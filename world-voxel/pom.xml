@@ -11,10 +11,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>voxelworld</artifactId>
+    <artifactId>world-voxel</artifactId>
     <packaging>jar</packaging>
-    <name>Nimbus VoxelWorld</name>
-    <description>VoxelWorld service for the Nimbus platform</description>
+    <name>Nimbus World Voxel</name>
+    <description>World Voxel service for the Nimbus platform</description>
 
     <dependencies>
         <!-- Spring Boot Starters -->

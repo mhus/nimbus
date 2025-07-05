@@ -33,7 +33,7 @@
         <module>registry</module>
         <module>identity</module>
         <module>common</module>
-        <module>voxelworld</module>
+        <module>world-voxel</module>
     </modules>
 
     <repositories>
