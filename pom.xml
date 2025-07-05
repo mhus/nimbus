@@ -26,6 +26,8 @@
     <modules>
         <module>shared</module>
         <module>registry</module>
+        <module>identity</module>
+        <module>common</module>
     </modules>
 
     <repositories>

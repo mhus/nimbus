@@ -1,0 +1,71 @@
+{
+  "type": "record",
+  "name": "PlayerCharacterLookupResponse",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für PlayerCharacter-Lookup-Antworten im Nimbus Identity System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "ID der ursprünglichen PlayerCharacter-Lookup-Anfrage"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "PlayerCharacterLookupStatus",
+        "symbols": ["SUCCESS", "CHARACTER_NOT_FOUND", "USER_NOT_FOUND", "ERROR", "TIMEOUT"]
+      },
+      "doc": "Status der PlayerCharacter-Lookup-Anfrage"
+    },
+    {
+      "name": "characters",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "PlayerCharacterInfo",
+          "fields": [
+            {"name": "id", "type": "long"},
+            {"name": "name", "type": "string"},
+            {"name": "description", "type": ["null", "string"], "default": null},
+            {"name": "characterClass", "type": "string"},
+            {"name": "level", "type": "int", "default": 1},
+            {"name": "experiencePoints", "type": "long", "default": 0},
+            {"name": "healthPoints", "type": "int", "default": 100},
+            {"name": "maxHealthPoints", "type": "int", "default": 100},
+            {"name": "manaPoints", "type": "int", "default": 100},
+            {"name": "maxManaPoints", "type": "int", "default": 100},
+            {"name": "currentWorldId", "type": ["null", "string"], "default": null},
+            {"name": "currentPlanet", "type": ["null", "string"], "default": null},
+            {"name": "positionX", "type": "double", "default": 0.0},
+            {"name": "positionY", "type": "double", "default": 0.0},
+            {"name": "positionZ", "type": "double", "default": 0.0},
+            {"name": "active", "type": "boolean", "default": true},
+            {"name": "lastLogin", "type": ["null", {"type": "long", "logicalType": "timestamp-millis"}], "default": null},
+            {"name": "createdAt", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+            {"name": "updatedAt", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+            {"name": "userId", "type": "long"}
+          ]
+        }
+      },
+      "doc": "Liste der gefundenen PlayerCharacters",
+      "default": []
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Antwort"
+    },
+    {
+      "name": "errorMessage",
+      "type": ["null", "string"],
+      "doc": "Fehlermeldung bei ERROR-Status",
+      "default": null
+    }
+  ]
+}
+

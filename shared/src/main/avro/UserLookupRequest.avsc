@@ -1,0 +1,46 @@
+{
+  "type": "record",
+  "name": "UserLookupRequest",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für User-Lookup-Anfragen im Nimbus Identity System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "Eindeutige ID der User-Lookup-Anfrage"
+    },
+    {
+      "name": "userId",
+      "type": ["null", "long"],
+      "doc": "ID des gesuchten Users (optional)",
+      "default": null
+    },
+    {
+      "name": "username",
+      "type": ["null", "string"],
+      "doc": "Benutzername des gesuchten Users (optional)",
+      "default": null
+    },
+    {
+      "name": "email",
+      "type": ["null", "string"],
+      "doc": "E-Mail des gesuchten Users (optional)",
+      "default": null
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Anfrage in Millisekunden"
+    },
+    {
+      "name": "requestedBy",
+      "type": ["null", "string"],
+      "doc": "Service oder User der die Anfrage stellt",
+      "default": null
+    }
+  ]
+}
+

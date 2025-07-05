@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+de.mhus.nimbus.common.config.NimbusCommonAutoConfiguration
+

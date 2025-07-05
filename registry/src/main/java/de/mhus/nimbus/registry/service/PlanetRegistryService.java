@@ -16,9 +16,14 @@ import de.mhus.nimbus.shared.avro.PlanetRegistrationStatus;
 import de.mhus.nimbus.shared.avro.PlanetUnregistrationRequest;
 import de.mhus.nimbus.shared.avro.PlanetUnregistrationResponse;
 import de.mhus.nimbus.shared.avro.PlanetUnregistrationStatus;
-import de.mhus.nimbus.shared.avro.RegisteredWorld;
 import de.mhus.nimbus.shared.avro.WorldRegistration;
+import de.mhus.nimbus.shared.avro.WorldRegistrationRequest;
+import de.mhus.nimbus.shared.avro.WorldRegistrationResponse;
 import de.mhus.nimbus.shared.avro.WorldRegistrationStatus;
+import de.mhus.nimbus.shared.avro.WorldUnregistrationRequest;
+import de.mhus.nimbus.shared.avro.WorldUnregistrationResponse;
+import de.mhus.nimbus.shared.avro.WorldUnregistrationStatus;
+import de.mhus.nimbus.shared.avro.RegisteredWorld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -336,7 +341,7 @@ public class PlanetRegistryService {
                 RegisteredWorld errorResult = RegisteredWorld.newBuilder()
                         .setWorldId(worldReg.getWorldId())
                         .setWorldName(worldReg.getWorldName())
-                        .setStatus(WorldRegistrationStatus.FAILED)
+                        .setStatus(WorldRegistrationStatus.ERROR)
                         .setMessage("Registration failed: " + e.getMessage())
                         .build();
                 results.add(errorResult);
@@ -367,7 +372,7 @@ public class PlanetRegistryService {
         } else {
             // Erstelle neue Welt
             world = createWorldFromRegistration(planet, worldReg);
-            status = WorldRegistrationStatus.CREATED;
+            status = WorldRegistrationStatus.SUCCESS;
             message = "World created successfully";
             logger.debug("Created new world: {}", worldReg.getWorldId());
         }
@@ -624,6 +629,372 @@ public class PlanetRegistryService {
         return PlanetUnregistrationResponse.newBuilder()
                 .setRequestId(request.getRequestId())
                 .setStatus(PlanetUnregistrationStatus.ERROR)
+                .setPlanetName(request.getPlanetName())
+                .setEnvironment(request.getEnvironment())
+                .setTimestamp(Instant.ofEpochMilli(timestamp))
+                .setMessage(null)
+                .setErrorMessage(errorMessage)
+                .build();
+    }
+
+    /**
+     * Verarbeitet eine World-Registrierungs-Anfrage
+     *
+     * @param request Die eingehende World-Registrierungs-Anfrage
+     * @return Die World-Registrierungs-Antwort mit Ergebnis
+     */
+    @Transactional
+    public WorldRegistrationResponse processWorldRegistrationRequest(WorldRegistrationRequest request) {
+        logger.info("Processing world registration request: world={}, planet={}, environment={}, registeredBy={}",
+                   request.getWorldName(), request.getPlanetName(), request.getEnvironment(), request.getRegisteredBy());
+
+        long currentTimestamp = Instant.now().toEpochMilli();
+
+        try {
+            // Prüfe ob Planet existiert
+            Optional<Planet> existingPlanet = planetRepository.findByNameIgnoreCaseAndEnvironmentAndActiveTrue(
+                request.getPlanetName(), request.getEnvironment());
+
+            if (existingPlanet.isEmpty()) {
+                logger.warn("Planet {} not found for world registration in environment {}",
+                           request.getPlanetName(), request.getEnvironment());
+
+                return WorldRegistrationResponse.newBuilder()
+                        .setRequestId(request.getRequestId())
+                        .setStatus(WorldRegistrationStatus.PLANET_NOT_FOUND)
+                        .setPlanetName(request.getPlanetName())
+                        .setWorldId(request.getWorldId())
+                        .setWorldName(request.getWorldName())
+                        .setEnvironment(request.getEnvironment())
+                        .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                        .setMessage("Planet not found for world registration")
+                        .setErrorMessage("Planet '" + request.getPlanetName() + "' not found in registry")
+                        .build();
+            }
+
+            Planet planet = existingPlanet.get();
+
+            // Prüfe ob Welt bereits existiert
+            Optional<World> existingWorld = worldRepository.findByWorldId(request.getWorldId());
+
+            World world;
+            WorldRegistrationStatus status;
+            String message;
+
+            if (existingWorld.isPresent()) {
+                // Welt existiert bereits - prüfe ob sie zum selben Planeten gehört
+                world = existingWorld.get();
+                if (!world.getPlanet().getId().equals(planet.getId())) {
+                    logger.warn("World {} already exists on different planet", request.getWorldId());
+                    return WorldRegistrationResponse.newBuilder()
+                            .setRequestId(request.getRequestId())
+                            .setStatus(WorldRegistrationStatus.WORLD_ALREADY_EXISTS)
+                            .setPlanetName(request.getPlanetName())
+                            .setWorldId(request.getWorldId())
+                            .setWorldName(request.getWorldName())
+                            .setEnvironment(request.getEnvironment())
+                            .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                            .setMessage("World already exists on different planet")
+                            .setErrorMessage("World '" + request.getWorldId() + "' already exists on planet '" + world.getPlanet().getName() + "'")
+                            .build();
+                }
+
+                // Aktualisiere existierende Welt
+                updateWorldFromWorldRegistrationRequest(world, request);
+                status = WorldRegistrationStatus.SUCCESS;
+                message = "World updated successfully";
+                logger.info("Updated existing world: {} on planet {}", request.getWorldId(), request.getPlanetName());
+            } else {
+                // Erstelle neue Welt
+                world = createWorldFromWorldRegistrationRequest(planet, request);
+                status = WorldRegistrationStatus.SUCCESS;
+                message = "World created successfully";
+                logger.info("Created new world: {} on planet {}", request.getWorldId(), request.getPlanetName());
+            }
+
+            world = worldRepository.save(world);
+
+            return WorldRegistrationResponse.newBuilder()
+                    .setRequestId(request.getRequestId())
+                    .setStatus(status)
+                    .setPlanetName(request.getPlanetName())
+                    .setWorldId(world.getWorldId())
+                    .setWorldName(world.getName())
+                    .setEnvironment(request.getEnvironment())
+                    .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                    .setMessage(message)
+                    .setErrorMessage(null)
+                    .build();
+
+        } catch (Exception e) {
+            logger.error("Error processing world registration request: {}", request.getRequestId(), e);
+            return createWorldRegistrationErrorResponse(request, e.getMessage(), currentTimestamp);
+        }
+    }
+
+    /**
+     * Erstellt eine neue Welt aus einer World-Registrierungs-Anfrage
+     */
+    private World createWorldFromWorldRegistrationRequest(Planet planet, WorldRegistrationRequest request) {
+        World world = new World(request.getWorldId(), request.getWorldName(), request.getManagementUrl());
+        world.setPlanet(planet);
+        world.setApiUrl(request.getApiUrl());
+        world.setWebUrl(request.getWebUrl());
+        world.setDescription(request.getDescription());
+        world.setWorldType(request.getWorldType());
+        world.setAccessLevel(request.getAccessLevel());
+        world.setLastHealthCheck(Instant.now());
+
+        if (request.getMetadata() != null) {
+            world.setMetadata(request.getMetadata());
+        }
+
+        return world;
+    }
+
+    /**
+     * Aktualisiert eine bestehende Welt mit Daten aus einer World-Registrierungs-Anfrage
+     */
+    private void updateWorldFromWorldRegistrationRequest(World world, WorldRegistrationRequest request) {
+        world.setName(request.getWorldName());
+        world.setManagementUrl(request.getManagementUrl());
+        world.setApiUrl(request.getApiUrl());
+        world.setWebUrl(request.getWebUrl());
+        world.setDescription(request.getDescription());
+        world.setWorldType(request.getWorldType());
+        world.setAccessLevel(request.getAccessLevel());
+        world.setLastHealthCheck(Instant.now());
+
+        if (request.getMetadata() != null) {
+            world.getMetadata().clear();
+            world.getMetadata().putAll(request.getMetadata());
+        }
+    }
+
+    /**
+     * Validiert eine eingehende World-Registrierungs-Anfrage
+     *
+     * @param request Die zu validierende Anfrage
+     * @throws IllegalArgumentException wenn die Anfrage ungültig ist
+     */
+    public void validateWorldRegistrationRequest(WorldRegistrationRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("World registration request cannot be null");
+        }
+
+        if (request.getRequestId() == null || request.getRequestId().trim().isEmpty()) {
+            throw new IllegalArgumentException("Request ID cannot be null or empty");
+        }
+
+        if (request.getPlanetName() == null || request.getPlanetName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Planet name cannot be null or empty");
+        }
+
+        if (request.getWorldId() == null || request.getWorldId().trim().isEmpty()) {
+            throw new IllegalArgumentException("World ID cannot be null or empty");
+        }
+
+        if (request.getWorldName() == null || request.getWorldName().trim().isEmpty()) {
+            throw new IllegalArgumentException("World name cannot be null or empty");
+        }
+
+        if (request.getManagementUrl() == null || request.getManagementUrl().trim().isEmpty()) {
+            throw new IllegalArgumentException("Management URL cannot be null or empty");
+        }
+
+        if (request.getEnvironment() == null) {
+            throw new IllegalArgumentException("Environment cannot be null");
+        }
+
+        logger.debug("World registration request validation passed: {}", request.getRequestId());
+    }
+
+    /**
+     * Erstellt eine Error-Response für World-Registrierungs-Fehler
+     *
+     * @param request Die ursprüngliche Anfrage
+     * @param errorMessage Die Fehlermeldung
+     * @return Error-Response
+     */
+    public WorldRegistrationResponse createWorldRegistrationErrorResponse(WorldRegistrationRequest request, String errorMessage) {
+        long currentTimestamp = Instant.now().toEpochMilli();
+        return createWorldRegistrationErrorResponse(request, errorMessage, currentTimestamp);
+    }
+
+    /**
+     * Erstellt eine Error-Response für World-Registrierungs-Fehler mit Timestamp
+     *
+     * @param request Die ursprüngliche Anfrage
+     * @param errorMessage Die Fehlermeldung
+     * @param timestamp Zeitstempel der Antwort
+     * @return Error-Response
+     */
+    private WorldRegistrationResponse createWorldRegistrationErrorResponse(WorldRegistrationRequest request, String errorMessage, long timestamp) {
+        return WorldRegistrationResponse.newBuilder()
+                .setRequestId(request.getRequestId())
+                .setStatus(WorldRegistrationStatus.ERROR)
+                .setPlanetName(request.getPlanetName())
+                .setWorldId(request.getWorldId())
+                .setWorldName(request.getWorldName())
+                .setEnvironment(request.getEnvironment())
+                .setTimestamp(Instant.ofEpochMilli(timestamp))
+                .setMessage(null)
+                .setErrorMessage(errorMessage)
+                .build();
+    }
+
+    /**
+     * Validiert eine eingehende World-Deregistrierungs-Anfrage
+     *
+     * @param request Die zu validierende Anfrage
+     * @throws IllegalArgumentException wenn die Anfrage ungültig ist
+     */
+    public void validateWorldUnregistrationRequest(WorldUnregistrationRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("World unregistration request cannot be null");
+        }
+
+        if (request.getRequestId() == null || request.getRequestId().trim().isEmpty()) {
+            throw new IllegalArgumentException("Request ID cannot be null or empty");
+        }
+
+        if (request.getWorldId() == null || request.getWorldId().trim().isEmpty()) {
+            throw new IllegalArgumentException("World ID cannot be null or empty");
+        }
+
+        if (request.getEnvironment() == null) {
+            throw new IllegalArgumentException("Environment cannot be null");
+        }
+
+        logger.debug("World unregistration request validation passed: {}", request.getRequestId());
+    }
+
+    /**
+     * Verarbeitet eine World-Deregistrierungs-Anfrage
+     *
+     * @param request Die eingehende World-Deregistrierungs-Anfrage
+     * @return Die World-Deregistrierungs-Antwort mit Ergebnis
+     */
+    @Transactional
+    public WorldUnregistrationResponse processWorldUnregistrationRequest(WorldUnregistrationRequest request) {
+        logger.info("Processing world unregistration request: worldId={}, planetName={}, environment={}, unregisteredBy={}",
+                   request.getWorldId(), request.getPlanetName(), request.getEnvironment(), request.getUnregisteredBy());
+
+        long currentTimestamp = Instant.now().toEpochMilli();
+
+        try {
+            // Suche nach der Welt anhand der worldId
+            Optional<World> existingWorld = worldRepository.findByWorldId(request.getWorldId());
+
+            if (existingWorld.isEmpty()) {
+                logger.warn("World {} not found for unregistration in environment {}",
+                           request.getWorldId(), request.getEnvironment());
+
+                return WorldUnregistrationResponse.newBuilder()
+                        .setRequestId(request.getRequestId())
+                        .setStatus(WorldUnregistrationStatus.WORLD_NOT_FOUND)
+                        .setWorldId(request.getWorldId())
+                        .setWorldName(null)
+                        .setPlanetName(request.getPlanetName())
+                        .setEnvironment(request.getEnvironment())
+                        .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                        .setMessage("World not found for unregistration")
+                        .setErrorMessage("World '" + request.getWorldId() + "' not found in registry")
+                        .build();
+            }
+
+            World world = existingWorld.get();
+
+            // Validiere Environment - Welt muss im angegebenen Environment existieren
+            if (!world.getPlanet().getEnvironment().equals(request.getEnvironment())) {
+                logger.warn("World {} exists but not in environment {}, found in environment {}",
+                           request.getWorldId(), request.getEnvironment(), world.getPlanet().getEnvironment());
+
+                return WorldUnregistrationResponse.newBuilder()
+                        .setRequestId(request.getRequestId())
+                        .setStatus(WorldUnregistrationStatus.WORLD_NOT_FOUND)
+                        .setWorldId(request.getWorldId())
+                        .setWorldName(world.getName())
+                        .setPlanetName(world.getPlanet().getName())
+                        .setEnvironment(request.getEnvironment())
+                        .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                        .setMessage("World not found in specified environment")
+                        .setErrorMessage("World '" + request.getWorldId() + "' not found in environment '" + request.getEnvironment() + "'")
+                        .build();
+            }
+
+            // Optional: Validiere Planet-Name falls angegeben
+            if (request.getPlanetName() != null && !request.getPlanetName().trim().isEmpty()) {
+                if (!world.getPlanet().getName().equalsIgnoreCase(request.getPlanetName().trim())) {
+                    logger.warn("World {} belongs to planet {} but request specified planet {}",
+                               request.getWorldId(), world.getPlanet().getName(), request.getPlanetName());
+
+                    return WorldUnregistrationResponse.newBuilder()
+                            .setRequestId(request.getRequestId())
+                            .setStatus(WorldUnregistrationStatus.ERROR)
+                            .setWorldId(request.getWorldId())
+                            .setWorldName(world.getName())
+                            .setPlanetName(world.getPlanet().getName())
+                            .setEnvironment(request.getEnvironment())
+                            .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                            .setMessage("Planet name mismatch")
+                            .setErrorMessage("World '" + request.getWorldId() + "' belongs to planet '" +
+                                           world.getPlanet().getName() + "' not '" + request.getPlanetName() + "'")
+                            .build();
+                }
+            }
+
+            // Entferne die Welt aus der Datenbank (hard delete)
+            // Alternative: Implementiere soft delete falls ein "active" Feld in der World-Entity vorhanden ist
+            worldRepository.delete(world);
+
+            logger.info("Successfully unregistered world {} from planet {} in environment {}",
+                       world.getWorldId(), world.getPlanet().getName(), request.getEnvironment());
+
+            return WorldUnregistrationResponse.newBuilder()
+                    .setRequestId(request.getRequestId())
+                    .setStatus(WorldUnregistrationStatus.SUCCESS)
+                    .setWorldId(world.getWorldId())
+                    .setWorldName(world.getName())
+                    .setPlanetName(world.getPlanet().getName())
+                    .setEnvironment(request.getEnvironment())
+                    .setTimestamp(Instant.ofEpochMilli(currentTimestamp))
+                    .setMessage("World unregistration completed successfully")
+                    .setErrorMessage(null)
+                    .build();
+
+        } catch (Exception e) {
+            logger.error("Error processing world unregistration request: {}", request.getRequestId(), e);
+            return createWorldUnregistrationErrorResponse(request, e.getMessage(), currentTimestamp);
+        }
+    }
+
+    /**
+     * Erstellt eine Error-Response für World-Deregistrierungs-Fehler
+     *
+     * @param request Die ursprüngliche Anfrage
+     * @param errorMessage Die Fehlermeldung
+     * @return Error-Response
+     */
+    public WorldUnregistrationResponse createWorldUnregistrationErrorResponse(WorldUnregistrationRequest request, String errorMessage) {
+        long currentTimestamp = Instant.now().toEpochMilli();
+        return createWorldUnregistrationErrorResponse(request, errorMessage, currentTimestamp);
+    }
+
+    /**
+     * Erstellt eine Error-Response für World-Deregistrierungs-Fehler mit Timestamp
+     *
+     * @param request Die ursprüngliche Anfrage
+     * @param errorMessage Die Fehlermeldung
+     * @param timestamp Zeitstempel der Antwort
+     * @return Error-Response
+     */
+    private WorldUnregistrationResponse createWorldUnregistrationErrorResponse(WorldUnregistrationRequest request, String errorMessage, long timestamp) {
+        return WorldUnregistrationResponse.newBuilder()
+                .setRequestId(request.getRequestId())
+                .setStatus(WorldUnregistrationStatus.ERROR)
+                .setWorldId(request.getWorldId())
+                .setWorldName(null)
                 .setPlanetName(request.getPlanetName())
                 .setEnvironment(request.getEnvironment())
                 .setTimestamp(Instant.ofEpochMilli(timestamp))

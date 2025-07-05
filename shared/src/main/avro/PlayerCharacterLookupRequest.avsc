@@ -1,0 +1,64 @@
+{
+  "type": "record",
+  "name": "PlayerCharacterLookupRequest",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für PlayerCharacter-Lookup-Anfragen im Nimbus Identity System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "Eindeutige ID der PlayerCharacter-Lookup-Anfrage"
+    },
+    {
+      "name": "characterId",
+      "type": ["null", "long"],
+      "doc": "ID des gesuchten PlayerCharacters (optional)",
+      "default": null
+    },
+    {
+      "name": "characterName",
+      "type": ["null", "string"],
+      "doc": "Name des gesuchten PlayerCharacters (optional)",
+      "default": null
+    },
+    {
+      "name": "userId",
+      "type": ["null", "long"],
+      "doc": "User-ID für die Suche nach allen Characters eines Users (optional)",
+      "default": null
+    },
+    {
+      "name": "currentPlanet",
+      "type": ["null", "string"],
+      "doc": "Planet für die Suche nach Characters auf einem bestimmten Planeten (optional)",
+      "default": null
+    },
+    {
+      "name": "currentWorldId",
+      "type": ["null", "string"],
+      "doc": "Welt-ID für die Suche nach Characters in einer bestimmten Welt (optional)",
+      "default": null
+    },
+    {
+      "name": "activeOnly",
+      "type": "boolean",
+      "doc": "Nur aktive Characters zurückgeben",
+      "default": true
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Anfrage in Millisekunden"
+    },
+    {
+      "name": "requestedBy",
+      "type": ["null", "string"],
+      "doc": "Service oder User der die Anfrage stellt",
+      "default": null
+    }
+  ]
+}
+
