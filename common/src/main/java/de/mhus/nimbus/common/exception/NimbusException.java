@@ -1,5 +1,7 @@
 package de.mhus.nimbus.common.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+
 /**
  * Basis-Exception für alle Nimbus-spezifischen Exceptions
  * Folgt Spring Boot Naming Conventions
@@ -33,7 +35,7 @@ public class NimbusException extends RuntimeException {
         this.serviceName = "unknown";
     }
 
-    public NimbusException(String message, Throwable cause, String errorCode, String serviceName) {
+    public NimbusException(String message, String errorCode, String serviceName, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
         this.serviceName = serviceName;

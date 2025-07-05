@@ -6,6 +6,9 @@ import de.mhus.nimbus.shared.avro.LoginRequest;
 import de.mhus.nimbus.shared.avro.LoginResponse;
 import de.mhus.nimbus.shared.avro.LoginStatus;
 import de.mhus.nimbus.shared.avro.LoginUserInfo;
+import de.mhus.nimbus.shared.avro.PublicKeyRequest;
+import de.mhus.nimbus.shared.avro.PublicKeyResponse;
+import de.mhus.nimbus.shared.avro.PublicKeyStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -191,6 +194,157 @@ class SecurityServiceTest {
         assertEquals(clientInfo, sentRequest.getClientInfo());
     }
 
+    @Test
+    void testGetPublicKeySuccess() {
+        // Given
+        PublicKeyResponse mockResponse = createSuccessPublicKeyResponse();
+
+        // Simuliere asynchrone Response
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                securityService.handlePublicKeyResponse(mockResponse, "public-key-response");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        // When
+        SecurityService.PublicKeyInfo result = securityService.getPublicKey();
+
+        // Then
+        assertNotNull(result);
+        assertEquals("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...", result.getPublicKey());
+        assertEquals("RSA", result.getKeyType());
+        assertEquals("RS256", result.getAlgorithm());
+        assertEquals("nimbus-identity-service", result.getIssuer());
+        assertNotNull(result.getFetchedAt());
+
+        // Verify Kafka interaction
+        verify(kafkaTemplate, atLeastOnce()).send(eq("public-key-request"), anyString(), any(PublicKeyRequest.class));
+    }
+
+    @Test
+    void testGetPublicKeyCaching() {
+        // Given
+        PublicKeyResponse mockResponse = createSuccessPublicKeyResponse();
+
+        // Simuliere erste Response
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                securityService.handlePublicKeyResponse(mockResponse, "public-key-response");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        // When - Erste Anfrage
+        SecurityService.PublicKeyInfo result1 = securityService.getPublicKey();
+
+        // When - Zweite Anfrage (sollte aus Cache kommen)
+        SecurityService.PublicKeyInfo result2 = securityService.getPublicKey();
+
+        // Then
+        assertNotNull(result1);
+        assertNotNull(result2);
+        assertEquals(result1.getPublicKey(), result2.getPublicKey());
+        assertTrue(securityService.hasValidPublicKey());
+
+        // Verify nur ein Kafka-Request gesendet wurde
+        verify(kafkaTemplate, times(1)).send(eq("public-key-request"), anyString(), any(PublicKeyRequest.class));
+    }
+
+    @Test
+    void testGetPublicKeyForceRefresh() {
+        // Given
+        PublicKeyResponse mockResponse = createSuccessPublicKeyResponse();
+
+        // Simuliere erste Response
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                securityService.handlePublicKeyResponse(mockResponse, "public-key-response");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        // Erste Anfrage
+        SecurityService.PublicKeyInfo result1 = securityService.getPublicKey();
+
+        // Simuliere zweite Response für forced refresh
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                securityService.handlePublicKeyResponse(mockResponse, "public-key-response");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        // When - Force refresh
+        SecurityService.PublicKeyInfo result2 = securityService.getPublicKey(true);
+
+        // Then
+        assertNotNull(result1);
+        assertNotNull(result2);
+        assertEquals(result1.getPublicKey(), result2.getPublicKey());
+
+        // Verify zwei Kafka-Requests gesendet wurden
+        verify(kafkaTemplate, times(2)).send(eq("public-key-request"), anyString(), any(PublicKeyRequest.class));
+    }
+
+    @Test
+    void testClearPublicKeyCache() {
+        // Given
+        PublicKeyResponse mockResponse = createSuccessPublicKeyResponse();
+
+        // Simuliere Response
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                securityService.handlePublicKeyResponse(mockResponse, "public-key-response");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        // When
+        SecurityService.PublicKeyInfo result = securityService.getPublicKey();
+        assertTrue(securityService.hasValidPublicKey());
+
+        securityService.clearPublicKeyCache();
+
+        // Then
+        assertFalse(securityService.hasValidPublicKey());
+        assertNull(securityService.getCachedPublicKey());
+    }
+
+    @Test
+    void testGetPublicKeyError() {
+        // Given
+        PublicKeyResponse mockResponse = createErrorPublicKeyResponse();
+
+        // Simuliere Error Response
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                securityService.handlePublicKeyResponse(mockResponse, "public-key-response");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        // When & Then
+        NimbusException exception = assertThrows(NimbusException.class, () -> {
+            securityService.getPublicKey();
+        });
+
+        assertEquals("Public key request failed", exception.getMessage());
+        assertEquals("PUBLIC_KEY_ERROR", exception.getErrorCode());
+    }
+
     private LoginResponse createSuccessLoginResponse() {
         LoginUserInfo userInfo = LoginUserInfo.newBuilder()
                 .setId(1L)
@@ -220,6 +374,32 @@ class SecurityServiceTest {
                 .setUser(null)
                 .setTimestamp(Instant.now().toEpochMilli())
                 .setErrorMessage("Login failed")
+                .build();
+    }
+
+    private PublicKeyResponse createSuccessPublicKeyResponse() {
+        return PublicKeyResponse.newBuilder()
+                .setRequestId("test-request-123")
+                .setStatus(PublicKeyStatus.SUCCESS)
+                .setPublicKey("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...")
+                .setKeyType("RSA")
+                .setAlgorithm("RS256")
+                .setIssuer("nimbus-identity-service")
+                .setTimestamp(Instant.now().toEpochMilli())
+                .setErrorMessage(null)
+                .build();
+    }
+
+    private PublicKeyResponse createErrorPublicKeyResponse() {
+        return PublicKeyResponse.newBuilder()
+                .setRequestId("test-request-123")
+                .setStatus(PublicKeyStatus.ERROR)
+                .setPublicKey(null)
+                .setKeyType(null)
+                .setAlgorithm(null)
+                .setIssuer(null)
+                .setTimestamp(Instant.now().toEpochMilli())
+                .setErrorMessage("Public key request failed")
                 .build();
     }
 }

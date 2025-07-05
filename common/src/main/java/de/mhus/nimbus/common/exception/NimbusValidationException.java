@@ -14,7 +14,7 @@ public class NimbusValidationException extends NimbusException {
         super(message, "VALIDATION_ERROR", serviceName);
     }
 
-    public NimbusValidationException(String message, Throwable cause, String serviceName) {
-        super(message, cause, "VALIDATION_ERROR", serviceName);
+    public NimbusValidationException(String message, String serviceName, Throwable cause) {
+        super(message, "VALIDATION_ERROR", serviceName, cause);
     }
 }
