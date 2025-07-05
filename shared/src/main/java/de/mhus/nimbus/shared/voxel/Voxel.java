@@ -1,64 +1,109 @@
 package de.mhus.nimbus.shared.voxel;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Stores all information for a specific voxel type.
  * Adapted from the Terasology Block model for the Nimbus platform.
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 public final class Voxel implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
+    @EqualsAndHashCode.Include
     private short id;
+
+    @Builder.Default
     private String displayName = "Untitled voxel";
+
     private VoxelFamily family;
 
     /* PROPERTIES */
 
     // Overall behavioral
-    private boolean liquid;
+    @Builder.Default
+    private boolean liquid = false;
+
+    @Builder.Default
     private boolean attachmentAllowed = true;
+
+    @Builder.Default
     private boolean replacementAllowed = true;
+
+    @Builder.Default
     private int hardness = 3;
-    private boolean supportRequired;
+
+    @Builder.Default
+    private boolean supportRequired = false;
 
     // Rendering related
-    private boolean translucent;
-    private boolean doubleSided;
+    @Builder.Default
+    private boolean translucent = false;
+
+    @Builder.Default
+    private boolean doubleSided = false;
+
+    @Builder.Default
     private boolean shadowCasting = true;
-    private byte luminance;
+
+    @Builder.Default
+    private byte luminance = 0;
 
     // Collision related
-    private boolean penetrable;
+    @Builder.Default
+    private boolean penetrable = false;
+
+    @Builder.Default
     private boolean targetable = true;
-    private boolean climbable;
+
+    @Builder.Default
+    private boolean climbable = false;
 
     // Physics
+    @Builder.Default
     private float mass = 10.0f;
+
+    @Builder.Default
     private float friction = 0.5f;
+
+    @Builder.Default
     private float restitution = 0.0f;
 
     // Position in world
+    @EqualsAndHashCode.Include
     private int x;
-    private int y;
-    private int z;
-    private byte metadata;
-    private long lastModified;
 
-    /**
-     * Initialize a new voxel with default properties.
-     */
-    public Voxel() {
-        this.lastModified = System.currentTimeMillis();
-    }
+    @EqualsAndHashCode.Include
+    private int y;
+
+    @EqualsAndHashCode.Include
+    private int z;
+
+    @EqualsAndHashCode.Include
+    private byte metadata;
+
+    @Builder.Default
+    private long lastModified = System.currentTimeMillis();
 
     /**
      * Constructor with position and basic properties
      */
     public Voxel(int x, int y, int z, VoxelType type) {
-        this();
         this.x = x;
         this.y = y;
         this.z = z;
@@ -68,110 +113,20 @@ public final class Voxel implements Serializable {
         this.hardness = type.getHardness();
         this.luminance = (byte) type.getLuminance();
         this.penetrable = !type.isSolid();
-    }
-
-    // Basic getters and setters
-    public short getId() {
-        return id;
-    }
-
-    public void setId(short id) {
-        this.id = id;
         this.lastModified = System.currentTimeMillis();
-    }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getZ() {
-        return z;
-    }
-
-    public void setZ(int z) {
-        this.z = z;
-    }
-
-    public byte getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(byte metadata) {
-        this.metadata = metadata;
-        this.lastModified = System.currentTimeMillis();
-    }
-
-    public long getLastModified() {
-        return lastModified;
-    }
-
-    public VoxelFamily getFamily() {
-        return family;
-    }
-
-    public void setFamily(VoxelFamily family) {
-        this.family = family;
-    }
-
-    // Behavioral properties
-    public boolean isLiquid() {
-        return liquid;
-    }
-
-    public void setLiquid(boolean liquid) {
-        this.liquid = liquid;
-    }
-
-    public int getHardness() {
-        return hardness;
-    }
-
-    public void setHardness(int hardness) {
-        this.hardness = hardness;
-    }
-
-    public byte getLuminance() {
-        return luminance;
-    }
-
-    public void setLuminance(byte luminance) {
-        this.luminance = luminance;
-    }
-
-    public boolean isPenetrable() {
-        return penetrable;
-    }
-
-    public void setPenetrable(boolean penetrable) {
-        this.penetrable = penetrable;
-    }
-
-    public boolean isTranslucent() {
-        return translucent;
-    }
-
-    public void setTranslucent(boolean translucent) {
-        this.translucent = translucent;
+        // Set default values for other fields
+        this.attachmentAllowed = true;
+        this.replacementAllowed = true;
+        this.supportRequired = false;
+        this.translucent = false;
+        this.doubleSided = false;
+        this.shadowCasting = true;
+        this.targetable = true;
+        this.climbable = false;
+        this.mass = 10.0f;
+        this.friction = 0.5f;
+        this.restitution = 0.0f;
     }
 
     /**
@@ -189,40 +144,41 @@ public final class Voxel implements Serializable {
         return id == VoxelType.AIR.getId();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Voxel voxel = (Voxel) o;
-        return x == voxel.x &&
-               y == voxel.y &&
-               z == voxel.z &&
-               id == voxel.id &&
-               metadata == voxel.metadata;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, x, y, z, metadata);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Voxel{id=%d, name='%s', pos=(%d,%d,%d), metadata=%d}",
-                           id, displayName, x, y, z, metadata);
-    }
-
     /**
      * Creates a copy of this voxel at a new position
      */
     public Voxel copyAt(int newX, int newY, int newZ) {
-        Voxel copy = new Voxel(newX, newY, newZ, VoxelType.fromId(this.id));
-        copy.metadata = this.metadata;
-        copy.displayName = this.displayName;
-        copy.liquid = this.liquid;
-        copy.hardness = this.hardness;
-        copy.translucent = this.translucent;
-        copy.luminance = this.luminance;
-        return copy;
+        return Voxel.builder()
+                .x(newX)
+                .y(newY)
+                .z(newZ)
+                .id(this.id)
+                .displayName(this.displayName)
+                .family(this.family)
+                .liquid(this.liquid)
+                .attachmentAllowed(this.attachmentAllowed)
+                .replacementAllowed(this.replacementAllowed)
+                .hardness(this.hardness)
+                .supportRequired(this.supportRequired)
+                .translucent(this.translucent)
+                .doubleSided(this.doubleSided)
+                .shadowCasting(this.shadowCasting)
+                .luminance(this.luminance)
+                .penetrable(this.penetrable)
+                .targetable(this.targetable)
+                .climbable(this.climbable)
+                .mass(this.mass)
+                .friction(this.friction)
+                .restitution(this.restitution)
+                .metadata(this.metadata)
+                .lastModified(System.currentTimeMillis())
+                .build();
+    }
+
+    /**
+     * Updates the lastModified timestamp
+     */
+    public void touch() {
+        this.lastModified = System.currentTimeMillis();
     }
 }

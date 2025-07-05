@@ -1,14 +1,22 @@
 package de.mhus.nimbus.shared.voxel;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Unique identifier for voxel types
  * Similar to BlockUri in Terasology
  */
+@Getter
+@EqualsAndHashCode
+@ToString
 public class VoxelUri implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
     private static final String SEPARATOR = ":";
 
@@ -44,31 +52,9 @@ public class VoxelUri implements Serializable {
         }
     }
 
-    public String getModuleId() {
-        return moduleId;
-    }
-
-    public String getVoxelName() {
-        return voxelName;
-    }
-
     @Override
     public String toString() {
         return moduleId + SEPARATOR + voxelName;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        VoxelUri voxelUri = (VoxelUri) o;
-        return Objects.equals(moduleId, voxelUri.moduleId) &&
-               Objects.equals(voxelName, voxelUri.voxelName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(moduleId, voxelName);
     }
 
     public static VoxelUri parse(String uriString) {

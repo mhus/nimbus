@@ -1,56 +1,38 @@
 package de.mhus.nimbus.shared.voxel;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * Represents RGBA color for voxel rendering
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class VoxelColor implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    private float red;
-    private float green;
-    private float blue;
-    private float alpha;
-
-    public VoxelColor() {
-        this(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-
-    public VoxelColor(float red, float green, float blue, float alpha) {
-        this.red = Math.max(0.0f, Math.min(1.0f, red));
-        this.green = Math.max(0.0f, Math.min(1.0f, green));
-        this.blue = Math.max(0.0f, Math.min(1.0f, blue));
-        this.alpha = Math.max(0.0f, Math.min(1.0f, alpha));
-    }
-
-    public float getRed() {
-        return red;
-    }
+    private float red = 1.0f;
+    private float green = 1.0f;
+    private float blue = 1.0f;
+    private float alpha = 1.0f;
 
     public void setRed(float red) {
         this.red = Math.max(0.0f, Math.min(1.0f, red));
-    }
-
-    public float getGreen() {
-        return green;
     }
 
     public void setGreen(float green) {
         this.green = Math.max(0.0f, Math.min(1.0f, green));
     }
 
-    public float getBlue() {
-        return blue;
-    }
-
     public void setBlue(float blue) {
         this.blue = Math.max(0.0f, Math.min(1.0f, blue));
-    }
-
-    public float getAlpha() {
-        return alpha;
     }
 
     public void setAlpha(float alpha) {

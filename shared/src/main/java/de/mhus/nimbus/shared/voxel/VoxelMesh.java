@@ -1,12 +1,18 @@
 package de.mhus.nimbus.shared.voxel;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * Represents mesh data for a voxel
  */
+@Data
 public class VoxelMesh implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final Voxel voxel;
@@ -47,10 +53,4 @@ public class VoxelMesh implements Serializable {
             20, 21, 22,   20, 22, 23    // left
         };
     }
-
-    public float[] getVertices() { return vertices; }
-    public int[] getIndices() { return indices; }
-    public float[] getNormals() { return normals; }
-    public float[] getTextureCoords() { return textureCoords; }
-    public Voxel getVoxel() { return voxel; }
 }
