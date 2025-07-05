@@ -1,5 +1,10 @@
 # AI Agent Development Notes for Nimbus Project
 
+## Logging
+
+Use lombok `@Slf4j` for logging in all 
+classes. This provides the variable 'LOGGER' for logging purposes.
+
 ## Avro Timestamp Handling
 
 ### Important: Avro Timestamp Serialization
