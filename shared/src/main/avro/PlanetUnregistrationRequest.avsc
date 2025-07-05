@@ -1,0 +1,57 @@
+{
+  "type": "record",
+  "name": "PlanetUnregistrationRequest",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für Planet-Deregistrierungs-Anfragen im Nimbus Registry System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "Eindeutige ID der Planet-Deregistrierungs-Anfrage"
+    },
+    {
+      "name": "planetName",
+      "type": "string",
+      "doc": "Name des zu deregistrierenden Planeten"
+    },
+    {
+      "name": "environment",
+      "type": {
+        "type": "enum",
+        "name": "Environment",
+        "symbols": ["DEV", "TEST", "STAGING", "PROD"]
+      },
+      "default": "DEV",
+      "doc": "Umgebung für die Planet-Deregistrierung"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Anfrage in Millisekunden"
+    },
+    {
+      "name": "unregisteredBy",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Benutzer oder Service, der die Deregistrierung durchführt"
+    },
+    {
+      "name": "reason",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Grund für die Deregistrierung"
+    },
+    {
+      "name": "metadata",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "default": {},
+      "doc": "Zusätzliche Metadaten für die Deregistrierungs-Anfrage"
+    }
+  ]
+}

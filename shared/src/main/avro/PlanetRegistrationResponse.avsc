@@ -1,0 +1,96 @@
+{
+  "type": "record",
+  "name": "PlanetRegistrationResponse",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für Planet-Registrierungs-Antworten im Nimbus Registry System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "ID der ursprünglichen Planet-Registrierungs-Anfrage"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "PlanetRegistrationStatus",
+        "symbols": ["SUCCESS", "PLANET_ALREADY_EXISTS", "WORLD_ALREADY_EXISTS", "VALIDATION_ERROR", "ERROR"]
+      },
+      "doc": "Status der Planet-Registrierungs-Anfrage"
+    },
+    {
+      "name": "planetName",
+      "type": "string",
+      "doc": "Name des registrierten Planeten"
+    },
+    {
+      "name": "environment",
+      "type": {
+        "type": "enum",
+        "name": "Environment",
+        "symbols": ["DEV", "TEST", "STAGING", "PROD"]
+      },
+      "doc": "Umgebung der Registrierung"
+    },
+    {
+      "name": "registeredWorlds",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "RegisteredWorld",
+          "fields": [
+            {
+              "name": "worldId",
+              "type": "string",
+              "doc": "ID der registrierten Welt"
+            },
+            {
+              "name": "worldName",
+              "type": "string",
+              "doc": "Name der registrierten Welt"
+            },
+            {
+              "name": "status",
+              "type": {
+                "type": "enum",
+                "name": "WorldRegistrationStatus",
+                "symbols": ["CREATED", "UPDATED", "ALREADY_EXISTS", "FAILED"]
+              },
+              "doc": "Status der Welt-Registrierung"
+            },
+            {
+              "name": "message",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "Statusmeldung für diese Welt"
+            }
+          ]
+        }
+      },
+      "default": [],
+      "doc": "Liste der verarbeiteten Welten mit ihrem Status"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Antwort"
+    },
+    {
+      "name": "message",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Allgemeine Statusmeldung"
+    },
+    {
+      "name": "errorMessage",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Fehlermeldung bei ERROR-Status"
+    }
+  ]
+}
+

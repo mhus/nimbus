@@ -1,0 +1,116 @@
+{
+  "type": "record",
+  "name": "PlanetLookupResponse",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für Planet-Lookup-Antworten im Nimbus Registry System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "ID der ursprünglichen Planet-Lookup-Anfrage"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "PlanetLookupStatus",
+        "symbols": ["SUCCESS", "PLANET_NOT_FOUND", "WORLD_NOT_FOUND", "ERROR", "TIMEOUT"]
+      },
+      "doc": "Status der Planet-Lookup-Anfrage"
+    },
+    {
+      "name": "planetName",
+      "type": "string",
+      "doc": "Name des gesuchten Planeten"
+    },
+    {
+      "name": "worldName",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Name der gesuchten Welt"
+    },
+    {
+      "name": "planetWorlds",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "PlanetWorld",
+          "fields": [
+            {
+              "name": "worldId",
+              "type": "string",
+              "doc": "Eindeutige ID der Welt"
+            },
+            {
+              "name": "worldName",
+              "type": "string",
+              "doc": "Name der Welt"
+            },
+            {
+              "name": "managementUrl",
+              "type": "string",
+              "doc": "URL des Management-Services für diese Welt"
+            },
+            {
+              "name": "apiUrl",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "API-URL für diese Welt"
+            },
+            {
+              "name": "webUrl",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "Web-URL für diese Welt"
+            },
+            {
+              "name": "status",
+              "type": {
+                "type": "enum",
+                "name": "WorldStatus",
+                "symbols": ["ACTIVE", "INACTIVE", "MAINTENANCE", "ERROR"]
+              },
+              "default": "ACTIVE",
+              "doc": "Status der Welt"
+            },
+            {
+              "name": "lastUpdate",
+              "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              },
+              "doc": "Zeitstempel der letzten Aktualisierung"
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "type": "map",
+                "values": "string"
+              },
+              "default": {},
+              "doc": "Zusätzliche Metadaten der Welt"
+            }
+          ]
+        }
+      },
+      "default": [],
+      "doc": "Liste der gefundenen Welten auf dem Planeten"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Antwort"
+    },
+    {
+      "name": "errorMessage",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Fehlermeldung bei ERROR-Status"
+    }
+  ]
+}
+

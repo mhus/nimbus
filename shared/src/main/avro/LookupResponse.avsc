@@ -1,0 +1,99 @@
+{
+  "type": "record",
+  "name": "LookupResponse",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Schema für Lookup-Antworten im Nimbus Registry System",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "ID der ursprünglichen Lookup-Anfrage"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "LookupStatus",
+        "symbols": ["SUCCESS", "NOT_FOUND", "ERROR", "TIMEOUT"]
+      },
+      "doc": "Status der Lookup-Anfrage"
+    },
+    {
+      "name": "service",
+      "type": "string",
+      "doc": "Name des gesuchten Services"
+    },
+    {
+      "name": "serviceInstances",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "ServiceInstance",
+          "fields": [
+            {
+              "name": "instanceId",
+              "type": "string",
+              "doc": "Eindeutige ID der Service-Instanz"
+            },
+            {
+              "name": "host",
+              "type": "string",
+              "doc": "Hostname oder IP-Adresse"
+            },
+            {
+              "name": "port",
+              "type": "int",
+              "doc": "Port der Service-Instanz"
+            },
+            {
+              "name": "version",
+              "type": "string",
+              "doc": "Version der Service-Instanz"
+            },
+            {
+              "name": "healthy",
+              "type": "boolean",
+              "default": true,
+              "doc": "Gesundheitsstatus der Instanz"
+            },
+            {
+              "name": "lastHealthCheck",
+              "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              },
+              "doc": "Zeitstempel der letzten Gesundheitsprüfung"
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "type": "map",
+                "values": "string"
+              },
+              "default": {},
+              "doc": "Zusätzliche Metadaten der Service-Instanz"
+            }
+          ]
+        }
+      },
+      "default": [],
+      "doc": "Liste der gefundenen Service-Instanzen"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Zeitstempel der Antwort"
+    },
+    {
+      "name": "errorMessage",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Fehlermeldung bei ERROR-Status"
+    }
+  ]
+}
+
