@@ -37,6 +37,25 @@ public class VoxelBounds implements Serializable {
         return maxZ - minZ;
     }
 
+    /**
+     * Creates a new VoxelBounds translated by the specified offsets
+     *
+     * @param offsetX X offset
+     * @param offsetY Y offset
+     * @param offsetZ Z offset
+     * @return A new translated VoxelBounds
+     */
+    public VoxelBounds translate(float offsetX, float offsetY, float offsetZ) {
+        return new VoxelBounds(
+            minX + offsetX,
+            minY + offsetY,
+            minZ + offsetZ,
+            maxX + offsetX,
+            maxY + offsetY,
+            maxZ + offsetZ
+        );
+    }
+
     public boolean intersects(VoxelBounds other) {
         return !(maxX < other.minX || minX > other.maxX ||
                  maxY < other.minY || minY > other.maxY ||

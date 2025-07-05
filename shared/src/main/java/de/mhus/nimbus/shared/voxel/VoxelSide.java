@@ -55,6 +55,34 @@ public enum VoxelSide {
     }
 
     /**
+     * Rotates this side clockwise (when looking down from TOP)
+     */
+    public VoxelSide rotateClockwise() {
+        return switch (this) {
+            case FRONT -> RIGHT;
+            case RIGHT -> BACK;
+            case BACK -> LEFT;
+            case LEFT -> FRONT;
+            case TOP -> TOP;
+            case BOTTOM -> BOTTOM;
+        };
+    }
+
+    /**
+     * Rotates this side counter-clockwise (when looking down from TOP)
+     */
+    public VoxelSide rotateCounterClockwise() {
+        return switch (this) {
+            case FRONT -> LEFT;
+            case LEFT -> BACK;
+            case BACK -> RIGHT;
+            case RIGHT -> FRONT;
+            case TOP -> TOP;
+            case BOTTOM -> BOTTOM;
+        };
+    }
+
+    /**
      * Checks if this side is horizontal
      */
     public boolean isHorizontal() {

@@ -18,6 +18,14 @@ public class VoxelColor implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    // Color constants
+    public static final VoxelColor WHITE = new VoxelColor(1.0f, 1.0f, 1.0f, 1.0f);
+    public static final VoxelColor BLACK = new VoxelColor(0.0f, 0.0f, 0.0f, 1.0f);
+    public static final VoxelColor RED = new VoxelColor(1.0f, 0.0f, 0.0f, 1.0f);
+    public static final VoxelColor GREEN = new VoxelColor(0.0f, 1.0f, 0.0f, 1.0f);
+    public static final VoxelColor BLUE = new VoxelColor(0.0f, 0.0f, 1.0f, 1.0f);
+    public static final VoxelColor TRANSPARENT = new VoxelColor(1.0f, 1.0f, 1.0f, 0.0f);
+
     private float red = 1.0f;
     private float green = 1.0f;
     private float blue = 1.0f;

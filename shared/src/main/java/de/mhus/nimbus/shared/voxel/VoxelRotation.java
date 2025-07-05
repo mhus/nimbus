@@ -20,6 +20,21 @@ public enum VoxelRotation {
         return degrees;
     }
 
+    /**
+     * Rotates a VoxelSide according to this rotation
+     *
+     * @param side The side to rotate
+     * @return The rotated side
+     */
+    public VoxelSide rotate(VoxelSide side) {
+        return switch (this) {
+            case NONE -> side;
+            case ROTATE_90 -> side.rotateClockwise();
+            case ROTATE_180 -> side.rotateClockwise().rotateClockwise();
+            case ROTATE_270 -> side.rotateCounterClockwise();
+        };
+    }
+
     public VoxelRotation next() {
         return switch (this) {
             case NONE -> ROTATE_90;
