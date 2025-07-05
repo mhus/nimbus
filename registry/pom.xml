@@ -20,7 +20,6 @@
         <dependency>
             <groupId>de.mhus.numbus</groupId>
             <artifactId>shared</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
