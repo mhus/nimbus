@@ -1,6 +1,7 @@
 package de.mhus.nimbus.worldlife.controller;
 
-import de.mhus.nimbus.worldlife.entity.CharacterType;
+import de.mhus.nimbus.shared.character.CharacterType;
+import de.mhus.nimbus.shared.dto.CharacterOperationMessage;
 import de.mhus.nimbus.worldlife.entity.WorldCharacter;
 import de.mhus.nimbus.worldlife.service.WorldLifeService;
 import org.slf4j.Logger;

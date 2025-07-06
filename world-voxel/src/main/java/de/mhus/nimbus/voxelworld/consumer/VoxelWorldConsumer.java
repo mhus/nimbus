@@ -1,9 +1,9 @@
 package de.mhus.nimbus.voxelworld.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.shared.dto.VoxelOperationMessage;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
-import de.mhus.nimbus.voxelworld.dto.VoxelOperationMessage;
 import de.mhus.nimbus.voxelworld.service.VoxelWorldService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -274,7 +274,7 @@ public class VoxelWorldConsumer {
             // Serialize chunk to JSON
             String chunkJson = objectMapper.writeValueAsString(chunk);
             VoxelOperationMessage.ChunkData chunkData = new VoxelOperationMessage.ChunkData(
-                chunk.getChunkX(), chunk.getChunkY(), chunk.getChunkZ(), chunkJson
+                chunk.getChunkX(), chunk.getChunkY(), chunk.getChunkZ(), chunkJson, false
             );
             response.setChunkData(chunkData);
 

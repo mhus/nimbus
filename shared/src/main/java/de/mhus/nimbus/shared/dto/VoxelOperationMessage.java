@@ -1,4 +1,4 @@
-package de.mhus.nimbus.voxelworld.dto;
+package de.mhus.nimbus.shared.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,6 +41,7 @@ public class VoxelOperationMessage {
         private int chunkY;
         private int chunkZ;
         private String chunkJson; // JSON representation of the chunk
+        private boolean includeEmpty = false;
     }
 
     @Data

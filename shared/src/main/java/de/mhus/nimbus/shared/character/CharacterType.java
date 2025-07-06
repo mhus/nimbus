@@ -27,6 +27,16 @@ public enum CharacterType {
     FAUNA("Fauna", "Animal life including creatures, pets, and wildlife"),
 
     /**
+     * Animal creatures and beasts
+     */
+    ANIMAL("Animal", "Wild animals, domesticated creatures, and beasts"),
+
+    /**
+     * Hostile monsters and dangerous creatures
+     */
+    MONSTER("Monster", "Hostile creatures, demons, and dangerous beings"),
+
+    /**
      * Artificial constructs and mechanical entities
      */
     CONSTRUCT("Construct", "Artificial beings, robots, and mechanical entities"),

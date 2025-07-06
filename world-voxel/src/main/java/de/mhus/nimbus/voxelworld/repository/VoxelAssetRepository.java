@@ -90,12 +90,6 @@ public interface VoxelAssetRepository extends JpaRepository<VoxelAsset, Long> {
     boolean existsByAssetId(String assetId);
 
     /**
-     * Find voxel assets with binary data larger than specified size
-     */
-    @Query("SELECT v FROM VoxelAsset v WHERE LENGTH(v.binaryData) > :sizeBytes")
-    List<VoxelAsset> findWithBinaryDataLargerThan(@Param("sizeBytes") long sizeBytes);
-
-    /**
      * Get voxel asset names only for dropdown/selection purposes
      */
     @Query("SELECT v.name FROM VoxelAsset v WHERE v.active = true ORDER BY v.name")

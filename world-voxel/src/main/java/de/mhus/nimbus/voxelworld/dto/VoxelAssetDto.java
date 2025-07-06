@@ -20,9 +20,6 @@ public class VoxelAssetDto {
     private String name;
     private String namespace;
     private Asset asset;
-    private boolean hasBinaryData;
-    private long binaryDataSize;
-    private String binaryDataPath;
     private Integer version;
     private Boolean active;
     private LocalDateTime createdAt;
@@ -44,9 +41,6 @@ public class VoxelAssetDto {
         dto.setName(voxelAsset.getName());
         dto.setNamespace(voxelAsset.getNamespace());
         dto.setAsset(voxelAsset.getAsset()); // Get the shared Asset object
-        dto.setHasBinaryData(voxelAsset.hasBinaryData());
-        dto.setBinaryDataSize(voxelAsset.getBinaryDataSize());
-        dto.setBinaryDataPath(voxelAsset.getBinaryDataPath());
         dto.setVersion(voxelAsset.getVersion());
         dto.setActive(voxelAsset.getActive());
         dto.setCreatedAt(voxelAsset.getCreatedAt());
@@ -65,7 +59,6 @@ public class VoxelAssetDto {
         voxelAsset.setId(this.getId());
         voxelAsset.setVersion(this.getVersion());
         voxelAsset.setActive(this.getActive());
-        voxelAsset.setBinaryDataPath(this.getBinaryDataPath());
         voxelAsset.setCreatedAt(this.getCreatedAt());
         voxelAsset.setLastModified(this.getLastModified());
         voxelAsset.setCreatedBy(this.getCreatedBy());
@@ -92,9 +85,6 @@ public class VoxelAssetDto {
         dto.setAssetId(voxelAsset.getAssetId());
         dto.setName(voxelAsset.getName());
         dto.setNamespace(voxelAsset.getNamespace());
-        dto.setHasBinaryData(voxelAsset.hasBinaryData());
-        dto.setBinaryDataSize(voxelAsset.getBinaryDataSize());
-        dto.setBinaryDataPath(voxelAsset.getBinaryDataPath());
         dto.setVersion(voxelAsset.getVersion());
         dto.setActive(voxelAsset.getActive());
         dto.setCreatedAt(voxelAsset.getCreatedAt());

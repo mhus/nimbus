@@ -9,9 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -161,36 +159,6 @@ public class VoxelAssetController {
             LOGGER.warn("Failed to update voxel asset {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
-    }
-
-    /**
-     * Download voxel asset binary data
-     */
-    @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadVoxelAsset(@PathVariable Long id) {
-        return voxelAssetService.findById(id)
-                .map(voxelAsset -> {
-                    Asset asset = voxelAsset.getAsset();
-                    if (asset == null || !asset.hasBinaryData()) {
-                        return ResponseEntity.notFound().<byte[]>build();
-                    }
-
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.parseMediaType(
-                            asset.getMimeType() != null ? asset.getMimeType() : MediaType.APPLICATION_OCTET_STREAM_VALUE));
-                    headers.setContentLength(asset.getData().length);
-
-                    String filename = asset.getName();
-                    if (asset.getFormat() != null) {
-                        filename += "." + asset.getFormat();
-                    }
-                    headers.setContentDispositionFormData("attachment", filename);
-
-                    return ResponseEntity.ok()
-                            .headers(headers)
-                            .body(asset.getData());
-                })
-                .orElse(ResponseEntity.notFound().build());
     }
 
     /**

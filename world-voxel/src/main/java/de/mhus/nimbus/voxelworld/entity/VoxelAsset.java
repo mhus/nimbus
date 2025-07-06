@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"assetJson", "binaryData"})
+@ToString(exclude = {"assetJson"})
 @Slf4j
 public class VoxelAsset {
 
@@ -62,20 +62,6 @@ public class VoxelAsset {
     @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String assetJson;
-
-    /**
-     * Binary data stored separately for performance
-     * (Large binary data should be stored in external file system)
-     */
-    @Lob
-    @Basic(fetch = FetchType.LAZY)
-    private byte[] binaryData;
-
-    /**
-     * External file path if binary data is stored outside database
-     */
-    @Column(length = 500)
-    private String binaryDataPath;
 
     /**
      * Version of the voxel asset for tracking changes
@@ -122,13 +108,7 @@ public class VoxelAsset {
             return null;
         }
 
-        Asset asset = Asset.fromJson(assetJson);
-        if (asset != null && binaryData != null) {
-            // Restore binary data from separate storage
-            asset.setData(binaryData);
-            asset.setSizeBytes(binaryData.length);
-        }
-        return asset;
+        return Asset.fromJson(assetJson);
     }
 
     /**
@@ -140,7 +120,6 @@ public class VoxelAsset {
             this.assetId = null;
             this.name = null;
             this.namespace = null;
-            this.binaryData = null;
             return;
         }
 
@@ -149,38 +128,12 @@ public class VoxelAsset {
         this.name = asset.getName();
         this.namespace = asset.getNamespace();
 
-        // Store binary data separately for performance
-        if (asset.hasBinaryData()) {
-            this.binaryData = asset.getData();
-            // Temporarily remove binary data for JSON serialization
-            byte[] originalData = asset.getData();
-            asset.setData(null);
-            this.assetJson = asset.toJson();
-            // Restore binary data
-            asset.setData(originalData);
-        } else {
-            this.binaryData = null;
-            this.assetJson = asset.toJson();
-        }
+        // Serialize asset to JSON (binary data is handled by the Asset class itself)
+        this.assetJson = asset.toJson();
 
         if (this.assetJson == null) {
             LOGGER.error("Failed to serialize Asset to JSON for asset ID: {}", asset.getId());
         }
-    }
-
-    /**
-     * Check if asset has binary data
-     */
-    public boolean hasBinaryData() {
-        return (binaryData != null && binaryData.length > 0) ||
-               (binaryDataPath != null && !binaryDataPath.trim().isEmpty());
-    }
-
-    /**
-     * Get binary data size in bytes
-     */
-    public long getBinaryDataSize() {
-        return binaryData != null ? binaryData.length : 0;
     }
 
     @PrePersist

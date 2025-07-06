@@ -1,6 +1,6 @@
-package de.mhus.nimbus.worldlife.dto;
+package de.mhus.nimbus.shared.dto;
 
-import de.mhus.nimbus.worldlife.entity.CharacterType;
+import de.mhus.nimbus.shared.character.CharacterType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
