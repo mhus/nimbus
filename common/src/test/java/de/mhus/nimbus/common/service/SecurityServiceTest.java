@@ -360,7 +360,7 @@ class SecurityServiceTest {
                 .setToken("jwt-token-123")
                 .setExpiresAt(Instant.now().plusSeconds(3600).toEpochMilli())
                 .setUser(userInfo)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setErrorMessage(null)
                 .build();
     }
@@ -372,7 +372,7 @@ class SecurityServiceTest {
                 .setToken(null)
                 .setExpiresAt(null)
                 .setUser(null)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setErrorMessage("Login failed")
                 .build();
     }
@@ -385,7 +385,7 @@ class SecurityServiceTest {
                 .setKeyType("RSA")
                 .setAlgorithm("RS256")
                 .setIssuer("nimbus-identity-service")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setErrorMessage(null)
                 .build();
     }
@@ -398,7 +398,7 @@ class SecurityServiceTest {
                 .setKeyType(null)
                 .setAlgorithm(null)
                 .setIssuer(null)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setErrorMessage("Public key request failed")
                 .build();
     }
