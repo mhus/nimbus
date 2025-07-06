@@ -3,6 +3,7 @@ package de.mhus.nimbus.generator.simple.service;
 import de.mhus.nimbus.generator.simple.dto.WorldGenerationRequest;
 import de.mhus.nimbus.generator.simple.dto.WorldGenerationResponse;
 import de.mhus.nimbus.common.client.WorldVoxelClient;
+import de.mhus.nimbus.shared.voxel.Voxel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -417,9 +418,14 @@ public class WorldGeneratorService {
 
             // Convert VoxelInstance objects to the format expected by VoxelClient
             // Since VoxelClient works with JSON serialization, we'll create simple objects
-            List<SimpleVoxelData> voxelData = result.voxelBatch.stream()
-                .map(v -> new SimpleVoxelData(v.getX(), v.getY(), v.getZ(), v.getMaterial(), v.isActive()))
+            List<Voxel> voxelData = result.voxelBatch.stream()
+                .map(v ->
+                        Voxel.builder().x(v.getX()).y(v.getY()).z(v.getZ())
+                                // .material(v.getMaterial())
+                            // .active(v.isActive())
+                                .build())
                 .toList();
+            voxelClient.batchSaveVoxels(result.worldId, voxelData);
 
             // Use a different approach: send individual voxel save operations
             // This is more reliable than trying to match the complex Voxel type structure
