@@ -1,6 +1,6 @@
 package de.mhus.nimbus.identity.service;
 
-import de.mhus.nimbus.identity.entity.PlayerCharacter;
+import de.mhus.nimbus.identity.entity.IdentityCharacter;
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.shared.avro.*;
 import org.slf4j.Logger;
@@ -24,11 +24,11 @@ public class IdentityLookupService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityLookupService.class);
 
     private final UserService userService;
-    private final PlayerCharacterService playerCharacterService;
+    private final IdentityCharacterService identityCharacterService;
 
-    public IdentityLookupService(UserService userService, PlayerCharacterService playerCharacterService) {
+    public IdentityLookupService(UserService userService, IdentityCharacterService identityCharacterService) {
         this.userService = userService;
-        this.playerCharacterService = playerCharacterService;
+        this.identityCharacterService = identityCharacterService;
     }
 
     /**
@@ -75,14 +75,14 @@ public class IdentityLookupService {
      * Verarbeitet eine PlayerCharacter-Lookup-Anfrage
      */
     public PlayerCharacterLookupResponse processPlayerCharacterLookupRequest(PlayerCharacterLookupRequest request) {
-        logger.info("Processing player character lookup request: requestId={}, characterId={}, characterName={}, userId={}, requestedBy={}",
+        logger.info("Processing identity character lookup request: requestId={}, characterId={}, characterName={}, userId={}, requestedBy={}",
                    request.getRequestId(), request.getCharacterId(), request.getCharacterName(),
                    request.getUserId(), request.getRequestedBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
 
         try {
-            List<PlayerCharacter> characters = findPlayerCharacters(request);
+            List<IdentityCharacter> characters = findIdentityCharacters(request);
             List<PlayerCharacterInfo> characterInfos = characters.stream()
                     .map(this::createPlayerCharacterInfo)
                     .toList();
@@ -101,7 +101,7 @@ public class IdentityLookupService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing player character lookup request: {}", request.getRequestId(), e);
+            logger.error("Error processing identity character lookup request: {}", request.getRequestId(), e);
             return createPlayerCharacterLookupErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -121,16 +121,16 @@ public class IdentityLookupService {
     }
 
     /**
-     * Findet PlayerCharacters basierend auf der Anfrage
+     * Findet IdentityCharacters basierend auf der Anfrage
      */
-    private List<PlayerCharacter> findPlayerCharacters(PlayerCharacterLookupRequest request) {
+    private List<IdentityCharacter> findIdentityCharacters(PlayerCharacterLookupRequest request) {
         if (request.getCharacterId() != null) {
-            return playerCharacterService.findById(request.getCharacterId())
+            return identityCharacterService.findById(request.getCharacterId())
                     .filter(character -> !request.getActiveOnly() || character.getActive())
                     .map(List::of)
                     .orElse(List.of());
         } else if (request.getCharacterName() != null && !request.getCharacterName().trim().isEmpty()) {
-            return playerCharacterService.findByName(request.getCharacterName().trim())
+            return identityCharacterService.findByName(request.getCharacterName().trim())
                     .filter(character -> !request.getActiveOnly() || character.getActive())
                     .map(List::of)
                     .orElse(List.of());
@@ -140,17 +140,17 @@ public class IdentityLookupService {
                 return List.of();
             }
             return request.getActiveOnly() ?
-                    playerCharacterService.findActiveCharactersByUser(userOpt.get()) :
-                    playerCharacterService.findByUser(userOpt.get());
+                    identityCharacterService.findActiveCharactersByUser(userOpt.get()) :
+                    identityCharacterService.findByUser(userOpt.get());
         } else if (request.getCurrentPlanet() != null && !request.getCurrentPlanet().trim().isEmpty()) {
-            List<PlayerCharacter> characters = playerCharacterService.findByPlanet(request.getCurrentPlanet().trim());
+            List<IdentityCharacter> characters = identityCharacterService.findByPlanet(request.getCurrentPlanet().trim());
             return request.getActiveOnly() ?
-                    characters.stream().filter(PlayerCharacter::getActive).toList() :
+                    characters.stream().filter(IdentityCharacter::getActive).toList() :
                     characters;
         } else if (request.getCurrentWorldId() != null && !request.getCurrentWorldId().trim().isEmpty()) {
-            List<PlayerCharacter> characters = playerCharacterService.findByWorld(request.getCurrentWorldId().trim());
+            List<IdentityCharacter> characters = identityCharacterService.findByWorld(request.getCurrentWorldId().trim());
             return request.getActiveOnly() ?
-                    characters.stream().filter(PlayerCharacter::getActive).toList() :
+                    characters.stream().filter(IdentityCharacter::getActive).toList() :
                     characters;
         }
         return List.of();
@@ -173,9 +173,9 @@ public class IdentityLookupService {
     }
 
     /**
-     * Erstellt PlayerCharacterInfo aus PlayerCharacter Entity
+     * Erstellt PlayerCharacterInfo aus IdentityCharacter Entity
      */
-    private PlayerCharacterInfo createPlayerCharacterInfo(PlayerCharacter character) {
+    private PlayerCharacterInfo createPlayerCharacterInfo(IdentityCharacter character) {
         return PlayerCharacterInfo.newBuilder()
                 .setId(character.getId())
                 .setName(character.getName())

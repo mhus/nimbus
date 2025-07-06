@@ -50,9 +50,9 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    // One-to-Many Beziehung zu PlayerCharacter
+    // One-to-Many Beziehung zu IdentityCharacter
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PlayerCharacter> playerCharacters = new ArrayList<>();
+    private List<IdentityCharacter> identityCharacters = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -174,27 +174,27 @@ public class User implements UserDetails {
         this.updatedAt = updatedAt;
     }
 
-    public List<PlayerCharacter> getPlayerCharacters() {
-        return playerCharacters;
+    public List<IdentityCharacter> getIdentityCharacters() {
+        return identityCharacters;
     }
 
-    public void setPlayerCharacters(List<PlayerCharacter> playerCharacters) {
-        this.playerCharacters = playerCharacters;
-    }
-
-    /**
-     * Fügt einen PlayerCharacter zu diesem User hinzu
-     */
-    public void addPlayerCharacter(PlayerCharacter playerCharacter) {
-        playerCharacters.add(playerCharacter);
-        playerCharacter.setUser(this);
+    public void setIdentityCharacters(List<IdentityCharacter> identityCharacters) {
+        this.identityCharacters = identityCharacters;
     }
 
     /**
-     * Entfernt einen PlayerCharacter von diesem User
+     * Fügt einen IdentityCharacter zu diesem User hinzu
      */
-    public void removePlayerCharacter(PlayerCharacter playerCharacter) {
-        playerCharacters.remove(playerCharacter);
-        playerCharacter.setUser(null);
+    public void addIdentityCharacter(IdentityCharacter identityCharacter) {
+        identityCharacters.add(identityCharacter);
+        identityCharacter.setUser(this);
+    }
+
+    /**
+     * Entfernt einen IdentityCharacter von diesem User
+     */
+    public void removeIdentityCharacter(IdentityCharacter identityCharacter) {
+        identityCharacters.remove(identityCharacter);
+        identityCharacter.setUser(null);
     }
 }

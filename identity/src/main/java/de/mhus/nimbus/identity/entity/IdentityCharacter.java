@@ -7,12 +7,12 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 
 /**
- * PlayerCharacter Entity - repräsentiert einen Spielercharakter im Nimbus System
- * Ein User kann mehrere PlayerCharacter besitzen
+ * IdentityCharacter Entity - repräsentiert einen Spielercharakter im Nimbus System
+ * Ein User kann mehrere IdentityCharacter besitzen
  */
 @Entity
 @Table(name = "player_characters")
-public class PlayerCharacter {
+public class IdentityCharacter {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -92,10 +92,10 @@ public class PlayerCharacter {
     }
 
     // Default constructor
-    public PlayerCharacter() {}
+    public IdentityCharacter() {}
 
     // Constructor
-    public PlayerCharacter(String name, String characterClass, User user) {
+    public IdentityCharacter(String name, String characterClass, User user) {
         this.name = name;
         this.characterClass = characterClass;
         this.user = user;
@@ -264,7 +264,7 @@ public class PlayerCharacter {
 
     @Override
     public String toString() {
-        return "PlayerCharacter{" +
+        return "IdentityCharacter{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", characterClass='" + characterClass + '\'' +
