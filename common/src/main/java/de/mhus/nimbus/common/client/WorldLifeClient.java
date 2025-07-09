@@ -1,20 +1,19 @@
 package de.mhus.nimbus.common.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.character.CharacterType;
-import de.mhus.nimbus.shared.dto.CharacterOperationMessage;
+import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Client for communicating with world-life module via Kafka
+ * Verwendet standardisierte Avro-Objekte für Character-Lookup-Operationen
  */
 @Component
 public class WorldLifeClient {
@@ -22,249 +21,167 @@ public class WorldLifeClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeClient.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ObjectMapper objectMapper;
 
     // Kafka Topics
-    private static final String CHARACTER_OPERATIONS_TOPIC = "character-operations";
+    private static final String CHARACTER_LOOKUP_TOPIC = "character-lookup";
 
     @Autowired
     public WorldLifeClient(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
-        this.objectMapper = new ObjectMapper();
     }
 
     /**
-     * Erstellt einen neuen Charakter
+     * Sucht nach einem Charakter anhand der Charakter-ID
      *
-     * @param worldId       Die Welt-ID
-     * @param characterType Der Charakter-Typ
-     * @param x             X-Koordinate
-     * @param y             Y-Koordinate
-     * @param z             Z-Koordinate
-     * @param name          Name des Charakters
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> createCharacter(String worldId, CharacterType characterType,
-                                                   double x, double y, double z, String name) {
-        String messageId = UUID.randomUUID().toString();
-
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.CREATE);
-        message.setWorldId(worldId);
-        message.setCharacterData(new CharacterOperationMessage.CharacterData());
-
-        CharacterOperationMessage.CharacterData data = message.getCharacterData();
-        data.setCharacterType(characterType);
-        data.setX(x);
-        data.setY(y);
-        data.setZ(z);
-        data.setName(name);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
-    }
-
-    /**
-     * Erstellt einen neuen Charakter mit erweiterten Informationen
-     *
-     * @param worldId       Die Welt-ID
-     * @param characterType Der Charakter-Typ
-     * @param x             X-Koordinate
-     * @param y             Y-Koordinate
-     * @param z             Z-Koordinate
-     * @param name          Name des Charakters
-     * @param displayName   Anzeigename
-     * @param description   Beschreibung
-     * @param health        Gesundheit
-     * @param maxHealth     Maximale Gesundheit
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> createCharacterWithDetails(String worldId, CharacterType characterType,
-                                                             double x, double y, double z, String name,
-                                                             String displayName, String description,
-                                                             Integer health, Integer maxHealth) {
-        String messageId = UUID.randomUUID().toString();
-
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.CREATE);
-        message.setWorldId(worldId);
-
-        CharacterOperationMessage.CharacterData data = new CharacterOperationMessage.CharacterData();
-        data.setCharacterType(characterType);
-        data.setX(x);
-        data.setY(y);
-        data.setZ(z);
-        data.setName(name);
-        data.setDisplayName(displayName);
-        data.setDescription(description);
-        data.setHealth(health);
-        data.setMaxHealth(maxHealth);
-        data.setActive(true);
-
-        message.setCharacterData(data);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
-    }
-
-    /**
-     * Aktualisiert die Position eines Charakters
-     *
-     * @param worldId     Die Welt-ID
-     * @param characterId Die Charakter-ID
-     * @param x           Neue X-Koordinate
-     * @param y           Neue Y-Koordinate
-     * @param z           Neue Z-Koordinate
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> updateCharacterPosition(String worldId, Long characterId, double x, double y, double z) {
-        String messageId = UUID.randomUUID().toString();
-
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.UPDATE_POSITION);
-        message.setWorldId(worldId);
-
-        CharacterOperationMessage.CharacterData data = new CharacterOperationMessage.CharacterData();
-        data.setCharacterId(characterId);
-        data.setX(x);
-        data.setY(y);
-        data.setZ(z);
-
-        message.setCharacterData(data);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
-    }
-
-    /**
-     * Aktualisiert die Gesundheit eines Charakters
-     *
-     * @param worldId     Die Welt-ID
-     * @param characterId Die Charakter-ID
-     * @param health      Neue Gesundheit
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> updateCharacterHealth(String worldId, Long characterId, Integer health) {
-        String messageId = UUID.randomUUID().toString();
-
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.UPDATE_HEALTH);
-        message.setWorldId(worldId);
-
-        CharacterOperationMessage.CharacterData data = new CharacterOperationMessage.CharacterData();
-        data.setCharacterId(characterId);
-        data.setHealth(health);
-
-        message.setCharacterData(data);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
-    }
-
-    /**
-     * Aktualisiert die Informationen eines Charakters
-     *
-     * @param worldId     Die Welt-ID
-     * @param characterId Die Charakter-ID
-     * @param name        Neuer Name
-     * @param displayName Neuer Anzeigename
-     * @param description Neue Beschreibung
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> updateCharacterInfo(String worldId, Long characterId, String name,
-                                                       String displayName, String description) {
-        String messageId = UUID.randomUUID().toString();
-
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.UPDATE_INFO);
-        message.setWorldId(worldId);
-
-        CharacterOperationMessage.CharacterData data = new CharacterOperationMessage.CharacterData();
-        data.setCharacterId(characterId);
-        data.setName(name);
-        data.setDisplayName(displayName);
-        data.setDescription(description);
-
-        message.setCharacterData(data);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
-    }
-
-    /**
-     * Löscht einen Charakter
-     *
-     * @param worldId     Die Welt-ID
      * @param characterId Die Charakter-ID
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> deleteCharacter(String worldId, Long characterId) {
-        String messageId = UUID.randomUUID().toString();
+    public CompletableFuture<Void> lookupCharacterById(Long characterId) {
+        String requestId = UUID.randomUUID().toString();
 
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.DELETE);
-        message.setWorldId(worldId);
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setCharacterId(characterId)
+                .setActiveOnly(true)
+                .setTimestamp(Instant.now())
+                .build();
 
-        CharacterOperationMessage.CharacterData data = new CharacterOperationMessage.CharacterData();
-        data.setCharacterId(characterId);
+        LOGGER.info("Looking up character by ID {} with requestId {}", characterId, requestId);
 
-        message.setCharacterData(data);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
+        return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
     }
 
     /**
-     * Erstellt mehrere Charaktere in einem Batch
+     * Sucht nach einem Charakter anhand des Charakternamens
      *
-     * @param worldId    Die Welt-ID
-     * @param characters Liste der zu erstellenden Charaktere
+     * @param characterName Der Charaktername
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> batchCreateCharacters(String worldId, List<CharacterOperationMessage.CharacterData> characters) {
-        try {
-            String messageId = UUID.randomUUID().toString();
-            String charactersJson = objectMapper.writeValueAsString(characters);
+    public CompletableFuture<Void> lookupCharacterByName(String characterName) {
+        String requestId = UUID.randomUUID().toString();
 
-            CharacterOperationMessage message = new CharacterOperationMessage();
-            message.setMessageId(messageId);
-            message.setOperation(CharacterOperationMessage.OperationType.BATCH_CREATE);
-            message.setWorldId(worldId);
-            message.setBatchData(new CharacterOperationMessage.BatchData(charactersJson));
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setCharacterName(characterName)
+                .setActiveOnly(true)
+                .setTimestamp(Instant.now())
+                .build();
 
-            return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
+        LOGGER.info("Looking up character by name '{}' with requestId {}", characterName, requestId);
 
-        } catch (Exception e) {
-            LOGGER.error("Failed to serialize characters for batch create operation", e);
-            CompletableFuture<Void> future = new CompletableFuture<>();
-            future.completeExceptionally(e);
-            return future;
+        return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
+    }
+
+    /**
+     * Sucht nach Charakteren eines bestimmten Users
+     *
+     * @param userId Die User-ID
+     * @param activeOnly Nur aktive Charaktere
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<Void> lookupCharactersByUserId(Long userId, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUserId(userId)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .build();
+
+        LOGGER.info("Looking up characters for userId {} (activeOnly: {}) with requestId {}",
+                   userId, activeOnly, requestId);
+
+        return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
+    }
+
+    /**
+     * Sucht nach Charakteren in einer bestimmten Welt
+     *
+     * @param worldId Die Welt-ID
+     * @param activeOnly Nur aktive Charaktere
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<Void> lookupCharactersByWorldId(String worldId, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setCurrentWorldId(worldId)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .build();
+
+        LOGGER.info("Looking up characters in world {} (activeOnly: {}) with requestId {}",
+                   worldId, activeOnly, requestId);
+
+        return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
+    }
+
+    /**
+     * Sucht nach Charakteren auf einem bestimmten Planeten
+     *
+     * @param planetName Der Planetenname
+     * @param activeOnly Nur aktive Charaktere
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<Void> lookupCharactersByPlanet(String planetName, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setCurrentPlanet(planetName)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .build();
+
+        LOGGER.info("Looking up characters on planet {} (activeOnly: {}) with requestId {}",
+                   planetName, activeOnly, requestId);
+
+        return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
+    }
+
+    /**
+     * Erweiterte Charakter-Suche mit mehreren Kriterien
+     *
+     * @param characterId Die Charakter-ID (optional)
+     * @param characterName Der Charaktername (optional)
+     * @param userId Die User-ID (optional)
+     * @param currentPlanet Der aktuelle Planet (optional)
+     * @param currentWorldId Die aktuelle Welt-ID (optional)
+     * @param activeOnly Nur aktive Charaktere
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<Void> lookupCharacters(Long characterId, String characterName, Long userId,
+                                                   String currentPlanet, String currentWorldId, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        PlayerCharacterLookupRequest.Builder builder = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now());
+
+        if (characterId != null) {
+            builder.setCharacterId(characterId);
         }
-    }
+        if (characterName != null) {
+            builder.setCharacterName(characterName);
+        }
+        if (userId != null) {
+            builder.setUserId(userId);
+        }
+        if (currentPlanet != null) {
+            builder.setCurrentPlanet(currentPlanet);
+        }
+        if (currentWorldId != null) {
+            builder.setCurrentWorldId(currentWorldId);
+        }
 
-    /**
-     * Aktiviert oder deaktiviert einen Charakter
-     *
-     * @param worldId     Die Welt-ID
-     * @param characterId Die Charakter-ID
-     * @param active      Aktivierungsstatus
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> setCharacterActive(String worldId, Long characterId, boolean active) {
-        String messageId = UUID.randomUUID().toString();
+        PlayerCharacterLookupRequest message = builder.build();
 
-        CharacterOperationMessage message = new CharacterOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(CharacterOperationMessage.OperationType.UPDATE_INFO);
-        message.setWorldId(worldId);
+        LOGGER.info("Extended character lookup with requestId {}", requestId);
 
-        CharacterOperationMessage.CharacterData data = new CharacterOperationMessage.CharacterData();
-        data.setCharacterId(characterId);
-        data.setActive(active);
-
-        message.setCharacterData(data);
-
-        return sendMessage(CHARACTER_OPERATIONS_TOPIC, messageId, message);
+        return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
     }
 
     /**
@@ -275,7 +192,7 @@ public class WorldLifeClient {
      * @param message   Die zu sendende Nachricht
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    private CompletableFuture<Void> sendMessage(String topic, String messageId, CharacterOperationMessage message) {
+    private CompletableFuture<Void> sendMessage(String topic, String messageId, Object message) {
         try {
             return kafkaTemplate.send(topic, messageId, message)
                 .thenRun(() -> LOGGER.debug("Successfully sent message with ID {} to topic {}", messageId, topic))

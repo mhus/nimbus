@@ -94,7 +94,7 @@ public class SecurityService {
         }
 
         // Verwende IdentityClient für Login-Request
-        return identityClient.requestLogin(username, password, clientInfo != null ? clientInfo : "nimbus-common", false)
+        return identityClient.requestLogin(username, password, clientInfo != null ? clientInfo : "nimbus-common")
             .thenApply(result -> {
                 logger.info("Login request successfully sent for user: {}", username);
                 // In einer echten Implementierung würde hier die Response vom Consumer verarbeitet

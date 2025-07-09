@@ -1,14 +1,16 @@
 package de.mhus.nimbus.common.client;
 
-import de.mhus.nimbus.shared.dto.IdentityCharacterLookupMessage;
-import de.mhus.nimbus.shared.dto.LoginOperationMessage;
-import de.mhus.nimbus.shared.dto.UserLookupMessage;
+import de.mhus.nimbus.shared.avro.LoginRequest;
+import de.mhus.nimbus.shared.avro.UserLookupRequest;
+import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
+import de.mhus.nimbus.shared.avro.PublicKeyRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -39,19 +41,18 @@ public class IdentityClient {
      * @param username   Benutzername
      * @param password   Passwort
      * @param clientInfo Client-Informationen
-     * @param rememberMe Soll die Anmeldung gespeichert werden
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> requestLogin(String username, String password, String clientInfo, boolean rememberMe) {
+    public CompletableFuture<Void> requestLogin(String username, String password, String clientInfo) {
         String requestId = UUID.randomUUID().toString();
 
-        LoginOperationMessage message = new LoginOperationMessage();
-        message.setRequestId(requestId);
-        message.setUsername(username);
-        message.setPassword(password);
-        message.setClientInfo(clientInfo);
-        message.setTimestamp(System.currentTimeMillis());
-        message.setRememberMe(rememberMe);
+        LoginRequest message = LoginRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUsername(username)
+                .setPassword(password)
+                .setTimestamp(Instant.now())
+                .setClientInfo(clientInfo)
+                .build();
 
         LOGGER.info("Sending login request for user '{}' with requestId {}", username, requestId);
 
@@ -66,7 +67,7 @@ public class IdentityClient {
      * @return CompletableFuture für asynchrone Verarbeitung
      */
     public CompletableFuture<Void> requestLogin(String username, String password) {
-        return requestLogin(username, password, "IdentityClient", false);
+        return requestLogin(username, password, "IdentityClient");
     }
 
     /**
@@ -78,10 +79,12 @@ public class IdentityClient {
     public CompletableFuture<Void> lookupUserById(Long userId) {
         String requestId = UUID.randomUUID().toString();
 
-        UserLookupMessage message = new UserLookupMessage();
-        message.setRequestId(requestId);
-        message.setUserId(userId);
-        message.setIncludeInactive(false);
+        UserLookupRequest message = UserLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUserId(userId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
 
         LOGGER.info("Sending user lookup request for userId {} with requestId {}", userId, requestId);
 
@@ -97,10 +100,12 @@ public class IdentityClient {
     public CompletableFuture<Void> lookupUserByUsername(String username) {
         String requestId = UUID.randomUUID().toString();
 
-        UserLookupMessage message = new UserLookupMessage();
-        message.setRequestId(requestId);
-        message.setUsername(username);
-        message.setIncludeInactive(false);
+        UserLookupRequest message = UserLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUsername(username)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
 
         LOGGER.info("Sending user lookup request for username '{}' with requestId {}", username, requestId);
 
@@ -116,10 +121,12 @@ public class IdentityClient {
     public CompletableFuture<Void> lookupUserByEmail(String email) {
         String requestId = UUID.randomUUID().toString();
 
-        UserLookupMessage message = new UserLookupMessage();
-        message.setRequestId(requestId);
-        message.setEmail(email);
-        message.setIncludeInactive(false);
+        UserLookupRequest message = UserLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setEmail(email)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
 
         LOGGER.info("Sending user lookup request for email '{}' with requestId {}", email, requestId);
 
@@ -127,23 +134,32 @@ public class IdentityClient {
     }
 
     /**
-     * Erweiterte Benutzer-Suche mit Option für inaktive Benutzer
+     * Erweiterte Benutzer-Suche
      *
      * @param userId          Die Benutzer-ID (optional)
      * @param username        Der Benutzername (optional)
      * @param email           Die E-Mail-Adresse (optional)
-     * @param includeInactive Sollen inaktive Benutzer eingeschlossen werden
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupUser(Long userId, String username, String email, boolean includeInactive) {
+    public CompletableFuture<Void> lookupUser(Long userId, String username, String email) {
         String requestId = UUID.randomUUID().toString();
 
-        UserLookupMessage message = new UserLookupMessage();
-        message.setRequestId(requestId);
-        message.setUserId(userId);
-        message.setUsername(username);
-        message.setEmail(email);
-        message.setIncludeInactive(includeInactive);
+        UserLookupRequest.Builder builder = UserLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient");
+
+        if (userId != null) {
+            builder.setUserId(userId);
+        }
+        if (username != null) {
+            builder.setUsername(username);
+        }
+        if (email != null) {
+            builder.setEmail(email);
+        }
+
+        UserLookupRequest message = builder.build();
 
         LOGGER.info("Sending extended user lookup request with requestId {}", requestId);
 
@@ -159,10 +175,13 @@ public class IdentityClient {
     public CompletableFuture<Void> lookupCharacterById(Long characterId) {
         String requestId = UUID.randomUUID().toString();
 
-        IdentityCharacterLookupMessage message = new IdentityCharacterLookupMessage();
-        message.setRequestId(requestId);
-        message.setCharacterId(characterId);
-        message.setActiveOnly(true);
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setCharacterId(characterId)
+                .setActiveOnly(true)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
 
         LOGGER.info("Sending character lookup request for characterId {} with requestId {}", characterId, requestId);
 
@@ -178,10 +197,13 @@ public class IdentityClient {
     public CompletableFuture<Void> lookupCharacterByName(String characterName) {
         String requestId = UUID.randomUUID().toString();
 
-        IdentityCharacterLookupMessage message = new IdentityCharacterLookupMessage();
-        message.setRequestId(requestId);
-        message.setCharacterName(characterName);
-        message.setActiveOnly(true);
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setCharacterName(characterName)
+                .setActiveOnly(true)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
 
         LOGGER.info("Sending character lookup request for characterName '{}' with requestId {}", characterName, requestId);
 
@@ -197,10 +219,13 @@ public class IdentityClient {
     public CompletableFuture<Void> lookupCharactersByUserId(Long userId) {
         String requestId = UUID.randomUUID().toString();
 
-        IdentityCharacterLookupMessage message = new IdentityCharacterLookupMessage();
-        message.setRequestId(requestId);
-        message.setUserId(userId);
-        message.setActiveOnly(true);
+        PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUserId(userId)
+                .setActiveOnly(true)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
 
         LOGGER.info("Sending character lookup request for userId {} with requestId {}", userId, requestId);
 
@@ -222,14 +247,29 @@ public class IdentityClient {
                                                    String currentPlanet, String currentWorldId, boolean activeOnly) {
         String requestId = UUID.randomUUID().toString();
 
-        IdentityCharacterLookupMessage message = new IdentityCharacterLookupMessage();
-        message.setRequestId(requestId);
-        message.setCharacterId(characterId);
-        message.setCharacterName(characterName);
-        message.setUserId(userId);
-        message.setCurrentPlanet(currentPlanet);
-        message.setCurrentWorldId(currentWorldId);
-        message.setActiveOnly(activeOnly);
+        PlayerCharacterLookupRequest.Builder builder = PlayerCharacterLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient");
+
+        if (characterId != null) {
+            builder.setCharacterId(characterId);
+        }
+        if (characterName != null) {
+            builder.setCharacterName(characterName);
+        }
+        if (userId != null) {
+            builder.setUserId(userId);
+        }
+        if (currentPlanet != null) {
+            builder.setCurrentPlanet(currentPlanet);
+        }
+        if (currentWorldId != null) {
+            builder.setCurrentWorldId(currentWorldId);
+        }
+
+        PlayerCharacterLookupRequest message = builder.build();
 
         LOGGER.info("Sending extended character lookup request with requestId {}", requestId);
 
@@ -244,9 +284,15 @@ public class IdentityClient {
     public CompletableFuture<Void> requestPublicKey() {
         String requestId = UUID.randomUUID().toString();
 
+        PublicKeyRequest message = PublicKeyRequest.newBuilder()
+                .setRequestId(requestId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
         LOGGER.info("Sending public key request with requestId {}", requestId);
 
-        return sendMessage(PUBLIC_KEY_REQUEST_TOPIC, requestId, requestId);
+        return sendMessage(PUBLIC_KEY_REQUEST_TOPIC, requestId, message);
     }
 
     /**

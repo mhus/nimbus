@@ -1,7 +1,9 @@
 package de.mhus.nimbus.common.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.VoxelOperationMessage;
+import de.mhus.nimbus.shared.avro.VoxelOperationMessage;
+import de.mhus.nimbus.shared.avro.OperationType;
+import de.mhus.nimbus.shared.avro.VoxelData;
+import de.mhus.nimbus.shared.avro.ChunkData;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
 import org.slf4j.Logger;
@@ -23,7 +25,6 @@ public class WorldVoxelClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorldVoxelClient.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ObjectMapper objectMapper;
 
     // Kafka Topics
     private static final String VOXEL_OPERATIONS_TOPIC = "voxel-operations";
@@ -34,7 +35,6 @@ public class WorldVoxelClient {
     @Autowired
     public WorldVoxelClient(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
-        this.objectMapper = new ObjectMapper();
     }
 
     /**
@@ -47,14 +47,19 @@ public class WorldVoxelClient {
     public CompletableFuture<Void> saveVoxel(String worldId, Voxel voxel) {
         try {
             String messageId = UUID.randomUUID().toString();
-            String voxelJson = objectMapper.writeValueAsString(voxel);
+            String voxelJson = voxel.toString(); // Directly use Voxel's toString method
 
-            VoxelOperationMessage message = new VoxelOperationMessage();
-            message.setMessageId(messageId);
-            message.setOperation(VoxelOperationMessage.OperationType.SAVE);
-            message.setWorldId(worldId);
-            message.setVoxelData(new VoxelOperationMessage.VoxelData(
-                    voxel.getX(), voxel.getY(), voxel.getZ(), voxelJson));
+            VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                    .setMessageId(messageId)
+                    .setOperation(OperationType.SAVE)
+                    .setWorldId(worldId)
+                    .setVoxelData(VoxelData.newBuilder()
+                            .setX(voxel.getX())
+                            .setY(voxel.getY())
+                            .setZ(voxel.getZ())
+                            .setData(voxelJson)
+                            .build())
+                    .build();
 
             return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
 
@@ -78,11 +83,16 @@ public class WorldVoxelClient {
     public CompletableFuture<Void> deleteVoxel(String worldId, int x, int y, int z) {
         String messageId = UUID.randomUUID().toString();
 
-        VoxelOperationMessage message = new VoxelOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(VoxelOperationMessage.OperationType.DELETE);
-        message.setWorldId(worldId);
-        message.setVoxelData(new VoxelOperationMessage.VoxelData(x, y, z, null));
+        VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                .setMessageId(messageId)
+                .setOperation(OperationType.DELETE)
+                .setWorldId(worldId)
+                .setVoxelData(VoxelData.newBuilder()
+                        .setX(x)
+                        .setY(y)
+                        .setZ(z)
+                        .build())
+                .build();
 
         return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
     }
@@ -97,13 +107,27 @@ public class WorldVoxelClient {
     public CompletableFuture<Void> batchSaveVoxels(String worldId, List<Voxel> voxels) {
         try {
             String messageId = UUID.randomUUID().toString();
-            String voxelsJson = objectMapper.writeValueAsString(voxels);
+            StringBuilder voxelsJson = new StringBuilder("[");
 
-            VoxelOperationMessage message = new VoxelOperationMessage();
-            message.setMessageId(messageId);
-            message.setOperation(VoxelOperationMessage.OperationType.BATCH_SAVE);
-            message.setWorldId(worldId);
-            message.setBatchData(new VoxelOperationMessage.BatchData(voxelsJson));
+            for (Voxel voxel : voxels) {
+                String voxelJson = voxel.toString(); // Directly use Voxel's toString method
+                voxelsJson.append(voxelJson).append(",");
+            }
+
+            // Remove the last comma and close the JSON array
+            if (voxelsJson.length() > 1) {
+                voxelsJson.setLength(voxelsJson.length() - 1);
+            }
+            voxelsJson.append("]");
+
+            VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                    .setMessageId(messageId)
+                    .setOperation(OperationType.BATCH_SAVE)
+                    .setWorldId(worldId)
+                    .setVoxelData(VoxelData.newBuilder()
+                            .setData(voxelsJson.toString())
+                            .build())
+                    .build();
 
             return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
 
@@ -127,11 +151,17 @@ public class WorldVoxelClient {
     public CompletableFuture<Void> clearChunk(String worldId, int chunkX, int chunkY, int chunkZ) {
         String messageId = UUID.randomUUID().toString();
 
-        VoxelOperationMessage message = new VoxelOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(VoxelOperationMessage.OperationType.CLEAR_CHUNK);
-        message.setWorldId(worldId);
-        message.setChunkData(new VoxelOperationMessage.ChunkData(chunkX, chunkY, chunkZ, null, false));
+        VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                .setMessageId(messageId)
+                .setOperation(OperationType.CLEAR_CHUNK)
+                .setWorldId(worldId)
+                .setChunkData(ChunkData.newBuilder()
+                        .setChunkX(chunkX)
+                        .setChunkY(chunkY)
+                        .setChunkZ(chunkZ)
+                        .setIncludeEmpty(false)
+                        .build())
+                .build();
 
         return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
     }
@@ -146,14 +176,20 @@ public class WorldVoxelClient {
     public CompletableFuture<Void> saveChunk(String worldId, VoxelChunk chunk) {
         try {
             String messageId = UUID.randomUUID().toString();
-            String chunkJson = objectMapper.writeValueAsString(chunk);
+            String chunkJson = chunk.toString(); // Directly use VoxelChunk's toString method
 
-            VoxelOperationMessage message = new VoxelOperationMessage();
-            message.setMessageId(messageId);
-            message.setOperation(VoxelOperationMessage.OperationType.SAVE);
-            message.setWorldId(worldId);
-            message.setChunkData(new VoxelOperationMessage.ChunkData(
-                    chunk.getChunkX(), chunk.getChunkY(), chunk.getChunkZ(), chunkJson, false));
+            VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                    .setMessageId(messageId)
+                    .setOperation(OperationType.SAVE)
+                    .setWorldId(worldId)
+                    .setChunkData(ChunkData.newBuilder()
+                            .setChunkX(chunk.getChunkX())
+                            .setChunkY(chunk.getChunkY())
+                            .setChunkZ(chunk.getChunkZ())
+                            .setData(chunkJson)
+                            .setIncludeEmpty(false)
+                            .build())
+                    .build();
 
             return sendMessage(CHUNK_OPERATIONS_TOPIC, messageId, message);
 
@@ -177,11 +213,17 @@ public class WorldVoxelClient {
     public CompletableFuture<Void> loadChunk(String worldId, int chunkX, int chunkY, int chunkZ) {
         String messageId = UUID.randomUUID().toString();
 
-        VoxelOperationMessage message = new VoxelOperationMessage();
-        message.setMessageId(messageId);
-        message.setOperation(VoxelOperationMessage.OperationType.SAVE);
-        message.setWorldId(worldId);
-        message.setChunkData(new VoxelOperationMessage.ChunkData(chunkX, chunkY, chunkZ, null, false));
+        VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                .setMessageId(messageId)
+                .setOperation(OperationType.SAVE)
+                .setWorldId(worldId)
+                .setChunkData(ChunkData.newBuilder()
+                        .setChunkX(chunkX)
+                        .setChunkY(chunkY)
+                        .setChunkZ(chunkZ)
+                        .setIncludeEmpty(false)
+                        .build())
+                .build();
 
         return sendMessage(CHUNK_LOAD_REQUESTS_TOPIC, messageId, message);
     }
@@ -203,11 +245,18 @@ public class WorldVoxelClient {
             // Create a simple JSON object for the includeEmpty flag
             String configJson = String.format("{\"includeEmpty\":%s}", includeEmpty);
 
-            VoxelOperationMessage message = new VoxelOperationMessage();
-            message.setMessageId(messageId);
-            message.setOperation(VoxelOperationMessage.OperationType.SAVE);
-            message.setWorldId(worldId);
-            message.setChunkData(new VoxelOperationMessage.ChunkData(chunkX, chunkY, chunkZ, configJson, includeEmpty));
+            VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
+                    .setMessageId(messageId)
+                    .setOperation(OperationType.SAVE)
+                    .setWorldId(worldId)
+                    .setChunkData(ChunkData.newBuilder()
+                            .setChunkX(chunkX)
+                            .setChunkY(chunkY)
+                            .setChunkZ(chunkZ)
+                            .setData(configJson)
+                            .setIncludeEmpty(includeEmpty)
+                            .build())
+                    .build();
 
             return sendMessage(CHUNK_FULL_LOAD_REQUESTS_TOPIC, messageId, message);
 

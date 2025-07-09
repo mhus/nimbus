@@ -1,14 +1,17 @@
 package de.mhus.nimbus.common.client;
 
-import de.mhus.nimbus.shared.dto.PlanetLookupMessage;
-import de.mhus.nimbus.shared.dto.PlanetRegistrationMessage;
-import de.mhus.nimbus.shared.dto.WorldRegistrationMessage;
+import de.mhus.nimbus.shared.avro.PlanetRegistrationRequest;
+import de.mhus.nimbus.shared.avro.PlanetUnregistrationRequest;
+import de.mhus.nimbus.shared.avro.PlanetLookupRequest;
+import de.mhus.nimbus.shared.avro.WorldRegistrationRequest;
+import de.mhus.nimbus.shared.avro.WorldUnregistrationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -37,37 +40,31 @@ public class RegistryClient {
     /**
      * Registriert einen neuen Planeten
      *
-     * @param planetId       Die Planet-ID
      * @param planetName     Der Planetenname
      * @param description    Beschreibung des Planeten
-     * @param serverAddress  Server-Adresse
-     * @param serverPort     Server-Port
-     * @param version        Server-Version
-     * @param maxPlayers     Maximale Spieleranzahl
-     * @param planetType     Typ des Planeten
+     * @param galaxy         Galaxie-Name
+     * @param sector         Sektor
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> registerPlanet(String planetId, String planetName, String description,
-                                                   String serverAddress, Integer serverPort, String version,
-                                                   Integer maxPlayers, String planetType) {
+    public CompletableFuture<Void> registerPlanet(String planetName, String description, String galaxy, String sector) {
         String requestId = UUID.randomUUID().toString();
 
-        PlanetRegistrationMessage message = new PlanetRegistrationMessage();
-        message.setRequestId(requestId);
-        message.setPlanetId(planetId);
-        message.setPlanetName(planetName);
-        message.setDescription(description);
-        message.setServerAddress(serverAddress);
-        message.setServerPort(serverPort);
-        message.setVersion(version);
-        message.setMaxPlayers(maxPlayers);
-        message.setCurrentPlayers(0);
-        message.setPlanetType(planetType);
-        message.setStatus("ACTIVE");
-        message.setTimestamp(System.currentTimeMillis());
+        // Erstelle PlanetInfo-Objekt
+        de.mhus.nimbus.shared.avro.PlanetInfo planetInfo = de.mhus.nimbus.shared.avro.PlanetInfo.newBuilder()
+                .setDescription(description)
+                .setGalaxy(galaxy)
+                .setSector(sector)
+                .build();
 
-        LOGGER.info("Registering planet '{}' (ID: {}) at {}:{} with requestId {}",
-                   planetName, planetId, serverAddress, serverPort, requestId);
+        PlanetRegistrationRequest message = PlanetRegistrationRequest.newBuilder()
+                .setRequestId(requestId)
+                .setPlanetName(planetName)
+                .setEnvironment(de.mhus.nimbus.shared.avro.Environment.DEV)
+                .setPlanetInfo(planetInfo)
+                .setTimestamp(Instant.now())
+                .build();
+
+        LOGGER.info("Registering planet '{}' with requestId {}", planetName, requestId);
 
         return sendMessage(PLANET_REGISTRATION_TOPIC, requestId, message);
     }
@@ -75,53 +72,45 @@ public class RegistryClient {
     /**
      * Registriert einen Planeten mit minimalen Informationen
      *
-     * @param planetId      Die Planet-ID
-     * @param planetName    Der Planetenname
-     * @param serverAddress Server-Adresse
-     * @param serverPort    Server-Port
+     * @param planetName Der Planetenname
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> registerPlanet(String planetId, String planetName, String serverAddress, Integer serverPort) {
-        return registerPlanet(planetId, planetName, null, serverAddress, serverPort, "1.0", 100, "DEFAULT");
+    public CompletableFuture<Void> registerPlanet(String planetName) {
+        return registerPlanet(planetName, null, null, null);
     }
 
     /**
      * Deregistriert einen Planeten
      *
-     * @param planetId Die Planet-ID
+     * @param planetName Der Planetenname
+     * @param reason Grund für die Deregistrierung
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> unregisterPlanet(String planetId) {
+    public CompletableFuture<Void> unregisterPlanet(String planetName, String reason) {
         String requestId = UUID.randomUUID().toString();
 
-        // Für Unregistrierung wird nur die Planet-ID benötigt
-        PlanetRegistrationMessage message = new PlanetRegistrationMessage();
-        message.setRequestId(requestId);
-        message.setPlanetId(planetId);
-        message.setTimestamp(System.currentTimeMillis());
+        PlanetUnregistrationRequest message = PlanetUnregistrationRequest.newBuilder()
+                .setRequestId(requestId)
+                .setPlanetName(planetName)
+                .setEnvironment(de.mhus.nimbus.shared.avro.Environment.DEV)
+                .setTimestamp(Instant.now())
+                .setUnregisteredBy("RegistryClient")
+                .setReason(reason)
+                .build();
 
-        LOGGER.info("Unregistering planet with ID '{}' with requestId {}", planetId, requestId);
+        LOGGER.info("Unregistering planet '{}' with requestId {}", planetName, requestId);
 
         return sendMessage(PLANET_UNREGISTRATION_TOPIC, requestId, message);
     }
 
     /**
-     * Sucht nach einem Planeten anhand der ID
+     * Deregistriert einen Planeten ohne Grund
      *
-     * @param planetId Die Planet-ID
+     * @param planetName Der Planetenname
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupPlanetById(String planetId) {
-        String requestId = UUID.randomUUID().toString();
-
-        PlanetLookupMessage message = new PlanetLookupMessage();
-        message.setRequestId(requestId);
-        message.setPlanetId(planetId);
-        message.setIncludeInactive(false);
-
-        LOGGER.info("Looking up planet by ID '{}' with requestId {}", planetId, requestId);
-
-        return sendMessage(PLANET_LOOKUP_TOPIC, requestId, message);
+    public CompletableFuture<Void> unregisterPlanet(String planetName) {
+        return unregisterPlanet(planetName, null);
     }
 
     /**
@@ -133,10 +122,12 @@ public class RegistryClient {
     public CompletableFuture<Void> lookupPlanetByName(String planetName) {
         String requestId = UUID.randomUUID().toString();
 
-        PlanetLookupMessage message = new PlanetLookupMessage();
-        message.setRequestId(requestId);
-        message.setPlanetName(planetName);
-        message.setIncludeInactive(false);
+        PlanetLookupRequest message = PlanetLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setPlanetName(planetName)
+                .setEnvironment(de.mhus.nimbus.shared.avro.Environment.DEV)
+                .setTimestamp(Instant.now())
+                .build();
 
         LOGGER.info("Looking up planet by name '{}' with requestId {}", planetName, requestId);
 
@@ -144,28 +135,29 @@ public class RegistryClient {
     }
 
     /**
-     * Erweiterte Planeten-Suche
+     * Sucht nach einem Planeten mit optionaler Welt-Spezifikation
      *
-     * @param planetId        Die Planet-ID (optional)
-     * @param planetName      Der Planetenname (optional)
-     * @param planetType      Der Planeten-Typ (optional)
-     * @param status          Der Status (optional)
-     * @param includeInactive Sollen inaktive Planeten eingeschlossen werden
+     * @param planetName Der Planetenname
+     * @param worldName  Der Weltname (optional)
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupPlanet(String planetId, String planetName, String planetType,
-                                                String status, boolean includeInactive) {
+    public CompletableFuture<Void> lookupPlanet(String planetName, String worldName) {
         String requestId = UUID.randomUUID().toString();
 
-        PlanetLookupMessage message = new PlanetLookupMessage();
-        message.setRequestId(requestId);
-        message.setPlanetId(planetId);
-        message.setPlanetName(planetName);
-        message.setPlanetType(planetType);
-        message.setStatus(status);
-        message.setIncludeInactive(includeInactive);
+        PlanetLookupRequest.Builder builder = PlanetLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setPlanetName(planetName)
+                .setEnvironment(de.mhus.nimbus.shared.avro.Environment.DEV)
+                .setTimestamp(Instant.now());
 
-        LOGGER.info("Extended planet lookup with requestId {}", requestId);
+        if (worldName != null) {
+            builder.setWorldName(worldName);
+        }
+
+        PlanetLookupRequest message = builder.build();
+
+        LOGGER.info("Looking up planet '{}' {} with requestId {}",
+                   planetName, worldName != null ? "with world '" + worldName + "'" : "", requestId);
 
         return sendMessage(PLANET_LOOKUP_TOPIC, requestId, message);
     }
@@ -175,33 +167,36 @@ public class RegistryClient {
      *
      * @param worldId       Die Welt-ID
      * @param worldName     Der Weltname
-     * @param planetId      Die Planet-ID, zu der die Welt gehört
-     * @param description   Beschreibung der Welt
-     * @param worldType     Typ der Welt
-     * @param maxPlayers    Maximale Spieleranzahl
-     * @param configuration Welt-Konfiguration
+     * @param planetName    Der Planetenname (nicht ID)
+     * @param managementUrl Management-URL für die Welt
+     * @param apiUrl        API-URL (optional)
+     * @param webUrl        Web-URL (optional)
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> registerWorld(String worldId, String worldName, String planetId,
-                                                 String description, String worldType, Integer maxPlayers,
-                                                 String configuration) {
+    public CompletableFuture<Void> registerWorld(String worldId, String worldName, String planetName,
+                                                 String managementUrl, String apiUrl, String webUrl) {
         String requestId = UUID.randomUUID().toString();
 
-        WorldRegistrationMessage message = new WorldRegistrationMessage();
-        message.setRequestId(requestId);
-        message.setWorldId(worldId);
-        message.setWorldName(worldName);
-        message.setPlanetId(planetId);
-        message.setDescription(description);
-        message.setWorldType(worldType);
-        message.setStatus("ACTIVE");
-        message.setMaxPlayers(maxPlayers);
-        message.setCurrentPlayers(0);
-        message.setConfiguration(configuration);
-        message.setTimestamp(System.currentTimeMillis());
+        WorldRegistrationRequest.Builder builder = WorldRegistrationRequest.newBuilder()
+                .setRequestId(requestId)
+                .setWorldId(worldId)
+                .setWorldName(worldName)
+                .setPlanetName(planetName)
+                .setEnvironment(de.mhus.nimbus.shared.avro.Environment.DEV)
+                .setManagementUrl(managementUrl)
+                .setTimestamp(Instant.now());
+
+        if (apiUrl != null) {
+            builder.setApiUrl(apiUrl);
+        }
+        if (webUrl != null) {
+            builder.setWebUrl(webUrl);
+        }
+
+        WorldRegistrationRequest message = builder.build();
 
         LOGGER.info("Registering world '{}' (ID: {}) on planet '{}' with requestId {}",
-                   worldName, worldId, planetId, requestId);
+                   worldName, worldId, planetName, requestId);
 
         return sendMessage(WORLD_REGISTRATION_TOPIC, requestId, message);
     }
@@ -211,74 +206,55 @@ public class RegistryClient {
      *
      * @param worldId   Die Welt-ID
      * @param worldName Der Weltname
-     * @param planetId  Die Planet-ID
+     * @param planetName Der Planetenname
+     * @param managementUrl Management-URL
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> registerWorld(String worldId, String worldName, String planetId) {
-        return registerWorld(worldId, worldName, planetId, null, "DEFAULT", 50, null);
+    public CompletableFuture<Void> registerWorld(String worldId, String worldName, String planetName, String managementUrl) {
+        return registerWorld(worldId, worldName, planetName, managementUrl, null, null);
     }
 
     /**
      * Deregistriert eine Welt
      *
      * @param worldId Die Welt-ID
+     * @param planetName Der Planetenname (optional für Validierung)
+     * @param reason Grund für die Deregistrierung
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> unregisterWorld(String worldId) {
+    public CompletableFuture<Void> unregisterWorld(String worldId, String planetName, String reason) {
         String requestId = UUID.randomUUID().toString();
 
-        WorldRegistrationMessage message = new WorldRegistrationMessage();
-        message.setRequestId(requestId);
-        message.setWorldId(worldId);
-        message.setTimestamp(System.currentTimeMillis());
+        WorldUnregistrationRequest.Builder builder = WorldUnregistrationRequest.newBuilder()
+                .setRequestId(requestId)
+                .setWorldId(worldId)
+                .setEnvironment(de.mhus.nimbus.shared.avro.Environment.DEV)
+                .setTimestamp(Instant.now())
+                .setUnregisteredBy("RegistryClient");
 
-        LOGGER.info("Unregistering world with ID '{}' with requestId {}", worldId, requestId);
+        if (planetName != null) {
+            builder.setPlanetName(planetName);
+        }
+        if (reason != null) {
+            builder.setReason(reason);
+        }
+
+        WorldUnregistrationRequest message = builder.build();
+
+        LOGGER.info("Unregistering world with ID '{}' {} with requestId {}",
+                   worldId, planetName != null ? "on planet '" + planetName + "'" : "", requestId);
 
         return sendMessage(WORLD_UNREGISTRATION_TOPIC, requestId, message);
     }
 
     /**
-     * Aktualisiert die Spieleranzahl für einen Planeten
+     * Deregistriert eine Welt mit minimalen Informationen
      *
-     * @param planetId      Die Planet-ID
-     * @param currentPlayers Aktuelle Spieleranzahl
+     * @param worldId Die Welt-ID
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> updatePlanetPlayerCount(String planetId, Integer currentPlayers) {
-        String requestId = UUID.randomUUID().toString();
-
-        PlanetRegistrationMessage message = new PlanetRegistrationMessage();
-        message.setRequestId(requestId);
-        message.setPlanetId(planetId);
-        message.setCurrentPlayers(currentPlayers);
-        message.setTimestamp(System.currentTimeMillis());
-
-        LOGGER.info("Updating player count for planet '{}' to {} with requestId {}",
-                   planetId, currentPlayers, requestId);
-
-        return sendMessage(PLANET_REGISTRATION_TOPIC, requestId, message);
-    }
-
-    /**
-     * Aktualisiert die Spieleranzahl für eine Welt
-     *
-     * @param worldId       Die Welt-ID
-     * @param currentPlayers Aktuelle Spieleranzahl
-     * @return CompletableFuture für asynchrone Verarbeitung
-     */
-    public CompletableFuture<Void> updateWorldPlayerCount(String worldId, Integer currentPlayers) {
-        String requestId = UUID.randomUUID().toString();
-
-        WorldRegistrationMessage message = new WorldRegistrationMessage();
-        message.setRequestId(requestId);
-        message.setWorldId(worldId);
-        message.setCurrentPlayers(currentPlayers);
-        message.setTimestamp(System.currentTimeMillis());
-
-        LOGGER.info("Updating player count for world '{}' to {} with requestId {}",
-                   worldId, currentPlayers, requestId);
-
-        return sendMessage(WORLD_REGISTRATION_TOPIC, requestId, message);
+    public CompletableFuture<Void> unregisterWorld(String worldId) {
+        return unregisterWorld(worldId, null, null);
     }
 
     /**

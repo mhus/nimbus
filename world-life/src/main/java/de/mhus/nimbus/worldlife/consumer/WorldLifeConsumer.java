@@ -1,7 +1,8 @@
 package de.mhus.nimbus.worldlife.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.CharacterOperationMessage;
+import de.mhus.nimbus.shared.avro.CharacterOperationMessage;
+import de.mhus.nimbus.shared.avro.CharacterData;
+import de.mhus.nimbus.shared.avro.CharacterBatchData;
 import de.mhus.nimbus.worldlife.entity.WorldCharacter;
 import de.mhus.nimbus.worldlife.service.WorldLifeService;
 import org.slf4j.Logger;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,12 +23,10 @@ public class WorldLifeConsumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeConsumer.class);
 
     private final WorldLifeService worldLifeService;
-    private final ObjectMapper objectMapper;
 
     @Autowired
     public WorldLifeConsumer(WorldLifeService worldLifeService) {
         this.worldLifeService = worldLifeService;
-        this.objectMapper = new ObjectMapper();
     }
 
     /**
@@ -78,7 +76,7 @@ public class WorldLifeConsumer {
     private void handleCreateCharacter(CharacterOperationMessage message) {
         try {
             if (message.getCharacterData() != null) {
-                CharacterOperationMessage.CharacterData data = message.getCharacterData();
+                CharacterData data = message.getCharacterData();
 
                 WorldCharacter character = worldLifeService.createCharacter(
                     message.getWorldId(),
@@ -113,7 +111,7 @@ public class WorldLifeConsumer {
     private void handleUpdatePosition(CharacterOperationMessage message) {
         try {
             if (message.getCharacterData() != null) {
-                CharacterOperationMessage.CharacterData data = message.getCharacterData();
+                CharacterData data = message.getCharacterData();
 
                 Optional<WorldCharacter> updated = worldLifeService.updateCharacterPosition(
                     data.getCharacterId(),
@@ -141,7 +139,7 @@ public class WorldLifeConsumer {
     private void handleUpdateHealth(CharacterOperationMessage message) {
         try {
             if (message.getCharacterData() != null) {
-                CharacterOperationMessage.CharacterData data = message.getCharacterData();
+                CharacterData data = message.getCharacterData();
 
                 Optional<WorldCharacter> updated = worldLifeService.updateCharacterHealth(
                     data.getCharacterId(),
@@ -167,7 +165,7 @@ public class WorldLifeConsumer {
     private void handleUpdateInfo(CharacterOperationMessage message) {
         try {
             if (message.getCharacterData() != null) {
-                CharacterOperationMessage.CharacterData data = message.getCharacterData();
+                CharacterData data = message.getCharacterData();
 
                 Optional<WorldCharacter> updated = worldLifeService.updateCharacterInfo(
                     data.getCharacterId(),
@@ -194,7 +192,7 @@ public class WorldLifeConsumer {
     private void handleDeleteCharacter(CharacterOperationMessage message) {
         try {
             if (message.getCharacterData() != null) {
-                CharacterOperationMessage.CharacterData data = message.getCharacterData();
+                CharacterData data = message.getCharacterData();
 
                 boolean deleted = worldLifeService.deleteCharacter(data.getCharacterId());
 
@@ -216,16 +214,12 @@ public class WorldLifeConsumer {
     private void handleBatchCreateCharacters(CharacterOperationMessage message) {
         try {
             if (message.getBatchData() != null) {
-                WorldCharacter[] characterArray = objectMapper.readValue(
-                    message.getBatchData().getCharactersJson(),
-                    WorldCharacter[].class
-                );
-                List<WorldCharacter> characters = Arrays.asList(characterArray);
+                CharacterBatchData batchData = message.getBatchData();
 
-                List<WorldCharacter> saved = worldLifeService.saveCharacters(characters);
+                List<WorldCharacter> characters = worldLifeService.saveCharacters(batchData.getCharacters());
 
                 LOGGER.info("Kafka: Batch created {} characters in world {}",
-                           saved.size(), message.getWorldId());
+                           characters.size(), message.getWorldId());
             }
         } catch (Exception e) {
             LOGGER.error("Kafka: Failed to batch create characters: {}", e.getMessage(), e);

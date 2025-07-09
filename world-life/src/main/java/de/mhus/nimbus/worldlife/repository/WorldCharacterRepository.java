@@ -1,7 +1,7 @@
 package de.mhus.nimbus.worldlife.repository;
 
 import de.mhus.nimbus.shared.character.CharacterType;
-import de.mhus.nimbus.shared.dto.CharacterOperationMessage;
+import de.mhus.nimbus.shared.avro.CharacterOperationMessage;
 import de.mhus.nimbus.worldlife.entity.WorldCharacter;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

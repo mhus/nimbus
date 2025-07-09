@@ -64,7 +64,7 @@
                             <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
                             <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
                             <stringType>String</stringType>
-                            <createSetters>false</createSetters>
+                            <createSetters>true</createSetters>
                             <enableDecimalLogicalType>true</enableDecimalLogicalType>
                             <fieldVisibility>private</fieldVisibility>
                         </configuration>

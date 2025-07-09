@@ -37,6 +37,7 @@
         <module>world-voxel</module>
         <module>world-life</module>
         <module>generator-simple</module>
+        <module>test-common</module>
     </modules>
 
     <repositories>

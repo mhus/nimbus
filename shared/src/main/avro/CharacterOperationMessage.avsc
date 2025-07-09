@@ -1,0 +1,141 @@
+{
+  "type": "record",
+  "name": "CharacterOperationMessage",
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "doc": "Message for character operations via Kafka",
+  "fields": [
+    {
+      "name": "messageId",
+      "type": "string",
+      "doc": "Unique identifier for the message"
+    },
+    {
+      "name": "operation",
+      "type": {
+        "type": "enum",
+        "name": "CharacterOperationType",
+        "symbols": ["CREATE", "UPDATE_POSITION", "UPDATE_HEALTH", "UPDATE_INFO", "DELETE", "BATCH_CREATE"]
+      },
+      "doc": "Type of character operation to perform"
+    },
+    {
+      "name": "worldId",
+      "type": "string",
+      "doc": "World identifier where the character operation takes place"
+    },
+    {
+      "name": "characterData",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "CharacterData",
+          "fields": [
+            {
+              "name": "characterId",
+              "type": ["null", "long"],
+              "default": null,
+              "doc": "ID of the character (for updates/deletes)"
+            },
+            {
+              "name": "characterType",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "Type of the character (for creation)"
+            },
+            {
+              "name": "x",
+              "type": ["null", "double"],
+              "default": null,
+              "doc": "X coordinate"
+            },
+            {
+              "name": "y",
+              "type": ["null", "double"],
+              "default": null,
+              "doc": "Y coordinate"
+            },
+            {
+              "name": "z",
+              "type": ["null", "double"],
+              "default": null,
+              "doc": "Z coordinate"
+            },
+            {
+              "name": "name",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "Character name"
+            },
+            {
+              "name": "displayName",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "Character display name"
+            },
+            {
+              "name": "description",
+              "type": ["null", "string"],
+              "default": null,
+              "doc": "Character description"
+            },
+            {
+              "name": "health",
+              "type": ["null", "int"],
+              "default": null,
+              "doc": "Current health points"
+            },
+            {
+              "name": "maxHealth",
+              "type": ["null", "int"],
+              "default": null,
+              "doc": "Maximum health points"
+            },
+            {
+              "name": "active",
+              "type": ["null", "boolean"],
+              "default": null,
+              "doc": "Whether the character is active"
+            }
+          ]
+        }
+      ],
+      "default": null,
+      "doc": "Character data for single character operations"
+    },
+    {
+      "name": "batchData",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "CharacterBatchData",
+          "fields": [
+            {
+              "name": "charactersJson",
+              "type": "string",
+              "doc": "JSON array of characters for batch operations"
+            }
+          ]
+        }
+      ],
+      "default": null,
+      "doc": "Batch data for multiple character operations"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Timestamp of the operation in milliseconds"
+    },
+    {
+      "name": "requestedBy",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Service or user that requested the operation"
+    }
+  ]
+}
+
