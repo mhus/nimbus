@@ -78,9 +78,18 @@ public class WorldLifeConsumer {
             if (message.getCharacterData() != null) {
                 CharacterData data = message.getCharacterData();
 
+                // Convert string to CharacterType enum
+                de.mhus.nimbus.shared.character.CharacterType characterType;
+                try {
+                    characterType = de.mhus.nimbus.shared.character.CharacterType.valueOf(data.getCharacterType().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Invalid character type: {}", data.getCharacterType());
+                    return;
+                }
+
                 WorldCharacter character = worldLifeService.createCharacter(
                     message.getWorldId(),
-                    data.getCharacterType(),
+                    characterType,
                     data.getX(),
                     data.getY(),
                     data.getZ(),
@@ -216,10 +225,16 @@ public class WorldLifeConsumer {
             if (message.getBatchData() != null) {
                 CharacterBatchData batchData = message.getBatchData();
 
-                List<WorldCharacter> characters = worldLifeService.saveCharacters(batchData.getCharacters());
+                // TODO: Parse charactersJson and convert to List<WorldCharacter>
+                // For now, log that we received the batch data
+                LOGGER.info("Kafka: Received batch create request with JSON data: {}",
+                           batchData.getCharactersJson());
 
-                LOGGER.info("Kafka: Batch created {} characters in world {}",
-                           characters.size(), message.getWorldId());
+                // This needs to be implemented when the JSON parsing logic is defined
+                // List<WorldCharacter> characters = parseCharactersFromJson(batchData.getCharactersJson());
+                // List<WorldCharacter> savedCharacters = worldLifeService.saveCharacters(characters);
+
+                LOGGER.warn("Kafka: Batch create characters operation not yet implemented - JSON parsing needed");
             }
         } catch (Exception e) {
             LOGGER.error("Kafka: Failed to batch create characters: {}", e.getMessage(), e);

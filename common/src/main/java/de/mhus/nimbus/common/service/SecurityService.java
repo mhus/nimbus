@@ -13,9 +13,6 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -24,7 +21,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -43,19 +39,13 @@ public class SecurityService {
 
     private final IdentityClient identityClient;
 
-    // Speichert pending Login-Requests (für Consumer Responses)
-    private final ConcurrentHashMap<String, CompletableFuture<LoginResponse>> pendingLogins = new ConcurrentHashMap<>();
-
-    // Speichert pending Public Key Requests (für Consumer Responses)
-    private final ConcurrentHashMap<String, CompletableFuture<PublicKeyResponse>> pendingPublicKeyRequests = new ConcurrentHashMap<>();
-
     // Public Key Cache
     private volatile PublicKeyInfo cachedPublicKey;
     private volatile Instant publicKeyLastFetched;
     private final AtomicBoolean publicKeyFetchInProgress = new AtomicBoolean(false);
     private static final long PUBLIC_KEY_CACHE_DURATION_MS = 300000; // 5 Minuten Cache
 
-    public SecurityService(IdentityClient identityClient, RequestIdUtils requestIdUtils) {
+    public SecurityService(IdentityClient identityClient) {
         this.identityClient = identityClient;
     }
 
@@ -93,24 +83,12 @@ public class SecurityService {
                 new NimbusException("Password cannot be null or empty", "VALIDATION_ERROR", "nimbus-common"));
         }
 
-        // Verwende IdentityClient für Login-Request
+        // Verwende IdentityClient für Login-Request mit Response-Handling
         return identityClient.requestLogin(username, password, clientInfo != null ? clientInfo : "nimbus-common")
-            .thenApply(result -> {
-                logger.info("Login request successfully sent for user: {}", username);
-                // In einer echten Implementierung würde hier die Response vom Consumer verarbeitet
-                // Für jetzt return ein Dummy-Result da der IdentityClient asynchron arbeitet
-                return new LoginResult(
-                    true,
-                    "pending", // Token kommt über Consumer Response
-                    Instant.now().plusSeconds(3600),
-                    null,
-                    "Login request sent successfully",
-                    null
-                );
-            })
+            .thenApply(response -> processLoginResponse(response, username))
             .exceptionally(throwable -> {
                 logger.error("Login failed for user {}: {}", username, throwable.getMessage(), throwable);
-                throw new RuntimeException(new NimbusException("Login request failed: " + throwable.getMessage(), throwable));
+                throw new RuntimeException(new NimbusException("Login request failed: " + throwable.getMessage(), "LOGIN_ERROR", "nimbus-common", throwable));
             });
     }
 
@@ -119,23 +97,6 @@ public class SecurityService {
      */
     public LoginResult login(String username, String password, String clientInfo) throws ExecutionException, InterruptedException, TimeoutException {
         return loginAsync(username, password, clientInfo).get(LOGIN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Verarbeitet die Login-Response vom Identity Service
-     * Diese Methode wird vom Kafka Consumer aufgerufen
-     */
-    public void handleLoginResponse(@Payload LoginResponse response,
-                                   @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-        String requestId = response.getRequestId();
-        logger.debug("Received login response: requestId={}, status={}", requestId, response.getStatus());
-
-        CompletableFuture<LoginResponse> loginFuture = pendingLogins.remove(requestId);
-        if (loginFuture != null) {
-            loginFuture.complete(response);
-        } else {
-            logger.warn("Received login response for unknown requestId: {}", requestId);
-        }
     }
 
     /**
@@ -221,34 +182,20 @@ public class SecurityService {
         }
 
         try {
-            // Verwende IdentityClient für Public Key Request
+            // Verwende IdentityClient für Public Key Request mit Response-Handling
             return identityClient.requestPublicKey()
-                .thenApply(result -> {
-                    logger.info("Public key request successfully sent");
-                    // In einer echten Implementierung würde hier die Response vom Consumer verarbeitet
-                    // Für jetzt return cached key oder dummy
-                    if (cachedPublicKey != null) {
-                        return cachedPublicKey;
-                    }
-                    // Dummy key info - in reality this would come from the consumer response
-                    PublicKeyInfo dummyKey = new PublicKeyInfo(
-                        "dummy-key",
-                        "RSA",
-                        "RS256",
-                        "nimbus-identity",
-                        Instant.now()
-                    );
-                    cachedPublicKey = dummyKey;
-                    publicKeyLastFetched = Instant.now();
-                    return dummyKey;
-                })
+                .thenApply(response -> processPublicKeyResponse(response))
                 .exceptionally(throwable -> {
                     logger.error("Failed to get public key: {}", throwable.getMessage(), throwable);
                     throw new RuntimeException(new NimbusException("Public key request failed: " + throwable.getMessage(), "PUBLIC_KEY_ERROR", "nimbus-common", throwable));
+                })
+                .whenComplete((result, throwable) -> {
+                    publicKeyFetchInProgress.set(false);
                 });
 
-        } finally {
+        } catch (Exception e) {
             publicKeyFetchInProgress.set(false);
+            throw e;
         }
     }
 
@@ -257,23 +204,6 @@ public class SecurityService {
      */
     public PublicKeyInfo getPublicKey(boolean forceRefresh) throws ExecutionException, InterruptedException, TimeoutException {
         return getPublicKeyAsync(forceRefresh).get(PUBLIC_KEY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Verarbeitet die Public Key Response vom Identity Service
-     * Diese Methode wird vom Kafka Consumer aufgerufen
-     */
-    public void handlePublicKeyResponse(@Payload PublicKeyResponse response,
-                                       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-        String requestId = response.getRequestId();
-        logger.debug("Received public key response: requestId={}, status={}", requestId, response.getStatus());
-
-        CompletableFuture<PublicKeyResponse> keyFuture = pendingPublicKeyRequests.remove(requestId);
-        if (keyFuture != null) {
-            keyFuture.complete(response);
-        } else {
-            logger.warn("Received public key response for unknown requestId: {}", requestId);
-        }
     }
 
     /**
@@ -346,26 +276,10 @@ public class SecurityService {
      */
     public void cleanupExpiredRequests() {
         // Login requests cleanup
-        pendingLogins.entrySet().removeIf(entry -> {
-            if (entry.getValue().isDone() || entry.getValue().isCancelled()) {
-                return true;
-            }
-            // Timeout nach 5 Minuten
-            entry.getValue().completeExceptionally(
-                    new NimbusException("Login request timed out", "TIMEOUT_ERROR", "nimbus-common"));
-            return true;
-        });
+        // (nicht mehr nötig, da keine pendingLogins mehr vorhanden sind)
 
         // Public Key requests cleanup
-        pendingPublicKeyRequests.entrySet().removeIf(entry -> {
-            if (entry.getValue().isDone() || entry.getValue().isCancelled()) {
-                return true;
-            }
-            // Timeout nach 5 Minuten
-            entry.getValue().completeExceptionally(
-                    new NimbusException("Public key request timed out", "TIMEOUT_ERROR", "nimbus-common"));
-            return true;
-        });
+        // (nicht mehr nötig, da keine pendingPublicKeyRequests mehr vorhanden sind)
     }
 
     /**

@@ -1,9 +1,13 @@
 package de.mhus.nimbus.common.client;
 
 import de.mhus.nimbus.shared.avro.LoginRequest;
+import de.mhus.nimbus.shared.avro.LoginResponse;
 import de.mhus.nimbus.shared.avro.UserLookupRequest;
+import de.mhus.nimbus.shared.avro.UserLookupResponse;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
+import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
 import de.mhus.nimbus.shared.avro.PublicKeyRequest;
+import de.mhus.nimbus.shared.avro.PublicKeyResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +17,8 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Client for communicating with identity module via Kafka
@@ -24,11 +30,20 @@ public class IdentityClient {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    // Maps für pending Requests
+    private final ConcurrentHashMap<String, CompletableFuture<LoginResponse>> pendingLoginRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<UserLookupResponse>> pendingUserLookupRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<PlayerCharacterLookupResponse>> pendingCharacterLookupRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<PublicKeyResponse>> pendingPublicKeyRequests = new ConcurrentHashMap<>();
+
     // Kafka Topics
     private static final String LOGIN_REQUEST_TOPIC = "login-request";
     private static final String USER_LOOKUP_REQUEST_TOPIC = "user-lookup-request";
     private static final String IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC = "identity-character-lookup-request";
     private static final String PUBLIC_KEY_REQUEST_TOPIC = "public-key-request";
+
+    // Default Timeout für Responses in Sekunden
+    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
     @Autowired
     public IdentityClient(KafkaTemplate<String, Object> kafkaTemplate) {
@@ -43,7 +58,7 @@ public class IdentityClient {
      * @param clientInfo Client-Informationen
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> requestLogin(String username, String password, String clientInfo) {
+    public CompletableFuture<LoginResponse> requestLogin(String username, String password, String clientInfo) {
         String requestId = UUID.randomUUID().toString();
 
         LoginRequest message = LoginRequest.newBuilder()
@@ -56,7 +71,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending login request for user '{}' with requestId {}", username, requestId);
 
-        return sendMessage(LOGIN_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<LoginResponse> future = new CompletableFuture<>();
+        pendingLoginRequests.put(requestId, future);
+
+        sendMessage(LOGIN_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -66,7 +92,7 @@ public class IdentityClient {
      * @param password Passwort
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> requestLogin(String username, String password) {
+    public CompletableFuture<LoginResponse> requestLogin(String username, String password) {
         return requestLogin(username, password, "IdentityClient");
     }
 
@@ -76,7 +102,7 @@ public class IdentityClient {
      * @param userId Die Benutzer-ID
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupUserById(Long userId) {
+    public CompletableFuture<UserLookupResponse> lookupUserById(Long userId) {
         String requestId = UUID.randomUUID().toString();
 
         UserLookupRequest message = UserLookupRequest.newBuilder()
@@ -88,7 +114,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending user lookup request for userId {} with requestId {}", userId, requestId);
 
-        return sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
+        pendingUserLookupRequests.put(requestId, future);
+
+        sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -97,7 +134,7 @@ public class IdentityClient {
      * @param username Der Benutzername
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupUserByUsername(String username) {
+    public CompletableFuture<UserLookupResponse> lookupUserByUsername(String username) {
         String requestId = UUID.randomUUID().toString();
 
         UserLookupRequest message = UserLookupRequest.newBuilder()
@@ -109,7 +146,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending user lookup request for username '{}' with requestId {}", username, requestId);
 
-        return sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
+        pendingUserLookupRequests.put(requestId, future);
+
+        sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -118,7 +166,7 @@ public class IdentityClient {
      * @param email Die E-Mail-Adresse
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupUserByEmail(String email) {
+    public CompletableFuture<UserLookupResponse> lookupUserByEmail(String email) {
         String requestId = UUID.randomUUID().toString();
 
         UserLookupRequest message = UserLookupRequest.newBuilder()
@@ -130,7 +178,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending user lookup request for email '{}' with requestId {}", email, requestId);
 
-        return sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
+        pendingUserLookupRequests.put(requestId, future);
+
+        sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -141,7 +200,7 @@ public class IdentityClient {
      * @param email           Die E-Mail-Adresse (optional)
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupUser(Long userId, String username, String email) {
+    public CompletableFuture<UserLookupResponse> lookupUser(Long userId, String username, String email) {
         String requestId = UUID.randomUUID().toString();
 
         UserLookupRequest.Builder builder = UserLookupRequest.newBuilder()
@@ -163,7 +222,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending extended user lookup request with requestId {}", requestId);
 
-        return sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
+        pendingUserLookupRequests.put(requestId, future);
+
+        sendMessage(USER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -172,7 +242,7 @@ public class IdentityClient {
      * @param characterId Die Charakter-ID
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupCharacterById(Long characterId) {
+    public CompletableFuture<PlayerCharacterLookupResponse> lookupCharacterById(Long characterId) {
         String requestId = UUID.randomUUID().toString();
 
         PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
@@ -185,7 +255,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending character lookup request for characterId {} with requestId {}", characterId, requestId);
 
-        return sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
+        pendingCharacterLookupRequests.put(requestId, future);
+
+        sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -194,7 +275,7 @@ public class IdentityClient {
      * @param characterName Der Charaktername
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupCharacterByName(String characterName) {
+    public CompletableFuture<PlayerCharacterLookupResponse> lookupCharacterByName(String characterName) {
         String requestId = UUID.randomUUID().toString();
 
         PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
@@ -207,7 +288,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending character lookup request for characterName '{}' with requestId {}", characterName, requestId);
 
-        return sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
+        pendingCharacterLookupRequests.put(requestId, future);
+
+        sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -216,7 +308,7 @@ public class IdentityClient {
      * @param userId Die Benutzer-ID
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupCharactersByUserId(Long userId) {
+    public CompletableFuture<PlayerCharacterLookupResponse> lookupCharactersByUserId(Long userId) {
         String requestId = UUID.randomUUID().toString();
 
         PlayerCharacterLookupRequest message = PlayerCharacterLookupRequest.newBuilder()
@@ -229,7 +321,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending character lookup request for userId {} with requestId {}", userId, requestId);
 
-        return sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
+        pendingCharacterLookupRequests.put(requestId, future);
+
+        sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -243,7 +346,7 @@ public class IdentityClient {
      * @param activeOnly      Nur aktive Charaktere
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> lookupCharacter(Long characterId, String characterName, Long userId,
+    public CompletableFuture<PlayerCharacterLookupResponse> lookupCharacter(Long characterId, String characterName, Long userId,
                                                    String currentPlanet, String currentWorldId, boolean activeOnly) {
         String requestId = UUID.randomUUID().toString();
 
@@ -273,7 +376,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending extended character lookup request with requestId {}", requestId);
 
-        return sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
+        pendingCharacterLookupRequests.put(requestId, future);
+
+        sendMessage(IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -281,7 +395,7 @@ public class IdentityClient {
      *
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> requestPublicKey() {
+    public CompletableFuture<PublicKeyResponse> requestPublicKey() {
         String requestId = UUID.randomUUID().toString();
 
         PublicKeyRequest message = PublicKeyRequest.newBuilder()
@@ -292,7 +406,18 @@ public class IdentityClient {
 
         LOGGER.info("Sending public key request with requestId {}", requestId);
 
-        return sendMessage(PUBLIC_KEY_REQUEST_TOPIC, requestId, message);
+        CompletableFuture<PublicKeyResponse> future = new CompletableFuture<>();
+        pendingPublicKeyRequests.put(requestId, future);
+
+        sendMessage(PUBLIC_KEY_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 
     /**
@@ -323,5 +448,142 @@ public class IdentityClient {
             future.completeExceptionally(e);
             return future;
         }
+    }
+
+    /**
+     * Handler für eingehende Login-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die LoginResponse
+     */
+    public void handleLoginResponse(LoginResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<LoginResponse> future = pendingLoginRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing login request {} with status {}", requestId, response.getStatus());
+            future.complete(response);
+        } else {
+            LOGGER.warn("Received login response for unknown request ID: {}", requestId);
+        }
+    }
+
+    /**
+     * Handler für eingehende UserLookup-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die UserLookupResponse
+     */
+    public void handleUserLookupResponse(UserLookupResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<UserLookupResponse> future = pendingUserLookupRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing user lookup request {} with status {}", requestId, response.getStatus());
+            future.complete(response);
+        } else {
+            LOGGER.warn("Received user lookup response for unknown request ID: {}", requestId);
+        }
+    }
+
+    /**
+     * Handler für eingehende PlayerCharacterLookup-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die PlayerCharacterLookupResponse
+     */
+    public void handleCharacterLookupResponse(PlayerCharacterLookupResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<PlayerCharacterLookupResponse> future = pendingCharacterLookupRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
+            future.complete(response);
+        } else {
+            LOGGER.warn("Received character lookup response for unknown request ID: {}", requestId);
+        }
+    }
+
+    /**
+     * Handler für eingehende PublicKey-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die PublicKeyResponse
+     */
+    public void handlePublicKeyResponse(PublicKeyResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<PublicKeyResponse> future = pendingPublicKeyRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing public key request {} with status {}", requestId, response.getStatus());
+            future.complete(response);
+        } else {
+            LOGGER.warn("Received public key response for unknown request ID: {}", requestId);
+        }
+    }
+
+    /**
+     * Bereinigt abgelaufene Requests aus den pending Maps
+     * Diese Methode sollte periodisch aufgerufen werden
+     */
+    public void cleanupExpiredRequests() {
+        long expiredCount = 0;
+
+        // Cleanup für Login Requests
+        expiredCount += cleanupExpiredRequests(pendingLoginRequests, "login");
+
+        // Cleanup für User Lookup Requests
+        expiredCount += cleanupExpiredRequests(pendingUserLookupRequests, "user lookup");
+
+        // Cleanup für Character Lookup Requests
+        expiredCount += cleanupExpiredRequests(pendingCharacterLookupRequests, "character lookup");
+
+        // Cleanup für Public Key Requests
+        expiredCount += cleanupExpiredRequests(pendingPublicKeyRequests, "public key");
+
+        if (expiredCount > 0) {
+            LOGGER.info("Cleaned up {} expired request(s)", expiredCount);
+        }
+    }
+
+    /**
+     * Hilfsmethode zum Bereinigen von abgelaufenen Requests
+     */
+    private <T> long cleanupExpiredRequests(ConcurrentHashMap<String, CompletableFuture<T>> pendingRequests, String requestType) {
+        long removedCount = 0;
+        var iterator = pendingRequests.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            CompletableFuture<T> future = entry.getValue();
+            if (future.isDone() || future.isCancelled()) {
+                LOGGER.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
+                iterator.remove();
+                removedCount++;
+            }
+        }
+
+        return removedCount;
+    }
+
+    /**
+     * Gibt die Anzahl der wartenden Requests zurück
+     */
+    public int getPendingRequestCount() {
+        return pendingLoginRequests.size() +
+               pendingUserLookupRequests.size() +
+               pendingCharacterLookupRequests.size() +
+               pendingPublicKeyRequests.size();
+    }
+
+    /**
+     * Gibt Statistiken über wartende Requests zurück
+     */
+    public String getPendingRequestStats() {
+        return String.format("Pending requests - Login: %d, UserLookup: %d, CharacterLookup: %d, PublicKey: %d",
+                pendingLoginRequests.size(),
+                pendingUserLookupRequests.size(),
+                pendingCharacterLookupRequests.size(),
+                pendingPublicKeyRequests.size());
     }
 }
