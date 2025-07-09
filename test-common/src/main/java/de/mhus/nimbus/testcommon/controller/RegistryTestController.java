@@ -34,104 +34,88 @@ public class RegistryTestController {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String galaxy,
             @RequestParam(required = false) String sector) {
+
         try {
-            LOGGER.info("REST: Registering planet: {}", planetName);
-            CompletableFuture<Void> future;
-            if (description != null || galaxy != null || sector != null) {
-                future = registryClient.registerPlanet(planetName, description, galaxy, sector);
-            } else {
-                future = registryClient.registerPlanet(planetName);
-            }
-            return ResponseEntity.ok("Planet registration request sent for: " + planetName);
+            LOGGER.info("Testing planet registration for: {}", planetName);
+
+            CompletableFuture<Void> future = registryClient.registerPlanet(planetName, description, galaxy, sector);
+
+            // Wait for the response and handle the result
+            future.get(); // This blocks until the response is received
+
+            String result = "Planet '" + planetName + "' successfully registered";
+            LOGGER.info("Planet registration completed: {}", result);
+
+            return ResponseEntity.ok(result);
+
         } catch (Exception e) {
-            LOGGER.error("Failed to register planet", e);
-            return ResponseEntity.internalServerError().body("Failed to register planet: " + e.getMessage());
+            String errorMessage = "Failed to register planet '" + planetName + "': " + e.getMessage();
+            LOGGER.error(errorMessage, e);
+            return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
 
     /**
      * Test planet unregistration
      */
-    @DeleteMapping("/planet/{planetName}")
+    @DeleteMapping("/planet")
     public ResponseEntity<String> unregisterPlanet(
-            @PathVariable String planetName,
-            @RequestParam(required = false) String reason) {
-        try {
-            LOGGER.info("REST: Unregistering planet: {}", planetName);
-            CompletableFuture<Void> future;
-            if (reason != null) {
-                future = registryClient.unregisterPlanet(planetName, reason);
-            } else {
-                future = registryClient.unregisterPlanet(planetName);
-            }
-            return ResponseEntity.ok("Planet unregistration request sent for: " + planetName);
-        } catch (Exception e) {
-            LOGGER.error("Failed to unregister planet", e);
-            return ResponseEntity.internalServerError().body("Failed to unregister planet: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Test planet lookup by name
-     */
-    @GetMapping("/planet/{planetName}")
-    public ResponseEntity<String> lookupPlanetByName(@PathVariable String planetName) {
-        try {
-            LOGGER.info("REST: Looking up planet by name: {}", planetName);
-            CompletableFuture<Void> future = registryClient.lookupPlanetByName(planetName);
-            return ResponseEntity.ok("Planet lookup request sent for: " + planetName);
-        } catch (Exception e) {
-            LOGGER.error("Failed to lookup planet by name", e);
-            return ResponseEntity.internalServerError().body("Failed to lookup planet: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Test world registration
-     */
-    @PostMapping("/world")
-    public ResponseEntity<String> registerWorld(
-            @RequestParam String worldId,
-            @RequestParam String worldName,
             @RequestParam String planetName,
-            @RequestParam String managementUrl,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String worldType) {
+            @RequestParam(required = false) String reason) {
+
         try {
-            LOGGER.info("REST: Registering world: {} on planet: {}", worldId, planetName);
-            CompletableFuture<Void> future;
-            if (description != null || worldType != null) {
-                future = registryClient.registerWorld(worldId, worldName, planetName, managementUrl, description, worldType);
-            } else {
-                future = registryClient.registerWorld(worldId, worldName, planetName, managementUrl);
-            }
-            return ResponseEntity.ok("World registration request sent for: " + worldId);
+            LOGGER.info("Testing planet unregistration for: {}", planetName);
+
+            CompletableFuture<Void> future = registryClient.unregisterPlanet(planetName, reason);
+
+            // Wait for the response and handle the result
+            future.get();
+
+            String result = "Planet '" + planetName + "' successfully unregistered";
+            LOGGER.info("Planet unregistration completed: {}", result);
+
+            return ResponseEntity.ok(result);
+
         } catch (Exception e) {
-            LOGGER.error("Failed to register world", e);
-            return ResponseEntity.internalServerError().body("Failed to register world: " + e.getMessage());
+            String errorMessage = "Failed to unregister planet '" + planetName + "': " + e.getMessage();
+            LOGGER.error(errorMessage, e);
+            return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
 
     /**
-     * Test world unregistration
+     * Test planet lookup
      */
-    @DeleteMapping("/world/{worldId}")
-    public ResponseEntity<String> unregisterWorld(
-            @PathVariable String worldId,
-            @RequestParam(required = false) String planetName,
-            @RequestParam(required = false) String reason) {
+    @GetMapping("/planet")
+    public ResponseEntity<String> lookupPlanet(
+            @RequestParam String planetName,
+            @RequestParam(required = false) String worldName) {
+
         try {
-            LOGGER.info("REST: Unregistering world: {}", worldId);
+            LOGGER.info("Testing planet lookup for: {}", planetName);
+
             CompletableFuture<Void> future;
-            if (planetName != null && reason != null) {
-                future = registryClient.unregisterWorld(worldId, planetName, reason);
+            if (worldName != null) {
+                future = registryClient.lookupPlanet(planetName, worldName);
             } else {
-                future = registryClient.unregisterWorld(worldId);
+                future = registryClient.lookupPlanetByName(planetName);
             }
-            return ResponseEntity.ok("World unregistration request sent for: " + worldId);
+
+            // Wait for the response and handle the result
+            future.get();
+
+            String result = "Planet lookup for '" + planetName + "' completed successfully";
+            if (worldName != null) {
+                result += " (with world: " + worldName + ")";
+            }
+            LOGGER.info("Planet lookup completed: {}", result);
+
+            return ResponseEntity.ok(result);
+
         } catch (Exception e) {
-            LOGGER.error("Failed to unregister world", e);
-            return ResponseEntity.internalServerError().body("Failed to unregister world: " + e.getMessage());
+            String errorMessage = "Failed to lookup planet '" + planetName + "': " + e.getMessage();
+            LOGGER.error(errorMessage, e);
+            return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
 }
