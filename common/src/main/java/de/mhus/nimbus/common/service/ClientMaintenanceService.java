@@ -2,6 +2,7 @@ package de.mhus.nimbus.common.service;
 
 import de.mhus.nimbus.common.client.IdentityClient;
 import de.mhus.nimbus.common.client.RegistryClient;
+import de.mhus.nimbus.common.client.WorldLifeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +20,13 @@ public class ClientMaintenanceService {
 
     private final IdentityClient identityClient;
     private final RegistryClient registryClient;
+    private final WorldLifeClient worldLifeClient;
 
     @Autowired
-    public ClientMaintenanceService(IdentityClient identityClient, RegistryClient registryClient) {
+    public ClientMaintenanceService(IdentityClient identityClient, RegistryClient registryClient, WorldLifeClient worldLifeClient) {
         this.identityClient = identityClient;
         this.registryClient = registryClient;
+        this.worldLifeClient = worldLifeClient;
     }
 
     /**
@@ -50,6 +53,15 @@ public class ClientMaintenanceService {
                 LOGGER.debug("Registry client cleanup completed - Remaining pending requests: {}", newRegistryPendingCount);
             }
 
+            // WorldLifeClient cleanup
+            int worldLifePendingCount = worldLifeClient.getPendingRequestCount();
+            if (worldLifePendingCount > 0) {
+                LOGGER.debug("Starting world-life client cleanup - Current pending requests: {}", worldLifeClient.getPendingRequestStats());
+                worldLifeClient.cleanupExpiredRequests();
+                int newWorldLifePendingCount = worldLifeClient.getPendingRequestCount();
+                LOGGER.debug("World-life client cleanup completed - Remaining pending requests: {}", newWorldLifePendingCount);
+            }
+
         } catch (Exception e) {
             LOGGER.error("Error during client cleanup", e);
         }
@@ -63,11 +75,13 @@ public class ClientMaintenanceService {
         try {
             int identityPendingCount = identityClient.getPendingRequestCount();
             int registryPendingCount = registryClient.getPendingRequestCount();
+            int worldLifePendingCount = worldLifeClient.getPendingRequestCount();
 
-            if (identityPendingCount > 0 || registryPendingCount > 0) {
-                LOGGER.info("Client status - Identity: {}, Registry: {}",
-                           identityClient.getPendingRequestStats(),
-                           registryClient.getPendingRequestStats());
+            if (identityPendingCount > 0 || registryPendingCount > 0 || worldLifePendingCount > 0) {
+                LOGGER.info("Client status - Identity: {}, Registry: {}, WorldLife: {}",
+                        identityClient.getPendingRequestStats(),
+                        registryClient.getPendingRequestStats(),
+                        worldLifeClient.getPendingRequestStats());
             }
         } catch (Exception e) {
             LOGGER.error("Error logging client statistics", e);
@@ -78,15 +92,18 @@ public class ClientMaintenanceService {
      * Gibt kombinierte Statistiken über alle Clients zurück
      */
     public String getCombinedClientStats() {
-        return String.format("Client Stats - Identity: %s, Registry: %s",
-                           identityClient.getPendingRequestStats(),
-                           registryClient.getPendingRequestStats());
+        return String.format("Client Stats - Identity: %s, Registry: %s, WorldLife: %s",
+                identityClient.getPendingRequestStats(),
+                registryClient.getPendingRequestStats(),
+                worldLifeClient.getPendingRequestStats());
     }
 
     /**
      * Gibt die Gesamtanzahl aller wartenden Requests zurück
      */
     public int getTotalPendingRequestCount() {
-        return identityClient.getPendingRequestCount() + registryClient.getPendingRequestCount();
+        return identityClient.getPendingRequestCount() +
+                registryClient.getPendingRequestCount() +
+                worldLifeClient.getPendingRequestCount();
     }
 }
