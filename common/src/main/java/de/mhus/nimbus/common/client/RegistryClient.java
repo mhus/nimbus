@@ -565,16 +565,19 @@ public class RegistryClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die PlanetRegistrationResponse
+     * @return true wenn die Response erfolgreich zugeordnet wurde, false andernfalls
      */
-    public void handlePlanetRegistrationResponse(PlanetRegistrationResponse response) {
+    public boolean handlePlanetRegistrationResponse(PlanetRegistrationResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<PlanetRegistrationResponse> future = pendingPlanetRegistrations.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing planet registration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received planet registration response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -583,16 +586,19 @@ public class RegistryClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die PlanetUnregistrationResponse
+     * @return true wenn die Response erfolgreich zugeordnet wurde, false andernfalls
      */
-    public void handlePlanetUnregistrationResponse(PlanetUnregistrationResponse response) {
+    public boolean handlePlanetUnregistrationResponse(PlanetUnregistrationResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<PlanetUnregistrationResponse> future = pendingPlanetUnregistrations.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing planet unregistration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received planet unregistration response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -601,16 +607,19 @@ public class RegistryClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die PlanetLookupResponse
+     * @return true wenn die Response erfolgreich zugeordnet wurde, false andernfalls
      */
-    public void handlePlanetLookupResponse(PlanetLookupResponse response) {
+    public boolean handlePlanetLookupResponse(PlanetLookupResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<PlanetLookupResponse> future = pendingPlanetLookups.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing planet lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received planet lookup response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -619,16 +628,19 @@ public class RegistryClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die WorldRegistrationResponse
+     * @return true wenn die Response erfolgreich zugeordnet wurde, false andernfalls
      */
-    public void handleWorldRegistrationResponse(WorldRegistrationResponse response) {
+    public boolean handleWorldRegistrationResponse(WorldRegistrationResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<WorldRegistrationResponse> future = pendingWorldRegistrations.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing world registration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received world registration response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -637,16 +649,19 @@ public class RegistryClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die WorldUnregistrationResponse
+     * @return true wenn die Response erfolgreich zugeordnet wurde, false andernfalls
      */
-    public void handleWorldUnregistrationResponse(WorldUnregistrationResponse response) {
+    public boolean handleWorldUnregistrationResponse(WorldUnregistrationResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<WorldUnregistrationResponse> future = pendingWorldUnregistrations.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing world unregistration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received world unregistration response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 

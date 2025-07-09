@@ -50,11 +50,15 @@ public class WorldLifeResponseConsumer {
 
         try {
             // Delegiere an WorldLifeClient
-            worldLifeClient.handleCharacterLookupResponse(response);
+            boolean handled = worldLifeClient.handleCharacterLookupResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process character lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling character lookup response: requestId={}", response.getRequestId(), e);
@@ -82,11 +86,15 @@ public class WorldLifeResponseConsumer {
 
         try {
             // Delegiere an WorldLifeClient
-            worldLifeClient.handleCharacterOperationConfirmation(messageId);
+            boolean handled = worldLifeClient.handleCharacterOperationConfirmation(messageId);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed character operation confirmation: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed character operation confirmation: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process character operation confirmation - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling character operation confirmation: messageId={}", messageId, e);
@@ -115,11 +123,15 @@ public class WorldLifeResponseConsumer {
 
         try {
             // Delegiere an WorldLifeClient
-            worldLifeClient.handleCharacterOperationError(messageId, errorMessage);
+            boolean handled = worldLifeClient.handleCharacterOperationError(messageId, errorMessage);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed character operation error: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed character operation error: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process character operation error - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling character operation error: messageId={}", messageId, e);

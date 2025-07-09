@@ -381,13 +381,16 @@ public class WorldVoxelClient {
      * Handhabt eingehende Nachrichten für Voxel-Operationen
      *
      * @param message Die empfangene Nachricht
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleVoxelOperationResponse(VoxelOperationMessage message) {
+    public boolean handleVoxelOperationResponse(VoxelOperationMessage message) {
         CompletableFuture<VoxelOperationMessage> future = pendingVoxelOperations.remove(message.getMessageId());
         if (future != null) {
             future.complete(message);
+            return true;
         } else {
             LOGGER.warn("Received response for unknown voxel operation message ID {}", message.getMessageId());
+            return false;
         }
     }
 
@@ -396,13 +399,16 @@ public class WorldVoxelClient {
      *
      * @param message Die empfangene Nachricht
      * @param messageId Die Message-ID für den Request
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleChunkLoadResponse(VoxelChunk message, String messageId) {
+    public boolean handleChunkLoadResponse(VoxelChunk message, String messageId) {
         CompletableFuture<VoxelChunk> future = pendingChunkLoads.remove(messageId);
         if (future != null) {
             future.complete(message);
+            return true;
         } else {
             LOGGER.warn("Received response for unknown chunk load message ID {}", messageId);
+            return false;
         }
     }
 
@@ -411,18 +417,21 @@ public class WorldVoxelClient {
      *
      * @param message Die empfangene Nachricht
      * @param messageId Die Message-ID für den Request
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleVoxelLoadResponse(List<Voxel> message, String messageId) {
+    public boolean handleVoxelLoadResponse(List<Voxel> message, String messageId) {
         if (message == null || message.isEmpty()) {
             LOGGER.warn("Received empty voxel load response for messageId: {}", messageId);
-            return;
+            return false;
         }
 
         CompletableFuture<List<Voxel>> future = pendingVoxelLoads.remove(messageId);
         if (future != null) {
             future.complete(message);
+            return true;
         } else {
             LOGGER.warn("Received response for unknown voxel load message ID {}", messageId);
+            return false;
         }
     }
 
@@ -770,8 +779,9 @@ public class WorldVoxelClient {
      * Diese Methode wird aufgerufen, wenn eine Voxel-Operation erfolgreich verarbeitet wurde
      *
      * @param messageId Die Message-ID der ursprünglichen Operation
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleVoxelOperationConfirmation(String messageId) {
+    public boolean handleVoxelOperationConfirmation(String messageId) {
         CompletableFuture<VoxelOperationMessage> future = pendingVoxelOperations.remove(messageId);
 
         if (future != null) {
@@ -782,8 +792,10 @@ public class WorldVoxelClient {
                     .setOperation(OperationType.SAVE) // oder entsprechende Operation
                     .build();
             future.complete(confirmation);
+            return true;
         } else {
             LOGGER.warn("Received voxel operation confirmation for unknown message ID: {}", messageId);
+            return false;
         }
     }
 
@@ -793,15 +805,18 @@ public class WorldVoxelClient {
      *
      * @param messageId Die Message-ID der ursprünglichen Operation
      * @param error Die Fehlermeldung
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleVoxelOperationError(String messageId, String error) {
+    public boolean handleVoxelOperationError(String messageId, String error) {
         CompletableFuture<VoxelOperationMessage> future = pendingVoxelOperations.remove(messageId);
 
         if (future != null) {
             LOGGER.debug("Completing voxel operation with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Voxel operation failed: " + error));
+            return true;
         } else {
             LOGGER.warn("Received voxel operation error for unknown message ID: {}", messageId);
+            return false;
         }
     }
 
@@ -811,15 +826,18 @@ public class WorldVoxelClient {
      *
      * @param messageId Die Message-ID der ursprünglichen Operation
      * @param error Die Fehlermeldung
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleChunkLoadError(String messageId, String error) {
+    public boolean handleChunkLoadError(String messageId, String error) {
         CompletableFuture<VoxelChunk> future = pendingChunkLoads.remove(messageId);
 
         if (future != null) {
             LOGGER.debug("Completing chunk load with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Chunk load failed: " + error));
+            return true;
         } else {
             LOGGER.warn("Received chunk load error for unknown message ID: {}", messageId);
+            return false;
         }
     }
 
@@ -829,15 +847,18 @@ public class WorldVoxelClient {
      *
      * @param messageId Die Message-ID der ursprünglichen Operation
      * @param error Die Fehlermeldung
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleVoxelLoadError(String messageId, String error) {
+    public boolean handleVoxelLoadError(String messageId, String error) {
         CompletableFuture<List<Voxel>> future = pendingVoxelLoads.remove(messageId);
 
         if (future != null) {
             LOGGER.debug("Completing voxel load with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Voxel load failed: " + error));
+            return true;
         } else {
             LOGGER.warn("Received voxel load error for unknown message ID: {}", messageId);
+            return false;
         }
     }
 }

@@ -519,16 +519,19 @@ public class WorldLifeClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die PlayerCharacterLookupResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleCharacterLookupResponse(PlayerCharacterLookupResponse response) {
+    public boolean handleCharacterLookupResponse(PlayerCharacterLookupResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<PlayerCharacterLookupResponse> future = pendingCharacterLookups.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received character lookup response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -537,15 +540,18 @@ public class WorldLifeClient {
      * Diese Methode wird aufgerufen, wenn eine Character-Operation erfolgreich verarbeitet wurde
      *
      * @param messageId Die Message-ID der ursprünglichen Operation
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleCharacterOperationConfirmation(String messageId) {
+    public boolean handleCharacterOperationConfirmation(String messageId) {
         CompletableFuture<Void> future = pendingCharacterOperations.remove(messageId);
 
         if (future != null) {
             LOGGER.debug("Completing character operation with messageId {}", messageId);
             future.complete(null);
+            return true;
         } else {
             LOGGER.warn("Received character operation confirmation for unknown message ID: {}", messageId);
+            return false;
         }
     }
 
@@ -555,15 +561,18 @@ public class WorldLifeClient {
      *
      * @param messageId Die Message-ID der ursprünglichen Operation
      * @param error Die Fehlermeldung
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleCharacterOperationError(String messageId, String error) {
+    public boolean handleCharacterOperationError(String messageId, String error) {
         CompletableFuture<Void> future = pendingCharacterOperations.remove(messageId);
 
         if (future != null) {
             LOGGER.debug("Completing character operation with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Character operation failed: " + error));
+            return true;
         } else {
             LOGGER.warn("Received character operation error for unknown message ID: {}", messageId);
+            return false;
         }
     }
 

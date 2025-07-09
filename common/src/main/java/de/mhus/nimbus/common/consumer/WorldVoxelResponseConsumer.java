@@ -53,11 +53,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleVoxelOperationResponse(response);
+            boolean handled = worldVoxelClient.handleVoxelOperationResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed voxel operation response: messageId={}", response.getMessageId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed voxel operation response: messageId={}", response.getMessageId());
+            } else {
+                LOGGER.warn("Could not process voxel operation response - message will not be acknowledged: messageId={}", response.getMessageId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling voxel operation response: messageId={}", response.getMessageId(), e);
@@ -87,11 +91,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleChunkLoadResponse(response, messageId);
+            boolean handled = worldVoxelClient.handleChunkLoadResponse(response, messageId);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed chunk load response: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed chunk load response: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process chunk load response - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling chunk load response: messageId={}", messageId, e);
@@ -120,11 +128,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleVoxelLoadResponse(response, messageId);
+            boolean handled = worldVoxelClient.handleVoxelLoadResponse(response, messageId);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed voxel load response: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed voxel load response: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process voxel load response - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling voxel load response: messageId={}", messageId, e);
@@ -152,11 +164,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleVoxelOperationConfirmation(messageId);
+            boolean handled = worldVoxelClient.handleVoxelOperationConfirmation(messageId);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed voxel operation confirmation: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed voxel operation confirmation: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process voxel operation confirmation - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling voxel operation confirmation: messageId={}", messageId, e);
@@ -185,11 +201,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleVoxelOperationError(messageId, errorMessage);
+            boolean handled = worldVoxelClient.handleVoxelOperationError(messageId, errorMessage);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed voxel operation error: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed voxel operation error: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process voxel operation error - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling voxel operation error: messageId={}", messageId, e);
@@ -218,11 +238,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleChunkLoadError(messageId, errorMessage);
+            boolean handled = worldVoxelClient.handleChunkLoadError(messageId, errorMessage);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed chunk load error: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed chunk load error: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process chunk load error - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling chunk load error: messageId={}", messageId, e);
@@ -251,11 +275,15 @@ public class WorldVoxelResponseConsumer {
 
         try {
             // Delegiere an WorldVoxelClient
-            worldVoxelClient.handleVoxelLoadError(messageId, errorMessage);
+            boolean handled = worldVoxelClient.handleVoxelLoadError(messageId, errorMessage);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed voxel load error: messageId={}", messageId);
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed voxel load error: messageId={}", messageId);
+            } else {
+                LOGGER.warn("Could not process voxel load error - message will not be acknowledged: messageId={}", messageId);
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling voxel load error: messageId={}", messageId, e);

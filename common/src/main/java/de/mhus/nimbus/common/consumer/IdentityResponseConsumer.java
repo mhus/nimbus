@@ -52,11 +52,15 @@ public class IdentityResponseConsumer {
 
         try {
             // Delegiere an IdentityClient
-            identityClient.handleLoginResponse(response);
+            boolean handled = identityClient.handleLoginResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed login response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed login response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process login response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling login response: requestId={}", response.getRequestId(), e);
@@ -84,11 +88,15 @@ public class IdentityResponseConsumer {
 
         try {
             // Delegiere an IdentityClient
-            identityClient.handleUserLookupResponse(response);
+            boolean handled = identityClient.handleUserLookupResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed user lookup response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed user lookup response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process user lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling user lookup response: requestId={}", response.getRequestId(), e);
@@ -116,11 +124,15 @@ public class IdentityResponseConsumer {
 
         try {
             // Delegiere an IdentityClient
-            identityClient.handleCharacterLookupResponse(response);
+            boolean handled = identityClient.handleCharacterLookupResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process character lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling character lookup response: requestId={}", response.getRequestId(), e);
@@ -148,11 +160,15 @@ public class IdentityResponseConsumer {
 
         try {
             // Delegiere an IdentityClient
-            identityClient.handlePublicKeyResponse(response);
+            boolean handled = identityClient.handlePublicKeyResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed public key response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed public key response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process public key response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling public key response: requestId={}", response.getRequestId(), e);

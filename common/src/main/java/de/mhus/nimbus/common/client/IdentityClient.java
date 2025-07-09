@@ -455,16 +455,19 @@ public class IdentityClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die LoginResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleLoginResponse(LoginResponse response) {
+    public boolean handleLoginResponse(LoginResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<LoginResponse> future = pendingLoginRequests.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing login request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received login response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -473,16 +476,19 @@ public class IdentityClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die UserLookupResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleUserLookupResponse(UserLookupResponse response) {
+    public boolean handleUserLookupResponse(UserLookupResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<UserLookupResponse> future = pendingUserLookupRequests.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing user lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received user lookup response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -491,16 +497,19 @@ public class IdentityClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die PlayerCharacterLookupResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handleCharacterLookupResponse(PlayerCharacterLookupResponse response) {
+    public boolean handleCharacterLookupResponse(PlayerCharacterLookupResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<PlayerCharacterLookupResponse> future = pendingCharacterLookupRequests.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received character lookup response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 
@@ -509,16 +518,19 @@ public class IdentityClient {
      * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
      *
      * @param response Die PublicKeyResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
      */
-    public void handlePublicKeyResponse(PublicKeyResponse response) {
+    public boolean handlePublicKeyResponse(PublicKeyResponse response) {
         String requestId = response.getRequestId();
         CompletableFuture<PublicKeyResponse> future = pendingPublicKeyRequests.remove(requestId);
 
         if (future != null) {
             LOGGER.debug("Completing public key request {} with status {}", requestId, response.getStatus());
             future.complete(response);
+            return true;
         } else {
             LOGGER.warn("Received public key response for unknown request ID: {}", requestId);
+            return false;
         }
     }
 

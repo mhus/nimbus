@@ -53,11 +53,15 @@ public class RegistryResponseConsumer {
 
         try {
             // Delegiere an RegistryClient
-            registryClient.handlePlanetRegistrationResponse(response);
+            boolean handled = registryClient.handlePlanetRegistrationResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed planet registration response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed planet registration response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process planet registration response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling planet registration response: requestId={}", response.getRequestId(), e);
@@ -85,11 +89,15 @@ public class RegistryResponseConsumer {
 
         try {
             // Delegiere an RegistryClient
-            registryClient.handlePlanetUnregistrationResponse(response);
+            boolean handled = registryClient.handlePlanetUnregistrationResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed planet unregistration response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed planet unregistration response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process planet unregistration response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling planet unregistration response: requestId={}", response.getRequestId(), e);
@@ -118,11 +126,15 @@ public class RegistryResponseConsumer {
 
         try {
             // Delegiere an RegistryClient
-            registryClient.handlePlanetLookupResponse(response);
+            boolean handled = registryClient.handlePlanetLookupResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed planet lookup response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed planet lookup response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process planet lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling planet lookup response: requestId={}", response.getRequestId(), e);
@@ -150,11 +162,15 @@ public class RegistryResponseConsumer {
 
         try {
             // Delegiere an RegistryClient
-            registryClient.handleWorldRegistrationResponse(response);
+            boolean handled = registryClient.handleWorldRegistrationResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed world registration response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed world registration response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process world registration response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling world registration response: requestId={}", response.getRequestId(), e);
@@ -182,11 +198,15 @@ public class RegistryResponseConsumer {
 
         try {
             // Delegiere an RegistryClient
-            registryClient.handleWorldUnregistrationResponse(response);
+            boolean handled = registryClient.handleWorldUnregistrationResponse(response);
 
-            // Bestätige die Verarbeitung
-            acknowledgment.acknowledge();
-            LOGGER.debug("Successfully processed world unregistration response: requestId={}", response.getRequestId());
+            if (handled) {
+                // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
+                acknowledgment.acknowledge();
+                LOGGER.debug("Successfully processed world unregistration response: requestId={}", response.getRequestId());
+            } else {
+                LOGGER.warn("Could not process world unregistration response - message will not be acknowledged: requestId={}", response.getRequestId());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Error handling world unregistration response: requestId={}", response.getRequestId(), e);
