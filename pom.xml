@@ -35,6 +35,8 @@
         <module>registry</module>
         <module>identity</module>
         <module>common</module>
+        <module>client-common</module>
+        <module>client-viewer</module>
         <module>entrance</module>
         <module>world-voxel</module>
         <module>world-life</module>
