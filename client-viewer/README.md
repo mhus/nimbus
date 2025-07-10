@@ -26,7 +26,7 @@ Ein grafisches Frontend für den Nimbus Client basierend auf LWJGL (Lightweight 
 
 ### Starten der Anwendung
 ```bash
-mvn spring-boot:run
+mvn -XstartOnFirstThread spring-boot:run
 ```
 
 ### Bedienung
