@@ -49,53 +49,42 @@ curl -X GET "http://localhost:7090/api/test/world-life/characters/world/world-al
 
 #### Login Request
 ```bash
-# Login mit Benutzername und Passwort
-curl -X POST "http://localhost:7090/api/test/identity/login?username=testuser&password=mypassword"
-```
-```bash
+# Login mit Username und Passwort
+curl -X POST "http://localhost:7090/api/test/identity/login" \
+  -d "username=testuser&password=mypassword"
+
 # Login mit zusätzlichen Client-Informationen
-curl -X POST "http://localhost:7090/api/test/identity/login?username=testuser&password=mypassword&clientInfo=TestClient"
+curl -X POST "http://localhost:7090/api/test/identity/login" \
+  -d "username=testuser&password=mypassword&clientInfo=TestClient-v1.0"
 ```
 
-#### User Lookup by ID
+#### User Lookup
 ```bash
-# Suche nach einem Benutzer anhand der ID
+# User Lookup anhand der ID
 curl -X GET "http://localhost:7090/api/test/identity/user/123"
-```
 
-#### User Lookup by Username
-```bash
-# Suche nach einem Benutzer anhand des Benutzernamens
+# User Lookup anhand des Usernamens
 curl -X GET "http://localhost:7090/api/test/identity/user/username/testuser"
-```
 
-#### User Lookup by Email
-```bash
-# Suche nach einem Benutzer anhand der E-Mail-Adresse
+# User Lookup anhand der E-Mail
 curl -X GET "http://localhost:7090/api/test/identity/user/email/test@example.com"
 ```
 
-#### Character Lookup by ID
+#### Character Lookup
 ```bash
-# Suche nach einem Charakter anhand der ID
+# Character Lookup anhand der ID
 curl -X GET "http://localhost:7090/api/test/identity/character/12345"
-```
 
-#### Character Lookup by Name
-```bash
-# Suche nach einem Charakter anhand des Namens
+# Character Lookup anhand des Namens
 curl -X GET "http://localhost:7090/api/test/identity/character/name/DragonSlayer"
-```
 
-#### Characters Lookup by User ID
-```bash
-# Suche nach allen Charakteren eines Users
+# Characters Lookup für einen User
 curl -X GET "http://localhost:7090/api/test/identity/characters/user/123"
 ```
 
 #### Public Key Request
 ```bash
-# Öffentlichen Schlüssel vom Identity Service abrufen
+# Öffentlichen Schlüssel abrufen
 curl -X GET "http://localhost:7090/api/test/identity/public-key"
 ```
 
@@ -250,3 +239,140 @@ mvn test
 
 ### Logs
 Die Anwendung schreibt detaillierte Logs für alle Test-Anfragen, einschließlich Request-IDs und Response-Status.
+
+### ACE (Access Control Entity) Management
+
+#### ACE Erstellen
+```bash
+# Neue ACE mit automatischer Reihenfolge erstellen
+curl -X POST "http://localhost:7090/api/test/identity/ace" \
+  -d "rule=READ:user:profile&userId=123&description=Berechtigung zum Lesen von Benutzerprofilen"
+
+# ACE mit spezifischer Reihenfolge erstellen
+curl -X POST "http://localhost:7090/api/test/identity/ace/with-order" \
+  -d "rule=WRITE:admin:users&userId=123&orderValue=1&description=Admin-Berechtigung für Benutzerverwaltung"
+
+# ACE ohne Beschreibung erstellen
+curl -X POST "http://localhost:7090/api/test/identity/ace" \
+  -d "rule=DELETE:user:data&userId=123"
+```
+
+#### ACE Suchen
+```bash
+# ACE anhand der ID suchen
+curl -X GET "http://localhost:7090/api/test/identity/ace/1"
+
+# Alle ACEs für einen Benutzer (nur aktive)
+curl -X GET "http://localhost:7090/api/test/identity/ace/user/123?activeOnly=true"
+
+# Alle ACEs für einen Benutzer (aktive und inaktive)
+curl -X GET "http://localhost:7090/api/test/identity/ace/user/123?activeOnly=false"
+
+# ACEs anhand eines Regel-Musters suchen (nur aktive)
+curl -X GET "http://localhost:7090/api/test/identity/ace/search?rulePattern=READ&activeOnly=true"
+
+# ACEs anhand eines Regel-Musters suchen (alle)
+curl -X GET "http://localhost:7090/api/test/identity/ace/search?rulePattern=admin&activeOnly=false"
+```
+
+#### ACE Aktualisieren
+```bash
+# ACE-Regel aktualisieren
+curl -X PUT "http://localhost:7090/api/test/identity/ace/1" \
+  -d "rule=READ:user:all"
+
+# ACE-Reihenfolge ändern
+curl -X PUT "http://localhost:7090/api/test/identity/ace/1" \
+  -d "orderValue=5"
+
+# ACE-Beschreibung aktualisieren
+curl -X PUT "http://localhost:7090/api/test/identity/ace/1" \
+  -d "description=Erweiterte Leseberechtigung für alle Benutzer"
+
+# ACE deaktivieren
+curl -X PUT "http://localhost:7090/api/test/identity/ace/1" \
+  -d "active=false"
+
+# Mehrere ACE-Eigenschaften gleichzeitig aktualisieren
+curl -X PUT "http://localhost:7090/api/test/identity/ace/1" \
+  -d "rule=ADMIN:system:all&orderValue=1&description=Vollständige System-Admin-Berechtigung&active=true"
+```
+
+#### ACE Löschen
+```bash
+# Einzelne ACE löschen
+curl -X DELETE "http://localhost:7090/api/test/identity/ace/1"
+
+# Alle ACEs für einen Benutzer löschen
+curl -X DELETE "http://localhost:7090/api/test/identity/ace/user/123"
+```
+
+### Beispiel-Workflow für ACE-Management
+
+```bash
+# 1. Benutzer einloggen und User-ID ermitteln
+curl -X POST "http://localhost:7090/api/test/identity/login" \
+  -d "username=testuser&password=mypassword"
+
+# 2. Grundlegende ACE erstellen
+curl -X POST "http://localhost:7090/api/test/identity/ace" \
+  -d "rule=READ:user:profile&userId=123&description=Grundlegende Leseberechtigung"
+
+# 3. Admin-ACE mit hoher Priorität erstellen
+curl -X POST "http://localhost:7090/api/test/identity/ace/with-order" \
+  -d "rule=ADMIN:system:all&userId=123&orderValue=1&description=System-Administrator"
+
+# 4. Alle ACEs für den Benutzer anzeigen
+curl -X GET "http://localhost:7090/api/test/identity/ace/user/123"
+
+# 5. Spezifische ACE aktualisieren
+curl -X PUT "http://localhost:7090/api/test/identity/ace/2" \
+  -d "description=Aktualisierte Beschreibung"
+
+# 6. ACEs nach Regel-Muster suchen
+curl -X GET "http://localhost:7090/api/test/identity/ace/search?rulePattern=ADMIN&activeOnly=true"
+
+# 7. Einzelne ACE löschen
+curl -X DELETE "http://localhost:7090/api/test/identity/ace/1"
+```
+
+### Antwortformat
+
+Alle ACE-Endpunkte geben Textantworten zurück, die die Details der Operation enthalten:
+
+#### Erfolgreiche ACE-Erstellung
+```
+ACE Create Response:
+Success: true
+Request ID: 550e8400-e29b-41d4-a716-446655440000
+ACE ID: 1
+Rule: READ:user:profile
+Order Value: 1
+```
+
+#### ACE-Suchergebnisse
+```
+ACEs Lookup by User ID Response:
+Success: true
+Request ID: 550e8400-e29b-41d4-a716-446655440001
+Total Count: 2
+ACEs found: 2
+
+ACE ID: 1
+Rule: READ:user:profile
+Order Value: 1
+Active: true
+Description: Grundlegende Leseberechtigung
+Created At: 2025-07-10T10:30:00Z
+Updated At: 2025-07-10T10:30:00Z
+
+ACE ID: 2
+Rule: ADMIN:system:all
+Order Value: 2
+Active: true
+Description: System-Administrator
+Created At: 2025-07-10T10:31:00Z
+Updated At: 2025-07-10T10:31:00Z
+```
+
+### Registry Client - Service Registration

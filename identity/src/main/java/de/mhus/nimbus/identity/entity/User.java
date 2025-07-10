@@ -54,6 +54,10 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<IdentityCharacter> identityCharacters = new ArrayList<>();
 
+    // One-to-Many Beziehung zu ACE
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Ace> aces = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
@@ -182,6 +186,14 @@ public class User implements UserDetails {
         this.identityCharacters = identityCharacters;
     }
 
+    public List<Ace> getAces() {
+        return aces;
+    }
+
+    public void setAces(List<Ace> aces) {
+        this.aces = aces;
+    }
+
     /**
      * Fügt einen IdentityCharacter zu diesem User hinzu
      */
@@ -196,5 +208,21 @@ public class User implements UserDetails {
     public void removeIdentityCharacter(IdentityCharacter identityCharacter) {
         identityCharacters.remove(identityCharacter);
         identityCharacter.setUser(null);
+    }
+
+    /**
+     * Fügt einen ACE zu diesem User hinzu
+     */
+    public void addAce(Ace ace) {
+        aces.add(ace);
+        ace.setUser(this);
+    }
+
+    /**
+     * Entfernt einen ACE von diesem User
+     */
+    public void removeAce(Ace ace) {
+        aces.remove(ace);
+        ace.setUser(null);
     }
 }

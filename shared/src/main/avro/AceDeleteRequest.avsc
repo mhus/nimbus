@@ -1,0 +1,39 @@
+{
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "type": "record",
+  "name": "AceDeleteRequest",
+  "doc": "Request to delete an Access Control Entity",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "Unique identifier for this request"
+    },
+    {
+      "name": "aceId",
+      "type": ["null", "long"],
+      "default": null,
+      "doc": "Specific ACE ID to delete"
+    },
+    {
+      "name": "userId",
+      "type": ["null", "long"],
+      "default": null,
+      "doc": "User ID to delete all ACEs for (if aceId is null)"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Timestamp when the request was created"
+    },
+    {
+      "name": "requestedBy",
+      "type": "string",
+      "doc": "Who requested this operation"
+    }
+  ]
+}
+

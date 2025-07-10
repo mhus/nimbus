@@ -1,0 +1,56 @@
+{
+  "namespace": "de.mhus.nimbus.shared.avro",
+  "type": "record",
+  "name": "AceUpdateRequest",
+  "doc": "Request to update an existing Access Control Entity",
+  "fields": [
+    {
+      "name": "requestId",
+      "type": "string",
+      "doc": "Unique identifier for this request"
+    },
+    {
+      "name": "aceId",
+      "type": "long",
+      "doc": "The ID of the ACE to update"
+    },
+    {
+      "name": "rule",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "New rule (if updating)"
+    },
+    {
+      "name": "orderValue",
+      "type": ["null", "int"],
+      "default": null,
+      "doc": "New order value (if updating)"
+    },
+    {
+      "name": "description",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "New description (if updating)"
+    },
+    {
+      "name": "active",
+      "type": ["null", "boolean"],
+      "default": null,
+      "doc": "New active status (if updating)"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Timestamp when the request was created"
+    },
+    {
+      "name": "requestedBy",
+      "type": "string",
+      "doc": "Who requested this operation"
+    }
+  ]
+}
+

@@ -8,6 +8,14 @@ import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
 import de.mhus.nimbus.shared.avro.PublicKeyRequest;
 import de.mhus.nimbus.shared.avro.PublicKeyResponse;
+import de.mhus.nimbus.shared.avro.AceCreateRequest;
+import de.mhus.nimbus.shared.avro.AceCreateResponse;
+import de.mhus.nimbus.shared.avro.AceLookupRequest;
+import de.mhus.nimbus.shared.avro.AceLookupResponse;
+import de.mhus.nimbus.shared.avro.AceUpdateRequest;
+import de.mhus.nimbus.shared.avro.AceUpdateResponse;
+import de.mhus.nimbus.shared.avro.AceDeleteRequest;
+import de.mhus.nimbus.shared.avro.AceDeleteResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +47,20 @@ public class IdentityClient {
     private final ConcurrentHashMap<String, CompletableFuture<UserLookupResponse>> pendingUserLookupRequests = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CompletableFuture<PlayerCharacterLookupResponse>> pendingCharacterLookupRequests = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CompletableFuture<PublicKeyResponse>> pendingPublicKeyRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<AceCreateResponse>> pendingAceCreateRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<AceLookupResponse>> pendingAceLookupRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<AceUpdateResponse>> pendingAceUpdateRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<AceDeleteResponse>> pendingAceDeleteRequests = new ConcurrentHashMap<>();
 
     // Kafka Topics
     private static final String LOGIN_REQUEST_TOPIC = "login-request";
     private static final String USER_LOOKUP_REQUEST_TOPIC = "user-lookup-request";
     private static final String IDENTITY_CHARACTER_LOOKUP_REQUEST_TOPIC = "identity-character-lookup-request";
     private static final String PUBLIC_KEY_REQUEST_TOPIC = "public-key-request";
+    private static final String ACE_CREATE_REQUEST_TOPIC = "ace-create-request";
+    private static final String ACE_LOOKUP_REQUEST_TOPIC = "ace-lookup-request";
+    private static final String ACE_UPDATE_REQUEST_TOPIC = "ace-update-request";
+    private static final String ACE_DELETE_REQUEST_TOPIC = "ace-delete-request";
 
     // Default Timeout für Responses in Sekunden
     private static final int DEFAULT_TIMEOUT_SECONDS = 30;
@@ -539,6 +555,92 @@ public class IdentityClient {
     }
 
     /**
+     * Handler für eingehende AceCreate-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die AceCreateResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
+     */
+    public boolean handleAceCreateResponse(AceCreateResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<AceCreateResponse> future = pendingAceCreateRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing ACE create request {} with success: {}", requestId, response.getSuccess());
+            future.complete(response);
+            return true;
+        } else {
+            LOGGER.warn("Received ACE create response for unknown request ID: {}", requestId);
+            return false;
+        }
+    }
+
+    /**
+     * Handler für eingehende AceLookup-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die AceLookupResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
+     */
+    public boolean handleAceLookupResponse(AceLookupResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<AceLookupResponse> future = pendingAceLookupRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing ACE lookup request {} with success: {}, found {} ACEs",
+                        requestId, response.getSuccess(), response.getAces().size());
+            future.complete(response);
+            return true;
+        } else {
+            LOGGER.warn("Received ACE lookup response for unknown request ID: {}", requestId);
+            return false;
+        }
+    }
+
+    /**
+     * Handler für eingehende AceUpdate-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die AceUpdateResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
+     */
+    public boolean handleAceUpdateResponse(AceUpdateResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<AceUpdateResponse> future = pendingAceUpdateRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing ACE update request {} with success: {}", requestId, response.getSuccess());
+            future.complete(response);
+            return true;
+        } else {
+            LOGGER.warn("Received ACE update response for unknown request ID: {}", requestId);
+            return false;
+        }
+    }
+
+    /**
+     * Handler für eingehende AceDelete-Responses
+     * Diese Methode sollte von einem Kafka-Consumer aufgerufen werden
+     *
+     * @param response Die AceDeleteResponse
+     * @return true wenn die Response zugeordnet werden konnte, false sonst
+     */
+    public boolean handleAceDeleteResponse(AceDeleteResponse response) {
+        String requestId = response.getRequestId();
+        CompletableFuture<AceDeleteResponse> future = pendingAceDeleteRequests.remove(requestId);
+
+        if (future != null) {
+            LOGGER.debug("Completing ACE delete request {} with success: {}, deleted {} ACEs",
+                        requestId, response.getSuccess(), response.getDeletedCount());
+            future.complete(response);
+            return true;
+        } else {
+            LOGGER.warn("Received ACE delete response for unknown request ID: {}", requestId);
+            return false;
+        }
+    }
+
+    /**
      * Bereinigt abgelaufene Requests aus den pending Maps
      * Diese Methode sollte periodisch aufgerufen werden
      */
@@ -556,6 +658,18 @@ public class IdentityClient {
 
         // Cleanup für Public Key Requests
         expiredCount += cleanupExpiredRequests(pendingPublicKeyRequests, "public key");
+
+        // Cleanup für ACE Create Requests
+        expiredCount += cleanupExpiredRequests(pendingAceCreateRequests, "ACE create");
+
+        // Cleanup für ACE Lookup Requests
+        expiredCount += cleanupExpiredRequests(pendingAceLookupRequests, "ACE lookup");
+
+        // Cleanup für ACE Update Requests
+        expiredCount += cleanupExpiredRequests(pendingAceUpdateRequests, "ACE update");
+
+        // Cleanup für ACE Delete Requests
+        expiredCount += cleanupExpiredRequests(pendingAceDeleteRequests, "ACE delete");
 
         if (expiredCount > 0) {
             LOGGER.info("Cleaned up {} expired request(s)", expiredCount);
@@ -589,18 +703,26 @@ public class IdentityClient {
         return pendingLoginRequests.size() +
                pendingUserLookupRequests.size() +
                pendingCharacterLookupRequests.size() +
-               pendingPublicKeyRequests.size();
+               pendingPublicKeyRequests.size() +
+               pendingAceCreateRequests.size() +
+               pendingAceLookupRequests.size() +
+               pendingAceUpdateRequests.size() +
+               pendingAceDeleteRequests.size();
     }
 
     /**
      * Gibt Statistiken über wartende Requests zurück
      */
     public String getPendingRequestStats() {
-        return String.format("Pending requests - Login: %d, UserLookup: %d, CharacterLookup: %d, PublicKey: %d",
+        return String.format("Pending requests - Login: %d, UserLookup: %d, CharacterLookup: %d, PublicKey: %d, AceCreate: %d, AceLookup: %d, AceUpdate: %d, AceDelete: %d",
                 pendingLoginRequests.size(),
                 pendingUserLookupRequests.size(),
                 pendingCharacterLookupRequests.size(),
-                pendingPublicKeyRequests.size());
+                pendingPublicKeyRequests.size(),
+                pendingAceCreateRequests.size(),
+                pendingAceLookupRequests.size(),
+                pendingAceUpdateRequests.size(),
+                pendingAceDeleteRequests.size());
     }
 
     /**
@@ -644,5 +766,341 @@ public class IdentityClient {
             LOGGER.warn("Failed to extract character names from token", e);
             return List.of();
         }
+    }
+
+    // ===== ACE (Access Control Entity) Methoden =====
+
+    /**
+     * Erstellt eine neue ACE
+     *
+     * @param rule        Die ACE-Regel
+     * @param userId      Die Benutzer-ID
+     * @param description Optionale Beschreibung
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceCreateResponse> createAce(String rule, Long userId, String description) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceCreateRequest message = AceCreateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setRule(rule)
+                .setUserId(userId)
+                .setDescription(description)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE create request for user {} with rule '{}' and requestId {}", userId, rule, requestId);
+
+        CompletableFuture<AceCreateResponse> future = new CompletableFuture<>();
+        pendingAceCreateRequests.put(requestId, future);
+
+        sendMessage(ACE_CREATE_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Erstellt eine neue ACE mit spezifischer Reihenfolge
+     *
+     * @param rule        Die ACE-Regel
+     * @param userId      Die Benutzer-ID
+     * @param orderValue  Die gewünschte Reihenfolge
+     * @param description Optionale Beschreibung
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceCreateResponse> createAceWithOrder(String rule, Long userId, Integer orderValue, String description) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceCreateRequest message = AceCreateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setRule(rule)
+                .setUserId(userId)
+                .setOrderValue(orderValue)
+                .setDescription(description)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE create request for user {} with rule '{}', order {} and requestId {}", userId, rule, orderValue, requestId);
+
+        CompletableFuture<AceCreateResponse> future = new CompletableFuture<>();
+        pendingAceCreateRequests.put(requestId, future);
+
+        sendMessage(ACE_CREATE_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Sucht ACE anhand der ACE-ID
+     *
+     * @param aceId Die ACE-ID
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceLookupResponse> lookupAceById(Long aceId) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceLookupRequest message = AceLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setAceId(aceId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE lookup request for aceId {} with requestId {}", aceId, requestId);
+
+        CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
+        pendingAceLookupRequests.put(requestId, future);
+
+        sendMessage(ACE_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Sucht alle ACEs für einen Benutzer
+     *
+     * @param userId     Die Benutzer-ID
+     * @param activeOnly Nur aktive ACEs zurückgeben
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceLookupResponse> lookupAcesByUserId(Long userId, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceLookupRequest message = AceLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUserId(userId)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE lookup request for userId {} (activeOnly: {}) with requestId {}", userId, activeOnly, requestId);
+
+        CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
+        pendingAceLookupRequests.put(requestId, future);
+
+        sendMessage(ACE_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Sucht ACEs anhand eines Regel-Musters
+     *
+     * @param rulePattern Das Suchmuster für Regeln
+     * @param activeOnly  Nur aktive ACEs zurückgeben
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceLookupResponse> lookupAcesByRule(String rulePattern, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceLookupRequest message = AceLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setRulePattern(rulePattern)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE lookup request for rule pattern '{}' (activeOnly: {}) with requestId {}", rulePattern, activeOnly, requestId);
+
+        CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
+        pendingAceLookupRequests.put(requestId, future);
+
+        sendMessage(ACE_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Erweiterte ACE-Suche
+     *
+     * @param aceId       Spezifische ACE-ID (optional)
+     * @param userId      Benutzer-ID (optional)
+     * @param rulePattern Regel-Muster (optional)
+     * @param activeOnly  Nur aktive ACEs
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceLookupResponse> lookupAces(Long aceId, Long userId, String rulePattern, boolean activeOnly) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceLookupRequest.Builder builder = AceLookupRequest.newBuilder()
+                .setRequestId(requestId)
+                .setActiveOnly(activeOnly)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient");
+
+        if (aceId != null) {
+            builder.setAceId(aceId);
+        }
+        if (userId != null) {
+            builder.setUserId(userId);
+        }
+        if (rulePattern != null) {
+            builder.setRulePattern(rulePattern);
+        }
+
+        AceLookupRequest message = builder.build();
+
+        LOGGER.info("Sending extended ACE lookup request with requestId {}", requestId);
+
+        CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
+        pendingAceLookupRequests.put(requestId, future);
+
+        sendMessage(ACE_LOOKUP_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Aktualisiert eine bestehende ACE
+     *
+     * @param aceId       Die ACE-ID
+     * @param rule        Neue Regel (optional)
+     * @param orderValue  Neue Reihenfolge (optional)
+     * @param description Neue Beschreibung (optional)
+     * @param active      Neuer Aktiv-Status (optional)
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceUpdateResponse> updateAce(Long aceId, String rule, Integer orderValue, String description, Boolean active) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceUpdateRequest.Builder builder = AceUpdateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setAceId(aceId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient");
+
+        if (rule != null) {
+            builder.setRule(rule);
+        }
+        if (orderValue != null) {
+            builder.setOrderValue(orderValue);
+        }
+        if (description != null) {
+            builder.setDescription(description);
+        }
+        if (active != null) {
+            builder.setActive(active);
+        }
+
+        AceUpdateRequest message = builder.build();
+
+        LOGGER.info("Sending ACE update request for aceId {} with requestId {}", aceId, requestId);
+
+        CompletableFuture<AceUpdateResponse> future = new CompletableFuture<>();
+        pendingAceUpdateRequests.put(requestId, future);
+
+        sendMessage(ACE_UPDATE_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Löscht eine spezifische ACE
+     *
+     * @param aceId Die ACE-ID
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceDeleteResponse> deleteAce(Long aceId) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceDeleteRequest message = AceDeleteRequest.newBuilder()
+                .setRequestId(requestId)
+                .setAceId(aceId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE delete request for aceId {} with requestId {}", aceId, requestId);
+
+        CompletableFuture<AceDeleteResponse> future = new CompletableFuture<>();
+        pendingAceDeleteRequests.put(requestId, future);
+
+        sendMessage(ACE_DELETE_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
+    }
+
+    /**
+     * Löscht alle ACEs für einen Benutzer
+     *
+     * @param userId Die Benutzer-ID
+     * @return CompletableFuture für asynchrone Verarbeitung
+     */
+    public CompletableFuture<AceDeleteResponse> deleteAllAcesForUser(Long userId) {
+        String requestId = UUID.randomUUID().toString();
+
+        AceDeleteRequest message = AceDeleteRequest.newBuilder()
+                .setRequestId(requestId)
+                .setUserId(userId)
+                .setTimestamp(Instant.now())
+                .setRequestedBy("IdentityClient")
+                .build();
+
+        LOGGER.info("Sending ACE delete request for all ACEs of userId {} with requestId {}", userId, requestId);
+
+        CompletableFuture<AceDeleteResponse> future = new CompletableFuture<>();
+        pendingAceDeleteRequests.put(requestId, future);
+
+        sendMessage(ACE_DELETE_REQUEST_TOPIC, requestId, message)
+            .orTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+
+        return future;
     }
 }
