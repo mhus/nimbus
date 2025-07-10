@@ -1,5 +1,6 @@
 package de.mhus.nimbus.identity.service;
 
+import de.mhus.nimbus.identity.entity.IdentityCharacter;
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.shared.avro.*;
 import org.slf4j.Logger;
@@ -8,7 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service für Login-Operationen
@@ -21,11 +24,14 @@ public class LoginService {
     private final UserService userService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final IdentityCharacterService identityCharacterService;
 
-    public LoginService(UserService userService, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public LoginService(UserService userService, JwtService jwtService, PasswordEncoder passwordEncoder,
+                       IdentityCharacterService identityCharacterService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.identityCharacterService = identityCharacterService;
     }
 
     /**
@@ -63,8 +69,14 @@ public class LoginService {
                                          currentTimestamp, "Invalid credentials");
             }
 
-            // Generiere JWT Token
-            String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getEmail());
+            // Hole alle aktiven IdentityCharacter-Namen des Users
+            List<IdentityCharacter> characters = identityCharacterService.findActiveCharactersByUser(user);
+            List<String> characterNames = characters.stream()
+                    .map(IdentityCharacter::getName)
+                    .collect(Collectors.toList());
+
+            // Generiere JWT Token mit Character-Namen
+            String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getEmail(), characterNames);
             Instant expiresAt = jwtService.calculateExpirationTime();
 
             // Erstelle User-Info für Response

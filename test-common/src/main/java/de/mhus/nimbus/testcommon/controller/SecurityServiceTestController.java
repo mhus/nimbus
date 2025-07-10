@@ -1,5 +1,7 @@
 package de.mhus.nimbus.testcommon.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.common.exception.NimbusException;
 import de.mhus.nimbus.common.service.SecurityService;
 import io.jsonwebtoken.Claims;
@@ -9,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,6 +66,14 @@ public class SecurityServiceTestController {
             if (result.isSuccess() && result.getToken() != null) {
                 response.append("Token: ").append(result.getToken()).append("\n");
                 response.append("Expires At: ").append(result.getExpiresAt()).append("\n");
+
+                // Extrahiere und zeige Character-Namen aus dem Token
+                List<String> characterNames = extractCharacterNamesFromToken(result.getToken());
+                if (!characterNames.isEmpty()) {
+                    response.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
+                } else {
+                    response.append("Identity Characters: None\n");
+                }
 
                 if (result.getUser() != null) {
                     response.append("User ID: ").append(result.getUser().getId()).append("\n");
@@ -122,6 +134,14 @@ public class SecurityServiceTestController {
             if (result.isSuccess() && result.getToken() != null) {
                 response.append("Token: ").append(result.getToken()).append("\n");
                 response.append("Expires At: ").append(result.getExpiresAt()).append("\n");
+
+                // Extrahiere und zeige Character-Namen aus dem Token
+                List<String> characterNames = extractCharacterNamesFromToken(result.getToken());
+                if (!characterNames.isEmpty()) {
+                    response.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
+                } else {
+                    response.append("Identity Characters: None\n");
+                }
 
                 if (result.getUser() != null) {
                     response.append("User ID: ").append(result.getUser().getId()).append("\n");
@@ -246,6 +266,14 @@ public class SecurityServiceTestController {
             response.append("Not Before: ").append(claims.getNotBefore()).append("\n");
             response.append("JWT ID: ").append(claims.getId()).append("\n");
 
+            // Extrahiere und zeige Character-Namen aus dem Token
+            List<String> characterNames = extractCharacterNamesFromToken(token);
+            if (!characterNames.isEmpty()) {
+                response.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
+            } else {
+                response.append("Identity Characters: None\n");
+            }
+
             // Add custom claims
             response.append("Custom Claims:\n");
             claims.entrySet().stream()
@@ -333,5 +361,27 @@ public class SecurityServiceTestController {
             LOGGER.error("Failed to clear public key cache", e);
             return ResponseEntity.internalServerError().body("Failed to clear public key cache: " + e.getMessage());
         }
+    }
+
+    private List<String> extractCharacterNamesFromToken(String token) {
+        // Implement the logic to extract character names from the token
+        // This is a placeholder implementation
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length == 3) {
+                String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(payload);
+
+                // Assuming character names are stored under a claim named "character_names"
+                JsonNode characterNamesNode = jsonNode.get("character_names");
+                if (characterNamesNode != null && characterNamesNode.isArray()) {
+                    return mapper.readValue(characterNamesNode.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract character names from token: {}", e.getMessage());
+        }
+        return List.of();
     }
 }

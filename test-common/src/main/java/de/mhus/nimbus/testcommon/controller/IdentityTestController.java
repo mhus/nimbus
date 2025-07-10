@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -69,6 +70,14 @@ public class IdentityTestController {
             }
             if (response.getToken() != null) {
                 result.append("Token: ").append(response.getToken()).append("\n");
+
+                // Extrahiere und zeige Character-Namen aus dem Token
+                List<String> characterNames = identityClient.extractCharacterNamesFromToken(response.getToken());
+                if (!characterNames.isEmpty()) {
+                    result.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
+                } else {
+                    result.append("Identity Characters: None\n");
+                }
             }
             if (response.getExpiresAt() != null) {
                 result.append("Expires At: ").append(response.getExpiresAt()).append("\n");

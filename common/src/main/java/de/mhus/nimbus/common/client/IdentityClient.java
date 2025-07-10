@@ -15,10 +15,14 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Client for communicating with identity module via Kafka
@@ -597,5 +601,48 @@ public class IdentityClient {
                 pendingUserLookupRequests.size(),
                 pendingCharacterLookupRequests.size(),
                 pendingPublicKeyRequests.size());
+    }
+
+    /**
+     * Extrahiert Character-Namen aus einem JWT Token (ohne Validierung)
+     * Nur für Testzwecke - in Produktionsumgebung sollte der Token validiert werden
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> extractCharacterNamesFromToken(String token) {
+        try {
+            // JWT Token besteht aus drei Teilen: header.payload.signature
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                LOGGER.warn("Invalid JWT token format");
+                return List.of();
+            }
+
+            // Dekodiere den Payload (Base64URL)
+            String payload = parts[1];
+            // Base64URL zu Base64 konvertieren
+            payload = payload.replace('-', '+').replace('_', '/');
+            // Padding hinzufügen falls nötig
+            while (payload.length() % 4 != 0) {
+                payload += "=";
+            }
+
+            byte[] decodedBytes = Base64.getDecoder().decode(payload);
+            String decodedPayload = new String(decodedBytes);
+
+            // JSON parsen
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(decodedPayload);
+
+            // Character-Namen extrahieren
+            JsonNode characterNamesNode = jsonNode.get("characterNames");
+            if (characterNamesNode != null && characterNamesNode.isArray()) {
+                return mapper.convertValue(characterNamesNode, List.class);
+            }
+
+            return List.of();
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract character names from token", e);
+            return List.of();
+        }
     }
 }

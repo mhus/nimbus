@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,11 +54,22 @@ public class JwtService {
      * Generiert einen JWT Token für einen User mit RSA-Signierung
      */
     public String generateToken(Long userId, String username, String email) {
+        return generateToken(userId, username, email, null);
+    }
+
+    /**
+     * Generiert einen JWT Token für einen User mit IdentityCharacter-Namen und RSA-Signierung
+     */
+    public String generateToken(Long userId, String username, String email, List<String> characterNames) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
         claims.put("email", email);
         claims.put("iss", jwtProperties.getIssuer());
+
+        if (characterNames != null && !characterNames.isEmpty()) {
+            claims.put("characterNames", characterNames);
+        }
 
         Instant now = Instant.now();
         Instant expiration = now.plus(jwtProperties.getExpiration(), ChronoUnit.MILLIS);
@@ -147,5 +159,13 @@ public class JwtService {
      */
     public String getPublicKeyAsString() {
         return java.util.Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+
+    /**
+     * Extrahiert die Character-Namen aus einem Token
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> extractCharacterNames(String token) {
+        return extractClaims(token).get("characterNames", List.class);
     }
 }
