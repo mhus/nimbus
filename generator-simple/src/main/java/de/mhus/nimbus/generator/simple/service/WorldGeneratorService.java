@@ -41,7 +41,7 @@ public class WorldGeneratorService {
      * @return the generation response with results
      */
     public WorldGenerationResponse generateWorld(WorldGenerationRequest request) {
-        LOGGER.info("Starting world generation for: {}", request.getWorldName());
+        log.info("Starting world generation for: {}", request.getWorldName());
 
         LocalDateTime startTime = LocalDateTime.now();
 
@@ -74,7 +74,7 @@ public class WorldGeneratorService {
                     .build();
 
         } catch (Exception e) {
-            LOGGER.error("World generation failed for {}: {}", request.getWorldName(), e.getMessage(), e);
+            log.error("World generation failed for {}: {}", request.getWorldName(), e.getMessage(), e);
 
             return responseBuilder
                     .status(WorldGenerationResponse.GenerationStatus.FAILED)
@@ -95,7 +95,7 @@ public class WorldGeneratorService {
      * Generate the actual world data based on world type
      */
     private GenerationResult generateWorldData(WorldGenerationRequest request, Random random) {
-        LOGGER.debug("Generating world data for type: {}", request.getWorldType());
+        log.debug("Generating world data for type: {}", request.getWorldType());
 
         GenerationResult result = new GenerationResult();
         result.stats = WorldGenerationResponse.GenerationStats.builder().build();
@@ -402,7 +402,7 @@ public class WorldGeneratorService {
         result.stats.setTerrainVoxels(result.stats.getTerrainVoxels() + 1);
         result.voxelsGenerated++;
 
-        LOGGER.trace("Created voxel at ({}, {}, {}) with material: {}", x, y, z, material);
+        log.trace("Created voxel at ({}, {}, {}) with material: {}", x, y, z, material);
     }
 
     /**
@@ -414,7 +414,7 @@ public class WorldGeneratorService {
         }
 
         try {
-            LOGGER.debug("Saving batch of {} voxels for world {}", result.voxelBatch.size(), result.worldId);
+            log.debug("Saving batch of {} voxels for world {}", result.voxelBatch.size(), result.worldId);
 
             // Convert VoxelInstance objects to the format expected by VoxelClient
             // VoxelClient now expects List<VoxelInstance> for batch operations
@@ -441,11 +441,11 @@ public class WorldGeneratorService {
 
                     // For now, we'll log the voxel data that would be saved
                     // In a real implementation, you'd create proper Voxel objects or use a different API
-                    LOGGER.debug("Saved voxel: {} at ({}, {}, {})",
+                    log.debug("Saved voxel: {} at ({}, {}, {})",
                         voxel.getMaterial(), voxel.getX(), voxel.getY(), voxel.getZ());
 
                 } catch (Exception e) {
-                    LOGGER.warn("Failed to process voxel at ({}, {}, {}): {}",
+                    log.warn("Failed to process voxel at ({}, {}, {}): {}",
                         voxel.getX(), voxel.getY(), voxel.getZ(), e.getMessage());
                 }
             }
@@ -453,10 +453,10 @@ public class WorldGeneratorService {
             result.savedVoxels += result.voxelBatch.size();
             result.voxelBatch.clear();
 
-            LOGGER.debug("Successfully processed voxel batch for world {}", result.worldId);
+            log.debug("Successfully processed voxel batch for world {}", result.worldId);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to save voxel batch for world {}: {}", result.worldId, e.getMessage(), e);
+            log.error("Failed to save voxel batch for world {}: {}", result.worldId, e.getMessage(), e);
             result.messages.add("Warning: Failed to save some voxel data: " + e.getMessage());
         }
     }

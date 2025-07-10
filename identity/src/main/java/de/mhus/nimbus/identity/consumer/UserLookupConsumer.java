@@ -3,6 +3,7 @@ package de.mhus.nimbus.identity.consumer;
 import de.mhus.nimbus.identity.service.IdentityLookupService;
 import de.mhus.nimbus.shared.avro.UserLookupRequest;
 import de.mhus.nimbus.shared.avro.UserLookupResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,9 +18,8 @@ import org.springframework.stereotype.Component;
  * Kafka Consumer für User-Lookup-Anfragen
  */
 @Component
+@Slf4j
 public class UserLookupConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserLookupConsumer.class);
 
     private final IdentityLookupService identityLookupService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -37,7 +37,7 @@ public class UserLookupConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        logger.info("Received user lookup request: requestId={}, userId={}, username={}, email={}, topic={}, partition={}, offset={}",
+        log.info("Received user lookup request: requestId={}, userId={}, username={}, email={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getUserId(), request.getUsername(), request.getEmail(),
                    topic, partition, offset);
 
@@ -51,14 +51,14 @@ public class UserLookupConsumer {
             // Sende die Antwort zurück
             kafkaTemplate.send("user-lookup-response", request.getRequestId(), response);
 
-            logger.info("Successfully processed user lookup request: requestId={}, status={}",
+            log.info("Successfully processed user lookup request: requestId={}, status={}",
                        request.getRequestId(), response.getStatus());
 
             // Bestätige die Verarbeitung
             acknowledgment.acknowledge();
 
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid user lookup request: requestId={}, error={}",
+            log.error("Invalid user lookup request: requestId={}, error={}",
                         request.getRequestId(), e.getMessage());
 
             // Sende Error-Response
@@ -68,7 +68,7 @@ public class UserLookupConsumer {
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing user lookup request: requestId={}",
+            log.error("Error processing user lookup request: requestId={}",
                         request.getRequestId(), e);
 
             // Sende Error-Response

@@ -30,7 +30,7 @@ public class NimbusClientService {
      * Erstellt eine neue Instanz des Client-Services
      */
     public NimbusClientService() {
-        LOGGER.info("NimbusClientService initialisiert");
+        log.info("NimbusClientService initialisiert");
     }
 
     /**
@@ -73,12 +73,12 @@ public class NimbusClientService {
             };
 
             webSocketClient.connect();
-            LOGGER.info("Verbindungsaufbau zu {} gestartet", serverUrl);
+            log.info("Verbindungsaufbau zu {} gestartet", serverUrl);
 
             return connectionFuture;
 
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Verbindungsaufbau zu {}", serverUrl, e);
+            log.error("Fehler beim Verbindungsaufbau zu {}", serverUrl, e);
             return CompletableFuture.failedFuture(e);
         }
     }
@@ -89,7 +89,7 @@ public class NimbusClientService {
     public void disconnect() {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.close();
-            LOGGER.info("WebSocket-Verbindung geschlossen");
+            log.info("WebSocket-Verbindung geschlossen");
         }
         connected = false;
     }
@@ -121,7 +121,7 @@ public class NimbusClientService {
             // Setze Authentifizierungsstatus basierend auf Antwort
             if (response != null && response.getData() != null) {
                 webSocketClient.setAuthenticated(true);
-                LOGGER.info("Authentifizierung erfolgreich");
+                log.info("Authentifizierung erfolgreich");
             }
             return response;
         });
@@ -164,7 +164,7 @@ public class NimbusClientService {
      */
     public void sendMessage(String type, Object data) {
         if (!isConnected()) {
-            LOGGER.warn("Kann Nachricht nicht senden - nicht verbunden");
+            log.warn("Kann Nachricht nicht senden - nicht verbunden");
             return;
         }
 

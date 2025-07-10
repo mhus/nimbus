@@ -1,6 +1,7 @@
 package de.mhus.nimbus.testcommon.controller;
 
 import de.mhus.nimbus.common.client.RegistryClient;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,8 @@ import java.util.concurrent.CompletableFuture;
  */
 @RestController
 @RequestMapping("/api/test/registry")
+@Slf4j
 public class RegistryTestController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RegistryTestController.class);
 
     private final RegistryClient registryClient;
 
@@ -36,7 +36,7 @@ public class RegistryTestController {
             @RequestParam(required = false) String sector) {
 
         try {
-            LOGGER.info("Testing planet registration for: {}", planetName);
+            log.info("Testing planet registration for: {}", planetName);
 
             CompletableFuture<Void> future = registryClient.registerPlanet(planetName, description, galaxy, sector);
 
@@ -44,13 +44,13 @@ public class RegistryTestController {
             future.get(); // This blocks until the response is received
 
             String result = "Planet '" + planetName + "' successfully registered";
-            LOGGER.info("Planet registration completed: {}", result);
+            log.info("Planet registration completed: {}", result);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to register planet '" + planetName + "': " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -64,7 +64,7 @@ public class RegistryTestController {
             @RequestParam(required = false) String reason) {
 
         try {
-            LOGGER.info("Testing planet unregistration for: {}", planetName);
+            log.info("Testing planet unregistration for: {}", planetName);
 
             CompletableFuture<Void> future = registryClient.unregisterPlanet(planetName, reason);
 
@@ -72,13 +72,13 @@ public class RegistryTestController {
             future.get();
 
             String result = "Planet '" + planetName + "' successfully unregistered";
-            LOGGER.info("Planet unregistration completed: {}", result);
+            log.info("Planet unregistration completed: {}", result);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to unregister planet '" + planetName + "': " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -92,7 +92,7 @@ public class RegistryTestController {
             @RequestParam(required = false) String worldName) {
 
         try {
-            LOGGER.info("Testing planet lookup for: {}", planetName);
+            log.info("Testing planet lookup for: {}", planetName);
 
             CompletableFuture<Void> future;
             if (worldName != null) {
@@ -108,13 +108,13 @@ public class RegistryTestController {
             if (worldName != null) {
                 result += " (with world: " + worldName + ")";
             }
-            LOGGER.info("Planet lookup completed: {}", result);
+            log.info("Planet lookup completed: {}", result);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to lookup planet '" + planetName + "': " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }

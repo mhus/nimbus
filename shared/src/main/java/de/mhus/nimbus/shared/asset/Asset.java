@@ -263,29 +263,29 @@ public class Asset implements Serializable {
      */
     public boolean isValid() {
         if (id == null || id.trim().isEmpty()) {
-            LOGGER.warn("Asset validation failed: ID is required");
+            log.warn("Asset validation failed: ID is required");
             return false;
         }
 
         if (type == null) {
-            LOGGER.warn("Asset validation failed: Type is required for asset {}", id);
+            log.warn("Asset validation failed: Type is required for asset {}", id);
             return false;
         }
 
         if (name == null || name.trim().isEmpty()) {
-            LOGGER.warn("Asset validation failed: Name is required for asset {}", id);
+            log.warn("Asset validation failed: Name is required for asset {}", id);
             return false;
         }
 
         // Validate binary data consistency
         if (hasBinaryData()) {
             if (sizeBytes <= 0) {
-                LOGGER.warn("Asset validation failed: Size mismatch for asset {} with binary data", id);
+                log.warn("Asset validation failed: Size mismatch for asset {} with binary data", id);
                 return false;
             }
 
             if (data.length != sizeBytes) {
-                LOGGER.warn("Asset validation failed: Actual data size {} doesn't match declared size {} for asset {}",
+                log.warn("Asset validation failed: Actual data size {} doesn't match declared size {} for asset {}",
                            data.length, sizeBytes, id);
                 return false;
             }
@@ -371,7 +371,7 @@ public class Asset implements Serializable {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to serialize Asset to JSON: {}", e.getMessage());
+            log.error("Failed to serialize Asset to JSON: {}", e.getMessage());
             return null;
         }
     }
@@ -388,7 +388,7 @@ public class Asset implements Serializable {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.readValue(json, Asset.class);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to deserialize Asset from JSON: {}", e.getMessage());
+            log.error("Failed to deserialize Asset from JSON: {}", e.getMessage());
             return null;
         }
     }

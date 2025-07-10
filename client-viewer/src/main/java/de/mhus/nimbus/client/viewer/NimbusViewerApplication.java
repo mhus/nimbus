@@ -13,7 +13,7 @@ public class NimbusViewerApplication {
     private static final String DEFAULT_SERVER_URL = "ws://localhost:8080/nimbus";
 
     public static void main(String[] args) {
-        LOGGER.info("Starte Nimbus Client Viewer...");
+        log.info("Starte Nimbus Client Viewer...");
 
         try {
             // Erstelle Client-Service
@@ -24,7 +24,7 @@ public class NimbusViewerApplication {
             viewerWindow.run();
 
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Starten des Nimbus Client Viewers", e);
+            log.error("Fehler beim Starten des Nimbus Client Viewers", e);
             System.exit(1);
         }
     }

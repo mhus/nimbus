@@ -10,8 +10,7 @@ import de.mhus.nimbus.shared.avro.WorldRegistrationRequest;
 import de.mhus.nimbus.shared.avro.WorldRegistrationResponse;
 import de.mhus.nimbus.shared.avro.WorldUnregistrationRequest;
 import de.mhus.nimbus.shared.avro.WorldUnregistrationResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -26,9 +25,9 @@ import java.util.concurrent.TimeUnit;
  * Client for communicating with registry module via Kafka
  */
 @Component
+@Slf4j
 public class RegistryClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RegistryClient.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -81,7 +80,7 @@ public class RegistryClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Registering planet '{}' with requestId {}", planetName, requestId);
+        log.info("Registering planet '{}' with requestId {}", planetName, requestId);
 
         return sendMessage(PLANET_REGISTRATION_TOPIC, requestId, message);
     }
@@ -115,7 +114,7 @@ public class RegistryClient {
                 .setReason(reason)
                 .build();
 
-        LOGGER.info("Unregistering planet '{}' with requestId {}", planetName, requestId);
+        log.info("Unregistering planet '{}' with requestId {}", planetName, requestId);
 
         return sendMessage(PLANET_UNREGISTRATION_TOPIC, requestId, message);
     }
@@ -146,7 +145,7 @@ public class RegistryClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up planet by name '{}' with requestId {}", planetName, requestId);
+        log.info("Looking up planet by name '{}' with requestId {}", planetName, requestId);
 
         return sendMessage(PLANET_LOOKUP_TOPIC, requestId, message);
     }
@@ -173,7 +172,7 @@ public class RegistryClient {
 
         PlanetLookupRequest message = builder.build();
 
-        LOGGER.info("Looking up planet '{}' {} with requestId {}",
+        log.info("Looking up planet '{}' {} with requestId {}",
                    planetName, worldName != null ? "with world '" + worldName + "'" : "", requestId);
 
         return sendMessage(PLANET_LOOKUP_TOPIC, requestId, message);
@@ -212,7 +211,7 @@ public class RegistryClient {
 
         WorldRegistrationRequest message = builder.build();
 
-        LOGGER.info("Registering world '{}' (ID: {}) on planet '{}' with requestId {}",
+        log.info("Registering world '{}' (ID: {}) on planet '{}' with requestId {}",
                    worldName, worldId, planetName, requestId);
 
         return sendMessage(WORLD_REGISTRATION_TOPIC, requestId, message);
@@ -258,7 +257,7 @@ public class RegistryClient {
 
         WorldUnregistrationRequest message = builder.build();
 
-        LOGGER.info("Unregistering world with ID '{}' {} with requestId {}",
+        log.info("Unregistering world with ID '{}' {} with requestId {}",
                    worldId, planetName != null ? "on planet '" + planetName + "'" : "", requestId);
 
         return sendMessage(WORLD_UNREGISTRATION_TOPIC, requestId, message);
@@ -301,7 +300,7 @@ public class RegistryClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Registering planet '{}' with requestId {} (with response)", planetName, requestId);
+        log.info("Registering planet '{}' with requestId {} (with response)", planetName, requestId);
 
         CompletableFuture<PlanetRegistrationResponse> future = new CompletableFuture<>();
         pendingPlanetRegistrations.put(requestId, future);
@@ -346,7 +345,7 @@ public class RegistryClient {
                 .setReason(reason)
                 .build();
 
-        LOGGER.info("Unregistering planet '{}' with requestId {} (with response)", planetName, requestId);
+        log.info("Unregistering planet '{}' with requestId {} (with response)", planetName, requestId);
 
         CompletableFuture<PlanetUnregistrationResponse> future = new CompletableFuture<>();
         pendingPlanetUnregistrations.put(requestId, future);
@@ -388,7 +387,7 @@ public class RegistryClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up planet by name '{}' with requestId {} (with response)", planetName, requestId);
+        log.info("Looking up planet by name '{}' with requestId {} (with response)", planetName, requestId);
 
         CompletableFuture<PlanetLookupResponse> future = new CompletableFuture<>();
         pendingPlanetLookups.put(requestId, future);
@@ -426,7 +425,7 @@ public class RegistryClient {
 
         PlanetLookupRequest message = builder.build();
 
-        LOGGER.info("Looking up planet '{}' {} with requestId {} (with response)",
+        log.info("Looking up planet '{}' {} with requestId {} (with response)",
                    planetName, worldName != null ? "with world '" + worldName + "'" : "", requestId);
 
         CompletableFuture<PlanetLookupResponse> future = new CompletableFuture<>();
@@ -476,7 +475,7 @@ public class RegistryClient {
 
         WorldRegistrationRequest message = builder.build();
 
-        LOGGER.info("Registering world '{}' (ID: {}) on planet '{}' with requestId {} (with response)",
+        log.info("Registering world '{}' (ID: {}) on planet '{}' with requestId {} (with response)",
                    worldName, worldId, planetName, requestId);
 
         CompletableFuture<WorldRegistrationResponse> future = new CompletableFuture<>();
@@ -533,7 +532,7 @@ public class RegistryClient {
 
         WorldUnregistrationRequest message = builder.build();
 
-        LOGGER.info("Unregistering world with ID '{}' {} with requestId {} (with response)",
+        log.info("Unregistering world with ID '{}' {} with requestId {} (with response)",
                    worldId, planetName != null ? "on planet '" + planetName + "'" : "", requestId);
 
         CompletableFuture<WorldUnregistrationResponse> future = new CompletableFuture<>();
@@ -572,11 +571,11 @@ public class RegistryClient {
         CompletableFuture<PlanetRegistrationResponse> future = pendingPlanetRegistrations.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing planet registration request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing planet registration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received planet registration response for unknown request ID: {}", requestId);
+            log.warn("Received planet registration response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -593,11 +592,11 @@ public class RegistryClient {
         CompletableFuture<PlanetUnregistrationResponse> future = pendingPlanetUnregistrations.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing planet unregistration request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing planet unregistration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received planet unregistration response for unknown request ID: {}", requestId);
+            log.warn("Received planet unregistration response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -614,11 +613,11 @@ public class RegistryClient {
         CompletableFuture<PlanetLookupResponse> future = pendingPlanetLookups.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing planet lookup request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing planet lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received planet lookup response for unknown request ID: {}", requestId);
+            log.warn("Received planet lookup response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -635,11 +634,11 @@ public class RegistryClient {
         CompletableFuture<WorldRegistrationResponse> future = pendingWorldRegistrations.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing world registration request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing world registration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received world registration response for unknown request ID: {}", requestId);
+            log.warn("Received world registration response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -656,11 +655,11 @@ public class RegistryClient {
         CompletableFuture<WorldUnregistrationResponse> future = pendingWorldUnregistrations.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing world unregistration request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing world unregistration request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received world unregistration response for unknown request ID: {}", requestId);
+            log.warn("Received world unregistration response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -688,7 +687,7 @@ public class RegistryClient {
         expiredCount += cleanupExpiredRequests(pendingWorldUnregistrations, "world unregistration");
 
         if (expiredCount > 0) {
-            LOGGER.info("Cleaned up {} expired request(s)", expiredCount);
+            log.info("Cleaned up {} expired request(s)", expiredCount);
         }
     }
 
@@ -703,7 +702,7 @@ public class RegistryClient {
             var entry = iterator.next();
             CompletableFuture<T> future = entry.getValue();
             if (future.isDone() || future.isCancelled()) {
-                LOGGER.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
+                log.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
                 iterator.remove();
                 removedCount++;
             }
@@ -746,10 +745,10 @@ public class RegistryClient {
     private CompletableFuture<Void> sendMessage(String topic, String messageId, Object message) {
         try {
             return kafkaTemplate.send(topic, messageId, message)
-                .thenRun(() -> LOGGER.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
+                .thenRun(() -> log.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
                 .handle((result, throwable) -> {
                     if (throwable != null) {
-                        LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+                        log.error("Failed to send message with ID {} to topic {}: {}",
                                    messageId, topic, throwable.getMessage(), throwable);
                         throw new RuntimeException(throwable);
                     }
@@ -757,7 +756,7 @@ public class RegistryClient {
                 });
 
         } catch (Exception e) {
-            LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+            log.error("Failed to send message with ID {} to topic {}: {}",
                        messageId, topic, e.getMessage(), e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);

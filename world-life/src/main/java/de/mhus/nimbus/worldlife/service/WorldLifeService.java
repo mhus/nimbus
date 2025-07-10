@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.character.CharacterType;
 import de.mhus.nimbus.shared.avro.CharacterOperationMessage;
 import de.mhus.nimbus.worldlife.entity.WorldCharacter;
 import de.mhus.nimbus.worldlife.repository.WorldCharacterRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,8 @@ import java.util.Optional;
  */
 @Service
 @Transactional
+@Slf4j
 public class WorldLifeService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeService.class);
 
     private final WorldCharacterRepository worldCharacterRepository;
 
@@ -43,13 +43,13 @@ public class WorldLifeService {
      */
     public WorldCharacter createCharacter(String worldId, CharacterType characterType,
                                         double x, double y, double z, String name) {
-        LOGGER.debug("Creating character of type {} at position ({}, {}, {}) in world {}",
+        log.debug("Creating character of type {} at position ({}, {}, {}) in world {}",
                     characterType, x, y, z, worldId);
 
         WorldCharacter character = new WorldCharacter(worldId, characterType, x, y, z, name);
         WorldCharacter saved = worldCharacterRepository.save(character);
 
-        LOGGER.info("Created character with ID {} of type {} in world {}",
+        log.info("Created character with ID {} of type {} in world {}",
                    saved.getId(), characterType, worldId);
 
         return saved;
@@ -63,7 +63,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public Optional<WorldCharacter> getCharacter(Long characterId) {
-        LOGGER.debug("Getting character with ID {}", characterId);
+        log.debug("Getting character with ID {}", characterId);
         return worldCharacterRepository.findById(characterId);
     }
 
@@ -75,7 +75,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public List<WorldCharacter> getCharactersInWorld(String worldId) {
-        LOGGER.debug("Getting all characters in world {}", worldId);
+        log.debug("Getting all characters in world {}", worldId);
         return worldCharacterRepository.findByWorldId(worldId);
     }
 
@@ -88,7 +88,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public List<WorldCharacter> getCharactersByType(String worldId, CharacterType characterType) {
-        LOGGER.debug("Getting characters of type {} in world {}", characterType, worldId);
+        log.debug("Getting characters of type {} in world {}", characterType, worldId);
         return worldCharacterRepository.findByWorldIdAndCharacterType(worldId, characterType);
     }
 
@@ -100,7 +100,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public List<WorldCharacter> getActiveCharacters(String worldId) {
-        LOGGER.debug("Getting active characters in world {}", worldId);
+        log.debug("Getting active characters in world {}", worldId);
         return worldCharacterRepository.findByWorldIdAndActiveTrue(worldId);
     }
 
@@ -114,7 +114,7 @@ public class WorldLifeService {
      * @return Updated character or empty if not found
      */
     public Optional<WorldCharacter> updateCharacterPosition(Long characterId, double x, double y, double z) {
-        LOGGER.debug("Updating position for character {} to ({}, {}, {})", characterId, x, y, z);
+        log.debug("Updating position for character {} to ({}, {}, {})", characterId, x, y, z);
 
         Optional<WorldCharacter> characterOpt = worldCharacterRepository.findById(characterId);
         if (characterOpt.isPresent()) {
@@ -122,13 +122,13 @@ public class WorldLifeService {
             character.updatePosition(x, y, z);
             WorldCharacter updated = worldCharacterRepository.save(character);
 
-            LOGGER.info("Updated position for character {} in world {} to ({}, {}, {})",
+            log.info("Updated position for character {} in world {} to ({}, {}, {})",
                        characterId, character.getWorldId(), x, y, z);
 
             return Optional.of(updated);
         }
 
-        LOGGER.warn("Character with ID {} not found for position update", characterId);
+        log.warn("Character with ID {} not found for position update", characterId);
         return Optional.empty();
     }
 
@@ -140,7 +140,7 @@ public class WorldLifeService {
      * @return Updated character or empty if not found
      */
     public Optional<WorldCharacter> updateCharacterHealth(Long characterId, int health) {
-        LOGGER.debug("Updating health for character {} to {}", characterId, health);
+        log.debug("Updating health for character {} to {}", characterId, health);
 
         Optional<WorldCharacter> characterOpt = worldCharacterRepository.findById(characterId);
         if (characterOpt.isPresent()) {
@@ -148,11 +148,11 @@ public class WorldLifeService {
             character.updateHealth(health);
             WorldCharacter updated = worldCharacterRepository.save(character);
 
-            LOGGER.info("Updated health for character {} to {}", characterId, health);
+            log.info("Updated health for character {} to {}", characterId, health);
             return Optional.of(updated);
         }
 
-        LOGGER.warn("Character with ID {} not found for health update", characterId);
+        log.warn("Character with ID {} not found for health update", characterId);
         return Optional.empty();
     }
 
@@ -178,7 +178,7 @@ public class WorldLifeService {
      * @return Updated character or empty if not found
      */
     public Optional<WorldCharacter> updateCharacterInfo(Long characterId, String name, String displayName, String description) {
-        LOGGER.debug("Updating info for character {} - name: {}, displayName: {}, description: {}",
+        log.debug("Updating info for character {} - name: {}, displayName: {}, description: {}",
                     characterId, name, displayName, description);
 
         Optional<WorldCharacter> characterOpt = worldCharacterRepository.findById(characterId);
@@ -190,11 +190,11 @@ public class WorldLifeService {
             character.setLastModified(LocalDateTime.now());
             WorldCharacter updated = worldCharacterRepository.save(character);
 
-            LOGGER.info("Updated info for character {}", characterId);
+            log.info("Updated info for character {}", characterId);
             return Optional.of(updated);
         }
 
-        LOGGER.warn("Character with ID {} not found for info update", characterId);
+        log.warn("Character with ID {} not found for info update", characterId);
         return Optional.empty();
     }
 
@@ -205,15 +205,15 @@ public class WorldLifeService {
      * @return true if character was deleted, false if not found
      */
     public boolean deleteCharacter(Long characterId) {
-        LOGGER.debug("Deleting character with ID {}", characterId);
+        log.debug("Deleting character with ID {}", characterId);
 
         if (worldCharacterRepository.existsById(characterId)) {
             worldCharacterRepository.deleteById(characterId);
-            LOGGER.info("Deleted character with ID {}", characterId);
+            log.info("Deleted character with ID {}", characterId);
             return true;
         }
 
-        LOGGER.warn("Character with ID {} not found for deletion", characterId);
+        log.warn("Character with ID {} not found for deletion", characterId);
         return false;
     }
 
@@ -224,11 +224,11 @@ public class WorldLifeService {
      * @return List of saved characters
      */
     public List<WorldCharacter> saveCharacters(List<WorldCharacter> characters) {
-        LOGGER.debug("Saving {} characters", characters.size());
+        log.debug("Saving {} characters", characters.size());
 
         List<WorldCharacter> saved = worldCharacterRepository.saveAll(characters);
 
-        LOGGER.info("Successfully saved {} characters", saved.size());
+        log.info("Successfully saved {} characters", saved.size());
         return saved;
     }
 
@@ -247,7 +247,7 @@ public class WorldLifeService {
     @Transactional(readOnly = true)
     public List<WorldCharacter> getCharactersInRange(String worldId, double minX, double maxX,
                                                    double minY, double maxY, double minZ, double maxZ) {
-        LOGGER.debug("Getting characters in range for world {} - X({}, {}), Y({}, {}), Z({}, {})",
+        log.debug("Getting characters in range for world {} - X({}, {}), Y({}, {}), Z({}, {})",
                     worldId, minX, maxX, minY, maxY, minZ, maxZ);
 
         return worldCharacterRepository.findByWorldIdAndXBetweenAndYBetweenAndZBetween(
@@ -267,7 +267,7 @@ public class WorldLifeService {
     @Transactional(readOnly = true)
     public List<WorldCharacter> getCharactersInRadius(String worldId, double centerX, double centerY,
                                                     double centerZ, double radius) {
-        LOGGER.debug("Getting characters in radius {} from point ({}, {}, {}) in world {}",
+        log.debug("Getting characters in radius {} from point ({}, {}, {}) in world {}",
                     radius, centerX, centerY, centerZ, worldId);
 
         List<WorldCharacter> allCharacters = worldCharacterRepository.findByWorldId(worldId);
@@ -290,7 +290,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public long getActiveCharacterCount(String worldId) {
-        LOGGER.debug("Getting active character count for world {}", worldId);
+        log.debug("Getting active character count for world {}", worldId);
         return worldCharacterRepository.countByWorldIdAndActiveTrue(worldId);
     }
 
@@ -303,7 +303,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public long getCharacterCountByType(String worldId, CharacterType characterType) {
-        LOGGER.debug("Getting character count for type {} in world {}", characterType, worldId);
+        log.debug("Getting character count for type {} in world {}", characterType, worldId);
         return worldCharacterRepository.countByWorldIdAndCharacterType(worldId, characterType);
     }
 
@@ -314,12 +314,12 @@ public class WorldLifeService {
      * @return Number of characters deleted
      */
     public long clearWorldCharacters(String worldId) {
-        LOGGER.debug("Clearing all characters from world {}", worldId);
+        log.debug("Clearing all characters from world {}", worldId);
 
         long count = worldCharacterRepository.countByWorldId(worldId);
         worldCharacterRepository.deleteByWorldId(worldId);
 
-        LOGGER.info("Cleared {} characters from world {}", count, worldId);
+        log.info("Cleared {} characters from world {}", count, worldId);
         return count;
     }
 
@@ -331,7 +331,7 @@ public class WorldLifeService {
      * @return Updated character or empty if not found
      */
     public Optional<WorldCharacter> updateCharacterData(Long characterId, de.mhus.nimbus.shared.character.AbstractCharacter characterData) {
-        LOGGER.debug("Updating character data for character {}", characterId);
+        log.debug("Updating character data for character {}", characterId);
 
         Optional<WorldCharacter> characterOpt = worldCharacterRepository.findById(characterId);
         if (characterOpt.isPresent()) {
@@ -339,11 +339,11 @@ public class WorldLifeService {
             character.setCharacter(characterData);
             WorldCharacter updated = worldCharacterRepository.save(character);
 
-            LOGGER.info("Updated character data for character {}", characterId);
+            log.info("Updated character data for character {}", characterId);
             return Optional.of(updated);
         }
 
-        LOGGER.warn("Character with ID {} not found for character data update", characterId);
+        log.warn("Character with ID {} not found for character data update", characterId);
         return Optional.empty();
     }
 
@@ -355,7 +355,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public Optional<de.mhus.nimbus.shared.character.AbstractCharacter> getCharacterData(Long characterId) {
-        LOGGER.debug("Getting character data for character {}", characterId);
+        log.debug("Getting character data for character {}", characterId);
 
         Optional<WorldCharacter> characterOpt = worldCharacterRepository.findById(characterId);
         if (characterOpt.isPresent()) {
@@ -364,7 +364,7 @@ public class WorldLifeService {
                 try {
                     return Optional.ofNullable(character.getCharacter());
                 } catch (Exception e) {
-                    LOGGER.error("Failed to deserialize character data for character {}: {}", characterId, e.getMessage());
+                    log.error("Failed to deserialize character data for character {}: {}", characterId, e.getMessage());
                     return Optional.empty();
                 }
             }
@@ -382,7 +382,7 @@ public class WorldLifeService {
      */
     @Transactional(readOnly = true)
     public <T extends de.mhus.nimbus.shared.character.AbstractCharacter> Optional<T> getCharacterData(Long characterId, Class<T> characterClass) {
-        LOGGER.debug("Getting character data for character {} as type {}", characterId, characterClass.getSimpleName());
+        log.debug("Getting character data for character {} as type {}", characterId, characterClass.getSimpleName());
 
         Optional<WorldCharacter> characterOpt = worldCharacterRepository.findById(characterId);
         if (characterOpt.isPresent()) {
@@ -391,7 +391,7 @@ public class WorldLifeService {
                 try {
                     return Optional.ofNullable(character.getCharacter(characterClass));
                 } catch (Exception e) {
-                    LOGGER.error("Failed to deserialize character data for character {} as type {}: {}",
+                    log.error("Failed to deserialize character data for character {} as type {}: {}",
                                characterId, characterClass.getSimpleName(), e.getMessage());
                     return Optional.empty();
                 }
@@ -416,7 +416,7 @@ public class WorldLifeService {
     public WorldCharacter createCharacterWithData(String worldId, de.mhus.nimbus.shared.character.CharacterType characterType,
                                                  double x, double y, double z, String name,
                                                  de.mhus.nimbus.shared.character.AbstractCharacter characterData) {
-        LOGGER.debug("Creating character with data of type {} at position ({}, {}, {}) in world {}",
+        log.debug("Creating character with data of type {} at position ({}, {}, {}) in world {}",
                     characterType, x, y, z, worldId);
 
         // Convert shared CharacterType to local CharacterType
@@ -430,7 +430,7 @@ public class WorldLifeService {
 
         WorldCharacter saved = worldCharacterRepository.save(character);
 
-        LOGGER.info("Created character with ID {} and data of type {} in world {}",
+        log.info("Created character with ID {} and data of type {} in world {}",
                    saved.getId(), characterType, worldId);
 
         return saved;
@@ -440,7 +440,7 @@ public class WorldLifeService {
      * Example method for world life service
      */
     public String getServiceInfo() {
-        LOGGER.debug("Getting world life service info");
+        log.debug("Getting world life service info");
         return "World Life Service is running";
     }
 

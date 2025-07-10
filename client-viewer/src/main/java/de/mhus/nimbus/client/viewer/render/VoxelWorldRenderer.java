@@ -1,13 +1,11 @@
 package de.mhus.nimbus.client.viewer.render;
 
-import de.mhus.nimbus.common.client.WorldVoxelClient;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
 import lombok.extern.slf4j.Slf4j;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -32,7 +30,6 @@ public class VoxelWorldRenderer {
     private static final float VOXEL_SIZE = 1.0f;
     private static final int RENDER_DISTANCE = 8; // Chunks
 
-    private final WorldVoxelClient worldVoxelClient;
     private final Camera camera;
 
     // OpenGL Resources
@@ -57,8 +54,7 @@ public class VoxelWorldRenderer {
     private final Matrix4f viewMatrix = new Matrix4f();
     private final Matrix4f modelMatrix = new Matrix4f();
 
-    public VoxelWorldRenderer(WorldVoxelClient worldVoxelClient) {
-        this.worldVoxelClient = worldVoxelClient;
+    public VoxelWorldRenderer() {
         this.camera = new Camera();
     }
 
@@ -66,7 +62,7 @@ public class VoxelWorldRenderer {
      * Initialisiert den Renderer
      */
     public void init(int windowWidth, int windowHeight) {
-        LOGGER.info("Initialisiere VoxelWorldRenderer...");
+        log.info("Initialisiere VoxelWorldRenderer...");
 
         // OpenGL Setup
         glEnable(GL_DEPTH_TEST);
@@ -82,7 +78,7 @@ public class VoxelWorldRenderer {
         // Setup Projection Matrix
         updateProjection(windowWidth, windowHeight);
 
-        LOGGER.info("VoxelWorldRenderer initialisiert");
+        log.info("VoxelWorldRenderer initialisiert");
     }
 
     /**
@@ -128,11 +124,20 @@ public class VoxelWorldRenderer {
     private void renderChunk(VoxelChunk chunk) {
         if (chunk == null || chunk.getVoxels() == null) return;
 
-        for (Voxel voxel : chunk.getVoxels()) {
-            if (voxel != null && !voxel.isEmpty()) {
+        // VoxelChunk.getVoxels() gibt eine ConcurrentHashMap zurück
+        for (Voxel voxel : chunk.getVoxels().values()) {
+            if (voxel != null && !isVoxelEmpty(voxel)) {
                 renderVoxel(voxel);
             }
         }
+    }
+
+    /**
+     * Prüft ob ein Voxel leer/transparent ist
+     */
+    private boolean isVoxelEmpty(Voxel voxel) {
+        // Basiert auf Voxel-Properties - ein Voxel ist leer wenn es durchlässig ist
+        return voxel.isPenetrable() || voxel.isTranslucent();
     }
 
     /**
@@ -162,22 +167,32 @@ public class VoxelWorldRenderer {
      */
     private Vector3f getVoxelColor(Voxel voxel) {
         // Einfache Farbzuordnung basierend auf Voxel-Properties
-        String material = voxel.getMaterial();
-        if (material == null) material = "default";
+        // Da getMaterial() nicht existiert, verwenden wir andere Properties
 
-        return switch (material.toLowerCase()) {
-            case "grass" -> new Vector3f(0.2f, 0.8f, 0.2f);
-            case "dirt" -> new Vector3f(0.6f, 0.4f, 0.2f);
-            case "stone" -> new Vector3f(0.5f, 0.5f, 0.5f);
-            case "water" -> new Vector3f(0.2f, 0.4f, 0.8f);
-            case "wood" -> new Vector3f(0.6f, 0.3f, 0.1f);
-            case "sand" -> new Vector3f(0.9f, 0.8f, 0.6f);
-            default -> new Vector3f(0.8f, 0.8f, 0.8f);
-        };
+        if (voxel.isWater()) {
+            return new Vector3f(0.2f, 0.4f, 0.8f);
+        } else if (voxel.isGrass()) {
+            return new Vector3f(0.2f, 0.8f, 0.2f);
+        } else if (voxel.isLiquid()) {
+            return new Vector3f(0.3f, 0.5f, 0.9f);
+        } else if (voxel.getDisplayName() != null) {
+            // Farbzuordnung basierend auf Display-Name
+            String name = voxel.getDisplayName().toLowerCase();
+            return switch (name) {
+                case "dirt" -> new Vector3f(0.6f, 0.4f, 0.2f);
+                case "stone" -> new Vector3f(0.5f, 0.5f, 0.5f);
+                case "wood" -> new Vector3f(0.6f, 0.3f, 0.1f);
+                case "sand" -> new Vector3f(0.9f, 0.8f, 0.6f);
+                default -> new Vector3f(0.8f, 0.8f, 0.8f);
+            };
+        }
+
+        // Default-Farbe
+        return new Vector3f(0.8f, 0.8f, 0.8f);
     }
 
     /**
-     * Lädt einen Chunk über den WorldVoxelClient
+     * Lädt einen Chunk - Placeholder-Implementierung da WorldVoxelClient nicht verfügbar
      */
     public void loadChunk(int chunkX, int chunkY, int chunkZ) {
         String chunkKey = getChunkKey(chunkX, chunkY, chunkZ);
@@ -186,21 +201,17 @@ public class VoxelWorldRenderer {
             return; // Chunk bereits geladen
         }
 
-        LOGGER.debug("Lade Chunk: {}", chunkKey);
+        log.debug("Lade Chunk: {}", chunkKey);
 
-        worldVoxelClient.loadChunk(currentWorldId, chunkX, chunkY, chunkZ)
-            .thenAccept(chunk -> {
-                if (chunk != null) {
-                    loadedChunks.put(chunkKey, chunk);
-                    LOGGER.debug("Chunk geladen: {}", chunkKey);
-                } else {
-                    LOGGER.warn("Chunk ist null: {}", chunkKey);
-                }
-            })
-            .exceptionally(ex -> {
-                LOGGER.error("Fehler beim Laden von Chunk {}: {}", chunkKey, ex.getMessage());
-                return null;
-            });
+        // TODO: Implementierung wenn WorldVoxelClient verfügbar ist
+        // Für jetzt erstellen wir einen leeren Chunk als Placeholder
+        VoxelChunk emptyChunk = new VoxelChunk();
+        emptyChunk.setChunkX(chunkX);
+        emptyChunk.setChunkY(chunkY);
+        emptyChunk.setChunkZ(chunkZ);
+
+        loadedChunks.put(chunkKey, emptyChunk);
+        log.debug("Placeholder-Chunk erstellt: {}", chunkKey);
     }
 
     /**
@@ -247,7 +258,7 @@ public class VoxelWorldRenderer {
         for (String chunkKey : chunksToUnload) {
             loadedChunks.remove(chunkKey);
             chunkMeshes.remove(chunkKey);
-            LOGGER.debug("Chunk entladen: {}", chunkKey);
+            log.debug("Chunk entladen: {}", chunkKey);
         }
     }
 
@@ -336,7 +347,7 @@ public class VoxelWorldRenderer {
         glLinkProgram(shaderProgram);
 
         if (glGetProgrami(shaderProgram, GL_LINK_STATUS) == GL_FALSE) {
-            LOGGER.error("Shader linking failed: {}", glGetProgramInfoLog(shaderProgram));
+            log.error("Shader linking failed: {}", glGetProgramInfoLog(shaderProgram));
             throw new RuntimeException("Shader linking failed");
         }
 
@@ -359,7 +370,7 @@ public class VoxelWorldRenderer {
         glCompileShader(shader);
 
         if (glGetShaderi(shader, GL_COMPILE_STATUS) == GL_FALSE) {
-            LOGGER.error("Shader compilation failed: {}", glGetShaderInfoLog(shader));
+            log.error("Shader compilation failed: {}", glGetShaderInfoLog(shader));
             throw new RuntimeException("Shader compilation failed");
         }
 

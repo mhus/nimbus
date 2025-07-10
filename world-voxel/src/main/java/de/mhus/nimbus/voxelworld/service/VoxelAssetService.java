@@ -35,7 +35,7 @@ public class VoxelAssetService {
      * @throws IllegalArgumentException if asset is invalid or already exists
      */
     public VoxelAsset createVoxelAsset(Asset asset) {
-        LOGGER.debug("Creating new voxel asset with ID: {}", asset.getId());
+        log.debug("Creating new voxel asset with ID: {}", asset.getId());
 
         if (!asset.isValid()) {
             throw new IllegalArgumentException("Asset validation failed for asset: " + asset.getId());
@@ -48,7 +48,7 @@ public class VoxelAssetService {
         VoxelAsset voxelAsset = VoxelAsset.fromAsset(asset);
         VoxelAsset savedVoxelAsset = voxelAssetRepository.save(voxelAsset);
 
-        LOGGER.info("Created voxel asset: {} (DB ID: {}, Asset ID: {})",
+        log.info("Created voxel asset: {} (DB ID: {}, Asset ID: {})",
                    savedVoxelAsset.getName(), savedVoxelAsset.getId(), savedVoxelAsset.getAssetId());
 
         return savedVoxelAsset;
@@ -63,7 +63,7 @@ public class VoxelAssetService {
      * @throws IllegalArgumentException if voxel asset not found
      */
     public VoxelAsset updateVoxelAsset(Long id, Asset asset) {
-        LOGGER.debug("Updating voxel asset with DB ID: {}", id);
+        log.debug("Updating voxel asset with DB ID: {}", id);
 
         VoxelAsset existingVoxelAsset = voxelAssetRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("VoxelAsset not found with ID: " + id));
@@ -81,7 +81,7 @@ public class VoxelAssetService {
         existingVoxelAsset.updateFromAsset(asset);
         VoxelAsset savedVoxelAsset = voxelAssetRepository.save(existingVoxelAsset);
 
-        LOGGER.info("Updated voxel asset: {} (DB ID: {}, Asset ID: {}, Version: {})",
+        log.info("Updated voxel asset: {} (DB ID: {}, Asset ID: {}, Version: {})",
                    savedVoxelAsset.getName(), savedVoxelAsset.getId(),
                    savedVoxelAsset.getAssetId(), savedVoxelAsset.getVersion());
 
@@ -93,7 +93,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public Optional<VoxelAsset> findById(Long id) {
-        LOGGER.debug("Finding voxel asset by DB ID: {}", id);
+        log.debug("Finding voxel asset by DB ID: {}", id);
         return voxelAssetRepository.findById(id);
     }
 
@@ -102,7 +102,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public Optional<VoxelAsset> findByAssetId(String assetId) {
-        LOGGER.debug("Finding voxel asset by asset ID: {}", assetId);
+        log.debug("Finding voxel asset by asset ID: {}", assetId);
         return voxelAssetRepository.findByAssetId(assetId);
     }
 
@@ -111,7 +111,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public Optional<VoxelAsset> findByName(String name) {
-        LOGGER.debug("Finding voxel asset by name: {}", name);
+        log.debug("Finding voxel asset by name: {}", name);
         return voxelAssetRepository.findByName(name);
     }
 
@@ -120,7 +120,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> findAll() {
-        LOGGER.debug("Finding all voxel assets");
+        log.debug("Finding all voxel assets");
         return voxelAssetRepository.findAll();
     }
 
@@ -129,7 +129,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> findAllActive() {
-        LOGGER.debug("Finding all active voxel assets");
+        log.debug("Finding all active voxel assets");
         return voxelAssetRepository.findByActiveTrue();
     }
 
@@ -138,7 +138,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> findByNamespace(String namespace) {
-        LOGGER.debug("Finding voxel assets by namespace: {}", namespace);
+        log.debug("Finding voxel assets by namespace: {}", namespace);
         return voxelAssetRepository.findByNamespace(namespace);
     }
 
@@ -147,7 +147,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> findActiveByNamespace(String namespace) {
-        LOGGER.debug("Finding active voxel assets by namespace: {}", namespace);
+        log.debug("Finding active voxel assets by namespace: {}", namespace);
         return voxelAssetRepository.findByNamespaceAndActiveTrue(namespace);
     }
 
@@ -156,7 +156,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> findByAssetType(Asset.AssetType assetType) {
-        LOGGER.debug("Finding voxel assets by asset type: {}", assetType);
+        log.debug("Finding voxel assets by asset type: {}", assetType);
         return voxelAssetRepository.findByAssetType(assetType.name());
     }
 
@@ -165,7 +165,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> findByAssetCategory(Asset.AssetCategory category) {
-        LOGGER.debug("Finding voxel assets by asset category: {}", category);
+        log.debug("Finding voxel assets by asset category: {}", category);
         return voxelAssetRepository.findByAssetCategory(category.name());
     }
 
@@ -174,7 +174,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<VoxelAsset> searchByName(String namePattern) {
-        LOGGER.debug("Searching voxel assets by name pattern: {}", namePattern);
+        log.debug("Searching voxel assets by name pattern: {}", namePattern);
         return voxelAssetRepository.findByNameContainingIgnoreCase(namePattern);
     }
 
@@ -184,7 +184,7 @@ public class VoxelAssetService {
     @Transactional(readOnly = true)
     public Page<VoxelAsset> findByCriteria(String namespace, Boolean active,
                                           String namePattern, Pageable pageable) {
-        LOGGER.debug("Finding voxel assets by criteria - namespace: {}, active: {}, pattern: {}",
+        log.debug("Finding voxel assets by criteria - namespace: {}, active: {}, pattern: {}",
                   namespace, active, namePattern);
         return voxelAssetRepository.findByCriteria(namespace, active, namePattern, pageable);
     }
@@ -204,7 +204,7 @@ public class VoxelAssetService {
      * Deactivate a voxel asset (soft delete)
      */
     public VoxelAsset deactivateVoxelAsset(Long id) {
-        LOGGER.debug("Deactivating voxel asset with ID: {}", id);
+        log.debug("Deactivating voxel asset with ID: {}", id);
 
         VoxelAsset voxelAsset = voxelAssetRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("VoxelAsset not found with ID: " + id));
@@ -213,7 +213,7 @@ public class VoxelAssetService {
         voxelAsset.setLastModified(LocalDateTime.now());
         VoxelAsset savedVoxelAsset = voxelAssetRepository.save(voxelAsset);
 
-        LOGGER.info("Deactivated voxel asset: {} (ID: {})", savedVoxelAsset.getName(), savedVoxelAsset.getId());
+        log.info("Deactivated voxel asset: {} (ID: {})", savedVoxelAsset.getName(), savedVoxelAsset.getId());
         return savedVoxelAsset;
     }
 
@@ -221,7 +221,7 @@ public class VoxelAssetService {
      * Activate a voxel asset
      */
     public VoxelAsset activateVoxelAsset(Long id) {
-        LOGGER.debug("Activating voxel asset with ID: {}", id);
+        log.debug("Activating voxel asset with ID: {}", id);
 
         VoxelAsset voxelAsset = voxelAssetRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("VoxelAsset not found with ID: " + id));
@@ -230,7 +230,7 @@ public class VoxelAssetService {
         voxelAsset.setLastModified(LocalDateTime.now());
         VoxelAsset savedVoxelAsset = voxelAssetRepository.save(voxelAsset);
 
-        LOGGER.info("Activated voxel asset: {} (ID: {})", savedVoxelAsset.getName(), savedVoxelAsset.getId());
+        log.info("Activated voxel asset: {} (ID: {})", savedVoxelAsset.getName(), savedVoxelAsset.getId());
         return savedVoxelAsset;
     }
 
@@ -238,14 +238,14 @@ public class VoxelAssetService {
      * Delete a voxel asset permanently
      */
     public void deleteVoxelAsset(Long id) {
-        LOGGER.debug("Deleting voxel asset with ID: {}", id);
+        log.debug("Deleting voxel asset with ID: {}", id);
 
         if (!voxelAssetRepository.existsById(id)) {
             throw new IllegalArgumentException("VoxelAsset not found with ID: " + id);
         }
 
         voxelAssetRepository.deleteById(id);
-        LOGGER.info("Deleted voxel asset with ID: {}", id);
+        log.info("Deleted voxel asset with ID: {}", id);
     }
 
     /**
@@ -253,7 +253,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public VoxelAssetStatistics getStatistics() {
-        LOGGER.debug("Calculating voxel asset statistics");
+        log.debug("Calculating voxel asset statistics");
 
         long totalVoxelAssets = voxelAssetRepository.count();
         long activeVoxelAssets = voxelAssetRepository.countByActiveTrue();
@@ -271,7 +271,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<String> getActiveVoxelAssetNames() {
-        LOGGER.debug("Getting active voxel asset names");
+        log.debug("Getting active voxel asset names");
         return voxelAssetRepository.findActiveVoxelAssetNames();
     }
 
@@ -280,7 +280,7 @@ public class VoxelAssetService {
      */
     @Transactional(readOnly = true)
     public List<String> getActiveVoxelAssetIds() {
-        LOGGER.debug("Getting active voxel asset IDs");
+        log.debug("Getting active voxel asset IDs");
         return voxelAssetRepository.findActiveVoxelAssetIds();
     }
 

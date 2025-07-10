@@ -3,6 +3,7 @@ package de.mhus.nimbus.identity.consumer;
 import de.mhus.nimbus.identity.service.IdentityLookupService;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,9 +18,8 @@ import org.springframework.stereotype.Component;
  * Kafka Consumer für IdentityCharacter-Lookup-Anfragen
  */
 @Component
+@Slf4j
 public class IdentityCharacterLookupConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(IdentityCharacterLookupConsumer.class);
 
     private final IdentityLookupService identityLookupService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -37,7 +37,7 @@ public class IdentityCharacterLookupConsumer {
                                                   @Header(KafkaHeaders.OFFSET) long offset,
                                                   Acknowledgment acknowledgment) {
 
-        logger.info("Received identity character lookup request: requestId={}, characterId={}, characterName={}, userId={}, planet={}, worldId={}, activeOnly={}, topic={}, partition={}, offset={}",
+        log.info("Received identity character lookup request: requestId={}, characterId={}, characterName={}, userId={}, planet={}, worldId={}, activeOnly={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getCharacterId(), request.getCharacterName(),
                    request.getUserId(), request.getCurrentPlanet(), request.getCurrentWorldId(),
                    request.getActiveOnly(), topic, partition, offset);
@@ -52,14 +52,14 @@ public class IdentityCharacterLookupConsumer {
             // Sende die Antwort zurück
             kafkaTemplate.send("identity-character-lookup-response", request.getRequestId(), response);
 
-            logger.info("Successfully processed identity character lookup request: requestId={}, status={}, characterCount={}",
+            log.info("Successfully processed identity character lookup request: requestId={}, status={}, characterCount={}",
                        request.getRequestId(), response.getStatus(), response.getCharacters().size());
 
             // Bestätige die Verarbeitung
             acknowledgment.acknowledge();
 
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid identity character lookup request: requestId={}, error={}",
+            log.error("Invalid identity character lookup request: requestId={}, error={}",
                         request.getRequestId(), e.getMessage());
 
             // Sende Error-Response
@@ -69,7 +69,7 @@ public class IdentityCharacterLookupConsumer {
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing identity character lookup request: requestId={}",
+            log.error("Error processing identity character lookup request: requestId={}",
                         request.getRequestId(), e);
 
             // Sende Error-Response

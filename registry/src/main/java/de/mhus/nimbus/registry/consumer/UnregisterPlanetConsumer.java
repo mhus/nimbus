@@ -3,8 +3,7 @@ package de.mhus.nimbus.registry.consumer;
 import de.mhus.nimbus.registry.service.PlanetRegistryService;
 import de.mhus.nimbus.shared.avro.PlanetUnregistrationRequest;
 import de.mhus.nimbus.shared.avro.PlanetUnregistrationResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
@@ -18,9 +17,8 @@ import org.springframework.stereotype.Component;
  * Delegiert die Business-Logik an den PlanetRegistryService
  */
 @Component
+@Slf4j
 public class UnregisterPlanetConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(UnregisterPlanetConsumer.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PlanetRegistryService planetRegistryService;
@@ -42,14 +40,14 @@ public class UnregisterPlanetConsumer {
                                                  @Header(KafkaHeaders.OFFSET) long offset,
                                                  Acknowledgment acknowledgment) {
 
-        logger.info("Received planet unregistration request from topic: '{}', partition: {}, offset: {}",
+        log.info("Received planet unregistration request from topic: '{}', partition: {}, offset: {}",
                    topic, partition, offset);
 
         try {
             // Validiere Request
             planetRegistryService.validateUnregistrationRequest(request);
 
-            logger.info("Processing planet unregistration request: requestId={}, planet={}, unregisteredBy={}",
+            log.info("Processing planet unregistration request: requestId={}, planet={}, unregisteredBy={}",
                        request.getRequestId(), request.getPlanetName(), request.getUnregisteredBy());
 
             // Delegiere an Service-Schicht
@@ -64,11 +62,11 @@ public class UnregisterPlanetConsumer {
             }
 
         } catch (IllegalArgumentException e) {
-            logger.warn("Invalid planet unregistration request: requestId={}, error={}",
+            log.warn("Invalid planet unregistration request: requestId={}, error={}",
                        request.getRequestId(), e.getMessage());
             sendErrorResponse(request, "Invalid request: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Error processing planet unregistration message: requestId={}",
+            log.error("Error processing planet unregistration message: requestId={}",
                         request.getRequestId(), e);
             sendErrorResponse(request, "Internal processing error");
         }
@@ -77,10 +75,10 @@ public class UnregisterPlanetConsumer {
     private void sendPlanetUnregistrationResponse(PlanetUnregistrationResponse response) {
         try {
             kafkaTemplate.send("planet-unregistration-response", response.getRequestId(), response);
-            logger.info("Sent planet unregistration response for requestId: {} with status: {}",
+            log.info("Sent planet unregistration response for requestId: {} with status: {}",
                        response.getRequestId(), response.getStatus());
         } catch (Exception e) {
-            logger.error("Error sending planet unregistration response for requestId: {}",
+            log.error("Error sending planet unregistration response for requestId: {}",
                         response.getRequestId(), e);
         }
     }
@@ -90,7 +88,7 @@ public class UnregisterPlanetConsumer {
             PlanetUnregistrationResponse errorResponse = planetRegistryService.createUnregistrationErrorResponse(request, errorMessage);
             sendPlanetUnregistrationResponse(errorResponse);
         } catch (Exception e) {
-            logger.error("Error sending unregistration error response for requestId: {}",
+            log.error("Error sending unregistration error response for requestId: {}",
                         request.getRequestId(), e);
         }
     }

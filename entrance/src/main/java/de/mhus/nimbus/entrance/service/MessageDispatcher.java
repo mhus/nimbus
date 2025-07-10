@@ -62,7 +62,7 @@ public class MessageDispatcher {
                 sendErrorResponse(session, message.getRequestId(), "Unbekannter Nachrichtentyp: " + message.getType());
             }
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Dispatching der Nachricht: {}", e.getMessage(), e);
+            log.error("Fehler beim Dispatching der Nachricht: {}", e.getMessage(), e);
             sendErrorResponse(session, message.getRequestId(), "Interner Serverfehler");
         }
     }
@@ -86,7 +86,7 @@ public class MessageDispatcher {
                 try {
                     return invokeMethod(service, methodName, parameters);
                 } catch (Exception e) {
-                    LOGGER.error("Fehler beim Ausführen der Methode {}.{}: {}", serviceName, methodName, e.getMessage(), e);
+                    log.error("Fehler beim Ausführen der Methode {}.{}: {}", serviceName, methodName, e.getMessage(), e);
                     throw new RuntimeException(e);
                 }
             }).thenAccept(result -> {
@@ -104,17 +104,17 @@ public class MessageDispatcher {
 
                     sendMessage(session, responseMessage);
                 } catch (Exception e) {
-                    LOGGER.error("Fehler beim Senden der Antwort: {}", e.getMessage(), e);
+                    log.error("Fehler beim Senden der Antwort: {}", e.getMessage(), e);
                     sendErrorResponse(session, message.getRequestId(), "Fehler beim Senden der Antwort");
                 }
             }).exceptionally(throwable -> {
-                LOGGER.error("Fehler beim Ausführen der Funktion: {}", throwable.getMessage(), throwable);
+                log.error("Fehler beim Ausführen der Funktion: {}", throwable.getMessage(), throwable);
                 sendErrorResponse(session, message.getRequestId(), "Fehler beim Ausführen der Funktion: " + throwable.getMessage());
                 return null;
             });
 
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Verarbeiten des Funktionsaufrufs: {}", e.getMessage(), e);
+            log.error("Fehler beim Verarbeiten des Funktionsaufrufs: {}", e.getMessage(), e);
             sendErrorResponse(session, message.getRequestId(), "Fehler beim Verarbeiten des Funktionsaufrufs");
         }
     }
@@ -138,7 +138,7 @@ public class MessageDispatcher {
             String json = objectMapper.writeValueAsString(message);
             session.sendMessage(new TextMessage(json));
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Senden der Nachricht: {}", e.getMessage(), e);
+            log.error("Fehler beim Senden der Nachricht: {}", e.getMessage(), e);
         }
     }
 
@@ -157,7 +157,7 @@ public class MessageDispatcher {
 
             sendMessage(session, responseMessage);
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Senden der Fehlernachricht: {}", e.getMessage(), e);
+            log.error("Fehler beim Senden der Fehlernachricht: {}", e.getMessage(), e);
         }
     }
 }

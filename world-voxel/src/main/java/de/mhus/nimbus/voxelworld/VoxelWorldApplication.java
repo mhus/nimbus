@@ -13,8 +13,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class VoxelWorldApplication {
 
     public static void main(String[] args) {
-        LOGGER.info("Starting VoxelWorld Application...");
+        log.info("Starting VoxelWorld Application...");
         SpringApplication.run(VoxelWorldApplication.class, args);
-        LOGGER.info("VoxelWorld Application started successfully");
+        log.info("VoxelWorld Application started successfully");
     }
 }

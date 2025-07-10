@@ -28,7 +28,7 @@ public class ClientSessionService {
         clientSession.setAuthenticated(false);
 
         sessions.put(session.getId(), clientSession);
-        LOGGER.info("Session {} hinzugefügt. Aktive Sessions: {}", session.getId(), sessions.size());
+        log.info("Session {} hinzugefügt. Aktive Sessions: {}", session.getId(), sessions.size());
     }
 
     /**
@@ -37,7 +37,7 @@ public class ClientSessionService {
     public void removeSession(String sessionId) {
         ClientSession removed = sessions.remove(sessionId);
         if (removed != null) {
-            LOGGER.info("Session {} entfernt. Aktive Sessions: {}", sessionId, sessions.size());
+            log.info("Session {} entfernt. Aktive Sessions: {}", sessionId, sessions.size());
         }
     }
 
@@ -51,7 +51,7 @@ public class ClientSessionService {
             session.setToken(token);
             session.setUsername(username);
             session.setAuthenticatedAt(Instant.now());
-            LOGGER.info("Session {} authentifiziert für Benutzer {}", sessionId, username);
+            log.info("Session {} authentifiziert für Benutzer {}", sessionId, username);
         }
     }
 

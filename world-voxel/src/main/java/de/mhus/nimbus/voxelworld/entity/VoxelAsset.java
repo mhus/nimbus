@@ -132,7 +132,7 @@ public class VoxelAsset {
         this.assetJson = asset.toJson();
 
         if (this.assetJson == null) {
-            LOGGER.error("Failed to serialize Asset to JSON for asset ID: {}", asset.getId());
+            log.error("Failed to serialize Asset to JSON for asset ID: {}", asset.getId());
         }
     }
 

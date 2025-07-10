@@ -50,7 +50,7 @@ public class VoxelWorldCanvas {
      * Initialisiert den 3D-Canvas
      */
     public void init(long window) {
-        LOGGER.info("Initialisiere VoxelWorldCanvas...");
+        log.info("Initialisiere VoxelWorldCanvas...");
 
         // Get initial window size
         try (MemoryStack stack = stackPush()) {
@@ -72,7 +72,7 @@ public class VoxelWorldCanvas {
         // Set camera to spawn position
         voxelRenderer.getCamera().setSpawnPosition();
 
-        LOGGER.info("VoxelWorldCanvas initialisiert");
+        log.info("VoxelWorldCanvas initialisiert");
     }
 
     /**
@@ -283,7 +283,7 @@ public class VoxelWorldCanvas {
                 case GLFW_KEY_R -> {
                     // Reset camera position
                     voxelRenderer.getCamera().setSpawnPosition();
-                    LOGGER.info("Kamera-Position zurückgesetzt");
+                    log.info("Kamera-Position zurückgesetzt");
                 }
                 case GLFW_KEY_T -> {
                     // Test teleport
@@ -336,10 +336,10 @@ public class VoxelWorldCanvas {
         if (mouseCaptured) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             voxelRenderer.getCamera().firstMouse = true;
-            LOGGER.info("Maus erfasst - WASD zum Bewegen, ESC zum Freigeben");
+            log.info("Maus erfasst - WASD zum Bewegen, ESC zum Freigeben");
         } else {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            LOGGER.info("Maus freigegeben - Klicken zum Erfassen");
+            log.info("Maus freigegeben - Klicken zum Erfassen");
         }
     }
 
@@ -364,7 +364,7 @@ public class VoxelWorldCanvas {
      */
     public void setWorldId(String worldId) {
         voxelRenderer.setWorldId(worldId);
-        LOGGER.info("Welt-ID gesetzt: {}", worldId);
+        log.info("Welt-ID gesetzt: {}", worldId);
     }
 
     /**
@@ -372,7 +372,7 @@ public class VoxelWorldCanvas {
      */
     public void cleanup() {
         voxelRenderer.cleanup();
-        LOGGER.info("VoxelWorldCanvas cleanup abgeschlossen");
+        log.info("VoxelWorldCanvas cleanup abgeschlossen");
     }
 
     // Getter

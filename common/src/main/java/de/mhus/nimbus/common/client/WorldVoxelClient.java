@@ -7,8 +7,7 @@ import de.mhus.nimbus.shared.avro.ChunkData;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
 import de.mhus.nimbus.shared.voxel.VoxelInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -23,9 +22,9 @@ import java.util.concurrent.TimeUnit;
  * Client for communicating with world-voxel module via Kafka
  */
 @Component
+@Slf4j
 public class WorldVoxelClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldVoxelClient.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -75,7 +74,7 @@ public class WorldVoxelClient {
             return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to serialize voxel for save operation", e);
+            log.error("Failed to serialize voxel for save operation", e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -131,7 +130,7 @@ public class WorldVoxelClient {
             return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to convert voxels for batch save operation", e);
+            log.error("Failed to convert voxels for batch save operation", e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -193,7 +192,7 @@ public class WorldVoxelClient {
             return sendMessage(CHUNK_OPERATIONS_TOPIC, messageId, message);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to serialize chunk for save operation", e);
+            log.error("Failed to serialize chunk for save operation", e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -260,7 +259,7 @@ public class WorldVoxelClient {
             return sendMessage(CHUNK_FULL_LOAD_REQUESTS_TOPIC, messageId, message);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to create full chunk load request", e);
+            log.error("Failed to create full chunk load request", e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -278,10 +277,10 @@ public class WorldVoxelClient {
     private CompletableFuture<Void> sendMessage(String topic, String messageId, VoxelOperationMessage message) {
         try {
             return kafkaTemplate.send(topic, messageId, message)
-                .thenRun(() -> LOGGER.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
+                .thenRun(() -> log.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
                 .handle((result, throwable) -> {
                     if (throwable != null) {
-                        LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+                        log.error("Failed to send message with ID {} to topic {}: {}",
                                    messageId, topic, throwable.getMessage(), throwable);
                         throw new RuntimeException(throwable);
                     }
@@ -289,7 +288,7 @@ public class WorldVoxelClient {
                 });
 
         } catch (Exception e) {
-            LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+            log.error("Failed to send message with ID {} to topic {}: {}",
                        messageId, topic, e.getMessage(), e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
@@ -378,7 +377,7 @@ public class WorldVoxelClient {
             future.complete(message);
             return true;
         } else {
-            LOGGER.warn("Received response for unknown voxel operation message ID {}", message.getMessageId());
+            log.warn("Received response for unknown voxel operation message ID {}", message.getMessageId());
             return false;
         }
     }
@@ -396,7 +395,7 @@ public class WorldVoxelClient {
             future.complete(message);
             return true;
         } else {
-            LOGGER.warn("Received response for unknown chunk load message ID {}", messageId);
+            log.warn("Received response for unknown chunk load message ID {}", messageId);
             return false;
         }
     }
@@ -410,7 +409,7 @@ public class WorldVoxelClient {
      */
     public boolean handleVoxelLoadResponse(List<Voxel> message, String messageId) {
         if (message == null || message.isEmpty()) {
-            LOGGER.warn("Received empty voxel load response for messageId: {}", messageId);
+            log.warn("Received empty voxel load response for messageId: {}", messageId);
             return false;
         }
 
@@ -419,7 +418,7 @@ public class WorldVoxelClient {
             future.complete(message);
             return true;
         } else {
-            LOGGER.warn("Received response for unknown voxel load message ID {}", messageId);
+            log.warn("Received response for unknown voxel load message ID {}", messageId);
             return false;
         }
     }
@@ -459,13 +458,13 @@ public class WorldVoxelClient {
                     }
                 });
 
-            LOGGER.info("Saving voxel at ({},{},{}) in world {} with messageId {} (with response)",
+            log.info("Saving voxel at ({},{},{}) in world {} with messageId {} (with response)",
                        voxel.getX(), voxel.getY(), voxel.getZ(), worldId, messageId);
 
             return future;
 
         } catch (Exception e) {
-            LOGGER.error("Failed to serialize voxel for save operation with response", e);
+            log.error("Failed to serialize voxel for save operation with response", e);
             CompletableFuture<VoxelOperationMessage> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -506,7 +505,7 @@ public class WorldVoxelClient {
                 }
             });
 
-        LOGGER.info("Deleting voxel at ({},{},{}) in world {} with messageId {} (with response)",
+        log.info("Deleting voxel at ({},{},{}) in world {} with messageId {} (with response)",
                    x, y, z, worldId, messageId);
 
         return future;
@@ -543,13 +542,13 @@ public class WorldVoxelClient {
                     }
                 });
 
-            LOGGER.info("Batch saving {} voxels in world {} with messageId {} (with response)",
+            log.info("Batch saving {} voxels in world {} with messageId {} (with response)",
                        voxelInstances.size(), worldId, messageId);
 
             return future;
 
         } catch (Exception e) {
-            LOGGER.error("Failed to convert voxels for batch save operation with response", e);
+            log.error("Failed to convert voxels for batch save operation with response", e);
             CompletableFuture<VoxelOperationMessage> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -591,7 +590,7 @@ public class WorldVoxelClient {
                 }
             });
 
-        LOGGER.info("Loading chunk ({},{},{}) in world {} with messageId {} (with response)",
+        log.info("Loading chunk ({},{},{}) in world {} with messageId {} (with response)",
                    chunkX, chunkY, chunkZ, worldId, messageId);
 
         return future;
@@ -636,13 +635,13 @@ public class WorldVoxelClient {
                     }
                 });
 
-            LOGGER.info("Loading full chunk ({},{},{}) in world {} with includeEmpty={} with messageId {} (with response)",
+            log.info("Loading full chunk ({},{},{}) in world {} with includeEmpty={} with messageId {} (with response)",
                        chunkX, chunkY, chunkZ, worldId, includeEmpty, messageId);
 
             return future;
 
         } catch (Exception e) {
-            LOGGER.error("Failed to create full chunk load request with response", e);
+            log.error("Failed to create full chunk load request with response", e);
             CompletableFuture<VoxelChunk> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -686,7 +685,7 @@ public class WorldVoxelClient {
                 }
             });
 
-        LOGGER.info("Loading voxels around ({},{},{}) with radius {} in world {} with messageId {} (with response)",
+        log.info("Loading voxels around ({},{},{}) with radius {} in world {} with messageId {} (with response)",
                    x, y, z, radius, worldId, messageId);
 
         return future;
@@ -709,7 +708,7 @@ public class WorldVoxelClient {
         expiredCount += cleanupExpiredRequests(pendingVoxelLoads, "voxel load");
 
         if (expiredCount > 0) {
-            LOGGER.info("Cleaned up {} expired request(s)", expiredCount);
+            log.info("Cleaned up {} expired request(s)", expiredCount);
         }
     }
 
@@ -724,7 +723,7 @@ public class WorldVoxelClient {
             var entry = iterator.next();
             CompletableFuture<T> future = entry.getValue();
             if (future.isDone() || future.isCancelled()) {
-                LOGGER.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
+                log.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
                 iterator.remove();
                 removedCount++;
             }
@@ -763,7 +762,7 @@ public class WorldVoxelClient {
         CompletableFuture<VoxelOperationMessage> future = pendingVoxelOperations.remove(messageId);
 
         if (future != null) {
-            LOGGER.debug("Completing voxel operation with messageId {}", messageId);
+            log.debug("Completing voxel operation with messageId {}", messageId);
             // Erstelle eine Bestätigungs-Nachricht
             VoxelOperationMessage confirmation = VoxelOperationMessage.newBuilder()
                     .setMessageId(messageId)
@@ -772,7 +771,7 @@ public class WorldVoxelClient {
             future.complete(confirmation);
             return true;
         } else {
-            LOGGER.warn("Received voxel operation confirmation for unknown message ID: {}", messageId);
+            log.warn("Received voxel operation confirmation for unknown message ID: {}", messageId);
             return false;
         }
     }
@@ -789,11 +788,11 @@ public class WorldVoxelClient {
         CompletableFuture<VoxelOperationMessage> future = pendingVoxelOperations.remove(messageId);
 
         if (future != null) {
-            LOGGER.debug("Completing voxel operation with error for messageId {}: {}", messageId, error);
+            log.debug("Completing voxel operation with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Voxel operation failed: " + error));
             return true;
         } else {
-            LOGGER.warn("Received voxel operation error for unknown message ID: {}", messageId);
+            log.warn("Received voxel operation error for unknown message ID: {}", messageId);
             return false;
         }
     }
@@ -810,11 +809,11 @@ public class WorldVoxelClient {
         CompletableFuture<VoxelChunk> future = pendingChunkLoads.remove(messageId);
 
         if (future != null) {
-            LOGGER.debug("Completing chunk load with error for messageId {}: {}", messageId, error);
+            log.debug("Completing chunk load with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Chunk load failed: " + error));
             return true;
         } else {
-            LOGGER.warn("Received chunk load error for unknown message ID: {}", messageId);
+            log.warn("Received chunk load error for unknown message ID: {}", messageId);
             return false;
         }
     }
@@ -831,11 +830,11 @@ public class WorldVoxelClient {
         CompletableFuture<List<Voxel>> future = pendingVoxelLoads.remove(messageId);
 
         if (future != null) {
-            LOGGER.debug("Completing voxel load with error for messageId {}: {}", messageId, error);
+            log.debug("Completing voxel load with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Voxel load failed: " + error));
             return true;
         } else {
-            LOGGER.warn("Received voxel load error for unknown message ID: {}", messageId);
+            log.warn("Received voxel load error for unknown message ID: {}", messageId);
             return false;
         }
     }

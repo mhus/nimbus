@@ -74,10 +74,10 @@ public class UserInterface {
         // Lade Schriftart (verwende system default)
         fontNormal = nvgCreateFont(vg, "sans", "");
         if (fontNormal == -1) {
-            LOGGER.warn("Konnte Schriftart nicht laden, verwende Default");
+            log.warn("Konnte Schriftart nicht laden, verwende Default");
         }
 
-        LOGGER.info("UserInterface initialisiert");
+        log.info("UserInterface initialisiert");
     }
 
     /**
@@ -446,7 +446,7 @@ public class UserInterface {
      * Wechselt zur 3D-Voxel-Welt nach erfolgreicher Anmeldung
      */
     private void enterVoxelWorld() {
-        LOGGER.info("Wechsle zur 3D-Voxel-Welt...");
+        log.info("Wechsle zur 3D-Voxel-Welt...");
 
         // Initialisiere 3D-Canvas wenn noch nicht geschehen
         viewerWindow.initializeVoxelWorld();
@@ -670,13 +670,13 @@ public class UserInterface {
     public void showMessage(String message) {
         messages.add(message);
         lastMessageTime = System.currentTimeMillis();
-        LOGGER.info("UI Message: {}", message);
+        log.info("UI Message: {}", message);
     }
 
     public void showError(String error) {
         errors.add(error);
         lastMessageTime = System.currentTimeMillis();
-        LOGGER.error("UI Error: {}", error);
+        log.error("UI Error: {}", error);
     }
 
     /**
@@ -686,6 +686,6 @@ public class UserInterface {
         if (vg != 0) {
             NanoVGGL3.nvgDelete(vg);
         }
-        LOGGER.info("UserInterface cleanup abgeschlossen");
+        log.info("UserInterface cleanup abgeschlossen");
     }
 }

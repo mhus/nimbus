@@ -33,10 +33,10 @@ public class WorldGeneratorController {
     @Operation(summary = "Generate a complete world",
                description = "Creates a new world with the specified name and generation parameters")
     public ResponseEntity<WorldGenerationResponse> generateWorld(@RequestBody WorldGenerationRequest request) {
-        LOGGER.info("Received world generation request for: {}", request.getWorldName());
+        log.info("Received world generation request for: {}", request.getWorldName());
 
         if (request.getWorldName() == null || request.getWorldName().trim().isEmpty()) {
-            LOGGER.warn("World generation request missing world name");
+            log.warn("World generation request missing world name");
             return ResponseEntity.badRequest().build();
         }
 
@@ -44,7 +44,7 @@ public class WorldGeneratorController {
             WorldGenerationResponse response = worldGeneratorService.generateWorld(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            LOGGER.error("Error generating world: {}", e.getMessage(), e);
+            log.error("Error generating world: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -57,7 +57,7 @@ public class WorldGeneratorController {
                description = "Starts world generation in the background and returns immediately")
     public ResponseEntity<CompletableFuture<WorldGenerationResponse>> generateWorldAsync(
             @RequestBody WorldGenerationRequest request) {
-        LOGGER.info("Received async world generation request for: {}", request.getWorldName());
+        log.info("Received async world generation request for: {}", request.getWorldName());
 
         if (request.getWorldName() == null || request.getWorldName().trim().isEmpty()) {
             return ResponseEntity.badRequest().build();
@@ -67,7 +67,7 @@ public class WorldGeneratorController {
             CompletableFuture<WorldGenerationResponse> future = worldGeneratorService.generateWorldAsync(request);
             return ResponseEntity.accepted().body(future);
         } catch (Exception e) {
-            LOGGER.error("Error starting async world generation: {}", e.getMessage(), e);
+            log.error("Error starting async world generation: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -81,7 +81,7 @@ public class WorldGeneratorController {
     public ResponseEntity<WorldGenerationResponse> generateSimpleWorld(
             @Parameter(description = "Name of the world to generate")
             @PathVariable String worldName) {
-        LOGGER.info("Received simple world generation request for: {}", worldName);
+        log.info("Received simple world generation request for: {}", worldName);
 
         WorldGenerationRequest request = WorldGenerationRequest.builder()
                 .worldName(worldName)
@@ -92,7 +92,7 @@ public class WorldGeneratorController {
             WorldGenerationResponse response = worldGeneratorService.generateWorld(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            LOGGER.error("Error generating simple world: {}", e.getMessage(), e);
+            log.error("Error generating simple world: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -115,7 +115,7 @@ public class WorldGeneratorController {
             @Parameter(description = "Random seed for generation")
             @RequestParam(required = false) Long seed) {
 
-        LOGGER.info("Received quick world generation request for: {} (type: {}, size: {}x{})",
+        log.info("Received quick world generation request for: {} (type: {}, size: {}x{})",
                    worldName, worldType, width, height);
 
         WorldGenerationRequest request = WorldGenerationRequest.builder()
@@ -129,7 +129,7 @@ public class WorldGeneratorController {
             WorldGenerationResponse response = worldGeneratorService.generateWorld(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            LOGGER.error("Error generating quick world: {}", e.getMessage(), e);
+            log.error("Error generating quick world: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

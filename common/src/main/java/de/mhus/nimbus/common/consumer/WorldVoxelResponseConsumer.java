@@ -4,6 +4,7 @@ import de.mhus.nimbus.common.client.WorldVoxelClient;
 import de.mhus.nimbus.shared.avro.VoxelOperationMessage;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
 import de.mhus.nimbus.shared.voxel.Voxel;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,8 @@ import java.util.List;
  */
 @Component
 @ConditionalOnProperty(name = "nimbus.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@Slf4j
 public class WorldVoxelResponseConsumer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldVoxelResponseConsumer.class);
 
     private final WorldVoxelClient worldVoxelClient;
 
@@ -48,7 +48,7 @@ public class WorldVoxelResponseConsumer {
                                             @Header(KafkaHeaders.OFFSET) long offset,
                                             Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received voxel operation response: messageId={}, operation={}, worldId={}, topic={}, partition={}, offset={}",
+        log.debug("Received voxel operation response: messageId={}, operation={}, worldId={}, topic={}, partition={}, offset={}",
                     response.getMessageId(), response.getOperation(), response.getWorldId(), topic, partition, offset);
 
         try {
@@ -58,13 +58,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed voxel operation response: messageId={}", response.getMessageId());
+                log.debug("Successfully processed voxel operation response: messageId={}", response.getMessageId());
             } else {
-                LOGGER.warn("Could not process voxel operation response - message will not be acknowledged: messageId={}", response.getMessageId());
+                log.warn("Could not process voxel operation response - message will not be acknowledged: messageId={}", response.getMessageId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling voxel operation response: messageId={}", response.getMessageId(), e);
+            log.error("Error handling voxel operation response: messageId={}", response.getMessageId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -85,7 +85,7 @@ public class WorldVoxelResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received chunk load response: messageId={}, chunk=({},{},{}), topic={}, partition={}, offset={}",
+        log.debug("Received chunk load response: messageId={}, chunk=({},{},{}), topic={}, partition={}, offset={}",
                     messageId, response.getChunkX(), response.getChunkY(), response.getChunkZ(),
                     topic, partition, offset);
 
@@ -96,13 +96,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed chunk load response: messageId={}", messageId);
+                log.debug("Successfully processed chunk load response: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process chunk load response - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process chunk load response - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling chunk load response: messageId={}", messageId, e);
+            log.error("Error handling chunk load response: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -123,7 +123,7 @@ public class WorldVoxelResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received voxel load response: messageId={}, voxels count={}, topic={}, partition={}, offset={}",
+        log.debug("Received voxel load response: messageId={}, voxels count={}, topic={}, partition={}, offset={}",
                     messageId, response != null ? response.size() : 0, topic, partition, offset);
 
         try {
@@ -133,13 +133,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed voxel load response: messageId={}", messageId);
+                log.debug("Successfully processed voxel load response: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process voxel load response - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process voxel load response - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling voxel load response: messageId={}", messageId, e);
+            log.error("Error handling voxel load response: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -159,7 +159,7 @@ public class WorldVoxelResponseConsumer {
                                                  @Header(KafkaHeaders.OFFSET) long offset,
                                                  Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received voxel operation confirmation: messageId={}, topic={}, partition={}, offset={}",
+        log.debug("Received voxel operation confirmation: messageId={}, topic={}, partition={}, offset={}",
                     messageId, topic, partition, offset);
 
         try {
@@ -169,13 +169,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed voxel operation confirmation: messageId={}", messageId);
+                log.debug("Successfully processed voxel operation confirmation: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process voxel operation confirmation - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process voxel operation confirmation - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling voxel operation confirmation: messageId={}", messageId, e);
+            log.error("Error handling voxel operation confirmation: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -196,7 +196,7 @@ public class WorldVoxelResponseConsumer {
                                          @Header(KafkaHeaders.OFFSET) long offset,
                                          Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received voxel operation error: messageId={}, error={}, topic={}, partition={}, offset={}",
+        log.debug("Received voxel operation error: messageId={}, error={}, topic={}, partition={}, offset={}",
                     messageId, errorMessage, topic, partition, offset);
 
         try {
@@ -206,13 +206,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed voxel operation error: messageId={}", messageId);
+                log.debug("Successfully processed voxel operation error: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process voxel operation error - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process voxel operation error - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling voxel operation error: messageId={}", messageId, e);
+            log.error("Error handling voxel operation error: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -233,7 +233,7 @@ public class WorldVoxelResponseConsumer {
                                     @Header(KafkaHeaders.OFFSET) long offset,
                                     Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received chunk load error: messageId={}, error={}, topic={}, partition={}, offset={}",
+        log.debug("Received chunk load error: messageId={}, error={}, topic={}, partition={}, offset={}",
                     messageId, errorMessage, topic, partition, offset);
 
         try {
@@ -243,13 +243,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed chunk load error: messageId={}", messageId);
+                log.debug("Successfully processed chunk load error: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process chunk load error - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process chunk load error - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling chunk load error: messageId={}", messageId, e);
+            log.error("Error handling chunk load error: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -270,7 +270,7 @@ public class WorldVoxelResponseConsumer {
                                     @Header(KafkaHeaders.OFFSET) long offset,
                                     Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received voxel load error: messageId={}, error={}, topic={}, partition={}, offset={}",
+        log.debug("Received voxel load error: messageId={}, error={}, topic={}, partition={}, offset={}",
                     messageId, errorMessage, topic, partition, offset);
 
         try {
@@ -280,13 +280,13 @@ public class WorldVoxelResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed voxel load error: messageId={}", messageId);
+                log.debug("Successfully processed voxel load error: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process voxel load error - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process voxel load error - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling voxel load error: messageId={}", messageId, e);
+            log.error("Error handling voxel load error: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }

@@ -3,8 +3,7 @@ package de.mhus.nimbus.identity.service;
 import de.mhus.nimbus.identity.entity.IdentityCharacter;
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.shared.avro.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +18,8 @@ import java.util.Optional;
  */
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class IdentityLookupService {
-
-    private static final Logger logger = LoggerFactory.getLogger(IdentityLookupService.class);
 
     private final UserService userService;
     private final IdentityCharacterService identityCharacterService;
@@ -35,7 +33,7 @@ public class IdentityLookupService {
      * Verarbeitet eine User-Lookup-Anfrage
      */
     public UserLookupResponse processUserLookupRequest(UserLookupRequest request) {
-        logger.info("Processing user lookup request: requestId={}, userId={}, username={}, email={}, requestedBy={}",
+        log.info("Processing user lookup request: requestId={}, userId={}, username={}, email={}, requestedBy={}",
                    request.getRequestId(), request.getUserId(), request.getUsername(),
                    request.getEmail(), request.getRequestedBy());
 
@@ -66,7 +64,7 @@ public class IdentityLookupService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing user lookup request: {}", request.getRequestId(), e);
+            log.error("Error processing user lookup request: {}", request.getRequestId(), e);
             return createUserLookupErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -75,7 +73,7 @@ public class IdentityLookupService {
      * Verarbeitet eine PlayerCharacter-Lookup-Anfrage
      */
     public PlayerCharacterLookupResponse processPlayerCharacterLookupRequest(PlayerCharacterLookupRequest request) {
-        logger.info("Processing identity character lookup request: requestId={}, characterId={}, characterName={}, userId={}, requestedBy={}",
+        log.info("Processing identity character lookup request: requestId={}, characterId={}, characterName={}, userId={}, requestedBy={}",
                    request.getRequestId(), request.getCharacterId(), request.getCharacterName(),
                    request.getUserId(), request.getRequestedBy());
 
@@ -101,7 +99,7 @@ public class IdentityLookupService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing identity character lookup request: {}", request.getRequestId(), e);
+            log.error("Error processing identity character lookup request: {}", request.getRequestId(), e);
             return createPlayerCharacterLookupErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -219,7 +217,7 @@ public class IdentityLookupService {
             throw new IllegalArgumentException("At least one search criteria (userId, username, or email) must be provided");
         }
 
-        logger.debug("User lookup request validation passed: {}", request.getRequestId());
+        log.debug("User lookup request validation passed: {}", request.getRequestId());
     }
 
     /**
@@ -243,7 +241,7 @@ public class IdentityLookupService {
             throw new IllegalArgumentException("At least one search criteria must be provided");
         }
 
-        logger.debug("Player character lookup request validation passed: {}", request.getRequestId());
+        log.debug("Player character lookup request validation passed: {}", request.getRequestId());
     }
 
     /**

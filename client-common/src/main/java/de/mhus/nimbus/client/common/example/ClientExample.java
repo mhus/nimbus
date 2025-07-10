@@ -29,29 +29,29 @@ public class ClientExample {
 
         // Registriere Handler für verschiedene Nachrichtentypen
         clientService.registerMessageHandler("notification", message -> {
-            LOGGER.info("Benachrichtigung erhalten: {}", message.getData());
+            log.info("Benachrichtigung erhalten: {}", message.getData());
         });
 
         clientService.registerMessageHandler("broadcast", message -> {
-            LOGGER.info("Broadcast erhalten: {}", message.getData());
+            log.info("Broadcast erhalten: {}", message.getData());
         });
 
         // Verbinde mit Server
         clientService.connect("ws://localhost:8080/nimbus")
             .thenCompose(v -> {
-                LOGGER.info("Verbindung hergestellt, authentifiziere...");
+                log.info("Verbindung hergestellt, authentifiziere...");
                 return clientService.authenticate("testuser", "password", "JavaClient/1.0");
             })
             .thenCompose(authResponse -> {
-                LOGGER.info("Authentifizierung erfolgreich: {}", authResponse);
+                log.info("Authentifizierung erfolgreich: {}", authResponse);
                 // Rufe eine Funktion auf dem Server auf
                 return clientService.callFunction("getUserProfile", null);
             })
             .thenAccept(response -> {
-                LOGGER.info("Funktionsaufruf-Antwort: {}", response);
+                log.info("Funktionsaufruf-Antwort: {}", response);
             })
             .exceptionally(throwable -> {
-                LOGGER.error("Fehler beim Client-Betrieb", throwable);
+                log.error("Fehler beim Client-Betrieb", throwable);
                 return null;
             })
             .whenComplete((result, throwable) -> {
@@ -67,7 +67,7 @@ public class ClientExample {
         CompletableFuture<NimbusClientService> clientFuture = NimbusClientBuilder.create()
             .serverUrl("ws://localhost:8080/nimbus")
             .defaultMessageHandler(message -> {
-                LOGGER.info("Standard-Handler: Nachricht erhalten vom Typ '{}': {}",
+                log.info("Standard-Handler: Nachricht erhalten vom Typ '{}': {}",
                     message.getType(), message.getData());
             })
             .autoReconnect(true)
@@ -76,7 +76,7 @@ public class ClientExample {
 
         clientFuture
             .thenCompose(client -> {
-                LOGGER.info("Client verbunden und bereit");
+                log.info("Client verbunden und bereit");
 
                 // Authentifiziere
                 return client.authenticate("admin", "secret", "AdminClient/1.0")
@@ -88,13 +88,13 @@ public class ClientExample {
 
                 // Rufe verschiedene Funktionen auf
                 client.callFunction("getServerStatus", null)
-                    .thenAccept(response -> LOGGER.info("Server Status: {}", response));
+                    .thenAccept(response -> log.info("Server Status: {}", response));
 
                 client.callFunction("listWorlds", null)
-                    .thenAccept(response -> LOGGER.info("Verfügbare Welten: {}", response));
+                    .thenAccept(response -> log.info("Verfügbare Welten: {}", response));
             })
             .exceptionally(throwable -> {
-                LOGGER.error("Fehler im Builder-Beispiel", throwable);
+                log.error("Fehler im Builder-Beispiel", throwable);
                 return null;
             });
     }

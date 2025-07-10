@@ -9,8 +9,7 @@ import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
 import de.mhus.nimbus.shared.voxel.VoxelInstance;
 import de.mhus.nimbus.voxelworld.service.VoxelWorldService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -23,9 +22,8 @@ import java.util.List;
  * Verwendet standardisierte Avro-Objekte aus dem shared-Modul
  */
 @Component
+@Slf4j
 public class VoxelWorldConsumer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(VoxelWorldConsumer.class);
 
     private final VoxelWorldService voxelWorldService;
 
@@ -40,7 +38,7 @@ public class VoxelWorldConsumer {
     @KafkaListener(topics = WorldVoxelClient.VOXEL_OPERATIONS_TOPIC, groupId = "voxelworld-service")
     public void consumeVoxelOperation(VoxelOperationMessage message, org.springframework.kafka.support.Acknowledgment acknowledgment) {
         try {
-            LOGGER.debug("Kafka: Received voxel operation {} for world {} with messageId {}",
+            log.debug("Kafka: Received voxel operation {} for world {} with messageId {}",
                         message.getOperation(), message.getWorldId(), message.getMessageId());
 
             switch (message.getOperation()) {
@@ -57,22 +55,22 @@ public class VoxelWorldConsumer {
                     handleClearChunk(message);
                     break;
                 default:
-                    LOGGER.warn("Unknown operation type: {}", message.getOperation());
+                    log.warn("Unknown operation type: {}", message.getOperation());
             }
 
-            LOGGER.debug("Kafka: Successfully processed operation {} for messageId {}",
+            log.debug("Kafka: Successfully processed operation {} for messageId {}",
                         message.getOperation(), message.getMessageId());
 
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to process voxel operation message with ID {}: {}",
+            log.error("Kafka: Failed to process voxel operation message with ID {}: {}",
                         message.getMessageId(), e.getMessage(), e);
         } finally {
             // Acknowledge the message after processing
             if (acknowledgment != null) {
                 acknowledgment.acknowledge();
-                LOGGER.debug("Kafka: Acknowledged message with ID {}", message.getMessageId());
+                log.debug("Kafka: Acknowledged message with ID {}", message.getMessageId());
             } else {
-                LOGGER.warn("Kafka: Acknowledgment is null for message with ID {}", message.getMessageId());
+                log.warn("Kafka: Acknowledgment is null for message with ID {}", message.getMessageId());
             }
         }
     }
@@ -89,11 +87,11 @@ public class VoxelWorldConsumer {
                 Voxel voxel = createVoxelFromData(voxelData);
                 voxelWorldService.saveVoxel(message.getWorldId(), voxel);
 
-                LOGGER.debug("Kafka: Saved voxel at ({}, {}, {}) in world {}",
+                log.debug("Kafka: Saved voxel at ({}, {}, {}) in world {}",
                            voxelData.getX(), voxelData.getY(), voxelData.getZ(), message.getWorldId());
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to save voxel: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to save voxel: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to save voxel", e);
         }
     }
@@ -113,15 +111,15 @@ public class VoxelWorldConsumer {
                 );
 
                 if (deleted) {
-                    LOGGER.debug("Kafka: Deleted voxel at ({}, {}, {}) in world {}",
+                    log.debug("Kafka: Deleted voxel at ({}, {}, {}) in world {}",
                                voxelData.getX(), voxelData.getY(), voxelData.getZ(), message.getWorldId());
                 } else {
-                    LOGGER.debug("Kafka: No voxel found to delete at ({}, {}, {}) in world {}",
+                    log.debug("Kafka: No voxel found to delete at ({}, {}, {}) in world {}",
                                voxelData.getX(), voxelData.getY(), voxelData.getZ(), message.getWorldId());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to delete voxel: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to delete voxel: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to delete voxel", e);
         }
     }
@@ -144,10 +142,10 @@ public class VoxelWorldConsumer {
 
                 int savedCount = voxelWorldService.saveVoxels(message.getWorldId(), voxels);
 
-                LOGGER.info("Kafka: Batch saved {} voxels in world {}", savedCount, message.getWorldId());
+                log.info("Kafka: Batch saved {} voxels in world {}", savedCount, message.getWorldId());
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to batch save voxels: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to batch save voxels: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to batch save voxels", e);
         }
     }
@@ -166,12 +164,12 @@ public class VoxelWorldConsumer {
                     chunkData.getChunkZ()
                 );
 
-                LOGGER.info("Kafka: Cleared chunk ({}, {}, {}) in world {} - {} voxels deleted",
+                log.info("Kafka: Cleared chunk ({}, {}, {}) in world {} - {} voxels deleted",
                            chunkData.getChunkX(), chunkData.getChunkY(), chunkData.getChunkZ(),
                            message.getWorldId(), deletedCount);
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to clear chunk: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to clear chunk: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to clear chunk", e);
         }
     }
@@ -200,7 +198,7 @@ public class VoxelWorldConsumer {
                 return createDefaultVoxel();
             }
         } catch (Exception e) {
-            LOGGER.warn("Failed to parse voxel data, creating default voxel: {}", e.getMessage());
+            log.warn("Failed to parse voxel data, creating default voxel: {}", e.getMessage());
             return createDefaultVoxel();
         }
     }
@@ -213,7 +211,7 @@ public class VoxelWorldConsumer {
             // BatchData enthält jetzt direkt eine Liste von AvroVoxel-Objekten
             return de.mhus.nimbus.shared.util.VoxelConverter.fromAvroVoxelList(batchData.getVoxels());
         } catch (Exception e) {
-            LOGGER.error("Failed to parse batch voxel data: {}", e.getMessage(), e);
+            log.error("Failed to parse batch voxel data: {}", e.getMessage(), e);
             return List.of(); // Leere Liste als Fallback
         }
     }
@@ -226,7 +224,7 @@ public class VoxelWorldConsumer {
             // Einfache Implementierung - erstelle Standard-Voxel
             return createDefaultVoxel();
         } catch (Exception e) {
-            LOGGER.warn("Failed to parse voxel JSON, using default voxel: {}", e.getMessage());
+            log.warn("Failed to parse voxel JSON, using default voxel: {}", e.getMessage());
             return createDefaultVoxel();
         }
     }
@@ -238,10 +236,10 @@ public class VoxelWorldConsumer {
         try {
             // Einfache Implementierung - kann erweitert werden für komplexere Parsing-Logik
             // Hier würde normalerweise ein JSON-Parser verwendet werden
-            LOGGER.debug("Parsing voxel list from JSON: {}", jsonData);
+            log.debug("Parsing voxel list from JSON: {}", jsonData);
             return List.of(); // Platzhalter - sollte durch echte JSON-Parsing-Logik ersetzt werden
         } catch (Exception e) {
-            LOGGER.error("Failed to parse voxel list JSON: {}", e.getMessage(), e);
+            log.error("Failed to parse voxel list JSON: {}", e.getMessage(), e);
             return List.of();
         }
     }

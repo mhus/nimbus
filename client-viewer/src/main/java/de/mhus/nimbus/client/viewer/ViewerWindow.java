@@ -52,7 +52,7 @@ public class ViewerWindow {
      * Startet die Hauptschleife der Anwendung
      */
     public void run() {
-        LOGGER.info("Initialisiere LWJGL...");
+        log.info("Initialisiere LWJGL...");
 
         init();
         loop();
@@ -132,7 +132,7 @@ public class ViewerWindow {
         // Initialize UI
         userInterface.init(window);
 
-        LOGGER.info("LWJGL initialisiert, Fenster erstellt");
+        log.info("LWJGL initialisiert, Fenster erstellt");
     }
 
     /**
@@ -182,14 +182,14 @@ public class ViewerWindow {
      * Verbindet zum Server
      */
     public CompletableFuture<Void> connectToServer(String serverUrl) {
-        LOGGER.info("Verbinde zu Server: {}", serverUrl);
+        log.info("Verbinde zu Server: {}", serverUrl);
         return clientService.connect(serverUrl)
             .thenRun(() -> {
-                LOGGER.info("Verbindung zum Server hergestellt");
+                log.info("Verbindung zum Server hergestellt");
                 userInterface.showMessage("Verbunden mit " + serverUrl);
             })
             .exceptionally(ex -> {
-                LOGGER.error("Fehler beim Verbinden zum Server", ex);
+                log.error("Fehler beim Verbinden zum Server", ex);
                 userInterface.showError("Verbindungsfehler: " + ex.getMessage());
                 return null;
             });
@@ -199,15 +199,15 @@ public class ViewerWindow {
      * Authentifiziert beim Server
      */
     public CompletableFuture<WebSocketMessage> authenticate(String username, String password) {
-        LOGGER.info("Authentifiziere Benutzer: {}", username);
+        log.info("Authentifiziere Benutzer: {}", username);
         return clientService.authenticate(username, password, "Nimbus Client Viewer v1.0")
             .thenApply(response -> {
-                LOGGER.info("Authentifizierung erfolgreich");
+                log.info("Authentifizierung erfolgreich");
                 userInterface.showMessage("Anmeldung erfolgreich");
                 return response;
             })
             .exceptionally(ex -> {
-                LOGGER.error("Fehler bei der Authentifizierung", ex);
+                log.error("Fehler bei der Authentifizierung", ex);
                 userInterface.showError("Anmeldung fehlgeschlagen: " + ex.getMessage());
                 return null;
             });
@@ -217,7 +217,7 @@ public class ViewerWindow {
      * Trennt die Verbindung zum Server
      */
     public void disconnect() {
-        LOGGER.info("Trenne Verbindung zum Server");
+        log.info("Trenne Verbindung zum Server");
         clientService.disconnect();
         userInterface.showMessage("Verbindung getrennt");
     }
@@ -244,7 +244,7 @@ public class ViewerWindow {
             voxelWorldCanvas = new VoxelWorldCanvas(this, worldVoxelClient, userInterface.getVgContext());
             voxelWorldCanvas.init(window);
             voxelWorldCanvas.setWorldId("default");
-            LOGGER.info("3D-Voxel-Canvas initialisiert");
+            log.info("3D-Voxel-Canvas initialisiert");
         }
     }
 
@@ -280,7 +280,7 @@ public class ViewerWindow {
         glfwTerminate();
         glfwSetErrorCallback(null).free();
 
-        LOGGER.info("LWJGL cleanup abgeschlossen");
+        log.info("LWJGL cleanup abgeschlossen");
     }
 
     // Getter methods

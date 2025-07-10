@@ -3,7 +3,7 @@
 ## Logging
 
 Use lombok `@Slf4j` for logging in all 
-classes. This provides the variable 'LOGGER' for logging purposes.
+classes.
 
 ## Avro Timestamp Handling
 

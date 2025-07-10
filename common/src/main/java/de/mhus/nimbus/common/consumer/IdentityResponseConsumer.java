@@ -9,6 +9,7 @@ import de.mhus.nimbus.shared.avro.AceCreateResponse;
 import de.mhus.nimbus.shared.avro.AceLookupResponse;
 import de.mhus.nimbus.shared.avro.AceUpdateResponse;
 import de.mhus.nimbus.shared.avro.AceDeleteResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnProperty(name = "nimbus.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@Slf4j
 public class IdentityResponseConsumer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(IdentityResponseConsumer.class);
 
     private final IdentityClient identityClient;
 
@@ -51,7 +51,7 @@ public class IdentityResponseConsumer {
                                    @Header(KafkaHeaders.OFFSET) long offset,
                                    Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received login response: requestId={}, status={}, topic={}, partition={}, offset={}",
+        log.debug("Received login response: requestId={}, status={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), topic, partition, offset);
 
         try {
@@ -61,13 +61,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed login response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed login response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process login response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process login response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling login response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling login response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -87,7 +87,7 @@ public class IdentityResponseConsumer {
                                         @Header(KafkaHeaders.OFFSET) long offset,
                                         Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received user lookup response: requestId={}, status={}, topic={}, partition={}, offset={}",
+        log.debug("Received user lookup response: requestId={}, status={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), topic, partition, offset);
 
         try {
@@ -97,13 +97,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed user lookup response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed user lookup response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process user lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process user lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling user lookup response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling user lookup response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -123,7 +123,7 @@ public class IdentityResponseConsumer {
                                              @Header(KafkaHeaders.OFFSET) long offset,
                                              Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received character lookup response: requestId={}, status={}, characters count={}, topic={}, partition={}, offset={}",
+        log.debug("Received character lookup response: requestId={}, status={}, characters count={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), response.getCharacters().size(), topic, partition, offset);
 
         try {
@@ -133,13 +133,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process character lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process character lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling character lookup response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling character lookup response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -159,7 +159,7 @@ public class IdentityResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received public key response: requestId={}, status={}, topic={}, partition={}, offset={}",
+        log.debug("Received public key response: requestId={}, status={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), topic, partition, offset);
 
         try {
@@ -169,13 +169,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed public key response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed public key response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process public key response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process public key response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling public key response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling public key response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -195,7 +195,7 @@ public class IdentityResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received ACE create response: requestId={}, success={}, topic={}, partition={}, offset={}",
+        log.debug("Received ACE create response: requestId={}, success={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getSuccess(), topic, partition, offset);
 
         try {
@@ -205,13 +205,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed ACE create response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed ACE create response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process ACE create response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process ACE create response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling ACE create response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling ACE create response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -231,7 +231,7 @@ public class IdentityResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received ACE lookup response: requestId={}, success={}, topic={}, partition={}, offset={}",
+        log.debug("Received ACE lookup response: requestId={}, success={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getSuccess(), topic, partition, offset);
 
         try {
@@ -241,13 +241,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed ACE lookup response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed ACE lookup response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process ACE lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process ACE lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling ACE lookup response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling ACE lookup response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -267,7 +267,7 @@ public class IdentityResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received ACE update response: requestId={}, success={}, topic={}, partition={}, offset={}",
+        log.debug("Received ACE update response: requestId={}, success={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getSuccess(), topic, partition, offset);
 
         try {
@@ -277,13 +277,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed ACE update response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed ACE update response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process ACE update response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process ACE update response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling ACE update response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling ACE update response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -303,7 +303,7 @@ public class IdentityResponseConsumer {
                                        @Header(KafkaHeaders.OFFSET) long offset,
                                        Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received ACE delete response: requestId={}, success={}, topic={}, partition={}, offset={}",
+        log.debug("Received ACE delete response: requestId={}, success={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getSuccess(), topic, partition, offset);
 
         try {
@@ -313,13 +313,13 @@ public class IdentityResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed ACE delete response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed ACE delete response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process ACE delete response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process ACE delete response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling ACE delete response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling ACE delete response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }

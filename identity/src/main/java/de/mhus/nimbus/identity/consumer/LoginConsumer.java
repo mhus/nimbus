@@ -3,6 +3,7 @@ package de.mhus.nimbus.identity.consumer;
 import de.mhus.nimbus.identity.service.LoginService;
 import de.mhus.nimbus.shared.avro.LoginRequest;
 import de.mhus.nimbus.shared.avro.LoginResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,9 +18,8 @@ import org.springframework.stereotype.Component;
  * Kafka Consumer für Login-Anfragen
  */
 @Component
+@Slf4j
 public class LoginConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(LoginConsumer.class);
 
     private final LoginService loginService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -36,7 +36,7 @@ public class LoginConsumer {
                                   @Header(KafkaHeaders.OFFSET) long offset,
                                   Acknowledgment acknowledgment) {
 
-        logger.info("Received login request: requestId={}, username={}, topic={}, partition={}, offset={}",
+        log.info("Received login request: requestId={}, username={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getUsername(), topic, partition, offset);
 
         try {
@@ -49,14 +49,14 @@ public class LoginConsumer {
             // Sende die Antwort zurück
             kafkaTemplate.send("login-response", request.getRequestId(), response);
 
-            logger.info("Successfully processed login request: requestId={}, status={}",
+            log.info("Successfully processed login request: requestId={}, status={}",
                        request.getRequestId(), response.getStatus());
 
             // Bestätige die Verarbeitung
             acknowledgment.acknowledge();
 
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid login request: requestId={}, error={}",
+            log.error("Invalid login request: requestId={}, error={}",
                         request.getRequestId(), e.getMessage());
 
             // Sende Error-Response
@@ -66,7 +66,7 @@ public class LoginConsumer {
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing login request: requestId={}",
+            log.error("Error processing login request: requestId={}",
                         request.getRequestId(), e);
 
             // Sende Error-Response

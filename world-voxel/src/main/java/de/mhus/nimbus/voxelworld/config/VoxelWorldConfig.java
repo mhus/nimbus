@@ -22,9 +22,9 @@ public class VoxelWorldConfig {
 
     @PostConstruct
     public void logConfiguration() {
-        LOGGER.info("VoxelWorld Configuration loaded:");
-        LOGGER.info("  - World Size: {}", worldSize);
-        LOGGER.info("  - Chunk Size: {}", chunkSize);
-        LOGGER.info("  - Max Players: {}", maxPlayers);
+        log.info("VoxelWorld Configuration loaded:");
+        log.info("  - World Size: {}", worldSize);
+        log.info("  - Chunk Size: {}", chunkSize);
+        log.info("  - Max Players: {}", maxPlayers);
     }
 }

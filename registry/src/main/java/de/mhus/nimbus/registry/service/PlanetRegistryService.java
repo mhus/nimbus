@@ -24,8 +24,7 @@ import de.mhus.nimbus.shared.avro.WorldUnregistrationRequest;
 import de.mhus.nimbus.shared.avro.WorldUnregistrationResponse;
 import de.mhus.nimbus.shared.avro.WorldUnregistrationStatus;
 import de.mhus.nimbus.shared.avro.RegisteredWorld;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,9 +39,8 @@ import java.util.Optional;
  */
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class PlanetRegistryService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PlanetRegistryService.class);
 
     private final PlanetRepository planetRepository;
     private final WorldRepository worldRepository;
@@ -63,7 +61,7 @@ public class PlanetRegistryService {
      * @return Die Planet-Lookup-Antwort mit gefundenen Welten oder Fehlerstatus
      */
     public PlanetLookupResponse processLookupRequest(PlanetLookupRequest request) {
-        logger.info("Processing planet lookup request: planet={}, world={}, environment={}, requestedBy={}",
+        log.info("Processing planet lookup request: planet={}, world={}, environment={}, requestedBy={}",
                    request.getPlanetName(), request.getWorldName(), request.getEnvironment(), request.getRequestedBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -87,7 +85,7 @@ public class PlanetRegistryService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing planet lookup request: {}", request.getRequestId(), e);
+            log.error("Error processing planet lookup request: {}", request.getRequestId(), e);
             return createErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -101,7 +99,7 @@ public class PlanetRegistryService {
      * @return Liste der gefundenen Welten
      */
     private List<PlanetWorld> findPlanetWorlds(String planetName, String worldName, Environment environment) {
-        logger.debug("Searching for planet worlds: planet={}, world={}, environment={}", planetName, worldName, environment);
+        log.debug("Searching for planet worlds: planet={}, world={}, environment={}", planetName, worldName, environment);
 
         // Prüfe ob spezifische Welt gesucht wird
         if (worldName != null && !worldName.trim().isEmpty()) {
@@ -218,7 +216,7 @@ public class PlanetRegistryService {
             throw new IllegalArgumentException("Environment cannot be null");
         }
 
-        logger.debug("Planet lookup request validation passed: {}", request.getRequestId());
+        log.debug("Planet lookup request validation passed: {}", request.getRequestId());
     }
 
     /**
@@ -229,7 +227,7 @@ public class PlanetRegistryService {
      * @return true wenn der Planet existiert
      */
     public boolean planetExists(String planetName, Environment environment) {
-        logger.debug("Checking if planet exists: planet={}, environment={}", planetName, environment);
+        log.debug("Checking if planet exists: planet={}, environment={}", planetName, environment);
         return planetRepository.existsByNameIgnoreCaseAndEnvironmentAndActiveTrue(planetName, environment);
     }
 
@@ -242,7 +240,7 @@ public class PlanetRegistryService {
      * @return true wenn die Welt existiert
      */
     public boolean worldExists(String planetName, String worldName, Environment environment) {
-        logger.debug("Checking if world exists: planet={}, world={}, environment={}", planetName, worldName, environment);
+        log.debug("Checking if world exists: planet={}, world={}, environment={}", planetName, worldName, environment);
         return worldRepository.existsByPlanetNameAndWorldNameAndEnvironment(planetName, worldName, environment);
     }
 
@@ -254,7 +252,7 @@ public class PlanetRegistryService {
      */
     @Transactional
     public PlanetRegistrationResponse processRegistrationRequest(PlanetRegistrationRequest request) {
-        logger.info("Processing planet registration request: planet={}, environment={}, worlds={}, registeredBy={}",
+        log.info("Processing planet registration request: planet={}, environment={}, worlds={}, registeredBy={}",
                    request.getPlanetName(), request.getEnvironment(), request.getWorlds().size(), request.getRegisteredBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -272,14 +270,14 @@ public class PlanetRegistryService {
                 // Planet existiert bereits - aktualisiere nur die Welten
                 planet = existingPlanet.get();
                 status = PlanetRegistrationStatus.SUCCESS; // Könnte auch PLANET_ALREADY_EXISTS sein
-                logger.info("Planet {} already exists in environment {}, updating worlds",
+                log.info("Planet {} already exists in environment {}, updating worlds",
                            request.getPlanetName(), request.getEnvironment());
             } else {
                 // Erstelle neuen Planet
                 planet = createPlanetFromRequest(request);
                 planet = planetRepository.save(planet);
                 status = PlanetRegistrationStatus.SUCCESS;
-                logger.info("Created new planet: {} in environment {}",
+                log.info("Created new planet: {} in environment {}",
                            request.getPlanetName(), request.getEnvironment());
             }
 
@@ -298,7 +296,7 @@ public class PlanetRegistryService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing planet registration request: {}", request.getRequestId(), e);
+            log.error("Error processing planet registration request: {}", request.getRequestId(), e);
             return createRegistrationErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -336,7 +334,7 @@ public class PlanetRegistryService {
                 RegisteredWorld result = processSingleWorldRegistration(planet, worldReg);
                 results.add(result);
             } catch (Exception e) {
-                logger.error("Error registering world {}: {}", worldReg.getWorldId(), e.getMessage());
+                log.error("Error registering world {}: {}", worldReg.getWorldId(), e.getMessage());
 
                 RegisteredWorld errorResult = RegisteredWorld.newBuilder()
                         .setWorldId(worldReg.getWorldId())
@@ -368,13 +366,13 @@ public class PlanetRegistryService {
             updateWorldFromRegistration(world, worldReg);
             status = WorldRegistrationStatus.UPDATED;
             message = "World updated successfully";
-            logger.debug("Updated existing world: {}", worldReg.getWorldId());
+            log.debug("Updated existing world: {}", worldReg.getWorldId());
         } else {
             // Erstelle neue Welt
             world = createWorldFromRegistration(planet, worldReg);
             status = WorldRegistrationStatus.SUCCESS;
             message = "World created successfully";
-            logger.debug("Created new world: {}", worldReg.getWorldId());
+            log.debug("Created new world: {}", worldReg.getWorldId());
         }
 
         world = worldRepository.save(world);
@@ -453,7 +451,7 @@ public class PlanetRegistryService {
             }
         }
 
-        logger.debug("Planet registration request validation passed: {}", request.getRequestId());
+        log.debug("Planet registration request validation passed: {}", request.getRequestId());
     }
 
     /**
@@ -505,7 +503,7 @@ public class PlanetRegistryService {
      */
     @Transactional
     public PlanetUnregistrationResponse processUnregistrationRequest(PlanetUnregistrationRequest request) {
-        logger.info("Processing planet unregistration request: planet={}, environment={}, unregisteredBy={}",
+        log.info("Processing planet unregistration request: planet={}, environment={}, unregisteredBy={}",
                    request.getPlanetName(), request.getEnvironment(), request.getUnregisteredBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -516,7 +514,7 @@ public class PlanetRegistryService {
                 request.getPlanetName(), request.getEnvironment());
 
             if (existingPlanet.isEmpty()) {
-                logger.warn("Planet {} not found for unregistration in environment {}",
+                log.warn("Planet {} not found for unregistration in environment {}",
                            request.getPlanetName(), request.getEnvironment());
 
                 return PlanetUnregistrationResponse.newBuilder()
@@ -534,7 +532,7 @@ public class PlanetRegistryService {
 
             // Prüfe ob Planet bereits inaktiv ist
             if (!planet.getActive()) {
-                logger.warn("Planet {} is already inactive in environment {}",
+                log.warn("Planet {} is already inactive in environment {}",
                            request.getPlanetName(), request.getEnvironment());
 
                 return PlanetUnregistrationResponse.newBuilder()
@@ -557,10 +555,10 @@ public class PlanetRegistryService {
             List<World> worlds = worldRepository.findByPlanetNameAndEnvironment(
                 request.getPlanetName(), request.getEnvironment());
 
-            logger.info("Found {} worlds associated with planet {} in environment {}",
+            log.info("Found {} worlds associated with planet {} in environment {}",
                        worlds.size(), request.getPlanetName(), request.getEnvironment());
 
-            logger.info("Successfully unregistered planet {} with {} worlds in environment {}",
+            log.info("Successfully unregistered planet {} with {} worlds in environment {}",
                        request.getPlanetName(), worlds.size(), request.getEnvironment());
 
             return PlanetUnregistrationResponse.newBuilder()
@@ -574,7 +572,7 @@ public class PlanetRegistryService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing planet unregistration request: {}", request.getRequestId(), e);
+            log.error("Error processing planet unregistration request: {}", request.getRequestId(), e);
             return createUnregistrationErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -602,7 +600,7 @@ public class PlanetRegistryService {
             throw new IllegalArgumentException("Environment cannot be null");
         }
 
-        logger.debug("Planet unregistration request validation passed: {}", request.getRequestId());
+        log.debug("Planet unregistration request validation passed: {}", request.getRequestId());
     }
 
     /**
@@ -645,7 +643,7 @@ public class PlanetRegistryService {
      */
     @Transactional
     public WorldRegistrationResponse processWorldRegistrationRequest(WorldRegistrationRequest request) {
-        logger.info("Processing world registration request: world={}, planet={}, environment={}, registeredBy={}",
+        log.info("Processing world registration request: world={}, planet={}, environment={}, registeredBy={}",
                    request.getWorldName(), request.getPlanetName(), request.getEnvironment(), request.getRegisteredBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -656,7 +654,7 @@ public class PlanetRegistryService {
                 request.getPlanetName(), request.getEnvironment());
 
             if (existingPlanet.isEmpty()) {
-                logger.warn("Planet {} not found for world registration in environment {}",
+                log.warn("Planet {} not found for world registration in environment {}",
                            request.getPlanetName(), request.getEnvironment());
 
                 return WorldRegistrationResponse.newBuilder()
@@ -685,7 +683,7 @@ public class PlanetRegistryService {
                 // Welt existiert bereits - prüfe ob sie zum selben Planeten gehört
                 world = existingWorld.get();
                 if (!world.getPlanet().getId().equals(planet.getId())) {
-                    logger.warn("World {} already exists on different planet", request.getWorldId());
+                    log.warn("World {} already exists on different planet", request.getWorldId());
                     return WorldRegistrationResponse.newBuilder()
                             .setRequestId(request.getRequestId())
                             .setStatus(WorldRegistrationStatus.WORLD_ALREADY_EXISTS)
@@ -703,13 +701,13 @@ public class PlanetRegistryService {
                 updateWorldFromWorldRegistrationRequest(world, request);
                 status = WorldRegistrationStatus.SUCCESS;
                 message = "World updated successfully";
-                logger.info("Updated existing world: {} on planet {}", request.getWorldId(), request.getPlanetName());
+                log.info("Updated existing world: {} on planet {}", request.getWorldId(), request.getPlanetName());
             } else {
                 // Erstelle neue Welt
                 world = createWorldFromWorldRegistrationRequest(planet, request);
                 status = WorldRegistrationStatus.SUCCESS;
                 message = "World created successfully";
-                logger.info("Created new world: {} on planet {}", request.getWorldId(), request.getPlanetName());
+                log.info("Created new world: {} on planet {}", request.getWorldId(), request.getPlanetName());
             }
 
             world = worldRepository.save(world);
@@ -727,7 +725,7 @@ public class PlanetRegistryService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing world registration request: {}", request.getRequestId(), e);
+            log.error("Error processing world registration request: {}", request.getRequestId(), e);
             return createWorldRegistrationErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -806,7 +804,7 @@ public class PlanetRegistryService {
             throw new IllegalArgumentException("Environment cannot be null");
         }
 
-        logger.debug("World registration request validation passed: {}", request.getRequestId());
+        log.debug("World registration request validation passed: {}", request.getRequestId());
     }
 
     /**
@@ -866,7 +864,7 @@ public class PlanetRegistryService {
             throw new IllegalArgumentException("Environment cannot be null");
         }
 
-        logger.debug("World unregistration request validation passed: {}", request.getRequestId());
+        log.debug("World unregistration request validation passed: {}", request.getRequestId());
     }
 
     /**
@@ -877,7 +875,7 @@ public class PlanetRegistryService {
      */
     @Transactional
     public WorldUnregistrationResponse processWorldUnregistrationRequest(WorldUnregistrationRequest request) {
-        logger.info("Processing world unregistration request: worldId={}, planetName={}, environment={}, unregisteredBy={}",
+        log.info("Processing world unregistration request: worldId={}, planetName={}, environment={}, unregisteredBy={}",
                    request.getWorldId(), request.getPlanetName(), request.getEnvironment(), request.getUnregisteredBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -887,7 +885,7 @@ public class PlanetRegistryService {
             Optional<World> existingWorld = worldRepository.findByWorldId(request.getWorldId());
 
             if (existingWorld.isEmpty()) {
-                logger.warn("World {} not found for unregistration in environment {}",
+                log.warn("World {} not found for unregistration in environment {}",
                            request.getWorldId(), request.getEnvironment());
 
                 return WorldUnregistrationResponse.newBuilder()
@@ -907,7 +905,7 @@ public class PlanetRegistryService {
 
             // Validiere Environment - Welt muss im angegebenen Environment existieren
             if (!world.getPlanet().getEnvironment().equals(request.getEnvironment())) {
-                logger.warn("World {} exists but not in environment {}, found in environment {}",
+                log.warn("World {} exists but not in environment {}, found in environment {}",
                            request.getWorldId(), request.getEnvironment(), world.getPlanet().getEnvironment());
 
                 return WorldUnregistrationResponse.newBuilder()
@@ -926,7 +924,7 @@ public class PlanetRegistryService {
             // Optional: Validiere Planet-Name falls angegeben
             if (request.getPlanetName() != null && !request.getPlanetName().trim().isEmpty()) {
                 if (!world.getPlanet().getName().equalsIgnoreCase(request.getPlanetName().trim())) {
-                    logger.warn("World {} belongs to planet {} but request specified planet {}",
+                    log.warn("World {} belongs to planet {} but request specified planet {}",
                                request.getWorldId(), world.getPlanet().getName(), request.getPlanetName());
 
                     return WorldUnregistrationResponse.newBuilder()
@@ -948,7 +946,7 @@ public class PlanetRegistryService {
             // Alternative: Implementiere soft delete falls ein "active" Feld in der World-Entity vorhanden ist
             worldRepository.delete(world);
 
-            logger.info("Successfully unregistered world {} from planet {} in environment {}",
+            log.info("Successfully unregistered world {} from planet {} in environment {}",
                        world.getWorldId(), world.getPlanet().getName(), request.getEnvironment());
 
             return WorldUnregistrationResponse.newBuilder()
@@ -964,7 +962,7 @@ public class PlanetRegistryService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing world unregistration request: {}", request.getRequestId(), e);
+            log.error("Error processing world unregistration request: {}", request.getRequestId(), e);
             return createWorldUnregistrationErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }

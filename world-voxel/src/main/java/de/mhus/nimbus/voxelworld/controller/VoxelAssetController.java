@@ -92,7 +92,7 @@ public class VoxelAssetController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(createdVoxelAsset.getAsset());
         } catch (IllegalArgumentException e) {
-            LOGGER.warn("Failed to create voxel asset: {}", e.getMessage());
+            log.warn("Failed to create voxel asset: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -139,10 +139,10 @@ public class VoxelAssetController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(createdVoxelAsset.getAsset());
         } catch (IOException e) {
-            LOGGER.error("Failed to upload voxel asset file", e);
+            log.error("Failed to upload voxel asset file", e);
             return ResponseEntity.internalServerError().build();
         } catch (IllegalArgumentException e) {
-            LOGGER.warn("Failed to create voxel asset: {}", e.getMessage());
+            log.warn("Failed to create voxel asset: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -156,7 +156,7 @@ public class VoxelAssetController {
             VoxelAsset updatedVoxelAsset = voxelAssetService.updateVoxelAsset(id, asset);
             return ResponseEntity.ok(updatedVoxelAsset.getAsset());
         } catch (IllegalArgumentException e) {
-            LOGGER.warn("Failed to update voxel asset {}: {}", id, e.getMessage());
+            log.warn("Failed to update voxel asset {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

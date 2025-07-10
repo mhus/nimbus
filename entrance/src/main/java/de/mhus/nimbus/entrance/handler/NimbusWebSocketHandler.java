@@ -40,7 +40,7 @@ public class NimbusWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        LOGGER.info("WebSocket Verbindung hergestellt: {}", session.getId());
+        log.info("WebSocket Verbindung hergestellt: {}", session.getId());
         clientSessionService.addSession(session);
     }
 
@@ -48,7 +48,7 @@ public class NimbusWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         try {
             String payload = message.getPayload();
-            LOGGER.debug("Nachricht empfangen von {}: {}", session.getId(), payload);
+            log.debug("Nachricht empfangen von {}: {}", session.getId(), payload);
 
             JsonNode jsonNode = objectMapper.readTree(payload);
             WebSocketMessage wsMessage = objectMapper.treeToValue(jsonNode, WebSocketMessage.class);
@@ -66,7 +66,7 @@ public class NimbusWebSocketHandler extends TextWebSocketHandler {
                 messageDispatcher.dispatch(session, wsMessage);
             }
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Verarbeiten der Nachricht von {}: {}", session.getId(), e.getMessage(), e);
+            log.error("Fehler beim Verarbeiten der Nachricht von {}: {}", session.getId(), e.getMessage(), e);
             sendErrorMessage(session, "Fehler beim Verarbeiten der Nachricht", null);
         }
     }
@@ -98,7 +98,7 @@ public class NimbusWebSocketHandler extends TextWebSocketHandler {
                     .build();
 
                 sendMessage(session, responseMessage);
-                LOGGER.info("Client {} erfolgreich authentifiziert als {}", session.getId(), authRequest.getUsername());
+                log.info("Client {} erfolgreich authentifiziert als {}", session.getId(), authRequest.getUsername());
             } else {
                 AuthenticationResponse response = AuthenticationResponse.builder()
                     .success(false)
@@ -112,23 +112,23 @@ public class NimbusWebSocketHandler extends TextWebSocketHandler {
                     .build();
 
                 sendMessage(session, responseMessage);
-                LOGGER.warn("Authentifizierung fehlgeschlagen für Client {}", session.getId());
+                log.warn("Authentifizierung fehlgeschlagen für Client {}", session.getId());
             }
         } catch (Exception e) {
-            LOGGER.error("Fehler bei Authentifizierung für {}: {}", session.getId(), e.getMessage(), e);
+            log.error("Fehler bei Authentifizierung für {}: {}", session.getId(), e.getMessage(), e);
             sendErrorMessage(session, "Authentifizierungsfehler", message.getRequestId());
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        LOGGER.info("WebSocket Verbindung geschlossen: {} (Status: {})", session.getId(), status);
+        log.info("WebSocket Verbindung geschlossen: {} (Status: {})", session.getId(), status);
         clientSessionService.removeSession(session.getId());
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        LOGGER.error("Transport Fehler für {}: {}", session.getId(), exception.getMessage(), exception);
+        log.error("Transport Fehler für {}: {}", session.getId(), exception.getMessage(), exception);
         clientSessionService.removeSession(session.getId());
     }
 
@@ -147,7 +147,7 @@ public class NimbusWebSocketHandler extends TextWebSocketHandler {
 
             sendMessage(session, errorResponse);
         } catch (Exception e) {
-            LOGGER.error("Fehler beim Senden der Fehlernachricht: {}", e.getMessage(), e);
+            log.error("Fehler beim Senden der Fehlernachricht: {}", e.getMessage(), e);
         }
     }
 }

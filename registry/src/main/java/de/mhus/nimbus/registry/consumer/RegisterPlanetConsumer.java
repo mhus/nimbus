@@ -3,8 +3,7 @@ package de.mhus.nimbus.registry.consumer;
 import de.mhus.nimbus.registry.service.PlanetRegistryService;
 import de.mhus.nimbus.shared.avro.PlanetRegistrationRequest;
 import de.mhus.nimbus.shared.avro.PlanetRegistrationResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
@@ -18,9 +17,8 @@ import org.springframework.stereotype.Component;
  * Delegiert die Business-Logik an den PlanetRegistryService
  */
 @Component
+@Slf4j
 public class RegisterPlanetConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(RegisterPlanetConsumer.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PlanetRegistryService planetRegistryService;
@@ -42,14 +40,14 @@ public class RegisterPlanetConsumer {
                                                @Header(KafkaHeaders.OFFSET) long offset,
                                                Acknowledgment acknowledgment) {
 
-        logger.info("Received planet registration request from topic: '{}', partition: {}, offset: {}",
+        log.info("Received planet registration request from topic: '{}', partition: {}, offset: {}",
                    topic, partition, offset);
 
         try {
             // Validiere Request
             planetRegistryService.validateRegistrationRequest(request);
 
-            logger.info("Processing planet registration request: requestId={}, planet={}, environment={}, worlds={}, registeredBy={}",
+            log.info("Processing planet registration request: requestId={}, planet={}, environment={}, worlds={}, registeredBy={}",
                        request.getRequestId(), request.getPlanetName(), request.getEnvironment(),
                        request.getWorlds().size(), request.getRegisteredBy());
 
@@ -65,11 +63,11 @@ public class RegisterPlanetConsumer {
             }
 
         } catch (IllegalArgumentException e) {
-            logger.warn("Invalid planet registration request: requestId={}, error={}",
+            log.warn("Invalid planet registration request: requestId={}, error={}",
                        request.getRequestId(), e.getMessage());
             sendErrorResponse(request, "Invalid request: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Error processing planet registration message: requestId={}",
+            log.error("Error processing planet registration message: requestId={}",
                         request.getRequestId(), e);
             sendErrorResponse(request, "Internal processing error");
         }
@@ -78,10 +76,10 @@ public class RegisterPlanetConsumer {
     private void sendPlanetRegistrationResponse(PlanetRegistrationResponse response) {
         try {
             kafkaTemplate.send("planet-registration-response", response.getRequestId(), response);
-            logger.info("Sent planet registration response for requestId: {} with status: {}",
+            log.info("Sent planet registration response for requestId: {} with status: {}",
                        response.getRequestId(), response.getStatus());
         } catch (Exception e) {
-            logger.error("Error sending planet registration response for requestId: {}",
+            log.error("Error sending planet registration response for requestId: {}",
                         response.getRequestId(), e);
         }
     }
@@ -91,7 +89,7 @@ public class RegisterPlanetConsumer {
             PlanetRegistrationResponse errorResponse = planetRegistryService.createRegistrationErrorResponse(request, errorMessage);
             sendPlanetRegistrationResponse(errorResponse);
         } catch (Exception e) {
-            logger.error("Error sending registration error response for requestId: {}",
+            log.error("Error sending registration error response for requestId: {}",
                         request.getRequestId(), e);
         }
     }

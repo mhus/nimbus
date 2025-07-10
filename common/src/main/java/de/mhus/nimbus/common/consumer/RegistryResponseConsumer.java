@@ -6,6 +6,7 @@ import de.mhus.nimbus.shared.avro.PlanetUnregistrationResponse;
 import de.mhus.nimbus.shared.avro.PlanetLookupResponse;
 import de.mhus.nimbus.shared.avro.WorldRegistrationResponse;
 import de.mhus.nimbus.shared.avro.WorldUnregistrationResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnProperty(name = "nimbus.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@Slf4j
 public class RegistryResponseConsumer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RegistryResponseConsumer.class);
 
     private final RegistryClient registryClient;
 
@@ -48,7 +48,7 @@ public class RegistryResponseConsumer {
                                                 @Header(KafkaHeaders.OFFSET) long offset,
                                                 Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received planet registration response: requestId={}, status={}, planet={}, topic={}, partition={}, offset={}",
+        log.debug("Received planet registration response: requestId={}, status={}, planet={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), response.getPlanetName(), topic, partition, offset);
 
         try {
@@ -58,13 +58,13 @@ public class RegistryResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed planet registration response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed planet registration response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process planet registration response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process planet registration response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling planet registration response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling planet registration response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -84,7 +84,7 @@ public class RegistryResponseConsumer {
                                                   @Header(KafkaHeaders.OFFSET) long offset,
                                                   Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received planet unregistration response: requestId={}, status={}, planet={}, topic={}, partition={}, offset={}",
+        log.debug("Received planet unregistration response: requestId={}, status={}, planet={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), response.getPlanetName(), topic, partition, offset);
 
         try {
@@ -94,13 +94,13 @@ public class RegistryResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed planet unregistration response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed planet unregistration response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process planet unregistration response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process planet unregistration response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling planet unregistration response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling planet unregistration response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -120,7 +120,7 @@ public class RegistryResponseConsumer {
                                           @Header(KafkaHeaders.OFFSET) long offset,
                                           Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received planet lookup response: requestId={}, status={}, worlds count={}, topic={}, partition={}, offset={}",
+        log.debug("Received planet lookup response: requestId={}, status={}, worlds count={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(),
                     response.getPlanetWorlds() != null ? response.getPlanetWorlds().size() : 0, topic, partition, offset);
 
@@ -131,13 +131,13 @@ public class RegistryResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed planet lookup response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed planet lookup response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process planet lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process planet lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling planet lookup response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling planet lookup response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -157,7 +157,7 @@ public class RegistryResponseConsumer {
                                                @Header(KafkaHeaders.OFFSET) long offset,
                                                Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received world registration response: requestId={}, status={}, world={}, topic={}, partition={}, offset={}",
+        log.debug("Received world registration response: requestId={}, status={}, world={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), response.getWorldId(), topic, partition, offset);
 
         try {
@@ -167,13 +167,13 @@ public class RegistryResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed world registration response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed world registration response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process world registration response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process world registration response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling world registration response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling world registration response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -193,7 +193,7 @@ public class RegistryResponseConsumer {
                                                  @Header(KafkaHeaders.OFFSET) long offset,
                                                  Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received world unregistration response: requestId={}, status={}, world={}, topic={}, partition={}, offset={}",
+        log.debug("Received world unregistration response: requestId={}, status={}, world={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(), response.getWorldId(), topic, partition, offset);
 
         try {
@@ -203,13 +203,13 @@ public class RegistryResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed world unregistration response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed world unregistration response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process world unregistration response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process world unregistration response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling world unregistration response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling world unregistration response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }

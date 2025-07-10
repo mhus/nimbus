@@ -3,6 +3,7 @@ package de.mhus.nimbus.identity.consumer;
 import de.mhus.nimbus.identity.entity.Ace;
 import de.mhus.nimbus.identity.service.AceService;
 import de.mhus.nimbus.shared.avro.*;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,9 +22,8 @@ import java.util.stream.Collectors;
  * Kafka Consumer für ACE-Management-Nachrichten
  */
 @Component
+@Slf4j
 public class AceManagementConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(AceManagementConsumer.class);
 
     private final AceService aceService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -43,7 +43,7 @@ public class AceManagementConsumer {
                                       @Header(KafkaHeaders.OFFSET) long offset,
                                       Acknowledgment acknowledgment) {
 
-        logger.info("Received ACE create request: requestId={}, rule={}, userId={}, topic={}, partition={}, offset={}",
+        log.info("Received ACE create request: requestId={}, rule={}, userId={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getRule(), request.getUserId(), topic, partition, offset);
 
         AceCreateResponse.Builder responseBuilder = AceCreateResponse.newBuilder()
@@ -78,11 +78,11 @@ public class AceManagementConsumer {
             // Antwort über Kafka senden
             kafkaTemplate.send("ace-create-response", request.getRequestId(), response);
 
-            logger.info("Successfully created ACE with ID: {} for user: {}", ace.getId(), request.getUserId());
+            log.info("Successfully created ACE with ID: {} for user: {}", ace.getId(), request.getUserId());
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing ACE create request: {}", e.getMessage(), e);
+            log.error("Error processing ACE create request: {}", e.getMessage(), e);
 
             // Fehler-Response erstellen
             AceCreateResponse response = responseBuilder
@@ -106,7 +106,7 @@ public class AceManagementConsumer {
                                       @Header(KafkaHeaders.OFFSET) long offset,
                                       Acknowledgment acknowledgment) {
 
-        logger.info("Received ACE lookup request: requestId={}, aceId={}, userId={}, topic={}, partition={}, offset={}",
+        log.info("Received ACE lookup request: requestId={}, aceId={}, userId={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getAceId(), request.getUserId(), topic, partition, offset);
 
         AceLookupResponse.Builder responseBuilder = AceLookupResponse.newBuilder()
@@ -153,11 +153,11 @@ public class AceManagementConsumer {
             // Antwort über Kafka senden
             kafkaTemplate.send("ace-lookup-response", request.getRequestId(), response);
 
-            logger.info("Successfully found {} ACEs for lookup request", aceInfos.size());
+            log.info("Successfully found {} ACEs for lookup request", aceInfos.size());
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing ACE lookup request: {}", e.getMessage(), e);
+            log.error("Error processing ACE lookup request: {}", e.getMessage(), e);
 
             // Fehler-Response erstellen
             AceLookupResponse response = responseBuilder
@@ -182,7 +182,7 @@ public class AceManagementConsumer {
                                       @Header(KafkaHeaders.OFFSET) long offset,
                                       Acknowledgment acknowledgment) {
 
-        logger.info("Received ACE update request: requestId={}, aceId={}, topic={}, partition={}, offset={}",
+        log.info("Received ACE update request: requestId={}, aceId={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getAceId(), topic, partition, offset);
 
         AceUpdateResponse.Builder responseBuilder = AceUpdateResponse.newBuilder()
@@ -207,11 +207,11 @@ public class AceManagementConsumer {
             // Antwort über Kafka senden
             kafkaTemplate.send("ace-update-response", request.getRequestId(), response);
 
-            logger.info("Successfully updated ACE with ID: {}", ace.getId());
+            log.info("Successfully updated ACE with ID: {}", ace.getId());
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing ACE update request: {}", e.getMessage(), e);
+            log.error("Error processing ACE update request: {}", e.getMessage(), e);
 
             // Fehler-Response erstellen
             AceUpdateResponse response = responseBuilder
@@ -235,7 +235,7 @@ public class AceManagementConsumer {
                                       @Header(KafkaHeaders.OFFSET) long offset,
                                       Acknowledgment acknowledgment) {
 
-        logger.info("Received ACE delete request: requestId={}, aceId={}, userId={}, topic={}, partition={}, offset={}",
+        log.info("Received ACE delete request: requestId={}, aceId={}, userId={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getAceId(), request.getUserId(), topic, partition, offset);
 
         AceDeleteResponse.Builder responseBuilder = AceDeleteResponse.newBuilder()
@@ -267,11 +267,11 @@ public class AceManagementConsumer {
             // Antwort über Kafka senden
             kafkaTemplate.send("ace-delete-response", request.getRequestId(), response);
 
-            logger.info("Successfully deleted {} ACE(s)", deletedCount);
+            log.info("Successfully deleted {} ACE(s)", deletedCount);
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing ACE delete request: {}", e.getMessage(), e);
+            log.error("Error processing ACE delete request: {}", e.getMessage(), e);
 
             // Fehler-Response erstellen
             AceDeleteResponse response = responseBuilder

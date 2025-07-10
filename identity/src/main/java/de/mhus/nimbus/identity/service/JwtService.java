@@ -7,6 +7,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,9 +26,8 @@ import java.util.stream.Collectors;
  * Service für JWT Token-Management mit asymmetrischer RSA-Signierung
  */
 @Service
+@Slf4j
 public class JwtService {
-
-    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
     private final JwtProperties jwtProperties;
     private final KeyUtils keyUtils;
@@ -45,9 +45,9 @@ public class JwtService {
         try {
             this.privateKey = keyUtils.loadPrivateKey(jwtProperties.getPrivateKeyPath());
             this.publicKey = keyUtils.loadPublicKey(jwtProperties.getPublicKeyPath());
-            logger.info("Successfully loaded RSA key pair for JWT signing");
+            log.info("Successfully loaded RSA key pair for JWT signing");
         } catch (Exception e) {
-            logger.error("Failed to load RSA keys for JWT signing", e);
+            log.error("Failed to load RSA keys for JWT signing", e);
             throw new RuntimeException("Failed to initialize JWT service", e);
         }
     }
@@ -141,7 +141,7 @@ public class JwtService {
                     !isTokenExpired(token) &&
                     jwtProperties.getIssuer().equals(extractedIssuer));
         } catch (Exception e) {
-            logger.warn("Token validation failed", e);
+            log.warn("Token validation failed", e);
             return false;
         }
     }

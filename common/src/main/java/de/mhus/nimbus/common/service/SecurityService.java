@@ -11,6 +11,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,9 +32,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Implementiert Login-Funktionalität und Public Key Management mit dem Identity Service
  */
 @Service
+@Slf4j
 public class SecurityService {
 
-    private static final Logger logger = LoggerFactory.getLogger(SecurityService.class);
     private static final long LOGIN_TIMEOUT_MS = 30000; // 30 Sekunden
     private static final long PUBLIC_KEY_TIMEOUT_MS = 30000; // 30 Sekunden
 
@@ -71,7 +72,7 @@ public class SecurityService {
      * @throws NimbusException bei Login-Fehlern
      */
     public CompletableFuture<LoginResult> loginAsync(String username, String password, String clientInfo) {
-        logger.info("Initiating async login request for user: {}", username);
+        log.info("Initiating async login request for user: {}", username);
 
         // Validierung
         if (username == null || username.trim().isEmpty()) {
@@ -87,7 +88,7 @@ public class SecurityService {
         return identityClient.requestLogin(username, password, clientInfo != null ? clientInfo : "nimbus-common")
             .thenApply(response -> processLoginResponse(response, username))
             .exceptionally(throwable -> {
-                logger.error("Login failed for user {}: {}", username, throwable.getMessage(), throwable);
+                log.error("Login failed for user {}: {}", username, throwable.getMessage(), throwable);
                 throw new RuntimeException(new NimbusException("Login request failed: " + throwable.getMessage(), "LOGIN_ERROR", "nimbus-common", throwable));
             });
     }
@@ -105,7 +106,7 @@ public class SecurityService {
     private LoginResult processLoginResponse(LoginResponse response, String username) {
         switch (response.getStatus()) {
             case SUCCESS:
-                logger.info("Login successful for user: {}", username);
+                log.info("Login successful for user: {}", username);
                 return new LoginResult(
                         true,
                         response.getToken(),
@@ -122,20 +123,20 @@ public class SecurityService {
                 );
 
             case INVALID_CREDENTIALS:
-                logger.warn("Invalid credentials for user: {}", username);
+                log.warn("Invalid credentials for user: {}", username);
                 throw new NimbusException("Invalid username or password", "INVALID_CREDENTIALS", "nimbus-common");
 
             case USER_NOT_FOUND:
-                logger.warn("User not found: {}", username);
+                log.warn("User not found: {}", username);
                 throw new NimbusException("User not found", "USER_NOT_FOUND", "nimbus-common");
 
             case USER_INACTIVE:
-                logger.warn("User account inactive: {}", username);
+                log.warn("User account inactive: {}", username);
                 throw new NimbusException("User account is inactive", "USER_INACTIVE", "nimbus-common");
 
             case ERROR:
             default:
-                logger.error("Login error for user {}: {}", username, response.getErrorMessage());
+                log.error("Login error for user {}: {}", username, response.getErrorMessage());
                 throw new NimbusException(
                         response.getErrorMessage() != null ? response.getErrorMessage() : "Login failed",
                         "LOGIN_ERROR",
@@ -163,11 +164,11 @@ public class SecurityService {
      * @throws NimbusException bei Fehlern beim Abrufen des Keys
      */
     public CompletableFuture<PublicKeyInfo> getPublicKeyAsync(boolean forceRefresh) {
-        logger.debug("Requesting public key asynchronously, forceRefresh={}", forceRefresh);
+        log.debug("Requesting public key asynchronously, forceRefresh={}", forceRefresh);
 
         // Prüfe Cache wenn nicht forced refresh
         if (!forceRefresh && isPublicKeyCacheValid()) {
-            logger.debug("Returning cached public key");
+            log.debug("Returning cached public key");
             return CompletableFuture.completedFuture(cachedPublicKey);
         }
 
@@ -186,7 +187,7 @@ public class SecurityService {
             return identityClient.requestPublicKey()
                 .thenApply(response -> processPublicKeyResponse(response))
                 .exceptionally(throwable -> {
-                    logger.error("Failed to get public key: {}", throwable.getMessage(), throwable);
+                    log.error("Failed to get public key: {}", throwable.getMessage(), throwable);
                     throw new RuntimeException(new NimbusException("Public key request failed: " + throwable.getMessage(), "PUBLIC_KEY_ERROR", "nimbus-common", throwable));
                 })
                 .whenComplete((result, throwable) -> {
@@ -212,7 +213,7 @@ public class SecurityService {
     private PublicKeyInfo processPublicKeyResponse(PublicKeyResponse response) {
         switch (response.getStatus()) {
             case SUCCESS:
-                logger.info("Successfully received public key from Identity Service");
+                log.info("Successfully received public key from Identity Service");
 
                 PublicKeyInfo keyInfo = new PublicKeyInfo(
                         response.getPublicKey(),
@@ -230,7 +231,7 @@ public class SecurityService {
 
             case ERROR:
             default:
-                logger.error("Public key request failed: {}", response.getErrorMessage());
+                log.error("Public key request failed: {}", response.getErrorMessage());
                 throw new NimbusException(
                         response.getErrorMessage() != null ? response.getErrorMessage() : "Public key request failed",
                         "PUBLIC_KEY_ERROR",
@@ -259,7 +260,7 @@ public class SecurityService {
      * Leert den Public Key Cache
      */
     public void clearPublicKeyCache() {
-        logger.debug("Clearing public key cache");
+        log.debug("Clearing public key cache");
         cachedPublicKey = null;
         publicKeyLastFetched = null;
     }
@@ -382,7 +383,7 @@ public class SecurityService {
         }
 
         try {
-            logger.debug("Validating JWT token");
+            log.debug("Validating JWT token");
 
             // Hole den Public Key vom Identity Service
             PublicKeyInfo keyInfo = getPublicKey();
@@ -397,23 +398,23 @@ public class SecurityService {
                     .parseClaimsJws(token)
                     .getBody();
 
-            logger.debug("Token validation successful for subject: {}", claims.getSubject());
+            log.debug("Token validation successful for subject: {}", claims.getSubject());
             return claims;
 
         } catch (ExpiredJwtException e) {
-            logger.warn("Token expired: {}", e.getMessage());
+            log.warn("Token expired: {}", e.getMessage());
             throw new NimbusException("Token is expired", "TOKEN_EXPIRED", "nimbus-common", e);
         } catch (MalformedJwtException e) {
-            logger.warn("Malformed token: {}", e.getMessage());
+            log.warn("Malformed token: {}", e.getMessage());
             throw new NimbusException("Token is malformed", "TOKEN_MALFORMED", "nimbus-common", e);
         } catch (UnsupportedJwtException e) {
-            logger.warn("Unsupported token: {}", e.getMessage());
+            log.warn("Unsupported token: {}", e.getMessage());
             throw new NimbusException("Token is unsupported", "TOKEN_UNSUPPORTED", "nimbus-common", e);
         } catch (SignatureException e) {
-            logger.warn("Invalid token signature: {}", e.getMessage());
+            log.warn("Invalid token signature: {}", e.getMessage());
             throw new NimbusException("Token signature is invalid", "TOKEN_INVALID_SIGNATURE", "nimbus-common", e);
         } catch (Exception e) {
-            logger.error("Token validation failed: {}", e.getMessage(), e);
+            log.error("Token validation failed: {}", e.getMessage(), e);
             throw new NimbusException("Token validation failed: " + e.getMessage(), "TOKEN_VALIDATION_ERROR", "nimbus-common", e);
         }
     }
@@ -429,7 +430,7 @@ public class SecurityService {
             Claims claims = validateToken(token);
             return new TokenValidationResult(true, claims, null, null);
         } catch (NimbusException e) {
-            logger.debug("Token validation failed: {}", e.getMessage());
+            log.debug("Token validation failed: {}", e.getMessage());
             return new TokenValidationResult(false, null, e.getMessage(), e.getErrorCode());
         }
     }
@@ -463,7 +464,7 @@ public class SecurityService {
             return keyFactory.generatePublic(keySpec);
 
         } catch (Exception e) {
-            logger.error("Failed to parse public key: {}", e.getMessage(), e);
+            log.error("Failed to parse public key: {}", e.getMessage(), e);
             throw new Exception("Failed to parse public key: " + e.getMessage(), e);
         }
     }
@@ -500,7 +501,7 @@ public class SecurityService {
             Claims claims = validateToken(token);
             return claims.getSubject();
         } catch (Exception e) {
-            logger.debug("Failed to extract username from token: {}", e.getMessage());
+            log.debug("Failed to extract username from token: {}", e.getMessage());
             return null;
         }
     }

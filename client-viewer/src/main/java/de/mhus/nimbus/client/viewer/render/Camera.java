@@ -187,7 +187,7 @@ public class Camera {
         yaw = -90.0f;
         pitch = -20.0f;
         updateCameraVectors();
-        LOGGER.info("Kamera auf Spawn-Position gesetzt: {}", position);
+        log.info("Kamera auf Spawn-Position gesetzt: {}", position);
     }
 
     /**
@@ -195,7 +195,7 @@ public class Camera {
      */
     public void teleport(float x, float y, float z) {
         setPosition(x, y, z);
-        LOGGER.info("Kamera teleportiert zu: {}", position);
+        log.info("Kamera teleportiert zu: {}", position);
     }
 
     /**

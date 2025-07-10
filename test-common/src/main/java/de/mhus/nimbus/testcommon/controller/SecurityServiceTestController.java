@@ -6,8 +6,7 @@ import de.mhus.nimbus.common.client.IdentityClient;
 import de.mhus.nimbus.common.exception.NimbusException;
 import de.mhus.nimbus.common.service.SecurityService;
 import io.jsonwebtoken.Claims;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +21,8 @@ import java.util.concurrent.CompletableFuture;
  */
 @RestController
 @RequestMapping("/api/test/security")
+@Slf4j
 public class SecurityServiceTestController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityServiceTestController.class);
 
     // Standard JWT Claims according to RFC 7519
     private static final Set<String> STANDARD_JWT_CLAIMS = Set.of(
@@ -49,7 +47,7 @@ public class SecurityServiceTestController {
             @RequestParam String password,
             @RequestParam(required = false) String clientInfo) {
         try {
-            LOGGER.info("REST: Requesting login via SecurityService for username: {}", username);
+            log.info("REST: Requesting login via SecurityService for username: {}", username);
 
             SecurityService.LoginResult result;
             if (clientInfo != null) {
@@ -58,7 +56,7 @@ public class SecurityServiceTestController {
                 result = securityService.login(username, password);
             }
 
-            LOGGER.info("Login response received for user '{}': success={}", username, result.isSuccess());
+            log.info("Login response received for user '{}': success={}", username, result.isSuccess());
 
             // Return the response as a formatted string
             StringBuilder response = new StringBuilder();
@@ -98,13 +96,13 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (java.util.concurrent.TimeoutException e) {
-            LOGGER.error("Login request timed out for user '{}'", username);
+            log.error("Login request timed out for user '{}'", username);
             return ResponseEntity.status(408).body("Login request timed out after 30 seconds");
         } catch (NimbusException e) {
-            LOGGER.error("Login failed with NimbusException for user '{}': {}", username, e.getMessage());
+            log.error("Login failed with NimbusException for user '{}': {}", username, e.getMessage());
             return ResponseEntity.badRequest().body("Login failed: " + e.getMessage() + " (Code: " + e.getErrorCode() + ")");
         } catch (Exception e) {
-            LOGGER.error("Failed to login via SecurityService", e);
+            log.error("Failed to login via SecurityService", e);
             return ResponseEntity.internalServerError().body("Failed to login: " + e.getMessage());
         }
     }
@@ -118,7 +116,7 @@ public class SecurityServiceTestController {
             @RequestParam String password,
             @RequestParam(required = false) String clientInfo) {
         try {
-            LOGGER.info("REST: Requesting async login via SecurityService for username: {}", username);
+            log.info("REST: Requesting async login via SecurityService for username: {}", username);
 
             CompletableFuture<SecurityService.LoginResult> future =
                 securityService.loginAsync(username, password, clientInfo);
@@ -126,7 +124,7 @@ public class SecurityServiceTestController {
             // Wait for the response synchronously with timeout
             SecurityService.LoginResult result = future.get(30, java.util.concurrent.TimeUnit.SECONDS);
 
-            LOGGER.info("Async login response received for user '{}': success={}", username, result.isSuccess());
+            log.info("Async login response received for user '{}': success={}", username, result.isSuccess());
 
             // Return the response as a formatted string
             StringBuilder response = new StringBuilder();
@@ -166,10 +164,10 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (java.util.concurrent.TimeoutException e) {
-            LOGGER.error("Async login request timed out for user '{}'", username);
+            log.error("Async login request timed out for user '{}'", username);
             return ResponseEntity.status(408).body("Async login request timed out after 30 seconds");
         } catch (Exception e) {
-            LOGGER.error("Failed to login async via SecurityService", e);
+            log.error("Failed to login async via SecurityService", e);
             return ResponseEntity.internalServerError().body("Failed to login async: " + e.getMessage());
         }
     }
@@ -180,11 +178,11 @@ public class SecurityServiceTestController {
     @GetMapping("/public-key")
     public ResponseEntity<String> getPublicKey(@RequestParam(required = false, defaultValue = "false") boolean forceRefresh) {
         try {
-            LOGGER.info("REST: Requesting public key via SecurityService, forceRefresh={}", forceRefresh);
+            log.info("REST: Requesting public key via SecurityService, forceRefresh={}", forceRefresh);
 
             SecurityService.PublicKeyInfo keyInfo = securityService.getPublicKey(forceRefresh);
 
-            LOGGER.info("Public key response received successfully");
+            log.info("Public key response received successfully");
 
             // Return the response as a formatted string
             StringBuilder response = new StringBuilder();
@@ -198,13 +196,13 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (java.util.concurrent.TimeoutException e) {
-            LOGGER.error("Public key request timed out");
+            log.error("Public key request timed out");
             return ResponseEntity.status(408).body("Public key request timed out after 30 seconds");
         } catch (NimbusException e) {
-            LOGGER.error("Public key request failed with NimbusException: {}", e.getMessage());
+            log.error("Public key request failed with NimbusException: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Public key request failed: " + e.getMessage() + " (Code: " + e.getErrorCode() + ")");
         } catch (Exception e) {
-            LOGGER.error("Failed to get public key via SecurityService", e);
+            log.error("Failed to get public key via SecurityService", e);
             return ResponseEntity.internalServerError().body("Failed to get public key: " + e.getMessage());
         }
     }
@@ -215,7 +213,7 @@ public class SecurityServiceTestController {
     @GetMapping("/public-key-async")
     public ResponseEntity<String> getPublicKeyAsync(@RequestParam(required = false, defaultValue = "false") boolean forceRefresh) {
         try {
-            LOGGER.info("REST: Requesting async public key via SecurityService, forceRefresh={}", forceRefresh);
+            log.info("REST: Requesting async public key via SecurityService, forceRefresh={}", forceRefresh);
 
             CompletableFuture<SecurityService.PublicKeyInfo> future =
                 securityService.getPublicKeyAsync(forceRefresh);
@@ -223,7 +221,7 @@ public class SecurityServiceTestController {
             // Wait for the response synchronously with timeout
             SecurityService.PublicKeyInfo keyInfo = future.get(30, java.util.concurrent.TimeUnit.SECONDS);
 
-            LOGGER.info("Async public key response received successfully");
+            log.info("Async public key response received successfully");
 
             // Return the response as a formatted string
             StringBuilder response = new StringBuilder();
@@ -237,10 +235,10 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (java.util.concurrent.TimeoutException e) {
-            LOGGER.error("Async public key request timed out");
+            log.error("Async public key request timed out");
             return ResponseEntity.status(408).body("Async public key request timed out after 30 seconds");
         } catch (Exception e) {
-            LOGGER.error("Failed to get async public key via SecurityService", e);
+            log.error("Failed to get async public key via SecurityService", e);
             return ResponseEntity.internalServerError().body("Failed to get async public key: " + e.getMessage());
         }
     }
@@ -251,11 +249,11 @@ public class SecurityServiceTestController {
     @PostMapping("/validate-token")
     public ResponseEntity<String> validateToken(@RequestParam String token) {
         try {
-            LOGGER.info("REST: Validating token via SecurityService");
+            log.info("REST: Validating token via SecurityService");
 
             Claims claims = securityService.validateToken(token);
 
-            LOGGER.info("Token validation successful for subject: {}", claims.getSubject());
+            log.info("Token validation successful for subject: {}", claims.getSubject());
 
             // Return the response as a formatted string
             StringBuilder response = new StringBuilder();
@@ -295,10 +293,10 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (NimbusException e) {
-            LOGGER.error("Token validation failed with NimbusException: {}", e.getMessage());
+            log.error("Token validation failed with NimbusException: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Token validation failed: " + e.getMessage() + " (Code: " + e.getErrorCode() + ")");
         } catch (Exception e) {
-            LOGGER.error("Failed to validate token via SecurityService", e);
+            log.error("Failed to validate token via SecurityService", e);
             return ResponseEntity.badRequest().body("Token validation failed: " + e.getMessage());
         }
     }
@@ -309,7 +307,7 @@ public class SecurityServiceTestController {
     @GetMapping("/cached-public-key")
     public ResponseEntity<String> getCachedPublicKey() {
         try {
-            LOGGER.info("REST: Getting cached public key via SecurityService");
+            log.info("REST: Getting cached public key via SecurityService");
 
             SecurityService.PublicKeyInfo keyInfo = securityService.getCachedPublicKey();
 
@@ -329,7 +327,7 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (Exception e) {
-            LOGGER.error("Failed to get cached public key", e);
+            log.error("Failed to get cached public key", e);
             return ResponseEntity.internalServerError().body("Failed to get cached public key: " + e.getMessage());
         }
     }
@@ -340,7 +338,7 @@ public class SecurityServiceTestController {
     @GetMapping("/has-valid-public-key")
     public ResponseEntity<String> hasValidPublicKey() {
         try {
-            LOGGER.info("REST: Checking if valid public key is cached");
+            log.info("REST: Checking if valid public key is cached");
 
             boolean hasValidKey = securityService.hasValidPublicKey();
 
@@ -351,7 +349,7 @@ public class SecurityServiceTestController {
             return ResponseEntity.ok(response.toString());
 
         } catch (Exception e) {
-            LOGGER.error("Failed to check valid public key", e);
+            log.error("Failed to check valid public key", e);
             return ResponseEntity.internalServerError().body("Failed to check valid public key: " + e.getMessage());
         }
     }
@@ -362,14 +360,14 @@ public class SecurityServiceTestController {
     @DeleteMapping("/public-key-cache")
     public ResponseEntity<String> clearPublicKeyCache() {
         try {
-            LOGGER.info("REST: Clearing public key cache via SecurityService");
+            log.info("REST: Clearing public key cache via SecurityService");
 
             securityService.clearPublicKeyCache();
 
             return ResponseEntity.ok("Public key cache cleared successfully");
 
         } catch (Exception e) {
-            LOGGER.error("Failed to clear public key cache", e);
+            log.error("Failed to clear public key cache", e);
             return ResponseEntity.internalServerError().body("Failed to clear public key cache: " + e.getMessage());
         }
     }

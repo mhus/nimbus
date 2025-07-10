@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.kafka;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.DecoderFactory;
@@ -22,9 +23,8 @@ import java.io.IOException;
 /**
  * Abstrakte Basis-Klasse für Kafka-Listener mit automatischer Avro-Serialisierung/Deserialisierung
  */
+@Slf4j
 public abstract class AbstractAvroKafkaListener<REQUEST extends SpecificRecord, RESPONSE extends SpecificRecord> {
-
-    private static final Logger logger = LoggerFactory.getLogger(AbstractAvroKafkaListener.class);
 
     private final KafkaTemplate<String, byte[]> kafkaTemplate;
     private final DatumReader<REQUEST> requestReader;
@@ -47,14 +47,14 @@ public abstract class AbstractAvroKafkaListener<REQUEST extends SpecificRecord, 
                                    @Header(KafkaHeaders.OFFSET) long offset,
                                    Acknowledgment acknowledgment) {
 
-        logger.debug("Received message from topic: '{}', partition: {}, offset: {}",
+        log.debug("Received message from topic: '{}', partition: {}, offset: {}",
                     topic, partition, offset);
 
         try {
             // Deserialisiere die Avro-Nachricht
             REQUEST request = deserialize(message);
 
-            logger.debug("Deserialized request: {}", request.getClass().getSimpleName());
+            log.debug("Deserialized request: {}", request.getClass().getSimpleName());
 
             // Verarbeite die Nachricht
             RESPONSE response = processMessage(request, topic, partition, offset);
@@ -70,7 +70,7 @@ public abstract class AbstractAvroKafkaListener<REQUEST extends SpecificRecord, 
             }
 
         } catch (Exception e) {
-            logger.error("Error processing message from topic: {}", topic, e);
+            log.error("Error processing message from topic: {}", topic, e);
             handleError(message, topic, partition, offset, e);
         }
     }
@@ -99,9 +99,9 @@ public abstract class AbstractAvroKafkaListener<REQUEST extends SpecificRecord, 
         try {
             byte[] serializedResponse = serialize(response);
             kafkaTemplate.send(responseTopic, key, serializedResponse);
-            logger.debug("Sent response to topic: {} with key: {}", responseTopic, key);
+            log.debug("Sent response to topic: {} with key: {}", responseTopic, key);
         } catch (Exception e) {
-            logger.error("Error sending response to topic: {}", responseTopic, e);
+            log.error("Error sending response to topic: {}", responseTopic, e);
         }
     }
 
@@ -132,7 +132,7 @@ public abstract class AbstractAvroKafkaListener<REQUEST extends SpecificRecord, 
      * Standard-Implementation loggt nur den Fehler (kann überschrieben werden)
      */
     protected void handleError(byte[] message, String topic, int partition, long offset, Exception error) {
-        logger.error("Failed to process message from topic: {}, partition: {}, offset: {}",
+        log.error("Failed to process message from topic: {}, partition: {}, offset: {}",
                     topic, partition, offset, error);
         // TODO: Implementierung einer Dead Letter Queue
     }

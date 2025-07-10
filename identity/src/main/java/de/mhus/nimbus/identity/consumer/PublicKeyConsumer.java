@@ -3,6 +3,7 @@ package de.mhus.nimbus.identity.consumer;
 import de.mhus.nimbus.identity.service.PublicKeyService;
 import de.mhus.nimbus.shared.avro.PublicKeyRequest;
 import de.mhus.nimbus.shared.avro.PublicKeyResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,9 +18,8 @@ import org.springframework.stereotype.Component;
  * Kafka Consumer für Public Key Anfragen
  */
 @Component
+@Slf4j
 public class PublicKeyConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(PublicKeyConsumer.class);
 
     private final PublicKeyService publicKeyService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -36,7 +36,7 @@ public class PublicKeyConsumer {
                                       @Header(KafkaHeaders.OFFSET) long offset,
                                       Acknowledgment acknowledgment) {
 
-        logger.info("Received public key request: requestId={}, requestedBy={}, topic={}, partition={}, offset={}",
+        log.info("Received public key request: requestId={}, requestedBy={}, topic={}, partition={}, offset={}",
                    request.getRequestId(), request.getRequestedBy(), topic, partition, offset);
 
         try {
@@ -49,14 +49,14 @@ public class PublicKeyConsumer {
             // Sende die Antwort zurück
             kafkaTemplate.send("public-key-response", request.getRequestId(), response);
 
-            logger.info("Successfully processed public key request: requestId={}, status={}",
+            log.info("Successfully processed public key request: requestId={}, status={}",
                        request.getRequestId(), response.getStatus());
 
             // Bestätige die Verarbeitung
             acknowledgment.acknowledge();
 
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid public key request: requestId={}, error={}",
+            log.error("Invalid public key request: requestId={}, error={}",
                         request.getRequestId(), e.getMessage());
 
             // Sende Error-Response
@@ -66,7 +66,7 @@ public class PublicKeyConsumer {
             acknowledgment.acknowledge();
 
         } catch (Exception e) {
-            logger.error("Error processing public key request: requestId={}",
+            log.error("Error processing public key request: requestId={}",
                         request.getRequestId(), e);
 
             // Sende Error-Response

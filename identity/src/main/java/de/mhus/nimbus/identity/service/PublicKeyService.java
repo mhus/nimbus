@@ -4,6 +4,7 @@ import de.mhus.nimbus.identity.config.JwtProperties;
 import de.mhus.nimbus.shared.avro.PublicKeyRequest;
 import de.mhus.nimbus.shared.avro.PublicKeyResponse;
 import de.mhus.nimbus.shared.avro.PublicKeyStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,8 @@ import java.time.Instant;
  * Service für Public Key Operationen
  */
 @Service
+@Slf4j
 public class PublicKeyService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PublicKeyService.class);
 
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
@@ -30,7 +30,7 @@ public class PublicKeyService {
      * Verarbeitet eine Public Key Anfrage
      */
     public PublicKeyResponse processPublicKeyRequest(PublicKeyRequest request) {
-        logger.info("Processing public key request: requestId={}, requestedBy={}",
+        log.info("Processing public key request: requestId={}, requestedBy={}",
                    request.getRequestId(), request.getRequestedBy());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -40,7 +40,7 @@ public class PublicKeyService {
             String publicKeyString = jwtService.getPublicKeyAsString();
             String issuer = jwtProperties.getIssuer();
 
-            logger.info("Successfully processed public key request: requestId={}", request.getRequestId());
+            log.info("Successfully processed public key request: requestId={}", request.getRequestId());
 
             return PublicKeyResponse.newBuilder()
                     .setRequestId(request.getRequestId())
@@ -54,7 +54,7 @@ public class PublicKeyService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Error processing public key request: {}", request.getRequestId(), e);
+            log.error("Error processing public key request: {}", request.getRequestId(), e);
             return createPublicKeyErrorResponse(request, e.getMessage(), currentTimestamp);
         }
     }
@@ -71,7 +71,7 @@ public class PublicKeyService {
             throw new IllegalArgumentException("Request ID cannot be null or empty");
         }
 
-        logger.debug("Public key request validation passed: {}", request.getRequestId());
+        log.debug("Public key request validation passed: {}", request.getRequestId());
     }
 
     /**

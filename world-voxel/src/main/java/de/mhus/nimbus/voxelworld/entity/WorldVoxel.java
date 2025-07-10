@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +35,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"voxelData"})
+@Slf4j
 public class WorldVoxel {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldVoxel.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -147,7 +147,7 @@ public class WorldVoxel {
             try {
                 this.voxelData = objectMapper.writeValueAsString(voxel);
             } catch (JsonProcessingException e) {
-                LOGGER.error("Failed to serialize voxel to JSON for position ({}, {}, {}) in world {}",
+                log.error("Failed to serialize voxel to JSON for position ({}, {}, {}) in world {}",
                          x, y, z, worldId, e);
                 throw new RuntimeException("Failed to serialize voxel data", e);
             }
@@ -166,7 +166,7 @@ public class WorldVoxel {
             try {
                 voxel = objectMapper.readValue(voxelData, Voxel.class);
             } catch (JsonProcessingException e) {
-                LOGGER.error("Failed to deserialize voxel from JSON for position ({}, {}, {}) in world {}",
+                log.error("Failed to deserialize voxel from JSON for position ({}, {}, {}) in world {}",
                          x, y, z, worldId, e);
                 throw new RuntimeException("Failed to deserialize voxel data", e);
             }

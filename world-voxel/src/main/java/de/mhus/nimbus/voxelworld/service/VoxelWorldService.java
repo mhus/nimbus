@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
 import de.mhus.nimbus.voxelworld.entity.WorldVoxel;
 import de.mhus.nimbus.voxelworld.repository.WorldVoxelRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,8 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
+@Slf4j
 public class VoxelWorldService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(VoxelWorldService.class);
 
     private final WorldVoxelRepository worldVoxelRepository;
 
@@ -39,7 +39,7 @@ public class VoxelWorldService {
      * @return The saved WorldVoxel entity
      */
     public WorldVoxel saveVoxel(String worldId, Voxel voxel) {
-        LOGGER.debug("Saving voxel at position ({}, {}, {}) in world {}",
+        log.debug("Saving voxel at position ({}, {}, {}) in world {}",
                     voxel.getX(), voxel.getY(), voxel.getZ(), worldId);
 
         // Check if voxel already exists at this position
@@ -51,12 +51,12 @@ public class VoxelWorldService {
             // Update existing voxel
             worldVoxel = existing.get();
             worldVoxel.updateVoxel(voxel);
-            LOGGER.debug("Updated existing voxel at position ({}, {}, {}) in world {}",
+            log.debug("Updated existing voxel at position ({}, {}, {}) in world {}",
                         voxel.getX(), voxel.getY(), voxel.getZ(), worldId);
         } else {
             // Create new voxel
             worldVoxel = new WorldVoxel(worldId, voxel);
-            LOGGER.debug("Created new voxel at position ({}, {}, {}) in world {}",
+            log.debug("Created new voxel at position ({}, {}, {}) in world {}",
                         voxel.getX(), voxel.getY(), voxel.getZ(), worldId);
         }
 
@@ -74,7 +74,7 @@ public class VoxelWorldService {
      */
     @Transactional(readOnly = true)
     public Optional<Voxel> getVoxel(String worldId, int x, int y, int z) {
-        LOGGER.debug("Getting voxel at position ({}, {}, {}) in world {}", x, y, z, worldId);
+        log.debug("Getting voxel at position ({}, {}, {}) in world {}", x, y, z, worldId);
 
         return worldVoxelRepository.findByWorldIdAndXAndYAndZ(worldId, x, y, z)
                 .map(WorldVoxel::getVoxel);
@@ -90,15 +90,15 @@ public class VoxelWorldService {
      * @return true if a voxel was deleted, false if none existed
      */
     public boolean deleteVoxel(String worldId, int x, int y, int z) {
-        LOGGER.debug("Deleting voxel at position ({}, {}, {}) in world {}", x, y, z, worldId);
+        log.debug("Deleting voxel at position ({}, {}, {}) in world {}", x, y, z, worldId);
 
         if (worldVoxelRepository.existsByWorldIdAndXAndYAndZ(worldId, x, y, z)) {
             worldVoxelRepository.deleteByWorldIdAndXAndYAndZ(worldId, x, y, z);
-            LOGGER.info("Deleted voxel at position ({}, {}, {}) in world {}", x, y, z, worldId);
+            log.info("Deleted voxel at position ({}, {}, {}) in world {}", x, y, z, worldId);
             return true;
         }
 
-        LOGGER.debug("No voxel found to delete at position ({}, {}, {}) in world {}", x, y, z, worldId);
+        log.debug("No voxel found to delete at position ({}, {}, {}) in world {}", x, y, z, worldId);
         return false;
     }
 
@@ -113,7 +113,7 @@ public class VoxelWorldService {
      */
     @Transactional(readOnly = true)
     public VoxelChunk loadChunk(String worldId, int chunkX, int chunkY, int chunkZ) {
-        LOGGER.debug("Loading chunk ({}, {}, {}) in world {}", chunkX, chunkY, chunkZ, worldId);
+        log.debug("Loading chunk ({}, {}, {}) in world {}", chunkX, chunkY, chunkZ, worldId);
 
         VoxelChunk chunk = new VoxelChunk(chunkX, chunkY, chunkZ);
 
@@ -132,7 +132,7 @@ public class VoxelWorldService {
             }
         }
 
-        LOGGER.debug("Loaded {} voxels for chunk ({}, {}, {}) in world {}",
+        log.debug("Loaded {} voxels for chunk ({}, {}, {}) in world {}",
                     voxels.size(), chunkX, chunkY, chunkZ, worldId);
 
         return chunk;
@@ -151,7 +151,7 @@ public class VoxelWorldService {
      */
     @Transactional(readOnly = true)
     public VoxelChunk loadFullChunk(String worldId, int chunkX, int chunkY, int chunkZ, boolean includeEmpty) {
-        LOGGER.info("Loading full chunk ({}, {}, {}) in world {} (includeEmpty: {})",
+        log.info("Loading full chunk ({}, {}, {}) in world {} (includeEmpty: {})",
                    chunkX, chunkY, chunkZ, worldId, includeEmpty);
 
         long startTime = System.currentTimeMillis();
@@ -165,7 +165,7 @@ public class VoxelWorldService {
         List<WorldVoxel> worldVoxels = worldVoxelRepository.findByWorldIdAndChunkXAndChunkYAndChunkZ(
                 worldId, chunkX, chunkY, chunkZ);
 
-        LOGGER.debug("Found {} voxels in database for chunk ({}, {}, {})",
+        log.debug("Found {} voxels in database for chunk ({}, {}, {})",
                     worldVoxels.size(), chunkX, chunkY, chunkZ);
 
         // Convert and add voxels to chunk
@@ -190,12 +190,12 @@ public class VoxelWorldService {
                             voxelCount++;
                         }
                     } else {
-                        LOGGER.warn("Voxel at world position ({}, {}, {}) has invalid local coordinates ({}, {}, {}) for chunk ({}, {}, {})",
+                        log.warn("Voxel at world position ({}, {}, {}) has invalid local coordinates ({}, {}, {}) for chunk ({}, {}, {})",
                                    voxel.getX(), voxel.getY(), voxel.getZ(), localX, localY, localZ, chunkX, chunkY, chunkZ);
                     }
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to process voxel from WorldVoxel ID {}: {}", worldVoxel.getId(), e.getMessage(), e);
+                log.error("Failed to process voxel from WorldVoxel ID {}: {}", worldVoxel.getId(), e.getMessage(), e);
             }
         }
 
@@ -206,7 +206,7 @@ public class VoxelWorldService {
 
         long loadTime = System.currentTimeMillis() - startTime;
 
-        LOGGER.info("Successfully loaded full chunk ({}, {}, {}) in world {} with {} voxels in {}ms",
+        log.info("Successfully loaded full chunk ({}, {}, {}) in world {} with {} voxels in {}ms",
                    chunkX, chunkY, chunkZ, worldId, voxelCount, loadTime);
 
         return chunk;
@@ -234,7 +234,7 @@ public class VoxelWorldService {
      * @return Number of voxels saved
      */
     public int saveChunk(String worldId, VoxelChunk chunk) {
-        LOGGER.debug("Saving chunk ({}, {}, {}) in world {}",
+        log.debug("Saving chunk ({}, {}, {}) in world {}",
                     chunk.getChunkX(), chunk.getChunkY(), chunk.getChunkZ(), worldId);
 
         int savedCount = 0;
@@ -246,7 +246,7 @@ public class VoxelWorldService {
             }
         }
 
-        LOGGER.info("Saved {} voxels for chunk ({}, {}, {}) in world {}",
+        log.info("Saved {} voxels for chunk ({}, {}, {}) in world {}",
                    savedCount, chunk.getChunkX(), chunk.getChunkY(), chunk.getChunkZ(), worldId);
 
         return savedCount;
@@ -266,7 +266,7 @@ public class VoxelWorldService {
      */
     @Transactional(readOnly = true)
     public List<Voxel> getVoxelsInRange(String worldId, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-        LOGGER.debug("Getting voxels in range ({},{},{}) to ({},{},{}) in world {}",
+        log.debug("Getting voxels in range ({},{},{}) to ({},{},{}) in world {}",
                     minX, minY, minZ, maxX, maxY, maxZ, worldId);
 
         return worldVoxelRepository.findByWorldIdAndCoordinateRange(worldId, minX, maxX, minY, maxY, minZ, maxZ)
@@ -284,7 +284,7 @@ public class VoxelWorldService {
      */
     @Transactional(readOnly = true)
     public List<Voxel> getModifiedVoxels(String worldId, LocalDateTime timestamp) {
-        LOGGER.debug("Getting voxels modified after {} in world {}", timestamp, worldId);
+        log.debug("Getting voxels modified after {} in world {}", timestamp, worldId);
 
         return worldVoxelRepository.findByWorldIdAndLastModifiedAfter(worldId, timestamp)
                 .stream()
@@ -302,14 +302,14 @@ public class VoxelWorldService {
      * @return Number of voxels deleted
      */
     public long clearChunk(String worldId, int chunkX, int chunkY, int chunkZ) {
-        LOGGER.debug("Clearing chunk ({}, {}, {}) in world {}", chunkX, chunkY, chunkZ, worldId);
+        log.debug("Clearing chunk ({}, {}, {}) in world {}", chunkX, chunkY, chunkZ, worldId);
 
         long count = worldVoxelRepository.findByWorldIdAndChunkXAndChunkYAndChunkZ(
                 worldId, chunkX, chunkY, chunkZ).size();
 
         worldVoxelRepository.deleteByWorldIdAndChunkXAndChunkYAndChunkZ(worldId, chunkX, chunkY, chunkZ);
 
-        LOGGER.info("Cleared {} voxels from chunk ({}, {}, {}) in world {}",
+        log.info("Cleared {} voxels from chunk ({}, {}, {}) in world {}",
                    count, chunkX, chunkY, chunkZ, worldId);
 
         return count;
@@ -348,7 +348,7 @@ public class VoxelWorldService {
      * @return Number of voxels saved
      */
     public int saveVoxels(String worldId, List<Voxel> voxels) {
-        LOGGER.debug("Batch saving {} voxels in world {}", voxels.size(), worldId);
+        log.debug("Batch saving {} voxels in world {}", voxels.size(), worldId);
 
         List<WorldVoxel> worldVoxels = voxels.stream()
                 .filter(voxel -> voxel != null && !voxel.isAir())
@@ -357,7 +357,7 @@ public class VoxelWorldService {
 
         worldVoxelRepository.saveAll(worldVoxels);
 
-        LOGGER.info("Batch saved {} voxels in world {}", worldVoxels.size(), worldId);
+        log.info("Batch saved {} voxels in world {}", worldVoxels.size(), worldId);
 
         return worldVoxels.size();
     }

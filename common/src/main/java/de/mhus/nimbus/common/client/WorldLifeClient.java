@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
 import de.mhus.nimbus.shared.avro.CharacterOperationMessage;
 import de.mhus.nimbus.shared.avro.CharacterData;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +22,8 @@ import java.util.concurrent.TimeUnit;
  * Verwendet standardisierte Avro-Objekte für Character-Operationen
  */
 @Component
+@Slf4j
 public class WorldLifeClient {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeClient.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -59,7 +59,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up character by ID {} with requestId {}", characterId, requestId);
+        log.info("Looking up character by ID {} with requestId {}", characterId, requestId);
 
         return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
     }
@@ -80,7 +80,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up character by name '{}' with requestId {}", characterName, requestId);
+        log.info("Looking up character by name '{}' with requestId {}", characterName, requestId);
 
         return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
     }
@@ -102,7 +102,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up characters for userId {} (activeOnly: {}) with requestId {}",
+        log.info("Looking up characters for userId {} (activeOnly: {}) with requestId {}",
                    userId, activeOnly, requestId);
 
         return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
@@ -125,7 +125,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up characters in world {} (activeOnly: {}) with requestId {}",
+        log.info("Looking up characters in world {} (activeOnly: {}) with requestId {}",
                    worldId, activeOnly, requestId);
 
         return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
@@ -148,7 +148,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Looking up characters on planet {} (activeOnly: {}) with requestId {}",
+        log.info("Looking up characters on planet {} (activeOnly: {}) with requestId {}",
                    planetName, activeOnly, requestId);
 
         return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
@@ -192,7 +192,7 @@ public class WorldLifeClient {
 
         PlayerCharacterLookupRequest message = builder.build();
 
-        LOGGER.info("Extended character lookup with requestId {}", requestId);
+        log.info("Extended character lookup with requestId {}", requestId);
 
         return sendMessage(CHARACTER_LOOKUP_TOPIC, requestId, message);
     }
@@ -214,7 +214,7 @@ public class WorldLifeClient {
                 .setRequestedBy("WorldLifeClient")
                 .build();
 
-        LOGGER.info("Looking up character by ID {} with requestId {} (with response)", characterId, requestId);
+        log.info("Looking up character by ID {} with requestId {} (with response)", characterId, requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
         pendingCharacterLookups.put(requestId, future);
@@ -247,7 +247,7 @@ public class WorldLifeClient {
                 .setRequestedBy("WorldLifeClient")
                 .build();
 
-        LOGGER.info("Looking up character by name '{}' with requestId {} (with response)", characterName, requestId);
+        log.info("Looking up character by name '{}' with requestId {} (with response)", characterName, requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
         pendingCharacterLookups.put(requestId, future);
@@ -281,7 +281,7 @@ public class WorldLifeClient {
                 .setRequestedBy("WorldLifeClient")
                 .build();
 
-        LOGGER.info("Looking up characters for userId {} (activeOnly: {}) with requestId {} (with response)",
+        log.info("Looking up characters for userId {} (activeOnly: {}) with requestId {} (with response)",
                    userId, activeOnly, requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
@@ -329,7 +329,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Creating character '{}' of type {} in world {} with messageId {}",
+        log.info("Creating character '{}' of type {} in world {} with messageId {}",
                    name, characterType, worldId, messageId);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -372,7 +372,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Updating position of character {} to ({}, {}, {}) with messageId {}",
+        log.info("Updating position of character {} to ({}, {}, {}) with messageId {}",
                    characterId, x, y, z, messageId);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -411,7 +411,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Updating health of character {} to {} with messageId {}",
+        log.info("Updating health of character {} to {} with messageId {}",
                    characterId, health, messageId);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -462,7 +462,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Updating info of character {} with messageId {}", characterId, messageId);
+        log.info("Updating info of character {} with messageId {}", characterId, messageId);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
         pendingCharacterOperations.put(messageId, future);
@@ -498,7 +498,7 @@ public class WorldLifeClient {
                 .setTimestamp(Instant.now())
                 .build();
 
-        LOGGER.info("Deleting character {} with messageId {}", characterId, messageId);
+        log.info("Deleting character {} with messageId {}", characterId, messageId);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
         pendingCharacterOperations.put(messageId, future);
@@ -526,11 +526,11 @@ public class WorldLifeClient {
         CompletableFuture<PlayerCharacterLookupResponse> future = pendingCharacterLookups.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received character lookup response for unknown request ID: {}", requestId);
+            log.warn("Received character lookup response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -546,11 +546,11 @@ public class WorldLifeClient {
         CompletableFuture<Void> future = pendingCharacterOperations.remove(messageId);
 
         if (future != null) {
-            LOGGER.debug("Completing character operation with messageId {}", messageId);
+            log.debug("Completing character operation with messageId {}", messageId);
             future.complete(null);
             return true;
         } else {
-            LOGGER.warn("Received character operation confirmation for unknown message ID: {}", messageId);
+            log.warn("Received character operation confirmation for unknown message ID: {}", messageId);
             return false;
         }
     }
@@ -567,11 +567,11 @@ public class WorldLifeClient {
         CompletableFuture<Void> future = pendingCharacterOperations.remove(messageId);
 
         if (future != null) {
-            LOGGER.debug("Completing character operation with error for messageId {}: {}", messageId, error);
+            log.debug("Completing character operation with error for messageId {}: {}", messageId, error);
             future.completeExceptionally(new RuntimeException("Character operation failed: " + error));
             return true;
         } else {
-            LOGGER.warn("Received character operation error for unknown message ID: {}", messageId);
+            log.warn("Received character operation error for unknown message ID: {}", messageId);
             return false;
         }
     }
@@ -590,7 +590,7 @@ public class WorldLifeClient {
         expiredCount += cleanupExpiredRequests(pendingCharacterOperations, "character operation");
 
         if (expiredCount > 0) {
-            LOGGER.info("Cleaned up {} expired request(s)", expiredCount);
+            log.info("Cleaned up {} expired request(s)", expiredCount);
         }
     }
 
@@ -605,7 +605,7 @@ public class WorldLifeClient {
             var entry = iterator.next();
             CompletableFuture<T> future = entry.getValue();
             if (future.isDone() || future.isCancelled()) {
-                LOGGER.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
+                log.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
                 iterator.remove();
                 removedCount++;
             }
@@ -641,10 +641,10 @@ public class WorldLifeClient {
     private CompletableFuture<Void> sendMessage(String topic, String messageId, Object message) {
         try {
             return kafkaTemplate.send(topic, messageId, message)
-                .thenRun(() -> LOGGER.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
+                .thenRun(() -> log.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
                 .handle((result, throwable) -> {
                     if (throwable != null) {
-                        LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+                        log.error("Failed to send message with ID {} to topic {}: {}",
                                    messageId, topic, throwable.getMessage(), throwable);
                         throw new RuntimeException(throwable);
                     }
@@ -652,7 +652,7 @@ public class WorldLifeClient {
                 });
 
         } catch (Exception e) {
-            LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+            log.error("Failed to send message with ID {} to topic {}: {}",
                        messageId, topic, e.getMessage(), e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);

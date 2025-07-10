@@ -2,6 +2,7 @@ package de.mhus.nimbus.common.consumer;
 
 import de.mhus.nimbus.common.client.WorldLifeClient;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnProperty(name = "nimbus.kafka.enabled", havingValue = "true", matchIfMissing = true)
+@Slf4j
 public class WorldLifeResponseConsumer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeResponseConsumer.class);
 
     private final WorldLifeClient worldLifeClient;
 
@@ -44,7 +44,7 @@ public class WorldLifeResponseConsumer {
                                              @Header(KafkaHeaders.OFFSET) long offset,
                                              Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received character lookup response: requestId={}, status={}, characters count={}, topic={}, partition={}, offset={}",
+        log.debug("Received character lookup response: requestId={}, status={}, characters count={}, topic={}, partition={}, offset={}",
                     response.getRequestId(), response.getStatus(),
                     response.getCharacters() != null ? response.getCharacters().size() : 0, topic, partition, offset);
 
@@ -55,13 +55,13 @@ public class WorldLifeResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
+                log.debug("Successfully processed character lookup response: requestId={}", response.getRequestId());
             } else {
-                LOGGER.warn("Could not process character lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
+                log.warn("Could not process character lookup response - message will not be acknowledged: requestId={}", response.getRequestId());
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling character lookup response: requestId={}", response.getRequestId(), e);
+            log.error("Error handling character lookup response: requestId={}", response.getRequestId(), e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -81,7 +81,7 @@ public class WorldLifeResponseConsumer {
                                                      @Header(KafkaHeaders.OFFSET) long offset,
                                                      Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received character operation confirmation: messageId={}, topic={}, partition={}, offset={}",
+        log.debug("Received character operation confirmation: messageId={}, topic={}, partition={}, offset={}",
                     messageId, topic, partition, offset);
 
         try {
@@ -91,13 +91,13 @@ public class WorldLifeResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed character operation confirmation: messageId={}", messageId);
+                log.debug("Successfully processed character operation confirmation: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process character operation confirmation - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process character operation confirmation - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling character operation confirmation: messageId={}", messageId, e);
+            log.error("Error handling character operation confirmation: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }
@@ -118,7 +118,7 @@ public class WorldLifeResponseConsumer {
                                              @Header(KafkaHeaders.OFFSET) long offset,
                                              Acknowledgment acknowledgment) {
 
-        LOGGER.debug("Received character operation error: messageId={}, error={}, topic={}, partition={}, offset={}",
+        log.debug("Received character operation error: messageId={}, error={}, topic={}, partition={}, offset={}",
                     messageId, errorMessage, topic, partition, offset);
 
         try {
@@ -128,13 +128,13 @@ public class WorldLifeResponseConsumer {
             if (handled) {
                 // Bestätige die Verarbeitung nur wenn die Response zugeordnet werden konnte
                 acknowledgment.acknowledge();
-                LOGGER.debug("Successfully processed character operation error: messageId={}", messageId);
+                log.debug("Successfully processed character operation error: messageId={}", messageId);
             } else {
-                LOGGER.warn("Could not process character operation error - message will not be acknowledged: messageId={}", messageId);
+                log.warn("Could not process character operation error - message will not be acknowledged: messageId={}", messageId);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling character operation error: messageId={}", messageId, e);
+            log.error("Error handling character operation error: messageId={}", messageId, e);
             // Bestätige trotzdem, um Endlosschleife zu vermeiden
             acknowledgment.acknowledge();
         }

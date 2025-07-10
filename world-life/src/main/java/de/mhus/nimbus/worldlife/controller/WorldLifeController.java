@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.character.CharacterType;
 import de.mhus.nimbus.shared.avro.CharacterOperationMessage;
 import de.mhus.nimbus.worldlife.entity.WorldCharacter;
 import de.mhus.nimbus.worldlife.service.WorldLifeService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +22,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/worldlife")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class WorldLifeController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeController.class);
 
     private final WorldLifeService worldLifeService;
 
@@ -38,11 +38,11 @@ public class WorldLifeController {
     @GetMapping("/info")
     public ResponseEntity<String> getServiceInfo() {
         try {
-            LOGGER.debug("REST: Getting service info");
+            log.debug("REST: Getting service info");
             String info = worldLifeService.getServiceInfo();
             return ResponseEntity.ok(info);
         } catch (Exception e) {
-            LOGGER.error("Failed to get service info", e);
+            log.error("Failed to get service info", e);
             return ResponseEntity.internalServerError().body("Service unavailable");
         }
     }
@@ -60,7 +60,7 @@ public class WorldLifeController {
                 return ResponseEntity.status(503).body("World Life Service is unhealthy");
             }
         } catch (Exception e) {
-            LOGGER.error("Health check failed", e);
+            log.error("Health check failed", e);
             return ResponseEntity.status(503).body("Health check failed");
         }
     }
@@ -72,7 +72,7 @@ public class WorldLifeController {
     public ResponseEntity<WorldCharacter> createCharacter(@PathVariable String worldId,
                                                          @RequestBody CreateCharacterRequest request) {
         try {
-            LOGGER.info("REST: Creating character of type {} at ({}, {}, {}) in world {}",
+            log.info("REST: Creating character of type {} at ({}, {}, {}) in world {}",
                        request.getCharacterType(), request.getX(), request.getY(), request.getZ(), worldId);
 
             WorldCharacter character = worldLifeService.createCharacter(
@@ -87,7 +87,7 @@ public class WorldLifeController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(character);
         } catch (Exception e) {
-            LOGGER.error("Failed to create character", e);
+            log.error("Failed to create character", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -98,7 +98,7 @@ public class WorldLifeController {
     @GetMapping("/characters/{characterId}")
     public ResponseEntity<WorldCharacter> getCharacter(@PathVariable Long characterId) {
         try {
-            LOGGER.debug("REST: Getting character with ID {}", characterId);
+            log.debug("REST: Getting character with ID {}", characterId);
 
             Optional<WorldCharacter> character = worldLifeService.getCharacter(characterId);
 
@@ -108,7 +108,7 @@ public class WorldLifeController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to get character", e);
+            log.error("Failed to get character", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -121,7 +121,7 @@ public class WorldLifeController {
                                                                    @RequestParam(required = false) CharacterType type,
                                                                    @RequestParam(defaultValue = "false") boolean activeOnly) {
         try {
-            LOGGER.debug("REST: Getting characters in world {} (type: {}, activeOnly: {})", worldId, type, activeOnly);
+            log.debug("REST: Getting characters in world {} (type: {}, activeOnly: {})", worldId, type, activeOnly);
 
             List<WorldCharacter> characters;
             if (type != null) {
@@ -134,7 +134,7 @@ public class WorldLifeController {
 
             return ResponseEntity.ok(characters);
         } catch (Exception e) {
-            LOGGER.error("Failed to get characters in world", e);
+            log.error("Failed to get characters in world", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -146,7 +146,7 @@ public class WorldLifeController {
     public ResponseEntity<WorldCharacter> updateCharacterPosition(@PathVariable Long characterId,
                                                                  @RequestBody PositionUpdateRequest request) {
         try {
-            LOGGER.info("REST: Updating position for character {} to ({}, {}, {})",
+            log.info("REST: Updating position for character {} to ({}, {}, {})",
                        characterId, request.getX(), request.getY(), request.getZ());
 
             Optional<WorldCharacter> updated = worldLifeService.updateCharacterPosition(
@@ -158,7 +158,7 @@ public class WorldLifeController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to update character position", e);
+            log.error("Failed to update character position", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -170,7 +170,7 @@ public class WorldLifeController {
     public ResponseEntity<WorldCharacter> updateCharacterHealth(@PathVariable Long characterId,
                                                                @RequestBody HealthUpdateRequest request) {
         try {
-            LOGGER.info("REST: Updating health for character {} to {}", characterId, request.getHealth());
+            log.info("REST: Updating health for character {} to {}", characterId, request.getHealth());
 
             Optional<WorldCharacter> updated = worldLifeService.updateCharacterHealth(characterId, request.getHealth());
 
@@ -180,7 +180,7 @@ public class WorldLifeController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to update character health", e);
+            log.error("Failed to update character health", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -192,7 +192,7 @@ public class WorldLifeController {
     public ResponseEntity<WorldCharacter> updateCharacterInfo(@PathVariable Long characterId,
                                                              @RequestBody InfoUpdateRequest request) {
         try {
-            LOGGER.info("REST: Updating info for character {}", characterId);
+            log.info("REST: Updating info for character {}", characterId);
 
             Optional<WorldCharacter> updated = worldLifeService.updateCharacterInfo(
                 characterId, request.getName(), request.getDisplayName(), request.getDescription());
@@ -203,7 +203,7 @@ public class WorldLifeController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to update character info", e);
+            log.error("Failed to update character info", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -214,7 +214,7 @@ public class WorldLifeController {
     @DeleteMapping("/characters/{characterId}")
     public ResponseEntity<String> deleteCharacter(@PathVariable Long characterId) {
         try {
-            LOGGER.info("REST: Deleting character {}", characterId);
+            log.info("REST: Deleting character {}", characterId);
 
             boolean deleted = worldLifeService.deleteCharacter(characterId);
 
@@ -224,7 +224,7 @@ public class WorldLifeController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to delete character", e);
+            log.error("Failed to delete character", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to delete character: " + e.getMessage());
         }
@@ -239,7 +239,7 @@ public class WorldLifeController {
                                                                    @RequestParam double minY, @RequestParam double maxY,
                                                                    @RequestParam double minZ, @RequestParam double maxZ) {
         try {
-            LOGGER.debug("REST: Getting characters in range ({},{},{}) to ({},{},{}) in world {}",
+            log.debug("REST: Getting characters in range ({},{},{}) to ({},{},{}) in world {}",
                         minX, minY, minZ, maxX, maxY, maxZ, worldId);
 
             List<WorldCharacter> characters = worldLifeService.getCharactersInRange(
@@ -247,7 +247,7 @@ public class WorldLifeController {
 
             return ResponseEntity.ok(characters);
         } catch (Exception e) {
-            LOGGER.error("Failed to get characters in range", e);
+            log.error("Failed to get characters in range", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -262,7 +262,7 @@ public class WorldLifeController {
                                                                     @RequestParam double centerZ,
                                                                     @RequestParam double radius) {
         try {
-            LOGGER.debug("REST: Getting characters within radius {} of ({}, {}, {}) in world {}",
+            log.debug("REST: Getting characters within radius {} of ({}, {}, {}) in world {}",
                         radius, centerX, centerY, centerZ, worldId);
 
             List<WorldCharacter> characters = worldLifeService.getCharactersInRadius(
@@ -270,7 +270,7 @@ public class WorldLifeController {
 
             return ResponseEntity.ok(characters);
         } catch (Exception e) {
-            LOGGER.error("Failed to get characters in radius", e);
+            log.error("Failed to get characters in radius", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -281,7 +281,7 @@ public class WorldLifeController {
     @GetMapping("/worlds/{worldId}/stats")
     public ResponseEntity<WorldStats> getWorldStats(@PathVariable String worldId) {
         try {
-            LOGGER.debug("REST: Getting stats for world {}", worldId);
+            log.debug("REST: Getting stats for world {}", worldId);
 
             long totalCharacters = worldLifeService.getCharactersInWorld(worldId).size();
             long activeCharacters = worldLifeService.getActiveCharacterCount(worldId);
@@ -294,7 +294,7 @@ public class WorldLifeController {
 
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
-            LOGGER.error("Failed to get world stats", e);
+            log.error("Failed to get world stats", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -305,12 +305,12 @@ public class WorldLifeController {
     @DeleteMapping("/worlds/{worldId}/characters")
     public ResponseEntity<String> clearWorldCharacters(@PathVariable String worldId) {
         try {
-            LOGGER.info("REST: Clearing all characters in world {}", worldId);
+            log.info("REST: Clearing all characters in world {}", worldId);
 
             long deletedCount = worldLifeService.clearWorldCharacters(worldId);
             return ResponseEntity.ok("Cleared " + deletedCount + " characters from world " + worldId);
         } catch (Exception e) {
-            LOGGER.error("Failed to clear world characters", e);
+            log.error("Failed to clear world characters", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to clear characters: " + e.getMessage());
         }

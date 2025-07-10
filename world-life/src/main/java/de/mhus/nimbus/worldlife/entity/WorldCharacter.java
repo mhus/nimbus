@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +36,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
+@Slf4j
 public class WorldCharacter {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldCharacter.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -194,7 +194,7 @@ public class WorldCharacter {
         this.z = z;
         this.lastModified = LocalDateTime.now();
 
-        LOGGER.debug("Updated position for character {} in world {} to ({}, {}, {})",
+        log.debug("Updated position for character {} in world {} to ({}, {}, {})",
                     id, worldId, x, y, z);
     }
 
@@ -209,7 +209,7 @@ public class WorldCharacter {
 
         if (this.health == 0) {
             this.active = false;
-            LOGGER.info("Character {} in world {} has died (health reached 0)", id, worldId);
+            log.info("Character {} in world {} has died (health reached 0)", id, worldId);
         }
     }
 
@@ -223,7 +223,7 @@ public class WorldCharacter {
             this.health = Math.min(this.maxHealth, this.health + healAmount);
             this.lastModified = LocalDateTime.now();
 
-            LOGGER.debug("Healed character {} in world {} by {} points, new health: {}",
+            log.debug("Healed character {} in world {} by {} points, new health: {}",
                         id, worldId, healAmount, this.health);
         }
     }
@@ -236,7 +236,7 @@ public class WorldCharacter {
     public void takeDamage(int damage) {
         if (this.health != null) {
             updateHealth(this.health - damage);
-            LOGGER.debug("Character {} in world {} took {} damage, remaining health: {}",
+            log.debug("Character {} in world {} took {} damage, remaining health: {}",
                         id, worldId, damage, this.health);
         }
     }
@@ -289,9 +289,9 @@ public class WorldCharacter {
                 this.characterData = objectMapper.writeValueAsString(character);
                 this.lastModified = LocalDateTime.now();
 
-                LOGGER.debug("Serialized character data for character {} in world {}", id, worldId);
+                log.debug("Serialized character data for character {} in world {}", id, worldId);
             } catch (JsonProcessingException e) {
-                LOGGER.error("Failed to serialize character data for character {} in world {}: {}",
+                log.error("Failed to serialize character data for character {} in world {}: {}",
                            id, worldId, e.getMessage(), e);
                 throw new RuntimeException("Failed to serialize character data", e);
             }
@@ -310,9 +310,9 @@ public class WorldCharacter {
         if (character == null && characterData != null) {
             try {
                 character = objectMapper.readValue(characterData, characterClass);
-                LOGGER.debug("Deserialized character data for character {} in world {}", id, worldId);
+                log.debug("Deserialized character data for character {} in world {}", id, worldId);
             } catch (JsonProcessingException e) {
-                LOGGER.error("Failed to deserialize character data for character {} in world {}: {}",
+                log.error("Failed to deserialize character data for character {} in world {}: {}",
                            id, worldId, e.getMessage(), e);
                 throw new RuntimeException("Failed to deserialize character data", e);
             }
@@ -356,7 +356,7 @@ public class WorldCharacter {
         this.characterData = null;
         this.lastModified = LocalDateTime.now();
 
-        LOGGER.debug("Cleared character data for character {} in world {}", id, worldId);
+        log.debug("Cleared character data for character {} in world {}", id, worldId);
     }
 
     /**

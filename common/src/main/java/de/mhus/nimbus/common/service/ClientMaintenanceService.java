@@ -3,6 +3,7 @@ package de.mhus.nimbus.common.service;
 import de.mhus.nimbus.common.client.IdentityClient;
 import de.mhus.nimbus.common.client.RegistryClient;
 import de.mhus.nimbus.common.client.WorldLifeClient;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,8 @@ import org.springframework.stereotype.Service;
  * Führt periodische Wartungsaufgaben aus
  */
 @Service
+@Slf4j
 public class ClientMaintenanceService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClientMaintenanceService.class);
 
     private final IdentityClient identityClient;
     private final RegistryClient registryClient;
@@ -38,32 +38,32 @@ public class ClientMaintenanceService {
             // IdentityClient cleanup
             int identityPendingCount = identityClient.getPendingRequestCount();
             if (identityPendingCount > 0) {
-                LOGGER.debug("Starting identity client cleanup - Current pending requests: {}", identityClient.getPendingRequestStats());
+                log.debug("Starting identity client cleanup - Current pending requests: {}", identityClient.getPendingRequestStats());
                 identityClient.cleanupExpiredRequests();
                 int newIdentityPendingCount = identityClient.getPendingRequestCount();
-                LOGGER.debug("Identity client cleanup completed - Remaining pending requests: {}", newIdentityPendingCount);
+                log.debug("Identity client cleanup completed - Remaining pending requests: {}", newIdentityPendingCount);
             }
 
             // RegistryClient cleanup
             int registryPendingCount = registryClient.getPendingRequestCount();
             if (registryPendingCount > 0) {
-                LOGGER.debug("Starting registry client cleanup - Current pending requests: {}", registryClient.getPendingRequestStats());
+                log.debug("Starting registry client cleanup - Current pending requests: {}", registryClient.getPendingRequestStats());
                 registryClient.cleanupExpiredRequests();
                 int newRegistryPendingCount = registryClient.getPendingRequestCount();
-                LOGGER.debug("Registry client cleanup completed - Remaining pending requests: {}", newRegistryPendingCount);
+                log.debug("Registry client cleanup completed - Remaining pending requests: {}", newRegistryPendingCount);
             }
 
             // WorldLifeClient cleanup
             int worldLifePendingCount = worldLifeClient.getPendingRequestCount();
             if (worldLifePendingCount > 0) {
-                LOGGER.debug("Starting world-life client cleanup - Current pending requests: {}", worldLifeClient.getPendingRequestStats());
+                log.debug("Starting world-life client cleanup - Current pending requests: {}", worldLifeClient.getPendingRequestStats());
                 worldLifeClient.cleanupExpiredRequests();
                 int newWorldLifePendingCount = worldLifeClient.getPendingRequestCount();
-                LOGGER.debug("World-life client cleanup completed - Remaining pending requests: {}", newWorldLifePendingCount);
+                log.debug("World-life client cleanup completed - Remaining pending requests: {}", newWorldLifePendingCount);
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error during client cleanup", e);
+            log.error("Error during client cleanup", e);
         }
     }
 
@@ -78,13 +78,13 @@ public class ClientMaintenanceService {
             int worldLifePendingCount = worldLifeClient.getPendingRequestCount();
 
             if (identityPendingCount > 0 || registryPendingCount > 0 || worldLifePendingCount > 0) {
-                LOGGER.info("Client status - Identity: {}, Registry: {}, WorldLife: {}",
+                log.info("Client status - Identity: {}, Registry: {}, WorldLife: {}",
                         identityClient.getPendingRequestStats(),
                         registryClient.getPendingRequestStats(),
                         worldLifeClient.getPendingRequestStats());
             }
         } catch (Exception e) {
-            LOGGER.error("Error logging client statistics", e);
+            log.error("Error logging client statistics", e);
         }
     }
 

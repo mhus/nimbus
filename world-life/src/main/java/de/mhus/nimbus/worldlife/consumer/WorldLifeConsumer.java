@@ -5,6 +5,7 @@ import de.mhus.nimbus.shared.avro.CharacterData;
 import de.mhus.nimbus.shared.avro.CharacterBatchData;
 import de.mhus.nimbus.worldlife.entity.WorldCharacter;
 import de.mhus.nimbus.worldlife.service.WorldLifeService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +19,8 @@ import java.util.Optional;
  * Kafka consumer for world character operations
  */
 @Component
+@Slf4j
 public class WorldLifeConsumer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeConsumer.class);
 
     private final WorldLifeService worldLifeService;
 
@@ -35,7 +35,7 @@ public class WorldLifeConsumer {
     @KafkaListener(topics = "character-operations", groupId = "world-life-service")
     public void consumeCharacterOperation(CharacterOperationMessage message) {
         try {
-            LOGGER.debug("Kafka: Received character operation {} for world {} with messageId {}",
+            log.debug("Kafka: Received character operation {} for world {} with messageId {}",
                         message.getOperation(), message.getWorldId(), message.getMessageId());
 
             switch (message.getOperation()) {
@@ -58,14 +58,14 @@ public class WorldLifeConsumer {
                     handleBatchCreateCharacters(message);
                     break;
                 default:
-                    LOGGER.warn("Unknown operation type: {}", message.getOperation());
+                    log.warn("Unknown operation type: {}", message.getOperation());
             }
 
-            LOGGER.debug("Kafka: Successfully processed operation {} for messageId {}",
+            log.debug("Kafka: Successfully processed operation {} for messageId {}",
                         message.getOperation(), message.getMessageId());
 
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to process character operation message with ID {}: {}",
+            log.error("Kafka: Failed to process character operation message with ID {}: {}",
                         message.getMessageId(), e.getMessage(), e);
         }
     }
@@ -83,7 +83,7 @@ public class WorldLifeConsumer {
                 try {
                     characterType = de.mhus.nimbus.shared.character.CharacterType.valueOf(data.getCharacterType().toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    LOGGER.error("Invalid character type: {}", data.getCharacterType());
+                    log.error("Invalid character type: {}", data.getCharacterType());
                     return;
                 }
 
@@ -105,11 +105,11 @@ public class WorldLifeConsumer {
                     worldLifeService.updateCharacterInfo(character.getId(), data.getName(), data.getDisplayName(), data.getDescription());
                 }
 
-                LOGGER.info("Kafka: Created character with ID {} of type {} at ({}, {}, {}) in world {}",
+                log.info("Kafka: Created character with ID {} of type {} at ({}, {}, {}) in world {}",
                            character.getId(), data.getCharacterType(), data.getX(), data.getY(), data.getZ(), message.getWorldId());
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to create character: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to create character: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create character", e);
         }
     }
@@ -130,14 +130,14 @@ public class WorldLifeConsumer {
                 );
 
                 if (updated.isPresent()) {
-                    LOGGER.info("Kafka: Updated position for character {} to ({}, {}, {})",
+                    log.info("Kafka: Updated position for character {} to ({}, {}, {})",
                                data.getCharacterId(), data.getX(), data.getY(), data.getZ());
                 } else {
-                    LOGGER.warn("Kafka: Character with ID {} not found for position update", data.getCharacterId());
+                    log.warn("Kafka: Character with ID {} not found for position update", data.getCharacterId());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to update character position: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to update character position: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to update character position", e);
         }
     }
@@ -156,14 +156,14 @@ public class WorldLifeConsumer {
                 );
 
                 if (updated.isPresent()) {
-                    LOGGER.info("Kafka: Updated health for character {} to {}",
+                    log.info("Kafka: Updated health for character {} to {}",
                                data.getCharacterId(), data.getHealth());
                 } else {
-                    LOGGER.warn("Kafka: Character with ID {} not found for health update", data.getCharacterId());
+                    log.warn("Kafka: Character with ID {} not found for health update", data.getCharacterId());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to update character health: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to update character health: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to update character health", e);
         }
     }
@@ -184,13 +184,13 @@ public class WorldLifeConsumer {
                 );
 
                 if (updated.isPresent()) {
-                    LOGGER.info("Kafka: Updated info for character {}", data.getCharacterId());
+                    log.info("Kafka: Updated info for character {}", data.getCharacterId());
                 } else {
-                    LOGGER.warn("Kafka: Character with ID {} not found for info update", data.getCharacterId());
+                    log.warn("Kafka: Character with ID {} not found for info update", data.getCharacterId());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to update character info: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to update character info: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to update character info", e);
         }
     }
@@ -206,13 +206,13 @@ public class WorldLifeConsumer {
                 boolean deleted = worldLifeService.deleteCharacter(data.getCharacterId());
 
                 if (deleted) {
-                    LOGGER.info("Kafka: Deleted character with ID {}", data.getCharacterId());
+                    log.info("Kafka: Deleted character with ID {}", data.getCharacterId());
                 } else {
-                    LOGGER.warn("Kafka: Character with ID {} not found for deletion", data.getCharacterId());
+                    log.warn("Kafka: Character with ID {} not found for deletion", data.getCharacterId());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to delete character: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to delete character: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to delete character", e);
         }
     }
@@ -227,17 +227,17 @@ public class WorldLifeConsumer {
 
                 // TODO: Parse charactersJson and convert to List<WorldCharacter>
                 // For now, log that we received the batch data
-                LOGGER.info("Kafka: Received batch create request with JSON data: {}",
+                log.info("Kafka: Received batch create request with JSON data: {}",
                            batchData.getCharactersJson());
 
                 // This needs to be implemented when the JSON parsing logic is defined
                 // List<WorldCharacter> characters = parseCharactersFromJson(batchData.getCharactersJson());
                 // List<WorldCharacter> savedCharacters = worldLifeService.saveCharacters(characters);
 
-                LOGGER.warn("Kafka: Batch create characters operation not yet implemented - JSON parsing needed");
+                log.warn("Kafka: Batch create characters operation not yet implemented - JSON parsing needed");
             }
         } catch (Exception e) {
-            LOGGER.error("Kafka: Failed to batch create characters: {}", e.getMessage(), e);
+            log.error("Kafka: Failed to batch create characters: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to batch create characters", e);
         }
     }

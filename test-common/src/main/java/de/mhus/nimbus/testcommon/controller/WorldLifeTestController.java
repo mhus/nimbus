@@ -2,6 +2,7 @@ package de.mhus.nimbus.testcommon.controller;
 
 import de.mhus.nimbus.common.client.WorldLifeClient;
 import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +17,8 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/test/world-life")
+@Slf4j
 public class WorldLifeTestController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorldLifeTestController.class);
 
     private final WorldLifeClient worldLifeClient;
 
@@ -33,7 +33,7 @@ public class WorldLifeTestController {
     @GetMapping("/character/{characterId}")
     public ResponseEntity<String> lookupCharacterById(@PathVariable Long characterId) {
         try {
-            LOGGER.info("Testing character lookup by ID: {}", characterId);
+            log.info("Testing character lookup by ID: {}", characterId);
 
             CompletableFuture<PlayerCharacterLookupResponse> future = worldLifeClient.lookupCharacterByIdWithResponse(characterId);
 
@@ -41,13 +41,13 @@ public class WorldLifeTestController {
             PlayerCharacterLookupResponse response = future.get();
 
             String result = formatCharacterLookupResponse(response, "Character lookup by ID " + characterId);
-            LOGGER.info("Character lookup by ID completed: {}", characterId);
+            log.info("Character lookup by ID completed: {}", characterId);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to lookup character by ID " + characterId + ": " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -58,7 +58,7 @@ public class WorldLifeTestController {
     @GetMapping("/character/name/{characterName}")
     public ResponseEntity<String> lookupCharacterByName(@PathVariable String characterName) {
         try {
-            LOGGER.info("Testing character lookup by name: {}", characterName);
+            log.info("Testing character lookup by name: {}", characterName);
 
             CompletableFuture<PlayerCharacterLookupResponse> future = worldLifeClient.lookupCharacterByNameWithResponse(characterName);
 
@@ -66,13 +66,13 @@ public class WorldLifeTestController {
             PlayerCharacterLookupResponse response = future.get();
 
             String result = formatCharacterLookupResponse(response, "Character lookup by name '" + characterName + "'");
-            LOGGER.info("Character lookup by name completed: {}", characterName);
+            log.info("Character lookup by name completed: {}", characterName);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to lookup character by name '" + characterName + "': " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -85,7 +85,7 @@ public class WorldLifeTestController {
             @PathVariable Long userId,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         try {
-            LOGGER.info("Testing character lookup by user ID: {} (activeOnly: {})", userId, activeOnly);
+            log.info("Testing character lookup by user ID: {} (activeOnly: {})", userId, activeOnly);
 
             CompletableFuture<PlayerCharacterLookupResponse> future = worldLifeClient.lookupCharactersByUserIdWithResponse(userId, activeOnly);
 
@@ -93,13 +93,13 @@ public class WorldLifeTestController {
             PlayerCharacterLookupResponse response = future.get();
 
             String result = formatCharacterLookupResponse(response, "Character lookup by user ID " + userId + " (activeOnly: " + activeOnly + ")");
-            LOGGER.info("Character lookup by user ID completed: {}", userId);
+            log.info("Character lookup by user ID completed: {}", userId);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to lookup characters by user ID " + userId + ": " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -112,7 +112,7 @@ public class WorldLifeTestController {
             @PathVariable String worldId,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         try {
-            LOGGER.info("Testing character lookup by world ID: {} (activeOnly: {})", worldId, activeOnly);
+            log.info("Testing character lookup by world ID: {} (activeOnly: {})", worldId, activeOnly);
 
             CompletableFuture<Void> future = worldLifeClient.lookupCharactersByWorldId(worldId, activeOnly);
 
@@ -120,13 +120,13 @@ public class WorldLifeTestController {
             future.get();
 
             String result = "Character lookup by world ID '" + worldId + "' completed successfully (activeOnly: " + activeOnly + ")";
-            LOGGER.info("Character lookup by world ID completed: {}", worldId);
+            log.info("Character lookup by world ID completed: {}", worldId);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to lookup characters by world ID '" + worldId + "': " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -139,7 +139,7 @@ public class WorldLifeTestController {
             @PathVariable String planetName,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         try {
-            LOGGER.info("Testing character lookup by planet: {} (activeOnly: {})", planetName, activeOnly);
+            log.info("Testing character lookup by planet: {} (activeOnly: {})", planetName, activeOnly);
 
             CompletableFuture<Void> future = worldLifeClient.lookupCharactersByPlanet(planetName, activeOnly);
 
@@ -147,13 +147,13 @@ public class WorldLifeTestController {
             future.get();
 
             String result = "Character lookup by planet '" + planetName + "' completed successfully (activeOnly: " + activeOnly + ")";
-            LOGGER.info("Character lookup by planet completed: {}", planetName);
+            log.info("Character lookup by planet completed: {}", planetName);
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             String errorMessage = "Failed to lookup characters by planet '" + planetName + "': " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }
@@ -170,7 +170,7 @@ public class WorldLifeTestController {
             @RequestParam(required = false) String currentWorldId,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         try {
-            LOGGER.info("Testing extended character lookup with multiple criteria");
+            log.info("Testing extended character lookup with multiple criteria");
 
             CompletableFuture<Void> future = worldLifeClient.lookupCharacters(
                 characterId, characterName, userId, currentPlanet, currentWorldId, activeOnly);
@@ -186,13 +186,13 @@ public class WorldLifeTestController {
             if (currentWorldId != null) result.append("currentWorldId='").append(currentWorldId).append("' ");
             result.append("activeOnly=").append(activeOnly);
 
-            LOGGER.info("Extended character lookup completed");
+            log.info("Extended character lookup completed");
 
             return ResponseEntity.ok(result.toString());
 
         } catch (Exception e) {
             String errorMessage = "Failed to perform extended character lookup: " + e.getMessage();
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             return ResponseEntity.internalServerError().body(errorMessage);
         }
     }

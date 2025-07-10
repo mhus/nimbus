@@ -1,44 +1,31 @@
 package de.mhus.nimbus.common.client;
 
-import de.mhus.nimbus.shared.avro.LoginRequest;
-import de.mhus.nimbus.shared.avro.LoginResponse;
-import de.mhus.nimbus.shared.avro.UserLookupRequest;
-import de.mhus.nimbus.shared.avro.UserLookupResponse;
-import de.mhus.nimbus.shared.avro.PlayerCharacterLookupRequest;
-import de.mhus.nimbus.shared.avro.PlayerCharacterLookupResponse;
-import de.mhus.nimbus.shared.avro.PublicKeyRequest;
-import de.mhus.nimbus.shared.avro.PublicKeyResponse;
-import de.mhus.nimbus.shared.avro.AceCreateRequest;
-import de.mhus.nimbus.shared.avro.AceCreateResponse;
-import de.mhus.nimbus.shared.avro.AceLookupRequest;
-import de.mhus.nimbus.shared.avro.AceLookupResponse;
-import de.mhus.nimbus.shared.avro.AceUpdateRequest;
-import de.mhus.nimbus.shared.avro.AceUpdateResponse;
-import de.mhus.nimbus.shared.avro.AceDeleteRequest;
-import de.mhus.nimbus.shared.avro.AceDeleteResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.common.exception.NimbusException;
+import de.mhus.nimbus.shared.avro.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * Client for communicating with identity module via Kafka
+ * Client für Identity-Service-Operationen
+ * Verwendet Kafka für die Kommunikation mit dem Identity-Service
  */
 @Component
+@Slf4j
 public class IdentityClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IdentityClient.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -89,7 +76,7 @@ public class IdentityClient {
                 .setClientInfo(clientInfo)
                 .build();
 
-        LOGGER.info("Sending login request for user '{}' with requestId {}", username, requestId);
+        log.info("Sending login request for user '{}' with requestId {}", username, requestId);
 
         CompletableFuture<LoginResponse> future = new CompletableFuture<>();
         pendingLoginRequests.put(requestId, future);
@@ -132,7 +119,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending user lookup request for userId {} with requestId {}", userId, requestId);
+        log.info("Sending user lookup request for userId {} with requestId {}", userId, requestId);
 
         CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
         pendingUserLookupRequests.put(requestId, future);
@@ -164,7 +151,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending user lookup request for username '{}' with requestId {}", username, requestId);
+        log.info("Sending user lookup request for username '{}' with requestId {}", username, requestId);
 
         CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
         pendingUserLookupRequests.put(requestId, future);
@@ -196,7 +183,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending user lookup request for email '{}' with requestId {}", email, requestId);
+        log.info("Sending user lookup request for email '{}' with requestId {}", email, requestId);
 
         CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
         pendingUserLookupRequests.put(requestId, future);
@@ -240,7 +227,7 @@ public class IdentityClient {
 
         UserLookupRequest message = builder.build();
 
-        LOGGER.info("Sending extended user lookup request with requestId {}", requestId);
+        log.info("Sending extended user lookup request with requestId {}", requestId);
 
         CompletableFuture<UserLookupResponse> future = new CompletableFuture<>();
         pendingUserLookupRequests.put(requestId, future);
@@ -273,7 +260,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending character lookup request for characterId {} with requestId {}", characterId, requestId);
+        log.info("Sending character lookup request for characterId {} with requestId {}", characterId, requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
         pendingCharacterLookupRequests.put(requestId, future);
@@ -306,7 +293,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending character lookup request for characterName '{}' with requestId {}", characterName, requestId);
+        log.info("Sending character lookup request for characterName '{}' with requestId {}", characterName, requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
         pendingCharacterLookupRequests.put(requestId, future);
@@ -339,7 +326,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending character lookup request for userId {} with requestId {}", userId, requestId);
+        log.info("Sending character lookup request for userId {} with requestId {}", userId, requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
         pendingCharacterLookupRequests.put(requestId, future);
@@ -394,7 +381,7 @@ public class IdentityClient {
 
         PlayerCharacterLookupRequest message = builder.build();
 
-        LOGGER.info("Sending extended character lookup request with requestId {}", requestId);
+        log.info("Sending extended character lookup request with requestId {}", requestId);
 
         CompletableFuture<PlayerCharacterLookupResponse> future = new CompletableFuture<>();
         pendingCharacterLookupRequests.put(requestId, future);
@@ -424,7 +411,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending public key request with requestId {}", requestId);
+        log.info("Sending public key request with requestId {}", requestId);
 
         CompletableFuture<PublicKeyResponse> future = new CompletableFuture<>();
         pendingPublicKeyRequests.put(requestId, future);
@@ -451,10 +438,10 @@ public class IdentityClient {
     private CompletableFuture<Void> sendMessage(String topic, String messageId, Object message) {
         try {
             return kafkaTemplate.send(topic, messageId, message)
-                .thenRun(() -> LOGGER.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
+                .thenRun(() -> log.debug("Successfully sent message with ID {} to topic {}", messageId, topic))
                 .handle((result, throwable) -> {
                     if (throwable != null) {
-                        LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+                        log.error("Failed to send message with ID {} to topic {}: {}",
                                    messageId, topic, throwable.getMessage(), throwable);
                         throw new RuntimeException(throwable);
                     }
@@ -462,7 +449,7 @@ public class IdentityClient {
                 });
 
         } catch (Exception e) {
-            LOGGER.error("Failed to send message with ID {} to topic {}: {}",
+            log.error("Failed to send message with ID {} to topic {}: {}",
                        messageId, topic, e.getMessage(), e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
@@ -482,11 +469,11 @@ public class IdentityClient {
         CompletableFuture<LoginResponse> future = pendingLoginRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing login request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing login request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received login response for unknown request ID: {}", requestId);
+            log.warn("Received login response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -503,11 +490,11 @@ public class IdentityClient {
         CompletableFuture<UserLookupResponse> future = pendingUserLookupRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing user lookup request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing user lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received user lookup response for unknown request ID: {}", requestId);
+            log.warn("Received user lookup response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -524,11 +511,11 @@ public class IdentityClient {
         CompletableFuture<PlayerCharacterLookupResponse> future = pendingCharacterLookupRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing character lookup request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received character lookup response for unknown request ID: {}", requestId);
+            log.warn("Received character lookup response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -545,11 +532,11 @@ public class IdentityClient {
         CompletableFuture<PublicKeyResponse> future = pendingPublicKeyRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing public key request {} with status {}", requestId, response.getStatus());
+            log.debug("Completing public key request {} with status {}", requestId, response.getStatus());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received public key response for unknown request ID: {}", requestId);
+            log.warn("Received public key response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -566,11 +553,11 @@ public class IdentityClient {
         CompletableFuture<AceCreateResponse> future = pendingAceCreateRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing ACE create request {} with success: {}", requestId, response.getSuccess());
+            log.debug("Completing ACE create request {} with success: {}", requestId, response.getSuccess());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received ACE create response for unknown request ID: {}", requestId);
+            log.warn("Received ACE create response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -587,12 +574,12 @@ public class IdentityClient {
         CompletableFuture<AceLookupResponse> future = pendingAceLookupRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing ACE lookup request {} with success: {}, found {} ACEs",
+            log.debug("Completing ACE lookup request {} with success: {}, found {} ACEs",
                         requestId, response.getSuccess(), response.getAces().size());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received ACE lookup response for unknown request ID: {}", requestId);
+            log.warn("Received ACE lookup response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -609,11 +596,11 @@ public class IdentityClient {
         CompletableFuture<AceUpdateResponse> future = pendingAceUpdateRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing ACE update request {} with success: {}", requestId, response.getSuccess());
+            log.debug("Completing ACE update request {} with success: {}", requestId, response.getSuccess());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received ACE update response for unknown request ID: {}", requestId);
+            log.warn("Received ACE update response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -630,12 +617,12 @@ public class IdentityClient {
         CompletableFuture<AceDeleteResponse> future = pendingAceDeleteRequests.remove(requestId);
 
         if (future != null) {
-            LOGGER.debug("Completing ACE delete request {} with success: {}, deleted {} ACEs",
+            log.debug("Completing ACE delete request {} with success: {}, deleted {} ACEs",
                         requestId, response.getSuccess(), response.getDeletedCount());
             future.complete(response);
             return true;
         } else {
-            LOGGER.warn("Received ACE delete response for unknown request ID: {}", requestId);
+            log.warn("Received ACE delete response for unknown request ID: {}", requestId);
             return false;
         }
     }
@@ -672,7 +659,7 @@ public class IdentityClient {
         expiredCount += cleanupExpiredRequests(pendingAceDeleteRequests, "ACE delete");
 
         if (expiredCount > 0) {
-            LOGGER.info("Cleaned up {} expired request(s)", expiredCount);
+            log.info("Cleaned up {} expired request(s)", expiredCount);
         }
     }
 
@@ -687,7 +674,7 @@ public class IdentityClient {
             var entry = iterator.next();
             CompletableFuture<T> future = entry.getValue();
             if (future.isDone() || future.isCancelled()) {
-                LOGGER.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
+                log.debug("Removing completed/cancelled {} request: {}", requestType, entry.getKey());
                 iterator.remove();
                 removedCount++;
             }
@@ -735,7 +722,7 @@ public class IdentityClient {
             // JWT Token besteht aus drei Teilen: header.payload.signature
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
-                LOGGER.warn("Invalid JWT token format");
+                log.warn("Invalid JWT token format");
                 return List.of();
             }
 
@@ -763,7 +750,7 @@ public class IdentityClient {
 
             return List.of();
         } catch (Exception e) {
-            LOGGER.warn("Failed to extract character names from token", e);
+            log.warn("Failed to extract character names from token", e);
             return List.of();
         }
     }
@@ -778,7 +765,7 @@ public class IdentityClient {
             // JWT Token besteht aus drei Teilen: header.payload.signature
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
-                LOGGER.warn("Invalid JWT token format");
+                log.warn("Invalid JWT token format");
                 return List.of();
             }
 
@@ -806,7 +793,7 @@ public class IdentityClient {
 
             return List.of();
         } catch (Exception e) {
-            LOGGER.warn("Failed to extract ACE rules from token", e);
+            log.warn("Failed to extract ACE rules from token", e);
             return List.of();
         }
     }
@@ -821,7 +808,7 @@ public class IdentityClient {
             // JWT Token besteht aus drei Teilen: header.payload.signature
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
-                LOGGER.warn("Invalid JWT token format");
+                log.warn("Invalid JWT token format");
                 return new TokenClaims();
             }
 
@@ -883,7 +870,7 @@ public class IdentityClient {
 
             return claims;
         } catch (Exception e) {
-            LOGGER.warn("Failed to extract token claims", e);
+            log.warn("Failed to extract token claims", e);
             return new TokenClaims();
         }
     }
@@ -958,7 +945,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE create request for user {} with rule '{}' and requestId {}", userId, rule, requestId);
+        log.info("Sending ACE create request for user {} with rule '{}' and requestId {}", userId, rule, requestId);
 
         CompletableFuture<AceCreateResponse> future = new CompletableFuture<>();
         pendingAceCreateRequests.put(requestId, future);
@@ -996,7 +983,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE create request for user {} with rule '{}', order {} and requestId {}", userId, rule, orderValue, requestId);
+        log.info("Sending ACE create request for user {} with rule '{}', order {} and requestId {}", userId, rule, orderValue, requestId);
 
         CompletableFuture<AceCreateResponse> future = new CompletableFuture<>();
         pendingAceCreateRequests.put(requestId, future);
@@ -1028,7 +1015,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE lookup request for aceId {} with requestId {}", aceId, requestId);
+        log.info("Sending ACE lookup request for aceId {} with requestId {}", aceId, requestId);
 
         CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
         pendingAceLookupRequests.put(requestId, future);
@@ -1062,7 +1049,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE lookup request for userId {} (activeOnly: {}) with requestId {}", userId, activeOnly, requestId);
+        log.info("Sending ACE lookup request for userId {} (activeOnly: {}) with requestId {}", userId, activeOnly, requestId);
 
         CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
         pendingAceLookupRequests.put(requestId, future);
@@ -1096,7 +1083,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE lookup request for rule pattern '{}' (activeOnly: {}) with requestId {}", rulePattern, activeOnly, requestId);
+        log.info("Sending ACE lookup request for rule pattern '{}' (activeOnly: {}) with requestId {}", rulePattern, activeOnly, requestId);
 
         CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
         pendingAceLookupRequests.put(requestId, future);
@@ -1142,7 +1129,7 @@ public class IdentityClient {
 
         AceLookupRequest message = builder.build();
 
-        LOGGER.info("Sending extended ACE lookup request with requestId {}", requestId);
+        log.info("Sending extended ACE lookup request with requestId {}", requestId);
 
         CompletableFuture<AceLookupResponse> future = new CompletableFuture<>();
         pendingAceLookupRequests.put(requestId, future);
@@ -1192,7 +1179,7 @@ public class IdentityClient {
 
         AceUpdateRequest message = builder.build();
 
-        LOGGER.info("Sending ACE update request for aceId {} with requestId {}", aceId, requestId);
+        log.info("Sending ACE update request for aceId {} with requestId {}", aceId, requestId);
 
         CompletableFuture<AceUpdateResponse> future = new CompletableFuture<>();
         pendingAceUpdateRequests.put(requestId, future);
@@ -1224,7 +1211,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE delete request for aceId {} with requestId {}", aceId, requestId);
+        log.info("Sending ACE delete request for aceId {} with requestId {}", aceId, requestId);
 
         CompletableFuture<AceDeleteResponse> future = new CompletableFuture<>();
         pendingAceDeleteRequests.put(requestId, future);
@@ -1256,7 +1243,7 @@ public class IdentityClient {
                 .setRequestedBy("IdentityClient")
                 .build();
 
-        LOGGER.info("Sending ACE delete request for all ACEs of userId {} with requestId {}", userId, requestId);
+        log.info("Sending ACE delete request for all ACEs of userId {} with requestId {}", userId, requestId);
 
         CompletableFuture<AceDeleteResponse> future = new CompletableFuture<>();
         pendingAceDeleteRequests.put(requestId, future);

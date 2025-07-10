@@ -4,6 +4,7 @@ import de.mhus.nimbus.identity.entity.Ace;
 import de.mhus.nimbus.identity.entity.IdentityCharacter;
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.shared.avro.*;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,9 +19,8 @@ import java.util.stream.Collectors;
  * Service für Login-Operationen
  */
 @Service
+@Slf4j
 public class LoginService {
-
-    private static final Logger logger = LoggerFactory.getLogger(LoginService.class);
 
     private final UserService userService;
     private final JwtService jwtService;
@@ -41,7 +41,7 @@ public class LoginService {
      * Verarbeitet eine Login-Anfrage und gibt eine Login-Response zurück
      */
     public LoginResponse processLoginRequest(LoginRequest request) {
-        logger.info("Processing login request: requestId={}, username={}",
+        log.info("Processing login request: requestId={}, username={}",
                    request.getRequestId(), request.getUsername());
 
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -51,7 +51,7 @@ public class LoginService {
             Optional<User> userOpt = findUserByUsernameOrEmail(request.getUsername());
 
             if (userOpt.isEmpty()) {
-                logger.warn("User not found for login: {}", request.getUsername());
+                log.warn("User not found for login: {}", request.getUsername());
                 return createLoginResponse(request, LoginStatus.USER_NOT_FOUND, null, null, null,
                                          currentTimestamp, "User not found");
             }
@@ -60,14 +60,14 @@ public class LoginService {
 
             // Prüfe ob User aktiv ist
             if (!user.getActive()) {
-                logger.warn("Inactive user attempted login: {}", request.getUsername());
+                log.warn("Inactive user attempted login: {}", request.getUsername());
                 return createLoginResponse(request, LoginStatus.USER_INACTIVE, null, null, null,
                                          currentTimestamp, "User account is inactive");
             }
 
             // Validiere Passwort
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                logger.warn("Invalid password for user: {}", request.getUsername());
+                log.warn("Invalid password for user: {}", request.getUsername());
                 return createLoginResponse(request, LoginStatus.INVALID_CREDENTIALS, null, null, null,
                                          currentTimestamp, "Invalid credentials");
             }
@@ -87,13 +87,13 @@ public class LoginService {
             // Erstelle User-Info für Response
             LoginUserInfo userInfo = createLoginUserInfo(user);
 
-            logger.info("Successful login for user: {} (ID: {})", user.getUsername(), user.getId());
+            log.info("Successful login for user: {} (ID: {})", user.getUsername(), user.getId());
 
             return createLoginResponse(request, LoginStatus.SUCCESS, token, expiresAt,
                                      userInfo, currentTimestamp, null);
 
         } catch (Exception e) {
-            logger.error("Error processing login request: {}", request.getRequestId(), e);
+            log.error("Error processing login request: {}", request.getRequestId(), e);
             return createLoginResponse(request, LoginStatus.ERROR, null, null, null,
                                      currentTimestamp, "Internal error during login");
         }
@@ -110,7 +110,7 @@ public class LoginService {
                     .map(Ace::getRule)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            logger.warn("Failed to load ACE rules for user {}: {}", userId, e.getMessage());
+            log.warn("Failed to load ACE rules for user {}: {}", userId, e.getMessage());
             return List.of();
         }
     }
@@ -180,7 +180,7 @@ public class LoginService {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
 
-        logger.debug("Login request validation passed: {}", request.getRequestId());
+        log.debug("Login request validation passed: {}", request.getRequestId());
     }
 
     /**

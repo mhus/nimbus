@@ -3,8 +3,7 @@ package de.mhus.nimbus.registry.consumer;
 import de.mhus.nimbus.registry.service.PlanetRegistryService;
 import de.mhus.nimbus.shared.avro.WorldRegistrationRequest;
 import de.mhus.nimbus.shared.avro.WorldRegistrationResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
@@ -18,9 +17,8 @@ import org.springframework.stereotype.Component;
  * Delegiert die Business-Logik an den PlanetRegistryService
  */
 @Component
+@Slf4j
 public class RegisterWorldConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(RegisterWorldConsumer.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PlanetRegistryService planetRegistryService;
@@ -42,14 +40,14 @@ public class RegisterWorldConsumer {
                                               @Header(KafkaHeaders.OFFSET) long offset,
                                               Acknowledgment acknowledgment) {
 
-        logger.info("Received world registration request from topic: '{}', partition: {}, offset: {}",
+        log.info("Received world registration request from topic: '{}', partition: {}, offset: {}",
                    topic, partition, offset);
 
         try {
             // Validiere Request
             planetRegistryService.validateWorldRegistrationRequest(request);
 
-            logger.info("Processing world registration request: requestId={}, world={}, planet={}, environment={}, registeredBy={}",
+            log.info("Processing world registration request: requestId={}, world={}, planet={}, environment={}, registeredBy={}",
                        request.getRequestId(), request.getWorldName(), request.getPlanetName(),
                        request.getEnvironment(), request.getRegisteredBy());
 
@@ -65,11 +63,11 @@ public class RegisterWorldConsumer {
             }
 
         } catch (IllegalArgumentException e) {
-            logger.warn("Invalid world registration request: requestId={}, error={}",
+            log.warn("Invalid world registration request: requestId={}, error={}",
                        request.getRequestId(), e.getMessage());
             sendErrorResponse(request, "Invalid request: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Error processing world registration message: requestId={}",
+            log.error("Error processing world registration message: requestId={}",
                         request.getRequestId(), e);
             sendErrorResponse(request, "Internal processing error");
         }
@@ -78,10 +76,10 @@ public class RegisterWorldConsumer {
     private void sendWorldRegistrationResponse(WorldRegistrationResponse response) {
         try {
             kafkaTemplate.send("world-registration-response", response.getRequestId(), response);
-            logger.info("Sent world registration response for requestId: {} with status: {}",
+            log.info("Sent world registration response for requestId: {} with status: {}",
                        response.getRequestId(), response.getStatus());
         } catch (Exception e) {
-            logger.error("Error sending world registration response for requestId: {}",
+            log.error("Error sending world registration response for requestId: {}",
                         response.getRequestId(), e);
         }
     }
@@ -91,7 +89,7 @@ public class RegisterWorldConsumer {
             WorldRegistrationResponse errorResponse = planetRegistryService.createWorldRegistrationErrorResponse(request, errorMessage);
             sendWorldRegistrationResponse(errorResponse);
         } catch (Exception e) {
-            logger.error("Error sending world registration error response for requestId: {}",
+            log.error("Error sending world registration error response for requestId: {}",
                         request.getRequestId(), e);
         }
     }

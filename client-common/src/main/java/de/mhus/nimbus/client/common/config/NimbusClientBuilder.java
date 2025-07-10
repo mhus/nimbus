@@ -74,7 +74,7 @@ public class NimbusClientBuilder {
             clientService.registerMessageHandler("*", defaultMessageHandler);
         }
 
-        LOGGER.info("NimbusClientService konfiguriert für Server: {}", serverUrl);
+        log.info("NimbusClientService konfiguriert für Server: {}", serverUrl);
         return clientService;
     }
 
@@ -86,11 +86,11 @@ public class NimbusClientBuilder {
 
         return clientService.connect(serverUrl)
                 .thenApply(v -> {
-                    LOGGER.info("Client erfolgreich verbunden mit {}", serverUrl);
+                    log.info("Client erfolgreich verbunden mit {}", serverUrl);
                     return clientService;
                 })
                 .exceptionally(throwable -> {
-                    LOGGER.error("Fehler beim Verbinden mit {}", serverUrl, throwable);
+                    log.error("Fehler beim Verbinden mit {}", serverUrl, throwable);
                     throw new RuntimeException("Verbindung fehlgeschlagen", throwable);
                 });
     }

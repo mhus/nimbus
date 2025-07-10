@@ -3,8 +3,7 @@ package de.mhus.nimbus.registry.consumer;
 import de.mhus.nimbus.registry.service.PlanetRegistryService;
 import de.mhus.nimbus.shared.avro.PlanetLookupRequest;
 import de.mhus.nimbus.shared.avro.PlanetLookupResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
@@ -18,9 +17,8 @@ import org.springframework.stereotype.Component;
  * Delegiert die Business-Logik an den PlanetRegistryService
  */
 @Component
+@Slf4j
 public class LookupPlanetConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(LookupPlanetConsumer.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PlanetRegistryService planetRegistryService;
@@ -42,14 +40,14 @@ public class LookupPlanetConsumer {
                                          @Header(KafkaHeaders.OFFSET) long offset,
                                          Acknowledgment acknowledgment) {
 
-        logger.info("Received planet lookup request from topic: '{}', partition: {}, offset: {}",
+        log.info("Received planet lookup request from topic: '{}', partition: {}, offset: {}",
                    topic, partition, offset);
 
         try {
             // Validiere Request
             planetRegistryService.validateRequest(request);
 
-            logger.info("Processing planet lookup request: requestId={}, planet={}, world={}, environment={}, requestedBy={}",
+            log.info("Processing planet lookup request: requestId={}, planet={}, world={}, environment={}, requestedBy={}",
                        request.getRequestId(), request.getPlanetName(), request.getWorldName(),
                        request.getEnvironment(), request.getRequestedBy());
 
@@ -65,11 +63,11 @@ public class LookupPlanetConsumer {
             }
 
         } catch (IllegalArgumentException e) {
-            logger.warn("Invalid planet lookup request: requestId={}, error={}",
+            log.warn("Invalid planet lookup request: requestId={}, error={}",
                        request.getRequestId(), e.getMessage());
             sendErrorResponse(request, "Invalid request: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Error processing planet lookup message: requestId={}",
+            log.error("Error processing planet lookup message: requestId={}",
                         request.getRequestId(), e);
             sendErrorResponse(request, "Internal processing error");
         }
@@ -78,10 +76,10 @@ public class LookupPlanetConsumer {
     private void sendPlanetLookupResponse(PlanetLookupResponse response) {
         try {
             kafkaTemplate.send("planet-lookup-response", response.getRequestId(), response);
-            logger.info("Sent planet lookup response for requestId: {} with status: {}",
+            log.info("Sent planet lookup response for requestId: {} with status: {}",
                        response.getRequestId(), response.getStatus());
         } catch (Exception e) {
-            logger.error("Error sending planet lookup response for requestId: {}",
+            log.error("Error sending planet lookup response for requestId: {}",
                         response.getRequestId(), e);
         }
     }
@@ -91,7 +89,7 @@ public class LookupPlanetConsumer {
             PlanetLookupResponse errorResponse = planetRegistryService.createErrorResponse(request, errorMessage);
             sendPlanetLookupResponse(errorResponse);
         } catch (Exception e) {
-            logger.error("Error sending error response for requestId: {}",
+            log.error("Error sending error response for requestId: {}",
                         request.getRequestId(), e);
         }
     }
