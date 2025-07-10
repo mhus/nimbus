@@ -42,7 +42,7 @@ class IdentityLookupServiceTest {
                 .setUserId(null)
                 .setUsername(username)
                 .setEmail(null)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setRequestedBy("test-service")
                 .build();
 
@@ -68,7 +68,7 @@ class IdentityLookupServiceTest {
                 .setUserId(null)
                 .setUsername("nonexistent")
                 .setEmail(null)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setRequestedBy("test-service")
                 .build();
 
@@ -89,7 +89,7 @@ class IdentityLookupServiceTest {
         UserLookupRequest validRequest = UserLookupRequest.newBuilder()
                 .setRequestId("valid-request")
                 .setUsername("testuser")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertDoesNotThrow(() -> identityLookupService.validateUserLookupRequest(validRequest));
@@ -97,7 +97,7 @@ class IdentityLookupServiceTest {
         // Invalid request - no search criteria
         UserLookupRequest invalidRequest = UserLookupRequest.newBuilder()
                 .setRequestId("invalid-request")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertThrows(IllegalArgumentException.class,

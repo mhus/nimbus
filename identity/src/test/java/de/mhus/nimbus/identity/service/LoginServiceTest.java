@@ -43,7 +43,7 @@ class LoginServiceTest {
                 .setRequestId("login-test-1")
                 .setUsername(username)
                 .setPassword(password)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setClientInfo("test-client")
                 .build();
 
@@ -81,7 +81,7 @@ class LoginServiceTest {
                 .setRequestId("login-test-2")
                 .setUsername(email) // Login mit E-Mail statt Username
                 .setPassword(password)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         // When
@@ -104,7 +104,7 @@ class LoginServiceTest {
                 .setRequestId("login-test-3")
                 .setUsername(username)
                 .setPassword("wrongpassword")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         // When
@@ -124,7 +124,7 @@ class LoginServiceTest {
                 .setRequestId("login-test-4")
                 .setUsername("nonexistent")
                 .setPassword("password")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         // When
@@ -151,7 +151,7 @@ class LoginServiceTest {
                 .setRequestId("login-test-5")
                 .setUsername(username)
                 .setPassword("password123")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         // When
@@ -171,19 +171,21 @@ class LoginServiceTest {
                 .setRequestId("valid-request")
                 .setUsername("testuser")
                 .setPassword("password")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertDoesNotThrow(() -> loginService.validateLoginRequest(validRequest));
 
         // Invalid request - missing username
-        LoginRequest invalidRequest = LoginRequest.newBuilder()
-                .setRequestId("invalid-request")
-                .setPassword("password")
-                .setTimestamp(Instant.now().toEpochMilli())
-                .build();
 
-        assertThrows(IllegalArgumentException.class,
-                    () -> loginService.validateLoginRequest(invalidRequest));
+        assertThrows(org.apache.avro.AvroMissingFieldException.class,
+                    () -> {
+                        LoginRequest invalidRequest = LoginRequest.newBuilder()
+                                .setRequestId("invalid-request")
+                                .setPassword("password")
+                                .setTimestamp(Instant.now())
+                                .build();
+                        loginService.validateLoginRequest(invalidRequest);
+                    });
     }
 }

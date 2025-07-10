@@ -43,7 +43,7 @@ public class RegisterWorldConsumerTest {
                 .setDescription("Test world description")
                 .setWorldType("settlement")
                 .setAccessLevel("public")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setRegisteredBy("test-user")
                 .setMetadata(new HashMap<>())
                 .build();
@@ -79,7 +79,7 @@ public class RegisterWorldConsumerTest {
                 .setWorldName("")
                 .setEnvironment(Environment.TEST)
                 .setManagementUrl("http://localhost:8080/management")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertThrows(IllegalArgumentException.class,
@@ -93,7 +93,7 @@ public class RegisterWorldConsumerTest {
                 .setWorldName("Test World")
                 .setEnvironment(Environment.TEST)
                 .setManagementUrl("")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertThrows(IllegalArgumentException.class,

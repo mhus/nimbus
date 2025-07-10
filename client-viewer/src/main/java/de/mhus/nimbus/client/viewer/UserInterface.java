@@ -65,10 +65,25 @@ public class UserInterface {
      * Initialisiert die Benutzeroberfläche
      */
     public void init(long window) {
+        // Stelle sicher, dass OpenGL-Context aktiv ist
+        glfwMakeContextCurrent(window);
+
         // Erstelle NanoVG Context
         vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS | NanoVGGL3.NVG_STENCIL_STROKES);
         if (vg == 0) {
-            throw new RuntimeException("Konnte NanoVG Context nicht erstellen");
+            // Fallback: Versuche ohne Antialiasing
+            log.warn("NanoVG Context mit Antialiasing fehlgeschlagen, versuche ohne...");
+            vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_STENCIL_STROKES);
+
+            if (vg == 0) {
+                // Letzter Versuch: Minimale Konfiguration
+                log.warn("NanoVG Context mit Stencil Strokes fehlgeschlagen, versuche minimal...");
+                vg = NanoVGGL3.nvgCreate(0);
+
+                if (vg == 0) {
+                    throw new RuntimeException("Konnte NanoVG Context nicht erstellen - OpenGL möglicherweise nicht verfügbar");
+                }
+            }
         }
 
         // Lade Schriftart (verwende system default)
@@ -77,7 +92,7 @@ public class UserInterface {
             log.warn("Konnte Schriftart nicht laden, verwende Default");
         }
 
-        log.info("UserInterface initialisiert");
+        log.info("UserInterface initialisiert mit NanoVG Context: {}", vg);
     }
 
     /**

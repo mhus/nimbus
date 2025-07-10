@@ -31,7 +31,7 @@ class PublicKeyServiceTest {
         // Given
         PublicKeyRequest request = PublicKeyRequest.newBuilder()
                 .setRequestId("test-public-key-1")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setRequestedBy("test-service")
                 .build();
 
@@ -48,7 +48,7 @@ class PublicKeyServiceTest {
         assertEquals("RS256", response.getAlgorithm());
         assertEquals(jwtProperties.getIssuer(), response.getIssuer());
         assertNull(response.getErrorMessage());
-        assertTrue(response.getTimestamp() > 0);
+        assertTrue(response.getTimestamp().getEpochSecond() > 0);
     }
 
     @Test
@@ -56,7 +56,7 @@ class PublicKeyServiceTest {
         // Valid request
         PublicKeyRequest validRequest = PublicKeyRequest.newBuilder()
                 .setRequestId("valid-request")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setRequestedBy("test-service")
                 .build();
 
@@ -69,7 +69,7 @@ class PublicKeyServiceTest {
         // Invalid request - empty requestId
         PublicKeyRequest invalidRequest = PublicKeyRequest.newBuilder()
                 .setRequestId("")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertThrows(IllegalArgumentException.class,
@@ -81,7 +81,7 @@ class PublicKeyServiceTest {
         // Given
         PublicKeyRequest request = PublicKeyRequest.newBuilder()
                 .setRequestId("error-test")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         String errorMessage = "Test error message";
@@ -98,7 +98,7 @@ class PublicKeyServiceTest {
         assertNull(response.getAlgorithm());
         assertNull(response.getIssuer());
         assertEquals(errorMessage, response.getErrorMessage());
-        assertTrue(response.getTimestamp() > 0);
+        assertTrue(response.getTimestamp().getEpochSecond() > 0);
     }
 
     @Test
@@ -106,12 +106,12 @@ class PublicKeyServiceTest {
         // Given - Mehrere Anfragen
         PublicKeyRequest request1 = PublicKeyRequest.newBuilder()
                 .setRequestId("consistency-test-1")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         PublicKeyRequest request2 = PublicKeyRequest.newBuilder()
                 .setRequestId("consistency-test-2")
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         // When

@@ -36,7 +36,7 @@ public class UnregisterWorldConsumerTest {
                 .setWorldId("non-existent-world")
                 .setPlanetName("SomePlanet")
                 .setEnvironment(Environment.TEST)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .setUnregisteredBy("test-user")
                 .setReason("Test unregistration")
                 .setMetadata(new HashMap<>())
@@ -69,7 +69,7 @@ public class UnregisterWorldConsumerTest {
                 .setRequestId(UUID.randomUUID().toString())
                 .setWorldId("")
                 .setEnvironment(Environment.TEST)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertThrows(IllegalArgumentException.class,
@@ -80,7 +80,7 @@ public class UnregisterWorldConsumerTest {
                 .setRequestId("")
                 .setWorldId("world-001")
                 .setEnvironment(Environment.TEST)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(Instant.now())
                 .build();
 
         assertThrows(IllegalArgumentException.class,
