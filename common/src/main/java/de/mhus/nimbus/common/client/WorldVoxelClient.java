@@ -34,10 +34,10 @@ public class WorldVoxelClient {
     private final ConcurrentHashMap<String, CompletableFuture<List<Voxel>>> pendingVoxelLoads = new ConcurrentHashMap<>();
 
     // Kafka Topics
-    private static final String VOXEL_OPERATIONS_TOPIC = "voxel-operations";
-    private static final String CHUNK_OPERATIONS_TOPIC = "chunk-operations";
-    private static final String CHUNK_LOAD_REQUESTS_TOPIC = "chunk-load-requests";
-    private static final String CHUNK_FULL_LOAD_REQUESTS_TOPIC = "chunk-full-load-requests";
+    public static final String VOXEL_OPERATIONS_TOPIC = "voxel-operations";
+    public static final String CHUNK_OPERATIONS_TOPIC = "chunk-operations";
+    public static final String CHUNK_LOAD_REQUESTS_TOPIC = "chunk-load-requests";
+    public static final String CHUNK_FULL_LOAD_REQUESTS_TOPIC = "chunk-full-load-requests";
 
     // Default Timeout für Responses in Sekunden
     private static final int DEFAULT_TIMEOUT_SECONDS = 30;
@@ -134,7 +134,7 @@ public class WorldVoxelClient {
                     .setMessageId(messageId)
                     .setOperation(OperationType.BATCH_SAVE)
                     .setWorldId(worldId)
-                    .setVoxelData(VoxelData.newBuilder()
+                    .setBatchData(de.mhus.nimbus.shared.avro.BatchData.newBuilder()
                             .setData(voxelsJson.toString())
                             .build())
                     .build();
@@ -549,7 +549,7 @@ public class WorldVoxelClient {
                     .setMessageId(messageId)
                     .setOperation(OperationType.BATCH_SAVE)
                     .setWorldId(worldId)
-                    .setVoxelData(VoxelData.newBuilder()
+                    .setBatchData(de.mhus.nimbus.shared.avro.BatchData.newBuilder()
                             .setData(voxelsJson.toString())
                             .build())
                     .build();

@@ -1,5 +1,6 @@
 package de.mhus.nimbus.voxelworld.consumer;
 
+import de.mhus.nimbus.common.client.WorldVoxelClient;
 import de.mhus.nimbus.shared.avro.VoxelOperationMessage;
 import de.mhus.nimbus.shared.avro.VoxelData;
 import de.mhus.nimbus.shared.avro.ChunkData;
@@ -35,7 +36,7 @@ public class VoxelWorldConsumer {
     /**
      * Consumes voxel operation messages from Kafka
      */
-    @KafkaListener(topics = "voxel-operations", groupId = "voxelworld-service")
+    @KafkaListener(topics = WorldVoxelClient.VOXEL_OPERATIONS_TOPIC, groupId = "voxelworld-service")
     public void consumeVoxelOperation(VoxelOperationMessage message) {
         try {
             LOGGER.debug("Kafka: Received voxel operation {} for world {} with messageId {}",

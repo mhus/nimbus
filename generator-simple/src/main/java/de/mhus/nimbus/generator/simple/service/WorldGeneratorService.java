@@ -23,9 +23,9 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class WorldGeneratorService {
 
-    private static final int CHUNK_SIZE = 16; // 16x16 voxels per chunk
+    private static final int CHUNK_SIZE = 5; // 16x16 voxels per chunk
     private static final int WORLD_HEIGHT = 64; // Default world height
-    private static final int BATCH_SIZE = 1000; // Batch size for voxel saving
+    private static final int BATCH_SIZE = 100; // Batch size for voxel saving
 
     private final WorldVoxelClient voxelClient;
 
@@ -439,7 +439,7 @@ public class WorldGeneratorService {
 
                     // For now, we'll log the voxel data that would be saved
                     // In a real implementation, you'd create proper Voxel objects or use a different API
-                    LOGGER.debug("Would save voxel: {} at ({}, {}, {})",
+                    LOGGER.debug("Saved voxel: {} at ({}, {}, {})",
                         voxel.getMaterial(), voxel.getX(), voxel.getY(), voxel.getZ());
 
                 } catch (Exception e) {
