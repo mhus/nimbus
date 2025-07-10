@@ -27,6 +27,7 @@
         <jjwt.version>0.11.5</jjwt.version>
         <joml.version>1.10.0</joml.version>
         <springdoc.version>2.2.0</springdoc.version>
+        <vavr.version>0.10.4</vavr.version>
     </properties>
 
     <modules>
@@ -100,6 +101,13 @@
                 <scope>provided</scope>
             </dependency>
 
+            <!-- Vavr (functional programming library) -->
+            <dependency>
+                <groupId>io.vavr</groupId>
+                <artifactId>vavr</artifactId>
+                <version>${vavr.version}</version>
+            </dependency>
+
             <!-- JOML -->
             <dependency>
                 <groupId>org.joml</groupId>
@@ -129,6 +137,12 @@
         <dependency>
             <groupId>org.joml</groupId>
             <artifactId>joml</artifactId>
+        </dependency>
+
+        <!-- Vavr (functional programming library) -->
+        <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr</artifactId>
         </dependency>
 
         <!-- Test dependencies -->

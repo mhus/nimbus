@@ -55,7 +55,7 @@ public class KafkaConfig {
         // Delegate deserializers
         configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS,
             StringDeserializer.class.getName());
-        configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS,
+        configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS,
             KafkaAvroDeserializer.class.getName());
 
         // Avro specific configuration

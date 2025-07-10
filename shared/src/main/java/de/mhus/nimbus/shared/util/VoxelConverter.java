@@ -3,6 +3,8 @@ package de.mhus.nimbus.shared.util;
 import de.mhus.nimbus.shared.avro.AvroVoxel;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelInstance;
+import de.mhus.nimbus.shared.voxel.VoxelType;
+import io.vavr.control.Try;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,10 +36,19 @@ public class VoxelConverter {
             builder.setVoxelType(voxelType.getDisplayName());
             builder.setMaterial(voxelType.getDisplayName()); // Verwende displayName als Material
             builder.setHealth((float) voxelType.getHardness());
+            builder.setX(voxelInstance.getX());
+            builder.setY(voxelInstance.getY());
+            builder.setZ(voxelInstance.getZ());
 
             // Einfache Tags basierend auf Voxel-Eigenschaften
             if (voxelType.isLiquid()) {
                 builder.setTags(List.of("liquid"));
+            }
+            if (voxelType.isAttachmentAllowed()) {
+                builder.setTags(List.of("attachmentAllowed"));
+            }
+            if (voxelType.isReplacementAllowed()) {
+                builder.setTags(List.of("replacementAllowed"));
             }
 
             // Properties können basierend auf Voxel-Eigenschaften gesetzt werden
@@ -63,8 +74,12 @@ public class VoxelConverter {
         if (avroVoxel.getVoxelType() != null) {
             voxelType = Voxel.builder()
                     .displayName(avroVoxel.getVoxelType())
+                    .id( Try.of(() -> (short)VoxelType.valueOf(avroVoxel.getVoxelType().toUpperCase()).getId()).getOrElse((short) VoxelType.AIR.getId())) // Fallback auf 0, wenn der Typ nicht gefunden wird
                     .hardness(avroVoxel.getHealth() != null ? avroVoxel.getHealth().intValue() : 3)
                     .liquid(avroVoxel.getTags() != null && avroVoxel.getTags().contains("liquid"))
+                    .x(avroVoxel.getX())
+                    .y(avroVoxel.getY())
+                    .z(avroVoxel.getZ())
                     .build();
         }
 
