@@ -143,9 +143,9 @@ public class UserInterface {
         String status = viewerWindow.isConnected() ? "Verbunden" : "Nicht verbunden";
         NVGColor color = NVGColor.create();
         if (viewerWindow.isConnected()) {
-            nvgRGBA(0, 255, 0, 255, color);
+            nvgRGBA((byte)0, (byte)255, (byte)0, (byte)255, color);
         } else {
-            nvgRGBA(255, 100, 100, 255, color);
+            nvgRGBA((byte)255, (byte)100, (byte)100, (byte)255, color);
         }
 
         nvgFillColor(vg, color);
@@ -201,9 +201,9 @@ public class UserInterface {
         String status = viewerWindow.isAuthenticated() ? "Angemeldet" : "Nicht angemeldet";
         NVGColor color = NVGColor.create();
         if (viewerWindow.isAuthenticated()) {
-            nvgRGBA(0, 255, 0, 255, color);
+            nvgRGBA((byte)0, (byte)255, (byte)0, (byte)255, color);
         } else {
-            nvgRGBA(255, 100, 100, 255, color);
+            nvgRGBA((byte)255, (byte)100, (byte)100, (byte)255, color);
         }
 
         nvgFillColor(vg, color);
@@ -261,7 +261,7 @@ public class UserInterface {
         }
 
         NVGColor color = NVGColor.create();
-        nvgRGBA(255, 255, 255, 255, color);
+        nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, color);
         nvgFillColor(vg, color);
 
         nvgText(vg, x, y, text);
@@ -276,9 +276,9 @@ public class UserInterface {
 
         // Background
         if (active) {
-            nvgRGBA(60, 60, 80, 255, color);
+            nvgRGBA((byte)60, (byte)60, (byte)80, (byte)255, color);
         } else {
-            nvgRGBA(40, 40, 50, 255, color);
+            nvgRGBA((byte)40, (byte)40, (byte)50, (byte)255, color);
         }
         nvgFillColor(vg, color);
         nvgBeginPath(vg);
@@ -287,16 +287,16 @@ public class UserInterface {
 
         // Border
         if (active) {
-            nvgRGBA(100, 150, 255, 255, color);
+            nvgRGBA((byte)100, (byte)150, (byte)255, (byte)255, color);
         } else {
-            nvgRGBA(100, 100, 100, 255, color);
+            nvgRGBA((byte)100, (byte)100, (byte)100, (byte)255, color);
         }
         nvgStrokeColor(vg, color);
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
 
         // Text
-        nvgRGBA(255, 255, 255, 255, color);
+        nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, color);
         nvgFillColor(vg, color);
         nvgFontSize(vg, 14);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
@@ -305,9 +305,13 @@ public class UserInterface {
         // Cursor
         if (active && System.currentTimeMillis() % 1000 < 500) {
             nvgBeginPath(vg);
-            float textWidth = nvgTextBounds(vg, 0, 0, text, null);
-            nvgRect(vg, x + 8 + textWidth, y + 4, 1, height - 8);
-            nvgFill(vg);
+            try (MemoryStack stack = stackPush()) {
+                float[] bounds = new float[4];
+                nvgTextBounds(vg, 0, 0, text, bounds);
+                float textWidth = bounds[2];
+                nvgRect(vg, x + 8 + textWidth, y + 4, 1, height - 8);
+                nvgFill(vg);
+            }
         }
     }
 
@@ -327,11 +331,11 @@ public class UserInterface {
 
         // Background
         if (!enabled) {
-            nvgRGBA(60, 60, 60, 255, color);
+            nvgRGBA((byte)60, (byte)60, (byte)60, (byte)255, color);
         } else if (hover) {
-            nvgRGBA(80, 120, 200, 255, color);
+            nvgRGBA((byte)80, (byte)120, (byte)200, (byte)255, color);
         } else {
-            nvgRGBA(70, 110, 180, 255, color);
+            nvgRGBA((byte)70, (byte)110, (byte)180, (byte)255, color);
         }
         nvgFillColor(vg, color);
         nvgBeginPath(vg);
@@ -340,9 +344,9 @@ public class UserInterface {
 
         // Text
         if (enabled) {
-            nvgRGBA(255, 255, 255, 255, color);
+            nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, color);
         } else {
-            nvgRGBA(150, 150, 150, 255, color);
+            nvgRGBA((byte)150, (byte)150, (byte)150, (byte)255, color);
         }
         nvgFillColor(vg, color);
         nvgFontSize(vg, 14);
@@ -360,21 +364,21 @@ public class UserInterface {
         NVGColor color = NVGColor.create();
 
         // Checkbox Background
-        nvgRGBA(40, 40, 50, 255, color);
+        nvgRGBA((byte)40, (byte)40, (byte)50, (byte)255, color);
         nvgFillColor(vg, color);
         nvgBeginPath(vg);
         nvgRect(vg, x, y, size, size);
         nvgFill(vg);
 
         // Border
-        nvgRGBA(100, 100, 100, 255, color);
+        nvgRGBA((byte)100, (byte)100, (byte)100, (byte)255, color);
         nvgStrokeColor(vg, color);
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
 
         // Check mark
         if (checked) {
-            nvgRGBA(0, 255, 0, 255, color);
+            nvgRGBA((byte)0, (byte)255, (byte)0, (byte)255, color);
             nvgFillColor(vg, color);
             nvgBeginPath(vg);
             nvgRect(vg, x + 3, y + 3, size - 6, size - 6);
@@ -382,7 +386,7 @@ public class UserInterface {
         }
 
         // Text
-        nvgRGBA(255, 255, 255, 255, color);
+        nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, color);
         nvgFillColor(vg, color);
         nvgFontSize(vg, 14);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

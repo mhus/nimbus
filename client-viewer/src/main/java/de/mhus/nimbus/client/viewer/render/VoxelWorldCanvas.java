@@ -43,7 +43,7 @@ public class VoxelWorldCanvas {
         this.viewerWindow = viewerWindow;
         this.worldVoxelClient = worldVoxelClient;
         this.vgContext = vgContext;
-        this.voxelRenderer = new VoxelWorldRenderer(worldVoxelClient);
+        this.voxelRenderer = new VoxelWorldRenderer();
     }
 
     /**
@@ -152,7 +152,7 @@ public class VoxelWorldCanvas {
         float size = 10.0f;
 
         NVGColor color = NVGColor.create();
-        nvgRGBA(255, 255, 255, 200, color);
+        nvgRGBA((byte)255, (byte)255, (byte)255, (byte)200, color);
         nvgStrokeColor(vgContext, color);
         nvgStrokeWidth(vgContext, 2.0f);
 
@@ -214,7 +214,7 @@ public class VoxelWorldCanvas {
 
         // Semi-transparenter Hintergrund
         NVGColor bgColor = NVGColor.create();
-        nvgRGBA(0, 0, 0, 150, bgColor);
+        nvgRGBA((byte)0, (byte)0, (byte)0, (byte)150, bgColor);
         nvgFillColor(vgContext, bgColor);
         nvgBeginPath(vgContext);
         nvgRect(vgContext, windowWidth / 2.0f - 200, windowHeight / 2.0f - 150, 400, 300);
@@ -232,13 +232,13 @@ public class VoxelWorldCanvas {
 
         if (!viewerWindow.isConnected()) {
             status = "Nicht verbunden";
-            nvgRGBA(255, 100, 100, 255, color);
+            nvgRGBA((byte)255, (byte)100, (byte)100, (byte)255, color);
         } else if (!viewerWindow.isAuthenticated()) {
             status = "Nicht angemeldet";
-            nvgRGBA(255, 200, 100, 255, color);
+            nvgRGBA((byte)255, (byte)200, (byte)100, (byte)255, color);
         } else {
             status = "Verbunden";
-            nvgRGBA(100, 255, 100, 255, color);
+            nvgRGBA((byte)100, (byte)255, (byte)100, (byte)255, color);
         }
 
         nvgFillColor(vgContext, color);
@@ -261,7 +261,7 @@ public class VoxelWorldCanvas {
         }
 
         NVGColor color = NVGColor.create();
-        nvgRGBA(255, 255, 255, 255, color);
+        nvgRGBA((byte)255, (byte)255, (byte)255, (byte)255, color);
         nvgFillColor(vgContext, color);
 
         float lineHeight = fontSize * 1.2f;
@@ -335,7 +335,8 @@ public class VoxelWorldCanvas {
 
         if (mouseCaptured) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            voxelRenderer.getCamera().firstMouse = true;
+            // Camera mouse handling will be reset automatically on next movement
+            // voxelRenderer.getCamera().resetMousePosition();
             log.info("Maus erfasst - WASD zum Bewegen, ESC zum Freigeben");
         } else {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
