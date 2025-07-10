@@ -75,8 +75,8 @@ public class LoginService {
                     .map(IdentityCharacter::getName)
                     .collect(Collectors.toList());
 
-            // Generiere JWT Token mit Character-Namen
-            String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getEmail(), characterNames);
+            // Generiere JWT Token mit Character-Namen und ACE-Regeln
+            String token = jwtService.generateTokenWithAces(user.getId(), user.getUsername(), user.getEmail(), characterNames);
             Instant expiresAt = jwtService.calculateExpirationTime();
 
             // Erstelle User-Info für Response

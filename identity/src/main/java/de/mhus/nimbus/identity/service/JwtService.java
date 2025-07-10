@@ -2,6 +2,7 @@ package de.mhus.nimbus.identity.service;
 
 import de.mhus.nimbus.identity.config.JwtProperties;
 import de.mhus.nimbus.identity.util.KeyUtils;
+import de.mhus.nimbus.identity.entity.Ace;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -18,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service für JWT Token-Management mit asymmetrischer RSA-Signierung
@@ -29,13 +31,15 @@ public class JwtService {
 
     private final JwtProperties jwtProperties;
     private final KeyUtils keyUtils;
+    private final AceService aceService;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    public JwtService(JwtProperties jwtProperties, KeyUtils keyUtils) {
+    public JwtService(JwtProperties jwtProperties, KeyUtils keyUtils, AceService aceService) {
         this.jwtProperties = jwtProperties;
         this.keyUtils = keyUtils;
+        this.aceService = aceService;
     }
 
     @PostConstruct
@@ -54,13 +58,20 @@ public class JwtService {
      * Generiert einen JWT Token für einen User mit RSA-Signierung
      */
     public String generateToken(Long userId, String username, String email) {
-        return generateToken(userId, username, email, null);
+        return generateToken(userId, username, email, null, null);
     }
 
     /**
      * Generiert einen JWT Token für einen User mit IdentityCharacter-Namen und RSA-Signierung
      */
     public String generateToken(Long userId, String username, String email, List<String> characterNames) {
+        return generateToken(userId, username, email, characterNames, null);
+    }
+
+    /**
+     * Generiert einen JWT Token für einen User mit IdentityCharacter-Namen, ACE-Regeln und RSA-Signierung
+     */
+    public String generateToken(Long userId, String username, String email, List<String> characterNames, List<String> aceRules) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
@@ -69,6 +80,10 @@ public class JwtService {
 
         if (characterNames != null && !characterNames.isEmpty()) {
             claims.put("characterNames", characterNames);
+        }
+
+        if (aceRules != null && !aceRules.isEmpty()) {
+            claims.put("aceRules", aceRules);
         }
 
         Instant now = Instant.now();
@@ -82,6 +97,29 @@ public class JwtService {
                 .setExpiration(Date.from(expiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
+    }
+
+    /**
+     * Generiert einen JWT Token für einen User mit automatischem Laden der ACE-Regeln
+     */
+    public String generateTokenWithAces(Long userId, String username, String email, List<String> characterNames) {
+        List<String> aceRules = getActiveAceRulesForUser(userId);
+        return generateToken(userId, username, email, characterNames, aceRules);
+    }
+
+    /**
+     * Lädt die aktiven ACE-Regeln für einen Benutzer
+     */
+    private List<String> getActiveAceRulesForUser(Long userId) {
+        try {
+            List<Ace> aces = aceService.getActiveAcesByUserId(userId);
+            return aces.stream()
+                    .map(Ace::getRule)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.warn("Failed to load ACE rules for user {}: {}", userId, e.getMessage());
+            return List.of();
+        }
     }
 
     /**
@@ -159,6 +197,14 @@ public class JwtService {
      */
     public String getPublicKeyAsString() {
         return java.util.Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+
+    /**
+     * Extrahiert die ACE-Regeln aus einem Token
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> extractAceRules(String token) {
+        return extractClaims(token).get("aceRules", List.class);
     }
 
     /**

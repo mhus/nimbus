@@ -274,6 +274,14 @@ public class SecurityServiceTestController {
                 response.append("Identity Characters: None\n");
             }
 
+            // Extrahiere und zeige ACE-Regeln aus dem Token
+            List<String> aceRules = extractAceRulesFromToken(token);
+            if (!aceRules.isEmpty()) {
+                response.append("ACE Rules: ").append(String.join(", ", aceRules)).append("\n");
+            } else {
+                response.append("ACE Rules: None\n");
+            }
+
             // Add custom claims
             response.append("Custom Claims:\n");
             claims.entrySet().stream()
@@ -381,6 +389,27 @@ public class SecurityServiceTestController {
             }
         } catch (Exception e) {
             LOGGER.warn("Failed to extract character names from token: {}", e.getMessage());
+        }
+        return List.of();
+    }
+
+    private List<String> extractAceRulesFromToken(String token) {
+        // Implement the logic to extract ACE rules from the token
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length == 3) {
+                String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(payload);
+
+                // ACE rules are stored under the claim named "aceRules"
+                JsonNode aceRulesNode = jsonNode.get("aceRules");
+                if (aceRulesNode != null && aceRulesNode.isArray()) {
+                    return mapper.readValue(aceRulesNode.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract ACE rules from token: {}", e.getMessage());
         }
         return List.of();
     }

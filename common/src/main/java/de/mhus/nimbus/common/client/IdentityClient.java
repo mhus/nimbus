@@ -768,6 +768,174 @@ public class IdentityClient {
         }
     }
 
+    /**
+     * Extrahiert ACE-Regeln aus einem JWT Token (ohne Validierung)
+     * Nur für Testzwecke - in Produktionsumgebung sollte der Token validiert werden
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> extractAceRulesFromToken(String token) {
+        try {
+            // JWT Token besteht aus drei Teilen: header.payload.signature
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                LOGGER.warn("Invalid JWT token format");
+                return List.of();
+            }
+
+            // Dekodiere den Payload (Base64URL)
+            String payload = parts[1];
+            // Base64URL zu Base64 konvertieren
+            payload = payload.replace('-', '+').replace('_', '/');
+            // Padding hinzufügen falls nötig
+            while (payload.length() % 4 != 0) {
+                payload += "=";
+            }
+
+            byte[] decodedBytes = Base64.getDecoder().decode(payload);
+            String decodedPayload = new String(decodedBytes);
+
+            // JSON parsen
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(decodedPayload);
+
+            // ACE-Regeln extrahieren
+            JsonNode aceRulesNode = jsonNode.get("aceRules");
+            if (aceRulesNode != null && aceRulesNode.isArray()) {
+                return mapper.convertValue(aceRulesNode, List.class);
+            }
+
+            return List.of();
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract ACE rules from token", e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Extrahiert alle wichtigen Claims aus einem JWT Token (ohne Validierung)
+     * Nur für Testzwecke - in Produktionsumgebung sollte der Token validiert werden
+     */
+    @SuppressWarnings("unchecked")
+    public TokenClaims extractTokenClaims(String token) {
+        try {
+            // JWT Token besteht aus drei Teilen: header.payload.signature
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                LOGGER.warn("Invalid JWT token format");
+                return new TokenClaims();
+            }
+
+            // Dekodiere den Payload (Base64URL)
+            String payload = parts[1];
+            // Base64URL zu Base64 konvertieren
+            payload = payload.replace('-', '+').replace('_', '/');
+            // Padding hinzufügen falls nötig
+            while (payload.length() % 4 != 0) {
+                payload += "=";
+            }
+
+            byte[] decodedBytes = Base64.getDecoder().decode(payload);
+            String decodedPayload = new String(decodedBytes);
+
+            // JSON parsen
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(decodedPayload);
+
+            TokenClaims claims = new TokenClaims();
+
+            // Standard Claims extrahieren
+            JsonNode userIdNode = jsonNode.get("userId");
+            if (userIdNode != null) {
+                claims.setUserId(userIdNode.asLong());
+            }
+
+            JsonNode usernameNode = jsonNode.get("username");
+            if (usernameNode != null) {
+                claims.setUsername(usernameNode.asText());
+            }
+
+            JsonNode emailNode = jsonNode.get("email");
+            if (emailNode != null) {
+                claims.setEmail(emailNode.asText());
+            }
+
+            JsonNode subjectNode = jsonNode.get("sub");
+            if (subjectNode != null) {
+                claims.setSubject(subjectNode.asText());
+            }
+
+            JsonNode issuerNode = jsonNode.get("iss");
+            if (issuerNode != null) {
+                claims.setIssuer(issuerNode.asText());
+            }
+
+            // Character-Namen extrahieren
+            JsonNode characterNamesNode = jsonNode.get("characterNames");
+            if (characterNamesNode != null && characterNamesNode.isArray()) {
+                claims.setCharacterNames(mapper.convertValue(characterNamesNode, List.class));
+            }
+
+            // ACE-Regeln extrahieren
+            JsonNode aceRulesNode = jsonNode.get("aceRules");
+            if (aceRulesNode != null && aceRulesNode.isArray()) {
+                claims.setAceRules(mapper.convertValue(aceRulesNode, List.class));
+            }
+
+            return claims;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract token claims", e);
+            return new TokenClaims();
+        }
+    }
+
+    /**
+     * Hilfsklasse für Token Claims
+     */
+    public static class TokenClaims {
+        private Long userId;
+        private String username;
+        private String email;
+        private String subject;
+        private String issuer;
+        private List<String> characterNames = List.of();
+        private List<String> aceRules = List.of();
+
+        // Getters and Setters
+        public Long getUserId() { return userId; }
+        public void setUserId(Long userId) { this.userId = userId; }
+
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getSubject() { return subject; }
+        public void setSubject(String subject) { this.subject = subject; }
+
+        public String getIssuer() { return issuer; }
+        public void setIssuer(String issuer) { this.issuer = issuer; }
+
+        public List<String> getCharacterNames() { return characterNames; }
+        public void setCharacterNames(List<String> characterNames) { this.characterNames = characterNames != null ? characterNames : List.of(); }
+
+        public List<String> getAceRules() { return aceRules; }
+        public void setAceRules(List<String> aceRules) { this.aceRules = aceRules != null ? aceRules : List.of(); }
+
+        @Override
+        public String toString() {
+            return "TokenClaims{" +
+                    "userId=" + userId +
+                    ", username='" + username + '\'' +
+                    ", email='" + email + '\'' +
+                    ", subject='" + subject + '\'' +
+                    ", issuer='" + issuer + '\'' +
+                    ", characterNames=" + characterNames +
+                    ", aceRules=" + aceRules +
+                    '}';
+        }
+    }
+
     // ===== ACE (Access Control Entity) Methoden =====
 
     /**

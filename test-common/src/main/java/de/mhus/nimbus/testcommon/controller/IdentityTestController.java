@@ -83,6 +83,14 @@ public class IdentityTestController {
                 } else {
                     result.append("Identity Characters: None\n");
                 }
+
+                // Extrahiere und zeige ACE-Regeln aus dem Token
+                List<String> aceRules = identityClient.extractAceRulesFromToken(response.getToken());
+                if (!aceRules.isEmpty()) {
+                    result.append("ACE Rules: ").append(String.join(", ", aceRules)).append("\n");
+                } else {
+                    result.append("ACE Rules: None\n");
+                }
             }
             if (response.getExpiresAt() != null) {
                 result.append("Expires At: ").append(response.getExpiresAt()).append("\n");
