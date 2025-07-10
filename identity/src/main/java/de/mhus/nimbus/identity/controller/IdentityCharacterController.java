@@ -38,7 +38,7 @@ public class IdentityCharacterController {
             IdentityCharacter character = identityCharacterService.createIdentityCharacter(
                     user, request.name(), request.characterClass(), request.description());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(character);
+            return ResponseEntity.status(HttpStatus.OK).body(character);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }

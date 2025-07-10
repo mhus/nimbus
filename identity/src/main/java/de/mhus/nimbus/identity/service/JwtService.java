@@ -31,15 +31,13 @@ public class JwtService {
 
     private final JwtProperties jwtProperties;
     private final KeyUtils keyUtils;
-    private final AceService aceService;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    public JwtService(JwtProperties jwtProperties, KeyUtils keyUtils, AceService aceService) {
+    public JwtService(JwtProperties jwtProperties, KeyUtils keyUtils) {
         this.jwtProperties = jwtProperties;
         this.keyUtils = keyUtils;
-        this.aceService = aceService;
     }
 
     @PostConstruct
@@ -59,13 +57,6 @@ public class JwtService {
      */
     public String generateToken(Long userId, String username, String email) {
         return generateToken(userId, username, email, null, null);
-    }
-
-    /**
-     * Generiert einen JWT Token für einen User mit IdentityCharacter-Namen und RSA-Signierung
-     */
-    public String generateToken(Long userId, String username, String email, List<String> characterNames) {
-        return generateToken(userId, username, email, characterNames, null);
     }
 
     /**
@@ -97,29 +88,6 @@ public class JwtService {
                 .setExpiration(Date.from(expiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
-    }
-
-    /**
-     * Generiert einen JWT Token für einen User mit automatischem Laden der ACE-Regeln
-     */
-    public String generateTokenWithAces(Long userId, String username, String email, List<String> characterNames) {
-        List<String> aceRules = getActiveAceRulesForUser(userId);
-        return generateToken(userId, username, email, characterNames, aceRules);
-    }
-
-    /**
-     * Lädt die aktiven ACE-Regeln für einen Benutzer
-     */
-    private List<String> getActiveAceRulesForUser(Long userId) {
-        try {
-            List<Ace> aces = aceService.getActiveAcesByUserId(userId);
-            return aces.stream()
-                    .map(Ace::getRule)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.warn("Failed to load ACE rules for user {}: {}", userId, e.getMessage());
-            return List.of();
-        }
     }
 
     /**

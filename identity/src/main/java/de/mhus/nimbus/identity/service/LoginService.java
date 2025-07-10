@@ -1,5 +1,6 @@
 package de.mhus.nimbus.identity.service;
 
+import de.mhus.nimbus.identity.entity.Ace;
 import de.mhus.nimbus.identity.entity.IdentityCharacter;
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.shared.avro.*;
@@ -23,15 +24,17 @@ public class LoginService {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final AceService aceService;
     private final PasswordEncoder passwordEncoder;
     private final IdentityCharacterService identityCharacterService;
 
     public LoginService(UserService userService, JwtService jwtService, PasswordEncoder passwordEncoder,
-                       IdentityCharacterService identityCharacterService) {
+                       IdentityCharacterService identityCharacterService, AceService aceService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.identityCharacterService = identityCharacterService;
+        this.aceService = aceService;
     }
 
     /**
@@ -75,8 +78,10 @@ public class LoginService {
                     .map(IdentityCharacter::getName)
                     .collect(Collectors.toList());
 
+            List<String> aceRules = getActiveAceRulesForUser(user.getId());
+
             // Generiere JWT Token mit Character-Namen und ACE-Regeln
-            String token = jwtService.generateTokenWithAces(user.getId(), user.getUsername(), user.getEmail(), characterNames);
+            String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getEmail(), characterNames, aceRules);
             Instant expiresAt = jwtService.calculateExpirationTime();
 
             // Erstelle User-Info für Response
@@ -91,6 +96,22 @@ public class LoginService {
             logger.error("Error processing login request: {}", request.getRequestId(), e);
             return createLoginResponse(request, LoginStatus.ERROR, null, null, null,
                                      currentTimestamp, "Internal error during login");
+        }
+    }
+
+
+    /**
+     * Lädt die aktiven ACE-Regeln für einen Benutzer
+     */
+    private List<String> getActiveAceRulesForUser(Long userId) {
+        try {
+            List<Ace> aces = aceService.getActiveAcesByUserId(userId);
+            return aces.stream()
+                    .map(Ace::getRule)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.warn("Failed to load ACE rules for user {}: {}", userId, e.getMessage());
+            return List.of();
         }
     }
 

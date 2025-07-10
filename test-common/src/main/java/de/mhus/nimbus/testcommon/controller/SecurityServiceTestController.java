@@ -2,6 +2,7 @@ package de.mhus.nimbus.testcommon.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.common.client.IdentityClient;
 import de.mhus.nimbus.common.exception.NimbusException;
 import de.mhus.nimbus.common.service.SecurityService;
 import io.jsonwebtoken.Claims;
@@ -31,10 +32,12 @@ public class SecurityServiceTestController {
     );
 
     private final SecurityService securityService;
+    private final IdentityClient identityClient;
 
     @Autowired
-    public SecurityServiceTestController(SecurityService securityService) {
+    public SecurityServiceTestController(SecurityService securityService, IdentityClient identityClient) {
         this.securityService = securityService;
+        this.identityClient = identityClient;
     }
 
     /**
@@ -68,7 +71,7 @@ public class SecurityServiceTestController {
                 response.append("Expires At: ").append(result.getExpiresAt()).append("\n");
 
                 // Extrahiere und zeige Character-Namen aus dem Token
-                List<String> characterNames = extractCharacterNamesFromToken(result.getToken());
+                List<String> characterNames = identityClient.extractCharacterNamesFromToken(result.getToken());
                 if (!characterNames.isEmpty()) {
                     response.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
                 } else {
@@ -136,7 +139,7 @@ public class SecurityServiceTestController {
                 response.append("Expires At: ").append(result.getExpiresAt()).append("\n");
 
                 // Extrahiere und zeige Character-Namen aus dem Token
-                List<String> characterNames = extractCharacterNamesFromToken(result.getToken());
+                List<String> characterNames = identityClient.extractCharacterNamesFromToken(result.getToken());
                 if (!characterNames.isEmpty()) {
                     response.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
                 } else {
@@ -267,7 +270,7 @@ public class SecurityServiceTestController {
             response.append("JWT ID: ").append(claims.getId()).append("\n");
 
             // Extrahiere und zeige Character-Namen aus dem Token
-            List<String> characterNames = extractCharacterNamesFromToken(token);
+            List<String> characterNames = identityClient.extractCharacterNamesFromToken(token);
             if (!characterNames.isEmpty()) {
                 response.append("Identity Characters: ").append(String.join(", ", characterNames)).append("\n");
             } else {
@@ -275,7 +278,7 @@ public class SecurityServiceTestController {
             }
 
             // Extrahiere und zeige ACE-Regeln aus dem Token
-            List<String> aceRules = extractAceRulesFromToken(token);
+            List<String> aceRules = identityClient.extractAceRulesFromToken(token);
             if (!aceRules.isEmpty()) {
                 response.append("ACE Rules: ").append(String.join(", ", aceRules)).append("\n");
             } else {
@@ -371,46 +374,4 @@ public class SecurityServiceTestController {
         }
     }
 
-    private List<String> extractCharacterNamesFromToken(String token) {
-        // Implement the logic to extract character names from the token
-        // This is a placeholder implementation
-        try {
-            String[] parts = token.split("\\.");
-            if (parts.length == 3) {
-                String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonNode = mapper.readTree(payload);
-
-                // Assuming character names are stored under a claim named "character_names"
-                JsonNode characterNamesNode = jsonNode.get("character_names");
-                if (characterNamesNode != null && characterNamesNode.isArray()) {
-                    return mapper.readValue(characterNamesNode.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Failed to extract character names from token: {}", e.getMessage());
-        }
-        return List.of();
-    }
-
-    private List<String> extractAceRulesFromToken(String token) {
-        // Implement the logic to extract ACE rules from the token
-        try {
-            String[] parts = token.split("\\.");
-            if (parts.length == 3) {
-                String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonNode = mapper.readTree(payload);
-
-                // ACE rules are stored under the claim named "aceRules"
-                JsonNode aceRulesNode = jsonNode.get("aceRules");
-                if (aceRulesNode != null && aceRulesNode.isArray()) {
-                    return mapper.readValue(aceRulesNode.traverse(), mapper.getTypeFactory().constructCollectionType(List.class, String.class));
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Failed to extract ACE rules from token: {}", e.getMessage());
-        }
-        return List.of();
-    }
 }
