@@ -417,13 +417,15 @@ public class WorldGeneratorService {
             LOGGER.debug("Saving batch of {} voxels for world {}", result.voxelBatch.size(), result.worldId);
 
             // Convert VoxelInstance objects to the format expected by VoxelClient
-            // Since VoxelClient works with JSON serialization, we'll create simple objects
-            List<Voxel> voxelData = result.voxelBatch.stream()
-                .map(v ->
-                        Voxel.builder().x(v.getX()).y(v.getY()).z(v.getZ())
-                                // .material(v.getMaterial())
-                            // .active(v.isActive())
-                                .build())
+            // VoxelClient now expects List<VoxelInstance> for batch operations
+            List<de.mhus.nimbus.shared.voxel.VoxelInstance> voxelData = result.voxelBatch.stream()
+                .map(v -> new de.mhus.nimbus.shared.voxel.VoxelInstance(
+                    v.getX(), v.getY(), v.getZ(),
+                    Voxel.builder()
+                        .displayName(v.getMaterial())
+                        .hardness(v.isActive() ? 3 : 1)
+                        .build()
+                ))
                 .toList();
             voxelClient.batchSaveVoxels(result.worldId, voxelData);
 

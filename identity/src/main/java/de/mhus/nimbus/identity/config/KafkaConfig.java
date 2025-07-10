@@ -1,5 +1,6 @@
 package de.mhus.nimbus.identity.config;
 
+import de.mhus.nimbus.shared.kafka.ErrorHandlingDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -16,19 +17,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kafka-Konfiguration für das Identity-Modul
+ * Kafka-Konfiguration für das Identity-Modul mit Error Handling
  */
 @Configuration
 @EnableKafka
 public class KafkaConfig {
 
-    @Value("${spring.kafka.bootstrap-servers}")
+    @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
     private String bootstrapServers;
 
-    @Value("${spring.kafka.consumer.group-id}")
+    @Value("${spring.kafka.consumer.group-id:identity-service}")
     private String groupId;
 
-    @Value("${spring.kafka.consumer.properties.schema.registry.url}")
+    @Value("${spring.kafka.consumer.properties.schema.registry.url:http://localhost:8081}")
     private String schemaRegistryUrl;
 
     @Bean
@@ -37,11 +38,23 @@ public class KafkaConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+
+        // Error handling deserializers
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                ErrorHandlingDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                ErrorHandlingDeserializer.class);
+
+        // Delegate deserializers
+        props.put(ErrorHandlingDeserializer.KEY_DELEGATE_CLASS,
+                StringDeserializer.class.getName());
+        props.put(ErrorHandlingDeserializer.VALUE_DELEGATE_CLASS,
+                io.confluent.kafka.serializers.KafkaAvroDeserializer.class.getName());
+
+        // Avro specific configuration
         props.put("schema.registry.url", schemaRegistryUrl);
         props.put("specific.avro.reader", true);
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
@@ -51,6 +64,10 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
+        // Error handling
+        factory.setCommonErrorHandler(new org.springframework.kafka.listener.DefaultErrorHandler());
+
         return factory;
     }
 

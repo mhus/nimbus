@@ -139,6 +139,13 @@ public class VoxelData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'x' field.
+   * @param value the value to set.
+   */
+  public void setX(int value) {
+    this.x = value;
+  }
 
   /**
    * Gets the value of the 'y' field.
@@ -149,6 +156,13 @@ public class VoxelData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'y' field.
+   * @param value the value to set.
+   */
+  public void setY(int value) {
+    this.y = value;
+  }
 
   /**
    * Gets the value of the 'z' field.
@@ -159,6 +173,13 @@ public class VoxelData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'z' field.
+   * @param value the value to set.
+   */
+  public void setZ(int value) {
+    this.z = value;
+  }
 
   /**
    * Gets the value of the 'data' field.
@@ -169,6 +190,13 @@ public class VoxelData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'data' field.
+   * @param value the value to set.
+   */
+  public void setData(java.lang.String value) {
+    this.data = value;
+  }
 
   /**
    * Creates a new VoxelData RecordBuilder.

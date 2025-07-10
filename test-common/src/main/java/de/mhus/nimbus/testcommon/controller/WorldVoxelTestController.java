@@ -169,7 +169,7 @@ public class WorldVoxelTestController {
             LOGGER.info("Testing batch voxel saving in world: {}", worldId);
 
             // Parse the voxel list - expecting format like "x1,y1,z1,type1;x2,y2,z2,type2"
-            java.util.List<de.mhus.nimbus.shared.voxel.Voxel> voxels = new java.util.ArrayList<>();
+            java.util.List<de.mhus.nimbus.shared.voxel.VoxelInstance> voxels = new java.util.ArrayList<>();
             String[] voxelEntries = voxelList.split(";");
 
             for (String entry : voxelEntries) {
@@ -180,15 +180,24 @@ public class WorldVoxelTestController {
                     int z = Integer.parseInt(parts[2].trim());
                     String typeStr = parts[3].trim();
 
-                    // Parse voxelType string to VoxelType enum (default to STONE if invalid)
-                    de.mhus.nimbus.shared.voxel.VoxelType type;
+                    // Create a Voxel type for the VoxelInstance
+                    de.mhus.nimbus.shared.voxel.Voxel voxelType;
                     try {
-                        type = de.mhus.nimbus.shared.voxel.VoxelType.valueOf(typeStr.toUpperCase());
-                    } catch (IllegalArgumentException e) {
-                        type = de.mhus.nimbus.shared.voxel.VoxelType.STONE; // Default fallback
+                        // Try to create a voxel type based on the type string
+                        voxelType = de.mhus.nimbus.shared.voxel.Voxel.builder()
+                                .displayName(typeStr)
+                                .hardness(3)
+                                .build();
+                    } catch (Exception e) {
+                        // Fallback to default voxel type
+                        voxelType = de.mhus.nimbus.shared.voxel.Voxel.builder()
+                                .displayName("STONE")
+                                .hardness(3)
+                                .build();
                     }
 
-                    voxels.add(new de.mhus.nimbus.shared.voxel.Voxel(x, y, z, type));
+                    // Create VoxelInstance with coordinates and voxel type
+                    voxels.add(new de.mhus.nimbus.shared.voxel.VoxelInstance(x, y, z, voxelType));
                 }
             }
 

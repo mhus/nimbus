@@ -12,14 +12,14 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kafka configuration for VoxelWorld service
+ * Kafka configuration for VoxelWorld service with error handling
  */
 @Configuration
 @EnableKafka
@@ -31,30 +31,42 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id:voxelworld-service}")
     private String groupId;
 
-    @Value("${spring.kafka.consumer.properties.schema.registry.url}")
+    @Value("${spring.kafka.consumer.properties.schema.registry.url:http://localhost:8081}")
     private String schemaRegistryUrl;
 
     /**
-     * Consumer configuration
+     * Consumer configuration with error handling
      */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
-        configProps.put("schema.registry.url", schemaRegistryUrl);
-        configProps.put("specific.avro.reader", true);
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
+
+        // Error handling deserializers
+        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            ErrorHandlingDeserializer.class);
+        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+            ErrorHandlingDeserializer.class);
+
+        // Delegate deserializers
+        configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS,
+            StringDeserializer.class.getName());
+        configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS,
+            KafkaAvroDeserializer.class.getName());
+
+        // Avro specific configuration
+        configProps.put("schema.registry.url", schemaRegistryUrl);
+        configProps.put("specific.avro.reader", true);
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
     /**
-     * Kafka listener container factory
+     * Kafka listener container factory with error handling
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
@@ -62,6 +74,10 @@ public class KafkaConfig {
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(3); // Number of consumer threads
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
+        // Error handling
+        factory.setCommonErrorHandler(new org.springframework.kafka.listener.DefaultErrorHandler());
+
         return factory;
     }
 

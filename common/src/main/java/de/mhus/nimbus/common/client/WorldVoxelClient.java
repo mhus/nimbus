@@ -6,6 +6,7 @@ import de.mhus.nimbus.shared.avro.VoxelData;
 import de.mhus.nimbus.shared.avro.ChunkData;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
+import de.mhus.nimbus.shared.voxel.VoxelInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,38 +112,26 @@ public class WorldVoxelClient {
      * Speichert mehrere Voxel in einem Batch
      *
      * @param worldId Die Welt-ID
-     * @param voxels  Liste der zu speichernden Voxel
+     * @param voxelInstances  Liste der zu speichernden VoxelInstances
      * @return CompletableFuture für asynchrone Verarbeitung
      */
-    public CompletableFuture<Void> batchSaveVoxels(String worldId, List<Voxel> voxels) {
+    public CompletableFuture<Void> batchSaveVoxels(String worldId, List<VoxelInstance> voxelInstances) {
         try {
             String messageId = UUID.randomUUID().toString();
-            StringBuilder voxelsJson = new StringBuilder("[");
-
-            for (Voxel voxel : voxels) {
-                String voxelJson = voxel.toString(); // Directly use Voxel's toString method
-                voxelsJson.append(voxelJson).append(",");
-            }
-
-            // Remove the last comma and close the JSON array
-            if (voxelsJson.length() > 1) {
-                voxelsJson.setLength(voxelsJson.length() - 1);
-            }
-            voxelsJson.append("]");
 
             VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
                     .setMessageId(messageId)
                     .setOperation(OperationType.BATCH_SAVE)
                     .setWorldId(worldId)
                     .setBatchData(de.mhus.nimbus.shared.avro.BatchData.newBuilder()
-                            .setData(voxelsJson.toString())
+                            .setVoxels(de.mhus.nimbus.shared.util.VoxelConverter.toAvroVoxelList(voxelInstances))
                             .build())
                     .build();
 
             return sendMessage(VOXEL_OPERATIONS_TOPIC, messageId, message);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to serialize voxels for batch save operation", e);
+            LOGGER.error("Failed to convert voxels for batch save operation", e);
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;
@@ -527,30 +516,19 @@ public class WorldVoxelClient {
      * Batch-Speichert mehrere Voxel mit Response-Handling
      *
      * @param worldId Die Welt-ID
-     * @param voxels  Liste der zu speichernden Voxel
+     * @param voxelInstances  Liste der zu speichernden VoxelInstances
      * @return CompletableFuture mit VoxelOperationMessage Response
      */
-    public CompletableFuture<VoxelOperationMessage> batchSaveVoxelsWithResponse(String worldId, List<Voxel> voxels) {
+    public CompletableFuture<VoxelOperationMessage> batchSaveVoxelsWithResponse(String worldId, List<VoxelInstance> voxelInstances) {
         try {
             String messageId = UUID.randomUUID().toString();
-            StringBuilder voxelsJson = new StringBuilder("[");
-
-            for (Voxel voxel : voxels) {
-                String voxelJson = voxel.toString();
-                voxelsJson.append(voxelJson).append(",");
-            }
-
-            if (voxelsJson.length() > 1) {
-                voxelsJson.setLength(voxelsJson.length() - 1);
-            }
-            voxelsJson.append("]");
 
             VoxelOperationMessage message = VoxelOperationMessage.newBuilder()
                     .setMessageId(messageId)
                     .setOperation(OperationType.BATCH_SAVE)
                     .setWorldId(worldId)
                     .setBatchData(de.mhus.nimbus.shared.avro.BatchData.newBuilder()
-                            .setData(voxelsJson.toString())
+                            .setVoxels(de.mhus.nimbus.shared.util.VoxelConverter.toAvroVoxelList(voxelInstances))
                             .build())
                     .build();
 
@@ -566,12 +544,12 @@ public class WorldVoxelClient {
                 });
 
             LOGGER.info("Batch saving {} voxels in world {} with messageId {} (with response)",
-                       voxels.size(), worldId, messageId);
+                       voxelInstances.size(), worldId, messageId);
 
             return future;
 
         } catch (Exception e) {
-            LOGGER.error("Failed to serialize voxels for batch save operation with response", e);
+            LOGGER.error("Failed to convert voxels for batch save operation with response", e);
             CompletableFuture<VoxelOperationMessage> future = new CompletableFuture<>();
             future.completeExceptionally(e);
             return future;

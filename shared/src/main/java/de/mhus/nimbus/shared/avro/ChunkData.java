@@ -144,6 +144,13 @@ public class ChunkData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'chunkX' field.
+   * @param value the value to set.
+   */
+  public void setChunkX(int value) {
+    this.chunkX = value;
+  }
 
   /**
    * Gets the value of the 'chunkY' field.
@@ -154,6 +161,13 @@ public class ChunkData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'chunkY' field.
+   * @param value the value to set.
+   */
+  public void setChunkY(int value) {
+    this.chunkY = value;
+  }
 
   /**
    * Gets the value of the 'chunkZ' field.
@@ -164,6 +178,13 @@ public class ChunkData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'chunkZ' field.
+   * @param value the value to set.
+   */
+  public void setChunkZ(int value) {
+    this.chunkZ = value;
+  }
 
   /**
    * Gets the value of the 'data' field.
@@ -174,6 +195,13 @@ public class ChunkData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'data' field.
+   * @param value the value to set.
+   */
+  public void setData(java.lang.String value) {
+    this.data = value;
+  }
 
   /**
    * Gets the value of the 'includeEmpty' field.
@@ -184,6 +212,13 @@ public class ChunkData extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
 
+  /**
+   * Sets the value of the 'includeEmpty' field.
+   * @param value the value to set.
+   */
+  public void setIncludeEmpty(boolean value) {
+    this.includeEmpty = value;
+  }
 
   /**
    * Creates a new ChunkData RecordBuilder.

@@ -15,10 +15,10 @@ import org.apache.avro.message.SchemaStore;
 /** Message for voxel operations via Kafka */
 @org.apache.avro.specific.AvroGenerated
 public class VoxelOperationMessage extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -8304207354856050682L;
+  private static final long serialVersionUID = -7513700940976838076L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"VoxelOperationMessage\",\"namespace\":\"de.mhus.nimbus.shared.avro\",\"doc\":\"Message for voxel operations via Kafka\",\"fields\":[{\"name\":\"messageId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier for the message\"},{\"name\":\"operation\",\"type\":{\"type\":\"enum\",\"name\":\"OperationType\",\"symbols\":[\"SAVE\",\"DELETE\",\"BATCH_SAVE\",\"CLEAR_CHUNK\"]},\"doc\":\"Type of operation to perform\"},{\"name\":\"worldId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"World identifier\"},{\"name\":\"voxelData\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"VoxelData\",\"fields\":[{\"name\":\"x\",\"type\":\"int\"},{\"name\":\"y\",\"type\":\"int\"},{\"name\":\"z\",\"type\":\"int\"},{\"name\":\"data\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}],\"default\":null},{\"name\":\"chunkData\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"ChunkData\",\"fields\":[{\"name\":\"chunkX\",\"type\":\"int\"},{\"name\":\"chunkY\",\"type\":\"int\"},{\"name\":\"chunkZ\",\"type\":\"int\"},{\"name\":\"data\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"includeEmpty\",\"type\":\"boolean\",\"default\":false}]}],\"default\":null},{\"name\":\"batchData\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"BatchData\",\"fields\":[{\"name\":\"data\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"VoxelOperationMessage\",\"namespace\":\"de.mhus.nimbus.shared.avro\",\"doc\":\"Message for voxel operations via Kafka\",\"fields\":[{\"name\":\"messageId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Unique identifier for the message\"},{\"name\":\"operation\",\"type\":{\"type\":\"enum\",\"name\":\"OperationType\",\"symbols\":[\"SAVE\",\"DELETE\",\"BATCH_SAVE\",\"CLEAR_CHUNK\"]},\"doc\":\"Type of operation to perform\"},{\"name\":\"worldId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"World identifier\"},{\"name\":\"voxelData\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"VoxelData\",\"fields\":[{\"name\":\"x\",\"type\":\"int\"},{\"name\":\"y\",\"type\":\"int\"},{\"name\":\"z\",\"type\":\"int\"},{\"name\":\"data\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}],\"default\":null},{\"name\":\"chunkData\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"ChunkData\",\"fields\":[{\"name\":\"chunkX\",\"type\":\"int\"},{\"name\":\"chunkY\",\"type\":\"int\"},{\"name\":\"chunkZ\",\"type\":\"int\"},{\"name\":\"data\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"includeEmpty\",\"type\":\"boolean\",\"default\":false}]}],\"default\":null},{\"name\":\"batchData\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"BatchData\",\"fields\":[{\"name\":\"voxels\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"AvroVoxel\",\"fields\":[{\"name\":\"x\",\"type\":\"int\"},{\"name\":\"y\",\"type\":\"int\"},{\"name\":\"z\",\"type\":\"int\"},{\"name\":\"voxelType\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"material\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"health\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"tags\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}],\"default\":null},{\"name\":\"properties\",\"type\":[\"null\",{\"type\":\"map\",\"values\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"avro.java.string\":\"String\"}],\"default\":null}]}}}]}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -153,6 +153,14 @@ public class VoxelOperationMessage extends org.apache.avro.specific.SpecificReco
   }
 
 
+  /**
+   * Sets the value of the 'messageId' field.
+   * Unique identifier for the message
+   * @param value the value to set.
+   */
+  public void setMessageId(java.lang.String value) {
+    this.messageId = value;
+  }
 
   /**
    * Gets the value of the 'operation' field.
@@ -163,6 +171,14 @@ public class VoxelOperationMessage extends org.apache.avro.specific.SpecificReco
   }
 
 
+  /**
+   * Sets the value of the 'operation' field.
+   * Type of operation to perform
+   * @param value the value to set.
+   */
+  public void setOperation(de.mhus.nimbus.shared.avro.OperationType value) {
+    this.operation = value;
+  }
 
   /**
    * Gets the value of the 'worldId' field.
@@ -173,6 +189,14 @@ public class VoxelOperationMessage extends org.apache.avro.specific.SpecificReco
   }
 
 
+  /**
+   * Sets the value of the 'worldId' field.
+   * World identifier
+   * @param value the value to set.
+   */
+  public void setWorldId(java.lang.String value) {
+    this.worldId = value;
+  }
 
   /**
    * Gets the value of the 'voxelData' field.
@@ -183,6 +207,13 @@ public class VoxelOperationMessage extends org.apache.avro.specific.SpecificReco
   }
 
 
+  /**
+   * Sets the value of the 'voxelData' field.
+   * @param value the value to set.
+   */
+  public void setVoxelData(de.mhus.nimbus.shared.avro.VoxelData value) {
+    this.voxelData = value;
+  }
 
   /**
    * Gets the value of the 'chunkData' field.
@@ -193,6 +224,13 @@ public class VoxelOperationMessage extends org.apache.avro.specific.SpecificReco
   }
 
 
+  /**
+   * Sets the value of the 'chunkData' field.
+   * @param value the value to set.
+   */
+  public void setChunkData(de.mhus.nimbus.shared.avro.ChunkData value) {
+    this.chunkData = value;
+  }
 
   /**
    * Gets the value of the 'batchData' field.
@@ -203,6 +241,13 @@ public class VoxelOperationMessage extends org.apache.avro.specific.SpecificReco
   }
 
 
+  /**
+   * Sets the value of the 'batchData' field.
+   * @param value the value to set.
+   */
+  public void setBatchData(de.mhus.nimbus.shared.avro.BatchData value) {
+    this.batchData = value;
+  }
 
   /**
    * Creates a new VoxelOperationMessage RecordBuilder.

@@ -14,10 +14,10 @@ import org.apache.avro.message.SchemaStore;
 
 @org.apache.avro.specific.AvroGenerated
 public class BatchData extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 363949198369852768L;
+  private static final long serialVersionUID = -3333612437825289680L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"BatchData\",\"namespace\":\"de.mhus.nimbus.shared.avro\",\"fields\":[{\"name\":\"data\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"BatchData\",\"namespace\":\"de.mhus.nimbus.shared.avro\",\"fields\":[{\"name\":\"voxels\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"AvroVoxel\",\"fields\":[{\"name\":\"x\",\"type\":\"int\"},{\"name\":\"y\",\"type\":\"int\"},{\"name\":\"z\",\"type\":\"int\"},{\"name\":\"voxelType\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"material\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"health\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"tags\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}],\"default\":null},{\"name\":\"properties\",\"type\":[\"null\",{\"type\":\"map\",\"values\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"avro.java.string\":\"String\"}],\"default\":null}]}}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -73,7 +73,7 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
     return DECODER.decode(b);
   }
 
-  private java.lang.String data;
+  private java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> voxels;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -84,10 +84,10 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
 
   /**
    * All-args constructor.
-   * @param data The new value for data
+   * @param voxels The new value for voxels
    */
-  public BatchData(java.lang.String data) {
-    this.data = data;
+  public BatchData(java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> voxels) {
+    this.voxels = voxels;
   }
 
   @Override
@@ -100,7 +100,7 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
   @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
-    case 0: return data;
+    case 0: return voxels;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -110,20 +110,27 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: data = value$ != null ? value$.toString() : null; break;
+    case 0: voxels = (java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel>)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
   /**
-   * Gets the value of the 'data' field.
-   * @return The value of the 'data' field.
+   * Gets the value of the 'voxels' field.
+   * @return The value of the 'voxels' field.
    */
-  public java.lang.String getData() {
-    return data;
+  public java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> getVoxels() {
+    return voxels;
   }
 
 
+  /**
+   * Sets the value of the 'voxels' field.
+   * @param value the value to set.
+   */
+  public void setVoxels(java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> value) {
+    this.voxels = value;
+  }
 
   /**
    * Creates a new BatchData RecordBuilder.
@@ -166,7 +173,7 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<BatchData>
     implements org.apache.avro.data.RecordBuilder<BatchData> {
 
-    private java.lang.String data;
+    private java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> voxels;
 
     /** Creates a new Builder */
     private Builder() {
@@ -179,8 +186,8 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
      */
     private Builder(de.mhus.nimbus.shared.avro.BatchData.Builder other) {
       super(other);
-      if (isValidValue(fields()[0], other.data)) {
-        this.data = data().deepCopy(fields()[0].schema(), other.data);
+      if (isValidValue(fields()[0], other.voxels)) {
+        this.voxels = data().deepCopy(fields()[0].schema(), other.voxels);
         fieldSetFlags()[0] = other.fieldSetFlags()[0];
       }
     }
@@ -191,48 +198,48 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
      */
     private Builder(de.mhus.nimbus.shared.avro.BatchData other) {
       super(SCHEMA$, MODEL$);
-      if (isValidValue(fields()[0], other.data)) {
-        this.data = data().deepCopy(fields()[0].schema(), other.data);
+      if (isValidValue(fields()[0], other.voxels)) {
+        this.voxels = data().deepCopy(fields()[0].schema(), other.voxels);
         fieldSetFlags()[0] = true;
       }
     }
 
     /**
-      * Gets the value of the 'data' field.
+      * Gets the value of the 'voxels' field.
       * @return The value.
       */
-    public java.lang.String getData() {
-      return data;
+    public java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> getVoxels() {
+      return voxels;
     }
 
 
     /**
-      * Sets the value of the 'data' field.
-      * @param value The value of 'data'.
+      * Sets the value of the 'voxels' field.
+      * @param value The value of 'voxels'.
       * @return This builder.
       */
-    public de.mhus.nimbus.shared.avro.BatchData.Builder setData(java.lang.String value) {
+    public de.mhus.nimbus.shared.avro.BatchData.Builder setVoxels(java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> value) {
       validate(fields()[0], value);
-      this.data = value;
+      this.voxels = value;
       fieldSetFlags()[0] = true;
       return this;
     }
 
     /**
-      * Checks whether the 'data' field has been set.
-      * @return True if the 'data' field has been set, false otherwise.
+      * Checks whether the 'voxels' field has been set.
+      * @return True if the 'voxels' field has been set, false otherwise.
       */
-    public boolean hasData() {
+    public boolean hasVoxels() {
       return fieldSetFlags()[0];
     }
 
 
     /**
-      * Clears the value of the 'data' field.
+      * Clears the value of the 'voxels' field.
       * @return This builder.
       */
-    public de.mhus.nimbus.shared.avro.BatchData.Builder clearData() {
-      data = null;
+    public de.mhus.nimbus.shared.avro.BatchData.Builder clearVoxels() {
+      voxels = null;
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -242,7 +249,7 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
     public BatchData build() {
       try {
         BatchData record = new BatchData();
-        record.data = fieldSetFlags()[0] ? this.data : (java.lang.String) defaultValue(fields()[0]);
+        record.voxels = fieldSetFlags()[0] ? this.voxels : (java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel>) defaultValue(fields()[0]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
@@ -275,7 +282,18 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
   @Override public void customEncode(org.apache.avro.io.Encoder out)
     throws java.io.IOException
   {
-    out.writeString(this.data);
+    long size0 = this.voxels.size();
+    out.writeArrayStart();
+    out.setItemCount(size0);
+    long actualSize0 = 0;
+    for (de.mhus.nimbus.shared.avro.AvroVoxel e0: this.voxels) {
+      actualSize0++;
+      out.startItem();
+      e0.customEncode(out);
+    }
+    out.writeArrayEnd();
+    if (actualSize0 != size0)
+      throw new java.util.ConcurrentModificationException("Array-size written was " + size0 + ", but element count was " + actualSize0 + ".");
 
   }
 
@@ -284,13 +302,45 @@ public class BatchData extends org.apache.avro.specific.SpecificRecordBase imple
   {
     org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
     if (fieldOrder == null) {
-      this.data = in.readString();
+      long size0 = in.readArrayStart();
+      java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> a0 = this.voxels;
+      if (a0 == null) {
+        a0 = new SpecificData.Array<de.mhus.nimbus.shared.avro.AvroVoxel>((int)size0, SCHEMA$.getField("voxels").schema());
+        this.voxels = a0;
+      } else a0.clear();
+      SpecificData.Array<de.mhus.nimbus.shared.avro.AvroVoxel> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<de.mhus.nimbus.shared.avro.AvroVoxel>)a0 : null);
+      for ( ; 0 < size0; size0 = in.arrayNext()) {
+        for ( ; size0 != 0; size0--) {
+          de.mhus.nimbus.shared.avro.AvroVoxel e0 = (ga0 != null ? ga0.peek() : null);
+          if (e0 == null) {
+            e0 = new de.mhus.nimbus.shared.avro.AvroVoxel();
+          }
+          e0.customDecode(in);
+          a0.add(e0);
+        }
+      }
 
     } else {
       for (int i = 0; i < 1; i++) {
         switch (fieldOrder[i].pos()) {
         case 0:
-          this.data = in.readString();
+          long size0 = in.readArrayStart();
+          java.util.List<de.mhus.nimbus.shared.avro.AvroVoxel> a0 = this.voxels;
+          if (a0 == null) {
+            a0 = new SpecificData.Array<de.mhus.nimbus.shared.avro.AvroVoxel>((int)size0, SCHEMA$.getField("voxels").schema());
+            this.voxels = a0;
+          } else a0.clear();
+          SpecificData.Array<de.mhus.nimbus.shared.avro.AvroVoxel> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<de.mhus.nimbus.shared.avro.AvroVoxel>)a0 : null);
+          for ( ; 0 < size0; size0 = in.arrayNext()) {
+            for ( ; size0 != 0; size0--) {
+              de.mhus.nimbus.shared.avro.AvroVoxel e0 = (ga0 != null ? ga0.peek() : null);
+              if (e0 == null) {
+                e0 = new de.mhus.nimbus.shared.avro.AvroVoxel();
+              }
+              e0.customDecode(in);
+              a0.add(e0);
+            }
+          }
           break;
 
         default:

@@ -7,6 +7,7 @@ import de.mhus.nimbus.shared.avro.ChunkData;
 import de.mhus.nimbus.shared.avro.BatchData;
 import de.mhus.nimbus.shared.voxel.Voxel;
 import de.mhus.nimbus.shared.voxel.VoxelChunk;
+import de.mhus.nimbus.shared.voxel.VoxelInstance;
 import de.mhus.nimbus.voxelworld.service.VoxelWorldService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class VoxelWorldConsumer {
      * Consumes voxel operation messages from Kafka
      */
     @KafkaListener(topics = WorldVoxelClient.VOXEL_OPERATIONS_TOPIC, groupId = "voxelworld-service")
-    public void consumeVoxelOperation(VoxelOperationMessage message) {
+    public void consumeVoxelOperation(VoxelOperationMessage message, org.springframework.kafka.support.Acknowledgment acknowledgment) {
         try {
             LOGGER.debug("Kafka: Received voxel operation {} for world {} with messageId {}",
                         message.getOperation(), message.getWorldId(), message.getMessageId());
@@ -65,6 +66,14 @@ public class VoxelWorldConsumer {
         } catch (Exception e) {
             LOGGER.error("Kafka: Failed to process voxel operation message with ID {}: {}",
                         message.getMessageId(), e.getMessage(), e);
+        } finally {
+            // Acknowledge the message after processing
+            if (acknowledgment != null) {
+                acknowledgment.acknowledge();
+                LOGGER.debug("Kafka: Acknowledged message with ID {}", message.getMessageId());
+            } else {
+                LOGGER.warn("Kafka: Acknowledgment is null for message with ID {}", message.getMessageId());
+            }
         }
     }
 
@@ -125,8 +134,14 @@ public class VoxelWorldConsumer {
             if (message.getBatchData() != null) {
                 BatchData batchData = message.getBatchData();
 
-                // Parse Voxel-Array aus JSON-String in BatchData
-                List<Voxel> voxels = parseVoxelsFromBatchData(batchData);
+                // Parse VoxelInstance-Liste aus BatchData und konvertiere zu Voxel-Liste
+                List<VoxelInstance> voxelInstances = parseVoxelsFromBatchData(batchData);
+
+                // Konvertiere VoxelInstances zu Voxels für den Service
+                List<Voxel> voxels = voxelInstances.stream()
+                    .map(vi -> vi.getVoxelType() != null ? vi.getVoxelType() : createDefaultVoxel())
+                    .toList();
+
                 int savedCount = voxelWorldService.saveVoxels(message.getWorldId(), voxels);
 
                 LOGGER.info("Kafka: Batch saved {} voxels in world {}", savedCount, message.getWorldId());
@@ -162,6 +177,16 @@ public class VoxelWorldConsumer {
     }
 
     /**
+     * Erstellt einen Standard-Voxel für Fallback-Zwecke
+     */
+    private Voxel createDefaultVoxel() {
+        return Voxel.builder()
+                .displayName("Default Voxel")
+                .hardness(3)
+                .build();
+    }
+
+    /**
      * Hilfsmethode um Voxel-Objekt aus Avro VoxelData zu erstellen
      */
     private Voxel createVoxelFromData(VoxelData voxelData) {
@@ -171,22 +196,22 @@ public class VoxelWorldConsumer {
                 // Parse JSON oder verwende die Daten direkt
                 return parseVoxelFromJson(voxelData.getData(), voxelData.getX(), voxelData.getY(), voxelData.getZ());
             } else {
-                // Erstelle ein einfaches Voxel ohne zusätzliche Daten
-                return new Voxel(voxelData.getX(), voxelData.getY(), voxelData.getZ(), null);
+                // Erstelle ein Standard-Voxel
+                return createDefaultVoxel();
             }
         } catch (Exception e) {
-            LOGGER.warn("Failed to parse voxel data, creating simple voxel: {}", e.getMessage());
-            return new Voxel(voxelData.getX(), voxelData.getY(), voxelData.getZ(), null);
+            LOGGER.warn("Failed to parse voxel data, creating default voxel: {}", e.getMessage());
+            return createDefaultVoxel();
         }
     }
 
     /**
-     * Hilfsmethode um Voxel-Liste aus BatchData zu parsen
+     * Hilfsmethode um VoxelInstance-Liste aus BatchData zu parsen
      */
-    private List<Voxel> parseVoxelsFromBatchData(BatchData batchData) {
+    private List<VoxelInstance> parseVoxelsFromBatchData(BatchData batchData) {
         try {
-            // Das 'data' Feld in BatchData enthält die JSON-Repräsentation der Voxel-Liste
-            return parseVoxelListFromJson(batchData.getData());
+            // BatchData enthält jetzt direkt eine Liste von AvroVoxel-Objekten
+            return de.mhus.nimbus.shared.util.VoxelConverter.fromAvroVoxelList(batchData.getVoxels());
         } catch (Exception e) {
             LOGGER.error("Failed to parse batch voxel data: {}", e.getMessage(), e);
             return List.of(); // Leere Liste als Fallback
@@ -198,11 +223,11 @@ public class VoxelWorldConsumer {
      */
     private Voxel parseVoxelFromJson(String jsonData, int x, int y, int z) {
         try {
-            // Einfache Implementierung - erstelle Voxel mit null VoxelType als Platzhalter
-            return new Voxel(x, y, z, null);
+            // Einfache Implementierung - erstelle Standard-Voxel
+            return createDefaultVoxel();
         } catch (Exception e) {
-            LOGGER.warn("Failed to parse voxel JSON, using coordinates only: {}", e.getMessage());
-            return new Voxel(x, y, z, null);
+            LOGGER.warn("Failed to parse voxel JSON, using default voxel: {}", e.getMessage());
+            return createDefaultVoxel();
         }
     }
 
