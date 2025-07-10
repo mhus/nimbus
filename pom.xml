@@ -35,6 +35,7 @@
         <module>registry</module>
         <module>identity</module>
         <module>common</module>
+        <module>entrance</module>
         <module>world-voxel</module>
         <module>world-life</module>
         <module>generator-simple</module>
