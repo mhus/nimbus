@@ -42,6 +42,12 @@
 
         <dependency>
             <groupId>de.mhus.numbus</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.mhus.numbus</groupId>
             <artifactId>shared</artifactId>
         </dependency>
 

@@ -30,7 +30,7 @@ public class NimbusClientService {
      * Erstellt eine neue Instanz des Client-Services
      */
     public NimbusClientService() {
-        log.info("NimbusClientService initialisiert");
+        LOGGER.info("NimbusClientService initialisiert");
     }
 
     /**
@@ -73,12 +73,12 @@ public class NimbusClientService {
             };
 
             webSocketClient.connect();
-            log.info("Verbindungsaufbau zu {} gestartet", serverUrl);
+            LOGGER.info("Verbindungsaufbau zu {} gestartet", serverUrl);
 
             return connectionFuture;
 
         } catch (Exception e) {
-            log.error("Fehler beim Verbindungsaufbau zu {}", serverUrl, e);
+            LOGGER.error("Fehler beim Verbindungsaufbau zu {}", serverUrl, e);
             return CompletableFuture.failedFuture(e);
         }
     }
@@ -89,7 +89,7 @@ public class NimbusClientService {
     public void disconnect() {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             webSocketClient.close();
-            log.info("WebSocket-Verbindung geschlossen");
+            LOGGER.info("WebSocket-Verbindung geschlossen");
         }
         connected = false;
     }
@@ -121,7 +121,7 @@ public class NimbusClientService {
             // Setze Authentifizierungsstatus basierend auf Antwort
             if (response != null && response.getData() != null) {
                 webSocketClient.setAuthenticated(true);
-                log.info("Authentifizierung erfolgreich");
+                LOGGER.info("Authentifizierung erfolgreich");
             }
             return response;
         });
@@ -164,7 +164,7 @@ public class NimbusClientService {
      */
     public void sendMessage(String type, Object data) {
         if (!isConnected()) {
-            log.warn("Kann Nachricht nicht senden - nicht verbunden");
+            LOGGER.warn("Kann Nachricht nicht senden - nicht verbunden");
             return;
         }
 
@@ -218,21 +218,21 @@ public class NimbusClientService {
      * Erstellt eine Authentifizierungsanfrage
      * Verwendet ein einfaches Object anstatt der konkreten DTO-Klasse um Abhängigkeiten zu vermeiden
      */
-    private Object createAuthenticationRequest(String username, String password, String clientInfo) {
+    private Object createAuthenticationRequest(String usernameIn, String passwordIn, String clientInfoIn) {
         return new Object() {
-            public final String username = username;
-            public final String password = password;
-            public final String clientInfo = clientInfo;
+            public final String username = usernameIn;
+            public final String password = passwordIn;
+            public final String clientInfo = clientInfoIn;
         };
     }
 
     /**
      * Erstellt eine Funktionsaufruf-Anfrage
      */
-    private Object createFunctionCallRequest(String functionName, Object parameters) {
+    private Object createFunctionCallRequest(String functionNameIn, Object parametersIn) {
         return new Object() {
-            public final String functionName = functionName;
-            public final Object parameters = parameters;
+            public final String functionName = functionNameIn;
+            public final Object parameters = parametersIn;
         };
     }
 }

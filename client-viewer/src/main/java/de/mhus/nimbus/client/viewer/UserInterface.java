@@ -47,7 +47,8 @@ public class UserInterface {
     public enum UIState {
         CONNECTION_SCREEN,
         LOGIN_SCREEN,
-        MAIN_SCREEN
+        MAIN_SCREEN,
+        VOXEL_WORLD_SCREEN
     }
 
     public enum InputField {
@@ -73,10 +74,10 @@ public class UserInterface {
         // Lade Schriftart (verwende system default)
         fontNormal = nvgCreateFont(vg, "sans", "");
         if (fontNormal == -1) {
-            log.warn("Konnte Schriftart nicht laden, verwende Default");
+            LOGGER.warn("Konnte Schriftart nicht laden, verwende Default");
         }
 
-        log.info("UserInterface initialisiert");
+        LOGGER.info("UserInterface initialisiert");
     }
 
     /**
@@ -100,6 +101,7 @@ public class UserInterface {
             case CONNECTION_SCREEN -> renderConnectionScreen();
             case LOGIN_SCREEN -> renderLoginScreen();
             case MAIN_SCREEN -> renderMainScreen();
+            case VOXEL_WORLD_SCREEN -> renderVoxelWorldScreen();
         }
 
         // Render messages and errors
@@ -209,8 +211,8 @@ public class UserInterface {
 
         // Weiter zur Hauptansicht wenn angemeldet
         if (viewerWindow.isAuthenticated()) {
-            if (renderButton("Hauptansicht", centerX + 75, centerY + 100, 125, 40, true)) {
-                currentState = UIState.MAIN_SCREEN;
+            if (renderButton("Voxel Welt", centerX + 75, centerY + 100, 125, 40, true)) {
+                enterVoxelWorld();
             }
         }
     }
@@ -428,8 +430,44 @@ public class UserInterface {
         }
     }
 
+    /**
+     * Rendert die 3D-Voxel-Welt-Ansicht
+     */
+    private void renderVoxelWorldScreen() {
+        // In diesem Modus wird hauptsächlich die 3D-Welt gerendert
+        // Die UI wird vom VoxelWorldCanvas übernommen
+        if (viewerWindow.getVoxelWorldCanvas() != null) {
+            viewerWindow.getVoxelWorldCanvas().update();
+            viewerWindow.getVoxelWorldCanvas().render();
+        }
+    }
+
+    /**
+     * Wechselt zur 3D-Voxel-Welt nach erfolgreicher Anmeldung
+     */
+    private void enterVoxelWorld() {
+        LOGGER.info("Wechsle zur 3D-Voxel-Welt...");
+
+        // Initialisiere 3D-Canvas wenn noch nicht geschehen
+        viewerWindow.initializeVoxelWorld();
+
+        // Wechsle zur Voxel-Welt-Ansicht
+        currentState = UIState.VOXEL_WORLD_SCREEN;
+
+        // Deaktiviere aktive Eingabefelder
+        activeInputField = null;
+
+        showMessage("3D-Voxel-Welt geladen - WASD zum Bewegen, ESC für Maus");
+    }
+
     // Event Handler
     public void handleKeyInput(int key, int scancode, int action, int mods) {
+        // In der Voxel-Welt: Events an den 3D-Canvas weiterleiten
+        if (currentState == UIState.VOXEL_WORLD_SCREEN && viewerWindow.getVoxelWorldCanvas() != null) {
+            viewerWindow.getVoxelWorldCanvas().handleKeyInput(key, scancode, action, mods);
+            return;
+        }
+
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
             if (activeInputField != null) {
                 handleTextInput(key, mods);
@@ -503,6 +541,12 @@ public class UserInterface {
     }
 
     public void handleMouseButton(long window, int button, int action, int mods) {
+        // In der Voxel-Welt: Events an den 3D-Canvas weiterleiten
+        if (currentState == UIState.VOXEL_WORLD_SCREEN && viewerWindow.getVoxelWorldCanvas() != null) {
+            viewerWindow.getVoxelWorldCanvas().handleMouseButton(window, button, action, mods);
+            return;
+        }
+
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
             // Handle input field selection
             double[] mouseX = new double[1];
@@ -541,7 +585,30 @@ public class UserInterface {
     }
 
     public void handleMouseMove(long window, double xpos, double ypos) {
-        // Currently not used, but could be used for hover effects
+        // In der Voxel-Welt: Events an den 3D-Canvas weiterleiten
+        if (currentState == UIState.VOXEL_WORLD_SCREEN && viewerWindow.getVoxelWorldCanvas() != null) {
+            viewerWindow.getVoxelWorldCanvas().handleMouseMove(window, xpos, ypos);
+            return;
+        }
+
+        // Currently not used for UI, but could be used for hover effects
+    }
+
+    /**
+     * Verarbeitet Mausrad-Ereignisse
+     */
+    public void handleMouseScroll(long window, double xoffset, double yoffset) {
+        // In der Voxel-Welt: Events an den 3D-Canvas weiterleiten
+        if (currentState == UIState.VOXEL_WORLD_SCREEN && viewerWindow.getVoxelWorldCanvas() != null) {
+            viewerWindow.getVoxelWorldCanvas().handleMouseScroll(window, xoffset, yoffset);
+        }
+    }
+
+    /**
+     * Gibt den NanoVG-Context zurück
+     */
+    public long getVgContext() {
+        return vg;
     }
 
     // Actions
@@ -603,13 +670,13 @@ public class UserInterface {
     public void showMessage(String message) {
         messages.add(message);
         lastMessageTime = System.currentTimeMillis();
-        log.info("UI Message: {}", message);
+        LOGGER.info("UI Message: {}", message);
     }
 
     public void showError(String error) {
         errors.add(error);
         lastMessageTime = System.currentTimeMillis();
-        log.error("UI Error: {}", error);
+        LOGGER.error("UI Error: {}", error);
     }
 
     /**
@@ -619,6 +686,6 @@ public class UserInterface {
         if (vg != 0) {
             NanoVGGL3.nvgDelete(vg);
         }
-        log.info("UserInterface cleanup abgeschlossen");
+        LOGGER.info("UserInterface cleanup abgeschlossen");
     }
 }

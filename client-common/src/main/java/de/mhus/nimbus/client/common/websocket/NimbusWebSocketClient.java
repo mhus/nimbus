@@ -35,14 +35,14 @@ public class NimbusWebSocketClient extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshake) {
-        log.info("WebSocket-Verbindung zum Nimbus Server hergestellt: {}", getURI());
+        LOGGER.info("WebSocket-Verbindung zum Nimbus Server hergestellt: {}", getURI());
     }
 
     @Override
     public void onMessage(String message) {
         try {
             WebSocketMessage wsMessage = objectMapper.readValue(message, WebSocketMessage.class);
-            log.debug("Nachricht empfangen: {}", wsMessage);
+            LOGGER.debug("Nachricht empfangen: {}", wsMessage);
 
             // Prüfe ob es eine Antwort auf eine ausstehende Anfrage ist
             if (wsMessage.getRequestId() != null) {
@@ -58,17 +58,17 @@ public class NimbusWebSocketClient extends WebSocketClient {
             if (handler != null) {
                 handler.accept(wsMessage);
             } else {
-                log.warn("Kein Handler für Nachrichtentyp '{}' gefunden", wsMessage.getType());
+                LOGGER.warn("Kein Handler für Nachrichtentyp '{}' gefunden", wsMessage.getType());
             }
 
         } catch (Exception e) {
-            log.error("Fehler beim Verarbeiten der WebSocket-Nachricht: {}", message, e);
+            LOGGER.error("Fehler beim Verarbeiten der WebSocket-Nachricht: {}", message, e);
         }
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        log.info("WebSocket-Verbindung geschlossen. Code: {}, Grund: {}, Remote: {}", code, reason, remote);
+        LOGGER.info("WebSocket-Verbindung geschlossen. Code: {}, Grund: {}, Remote: {}", code, reason, remote);
         authenticated = false;
 
         // Alle ausstehenden Anfragen mit Fehler abschließen
@@ -80,7 +80,7 @@ public class NimbusWebSocketClient extends WebSocketClient {
 
     @Override
     public void onError(Exception ex) {
-        log.error("WebSocket-Fehler aufgetreten", ex);
+        LOGGER.error("WebSocket-Fehler aufgetreten", ex);
     }
 
     /**
@@ -108,7 +108,7 @@ public class NimbusWebSocketClient extends WebSocketClient {
         try {
             String json = objectMapper.writeValueAsString(message);
             send(json);
-            log.debug("Nachricht gesendet: {}", message);
+            LOGGER.debug("Nachricht gesendet: {}", message);
 
             if (message.getRequestId() == null) {
                 future.complete(null); // Für Fire-and-Forget Nachrichten
@@ -126,16 +126,16 @@ public class NimbusWebSocketClient extends WebSocketClient {
      */
     public void sendMessage(WebSocketMessage message) {
         if (!isOpen()) {
-            log.warn("Kann Nachricht nicht senden - WebSocket-Verbindung nicht offen");
+            LOGGER.warn("Kann Nachricht nicht senden - WebSocket-Verbindung nicht offen");
             return;
         }
 
         try {
             String json = objectMapper.writeValueAsString(message);
             send(json);
-            log.debug("Fire-and-Forget Nachricht gesendet: {}", message);
+            LOGGER.debug("Fire-and-Forget Nachricht gesendet: {}", message);
         } catch (Exception e) {
-            log.error("Fehler beim Senden der Nachricht", e);
+            LOGGER.error("Fehler beim Senden der Nachricht", e);
         }
     }
 
@@ -144,7 +144,7 @@ public class NimbusWebSocketClient extends WebSocketClient {
      */
     public void registerMessageHandler(String messageType, Consumer<WebSocketMessage> handler) {
         messageHandlers.put(messageType, handler);
-        log.debug("Handler für Nachrichtentyp '{}' registriert", messageType);
+        LOGGER.debug("Handler für Nachrichtentyp '{}' registriert", messageType);
     }
 
     /**
@@ -152,7 +152,7 @@ public class NimbusWebSocketClient extends WebSocketClient {
      */
     public void unregisterMessageHandler(String messageType) {
         messageHandlers.remove(messageType);
-        log.debug("Handler für Nachrichtentyp '{}' entfernt", messageType);
+        LOGGER.debug("Handler für Nachrichtentyp '{}' entfernt", messageType);
     }
 
     /**
@@ -160,6 +160,6 @@ public class NimbusWebSocketClient extends WebSocketClient {
      */
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
-        log.info("Authentifizierungsstatus gesetzt: {}", authenticated);
+        LOGGER.info("Authentifizierungsstatus gesetzt: {}", authenticated);
     }
 }

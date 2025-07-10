@@ -1,6 +1,8 @@
 package de.mhus.nimbus.client.viewer;
 
 import de.mhus.nimbus.client.common.service.NimbusClientService;
+import de.mhus.nimbus.client.viewer.render.VoxelWorldCanvas;
+import de.mhus.nimbus.common.client.WorldVoxelClient;
 import de.mhus.nimbus.shared.dto.WebSocketMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -30,6 +32,8 @@ public class ViewerWindow {
 
     private final NimbusClientService clientService;
     private final UserInterface userInterface;
+    private final WorldVoxelClient worldVoxelClient;
+    private VoxelWorldCanvas voxelWorldCanvas;
 
     // GLFW Window Handle
     private long window;
@@ -40,6 +44,7 @@ public class ViewerWindow {
 
     public ViewerWindow(NimbusClientService clientService) {
         this.clientService = clientService;
+        this.worldVoxelClient = new WorldVoxelClient(null); // TODO: KafkaTemplate injection
         this.userInterface = new UserInterface(this);
     }
 
@@ -47,7 +52,7 @@ public class ViewerWindow {
      * Startet die Hauptschleife der Anwendung
      */
     public void run() {
-        log.info("Initialisiere LWJGL...");
+        LOGGER.info("Initialisiere LWJGL...");
 
         init();
         loop();
@@ -90,6 +95,7 @@ public class ViewerWindow {
         // Setup mouse callbacks
         glfwSetMouseButtonCallback(window, userInterface::handleMouseButton);
         glfwSetCursorPosCallback(window, userInterface::handleMouseMove);
+        glfwSetScrollCallback(window, userInterface::handleMouseScroll);
 
         // Get the thread stack and push a new frame
         try (MemoryStack stack = stackPush()) {
@@ -126,7 +132,7 @@ public class ViewerWindow {
         // Initialize UI
         userInterface.init(window);
 
-        log.info("LWJGL initialisiert, Fenster erstellt");
+        LOGGER.info("LWJGL initialisiert, Fenster erstellt");
     }
 
     /**
@@ -176,14 +182,14 @@ public class ViewerWindow {
      * Verbindet zum Server
      */
     public CompletableFuture<Void> connectToServer(String serverUrl) {
-        log.info("Verbinde zu Server: {}", serverUrl);
+        LOGGER.info("Verbinde zu Server: {}", serverUrl);
         return clientService.connect(serverUrl)
             .thenRun(() -> {
-                log.info("Verbindung zum Server hergestellt");
+                LOGGER.info("Verbindung zum Server hergestellt");
                 userInterface.showMessage("Verbunden mit " + serverUrl);
             })
             .exceptionally(ex -> {
-                log.error("Fehler beim Verbinden zum Server", ex);
+                LOGGER.error("Fehler beim Verbinden zum Server", ex);
                 userInterface.showError("Verbindungsfehler: " + ex.getMessage());
                 return null;
             });
@@ -193,15 +199,15 @@ public class ViewerWindow {
      * Authentifiziert beim Server
      */
     public CompletableFuture<WebSocketMessage> authenticate(String username, String password) {
-        log.info("Authentifiziere Benutzer: {}", username);
+        LOGGER.info("Authentifiziere Benutzer: {}", username);
         return clientService.authenticate(username, password, "Nimbus Client Viewer v1.0")
             .thenApply(response -> {
-                log.info("Authentifizierung erfolgreich");
+                LOGGER.info("Authentifizierung erfolgreich");
                 userInterface.showMessage("Anmeldung erfolgreich");
                 return response;
             })
             .exceptionally(ex -> {
-                log.error("Fehler bei der Authentifizierung", ex);
+                LOGGER.error("Fehler bei der Authentifizierung", ex);
                 userInterface.showError("Anmeldung fehlgeschlagen: " + ex.getMessage());
                 return null;
             });
@@ -211,7 +217,7 @@ public class ViewerWindow {
      * Trennt die Verbindung zum Server
      */
     public void disconnect() {
-        log.info("Trenne Verbindung zum Server");
+        LOGGER.info("Trenne Verbindung zum Server");
         clientService.disconnect();
         userInterface.showMessage("Verbindung getrennt");
     }
@@ -231,12 +237,36 @@ public class ViewerWindow {
     }
 
     /**
+     * Initialisiert den 3D-Voxel-Canvas nach erfolgreicher Authentifizierung
+     */
+    public void initializeVoxelWorld() {
+        if (voxelWorldCanvas == null) {
+            voxelWorldCanvas = new VoxelWorldCanvas(this, worldVoxelClient, userInterface.getVgContext());
+            voxelWorldCanvas.init(window);
+            voxelWorldCanvas.setWorldId("default");
+            LOGGER.info("3D-Voxel-Canvas initialisiert");
+        }
+    }
+
+    /**
+     * Gibt den 3D-Voxel-Canvas zurück
+     */
+    public VoxelWorldCanvas getVoxelWorldCanvas() {
+        return voxelWorldCanvas;
+    }
+
+    /**
      * Cleanup-Methode
      */
     private void cleanup() {
         // Disconnect from server
         if (clientService.isConnected()) {
             clientService.disconnect();
+        }
+
+        // Cleanup 3D Canvas
+        if (voxelWorldCanvas != null) {
+            voxelWorldCanvas.cleanup();
         }
 
         // Cleanup UI
@@ -250,7 +280,7 @@ public class ViewerWindow {
         glfwTerminate();
         glfwSetErrorCallback(null).free();
 
-        log.info("LWJGL cleanup abgeschlossen");
+        LOGGER.info("LWJGL cleanup abgeschlossen");
     }
 
     // Getter methods
@@ -264,5 +294,9 @@ public class ViewerWindow {
 
     public NimbusClientService getClientService() {
         return clientService;
+    }
+
+    public WorldVoxelClient getWorldVoxelClient() {
+        return worldVoxelClient;
     }
 }
