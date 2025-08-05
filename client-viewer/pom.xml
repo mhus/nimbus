@@ -178,7 +178,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>de.mhus.nimbus.client.viewer.ViewerApplication</mainClass>
+                    <mainClass>de.mhus.nimbus.client.viewer.NimbusViewerApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -204,10 +204,10 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>de.mhus.nimbus.client.viewer.ViewerApplication</mainClass>
+                    <mainClass>de.mhus.nimbus.client.viewer.NimbusViewerApplication</mainClass>
                     <options>
-                        <option>-Djava.library.path=${project.build.directory}/natives</option>
                         <option>-XstartOnFirstThread</option>
+                        <option>-Djava.library.path=${project.build.directory}/natives</option>
                     </options>
                 </configuration>
             </plugin>

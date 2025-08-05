@@ -68,6 +68,9 @@ public class UserInterface {
         // Stelle sicher, dass OpenGL-Context aktiv ist
         glfwMakeContextCurrent(window);
 
+        var version = glGetString(GL_VERSION);
+        log.info("OpenGL Version: {}", version != null ? version : "unbekannt");
+
         // Erstelle NanoVG Context
         vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS | NanoVGGL3.NVG_STENCIL_STROKES);
         if (vg == 0) {
