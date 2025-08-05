@@ -31,17 +31,6 @@
     </properties>
 
     <modules>
-        <module>shared</module>
-        <module>registry</module>
-        <module>identity</module>
-        <module>common</module>
-        <module>client-common</module>
-        <module>client-viewer</module>
-        <module>entrance</module>
-        <module>world-voxel</module>
-        <module>world-life</module>
-        <module>generator-simple</module>
-        <module>test-common</module>
     </modules>
 
     <repositories>
