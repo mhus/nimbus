@@ -92,3 +92,49 @@ cd identity && mvn spring-boot:run
 API testen mit den curl-Befehlen aus examples/identity.md
 Der Identity Service läuft standardmäßig auf Port 8081 und ist vollständig funktionsfähig gemäß der Spezifikation in spec/10_identity.md.
 
+## 02 Benutze einen Public Key für die JWT Signierung
+
+```text
+Ersetze die JWT Signierung im Identity Service durch einen Public/Private Key,
+anstatt eines Shared Secrets. Der Public Key soll in der Datei 
+`shared/src/main/resources/public.key` liegen. Der Private Key soll in der Datei
+`identity/src/main/resources/private.key` liegen.
+
+Passe die JWT Validierung im IdentityServiceUtils an, um den Public Key zu verwenden.
+
+Beachte die Anweisungen in der Datei `spec/02_development.md` und `spec/00_overview.md`.
+```
+
+Ich habe die JWT-Signierung erfolgreich von einem Shared Secret auf RSA Public/Private Key Kryptographie umgestellt. Hier ist eine Zusammenfassung der Änderungen:
+🔑 Erstellte RSA-Schlüsseldateien:
+Private Key in identity/src/main/resources/private.key - für JWT-Signierung im Identity Service
+Public Key in shared/src/main/resources/public.key - für JWT-Validierung in anderen Services
+🔧 Angepasste Klassen:
+IdentityServiceUtils (server-shared)
+Entfernt: createToken() Methode und Shared Secret Konfiguration
+Hinzugefügt: RSA Public Key Laden aus Classpath
+Geändert: validateToken() verwendet jetzt Algorithm.RSA256(publicKey, null)
+Die Klasse lädt automatisch den Public Key beim Start und validiert JWT-Token
+Neue JwtTokenUtils Klasse (identity)
+Erstellt: Separate Utility-Klasse für JWT-Token-Erstellung im Identity Service
+Funktionen: Lädt RSA Private Key und erstellt signierte JWT-Token
+Algorithmus: Verwendet Algorithm.RSA256(null, privateKey) für Signierung
+IdentityService (identity)
+Geändert: Verwendet jetzt JwtTokenUtils für Token-Erstellung statt IdentityServiceUtils
+Dependency Injection: Neue Abhängigkeit zu JwtTokenUtils hinzugefügt
+Sicherheit: Token werden jetzt mit RSA Private Key signiert
+🚀 Vorteile der RSA-Implementierung:
+Bessere Sicherheit: Private Key bleibt nur im Identity Service
+Skalierbarkeit: Andere Services können Token mit Public Key validieren
+Keine geteilten Geheimnisse: Kein Shared Secret zwischen Services nötig
+Standard-Konformität: Entspricht JWT Best Practices
+📝 Nächste Schritte:
+Jetzt können Sie den Identity Service testen:
+-# Identity Service starten
+cd identity && mvn spring-boot:run
+
+-# Token erstellen (Login)
+curl -X POST http://localhost:8081/login \
+-H "Content-Type: application/json" \
+-d '{"userId": "test_user", "password": "password"}'
+Andere Services können jetzt den Public Key aus dem shared Modul verwenden, um die vom Identity Service erstellten JWT-Token zu validieren, ohne Zugriff auf den Private Key zu benötigen.

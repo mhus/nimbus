@@ -2,6 +2,7 @@ package de.mhus.nimbus.identity.service;
 
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.identity.repository.UserRepository;
+import de.mhus.nimbus.identity.util.JwtTokenUtils;
 import de.mhus.nimbus.server.shared.dto.*;
 import de.mhus.nimbus.server.shared.util.IdentityServiceUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class IdentityService {
 
     private final UserRepository userRepository;
     private final IdentityServiceUtils identityServiceUtils;
+    private final JwtTokenUtils jwtTokenUtils;
 
     /**
      * Creates a new user with the provided information.
@@ -159,10 +161,10 @@ public class IdentityService {
             throw new IllegalArgumentException("Invalid credentials");
         }
 
-        // Generate JWT token
-        String token = identityServiceUtils.createToken(user.getId(), user.getRoles());
-        Long expiresAt = identityServiceUtils.extractExpirationTime(token);
-        Long issuedAt = identityServiceUtils.extractIssuedTime(token);
+        // Generate JWT token using RSA private key
+        String token = jwtTokenUtils.createToken(user.getId(), user.getRoles());
+        Long expiresAt = jwtTokenUtils.getExpirationTime(token);
+        Long issuedAt = jwtTokenUtils.getIssuedTime(token);
 
         log.info("Login successful for user: {}", loginDto.getUserId());
 
@@ -195,10 +197,10 @@ public class IdentityService {
             throw new IllegalArgumentException("User no longer exists");
         }
 
-        // Generate new token
-        String newToken = identityServiceUtils.createToken(userId, roles);
-        Long expiresAt = identityServiceUtils.extractExpirationTime(newToken);
-        Long issuedAt = identityServiceUtils.extractIssuedTime(newToken);
+        // Generate new token using RSA private key
+        String newToken = jwtTokenUtils.createToken(userId, roles);
+        Long expiresAt = jwtTokenUtils.getExpirationTime(newToken);
+        Long issuedAt = jwtTokenUtils.getIssuedTime(newToken);
 
         log.info("Token renewed for user: {}", userId);
 
