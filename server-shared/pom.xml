@@ -11,28 +11,29 @@
     </parent>
 
     <artifactId>server-shared</artifactId>
-    <packaging>jar</packaging>
-
-    <name>Nimbus Server Shared</name>
-    <description>Common functions and data structures for all server services</description>
+    <name>Server Shared</name>
+    <description>Shared components for server modules</description>
 
     <dependencies>
-        <dependency>
-            <groupId>de.mhus.nimbus</groupId>
-            <artifactId>shared</artifactId>
-        </dependency>
+        <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- Spring Boot Starter Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
+        <!-- JWT -->
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
         </dependency>
+
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
