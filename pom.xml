@@ -4,144 +4,138 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.0</version>
-        <relativePath/>
-    </parent>
-
-    <groupId>de.mhus.numbus</groupId>
+    <groupId>de.mhus.nimbus</groupId>
     <artifactId>nimbus</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <name>Nimbus MMORPG System</name>
+    <description>A distributed MMORPG system with 2D worlds</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
+
+        <spring.boot.version>3.3.2</spring.boot.version>
         <lombok.version>1.18.30</lombok.version>
-        <avro.version>1.11.3</avro.version>
-        <kafka-avro-serializer.version>7.4.0</kafka-avro-serializer.version>
-        <jjwt.version>0.11.5</jjwt.version>
-        <joml.version>1.10.0</joml.version>
-        <springdoc.version>2.2.0</springdoc.version>
-        <vavr.version>0.10.4</vavr.version>
+        <postgresql.version>42.7.3</postgresql.version>
+        <redis.version>4.4.6</redis.version>
+        <kafka.version>3.5.1</kafka.version>
+        <jwt.version>4.4.0</jwt.version>
+        <jackson.version>2.15.2</jackson.version>
     </properties>
 
     <modules>
-    </modules>
+        <!-- Shared Libraries -->
+        <module>shared</module>
+        <module>server-shared</module>
+        <module>client-shared</module>
+        <module>world-shared</module>
 
-    <repositories>
-        <repository>
-            <id>confluent</id>
-            <url>https://packages.confluent.io/maven/</url>
-        </repository>
-    </repositories>
+        <!-- Central Services -->
+        <module>identity</module>
+        <module>registry</module>
+
+        <!-- World Services -->
+        <module>world-data</module>
+        <module>world-life</module>
+        <module>world-physics</module>
+        <module>world-bridge</module>
+
+        <!-- Bridge Services -->
+        <module>client-bridge</module>
+
+        <!-- Client -->
+        <module>client</module>
+
+        <!-- Generators -->
+        <module>generator-simple</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Internal modules -->
+            <!-- Spring Boot BOM -->
             <dependency>
-                <groupId>de.mhus.numbus</groupId>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Internal Dependencies -->
+            <dependency>
+                <groupId>de.mhus.nimbus</groupId>
                 <artifactId>shared</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>de.mhus.numbus</groupId>
-                <artifactId>common</artifactId>
+                <groupId>de.mhus.nimbus</groupId>
+                <artifactId>server-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.mhus.nimbus</groupId>
+                <artifactId>client-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.mhus.nimbus</groupId>
+                <artifactId>world-shared</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- Apache Avro -->
-            <dependency>
-                <groupId>org.apache.avro</groupId>
-                <artifactId>avro</artifactId>
-                <version>${avro.version}</version>
-            </dependency>
-
-            <!-- Confluent Kafka -->
-            <dependency>
-                <groupId>io.confluent</groupId>
-                <artifactId>kafka-avro-serializer</artifactId>
-                <version>${kafka-avro-serializer.version}</version>
-            </dependency>
-
-            <!-- JWT Dependencies -->
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-api</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-impl</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-jackson</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-
-            <!-- Lombok -->
+            <!-- External Dependencies -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
                 <scope>provided</scope>
             </dependency>
-
-            <!-- Vavr (functional programming library) -->
             <dependency>
-                <groupId>io.vavr</groupId>
-                <artifactId>vavr</artifactId>
-                <version>${vavr.version}</version>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
             </dependency>
-
-            <!-- JOML -->
             <dependency>
-                <groupId>org.joml</groupId>
-                <artifactId>joml</artifactId>
-                <version>${joml.version}</version>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${redis.version}</version>
             </dependency>
-
-            <!-- SpringDoc OpenAPI -->
             <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>${springdoc.version}</version>
+                <groupId>com.auth0</groupId>
+                <artifactId>java-jwt</artifactId>
+                <version>${jwt.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <!-- Common dependencies for all modules -->
-    <dependencies>
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- JOML -->
-        <dependency>
-            <groupId>org.joml</groupId>
-            <artifactId>joml</artifactId>
-        </dependency>
-
-        <!-- Vavr (functional programming library) -->
-        <dependency>
-            <groupId>io.vavr</groupId>
-            <artifactId>vavr</artifactId>
-        </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring.boot.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>21</source>
+                        <target>21</target>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
