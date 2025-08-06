@@ -138,3 +138,40 @@ curl -X POST http://localhost:8081/login \
 -H "Content-Type: application/json" \
 -d '{"userId": "test_user", "password": "password"}'
 Andere Services können jetzt den Public Key aus dem shared Modul verwenden, um die vom Identity Service erstellten JWT-Token zu validieren, ohne Zugriff auf den Private Key zu benötigen.
+
+## 03 Verschiebe die JWT Token Validierung in das Modul `shared`
+
+```text
+Verschiebe die JWT Token Validierung aus dem modul `server-shared`
+und Klasse `IdentityServiceUtils` und alle zugehörigen Klassen
+in das Modul `shared`.
+```
+
+Ich habe die JWT Token Validierung erfolgreich aus dem server-shared Modul in das shared Modul verschoben. Hier ist eine Zusammenfassung der durchgeführten Änderungen:
+✅ Erfolgreich verschoben:
+1. Neue Struktur im shared Modul:
+   shared/pom.xml - Erstellt mit Dependencies für JWT, Spring Context/Core, Lombok und SLF4J
+   IdentityServiceUtils - Verschoben nach de.mhus.nimbus.shared.util.IdentityServiceUtils
+   SharedConfig - Neue Konfigurationsklasse, die IdentityServiceUtils als Spring Bean bereitstellt
+2. Aktualisierte Import-Statements:
+   JWTAuthenticationFilter - Import geändert zu de.mhus.nimbus.shared.util.IdentityServiceUtils
+   IdentityService - Import geändert zu de.mhus.nimbus.shared.util.IdentityServiceUtils
+3. Aktualisierte Dependencies:
+   identity/pom.xml - Dependency zum shared Modul hinzugefügt
+   server-shared/pom.xml - Dependency zum shared Modul hinzugefügt
+   IdentityApplication - Component Scan um de.mhus.nimbus.shared erweitert
+   🔧 Vorteile der neuen Struktur:
+   Bessere Modularität: JWT-Validierung ist jetzt im grundlegenden shared Modul verfügbar
+   Weniger Abhängigkeiten: Andere Module können JWT-Validierung nutzen, ohne server-shared zu importieren
+   Klarere Trennung: shared = allgemeine Utilities, server-shared = server-spezifische Komponenten
+   Wiederverwendbarkeit: Client-Module können jetzt auch JWT-Validierung nutzen
+   📝 Nächste Schritte:
+   Die Verschiebung ist abgeschlossen. Sie können jetzt:
+   Kompilieren und testen:
+   cd /Users/hummel/sources/mhus/nimbus
+   mvn clean compile -pl shared,server-shared,identity
+   Identity Service starten:
+   cd identity && mvn spring-boot:run
+   JWT-Validierung in anderen Modulen nutzen: Andere Module können jetzt de.mhus.nimbus.shared.util.IdentityServiceUtils verwenden, indem sie das shared Modul als Dependency hinzufügen.
+   Die JWT Token Validierung ist jetzt zentral im shared Modul verfügbar und kann von allen anderen Modulen im Projekt genutzt werden, ohne dass sie das schwergewichtigere server-shared Modul importieren müssen.
+

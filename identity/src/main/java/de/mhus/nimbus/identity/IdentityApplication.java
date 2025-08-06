@@ -11,7 +11,8 @@ import org.springframework.web.client.RestTemplate;
  */
 @SpringBootApplication(scanBasePackages = {
     "de.mhus.nimbus.identity",
-    "de.mhus.nimbus.server.shared"
+    "de.mhus.nimbus.server.shared",
+    "de.mhus.nimbus.shared"
 })
 public class IdentityApplication {
 

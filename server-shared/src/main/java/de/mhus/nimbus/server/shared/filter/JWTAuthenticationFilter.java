@@ -1,6 +1,6 @@
 package de.mhus.nimbus.server.shared.filter;
 
-import de.mhus.nimbus.server.shared.util.IdentityServiceUtils;
+import de.mhus.nimbus.shared.util.IdentityServiceUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

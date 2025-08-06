@@ -4,7 +4,7 @@ import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.identity.repository.UserRepository;
 import de.mhus.nimbus.identity.util.JwtTokenUtils;
 import de.mhus.nimbus.server.shared.dto.*;
-import de.mhus.nimbus.server.shared.util.IdentityServiceUtils;
+import de.mhus.nimbus.shared.util.IdentityServiceUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
