@@ -40,3 +40,34 @@ Spring Boot Konfiguration wo benötigt
 Lombok-Integration
 Die Struktur ist jetzt bereit für die Implementierung der spezifischen Klassen und Methoden gemäß den Anforderungen in der Spezifikation.
 
+## 02 Spring Boot 3.5.4
+
+```text
+Erbe in der root-Pom.xml von Spring Boot 3.5.4.
+Erstelle in allen Modulen ohne `shared` im Namen eine Application-Klasse, die von `SpringBootServletInitializer` erbt.
+
+Beachte die Anweisungen in der Datei `spec/02_development.md`.
+```
+
+Perfekt! Ich habe alle geforderten Änderungen erfolgreich umgesetzt:
+1. Root-pom.xml aktualisiert
+   Die Spring Boot Version wurde von 3.3.2 auf 3.5.4 aktualisiert.
+2. Application-Klassen erstellt
+   Ich habe für alle Module ohne "shared" im Namen Application-Klassen erstellt, die von SpringBootServletInitializer erben:
+   IdentityApplication (identity-Modul)
+   RegistryApplication (registry-Modul)
+   WorldDataApplication (world-data-Modul)
+   WorldLifeApplication (world-life-Modul)
+   WorldPhysicsApplication (world-physics-Modul)
+   WorldBridgeApplication (world-bridge-Modul)
+   ClientBridgeApplication (client-bridge-Modul)
+   ClientApplication (client-Modul)
+   GeneratorSimpleApplication (generator-simple-Modul)
+   Alle Application-Klassen:
+   Sind mit @SpringBootApplication annotiert
+   Erben von SpringBootServletInitializer (für WAR-Deployment)
+   Enthalten eine main-Methode für das Starten als JAR
+   Sind im korrekten Package-Namespace platziert
+   Die Module mit "shared" im Namen (shared, server-shared, client-shared, world-shared) haben keine Application-Klassen erhalten, da sie als Bibliotheken fungieren und nicht eigenständig ausführbar sind.
+   Die Struktur ist nun bereit für die weitere Entwicklung der Services gemäß der Nimbus MMORPG System Spezifikation.
+
