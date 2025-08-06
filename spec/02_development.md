@@ -65,3 +65,10 @@ Dieses Journal sollte bei jedem Schritt eine neue Datei im Format `YYYY-MM-DD_HH
 ## Code Style
 
 Schreibe für jede Funktion und Klasse einen Javadoc-Kommentar, der die Funktionalität beschreibt. 
+
+## Security
+
+Alle Endpunkte der Rest-API sollten durch Authentifizierung und Autorisierung geschützt sein.
+Dabei wird der JWT-Token als Bearer-Token in den HTTP-Headern verwendet.
+Das Benutzer-Objekt und die Rollen werden im Http-Request gespeichert, um sie in den Controllern und 
+Services verwenden zu können.
