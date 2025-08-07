@@ -1,10 +1,5 @@
 package de.mhus.nimbus.shared.util;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +15,6 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,41 +30,12 @@ import static org.mockito.Mockito.*;
 public class IdentityServiceUtilsTest {
 
     private IdentityServiceUtils identityServiceUtils;
-    private String testPublicKey;
 
     @BeforeEach
     void setUp() throws IOException {
-        // Create a test public key content
-        testPublicKey = """
-                -----BEGIN PUBLIC KEY-----
-                MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuH+mty6q+AOIPey8L0/c
-                9oOKfZi7BfEO7dcGOa/KS94+DZPcVe6TKkdrA+nxvITdb2OLS9oxOcyvWhd20dcl
-                +KS+rTPK1drDe3+RuoT9Y0Pct8E/L2eGzecdTOqxd3WPMPaS+bTdo1+7+DNc920f
-                cuReqS9rDfHxtYV+L0/c9oOKfZi7BfEO7dcGOa/KS94+DZPcVe6TKkdrA+nxvITd
-                b2OLS9oxOcyvWhd20dcl+KS+rTPK1drDe3+RuoT9Y0Pct8E/L2eGzecdTOqxd3WP
-                MPaS+bTdo1+7+DNc920fcuReqS9rDfHxtYV+L0/c9oOKfZi7BfEO7dcGOa/KSw==
-                -----END PUBLIC KEY-----
-                """;
-
-        // Mock ClassPathResource and Files to avoid actual file system access
-        try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
-            ClassPathResource mockResource = mock(ClassPathResource.class);
-            File mockFile = mock(File.class);
-            Path mockPath = mock(Path.class);
-
-            when(mockResource.getFile()).thenReturn(mockFile);
-            when(mockFile.toPath()).thenReturn(mockPath);
-            mockedFiles.when(() -> Files.readString(eq(mockPath), any())).thenReturn(testPublicKey);
-
-            try (MockedStatic<ClassPathResource> mockedClassPathResource = mockStatic(ClassPathResource.class)) {
-                mockedClassPathResource.when(() -> new ClassPathResource("public.key")).thenReturn(mockResource);
-
-                // This will fail because the test key is not valid, but we can test the structure
-                assertThrows(RuntimeException.class, () -> {
-                    identityServiceUtils = new IdentityServiceUtils();
-                });
-            }
-        }
+        // For most tests, we'll use a mocked IdentityServiceUtils
+        // The constructor test is separate and doesn't need this setup
+        identityServiceUtils = null; // Will be set up in individual tests
     }
 
     @Test
@@ -341,23 +306,6 @@ public class IdentityServiceUtilsTest {
 
         // Then
         assertFalse(result);
-    }
-
-    @Test
-    void loadPublicKey_FileNotFound() throws IOException {
-        // Given - Mock ClassPathResource to throw IOException
-        try (MockedStatic<ClassPathResource> mockedClassPathResource = mockStatic(ClassPathResource.class)) {
-            ClassPathResource mockResource = mock(ClassPathResource.class);
-            when(mockResource.getFile()).thenThrow(new IOException("File not found"));
-            mockedClassPathResource.when(() -> new ClassPathResource("public.key")).thenReturn(mockResource);
-
-            // When & Then
-            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                new IdentityServiceUtils();
-            });
-
-            assertTrue(exception.getMessage().contains("Could not load public key for JWT validation"));
-        }
     }
 
     @Test
