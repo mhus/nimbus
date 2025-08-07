@@ -64,8 +64,8 @@ public class IdentityServiceTest {
                 .email("test@example.com")
                 .roles(Arrays.asList("USER"))
                 .passwordHash("hashedpassword")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
 
         userDto = UserDto.builder()

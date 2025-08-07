@@ -77,8 +77,8 @@ public class IdentityServiceIntegrationTest {
                 .email("test@example.com")
                 .roles(Arrays.asList("USER"))
                 .passwordHash("hashedpassword")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
 
         createUserDto = CreateUserDto.builder()
@@ -250,8 +250,8 @@ public class IdentityServiceIntegrationTest {
                 .email("second@example.com")
                 .roles(Arrays.asList("ADMIN"))
                 .passwordHash("hashedpassword2")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
         userRepository.save(secondUser);
 

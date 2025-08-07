@@ -49,8 +49,8 @@ public class PostgreSQLIntegrationTest {
                 .email("test@example.com")
                 .roles(Arrays.asList("USER"))
                 .passwordHash("hashedpassword")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
     }
 
@@ -84,8 +84,8 @@ public class PostgreSQLIntegrationTest {
                 .email("second@example.com")
                 .roles(Arrays.asList("ADMIN"))
                 .passwordHash("hashedpassword2")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
 
         // When
@@ -151,7 +151,7 @@ public class PostgreSQLIntegrationTest {
         savedUser.setName("Updated Name");
         savedUser.setEmail("updated@example.com");
         savedUser.setRoles(Arrays.asList("USER", "MODERATOR"));
-        savedUser.setUpdatedAt(Instant.now());
+        savedUser.setUpdatedAt(Instant.now().getEpochSecond());
 
         User updatedUser = userRepository.save(savedUser);
         entityManager.flush();
@@ -250,8 +250,8 @@ public class PostgreSQLIntegrationTest {
                 .build();
 
         // When
-        userWithoutTimestamps.setCreatedAt(Instant.now());
-        userWithoutTimestamps.setUpdatedAt(Instant.now());
+        userWithoutTimestamps.setCreatedAt(Instant.now().getEpochSecond());
+        userWithoutTimestamps.setUpdatedAt(Instant.now().getEpochSecond());
         User savedUser = userRepository.save(userWithoutTimestamps);
         entityManager.flush();
 

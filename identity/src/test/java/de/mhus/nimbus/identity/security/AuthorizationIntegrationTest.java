@@ -63,8 +63,8 @@ public class AuthorizationIntegrationTest {
                 .email("admin@example.com")
                 .roles(Arrays.asList("ADMIN"))
                 .passwordHash("hashedpassword")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
 
         regularUser = User.builder()
@@ -74,8 +74,8 @@ public class AuthorizationIntegrationTest {
                 .email("user@example.com")
                 .roles(Arrays.asList("USER"))
                 .passwordHash("hashedpassword")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
 
         moderatorUser = User.builder()
@@ -85,8 +85,8 @@ public class AuthorizationIntegrationTest {
                 .email("moderator@example.com")
                 .roles(Arrays.asList("USER", "MODERATOR"))
                 .passwordHash("hashedpassword")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now().getEpochSecond())
+                .updatedAt(Instant.now().getEpochSecond())
                 .build();
 
         userRepository.save(adminUser);

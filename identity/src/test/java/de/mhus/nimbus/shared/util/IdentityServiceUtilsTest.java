@@ -344,7 +344,7 @@ public class IdentityServiceUtilsTest {
     }
 
     @Test
-    void loadPublicKey_FileNotFound() {
+    void loadPublicKey_FileNotFound() throws IOException {
         // Given - Mock ClassPathResource to throw IOException
         try (MockedStatic<ClassPathResource> mockedClassPathResource = mockStatic(ClassPathResource.class)) {
             ClassPathResource mockResource = mock(ClassPathResource.class);
