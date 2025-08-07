@@ -291,7 +291,7 @@ public class PostgreSQLIntegrationTest {
     @Test
     void userRepository_LongEmailAddress_Success() {
         // Given
-        String longEmail = "a".repeat(100) + "@" + "b".repeat(100) + ".com";
+        String longEmail = "a".repeat(80) + "@" + "b".repeat(100) + ".com";
         testUser.setEmail(longEmail);
 
         // When

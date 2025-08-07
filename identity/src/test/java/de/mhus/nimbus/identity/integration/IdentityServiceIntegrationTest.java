@@ -3,7 +3,6 @@ package de.mhus.nimbus.identity.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.identity.repository.UserRepository;
-import de.mhus.nimbus.identity.service.IdentityService;
 import de.mhus.nimbus.identity.util.JwtTokenUtils;
 import de.mhus.nimbus.server.shared.dto.*;
 import de.mhus.nimbus.shared.util.IdentityServiceUtils;
@@ -22,7 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @ActiveProfiles("test")
 @Transactional
+@SuppressWarnings("deprecation") // Suppress MockBean deprecation until Spring Boot upgrade
 public class IdentityServiceIntegrationTest {
 
     @Autowired
@@ -45,9 +45,6 @@ public class IdentityServiceIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private IdentityService identityService;
 
     @MockBean
     private IdentityServiceUtils identityServiceUtils;
@@ -75,7 +72,7 @@ public class IdentityServiceIntegrationTest {
                 .name("Test User")
                 .nickname("tester")
                 .email("test@example.com")
-                .roles(Arrays.asList("USER"))
+                .roles(Collections.singletonList("USER"))
                 .passwordHash("hashedpassword")
                 .createdAt(Instant.now().getEpochSecond())
                 .updatedAt(Instant.now().getEpochSecond())
@@ -87,7 +84,7 @@ public class IdentityServiceIntegrationTest {
                 .nickname("new")
                 .email("new@example.com")
                 .password("password123")
-                .roles(Arrays.asList("USER"))
+                .roles(Collections.singletonList("USER"))
                 .build();
 
         // Setup mocks
@@ -128,7 +125,7 @@ public class IdentityServiceIntegrationTest {
                 .nickname("duplicate")
                 .email("duplicate@example.com")
                 .password("password123")
-                .roles(Arrays.asList("USER"))
+                .roles(Collections.singletonList("USER"))
                 .build();
 
         // When & Then
@@ -146,7 +143,7 @@ public class IdentityServiceIntegrationTest {
         // When & Then
         mockMvc.perform(get("/users/testuser")
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("testuser"))
                 .andExpect(jsonPath("$.name").value("Test User"))
@@ -161,7 +158,7 @@ public class IdentityServiceIntegrationTest {
         // When & Then
         mockMvc.perform(get("/users/testuser")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("testuser"));
     }
@@ -174,7 +171,7 @@ public class IdentityServiceIntegrationTest {
         // When & Then
         mockMvc.perform(get("/users/testuser")
                         .requestAttr("userId", "otheruser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isForbidden());
     }
 
@@ -196,7 +193,7 @@ public class IdentityServiceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Name"))
                 .andExpect(jsonPath("$.email").value("updated@example.com"));
@@ -217,7 +214,7 @@ public class IdentityServiceIntegrationTest {
         // When & Then
         mockMvc.perform(delete("/users/testuser")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isNoContent());
 
         // Verify database state
@@ -316,7 +313,7 @@ public class IdentityServiceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk());
     }
 
@@ -336,7 +333,7 @@ public class IdentityServiceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isBadRequest());
     }
 
@@ -395,7 +392,7 @@ public class IdentityServiceIntegrationTest {
         // 3. Get user info
         mockMvc.perform(get("/users/newuser")
                         .requestAttr("userId", "newuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("newuser"));
 
@@ -412,7 +409,7 @@ public class IdentityServiceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto))
                         .requestAttr("userId", "newuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated New User"));
 
@@ -426,13 +423,13 @@ public class IdentityServiceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDto))
                         .requestAttr("userId", "newuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk());
 
         // 6. Delete user (as admin)
         mockMvc.perform(delete("/users/newuser")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isNoContent());
 
         // Verify user is deleted

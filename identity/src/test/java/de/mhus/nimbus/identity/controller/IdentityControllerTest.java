@@ -3,16 +3,24 @@ package de.mhus.nimbus.identity.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.identity.service.IdentityService;
 import de.mhus.nimbus.server.shared.dto.*;
+import de.mhus.nimbus.shared.util.IdentityServiceUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -24,14 +32,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for IdentityController.
  * Tests all REST endpoints and authorization scenarios.
  */
-@WebMvcTest(IdentityController.class)
+@SpringBootTest(classes = de.mhus.nimbus.identity.IdentityApplication.class)
+@AutoConfigureWebMvc
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.datasource.driver-class-name=org.h2.Driver",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+})
 public class IdentityControllerTest {
 
     @Autowired
+    private WebApplicationContext webApplicationContext;
+
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private IdentityService identityService;
+
+    @MockitoBean
+    private IdentityServiceUtils identityServiceUtils;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -44,13 +65,15 @@ public class IdentityControllerTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
         createUserDto = CreateUserDto.builder()
                 .id("testuser")
                 .name("Test User")
                 .nickname("tester")
                 .email("test@example.com")
                 .password("password123")
-                .roles(Arrays.asList("USER"))
+                .roles(Collections.singletonList("USER"))
                 .build();
 
         userDto = UserDto.builder()
@@ -58,7 +81,7 @@ public class IdentityControllerTest {
                 .name("Test User")
                 .nickname("tester")
                 .email("test@example.com")
-                .roles(Arrays.asList("USER"))
+                .roles(Collections.singletonList("USER"))
                 .createdAt(Instant.now().getEpochSecond())
                 .updatedAt(Instant.now().getEpochSecond())
                 .build();
@@ -114,7 +137,7 @@ public class IdentityControllerTest {
 
         mockMvc.perform(get("/users/testuser")
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("testuser"))
                 .andExpect(jsonPath("$.name").value("Test User"));
@@ -128,7 +151,7 @@ public class IdentityControllerTest {
 
         mockMvc.perform(get("/users/otheruserid")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("testuser"));
 
@@ -139,7 +162,7 @@ public class IdentityControllerTest {
     void getUser_Forbidden_NotOwnDataAndNotAdmin() throws Exception {
         mockMvc.perform(get("/users/otheruserid")
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isForbidden());
 
         verify(identityService, never()).getUser(anyString());
@@ -152,7 +175,7 @@ public class IdentityControllerTest {
 
         mockMvc.perform(get("/users/nonexistent")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isNotFound());
 
         verify(identityService).getUser("nonexistent");
@@ -166,7 +189,7 @@ public class IdentityControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("testuser"));
 
@@ -179,7 +202,7 @@ public class IdentityControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isForbidden());
 
         verify(identityService, never()).updateUser(anyString(), any(UserDto.class));
@@ -191,7 +214,7 @@ public class IdentityControllerTest {
 
         mockMvc.perform(delete("/users/testuser")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isNoContent());
 
         verify(identityService).deleteUser("testuser");
@@ -201,7 +224,7 @@ public class IdentityControllerTest {
     void deleteUser_Forbidden_NotAdmin() throws Exception {
         mockMvc.perform(delete("/users/testuser")
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isForbidden());
 
         verify(identityService, never()).deleteUser(anyString());
@@ -209,12 +232,12 @@ public class IdentityControllerTest {
 
     @Test
     void getAllUsers_Success_Admin() throws Exception {
-        List<UserDto> users = Arrays.asList(userDto);
+        List<UserDto> users = Collections.singletonList(userDto);
         when(identityService.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/users")
                         .requestAttr("userId", "admin")
-                        .requestAttr("userRoles", Arrays.asList("ADMIN")))
+                        .requestAttr("userRoles", Collections.singletonList("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").value("testuser"));
@@ -226,7 +249,7 @@ public class IdentityControllerTest {
     void getAllUsers_Forbidden_NotAdmin() throws Exception {
         mockMvc.perform(get("/users")
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isForbidden());
 
         verify(identityService, never()).getAllUsers();
@@ -288,7 +311,7 @@ public class IdentityControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isOk());
 
         verify(identityService).changePassword(eq("testuser"), any(ChangePasswordDto.class));
@@ -300,7 +323,7 @@ public class IdentityControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDto))
                         .requestAttr("userId", "testuser")
-                        .requestAttr("userRoles", Arrays.asList("USER")))
+                        .requestAttr("userRoles", Collections.singletonList("USER")))
                 .andExpect(status().isForbidden());
 
         verify(identityService, never()).changePassword(anyString(), any(ChangePasswordDto.class));
@@ -311,5 +334,14 @@ public class IdentityControllerTest {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Identity Service is running"));
+    }
+
+    @Configuration
+    static class TestConfig {
+
+        @Bean
+        public IdentityServiceUtils identityServiceUtils() {
+            return mock(IdentityServiceUtils.class);
+        }
     }
 }
