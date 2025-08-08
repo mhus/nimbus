@@ -8,7 +8,7 @@ Erstelle die pom.xml Dateien und alle module für die Komponenten, die in der Da
 Beachte die Anweisungen in der Datei `spec/02_development.md`.
 Lege alle nötigen Verzeichnisse und Dateien an. Erstelle noch keine Klassen oder Methoden die darüber hinaus gehen.
 ```
-
+```text
 Perfekt! Ich habe die Maven-Modulstruktur für das Nimbus MMORPG System erfolgreich erstellt. Hier ist eine Zusammenfassung dessen, was erstellt wurde:
 Haupt-pom.xml
 Erstellt mit Java 21, Spring Boot 3.3.2, und allen notwendigen Abhängigkeiten
@@ -39,6 +39,7 @@ Java-Paketstrukturen (de.mhus.nimbus.*)
 Spring Boot Konfiguration wo benötigt
 Lombok-Integration
 Die Struktur ist jetzt bereit für die Implementierung der spezifischen Klassen und Methoden gemäß den Anforderungen in der Spezifikation.
+```
 
 ## 02 Spring Boot 3.5.4
 
@@ -49,6 +50,7 @@ Erstelle in allen Modulen ohne `shared` im Namen eine Application-Klasse, die vo
 Beachte die Anweisungen in der Datei `spec/02_development.md`.
 ```
 
+```text
 Perfekt! Ich habe alle geforderten Änderungen erfolgreich umgesetzt:
 1. Root-pom.xml aktualisiert
    Die Spring Boot Version wurde von 3.3.2 auf 3.5.4 aktualisiert.
@@ -70,4 +72,37 @@ Perfekt! Ich habe alle geforderten Änderungen erfolgreich umgesetzt:
    Sind im korrekten Package-Namespace platziert
    Die Module mit "shared" im Namen (shared, server-shared, client-shared, world-shared) haben keine Application-Klassen erhalten, da sie als Bibliotheken fungieren und nicht eigenständig ausführbar sind.
    Die Struktur ist nun bereit für die weitere Entwicklung der Services gemäß der Nimbus MMORPG System Spezifikation.
+```
 
+## 03 Spring Boot 3.5.4 als parent pom.xml
+
+Hat im Schritt 02 als BOM eingebunden, deshalb nochmal.
+
+```text
+Stelle die root-Pom.xml so ein, dass sie von Spring Boot 3.5.4 erbt.
+Stelle module pom.xml Dateien gegebenenfalls um.
+```
+
+```text
+Perfect! I have successfully configured the root pom.xml to inherit from Spring Boot 3.5.4 and made the necessary adjustments. Here's what I accomplished:
+Changes Made:
+1. Root pom.xml Configuration
+Added Spring Boot Parent: The root pom.xml now inherits from spring-boot-starter-parent version 3.5.4
+Removed redundant dependency management: Removed the Spring Boot BOM from dependency management since it's now inherited from the parent
+Updated properties: Changed from maven.compiler.source/target to java.version property (Spring Boot standard)
+Simplified plugin management: Removed the Spring Boot Maven plugin version since it's now managed by the parent
+2. Module Dependencies Fix
+Fixed duplicate H2 dependency: Removed the duplicate H2 database dependency in the identity module that was causing Maven warnings
+3. Validation Results
+The Maven validation confirms that:
+✅ All 14 modules build successfully
+✅ Spring Boot 3.5.4 parent is properly downloaded and integrated
+✅ No more dependency warnings
+✅ All module pom.xml files correctly inherit from the nimbus parent, which now inherits from Spring Boot
+Key Benefits:
+Automatic dependency management: Spring Boot manages versions for all Spring and common dependencies
+Consistent plugin versions: Maven plugins are managed by Spring Boot parent
+Simplified configuration: Less boilerplate in the root pom.xml
+Better Spring Boot integration: Full access to Spring Boot features and conventions
+The configuration is now ready and all modules are properly set up to use Spring Boot 3.5.4 with Java 21.
+```
