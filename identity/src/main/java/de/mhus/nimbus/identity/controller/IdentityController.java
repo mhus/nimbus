@@ -2,6 +2,7 @@ package de.mhus.nimbus.identity.controller;
 
 import de.mhus.nimbus.identity.service.IdentityService;
 import de.mhus.nimbus.server.shared.dto.*;
+import de.mhus.nimbus.server.shared.util.AuthorizationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,24 @@ import java.util.List;
 public class IdentityController {
 
     private final IdentityService identityService;
+
+    /**
+     * Helper method to create a UserDto from request attributes for authorization checks.
+     */
+    private UserDto createCurrentUserFromRequest(HttpServletRequest request) {
+        String userId = (String) request.getAttribute("userId");
+        @SuppressWarnings("unchecked")
+        List<String> roles = (List<String>) request.getAttribute("userRoles");
+
+        if (userId == null) {
+            return null;
+        }
+
+        return UserDto.builder()
+                .id(userId)
+                .roles(roles)
+                .build();
+    }
 
     /**
      * Creates a new user.
@@ -44,12 +63,14 @@ public class IdentityController {
     @GetMapping("/users/{id}")
     public ResponseEntity<UserDto> getUser(@PathVariable String id, HttpServletRequest request) {
         try {
-            // Check authorization: user can only access their own data or admin can access any
-            String requestingUserId = (String) request.getAttribute("userId");
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) request.getAttribute("userRoles");
+            // Check authorization using AuthorizationUtils
+            UserDto currentUser = createCurrentUserFromRequest(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-            if (!id.equals(requestingUserId) && (roles == null || !roles.contains("ADMIN"))) {
+            // User can access their own data, admin can access any user's data
+            if (!AuthorizationUtils.canAccessUserData(currentUser, id)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -70,12 +91,14 @@ public class IdentityController {
                                             @RequestBody UserDto userDto,
                                             HttpServletRequest request) {
         try {
-            // Check authorization: user can only update their own data or admin can update any
-            String requestingUserId = (String) request.getAttribute("userId");
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) request.getAttribute("userRoles");
+            // Check authorization using AuthorizationUtils
+            UserDto currentUser = createCurrentUserFromRequest(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-            if (!id.equals(requestingUserId) && (roles == null || !roles.contains("ADMIN"))) {
+            // User can update their own data, admin can update any user's data
+            if (!AuthorizationUtils.canAccessUserData(currentUser, id)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -94,11 +117,13 @@ public class IdentityController {
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id, HttpServletRequest request) {
         try {
-            // Check authorization: only admin can delete users
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) request.getAttribute("userRoles");
+            // Check authorization using AuthorizationUtils: only admin can delete users
+            UserDto currentUser = createCurrentUserFromRequest(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-            if (roles == null || !roles.contains("ADMIN")) {
+            if (!AuthorizationUtils.hasRole(currentUser, AuthorizationUtils.Roles.ADMIN)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -116,11 +141,13 @@ public class IdentityController {
      */
     @GetMapping("/users")
     public ResponseEntity<List<UserDto>> getAllUsers(HttpServletRequest request) {
-        // Check authorization: only admin can list all users
-        @SuppressWarnings("unchecked")
-        List<String> roles = (List<String>) request.getAttribute("userRoles");
+        // Check authorization using AuthorizationUtils: only admin can list all users
+        UserDto currentUser = createCurrentUserFromRequest(request);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        if (roles == null || !roles.contains("ADMIN")) {
+        if (!AuthorizationUtils.hasRole(currentUser, AuthorizationUtils.Roles.ADMIN)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -173,12 +200,14 @@ public class IdentityController {
                                              @RequestBody ChangePasswordDto changePasswordDto,
                                              HttpServletRequest request) {
         try {
-            // Check authorization: user can only change their own password or admin can change any
-            String requestingUserId = (String) request.getAttribute("userId");
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) request.getAttribute("userRoles");
+            // Check authorization using AuthorizationUtils
+            UserDto currentUser = createCurrentUserFromRequest(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-            if (!id.equals(requestingUserId) && (roles == null || !roles.contains("ADMIN"))) {
+            // User can change their own password, admin can change any user's password
+            if (!AuthorizationUtils.canAccessUserData(currentUser, id)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 

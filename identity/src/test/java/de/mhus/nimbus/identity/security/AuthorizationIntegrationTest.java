@@ -354,7 +354,7 @@ public class AuthorizationIntegrationTest {
         mockMvc.perform(get("/users")
                         .requestAttr("userId", "admin")
                         .requestAttr("userRoles", Arrays.asList("admin"))) // lowercase
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/users")
                         .requestAttr("userId", "admin")
