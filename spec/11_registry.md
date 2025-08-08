@@ -22,9 +22,10 @@ Welten basierend auf verschiedenen Kriterien.
     "description": "string", // Beschreibung der Welt
     "created_at": long, // Erstellungszeit der Welt (Unix-Zeit)
     "updated_at": long, // Letzte Aktualisierung der Welt (Unix-Zeit)
-    "owner_id": "string",
-    "url": "string",
-    "properties": {
+    "owner_id": "string", // ID des Besitzers der Welt, UUID des Users
+    "enabled": boolean, // Gibt an, ob die Welt aktiv ist
+    "access_url": "string", // URL der Welt für den Zugriff auf die Welt WebSocket
+    "properties": { // Zusätzliche Eigenschaften der Welt
       "key": "string",
       "value": "string"
     }
@@ -82,3 +83,11 @@ Role: `ADMIN` oder owner der Welt.
 Löscht eine bestehende Welt. Die ID der Welt muss in der URL angegeben werden.
 Die Welt wird aus der Datenbank entfernt und kann nicht wiederhergestellt werden.
 
+## Enable/Disable Welt
+
+**POST /worlds/{id}/enable**
+**POST /worlds/{id}/disable**
+
+Role: `ADMIN` oder owner der Welt.
+
+Aktiviert oder deaktiviert eine bestehende Welt. Die ID der Welt muss in der URL angegeben werden.

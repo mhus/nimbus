@@ -16,6 +16,7 @@ Datei `spec/11_registry.md` beschrieben.
   die die Kommunikation mit dem Identity Service ermöglicht.
 * Implementiere die Authentifizierung für den Registry Service über die 
   den JWTAuthenticationFilter in `server-shared` analog zum service `identity`.
+* Erstelle Unit-Tests für den Registry Service, um die Funktionalität zu überprüfen.
 
 Beachte die Anweisungen in der Datei `spec/02_development.md` und `spec/00_overview.md`.  
 ```
