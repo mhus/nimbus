@@ -2,6 +2,7 @@ package de.mhus.nimbus.server.shared.util;
 
 import de.mhus.nimbus.server.shared.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -182,5 +183,44 @@ public class AuthorizationUtils {
      */
     public static List<String> getAllKnownRoles() {
         return List.of(Roles.ADMIN, Roles.USER, Roles.CREATOR, Roles.MODERATOR);
+    }
+
+    /**
+     * Extracts the user ID from the HTTP request.
+     * The user ID is set by the JWT authentication filter as a request attribute.
+     *
+     * @param request The HTTP servlet request
+     * @return The user ID, or null if not found
+     */
+    public static String getUserId(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        Object userId = request.getAttribute("userId");
+        return userId != null ? userId.toString() : null;
+    }
+
+    /**
+     * Extracts the user roles from the HTTP request.
+     * The user roles are set by the JWT authentication filter as a request attribute.
+     *
+     * @param request The HTTP servlet request
+     * @return The list of user roles, or null if not found
+     */
+    @SuppressWarnings("unchecked")
+    public static List<String> getUserRoles(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        Object roles = request.getAttribute("userRoles");
+        if (roles instanceof List<?>) {
+            try {
+                return (List<String>) roles;
+            } catch (ClassCastException e) {
+                log.warn("User roles attribute is not a List<String>: {}", roles.getClass());
+                return null;
+            }
+        }
+        return null;
     }
 }
