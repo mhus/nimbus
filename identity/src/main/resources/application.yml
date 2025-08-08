@@ -6,9 +6,9 @@ spring:
     name: identity-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/nimbus_identity
+    url: jdbc:postgresql://localhost:5432/identity
     username: nimbus
-    password: nimbus
+    password: nimbus123
     driver-class-name: org.postgresql.Driver
 
   jpa:
