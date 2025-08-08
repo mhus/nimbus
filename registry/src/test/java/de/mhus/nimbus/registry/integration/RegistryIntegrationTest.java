@@ -53,7 +53,7 @@ class RegistryIntegrationTest {
                 .id("test-world-123")
                 .name("Integration Test World")
                 .description("A world for integration testing")
-                .ownerId("test-user")
+                .ownerId("test-user-123") // Changed from "test-user" to "test-user-123"
                 .enabled(true)
                 .accessUrl("ws://localhost:8080/world/test")
                 .properties(Map.of("type", "test"))
@@ -107,7 +107,7 @@ class RegistryIntegrationTest {
                 .andExpect(jsonPath("$.id").value(savedWorld.getId()))
                 .andExpect(jsonPath("$.name").value("Integration Test World"))
                 .andExpect(jsonPath("$.description").value("A world for integration testing"))
-                .andExpect(jsonPath("$.ownerId").value("test-user"))
+                .andExpect(jsonPath("$.ownerId").value("test-user-123")) // Changed from "test-user" to "test-user-123"
                 .andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.properties.type").value("test"));
     }

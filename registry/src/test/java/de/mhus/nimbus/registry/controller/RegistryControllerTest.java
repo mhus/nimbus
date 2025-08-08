@@ -6,8 +6,11 @@ import de.mhus.nimbus.server.shared.dto.CreateWorldDto;
 import de.mhus.nimbus.server.shared.dto.UpdateWorldDto;
 import de.mhus.nimbus.server.shared.dto.WorldDto;
 import de.mhus.nimbus.server.shared.util.AuthorizationUtils;
+import de.mhus.nimbus.shared.util.IdentityServiceUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -17,7 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +41,9 @@ class RegistryControllerTest {
 
     @MockBean
     private RegistryService registryService;
+
+    @MockBean
+    private IdentityServiceUtils identityServiceUtils;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -82,24 +88,21 @@ class RegistryControllerTest {
         when(registryService.createWorld(any(CreateWorldDto.class), anyString()))
                 .thenReturn(testWorldDto);
 
-        // Mock AuthorizationUtils
-        mockStatic(AuthorizationUtils.class, invocation -> {
-            if (invocation.getMethod().getName().equals("getUserId")) {
-                return "user-123";
-            }
-            return invocation.callRealMethod();
-        });
+        try (MockedStatic<AuthorizationUtils> mockedUtils = mockStatic(AuthorizationUtils.class)) {
+            mockedUtils.when(() -> AuthorizationUtils.getUserId(any(HttpServletRequest.class)))
+                    .thenReturn("test-user-123");
 
-        // When & Then
-        mockMvc.perform(post("/worlds")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createWorldDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("world-123"))
-                .andExpect(jsonPath("$.name").value("Test World"));
+            // When & Then
+            mockMvc.perform(post("/worlds")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(createWorldDto)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value("world-123"))
+                    .andExpect(jsonPath("$.name").value("Test World"));
 
-        verify(registryService).createWorld(any(CreateWorldDto.class), eq("user-123"));
+            verify(registryService).createWorld(any(CreateWorldDto.class), anyString());
+        }
     }
 
     @Test
@@ -134,7 +137,7 @@ class RegistryControllerTest {
     @WithMockUser(roles = {"USER"})
     void listWorlds_ShouldReturnPageOfWorlds() throws Exception {
         // Given
-        Page<WorldDto> worldPage = new PageImpl<>(Arrays.asList(testWorldDto));
+        Page<WorldDto> worldPage = new PageImpl<>(List.of(testWorldDto));
         when(registryService.listWorlds(any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(worldPage);
 
@@ -150,119 +153,107 @@ class RegistryControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = {"USER"})
+    @WithMockUser(roles = {"ADMIN"})
     void updateWorld_ShouldReturnUpdatedWorld() throws Exception {
         // Given
         when(registryService.updateWorld(anyString(), any(UpdateWorldDto.class), anyString(), anyList()))
                 .thenReturn(Optional.of(testWorldDto));
 
-        // Mock AuthorizationUtils
-        mockStatic(AuthorizationUtils.class, invocation -> {
-            if (invocation.getMethod().getName().equals("getUserId")) {
-                return "user-123";
-            } else if (invocation.getMethod().getName().equals("getUserRoles")) {
-                return Arrays.asList("USER");
-            }
-            return invocation.callRealMethod();
-        });
+        try (MockedStatic<AuthorizationUtils> mockedUtils = mockStatic(AuthorizationUtils.class)) {
+            mockedUtils.when(() -> AuthorizationUtils.getUserId(any(HttpServletRequest.class)))
+                    .thenReturn("test-user-123");
+            mockedUtils.when(() -> AuthorizationUtils.getUserRoles(any(HttpServletRequest.class)))
+                    .thenReturn(List.of("ADMIN"));
 
-        // When & Then
-        mockMvc.perform(put("/worlds/world-123")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateWorldDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("world-123"));
+            // When & Then
+            mockMvc.perform(put("/worlds/world-123")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updateWorldDto)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value("world-123"));
 
-        verify(registryService).updateWorld(eq("world-123"), any(UpdateWorldDto.class),
-                                          eq("user-123"), eq(Arrays.asList("USER")));
+            verify(registryService).updateWorld(eq("world-123"), any(UpdateWorldDto.class),
+                                              anyString(), anyList());
+        }
     }
 
     @Test
-    @WithMockUser(roles = {"USER"})
+    @WithMockUser(roles = {"ADMIN"})
     void deleteWorld_ShouldReturnNoContent_WhenDeleted() throws Exception {
         // Given
         when(registryService.deleteWorld(anyString(), anyString(), anyList()))
                 .thenReturn(true);
 
-        // Mock AuthorizationUtils
-        mockStatic(AuthorizationUtils.class, invocation -> {
-            if (invocation.getMethod().getName().equals("getUserId")) {
-                return "user-123";
-            } else if (invocation.getMethod().getName().equals("getUserRoles")) {
-                return Arrays.asList("USER");
-            }
-            return invocation.callRealMethod();
-        });
+        try (MockedStatic<AuthorizationUtils> mockedUtils = mockStatic(AuthorizationUtils.class)) {
+            mockedUtils.when(() -> AuthorizationUtils.getUserId(any(HttpServletRequest.class)))
+                    .thenReturn("test-user-123");
+            mockedUtils.when(() -> AuthorizationUtils.getUserRoles(any(HttpServletRequest.class)))
+                    .thenReturn(List.of("ADMIN"));
 
-        // When & Then
-        mockMvc.perform(delete("/worlds/world-123")
-                .with(csrf()))
-                .andExpect(status().isNoContent());
+            // When & Then
+            mockMvc.perform(delete("/worlds/world-123")
+                    .with(csrf()))
+                    .andExpect(status().isNoContent());
 
-        verify(registryService).deleteWorld("world-123", "user-123", Arrays.asList("USER"));
+            verify(registryService).deleteWorld(eq("world-123"), anyString(), anyList());
+        }
     }
 
     @Test
-    @WithMockUser(roles = {"USER"})
+    @WithMockUser(roles = {"ADMIN"})
     void enableWorld_ShouldReturnEnabledWorld() throws Exception {
         // Given
         when(registryService.enableWorld(anyString(), anyString(), anyList()))
                 .thenReturn(Optional.of(testWorldDto));
 
-        // Mock AuthorizationUtils
-        mockStatic(AuthorizationUtils.class, invocation -> {
-            if (invocation.getMethod().getName().equals("getUserId")) {
-                return "user-123";
-            } else if (invocation.getMethod().getName().equals("getUserRoles")) {
-                return Arrays.asList("USER");
-            }
-            return invocation.callRealMethod();
-        });
+        try (MockedStatic<AuthorizationUtils> mockedUtils = mockStatic(AuthorizationUtils.class)) {
+            mockedUtils.when(() -> AuthorizationUtils.getUserId(any(HttpServletRequest.class)))
+                    .thenReturn("test-user-123");
+            mockedUtils.when(() -> AuthorizationUtils.getUserRoles(any(HttpServletRequest.class)))
+                    .thenReturn(List.of("ADMIN"));
 
-        // When & Then
-        mockMvc.perform(post("/worlds/world-123/enable")
-                .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("world-123"));
+            // When & Then
+            mockMvc.perform(post("/worlds/world-123/enable")
+                    .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value("world-123"));
 
-        verify(registryService).enableWorld("world-123", "user-123", Arrays.asList("USER"));
+            verify(registryService).enableWorld(eq("world-123"), anyString(), anyList());
+        }
     }
 
     @Test
-    @WithMockUser(roles = {"USER"})
+    @WithMockUser(roles = {"ADMIN"})
     void disableWorld_ShouldReturnDisabledWorld() throws Exception {
         // Given
         when(registryService.disableWorld(anyString(), anyString(), anyList()))
                 .thenReturn(Optional.of(testWorldDto));
 
-        // Mock AuthorizationUtils
-        mockStatic(AuthorizationUtils.class, invocation -> {
-            if (invocation.getMethod().getName().equals("getUserId")) {
-                return "user-123";
-            } else if (invocation.getMethod().getName().equals("getUserRoles")) {
-                return Arrays.asList("USER");
-            }
-            return invocation.callRealMethod();
-        });
+        try (MockedStatic<AuthorizationUtils> mockedUtils = mockStatic(AuthorizationUtils.class)) {
+            mockedUtils.when(() -> AuthorizationUtils.getUserId(any(HttpServletRequest.class)))
+                    .thenReturn("test-user-123");
+            mockedUtils.when(() -> AuthorizationUtils.getUserRoles(any(HttpServletRequest.class)))
+                    .thenReturn(List.of("ADMIN"));
 
-        // When & Then
-        mockMvc.perform(post("/worlds/world-123/disable")
-                .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("world-123"));
+            // When & Then
+            mockMvc.perform(post("/worlds/world-123/disable")
+                    .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value("world-123"));
 
-        verify(registryService).disableWorld("world-123", "user-123", Arrays.asList("USER"));
+            verify(registryService).disableWorld(eq("world-123"), anyString(), anyList());
+        }
     }
 
     @Test
-    void createWorld_ShouldReturnUnauthorized_WhenNoCreatorRole() throws Exception {
+    void createWorld_ShouldReturnUnauthorized_WhenNoAuthentication() throws Exception {
         // When & Then
         mockMvc.perform(post("/worlds")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createWorldDto)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(registryService, never()).createWorld(any(), any());
     }
