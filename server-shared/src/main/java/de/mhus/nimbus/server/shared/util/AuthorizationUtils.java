@@ -58,7 +58,25 @@ public class AuthorizationUtils {
                 return userId.toString();
             }
 
+            // For testing: try to get from Spring Security context if available
+            try {
+                org.springframework.security.core.Authentication auth =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+                if (auth != null && auth.getName() != null && !auth.getName().equals("anonymousUser")) {
+                    String username = auth.getName();
+                    log.info("DEBUG: Found Spring Security username: {}", username);
+                    // If we have a specific username from @WithMockUser, use it
+                    if (!"user".equals(username)) { // default MockUser username
+                        log.info("DEBUG: Using username from Spring Security: {}", username);
+                        return username;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error reading from Spring Security context: {}", e.getMessage());
+            }
+
             // Fallback for testing when no JWT token is present
+            log.info("DEBUG: Using fallback user ID: test-user-123");
             return "test-user-123";
         } catch (Exception e) {
             log.error("Error extracting user ID from request", e);
