@@ -46,6 +46,21 @@ oder den Token vorher erneuern.
 }
 ```
 
+## Rollen
+
+Rollen sind eine Möglichkeit, Berechtigungen für Benutzer zu definieren. Rollen
+können frei vergeben werden und sind nicht auf vordefinierte Werte beschränkt.
+Rollen werden immer großgeschrieben werden aber case insensitiv behandelt. Intern
+immer in Großbuchstaben umgesetzt.
+
+Bekannte Rollen sind:
+
+- `ADMIN`: Vollzugriff auf alle Funktionen des Systems.
+- `USER`: Zugriff
+- `CREATOR`: Erstellen von Inhalten, aber keine administrativen Rechte.
+- `MODERATOR`: Moderation von Inhalten, aber keine administrativen Rechte.
+
+
 ## API Endpunkte
 
 ### Benutzer anlegen

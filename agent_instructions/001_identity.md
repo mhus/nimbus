@@ -333,3 +333,38 @@ Leverages the existing IdentityService for user management operations
 The bean will automatically execute every time the Identity Service starts up, ensuring that there's always an admin user available for initial system access and configuration.
 ```
 
+## 06 Erstellen des Authorization Tools
+
+```text
+Erstelle in `server-shared` ein util zur Autorisierung, das die Rollen eines Benutzers überprüft.
+Es wird das UserDto übergeben und es können eine oder mehrere Rollen (String) übergeben werden und das Tool prüft, ob der Benutzer eine der Rollen hat.
+Hat der Benutzer die Rolle `ADMIN` wird immer true zurückgegeben.
+Erstelle Konstanten für die bekannten Rollen.
+Beachte die Anweisungen in der Datei `spec/10_identity.md`, `spec/02_development.md` und `spec/00_overview.md`.
+```
+
+```text
+Perfekt! Ich habe erfolgreich die Autorisierungs-Utility AuthorizationUtils im server-shared Modul erstellt und alle Tests laufen erfolgreich durch.
+Zusammenfassung der implementierten Lösung:
+✅ AuthorizationUtils-Klasse erstellt mit folgenden Features:
+Rollen-Konstanten: ADMIN, USER, CREATOR, MODERATOR
+Hauptmethode hasAnyRole(UserDto user, String... requiredRoles) - prüft ob Benutzer eine der angegebenen Rollen hat
+ADMIN-Sonderbehandlung: ADMIN-Benutzer erhalten immer true zurück
+Case-insensitive Behandlung: Alle Rollen werden intern in Großbuchstaben umgewandelt
+Umfassende Validierung: Null-Checks und aussagekräftige Fehlermeldungen
+✅ Zusätzliche Hilfsmethoden:
+hasRole() für einzelne Rollen
+isAdmin(), isUser(), isCreator(), isModerator() für spezifische Rollen
+canAccessUserData() für typische Zugriffskontrolle
+getAllKnownRoles() zur Auflistung aller Systemrollen
+✅ Umfassende Unit Tests erstellt:
+19 Tests in 4 Kategorien (Konstanten, hasAnyRole, spezifische Rollen, Datenzugriff)
+Alle Tests bestanden ohne Fehler
+JUnit 5 Dependencies zur pom.xml hinzugefügt
+✅ Konform mit Spezifikationen:
+Entspricht den Anforderungen aus spec/10_identity.md
+Folgt den Entwicklungsrichtlinien aus spec/02_development.md
+Verwendet Lombok und Java 21
+Implementiert detailliertes Logging
+Die Utility-Klasse ist jetzt bereit für die Verwendung in anderen Server-Modulen zur Autorisierung von Benutzern basierend auf ihren Rollen.
+```
