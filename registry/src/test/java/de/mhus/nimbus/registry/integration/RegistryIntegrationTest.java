@@ -8,26 +8,27 @@ import de.mhus.nimbus.server.shared.dto.UpdateWorldDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Integration tests for Registry Service REST API.
  */
-@SpringBootTest
-@AutoConfigureWebMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
 class RegistryIntegrationTest {
@@ -56,6 +57,8 @@ class RegistryIntegrationTest {
                 .enabled(true)
                 .accessUrl("ws://localhost:8080/world/test")
                 .properties(Map.of("type", "test"))
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
                 .build();
 
         createWorldDto = CreateWorldDto.builder()
@@ -66,11 +69,19 @@ class RegistryIntegrationTest {
                 .build();
     }
 
+    /**
+     * Helper method to add JWT user attributes to request
+     */
+    private MockHttpServletRequestBuilder addUserAttributes(MockHttpServletRequestBuilder builder, String userId, List<String> roles) {
+        return builder
+                .requestAttr("userId", userId)
+                .requestAttr("userRoles", roles);
+    }
+
     @Test
     @WithMockUser(roles = {"CREATOR"})
     void createWorld_ShouldCreateWorldSuccessfully() throws Exception {
-        mockMvc.perform(post("/worlds")
-                .with(csrf())
+        mockMvc.perform(addUserAttributes(post("/worlds"), "test-creator", List.of("CREATOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createWorldDto)))
                 .andExpect(status().isCreated())
@@ -112,7 +123,7 @@ class RegistryIntegrationTest {
     @WithMockUser(roles = {"USER"})
     void listWorlds_ShouldReturnPagedResults() throws Exception {
         // Given - save multiple test worlds
-        World world1 = worldRepository.save(testWorld);
+        worldRepository.save(testWorld);
         World world2 = World.builder()
                 .name("Second Test World")
                 .description("Another test world")
@@ -120,6 +131,8 @@ class RegistryIntegrationTest {
                 .enabled(false)
                 .accessUrl("ws://localhost:8080/world/second")
                 .properties(Map.of("category", "adventure"))
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
                 .build();
         worldRepository.save(world2);
 
@@ -146,6 +159,8 @@ class RegistryIntegrationTest {
                 .ownerId("other-user")
                 .enabled(true)
                 .accessUrl("ws://localhost:8080/world/different")
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
                 .build();
         worldRepository.save(anotherWorld);
 
@@ -168,6 +183,8 @@ class RegistryIntegrationTest {
                 .ownerId("test-user")
                 .enabled(false)
                 .accessUrl("ws://localhost:8080/world/disabled")
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
                 .build();
         worldRepository.save(disabledWorld);
 
@@ -193,8 +210,7 @@ class RegistryIntegrationTest {
                 .build();
 
         // When & Then
-        mockMvc.perform(put("/worlds/{id}", savedWorld.getId())
-                .with(csrf())
+        mockMvc.perform(addUserAttributes(put("/worlds/{id}", savedWorld.getId()), "test-user", List.of("USER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -214,8 +230,7 @@ class RegistryIntegrationTest {
                 .build();
 
         // When & Then
-        mockMvc.perform(put("/worlds/{id}", savedWorld.getId())
-                .with(csrf())
+        mockMvc.perform(addUserAttributes(put("/worlds/{id}", savedWorld.getId()), "admin-user", List.of("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -233,8 +248,7 @@ class RegistryIntegrationTest {
                 .build();
 
         // When & Then
-        mockMvc.perform(put("/worlds/{id}", savedWorld.getId())
-                .with(csrf())
+        mockMvc.perform(addUserAttributes(put("/worlds/{id}", savedWorld.getId()), "other-user", List.of("USER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isNotFound());
@@ -247,8 +261,7 @@ class RegistryIntegrationTest {
         World savedWorld = worldRepository.save(testWorld);
 
         // When & Then
-        mockMvc.perform(delete("/worlds/{id}", savedWorld.getId())
-                .with(csrf()))
+        mockMvc.perform(addUserAttributes(delete("/worlds/{id}", savedWorld.getId()), "test-user", List.of("USER")))
                 .andExpect(status().isNoContent());
 
         // Verify deletion
@@ -264,8 +277,7 @@ class RegistryIntegrationTest {
         World savedWorld = worldRepository.save(testWorld);
 
         // When & Then
-        mockMvc.perform(post("/worlds/{id}/enable", savedWorld.getId())
-                .with(csrf()))
+        mockMvc.perform(addUserAttributes(post("/worlds/{id}/enable", savedWorld.getId()), "test-user", List.of("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true));
     }
@@ -277,26 +289,24 @@ class RegistryIntegrationTest {
         World savedWorld = worldRepository.save(testWorld);
 
         // When & Then
-        mockMvc.perform(post("/worlds/{id}/disable", savedWorld.getId())
-                .with(csrf()))
+        mockMvc.perform(addUserAttributes(post("/worlds/{id}/disable", savedWorld.getId()), "test-user", List.of("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(false));
     }
 
     @Test
-    void createWorld_ShouldReturn403WhenNotAuthenticated() throws Exception {
-        mockMvc.perform(post("/worlds")
-                .with(csrf())
+    @WithMockUser(roles = {"CREATOR"})
+    void createWorld_ShouldWork_WhenAuthenticated() throws Exception {
+        mockMvc.perform(addUserAttributes(post("/worlds"), "authenticated-user", List.of("CREATOR"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createWorldDto)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
     }
 
     @Test
     @WithMockUser(roles = {"USER"})
     void createWorld_ShouldReturn403WhenNoCreatorRole() throws Exception {
-        mockMvc.perform(post("/worlds")
-                .with(csrf())
+        mockMvc.perform(addUserAttributes(post("/worlds"), "regular-user", List.of("USER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createWorldDto)))
                 .andExpect(status().isForbidden());

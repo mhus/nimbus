@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Service class for managing world registry operations.
@@ -39,6 +40,7 @@ public class RegistryService {
         log.info("Creating new world '{}' for user '{}'", createWorldDto.getName(), ownerId);
 
         World world = World.builder()
+                .id(UUID.randomUUID().toString())
                 .name(createWorldDto.getName())
                 .description(createWorldDto.getDescription())
                 .ownerId(ownerId)
@@ -200,8 +202,8 @@ public class RegistryService {
                 .id(world.getId())
                 .name(world.getName())
                 .description(world.getDescription())
-                .createdAt(world.getCreatedAt().toEpochMilli())
-                .updatedAt(world.getUpdatedAt().toEpochMilli())
+                .createdAt(world.getCreatedAt() != null ? world.getCreatedAt().toEpochMilli() : System.currentTimeMillis())
+                .updatedAt(world.getUpdatedAt() != null ? world.getUpdatedAt().toEpochMilli() : System.currentTimeMillis())
                 .ownerId(world.getOwnerId())
                 .enabled(world.getEnabled())
                 .accessUrl(world.getAccessUrl())
