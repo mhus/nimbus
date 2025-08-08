@@ -94,9 +94,6 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   - In der Komponente 'server-shared' wird eine Bean für die Valiiderung von JWT-Tokens bereitgestellt.
 - **registry**: Ein zentraler Service, der die Welten und deren Metadaten verwaltet.
   Er ermöglicht das Erstellen, Löschen und Abfragen von Welten und wie diese programatisch erreichbar sind (host/port).
-  - Er speichert Welten-Metadaten in einer PostgreSQL-Datenbank via JPA.
-  - Er bietet REST-APIs für die Kommunikation mit anderen Komponenten.
-  - Er ermöglicht das Abfragen von Welten und deren Metadaten.
 - **world-data**: Ein World Service, der die Felder und Sprites verwaltet.
   Er ermöglicht das Erstellen, Löschen und Abfragen von Welt und deren Felder und Sprites.
   - Er speichert Felder und statische Sprites in einer PostgreSQL-Datenbank via JPA.
