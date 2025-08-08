@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for all components
+  postgres:
+    image: postgres:15-alpine
+    container_name: nimbus-postgres
+    environment:
+      POSTGRES_DB: nimbus
+      POSTGRES_USER: nimbus
+      POSTGRES_PASSWORD: nimbus123
+      POSTGRES_MULTIPLE_DATABASES: identity,registry,world_data,world_life
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - nimbus-network
+    restart: unless-stopped
+
+  # Redis Cache for all components
+  redis:
+    image: redis:7-alpine
+    container_name: nimbus-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nimbus-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: nimbus-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - nimbus-network
+    restart: unless-stopped
+
+  # Kafka Service
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: nimbus-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - nimbus-network
+    restart: unless-stopped
+
+  # Kafka UI Service
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: nimbus-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: nimbus-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - nimbus-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+
+networks:
+  nimbus-network:
+    driver: bridge

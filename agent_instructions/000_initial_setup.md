@@ -106,3 +106,62 @@ Simplified configuration: Less boilerplate in the root pom.xml
 Better Spring Boot integration: Full access to Spring Boot features and conventions
 The configuration is now ready and all modules are properly set up to use Spring Boot 3.5.4 with Java 21.
 ```
+
+## 04 local compose file
+
+```text
+Erstelle eine Datei `docker-compose.local.yml` im Verzeichnis `deployment/local` des Projekts.
+Diese Datei soll die lokale Entwicklungsumgebung mit Docker Compose konfigurieren.
+Die Datei soll folgende Services enthalten:
+- Eine PostgreSQL-Datenbank für alle Komponenten
+- Ein Redis-Cache für alle Komponenten
+- Ein Kafka Services für alle Komponenten
+- Ein Kafka UI Service
+```
+
+```text
+Perfect! I have successfully created the Docker Compose configuration for your local development environment. Here's what I've set up:
+Created Files
+deployment/local/docker-compose.local.yml - The main Docker Compose configuration
+deployment/local/init-db.sql - Database initialization script
+Services Configuration
+The Docker Compose file includes all the requested services:
+PostgreSQL Database
+Container: nimbus-postgres (PostgreSQL 15 Alpine)
+Port: 5432
+Credentials: User nimbus, Password nimbus123
+Databases: Automatically creates separate databases for each component:
+identity - for the identity service
+registry - for the registry service
+world_data - for world data management
+world_life - for life form management
+Persistent storage with Docker volume
+Redis Cache
+Container: nimbus-redis (Redis 7 Alpine)
+Port: 6379
+Configuration: Persistence enabled with AOF (Append Only File)
+Persistent storage with Docker volume
+Kafka Service
+Container: nimbus-kafka (Confluent Platform 7.4.0)
+Ports: 9092 (external), 9093 (internal)
+Configuration: Single broker setup with auto-topic creation enabled
+Dependencies: Includes Zookeeper as required dependency
+Persistent storage with Docker volume
+Kafka UI Service
+Container: nimbus-kafka-ui (Provectus Kafka UI)
+Port: 8080
+Features: Web interface to manage and monitor Kafka topics, messages, and consumers
+Usage
+To start the local development environment:
+cd deployment/local
+docker-compose -f docker-compose.local.yml up -d
+To stop the services:
+docker-compose -f docker-compose.local.yml down
+Access Points
+PostgreSQL: localhost:5432
+Redis: localhost:6379
+Kafka: localhost:9092
+Kafka UI: http://localhost:8080
+All services are connected via a custom Docker network (nimbus-network) and configured for development use with appropriate restart policies.
+```
+
