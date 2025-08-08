@@ -303,5 +303,33 @@ Es gibt noch wenige Zeitstempel-Konvertierungsfehler (Instant zu Long), die mit 
 Die Unit Tests sind gemäß den Anforderungen in spec/02_development.md erstellt und verwenden JUnit 5 mit Mockito wie gefordert.
 ```
 
+## 05 Initial Bean
 
+```text
+Erstelle im modul `identity` eine Bean die beim Starten prüft ob es den Benutzer `admin` gibt.
+Falls nicht, soll der Benutzer `admin` mit dem Passwort `admin` und der Rolle `ADMIN` erstellt werden.
+Beachte die Anweisungen in der Datei `spec/02_development.md` und `spec/00_overview.md`.
+```
+
+```text
+Perfect! I have successfully created the AdminUserInitializer bean in the identity module. Here's what the bean accomplishes:
+Key Features
+Automatic Admin User Creation: The bean uses Spring's @EventListener(ApplicationReadyEvent.class) to execute after the application context is fully loaded, ensuring all dependencies are available.
+Smart Existence Check: It first calls identityService.getUser("admin") to check if the admin user already exists. If the user exists, it logs a message and skips creation.
+Default Admin User Setup: If the admin user doesn't exist, it creates one with:
+User ID: admin
+Password: admin
+Name: Administrator
+Email: admin@nimbus.local
+Role: ADMIN
+Error Handling: The bean includes comprehensive error handling for both the existence check and user creation process.
+Security Warning: It logs a security warning reminding administrators to change the default password after first login.
+Implementation Details
+The bean is located at /identity/src/main/java/de/mhus/nimbus/identity/config/AdminUserInitializer.java and follows the Spring Boot best practices:
+Uses @Component annotation for Spring bean registration
+Uses @RequiredArgsConstructor from Lombok for dependency injection
+Uses @Slf4j for logging
+Leverages the existing IdentityService for user management operations
+The bean will automatically execute every time the Identity Service starts up, ensuring that there's always an admin user available for initial system access and configuration.
+```
 

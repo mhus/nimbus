@@ -54,6 +54,28 @@ Response:
 }
 ```
 
+Login as john_doe and catch the token:
+
+```bash
+token=$(curl -X POST http://localhost:8081/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "john_doe",
+    "password": "securePassword123"
+  }'|cut -d \" -f 4)
+```
+
+Login as admin and catch the token:
+
+```bash
+token=$(curl -X POST http://localhost:8081/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "admin",
+    "password": "admin"
+  }'|cut -d \" -f 4)
+```
+
 ## Get User
 
 Retrieves user information by ID.
@@ -61,11 +83,11 @@ Retrieves user information by ID.
 ```bash
 # User accessing their own data
 curl -X GET http://localhost:8081/users/john_doe \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  -H "Authorization: Bearer $token"
 
 # Admin accessing any user data
 curl -X GET http://localhost:8081/users/jane_doe \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $token"
 ```
 
 Response:
@@ -88,7 +110,7 @@ Updates user information.
 ```bash
 curl -X PUT http://localhost:8081/users/john_doe \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Authorization: Bearer $token" \
   -d '{
     "id": "john_doe",
     "name": "John Smith",
@@ -117,7 +139,7 @@ Retrieves all users (admin only).
 
 ```bash
 curl -X GET http://localhost:8081/users \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $token"
 ```
 
 Response:
@@ -151,7 +173,7 @@ Changes a user's password.
 ```bash
 curl -X POST http://localhost:8081/users/john_doe/change-password \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Authorization: Bearer $token" \
   -d '{
     "oldPassword": "securePassword123",
     "newPassword": "newSecurePassword456"
@@ -166,7 +188,7 @@ Renews an existing JWT token.
 
 ```bash
 curl -X POST http://localhost:8081/token/renew \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  -H "Authorization: Bearer $token"
 ```
 
 Response:
@@ -184,7 +206,7 @@ Deletes a user (admin only).
 
 ```bash
 curl -X DELETE http://localhost:8081/users/john_doe \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $token"
 ```
 
 Response: 204 No Content
@@ -222,7 +244,7 @@ Response: 401 Unauthorized
 ```bash
 # User trying to access another user's data
 curl -X GET http://localhost:8081/users/admin \
-  -H "Authorization: Bearer <user_token>"
+  -H "Authorization: Bearer $token"
 ```
 
 Response: 403 Forbidden
@@ -231,7 +253,7 @@ Response: 403 Forbidden
 
 ```bash
 curl -X GET http://localhost:8081/users/nonexistent \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $token"
 ```
 
 Response: 404 Not Found
