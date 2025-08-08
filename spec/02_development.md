@@ -72,3 +72,6 @@ Alle Endpunkte der Rest-API sollten durch Authentifizierung und Autorisierung ge
 Dabei wird der JWT-Token als Bearer-Token in den HTTP-Headern verwendet.
 Das Benutzer-Objekt und die Rollen werden im Http-Request gespeichert, um sie in den Controllern und 
 Services verwenden zu können.
+
+Nutze die Klasse `AuthorizationUtil` aus dem `server-shared` Projekt, um die 
+Autorisierung durch Rollen zu überprüfen.
