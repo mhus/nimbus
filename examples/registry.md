@@ -8,15 +8,12 @@ All endpoints require authentication via JWT token. First, obtain a token from t
 
 ```bash
 # Login to get JWT token
-curl -X POST http://localhost:8081/auth/login \
+JWT_TOKEN=$(curl -X POST http://localhost:8081/login \
   -H "Content-Type: application/json" \
   -d '{
-    "id": "admin",
-    "password": "admin123"
-  }'
-
-# Response will contain the token
-export JWT_TOKEN="your_jwt_token_here"
+    "userId": "admin",
+    "password": "admin"
+  }'|cut -d \" -f 4)
 ```
 
 ## Create World
@@ -24,7 +21,7 @@ export JWT_TOKEN="your_jwt_token_here"
 Creates a new world. Requires CREATOR role.
 
 ```bash
-curl -X POST http://localhost:8082/worlds \
+curl -v -X POST http://localhost:8082/worlds \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d '{
@@ -93,7 +90,7 @@ Lists all worlds with optional filtering and pagination. Requires USER role.
 ### Basic listing
 
 ```bash
-curl -X GET http://localhost:8082/worlds \
+curl -v -X GET http://localhost:8082/worlds \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
