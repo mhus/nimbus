@@ -4,6 +4,7 @@ import de.mhus.nimbus.identity.entity.User;
 import de.mhus.nimbus.identity.repository.UserRepository;
 import de.mhus.nimbus.identity.util.JwtTokenUtils;
 import de.mhus.nimbus.server.shared.dto.*;
+import de.mhus.nimbus.server.shared.util.AuthorizationUtils;
 import de.mhus.nimbus.shared.util.IdentityServiceUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -239,16 +240,26 @@ public class IdentityService {
 
     /**
      * Converts User entity to UserDto.
+     * If the user has ADMIN role, all known roles are set.
      * @param user the user entity
      * @return user DTO
      */
     private UserDto convertToDto(User user) {
+        List<String> roles = user.getRoles();
+
+        // If user has ADMIN role, set all known roles
+        if (roles != null && roles.stream().anyMatch(role ->
+            AuthorizationUtils.Roles.ADMIN.equalsIgnoreCase(role))) {
+            log.debug("User {} has ADMIN role - setting all known roles", user.getId());
+            roles = AuthorizationUtils.getAllKnownRoles();
+        }
+
         return UserDto.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .email(user.getEmail())
-                .roles(user.getRoles())
+                .roles(roles)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

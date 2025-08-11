@@ -427,4 +427,39 @@ Der eine fehlschlagende Test in AuthorizationIntegrationTest sollte aktualisiert
 Die AuthorizationUtils sind erfolgreich im Identity Service integriert und funktionieren wie erwartet! 🎉
 ```
 
+## 08 Bei ADMIN alle bekannten Rollen setzen
+
+```text
+Erweitere den IdentityService so, dass bei der Rückgabe eines Benutzers, der die Rolle `ADMIN` hat, alle bekannten Rollen gesetzt werden.
+Beachte die Anweisungen in der Datei `spec/10_identity.md`, `spec/02_development.md` und `spec/00_overview.md`.
+```
+
+```text
+Perfect! I have successfully implemented the requested feature and created comprehensive tests to verify it works correctly.
+Summary of Implementation
+I've extended the IdentityService so that when a user with the ADMIN role is returned, they automatically receive all known system roles. Here's what was implemented:
+Key Changes:
+Enhanced convertToDto Method: Added logic to detect users with ADMIN role and automatically assign all known roles (ADMIN, USER, CREATOR, MODERATOR)
+Case-Insensitive Detection: The system recognizes "admin", "Admin", or "ADMIN" - all variations work
+Comprehensive Coverage: This enhancement applies to all user return operations:
+Single user retrieval (getUser())
+User listing (getAllUsers())
+After user creation (createUser())
+After user updates (updateUser())
+Technical Details:
+Uses AuthorizationUtils.getAllKnownRoles() to get the complete list of system roles
+Includes proper null safety checks
+Adds debug logging for troubleshooting
+Maintains backward compatibility for non-admin users
+Verification:
+I created a comprehensive test suite with 6 test scenarios covering:
+Admin users getting expanded roles
+Regular users keeping their original roles
+Case-insensitive admin detection
+Multiple admin users in listings
+Null role handling
+Mixed user scenarios
+The implementation compiles successfully and follows the specifications from spec/10_identity.md, spec/02_development.md, and spec/00_overview.md.
+Now when any user with ADMIN privileges is returned from the Identity Service, they will have comprehensive access across all system functions through their expanded role set.
+```
 
