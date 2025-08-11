@@ -57,9 +57,15 @@ public interface WorldRepository extends JpaRepository<World, String> {
      * @param pageable pagination information
      * @return page of worlds matching the criteria
      */
-    @Query("SELECT w FROM World w WHERE " +
-           "(:name IS NULL OR LOWER(w.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-           "(:ownerId IS NULL OR w.ownerId = :ownerId) AND " +
+    @Query(value = "SELECT * FROM worlds w WHERE " +
+           "(:name IS NULL OR LOWER(w.name::text) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+           "(:ownerId IS NULL OR w.owner_id = :ownerId) AND " +
+           "(:enabled IS NULL OR w.enabled = :enabled) " +
+           "ORDER BY w.created_at DESC",
+           nativeQuery = true,
+           countQuery = "SELECT COUNT(*) FROM worlds w WHERE " +
+           "(:name IS NULL OR LOWER(w.name::text) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+           "(:ownerId IS NULL OR w.owner_id = :ownerId) AND " +
            "(:enabled IS NULL OR w.enabled = :enabled)")
     Page<World> findWorldsWithFilters(@Param("name") String name,
                                      @Param("ownerId") String ownerId,

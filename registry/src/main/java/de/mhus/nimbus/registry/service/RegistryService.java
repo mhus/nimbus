@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +84,8 @@ public class RegistryService {
 
         // Validate and limit page size
         int validatedSize = Math.min(Math.max(size, 1), 100);
-        Pageable pageable = PageRequest.of(page, validatedSize, Sort.by("createdAt").descending());
+        // Use unsorted Pageable since we handle ordering in the native query
+        Pageable pageable = PageRequest.of(page, validatedSize);
 
         Page<World> worlds = worldRepository.findWorldsWithFilters(name, ownerId, enabled, pageable);
 
