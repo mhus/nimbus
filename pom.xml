@@ -41,7 +41,7 @@
         <module>registry</module>
 
         <!-- World Services -->
-        <module>world-data</module>
+        <module>world-terrain</module>
         <module>world-life</module>
         <module>world-physics</module>
         <module>world-bridge</module>

@@ -1,7 +1,7 @@
 
 # Registry Service Spezifikation
 
-# Einleitung
+## Einleitung
 
 Der Registry Service verwaltet Informationen über die verfügbaren Welten und deren 
 Eigenschaften. Er ermöglicht es, Welten zu registrieren, zu aktualisieren, zu 
@@ -12,7 +12,7 @@ Welten basierend auf verschiedenen Kriterien.
 - Er bietet REST-APIs für die Kommunikation mit anderen Komponenten.
 - Er ermöglicht das Abfragen von Welten und deren Metadaten.
 
-# Datenmodell
+## Datenmodell
 
 ```json
 {
@@ -33,9 +33,9 @@ Welten basierend auf verschiedenen Kriterien.
 }
 ```
 
-API Endpunkte
+## API Endpunkte
 
-## Welten anlegen
+### Welten anlegen
 
 **POST /worlds**
 
@@ -43,7 +43,7 @@ Role: `CREATOR`
 
 Erstellt eine neue Welt. Die ID wird automatisch generiert.
 
-## Welten abfragen
+### Welten abfragen
 
 **GET /worlds/{id}**
 
@@ -51,7 +51,7 @@ Role: `USER`.
 
 Fragt eine Welt anhand ihrer ID ab. Gibt die Metadaten der Welt zurück.
 
-## Welten auflisten
+### Welten auflisten
 
 **GET /worlds**
 
@@ -65,7 +65,7 @@ mit den Parametern `page` und `size` paginiert werden.
 
 Maximum `size` ist 100, Standard ist 20.
 
-## Welten aktualisieren
+### Welten aktualisieren
 
 **PUT /worlds/{id}**
 
@@ -74,7 +74,7 @@ Role: `ADMIN` oder owner der Welt.
 Aktualisiert die Metadaten einer bestehenden Welt. Die ID der Welt muss in der URL angegeben werden.
 Die Anfrage muss die aktualisierten Metadaten im Body enthalten.
 
-## Welten löschen
+### Welten löschen
 
 **DELETE /worlds/{id}**
 
@@ -83,7 +83,7 @@ Role: `ADMIN` oder owner der Welt.
 Löscht eine bestehende Welt. Die ID der Welt muss in der URL angegeben werden.
 Die Welt wird aus der Datenbank entfernt und kann nicht wiederhergestellt werden.
 
-## Enable/Disable Welt
+### Enable/Disable Welt
 
 **POST /worlds/{id}/enable**
 **POST /worlds/{id}/disable**

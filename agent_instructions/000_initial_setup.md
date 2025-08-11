@@ -165,3 +165,18 @@ Kafka UI: http://localhost:8080
 All services are connected via a custom Docker network (nimbus-network) and configured for development use with appropriate restart policies.
 ```
 
+## 05 Erstelle in world-shared eine einfache Authentifizierung
+
+```text
+Erstelle im Modul `world-shared` eine einfache Authentifizierung.
+Ausserdem sollen der Benutzername und die Rollen des Benutzers im HTTP-Request gespeichert werden, damit sie in den Controllern und Services verwendet werden können.
+Die Authentifizierung soll über ein einfahces Shared Secret erfolgen, die im HTTP-Header der Anfragen gesendet werden.
+
+Die Authentifizierung soll in der Klasse `WorldAuthorizationUtils` implementiert werden.
+
+Erstelle auch einen WorldAuthorizationFilter, der die Authentifizierung in der REST-API durchführt.
+
+Erstelle auch einen Unit-Test, der die Authentifizierung testet.
+
+Beachte die Anweisungen in der Datei `spec/02_development.md` und `spec/00_overview.md`.
+```

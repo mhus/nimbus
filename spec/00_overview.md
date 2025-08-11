@@ -3,85 +3,75 @@
 
 ## Einführung
 
-Nimbus ist ein MMORPG System, das es Spielern ermöglicht, in 2D-Welten zu interagieren. 
+Nimbus ist ein MMORPG System, das es Spielern ermöglicht, in 2.5D-Welten zu interagieren. 
 Es besteht aus mehreren Komponenten, die zusammenarbeiten, um eine dynamische und 
 interaktive Umgebung zu schaffen.
 
-Die 2D-Welten sind in mehreren Ebenen übereinander angeordnet, wobei die Ebene mit der 
+Die 2.5D-Welten sind in mehreren Ebenen übereinander angeordnet, wobei die Ebene mit der 
 Nummer 0 die Oberfläche darstellt. Ebenen unter der Oberfläche sind unterirdisch und können
 von der Oberfläche aus nicht gesehen werden. Ebenen über der Oberfläche sind
 überirdisch und können von der Oberfläche aus gesehen werden.
 
-## Terran Felder
+## Darstellung
 
-Die Welten bestehen aus Feldern, die in einem Gitter angeordnet sind. Jedes Feld hat
-Eigenschaften wie Position, Größe und Inhalt. Felder können verschiedene Eigenschaften haben.
+Die Welten werden in 3D dargestellt, wobei die Spieler in einer 2.5D-Ansicht interagieren. Jedes Feld
+wird als Würfel dargestellt, der in der 3D-Welt platziert ist. Es werden nicht immer alle Seiten des Würfels
+für die Anzeige benötig, da immer von schräg vorne geschaut wird.
 
-* **position**: Jedes Feld hat eine Position, die durch seine X- und Y-Koordinaten im Gitter definiert ist.
-* **level**: Jedes Feld gehört zu einer bestimmten Ebene, die durch eine Ganzzahl definiert ist. 
-* **group**: Jedes Feld kann zu einer Gruppe gehören, die durch eine Nummer definiert ist. Gruppen
-  haben Eigenschaften, die für alle Felder und Sprites in der Gruppe gelten. Sie werden aktiv sobald man ein Feld 
-  dieser Gruppe betritt.
-* **material**: Jedes Feld hat ein Material, das seine physikalischen Eigenschaften definiert. 
-  Materialien können verschiedene Eigenschaften haben, wie z.B. ob sie durchlässig sind oder nicht.
-* **height**: Jedes Feld hat eine Höhe, die seine vertikale Ausdehnung definiert. Die Höhe kann ein
-  Feld leicht erhöhen oder senken, um z.B. eine Treppe zu bilden.
+## World 
 
-## Cluster
+World Terrain Data bestehen aus Map, Sprites, Assets und Terrain-Gruppen. Die Daten werden in Clustern organisiert, 
+um die Performance zu verbessern. Sprites können dynamisch oder statisch sein.
 
-Felder sind in genau definierten Clustern organisiert, die eine Gruppe von Feldern darstellen.
-Der Cluster ist durch seine Position im Gitter definiert.
+Siehe [World Terrain Data Service](12_world_Terrain.md)
 
-```
-clusterX = fieldX / clusterSize
-clusterY = fieldY / clusterSize
-```
+World Life erweckt die Daten zum Leben und simuliert Lebewesen wie Planzen, Tiere 
+und NPCs. Er kontrolliert Wachstumsphasen und Interaktion mit allen Lebewesen die
+nicht echte Benutzer sind. Benutzer Lebewesen werden hier auch verwaltet aber nicht
+deren Lebenszyklus.
 
-## Sprites
+Auch Person Character werden hier verwaltet und gespeichert. Person Character sind
+die Spielfiguren der Benutzer, die in der Welt interagieren können.
 
-Sprites sind grafische Darstellungen von Objekten in der Welt. Sie können über mehrere Felder hinweg
-angeordnet sein und haben eine Position, die durch ihre X- und Y-Koordinaten im Gitter definiert ist.
+Der World Items Service verwaltet alle Items in der Welt. Items sind Objekte, die in der Welt
+existieren können und von Spielern gesammelt, gehandelt oder verwendet werden können. Hier wird auch das Inventar
+der Spieler verwaltet, das die Items enthält, die der Spieler besitzt. Auch Coins und andere Währungen werden hier
+verwaltet. Alchemie und Crafting sind hier ebenfalls möglich, um neue Items zu erstellen.
 
-Ein Sprite kann nicht größer als ein Cluster sein, aber es kann durch sine Ausdehnung über mehrere 
-Cluster hinausgehen (maximal 4).
+World Physics sorgt dafür das alle Lebewesen der gleichen Physik unterlegen. Es
+ist das Bindeglied zwischen Data und Life. Physics sorgt auch dafür das
+die Parameter für Lebensenergie und Parameteränderungen bei Kämpfen oder das
+Auslösen von Effekten richtig funktioniert.
 
-Es wird zwischen statischen und dynamischen Sprites unterschieden. Statische Sprites
-werden in der Datenbank gespeichert und werden selent verändert. Dynamische Sprites
-werden in Echtzeit erstellt und verändert, z.B. durch Spieleraktionen oder Ereignisse in der Welt.
+Eine Welt benutzt eine einfachere Methode zur Authentifizierung, die auf einem
+einfachen Shared Secret basiert. Das Secret wird jedem Service in den application.properties
+bereitgestellt.
 
-Sprites können verschiedene Eigenschaften haben, wie z.B. ob sie durchlässig sind oder nicht.
+## Items
 
-* **position**: Jedes Sprite hat eine Position, die durch seine X- und Y-Koordinaten im Gitter definiert ist.
-* **level**: Jedes Sprite gehört zu einer bestimmten Ebene, die durch eine Ganzzahl definiert ist. 
-* **size**: Jedes Sprite hat eine Größe, die seine Ausdehnung in X- und Y-Richtung definiert.
-* **group**: Jedes Sprite kann zu einer Gruppe gehören, die durch eine Nummer definiert ist. 
-  Gruppen haben Eigenschaften, die für alle Sprites und Felder in der Gruppe gelten.
-
-## Assets
-
-Assets sind Grafiken, Sounds und andere Ressourcen, die in der Welt verwendet werden.
-
-## Gruppen
-
-Die Gruppen sind eine Möglichkeit, Felder und Sprites zu organisieren und ihnen gemeinsame Eigenschaften zuzuweisen.
+Items sind Objekte, die in der Welt existieren können. Sie können von Spielern gesammelt,
+gehandelt oder verwendet werden. Sie können auch verarbeitet werden, um neue Items zu erstellen.
 
 ## Architektur
 
 Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktion erfüllen.
 
 * Es gibt zentrale Service komponenten, die Benutzerdaten, Welten und deren Metadaten verwalten.
-* Es gibt Komponenten die die Welten mit Terran und Leben und deren Physik verwalten.
+* Es gibt Komponenten die die Welten mit Terrain und Leben und deren Physik verwalten.
 * Es gibt einen zentralen Zugangspunkt für jede Welt (World Bridge), der die Kommunikation zwischen den Clients und den Servern ermöglicht.
 * Es gibt eine zentralen Zugangspunkt (Client Bridge) über den die Clients mit den Servern kommunizieren können.
 * Es gibt Clients, die die Welten darstellen und es den Spielern ermöglichen, in diesen Welten zu interagieren.
 * Es gibt Generatoren, die Welten generieren und deren Metadaten erstellen.
+* Alle Komponenten sind in Microservices die scalierbar sind und keine Daten lokal speichern (stateless).
 
 ## Kommunikation
 
 * Die Kommunikation zwischen den zentralen Server-Komponenten erfolgt über REST-APIs für Function Calls.
 * Die Kommunikation zwischen den Welten-Servern untereinander erfolgt über REST-APIs für Function Calls und Kafka für Events.
 * Die Kommunikation zwischen den Clients und der Client Bridge erfolgt über WebSockets für Function Calls und Events.
-* Die Kommunikation zwischen den Client Bridge und der World Bridge erfolgt über WebSockets für Function Calls und Events.
+* Die Kommunikation zwischen den Client Bridge und der World Bridge erfolgt über WebSockets für Function Calls und Events. Aussname
+  sind offene Resourcen wie WebSocket-Verbindungen, die direkt von der Client Bridge zu den Welten-Servern aufgebaut werden und beim 
+  Abbauen erst alle Daten verlieren.
 
 ## Komponenten
 
@@ -94,7 +84,7 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   - In der Komponente 'server-shared' wird eine Bean für die Valiiderung von JWT-Tokens bereitgestellt.
 - **registry**: Ein zentraler Service, der die Welten und deren Metadaten verwaltet.
   Er ermöglicht das Erstellen, Löschen und Abfragen von Welten und wie diese programatisch erreichbar sind (host/port).
-- **world-data**: Ein World Service, der die Felder und Sprites verwaltet.
+- **world-terrain**: Ein World Service, der die Felder/Map und Sprites verwaltet.
   Er ermöglicht das Erstellen, Löschen und Abfragen von Welt und deren Felder und Sprites.
   - Er speichert Felder und statische Sprites in einer PostgreSQL-Datenbank via JPA.
   - Er speichert Assets in einer PostgreSQL-Datenbank via JPA.
@@ -114,7 +104,13 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   - Er berechnet die Kollisionen zwischen Feldern, Sprites und Lebewesen.
   - Nur über die Komponente 'world-physics' können Lebewesen und Sprites bewegt werden.
   - Er ermöglicht das Berechnen von Bewegungen und Kollisionen in Echtzeit.
-  - Es speichert dynamische Sprites in einer Redis-Datenbank (shared mit 'world-data').
+  - Es speichert dynamische Sprites in einer Redis-Datenbank (shared mit 'world-Terrain').
+- **world-items**: Ein World Service, der die Items in den Welten verwaltet.
+  Er ermöglicht das Erstellen, Löschen und Abfragen von Items und deren Aktionen.
+  - Er speichert Items in einer PostgreSQL-Datenbank via JPA.
+  - Er ermöglicht das Sammeln, Handeln und Verwenden von Items in einer Welt.
+  - Er ermöglicht das Verarbeiten von Items, um neue Items zu erstellen.
+  - Items können Person oder Non Person Character zugeordnet werden, um deren Inventar zu verwalten.
 - ***world-bridge**: Ein zentraler Service, der die Kommunikation zwischen der Welt und anderen Komponenten 
   ermöglicht. Er fungiert als Gateway für alle Anfragen von aussen an die Welten-Services.
   - Er verwaltet die WebSocket-Verbindungen und leitet Anfragen an die entsprechenden Welten-Services weiter.
@@ -173,5 +169,5 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
 - **PostgreSQL**: Eine relationale Datenbank, die für die Speicherung von Benutzerdaten, Welten und deren Metadaten verwendet wird.
   Sie wird in den zentralen Services wie Identity und Registry verwendet, um Daten persistent zu speichern.
 - **Redis**: Eine In-Memory-Datenbank, die für die Speicherung von dynamischen Sprites verwendet wird.
-  Sie wird in der Welt-Data-Komponente verwendet, um die Leistung zu verbessern und die Latenz zu reduzieren.
+  Sie wird in der Welt-Terrain-Data-Komponente verwendet, um die Leistung zu verbessern und die Latenz zu reduzieren.
 
