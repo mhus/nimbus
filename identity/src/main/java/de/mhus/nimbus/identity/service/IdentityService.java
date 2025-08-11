@@ -163,7 +163,7 @@ public class IdentityService {
         }
 
         // Generate JWT token using RSA private key
-        String token = jwtTokenUtils.createToken(user.getId(), user.getRoles());
+        String token = jwtTokenUtils.createToken(user.getId(), calculateUserRoles(user));
         Long expiresAt = jwtTokenUtils.getExpirationTime(token);
         Long issuedAt = jwtTokenUtils.getIssuedTime(token);
 
@@ -245,14 +245,7 @@ public class IdentityService {
      * @return user DTO
      */
     private UserDto convertToDto(User user) {
-        List<String> roles = user.getRoles();
-
-        // If user has ADMIN role, set all known roles
-        if (roles != null && roles.stream().anyMatch(role ->
-            AuthorizationUtils.Roles.ADMIN.equalsIgnoreCase(role))) {
-            log.debug("User {} has ADMIN role - setting all known roles", user.getId());
-            roles = AuthorizationUtils.getAllKnownRoles();
-        }
+        List<String> roles = calculateUserRoles(user);
 
         return UserDto.builder()
                 .id(user.getId())
@@ -263,5 +256,17 @@ public class IdentityService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    private List<String> calculateUserRoles(final User user) {
+        List<String> roles = user.getRoles();
+
+        // If user has ADMIN role, set all known roles
+        if (roles != null && roles.stream().anyMatch(role ->
+                AuthorizationUtils.Roles.ADMIN.equalsIgnoreCase(role))) {
+            log.debug("User {} has ADMIN role - setting all known roles", user.getId());
+            roles = AuthorizationUtils.getAllKnownRoles();
+        }
+        return roles;
     }
 }
