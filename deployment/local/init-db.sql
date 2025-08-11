@@ -4,13 +4,13 @@
 -- Create databases for different services
 CREATE DATABASE identity;
 CREATE DATABASE registry;
-CREATE DATABASE world_data;
+CREATE DATABASE world_terrain;
 CREATE DATABASE world_life;
 
 -- Grant permissions to the nimbus user
 GRANT ALL PRIVILEGES ON DATABASE identity TO nimbus;
 GRANT ALL PRIVILEGES ON DATABASE registry TO nimbus;
-GRANT ALL PRIVILEGES ON DATABASE world_data TO nimbus;
+GRANT ALL PRIVILEGES ON DATABASE world_terrain TO nimbus;
 GRANT ALL PRIVILEGES ON DATABASE world_life TO nimbus;
 
 -- Connect to each database and ensure the nimbus user can create schemas
@@ -22,7 +22,7 @@ ALTER SCHEMA public OWNER TO nimbus;
 GRANT CREATE ON SCHEMA public TO nimbus;
 ALTER SCHEMA public OWNER TO nimbus;
 
-\c world_data;
+\c world_terrain;
 GRANT CREATE ON SCHEMA public TO nimbus;
 ALTER SCHEMA public OWNER TO nimbus;
 
