@@ -1,228 +1,175 @@
 package de.mhus.nimbus.world.shared.client;
 
-import de.mhus.nimbus.shared.dto.terrain.*;
-import de.mhus.nimbus.shared.dto.terrain.request.*;
+import de.mhus.nimbus.shared.dto.world.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class TerrainServiceClient {
 
-    private final WebClient.Builder webClientBuilder;
+    private final RestTemplate restTemplate;
 
-    @Value("${terrain.service.url:http://localhost:8083}")
-    private String terrainServiceUrl;
+    @Value("${nimbus.world-terrain.url:http://localhost:8083}")
+    private String worldTerrainUrl;
 
-    @Value("${world.auth.secret}")
-    private String authSecret;
-
-    private WebClient getWebClient() {
-        return webClientBuilder
-                .baseUrl(terrainServiceUrl)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader("X-World-Auth", authSecret)
-                .build();
+    // World Management
+    public WorldDto createWorld(WorldDto worldDto) {
+        String url = worldTerrainUrl + "/api/worlds";
+        ResponseEntity<WorldDto> response = restTemplate.postForEntity(url, worldDto, WorldDto.class);
+        return response.getBody();
     }
 
-    // Material operations
-    public Mono<MaterialDto> createMaterial(MaterialDto materialDto) {
-        return getWebClient()
-                .post()
-                .uri("/materials")
-                .bodyValue(materialDto)
-                .retrieve()
-                .bodyToMono(MaterialDto.class)
-                .doOnError(error -> log.error("Error creating material", error));
+    public Optional<WorldDto> getWorld(String id) {
+        try {
+            String url = worldTerrainUrl + "/api/worlds/" + id;
+            ResponseEntity<WorldDto> response = restTemplate.getForEntity(url, WorldDto.class);
+            return Optional.ofNullable(response.getBody());
+        } catch (Exception e) {
+            log.warn("Failed to get world with id {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
     }
 
-    public Mono<MaterialDto> getMaterial(Integer id) {
-        return getWebClient()
-                .get()
-                .uri("/materials/{id}", id)
-                .retrieve()
-                .bodyToMono(MaterialDto.class)
-                .doOnError(error -> log.error("Error getting material with id: " + id, error));
+    public List<WorldDto> getAllWorlds() {
+        String url = worldTerrainUrl + "/api/worlds";
+        ResponseEntity<WorldDto[]> response = restTemplate.getForEntity(url, WorldDto[].class);
+        WorldDto[] body = response.getBody();
+        return body != null ? List.of(body) : List.of();
     }
 
-    public Mono<Page<MaterialDto>> getMaterials(int page, int size) {
-        return getWebClient()
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/materials")
-                        .queryParam("page", page)
-                        .queryParam("size", size)
-                        .build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Page<MaterialDto>>() {})
-                .doOnError(error -> log.error("Error getting materials", error));
+    public Optional<WorldDto> updateWorld(String id, WorldDto worldDto) {
+        try {
+            String url = worldTerrainUrl + "/api/worlds/" + id;
+            ResponseEntity<WorldDto> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(worldDto), WorldDto.class);
+            return Optional.ofNullable(response.getBody());
+        } catch (Exception e) {
+            log.warn("Failed to update world with id {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
     }
 
-    public Mono<MaterialDto> updateMaterial(Integer id, MaterialDto materialDto) {
-        return getWebClient()
-                .put()
-                .uri("/materials/{id}", id)
-                .bodyValue(materialDto)
-                .retrieve()
-                .bodyToMono(MaterialDto.class)
-                .doOnError(error -> log.error("Error updating material with id: " + id, error));
+    public boolean deleteWorld(String id) {
+        try {
+            String url = worldTerrainUrl + "/api/worlds/" + id;
+            restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            log.warn("Failed to delete world with id {}: {}", id, e.getMessage());
+            return false;
+        }
     }
 
-    public Mono<Void> deleteMaterial(Integer id) {
-        return getWebClient()
-                .delete()
-                .uri("/materials/{id}", id)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(error -> log.error("Error deleting material with id: " + id, error));
+    // Material Management
+    public MaterialDto createMaterial(MaterialDto materialDto) {
+        String url = worldTerrainUrl + "/api/materials";
+        ResponseEntity<MaterialDto> response = restTemplate.postForEntity(url, materialDto, MaterialDto.class);
+        return response.getBody();
     }
 
-    // Map operations
-    public Mono<Void> createMap(MapCreateRequest request) {
-        return getWebClient()
-                .post()
-                .uri("/maps")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(error -> log.error("Error creating map", error));
+    public Optional<MaterialDto> getMaterial(Integer id) {
+        try {
+            String url = worldTerrainUrl + "/api/materials/" + id;
+            ResponseEntity<MaterialDto> response = restTemplate.getForEntity(url, MaterialDto.class);
+            return Optional.ofNullable(response.getBody());
+        } catch (Exception e) {
+            log.warn("Failed to get material with id {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
     }
 
-    public Mono<ClusterDto> getMap(String world, Integer level, Integer x, Integer y) {
-        return getWebClient()
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/maps/{x}/{y}")
-                        .queryParam("world", world)
-                        .queryParam("level", level)
-                        .build(x, y))
-                .retrieve()
-                .bodyToMono(ClusterDto.class)
-                .doOnError(error -> log.error("Error getting map cluster", error));
+    public Page<MaterialDto> getMaterials(String name, int page, int size) {
+        String url = UriComponentsBuilder.fromUriString(worldTerrainUrl + "/api/materials")
+                .queryParamIfPresent("name", Optional.ofNullable(name))
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
+
+        ResponseEntity<PageImpl<MaterialDto>> response = restTemplate.exchange(
+            url, HttpMethod.GET, null,
+            new ParameterizedTypeReference<>() {});
+
+        return response.getBody();
     }
 
-    public Mono<List<ClusterDto>> getMapBatch(MapBatchRequest request) {
-        return getWebClient()
-                .post()
-                .uri("/maps/batch")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<ClusterDto>>() {})
-                .doOnError(error -> log.error("Error getting map batch", error));
+    public Optional<MaterialDto> updateMaterial(Integer id, MaterialDto materialDto) {
+        try {
+            String url = worldTerrainUrl + "/api/materials/" + id;
+            ResponseEntity<MaterialDto> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(materialDto), MaterialDto.class);
+            return Optional.ofNullable(response.getBody());
+        } catch (Exception e) {
+            log.warn("Failed to update material with id {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
     }
 
-    public Mono<Void> updateMap(MapCreateRequest request) {
-        return getWebClient()
-                .put()
-                .uri("/maps")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(error -> log.error("Error updating map", error));
+    public boolean deleteMaterial(Integer id) {
+        try {
+            String url = worldTerrainUrl + "/api/materials/" + id;
+            restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            log.warn("Failed to delete material with id {}: {}", id, e.getMessage());
+            return false;
+        }
     }
 
-    public Mono<Void> deleteMapLevel(String world, Integer level) {
-        return getWebClient()
-                .delete()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/maps/level")
-                        .queryParam("world", world)
-                        .queryParam("level", level)
-                        .build())
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(error -> log.error("Error deleting map level", error));
+    // Map Management
+    public void createOrUpdateMap(MapCreateRequest request) {
+        String url = worldTerrainUrl + "/api/maps";
+        restTemplate.postForEntity(url, request, Void.class);
     }
 
-    // Sprite operations
-    public Mono<List<String>> createSprites(SpriteCreateRequest request) {
-        return getWebClient()
-                .post()
-                .uri("/sprites")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
-                .doOnError(error -> log.error("Error creating sprites", error));
+    public Optional<TerrainClusterDto> getMapCluster(String world, Integer level, Integer x, Integer y) {
+        try {
+            String url = UriComponentsBuilder.fromUriString(worldTerrainUrl + "/api/maps/" + x + "/" + y)
+                    .queryParam("world", world)
+                    .queryParam("level", level)
+                    .toUriString();
+
+            ResponseEntity<TerrainClusterDto> response = restTemplate.getForEntity(url, TerrainClusterDto.class);
+            return Optional.ofNullable(response.getBody());
+        } catch (Exception e) {
+            log.warn("Failed to get map cluster at {},{} for world {} level {}: {}",
+                    x, y, world, level, e.getMessage());
+            return Optional.empty();
+        }
     }
 
-    public Mono<SpriteDto> getSprite(String id) {
-        return getWebClient()
-                .get()
-                .uri("/sprites/{id}", id)
-                .retrieve()
-                .bodyToMono(SpriteDto.class)
-                .doOnError(error -> log.error("Error getting sprite with id: " + id, error));
+    public List<TerrainClusterDto> getMapClusters(MapBatchRequest request) {
+        String url = worldTerrainUrl + "/api/maps/batch";
+        ResponseEntity<TerrainClusterDto[]> response = restTemplate.postForEntity(url, request, TerrainClusterDto[].class);
+        TerrainClusterDto[] body = response.getBody();
+        return body != null ? List.of(body) : List.of();
     }
 
-    public Mono<List<SpriteDto>> getSpritesInCluster(String world, Integer level, Integer x, Integer y) {
-        return getWebClient()
-                .get()
-                .uri("/sprites/{world}/{level}/{x}/{y}", world, level, x, y)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<SpriteDto>>() {})
-                .doOnError(error -> log.error("Error getting sprites in cluster", error));
+    public void deleteMapFields(MapDeleteRequest request) {
+        String url = worldTerrainUrl + "/api/maps";
+        restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(request), Void.class);
     }
 
-    public Mono<SpriteDto> updateSprite(String id, SpriteDto spriteDto) {
-        return getWebClient()
-                .put()
-                .uri("/sprites/{id}", id)
-                .bodyValue(spriteDto)
-                .retrieve()
-                .bodyToMono(SpriteDto.class)
-                .doOnError(error -> log.error("Error updating sprite with id: " + id, error));
-    }
+    public void deleteLevel(String world, Integer level) {
+        String url = UriComponentsBuilder.fromUriString(worldTerrainUrl + "/api/maps/level")
+                .queryParam("world", world)
+                .queryParam("level", level)
+                .toUriString();
 
-    public Mono<Void> deleteSprite(String id) {
-        return getWebClient()
-                .delete()
-                .uri("/sprites/{id}", id)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(error -> log.error("Error deleting sprite with id: " + id, error));
-    }
-
-    // Asset operations
-    public Mono<AssetDto> createAsset(AssetDto assetDto) {
-        return getWebClient()
-                .post()
-                .uri("/assets")
-                .bodyValue(assetDto)
-                .retrieve()
-                .bodyToMono(AssetDto.class)
-                .doOnError(error -> log.error("Error creating asset", error));
-    }
-
-    public Mono<AssetDto> getAsset(String world, String name) {
-        return getWebClient()
-                .get()
-                .uri("/assets/{world}/{name}", world, name)
-                .retrieve()
-                .bodyToMono(AssetDto.class)
-                .doOnError(error -> log.error("Error getting asset", error));
-    }
-
-    public Mono<Page<AssetDto>> getAssets(String world, int page, int size) {
-        return getWebClient()
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/assets/{world}")
-                        .queryParam("page", page)
-                        .queryParam("size", size)
-                        .build(world))
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Page<AssetDto>>() {})
-                .doOnError(error -> log.error("Error getting assets", error));
+        restTemplate.delete(url);
     }
 }

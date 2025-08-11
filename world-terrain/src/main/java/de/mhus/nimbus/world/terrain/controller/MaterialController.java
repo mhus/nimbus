@@ -1,16 +1,17 @@
 package de.mhus.nimbus.world.terrain.controller;
 
-import de.mhus.nimbus.shared.dto.terrain.MaterialDto;
+import de.mhus.nimbus.shared.dto.world.MaterialDto;
 import de.mhus.nimbus.world.terrain.service.WorldTerrainService;
-import de.mhus.nimbus.world.shared.filter.WorldAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/materials")
+@RequestMapping("/api/materials")
 @RequiredArgsConstructor
 public class MaterialController {
 
@@ -34,17 +35,20 @@ public class MaterialController {
     @GetMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Page<MaterialDto>> getMaterials(
+            @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<MaterialDto> materials = worldTerrainService.getMaterials(page, size);
+
+        if (size > 100) size = 100; // Maximum size limit
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MaterialDto> materials = worldTerrainService.getMaterials(name, pageable);
         return ResponseEntity.ok(materials);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('CREATOR')")
-    public ResponseEntity<MaterialDto> updateMaterial(
-            @PathVariable Integer id,
-            @RequestBody MaterialDto materialDto) {
+    public ResponseEntity<MaterialDto> updateMaterial(@PathVariable Integer id, @RequestBody MaterialDto materialDto) {
         return worldTerrainService.updateMaterial(id, materialDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -53,9 +57,7 @@ public class MaterialController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> deleteMaterial(@PathVariable Integer id) {
-        if (worldTerrainService.deleteMaterial(id)) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+        boolean deleted = worldTerrainService.deleteMaterial(id);
+        return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 }

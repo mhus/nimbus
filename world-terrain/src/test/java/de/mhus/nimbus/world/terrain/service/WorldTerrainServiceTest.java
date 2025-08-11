@@ -1,22 +1,22 @@
 package de.mhus.nimbus.world.terrain.service;
 
-import de.mhus.nimbus.shared.dto.terrain.MaterialDto;
-import de.mhus.nimbus.world.terrain.entity.Material;
-import de.mhus.nimbus.world.terrain.repository.MaterialRepository;
+import de.mhus.nimbus.shared.dto.world.*;
+import de.mhus.nimbus.world.terrain.entity.*;
+import de.mhus.nimbus.world.terrain.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -26,234 +26,328 @@ import static org.mockito.Mockito.*;
 class WorldTerrainServiceTest {
 
     @Mock
+    private WorldRepository worldRepository;
+
+    @Mock
     private MaterialRepository materialRepository;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private MapRepository mapRepository;
 
-    private WorldTerrainService worldTerrainService;
+    @Mock
+    private SpriteRepository spriteRepository;
+
+    @Mock
+    private TerrainGroupRepository terrainGroupRepository;
+
+    @Mock
     private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private WorldTerrainService worldTerrainService;
+
+    private WorldEntity worldEntity;
+    private WorldDto worldDto;
+    private MaterialEntity materialEntity;
+    private MaterialDto materialDto;
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
-        worldTerrainService = new WorldTerrainService(
-            materialRepository,
-            null, // mapClusterRepository
-            null, // spriteRepository
-            null, // assetRepository
-            null, // terrainGroupRepository
-            objectMapper,
-            kafkaTemplate
-        );
+        // Setup test data
+        worldEntity = WorldEntity.builder()
+                .id("world-1")
+                .name("Test World")
+                .description("A test world")
+                .properties("{\"key\": \"value\"}")
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        worldDto = WorldDto.builder()
+                .id("world-1")
+                .name("Test World")
+                .description("A test world")
+                .properties(Map.of("key", "value"))
+                .build();
+
+        materialEntity = MaterialEntity.builder()
+                .id(1)
+                .name("grass")
+                .blocking(false)
+                .friction(0.5f)
+                .color("#00FF00")
+                .texture("grass.png")
+                .soundWalk("grass.wav")
+                .properties("{\"type\": \"natural\"}")
+                .build();
+
+        materialDto = MaterialDto.builder()
+                .id(1)
+                .name("grass")
+                .blocking(false)
+                .friction(0.5f)
+                .color("#00FF00")
+                .texture("grass.png")
+                .soundWalk("grass.wav")
+                .properties(Map.of("type", "natural"))
+                .build();
     }
 
     @Test
-    void createMaterial_ShouldCreateAndReturnMaterial() {
+    void createWorld_ShouldReturnCreatedWorld() throws Exception {
         // Given
-        MaterialDto inputDto = MaterialDto.builder()
-            .name("grass")
-            .blocking(false)
-            .friction(0.5f)
-            .color("#00FF00")
-            .texture("grass.png")
-            .soundWalk("grass.wav")
-            .properties(Map.of("key", "value"))
-            .build();
-
-        Material savedMaterial = Material.builder()
-            .id(1)
-            .name("grass")
-            .blocking(false)
-            .friction(0.5f)
-            .color("#00FF00")
-            .texture("grass.png")
-            .soundWalk("grass.wav")
-            .properties("{\"key\":\"value\"}")
-            .build();
-
-        when(materialRepository.save(any(Material.class))).thenReturn(savedMaterial);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"key\": \"value\"}");
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("key", "value"));
+        when(worldRepository.save(any(WorldEntity.class))).thenReturn(worldEntity);
 
         // When
-        MaterialDto result = worldTerrainService.createMaterial(inputDto);
+        WorldDto result = worldTerrainService.createWorld(worldDto);
 
         // Then
         assertNotNull(result);
-        assertEquals(1, result.getId());
-        assertEquals("grass", result.getName());
-        assertEquals(false, result.getBlocking());
-        assertEquals(0.5f, result.getFriction());
-        assertEquals("#00FF00", result.getColor());
-        assertEquals("grass.png", result.getTexture());
-        assertEquals("grass.wav", result.getSoundWalk());
-        assertEquals(Map.of("key", "value"), result.getProperties());
-
-        verify(materialRepository).save(any(Material.class));
-        verify(kafkaTemplate).send(eq("terrain.material.events"), eq("material.created"), any());
+        assertEquals("Test World", result.getName());
+        assertEquals("A test world", result.getDescription());
+        verify(worldRepository).save(any(WorldEntity.class));
     }
 
     @Test
-    void getMaterial_WhenMaterialExists_ShouldReturnMaterial() {
+    void getWorld_ShouldReturnWorld_WhenExists() throws Exception {
         // Given
-        Integer materialId = 1;
-        Material material = Material.builder()
-            .id(materialId)
-            .name("water")
-            .blocking(true)
-            .friction(0.1f)
-            .color("#0000FF")
-            .texture("water.png")
-            .soundWalk("water.wav")
-            .properties("{\"transparent\":\"true\"}")
-            .build();
-
-        when(materialRepository.findById(materialId)).thenReturn(Optional.of(material));
+        when(worldRepository.findById("world-1")).thenReturn(Optional.of(worldEntity));
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("key", "value"));
 
         // When
-        Optional<MaterialDto> result = worldTerrainService.getMaterial(materialId);
+        Optional<WorldDto> result = worldTerrainService.getWorld("world-1");
 
         // Then
         assertTrue(result.isPresent());
-        MaterialDto materialDto = result.get();
-        assertEquals(materialId, materialDto.getId());
-        assertEquals("water", materialDto.getName());
-        assertEquals(true, materialDto.getBlocking());
-        assertEquals(0.1f, materialDto.getFriction());
-        assertEquals("#0000FF", materialDto.getColor());
-        assertEquals("water.png", materialDto.getTexture());
-        assertEquals("water.wav", materialDto.getSoundWalk());
-        assertTrue(materialDto.getProperties().containsKey("transparent"));
-
-        verify(materialRepository).findById(materialId);
+        assertEquals("Test World", result.get().getName());
+        verify(worldRepository).findById("world-1");
     }
 
     @Test
-    void getMaterial_WhenMaterialDoesNotExist_ShouldReturnEmpty() {
+    void getWorld_ShouldReturnEmpty_WhenNotExists() {
         // Given
-        Integer materialId = 999;
-        when(materialRepository.findById(materialId)).thenReturn(Optional.empty());
+        when(worldRepository.findById("non-existent")).thenReturn(Optional.empty());
 
         // When
-        Optional<MaterialDto> result = worldTerrainService.getMaterial(materialId);
+        Optional<WorldDto> result = worldTerrainService.getWorld("non-existent");
 
         // Then
         assertFalse(result.isPresent());
-        verify(materialRepository).findById(materialId);
+        verify(worldRepository).findById("non-existent");
     }
 
     @Test
-    void getMaterials_ShouldReturnPagedResults() {
+    void getAllWorlds_ShouldReturnAllWorlds() throws Exception {
         // Given
-        Material material1 = Material.builder().id(1).name("grass").blocking(false).friction(0.5f).build();
-        Material material2 = Material.builder().id(2).name("stone").blocking(true).friction(0.8f).build();
-
-        Page<Material> materialPage = new PageImpl<>(List.of(material1, material2));
-        when(materialRepository.findAll(any(PageRequest.class))).thenReturn(materialPage);
+        when(worldRepository.findAll()).thenReturn(List.of(worldEntity));
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("key", "value"));
 
         // When
-        Page<MaterialDto> result = worldTerrainService.getMaterials(0, 20);
+        List<WorldDto> result = worldTerrainService.getAllWorlds();
 
         // Then
-        assertNotNull(result);
-        assertEquals(2, result.getContent().size());
-        assertEquals("grass", result.getContent().get(0).getName());
-        assertEquals("stone", result.getContent().get(1).getName());
-
-        verify(materialRepository).findAll(any(PageRequest.class));
+        assertEquals(1, result.size());
+        assertEquals("Test World", result.get(0).getName());
+        verify(worldRepository).findAll();
     }
 
     @Test
-    void updateMaterial_WhenMaterialExists_ShouldUpdateAndReturnMaterial() {
+    void updateWorld_ShouldReturnUpdatedWorld_WhenExists() throws Exception {
         // Given
-        Integer materialId = 1;
-        Material existingMaterial = Material.builder()
-            .id(materialId)
-            .name("oldName")
-            .blocking(false)
-            .friction(0.3f)
-            .build();
+        WorldDto updateDto = WorldDto.builder()
+                .name("Updated World")
+                .description("Updated description")
+                .properties(Map.of("updated", "true"))
+                .build();
 
-        MaterialDto updateDto = MaterialDto.builder()
-            .name("newName")
-            .blocking(true)
-            .friction(0.7f)
-            .color("#FF0000")
-            .build();
-
-        Material updatedMaterial = Material.builder()
-            .id(materialId)
-            .name("newName")
-            .blocking(true)
-            .friction(0.7f)
-            .color("#FF0000")
-            .build();
-
-        when(materialRepository.findById(materialId)).thenReturn(Optional.of(existingMaterial));
-        when(materialRepository.save(any(Material.class))).thenReturn(updatedMaterial);
+        when(worldRepository.findById("world-1")).thenReturn(Optional.of(worldEntity));
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"updated\": \"true\"}");
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("updated", "true"));
+        when(worldRepository.save(any(WorldEntity.class))).thenReturn(worldEntity);
 
         // When
-        Optional<MaterialDto> result = worldTerrainService.updateMaterial(materialId, updateDto);
+        Optional<WorldDto> result = worldTerrainService.updateWorld("world-1", updateDto);
 
         // Then
         assertTrue(result.isPresent());
-        MaterialDto materialDto = result.get();
-        assertEquals("newName", materialDto.getName());
-        assertEquals(true, materialDto.getBlocking());
-        assertEquals(0.7f, materialDto.getFriction());
-        assertEquals("#FF0000", materialDto.getColor());
-
-        verify(materialRepository).findById(materialId);
-        verify(materialRepository).save(any(Material.class));
-        verify(kafkaTemplate).send(eq("terrain.material.events"), eq("material.updated"), any());
+        verify(worldRepository).findById("world-1");
+        verify(worldRepository).save(any(WorldEntity.class));
     }
 
     @Test
-    void updateMaterial_WhenMaterialDoesNotExist_ShouldReturnEmpty() {
+    void deleteWorld_ShouldReturnTrue_WhenExists() {
         // Given
-        Integer materialId = 999;
-        MaterialDto updateDto = MaterialDto.builder().name("newName").build();
-
-        when(materialRepository.findById(materialId)).thenReturn(Optional.empty());
+        when(worldRepository.existsById("world-1")).thenReturn(true);
 
         // When
-        Optional<MaterialDto> result = worldTerrainService.updateMaterial(materialId, updateDto);
-
-        // Then
-        assertFalse(result.isPresent());
-        verify(materialRepository).findById(materialId);
-        verify(materialRepository, never()).save(any());
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), any());
-    }
-
-    @Test
-    void deleteMaterial_WhenMaterialExists_ShouldDeleteAndReturnTrue() {
-        // Given
-        Integer materialId = 1;
-        when(materialRepository.existsById(materialId)).thenReturn(true);
-
-        // When
-        boolean result = worldTerrainService.deleteMaterial(materialId);
+        boolean result = worldTerrainService.deleteWorld("world-1");
 
         // Then
         assertTrue(result);
-        verify(materialRepository).existsById(materialId);
-        verify(materialRepository).deleteById(materialId);
-        verify(kafkaTemplate).send(eq("terrain.material.events"), eq("material.deleted"), any());
+        verify(worldRepository).existsById("world-1");
+        verify(worldRepository).deleteById("world-1");
     }
 
     @Test
-    void deleteMaterial_WhenMaterialDoesNotExist_ShouldReturnFalse() {
+    void deleteWorld_ShouldReturnFalse_WhenNotExists() {
         // Given
-        Integer materialId = 999;
-        when(materialRepository.existsById(materialId)).thenReturn(false);
+        when(worldRepository.existsById("non-existent")).thenReturn(false);
 
         // When
-        boolean result = worldTerrainService.deleteMaterial(materialId);
+        boolean result = worldTerrainService.deleteWorld("non-existent");
 
         // Then
         assertFalse(result);
-        verify(materialRepository).existsById(materialId);
-        verify(materialRepository, never()).deleteById(anyInt());
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), any());
+        verify(worldRepository).existsById("non-existent");
+        verify(worldRepository, never()).deleteById(anyString());
+    }
+
+    @Test
+    void createMaterial_ShouldReturnCreatedMaterial() throws Exception {
+        // Given
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"type\": \"natural\"}");
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("type", "natural"));
+        when(materialRepository.save(any(MaterialEntity.class))).thenReturn(materialEntity);
+
+        // When
+        MaterialDto result = worldTerrainService.createMaterial(materialDto);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("grass", result.getName());
+        assertEquals(false, result.getBlocking());
+        verify(materialRepository).save(any(MaterialEntity.class));
+    }
+
+    @Test
+    void getMaterial_ShouldReturnMaterial_WhenExists() throws Exception {
+        // Given
+        when(materialRepository.findById(1)).thenReturn(Optional.of(materialEntity));
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("type", "natural"));
+
+        // When
+        Optional<MaterialDto> result = worldTerrainService.getMaterial(1);
+
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals("grass", result.get().getName());
+        verify(materialRepository).findById(1);
+    }
+
+    @Test
+    void getMaterials_ShouldReturnPagedMaterials() throws Exception {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<MaterialEntity> page = new PageImpl<>(List.of(materialEntity));
+
+        when(materialRepository.findAll(pageable)).thenReturn(page);
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("type", "natural"));
+
+        // When
+        Page<MaterialDto> result = worldTerrainService.getMaterials(null, pageable);
+
+        // Then
+        assertEquals(1, result.getContent().size());
+        assertEquals("grass", result.getContent().get(0).getName());
+        verify(materialRepository).findAll(pageable);
+    }
+
+    @Test
+    void getMaterials_WithNameFilter_ShouldReturnFilteredMaterials() throws Exception {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<MaterialEntity> page = new PageImpl<>(List.of(materialEntity));
+
+        when(materialRepository.findByNameContainingIgnoreCase("grass", pageable)).thenReturn(page);
+        when(objectMapper.readValue(anyString(), eq(Map.class))).thenReturn(Map.of("type", "natural"));
+
+        // When
+        Page<MaterialDto> result = worldTerrainService.getMaterials("grass", pageable);
+
+        // Then
+        assertEquals(1, result.getContent().size());
+        assertEquals("grass", result.getContent().get(0).getName());
+        verify(materialRepository).findByNameContainingIgnoreCase("grass", pageable);
+    }
+
+    @Test
+    void createOrUpdateMap_ShouldSaveMapEntity() throws Exception {
+        // Given
+        TerrainFieldDto field = TerrainFieldDto.builder()
+                .x(1).y(1).z(0)
+                .materials(List.of(1, 2, 3, 4, 5, 6))
+                .opacity(255)
+                .sizeZ(1)
+                .parameters(Map.of("test", "value"))
+                .build();
+
+        TerrainClusterDto cluster = TerrainClusterDto.builder()
+                .level(0)
+                .x(0).y(0)
+                .fields(List.of(field))
+                .build();
+
+        MapCreateRequest request = MapCreateRequest.builder()
+                .world("world-1")
+                .clusters(List.of(cluster))
+                .build();
+
+        MapEntity mapEntity = MapEntity.builder()
+                .world("world-1")
+                .level(0)
+                .clusterX(0)
+                .clusterY(0)
+                .data("[{\"x\":1,\"y\":1}]")
+                .build();
+
+        when(mapRepository.findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0))
+                .thenReturn(Optional.of(mapEntity));
+        when(objectMapper.writeValueAsString(any())).thenReturn("[{\"x\":1,\"y\":1}]");
+        when(mapRepository.save(any(MapEntity.class))).thenReturn(mapEntity);
+
+        // When
+        worldTerrainService.createOrUpdateMap(request);
+
+        // Then
+        verify(mapRepository).findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0);
+        verify(mapRepository).save(any(MapEntity.class));
+    }
+
+    @Test
+    void getMapCluster_ShouldReturnCluster_WhenExists() throws Exception {
+        // Given
+        MapEntity mapEntity = MapEntity.builder()
+                .world("world-1")
+                .level(0)
+                .clusterX(0)
+                .clusterY(0)
+                .data("[{\"x\":1,\"y\":1}]")
+                .build();
+
+        when(mapRepository.findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0))
+                .thenReturn(Optional.of(mapEntity));
+        when(objectMapper.readValue(anyString(), eq(List.class)))
+                .thenReturn(List.of(Map.of("x", 1, "y", 1)));
+
+        // When
+        Optional<TerrainClusterDto> result = worldTerrainService.getMapCluster("world-1", 0, 0, 0);
+
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(0, result.get().getLevel());
+        assertEquals(0, result.get().getX());
+        assertEquals(0, result.get().getY());
+        verify(mapRepository).findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0);
+    }
+
+    @Test
+    void deleteLevel_ShouldCallRepository() {
+        // When
+        worldTerrainService.deleteLevel("world-1", 0);
+
+        // Then
+        verify(mapRepository).deleteByWorldAndLevel("world-1", 0);
     }
 }

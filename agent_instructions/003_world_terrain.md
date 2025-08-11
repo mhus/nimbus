@@ -103,3 +103,136 @@ mergeParameters(): Führt Parameter-Maps zusammen
 Jetzt werden beim Speichern eines Clusters die bestehenden Felder nicht mehr überschrieben, sondern intelligent mit den neuen Feldern zusammengeführt.
 ```
 
+## 04 Fix checkWorldExists() Method
+
+```text
+Prüfe in WorldTerrainService ob die Welt existiert,
+bevor allen Operationen die auf eine Welt angewiesen sind.
+```
+
+```text
+Ich habe erfolgreich die WorldTerrainService erweitert, um Weltvalidierung für alle weltspezifischen Operationen zu implementieren. Hier ist was ich gemacht habe:
+Erstellte neue Dateien:
+WorldRepository - Ein Repository Interface für Weltvalidierung
+WorldNotFoundException - Eine spezifische Exception für nicht existierende Welten
+Erweiterte WorldTerrainService:
+Neue Abhängigkeit: WorldRepository wurde zum Service hinzugefügt
+Validierungsmethode: validateWorldExists(String worldId) prüft ob eine Welt existiert und wirft eine WorldNotFoundException falls nicht
+Weltvalidierung wurde zu allen relevanten Operationen hinzugefügt:
+Map-Operationen:
+createMap() - prüft Welt vor Cluster-Erstellung
+getMap() - prüft Welt vor Abruf
+getMapBatch() - prüft Welt vor Batch-Abruf
+updateMap() - prüft Welt vor Update
+deleteMapLevel() - prüft Welt vor Löschung
+Sprite-Operationen:
+createSprites() - prüft Welt vor Sprite-Erstellung
+getSpritesInCluster() - prüft Welt vor Abruf
+Asset-Operationen:
+createAsset() - prüft Welt vor Asset-Erstellung
+getAsset() - prüft Welt vor Abruf
+getAssets() - prüft Welt vor Batch-Abruf
+updateAsset() - prüft Welt vor Update
+deleteAsset() - prüft Welt vor Löschung
+getAssetsBatch() - prüft Welt vor Batch-Abruf
+compressAssets() - prüft Welt vor Komprimierung
+Group-Operationen:
+createGroup() - prüft Welt vor Gruppen-Erstellung
+getGroup() - prüft Welt vor Abruf
+getGroups() - prüft Welt vor Abruf aller Gruppen
+updateGroup() - prüft Welt vor Update
+deleteGroup() - prüft Welt vor Löschung
+Material-Operationen wurden bewusst nicht erweitert, da sie weltunabhängig sind und global verwendet werden können.
+Die Implementierung führt dazu, dass bei allen weltspezifischen Operationen zunächst geprüft wird, ob die angegebene Welt in der Datenbank existiert. Falls nicht, wird eine aussagekräftige WorldNotFoundException mit der Welt-ID geworfen.
+Die Kompilierung ist erfolgreich - es gibt nur eine unwichtige Warnung bezüglich eines unnötigen toString() Aufrufs, die die Funktionalität nicht beeinträchtigt.
+```
+
+## 05 Implementiere im World Terrain Service Methoden für World Management
+
+```text
+Erstelle im Modul `world-terrain` im WorldTerrainService Methoden für World Management,
+wie in der Datei `spec/12_world_terrain.md` beschrieben.
+
+* Erstelle DTOs im modul `shared`.
+* Erstelle Rest-API-Endpunkte und nutze den WorldTerrainService 
+  für die Implementierung.
+* Erstelle für jeden Endpunkt in `examples/world_terrain.md` ein Beispiel mit curl,
+  das die Funktionsweise des Endpunkts demonstriert.
+* Erweitere im modul `world-shared` die Bean Klasse `TerrainServiceClient`, 
+  die die Kommunikation mit dem Identity Service ermöglicht.
+* Erstelle Unit-Tests für den Registry Service, um die Funktionalität zu überprüfen.
+
+Beachte die Anweisungen in der Datei `spec/02_development.md` und `spec/00_overview.md`.  
+```
+
+```text
+Ich habe die Implementierung des World Management Systems für das world-terrain Modul erfolgreich abgeschlossen. Hier ist eine Zusammenfassung der erstellten Komponenten:
+Erstellte DTOs im shared Modul:
+WorldDto - für Weltdaten
+MaterialDto - für Materialeigenschaften
+TerrainFieldDto - für einzelne Terrain-Felder
+TerrainClusterDto - für Terrain-Cluster (32x32 Felder)
+SpriteDto - für Sprite-Objekte
+TerrainGroupDto - für Terrain-Gruppen
+Request-DTOs: MapCreateRequest, MapBatchRequest, MapDeleteRequest
+Koordinaten-DTOs: ClusterCoordinateDto, FieldCoordinateDto
+JPA Entities im world-terrain Modul:
+WorldEntity - Weltdaten mit UUID als Primary Key
+MaterialEntity - Materialien mit Auto-Generated ID
+MapEntity - Cluster-basierte Terrain-Speicherung mit Unique Index
+SpriteEntity - Sprites mit Multi-Cluster-Support
+TerrainGroupEntity - Gruppierungen für Terrain-Elemente
+Repository-Interfaces:
+Alle mit optimierten Queries und Indizes für Performance
+Spezielle Methoden für Cluster-basierte Abfragen
+Batch-Operationen für Map-Verwaltung
+WorldTerrainService:
+Vollständige CRUD-Operationen für alle Entities
+JSON-Serialisierung für komplexe Properties
+Cluster-basierte Map-Verwaltung (32x32 Felder pro Cluster)
+Batch-Operationen für effiziente Updates
+REST-Controller:
+WorldController - Weltverwaltung
+MaterialController - Materialverwaltung mit Pagination
+MapController - Terrain-/Map-Verwaltung
+Alle mit entsprechenden Security-Annotationen (USER/CREATOR Rollen)
+TerrainServiceClient im world-shared Modul:
+Vollständiger REST-Client für alle API-Endpunkte
+Fehlerbehandlung und Logging
+Konfigurierbare Service-URL
+Unit-Tests:
+Umfassende Tests für den WorldTerrainService
+Mocking aller Dependencies
+Test-Abdeckung für alle CRUD-Operationen
+Curl-Beispiele:
+Vollständige API-Dokumentation in examples/world_terrain.md
+Beispiele für alle Endpunkte mit Request/Response-Bodies
+Fehlerbehandlungs-Beispiele
+Möchten Sie, dass ich noch weitere Tests erstelle oder bestimmte Aspekte der Implementierung anpasse?
+
+---
+
+Perfekt! Ich habe die verbleibenden Probleme im Code behoben:
+Behobene Probleme:
+Deprecated fromHttpUrl() Methoden: Ersetzt durch fromUriString() in allen UriComponentsBuilder-Aufrufen
+Null-Pointer Warnungen: Hinzugefügt null-Checks für ResponseEntity-Bodies
+Type-Inference Verbesserungen: Verwendung von Diamond-Operator <> statt expliziter Typangaben
+Übersicht der vollständigen Implementierung:
+✅ DTOs im shared Modul - Alle benötigten DTOs für World, Material, Terrain und Map-Management
+✅ JPA Entities im world-terrain Modul - Vollständig mit Indizes und Constraints nach Spezifikation
+✅ Repository-Interfaces - Optimierte Queries für Cluster-basierte Abfragen
+✅ WorldTerrainService - Komplette CRUD-Operationen mit JSON-Serialisierung und Cluster-Management
+✅ REST-Controller - Alle API-Endpunkte mit korrekten Security-Annotationen (USER/CREATOR Rollen)
+✅ TerrainServiceClient im world-shared Modul - Vollständiger REST-Client mit Fehlerbehandlung
+✅ Unit-Tests - Umfassende Test-Abdeckung für den Service
+✅ Curl-Beispiele - Komplette API-Dokumentation in examples/world_terrain.md
+Besondere Features der Implementierung:
+Cluster-basierte Speicherung: 32x32 Felder pro Cluster für optimale Performance
+Multi-Cluster Sprite-Support: Sprites können über bis zu 4 Cluster verteilt sein
+JSON-Komprimierung: Vorbereitet für Hintergrund-Komprimierung großer Terrain-Daten
+Typsichere JSON-Serialisierung: Verwendung von TypeReference für korrekte Deserialisierung
+Pagination: Materialien-API mit konfigurierbarer Seitengröße (max. 100)
+Batch-Operationen: Effiziente Updates und Abfragen für mehrere Cluster gleichzeitig
+Die Implementierung folgt allen Anweisungen aus der Spezifikation und den Entwicklungsrichtlinien. Das System ist bereit für den Einsatz und kann als Basis für die Terrain-Verwaltung in der Nimbus-Spieleumgebung dienen.
+```
+

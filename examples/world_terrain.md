@@ -1,12 +1,74 @@
 # World Terrain Service API Examples
 
-## Material Endpoints
+Diese Datei enthält Curl-Beispiele für alle World Terrain Service API-Endpunkte.
 
-### Erstelle ein neues Material
+## World Management
+
+### Welt erstellen
+
 ```bash
-curl -X POST http://localhost:8083/materials \
+curl -X POST "http://localhost:8083/api/worlds" \
   -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "id": "earth-001",
+    "name": "Earth",
+    "description": "Main game world",
+    "properties": {
+      "gravity": "9.81",
+      "atmosphere": "earth-like",
+      "weather": "enabled"
+    }
+  }'
+```
+
+### Welt abrufen
+
+```bash
+curl -X GET "http://localhost:8083/api/worlds/earth-001" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Alle Welten auflisten
+
+```bash
+curl -X GET "http://localhost:8083/api/worlds" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Welt aktualisieren
+
+```bash
+curl -X PUT "http://localhost:8083/api/worlds/earth-001" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "name": "Earth Prime",
+    "description": "Updated main game world",
+    "properties": {
+      "gravity": "9.81",
+      "atmosphere": "earth-like",
+      "weather": "enabled",
+      "seasons": "true"
+    }
+  }'
+```
+
+### Welt löschen
+
+```bash
+curl -X DELETE "http://localhost:8083/api/worlds/earth-001" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Material Management
+
+### Material erstellen
+
+```bash
+curl -X POST "http://localhost:8083/api/materials" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "name": "grass",
     "blocking": false,
@@ -15,56 +77,71 @@ curl -X POST http://localhost:8083/materials \
     "texture": "grass.png",
     "soundWalk": "grass.wav",
     "properties": {
-      "growth": "fast",
-      "season": "all"
+      "type": "natural",
+      "flammable": "true",
+      "hardness": "1"
     }
   }'
 ```
 
-### Hole ein Material nach ID
+### Material abrufen
+
 ```bash
-curl -X GET http://localhost:8083/materials/1 \
-  -H "X-World-Auth: world-terrain-secret-key"
+curl -X GET "http://localhost:8083/api/materials/1" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Liste alle Materialien auf
+### Materialien auflisten (mit Pagination)
+
 ```bash
-curl -X GET "http://localhost:8083/materials?page=0&size=20" \
-  -H "X-World-Auth: world-terrain-secret-key"
+curl -X GET "http://localhost:8083/api/materials?page=0&size=20" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Aktualisiere ein Material
+### Materialien mit Filter suchen
+
 ```bash
-curl -X PUT http://localhost:8083/materials/1 \
+curl -X GET "http://localhost:8083/api/materials?name=grass&page=0&size=10" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Material aktualisieren
+
+```bash
+curl -X PUT "http://localhost:8083/api/materials/1" \
   -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
-    "name": "grass_updated",
+    "name": "grass",
     "blocking": false,
     "friction": 0.6,
     "color": "#00AA00",
     "texture": "grass_v2.png",
     "soundWalk": "grass_new.wav",
     "properties": {
-      "growth": "medium",
-      "season": "spring_summer"
+      "type": "natural",
+      "flammable": "true",
+      "hardness": "1",
+      "seasonal": "true"
     }
   }'
 ```
 
-### Lösche ein Material
+### Material löschen
+
 ```bash
-curl -X DELETE http://localhost:8083/materials/1 \
-  -H "X-World-Auth: world-terrain-secret-key"
+curl -X DELETE "http://localhost:8083/api/materials/1" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-## Map Endpoints
+## Map Management
 
-### Erstelle eine neue Map
+### Map/Terrain erstellen
+
 ```bash
-curl -v -X POST http://localhost:8083/maps \
+curl -X POST "http://localhost:8083/api/maps" \
   -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "world": "earth-001",
     "clusters": [
@@ -74,29 +151,29 @@ curl -v -X POST http://localhost:8083/maps \
         "y": 0,
         "fields": [
           {
-            "x": 0,
-            "y": 0,
+            "x": 1,
+            "y": 1,
             "z": 0,
             "groups": [1, 2],
             "materials": [1, 2, 2, 2, 2, 3],
             "opacity": 255,
             "sizeZ": 1,
             "parameters": {
-              "elevation": "0.5",
-              "moisture": "0.7"
+              "temperature": "20",
+              "humidity": "60"
             }
           },
           {
-            "x": 1,
-            "y": 0,
+            "x": 2,
+            "y": 1,
             "z": 0,
             "groups": [1],
-            "materials": [2, 3, 3, 3, 3, 4],
+            "materials": [1, 2, 2, 2, 2, 3],
             "opacity": 255,
             "sizeZ": 1,
             "parameters": {
-              "elevation": "0.3",
-              "moisture": "0.4"
+              "temperature": "21",
+              "humidity": "65"
             }
           }
         ]
@@ -105,33 +182,37 @@ curl -v -X POST http://localhost:8083/maps \
   }'
 ```
 
-### Hole Map-Daten für einen Cluster
+### Map-Cluster abrufen
+
 ```bash
-curl -X GET "http://localhost:8083/maps/0/0?world=earth-001&level=0" \
-  -H "X-World-Auth: world-terrain-secret-key"
+curl -X GET "http://localhost:8083/api/maps/0/0?world=earth-001&level=0" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Hole Map-Daten für mehrere Cluster (Batch)
+### Mehrere Map-Cluster als Batch abrufen
+
 ```bash
-curl -X POST http://localhost:8083/maps/batch \
+curl -X POST "http://localhost:8083/api/maps/batch" \
   -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "world": "earth-001",
     "level": 0,
     "clusters": [
       {"x": 0, "y": 0},
       {"x": 1, "y": 0},
-      {"x": 0, "y": 1}
+      {"x": 0, "y": 1},
+      {"x": 1, "y": 1}
     ]
   }'
 ```
 
-### Aktualisiere eine Map
+### Map aktualisieren
+
 ```bash
-curl -X PUT http://localhost:8083/maps \
+curl -X PUT "http://localhost:8083/api/maps" \
   -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "world": "earth-001",
     "clusters": [
@@ -141,16 +222,17 @@ curl -X PUT http://localhost:8083/maps \
         "y": 0,
         "fields": [
           {
-            "x": 0,
-            "y": 0,
+            "x": 1,
+            "y": 1,
             "z": 0,
             "groups": [1, 2, 3],
-            "materials": [2, 2, 2, 2, 2, 3],
+            "materials": [4, 2, 2, 2, 2, 3],
             "opacity": 200,
             "sizeZ": 2,
             "parameters": {
-              "elevation": "0.8",
-              "moisture": "0.9"
+              "temperature": "25",
+              "humidity": "70",
+              "updated": "true"
             }
           }
         ]
@@ -159,246 +241,190 @@ curl -X PUT http://localhost:8083/maps \
   }'
 ```
 
-### Lösche ein Map-Level
-```bash
-curl -X DELETE "http://localhost:8083/maps/level?world=earth-001&level=0" \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
+### Map-Felder löschen
 
-## Sprite Endpoints
-
-### Erstelle neue Sprites
 ```bash
-curl -X POST http://localhost:8083/sprites \
+curl -X DELETE "http://localhost:8083/api/maps" \
   -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "world": "earth-001",
     "level": 0,
-    "sprites": [
+    "clusters": [
       {
-        "dynamic": false,
-        "x": 10,
-        "y": 15,
-        "z": 0,
-        "sizeX": 2,
-        "sizeY": 2,
-        "sizeZ": 3,
-        "groups": [5, 6],
-        "parameters": {
-          "age": "mature",
-          "health": "100"
-        },
-        "rasterType": "png",
-        "raster": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
-        "type": "tree",
-        "blocking": true,
-        "opacity": 255
+        "x": 0,
+        "y": 0,
+        "fields": [
+          {"x": 1, "y": 1},
+          {"x": 2, "y": 1}
+        ]
       }
     ]
   }'
 ```
 
-### Hole ein Sprite nach ID
+### Komplettes Level löschen
+
 ```bash
-curl -X GET http://localhost:8083/sprites/S12345678-1234-5678-9abc-123456789abc \
-  -H "X-World-Auth: world-terrain-secret-key"
+curl -X DELETE "http://localhost:8083/api/maps/level?world=earth-001&level=0" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Liste Sprites in einem Cluster auf
-```bash
-curl -X GET http://localhost:8083/sprites/earth-001/0/0/0 \
-  -H "X-World-Auth: world-terrain-secret-key"
+## Antwort-Beispiele
+
+### World-Antwort
+
+```json
+{
+  "id": "earth-001",
+  "createdAt": "2025-08-12T10:30:00Z",
+  "updatedAt": "2025-08-12T11:00:00Z",
+  "name": "Earth",
+  "description": "Main game world",
+  "properties": {
+    "gravity": "9.81",
+    "atmosphere": "earth-like",
+    "weather": "enabled"
+  }
+}
 ```
 
-### Aktualisiere ein Sprite
-```bash
-curl -X PUT http://localhost:8083/sprites/S12345678-1234-5678-9abc-123456789abc \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "x": 10,
-    "y": 15,
-    "z": 0,
-    "sizeX": 3,
-    "sizeY": 3,
-    "sizeZ": 4,
-    "groups": [5, 6, 7],
-    "parameters": {
-      "age": "old",
-      "health": "80"
+### Material-Antwort
+
+```json
+{
+  "id": 1,
+  "name": "grass",
+  "blocking": false,
+  "friction": 0.5,
+  "color": "#00FF00",
+  "texture": "grass.png",
+  "soundWalk": "grass.wav",
+  "properties": {
+    "type": "natural",
+    "flammable": "true",
+    "hardness": "1"
+  }
+}
+```
+
+### Map-Cluster-Antwort
+
+```json
+{
+  "level": 0,
+  "x": 0,
+  "y": 0,
+  "fields": [
+    {
+      "x": 1,
+      "y": 1,
+      "z": 0,
+      "groups": [1, 2],
+      "materials": [1, 2, 2, 2, 2, 3],
+      "opacity": 255,
+      "sizeZ": 1,
+      "parameters": {
+        "temperature": "20",
+        "humidity": "60"
+      }
+    }
+  ]
+}
+```
+
+### Paginierte Material-Liste-Antwort
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "name": "grass",
+      "blocking": false,
+      "friction": 0.5,
+      "color": "#00FF00",
+      "texture": "grass.png",
+      "soundWalk": "grass.wav",
+      "properties": {
+        "type": "natural"
+      }
+    }
+  ],
+  "pageable": {
+    "sort": {
+      "sorted": false,
+      "unsorted": true,
+      "empty": true
     },
-    "rasterType": "png",
-    "raster": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
-    "type": "tree",
-    "blocking": true,
-    "opacity": 200,
-    "enabled": true
-  }'
+    "pageNumber": 0,
+    "pageSize": 20,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "totalElements": 1,
+  "totalPages": 1,
+  "last": true,
+  "first": true,
+  "numberOfElements": 1,
+  "size": 20,
+  "number": 0,
+  "sort": {
+    "sorted": false,
+    "unsorted": true,
+    "empty": true
+  },
+  "empty": false
+}
 ```
 
-### Lösche ein Sprite
-```bash
-curl -X DELETE http://localhost:8083/sprites/S12345678-1234-5678-9abc-123456789abc \
-  -H "X-World-Auth: world-terrain-secret-key"
+## Fehler-Beispiele
+
+### 404 Not Found
+
+```json
+{
+  "timestamp": "2025-08-12T10:30:00Z",
+  "status": 404,
+  "error": "Not Found",
+  "message": "World with id 'non-existent' not found",
+  "path": "/api/worlds/non-existent"
+}
 ```
 
-### Aktualisiere Sprite-Koordinaten
-```bash
-curl -X PUT http://localhost:8083/sprites/S12345678-1234-5678-9abc-123456789abc/coordinates \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "x": 20,
-    "y": 25,
-    "z": 1
-  }'
+### 400 Bad Request
+
+```json
+{
+  "timestamp": "2025-08-12T10:30:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "path": "/api/materials"
+}
 ```
 
-### Aktiviere ein Sprite
-```bash
-curl -X POST http://localhost:8083/sprites/S12345678-1234-5678-9abc-123456789abc/enable \
-  -H "X-World-Auth: world-terrain-secret-key"
+### 401 Unauthorized
+
+```json
+{
+  "timestamp": "2025-08-12T10:30:00Z",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Access token required",
+  "path": "/api/worlds"
+}
 ```
 
-### Deaktiviere ein Sprite
-```bash
-curl -X POST http://localhost:8083/sprites/S12345678-1234-5678-9abc-123456789abc/disable \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
+### 403 Forbidden
 
-## Asset Endpoints
-
-### Erstelle ein neues Asset
-```bash
-curl -X POST http://localhost:8083/assets \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "world": "earth-001",
-    "name": "tree_oak.png",
-    "type": "image",
-    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
-    "properties": {
-      "width": "64",
-      "height": "128",
-      "format": "PNG",
-      "animated": "false"
-    }
-  }'
-```
-
-### Hole ein Asset
-```bash
-curl -X GET http://localhost:8083/assets/earth-001/tree_oak.png \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
-
-### Liste Assets einer Welt auf
-```bash
-curl -X GET "http://localhost:8083/assets/earth-001?page=0&size=20" \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
-
-### Hole mehrere Assets (Batch)
-```bash
-curl -X POST http://localhost:8083/assets/batch \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "world": "earth-001",
-    "assets": [
-      "tree_oak.png",
-      "grass_texture.jpg",
-      "water_sound.wav"
-    ]
-  }'
-```
-
-### Aktualisiere ein Asset
-```bash
-curl -X PUT http://localhost:8083/assets/earth-001/tree_oak.png \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "world": "earth-001",
-    "name": "tree_oak.png",
-    "type": "image",
-    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
-    "properties": {
-      "width": "128",
-      "height": "256",
-      "format": "PNG",
-      "animated": "false",
-      "version": "2.0"
-    }
-  }'
-```
-
-### Lösche ein Asset
-```bash
-curl -X DELETE http://localhost:8083/assets/earth-001/tree_oak.png \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
-
-### Komprimiere Assets
-```bash
-curl -X POST http://localhost:8083/assets/compress \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '"earth-001"'
-```
-
-## Terrain Group Endpoints
-
-### Erstelle eine neue Terrain-Gruppe
-```bash
-curl -X POST http://localhost:8083/groups \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "world": "earth-001",
-    "name": "forest_area",
-    "type": "field",
-    "properties": {
-      "biome": "temperate_forest",
-      "temperature": "moderate",
-      "humidity": "high"
-    }
-  }'
-```
-
-### Hole eine Terrain-Gruppe
-```bash
-curl -X GET http://localhost:8083/groups/earth-001/1 \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
-
-### Liste Terrain-Gruppen einer Welt auf
-```bash
-curl -X GET http://localhost:8083/groups/earth-001 \
-  -H "X-World-Auth: world-terrain-secret-key"
-```
-
-### Aktualisiere eine Terrain-Gruppe
-```bash
-curl -X PUT http://localhost:8083/groups/earth-001/1 \
-  -H "Content-Type: application/json" \
-  -H "X-World-Auth: world-terrain-secret-key" \
-  -d '{
-    "name": "forest_area_updated",
-    "type": "field",
-    "properties": {
-      "biome": "dense_forest",
-      "temperature": "cool",
-      "humidity": "very_high",
-      "wildlife": "abundant"
-    }
-  }'
-```
-
-### Lösche eine Terrain-Gruppe
-```bash
-curl -X DELETE http://localhost:8083/groups/earth-001/1 \
-  -H "X-World-Auth: world-terrain-secret-key"
+```json
+{
+  "timestamp": "2025-08-12T10:30:00Z",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "Insufficient privileges. CREATOR role required",
+  "path": "/api/worlds"
+}
 ```
