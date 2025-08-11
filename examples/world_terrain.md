@@ -62,7 +62,7 @@ curl -X DELETE http://localhost:8083/materials/1 \
 
 ### Erstelle eine neue Map
 ```bash
-curl -X POST http://localhost:8083/maps \
+curl -v -X POST http://localhost:8083/maps \
   -H "Content-Type: application/json" \
   -H "X-World-Auth: world-terrain-secret-key" \
   -d '{
