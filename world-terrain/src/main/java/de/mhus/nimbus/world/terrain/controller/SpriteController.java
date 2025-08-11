@@ -1,8 +1,8 @@
 package de.mhus.nimbus.world.terrain.controller;
 
-import de.mhus.nimbus.shared.dto.terrain.SpriteDto;
-import de.mhus.nimbus.shared.dto.terrain.request.SpriteCreateRequest;
-import de.mhus.nimbus.shared.dto.terrain.request.SpriteCoordinateUpdateRequest;
+import de.mhus.nimbus.shared.dto.world.SpriteDto;
+import de.mhus.nimbus.shared.dto.world.SpriteCreateRequest;
+import de.mhus.nimbus.shared.dto.world.SpriteCoordinateUpdateRequest;
 import de.mhus.nimbus.world.terrain.service.WorldTerrainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/sprites")
+@RequestMapping("/api/sprites")
 @RequiredArgsConstructor
 public class SpriteController {
 
@@ -29,17 +29,17 @@ public class SpriteController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SpriteDto> getSprite(@PathVariable String id) {
         return worldTerrainService.getSprite(id)
-                .map(ResponseEntity::ok)
+                .map(sprite -> ResponseEntity.ok(sprite))
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{world}/{level}/{x}/{y}")
+    @GetMapping("/cluster")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<SpriteDto>> getSpritesInCluster(
-            @PathVariable String world,
-            @PathVariable Integer level,
-            @PathVariable Integer x,
-            @PathVariable Integer y) {
+            @RequestParam String world,
+            @RequestParam Integer level,
+            @RequestParam Integer x,
+            @RequestParam Integer y) {
         List<SpriteDto> sprites = worldTerrainService.getSpritesInCluster(world, level, x, y);
         return ResponseEntity.ok(sprites);
     }
@@ -50,7 +50,7 @@ public class SpriteController {
             @PathVariable String id,
             @RequestBody SpriteDto spriteDto) {
         return worldTerrainService.updateSprite(id, spriteDto)
-                .map(ResponseEntity::ok)
+                .map(sprite -> ResponseEntity.ok(sprite))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -69,7 +69,7 @@ public class SpriteController {
             @PathVariable String id,
             @RequestBody SpriteCoordinateUpdateRequest request) {
         return worldTerrainService.updateSpriteCoordinates(id, request)
-                .map(ResponseEntity::ok)
+                .map(sprite -> ResponseEntity.ok(sprite))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -77,7 +77,7 @@ public class SpriteController {
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<SpriteDto> enableSprite(@PathVariable String id) {
         return worldTerrainService.enableSprite(id)
-                .map(ResponseEntity::ok)
+                .map(sprite -> ResponseEntity.ok(sprite))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -85,7 +85,7 @@ public class SpriteController {
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<SpriteDto> disableSprite(@PathVariable String id) {
         return worldTerrainService.disableSprite(id)
-                .map(ResponseEntity::ok)
+                .map(sprite -> ResponseEntity.ok(sprite))
                 .orElse(ResponseEntity.notFound().build());
     }
 }

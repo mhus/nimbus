@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.terrain.controller;
 
-import de.mhus.nimbus.shared.dto.terrain.GroupDto;
+import de.mhus.nimbus.shared.dto.world.TerrainGroupDto;
 import de.mhus.nimbus.world.terrain.service.WorldTerrainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,46 +10,46 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/groups")
+@RequestMapping("/api/groups")
 @RequiredArgsConstructor
 public class GroupController {
 
     private final WorldTerrainService worldTerrainService;
 
-    @PostMapping
+    @PostMapping("/{world}")
     @PreAuthorize("hasRole('CREATOR')")
-    public ResponseEntity<GroupDto> createGroup(
-            @RequestParam String world,
-            @RequestBody GroupDto groupDto) {
-        GroupDto created = worldTerrainService.createGroup(world, groupDto);
+    public ResponseEntity<TerrainGroupDto> createGroup(
+            @PathVariable String world,
+            @RequestBody TerrainGroupDto groupDto) {
+        TerrainGroupDto created = worldTerrainService.createGroup(world, groupDto);
         return ResponseEntity.ok(created);
     }
 
     @GetMapping("/{world}/{id}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<GroupDto> getGroup(
+    public ResponseEntity<TerrainGroupDto> getGroup(
             @PathVariable String world,
             @PathVariable Long id) {
         return worldTerrainService.getGroup(world, id)
-                .map(ResponseEntity::ok)
+                .map(group -> ResponseEntity.ok(group))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{world}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<GroupDto>> getGroups(@PathVariable String world) {
-        List<GroupDto> groups = worldTerrainService.getGroups(world);
+    public ResponseEntity<List<TerrainGroupDto>> getGroups(@PathVariable String world) {
+        List<TerrainGroupDto> groups = worldTerrainService.getGroups(world);
         return ResponseEntity.ok(groups);
     }
 
     @PutMapping("/{world}/{id}")
     @PreAuthorize("hasRole('CREATOR')")
-    public ResponseEntity<GroupDto> updateGroup(
+    public ResponseEntity<TerrainGroupDto> updateGroup(
             @PathVariable String world,
             @PathVariable Long id,
-            @RequestBody GroupDto groupDto) {
+            @RequestBody TerrainGroupDto groupDto) {
         return worldTerrainService.updateGroup(world, id, groupDto)
-                .map(ResponseEntity::ok)
+                .map(group -> ResponseEntity.ok(group))
                 .orElse(ResponseEntity.notFound().build());
     }
 

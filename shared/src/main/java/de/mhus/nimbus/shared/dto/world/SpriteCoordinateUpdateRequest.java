@@ -5,15 +5,15 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import java.util.Map;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TerrainGroupDto {
-    private Long id;
-    private String name;
-    private String type;
-    private Map<String, Object> properties;
+public class SpriteCoordinateUpdateRequest {
+    private Integer x;
+    private Integer y;
+    private Integer z;
+    private Integer sizeX;
+    private Integer sizeY;
+    private Integer sizeZ;
 }

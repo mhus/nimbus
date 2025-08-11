@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.terrain.controller;
 
-import de.mhus.nimbus.shared.dto.terrain.AssetDto;
-import de.mhus.nimbus.shared.dto.terrain.request.AssetBatchRequest;
+import de.mhus.nimbus.shared.dto.world.AssetDto;
+import de.mhus.nimbus.shared.dto.world.AssetBatchRequest;
 import de.mhus.nimbus.world.terrain.service.WorldTerrainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,39 +12,39 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/assets")
+@RequestMapping("/api/assets")
 @RequiredArgsConstructor
 public class AssetController {
-    
+
     private final WorldTerrainService worldTerrainService;
-    
+
     @PostMapping
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<AssetDto> createAsset(@RequestBody AssetDto assetDto) {
         AssetDto created = worldTerrainService.createAsset(assetDto);
         return ResponseEntity.ok(created);
     }
-    
+
     @GetMapping("/{world}/{name}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<AssetDto> getAsset(
             @PathVariable String world,
             @PathVariable String name) {
         return worldTerrainService.getAsset(world, name)
-                .map(ResponseEntity::ok)
+                .map(asset -> ResponseEntity.ok(asset))
                 .orElse(ResponseEntity.notFound().build());
     }
-    
-    @GetMapping("/{world}")
+
+    @GetMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Page<AssetDto>> getAssets(
-            @PathVariable String world,
+            @RequestParam String world,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Page<AssetDto> assets = worldTerrainService.getAssets(world, page, size);
         return ResponseEntity.ok(assets);
     }
-    
+
     @PostMapping("/batch")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<AssetDto>> getAssetsBatch(@RequestBody AssetBatchRequest request) {
@@ -59,7 +59,7 @@ public class AssetController {
             @PathVariable String name,
             @RequestBody AssetDto assetDto) {
         return worldTerrainService.updateAsset(world, name, assetDto)
-                .map(ResponseEntity::ok)
+                .map(asset -> ResponseEntity.ok(asset))
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -73,7 +73,7 @@ public class AssetController {
         }
         return ResponseEntity.notFound().build();
     }
-    
+
     @PostMapping("/compress")
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> compressAssets(@RequestBody String world) {
