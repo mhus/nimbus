@@ -78,4 +78,28 @@ Batch-Operationen: Für effiziente Multi-Cluster-Abfragen
 Die Implementierung folgt vollständig der Spezifikation aus 12_world_terrain.md und den Entwicklungsrichtlinien aus 02_development.md. Der Service ist bereit für den Einsatz und kann mit den anderen Nimbus-Komponenten integriert werden.
 Möchten Sie, dass ich bestimmte Aspekte der Implementierung weiter verfeinere oder zusätzliche Features hinzufüge?
 ```
+## 03 Fix saveCluster() Method
+
+```text
+Beim speichern des Clusters in saveCluster() müssen 
+die Felder mit den bestehenden Feldern zusammengeführt 
+werden.
+```
+
+```text
+Die Änderungen wurden erfolgreich implementiert! Es gibt nur eine kleine Warnung bezüglich einer unnötigen toString() Aufruf, aber das ist nicht kritisch für die Funktionalität.
+Die saveCluster() Methode wurde so erweitert, dass sie jetzt:
+Bestehende Felder lädt: Wenn ein Cluster bereits existiert, werden die bestehenden Felder aus der JSON-Datenbank geladen
+Felder zusammenführt: Die neuen Felder werden mit den bestehenden Feldern basierend auf ihrer Position (x, y, z) zusammengeführt
+Intelligentes Merging:
+Felder an derselben Position werden zusammengeführt, wobei neue Werte die alten überschreiben (außer bei null-Werten)
+Parameter werden gemergt, wobei neue Parameter bestehende überschreiben
+Komplett neue Felder werden hinzugefügt
+Die wichtigsten neuen Hilfsmethoden sind:
+parseExistingFields(): Parst die bestehenden JSON-Felddaten
+mergeFields(): Führt Listen von Feldern zusammen basierend auf Position
+mergeField(): Führt zwei einzelne Felder zusammen
+mergeParameters(): Führt Parameter-Maps zusammen
+Jetzt werden beim Speichern eines Clusters die bestehenden Felder nicht mehr überschrieben, sondern intelligent mit den neuen Feldern zusammengeführt.
+```
 

@@ -126,10 +126,20 @@ public class WorldTerrainService {
 
     private void saveCluster(String world, ClusterDto cluster) {
         try {
-            String clusterData = objectMapper.writeValueAsString(cluster.getFields());
-
             Optional<MapCluster> existingCluster = mapClusterRepository
                     .findByWorldAndLevelAndClusterXAndClusterY(world, cluster.getLevel(), cluster.getX(), cluster.getY());
+
+            List<FieldDto> finalFields;
+            if (existingCluster.isPresent()) {
+                // Merge existing fields with new fields
+                List<FieldDto> existingFields = parseExistingFields(existingCluster.get().getData());
+                finalFields = mergeFields(existingFields, cluster.getFields());
+            } else {
+                // No existing cluster, use new fields as-is
+                finalFields = cluster.getFields();
+            }
+
+            String clusterData = objectMapper.writeValueAsString(finalFields);
 
             MapCluster mapCluster;
             if (existingCluster.isPresent()) {
@@ -151,6 +161,66 @@ public class WorldTerrainService {
             log.error("Error saving cluster data", e);
             throw new RuntimeException("Failed to save cluster data", e);
         }
+    }
+
+    private List<FieldDto> parseExistingFields(String data) {
+        try {
+            return objectMapper.readValue(data, objectMapper.getTypeFactory()
+                    .constructCollectionType(List.class, FieldDto.class));
+        } catch (Exception e) {
+            log.warn("Failed to parse existing cluster data, returning empty list", e);
+            return new ArrayList<>();
+        }
+    }
+
+    private List<FieldDto> mergeFields(List<FieldDto> existingFields, List<FieldDto> newFields) {
+        Map<String, FieldDto> fieldMap = new HashMap<>();
+
+        // Add existing fields to map with position as key
+        for (FieldDto field : existingFields) {
+            String key = field.getX() + "," + field.getY() + "," + field.getZ();
+            fieldMap.put(key, field);
+        }
+
+        // Merge or add new fields
+        for (FieldDto newField : newFields) {
+            String key = newField.getX() + "," + newField.getY() + "," + newField.getZ();
+            FieldDto existingField = fieldMap.get(key);
+
+            if (existingField != null) {
+                // Merge fields at same position
+                fieldMap.put(key, mergeField(existingField, newField));
+            } else {
+                // Add new field
+                fieldMap.put(key, newField);
+            }
+        }
+
+        return new ArrayList<>(fieldMap.values());
+    }
+
+    private FieldDto mergeField(FieldDto existing, FieldDto newField) {
+        return FieldDto.builder()
+                .x(newField.getX())
+                .y(newField.getY())
+                .z(newField.getZ())
+                .groups(newField.getGroups() != null ? newField.getGroups() : existing.getGroups())
+                .materials(newField.getMaterials() != null ? newField.getMaterials() : existing.getMaterials())
+                .opacity(newField.getOpacity() != null ? newField.getOpacity() : existing.getOpacity())
+                .sizeZ(newField.getSizeZ() != null ? newField.getSizeZ() : existing.getSizeZ())
+                .parameters(mergeParameters(existing.getParameters(), newField.getParameters()))
+                .build();
+    }
+
+    private Map<String, String> mergeParameters(Map<String, String> existing, Map<String, String> newParams) {
+        Map<String, String> merged = new HashMap<>();
+        if (existing != null) {
+            merged.putAll(existing);
+        }
+        if (newParams != null) {
+            merged.putAll(newParams); // New parameters override existing ones
+        }
+        return merged.isEmpty() ? null : merged;
     }
 
     // Sprite operations
