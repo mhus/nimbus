@@ -15,16 +15,16 @@ import java.util.List;
 @RequestMapping("/assets")
 @RequiredArgsConstructor
 public class AssetController {
-
+    
     private final WorldTerrainService worldTerrainService;
-
+    
     @PostMapping
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<AssetDto> createAsset(@RequestBody AssetDto assetDto) {
         AssetDto created = worldTerrainService.createAsset(assetDto);
         return ResponseEntity.ok(created);
     }
-
+    
     @GetMapping("/{world}/{name}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<AssetDto> getAsset(
@@ -34,7 +34,7 @@ public class AssetController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
+    
     @GetMapping("/{world}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Page<AssetDto>> getAssets(
@@ -44,14 +44,14 @@ public class AssetController {
         Page<AssetDto> assets = worldTerrainService.getAssets(world, page, size);
         return ResponseEntity.ok(assets);
     }
-
+    
     @PostMapping("/batch")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<AssetDto>> getAssetsBatch(@RequestBody AssetBatchRequest request) {
         List<AssetDto> assets = worldTerrainService.getAssetsBatch(request);
         return ResponseEntity.ok(assets);
     }
-
+    
     @PutMapping("/{world}/{name}")
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<AssetDto> updateAsset(
@@ -62,7 +62,7 @@ public class AssetController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
+    
     @DeleteMapping("/{world}/{name}")
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> deleteAsset(
@@ -73,7 +73,7 @@ public class AssetController {
         }
         return ResponseEntity.notFound().build();
     }
-
+    
     @PostMapping("/compress")
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> compressAssets(@RequestBody String world) {

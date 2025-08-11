@@ -3,7 +3,7 @@ package de.mhus.nimbus.shared.dto.terrain;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class SpriteDto {
     private String id;
     private Integer x;

@@ -2,9 +2,11 @@ package de.mhus.nimbus.shared.dto.terrain.request;
 
 import de.mhus.nimbus.shared.dto.terrain.SpriteDto;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -18,9 +20,10 @@ public class SpriteCreateRequest {
     private List<SpriteData> sprites;
 
     @Data
+    @EqualsAndHashCode(callSuper = false)
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
+    @SuperBuilder
     public static class SpriteData extends SpriteDto {
         private Boolean dynamic;
     }

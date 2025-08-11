@@ -5,6 +5,7 @@ import de.mhus.nimbus.shared.dto.terrain.request.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -64,7 +65,7 @@ public class TerrainServiceClient {
                         .queryParam("size", size)
                         .build())
                 .retrieve()
-                .bodyToMono(Page.class)
+                .bodyToMono(new ParameterizedTypeReference<Page<MaterialDto>>() {})
                 .doOnError(error -> log.error("Error getting materials", error));
     }
 
@@ -117,7 +118,7 @@ public class TerrainServiceClient {
                 .uri("/maps/batch")
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(List.class)
+                .bodyToMono(new ParameterizedTypeReference<List<ClusterDto>>() {})
                 .doOnError(error -> log.error("Error getting map batch", error));
     }
 
@@ -151,7 +152,7 @@ public class TerrainServiceClient {
                 .uri("/sprites")
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(List.class)
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
                 .doOnError(error -> log.error("Error creating sprites", error));
     }
 
@@ -169,7 +170,7 @@ public class TerrainServiceClient {
                 .get()
                 .uri("/sprites/{world}/{level}/{x}/{y}", world, level, x, y)
                 .retrieve()
-                .bodyToMono(List.class)
+                .bodyToMono(new ParameterizedTypeReference<List<SpriteDto>>() {})
                 .doOnError(error -> log.error("Error getting sprites in cluster", error));
     }
 
@@ -221,7 +222,7 @@ public class TerrainServiceClient {
                         .queryParam("size", size)
                         .build(world))
                 .retrieve()
-                .bodyToMono(Page.class)
+                .bodyToMono(new ParameterizedTypeReference<Page<AssetDto>>() {})
                 .doOnError(error -> log.error("Error getting assets", error));
     }
 }

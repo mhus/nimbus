@@ -484,6 +484,15 @@ public class WorldTerrainService {
                 .build();
     }
 
+    private GroupDto convertGroupToDto(TerrainGroup group) {
+        return GroupDto.builder()
+                .id(group.getId())
+                .name(group.getName())
+                .type(group.getType())
+                .properties(convertJsonToProperties(group.getData()))
+                .build();
+    }
+
     private Sprite createSpriteEntity(String id, String world, Integer level, SpriteCreateRequest.SpriteData spriteData) {
         try {
             // Calculate cluster positions
