@@ -846,7 +846,7 @@ Ausserdem wird die ID des Clusters und die X- und Y-Koordinaten des Clusters ang
 
 ### Sprite Update
 
-**Topic: `terrain-prite-update`**
+**Topic: `terrain-sprite-update`**
 
 Dieser Topic wird verwendet, um Änderungen an Sprites zu veröffentlichen.
 Es wird ein update Typ 'create', 'update', 'moved', 'enabled', 'disabled' oder 'delete' verwendet, 
@@ -858,6 +858,7 @@ des Sprites angegeben.
     "type": "create|update|moved|enabled|disabled|delete", // Typ der Änderung
     "world": "string", // ID der Welt
     "level": "int", // Ebene des Sprites
+    "reference": "string", // NEU Referenz zu einem Item oder Lebewesen, das das Sprite repräsentiert (optional, für create und update)
     "id": "string", // ID des Sprites
     "x": int, // X-Koordinate des Sprites im Gitter (optional, für create und update)
     "y": int // Y-Koordinate des Sprites im Gitter (optional, für create und update)

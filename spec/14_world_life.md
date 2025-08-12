@@ -123,7 +123,7 @@ Was wird benötigt:
     automatisch ein neues Tier in der Gruppe erzeugt.
   * Eine einfache LifecycleService für NPCs wird benötigt,
     der die verschiedenen NPC-Arten verwaltet. Er lässt die NPCs langsam in ihrem definierten
-    `area` herum laufen.
+    `area` herumlaufen.
   * Ein einfacher LifecycleService für PCs wird benötigt,
     der die verschiedenen PC-Arten verwaltet. PCs werden von aussen gesteuert.
 
@@ -169,6 +169,7 @@ die alle oben genannten Arten umfassen.
   "name": "string",
   "type": "string", // z.B. "animal", "plant", "npc", "pc", redundant mit Species
   "description": "string",
+  "owner": "string", // ID des Besitzers (z.B. Spieler) bei PCs
   "attributes": {
     "key": "value" // z.B. "intelligence": "high", "aggression": "low"
   },
@@ -420,4 +421,25 @@ Abrufen aller registrierten Beings für eine bestimmte Species im BeingsManageme
 Rolle: `ADMIN`
 
 Abrufen aller registrierten Beings für eine bestimmte Gruppe im BeingsManagementService.
+
+## Kafka Topics
+
+### Beings-Registrierung
+
+**Topic: `terrain-life-beings-registration`**
+
+Veröffentlicht Ereignisse, wenn ein Being registriert oder deregistriert wird.
+
+### Species-Änderungen
+
+**Topic: `terrain-life-species-changes`**
+
+Veröffentlicht Ereignisse, wenn eine Species angelegt, aktualisiert oder gelöscht wird.
+
+### Beings-Änderungen
+
+**Topic: `terrain-life-beings-changes`**
+
+Veröffentlicht Ereignisse, wenn ein Being angelegt, aktualisiert, gelöscht, enabled oder disabled wird.
+Topic wird nicht bei Änderungen der Position verwendet.
 
