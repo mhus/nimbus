@@ -104,7 +104,6 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   - Er berechnet die Kollisionen zwischen Feldern, Sprites und Lebewesen.
   - Nur über die Komponente 'world-physics' können Lebewesen und Sprites bewegt werden.
   - Er ermöglicht das Berechnen von Bewegungen und Kollisionen in Echtzeit.
-  - Es speichert dynamische Sprites in einer Redis-Datenbank (shared mit 'world-Terrain').
 - **world-items**: Ein World Service, der die Items in den Welten verwaltet.
   Er ermöglicht das Erstellen, Löschen und Abfragen von Items und deren Aktionen.
   - Er speichert Items in einer PostgreSQL-Datenbank via JPA.
