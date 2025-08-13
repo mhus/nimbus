@@ -3,6 +3,7 @@ package de.mhus.nimbus.worldbridge.websocket;
 import de.mhus.nimbus.worldbridge.service.AuthenticationResult;
 import de.mhus.nimbus.worldbridge.service.AuthenticationService;
 import de.mhus.nimbus.worldbridge.service.WorldService;
+import de.mhus.nimbus.world.shared.client.TerrainServiceClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,6 +27,9 @@ class WorldBridgeWebSocketHandlerIntegrationTest {
 
     @MockBean
     private WorldService worldService;
+
+    @MockBean
+    private TerrainServiceClient terrainServiceClient;
 
     @Test
     void contextLoads() {
