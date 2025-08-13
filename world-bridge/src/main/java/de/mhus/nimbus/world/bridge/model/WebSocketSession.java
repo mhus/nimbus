@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.bridge.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Builder;
 import de.mhus.nimbus.shared.dto.worldwebsocket.RegisterClusterCommandData.ClusterCoordinate;
@@ -10,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class WebSocketSession {
     private String sessionId;
     private String userId;
