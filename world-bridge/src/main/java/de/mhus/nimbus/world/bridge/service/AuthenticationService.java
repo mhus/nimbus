@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.bridge.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuthenticationService {
 
     @Value("${nimbus.identity.service.url:http://localhost:8080}")
@@ -22,7 +24,7 @@ public class AuthenticationService {
     @Value("${nimbus.world.shared.secret:default-secret}")
     private String sharedSecret;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     public AuthenticationResult validateToken(String token) {
         try {

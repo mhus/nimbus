@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8089
 
 spring:
   application:
@@ -22,6 +22,9 @@ nimbus:
         url: http://localhost:8081
     shared:
       secret: nimbus-world-secret
+world:
+  auth:
+    secret: ${WORLD_AUTH_SECRET:world-terrain-secret-key}
 
 logging:
   level:

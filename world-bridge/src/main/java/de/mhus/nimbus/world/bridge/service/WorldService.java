@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.bridge.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class WorldService {
 
     @Value("${nimbus.world.terrain.service.url:http://localhost:8081}")
@@ -21,7 +23,7 @@ public class WorldService {
     @Value("${nimbus.world.shared.secret:default-secret}")
     private String sharedSecret;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     public boolean hasWorldAccess(String userId, String worldId) {
         try {
