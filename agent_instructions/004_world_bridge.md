@@ -66,3 +66,19 @@ Mocking von externen Services
 Die Implementierung ist vollständig funktionsfähig und folgt den Spring Boot und Maven Best Practices. Der Service kann gestartet werden und WebSocket-Verbindungen akzeptieren. Die Test-Abhängigkeiten müssten nur noch zur pom.xml hinzugefügt werden, um die Tests ausführen zu können.
 ```
 
+## 02 Kommando-Implementierung ändern
+
+```text
+In der Datei `spec/20_world_bridge.md` wurde 
+der Abschnitt '### Kommando-Implementierung' hinzugefügt.
+Ändere die Kommando-Implementierung in der WorldBridgeService-Klasse, um die neuen Anforderungen zu erfüllen:
+* Füge die `WebSocketCommand`-Klasse hinzu, die die `execute` und `info`-Methoden enthält.
+* Implementiere die `info`-Methode, die ein `WebSocketCommandInfo`-Objekt zurückgibt, das die Informationen über das Kommando enthält, wie den Service-Namen, Namen des Kommandos und die Beschreibung.
+* Speichere die Kommandos in einer Map in der `WorldBridgeService`-Klasse, um sie später schnell zu finden.
+* Implementiere die `executeCommand`-Methode, die ein Kommando entgegennimmt, das entsprechende Kommando in der Map sucht und es ausführt.
+* Stelle sicher, dass die `execute`-Methode der Kommandos in der Klasse `ExecuteRequest` die erforderlichen Parameter entgegennimmt und die Logik entsprechend der Spezifikation implementiert.
+* Stelle sicher dass die `execute`-Methode eine `ExecuteResponse` zurückgibt, die das Ergebnis der Ausführung des Kommandos enthält.
+* Füge Unit-Tests hinzu, um die Funktionalität der Kommandos zu überprüfen.
+* Teste die Änderungen, um sicherzustellen, dass die Kommandos korrekt ausgeführt werden und die Informationen über die Kommandos korrekt zurückgegeben werden.
+```
+

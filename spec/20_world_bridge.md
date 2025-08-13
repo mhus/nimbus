@@ -47,7 +47,7 @@ Die Struktur eines Kommandos sieht wie folgt aus:
 }
 ```
 
-Die Aatworten des WebSocket-Servers haben ebenfalls eine ähnliche Struktur.
+Die Antworten des WebSocket-Servers haben ebenfalls eine ähnliche Struktur.
 
 ```json
 {
@@ -62,6 +62,26 @@ Die Aatworten des WebSocket-Servers haben ebenfalls eine ähnliche Struktur.
   "message": "string" // Optional: Nachricht zur Beschreibung des Status
 }
 ```
+
+### Kommando-Implementierung
+
+Jedes Kommando soll als separate Bean/Service Klasse implementiert
+werden. Ein Interface `WebSocketCommand` wird definiert, 
+das die Methode `execute` und `info` enthält.
+
+Die `info`-Methode gibt das Objekt `WebSocketCommandInfo` zurück, das die Informationen
+über das Kommando enthält, wie den Service-Namen, Namen des Kommandos und die Beschreibung.
+
+Die `execute`-Methode nimmt als Parameter eine Klasse `ExecuteRequest` entgegen, 
+die die erforderlichen Parameter für das Kommando enthält. Diese Methode führt die Logik des Kommandos 
+aus und gibt eine `ExecuteResponse` zurück.
+
+In der `WorldBridgeService` Klasse werden die Kommandos als Liste von `WebSocketCommand`-Instanzen
+Autowired und in der PostConstruct-Methode in einer Map gespeichert, um sie später
+schnell zu finden.
+
+Die `executeCommand`-Methode von `WorldBridgeService` nimmt 
+ein Kommando entgegen, sucht das entsprechende Kommando in der Liste und führt es aus.
 
 ## Login
 
