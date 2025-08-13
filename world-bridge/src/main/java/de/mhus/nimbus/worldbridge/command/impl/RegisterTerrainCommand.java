@@ -1,8 +1,8 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.RegisterTerrainCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.RegisterTerrainCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.worldbridge.command.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class RegisterTerrainCommand implements WebSocketCommand {
             request.getSessionInfo().getRegisteredTerrainEvents().clear();
             request.getSessionInfo().getRegisteredTerrainEvents().addAll(terrainData.getEvents());
 
-            WebSocketResponse response = WebSocketResponse.builder()
+            WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                     .service(request.getCommand().getService())
                     .command(request.getCommand().getCommand())
                     .requestId(request.getCommand().getRequestId())

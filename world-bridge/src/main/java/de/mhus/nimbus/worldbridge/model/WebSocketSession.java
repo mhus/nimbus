@@ -2,7 +2,7 @@ package de.mhus.nimbus.worldbridge.model;
 
 import lombok.Data;
 import lombok.Builder;
-import de.mhus.nimbus.shared.dto.websocket.RegisterClusterCommandData.ClusterCoordinate;
+import de.mhus.nimbus.shared.dto.worldwebsocket.RegisterClusterCommandData.ClusterCoordinate;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;

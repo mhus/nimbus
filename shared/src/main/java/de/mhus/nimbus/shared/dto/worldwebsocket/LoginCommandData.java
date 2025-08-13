@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.dto.websocket;
+package de.mhus.nimbus.shared.dto.worldwebsocket;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

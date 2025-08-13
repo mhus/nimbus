@@ -1,7 +1,7 @@
 package de.mhus.nimbus.worldbridge.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.worldbridge.model.WebSocketSession;
 import de.mhus.nimbus.worldbridge.websocket.WorldBridgeWebSocketHandler;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class TerrainEventConsumer {
             // Filter and send to registered clients
             webSocketHandler.getSessionData().forEach((sessionId, sessionInfo) -> {
                 if (shouldReceiveEvent(sessionInfo, event, eventType, worldId)) {
-                    WebSocketResponse response = WebSocketResponse.builder()
+                    WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                             .service("terrain")
                             .command("event")
                             .data(event)

@@ -1,6 +1,7 @@
 package de.mhus.nimbus.worldbridge.service;
 
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
 import de.mhus.nimbus.worldbridge.command.*;
 import de.mhus.nimbus.worldbridge.model.WebSocketSession;
 import lombok.RequiredArgsConstructor;
@@ -35,15 +36,15 @@ public class WorldBridgeService {
                 commandMap.keySet());
     }
 
-    public WebSocketResponse processCommand(String sessionId, WebSocketSession sessionInfo,
-                                          de.mhus.nimbus.shared.dto.websocket.WebSocketCommand command) {
+    public WorldWebSocketResponse processCommand(String sessionId, WebSocketSession sessionInfo,
+                                                 WorldWebSocketCommand command) {
         try {
             ExecuteResponse executeResponse = executeCommand(sessionId, sessionInfo, command);
 
             if (executeResponse.isSuccess()) {
                 return executeResponse.getResponse();
             } else {
-                return WebSocketResponse.builder()
+                return WorldWebSocketResponse.builder()
                         .service(command.getService())
                         .command(command.getCommand())
                         .requestId(command.getRequestId())
@@ -54,7 +55,7 @@ public class WorldBridgeService {
             }
         } catch (Exception e) {
             log.error("Error processing command: {}", command.getCommand(), e);
-            return WebSocketResponse.builder()
+            return WorldWebSocketResponse.builder()
                     .service(command.getService())
                     .command(command.getCommand())
                     .requestId(command.getRequestId())
@@ -66,7 +67,7 @@ public class WorldBridgeService {
     }
 
     public ExecuteResponse executeCommand(String sessionId, WebSocketSession sessionInfo,
-                                        de.mhus.nimbus.shared.dto.websocket.WebSocketCommand command) {
+                                        WorldWebSocketCommand command) {
         WebSocketCommand commandHandler = commandMap.get(command.getCommand());
 
         if (commandHandler == null) {

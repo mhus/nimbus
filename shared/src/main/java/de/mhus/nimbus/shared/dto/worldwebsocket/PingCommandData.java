@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.dto.websocket;
+package de.mhus.nimbus.shared.dto.worldwebsocket;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UseWorldCommandData {
-    @JsonProperty("worldId")
-    private String worldId;
+public class PingCommandData {
+    @JsonProperty("timestamp")
+    private Long timestamp;
 }

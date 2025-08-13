@@ -1,8 +1,8 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.LoginCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.LoginCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.worldbridge.command.*;
 import de.mhus.nimbus.worldbridge.service.AuthenticationResult;
 import de.mhus.nimbus.worldbridge.service.AuthenticationService;
@@ -33,7 +33,7 @@ public class LoginCommand implements WebSocketCommand {
             AuthenticationResult authResult = authenticationService.validateToken(loginData.getToken());
 
             if (!authResult.isValid()) {
-                WebSocketResponse errorResponse = WebSocketResponse.builder()
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
                         .service(request.getCommand().getService())
                         .command(request.getCommand().getCommand())
                         .requestId(request.getCommand().getRequestId())
@@ -48,7 +48,7 @@ public class LoginCommand implements WebSocketCommand {
             request.getSessionInfo().setUserId(authResult.getUserId());
             request.getSessionInfo().setRoles(authResult.getRoles());
 
-            WebSocketResponse response = WebSocketResponse.builder()
+            WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                     .service(request.getCommand().getService())
                     .command(request.getCommand().getCommand())
                     .requestId(request.getCommand().getRequestId())

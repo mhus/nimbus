@@ -1,6 +1,6 @@
 package de.mhus.nimbus.worldbridge.service;
 
-import de.mhus.nimbus.shared.dto.websocket.*;
+import de.mhus.nimbus.shared.dto.worldwebsocket.*;
 import de.mhus.nimbus.worldbridge.command.*;
 import de.mhus.nimbus.worldbridge.model.WebSocketSession;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,9 +62,9 @@ class WorldBridgeServiceTest {
     void testProcessCommandSuccess() {
         // Given
         String sessionId = "test-session";
-        WebSocketCommand command = new WebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
 
-        WebSocketResponse expectedResponse = WebSocketResponse.builder()
+        WorldWebSocketResponse expectedResponse = WorldWebSocketResponse.builder()
                 .service("bridge")
                 .command("login")
                 .requestId("req-1")
@@ -75,7 +75,7 @@ class WorldBridgeServiceTest {
         when(mockCommand1.execute(any(ExecuteRequest.class))).thenReturn(executeResponse);
 
         // When
-        WebSocketResponse response = worldBridgeService.processCommand(sessionId, testSession, command);
+        WorldWebSocketResponse response = worldBridgeService.processCommand(sessionId, testSession, command);
 
         // Then
         assertEquals("success", response.getStatus());
@@ -89,13 +89,13 @@ class WorldBridgeServiceTest {
     void testProcessCommandError() {
         // Given
         String sessionId = "test-session";
-        WebSocketCommand command = new WebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
 
         ExecuteResponse executeResponse = ExecuteResponse.error("AUTH_ERROR", "Authentication failed");
         when(mockCommand1.execute(any(ExecuteRequest.class))).thenReturn(executeResponse);
 
         // When
-        WebSocketResponse response = worldBridgeService.processCommand(sessionId, testSession, command);
+        WorldWebSocketResponse response = worldBridgeService.processCommand(sessionId, testSession, command);
 
         // Then
         assertEquals("error", response.getStatus());
@@ -107,7 +107,7 @@ class WorldBridgeServiceTest {
     void testExecuteCommandUnknown() {
         // Given
         String sessionId = "test-session";
-        WebSocketCommand command = new WebSocketCommand("bridge", "unknown", null, "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "unknown", null, "req-1");
 
         // When
         ExecuteResponse response = worldBridgeService.executeCommand(sessionId, testSession, command);
@@ -122,12 +122,12 @@ class WorldBridgeServiceTest {
     void testProcessCommandException() {
         // Given
         String sessionId = "test-session";
-        WebSocketCommand command = new WebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
 
         when(mockCommand1.execute(any(ExecuteRequest.class))).thenThrow(new RuntimeException("Test exception"));
 
         // When
-        WebSocketResponse response = worldBridgeService.processCommand(sessionId, testSession, command);
+        WorldWebSocketResponse response = worldBridgeService.processCommand(sessionId, testSession, command);
 
         // Then
         assertEquals("error", response.getStatus());

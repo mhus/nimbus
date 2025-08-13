@@ -1,7 +1,7 @@
 package de.mhus.nimbus.worldbridge.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.*;
+import de.mhus.nimbus.shared.dto.worldwebsocket.*;
 import de.mhus.nimbus.worldbridge.model.WebSocketSession;
 import de.mhus.nimbus.worldbridge.service.WorldBridgeService;
 import lombok.RequiredArgsConstructor;
@@ -36,12 +36,12 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
         String payload = (String) message.getPayload();
 
         try {
-            WebSocketCommand command = objectMapper.readValue(payload, WebSocketCommand.class);
-            WebSocketResponse response = processCommand(sessionId, command);
+            WorldWebSocketCommand command = objectMapper.readValue(payload, WorldWebSocketCommand.class);
+            WorldWebSocketResponse response = processCommand(sessionId, command);
             sendResponse(session, response);
         } catch (Exception e) {
             log.error("Error processing WebSocket message", e);
-            WebSocketResponse errorResponse = WebSocketResponse.builder()
+            WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
                     .status("error")
                     .errorCode("INVALID_MESSAGE")
                     .message("Invalid message format")
@@ -68,11 +68,11 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
         return false;
     }
 
-    private WebSocketResponse processCommand(String sessionId, WebSocketCommand command) {
+    private WorldWebSocketResponse processCommand(String sessionId, WorldWebSocketCommand command) {
         WebSocketSession sessionInfo = sessionData.get(sessionId);
 
         if (!"bridge".equals(command.getService())) {
-            return WebSocketResponse.builder()
+            return WorldWebSocketResponse.builder()
                     .service(command.getService())
                     .command(command.getCommand())
                     .requestId(command.getRequestId())
@@ -84,7 +84,7 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
 
         // Check authentication for all commands except login
         if (!"login".equals(command.getCommand()) && !sessionInfo.isLoggedIn()) {
-            return WebSocketResponse.builder()
+            return WorldWebSocketResponse.builder()
                     .service(command.getService())
                     .command(command.getCommand())
                     .requestId(command.getRequestId())
@@ -97,7 +97,7 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
         // Check world selection for all commands except login and use
         if (!"login".equals(command.getCommand()) && !"use".equals(command.getCommand())
             && !"ping".equals(command.getCommand()) && !sessionInfo.hasWorld()) {
-            return WebSocketResponse.builder()
+            return WorldWebSocketResponse.builder()
                     .service(command.getService())
                     .command(command.getCommand())
                     .requestId(command.getRequestId())
@@ -110,7 +110,7 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
         return worldBridgeService.processCommand(sessionId, sessionInfo, command);
     }
 
-    private void sendResponse(org.springframework.web.socket.WebSocketSession session, WebSocketResponse response) {
+    private void sendResponse(org.springframework.web.socket.WebSocketSession session, WorldWebSocketResponse response) {
         try {
             String responseJson = objectMapper.writeValueAsString(response);
             session.sendMessage(new TextMessage(responseJson));
@@ -119,7 +119,7 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    public void sendMessageToSession(String sessionId, WebSocketResponse message) {
+    public void sendMessageToSession(String sessionId, WorldWebSocketResponse message) {
         org.springframework.web.socket.WebSocketSession session = sessions.get(sessionId);
         if (session != null && session.isOpen()) {
             sendResponse(session, message);

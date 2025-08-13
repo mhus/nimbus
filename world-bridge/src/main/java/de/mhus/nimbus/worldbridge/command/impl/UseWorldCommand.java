@@ -1,8 +1,8 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.UseWorldCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.UseWorldCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.worldbridge.command.*;
 import de.mhus.nimbus.worldbridge.service.WorldService;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class UseWorldCommand implements WebSocketCommand {
 
             // If no worldId provided, return current world
             if (useWorldData.getWorldId() == null || useWorldData.getWorldId().isEmpty()) {
-                WebSocketResponse response = WebSocketResponse.builder()
+                WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                         .service(request.getCommand().getService())
                         .command(request.getCommand().getCommand())
                         .requestId(request.getCommand().getRequestId())
@@ -45,7 +45,7 @@ public class UseWorldCommand implements WebSocketCommand {
             boolean hasAccess = worldService.hasWorldAccess(
                 request.getSessionInfo().getUserId(), useWorldData.getWorldId());
             if (!hasAccess) {
-                WebSocketResponse errorResponse = WebSocketResponse.builder()
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
                         .service(request.getCommand().getService())
                         .command(request.getCommand().getCommand())
                         .requestId(request.getCommand().getRequestId())
@@ -63,7 +63,7 @@ public class UseWorldCommand implements WebSocketCommand {
             request.getSessionInfo().setWorldId(useWorldData.getWorldId());
             request.getSessionInfo().clearRegistrations();
 
-            WebSocketResponse response = WebSocketResponse.builder()
+            WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                     .service(request.getCommand().getService())
                     .command(request.getCommand().getCommand())
                     .requestId(request.getCommand().getRequestId())

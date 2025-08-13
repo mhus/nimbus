@@ -1,7 +1,7 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
-import de.mhus.nimbus.shared.dto.websocket.PingCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketCommand;
+import de.mhus.nimbus.shared.dto.worldwebsocket.PingCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
 import de.mhus.nimbus.worldbridge.command.ExecuteRequest;
 import de.mhus.nimbus.worldbridge.command.ExecuteResponse;
 import de.mhus.nimbus.worldbridge.command.WebSocketCommandInfo;
@@ -15,13 +15,13 @@ class PingCommandTest {
 
     private PingCommand pingCommand;
     private WebSocketSession testSession;
-    private WebSocketCommand testCommand;
+    private WorldWebSocketCommand testCommand;
 
     @BeforeEach
     void setUp() {
         pingCommand = new PingCommand();
         testSession = new WebSocketSession();
-        testCommand = new WebSocketCommand("bridge", "ping", null, "req-1");
+        testCommand = new WorldWebSocketCommand("bridge", "ping", null, "req-1");
     }
 
     @Test

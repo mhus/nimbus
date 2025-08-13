@@ -1,8 +1,8 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.RegisterClusterCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.RegisterClusterCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.worldbridge.command.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class RegisterClusterCommand implements WebSocketCommand {
             request.getSessionInfo().getRegisteredClusters().clear();
             request.getSessionInfo().getRegisteredClusters().addAll(clusterData.getClusters());
 
-            WebSocketResponse response = WebSocketResponse.builder()
+            WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                     .service(request.getCommand().getService())
                     .command(request.getCommand().getCommand())
                     .requestId(request.getCommand().getRequestId())

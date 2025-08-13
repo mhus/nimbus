@@ -1,6 +1,6 @@
 package de.mhus.nimbus.worldbridge.command;
 
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -11,12 +11,12 @@ import lombok.Builder;
 @NoArgsConstructor
 @Builder
 public class ExecuteResponse {
-    private WebSocketResponse response;
+    private WorldWebSocketResponse response;
     private boolean success;
     private String errorCode;
     private String message;
 
-    public static ExecuteResponse success(WebSocketResponse response) {
+    public static ExecuteResponse success(WorldWebSocketResponse response) {
         return ExecuteResponse.builder()
                 .response(response)
                 .success(true)

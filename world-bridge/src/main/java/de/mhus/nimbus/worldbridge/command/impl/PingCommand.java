@@ -1,8 +1,8 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.PingCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.PingCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.worldbridge.command.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,7 +23,7 @@ public class PingCommand implements WebSocketCommand {
         PingCommandData pingData = objectMapper.convertValue(
             request.getCommand().getData(), PingCommandData.class);
 
-        WebSocketResponse response = WebSocketResponse.builder()
+        WorldWebSocketResponse response = WorldWebSocketResponse.builder()
                 .service(request.getCommand().getService())
                 .command("pong")
                 .requestId(request.getCommand().getRequestId())

@@ -1,14 +1,16 @@
-package de.mhus.nimbus.shared.dto.websocket;
+package de.mhus.nimbus.shared.dto.worldwebsocket;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class WebSocketCommand {
+@Builder
+public class WorldWebSocketResponse {
     @JsonProperty("service")
     private String service;
 
@@ -20,4 +22,13 @@ public class WebSocketCommand {
 
     @JsonProperty("requestId")
     private String requestId;
+
+    @JsonProperty("status")
+    private String status; // "success" or "error"
+
+    @JsonProperty("errorCode")
+    private String errorCode;
+
+    @JsonProperty("message")
+    private String message;
 }

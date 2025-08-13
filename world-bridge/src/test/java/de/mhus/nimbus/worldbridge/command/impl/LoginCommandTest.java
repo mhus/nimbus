@@ -1,7 +1,7 @@
 package de.mhus.nimbus.worldbridge.command.impl;
 
-import de.mhus.nimbus.shared.dto.websocket.LoginCommandData;
-import de.mhus.nimbus.shared.dto.websocket.WebSocketCommand;
+import de.mhus.nimbus.shared.dto.worldwebsocket.LoginCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
 import de.mhus.nimbus.worldbridge.command.ExecuteRequest;
 import de.mhus.nimbus.worldbridge.command.ExecuteResponse;
 import de.mhus.nimbus.worldbridge.command.WebSocketCommandInfo;
@@ -31,12 +31,12 @@ class LoginCommandTest {
     private LoginCommand loginCommand;
 
     private WebSocketSession testSession;
-    private WebSocketCommand testCommand;
+    private WorldWebSocketCommand testCommand;
 
     @BeforeEach
     void setUp() {
         testSession = new WebSocketSession();
-        testCommand = new WebSocketCommand("bridge", "login", null, "req-1");
+        testCommand = new WorldWebSocketCommand("bridge", "login", null, "req-1");
     }
 
     @Test
