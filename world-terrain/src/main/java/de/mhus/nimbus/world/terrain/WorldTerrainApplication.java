@@ -5,7 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-@SpringBootApplication
+@SpringBootApplication(
+        scanBasePackages = {
+                "de.mhus.nimbus.world.terrain",
+                "de.mhus.nimbus.world.shared"
+        }
+)
 @EnableJpaRepositories
 @EnableTransactionManagement
 public class WorldTerrainApplication {
