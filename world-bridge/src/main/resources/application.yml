@@ -1,0 +1,29 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: world-bridge
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: world-bridge
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+nimbus:
+  identity:
+    service:
+      url: http://localhost:8080
+  world:
+    terrain:
+      service:
+        url: http://localhost:8081
+    shared:
+      secret: nimbus-world-secret
+
+logging:
+  level:
+    de.mhus.nimbus.worldbridge: DEBUG
+    org.springframework.kafka: INFO
