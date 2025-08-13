@@ -113,3 +113,57 @@ Alle Tests bestehen erfolgreich - die neue Architektur funktioniert einwandfrei 
 Die Implementierung entspricht vollständig den Anforderungen aus der Spezifikation spec/20_world_bridge.md und bietet eine solide Basis für zukünftige Erweiterungen des World Bridge Service.
 ```
 
+## 03 Implementiere alle Terrain-Kommandos
+
+```text
+Implementiere für jeden REST-Endpunkt im modul `world-terrain` ein WebSocket-Kommando im World Bridge Service.
+Benutze die Klasse `TerrainServiceClient` aus dem modul `world-shared` um die REST-Endpunkte des World Terrain 
+Service aufzurufen.
+* Erstelle fü® jeden Endpunkt ein Kommando, das die entsprechenden Daten entgegennimmt und die Logik des Endpunkts ausführt.
+* Benutze die bestehenden DTOs aus dem modul `shared` für die Datenübergabe.
+* Passe `TerrainServiceClient` wenn nötig an.
+* Erstelle Unit-Tests für jedes Kommando, um die Funktionalität zu überprüfen.
+* Compiliere und teste die Änderungen, um sicherzustellen, dass bas Projekt weiterhin funktioniert.
+```
+
+```text
+Perfekt! Ich habe die Implementierung aller Terrain-Kommandos erfolgreich abgeschlossen. Insgesamt habe ich 30 WebSocket-Kommandos erstellt, die alle REST-Endpunkte des World Terrain Service abdecken:
+✅ Vollständige Terrain-Kommando-Implementierung
+Material-Kommandos (5):
+CreateMaterialCommand - Neues Material erstellen
+GetMaterialCommand - Material nach ID abrufen
+GetMaterialsCommand - Paginierte Material-Liste
+UpdateMaterialCommand - Material aktualisieren
+DeleteMaterialCommand - Material löschen
+Map-Kommandos (5):
+CreateMapCommand - Map-Cluster erstellen/aktualisieren
+GetMapClusterCommand - Einzelnen Map-Cluster abrufen
+GetMapClustersCommand - Mehrere Map-Cluster in Batch
+DeleteMapFieldsCommand - Spezifische Map-Felder löschen
+DeleteMapLevelCommand - Ganzes Map-Level löschen
+Sprite-Kommandos (8):
+CreateSpriteCommand - Neues Sprite erstellen
+GetSpriteCommand - Sprite nach ID abrufen
+GetSpritesCommand - Sprites nach Cluster-Koordinaten
+UpdateSpriteCommand - Sprite aktualisieren
+DeleteSpriteCommand - Sprite löschen
+UpdateSpriteCoordinatesCommand - Sprite-Koordinaten ändern
+EnableSpriteCommand - Sprite aktivieren
+DisableSpriteCommand - Sprite deaktivieren
+Asset-Kommandos (6):
+CreateAssetCommand - Neues Asset erstellen
+GetAssetCommand - Asset nach Name abrufen
+GetAssetsCommand - Paginierte Asset-Liste
+UpdateAssetCommand - Asset aktualisieren
+DeleteAssetCommand - Asset löschen
+CompressAssetsCommand - Asset-Komprimierung starten
+GetAssetsBatchCommand - Mehrere Assets in Batch
+Gruppen-Kommandos (5):
+CreateGroupCommand - Neue Terrain-Gruppe erstellen
+GetGroupCommand - Gruppe nach ID abrufen
+GetGroupsCommand - Paginierte Gruppen-Liste
+UpdateGroupCommand - Gruppe aktualisieren
+DeleteGroupCommand - Gruppe löschen
+Jetzt werde ich das Projekt kompilieren und testen, um sicherzustellen, dass alles korrekt funktioniert:
+```
+

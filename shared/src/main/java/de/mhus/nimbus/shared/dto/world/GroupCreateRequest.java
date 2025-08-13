@@ -4,15 +4,21 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AssetBatchRequest {
+public class GroupCreateRequest {
     @JsonProperty("world")
     private String world;
 
-    @JsonProperty("assets")
-    private List<String> assets;
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("type")
+    private String type;
+
+    @JsonProperty("properties")
+    private Map<String, String> properties;
 }

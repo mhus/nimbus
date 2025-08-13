@@ -4,15 +4,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AssetBatchRequest {
-    @JsonProperty("world")
-    private String world;
+public class SpriteCoordinatesDto {
+    @JsonProperty("x")
+    private Integer x;
 
-    @JsonProperty("assets")
-    private List<String> assets;
+    @JsonProperty("y")
+    private Integer y;
+
+    @JsonProperty("z")
+    private Integer z;
 }

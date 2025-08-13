@@ -1,0 +1,27 @@
+package de.mhus.nimbus.shared.dto.world;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Map;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AssetCreateRequest {
+    @JsonProperty("world")
+    private String world;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("type")
+    private String type;
+
+    @JsonProperty("data")
+    private byte[] data;
+
+    @JsonProperty("properties")
+    private Map<String, String> properties;
+}
