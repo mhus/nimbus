@@ -1,38 +1,57 @@
 package de.mhus.nimbus.worldbridge.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.dto.websocket.*;
+import de.mhus.nimbus.shared.dto.websocket.WebSocketResponse;
+import de.mhus.nimbus.worldbridge.command.*;
 import de.mhus.nimbus.worldbridge.model.WebSocketSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class WorldBridgeService {
 
-    private final AuthenticationService authenticationService;
-    private final WorldService worldService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final List<WebSocketCommand> commands;
+    private Map<String, WebSocketCommand> commandMap;
 
-    public WebSocketResponse processCommand(String sessionId, WebSocketSession sessionInfo, WebSocketCommand command) {
+    @PostConstruct
+    public void initializeCommands() {
+        // Store commands in a map for quick lookup by command name
+        commandMap = commands.stream()
+                .collect(Collectors.toMap(
+                    cmd -> cmd.info().getCommand(),
+                    Function.identity()
+                ));
+
+        log.info("Initialized {} WebSocket commands: {}",
+                commandMap.size(),
+                commandMap.keySet());
+    }
+
+    public WebSocketResponse processCommand(String sessionId, WebSocketSession sessionInfo,
+                                          de.mhus.nimbus.shared.dto.websocket.WebSocketCommand command) {
         try {
-            return switch (command.getCommand()) {
-                case "login" -> handleLogin(sessionInfo, command);
-                case "use" -> handleUseWorld(sessionInfo, command);
-                case "ping" -> handlePing(command);
-                case "registerCluster" -> handleRegisterCluster(sessionInfo, command);
-                case "registerTerrain" -> handleRegisterTerrain(sessionInfo, command);
-                default -> WebSocketResponse.builder()
+            ExecuteResponse executeResponse = executeCommand(sessionId, sessionInfo, command);
+
+            if (executeResponse.isSuccess()) {
+                return executeResponse.getResponse();
+            } else {
+                return WebSocketResponse.builder()
                         .service(command.getService())
                         .command(command.getCommand())
                         .requestId(command.getRequestId())
                         .status("error")
-                        .errorCode("UNKNOWN_COMMAND")
-                        .message("Unknown command: " + command.getCommand())
+                        .errorCode(executeResponse.getErrorCode())
+                        .message(executeResponse.getMessage())
                         .build();
-            };
+            }
         } catch (Exception e) {
             log.error("Error processing command: {}", command.getCommand(), e);
             return WebSocketResponse.builder()
@@ -46,178 +65,21 @@ public class WorldBridgeService {
         }
     }
 
-    private WebSocketResponse handleLogin(WebSocketSession sessionInfo, WebSocketCommand command) {
-        try {
-            LoginCommandData loginData = objectMapper.convertValue(command.getData(), LoginCommandData.class);
+    public ExecuteResponse executeCommand(String sessionId, WebSocketSession sessionInfo,
+                                        de.mhus.nimbus.shared.dto.websocket.WebSocketCommand command) {
+        WebSocketCommand commandHandler = commandMap.get(command.getCommand());
 
-            // Validate token and get user information
-            AuthenticationResult authResult = authenticationService.validateToken(loginData.getToken());
-
-            if (!authResult.isValid()) {
-                return WebSocketResponse.builder()
-                        .service(command.getService())
-                        .command(command.getCommand())
-                        .requestId(command.getRequestId())
-                        .status("error")
-                        .errorCode("INVALID_TOKEN")
-                        .message("Invalid authentication token")
-                        .build();
-            }
-
-            // Update session info
-            sessionInfo.setUserId(authResult.getUserId());
-            sessionInfo.setRoles(authResult.getRoles());
-
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("success")
-                    .data(authResult)
-                    .message("Login successful")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error during login", e);
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("LOGIN_ERROR")
-                    .message("Login failed")
-                    .build();
+        if (commandHandler == null) {
+            return ExecuteResponse.error("UNKNOWN_COMMAND", "Unknown command: " + command.getCommand());
         }
+
+        ExecuteRequest request = new ExecuteRequest(sessionId, sessionInfo, command);
+        return commandHandler.execute(request);
     }
 
-    private WebSocketResponse handleUseWorld(WebSocketSession sessionInfo, WebSocketCommand command) {
-        try {
-            UseWorldCommandData useWorldData = objectMapper.convertValue(command.getData(), UseWorldCommandData.class);
-
-            // If no worldId provided, return current world
-            if (useWorldData.getWorldId() == null || useWorldData.getWorldId().isEmpty()) {
-                return WebSocketResponse.builder()
-                        .service(command.getService())
-                        .command(command.getCommand())
-                        .requestId(command.getRequestId())
-                        .status("success")
-                        .data(sessionInfo.getWorldId())
-                        .message("Current world ID")
-                        .build();
-            }
-
-            // Validate world access
-            boolean hasAccess = worldService.hasWorldAccess(sessionInfo.getUserId(), useWorldData.getWorldId());
-            if (!hasAccess) {
-                return WebSocketResponse.builder()
-                        .service(command.getService())
-                        .command(command.getCommand())
-                        .requestId(command.getRequestId())
-                        .status("error")
-                        .errorCode("NO_WORLD_ACCESS")
-                        .message("No access to specified world")
-                        .build();
-            }
-
-            // Get world details
-            Object worldDetails = worldService.getWorldDetails(useWorldData.getWorldId());
-
-            // Update session info and clear registrations
-            sessionInfo.setWorldId(useWorldData.getWorldId());
-            sessionInfo.clearRegistrations();
-
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("success")
-                    .data(worldDetails)
-                    .message("World selected successfully")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error during world selection", e);
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("WORLD_SELECTION_ERROR")
-                    .message("World selection failed")
-                    .build();
-        }
-    }
-
-    private WebSocketResponse handlePing(WebSocketCommand command) {
-        PingCommandData pingData = objectMapper.convertValue(command.getData(), PingCommandData.class);
-
-        return WebSocketResponse.builder()
-                .service(command.getService())
-                .command("pong")
-                .requestId(command.getRequestId())
-                .status("success")
-                .data(pingData)
-                .message("Pong")
-                .build();
-    }
-
-    private WebSocketResponse handleRegisterCluster(WebSocketSession sessionInfo, WebSocketCommand command) {
-        try {
-            RegisterClusterCommandData clusterData = objectMapper.convertValue(command.getData(), RegisterClusterCommandData.class);
-
-            // Clear existing registrations and add new ones
-            sessionInfo.getRegisteredClusters().clear();
-            sessionInfo.getRegisteredClusters().addAll(clusterData.getClusters());
-
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("success")
-                    .data(clusterData)
-                    .message("Cluster registration successful")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error during cluster registration", e);
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("CLUSTER_REGISTRATION_ERROR")
-                    .message("Cluster registration failed")
-                    .build();
-        }
-    }
-
-    private WebSocketResponse handleRegisterTerrain(WebSocketSession sessionInfo, WebSocketCommand command) {
-        try {
-            RegisterTerrainCommandData terrainData = objectMapper.convertValue(command.getData(), RegisterTerrainCommandData.class);
-
-            // Clear existing registrations and add new ones
-            sessionInfo.getRegisteredTerrainEvents().clear();
-            sessionInfo.getRegisteredTerrainEvents().addAll(terrainData.getEvents());
-
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("success")
-                    .data(terrainData)
-                    .message("Terrain event registration successful")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error during terrain registration", e);
-            return WebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("TERRAIN_REGISTRATION_ERROR")
-                    .message("Terrain event registration failed")
-                    .build();
-        }
+    public List<WebSocketCommandInfo> getAvailableCommands() {
+        return commands.stream()
+                .map(WebSocketCommand::info)
+                .collect(Collectors.toList());
     }
 }
