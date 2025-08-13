@@ -8,7 +8,7 @@ All endpoints require authentication via JWT token. First, obtain a token from t
 
 ```bash
 # Login to get JWT token
-JWT_TOKEN=$(curl -X POST http://localhost:8081/login \
+JWT_TOKEN=$(curl -X POST http://localhost:7081/login \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "admin",
@@ -21,7 +21,7 @@ JWT_TOKEN=$(curl -X POST http://localhost:8081/login \
 Creates a new world. Requires CREATOR role.
 
 ```bash
-curl -v -X POST http://localhost:8082/worlds \
+curl -v -X POST http://localhost:7082/worlds \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d '{
@@ -60,7 +60,7 @@ Response:
 Retrieves a specific world by its ID. Requires USER role.
 
 ```bash
-curl -X GET http://localhost:8082/worlds/550e8400-e29b-41d4-a716-446655440000 \
+curl -X GET http://localhost:7082/worlds/550e8400-e29b-41d4-a716-446655440000 \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -90,14 +90,14 @@ Lists all worlds with optional filtering and pagination. Requires USER role.
 ### Basic listing
 
 ```bash
-curl -v -X GET http://localhost:8082/worlds \
+curl -v -X GET http://localhost:7082/worlds \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 ### With pagination
 
 ```bash
-curl -X GET "http://localhost:8082/worlds?page=0&size=10" \
+curl -X GET "http://localhost:7082/worlds?page=0&size=10" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -105,19 +105,19 @@ curl -X GET "http://localhost:8082/worlds?page=0&size=10" \
 
 ```bash
 # Filter by name
-curl -X GET "http://localhost:8082/worlds?name=test" \
+curl -X GET "http://localhost:7082/worlds?name=test" \
   -H "Authorization: Bearer $JWT_TOKEN"
 
 # Filter by owner
-curl -X GET "http://localhost:8082/worlds?ownerId=admin" \
+curl -X GET "http://localhost:7082/worlds?ownerId=admin" \
   -H "Authorization: Bearer $JWT_TOKEN"
 
 # Filter by enabled status
-curl -X GET "http://localhost:8082/worlds?enabled=true" \
+curl -X GET "http://localhost:7082/worlds?enabled=true" \
   -H "Authorization: Bearer $JWT_TOKEN"
 
 # Combined filters
-curl -X GET "http://localhost:8082/worlds?name=test&enabled=true&page=0&size=5" \
+curl -X GET "http://localhost:7082/worlds?name=test&enabled=true&page=0&size=5" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -174,7 +174,7 @@ Response:
 Updates an existing world. Requires ADMIN role or ownership of the world.
 
 ```bash
-curl -X PUT http://localhost:8082/worlds/550e8400-e29b-41d4-a716-446655440000 \
+curl -X PUT http://localhost:7082/worlds/550e8400-e29b-41d4-a716-446655440000 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d '{
@@ -215,7 +215,7 @@ Response:
 Deletes a world permanently. Requires ADMIN role or ownership of the world.
 
 ```bash
-curl -X DELETE http://localhost:8082/worlds/550e8400-e29b-41d4-a716-446655440000 \
+curl -X DELETE http://localhost:7082/worlds/550e8400-e29b-41d4-a716-446655440000 \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -226,7 +226,7 @@ Success response: HTTP 204 No Content
 Enables a world (sets enabled status to true). Requires ADMIN role or ownership of the world.
 
 ```bash
-curl -X POST http://localhost:8082/worlds/550e8400-e29b-41d4-a716-446655440000/enable \
+curl -X POST http://localhost:7082/worlds/550e8400-e29b-41d4-a716-446655440000/enable \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
@@ -254,7 +254,7 @@ Response:
 Disables a world (sets enabled status to false). Requires ADMIN role or ownership of the world.
 
 ```bash
-curl -X POST http://localhost:8082/worlds/550e8400-e29b-41d4-a716-446655440000/disable \
+curl -X POST http://localhost:7082/worlds/550e8400-e29b-41d4-a716-446655440000/disable \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 

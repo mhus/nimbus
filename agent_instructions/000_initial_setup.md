@@ -252,3 +252,32 @@ Mock-Tests für den Filter
 Die Implementierung folgt den Spezifikationen aus 02_development.md und 00_overview.md und verwendet die empfohlenen Technologien (Java 21, Spring Boot, Lombok, JUnit 5, Mockito).
 ```
 
+## 06 Die REST Ports der Anwendungen 70xx
+
+```text
+Ändere alle application properties files so um, dass die REST-Ports der 
+Anwendungen auf 70xx gesetzt werden (vorhger 80xx).
+Ändere auch alle Beispiele im ordner 'examples'.
+```
+
+```text
+Perfekt! Ich habe erfolgreich alle application.properties und application.yml Dateien im Projekt aktualisiert, um die REST-Ports von 80xx auf 70xx zu ändern.
+Durchgeführte Änderungen:
+1. Identity Service (identity/src/main/resources/application.yml)
+Port geändert von 8081 → 7081
+2. Registry Service (registry/src/main/resources/application.properties)
+Port geändert von 8082 → 7082
+Identity Service URL aktualisiert von http://localhost:8081 → http://localhost:7081
+3. World-Terrain Service (world-terrain/src/main/resources/application.yml)
+Port geändert von 8083 → 7083
+4. World-Bridge Service (world-bridge/src/main/resources/application.yml)
+Port geändert von 8089 → 7089
+Identity Service URL aktualisiert von http://localhost:8080 → http://localhost:7081
+World Terrain Service URL aktualisiert von http://localhost:8081 → http://localhost:7083
+Neue Port-Zuordnung:
+Identity Service: 7081 (vorher 8081)
+Registry Service: 7082 (vorher 8082)
+World-Terrain Service: 7083 (vorher 8083)
+World-Bridge Service: 7089 (vorher 8089)
+Alle Service-zu-Service Kommunikations-URLs wurden entsprechend angepasst, damit die Services weiterhin korrekt miteinander kommunizieren können. Die Änderungen sind nun vollständig und konsistent im gesamten Projekt umgesetzt.
+```

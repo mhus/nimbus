@@ -7,7 +7,7 @@ This document contains curl examples for all Identity Service endpoints.
 Creates a new user in the system.
 
 ```bash
-curl -X POST http://localhost:8081/users \
+curl -X POST http://localhost:7081/users \
   -H "Content-Type: application/json" \
   -d '{
     "id": "john_doe",
@@ -37,7 +37,7 @@ Response:
 Authenticates a user and returns a JWT token.
 
 ```bash
-curl -X POST http://localhost:8081/login \
+curl -X POST http://localhost:7081/login \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "john_doe",
@@ -57,7 +57,7 @@ Response:
 Login as john_doe and catch the token:
 
 ```bash
-token=$(curl -X POST http://localhost:8081/login \
+token=$(curl -X POST http://localhost:7081/login \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "john_doe",
@@ -68,7 +68,7 @@ token=$(curl -X POST http://localhost:8081/login \
 Login as admin and catch the token:
 
 ```bash
-token=$(curl -X POST http://localhost:8081/login \
+token=$(curl -X POST http://localhost:7081/login \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "admin",
@@ -82,11 +82,11 @@ Retrieves user information by ID.
 
 ```bash
 # User accessing their own data
-curl -X GET http://localhost:8081/users/john_doe \
+curl -X GET http://localhost:7081/users/john_doe \
   -H "Authorization: Bearer $token"
 
 # Admin accessing any user data
-curl -X GET http://localhost:8081/users/jane_doe \
+curl -X GET http://localhost:7081/users/jane_doe \
   -H "Authorization: Bearer $token"
 ```
 
@@ -108,7 +108,7 @@ Response:
 Updates user information.
 
 ```bash
-curl -X PUT http://localhost:8081/users/john_doe \
+curl -X PUT http://localhost:7081/users/john_doe \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $token" \
   -d '{
@@ -138,7 +138,7 @@ Response:
 Retrieves all users (admin only).
 
 ```bash
-curl -X GET http://localhost:8081/users \
+curl -X GET http://localhost:7081/users \
   -H "Authorization: Bearer $token"
 ```
 
@@ -171,7 +171,7 @@ Response:
 Changes a user's password.
 
 ```bash
-curl -X POST http://localhost:8081/users/john_doe/change-password \
+curl -X POST http://localhost:7081/users/john_doe/change-password \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $token" \
   -d '{
@@ -187,7 +187,7 @@ Response: 200 OK (no body)
 Renews an existing JWT token.
 
 ```bash
-curl -X POST http://localhost:8081/token/renew \
+curl -X POST http://localhost:7081/token/renew \
   -H "Authorization: Bearer $token"
 ```
 
@@ -205,7 +205,7 @@ Response:
 Deletes a user (admin only).
 
 ```bash
-curl -X DELETE http://localhost:8081/users/john_doe \
+curl -X DELETE http://localhost:7081/users/john_doe \
   -H "Authorization: Bearer $token"
 ```
 
@@ -216,7 +216,7 @@ Response: 204 No Content
 Checks if the service is running.
 
 ```bash
-curl -X GET http://localhost:8081/health
+curl -X GET http://localhost:7081/health
 ```
 
 Response:
@@ -229,7 +229,7 @@ Identity Service is running
 ### Invalid Credentials
 
 ```bash
-curl -X POST http://localhost:8081/login \
+curl -X POST http://localhost:7081/login \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "john_doe",
@@ -243,7 +243,7 @@ Response: 401 Unauthorized
 
 ```bash
 # User trying to access another user's data
-curl -X GET http://localhost:8081/users/admin \
+curl -X GET http://localhost:7081/users/admin \
   -H "Authorization: Bearer $token"
 ```
 
@@ -252,7 +252,7 @@ Response: 403 Forbidden
 ### User Not Found
 
 ```bash
-curl -X GET http://localhost:8081/users/nonexistent \
+curl -X GET http://localhost:7081/users/nonexistent \
   -H "Authorization: Bearer $token"
 ```
 
@@ -261,7 +261,7 @@ Response: 404 Not Found
 ### Duplicate User Creation
 
 ```bash
-curl -X POST http://localhost:8081/users \
+curl -X POST http://localhost:7081/users \
   -H "Content-Type: application/json" \
   -d '{
     "id": "john_doe",

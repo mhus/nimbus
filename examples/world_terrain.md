@@ -7,7 +7,7 @@ Diese Datei enthält Curl-Beispiele für alle World Terrain Service API-Endpunkt
 ### Welt erstellen
 
 ```bash
-curl -X POST "http://localhost:8083/api/worlds" \
+curl -X POST "http://localhost:7083/api/worlds" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -25,21 +25,21 @@ curl -X POST "http://localhost:8083/api/worlds" \
 ### Welt abrufen
 
 ```bash
-curl -X GET "http://localhost:8083/api/worlds/earth-001" \
+curl -X GET "http://localhost:7083/api/worlds/earth-001" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Alle Welten auflisten
 
 ```bash
-curl -X GET "http://localhost:8083/api/worlds" \
+curl -X GET "http://localhost:7083/api/worlds" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Welt aktualisieren
 
 ```bash
-curl -X PUT "http://localhost:8083/api/worlds/earth-001" \
+curl -X PUT "http://localhost:7083/api/worlds/earth-001" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -57,7 +57,7 @@ curl -X PUT "http://localhost:8083/api/worlds/earth-001" \
 ### Welt löschen
 
 ```bash
-curl -X DELETE "http://localhost:8083/api/worlds/earth-001" \
+curl -X DELETE "http://localhost:7083/api/worlds/earth-001" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -66,7 +66,7 @@ curl -X DELETE "http://localhost:8083/api/worlds/earth-001" \
 ### Material erstellen
 
 ```bash
-curl -X POST "http://localhost:8083/api/materials" \
+curl -X POST "http://localhost:7083/api/materials" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -87,28 +87,28 @@ curl -X POST "http://localhost:8083/api/materials" \
 ### Material abrufen
 
 ```bash
-curl -X GET "http://localhost:8083/api/materials/1" \
+curl -X GET "http://localhost:7083/api/materials/1" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Materialien auflisten (mit Pagination)
 
 ```bash
-curl -X GET "http://localhost:8083/api/materials?page=0&size=20" \
+curl -X GET "http://localhost:7083/api/materials?page=0&size=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Materialien mit Filter suchen
 
 ```bash
-curl -X GET "http://localhost:8083/api/materials?name=grass&page=0&size=10" \
+curl -X GET "http://localhost:7083/api/materials?name=grass&page=0&size=10" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Material aktualisieren
 
 ```bash
-curl -X PUT "http://localhost:8083/api/materials/1" \
+curl -X PUT "http://localhost:7083/api/materials/1" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -130,7 +130,7 @@ curl -X PUT "http://localhost:8083/api/materials/1" \
 ### Material löschen
 
 ```bash
-curl -X DELETE "http://localhost:8083/api/materials/1" \
+curl -X DELETE "http://localhost:7083/api/materials/1" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -139,7 +139,7 @@ curl -X DELETE "http://localhost:8083/api/materials/1" \
 ### Map/Terrain erstellen
 
 ```bash
-curl -X POST "http://localhost:8083/api/maps" \
+curl -X POST "http://localhost:7083/api/maps" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -185,14 +185,14 @@ curl -X POST "http://localhost:8083/api/maps" \
 ### Map-Cluster abrufen
 
 ```bash
-curl -X GET "http://localhost:8083/api/maps/0/0?world=earth-001&level=0" \
+curl -X GET "http://localhost:7083/api/maps/0/0?world=earth-001&level=0" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Mehrere Map-Cluster als Batch abrufen
 
 ```bash
-curl -X POST "http://localhost:8083/api/maps/batch" \
+curl -X POST "http://localhost:7083/api/maps/batch" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -210,7 +210,7 @@ curl -X POST "http://localhost:8083/api/maps/batch" \
 ### Map aktualisieren
 
 ```bash
-curl -X PUT "http://localhost:8083/api/maps" \
+curl -X PUT "http://localhost:7083/api/maps" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -244,7 +244,7 @@ curl -X PUT "http://localhost:8083/api/maps" \
 ### Map-Felder löschen
 
 ```bash
-curl -X DELETE "http://localhost:8083/api/maps" \
+curl -X DELETE "http://localhost:7083/api/maps" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -266,7 +266,7 @@ curl -X DELETE "http://localhost:8083/api/maps" \
 ### Komplettes Level löschen
 
 ```bash
-curl -X DELETE "http://localhost:8083/api/maps/level?world=earth-001&level=0" \
+curl -X DELETE "http://localhost:7083/api/maps/level?world=earth-001&level=0" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

@@ -17,7 +17,7 @@ sudo mv websocat.x86_64-unknown-linux-musl /usr/local/bin/websocat
 ## Verbindung zum World Bridge Service
 
 ```bash
-websocat ws://localhost:8082/ws
+websocat ws://localhost:7089/ws
 ```
 
 ## Login
@@ -238,7 +238,7 @@ Erwartete Antwort:
 
 ```bash
 # Terminal 1: Starten Sie websocat
-websocat ws://localhost:8082/ws
+websocat ws://localhost:7089/ws
 
 # Senden Sie folgende Nachrichten in der Reihenfolge:
 

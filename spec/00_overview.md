@@ -1,4 +1,3 @@
-
 # Überblick
 
 ## Einführung
@@ -141,6 +140,36 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
 - **generator-simple**: Ein Service, der Welten generiert und deren Metadaten erstellt.
   Er ermöglicht das Erstellen von neuen Welten basierend auf bestimmten Parametern und Regeln.
 
+## Ports und Services
+
+Alle Services im Nimbus-System verwenden spezifische Ports für die REST-API-Kommunikation. Die Ports sind im 
+70xx-Bereich konfiguriert, um Konflikte mit anderen Anwendungen zu vermeiden.
+
+### Service Port-Übersicht
+
+| Service | Port | Protokoll | Beschreibung |
+|---------|------|-----------|--------------|
+| **Identity Service** | 7081 | HTTP/REST | Benutzerauthentifizierung, JWT-Token-Verwaltung |
+| **Registry Service** | 7082 | HTTP/REST | Weltenverwaltung und Metadaten |
+| **World-Terrain Service** | 7083 | HTTP/REST | Terrain-Daten, Maps und Sprites |
+| **World-Bridge Service** | 7089 | WebSocket | Gateway für Weltenzugriff, Client-Kommunikation |
+
+### Entwicklungsumgebung
+
+In der lokalen Entwicklungsumgebung verwenden alle Services `localhost` mit den oben genannten Ports. Für die Produktion können die Hosts entsprechend angepasst werden, während die Ports beibehalten werden können.
+
+### Zusätzliche Infrastruktur-Ports
+
+Neben den Service-Ports werden weitere Ports für die Infrastruktur verwendet:
+
+| Service | Port | Beschreibung |
+|---------|------|--------------|
+| PostgreSQL | 5432 | Hauptdatenbank für persistente Daten |
+| Redis | 6379 | In-Memory-Datenbank für dynamische Sprites |
+| Kafka | 9092 | Event-Streaming zwischen World-Services |
+
+Diese Infrastruktur-Ports sind Standard-Ports der jeweiligen Technologien und können bei Bedarf in der `docker-compose.local.yml` angepasst werden.
+
 ## Technologie-Stack
 
 - **Java**: Die Hauptprogrammiersprache für alle Server- und Client-Komponenten. 
@@ -169,4 +198,3 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   Sie wird in den zentralen Services wie Identity und Registry verwendet, um Daten persistent zu speichern.
 - **Redis**: Eine In-Memory-Datenbank, die für die Speicherung von dynamischen Sprites verwendet wird.
   Sie wird in der Welt-Terrain-Data-Komponente verwendet, um die Leistung zu verbessern und die Latenz zu reduzieren.
-

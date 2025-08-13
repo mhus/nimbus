@@ -1,5 +1,5 @@
 server:
-  port: 8089
+  port: 7089
 
 spring:
   application:
@@ -15,11 +15,11 @@ spring:
 nimbus:
   identity:
     service:
-      url: http://localhost:8080
+      url: http://localhost:7081
   world:
     terrain:
       service:
-        url: http://localhost:8081
+        url: http://localhost:7083
     shared:
       secret: nimbus-world-secret
 world:
