@@ -1,6 +1,6 @@
 package de.mhus.nimbus.worldbridge.command.terrain;
 
-import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWorldWebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.shared.dto.world.SpriteCreateRequest;
 import de.mhus.nimbus.shared.dto.world.SpriteDto;
 import de.mhus.nimbus.worldbridge.command.*;

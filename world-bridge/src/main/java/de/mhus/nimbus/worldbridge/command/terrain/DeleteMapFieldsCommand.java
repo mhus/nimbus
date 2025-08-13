@@ -1,6 +1,6 @@
 package de.mhus.nimbus.worldbridge.command.terrain;
 
-import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWorldWebSocketResponse;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.shared.dto.world.MapDeleteRequest;
 import de.mhus.nimbus.worldbridge.command.*;
 import de.mhus.nimbus.world.shared.client.TerrainServiceClient;

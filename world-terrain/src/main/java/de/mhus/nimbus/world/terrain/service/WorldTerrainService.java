@@ -224,7 +224,7 @@ public class WorldTerrainService {
 
     public List<AssetDto> getAssetsBatch(AssetBatchRequest request) {
         List<AssetEntity> entities = assetRepository.findByWorldAndNameIn(
-                request.getWorld(), request.getAssetNames());
+                request.getWorld(), request.getAssets());
         return entities.stream()
                 .map(this::mapToAssetDto)
                 .collect(Collectors.toList());
