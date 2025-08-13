@@ -1,5 +1,5 @@
 
-# World Life Service
+# World Life Specifikation
 
 ## Einführung
 

@@ -1,5 +1,5 @@
 
-# World Item Service
+# World Item Spezifikation
 
 ## Einleitung
 
