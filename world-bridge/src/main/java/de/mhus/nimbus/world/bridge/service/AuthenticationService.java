@@ -1,16 +1,12 @@
 package de.mhus.nimbus.world.bridge.service;
 
+import de.mhus.nimbus.shared.util.IdentityServiceUtils;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -18,37 +14,19 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    @Value("${nimbus.identity.service.url:http://localhost:8080}")
-    private String identityServiceUrl;
-
-    @Value("${nimbus.world.shared.secret:default-secret}")
-    private String sharedSecret;
-
-    private final RestTemplate restTemplate;
+    private final IdentityServiceUtils identityServiceUtils = new IdentityServiceUtils();
 
     public AuthenticationResult validateToken(String token) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
-            headers.set("X-Shared-Secret", sharedSecret);
+            DecodedJWT decodedJWT = identityServiceUtils.validateToken(token);
 
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            if (decodedJWT != null) {
+                String userId = decodedJWT.getSubject();
+                List<String> rolesList = decodedJWT.getClaim("roles").asList(String.class);
+                Set<String> roles = rolesList != null ? Set.copyOf(rolesList) : Set.of();
+                String username = decodedJWT.getClaim("username").asString();
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                identityServiceUrl + "/api/auth/validate",
-                HttpMethod.GET,
-                entity,
-                Map.class
-            );
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = response.getBody();
-                return new AuthenticationResult(
-                    true,
-                    (String) body.get("userId"),
-                    Set.copyOf((Set<String>) body.getOrDefault("roles", Set.of())),
-                    (String) body.get("username")
-                );
+                return new AuthenticationResult(true, userId, roles, username);
             }
 
         } catch (Exception e) {

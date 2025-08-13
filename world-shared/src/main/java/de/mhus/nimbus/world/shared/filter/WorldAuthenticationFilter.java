@@ -57,6 +57,6 @@ public class WorldAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         // Skip authentication for actuator endpoints
-        return path.startsWith("/actuator");
+        return path.startsWith("/actuator") || path.startsWith("/ws");
     }
 }
