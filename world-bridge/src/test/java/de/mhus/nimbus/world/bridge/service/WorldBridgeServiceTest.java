@@ -10,7 +10,6 @@ import de.mhus.nimbus.world.bridge.model.WebSocketSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,7 +29,6 @@ class WorldBridgeServiceTest {
     @Mock
     private WebSocketCommand mockCommand2;
 
-    @InjectMocks
     private WorldBridgeService worldBridgeService;
 
     private WebSocketSession testSession;
@@ -43,7 +41,7 @@ class WorldBridgeServiceTest {
         when(mockCommand1.info()).thenReturn(new WebSocketCommandInfo("bridge", "login", "Login command"));
         when(mockCommand2.info()).thenReturn(new WebSocketCommandInfo("bridge", "ping", "Ping command"));
 
-        // Initialize service with mocked commands
+        // Create the service with the mocked commands manually
         List<WebSocketCommand> commands = Arrays.asList(mockCommand1, mockCommand2);
         worldBridgeService = new WorldBridgeService(commands);
         worldBridgeService.initializeCommands();

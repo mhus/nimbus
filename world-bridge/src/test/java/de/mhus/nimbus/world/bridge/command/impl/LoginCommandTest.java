@@ -12,7 +12,6 @@ import de.mhus.nimbus.world.bridge.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -20,7 +19,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,7 +30,6 @@ class LoginCommandTest {
     @Mock
     private IdentityServiceUtils identityServiceUtils;
 
-    @InjectMocks
     private LoginCommand loginCommand;
 
     private WebSocketSession testSession;
@@ -42,7 +39,11 @@ class LoginCommandTest {
     void setUp() {
         testSession = new WebSocketSession();
         testCommand = new WorldWebSocketCommand("bridge", "login", null, "req-1");
-        // Set the identity service URL for testing
+
+        // Create LoginCommand manually with mocked dependencies
+        loginCommand = new LoginCommand(authenticationService, identityServiceUtils);
+
+        // Set the identity service URL for testing using reflection
         ReflectionTestUtils.setField(loginCommand, "identityServiceUrl", "http://localhost:8080");
     }
 

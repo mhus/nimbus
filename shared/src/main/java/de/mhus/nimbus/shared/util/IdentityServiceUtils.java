@@ -15,6 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyFactory;
@@ -79,7 +80,12 @@ public class IdentityServiceUtils {
     private void loadPublicKey() {
         try {
             ClassPathResource resource = new ClassPathResource("public.key");
-            String keyContent = Files.readString(resource.getFile().toPath(), StandardCharsets.UTF_8);
+
+            // Use InputStream to read from JAR or file system
+            String keyContent;
+            try (InputStream inputStream = resource.getInputStream()) {
+                keyContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            }
 
             // Remove header, footer and whitespace
             keyContent = keyContent
