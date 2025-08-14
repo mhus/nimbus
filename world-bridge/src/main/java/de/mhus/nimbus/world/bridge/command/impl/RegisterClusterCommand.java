@@ -21,7 +21,7 @@ public class RegisterClusterCommand implements WebSocketCommand {
 
     @Override
     public WebSocketCommandInfo info() {
-        return new WebSocketCommandInfo("bridge", "registerCluster", "Register for cluster-specific events");
+        return new WebSocketCommandInfo("bridge", "registerCluster", "Register for cluster-specific events", true);
     }
 
     @Override

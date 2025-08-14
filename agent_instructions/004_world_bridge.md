@@ -119,7 +119,7 @@ Die Implementierung entspricht vollständig den Anforderungen aus der Spezifikat
 Implementiere für jeden REST-Endpunkt im modul `world-terrain` ein WebSocket-Kommando im World Bridge Service.
 Benutze die Klasse `TerrainServiceClient` aus dem modul `world-shared` um die REST-Endpunkte des World Terrain 
 Service aufzurufen.
-* Erstelle fü® jeden Endpunkt ein Kommando, das die entsprechenden Daten entgegennimmt und die Logik des Endpunkts ausführt.
+* Erstelle für jeden Endpunkt ein Kommando, das die entsprechenden Daten entgegennimmt und die Logik des Endpunkts ausführt.
 * Benutze die bestehenden DTOs aus dem modul `shared` für die Datenübergabe.
 * Passe `TerrainServiceClient` wenn nötig an.
 * Erstelle Unit-Tests für jedes Kommando, um die Funktionalität zu überprüfen.
@@ -264,6 +264,61 @@ Mit Benutzername/Passwort:
 Das System entscheidet automatisch anhand der verfügbaren Felder, welche Authentifizierungsmethode verwendet wird. Bei Benutzername/Passwort wird der Identity Service kontaktiert, ein JWT-Token angefordert und dann derselbe Validierungsweg wie bei der Token-basierten Authentifizierung verwendet.
 Die Implementierung ist vollständig getestet und produktionsbereit! 🚀
 ```
+
+## 06 Implementiere world Terrain-Kommandos
+
+```text
+Implementiere für REST-Endpunkt im WorldController im modul `world-terrain` die WebSocket-Kommandos im World Bridge Service.
+Benutze die Klasse `TerrainServiceClient` aus dem modul `world-shared` um die REST-Endpunkte des World Terrain 
+Service aufzurufen.
+* Erstelle für jeden Endpunkt ein Kommando, das die entsprechenden Daten entgegennimmt und die Logik des Endpunkts ausführt.
+* Benutze die bestehenden DTOs aus dem modul `shared` für die Datenübergabe.
+* Passe `TerrainServiceClient` wenn nötig an.
+* Der Endpunkt createWorld und getWorlds sollen auch funktionieren, wenn keine Welt ausgewählt ist. Erweitere die 
+  Klasse 'WebSocketCommandInfo' so, dass sie ein Flag `isWorldRequired` enthält, das angibt, ob eine Welt ausgewählt sein muss.
+* Erstelle beispiel in `examples/world_bridge.md`, das die neue Funktionalität demonstriert.
+* Erstelle Unit-Tests für jedes Kommando, um die Funktionalität zu überprüfen.
+* Compiliere und teste die Änderungen, um sicherzustellen, dass bas Projekt weiterhin funktioniert.
+
+Beachte die Anweisungen in der Datei `spec/20_world_bridge.md` und `spec/02_development.md` und `spec/00_overview.md`.  
+```
+
+```text
+Perfekt! Die Kompilierung und alle Tests wurden erfolgreich ausgeführt. Ich habe die vollständige Implementierung der WebSocket-Kommandos für die REST-Endpunkte des WorldControllers abgeschlossen.
+Zusammenfassung der implementierten Funktionalität:
+1. Erweiterte WebSocketCommandInfo-Klasse
+Hinzugefügtes isWorldRequired-Flag
+Backward-kompatible Konstruktoren
+Aktualisierte bestehende Kommandos (Login, UseWorld, Ping, RegisterCluster, RegisterTerrain)
+2. Neue WebSocket-Kommandos für World Terrain Service
+Ich habe 5 neue WebSocket-Kommandos implementiert, die die REST-Endpunkte des WorldControllers aufrufen:
+CreateWorldCommand (isWorldRequired = false)
+GetWorldsCommand (isWorldRequired = false)
+GetWorldCommand (isWorldRequired = true)
+UpdateWorldCommand (isWorldRequired = true)
+DeleteWorldCommand (isWorldRequired = true)
+3. DTOs für Kommando-Daten
+CreateWorldCommandData
+GetWorldCommandData
+GetWorldsCommandData
+UpdateWorldCommandData
+DeleteWorldCommandData
+4. Vollständige Unit-Tests
+Für jedes Kommando wurden umfassende Unit-Tests erstellt, die verschiedene Szenarien abdecken:
+Erfolgreiche Ausführung
+Fehlerbehandlung bei fehlenden Parametern
+Fehlerbehandlung bei Service-Fehlern
+Validierung der isWorldRequired-Logik
+5. Dokumentation und Beispiele
+Detaillierte Beispiele in examples/world_bridge.md
+Vollständiger Workflow von Login bis World-Management
+Fehlerbehandlungsszenarien
+6. TerrainServiceClient-Integration
+Die bestehende TerrainServiceClient-Klasse wurde erfolgreich wiederverwendet, da sie bereits alle benötigten Methoden für die World-Endpunkte enthält.
+Alle Implementierungen folgen den Spezifikationen in spec/20_world_bridge.md und spec/02_development.md. Das Projekt kompiliert erfolgreich und alle Tests bestehen.
+Die neuen WebSocket-Kommandos sind jetzt vollständig funktionsfähig und können über den World Bridge Service verwendet werden, um mit dem World Terrain Service zu interagieren.
+```
+
 
 
 

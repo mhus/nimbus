@@ -21,7 +21,7 @@ public class RegisterTerrainCommand implements WebSocketCommand {
 
     @Override
     public WebSocketCommandInfo info() {
-        return new WebSocketCommandInfo("bridge", "registerTerrain", "Register for terrain-specific events");
+        return new WebSocketCommandInfo("bridge", "registerTerrain", "Register for terrain-specific events", true);
     }
 
     @Override

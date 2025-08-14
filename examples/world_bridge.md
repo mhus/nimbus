@@ -1,462 +1,258 @@
-# World Bridge WebSocket Examples
+# World Bridge WebSocket Commands - Terrain Service Integration
 
-Diese Beispiele zeigen, wie Sie mit websocat mit dem World Bridge Service interagieren können.
+Dieses Beispiel demonstriert die Verwendung der neuen WebSocket-Kommandos für die Integration mit dem World Terrain Service.
 
-## Installation von websocat
+## Terrain Service Kommandos
 
-```bash
-# macOS mit Homebrew
-brew install websocat
+Die folgenden Kommandos sind jetzt über WebSocket verfügbar und rufen die entsprechenden REST-Endpunkte des World Terrain Service auf:
 
-# Linux
-wget https://github.com/vi/websocat/releases/latest/download/websocat.x86_64-unknown-linux-musl
-chmod +x websocat.x86_64-unknown-linux-musl
-sudo mv websocat.x86_64-unknown-linux-musl /usr/local/bin/websocat
+### 1. Create World (kein Welt-Kontext erforderlich)
+
+```json
+{
+  "service": "terrain",
+  "command": "createWorld",
+  "data": {
+    "world": {
+      "name": "Neue Welt",
+      "description": "Eine beispielhafte Welt",
+      "seed": 12345
+    }
+  },
+  "requestId": "create-world-001"
+}
 ```
 
-## Verbindung zum World Bridge Service
-
-```bash
-websocat ws://localhost:7089/ws
+**Antwort:**
+```json
+{
+  "service": "terrain",
+  "command": "createWorld",
+  "data": {
+    "id": "world-uuid-123",
+    "name": "Neue Welt",
+    "description": "Eine beispielhafte Welt",
+    "seed": 12345,
+    "createdAt": "2025-08-14T10:00:00Z"
+  },
+  "requestId": "create-world-001",
+  "status": "success",
+  "message": "World created successfully"
+}
 ```
 
-## Login
+### 2. Get All Worlds (kein Welt-Kontext erforderlich)
 
-Melden Sie sich mit einem gültigen Token an:
+```json
+{
+  "service": "terrain",
+  "command": "getWorlds",
+  "data": {},
+  "requestId": "get-worlds-001"
+}
+```
 
+**Antwort:**
+```json
+{
+  "service": "terrain",
+  "command": "getWorlds",
+  "data": [
+    {
+      "id": "world-uuid-123",
+      "name": "Neue Welt",
+      "description": "Eine beispielhafte Welt",
+      "seed": 12345,
+      "createdAt": "2025-08-14T10:00:00Z"
+    },
+    {
+      "id": "world-uuid-456",
+      "name": "Andere Welt",
+      "description": "Eine andere Welt",
+      "seed": 67890,
+      "createdAt": "2025-08-14T09:30:00Z"
+    }
+  ],
+  "requestId": "get-worlds-001",
+  "status": "success"
+}
+```
+
+### 3. Get World by ID (Welt-Kontext erforderlich)
+
+```json
+{
+  "service": "terrain",
+  "command": "getWorld",
+  "data": {
+    "worldId": "world-uuid-123"
+  },
+  "requestId": "get-world-001"
+}
+```
+
+**Antwort:**
+```json
+{
+  "service": "terrain",
+  "command": "getWorld",
+  "data": {
+    "id": "world-uuid-123",
+    "name": "Neue Welt",
+    "description": "Eine beispielhafte Welt",
+    "seed": 12345,
+    "createdAt": "2025-08-14T10:00:00Z"
+  },
+  "requestId": "get-world-001",
+  "status": "success"
+}
+```
+
+### 4. Update World (Welt-Kontext erforderlich)
+
+```json
+{
+  "service": "terrain",
+  "command": "updateWorld",
+  "data": {
+    "worldId": "world-uuid-123",
+    "world": {
+      "name": "Aktualisierte Welt",
+      "description": "Eine aktualisierte Beschreibung",
+      "seed": 12345
+    }
+  },
+  "requestId": "update-world-001"
+}
+```
+
+**Antwort:**
+```json
+{
+  "service": "terrain",
+  "command": "updateWorld",
+  "data": {
+    "id": "world-uuid-123",
+    "name": "Aktualisierte Welt",
+    "description": "Eine aktualisierte Beschreibung",
+    "seed": 12345,
+    "updatedAt": "2025-08-14T11:00:00Z"
+  },
+  "requestId": "update-world-001",
+  "status": "success"
+}
+```
+
+### 5. Delete World (Welt-Kontext erforderlich)
+
+```json
+{
+  "service": "terrain",
+  "command": "deleteWorld",
+  "data": {
+    "worldId": "world-uuid-123"
+  },
+  "requestId": "delete-world-001"
+}
+```
+
+**Antwort:**
+```json
+{
+  "service": "terrain",
+  "command": "deleteWorld",
+  "data": "World deleted successfully",
+  "requestId": "delete-world-001",
+  "status": "success"
+}
+```
+
+## Vollständiger Workflow
+
+1. **Anmeldung** (kein Welt-Kontext erforderlich):
 ```json
 {
   "service": "bridge",
   "command": "login",
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "username": "testuser",
+    "password": "testpass"
   },
   "requestId": "login-001"
 }
 ```
 
-Erwartete Antwort bei erfolgreichem Login:
-
+2. **Welten auflisten** (kein Welt-Kontext erforderlich):
 ```json
 {
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "valid": true,
-    "userId": "user-123",
-    "roles": ["USER", "PLAYER"],
-    "username": "testuser"
-  },
-  "requestId": "login-001",
-  "status": "success",
-  "message": "Login successful"
-}
-```
-
-### Alternative: Login mit Benutzername und Passwort
-
-Alternativ können Sie sich auch mit Benutzername und Passwort anmelden:
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "username": "testuser",
-    "password": "mypassword123"
-  },
-  "requestId": "login-002"
-}
-
-{
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "username": "admin",
-    "password": "admin"
-  },
-  "requestId": "login-002"
-}
-
-```
-
-Erwartete Antwort bei erfolgreichem Login mit Benutzername/Passwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "valid": true,
-    "userId": "user-123",
-    "roles": ["USER", "PLAYER"],
-    "username": "testuser"
-  },
-  "requestId": "login-002",
-  "status": "success",
-  "message": "Login successful"
-}
-```
-
-### Fehlerbehandlung beim Login
-
-**Fehlende Anmeldedaten:**
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
+  "service": "terrain",
+  "command": "getWorlds",
   "data": {},
-  "requestId": "login-error-001"
+  "requestId": "get-worlds-001"
 }
 ```
 
-Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": null,
-  "requestId": "login-error-001",
-  "status": "error",
-  "errorCode": "MISSING_CREDENTIALS",
-  "message": "Either token or username/password must be provided"
-}
-```
-
-**Ungültige Anmeldedaten:**
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "username": "testuser",
-    "password": "wrongpassword"
-  },
-  "requestId": "login-error-002"
-}
-```
-
-Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": null,
-  "requestId": "login-error-002",
-  "status": "error",
-  "errorCode": "INVALID_CREDENTIALS",
-  "message": "Invalid username or password"
-}
-```
-
-**Ungültiger Token:**
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "token": "invalid-token"
-  },
-  "requestId": "login-error-003"
-}
-```
-
-Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "data": null,
-  "requestId": "login-error-003",
-  "status": "error",
-  "errorCode": "INVALID_TOKEN",
-  "message": "Invalid authentication token"
-}
-```
-
-## Ping
-
-Testen Sie die Verbindung mit einem Ping:
-
-```json
-{
-  "service": "bridge",
-  "command": "ping",
-  "data": {
-    "timestamp": 1692345678901
-  },
-  "requestId": "ping-001"
-}
-```
-
-Erwartete Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "pong",
-  "data": {
-    "timestamp": 1692345678901
-  },
-  "requestId": "ping-001",
-  "status": "success",
-  "message": "Pong"
-}
-```
-
-## Welt auswählen
-
-Wählen Sie eine Welt aus:
-
+3. **Welt auswählen** (kein Welt-Kontext erforderlich):
 ```json
 {
   "service": "bridge",
   "command": "use",
   "data": {
-    "worldId": "world-123"
+    "worldId": "world-uuid-123"
   },
   "requestId": "use-world-001"
 }
 ```
 
-Erwartete Antwort:
-
+4. **Welt-Details abrufen** (Welt-Kontext erforderlich):
 ```json
 {
-  "service": "bridge",
-  "command": "use",
+  "service": "terrain",
+  "command": "getWorld",
   "data": {
-    "id": "world-123",
-    "name": "Test World",
-    "description": "A test world for development"
+    "worldId": "world-uuid-123"
   },
-  "requestId": "use-world-001",
-  "status": "success",
-  "message": "World selected successfully"
+  "requestId": "get-world-details-001"
 }
-```
-
-## Aktuelle Welt abfragen
-
-Fragen Sie die aktuell ausgewählte Welt ab (leere worldId):
-
-```json
-{
-  "service": "bridge",
-  "command": "use",
-  "data": {
-    "worldId": ""
-  },
-  "requestId": "current-world-001"
-}
-```
-
-## Cluster registrieren
-
-Registrieren Sie sich für Cluster-Events:
-
-```json
-{
-  "service": "bridge",
-  "command": "registerCluster",
-  "data": {
-    "clusters": [
-      {
-        "x": 0,
-        "y": 0,
-        "level": 0
-      },
-      {
-        "x": 1,
-        "y": 0,
-        "level": 0
-      },
-      {
-        "x": 0,
-        "y": 1,
-        "level": 0
-      }
-    ]
-  },
-  "requestId": "register-cluster-001"
-}
-```
-
-Erwartete Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "registerCluster",
-  "data": {
-    "clusters": [
-      {
-        "x": 0,
-        "y": 0,
-        "level": 0
-      },
-      {
-        "x": 1,
-        "y": 0,
-        "level": 0
-      },
-      {
-        "x": 0,
-        "y": 1,
-        "level": 0
-      }
-    ]
-  },
-  "requestId": "register-cluster-001",
-  "status": "success",
-  "message": "Cluster registration successful"
-}
-```
-
-## Terrain-Events registrieren
-
-Registrieren Sie sich für Terrain-Events:
-
-```json
-{
-  "service": "bridge",
-  "command": "registerTerrain",
-  "data": {
-    "events": [
-      "world",
-      "group",
-      "cluster",
-      "tile",
-      "sprite"
-    ]
-  },
-  "requestId": "register-terrain-001"
-}
-```
-
-Erwartete Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "registerTerrain",
-  "data": {
-    "events": [
-      "world",
-      "group",
-      "cluster",
-      "tile",
-      "sprite"
-    ]
-  },
-  "requestId": "register-terrain-001",
-  "status": "success",
-  "message": "Terrain event registration successful"
-}
-```
-
-## Vollständiges Beispiel-Session
-
-```bash
-# Terminal 1: Starten Sie websocat
-websocat ws://localhost:7089/ws
-
-# Senden Sie folgende Nachrichten in der Reihenfolge:
-
-# 1. Login
-{"service":"bridge","command":"login","data":{"token":"your-jwt-token-here"},"requestId":"001"}
-
-# 2. Welt auswählen
-{"service":"bridge","command":"use","data":{"worldId":"world-123"},"requestId":"002"}
-
-# 3. Cluster registrieren
-{"service":"bridge","command":"registerCluster","data":{"clusters":[{"x":0,"y":0,"level":0}]},"requestId":"003"}
-
-# 4. Terrain-Events registrieren
-{"service":"bridge","command":"registerTerrain","data":{"events":["world","cluster"]},"requestId":"004"}
-
-# 5. Ping senden
-{"service":"bridge","command":"ping","data":{"timestamp":1692345678901},"requestId":"005"}
 ```
 
 ## Fehlerbehandlung
 
-### Ungültiger Token
-
+### Welt nicht gefunden
 ```json
 {
-  "service": "bridge",
-  "command": "login",
-  "data": {
-    "token": "invalid-token"
-  },
-  "requestId": "login-error-001"
-}
-```
-
-Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "login",
-  "requestId": "login-error-001",
+  "service": "terrain",
+  "command": "getWorld",
+  "data": null,
+  "requestId": "get-world-001",
   "status": "error",
-  "errorCode": "INVALID_TOKEN",
-  "message": "Invalid authentication token"
+  "errorCode": "not_found",
+  "message": "World not found"
 }
 ```
 
-### Kommando ohne Login
-
+### Fehlende Parameter
 ```json
 {
-  "service": "bridge",
-  "command": "ping",
-  "data": {},
-  "requestId": "ping-no-auth-001"
-}
-```
-
-Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "ping",
-  "requestId": "ping-no-auth-001",
+  "service": "terrain",
+  "command": "createWorld",
+  "data": null,
+  "requestId": "create-world-001",
   "status": "error",
-  "errorCode": "NOT_AUTHENTICATED",
-  "message": "User not authenticated"
+  "errorCode": "error",
+  "message": "World data is required"
 }
 ```
 
-### Kommando ohne Welt
-
+### Kein Welt-Kontext
 ```json
 {
-  "service": "bridge",
-  "command": "registerCluster",
-  "data": {"clusters": []},
-  "requestId": "register-no-world-001"
-}
-```
-
-Antwort:
-
-```json
-{
-  "service": "bridge",
-  "command": "registerCluster",
-  "requestId": "register-no-world-001",
+  "service": "terrain",
+  "command": "getWorld",
+  "data": null,
+  "requestId": "get-world-001",
   "status": "error",
   "errorCode": "NO_WORLD_SELECTED",
-  "message": "No world selected"
+  "message": "No world selected. Use the 'use' command to select a world first."
 }
 ```

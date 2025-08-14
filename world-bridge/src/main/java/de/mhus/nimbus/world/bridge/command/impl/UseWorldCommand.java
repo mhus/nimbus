@@ -23,7 +23,7 @@ public class UseWorldCommand implements WebSocketCommand {
 
     @Override
     public WebSocketCommandInfo info() {
-        return new WebSocketCommandInfo("bridge", "use", "Select a world for the session");
+        return new WebSocketCommandInfo("bridge", "use", "Select a world for the session", false);
     }
 
     @Override

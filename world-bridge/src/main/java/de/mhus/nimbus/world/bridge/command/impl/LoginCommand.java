@@ -30,7 +30,7 @@ public class LoginCommand implements WebSocketCommand {
 
     @Override
     public WebSocketCommandInfo info() {
-        return new WebSocketCommandInfo("bridge", "login", "Authenticate user with token or username/password");
+        return new WebSocketCommandInfo("bridge", "login", "Authenticate user with token or username/password", false);
     }
 
     @Override
