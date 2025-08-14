@@ -53,6 +53,122 @@ Erwartete Antwort bei erfolgreichem Login:
 }
 ```
 
+### Alternative: Login mit Benutzername und Passwort
+
+Alternativ können Sie sich auch mit Benutzername und Passwort anmelden:
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "username": "testuser",
+    "password": "mypassword123"
+  },
+  "requestId": "login-002"
+}
+```
+
+Erwartete Antwort bei erfolgreichem Login mit Benutzername/Passwort:
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "valid": true,
+    "userId": "user-123",
+    "roles": ["USER", "PLAYER"],
+    "username": "testuser"
+  },
+  "requestId": "login-002",
+  "status": "success",
+  "message": "Login successful"
+}
+```
+
+### Fehlerbehandlung beim Login
+
+**Fehlende Anmeldedaten:**
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {},
+  "requestId": "login-error-001"
+}
+```
+
+Antwort:
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": null,
+  "requestId": "login-error-001",
+  "status": "error",
+  "errorCode": "MISSING_CREDENTIALS",
+  "message": "Either token or username/password must be provided"
+}
+```
+
+**Ungültige Anmeldedaten:**
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "username": "testuser",
+    "password": "wrongpassword"
+  },
+  "requestId": "login-error-002"
+}
+```
+
+Antwort:
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": null,
+  "requestId": "login-error-002",
+  "status": "error",
+  "errorCode": "INVALID_CREDENTIALS",
+  "message": "Invalid username or password"
+}
+```
+
+**Ungültiger Token:**
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "token": "invalid-token"
+  },
+  "requestId": "login-error-003"
+}
+```
+
+Antwort:
+
+```json
+{
+  "service": "bridge",
+  "command": "login",
+  "data": null,
+  "requestId": "login-error-003",
+  "status": "error",
+  "errorCode": "INVALID_TOKEN",
+  "message": "Invalid authentication token"
+}
+```
+
 ## Ping
 
 Testen Sie die Verbindung mit einem Ping:
