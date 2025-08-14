@@ -5,8 +5,14 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,9 +35,42 @@ public class IdentityServiceUtils {
 
     private static final String ISSUER = "identity-service";
     private RSAPublicKey publicKey;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     public IdentityServiceUtils() {
         loadPublicKey();
+        this.restTemplate = new RestTemplate();
+        this.objectMapper = new ObjectMapper();
+    }
+
+    /**
+     * DTO for login request.
+     */
+    @Data
+    public static class LoginRequest {
+        @JsonProperty("username")
+        private String username;
+
+        @JsonProperty("password")
+        private String password;
+
+        public LoginRequest(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
+    }
+
+    /**
+     * DTO for login response.
+     */
+    @Data
+    public static class LoginResponse {
+        @JsonProperty("token")
+        private String token;
+
+        @JsonProperty("expires_at")
+        private Long expiresAt;
     }
 
     /**
@@ -121,6 +160,62 @@ public class IdentityServiceUtils {
     public Long extractIssuedTime(String token) {
         DecodedJWT decodedJWT = validateToken(token);
         return decodedJWT != null ? decodedJWT.getIssuedAt().getTime() / 1000 : null;
+    }
+
+    /**
+     * Performs a login against the Identity Service via REST request.
+     *
+     * @param url      the base URL of the Identity Service
+     * @param username the username for login
+     * @param password the password for login
+     * @return JWT token if login successful
+     * @throws RuntimeException if login fails or communication error occurs
+     */
+    public String login(String url, String username, String password) {
+        try {
+            // Prepare login request
+            LoginRequest loginRequest = new LoginRequest(username, password);
+
+            // Set up HTTP headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            // Create HTTP entity with request body
+            HttpEntity<LoginRequest> entity = new HttpEntity<>(loginRequest, headers);
+
+            // Construct login endpoint URL
+            String loginUrl = url.endsWith("/") ? url + "login" : url + "/login";
+
+            log.debug("Attempting login for user '{}' at URL: {}", username, loginUrl);
+
+            // Perform POST request to login endpoint
+            ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
+                    loginUrl,
+                    entity,
+                    LoginResponse.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                String token = response.getBody().getToken();
+                log.info("Login successful for user '{}'", username);
+                return token;
+            } else {
+                log.warn("Login failed for user '{}': Invalid response", username);
+                throw new RuntimeException("Login failed: Invalid response from Identity Service");
+            }
+
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                log.warn("Login failed for user '{}': Invalid credentials", username);
+                throw new RuntimeException("Login failed: Invalid username or password");
+            } else {
+                log.error("Login failed for user '{}': HTTP error {}", username, e.getStatusCode());
+                throw new RuntimeException("Login failed: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Login failed for user '{}': {}", username, e.getMessage());
+            throw new RuntimeException("Login failed: Communication error with Identity Service", e);
+        }
     }
 
     /**
