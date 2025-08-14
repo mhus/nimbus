@@ -473,3 +473,29 @@ durchführt. Es wird der Token zurückgegeben, oder eine Exception geworfen, wen
 Siehe dazu die Spezifikation in `spec/10_identity.md`.
 ```
 
+```text
+Perfekt! Ich habe die IdentityServiceUtils Klasse erfolgreich um die login Methode erweitert. Hier ist eine Zusammenfassung der Änderungen:
+Durchgeführte Änderungen:
+1. Dependencies hinzugefügt
+Spring Web: Für RestTemplate zum Durchführen von HTTP-Requests
+Jackson Databind: Für JSON-Serialisierung/-Deserialisierung
+2. Login-Funktionalität implementiert
+Die neue login(String url, String username, String password) Methode:
+Führt einen POST-Request an den /login Endpunkt des Identity Service durch
+Verwendet DTO-Klassen für strukturierte Request/Response-Verarbeitung:
+LoginRequest: Enthält username und password
+LoginResponse: Enthält token und expires_at
+Robuste Fehlerbehandlung:
+HTTP 401 (Unauthorized) → "Invalid username or password"
+Andere HTTP-Fehler → Spezifische Fehlermeldungen
+Kommunikationsfehler → "Communication error with Identity Service"
+Detailliertes Logging für Debugging und Monitoring
+Flexible URL-Behandlung (mit oder ohne trailing slash)
+3. Funktionsweise
+// Verwendungsbeispiel:
+IdentityServiceUtils utils = new IdentityServiceUtils();
+String token = utils.login("http://localhost:8080", "username", "password");
+// Token kann dann für weitere API-Aufrufe verwendet werden
+Die Methode gibt bei erfolgreichem Login den JWT-Token zurück, oder wirft eine RuntimeException mit einer beschreibenden Fehlermeldung bei Problemen.
+Die Implementierung ist vollständig kompatibel mit der Spezifikation in spec/10_identity.md und integriert sich nahtlos in die bestehende Klasse.
+```
