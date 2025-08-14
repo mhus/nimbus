@@ -463,3 +463,13 @@ The implementation compiles successfully and follows the specifications from spe
 Now when any user with ADMIN privileges is returned from the Identity Service, they will have comprehensive access across all system functions through their expanded role set.
 ```
 
+## 09 Login Client Utility
+
+```text
+Erweitere die Klasse `IdentityServiceUtils` im Modul `shared` um eine 
+Methode `login(String url, String username, String password)`, die einen Login beim Identity Service via REST Request 
+durchführt. Es wird der Token zurückgegeben, oder eine Exception geworfen, wenn der Login fehlschlägt.
+
+Siehe dazu die Spezifikation in `spec/10_identity.md`.
+```
+

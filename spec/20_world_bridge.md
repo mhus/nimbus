@@ -90,6 +90,11 @@ vom Authentifizierungsdienst generiert wurde. Der Token wird validiert und der B
 angemeldet. Der WebSocket-Client erhält eine Bestätigung, dass er angemeldet ist
 und die Rollen des Benutzers werden an den WebSocket-Client gesendet.
 
+Der login kann auch mit username und password erfolgen, wenn kein Token vorhanden ist. Dann
+fragt der WebSocket-Server den Authentifizierungsdienst an, ob die Anmeldedaten korrekt sind
+und benutzt den zurückgegebenen Token für die Anmeldung. Der Identity Service wird
+mittels der IdentityServiceUtils.login() Methode aufgerufen.
+
 Der Befehl `login` hat folgende Struktur:
 
 ```json
@@ -98,6 +103,9 @@ Der Befehl `login` hat folgende Struktur:
   "command": "login",
     "data": {
         "token": "string" // Token des Benutzers
+        // Optional: Wenn kein Token vorhanden ist, können auch username und password übergeben werden
+        "username": "string", // Benutzername des Benutzers
+        "password": "string" // Passwort des Benutzers
     },
     "requestId": "string"
 }
