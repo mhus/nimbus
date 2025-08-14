@@ -198,4 +198,72 @@ Multi-Line JSON: Wird über mehrere Zeilen gesammelt und erst bei einer leeren Z
 Der Code ist bereit für den Einsatz und die angezeigten Warnungen sind nur Code-Style-Hinweise, die die Funktionalität nicht beeinträchtigen.
 ```
 
+## 05 Erweitere Login Kommand
+
+```text
+Erweitere das Login-Kommando, um die optionale Funktion auch mit username und passwort 
+den login zu unterstützen.
+Benutze die Klasse `IdentityServiceUtil` aus dem modul `shared`, um die Anmeldedaten zu validieren.
+
+Siehe `spec/20_world_bridge.md` für Details.
+
+* Erweitere das bestehende LoginCommandData um die Felder `username` und `password`.
+* Erweitere die `LoginCommand`-Klasse, um die neuen Felder zu unterstützen.
+* Implementiere die Logik, um die Anmeldedaten zu validieren und ein JWT-Token zu erhalten, wenn die Anmeldedaten korrekt sind.
+* Erstelle Unit-Tests für das erweiterte Login-Kommando, um die Funktionalität zu überprüfen.
+* Teste die Änderungen, um sicherzustellen, dass das Login-Kommando sowohl mit Token als auch mit Benutzernamen und Passwort funktioniert.
+* Erstelle ein Beispiel in `examples/world_bridge.md`, das die neue Funktionalität demonstriert.
+```
+```text
+Perfekt! Die Tests laufen jetzt erfolgreich durch. Ich kann aus der Ausgabe sehen, dass alle Tests im world-bridge Modul bestanden haben, nachdem ich die IdentityServiceConfig-Konfigurationsklasse hinzugefügt habe.
+Lassen Sie mich eine Zusammenfassung der erfolgreich durchgeführten Erweiterung des Login-Kommandos erstellen:
+✅ Zusammenfassung der implementierten Funktionalität
+1. LoginCommandData erweitert
+Hinzugefügt: username und password Felder
+Alle bestehenden Konstruktoren und Getter/Setter funktionieren weiterhin
+2. LoginCommand erweitert
+Token-basierte Authentifizierung: Funktioniert wie bisher
+Benutzername/Passwort-Authentifizierung: Neue Funktionalität implementiert
+Fallback-Logik: Wenn kein Token vorhanden ist, wird automatisch auf Benutzername/Passwort-Authentifizierung umgeschaltet
+Fehlerbehandlung: Vollständige Validierung und aussagekräftige Fehlermeldungen
+3. IdentityServiceUtils Integration
+Verwendet die bestehende IdentityServiceUtils.login()-Methode
+Konfigurierbare Identity Service URL über identity.service.url
+Spring Bean-Konfiguration für Dependency Injection
+4. Umfassende Unit-Tests
+✅ 10 Testfälle für alle Szenarien:
+Token-basierte Authentifizierung (erfolgreich)
+Benutzername/Passwort-Authentifizierung (erfolgreich)
+Ungültige Anmeldedaten
+Fehlende Credentials (verschiedene Kombinationen)
+Exception-Handling
+5. Backward Compatibility
+Alle bestehenden Tests und Funktionalitäten funktionieren weiterhin
+Kein Breaking Change für bestehende Implementierungen
+🎯 Funktionsweise
+Das erweiterte Login-Kommando unterstützt nun beide Authentifizierungsmethoden:
+Mit Token:
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "token": "jwt-token-hier"
+  },
+  "requestId": "req-1"
+}
+Mit Benutzername/Passwort:
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "username": "testuser",
+    "password": "password123"
+  },
+  "requestId": "req-1"
+}
+Das System entscheidet automatisch anhand der verfügbaren Felder, welche Authentifizierungsmethode verwendet wird. Bei Benutzername/Passwort wird der Identity Service kontaktiert, ein JWT-Token angefordert und dann derselbe Validierungsweg wie bei der Token-basierten Authentifizierung verwendet.
+Die Implementierung ist vollständig getestet und produktionsbereit! 🚀
+```
+
+
 

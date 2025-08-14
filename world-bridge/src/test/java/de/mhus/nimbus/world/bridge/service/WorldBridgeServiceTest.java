@@ -66,7 +66,7 @@ class WorldBridgeServiceTest {
     void testProcessCommandSuccess() {
         // Given
         String sessionId = "test-session";
-        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token", null, null), "req-1");
 
         WorldWebSocketResponse expectedResponse = WorldWebSocketResponse.builder()
                 .service("bridge")
@@ -93,7 +93,7 @@ class WorldBridgeServiceTest {
     void testProcessCommandError() {
         // Given
         String sessionId = "test-session";
-        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token", null, null), "req-1");
 
         ExecuteResponse executeResponse = ExecuteResponse.error("AUTH_ERROR", "Authentication failed");
         when(mockCommand1.execute(any(ExecuteRequest.class))).thenReturn(executeResponse);
@@ -126,7 +126,7 @@ class WorldBridgeServiceTest {
     void testProcessCommandException() {
         // Given
         String sessionId = "test-session";
-        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token"), "req-1");
+        WorldWebSocketCommand command = new WorldWebSocketCommand("bridge", "login", new LoginCommandData("token", null, null), "req-1");
 
         when(mockCommand1.execute(any(ExecuteRequest.class))).thenThrow(new RuntimeException("Test exception"));
 

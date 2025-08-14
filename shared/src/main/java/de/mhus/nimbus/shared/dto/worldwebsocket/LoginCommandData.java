@@ -11,4 +11,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class LoginCommandData {
     @JsonProperty("token")
     private String token;
+
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("password")
+    private String password;
 }
