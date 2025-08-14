@@ -67,6 +67,17 @@ Alternativ können Sie sich auch mit Benutzername und Passwort anmelden:
   },
   "requestId": "login-002"
 }
+
+{
+  "service": "bridge",
+  "command": "login",
+  "data": {
+    "username": "admin",
+    "password": "admin"
+  },
+  "requestId": "login-002"
+}
+
 ```
 
 Erwartete Antwort bei erfolgreichem Login mit Benutzername/Passwort:

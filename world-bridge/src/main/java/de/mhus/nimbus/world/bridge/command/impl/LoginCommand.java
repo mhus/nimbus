@@ -25,7 +25,7 @@ public class LoginCommand implements WebSocketCommand {
     private final IdentityServiceUtils identityServiceUtils;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${identity.service.url:http://localhost:8080}")
+    @Value("${nimbus.identity.service.url}")
     private String identityServiceUrl;
 
     @Override

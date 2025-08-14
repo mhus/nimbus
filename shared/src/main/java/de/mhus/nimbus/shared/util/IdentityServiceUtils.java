@@ -17,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -50,14 +49,14 @@ public class IdentityServiceUtils {
      */
     @Data
     public static class LoginRequest {
-        @JsonProperty("username")
-        private String username;
+        @JsonProperty("userId")
+        private String userId;
 
         @JsonProperty("password")
         private String password;
 
-        public LoginRequest(String username, String password) {
-            this.username = username;
+        public LoginRequest(String userId, String password) {
+            this.userId = userId;
             this.password = password;
         }
     }
