@@ -62,7 +62,7 @@ public interface RegistryWorldRepository extends JpaRepository<RegistryWorld, St
            "(:enabled IS NULL OR w.enabled = :enabled) " +
            "ORDER BY w.created_at DESC",
            nativeQuery = true,
-           countQuery = "SELECT COUNT(*) FROM worlds w WHERE " +
+           countQuery = "SELECT COUNT(*) FROM registry_worlds w WHERE " +
            "(:name IS NULL OR LOWER(w.name::text) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
            "(:ownerId IS NULL OR w.owner_id = :ownerId) AND " +
            "(:enabled IS NULL OR w.enabled = :enabled)")

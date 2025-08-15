@@ -371,13 +371,19 @@ public class WorldTerrainService {
     public GroupDto createGroup(String world, GroupCreateRequest request) {
         validateWorldExists(world);
 
-        Long groupId = request.getId() != null ? request.getId() : generateGroupId();
+        Long groupId = generateGroupId(); // GroupCreateRequest hat keine ID, generiere immer eine neue
+
+        // Convert Map<String,String> to Map<String,Object> for TerrainGroupDto
+        Map<String, Object> objectProperties = new HashMap<>();
+        if (request.getProperties() != null) {
+            objectProperties.putAll(request.getProperties());
+        }
 
         TerrainGroupDto groupDto = TerrainGroupDto.builder()
                 .id(groupId)
                 .name(request.getName())
                 .type(request.getType())
-                .properties(request.getProperties())
+                .properties(objectProperties)
                 .build();
 
         TerrainGroupEntity entity = TerrainGroupEntity.builder()
@@ -412,11 +418,17 @@ public class WorldTerrainService {
 
         return terrainGroupRepository.findByWorldAndGroupId(world, groupId)
                 .map(entity -> {
+                    // Convert Map<String,String> to Map<String,Object> for TerrainGroupDto
+                    Map<String, Object> objectProperties = new HashMap<>();
+                    if (request.getProperties() != null) {
+                        objectProperties.putAll(request.getProperties());
+                    }
+
                     TerrainGroupDto groupDto = TerrainGroupDto.builder()
                             .id(groupId)
                             .name(request.getName())
                             .type(request.getType())
-                            .properties(request.getProperties())
+                            .properties(objectProperties)
                             .build();
 
                     entity.setName(request.getName());
@@ -591,22 +603,30 @@ public class WorldTerrainService {
                 .type(entity.getType())
                 .data(entity.getData())
                 .properties(parseJsonToMap(entity.getProperties()))
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .compressedAt(entity.getCompressedAt())
+                .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant() : null)
+                .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant() : null)
+                .compressedAt(entity.getCompressedAt() != null ? entity.getCompressedAt().atZone(java.time.ZoneId.systemDefault()).toInstant() : null)
                 .build();
     }
 
     private GroupDto mapToGroupDto(TerrainGroupDto terrainGroupDto) {
+        // Convert Map<String,Object> to Map<String,String> for GroupDto
+        Map<String, String> stringProperties = new HashMap<>();
+        if (terrainGroupDto.getProperties() != null) {
+            terrainGroupDto.getProperties().forEach((key, value) ->
+                stringProperties.put(key, value != null ? value.toString() : null)
+            );
+        }
+
         return GroupDto.builder()
                 .id(terrainGroupDto.getId())
                 .name(terrainGroupDto.getName())
                 .type(terrainGroupDto.getType())
-                .properties(terrainGroupDto.getProperties())
+                .properties(stringProperties)
                 .build();
     }
 
-    private String mapToJson(Map<String, String> map) {
+    private String mapToJson(Map<String, Object> map) {
         if (map == null) return "{}";
         try {
             return objectMapper.writeValueAsString(map);
@@ -616,10 +636,10 @@ public class WorldTerrainService {
         }
     }
 
-    private Map<String, String> parseJsonToMap(String json) {
+    private Map<String, Object> parseJsonToMap(String json) {
         if (json == null || json.trim().isEmpty()) return new HashMap<>();
         try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, String>>() {});
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
             log.error("Failed to parse JSON to map", e);
             return new HashMap<>();

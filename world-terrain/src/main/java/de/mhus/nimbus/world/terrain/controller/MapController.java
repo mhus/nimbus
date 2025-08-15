@@ -19,7 +19,7 @@ public class MapController {
     @PostMapping
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> createMap(@RequestBody MapCreateRequest request) {
-        worldTerrainService.createOrUpdateMap(request);
+        worldTerrainService.createMap(request);
         return ResponseEntity.ok().build();
     }
 
@@ -31,7 +31,7 @@ public class MapController {
             @RequestParam String world,
             @RequestParam Integer level) {
 
-        return worldTerrainService.getMapCluster(world, level, x, y)
+        return worldTerrainService.getMap(world, level, x, y)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -39,28 +39,28 @@ public class MapController {
     @PostMapping("/batch")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<TerrainClusterDto>> getMapClusters(@RequestBody MapBatchRequest request) {
-        List<TerrainClusterDto> clusters = worldTerrainService.getMapClusters(request);
+        List<TerrainClusterDto> clusters = worldTerrainService.getMapBatch(request);
         return ResponseEntity.ok(clusters);
     }
 
     @PutMapping
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> updateMap(@RequestBody MapCreateRequest request) {
-        worldTerrainService.createOrUpdateMap(request);
+        worldTerrainService.updateMap(request);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> deleteMapFields(@RequestBody MapDeleteRequest request) {
-        worldTerrainService.deleteMapFields(request);
-        return ResponseEntity.ok().build();
+        // TODO: Implement deleteMapFields method in service
+        return ResponseEntity.status(501).build(); // 501 Not Implemented
     }
 
     @DeleteMapping("/level")
     @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Void> deleteLevel(@RequestParam String world, @RequestParam Integer level) {
-        worldTerrainService.deleteLevel(world, level);
+        worldTerrainService.deleteMapLevel(world, level);
         return ResponseEntity.ok().build();
     }
 }

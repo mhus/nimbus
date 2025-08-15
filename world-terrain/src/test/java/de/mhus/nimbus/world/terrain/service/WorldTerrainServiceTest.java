@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -65,8 +66,8 @@ class WorldTerrainServiceTest {
                 .name("Test World")
                 .description("A test world")
                 .properties("{\"key\": \"value\"}")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
 
         worldDto = WorldDto.builder()
