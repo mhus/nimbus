@@ -13,7 +13,7 @@ import java.util.List;
  * Contains user information including credentials and roles.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "identity_users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

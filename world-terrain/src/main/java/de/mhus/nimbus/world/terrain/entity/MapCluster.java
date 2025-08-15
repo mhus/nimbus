@@ -11,7 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "map_clusters",
+@Table(name = "terrain_map_clusters",
        uniqueConstraints = @UniqueConstraint(columnNames = {"world", "level", "cluster_x", "cluster_y"}))
 @Data
 @NoArgsConstructor

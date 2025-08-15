@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 @Entity
-@Table(name = "materials")
+@Table(name = "terrain_materials")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

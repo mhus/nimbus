@@ -3,7 +3,7 @@ spring:
     name: world-terrain
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/world_data
+    url: jdbc:postgresql://localhost:5432/nimbus
     username: nimbus
     password: nimbus123
     driver-class-name: org.postgresql.Driver

@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: nimbus
       POSTGRES_USER: nimbus
       POSTGRES_PASSWORD: nimbus123
-      POSTGRES_MULTIPLE_DATABASES: identity,registry,world_terrain,world_life
+      # POSTGRES_MULTIPLE_DATABASES: identity,registry,world_terrain,world_life
     ports:
       - "5432:5432"
     volumes:

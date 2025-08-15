@@ -11,7 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 
 @Entity
-@Table(name = "assets",
+@Table(name = "terrain_assets",
        uniqueConstraints = @UniqueConstraint(columnNames = {"world", "name"}),
        indexes = {
            @Index(name = "idx_assets_world", columnList = "world"),

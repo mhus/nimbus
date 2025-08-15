@@ -11,7 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 
 @Entity
-@Table(name = "sprites",
+@Table(name = "terrain_sprites",
        indexes = {
            @Index(name = "idx_sprites_world_level_enabled_cluster0", columnList = "world, level, enabled, cluster_x0, cluster_y0"),
            @Index(name = "idx_sprites_world_level_enabled_cluster1", columnList = "world, level, enabled, cluster_x1, cluster_y1"),

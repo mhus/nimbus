@@ -18,7 +18,7 @@ import java.util.UUID;
  * Contains metadata about worlds including access information and properties.
  */
 @Entity
-@Table(name = "worlds")
+@Table(name = "registry_worlds")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
