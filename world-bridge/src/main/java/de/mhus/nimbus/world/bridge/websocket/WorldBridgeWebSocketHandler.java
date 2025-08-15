@@ -114,16 +114,16 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
     private WorldWebSocketResponse processCommand(String sessionId, WorldWebSocketCommand command) {
         WebSocketSession sessionInfo = sessionData.get(sessionId);
 
-        if (!"bridge".equals(command.getService())) {
-            return WorldWebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("INVALID_SERVICE")
-                    .message("Service not supported by bridge")
-                    .build();
-        }
+//        if (!"bridge".equals(command.getService())) {
+//            return WorldWebSocketResponse.builder()
+//                    .service(command.getService())
+//                    .command(command.getCommand())
+//                    .requestId(command.getRequestId())
+//                    .status("error")
+//                    .errorCode("INVALID_SERVICE")
+//                    .message("Service not supported by bridge")
+//                    .build();
+//        }
 
         return worldBridgeService.processCommand(sessionId, sessionInfo, command);
     }

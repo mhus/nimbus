@@ -24,7 +24,7 @@ public class TerrainServiceClient {
 
     private final RestTemplate restTemplate;
 
-    @Value("${nimbus.world-terrain.url:http://localhost:8083}")
+    @Value("${nimbus.world.terrain.service.url:http://localhost:8083}")
     private String worldTerrainUrl;
 
     // World Management
