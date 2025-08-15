@@ -8,14 +8,11 @@ import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "terrain_groups",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"world", "id"}),
-       indexes = {
-           @Index(name = "idx_terrain_groups_world", columnList = "world")
-       })
+       uniqueConstraints = @UniqueConstraint(columnNames = {"world", "group_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,6 +26,9 @@ public class TerrainGroupEntity {
     @Column(nullable = false)
     private String world;
 
+    @Column(name = "group_id", nullable = false)
+    private Long groupId;
+
     @Column(nullable = false)
     private String name;
 
@@ -36,14 +36,14 @@ public class TerrainGroupEntity {
     private String type;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
-    private String data; // JSON string of group properties
+    @Column(nullable = false)
+    private String data; // JSON-serialized TerrainGroupDto
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 }

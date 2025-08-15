@@ -3,16 +3,19 @@ package de.mhus.nimbus.world.terrain.service;
 import de.mhus.nimbus.shared.dto.world.*;
 import de.mhus.nimbus.world.terrain.entity.*;
 import de.mhus.nimbus.world.terrain.repository.*;
+import de.mhus.nimbus.world.terrain.exception.WorldNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -72,48 +75,37 @@ public class WorldTerrainService {
         return false;
     }
 
-    // Material Management
+    // Material Management - now using JSON serialization
     public MaterialDto createMaterial(MaterialDto materialDto) {
         MaterialEntity entity = MaterialEntity.builder()
                 .name(materialDto.getName())
-                .blocking(materialDto.getBlocking())
-                .friction(materialDto.getFriction())
-                .color(materialDto.getColor())
-                .texture(materialDto.getTexture())
-                .soundWalk(materialDto.getSoundWalk())
-                .properties(mapToJson(materialDto.getProperties()))
+                .data(serializeToJson(materialDto))
                 .build();
 
         MaterialEntity saved = materialRepository.save(entity);
-        return mapToMaterialDto(saved);
+        return deserializeFromJson(saved.getData(), MaterialDto.class);
     }
 
     public Optional<MaterialDto> getMaterial(Integer id) {
         return materialRepository.findById(id)
-                .map(this::mapToMaterialDto);
+                .map(entity -> deserializeFromJson(entity.getData(), MaterialDto.class));
     }
 
-    public Page<MaterialDto> getMaterials(String name, Pageable pageable) {
-        Page<MaterialEntity> entities;
-        if (name != null && !name.trim().isEmpty()) {
-            entities = materialRepository.findByNameContainingIgnoreCase(name, pageable);
-        } else {
-            entities = materialRepository.findAll(pageable);
-        }
-        return entities.map(this::mapToMaterialDto);
+    public Page<MaterialDto> getMaterials(Pageable pageable) {
+        Page<MaterialEntity> entities = materialRepository.findAll(pageable);
+        List<MaterialDto> dtos = entities.getContent().stream()
+                .map(entity -> deserializeFromJson(entity.getData(), MaterialDto.class))
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, entities.getTotalElements());
     }
 
     public Optional<MaterialDto> updateMaterial(Integer id, MaterialDto materialDto) {
         return materialRepository.findById(id)
                 .map(entity -> {
-                    entity.setName(materialDto.getName());
-                    entity.setBlocking(materialDto.getBlocking());
-                    entity.setFriction(materialDto.getFriction());
-                    entity.setColor(materialDto.getColor());
-                    entity.setTexture(materialDto.getTexture());
-                    entity.setSoundWalk(materialDto.getSoundWalk());
-                    entity.setProperties(mapToJson(materialDto.getProperties()));
-                    return mapToMaterialDto(materialRepository.save(entity));
+                    materialDto.setId(id); // Ensure ID consistency
+                    entity.setData(serializeToJson(materialDto));
+                    entity.setName(materialDto.getName()); // Keep name for indexing
+                    return deserializeFromJson(materialRepository.save(entity).getData(), MaterialDto.class);
                 });
     }
 
@@ -125,8 +117,10 @@ public class WorldTerrainService {
         return false;
     }
 
-    // Map Management
-    public void createOrUpdateMap(MapCreateRequest request) {
+    // Map Management - now using JSON serialization for clusters
+    public void createMap(MapCreateRequest request) {
+        validateWorldExists(request.getWorld());
+
         for (TerrainClusterDto cluster : request.getClusters()) {
             MapEntity entity = mapRepository.findByWorldAndLevelAndClusterXAndClusterY(
                     request.getWorld(), cluster.getLevel(), cluster.getX(), cluster.getY())
@@ -137,260 +131,110 @@ public class WorldTerrainService {
                             .clusterY(cluster.getY())
                             .build());
 
-            entity.setData(mapToJson(cluster.getFields()));
-            entity.setCompressed(null); // Reset compression
+            // Merge existing fields with new fields
+            List<TerrainFieldDto> existingFields = parseExistingFields(entity.getData());
+            List<TerrainFieldDto> mergedFields = mergeFields(existingFields, cluster.getFields());
+
+            TerrainClusterDto mergedCluster = TerrainClusterDto.builder()
+                    .x(cluster.getX())
+                    .y(cluster.getY())
+                    .level(cluster.getLevel())
+                    .fields(mergedFields)
+                    .build();
+
+            entity.setData(serializeToJson(mergedCluster));
+            entity.setCompressed(null); // Reset compression when data changes
             mapRepository.save(entity);
         }
     }
 
-    public Optional<TerrainClusterDto> getMapCluster(String world, Integer level, Integer clusterX, Integer clusterY) {
+    public Optional<TerrainClusterDto> getMap(String world, Integer level, Integer clusterX, Integer clusterY) {
+        validateWorldExists(world);
+
         return mapRepository.findByWorldAndLevelAndClusterXAndClusterY(world, level, clusterX, clusterY)
-                .map(entity -> TerrainClusterDto.builder()
-                        .level(entity.getLevel())
-                        .x(entity.getClusterX())
-                        .y(entity.getClusterY())
-                        .fields(parseJsonList(entity.getData(), TerrainFieldDto.class))
-                        .build());
+                .map(entity -> deserializeFromJson(entity.getData(), TerrainClusterDto.class));
     }
 
-    public List<TerrainClusterDto> getMapClusters(MapBatchRequest request) {
-        List<TerrainClusterDto> result = new ArrayList<>();
+    public List<TerrainClusterDto> getMapBatch(MapBatchRequest request) {
+        validateWorldExists(request.getWorld());
 
-        for (ClusterCoordinateDto coord : request.getClusters()) {
-            getMapCluster(request.getWorld(), request.getLevel(), coord.getX(), coord.getY())
-                    .ifPresent(result::add);
-        }
+        List<Object[]> coordinates = request.getClusters().stream()
+                .map(coord -> new Object[]{coord.getX(), coord.getY()})
+                .collect(Collectors.toList());
 
-        return result;
+        return mapRepository.findByWorldAndLevelAndClusterCoordinates(
+                request.getWorld(), request.getLevel(), coordinates)
+                .stream()
+                .map(entity -> deserializeFromJson(entity.getData(), TerrainClusterDto.class))
+                .collect(Collectors.toList());
     }
 
-    public void deleteMapFields(MapDeleteRequest request) {
-        for (TerrainClusterDeleteDto clusterDelete : request.getClusters()) {
-            Optional<MapEntity> entityOpt = mapRepository.findByWorldAndLevelAndClusterXAndClusterY(
-                    request.getWorld(), request.getLevel(), clusterDelete.getX(), clusterDelete.getY());
-
-            if (entityOpt.isPresent()) {
-                MapEntity entity = entityOpt.get();
-                List<TerrainFieldDto> existingFields = parseJsonList(entity.getData(), TerrainFieldDto.class);
-
-                // Remove specified fields
-                Set<String> fieldsToRemove = clusterDelete.getFields().stream()
-                        .map(field -> field.getX() + "," + field.getY())
-                        .collect(Collectors.toSet());
-
-                List<TerrainFieldDto> filteredFields = existingFields.stream()
-                        .filter(field -> !fieldsToRemove.contains(field.getX() + "," + field.getY()))
-                        .collect(Collectors.toList());
-
-                if (filteredFields.isEmpty()) {
-                    mapRepository.delete(entity);
-                } else {
-                    entity.setData(mapToJson(filteredFields));
-                    entity.setCompressed(null);
-                    mapRepository.save(entity);
-                }
-            }
-        }
+    public void updateMap(MapCreateRequest request) {
+        createMap(request); // Same logic as create - merge fields
     }
 
-    public void deleteLevel(String world, Integer level) {
+    public void deleteMapLevel(String world, Integer level) {
+        validateWorldExists(world);
         mapRepository.deleteByWorldAndLevel(world, level);
     }
 
-    // Asset Management
-    public AssetDto createAsset(AssetDto assetDto) {
-        AssetEntity entity = AssetEntity.builder()
-                .world(assetDto.getWorld())
-                .name(assetDto.getName())
-                .type(assetDto.getType())
-                .data(assetDto.getData())
-                .properties(mapToJson(assetDto.getProperties()))
-                .build();
-
-        AssetEntity saved = assetRepository.save(entity);
-        return mapToAssetDto(saved);
-    }
-
-    public Optional<AssetDto> getAsset(String world, String name) {
-        return assetRepository.findByWorldAndName(world, name)
-                .map(this::mapToAssetDto);
-    }
-
-    public Page<AssetDto> getAssets(String world, int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size);
-        return assetRepository.findByWorld(world, pageable)
-                .map(this::mapToAssetDto);
-    }
-
-    public List<AssetDto> getAssetsBatch(AssetBatchRequest request) {
-        List<AssetEntity> entities = assetRepository.findByWorldAndNameIn(
-                request.getWorld(), request.getAssets());
-        return entities.stream()
-                .map(this::mapToAssetDto)
-                .collect(Collectors.toList());
-    }
-
-    public Optional<AssetDto> updateAsset(String world, String name, AssetDto assetDto) {
-        return assetRepository.findByWorldAndName(world, name)
-                .map(entity -> {
-                    entity.setType(assetDto.getType());
-                    entity.setData(assetDto.getData());
-                    entity.setProperties(mapToJson(assetDto.getProperties()));
-                    entity.setCompressed(null); // Reset compression when updating
-                    return mapToAssetDto(assetRepository.save(entity));
-                });
-    }
-
-    public boolean deleteAsset(String world, String name) {
-        if (assetRepository.existsByWorldAndName(world, name)) {
-            assetRepository.deleteByWorldAndName(world, name);
-            return true;
-        }
-        return false;
-    }
-
-    public void compressAssets(String world) {
-        // This would be implemented as a background job in a real system
-        // For now, it's a placeholder that could trigger asset compression
-        log.info("Asset compression triggered for world: {}", world);
-        // Implementation would involve finding uncompressed assets and compressing them
-    }
-
-    // Terrain Group Management
-    public TerrainGroupDto createGroup(String world, TerrainGroupDto groupDto) {
-        TerrainGroupEntity entity = TerrainGroupEntity.builder()
-                .world(world)
-                .name(groupDto.getName())
-                .type(groupDto.getType())
-                .data(mapToJson(groupDto.getProperties()))
-                .build();
-
-        TerrainGroupEntity saved = terrainGroupRepository.save(entity);
-        return mapToTerrainGroupDto(saved);
-    }
-
-    public Optional<TerrainGroupDto> getGroup(String world, Long id) {
-        return terrainGroupRepository.findByWorldAndName(world, String.valueOf(id))
-                .or(() -> terrainGroupRepository.findById(id)
-                        .filter(entity -> entity.getWorld().equals(world)))
-                .map(this::mapToTerrainGroupDto);
-    }
-
-    public List<TerrainGroupDto> getGroups(String world) {
-        return terrainGroupRepository.findByWorld(world).stream()
-                .map(this::mapToTerrainGroupDto)
-                .collect(Collectors.toList());
-    }
-
-    public Optional<TerrainGroupDto> updateGroup(String world, Long id, TerrainGroupDto groupDto) {
-        return terrainGroupRepository.findById(id)
-                .filter(entity -> entity.getWorld().equals(world))
-                .map(entity -> {
-                    entity.setName(groupDto.getName());
-                    entity.setType(groupDto.getType());
-                    entity.setData(mapToJson(groupDto.getProperties()));
-                    return mapToTerrainGroupDto(terrainGroupRepository.save(entity));
-                });
-    }
-
-    public boolean deleteGroup(String world, Long id) {
-        Optional<TerrainGroupEntity> entityOpt = terrainGroupRepository.findById(id)
-                .filter(entity -> entity.getWorld().equals(world));
-
-        if (entityOpt.isPresent()) {
-            terrainGroupRepository.delete(entityOpt.get());
-            return true;
-        }
-        return false;
-    }
-
-    // Sprite Management
+    // Sprite Management - now using JSON serialization
     public List<String> createSprites(SpriteCreateRequest request) {
-        List<String> spriteIds = new ArrayList<>();
+        validateWorldExists(request.getWorld());
+
+        List<String> createdIds = new ArrayList<>();
 
         for (SpriteDto spriteDto : request.getSprites()) {
-            String spriteId = "S" + UUID.randomUUID().toString();
+            String id = "S" + UUID.randomUUID().toString();
+            spriteDto.setId(id);
 
-            // Calculate cluster positions for sprite placement
-            int clusterX0 = spriteDto.getX() / 32; // CLUSTER_SIZE = 32
-            int clusterY0 = spriteDto.getY() / 32;
-
-            // Check if sprite spans multiple clusters
-            Integer clusterX1 = null, clusterY1 = null, clusterX2 = null, clusterY2 = null, clusterX3 = null, clusterY3 = null;
-
-            int maxX = spriteDto.getX() + (spriteDto.getSizeX() != null ? spriteDto.getSizeX() : 1);
-            int maxY = spriteDto.getY() + (spriteDto.getSizeY() != null ? spriteDto.getSizeY() : 1);
-
-            int endClusterX = (maxX - 1) / 32;
-            int endClusterY = (maxY - 1) / 32;
-
-            if (endClusterX > clusterX0) {
-                clusterX1 = endClusterX;
-                clusterY1 = clusterY0;
-            }
-            if (endClusterY > clusterY0) {
-                clusterX2 = clusterX0;
-                clusterY2 = endClusterY;
-            }
-            if (endClusterX > clusterX0 && endClusterY > clusterY0) {
-                clusterX3 = endClusterX;
-                clusterY3 = endClusterY;
-            }
+            // Calculate cluster positions based on sprite position and size
+            int[] clusterPositions = calculateClusterPositions(spriteDto);
 
             SpriteEntity entity = SpriteEntity.builder()
-                    .id(spriteId)
+                    .id(id)
                     .world(request.getWorld())
                     .level(request.getLevel())
                     .enabled(true)
-                    .clusterX0(clusterX0)
-                    .clusterY0(clusterY0)
-                    .clusterX1(clusterX1)
-                    .clusterY1(clusterY1)
-                    .clusterX2(clusterX2)
-                    .clusterY2(clusterY2)
-                    .clusterX3(clusterX3)
-                    .clusterY3(clusterY3)
-                    .data(mapToJson(spriteDto))
+                    .clusterX0(clusterPositions[0])
+                    .clusterY0(clusterPositions[1])
+                    .clusterX1(clusterPositions.length > 2 ? clusterPositions[2] : null)
+                    .clusterY1(clusterPositions.length > 3 ? clusterPositions[3] : null)
+                    .clusterX2(clusterPositions.length > 4 ? clusterPositions[4] : null)
+                    .clusterY2(clusterPositions.length > 5 ? clusterPositions[5] : null)
+                    .clusterX3(clusterPositions.length > 6 ? clusterPositions[6] : null)
+                    .clusterY3(clusterPositions.length > 7 ? clusterPositions[7] : null)
+                    .data(serializeToJson(spriteDto))
                     .build();
 
             spriteRepository.save(entity);
-            spriteIds.add(spriteId);
+            createdIds.add(id);
         }
 
-        return spriteIds;
+        return createdIds;
     }
 
     public Optional<SpriteDto> getSprite(String id) {
         return spriteRepository.findById(id)
-                .map(this::mapToSpriteDto);
+                .map(entity -> deserializeFromJson(entity.getData(), SpriteDto.class));
     }
 
-    public List<SpriteDto> getSpritesInCluster(String world, Integer level, Integer x, Integer y) {
-        return spriteRepository.findByWorldAndLevelAndCluster(world, level, x, y)
+    public List<SpriteDto> getSpritesInCluster(String world, Integer level, Integer clusterX, Integer clusterY) {
+        validateWorldExists(world);
+
+        return spriteRepository.findSpritesInCluster(world, level, true, clusterX, clusterY)
                 .stream()
-                .map(this::mapToSpriteDto)
+                .map(entity -> deserializeFromJson(entity.getData(), SpriteDto.class))
                 .collect(Collectors.toList());
     }
 
     public Optional<SpriteDto> updateSprite(String id, SpriteDto spriteDto) {
         return spriteRepository.findById(id)
                 .map(entity -> {
-                    // Update sprite data
-                    entity.setData(mapToJson(spriteDto));
-                    entity.setCompressed(null); // Reset compression
-
-                    // Recalculate cluster positions if coordinates changed
-                    SpriteDto currentData = parseJson(entity.getData(), SpriteDto.class);
-                    if (currentData != null &&
-                        (!Objects.equals(currentData.getX(), spriteDto.getX()) ||
-                         !Objects.equals(currentData.getY(), spriteDto.getY()) ||
-                         !Objects.equals(currentData.getSizeX(), spriteDto.getSizeX()) ||
-                         !Objects.equals(currentData.getSizeY(), spriteDto.getSizeY()))) {
-
-                        updateSpriteClusterPositions(entity, spriteDto);
-                    }
-
-                    return mapToSpriteDto(spriteRepository.save(entity));
+                    spriteDto.setId(id); // Ensure ID consistency
+                    entity.setData(serializeToJson(spriteDto));
+                    entity.setCompressed(null); // Reset compression when data changes
+                    return deserializeFromJson(spriteRepository.save(entity).getData(), SpriteDto.class);
                 });
     }
 
@@ -405,32 +249,35 @@ public class WorldTerrainService {
     public Optional<SpriteDto> updateSpriteCoordinates(String id, SpriteCoordinateUpdateRequest request) {
         return spriteRepository.findById(id)
                 .map(entity -> {
-                    SpriteDto spriteData = parseJson(entity.getData(), SpriteDto.class);
-                    if (spriteData != null) {
-                        spriteData.setX(request.getX());
-                        spriteData.setY(request.getY());
-                        spriteData.setZ(request.getZ());
-                        spriteData.setSizeX(request.getSizeX());
-                        spriteData.setSizeY(request.getSizeY());
-                        spriteData.setSizeZ(request.getSizeZ());
-
-                        entity.setData(mapToJson(spriteData));
-                        entity.setCompressed(null);
-
-                        updateSpriteClusterPositions(entity, spriteData);
-
-                        return mapToSpriteDto(spriteRepository.save(entity));
+                    SpriteDto spriteDto = deserializeFromJson(entity.getData(), SpriteDto.class);
+                    spriteDto.setX(request.getX());
+                    spriteDto.setY(request.getY());
+                    if (request.getZ() != null) {
+                        spriteDto.setZ(request.getZ());
                     }
-                    return null;
-                })
-                .filter(Objects::nonNull);
+
+                    // Recalculate cluster positions
+                    int[] clusterPositions = calculateClusterPositions(spriteDto);
+                    entity.setClusterX0(clusterPositions[0]);
+                    entity.setClusterY0(clusterPositions[1]);
+                    entity.setClusterX1(clusterPositions.length > 2 ? clusterPositions[2] : null);
+                    entity.setClusterY1(clusterPositions.length > 3 ? clusterPositions[3] : null);
+                    entity.setClusterX2(clusterPositions.length > 4 ? clusterPositions[4] : null);
+                    entity.setClusterY2(clusterPositions.length > 5 ? clusterPositions[5] : null);
+                    entity.setClusterX3(clusterPositions.length > 6 ? clusterPositions[6] : null);
+                    entity.setClusterY3(clusterPositions.length > 7 ? clusterPositions[7] : null);
+
+                    entity.setData(serializeToJson(spriteDto));
+                    entity.setCompressed(null);
+                    return deserializeFromJson(spriteRepository.save(entity).getData(), SpriteDto.class);
+                });
     }
 
     public Optional<SpriteDto> enableSprite(String id) {
         return spriteRepository.findById(id)
                 .map(entity -> {
                     entity.setEnabled(true);
-                    return mapToSpriteDto(spriteRepository.save(entity));
+                    return deserializeFromJson(spriteRepository.save(entity).getData(), SpriteDto.class);
                 });
     }
 
@@ -438,55 +285,302 @@ public class WorldTerrainService {
         return spriteRepository.findById(id)
                 .map(entity -> {
                     entity.setEnabled(false);
-                    return mapToSpriteDto(spriteRepository.save(entity));
+                    return deserializeFromJson(spriteRepository.save(entity).getData(), SpriteDto.class);
                 });
     }
 
-    private void updateSpriteClusterPositions(SpriteEntity entity, SpriteDto spriteDto) {
-        int clusterX0 = spriteDto.getX() / 32;
-        int clusterY0 = spriteDto.getY() / 32;
+    // Asset Management - now using JSON serialization for properties
+    public AssetDto createAsset(String world, AssetCreateRequest request) {
+        validateWorldExists(world);
 
-        int maxX = spriteDto.getX() + (spriteDto.getSizeX() != null ? spriteDto.getSizeX() : 1);
-        int maxY = spriteDto.getY() + (spriteDto.getSizeY() != null ? spriteDto.getSizeY() : 1);
+        AssetEntity entity = AssetEntity.builder()
+                .world(world)
+                .name(request.getName())
+                .type(request.getType())
+                .data(request.getData())
+                .properties(serializeToJson(request.getProperties()))
+                .build();
 
-        int endClusterX = (maxX - 1) / 32;
-        int endClusterY = (maxY - 1) / 32;
+        AssetEntity saved = assetRepository.save(entity);
+        return mapToAssetDto(saved);
+    }
 
-        entity.setClusterX0(clusterX0);
-        entity.setClusterY0(clusterY0);
+    public Optional<AssetDto> getAsset(String world, String name) {
+        validateWorldExists(world);
 
-        entity.setClusterX1(endClusterX > clusterX0 ? endClusterX : null);
-        entity.setClusterY1(endClusterX > clusterX0 ? clusterY0 : null);
+        return assetRepository.findByWorldAndName(world, name)
+                .map(this::mapToAssetDto);
+    }
 
-        entity.setClusterX2(endClusterY > clusterY0 ? clusterX0 : null);
-        entity.setClusterY2(endClusterY > clusterY0 ? endClusterY : null);
+    public List<AssetDto> getAssets(String world) {
+        validateWorldExists(world);
 
-        entity.setClusterX3((endClusterX > clusterX0 && endClusterY > clusterY0) ? endClusterX : null);
-        entity.setClusterY3((endClusterX > clusterX0 && endClusterY > clusterY0) ? endClusterY : null);
+        return assetRepository.findByWorld(world).stream()
+                .map(this::mapToAssetDto)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<AssetDto> updateAsset(String world, String name, AssetCreateRequest request) {
+        validateWorldExists(world);
+
+        return assetRepository.findByWorldAndName(world, name)
+                .map(entity -> {
+                    entity.setType(request.getType());
+                    entity.setData(request.getData());
+                    entity.setProperties(serializeToJson(request.getProperties()));
+                    entity.setCompressed(null); // Reset compression when data changes
+                    return mapToAssetDto(assetRepository.save(entity));
+                });
+    }
+
+    public boolean deleteAsset(String world, String name) {
+        validateWorldExists(world);
+
+        if (assetRepository.existsByWorldAndName(world, name)) {
+            assetRepository.deleteByWorldAndName(world, name);
+            return true;
+        }
+        return false;
+    }
+
+    public List<AssetDto> getAssetsBatch(String world, List<String> names) {
+        validateWorldExists(world);
+
+        return names.stream()
+                .map(name -> assetRepository.findByWorldAndName(world, name))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(this::mapToAssetDto)
+                .collect(Collectors.toList());
+    }
+
+    public void compressAssets(String world, List<String> names) {
+        validateWorldExists(world);
+
+        names.forEach(name -> {
+            assetRepository.findByWorldAndName(world, name)
+                    .ifPresent(entity -> {
+                        // TODO: Implement compression logic
+                        entity.setCompressedAt(LocalDateTime.now());
+                        assetRepository.save(entity);
+                    });
+        });
+    }
+
+    // Group Management - now using JSON serialization
+    public GroupDto createGroup(String world, GroupCreateRequest request) {
+        validateWorldExists(world);
+
+        Long groupId = request.getId() != null ? request.getId() : generateGroupId();
+
+        TerrainGroupDto groupDto = TerrainGroupDto.builder()
+                .id(groupId)
+                .name(request.getName())
+                .type(request.getType())
+                .properties(request.getProperties())
+                .build();
+
+        TerrainGroupEntity entity = TerrainGroupEntity.builder()
+                .world(world)
+                .groupId(groupId)
+                .name(request.getName())
+                .type(request.getType())
+                .data(serializeToJson(groupDto))
+                .build();
+
+        TerrainGroupEntity saved = terrainGroupRepository.save(entity);
+        return mapToGroupDto(deserializeFromJson(saved.getData(), TerrainGroupDto.class));
+    }
+
+    public Optional<GroupDto> getGroup(String world, Long groupId) {
+        validateWorldExists(world);
+
+        return terrainGroupRepository.findByWorldAndGroupId(world, groupId)
+                .map(entity -> mapToGroupDto(deserializeFromJson(entity.getData(), TerrainGroupDto.class)));
+    }
+
+    public List<GroupDto> getGroups(String world) {
+        validateWorldExists(world);
+
+        return terrainGroupRepository.findByWorld(world).stream()
+                .map(entity -> mapToGroupDto(deserializeFromJson(entity.getData(), TerrainGroupDto.class)))
+                .collect(Collectors.toList());
+    }
+
+    public Optional<GroupDto> updateGroup(String world, Long groupId, GroupCreateRequest request) {
+        validateWorldExists(world);
+
+        return terrainGroupRepository.findByWorldAndGroupId(world, groupId)
+                .map(entity -> {
+                    TerrainGroupDto groupDto = TerrainGroupDto.builder()
+                            .id(groupId)
+                            .name(request.getName())
+                            .type(request.getType())
+                            .properties(request.getProperties())
+                            .build();
+
+                    entity.setName(request.getName());
+                    entity.setType(request.getType());
+                    entity.setData(serializeToJson(groupDto));
+
+                    TerrainGroupEntity saved = terrainGroupRepository.save(entity);
+                    return mapToGroupDto(deserializeFromJson(saved.getData(), TerrainGroupDto.class));
+                });
+    }
+
+    public boolean deleteGroup(String world, Long groupId) {
+        validateWorldExists(world);
+
+        if (terrainGroupRepository.existsByWorldAndGroupId(world, groupId)) {
+            terrainGroupRepository.deleteByWorldAndGroupId(world, groupId);
+            return true;
+        }
+        return false;
     }
 
     // Utility methods
-    private WorldDto mapToWorldDto(WorldEntity entity) {
-        return WorldDto.builder()
-                .id(entity.getId())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .properties(parseJsonMap(entity.getProperties()))
+    private void validateWorldExists(String worldId) {
+        if (!worldRepository.existsById(worldId)) {
+            throw new WorldNotFoundException("World not found: " + worldId);
+        }
+    }
+
+    private String serializeToJson(Object object) {
+        try {
+            return objectMapper.writeValueAsString(object);
+        } catch (Exception e) {
+            log.error("Failed to serialize object to JSON", e);
+            throw new RuntimeException("JSON serialization failed", e);
+        }
+    }
+
+    private <T> T deserializeFromJson(String json, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(json, clazz);
+        } catch (Exception e) {
+            log.error("Failed to deserialize JSON to object", e);
+            throw new RuntimeException("JSON deserialization failed", e);
+        }
+    }
+
+    private List<TerrainFieldDto> parseExistingFields(String data) {
+        if (data == null || data.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            TerrainClusterDto cluster = objectMapper.readValue(data, TerrainClusterDto.class);
+            return cluster.getFields() != null ? cluster.getFields() : new ArrayList<>();
+        } catch (Exception e) {
+            log.warn("Failed to parse existing fields, starting with empty list", e);
+            return new ArrayList<>();
+        }
+    }
+
+    private List<TerrainFieldDto> mergeFields(List<TerrainFieldDto> existing, List<TerrainFieldDto> newFields) {
+        Map<String, TerrainFieldDto> fieldMap = new HashMap<>();
+
+        // Add existing fields
+        for (TerrainFieldDto field : existing) {
+            String key = field.getX() + "," + field.getY() + "," + field.getZ();
+            fieldMap.put(key, field);
+        }
+
+        // Merge or add new fields
+        for (TerrainFieldDto newField : newFields) {
+            String key = newField.getX() + "," + newField.getY() + "," + newField.getZ();
+            TerrainFieldDto existingField = fieldMap.get(key);
+
+            if (existingField != null) {
+                // Merge fields
+                fieldMap.put(key, mergeField(existingField, newField));
+            } else {
+                // Add new field
+                fieldMap.put(key, newField);
+            }
+        }
+
+        return new ArrayList<>(fieldMap.values());
+    }
+
+    private TerrainFieldDto mergeField(TerrainFieldDto existing, TerrainFieldDto newField) {
+        return TerrainFieldDto.builder()
+                .x(newField.getX())
+                .y(newField.getY())
+                .z(newField.getZ())
+                .groups(newField.getGroups() != null ? newField.getGroups() : existing.getGroups())
+                .materials(newField.getMaterials() != null ? newField.getMaterials() : existing.getMaterials())
+                .opacity(newField.getOpacity() != null ? newField.getOpacity() : existing.getOpacity())
+                .sizeZ(newField.getSizeZ() != null ? newField.getSizeZ() : existing.getSizeZ())
+                .parameters(mergeParameters(existing.getParameters(), newField.getParameters()))
                 .build();
     }
 
-    private MaterialDto mapToMaterialDto(MaterialEntity entity) {
-        return MaterialDto.builder()
+    private Map<String, String> mergeParameters(Map<String, String> existing, Map<String, String> newParams) {
+        Map<String, String> merged = new HashMap<>();
+        if (existing != null) {
+            merged.putAll(existing);
+        }
+        if (newParams != null) {
+            merged.putAll(newParams);
+        }
+        return merged;
+    }
+
+    private int[] calculateClusterPositions(SpriteDto sprite) {
+        final int CLUSTER_SIZE = 32;
+
+        int clusterX0 = sprite.getX() / CLUSTER_SIZE;
+        int clusterY0 = sprite.getY() / CLUSTER_SIZE;
+
+        List<Integer> positions = new ArrayList<>();
+        positions.add(clusterX0);
+        positions.add(clusterY0);
+
+        // Check if sprite spans multiple clusters
+        int endX = sprite.getX() + sprite.getSizeX() - 1;
+        int endY = sprite.getY() + sprite.getSizeY() - 1;
+
+        int clusterX1 = endX / CLUSTER_SIZE;
+        int clusterY1 = endY / CLUSTER_SIZE;
+
+        if (clusterX1 != clusterX0 || clusterY1 != clusterY0) {
+            // Sprite spans multiple clusters
+            if (clusterX1 != clusterX0 && clusterY1 == clusterY0) {
+                // Spans horizontally
+                positions.add(clusterX1);
+                positions.add(clusterY0);
+            } else if (clusterX1 == clusterX0 && clusterY1 != clusterY0) {
+                // Spans vertically
+                positions.add(clusterX0);
+                positions.add(clusterY1);
+            } else {
+                // Spans both directions (up to 4 clusters)
+                positions.add(clusterX1);
+                positions.add(clusterY0);
+                positions.add(clusterX0);
+                positions.add(clusterY1);
+                positions.add(clusterX1);
+                positions.add(clusterY1);
+            }
+        }
+
+        return positions.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    private Long generateGroupId() {
+        // Generate a unique group ID
+        return System.currentTimeMillis();
+    }
+
+    // Mapping methods
+    private WorldDto mapToWorldDto(WorldEntity entity) {
+        return WorldDto.builder()
                 .id(entity.getId())
                 .name(entity.getName())
-                .blocking(entity.getBlocking())
-                .friction(entity.getFriction())
-                .color(entity.getColor())
-                .texture(entity.getTexture())
-                .soundWalk(entity.getSoundWalk())
-                .properties(parseJsonMapString(entity.getProperties()))
+                .description(entity.getDescription())
+                .properties(parseJsonToMap(entity.getProperties()))
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
@@ -496,77 +590,39 @@ public class WorldTerrainService {
                 .name(entity.getName())
                 .type(entity.getType())
                 .data(entity.getData())
-                .properties(parseJsonMap(entity.getProperties()))
+                .properties(parseJsonToMap(entity.getProperties()))
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .compressedAt(entity.getCompressedAt())
                 .build();
     }
 
-    private SpriteDto mapToSpriteDto(SpriteEntity entity) {
-        SpriteDto spriteData = parseJson(entity.getData(), SpriteDto.class);
-        if (spriteData != null) {
-            spriteData.setId(entity.getId());
-            return spriteData;
-        }
-        return SpriteDto.builder()
-                .id(entity.getId())
+    private GroupDto mapToGroupDto(TerrainGroupDto terrainGroupDto) {
+        return GroupDto.builder()
+                .id(terrainGroupDto.getId())
+                .name(terrainGroupDto.getName())
+                .type(terrainGroupDto.getType())
+                .properties(terrainGroupDto.getProperties())
                 .build();
     }
 
-    private TerrainGroupDto mapToTerrainGroupDto(TerrainGroupEntity entity) {
-        return TerrainGroupDto.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .type(entity.getType())
-                .properties(parseJsonMap(entity.getData()))
-                .build();
-    }
-
-    private String mapToJson(Object object) {
-        if (object == null) return null;
+    private String mapToJson(Map<String, String> map) {
+        if (map == null) return "{}";
         try {
-            return objectMapper.writeValueAsString(object);
+            return objectMapper.writeValueAsString(map);
         } catch (Exception e) {
-            log.error("Error converting object to JSON", e);
-            return null;
+            log.error("Failed to convert map to JSON", e);
+            return "{}";
         }
     }
 
-    private Map<String, Object> parseJsonMap(String json) {
-        if (json == null || json.trim().isEmpty()) return new HashMap<>();
-        try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception e) {
-            log.error("Error parsing JSON to Map<String, Object>", e);
-            return new HashMap<>();
-        }
-    }
-
-    private Map<String, String> parseJsonMapString(String json) {
+    private Map<String, String> parseJsonToMap(String json) {
         if (json == null || json.trim().isEmpty()) return new HashMap<>();
         try {
             return objectMapper.readValue(json, new TypeReference<Map<String, String>>() {});
         } catch (Exception e) {
-            log.error("Error parsing JSON to Map<String, String>", e);
+            log.error("Failed to parse JSON to map", e);
             return new HashMap<>();
-        }
-    }
-
-    private <T> List<T> parseJsonList(String json, Class<T> clazz) {
-        if (json == null || json.trim().isEmpty()) return new ArrayList<>();
-        try {
-            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
-        } catch (Exception e) {
-            log.error("Error parsing JSON to List<{}>", clazz.getSimpleName(), e);
-            return new ArrayList<>();
-        }
-    }
-
-    private <T> T parseJson(String json, Class<T> clazz) {
-        if (json == null || json.trim().isEmpty()) return null;
-        try {
-            return objectMapper.readValue(json, clazz);
-        } catch (Exception e) {
-            log.error("Error parsing JSON to {}", clazz.getSimpleName(), e);
-            return null;
         }
     }
 }

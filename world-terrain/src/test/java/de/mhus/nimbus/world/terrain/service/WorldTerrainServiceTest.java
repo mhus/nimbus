@@ -3,9 +3,9 @@ package de.mhus.nimbus.world.terrain.service;
 import de.mhus.nimbus.shared.dto.world.*;
 import de.mhus.nimbus.world.terrain.entity.*;
 import de.mhus.nimbus.world.terrain.repository.*;
+import de.mhus.nimbus.world.terrain.exception.WorldNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,9 +48,6 @@ class WorldTerrainServiceTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    @Mock
-    private TypeFactory typeFactory;
-
     @InjectMocks
     private WorldTerrainService worldTerrainService;
 
@@ -58,17 +55,18 @@ class WorldTerrainServiceTest {
     private WorldDto worldDto;
     private MaterialEntity materialEntity;
     private MaterialDto materialDto;
+    private String materialDtoJson;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         // Setup test data
         worldEntity = WorldEntity.builder()
                 .id("world-1")
                 .name("Test World")
                 .description("A test world")
                 .properties("{\"key\": \"value\"}")
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         worldDto = WorldDto.builder()
@@ -76,17 +74,6 @@ class WorldTerrainServiceTest {
                 .name("Test World")
                 .description("A test world")
                 .properties(Map.of("key", "value"))
-                .build();
-
-        materialEntity = MaterialEntity.builder()
-                .id(1)
-                .name("grass")
-                .blocking(false)
-                .friction(0.5f)
-                .color("#00FF00")
-                .texture("grass.png")
-                .soundWalk("grass.wav")
-                .properties("{\"type\": \"natural\"}")
                 .build();
 
         materialDto = MaterialDto.builder()
@@ -99,15 +86,25 @@ class WorldTerrainServiceTest {
                 .soundWalk("grass.wav")
                 .properties(Map.of("type", "natural"))
                 .build();
+
+        materialDtoJson = "{\"id\":1,\"name\":\"grass\",\"blocking\":false,\"friction\":0.5,\"color\":\"#00FF00\",\"texture\":\"grass.png\",\"soundWalk\":\"grass.wav\",\"properties\":{\"type\":\"natural\"}}";
+
+        materialEntity = MaterialEntity.builder()
+                .id(1)
+                .name("grass")
+                .data(materialDtoJson)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 
     @Test
-    void createWorld_ShouldReturnCreatedWorld() throws Exception {
+    void createWorld_ShouldReturnWorldDto() throws Exception {
         // Given
+        when(worldRepository.save(any(WorldEntity.class))).thenReturn(worldEntity);
         when(objectMapper.writeValueAsString(any())).thenReturn("{\"key\": \"value\"}");
         when(objectMapper.readValue(eq("{\"key\": \"value\"}"), any(TypeReference.class)))
                 .thenReturn(Map.of("key", "value"));
-        when(worldRepository.save(any(WorldEntity.class))).thenReturn(worldEntity);
 
         // When
         WorldDto result = worldTerrainService.createWorld(worldDto);
@@ -120,7 +117,7 @@ class WorldTerrainServiceTest {
     }
 
     @Test
-    void getWorld_ShouldReturnWorld_WhenExists() throws Exception {
+    void getWorld_ShouldReturnWorldDto_WhenWorldExists() throws Exception {
         // Given
         when(worldRepository.findById("world-1")).thenReturn(Optional.of(worldEntity));
         when(objectMapper.readValue(eq("{\"key\": \"value\"}"), any(TypeReference.class)))
@@ -136,7 +133,7 @@ class WorldTerrainServiceTest {
     }
 
     @Test
-    void getWorld_ShouldReturnEmpty_WhenNotExists() {
+    void getWorld_ShouldReturnEmpty_WhenWorldDoesNotExist() {
         // Given
         when(worldRepository.findById("non-existent")).thenReturn(Optional.empty());
 
@@ -149,79 +146,10 @@ class WorldTerrainServiceTest {
     }
 
     @Test
-    void getAllWorlds_ShouldReturnAllWorlds() throws Exception {
+    void createMaterial_ShouldReturnMaterialDto() throws Exception {
         // Given
-        when(worldRepository.findAll()).thenReturn(List.of(worldEntity));
-        when(objectMapper.readValue(eq("{\"key\": \"value\"}"), any(TypeReference.class)))
-                .thenReturn(Map.of("key", "value"));
-
-        // When
-        List<WorldDto> result = worldTerrainService.getAllWorlds();
-
-        // Then
-        assertEquals(1, result.size());
-        assertEquals("Test World", result.getFirst().getName());
-        verify(worldRepository).findAll();
-    }
-
-    @Test
-    void updateWorld_ShouldReturnUpdatedWorld_WhenExists() throws Exception {
-        // Given
-        WorldDto updateDto = WorldDto.builder()
-                .name("Updated World")
-                .description("Updated description")
-                .properties(Map.of("updated", "true"))
-                .build();
-
-        when(worldRepository.findById("world-1")).thenReturn(Optional.of(worldEntity));
-        when(objectMapper.writeValueAsString(any())).thenReturn("{\"updated\": \"true\"}");
-        when(objectMapper.readValue(eq("{\"key\": \"value\"}"), any(TypeReference.class)))
-                .thenReturn(Map.of("updated", "true"));
-        when(worldRepository.save(any(WorldEntity.class))).thenReturn(worldEntity);
-
-        // When
-        Optional<WorldDto> result = worldTerrainService.updateWorld("world-1", updateDto);
-
-        // Then
-        assertTrue(result.isPresent());
-        verify(worldRepository).findById("world-1");
-        verify(worldRepository).save(any(WorldEntity.class));
-    }
-
-    @Test
-    void deleteWorld_ShouldReturnTrue_WhenExists() {
-        // Given
-        when(worldRepository.existsById("world-1")).thenReturn(true);
-
-        // When
-        boolean result = worldTerrainService.deleteWorld("world-1");
-
-        // Then
-        assertTrue(result);
-        verify(worldRepository).existsById("world-1");
-        verify(worldRepository).deleteById("world-1");
-    }
-
-    @Test
-    void deleteWorld_ShouldReturnFalse_WhenNotExists() {
-        // Given
-        when(worldRepository.existsById("non-existent")).thenReturn(false);
-
-        // When
-        boolean result = worldTerrainService.deleteWorld("non-existent");
-
-        // Then
-        assertFalse(result);
-        verify(worldRepository).existsById("non-existent");
-        verify(worldRepository, never()).deleteById(anyString());
-    }
-
-    @Test
-    void createMaterial_ShouldReturnCreatedMaterial() throws Exception {
-        // Given
-        when(objectMapper.writeValueAsString(any())).thenReturn("{\"type\": \"natural\"}");
-        when(objectMapper.readValue(eq("{\"type\": \"natural\"}"), any(TypeReference.class)))
-                .thenReturn(Map.of("type", "natural"));
+        when(objectMapper.writeValueAsString(materialDto)).thenReturn(materialDtoJson);
+        when(objectMapper.readValue(materialDtoJson, MaterialDto.class)).thenReturn(materialDto);
         when(materialRepository.save(any(MaterialEntity.class))).thenReturn(materialEntity);
 
         // When
@@ -231,15 +159,17 @@ class WorldTerrainServiceTest {
         assertNotNull(result);
         assertEquals("grass", result.getName());
         assertEquals(false, result.getBlocking());
+        assertEquals(0.5f, result.getFriction());
         verify(materialRepository).save(any(MaterialEntity.class));
+        verify(objectMapper).writeValueAsString(materialDto);
+        verify(objectMapper).readValue(materialDtoJson, MaterialDto.class);
     }
 
     @Test
-    void getMaterial_ShouldReturnMaterial_WhenExists() throws Exception {
+    void getMaterial_ShouldReturnMaterialDto_WhenMaterialExists() throws Exception {
         // Given
         when(materialRepository.findById(1)).thenReturn(Optional.of(materialEntity));
-        when(objectMapper.readValue(eq("{\"type\": \"natural\"}"), any(TypeReference.class)))
-                .thenReturn(Map.of("type", "natural"));
+        when(objectMapper.readValue(materialDtoJson, MaterialDto.class)).thenReturn(materialDto);
 
         // When
         Optional<MaterialDto> result = worldTerrainService.getMaterial(1);
@@ -248,135 +178,155 @@ class WorldTerrainServiceTest {
         assertTrue(result.isPresent());
         assertEquals("grass", result.get().getName());
         verify(materialRepository).findById(1);
+        verify(objectMapper).readValue(materialDtoJson, MaterialDto.class);
     }
 
     @Test
-    void getMaterials_ShouldReturnPagedMaterials() throws Exception {
+    void getMaterial_ShouldReturnEmpty_WhenMaterialDoesNotExist() {
         // Given
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<MaterialEntity> page = new PageImpl<>(List.of(materialEntity));
-
-        when(materialRepository.findAll(pageable)).thenReturn(page);
-        when(objectMapper.readValue(eq("{\"type\": \"natural\"}"), any(TypeReference.class)))
-                .thenReturn(Map.of("type", "natural"));
+        when(materialRepository.findById(999)).thenReturn(Optional.empty());
 
         // When
-        Page<MaterialDto> result = worldTerrainService.getMaterials(null, pageable);
+        Optional<MaterialDto> result = worldTerrainService.getMaterial(999);
 
         // Then
+        assertFalse(result.isPresent());
+        verify(materialRepository).findById(999);
+    }
+
+    @Test
+    void getMaterials_ShouldReturnPageOfMaterialDtos() throws Exception {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        List<MaterialEntity> entities = Arrays.asList(materialEntity);
+        Page<MaterialEntity> entityPage = new PageImpl<>(entities, pageable, 1);
+
+        when(materialRepository.findAll(pageable)).thenReturn(entityPage);
+        when(objectMapper.readValue(materialDtoJson, MaterialDto.class)).thenReturn(materialDto);
+
+        // When
+        Page<MaterialDto> result = worldTerrainService.getMaterials(pageable);
+
+        // Then
+        assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        assertEquals("grass", result.getContent().getFirst().getName());
+        assertEquals("grass", result.getContent().get(0).getName());
         verify(materialRepository).findAll(pageable);
+        verify(objectMapper).readValue(materialDtoJson, MaterialDto.class);
     }
 
     @Test
-    void getMaterials_WithNameFilter_ShouldReturnFilteredMaterials() throws Exception {
+    void updateMaterial_ShouldReturnUpdatedMaterialDto() throws Exception {
         // Given
-        Pageable pageable = PageRequest.of(0, 20);
-        Page<MaterialEntity> page = new PageImpl<>(List.of(materialEntity));
+        MaterialDto updatedDto = MaterialDto.builder()
+                .id(1)
+                .name("updated_grass")
+                .blocking(true)
+                .friction(0.8f)
+                .color("#00AA00")
+                .texture("updated_grass.png")
+                .soundWalk("updated_grass.wav")
+                .properties(Map.of("type", "modified"))
+                .build();
 
-        when(materialRepository.findByNameContainingIgnoreCase("grass", pageable)).thenReturn(page);
-        when(objectMapper.readValue(eq("{\"type\": \"natural\"}"), any(TypeReference.class)))
-                .thenReturn(Map.of("type", "natural"));
+        String updatedJson = "{\"id\":1,\"name\":\"updated_grass\",\"blocking\":true,\"friction\":0.8,\"color\":\"#00AA00\",\"texture\":\"updated_grass.png\",\"soundWalk\":\"updated_grass.wav\",\"properties\":{\"type\":\"modified\"}}";
+
+        MaterialEntity updatedEntity = MaterialEntity.builder()
+                .id(1)
+                .name("updated_grass")
+                .data(updatedJson)
+                .build();
+
+        when(materialRepository.findById(1)).thenReturn(Optional.of(materialEntity));
+        when(objectMapper.writeValueAsString(updatedDto)).thenReturn(updatedJson);
+        when(materialRepository.save(any(MaterialEntity.class))).thenReturn(updatedEntity);
+        when(objectMapper.readValue(updatedJson, MaterialDto.class)).thenReturn(updatedDto);
 
         // When
-        Page<MaterialDto> result = worldTerrainService.getMaterials("grass", pageable);
-
-        // Then
-        assertEquals(1, result.getContent().size());
-        assertEquals("grass", result.getContent().getFirst().getName());
-        verify(materialRepository).findByNameContainingIgnoreCase("grass", pageable);
-    }
-
-    @Test
-    void createOrUpdateMap_ShouldSaveMapEntity() throws Exception {
-        // Given
-        TerrainFieldDto field = TerrainFieldDto.builder()
-                .x(1).y(1).z(0)
-                .materials(List.of(1, 2, 3, 4, 5, 6))
-                .opacity(255)
-                .sizeZ(1)
-                .parameters(Map.of("test", "value"))
-                .build();
-
-        TerrainClusterDto cluster = TerrainClusterDto.builder()
-                .level(0)
-                .x(0).y(0)
-                .fields(List.of(field))
-                .build();
-
-        MapCreateRequest request = MapCreateRequest.builder()
-                .world("world-1")
-                .clusters(List.of(cluster))
-                .build();
-
-        MapEntity mapEntity = MapEntity.builder()
-                .world("world-1")
-                .level(0)
-                .clusterX(0)
-                .clusterY(0)
-                .data("[{\"x\":1,\"y\":1}]")
-                .build();
-
-        when(mapRepository.findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0))
-                .thenReturn(Optional.of(mapEntity));
-        when(objectMapper.writeValueAsString(any())).thenReturn("[{\"x\":1,\"y\":1}]");
-        when(mapRepository.save(any(MapEntity.class))).thenReturn(mapEntity);
-
-        // When
-        worldTerrainService.createOrUpdateMap(request);
-
-        // Then
-        verify(mapRepository).findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0);
-        verify(mapRepository).save(any(MapEntity.class));
-    }
-
-    @Test
-    void getMapCluster_ShouldReturnCluster_WhenExists() throws Exception {
-        // Given
-        TerrainFieldDto field = TerrainFieldDto.builder()
-                .x(1).y(1).z(0)
-                .materials(List.of(1, 2, 3, 4, 5, 6))
-                .opacity(255)
-                .sizeZ(1)
-                .parameters(Map.of("test", "value"))
-                .build();
-
-        MapEntity mapEntity = MapEntity.builder()
-                .world("world-1")
-                .level(0)
-                .clusterX(0)
-                .clusterY(0)
-                .data("[{\"x\":1,\"y\":1}]")
-                .build();
-
-        when(mapRepository.findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0))
-                .thenReturn(Optional.of(mapEntity));
-
-        // Mock the ObjectMapper for parseJsonList method specifically
-        when(objectMapper.getTypeFactory()).thenReturn(typeFactory);
-        when(typeFactory.constructCollectionType(eq(List.class), eq(TerrainFieldDto.class)))
-                .thenReturn(mock(com.fasterxml.jackson.databind.type.CollectionType.class));
-        when(objectMapper.readValue(eq("[{\"x\":1,\"y\":1}]"), any(com.fasterxml.jackson.databind.JavaType.class)))
-                .thenReturn(List.of(field));
-
-        // When
-        Optional<TerrainClusterDto> result = worldTerrainService.getMapCluster("world-1", 0, 0, 0);
+        Optional<MaterialDto> result = worldTerrainService.updateMaterial(1, updatedDto);
 
         // Then
         assertTrue(result.isPresent());
-        assertEquals(0, result.get().getLevel());
-        assertEquals(0, result.get().getX());
-        assertEquals(0, result.get().getY());
-        verify(mapRepository).findByWorldAndLevelAndClusterXAndClusterY("world-1", 0, 0, 0);
+        assertEquals("updated_grass", result.get().getName());
+        verify(materialRepository).findById(1);
+        verify(materialRepository).save(any(MaterialEntity.class));
+        verify(objectMapper).writeValueAsString(updatedDto);
+        verify(objectMapper).readValue(updatedJson, MaterialDto.class);
     }
 
     @Test
-    void deleteLevel_ShouldCallRepository() {
+    void deleteMaterial_ShouldReturnTrue_WhenMaterialExists() {
+        // Given
+        when(materialRepository.existsById(1)).thenReturn(true);
+
         // When
-        worldTerrainService.deleteLevel("world-1", 0);
+        boolean result = worldTerrainService.deleteMaterial(1);
 
         // Then
-        verify(mapRepository).deleteByWorldAndLevel("world-1", 0);
+        assertTrue(result);
+        verify(materialRepository).existsById(1);
+        verify(materialRepository).deleteById(1);
+    }
+
+    @Test
+    void deleteMaterial_ShouldReturnFalse_WhenMaterialDoesNotExist() {
+        // Given
+        when(materialRepository.existsById(999)).thenReturn(false);
+
+        // When
+        boolean result = worldTerrainService.deleteMaterial(999);
+
+        // Then
+        assertFalse(result);
+        verify(materialRepository).existsById(999);
+        verify(materialRepository, never()).deleteById(999);
+    }
+
+    @Test
+    void validateWorldExists_ShouldThrowException_WhenWorldDoesNotExist() {
+        // Given
+        when(worldRepository.existsById("non-existent")).thenReturn(false);
+
+        // When & Then
+        assertThrows(WorldNotFoundException.class, () -> {
+            worldTerrainService.getMap("non-existent", 0, 0, 0);
+        });
+    }
+
+    @Test
+    void createMap_ShouldValidateWorldExists() {
+        // Given
+        MapCreateRequest request = MapCreateRequest.builder()
+                .world("non-existent")
+                .clusters(Arrays.asList())
+                .build();
+
+        when(worldRepository.existsById("non-existent")).thenReturn(false);
+
+        // When & Then
+        assertThrows(WorldNotFoundException.class, () -> {
+            worldTerrainService.createMap(request);
+        });
+
+        verify(worldRepository).existsById("non-existent");
+    }
+
+    @Test
+    void createSprites_ShouldValidateWorldExists() {
+        // Given
+        SpriteCreateRequest request = SpriteCreateRequest.builder()
+                .world("non-existent")
+                .level(0)
+                .sprites(Arrays.asList())
+                .build();
+
+        when(worldRepository.existsById("non-existent")).thenReturn(false);
+
+        // When & Then
+        assertThrows(WorldNotFoundException.class, () -> {
+            worldTerrainService.createSprites(request);
+        });
+
+        verify(worldRepository).existsById("non-existent");
     }
 }

@@ -8,15 +8,11 @@ import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "terrain_maps",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"world", "level", "cluster_x", "cluster_y"}),
-       indexes = {
-           @Index(name = "idx_maps_world_level", columnList = "world, level"),
-           @Index(name = "idx_maps_cluster", columnList = "world, level, cluster_x, cluster_y")
-       })
+@Table(name = "terrain_map_clusters",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"world", "level", "cluster_x", "cluster_y"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,20 +36,20 @@ public class MapEntity {
     private Integer clusterY;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
-    private String data; // JSON string of cluster fields
+    @Column(nullable = false)
+    private String data; // JSON-serialized TerrainClusterDto
 
     @Lob
-    private byte[] compressed; // Compressed data
+    private byte[] compressed;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "compressed_at")
-    private Instant compressedAt;
+    private LocalDateTime compressedAt;
 }

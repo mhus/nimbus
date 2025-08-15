@@ -8,15 +8,11 @@ import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "terrain_assets",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"world", "name"}),
-       indexes = {
-           @Index(name = "idx_assets_world", columnList = "world"),
-           @Index(name = "idx_assets_world_type", columnList = "world, type")
-       })
+       uniqueConstraints = @UniqueConstraint(columnNames = {"world", "name"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,23 +33,23 @@ public class AssetEntity {
     private String type;
 
     @Lob
-    private byte[] data; // Uncompressed data
+    private byte[] data;
 
     @Lob
-    private byte[] compressed; // Compressed data
+    private byte[] compressed;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
-    private String properties; // JSON string of properties
+    @Column(nullable = false)
+    private String properties; // JSON-serialized AssetDto properties
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "compressed_at")
-    private Instant compressedAt;
+    private LocalDateTime compressedAt;
 }

@@ -10,6 +10,10 @@ import java.util.Optional;
 
 @Repository
 public interface MaterialRepository extends JpaRepository<MaterialEntity, Integer> {
+
     Optional<MaterialEntity> findByName(String name);
-    Page<MaterialEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    Page<MaterialEntity> findAll(Pageable pageable);
+
+    boolean existsByName(String name);
 }

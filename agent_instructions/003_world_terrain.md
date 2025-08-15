@@ -264,3 +264,23 @@ Group Management
 Jeder HTTP-Aufruf verwendet jetzt restTemplate.exchange() oder restTemplate.postForEntity() mit dem createAuthEntity(), wodurch der Authorization Header mit dem Secret aus der application.yml automatisch hinzugefügt wird.
 Die Klasse ist jetzt bereit, sich korrekt gegenüber dem World Terrain Service zu authentifizieren, sobald das nimbus.world.shared.secret in der application.yml konfiguriert ist.
 ```
+
+## 07 Entitäten Bereinigen
+
+```text
+Im modul 'world-terrain' wurde die Spezifikation falsch umgesetzt. Es wurden fü® das Datenmodell
+JPA Entities verwendet, obwohl nur DTOs gefordert waren. Es gibt aber auch schon DTOs im Modul 'shared'.
+
+Die Datenmodelle im Modul 'world-terrain' müssen auf DTOs umgestellt werden und als JSON serialisiert in den JPA 
+Entities gespeichert werden. Für `World` gibt es nur eine JPA Entity, aber kein DTO Datenmodell.
+
+Siehe dazu die Datei `spec/12_world_terrain.md`.
+* Bestehende DTOs im Modul 'shared' im Packet `de.mhus.nimbus.shared.dto.world` müssen verwendet werden.
+* Lösche alle JPA Entities im Modul 'world-terrain' die eigentlich Datenmodelle sind und deren Repositories.
+* Prüfe ob auch Tests für die JPA Entities existieren und lösche diese.
+* Stelle sicher das alle Datenmodelle im Modul 'shared' als DTOs existieren und die JPA Entities im Modul 'world-terrain' 
+  diese DTOs verwenden und als JSON serialisiert in der Datenbank speichern.
+* Prüƒe ob sich das modul 'world-terrain' noch kompilieren lässt und alle Tests erfolgreich durchlaufen.
+
+Beachte die Anweisungen in der Datei `spec/02_development.md` und `spec/00_overview.md`.  
+```

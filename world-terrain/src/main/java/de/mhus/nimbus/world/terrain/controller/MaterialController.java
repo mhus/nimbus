@@ -35,14 +35,13 @@ public class MaterialController {
     @GetMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Page<MaterialDto>> getMaterials(
-            @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         if (size > 100) size = 100; // Maximum size limit
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<MaterialDto> materials = worldTerrainService.getMaterials(name, pageable);
+        Page<MaterialDto> materials = worldTerrainService.getMaterials(pageable);
         return ResponseEntity.ok(materials);
     }
 

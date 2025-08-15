@@ -5,6 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "terrain_materials")
@@ -21,19 +25,15 @@ public class MaterialEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(nullable = false)
-    private Boolean blocking;
-
-    private Float friction;
-
-    private String color;
-
-    private String texture;
-
-    @Column(name = "sound_walk")
-    private String soundWalk;
-
     @Lob
-    @Column(columnDefinition = "TEXT")
-    private String properties; // JSON string
+    @Column(nullable = false)
+    private String data; // JSON-serialized MaterialDto
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
