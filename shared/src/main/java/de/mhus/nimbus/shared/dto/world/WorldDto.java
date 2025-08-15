@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 
 @Data
@@ -14,8 +14,8 @@ import java.util.Map;
 @Builder
 public class WorldDto {
     private String id;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private Date createdAt;
+    private Date updatedAt;
     private String name;
     private String description;
     private Map<String, Object> properties;

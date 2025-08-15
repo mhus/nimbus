@@ -13,3 +13,5 @@ Bitte führe die tests in dieser klasse aus. Einige tests können nicht
 ausgeführt werden weil die Resource nicht gefunden wurde (fehler 404). Bitte
 fixe das problem.
 
+```text
+Ersetze alle java.time.Instant in den DTOs durch java.util.Date.```

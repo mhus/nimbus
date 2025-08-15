@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 
 @Data
@@ -19,7 +19,7 @@ public class AssetDto {
     private byte[] data;
     private byte[] compressed;
     private Map<String, Object> properties;
-    private Instant createdAt;
-    private Instant updatedAt;
-    private Instant compressedAt;
+    private Date createdAt;
+    private Date updatedAt;
+    private Date compressedAt;
 }
