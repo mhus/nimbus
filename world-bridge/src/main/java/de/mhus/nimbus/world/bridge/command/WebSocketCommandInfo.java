@@ -12,6 +12,7 @@ public class WebSocketCommandInfo {
     private String command;
     private String description;
     private boolean isWorldRequired;
+    private boolean isAuthenticationRequired;
 
     // Convenience constructor for backward compatibility
     public WebSocketCommandInfo(String service, String command, String description) {
@@ -19,5 +20,15 @@ public class WebSocketCommandInfo {
         this.command = command;
         this.description = description;
         this.isWorldRequired = true; // Default: world is required
+        this.isAuthenticationRequired = true; // Default: authentication is required
+    }
+
+    // Convenience constructor with world requirement flag
+    public WebSocketCommandInfo(String service, String command, String description, boolean isWorldRequired) {
+        this.service = service;
+        this.command = command;
+        this.description = description;
+        this.isWorldRequired = isWorldRequired;
+        this.isAuthenticationRequired = true; // Default: authentication is required
     }
 }

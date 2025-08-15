@@ -78,6 +78,18 @@ public class WorldBridgeService {
             return ExecuteResponse.error("UNKNOWN_COMMAND", "Unknown command: " + command.getCommand());
         }
 
+        WebSocketCommandInfo commandInfo = commandHandler.info();
+
+        // Check authentication requirement
+        if (commandInfo.isAuthenticationRequired() && !sessionInfo.isLoggedIn()) {
+            return ExecuteResponse.error("NOT_AUTHENTICATED", "User not authenticated");
+        }
+
+        // Check world requirement
+        if (commandInfo.isWorldRequired() && !sessionInfo.hasWorld()) {
+            return ExecuteResponse.error("NO_WORLD_SELECTED", "No world selected");
+        }
+
         ExecuteRequest request = new ExecuteRequest(sessionId, sessionInfo, command);
         return commandHandler.execute(request);
     }

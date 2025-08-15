@@ -19,7 +19,7 @@ public class PingCommand implements WebSocketCommand {
 
     @Override
     public WebSocketCommandInfo info() {
-        return new WebSocketCommandInfo("bridge", "ping", "Test connection with pong response", false);
+        return new WebSocketCommandInfo("bridge", "ping", "Test connection with pong response", false, false);
     }
 
     @Override

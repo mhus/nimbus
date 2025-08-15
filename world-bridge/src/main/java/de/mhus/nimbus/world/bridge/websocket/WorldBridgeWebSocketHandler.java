@@ -125,31 +125,6 @@ public class WorldBridgeWebSocketHandler implements WebSocketHandler {
                     .build();
         }
 
-        // Check authentication for all commands except login
-        if (!"login".equals(command.getCommand()) && !sessionInfo.isLoggedIn()) {
-            return WorldWebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("NOT_AUTHENTICATED")
-                    .message("User not authenticated")
-                    .build();
-        }
-
-        // Check world selection for all commands except login and use
-        if (!"login".equals(command.getCommand()) && !"use".equals(command.getCommand())
-            && !"ping".equals(command.getCommand()) && !sessionInfo.hasWorld()) {
-            return WorldWebSocketResponse.builder()
-                    .service(command.getService())
-                    .command(command.getCommand())
-                    .requestId(command.getRequestId())
-                    .status("error")
-                    .errorCode("NO_WORLD_SELECTED")
-                    .message("No world selected")
-                    .build();
-        }
-
         return worldBridgeService.processCommand(sessionId, sessionInfo, command);
     }
 

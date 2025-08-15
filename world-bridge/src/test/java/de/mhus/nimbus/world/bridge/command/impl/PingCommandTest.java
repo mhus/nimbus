@@ -33,11 +33,55 @@ class PingCommandTest {
         assertEquals("bridge", info.getService());
         assertEquals("ping", info.getCommand());
         assertEquals("Test connection with pong response", info.getDescription());
+        assertFalse(info.isWorldRequired());
+        assertFalse(info.isAuthenticationRequired());
     }
 
     @Test
     void testExecute() {
         // Given
+        Long timestamp = System.currentTimeMillis();
+        PingCommandData pingData = new PingCommandData(timestamp);
+        testCommand.setData(pingData);
+        ExecuteRequest request = new ExecuteRequest("session-1", testSession, testCommand);
+
+        // When
+        ExecuteResponse response = pingCommand.execute(request);
+
+        // Then
+        assertTrue(response.isSuccess());
+        assertEquals("success", response.getResponse().getStatus());
+        assertEquals("pong", response.getResponse().getCommand());
+
+        PingCommandData responseData = (PingCommandData) response.getResponse().getData();
+        assertEquals(timestamp, responseData.getTimestamp());
+    }
+
+    @Test
+    void testExecuteWithoutAuthentication() {
+        // Given - Session without authentication
+        testSession.setUserId(null); // No user logged in
+        Long timestamp = System.currentTimeMillis();
+        PingCommandData pingData = new PingCommandData(timestamp);
+        testCommand.setData(pingData);
+        ExecuteRequest request = new ExecuteRequest("session-1", testSession, testCommand);
+
+        // When
+        ExecuteResponse response = pingCommand.execute(request);
+
+        // Then
+        assertTrue(response.isSuccess());
+        assertEquals("success", response.getResponse().getStatus());
+        assertEquals("pong", response.getResponse().getCommand());
+
+        PingCommandData responseData = (PingCommandData) response.getResponse().getData();
+        assertEquals(timestamp, responseData.getTimestamp());
+    }
+
+    @Test
+    void testExecuteWithoutWorld() {
+        // Given - Session without world
+        testSession.setWorldId(null); // No world selected
         Long timestamp = System.currentTimeMillis();
         PingCommandData pingData = new PingCommandData(timestamp);
         testCommand.setData(pingData);
