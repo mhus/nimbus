@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.web.socket.*;
+import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
@@ -29,20 +30,10 @@ class PingCommandIntegrationTest {
         URI uri = URI.create("ws://localhost:" + port + "/ws");
         CompletableFuture<WorldWebSocketResponse> responseFuture = new CompletableFuture<>();
 
-        WebSocketSession session = new StandardWebSocketSession() {
-            @Override
-            public void sendMessage(WebSocketMessage<?> message) throws Exception {
-                String responseJson = (String) message.getPayload();
-                WorldWebSocketResponse response = objectMapper.readValue(responseJson, WorldWebSocketResponse.class);
-                responseFuture.complete(response);
-            }
-        };
-
         TestWebSocketHandler handler = new TestWebSocketHandler(responseFuture);
 
         // Create WebSocket client
-        org.springframework.web.socket.client.WebSocketClient client =
-            new org.springframework.web.socket.client.standard.StandardWebSocketClient();
+        StandardWebSocketClient client = new StandardWebSocketClient();
 
         WebSocketSession webSocketSession = client.doHandshake(handler, null, uri).get(5, TimeUnit.SECONDS);
 

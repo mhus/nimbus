@@ -37,9 +37,9 @@ class WorldBridgeServiceTest {
     void setUp() {
         testSession = new WebSocketSession();
 
-        // Mock command infos
-        when(mockCommand1.info()).thenReturn(new WebSocketCommandInfo("bridge", "login", "Login command"));
-        when(mockCommand2.info()).thenReturn(new WebSocketCommandInfo("bridge", "ping", "Ping command"));
+        // Mock command infos with proper authentication flags
+        when(mockCommand1.info()).thenReturn(new WebSocketCommandInfo("bridge", "login", "Login command", false, false)); // login doesn't require auth
+        when(mockCommand2.info()).thenReturn(new WebSocketCommandInfo("bridge", "ping", "Ping command", false, false)); // ping doesn't require auth
 
         // Create the service with the mocked commands manually
         List<WebSocketCommand> commands = Arrays.asList(mockCommand1, mockCommand2);

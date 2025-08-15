@@ -29,6 +29,9 @@ class WorldBridgeServiceAuthenticationTest {
 
     @BeforeEach
     void setUp() {
+        // WICHTIG: Mock-Command MUSS vor initializeCommands() konfiguriert werden
+        when(mockCommand.info()).thenReturn(new WebSocketCommandInfo("bridge", "test", "Test command", true, true));
+
         worldBridgeService = new WorldBridgeService(List.of(mockCommand));
         worldBridgeService.initializeCommands();
 
