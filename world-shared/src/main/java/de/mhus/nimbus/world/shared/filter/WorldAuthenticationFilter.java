@@ -21,14 +21,23 @@ import java.util.List;
 @Slf4j
 public class WorldAuthenticationFilter extends OncePerRequestFilter {
 
-    @Value("${world.auth.secret}")
+    @Value("${nimbus.world.shared.secret}")
     private String authSecret;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("X-World-Auth");
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null) {
+            authHeader = request.getHeader("X-World-Auth");
+        } else {
+            if (authHeader.startsWith("Bearer ")) {
+                authHeader = authHeader.substring(7); // Remove "Bearer " prefix
+            } else if (authHeader.startsWith("Basic ")) {
+                authHeader = authHeader.substring(6); // Remove "Basic " prefix
+            }
+        }
 
         if (authHeader != null && authHeader.equals(authSecret)) {
             // Create authentication token with world service roles

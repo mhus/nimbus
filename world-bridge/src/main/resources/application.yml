@@ -21,10 +21,7 @@ nimbus:
       service:
         url: http://localhost:7083
     shared:
-      secret: nimbus-world-secret
-world:
-  auth:
-    secret: ${WORLD_AUTH_SECRET:world-terrain-secret-key}
+      secret: ${WORLD_AUTH_SECRET:nimbus-world-secret}
 
 logging:
   level:

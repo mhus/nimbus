@@ -23,7 +23,7 @@ public class WorldAuthorizationUtils {
     public static final String USERNAME_HEADER = "X-World-Username";
     public static final String ROLES_HEADER = "X-World-Roles";
 
-    @Value("${nimbus.world.shared-secret:default-secret}")
+    @Value("${nimbus.world.shared.secret:default-secret}")
     private String sharedSecret;
 
     /**

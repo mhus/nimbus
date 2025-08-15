@@ -38,9 +38,10 @@ spring:
 server:
   port: 7083
 
-world:
-  auth:
-    secret: ${WORLD_AUTH_SECRET:world-terrain-secret-key}
+nimbus:
+  world:
+    shared:
+      secret: ${WORLD_AUTH_SECRET:nimbus-world-secret}
 
 logging:
   level:
