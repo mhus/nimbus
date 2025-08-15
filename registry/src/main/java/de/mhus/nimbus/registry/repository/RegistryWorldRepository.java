@@ -56,7 +56,7 @@ public interface RegistryWorldRepository extends JpaRepository<RegistryWorld, St
      * @param pageable pagination information
      * @return page of worlds matching the criteria
      */
-    @Query(value = "SELECT * FROM worlds w WHERE " +
+    @Query(value = "SELECT * FROM registry_worlds w WHERE " +
            "(:name IS NULL OR LOWER(w.name::text) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
            "(:ownerId IS NULL OR w.owner_id = :ownerId) AND " +
            "(:enabled IS NULL OR w.enabled = :enabled) " +
