@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.CreateWorldCommandData;
 import de.mhus.nimbus.shared.dto.world.WorldDto;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommand;
@@ -32,15 +33,39 @@ public class CreateWorldCommand implements WebSocketCommand {
                 request.getCommand().getData(), CreateWorldCommandData.class);
 
             if (data.getWorld() == null) {
-                return ExecuteResponse.error("error", "World data is required");
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("error")
+                        .errorCode("error")
+                        .message("World data is required")
+                        .build();
+                return ExecuteResponse.success(errorResponse);
             }
 
             WorldDto createdWorld = terrainServiceClient.createWorld(data.getWorld());
 
-            return ExecuteResponse.success(createdWorld);
+            WorldWebSocketResponse response = WorldWebSocketResponse.builder()
+                    .service(request.getCommand().getService())
+                    .command(request.getCommand().getCommand())
+                    .requestId(request.getCommand().getRequestId())
+                    .status("success")
+                    .data(createdWorld)
+                    .build();
+
+            return ExecuteResponse.success(response);
         } catch (Exception e) {
             log.error("Error creating world", e);
-            return ExecuteResponse.error("error", "Failed to create world: " + e.getMessage());
+            WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                    .service(request.getCommand().getService())
+                    .command(request.getCommand().getCommand())
+                    .requestId(request.getCommand().getRequestId())
+                    .status("error")
+                    .errorCode("error")
+                    .message("Failed to create world: " + e.getMessage())
+                    .build();
+            return ExecuteResponse.success(errorResponse);
         }
     }
 }

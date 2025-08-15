@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.DeleteWorldCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommand;
@@ -31,19 +32,50 @@ public class DeleteWorldCommand implements WebSocketCommand {
                 request.getCommand().getData(), DeleteWorldCommandData.class);
 
             if (data.getWorldId() == null || data.getWorldId().trim().isEmpty()) {
-                return ExecuteResponse.error("error", "World ID is required");
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("error")
+                        .errorCode("error")
+                        .message("World ID is required")
+                        .build();
+                return ExecuteResponse.success(errorResponse);
             }
 
             boolean deleted = terrainServiceClient.deleteWorld(data.getWorldId());
 
             if (deleted) {
-                return ExecuteResponse.success("World deleted successfully");
+                WorldWebSocketResponse response = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("success")
+                        .data("World deleted successfully")
+                        .build();
+                return ExecuteResponse.success(response);
             } else {
-                return ExecuteResponse.error("not_found", "World not found");
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("error")
+                        .errorCode("not_found")
+                        .message("World not found")
+                        .build();
+                return ExecuteResponse.success(errorResponse);
             }
         } catch (Exception e) {
             log.error("Error deleting world", e);
-            return ExecuteResponse.error("error", "Failed to delete world: " + e.getMessage());
+            WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                    .service(request.getCommand().getService())
+                    .command(request.getCommand().getCommand())
+                    .requestId(request.getCommand().getRequestId())
+                    .status("error")
+                    .errorCode("error")
+                    .message("Failed to delete world: " + e.getMessage())
+                    .build();
+            return ExecuteResponse.success(errorResponse);
         }
     }
 }

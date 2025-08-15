@@ -3,6 +3,8 @@ package de.mhus.nimbus.world.bridge.command.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.GetWorldCommandData;
 import de.mhus.nimbus.shared.dto.world.WorldDto;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommandInfo;
@@ -34,13 +36,24 @@ class GetWorldCommandTest {
     private GetWorldCommand getWorldCommand;
 
     private ExecuteRequest executeRequest;
+    private WorldWebSocketCommand mockCommand;
     private GetWorldCommandData commandData;
 
     @BeforeEach
     void setUp() {
         executeRequest = mock(ExecuteRequest.class);
+        mockCommand = mock(WorldWebSocketCommand.class);
         commandData = new GetWorldCommandData();
         commandData.setWorldId("world-123");
+
+        // Configure the mock objects only when needed - not for testInfo()
+    }
+
+    private void setupMocksForExecution() {
+        when(executeRequest.getCommand()).thenReturn(mockCommand);
+        when(mockCommand.getService()).thenReturn("terrain");
+        when(mockCommand.getCommand()).thenReturn("getWorld");
+        when(mockCommand.getRequestId()).thenReturn("test-request-id");
     }
 
     @Test
@@ -64,12 +77,14 @@ class GetWorldCommandTest {
             .thenReturn(commandData);
         when(terrainServiceClient.getWorld("world-123")).thenReturn(Optional.of(worldDto));
 
+        setupMocksForExecution();
+
         // Act
         ExecuteResponse response = getWorldCommand.execute(executeRequest);
 
         // Assert
         assertTrue(response.isSuccess());
-        assertEquals(worldDto, response.getData());
+        assertEquals(worldDto, response.getResponse().getData());
         verify(terrainServiceClient).getWorld("world-123");
     }
 
@@ -80,13 +95,16 @@ class GetWorldCommandTest {
             .thenReturn(commandData);
         when(terrainServiceClient.getWorld("world-123")).thenReturn(Optional.empty());
 
+        setupMocksForExecution();
+
         // Act
         ExecuteResponse response = getWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("not_found", response.getErrorCode());
-        assertEquals("World not found", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("not_found", response.getResponse().getErrorCode());
+        assertEquals("World not found", response.getResponse().getMessage());
     }
 
     @Test
@@ -98,13 +116,16 @@ class GetWorldCommandTest {
         when(objectMapper.convertValue(any(), eq(GetWorldCommandData.class)))
             .thenReturn(emptyData);
 
+        setupMocksForExecution();
+
         // Act
         ExecuteResponse response = getWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertEquals("World ID is required", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertEquals("World ID is required", response.getResponse().getMessage());
         verify(terrainServiceClient, never()).getWorld(any());
     }
 
@@ -117,13 +138,16 @@ class GetWorldCommandTest {
         when(objectMapper.convertValue(any(), eq(GetWorldCommandData.class)))
             .thenReturn(emptyData);
 
+        setupMocksForExecution();
+
         // Act
         ExecuteResponse response = getWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertEquals("World ID is required", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertEquals("World ID is required", response.getResponse().getMessage());
         verify(terrainServiceClient, never()).getWorld(any());
     }
 }

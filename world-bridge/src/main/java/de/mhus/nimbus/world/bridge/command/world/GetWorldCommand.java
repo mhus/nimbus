@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.GetWorldCommandData;
 import de.mhus.nimbus.shared.dto.world.WorldDto;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommand;
@@ -34,19 +35,50 @@ public class GetWorldCommand implements WebSocketCommand {
                 request.getCommand().getData(), GetWorldCommandData.class);
 
             if (data.getWorldId() == null || data.getWorldId().trim().isEmpty()) {
-                return ExecuteResponse.error("error", "World ID is required");
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("error")
+                        .errorCode("error")
+                        .message("World ID is required")
+                        .build();
+                return ExecuteResponse.success(errorResponse);
             }
 
             Optional<WorldDto> world = terrainServiceClient.getWorld(data.getWorldId());
 
             if (world.isPresent()) {
-                return ExecuteResponse.success(world.get());
+                WorldWebSocketResponse response = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("success")
+                        .data(world.get())
+                        .build();
+                return ExecuteResponse.success(response);
             } else {
-                return ExecuteResponse.error("not_found", "World not found");
+                WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                        .service(request.getCommand().getService())
+                        .command(request.getCommand().getCommand())
+                        .requestId(request.getCommand().getRequestId())
+                        .status("error")
+                        .errorCode("not_found")
+                        .message("World not found")
+                        .build();
+                return ExecuteResponse.success(errorResponse);
             }
         } catch (Exception e) {
             log.error("Error getting world", e);
-            return ExecuteResponse.error("error", "Failed to get world: " + e.getMessage());
+            WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                    .service(request.getCommand().getService())
+                    .command(request.getCommand().getCommand())
+                    .requestId(request.getCommand().getRequestId())
+                    .status("error")
+                    .errorCode("error")
+                    .message("Failed to get world: " + e.getMessage())
+                    .build();
+            return ExecuteResponse.success(errorResponse);
         }
     }
 }

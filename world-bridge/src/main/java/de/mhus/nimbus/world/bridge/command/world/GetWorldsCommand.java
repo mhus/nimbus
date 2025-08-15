@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.GetWorldsCommandData;
 import de.mhus.nimbus.shared.dto.world.WorldDto;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketResponse;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommand;
@@ -31,10 +32,27 @@ public class GetWorldsCommand implements WebSocketCommand {
     public ExecuteResponse execute(ExecuteRequest request) {
         try {
             List<WorldDto> worlds = terrainServiceClient.getAllWorlds();
-            return ExecuteResponse.success(worlds);
+
+            WorldWebSocketResponse response = WorldWebSocketResponse.builder()
+                    .service(request.getCommand().getService())
+                    .command(request.getCommand().getCommand())
+                    .requestId(request.getCommand().getRequestId())
+                    .status("success")
+                    .data(worlds)
+                    .build();
+
+            return ExecuteResponse.success(response);
         } catch (Exception e) {
             log.error("Error getting worlds", e);
-            return ExecuteResponse.error("error", "Failed to get worlds: " + e.getMessage());
+            WorldWebSocketResponse errorResponse = WorldWebSocketResponse.builder()
+                    .service(request.getCommand().getService())
+                    .command(request.getCommand().getCommand())
+                    .requestId(request.getCommand().getRequestId())
+                    .status("error")
+                    .errorCode("error")
+                    .message("Failed to get worlds: " + e.getMessage())
+                    .build();
+            return ExecuteResponse.success(errorResponse);
         }
     }
 }

@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.GetWorldsCommandData;
 import de.mhus.nimbus.shared.dto.world.WorldDto;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommandInfo;
@@ -33,10 +34,21 @@ class GetWorldsCommandTest {
     private GetWorldsCommand getWorldsCommand;
 
     private ExecuteRequest executeRequest;
+    private WorldWebSocketCommand mockCommand;
 
     @BeforeEach
     void setUp() {
         executeRequest = mock(ExecuteRequest.class);
+        mockCommand = mock(WorldWebSocketCommand.class);
+
+        // Configure the mock objects only when needed - not for testInfo()
+    }
+
+    private void setupMocksForExecution() {
+        when(executeRequest.getCommand()).thenReturn(mockCommand);
+        when(mockCommand.getService()).thenReturn("terrain");
+        when(mockCommand.getCommand()).thenReturn("getWorlds");
+        when(mockCommand.getRequestId()).thenReturn("test-request-id");
     }
 
     @Test
@@ -62,13 +74,14 @@ class GetWorldsCommandTest {
 
         List<WorldDto> worlds = Arrays.asList(world1, world2);
         when(terrainServiceClient.getAllWorlds()).thenReturn(worlds);
+        setupMocksForExecution();
 
         // Act
         ExecuteResponse response = getWorldsCommand.execute(executeRequest);
 
         // Assert
         assertTrue(response.isSuccess());
-        assertEquals(worlds, response.getData());
+        assertEquals(worlds, response.getResponse().getData());
         verify(terrainServiceClient).getAllWorlds();
     }
 
@@ -77,13 +90,15 @@ class GetWorldsCommandTest {
         // Arrange
         when(terrainServiceClient.getAllWorlds())
             .thenThrow(new RuntimeException("Service error"));
+        setupMocksForExecution();
 
         // Act
         ExecuteResponse response = getWorldsCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertTrue(response.getMessage().contains("Failed to get worlds"));
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertTrue(response.getResponse().getMessage().contains("Failed to get worlds"));
     }
 }

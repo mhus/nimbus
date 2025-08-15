@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.CreateWorldCommandData;
 import de.mhus.nimbus.shared.dto.world.WorldDto;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommandInfo;
@@ -31,18 +32,29 @@ class CreateWorldCommandTest {
     private CreateWorldCommand createWorldCommand;
 
     private ExecuteRequest executeRequest;
+    private WorldWebSocketCommand mockCommand;
     private WorldDto worldDto;
     private CreateWorldCommandData commandData;
 
     @BeforeEach
     void setUp() {
         executeRequest = mock(ExecuteRequest.class);
+        mockCommand = mock(WorldWebSocketCommand.class);
         worldDto = new WorldDto();
         worldDto.setName("Test World");
         worldDto.setDescription("Test Description");
 
         commandData = new CreateWorldCommandData();
         commandData.setWorld(worldDto);
+
+        // Configure the mock objects only when needed - not for testInfo()
+    }
+
+    private void setupMocksForExecution() {
+        when(executeRequest.getCommand()).thenReturn(mockCommand);
+        when(mockCommand.getService()).thenReturn("terrain");
+        when(mockCommand.getCommand()).thenReturn("createWorld");
+        when(mockCommand.getRequestId()).thenReturn("test-request-id");
     }
 
     @Test
@@ -58,6 +70,7 @@ class CreateWorldCommandTest {
     @Test
     void testExecuteSuccess() {
         // Arrange
+        setupMocksForExecution();
         WorldDto createdWorld = new WorldDto();
         createdWorld.setId("world-123");
         createdWorld.setName("Test World");
@@ -71,13 +84,14 @@ class CreateWorldCommandTest {
 
         // Assert
         assertTrue(response.isSuccess());
-        assertEquals(createdWorld, response.getData());
+        assertEquals(createdWorld, response.getResponse().getData());
         verify(terrainServiceClient).createWorld(worldDto);
     }
 
     @Test
     void testExecuteWithNullWorldData() {
         // Arrange
+        setupMocksForExecution();
         CreateWorldCommandData emptyData = new CreateWorldCommandData();
         emptyData.setWorld(null);
 
@@ -88,15 +102,17 @@ class CreateWorldCommandTest {
         ExecuteResponse response = createWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertEquals("World data is required", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertEquals("World data is required", response.getResponse().getMessage());
         verify(terrainServiceClient, never()).createWorld(any());
     }
 
     @Test
     void testExecuteWithException() {
         // Arrange
+        setupMocksForExecution();
         when(objectMapper.convertValue(any(), eq(CreateWorldCommandData.class)))
             .thenReturn(commandData);
         when(terrainServiceClient.createWorld(worldDto))
@@ -106,8 +122,9 @@ class CreateWorldCommandTest {
         ExecuteResponse response = createWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertTrue(response.getMessage().contains("Failed to create world"));
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertTrue(response.getResponse().getMessage().contains("Failed to create world"));
     }
 }

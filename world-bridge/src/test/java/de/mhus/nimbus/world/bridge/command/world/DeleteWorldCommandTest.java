@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.bridge.command.world;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.dto.command.DeleteWorldCommandData;
+import de.mhus.nimbus.shared.dto.worldwebsocket.WorldWebSocketCommand;
 import de.mhus.nimbus.world.bridge.command.ExecuteRequest;
 import de.mhus.nimbus.world.bridge.command.ExecuteResponse;
 import de.mhus.nimbus.world.bridge.command.WebSocketCommandInfo;
@@ -31,13 +32,24 @@ class DeleteWorldCommandTest {
     private DeleteWorldCommand deleteWorldCommand;
 
     private ExecuteRequest executeRequest;
+    private WorldWebSocketCommand mockCommand;
     private DeleteWorldCommandData commandData;
 
     @BeforeEach
     void setUp() {
         executeRequest = mock(ExecuteRequest.class);
+        mockCommand = mock(WorldWebSocketCommand.class);
         commandData = new DeleteWorldCommandData();
         commandData.setWorldId("world-123");
+
+        // Configure the mock objects only when needed - not for testInfo()
+    }
+
+    private void setupMocksForExecution() {
+        when(executeRequest.getCommand()).thenReturn(mockCommand);
+        when(mockCommand.getService()).thenReturn("terrain");
+        when(mockCommand.getCommand()).thenReturn("deleteWorld");
+        when(mockCommand.getRequestId()).thenReturn("test-request-id");
     }
 
     @Test
@@ -53,6 +65,7 @@ class DeleteWorldCommandTest {
     @Test
     void testExecuteSuccess() {
         // Arrange
+        setupMocksForExecution();
         when(objectMapper.convertValue(any(), eq(DeleteWorldCommandData.class)))
             .thenReturn(commandData);
         when(terrainServiceClient.deleteWorld("world-123")).thenReturn(true);
@@ -62,13 +75,14 @@ class DeleteWorldCommandTest {
 
         // Assert
         assertTrue(response.isSuccess());
-        assertEquals("World deleted successfully", response.getData());
+        assertEquals("World deleted successfully", response.getResponse().getData());
         verify(terrainServiceClient).deleteWorld("world-123");
     }
 
     @Test
     void testExecuteWorldNotFound() {
         // Arrange
+        setupMocksForExecution();
         when(objectMapper.convertValue(any(), eq(DeleteWorldCommandData.class)))
             .thenReturn(commandData);
         when(terrainServiceClient.deleteWorld("world-123")).thenReturn(false);
@@ -77,9 +91,10 @@ class DeleteWorldCommandTest {
         ExecuteResponse response = deleteWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("not_found", response.getErrorCode());
-        assertEquals("World not found", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("not_found", response.getResponse().getErrorCode());
+        assertEquals("World not found", response.getResponse().getMessage());
     }
 
     @Test
@@ -88,6 +103,7 @@ class DeleteWorldCommandTest {
         DeleteWorldCommandData emptyData = new DeleteWorldCommandData();
         emptyData.setWorldId(null);
 
+        setupMocksForExecution();
         when(objectMapper.convertValue(any(), eq(DeleteWorldCommandData.class)))
             .thenReturn(emptyData);
 
@@ -95,9 +111,10 @@ class DeleteWorldCommandTest {
         ExecuteResponse response = deleteWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertEquals("World ID is required", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertEquals("World ID is required", response.getResponse().getMessage());
         verify(terrainServiceClient, never()).deleteWorld(any());
     }
 
@@ -107,6 +124,7 @@ class DeleteWorldCommandTest {
         DeleteWorldCommandData emptyData = new DeleteWorldCommandData();
         emptyData.setWorldId("");
 
+        setupMocksForExecution();
         when(objectMapper.convertValue(any(), eq(DeleteWorldCommandData.class)))
             .thenReturn(emptyData);
 
@@ -114,15 +132,17 @@ class DeleteWorldCommandTest {
         ExecuteResponse response = deleteWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertEquals("World ID is required", response.getMessage());
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertEquals("World ID is required", response.getResponse().getMessage());
         verify(terrainServiceClient, never()).deleteWorld(any());
     }
 
     @Test
     void testExecuteWithException() {
         // Arrange
+        setupMocksForExecution();
         when(objectMapper.convertValue(any(), eq(DeleteWorldCommandData.class)))
             .thenReturn(commandData);
         when(terrainServiceClient.deleteWorld("world-123"))
@@ -132,8 +152,9 @@ class DeleteWorldCommandTest {
         ExecuteResponse response = deleteWorldCommand.execute(executeRequest);
 
         // Assert
-        assertFalse(response.isSuccess());
-        assertEquals("error", response.getErrorCode());
-        assertTrue(response.getMessage().contains("Failed to delete world"));
+        assertTrue(response.isSuccess());
+        assertEquals("error", response.getResponse().getStatus());
+        assertEquals("error", response.getResponse().getErrorCode());
+        assertTrue(response.getResponse().getMessage().contains("Failed to delete world"));
     }
 }
