@@ -236,3 +236,31 @@ Batch-Operationen: Effiziente Updates und Abfragen für mehrere Cluster gleichze
 Die Implementierung folgt allen Anweisungen aus der Spezifikation und den Entwicklungsrichtlinien. Das System ist bereit für den Einsatz und kann als Basis für die Terrain-Verwaltung in der Nimbus-Spieleumgebung dienen.
 ```
 
+## 06 Fix TerrainServiceClient
+
+```text
+Die Klasse TerrainServiceClient im Modul world-shared muss als Authentication Header das
+Secret des WorldAuthenticationFilter verwenden, um sich gegenüber dem World Terrain Service zu authentifizieren.
+Das secret ist immer in der application.yml definiert und kann mit dem Key `nimbus.world.shared.secret` abgerufen 
+werden.
+```
+
+```text
+Die Kompilierungswarnungen sind nur darüber, dass die IDE nicht erkennt, dass die Felder durch Spring's @Value Annotation zur Laufzeit injiziert werden. Das ist normal und kein Problem.
+Die TerrainServiceClient-Klasse wurde erfolgreich erweitert und verwendet jetzt Authentifizierung:
+Was implementiert wurde:
+Secret-Konfiguration: Das nimbus.world.shared.secret aus der application.yml wird über @Value injiziert
+Authorization Header: Alle HTTP-Requests verwenden jetzt einen "Bearer Token" Authorization Header
+Hilfsmethoden:
+createAuthHeaders() - erstellt die HTTP-Header mit dem Authorization Token
+createAuthEntity() - erstellt HttpEntity-Objekte mit den Auth-Headern
+Alle Methoden wurden aktualisiert:
+World Management (createWorld, getWorld, updateWorld, deleteWorld, etc.)
+Material Management
+Map Management
+Sprite Management
+Asset Management
+Group Management
+Jeder HTTP-Aufruf verwendet jetzt restTemplate.exchange() oder restTemplate.postForEntity() mit dem createAuthEntity(), wodurch der Authorization Header mit dem Secret aus der application.yml automatisch hinzugefügt wird.
+Die Klasse ist jetzt bereit, sich korrekt gegenüber dem World Terrain Service zu authentifizieren, sobald das nimbus.world.shared.secret in der application.yml konfiguriert ist.
+```

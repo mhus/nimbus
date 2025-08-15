@@ -8,6 +8,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -27,17 +28,34 @@ public class TerrainServiceClient {
     @Value("${nimbus.world.terrain.service.url:http://localhost:8083}")
     private String worldTerrainUrl;
 
+    @Value("${nimbus.world.shared.secret}")
+    private String sharedSecret;
+
+    private HttpHeaders createAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + sharedSecret);
+        return headers;
+    }
+
+    private <T> HttpEntity<T> createAuthEntity(T body) {
+        return new HttpEntity<>(body, createAuthHeaders());
+    }
+
+    private HttpEntity<Void> createAuthEntity() {
+        return new HttpEntity<>(createAuthHeaders());
+    }
+
     // World Management
     public WorldDto createWorld(WorldDto worldDto) {
         String url = worldTerrainUrl + "/api/worlds";
-        ResponseEntity<WorldDto> response = restTemplate.postForEntity(url, worldDto, WorldDto.class);
+        ResponseEntity<WorldDto> response = restTemplate.postForEntity(url, createAuthEntity(worldDto), WorldDto.class);
         return response.getBody();
     }
 
     public Optional<WorldDto> getWorld(String id) {
         try {
             String url = worldTerrainUrl + "/api/worlds/" + id;
-            ResponseEntity<WorldDto> response = restTemplate.getForEntity(url, WorldDto.class);
+            ResponseEntity<WorldDto> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), WorldDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to get world with id {}: {}", id, e.getMessage());
@@ -47,7 +65,7 @@ public class TerrainServiceClient {
 
     public List<WorldDto> getAllWorlds() {
         String url = worldTerrainUrl + "/api/worlds";
-        ResponseEntity<WorldDto[]> response = restTemplate.getForEntity(url, WorldDto[].class);
+        ResponseEntity<WorldDto[]> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), WorldDto[].class);
         WorldDto[] body = response.getBody();
         return body != null ? List.of(body) : List.of();
     }
@@ -56,7 +74,7 @@ public class TerrainServiceClient {
         try {
             String url = worldTerrainUrl + "/api/worlds/" + id;
             ResponseEntity<WorldDto> response = restTemplate.exchange(
-                url, HttpMethod.PUT, new HttpEntity<>(worldDto), WorldDto.class);
+                url, HttpMethod.PUT, createAuthEntity(worldDto), WorldDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to update world with id {}: {}", id, e.getMessage());
@@ -67,7 +85,7 @@ public class TerrainServiceClient {
     public boolean deleteWorld(String id) {
         try {
             String url = worldTerrainUrl + "/api/worlds/" + id;
-            restTemplate.delete(url);
+            restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(), Void.class);
             return true;
         } catch (Exception e) {
             log.warn("Failed to delete world with id {}: {}", id, e.getMessage());
@@ -78,14 +96,14 @@ public class TerrainServiceClient {
     // Material Management
     public MaterialDto createMaterial(MaterialDto materialDto) {
         String url = worldTerrainUrl + "/api/materials";
-        ResponseEntity<MaterialDto> response = restTemplate.postForEntity(url, materialDto, MaterialDto.class);
+        ResponseEntity<MaterialDto> response = restTemplate.postForEntity(url, createAuthEntity(materialDto), MaterialDto.class);
         return response.getBody();
     }
 
     public Optional<MaterialDto> getMaterial(Integer id) {
         try {
             String url = worldTerrainUrl + "/api/materials/" + id;
-            ResponseEntity<MaterialDto> response = restTemplate.getForEntity(url, MaterialDto.class);
+            ResponseEntity<MaterialDto> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), MaterialDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to get material with id {}: {}", id, e.getMessage());
@@ -101,7 +119,7 @@ public class TerrainServiceClient {
                 .toUriString();
 
         ResponseEntity<PageImpl<MaterialDto>> response = restTemplate.exchange(
-            url, HttpMethod.GET, null,
+            url, HttpMethod.GET, createAuthEntity(),
             new ParameterizedTypeReference<>() {});
 
         return response.getBody();
@@ -111,7 +129,7 @@ public class TerrainServiceClient {
         try {
             String url = worldTerrainUrl + "/api/materials/" + id;
             ResponseEntity<MaterialDto> response = restTemplate.exchange(
-                url, HttpMethod.PUT, new HttpEntity<>(materialDto), MaterialDto.class);
+                url, HttpMethod.PUT, createAuthEntity(materialDto), MaterialDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to update material with id {}: {}", id, e.getMessage());
@@ -122,7 +140,7 @@ public class TerrainServiceClient {
     public boolean deleteMaterial(Integer id) {
         try {
             String url = worldTerrainUrl + "/api/materials/" + id;
-            restTemplate.delete(url);
+            restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(), Void.class);
             return true;
         } catch (Exception e) {
             log.warn("Failed to delete material with id {}: {}", id, e.getMessage());
@@ -133,7 +151,7 @@ public class TerrainServiceClient {
     // Map Management
     public void createOrUpdateMap(MapCreateRequest request) {
         String url = worldTerrainUrl + "/api/maps";
-        restTemplate.postForEntity(url, request, Void.class);
+        restTemplate.postForEntity(url, createAuthEntity(request), Void.class);
     }
 
     public Optional<TerrainClusterDto> getMapCluster(String world, Integer level, Integer x, Integer y) {
@@ -143,7 +161,7 @@ public class TerrainServiceClient {
                     .queryParam("level", level)
                     .toUriString();
 
-            ResponseEntity<TerrainClusterDto> response = restTemplate.getForEntity(url, TerrainClusterDto.class);
+            ResponseEntity<TerrainClusterDto> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), TerrainClusterDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to get map cluster at {},{} for world {} level {}: {}",
@@ -154,14 +172,14 @@ public class TerrainServiceClient {
 
     public List<TerrainClusterDto> getMapClusters(MapBatchRequest request) {
         String url = worldTerrainUrl + "/api/maps/batch";
-        ResponseEntity<TerrainClusterDto[]> response = restTemplate.postForEntity(url, request, TerrainClusterDto[].class);
+        ResponseEntity<TerrainClusterDto[]> response = restTemplate.postForEntity(url, createAuthEntity(request), TerrainClusterDto[].class);
         TerrainClusterDto[] body = response.getBody();
         return body != null ? List.of(body) : List.of();
     }
 
     public void deleteMapFields(MapDeleteRequest request) {
         String url = worldTerrainUrl + "/api/maps";
-        restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(request), Void.class);
+        restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(request), Void.class);
     }
 
     public void deleteLevel(String world, Integer level) {
@@ -170,20 +188,20 @@ public class TerrainServiceClient {
                 .queryParam("level", level)
                 .toUriString();
 
-        restTemplate.delete(url);
+        restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(), Void.class);
     }
 
     // Sprite Management
     public SpriteDto createSprite(SpriteCreateRequest request) {
         String url = worldTerrainUrl + "/api/sprites";
-        ResponseEntity<SpriteDto> response = restTemplate.postForEntity(url, request, SpriteDto.class);
+        ResponseEntity<SpriteDto> response = restTemplate.postForEntity(url, createAuthEntity(request), SpriteDto.class);
         return response.getBody();
     }
 
     public Optional<SpriteDto> getSprite(String id) {
         try {
             String url = worldTerrainUrl + "/api/sprites/" + id;
-            ResponseEntity<SpriteDto> response = restTemplate.getForEntity(url, SpriteDto.class);
+            ResponseEntity<SpriteDto> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), SpriteDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to get sprite with id {}: {}", id, e.getMessage());
@@ -194,7 +212,7 @@ public class TerrainServiceClient {
     public List<SpriteDto> getSprites(String world, Integer level, Integer x, Integer y) {
         String url = UriComponentsBuilder.fromUriString(worldTerrainUrl + "/api/sprites/" + world + "/" + level + "/" + x + "/" + y)
                 .toUriString();
-        ResponseEntity<SpriteDto[]> response = restTemplate.getForEntity(url, SpriteDto[].class);
+        ResponseEntity<SpriteDto[]> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), SpriteDto[].class);
         SpriteDto[] body = response.getBody();
         return body != null ? List.of(body) : List.of();
     }
@@ -203,7 +221,7 @@ public class TerrainServiceClient {
         try {
             String url = worldTerrainUrl + "/api/sprites/" + id;
             ResponseEntity<SpriteDto> response = restTemplate.exchange(
-                url, HttpMethod.PUT, new HttpEntity<>(spriteDto), SpriteDto.class);
+                url, HttpMethod.PUT, createAuthEntity(spriteDto), SpriteDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to update sprite with id {}: {}", id, e.getMessage());
@@ -214,7 +232,7 @@ public class TerrainServiceClient {
     public boolean deleteSprite(String id) {
         try {
             String url = worldTerrainUrl + "/api/sprites/" + id;
-            restTemplate.delete(url);
+            restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(), Void.class);
             return true;
         } catch (Exception e) {
             log.warn("Failed to delete sprite with id {}: {}", id, e.getMessage());
@@ -226,7 +244,7 @@ public class TerrainServiceClient {
         try {
             String url = worldTerrainUrl + "/api/sprites/" + id + "/coordinates";
             ResponseEntity<SpriteDto> response = restTemplate.exchange(
-                url, HttpMethod.PUT, new HttpEntity<>(coordinates), SpriteDto.class);
+                url, HttpMethod.PUT, createAuthEntity(coordinates), SpriteDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to update sprite coordinates for id {}: {}", id, e.getMessage());
@@ -237,7 +255,7 @@ public class TerrainServiceClient {
     public Optional<SpriteDto> enableSprite(String id) {
         try {
             String url = worldTerrainUrl + "/api/sprites/" + id + "/enable";
-            ResponseEntity<SpriteDto> response = restTemplate.postForEntity(url, null, SpriteDto.class);
+            ResponseEntity<SpriteDto> response = restTemplate.postForEntity(url, createAuthEntity(), SpriteDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to enable sprite with id {}: {}", id, e.getMessage());
@@ -248,7 +266,7 @@ public class TerrainServiceClient {
     public Optional<SpriteDto> disableSprite(String id) {
         try {
             String url = worldTerrainUrl + "/api/sprites/" + id + "/disable";
-            ResponseEntity<SpriteDto> response = restTemplate.postForEntity(url, null, SpriteDto.class);
+            ResponseEntity<SpriteDto> response = restTemplate.postForEntity(url, createAuthEntity(), SpriteDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to disable sprite with id {}: {}", id, e.getMessage());
@@ -259,14 +277,14 @@ public class TerrainServiceClient {
     // Asset Management
     public AssetDto createAsset(AssetCreateRequest request) {
         String url = worldTerrainUrl + "/api/assets";
-        ResponseEntity<AssetDto> response = restTemplate.postForEntity(url, request, AssetDto.class);
+        ResponseEntity<AssetDto> response = restTemplate.postForEntity(url, createAuthEntity(request), AssetDto.class);
         return response.getBody();
     }
 
     public Optional<AssetDto> getAsset(String world, String name) {
         try {
             String url = worldTerrainUrl + "/api/assets/" + world + "/" + name;
-            ResponseEntity<AssetDto> response = restTemplate.getForEntity(url, AssetDto.class);
+            ResponseEntity<AssetDto> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), AssetDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to get asset {} in world {}: {}", name, world, e.getMessage());
@@ -281,7 +299,7 @@ public class TerrainServiceClient {
                 .toUriString();
 
         ResponseEntity<PageImpl<AssetDto>> response = restTemplate.exchange(
-            url, HttpMethod.GET, null,
+            url, HttpMethod.GET, createAuthEntity(),
             new ParameterizedTypeReference<>() {});
 
         return response.getBody();
@@ -291,7 +309,7 @@ public class TerrainServiceClient {
         try {
             String url = worldTerrainUrl + "/api/assets/" + world + "/" + name;
             ResponseEntity<AssetDto> response = restTemplate.exchange(
-                url, HttpMethod.PUT, new HttpEntity<>(assetDto), AssetDto.class);
+                url, HttpMethod.PUT, createAuthEntity(assetDto), AssetDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to update asset {} in world {}: {}", name, world, e.getMessage());
@@ -302,7 +320,7 @@ public class TerrainServiceClient {
     public boolean deleteAsset(String world, String name) {
         try {
             String url = worldTerrainUrl + "/api/assets/" + world + "/" + name;
-            restTemplate.delete(url);
+            restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(), Void.class);
             return true;
         } catch (Exception e) {
             log.warn("Failed to delete asset {} in world {}: {}", name, world, e.getMessage());
@@ -313,12 +331,12 @@ public class TerrainServiceClient {
     public void compressAssets(String world) {
         String url = worldTerrainUrl + "/api/assets/compress";
         AssetCompressRequest request = new AssetCompressRequest(world);
-        restTemplate.postForEntity(url, request, Void.class);
+        restTemplate.postForEntity(url, createAuthEntity(request), Void.class);
     }
 
     public List<AssetDto> getAssetsBatch(AssetBatchRequest request) {
         String url = worldTerrainUrl + "/api/assets/batch";
-        ResponseEntity<AssetDto[]> response = restTemplate.postForEntity(url, request, AssetDto[].class);
+        ResponseEntity<AssetDto[]> response = restTemplate.postForEntity(url, createAuthEntity(request), AssetDto[].class);
         AssetDto[] body = response.getBody();
         return body != null ? List.of(body) : List.of();
     }
@@ -326,14 +344,14 @@ public class TerrainServiceClient {
     // Group Management
     public GroupDto createGroup(GroupCreateRequest request) {
         String url = worldTerrainUrl + "/api/groups";
-        ResponseEntity<GroupDto> response = restTemplate.postForEntity(url, request, GroupDto.class);
+        ResponseEntity<GroupDto> response = restTemplate.postForEntity(url, createAuthEntity(request), GroupDto.class);
         return response.getBody();
     }
 
     public Optional<GroupDto> getGroup(String world, Long id) {
         try {
             String url = worldTerrainUrl + "/api/groups/" + world + "/" + id;
-            ResponseEntity<GroupDto> response = restTemplate.getForEntity(url, GroupDto.class);
+            ResponseEntity<GroupDto> response = restTemplate.exchange(url, HttpMethod.GET, createAuthEntity(), GroupDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to get group {} in world {}: {}", id, world, e.getMessage());
@@ -349,7 +367,7 @@ public class TerrainServiceClient {
                 .toUriString();
 
         ResponseEntity<PageImpl<GroupDto>> response = restTemplate.exchange(
-            url, HttpMethod.GET, null,
+            url, HttpMethod.GET, createAuthEntity(),
             new ParameterizedTypeReference<>() {});
 
         return response.getBody();
@@ -359,7 +377,7 @@ public class TerrainServiceClient {
         try {
             String url = worldTerrainUrl + "/api/groups/" + world + "/" + id;
             ResponseEntity<GroupDto> response = restTemplate.exchange(
-                url, HttpMethod.PUT, new HttpEntity<>(groupDto), GroupDto.class);
+                url, HttpMethod.PUT, createAuthEntity(groupDto), GroupDto.class);
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {
             log.warn("Failed to update group {} in world {}: {}", id, world, e.getMessage());
@@ -370,7 +388,7 @@ public class TerrainServiceClient {
     public boolean deleteGroup(String world, Long id) {
         try {
             String url = worldTerrainUrl + "/api/groups/" + world + "/" + id;
-            restTemplate.delete(url);
+            restTemplate.exchange(url, HttpMethod.DELETE, createAuthEntity(), Void.class);
             return true;
         } catch (Exception e) {
             log.warn("Failed to delete group {} in world {}: {}", id, world, e.getMessage());
