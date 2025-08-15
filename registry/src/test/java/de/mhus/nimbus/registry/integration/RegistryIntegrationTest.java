@@ -1,8 +1,8 @@
 package de.mhus.nimbus.registry.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.registry.entity.World;
-import de.mhus.nimbus.registry.repository.WorldRepository;
+import de.mhus.nimbus.registry.entity.RegistryWorld;
+import de.mhus.nimbus.registry.repository.RegistryWorldRepository;
 import de.mhus.nimbus.server.shared.dto.CreateWorldDto;
 import de.mhus.nimbus.server.shared.dto.UpdateWorldDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,19 +38,19 @@ class RegistryIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private WorldRepository worldRepository;
+    private RegistryWorldRepository worldRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    private World testWorld;
+    private RegistryWorld testWorld;
     private CreateWorldDto createWorldDto;
 
     @BeforeEach
     void setUp() {
         worldRepository.deleteAll();
 
-        testWorld = World.builder()
+        testWorld = RegistryWorld.builder()
                 .id("test-world-123")
                 .name("Integration Test World")
                 .description("A world for integration testing")
@@ -100,7 +100,7 @@ class RegistryIntegrationTest {
     @WithMockUser(roles = {"USER"})
     void getWorld_ShouldReturnWorldWhenExists() throws Exception {
         // Given - save test world
-        World savedWorld = worldRepository.save(testWorld);
+        RegistryWorld savedWorld = worldRepository.save(testWorld);
 
         // When & Then
         mockMvc.perform(get("/worlds/{id}", savedWorld.getId()))
@@ -125,7 +125,7 @@ class RegistryIntegrationTest {
     void listWorlds_ShouldReturnPagedResults() throws Exception {
         // Given - save multiple test worlds
         worldRepository.save(testWorld);
-        World world2 = World.builder()
+        RegistryWorld world2 = RegistryWorld.builder()
                 .name("Second Test World")
                 .description("Another test world")
                 .ownerId("test-user-2")
@@ -154,7 +154,7 @@ class RegistryIntegrationTest {
     void listWorlds_ShouldFilterByName() throws Exception {
         // Given
         worldRepository.save(testWorld);
-        World anotherWorld = World.builder()
+        RegistryWorld anotherWorld = RegistryWorld.builder()
                 .name("Different World")
                 .description("A different world")
                 .ownerId("other-user")
@@ -178,7 +178,7 @@ class RegistryIntegrationTest {
     void listWorlds_ShouldFilterByEnabled() throws Exception {
         // Given
         worldRepository.save(testWorld);
-        World disabledWorld = World.builder()
+        RegistryWorld disabledWorld = RegistryWorld.builder()
                 .name("Disabled World")
                 .description("A disabled world")
                 .ownerId("test-user")
@@ -202,7 +202,7 @@ class RegistryIntegrationTest {
     @Disabled // TODO
     void updateWorld_ShouldUpdateWhenOwner() throws Exception {
         // Given
-        World savedWorld = worldRepository.save(testWorld);
+        RegistryWorld savedWorld = worldRepository.save(testWorld);
 
         UpdateWorldDto updateDto = UpdateWorldDto.builder()
                 .name("Updated Integration World")
@@ -225,7 +225,7 @@ class RegistryIntegrationTest {
     @WithMockUser(roles = {"ADMIN"})
     void updateWorld_ShouldUpdateWhenAdmin() throws Exception {
         // Given
-        World savedWorld = worldRepository.save(testWorld);
+        RegistryWorld savedWorld = worldRepository.save(testWorld);
 
         UpdateWorldDto updateDto = UpdateWorldDto.builder()
                 .name("Admin Updated World")
@@ -243,7 +243,7 @@ class RegistryIntegrationTest {
     @WithMockUser(username = "other-user", roles = {"USER"})
     void updateWorld_ShouldReturn404WhenNotOwnerOrAdmin() throws Exception {
         // Given - create a world owned by a different user than the current user
-        World worldOwnedByOtherUser = World.builder()
+        RegistryWorld worldOwnedByOtherUser = RegistryWorld.builder()
                 .id("other-world-456")
                 .name("Other User's World")
                 .description("A world owned by someone else")
@@ -254,7 +254,7 @@ class RegistryIntegrationTest {
                 .createdAt(java.time.Instant.now())
                 .updatedAt(java.time.Instant.now())
                 .build();
-        World savedWorld = worldRepository.save(worldOwnedByOtherUser);
+        RegistryWorld savedWorld = worldRepository.save(worldOwnedByOtherUser);
 
         UpdateWorldDto updateDto = UpdateWorldDto.builder()
                 .name("Unauthorized Update")
@@ -272,7 +272,7 @@ class RegistryIntegrationTest {
     @Disabled // TODO
     void deleteWorld_ShouldDeleteWhenOwner() throws Exception {
         // Given
-        World savedWorld = worldRepository.save(testWorld);
+        RegistryWorld savedWorld = worldRepository.save(testWorld);
 
         // When & Then
         mockMvc.perform(addUserAttributes(delete("/worlds/{id}", savedWorld.getId()), "test-user", List.of("USER")))
@@ -289,7 +289,7 @@ class RegistryIntegrationTest {
     void enableWorld_ShouldEnableWorld() throws Exception {
         // Given
         testWorld.setEnabled(false);
-        World savedWorld = worldRepository.save(testWorld);
+        RegistryWorld savedWorld = worldRepository.save(testWorld);
 
         // When & Then
         mockMvc.perform(addUserAttributes(post("/worlds/{id}/enable", savedWorld.getId()), "test-user", List.of("USER")))
@@ -302,7 +302,7 @@ class RegistryIntegrationTest {
     @Disabled // TODO
     void disableWorld_ShouldDisableWorld() throws Exception {
         // Given
-        World savedWorld = worldRepository.save(testWorld);
+        RegistryWorld savedWorld = worldRepository.save(testWorld);
 
         // When & Then
         mockMvc.perform(addUserAttributes(post("/worlds/{id}/disable", savedWorld.getId()), "test-user", List.of("USER")))

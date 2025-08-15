@@ -1,7 +1,7 @@
 package de.mhus.nimbus.registry.service;
 
-import de.mhus.nimbus.registry.entity.World;
-import de.mhus.nimbus.registry.repository.WorldRepository;
+import de.mhus.nimbus.registry.entity.RegistryWorld;
+import de.mhus.nimbus.registry.repository.RegistryWorldRepository;
 import de.mhus.nimbus.server.shared.dto.CreateWorldDto;
 import de.mhus.nimbus.server.shared.dto.UpdateWorldDto;
 import de.mhus.nimbus.server.shared.dto.WorldDto;
@@ -29,18 +29,18 @@ import static org.mockito.Mockito.*;
 class RegistryServiceTest {
 
     @Mock
-    private WorldRepository worldRepository;
+    private RegistryWorldRepository worldRepository;
 
     @InjectMocks
     private RegistryService registryService;
 
-    private World testWorld;
+    private RegistryWorld testWorld;
     private CreateWorldDto createWorldDto;
     private UpdateWorldDto updateWorldDto;
 
     @BeforeEach
     void setUp() {
-        testWorld = World.builder()
+        testWorld = RegistryWorld.builder()
                 .id("world-123")
                 .name("Test World")
                 .description("A test world")
@@ -70,7 +70,7 @@ class RegistryServiceTest {
     @Test
     void createWorld_ShouldCreateAndReturnWorld() {
         // Given
-        when(worldRepository.save(any(World.class))).thenReturn(testWorld);
+        when(worldRepository.save(any(RegistryWorld.class))).thenReturn(testWorld);
 
         // When
         WorldDto result = registryService.createWorld(createWorldDto, "user-123");
@@ -85,7 +85,7 @@ class RegistryServiceTest {
         assertEquals("ws://localhost:8080/world/world-123", result.getAccessUrl());
         assertEquals(Map.of("key1", "value1"), result.getProperties());
 
-        verify(worldRepository).save(any(World.class));
+        verify(worldRepository).save(any(RegistryWorld.class));
     }
 
     @Test
@@ -121,8 +121,8 @@ class RegistryServiceTest {
     @Test
     void listWorlds_ShouldReturnPageOfWorlds() {
         // Given
-        List<World> worlds = Arrays.asList(testWorld);
-        Page<World> worldPage = new PageImpl<>(worlds);
+        List<RegistryWorld> worlds = Arrays.asList(testWorld);
+        Page<RegistryWorld> worldPage = new PageImpl<>(worlds);
         when(worldRepository.findWorldsWithFilters(any(), any(), any(), any(Pageable.class)))
                 .thenReturn(worldPage);
 
@@ -140,8 +140,8 @@ class RegistryServiceTest {
     @Test
     void listWorlds_ShouldLimitPageSize() {
         // Given
-        List<World> worlds = Arrays.asList(testWorld);
-        Page<World> worldPage = new PageImpl<>(worlds);
+        List<RegistryWorld> worlds = Arrays.asList(testWorld);
+        Page<RegistryWorld> worldPage = new PageImpl<>(worlds);
         when(worldRepository.findWorldsWithFilters(any(), any(), any(), any(Pageable.class)))
                 .thenReturn(worldPage);
 
@@ -158,7 +158,7 @@ class RegistryServiceTest {
     void updateWorld_ShouldUpdateWorld_WhenUserIsOwner() {
         // Given
         when(worldRepository.findById("world-123")).thenReturn(Optional.of(testWorld));
-        when(worldRepository.save(any(World.class))).thenReturn(testWorld);
+        when(worldRepository.save(any(RegistryWorld.class))).thenReturn(testWorld);
 
         // When
         Optional<WorldDto> result = registryService.updateWorld(
@@ -167,14 +167,14 @@ class RegistryServiceTest {
         // Then
         assertTrue(result.isPresent());
         verify(worldRepository).findById("world-123");
-        verify(worldRepository).save(any(World.class));
+        verify(worldRepository).save(any(RegistryWorld.class));
     }
 
     @Test
     void updateWorld_ShouldUpdateWorld_WhenUserIsAdmin() {
         // Given
         when(worldRepository.findById("world-123")).thenReturn(Optional.of(testWorld));
-        when(worldRepository.save(any(World.class))).thenReturn(testWorld);
+        when(worldRepository.save(any(RegistryWorld.class))).thenReturn(testWorld);
 
         // When
         Optional<WorldDto> result = registryService.updateWorld(
@@ -183,7 +183,7 @@ class RegistryServiceTest {
         // Then
         assertTrue(result.isPresent());
         verify(worldRepository).findById("world-123");
-        verify(worldRepository).save(any(World.class));
+        verify(worldRepository).save(any(RegistryWorld.class));
     }
 
     @Test
@@ -198,7 +198,7 @@ class RegistryServiceTest {
         // Then
         assertFalse(result.isPresent());
         verify(worldRepository).findById("world-123");
-        verify(worldRepository, never()).save(any(World.class));
+        verify(worldRepository, never()).save(any(RegistryWorld.class));
     }
 
     @Test
@@ -226,7 +226,7 @@ class RegistryServiceTest {
         // Then
         assertFalse(result);
         verify(worldRepository).findById("world-123");
-        verify(worldRepository, never()).delete(any(World.class));
+        verify(worldRepository, never()).delete(any(RegistryWorld.class));
     }
 
     @Test
@@ -234,7 +234,7 @@ class RegistryServiceTest {
         // Given
         testWorld.setEnabled(false);
         when(worldRepository.findById("world-123")).thenReturn(Optional.of(testWorld));
-        when(worldRepository.save(any(World.class))).thenReturn(testWorld);
+        when(worldRepository.save(any(RegistryWorld.class))).thenReturn(testWorld);
 
         // When
         Optional<WorldDto> result = registryService.enableWorld("world-123", "user-123", Arrays.asList("USER"));
@@ -249,7 +249,7 @@ class RegistryServiceTest {
     void disableWorld_ShouldDisableWorld_WhenUserIsOwner() {
         // Given
         when(worldRepository.findById("world-123")).thenReturn(Optional.of(testWorld));
-        when(worldRepository.save(any(World.class))).thenReturn(testWorld);
+        when(worldRepository.save(any(RegistryWorld.class))).thenReturn(testWorld);
 
         // When
         Optional<WorldDto> result = registryService.disableWorld("world-123", "user-123", Arrays.asList("USER"));

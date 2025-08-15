@@ -1,7 +1,7 @@
 package de.mhus.nimbus.registry.service;
 
-import de.mhus.nimbus.registry.entity.World;
-import de.mhus.nimbus.registry.repository.WorldRepository;
+import de.mhus.nimbus.registry.entity.RegistryWorld;
+import de.mhus.nimbus.registry.repository.RegistryWorldRepository;
 import de.mhus.nimbus.server.shared.dto.CreateWorldDto;
 import de.mhus.nimbus.server.shared.dto.UpdateWorldDto;
 import de.mhus.nimbus.server.shared.dto.WorldDto;
@@ -27,7 +27,7 @@ import java.util.UUID;
 @Transactional
 public class RegistryService {
 
-    private final WorldRepository worldRepository;
+    private final RegistryWorldRepository worldRepository;
 
     /**
      * Creates a new world.
@@ -38,7 +38,7 @@ public class RegistryService {
     public WorldDto createWorld(CreateWorldDto createWorldDto, String ownerId) {
         log.info("Creating new world '{}' for user '{}'", createWorldDto.getName(), ownerId);
 
-        World world = World.builder()
+        RegistryWorld world = RegistryWorld.builder()
                 .id(UUID.randomUUID().toString())
                 .name(createWorldDto.getName())
                 .description(createWorldDto.getDescription())
@@ -49,7 +49,7 @@ public class RegistryService {
                            new HashMap<>(createWorldDto.getProperties()) : new HashMap<>())
                 .build();
 
-        World savedWorld = worldRepository.save(world);
+        RegistryWorld savedWorld = worldRepository.save(world);
         log.info("Successfully created world with ID '{}'", savedWorld.getId());
 
         return convertToDto(savedWorld);
@@ -87,7 +87,7 @@ public class RegistryService {
         // Use unsorted Pageable since we handle ordering in the native query
         Pageable pageable = PageRequest.of(page, validatedSize);
 
-        Page<World> worlds = worldRepository.findWorldsWithFilters(name, ownerId, enabled, pageable);
+        Page<RegistryWorld> worlds = worldRepository.findWorldsWithFilters(name, ownerId, enabled, pageable);
 
         return worlds.map(this::convertToDto);
     }
@@ -120,7 +120,7 @@ public class RegistryService {
                         world.setProperties(new HashMap<>(updateWorldDto.getProperties()));
                     }
 
-                    World updatedWorld = worldRepository.save(world);
+                    RegistryWorld updatedWorld = worldRepository.save(world);
                     log.info("Successfully updated world '{}'", worldId);
                     return convertToDto(updatedWorld);
                 });
@@ -179,7 +179,7 @@ public class RegistryService {
                 .filter(world -> canModifyWorld(world, userId, userRoles))
                 .map(world -> {
                     world.setEnabled(enabled);
-                    World updatedWorld = worldRepository.save(world);
+                    RegistryWorld updatedWorld = worldRepository.save(world);
                     log.info("Successfully {} world '{}'", enabled ? "enabled" : "disabled", worldId);
                     return convertToDto(updatedWorld);
                 });
@@ -189,7 +189,7 @@ public class RegistryService {
      * Checks if a user can modify a world.
      * Users can modify worlds they own or if they have ADMIN role.
      */
-    private boolean canModifyWorld(World world, String userId, java.util.List<String> userRoles) {
+    private boolean canModifyWorld(RegistryWorld world, String userId, java.util.List<String> userRoles) {
         return world.getOwnerId().equals(userId) ||
                (userRoles != null && userRoles.contains("ADMIN"));
     }
@@ -197,7 +197,7 @@ public class RegistryService {
     /**
      * Converts a World entity to WorldDto.
      */
-    private WorldDto convertToDto(World world) {
+    private WorldDto convertToDto(RegistryWorld world) {
         return WorldDto.builder()
                 .id(world.getId())
                 .name(world.getName())

@@ -23,7 +23,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class World {
+public class RegistryWorld {
 
     @Id
     @Column(name = "id", updatable = false, nullable = false)

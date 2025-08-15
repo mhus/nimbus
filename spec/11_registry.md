@@ -12,11 +12,11 @@ Welten basierend auf verschiedenen Kriterien.
 - Er bietet REST-APIs für die Kommunikation mit anderen Komponenten.
 - Er ermöglicht das Abfragen von Welten und deren Metadaten.
 
-## Datenmodell
+## JPA-Entity
 
 ```json
 {
-  "World": {
+  "RegistryWorld": {
     "id": "string", // Eindeutige ID der Welt, UUID wird beim anlegen generiert
     "name": "string", // Name der Welt
     "description": "string", // Beschreibung der Welt
