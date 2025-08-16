@@ -10,10 +10,10 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>generator-simple</artifactId>
+    <artifactId>world-generator-simple</artifactId>
     <packaging>jar</packaging>
 
-    <name>Nimbus Simple Generator</name>
+    <name>World Generator Simple Service</name>
     <description>Service for generating worlds and their metadata</description>
 
     <dependencies>

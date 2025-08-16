@@ -1,13 +1,13 @@
-package de.mhus.nimbus.generator.simple;
+package de.mhus.nimbus.worldgenerator.simple;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class GeneratorSimpleApplication extends SpringBootServletInitializer {
+public class WorldGeneratorSimpleApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
-        SpringApplication.run(GeneratorSimpleApplication.class, args);
+        SpringApplication.run(WorldGeneratorSimpleApplication.class, args);
     }
 }

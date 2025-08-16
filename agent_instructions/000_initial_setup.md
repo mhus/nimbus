@@ -1,4 +1,3 @@
-
 # Initial Setup Instructions
 
 ## 01 Erstelle alle Module und Verzeichnisse
@@ -32,7 +31,7 @@ client-bridge: Client-Gateway mit WebSockets und JWT-Authentifizierung
 Client:
 client: Web-Client mit Thymeleaf und WebSockets
 Generatoren:
-generator-simple: Weltgenerierungs-Service
+world-generator-simple: Weltgenerierungs-Service
 Alle Module haben:
 Korrekte Maven-Abhängigkeiten basierend auf der Spezifikation
 Java-Paketstrukturen (de.mhus.nimbus.*)
@@ -64,7 +63,7 @@ Perfekt! Ich habe alle geforderten Änderungen erfolgreich umgesetzt:
    WorldBridgeApplication (world-bridge-Modul)
    ClientBridgeApplication (client-bridge-Modul)
    ClientApplication (client-Modul)
-   GeneratorSimpleApplication (generator-simple-Modul)
+   WorldGeneratorSimpleApplication (world-generator-simple-Modul)
    Alle Application-Klassen:
    Sind mit @SpringBootApplication annotiert
    Erben von SpringBootServletInitializer (für WAR-Deployment)
