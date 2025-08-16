@@ -332,3 +332,14 @@ Typsicher: JSON-Serialisierung mit vollständiger DTO-Validierung
 Skalierbar: Vorbereitet für Komprimierung und Redis-Integration
 Das 'world-terrain' Modul ist jetzt vollständig spezifikationskonform und bereit für den produktiven Einsatz! 🎉
 ```
+
+## 08 World sizeX und sizeY
+
+```text
+Die World Entity im Modul world-terrain muss die Felder sizeX und sizeY enthalten,
+die die Größe der Welt in X- und Y-Richtung angeben. 
+* Füge in der spezifikation `spec/12_world_terrain.md` die Felder sizeX und sizeY hinzu.
+* Füge in der World Entity im Modul world-terrain die Felder sizeX und sizeY hinzu.
+* Füge in den API Endpunkten die Felder sizeX und sizeY hinzu, damit sie in der World Entity gespeichert und 
+  zurückgegeben werden können.
+```

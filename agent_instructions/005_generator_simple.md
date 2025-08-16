@@ -84,3 +84,17 @@ Bean-Konfiguration für PhaseProcessor-Registrierung
 RestTemplate Bean für Client-Kommunikation
 Der World Generator Service ist nun vollständig funktionsfähig und kann Welten in konfigurierbaren Phasen generieren. Die Implementierung folgt allen Spezifikationen aus spec/30_generator_overview.md und den Entwicklungsrichtlinien aus spec/02_development.md.
 ```
+
+## 01 Implementiere den World Generator Simple
+
+```text
+Erstelle im Modul `world-generator` ein package `simple` in dem
+die Beans des World Generator Simple Service implementiert werden.
+* Ertelle in den resources ein Verzeichnis `simple/assets` in dem die
+  Assets des World Generator Simple Service abgelegt werden.
+* Lege die Assets in das Verzeichnis `simple/assets` ab.
+* Erstelle im unter-packet `simple` die Beans um die Phasen
+  des World Generator Simple Service zu implementieren.
+* Erstelle für jeden Endpunkt in `examples/generator.md` ein Beispiel mit curl,
+  das die Funktionsweise des Endpunkts demonstriert.
+```
