@@ -232,3 +232,233 @@ curl -s -X POST "${GENERATOR_URL}/api/generator/${WORLD_ID}/start" \
 echo "Generierung gestartet! Status prüfen mit:"
 echo "curl -X GET \"${GENERATOR_URL}/api/generator/${WORLD_ID}\" -H \"Authorization: Bearer ${GENERATOR_TOKEN}\""
 ```
+
+# World Generator Simple Service Examples
+
+Der World Generator Simple Service bietet spezialisierte Prozessoren für die Erstellung einfacher Welten mit grundlegenden Biomen.
+
+### Simple World erstellen
+
+Erstellt eine einfache Welt mit allen Simple-Phasen:
+
+```bash
+#!/bin/bash
+
+export GENERATOR_TOKEN="generator-secret-key-2024"
+export GENERATOR_URL="http://localhost:8083"
+
+echo "1. Simple World Generator erstellen..."
+SIMPLE_WORLD_ID=$(curl -s -X POST "${GENERATOR_URL}/api/generator/create" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "name": "Simple Fantasy World",
+    "description": "Eine einfache Welt mit Wald, Wüste, Ozean und Bergen",
+    "parameters": {
+      "type": "simple",
+      "size": "medium",
+      "biomes": ["forest", "desert", "ocean", "mountain", "swamp"]
+    }
+  }' | jq -r '.id')
+
+echo "Simple World Generator ID: $SIMPLE_WORLD_ID"
+
+echo "2. Simple Terrain-Phase hinzufügen..."
+curl -s -X POST "${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleTerrainProcessor",
+    "name": "Simple Terrain Generation",
+    "description": "Grundlegende Kontinente mit Wald, Wüste, Ozean und Bergen",
+    "phaseOrder": 1,
+    "parameters": {
+      "continentTypes": ["forest", "desert", "ocean", "mountain"],
+      "simplicity": "high"
+    }
+  }' > /dev/null
+
+echo "3. Simple Asset-Phase hinzufügen..."
+curl -s -X POST "${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleAssetProcessor",
+    "name": "Simple Asset Generation",
+    "description": "Lädt alle Assets und erstellt Materialien",
+    "phaseOrder": 2,
+    "parameters": {
+      "assetPath": "simple/assets/",
+      "generateMaterials": true
+    }
+  }' > /dev/null
+
+echo "4. Simple Biome-Phase hinzufügen..."
+curl -s -X POST "${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleBiomeProcessor",
+    "name": "Simple Biome Generation",
+    "description": "Verteilt Biome auf den Kontinenten",
+    "phaseOrder": 3,
+    "parameters": {
+      "biomeTransitions": true,
+      "swampGeneration": true
+    }
+  }' > /dev/null
+
+echo "5. Simple Structure-Phase hinzufügen..."
+curl -s -X POST "${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleStructureProcessor",
+    "name": "Simple Structure Generation",
+    "description": "Erstellt Pfade, Wasserfälle und Flüsse",
+    "phaseOrder": 4,
+    "parameters": {
+      "pathGeneration": true,
+      "naturalFormations": true
+    }
+  }' > /dev/null
+
+echo "6. Simple World Finalization-Phase hinzufügen..."
+curl -s -X POST "${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleWorldProcessor",
+    "name": "Simple World Finalization",
+    "description": "Finale Validierung und Optimierung",
+    "phaseOrder": 5,
+    "parameters": {
+      "validation": true,
+      "optimization": true
+    }
+  }' > /dev/null
+
+echo "7. Simple World Generierung starten..."
+curl -s -X POST "${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}/start" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+
+echo "Simple World Generierung gestartet!"
+echo "Status prüfen: curl -X GET \"${GENERATOR_URL}/api/generator/${SIMPLE_WORLD_ID}\" -H \"Authorization: Bearer ${GENERATOR_TOKEN}\""
+```
+
+### Einzelne Simple Phasen testen
+
+#### Simple Terrain Processor testen
+
+```bash
+curl -X POST "${GENERATOR_URL}/api/generator/create" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "name": "Test Simple Terrain",
+    "description": "Test für Simple Terrain Processor",
+    "parameters": {"type": "simple", "testMode": true}
+  }'
+
+# Phase hinzufügen
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleTerrainProcessor",
+    "name": "Test Terrain",
+    "description": "Test der einfachen Terrain-Generierung",
+    "phaseOrder": 1,
+    "parameters": {"testMode": true}
+  }'
+```
+
+#### Simple Asset Processor testen
+
+```bash
+curl -X POST "${GENERATOR_URL}/api/generator/2/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleAssetProcessor",
+    "name": "Test Assets",
+    "description": "Test der Asset-Generierung",
+    "phaseOrder": 1,
+    "parameters": {
+      "assetTypes": ["gras", "sand", "wasser", "felsen"],
+      "testMode": true
+    }
+  }'
+```
+
+#### Simple Biome Processor testen
+
+```bash
+curl -X POST "${GENERATOR_URL}/api/generator/3/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleBiomeProcessor",
+    "name": "Test Biomes",
+    "description": "Test der Biome-Generierung",
+    "phaseOrder": 1,
+    "parameters": {
+      "biomes": ["forest", "desert"],
+      "testMode": true
+    }
+  }'
+```
+
+#### Simple Structure Processor testen
+
+```bash
+curl -X POST "${GENERATOR_URL}/api/generator/4/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleStructureProcessor",
+    "name": "Test Structures",
+    "description": "Test der Struktur-Generierung",
+    "phaseOrder": 1,
+    "parameters": {
+      "structures": ["paths", "rivers"],
+      "testMode": true
+    }
+  }'
+```
+
+#### Simple World Processor testen
+
+```bash
+curl -X POST "${GENERATOR_URL}/api/generator/5/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "simpleWorldProcessor",
+    "name": "Test World Finalization",
+    "description": "Test der Welt-Finalisierung",
+    "phaseOrder": 1,
+    "parameters": {
+      "validationOnly": true,
+      "testMode": true
+    }
+  }'
+```
+
+### Simple World Status überprüfen
+
+```bash
+# Alle Simple World Generators abrufen
+curl -X GET "${GENERATOR_URL}/api/generator" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  | jq '.[] | select(.parameters.type == "simple")'
+
+# Simple World nach Name suchen
+curl -X GET "${GENERATOR_URL}/api/generator/by-name/Simple%20Fantasy%20World" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+
+# Phasen einer Simple World abrufen
+curl -X GET "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  | jq '.[] | select(.processor | startswith("simple"))'
+```
