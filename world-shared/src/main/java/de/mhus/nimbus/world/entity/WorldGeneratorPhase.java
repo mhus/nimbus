@@ -1,4 +1,4 @@
-package de.mhus.nimbus.worldgenerator.dto;
+package de.mhus.nimbus.world.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,15 +12,16 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class WorldGeneratorPhaseDto {
+public class WorldGeneratorPhase {
+
     private Long id;
-    private Long worldGeneratorId;
+    private WorldGenerator worldGenerator;
     private String processor;
     private Integer phaseOrder;
     private String name;
     private Boolean archived;
     private String description;
-    private String status;
+    private String status; // PENDING, IN_PROGRESS, COMPLETED, ERROR
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Map<String, Object> parameters;

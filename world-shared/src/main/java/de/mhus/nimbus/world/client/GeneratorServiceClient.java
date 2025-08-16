@@ -1,9 +1,9 @@
-package de.mhus.nimbus.shared.client;
+package de.mhus.nimbus.world.client;
 
-import de.mhus.nimbus.worldgenerator.dto.AddPhaseRequest;
-import de.mhus.nimbus.worldgenerator.dto.CreateWorldGeneratorRequest;
-import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
-import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
+import de.mhus.nimbus.world.dto.AddPhaseRequest;
+import de.mhus.nimbus.world.dto.CreateWorldGeneratorRequest;
+import de.mhus.nimbus.world.entity.WorldGenerator;
+import de.mhus.nimbus.world.entity.WorldGeneratorPhase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -36,7 +37,7 @@ public class GeneratorServiceClient {
     }
 
     public Optional<WorldGenerator> createWorldGenerator(String name, String description,
-                                                        java.util.Map<String, Object> parameters) {
+                                                        Map<String, Object> parameters) {
         try {
             CreateWorldGeneratorRequest request = CreateWorldGeneratorRequest.builder()
                     .name(name)
@@ -62,7 +63,7 @@ public class GeneratorServiceClient {
 
     public Optional<WorldGeneratorPhase> addPhase(Long worldGeneratorId, String processor, String name,
                                                  String description, Integer phaseOrder,
-                                                 java.util.Map<String, Object> parameters) {
+                                                 Map<String, Object> parameters) {
         try {
             AddPhaseRequest request = AddPhaseRequest.builder()
                     .processor(processor)
@@ -175,6 +176,42 @@ public class GeneratorServiceClient {
         } catch (Exception e) {
             log.error("Error getting phases: {}", e.getMessage(), e);
             return List.of();
+        }
+    }
+
+    public boolean deleteWorldGenerator(Long id) {
+        try {
+            HttpEntity<?> entity = new HttpEntity<>(createHeaders());
+
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    generatorServiceUrl + "/api/generator/" + id,
+                    HttpMethod.DELETE,
+                    entity,
+                    Void.class
+            );
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.error("Error deleting world generator: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public boolean archivePhase(Long phaseId) {
+        try {
+            HttpEntity<?> entity = new HttpEntity<>(createHeaders());
+
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    generatorServiceUrl + "/api/generator/phases/" + phaseId + "/archive",
+                    HttpMethod.POST,
+                    entity,
+                    Void.class
+            );
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.error("Error archiving phase: {}", e.getMessage(), e);
+            return false;
         }
     }
 }

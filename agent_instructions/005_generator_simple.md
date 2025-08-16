@@ -39,7 +39,7 @@ Datei `spec/30_generator_overview.md` beschrieben.
   für die Implementierung.
 * Erstelle für jeden Endpunkt in `examples/generator.md` ein Beispiel mit curl,
   das die Funktionsweise des Endpunkts demonstriert.
-* Erstelle im modul `server-shared` eine Bean Klasse `GeneratorServiceClient`, 
+* Erstelle im modul `world-shared` eine Bean Klasse `GeneratorServiceClient`, 
   die die Kommunikation mit dem Generator Service ermöglicht.
 * Implementiere die Authentifizierung für den Registry Service über die 
   den JWTAuthenticationFilter in `server-shared` analog zum service `identity`.

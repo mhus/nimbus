@@ -1,4 +1,4 @@
-package de.mhus.nimbus.worldgenerator.dto;
+package de.mhus.nimbus.world.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

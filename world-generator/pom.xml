@@ -26,6 +26,10 @@
             <artifactId>server-shared</artifactId>
         </dependency>
         <dependency>
+            <groupId>de.mhus.nimbus</groupId>
+            <artifactId>world-shared</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>

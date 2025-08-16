@@ -1,8 +1,8 @@
 package de.mhus.nimbus.worldgenerator.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.worldgenerator.dto.AddPhaseRequest;
-import de.mhus.nimbus.worldgenerator.dto.CreateWorldGeneratorRequest;
+import de.mhus.nimbus.world.dto.AddPhaseRequest;
+import de.mhus.nimbus.world.dto.CreateWorldGeneratorRequest;
 import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
 import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
 import de.mhus.nimbus.worldgenerator.service.GeneratorService;
