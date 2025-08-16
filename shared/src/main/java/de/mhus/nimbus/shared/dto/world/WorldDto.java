@@ -18,5 +18,7 @@ public class WorldDto {
     private Date updatedAt;
     private String name;
     private String description;
+    private Integer sizeX;
+    private Integer sizeY;
     private Map<String, Object> properties;
 }

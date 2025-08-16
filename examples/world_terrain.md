@@ -14,6 +14,8 @@ curl -X POST "http://localhost:7083/api/worlds" \
     "id": "earth-001",
     "name": "Earth",
     "description": "Main game world",
+    "sizeX": 10000,
+    "sizeY": 10000,
     "properties": {
       "gravity": "9.81",
       "atmosphere": "earth-like",
@@ -27,6 +29,24 @@ curl -X POST "http://localhost:7083/api/worlds" \
 ```bash
 curl -X GET "http://localhost:7083/api/worlds/earth-001" \
   -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Antwort:**
+```json
+{
+  "id": "earth-001",
+  "name": "Earth",
+  "description": "Main game world",
+  "sizeX": 10000,
+  "sizeY": 10000,
+  "properties": {
+    "gravity": "9.81",
+    "atmosphere": "earth-like",
+    "weather": "enabled"
+  },
+  "createdAt": "2024-12-08T10:00:00Z",
+  "updatedAt": "2024-12-08T10:00:00Z"
+}
 ```
 
 ### Alle Welten auflisten
@@ -45,6 +65,8 @@ curl -X PUT "http://localhost:7083/api/worlds/earth-001" \
   -d '{
     "name": "Earth Prime",
     "description": "Updated main game world",
+    "sizeX": 15000,
+    "sizeY": 12000,
     "properties": {
       "gravity": "9.81",
       "atmosphere": "earth-like",

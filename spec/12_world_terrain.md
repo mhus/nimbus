@@ -1,4 +1,3 @@
-
 # World Terrain Service Spezifikation
 
 ## Einleitung
@@ -35,6 +34,8 @@ eine virtuelle Umgebung, in der Felder, Sprites und andere Objekte existieren k�
 "updatedAt": "timestamp", // Aktualisierungszeitpunkt der Welt
 "name": "string", // Name der Welt (z.B. "Earth", "Mars")
 "description": "string", // Beschreibung der Welt
+"sizeX": "int", // Größe der Welt in X-Richtung
+"sizeY": "int", // Größe der Welt in Y-Richtung
 "properties": "blob" // JSON-String der Eigenschaften der Welt
 ```
 
@@ -236,7 +237,7 @@ Assets sind Grafiken, Sounds und andere Ressourcen, die in der Welt verwendet we
 ```text
 "world:"string", // ID der Welt, zu der das Cluster-Feld gehört
 "name": "string", // Name des Assets (z.B. "tree.png", "water.wav", uuid) - Eindeutiger Name (primary key)
-"type": "string", // Typ des Assets (z.B. "image", "sound")
+"type": "string", // Typ der Gruppe (z.B. "image", "sound")
 "data": "blob", // Unkomprimierte Daten des Assets
 "compressed": "blob", // Komprimierte Daten des Assets
 "properties": "blob", // JSON-String der Eigenschaften des Assets
@@ -469,7 +470,7 @@ Die Map wird aus der Datenbank entfernt und kann nicht wiederhergestellt werden.
         {
             "x": "int", // X-Koordinate des Clusters
             "y": "int" // Y-Koordinate des Clusters
-          fields: [ // Array von Feldern im Cluster, die gelöscht werden sollen
+          fields: [ // Array von Feldern im Cluster, die gel��scht werden sollen
             {
               "x": "int",
               // X-Koordinate des Feldes im Cluster

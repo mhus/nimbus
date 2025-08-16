@@ -34,6 +34,12 @@ public class WorldEntity {
 
     private String description;
 
+    @Column(name = "size_x")
+    private Integer sizeX;
+
+    @Column(name = "size_y")
+    private Integer sizeY;
+
     @Lob
     @Column(columnDefinition = "TEXT")
     private String properties; // JSON string

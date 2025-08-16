@@ -38,6 +38,8 @@ public class WorldTerrainService {
                 .id(worldDto.getId() != null ? worldDto.getId() : UUID.randomUUID().toString())
                 .name(worldDto.getName())
                 .description(worldDto.getDescription())
+                .sizeX(worldDto.getSizeX())
+                .sizeY(worldDto.getSizeY())
                 .properties(mapToJson(worldDto.getProperties()))
                 .build();
 
@@ -61,6 +63,8 @@ public class WorldTerrainService {
                 .map(entity -> {
                     entity.setName(worldDto.getName());
                     entity.setDescription(worldDto.getDescription());
+                    entity.setSizeX(worldDto.getSizeX());
+                    entity.setSizeY(worldDto.getSizeY());
                     entity.setProperties(mapToJson(worldDto.getProperties()));
                     return mapToWorldDto(worldRepository.save(entity));
                 });
@@ -589,6 +593,8 @@ public class WorldTerrainService {
                 .id(entity.getId())
                 .name(entity.getName())
                 .description(entity.getDescription())
+                .sizeX(entity.getSizeX())
+                .sizeY(entity.getSizeY())
                 .properties(parseJsonToMap(entity.getProperties()))
                 .createdAt(entity.getCreatedAt() != null ? Date.from(entity.getCreatedAt()) : null)
                 .updatedAt(entity.getUpdatedAt() != null ? Date.from(entity.getUpdatedAt()) : null)
