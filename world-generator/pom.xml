@@ -10,10 +10,10 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>world-generator-simple</artifactId>
+    <artifactId>world-generator</artifactId>
     <packaging>jar</packaging>
 
-    <name>World Generator Simple Service</name>
+    <name>World Generator Service</name>
     <description>Service for generating worlds and their metadata</description>
 
     <dependencies>

@@ -83,6 +83,7 @@ der Welt angepasst werden. Die Phasen werden separat entwickelt und ausgeführt.
 * WorldGeneratorPhase
     - id: Long
     - worldGenerator: Long
+    - processor: String 
     - order: Integer (to define the order of execution)
     - name: String
     - archived: Boolean (to indicate if the phase is archived)
@@ -94,6 +95,17 @@ PLETED")
     - parameters: JSON Data
     - phaseOrder: Integer (to define the order of execution)
 ```
+
+## Erweiterungsfähigkeit
+
+Die Welt-Generatoren sind so konzipiert, dass sie leicht
+erweitert werden können. Neue Phasen Processoren können
+hinzugefügt werden, um zusätzliche Aspekte der Welt
+zu generieren.
+
+Erweiterungen werden separat spezifiziert und dann in
+Beans implementiert die das Phase-Processor Interface 
+implementieren.
 
 ## API Endpunkte
 

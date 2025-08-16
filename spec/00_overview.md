@@ -137,7 +137,7 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   Sie enthält alle DTOs (Data Transfer Objects) und andere gemeinsame Klassen, die von allen Services verwendet werden.
   - Keine dependencies auf andere Services, um eine klare Trennung der Verantwortlichkeiten zu gewährleisten.
   - Keine dependencies auf Kafka oder Spring Boot, um die Bibliothek unabhängig von der Implementierung zu halten.
-- **world-generator-simple**: Ein Service, der Welten generiert und deren Metadaten erstellt.
+- **world-generator**: Ein Service, der Welten generiert und deren Metadaten erstellt.
   Er ermöglicht das Erstellen von neuen Welten basierend auf bestimmten Parametern und Regeln.
 
 ## Ports und Services

@@ -31,13 +31,13 @@ client-bridge: Client-Gateway mit WebSockets und JWT-Authentifizierung
 Client:
 client: Web-Client mit Thymeleaf und WebSockets
 Generatoren:
-world-generator-simple: Weltgenerierungs-Service
+world-generator: Weltgenerierungs-Service
 Alle Module haben:
 Korrekte Maven-Abhängigkeiten basierend auf der Spezifikation
 Java-Paketstrukturen (de.mhus.nimbus.*)
 Spring Boot Konfiguration wo benötigt
 Lombok-Integration
-Die Struktur ist jetzt bereit für die Implementierung der spezifischen Klassen und Methoden gemäß den Anforderungen in der Spezifikation.
+Die Struktur ist jetzt bereit f��r die Implementierung der spezifischen Klassen und Methoden gemäß den Anforderungen in der Spezifikation.
 ```
 
 ## 02 Spring Boot 3.5.4
@@ -63,7 +63,7 @@ Perfekt! Ich habe alle geforderten Änderungen erfolgreich umgesetzt:
    WorldBridgeApplication (world-bridge-Modul)
    ClientBridgeApplication (client-bridge-Modul)
    ClientApplication (client-Modul)
-   WorldGeneratorSimpleApplication (world-generator-simple-Modul)
+   WorldGeneratorApplication (world-generator-Modul)
    Alle Application-Klassen:
    Sind mit @SpringBootApplication annotiert
    Erben von SpringBootServletInitializer (für WAR-Deployment)

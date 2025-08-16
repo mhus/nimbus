@@ -53,7 +53,7 @@
         <module>client</module>
 
         <!-- Generators -->
-        <module>world-generator-simple</module>
+        <module>world-generator</module>
     </modules>
 
     <dependencyManagement>
