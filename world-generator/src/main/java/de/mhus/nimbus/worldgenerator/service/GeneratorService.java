@@ -126,9 +126,10 @@ public class GeneratorService {
         } catch (Exception e) {
             log.error("Error processing phase '{}': {}", phase.getName(), e.getMessage(), e);
             phase.setStatus("ERROR");
+        } finally {
+            // Stelle sicher, dass die Phase immer gespeichert wird
+            worldGeneratorPhaseRepository.save(phase);
         }
-
-        worldGeneratorPhaseRepository.save(phase);
     }
 
     public List<WorldGenerator> getAllWorldGenerators() {

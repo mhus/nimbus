@@ -88,9 +88,9 @@ class GeneratorServiceTest {
         when(worldGeneratorRepository.findByName("Test World")).thenReturn(Optional.of(testWorldGenerator));
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            generatorService.createWorldGenerator("Test World", "Test Description", Map.of());
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+            generatorService.createWorldGenerator("Test World", "Test Description", Map.of())
+        );
 
         verify(worldGeneratorRepository, never()).save(any(WorldGenerator.class));
     }
@@ -125,9 +125,9 @@ class GeneratorServiceTest {
         when(worldGeneratorRepository.findById(1L)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            generatorService.addPhase(1L, "terrainProcessor", "Test Phase", "Description", 1, Map.of());
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+            generatorService.addPhase(1L, "terrainProcessor", "Test Phase", "Description", 1, Map.of())
+        );
 
         verify(worldGeneratorPhaseRepository, never()).save(any(WorldGeneratorPhase.class));
     }
@@ -146,7 +146,7 @@ class GeneratorServiceTest {
 
         // Then
         verify(worldGeneratorRepository, times(2)).save(testWorldGenerator);
-        verify(worldGeneratorPhaseRepository).save(testPhase);
+        verify(worldGeneratorPhaseRepository, times(2)).save(testPhase); // Zweimal: IN_PROGRESS und im finally-Block
         assertEquals("COMPLETED", testWorldGenerator.getStatus());
     }
 
@@ -171,9 +171,9 @@ class GeneratorServiceTest {
         when(phaseProcessors.get("terrainProcessor")).thenReturn(null);
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            generatorService.processPhase(testPhase);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+            generatorService.processPhase(testPhase)
+        );
     }
 
     @Test
@@ -187,7 +187,8 @@ class GeneratorServiceTest {
 
         // Then
         assertEquals("ERROR", testPhase.getStatus());
-        verify(worldGeneratorPhaseRepository, times(2)).save(testPhase);
+        verify(worldGeneratorPhaseRepository, times(2)).save(testPhase); // Einmal für IN_PROGRESS, einmal im finally
+        verify(mockProcessor).processPhase(any());
     }
 
     @Test
