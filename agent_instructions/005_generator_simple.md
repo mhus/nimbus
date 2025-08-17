@@ -204,3 +204,20 @@ Interdependente Parameter zwischen den Phasen
 Skalierbare Performance basierend auf Weltgröße
 Alle Simple-Prozessoren sind jetzt vollständig einsatzbereit und können über die REST-API des World Generator Service verwendet werden. Die Implementierung folgt den Spezifikationen aus spec/31_generator_simple.md und ist vollständig in das bestehende System integriert.
 ```
+
+## 04 Lege die Welt im World Terrain Service an
+
+```text
+Erweitere den SimpleInitializationProcessor und lege die
+erstellte Welt unter Benutzung des WorldTerrainClient im 
+World Terrain Service an. Vermerke die WorldId in den
+Properties der WorldGenerator Entität.
+```
+
+## 05 Lege das Terrain im World Terrain Service an
+
+```text
+Lese die WorldId aus der WorldGenerator Entität und
+lege das Terrain im World Terrain Service an.
+Erweitere FlatTerrainProcessor und MountainTerrainProcessor und lege die
+erstellten Terrains unter Benutzung des WorldTerrainClient im World Terrain Service an.

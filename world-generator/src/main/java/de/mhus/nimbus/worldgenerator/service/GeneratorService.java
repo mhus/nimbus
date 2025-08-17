@@ -255,6 +255,30 @@ public class GeneratorService {
     }
 
     @Transactional
+    public boolean updateWorldGeneratorProperties(Long worldGeneratorId, Map<String, String> additionalProperties) {
+        log.info("Updating properties for world generator {}", worldGeneratorId);
+
+        Optional<WorldGenerator> optionalGenerator = worldGeneratorRepository.findById(worldGeneratorId);
+        if (optionalGenerator.isEmpty()) {
+            return false;
+        }
+
+        WorldGenerator generator = optionalGenerator.get();
+        Map<String, String> currentProperties = generator.getParameters();
+        if (currentProperties == null) {
+            currentProperties = new HashMap<>();
+        }
+
+        // Füge neue Properties hinzu
+        currentProperties.putAll(additionalProperties);
+        generator.setParameters(currentProperties);
+
+        worldGeneratorRepository.save(generator);
+        log.info("Updated properties for world generator {}: {}", worldGeneratorId, additionalProperties);
+        return true;
+    }
+
+    @Transactional
     public boolean archivePhase(Long phaseId) {
         log.info("Archiving phase {}", phaseId);
 
