@@ -71,6 +71,37 @@ public class WorldTerrainClient {
         }
     }
 
+    /**
+     * Erstellt Terrain/Map-Daten im World Terrain Service.
+     */
+    public void createTerrain(Object terrainRequest) {
+        log.info("Erstelle Terrain im World Terrain Service");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + sharedSecret);
+        headers.set("Content-Type", "application/json");
+
+        HttpEntity<Object> entity = new HttpEntity<>(terrainRequest, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    worldTerrainServiceUrl + "/api/maps",
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Terrain erfolgreich erstellt");
+            } else {
+                throw new RuntimeException("Fehler beim Erstellen des Terrains: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Fehler beim Erstellen des Terrains: {}", e.getMessage(), e);
+            throw new RuntimeException("Fehler beim Erstellen des Terrains: " + e.getMessage(), e);
+        }
+    }
+
     // DTOs für die API-Kommunikation
     @Data
     public static class WorldRequest {
