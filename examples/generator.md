@@ -23,15 +23,44 @@ curl -X POST "${GENERATOR_URL}/api/generator/create" \
     "name": "Fantasy World",
     "description": "Ein magisches Fantasy-Universum mit Drachen und Zauberei",
     "parameters": {
-      "size": "large",
-      "biome": "mixed",
-      "difficulty": "medium",
-      "magic": true
+      "worldSize": 1000,
+      "primaryBiome": "forest",
+      "seed": 123456,
+      "worldType": "fantasy",
+      "itemDensity": 3,
+      "structureDensity": 3,
+      "questDensity": 3,
+      "historyDepth": 5
     }
   }'
 ```
 
-## 2. Phase zu World Generator hinzufügen
+## 2. Simple World Generator mit Simple-Prozessoren erstellen
+
+Erstellt einen World Generator der die Simple-Implementierungen verwendet.
+
+```bash
+curl -X POST "${GENERATOR_URL}/api/generator/create" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "name": "Simple Fantasy World",
+    "description": "Einfache Fantasywelt mit Simple-Generatoren",
+    "parameters": {
+      "worldSize": 500,
+      "primaryBiome": "mixed",
+      "seed": 42,
+      "worldType": "fantasy",
+      "itemDensity": 2,
+      "structureDensity": 2,
+      "questDensity": 2,
+      "historyDepth": 3,
+      "useSimpleProcessors": true
+    }
+  }'
+```
+
+## 3. Phase zu World Generator hinzufügen
 
 Fügt eine Generierungsphase zu einem bestehenden World Generator hinzu.
 
@@ -40,132 +69,194 @@ curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
   -d '{
-    "processor": "terrainProcessor",
-    "name": "Terrain Generation",
-    "description": "Grundlegende Landschaftsgenerierung mit Bergen und Tälern",
+    "processor": "SimpleInitializationProcessor",
+    "name": "Simple Initialisierung",
+    "description": "Grundlegende Weltinitialisierung mit Simple-Generator",
     "phaseOrder": 1,
     "parameters": {
-      "heightVariation": "high",
-      "waterLevel": 64,
-      "mountainDensity": 0.3
+      "worldSize": 500,
+      "primaryBiome": "forest",
+      "seed": 42
     }
   }'
 ```
 
-## 3. Struktur-Phase hinzufügen
+## 4. Simple Asset-Generation Phase
+
+Fügt eine Asset-Generierungsphase hinzu, die PNG-Texturen erstellt.
 
 ```bash
 curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
   -d '{
-    "processor": "structureProcessor",
-    "name": "Structure Generation",
-    "description": "Platzierung von Dörfern, Städten und Dungeons",
+    "processor": "SimpleAssetProcessor",
+    "name": "Simple Asset Generierung",
+    "description": "Erstellt Texturen für Materialien wie Gras, Sand, Wasser, Felsen",
     "phaseOrder": 2,
     "parameters": {
-      "villageDensity": 0.1,
-      "dungeonCount": 5,
-      "castleCount": 2
+      "textureSize": 64,
+      "generateNoise": true
     }
   }'
 ```
 
-## 4. Item-Phase hinzufügen
+## 5. Simple Kontinent-Generation Phase
+
+Fügt eine Kontinent-Generierungsphase hinzu.
 
 ```bash
 curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
   -d '{
-    "processor": "itemProcessor",
-    "name": "Item Generation",
-    "description": "Verteilung von Schätzen und Ressourcen",
+    "processor": "SimpleContinentProcessor",
+    "name": "Simple Kontinent Generierung",
+    "description": "Erstellt Kontinente mit Wald, Wüste, Ozean und Bergen",
     "phaseOrder": 3,
     "parameters": {
-      "treasureRarity": "medium",
-      "resourceDensity": 0.7,
-      "magicItems": true
+      "worldSize": 500,
+      "seed": 42,
+      "continentCount": 3
     }
   }'
 ```
 
-## 5. Generierung starten
+## 6. Flaches Terrain generieren
 
-Startet die Generierung für einen World Generator. Alle Phasen werden in der definierten Reihenfolge ausgeführt.
-
-```bash
-curl -X POST "${GENERATOR_URL}/api/generator/1/start" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
-```
-
-## 6. Alle World Generators abrufen
+Fügt eine Flachland-Terrain-Generierungsphase hinzu.
 
 ```bash
-curl -X GET "${GENERATOR_URL}/api/generator" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "FlatTerrainProcessor",
+    "name": "Flachland Terrain",
+    "description": "Generiert flaches Terrain mit minimaler Höhenvariation",
+    "phaseOrder": 4,
+    "parameters": {
+      "worldSize": 500,
+      "seed": 42,
+      "baseHeight": 50,
+      "maxVariation": 5
+    }
+  }'
 ```
 
-## 7. Spezifischen World Generator abrufen
+## 7. Bergiges Terrain generieren
+
+Fügt eine Berg-Terrain-Generierungsphase hinzu.
 
 ```bash
-curl -X GET "${GENERATOR_URL}/api/generator/1" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "MountainTerrainProcessor",
+    "name": "Berg Terrain",
+    "description": "Generiert bergiges Terrain mit Gipfeln, Tälern und alpinen Features",
+    "phaseOrder": 4,
+    "parameters": {
+      "worldSize": 500,
+      "seed": 42,
+      "mountainRanges": 3,
+      "maxHeight": 2000
+    }
+  }'
 ```
 
-## 8. World Generator nach Name abrufen
+## 8. Historische Generierung
+
+Fügt eine historische Generierungsphase hinzu.
 
 ```bash
-curl -X GET "${GENERATOR_URL}/api/generator/by-name/Fantasy%20World" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "SimpleHistoryProcessor",
+    "name": "Weltgeschichte",
+    "description": "Generiert Zeitalter, Ereignisse und kulturelle Entwicklungen",
+    "phaseOrder": 5,
+    "parameters": {
+      "seed": 42,
+      "historyDepth": 5,
+      "civilizationCount": 4
+    }
+  }'
 ```
 
-## 9. World Generators nach Status abrufen
+## 9. Struktur-Generierung
+
+Fügt eine Struktur-Generierungsphase hinzu.
 
 ```bash
-curl -X GET "${GENERATOR_URL}/api/generator/status/COMPLETED" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "SimpleStructureProcessor",
+    "name": "Strukturen und Siedlungen",
+    "description": "Generiert Dörfer, Städte, Festungen und andere Bauwerke",
+    "phaseOrder": 6,
+    "parameters": {
+      "worldSize": 500,
+      "seed": 42,
+      "structureDensity": 3,
+      "settlementCount": 5
+    }
+  }'
 ```
 
-Verfügbare Status:
-- `INITIALIZED` - Neu erstellt, noch nicht gestartet
-- `GENERATING` - Generierung läuft
-- `COMPLETED` - Generierung abgeschlossen
-- `ERROR` - Fehler während der Generierung
+## 10. Item-Generierung
 
-## 10. Phasen eines World Generators abrufen
+Fügt eine Item-Generierungsphase hinzu.
 
 ```bash
-curl -X GET "${GENERATOR_URL}/api/generator/1/phases" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "SimpleItemProcessor",
+    "name": "Items und Ausrüstung",
+    "description": "Generiert Waffen, Rüstung, Werkzeuge und Schätze",
+    "phaseOrder": 7,
+    "parameters": {
+      "seed": 42,
+      "itemDensity": 3,
+      "worldType": "fantasy",
+      "includeMagicalItems": true
+    }
+  }'
 ```
 
-## 11. Aktive Phasen abrufen
+## 11. Quest-Generierung
 
-Zeigt nur nicht archivierte Phasen an.
+Fügt eine Quest-Generierungsphase hinzu.
 
 ```bash
-curl -X GET "${GENERATOR_URL}/api/generator/1/phases/active" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
+curl -X POST "${GENERATOR_URL}/api/generator/1/phases" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+  -d '{
+    "processor": "SimpleQuestProcessor",
+    "name": "Quests und NPCs",
+    "description": "Generiert Aufgaben, NPCs und Storylines",
+    "phaseOrder": 8,
+    "parameters": {
+      "seed": 42,
+      "questDensity": 3,
+      "worldTheme": "fantasy",
+      "npcCount": 20,
+      "storylineCount": 2
+    }
+  }'
 ```
 
-## 12. Phase archivieren
+## 12. Komplette Simple World mit allen Phasen erstellen
 
-Archiviert eine Phase (setzt archived=true).
-
-```bash
-curl -X POST "${GENERATOR_URL}/api/generator/phases/1/archive" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
-```
-
-## 13. World Generator löschen
-
-```bash
-curl -X DELETE "${GENERATOR_URL}/api/generator/1" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}"
-```
-
-## Vollständiges Beispiel: Komplette Welt erstellen
+Bash-Script zum Erstellen einer kompletten Welt mit allen Simple-Prozessoren:
 
 ```bash
 #!/bin/bash
@@ -173,64 +264,58 @@ curl -X DELETE "${GENERATOR_URL}/api/generator/1" \
 export GENERATOR_TOKEN="generator-secret-key-2024"
 export GENERATOR_URL="http://localhost:8083"
 
-echo "1. World Generator erstellen..."
-WORLD_ID=$(curl -s -X POST "${GENERATOR_URL}/api/generator/create" \
+echo "=== Erstelle Simple Fantasy World ==="
+
+# 1. World Generator erstellen
+GENERATOR_RESPONSE=$(curl -s -X POST "${GENERATOR_URL}/api/generator/create" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
   -d '{
-    "name": "Complete Fantasy World",
-    "description": "Eine vollständige Fantasy-Welt mit allen Features",
+    "name": "Complete Simple World",
+    "description": "Vollständige Fantasywelt mit allen Simple-Generatoren",
     "parameters": {
-      "size": "huge",
-      "biome": "varied",
-      "difficulty": "hard"
+      "worldSize": 500,
+      "primaryBiome": "mixed",
+      "seed": 12345,
+      "worldType": "fantasy",
+      "itemDensity": 3,
+      "structureDensity": 3,
+      "questDensity": 3,
+      "historyDepth": 5
     }
-  }' | jq -r '.id')
+  }')
 
-echo "World Generator ID: $WORLD_ID"
+GENERATOR_ID=$(echo $GENERATOR_RESPONSE | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
+echo "World Generator erstellt mit ID: $GENERATOR_ID"
 
-echo "2. Terrain-Phase hinzufügen..."
-curl -s -X POST "${GENERATOR_URL}/api/generator/${WORLD_ID}/phases" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
-  -d '{
-    "processor": "terrainProcessor",
-    "name": "Terrain Generation",
-    "description": "Grundlegende Landschaftsgenerierung",
-    "phaseOrder": 1,
-    "parameters": {"heightVariation": "extreme"}
-  }' > /dev/null
+# 2. Alle Phasen hinzufügen
+PHASES=(
+  '{"processor": "SimpleInitializationProcessor", "name": "Initialisierung", "description": "Weltinitialisierung", "phaseOrder": 1, "parameters": {"worldSize": 500, "primaryBiome": "mixed", "seed": 12345}}'
+  '{"processor": "SimpleAssetProcessor", "name": "Asset Generation", "description": "Texturen und Materialien", "phaseOrder": 2, "parameters": {"textureSize": 64}}'
+  '{"processor": "SimpleContinentProcessor", "name": "Kontinente", "description": "Landmassen und Ozeane", "phaseOrder": 3, "parameters": {"worldSize": 500, "seed": 12345}}'
+  '{"processor": "MountainTerrainProcessor", "name": "Bergterrein", "description": "Gebirge und Täler", "phaseOrder": 4, "parameters": {"worldSize": 500, "seed": 12345}}'
+  '{"processor": "SimpleHistoryProcessor", "name": "Geschichte", "description": "Weltgeschichte", "phaseOrder": 5, "parameters": {"seed": 12345, "historyDepth": 5}}'
+  '{"processor": "SimpleStructureProcessor", "name": "Strukturen", "description": "Siedlungen und Gebäude", "phaseOrder": 6, "parameters": {"worldSize": 500, "seed": 12345, "structureDensity": 3}}'
+  '{"processor": "SimpleItemProcessor", "name": "Items", "description": "Gegenstände und Ausrüstung", "phaseOrder": 7, "parameters": {"seed": 12345, "itemDensity": 3, "worldType": "fantasy"}}'
+  '{"processor": "SimpleQuestProcessor", "name": "Quests", "description": "Aufgaben und NPCs", "phaseOrder": 8, "parameters": {"seed": 12345, "questDensity": 3, "worldTheme": "fantasy"}}'
+)
 
-echo "3. Struktur-Phase hinzufügen..."
-curl -s -X POST "${GENERATOR_URL}/api/generator/${WORLD_ID}/phases" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
-  -d '{
-    "processor": "structureProcessor",
-    "name": "Structure Generation",
-    "description": "Städte und Dungeons platzieren",
-    "phaseOrder": 2,
-    "parameters": {"complexity": "high"}
-  }' > /dev/null
+for phase in "${PHASES[@]}"; do
+  echo "Füge Phase hinzu: $(echo $phase | grep -o '"name":"[^"]*' | cut -d'"' -f4)"
+  curl -s -X POST "${GENERATOR_URL}/api/generator/${GENERATOR_ID}/phases" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
+    -d "$phase" > /dev/null
+done
 
-echo "4. Item-Phase hinzufügen..."
-curl -s -X POST "${GENERATOR_URL}/api/generator/${WORLD_ID}/phases" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
-  -d '{
-    "processor": "itemProcessor",
-    "name": "Item Generation",
-    "description": "Schätze und Ressourcen verteilen",
-    "phaseOrder": 3,
-    "parameters": {"rarity": "legendary"}
-  }' > /dev/null
+echo "=== Starte Weltgenerierung ==="
 
-echo "5. Generierung starten..."
-curl -s -X POST "${GENERATOR_URL}/api/generator/${WORLD_ID}/start" \
+# 3. Generierung starten
+curl -X POST "${GENERATOR_URL}/api/generator/${GENERATOR_ID}/start" \
   -H "Authorization: Bearer ${GENERATOR_TOKEN}"
 
-echo "Generierung gestartet! Status prüfen mit:"
-echo "curl -X GET \"${GENERATOR_URL}/api/generator/${WORLD_ID}\" -H \"Authorization: Bearer ${GENERATOR_TOKEN}\""
+echo "Weltgenerierung gestartet für Generator ID: $GENERATOR_ID"
+echo "Status prüfen mit: curl -H 'Authorization: Bearer ${GENERATOR_TOKEN}' ${GENERATOR_URL}/api/generator/${GENERATOR_ID}"
 ```
 
 # World Generator Simple Service Examples
