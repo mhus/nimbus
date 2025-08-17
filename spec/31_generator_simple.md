@@ -31,9 +31,11 @@ Texturen werden später verwendet, um die Welt visuell darzustellen.
 
 Es werden auch die Materialien für jedes Asset generiert.
 
-Die Assets sind bereits im Projekt enthalten und werden
-nicht dynamisch generiert. Sie werden aus den resources
-geladen und in der Datenbank gespeichert.
+Die Assets werden von der Phase automatisch als PNG Dateien
+generiert und in der Datenbank gespeichert.
+Dazu werden die Materialien in der Datenbank erstellt und
+die Texturen für die Materialien generiert.
+Die erstellung ist ein fest implementierter Prozess.
 
 ### Assets / Materialien
 

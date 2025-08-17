@@ -127,6 +127,8 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   - Er ist eine Webanwendung, die in einem Browser läuft und die Welten in 2D darstellt.
   - Er kommuniziert über WebSockets mit der Client Bridge, um Updates von den Welten zu erhalten.
   - Er ermöglicht es den Spielern, in den Welten zu interagieren, indem sie Aktionen ausführen, wie z.B. das Bewegen von Sprites oder das Interagieren mit Lebewesen.
+  - Es wird typescript verwendet, um die Logik des Clients zu implementieren.
+  - Er wird auch in Maven verwaltet und mit jetty gestartet/bereitgestellt, Beispiel https://github.com/pkaul/maven-typescript-example/tree/master
 - **server-shared**: Eine Java-Bibliothek, die gemeinsame Funktionen und Datenstrukturen für alle Services bereitstellt.
   Sie enthält Klassen für die Kommunikation zwischen den Services (Client-Klassen), die Verwaltung von Daten und andere Hilfsfunktionen.
 - **client-shared**: Eine Java-Bibliothek, die gemeinsame Funktionen und Datenstrukturen für alle Clients bereitstellt.

@@ -31,7 +31,7 @@ neue Features oder Änderungen an bestehenden Komponenten
 einzuführen, ohne die gesamte Generierung zu beeinträchtigen.
 Die Generierung kann auch auf verschiedene Arten von Welten
 angepasst werden, einschließlich flacher Welten, komplexer
-3D-Welten oder sogar Welten mit speziellen Regeln oder
+Welten oder sogar Welten mit speziellen Regeln oder
 Einstellungen.
 
 Parameter die zur weiterentwicklung der Welt benötigt werden,
@@ -43,6 +43,11 @@ ohne die gesamte Generierung zu beeinträchtigen. Die Datenbank
 kann auch verwendet werden, um den Fortschritt der Generierung
 zu verfolgen und sicherzustellen, dass alle Teile der Welt
 erfolgreich generiert wurden.
+
+Persistierte Daten können auch als Basis für weitere Phasen
+der Generierung dienen, um eine konsistente und zusammenhängende
+Welt zu schaffen.
+
 
 ## Generator-Phasen
 
@@ -58,13 +63,34 @@ Die Phasen der Generierung können Folgendes umfassen:
 - **Asset/Material-Generierung**: Erstellt die grundlegenden Assets der Welt, einschließlich Texturen, Modelle und andere visuelle Elemente. Diese Phase kann auch die Erstellung von Soundeffekten und Musik umfassen, die in der Welt verwendet werden.
 - **Kontinent-Generierung**: Erstellt die grundlegenden Kontinente und Ozeane der Welt, einschließlich der Platzierung von Landmassen, Inseln und anderen geografischen Merkmalen. Diese Phase kann auch die Festlegung von Klimazonen und Wetterbedingungen umfassen.
 - **Terrain-Generierung**: Erzeugt die grundlegende Landschaft der Welt, einschließlich Berge, Täler, Flüsse und Seen. Diese Phase kann auch die Platzierung von Biomen und anderen natürlichen Merkmalen umfassen.
+- **Historische Generierung**: Erstellt die Geschichte und Hintergrundinformationen der Welt, einschließlich wichtiger Ereignisse, Charaktere und Orte. Diese Phase kann auch die Festlegung von Regeln und Einschränkungen für die Welt umfassen, die das Verhalten von Spielern und NPCs beeinflussen.
 - **Struktur-Generierung**: Platziert Gebäude, Dörfer, Ruinen und andere Strukturen in der Welt. Diese Phase kann auch die Platzierung von Ressourcen wie Erzen, Pflanzen und Tieren umfassen.
 - **Item-Generierung**: Erstellt Gegenstände, die in der Welt gefunden oder 
   verwendet werden können, einschließlich Waffen, Rüstungen, Werkzeuge und andere nützliche Objekte. Diese Phase kann auch die Platzierung von Quests und anderen Aktivitäten umfassen.
 - **Quest-Generierung**: Erstellt Quests und Aufgaben, die die Spieler in der Welt erfüllen können. Diese Phase kann auch die Platzierung von NPCs (Nicht-Spieler-Charakteren) umfassen, die den Spielern helfen oder sie herausfordern können.
 
 Die Phasen sind nicht festgelegt und können je nach den spezifischen Anforderungen
-der Welt angepasst werden. Die Phasen werden separat entwickelt und ausgeführt.
+der Welt angepasst werden. Die Phasen werden separat entwickelt und ausgeführt,
+können aber aufeinander aufbauen.
+
+Phasen können auch dafür benutzt werden nur kleine Strukturen zu generieren, 
+die dann in der Welt platziert werden.
+
+## General Mechaniken
+
+Um grundlegende Mechaniken vorzubereiten wird eine Bean mit vorgefertigten
+Keys und Methoden erstellt, die in der Welt-Generator Phase
+verwendet werden können. Diese Mechaniken können verwendet werden,
+um die Zusammenarbeit bzw. grundlegende Interaktion zwischen den
+verschiedenen Phasen zu ermöglichen.
+
+Die DTO Struntkur wird im WorldGenerator als Parameter
+gespeichert.
+
+Aspekte bei der Initiierung der Welt-Generator Phase sind:
+- **Thema**: Das Thema der Welt, z.B. Fantasy, Sci-Fi, Historisch.
+
+TBD
 
 ## Generator JPA Enitäten
 
@@ -76,6 +102,7 @@ der Welt angepasst werden. Die Phasen werden separat entwickelt und ausgeführt.
   - status: String (e.g., "INITIALIZED", "GENERATING", "COMPLETED")
   - createdAt: Date
   - updatedAt: Date
+  - inputParameters: JSON Data (to store the input for the phase)
   - parameters: JSON Data
 ```
 
@@ -92,7 +119,9 @@ der Welt angepasst werden. Die Phasen werden separat entwickelt und ausgeführt.
 PLETED")
     - createdAt: Date
     - updatedAt: Date
-    - parameters: JSON Data
+    - parameters: JSON Data (working parameters for the phase)
+    - inputParameters: JSON Data (to store the input for the phase)
+    - outputParameters: JSON Data (to store the output of the phase)
     - phaseOrder: Integer (to define the order of execution)
 ```
 
@@ -122,7 +151,7 @@ Erstellt einen neuen Welt-Generator. Die ID wird automatisch generiert.
   "description": "A magical world filled with adventures.",
   "worldId": "123e4567-e89b-12d3-a456-426614174000",
   "size": "large",
-  "parameters": {
+  "inputParameters": {
   }
 }
 ```
@@ -139,8 +168,8 @@ Startet die Generierung einer Welt. Die ID des Welt-Generators wird verwendet, u
   "name": "Fantasy World Phase 1",
   "generator": "terrain",
   "description": "Initial phase of the fantasy world generation.",
-  "parameters": {
-    "terrainType": "mountainous",
+  "inputParameters": {
+    "terrainType": "mountainous"
   }
 }
 ```
@@ -166,7 +195,13 @@ Aktualisiert die Metadaten einer bestehenden Welt-Generator Phase. Die ID der We
   "name": "Fantasy World Phase 1 Updated",
   "description": "Updated phase of the fantasy world generation.",
   "status": "IN_PROGRESS",
+  "inputParameters": {
+    "terrainType": "hilly"
+  },
   "parameters": {
+    "terrainType": "hilly"
+  },
+  "outputParameters": {
     "terrainType": "hilly"
   }
 }

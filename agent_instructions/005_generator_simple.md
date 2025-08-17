@@ -85,54 +85,21 @@ RestTemplate Bean für Client-Kommunikation
 Der World Generator Service ist nun vollständig funktionsfähig und kann Welten in konfigurierbaren Phasen generieren. Die Implementierung folgt allen Spezifikationen aus spec/30_generator_overview.md und den Entwicklungsrichtlinien aus spec/02_development.md.
 ```
 
-## 02 Implementiere den World Generator Simple
+## 02 Update World Generator Service
+
+```text
+Dies SPezifikation in `spec/30_generator_overview.md` wurde geändert. Bitte Passe die Implementierung
+der JPA Entities an.
+```
+
+## 03 Implementiere den World Generator Simple
 
 ```text
 Erstelle im Modul `world-generator` ein package `simple` in dem
 die Beans des World Generator Simple Service implementiert werden.
-* Ertelle in den resources ein Verzeichnis `simple/assets` in dem die
-  Assets des World Generator Simple Service abgelegt werden.
-* Lege die Assets in das Verzeichnis `simple/assets` ab.
-* Erstelle im unter-packet `simple` die Beans um die Phasen
+* Erstelle im packet `simple` die Beans um die Phasen
   des World Generator Simple Service zu implementieren.
+* Implementiere die einzelnen Phasen mit Random Generatoren.
 * Erstelle für jeden Endpunkt in `examples/generator.md` ein Beispiel mit curl,
   das die Funktionsweise des Endpunkts demonstriert.
-```
-
-```text
-Perfekt! Ich habe die vollständige Implementierung des World Generator Simple Service erfolgreich abgeschlossen. Hier ist eine Zusammenfassung dessen, was erstellt wurde:
-✅ Implementierung abgeschlossen
-📁 Package-Struktur erstellt
-Simple Package: /world-generator/src/main/java/de/mhus/nimbus/worldgenerator/simple/
-Assets Verzeichnis: /world-generator/src/main/resources/simple/assets/
-🎨 Assets erstellt (37 Texturdateien)
-Alle in der Spezifikation genannten Assets wurden als Placeholder-Dateien erstellt:
-Grundmaterialien: gras, sand, wasser, felsen, baum, blume
-Bodentexturen: gras_boden, sand_boden, wasser_boden, etc.
-Spezielle Assets: pfad, stein, wasserfall, fluss, schnee, lava, eis, moos, pilz, kristall
-Wasser-Assets: koralle, muschel, algen, schilf
-Sumpf-Varianten: Alle Assets haben auch Sumpf-Versionen (z.B. gras_sumpf, baum_sumpf)
-🔧 Bean-Implementierungen erstellt
-5 spezialisierte Phasen-Prozessoren:
-SimpleTerrainProcessor - Generiert die Grundstruktur der Kontinente (Wald, Wüste, Ozean, Berge)
-SimpleAssetProcessor - Lädt und verwaltet alle Assets, erstellt Materialien
-SimpleBiomeProcessor - Verteilt Biome auf den Kontinenten und erstellt Übergänge
-SimpleStructureProcessor - Platziert natürliche Strukturen wie Pfade, Wasserfälle, Flüsse
-SimpleWorldProcessor - Führt finale Validierung und Optimierung durch
-1 Konfigurationsklasse:
-SimpleWorldGeneratorConfig - Registriert alle Prozessoren und konfiguriert Asset-Pfade
-📖 curl-Beispiele erstellt
-Die examples/generator.md wurde um umfassende curl-Beispiele erweitert:
-Vollständiges Simple World Beispiel - Erstellt eine komplette einfache Welt mit allen 5 Phasen
-Einzelne Phasen-Tests - Separate curl-Kommandos für jeden Prozessor
-Status-Überprüfung - Kommandos zum Monitoring der Simple World Generierung
-🚀 Funktionalität
-Der World Generator Simple Service kann jetzt:
-Einfache Welten mit den Biomen Wald, Wüste, Ozean, Berge und Sümpfe generieren
-Alle 37 verschiedenen Asset-Typen laden und verwalten
-Materialien für Assets automatisch erstellen
-Natürliche Strukturen wie Pfade und Wasserfälle platzieren
-Biome-Übergänge erstellen
-Finale Validierung und Optimierung durchführen
-Die Implementierung ist vollständig funktionsfähig und folgt allen Spezifikationen aus spec/31_generator_simple.md und den Entwicklungsrichtlinien.
 ```
