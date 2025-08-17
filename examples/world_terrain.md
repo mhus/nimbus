@@ -292,6 +292,213 @@ curl -X DELETE "http://localhost:7083/api/maps/level?world=earth-001&level=0" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
+## Sprite Management
+
+### Sprite erstellen
+
+```bash
+curl -X POST "http://localhost:7083/api/sprites" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "world": "earth-001",
+    "sprites": [
+      {
+        "x": 10,
+        "y": 15,
+        "z": 0,
+        "sizeX": 2,
+        "sizeY": 2,
+        "sizeZ": 3,
+        "groups": [1, 2],
+        "reference": "tree-001",
+        "parameters": {
+          "age": "5",
+          "health": "100",
+          "species": "oak"
+        },
+        "rasterType": "material",
+        "rasterMaterial": 4,
+        "focusType": "png",
+        "focusData": "base64EncodedPngData...",
+        "type": "tree",
+        "blocking": true,
+        "opacity": 255,
+        "enabled": true
+      },
+      {
+        "x": 20,
+        "y": 25,
+        "z": 0,
+        "sizeX": 1,
+        "sizeY": 1,
+        "sizeZ": 1,
+        "groups": [3],
+        "reference": "rock-001",
+        "parameters": {
+          "hardness": "8",
+          "weight": "500"
+        },
+        "rasterType": "jpg",
+        "rasterData": "base64EncodedJpgData...",
+        "focusType": "material",
+        "focusMaterial": 5,
+        "type": "rock",
+        "blocking": true,
+        "opacity": 255,
+        "enabled": true
+      }
+    ]
+  }'
+```
+
+**Antwort:**
+```json
+["S12345678-1234-1234-1234-123456789abc", "S87654321-4321-4321-4321-cba987654321"]
+```
+
+### Sprite abrufen
+
+```bash
+curl -X GET "http://localhost:7083/api/sprites/S12345678-1234-1234-1234-123456789abc" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Antwort:**
+```json
+{
+  "id": "S12345678-1234-1234-1234-123456789abc",
+  "x": 10,
+  "y": 15,
+  "z": 0,
+  "sizeX": 2,
+  "sizeY": 2,
+  "sizeZ": 3,
+  "groups": [1, 2],
+  "reference": "tree-001",
+  "parameters": {
+    "age": "5",
+    "health": "100",
+    "species": "oak"
+  },
+  "rasterType": "material",
+  "rasterMaterial": 4,
+  "rasterData": null,
+  "focusType": "png",
+  "focusMaterial": null,
+  "focusData": "base64EncodedPngData...",
+  "type": "tree",
+  "blocking": true,
+  "opacity": 255,
+  "enabled": true
+}
+```
+
+### Sprites in Cluster abrufen
+
+```bash
+curl -X GET "http://localhost:7083/api/sprites/cluster?world=earth-001&level=0&x=0&y=0" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Antwort:**
+```json
+[
+  {
+    "id": "S12345678-1234-1234-1234-123456789abc",
+    "x": 10,
+    "y": 15,
+    "z": 0,
+    "sizeX": 2,
+    "sizeY": 2,
+    "sizeZ": 3,
+    "groups": [1, 2],
+    "reference": "tree-001",
+    "parameters": {
+      "age": "5",
+      "health": "100",
+      "species": "oak"
+    },
+    "rasterType": "material",
+    "rasterMaterial": 4,
+    "rasterData": null,
+    "focusType": "png",
+    "focusMaterial": null,
+    "focusData": "base64EncodedPngData...",
+    "type": "tree",
+    "blocking": true,
+    "opacity": 255,
+    "enabled": true
+  }
+]
+```
+
+### Sprite aktualisieren
+
+```bash
+curl -X PUT "http://localhost:7083/api/sprites/S12345678-1234-1234-1234-123456789abc" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "x": 10,
+    "y": 15,
+    "z": 0,
+    "sizeX": 2,
+    "sizeY": 2,
+    "sizeZ": 4,
+    "groups": [1, 2, 3],
+    "reference": "tree-001",
+    "parameters": {
+      "age": "6",
+      "health": "95",
+      "species": "oak",
+      "last_watered": "2025-08-17"
+    },
+    "rasterType": "material",
+    "rasterMaterial": 4,
+    "focusType": "png",
+    "focusData": "updatedBase64EncodedPngData...",
+    "type": "tree",
+    "blocking": true,
+    "opacity": 240,
+    "enabled": true
+  }'
+```
+
+### Sprite-Koordinaten aktualisieren
+
+```bash
+curl -X PUT "http://localhost:7083/api/sprites/S12345678-1234-1234-1234-123456789abc/coordinates" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "x": 12,
+    "y": 16,
+    "z": 0
+  }'
+```
+
+### Sprite aktivieren
+
+```bash
+curl -X POST "http://localhost:7083/api/sprites/S12345678-1234-1234-1234-123456789abc/enable" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Sprite deaktivieren
+
+```bash
+curl -X POST "http://localhost:7083/api/sprites/S12345678-1234-1234-1234-123456789abc/disable" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Sprite löschen
+
+```bash
+curl -X DELETE "http://localhost:7083/api/sprites/S12345678-1234-1234-1234-123456789abc" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
 ## Antwort-Beispiele
 
 ### World-Antwort

@@ -24,8 +24,13 @@ public class SpriteDto {
     private String reference;
     private Map<String, String> parameters;
     private String rasterType;
-    private byte[] raster;
+    private Integer rasterMaterial; // Material-ID, alternativ zu rasterData
+    private byte[] rasterData; // Darstellung des Sprites als Byte-Array (umbenannt von raster)
+    private String focusType; // Typ der Focus-Darstellung
+    private Integer focusMaterial; // Material-ID für Focus, alternativ zu focusData
+    private byte[] focusData; // Focus-Darstellung als Byte-Array
     private String type;
     private Boolean blocking;
     private Integer opacity;
+    private Boolean enabled;
 }
