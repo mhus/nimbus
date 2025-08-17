@@ -17,7 +17,7 @@ public class TestSecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .anyRequest().permitAll()
             )
-            .headers(headers -> headers.frameOptions().deny());
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.deny()));
         return http.build();
     }
 }

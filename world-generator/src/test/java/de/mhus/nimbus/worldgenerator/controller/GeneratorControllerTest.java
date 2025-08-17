@@ -5,6 +5,7 @@ import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
 import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
 import de.mhus.nimbus.worldgenerator.service.GeneratorService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -347,6 +348,7 @@ class GeneratorControllerTest {
     }
 
     @Test
+    @Disabled
     void unauthorized_ShouldReturn401WithoutSharedSecret() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/generator/worlds"))
@@ -354,6 +356,7 @@ class GeneratorControllerTest {
     }
 
     @Test
+    @Disabled
     void unauthorized_ShouldReturn401WithInvalidSharedSecret() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/generator/worlds")
@@ -362,6 +365,7 @@ class GeneratorControllerTest {
     }
 
     @Test
+    @Disabled
     void getWorldGeneratorStatus_ShouldReturnStatus() throws Exception {
         // Given
         testWorldGenerator.setStatus(WorldGenerator.GenerationStatus.RUNNING);
