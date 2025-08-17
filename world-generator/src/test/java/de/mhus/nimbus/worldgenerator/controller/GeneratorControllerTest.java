@@ -1,7 +1,6 @@
 package de.mhus.nimbus.worldgenerator.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.worldgenerator.config.SharedSecretAuthenticationFilter;
 import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
 import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
 import de.mhus.nimbus.worldgenerator.service.GeneratorService;
@@ -9,7 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
@@ -29,14 +30,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser
 class GeneratorControllerTest {
 
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        @Primary
+        public GeneratorService generatorService() {
+            return mock(GeneratorService.class);
+        }
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Autowired
     private GeneratorService generatorService;
-
-    @MockBean
-    private SharedSecretAuthenticationFilter sharedSecretAuthenticationFilter;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -115,7 +122,7 @@ class GeneratorControllerTest {
     @Test
     void getAllWorldGenerators_ShouldReturnListOfGenerators() throws Exception {
         // Given
-        List<WorldGenerator> generators = Arrays.asList(testWorldGenerator);
+        List<WorldGenerator> generators = List.of(testWorldGenerator);
         when(generatorService.getAllWorldGenerators()).thenReturn(generators);
 
         // When & Then
@@ -294,7 +301,7 @@ class GeneratorControllerTest {
     @Test
     void getWorldGeneratorsByStatus_ShouldReturnFilteredGenerators() throws Exception {
         // Given
-        List<WorldGenerator> completedGenerators = Arrays.asList(testWorldGenerator);
+        List<WorldGenerator> completedGenerators = List.of(testWorldGenerator);
         when(generatorService.getWorldGeneratorsByStatus(WorldGenerator.GenerationStatus.COMPLETED))
                 .thenReturn(completedGenerators);
 
