@@ -13,23 +13,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${nimbus.generator.shared-secret}")
+    @Value("${nimbus.shared-secret:default-secret}")
     private String sharedSecret;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        return http
+            .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(new SharedSecretAuthenticationFilter(sharedSecret),
+                            UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/generator/**").authenticated()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
-            .headers(headers -> headers.frameOptions().disable());
-
-        // Add shared secret filter
-        http.addFilterBefore(new SharedSecretFilter(sharedSecret), UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+            .build();
     }
 }

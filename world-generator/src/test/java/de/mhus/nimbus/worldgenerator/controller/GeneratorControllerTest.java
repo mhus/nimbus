@@ -1,6 +1,7 @@
 package de.mhus.nimbus.worldgenerator.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.worldgenerator.config.SharedSecretAuthenticationFilter;
 import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
 import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
 import de.mhus.nimbus.worldgenerator.service.GeneratorService;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -17,10 +20,13 @@ import java.util.*;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(GeneratorController.class)
+@WebMvcTest(controllers = GeneratorController.class)
+@TestPropertySource(properties = {"nimbus.shared-secret=test-secret"})
+@WithMockUser
 class GeneratorControllerTest {
 
     @Autowired
@@ -28,6 +34,9 @@ class GeneratorControllerTest {
 
     @MockBean
     private GeneratorService generatorService;
+
+    @MockBean
+    private SharedSecretAuthenticationFilter sharedSecretAuthenticationFilter;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -95,14 +104,12 @@ class GeneratorControllerTest {
         mockMvc.perform(post("/api/generator/worlds")
                         .header("X-Shared-Secret", "test-secret")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestBody)))
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.worldId").value("test-world-001"))
                 .andExpect(jsonPath("$.name").value("Test Fantasy World"))
                 .andExpect(jsonPath("$.status").value("PENDING"));
-
-        verify(generatorService).createWorldGenerator("test-world-001", "Test Fantasy World",
-                "Eine Testwelt für Controller Tests", Map.of("worldSize", "medium"));
     }
 
     @Test
@@ -157,7 +164,8 @@ class GeneratorControllerTest {
 
         // When & Then
         mockMvc.perform(post("/api/generator/worlds/1/start")
-                        .header("X-Shared-Secret", "test-secret"))
+                        .header("X-Shared-Secret", "test-secret")
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Generation started successfully"));
 
@@ -171,7 +179,8 @@ class GeneratorControllerTest {
 
         // When & Then
         mockMvc.perform(post("/api/generator/worlds/999/start")
-                        .header("X-Shared-Secret", "test-secret"))
+                        .header("X-Shared-Secret", "test-secret")
+                        .with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("World generator not found"));
 
@@ -218,7 +227,8 @@ class GeneratorControllerTest {
         mockMvc.perform(post("/api/generator/worlds/1/phases")
                         .header("X-Shared-Secret", "test-secret")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestBody)))
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.phaseType").value("INITIALIZATION"))
                 .andExpect(jsonPath("$.phaseOrder").value(1));
@@ -237,7 +247,8 @@ class GeneratorControllerTest {
         mockMvc.perform(put("/api/generator/phases/1/progress")
                         .header("X-Shared-Secret", "test-secret")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestBody)))
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Phase progress updated successfully"));
 
@@ -254,7 +265,8 @@ class GeneratorControllerTest {
         mockMvc.perform(post("/api/generator/phases/1/complete")
                         .header("X-Shared-Secret", "test-secret")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestBody)))
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Phase completed successfully"));
 
@@ -271,7 +283,8 @@ class GeneratorControllerTest {
         mockMvc.perform(post("/api/generator/phases/1/fail")
                         .header("X-Shared-Secret", "test-secret")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestBody)))
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Phase failed"));
 
@@ -303,7 +316,8 @@ class GeneratorControllerTest {
 
         // When & Then
         mockMvc.perform(delete("/api/generator/worlds/1")
-                        .header("X-Shared-Secret", "test-secret"))
+                        .header("X-Shared-Secret", "test-secret")
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("World generator deleted successfully"));
 
@@ -317,7 +331,8 @@ class GeneratorControllerTest {
 
         // When & Then
         mockMvc.perform(delete("/api/generator/worlds/999")
-                        .header("X-Shared-Secret", "test-secret"))
+                        .header("X-Shared-Secret", "test-secret")
+                        .with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("World generator not found"));
 

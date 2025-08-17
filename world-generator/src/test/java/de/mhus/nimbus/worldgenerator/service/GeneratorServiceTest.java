@@ -146,6 +146,7 @@ class GeneratorServiceTest {
         testWorldGenerator.setPhases(testPhases);
         when(worldGeneratorRepository.findById(1L)).thenReturn(Optional.of(testWorldGenerator));
         when(worldGeneratorRepository.save(any(WorldGenerator.class))).thenReturn(testWorldGenerator);
+        when(phaseRepository.findByWorldGeneratorIdOrderByPhaseOrder(1L)).thenReturn(testPhases);
         when(phaseRepository.save(any(WorldGeneratorPhase.class))).thenReturn(testPhases.get(0));
 
         // When
@@ -155,8 +156,9 @@ class GeneratorServiceTest {
         assertTrue(result);
         assertEquals(WorldGenerator.GenerationStatus.RUNNING, testWorldGenerator.getStatus());
         assertNotNull(testWorldGenerator.getStartedAt());
-        verify(worldGeneratorRepository).save(testWorldGenerator);
+        verify(worldGeneratorRepository, times(2)).save(testWorldGenerator); // once for status update, once for current phase
         verify(phaseRepository).save(any(WorldGeneratorPhase.class));
+        verify(phaseRepository).findByWorldGeneratorIdOrderByPhaseOrder(1L);
     }
 
     @Test
@@ -168,10 +170,14 @@ class GeneratorServiceTest {
         firstPhase.setStatus(WorldGeneratorPhase.PhaseStatus.RUNNING);
         firstPhase.setStartedAt(LocalDateTime.now().minusMinutes(5));
 
+        // Setze die zweite Phase als PENDING, damit sie als nächste Phase gestartet wird
+        secondPhase.setStatus(WorldGeneratorPhase.PhaseStatus.PENDING);
+
         testWorldGenerator.setPhases(testPhases);
         testWorldGenerator.setCurrentPhase(firstPhase.getPhaseType());
 
         when(phaseRepository.findById(1L)).thenReturn(Optional.of(firstPhase));
+        when(phaseRepository.findByWorldGeneratorId(testWorldGenerator.getId())).thenReturn(testPhases);
         when(phaseRepository.save(any(WorldGeneratorPhase.class))).thenReturn(firstPhase);
         when(worldGeneratorRepository.save(any(WorldGenerator.class))).thenReturn(testWorldGenerator);
 

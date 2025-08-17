@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 public class GeneratorService {
 
     private final WorldGeneratorRepository worldGeneratorRepository;
-    private final WorldGeneratorPhaseRepository worldGeneratorPhaseRepository;
+    private final WorldGeneratorPhaseRepository phaseRepository;
 
     @Transactional
     public WorldGenerator createWorldGenerator(String worldId, String name, String description, Map<String, String> parameters) {
@@ -43,7 +43,7 @@ public class GeneratorService {
 
         // Erstelle alle Standard-Phasen
         List<WorldGeneratorPhase> phases = createDefaultPhases(savedGenerator);
-        worldGeneratorPhaseRepository.saveAll(phases);
+        phaseRepository.saveAll(phases);
 
         log.info("Created world generator {} with {} phases", savedGenerator.getId(), phases.size());
         return savedGenerator;
@@ -100,7 +100,7 @@ public class GeneratorService {
             WorldGeneratorPhase firstPhase = phases.get(0);
             firstPhase.setStatus(WorldGeneratorPhase.PhaseStatus.RUNNING);
             firstPhase.setStartedAt(LocalDateTime.now());
-            worldGeneratorPhaseRepository.save(firstPhase);
+            phaseRepository.save(firstPhase);
 
             generator.setCurrentPhase(firstPhase.getPhaseType());
             worldGeneratorRepository.save(generator);
@@ -115,7 +115,7 @@ public class GeneratorService {
     public boolean completePhase(Long phaseId, String resultSummary) {
         log.info("Completing phase {}", phaseId);
 
-        Optional<WorldGeneratorPhase> optionalPhase = worldGeneratorPhaseRepository.findById(phaseId);
+        Optional<WorldGeneratorPhase> optionalPhase = phaseRepository.findById(phaseId);
         if (optionalPhase.isEmpty()) {
             return false;
         }
@@ -125,7 +125,7 @@ public class GeneratorService {
         phase.setCompletedAt(LocalDateTime.now());
         phase.setProgressPercentage(100);
         phase.setResultSummary(resultSummary);
-        worldGeneratorPhaseRepository.save(phase);
+        phaseRepository.save(phase);
 
         // Update World Generator
         WorldGenerator generator = phase.getWorldGenerator();
@@ -141,7 +141,7 @@ public class GeneratorService {
             WorldGeneratorPhase next = nextPhase.get();
             next.setStatus(WorldGeneratorPhase.PhaseStatus.RUNNING);
             next.setStartedAt(LocalDateTime.now());
-            worldGeneratorPhaseRepository.save(next);
+            phaseRepository.save(next);
 
             generator.setCurrentPhase(next.getPhaseType());
             log.info("Started next phase {} for world generator {}", next.getPhaseType(), generator.getId());
@@ -179,7 +179,7 @@ public class GeneratorService {
     public boolean failPhase(Long phaseId, String errorMessage) {
         log.error("Failing phase {}: {}", phaseId, errorMessage);
 
-        Optional<WorldGeneratorPhase> optionalPhase = worldGeneratorPhaseRepository.findById(phaseId);
+        Optional<WorldGeneratorPhase> optionalPhase = phaseRepository.findById(phaseId);
         if (optionalPhase.isEmpty()) {
             return false;
         }
@@ -188,7 +188,7 @@ public class GeneratorService {
         phase.setStatus(WorldGeneratorPhase.PhaseStatus.FAILED);
         phase.setErrorMessage(errorMessage);
         phase.setCompletedAt(LocalDateTime.now());
-        worldGeneratorPhaseRepository.save(phase);
+        phaseRepository.save(phase);
 
         // Markiere World Generator als fehlgeschlagen
         WorldGenerator generator = phase.getWorldGenerator();
@@ -200,19 +200,19 @@ public class GeneratorService {
     }
 
     public List<WorldGeneratorPhase> getPhasesByWorldGenerator(Long worldGeneratorId) {
-        return worldGeneratorPhaseRepository.findByWorldGeneratorIdOrderByPhaseOrder(worldGeneratorId);
+        return phaseRepository.findByWorldGeneratorIdOrderByPhaseOrder(worldGeneratorId);
     }
 
     @Transactional
     public boolean updatePhaseProgress(Long phaseId, Integer progressPercentage) {
-        Optional<WorldGeneratorPhase> optionalPhase = worldGeneratorPhaseRepository.findById(phaseId);
+        Optional<WorldGeneratorPhase> optionalPhase = phaseRepository.findById(phaseId);
         if (optionalPhase.isEmpty()) {
             return false;
         }
 
         WorldGeneratorPhase phase = optionalPhase.get();
         phase.setProgressPercentage(progressPercentage);
-        worldGeneratorPhaseRepository.save(phase);
+        phaseRepository.save(phase);
 
         log.debug("Updated progress for phase {} to {}%", phaseId, progressPercentage);
         return true;
@@ -237,7 +237,7 @@ public class GeneratorService {
                 .progressPercentage(0)
                 .build();
 
-        return worldGeneratorPhaseRepository.save(phase);
+        return phaseRepository.save(phase);
     }
 
     @Transactional
@@ -252,5 +252,28 @@ public class GeneratorService {
         WorldGenerator generator = optionalGenerator.get();
         worldGeneratorRepository.delete(generator);
         return true;
+    }
+
+    @Transactional
+    public boolean archivePhase(Long phaseId) {
+        log.info("Archiving phase {}", phaseId);
+
+        Optional<WorldGeneratorPhase> optionalPhase = phaseRepository.findById(phaseId);
+        if (optionalPhase.isEmpty()) {
+            return false;
+        }
+
+        WorldGeneratorPhase phase = optionalPhase.get();
+        // Für die Archivierung können wir ein spezielles Flag setzen oder den Status ändern
+        // Da wir kein archived-Flag in der Entity haben, setzen wir den Status auf SKIPPED
+        if (phase.getStatus() == WorldGeneratorPhase.PhaseStatus.PENDING) {
+            phase.setStatus(WorldGeneratorPhase.PhaseStatus.SKIPPED);
+            phaseRepository.save(phase);
+            log.info("Phase {} archived (status set to SKIPPED)", phaseId);
+            return true;
+        } else {
+            log.warn("Cannot archive phase {} with status {}", phaseId, phase.getStatus());
+            return false;
+        }
     }
 }

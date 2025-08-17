@@ -1,7 +1,5 @@
 package de.mhus.nimbus.worldgenerator.controller;
 
-import de.mhus.nimbus.world.dto.AddPhaseRequest;
-import de.mhus.nimbus.world.dto.CreateWorldGeneratorRequest;
 import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
 import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
 import de.mhus.nimbus.worldgenerator.service.GeneratorService;
@@ -12,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -22,102 +21,198 @@ public class GeneratorController {
 
     private final GeneratorService generatorService;
 
-    @PostMapping("/create")
-    public ResponseEntity<WorldGenerator> createWorldGenerator(@RequestBody CreateWorldGeneratorRequest request) {
+    @PostMapping("/worlds")
+    public ResponseEntity<WorldGenerator> createWorldGenerator(@RequestBody Map<String, Object> request) {
         try {
-            WorldGenerator worldGenerator = generatorService.createWorldGenerator(
-                    request.getName(),
-                    request.getDescription(),
-                    request.getParameters()
-            );
-            return ResponseEntity.ok(worldGenerator);
+            String worldId = (String) request.get("worldId");
+            String name = (String) request.get("name");
+            String description = (String) request.get("description");
+            @SuppressWarnings("unchecked")
+            Map<String, String> parameters = (Map<String, String>) request.get("parameters");
+
+            WorldGenerator generator = generatorService.createWorldGenerator(worldId, name, description, parameters);
+            return ResponseEntity.status(HttpStatus.CREATED).body(generator);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @PostMapping("/{id}/phases")
-    public ResponseEntity<WorldGeneratorPhase> addPhase(@PathVariable Long id, @RequestBody AddPhaseRequest request) {
-        try {
-            WorldGeneratorPhase phase = generatorService.addPhase(
-                    id,
-                    request.getProcessor(),
-                    request.getName(),
-                    request.getDescription(),
-                    request.getPhaseOrder(),
-                    request.getParameters()
-            );
-            return ResponseEntity.ok(phase);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @PostMapping("/{id}/start")
-    public ResponseEntity<Void> startGeneration(@PathVariable Long id) {
-        try {
-            generatorService.startGeneration(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<WorldGenerator>> getAllWorldGenerators() {
-        List<WorldGenerator> generators = generatorService.getAllWorldGenerators();
-        return ResponseEntity.ok(generators);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<WorldGenerator> getWorldGenerator(@PathVariable Long id) {
-        Optional<WorldGenerator> generator = generatorService.getWorldGenerator(id);
-        return generator.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/by-name/{name}")
-    public ResponseEntity<WorldGenerator> getWorldGeneratorByName(@PathVariable String name) {
-        Optional<WorldGenerator> generator = generatorService.getWorldGeneratorByName(name);
-        return generator.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<WorldGenerator>> getWorldGeneratorsByStatus(@PathVariable String status) {
-        List<WorldGenerator> generators = generatorService.getWorldGeneratorsByStatus(status);
-        return ResponseEntity.ok(generators);
-    }
-
-    @GetMapping("/{id}/phases")
-    public ResponseEntity<List<WorldGeneratorPhase>> getPhases(@PathVariable Long id) {
-        List<WorldGeneratorPhase> phases = generatorService.getPhases(id);
-        return ResponseEntity.ok(phases);
-    }
-
-    @GetMapping("/{id}/phases/active")
-    public ResponseEntity<List<WorldGeneratorPhase>> getActivePhases(@PathVariable Long id) {
-        List<WorldGeneratorPhase> phases = generatorService.getActivePhases(id);
-        return ResponseEntity.ok(phases);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWorldGenerator(@PathVariable Long id) {
-        try {
-            generatorService.deleteWorldGenerator(id);
-            return ResponseEntity.ok().build();
         } catch (Exception e) {
+            log.error("Error creating world generator", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/worlds")
+    public ResponseEntity<List<WorldGenerator>> getAllWorldGenerators(
+            @RequestParam(required = false) String status) {
+        try {
+            List<WorldGenerator> generators;
+            if (status != null) {
+                WorldGenerator.GenerationStatus generationStatus = WorldGenerator.GenerationStatus.valueOf(status);
+                generators = generatorService.getWorldGeneratorsByStatus(generationStatus);
+            } else {
+                generators = generatorService.getAllWorldGenerators();
+            }
+            return ResponseEntity.ok(generators);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error retrieving world generators", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/worlds/{id}")
+    public ResponseEntity<WorldGenerator> getWorldGeneratorById(@PathVariable Long id) {
+        Optional<WorldGenerator> generator = generatorService.getWorldGeneratorById(id);
+        return generator.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/worlds/{id}/status")
+    public ResponseEntity<Map<String, Object>> getWorldGeneratorStatus(@PathVariable Long id) {
+        Optional<WorldGenerator> optionalGenerator = generatorService.getWorldGeneratorById(id);
+        if (optionalGenerator.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        WorldGenerator generator = optionalGenerator.get();
+        Map<String, Object> status = Map.of(
+                "status", generator.getStatus(),
+                "progressPercentage", generator.getProgressPercentage(),
+                "completedPhases", generator.getCompletedPhases(),
+                "totalPhases", generator.getTotalPhases(),
+                "currentPhase", generator.getCurrentPhase() != null ? generator.getCurrentPhase() : ""
+        );
+
+        return ResponseEntity.ok(status);
+    }
+
+    @PostMapping("/worlds/{id}/start")
+    public ResponseEntity<Map<String, String>> startGeneration(@PathVariable Long id) {
+        try {
+            boolean started = generatorService.startGeneration(id);
+            if (started) {
+                return ResponseEntity.ok(Map.of("message", "Generation started successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "World generator not found"));
+            }
+        } catch (Exception e) {
+            log.error("Error starting generation for world generator {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error"));
+        }
+    }
+
+    @GetMapping("/worlds/{id}/phases")
+    public ResponseEntity<List<WorldGeneratorPhase>> getPhasesByWorldGenerator(@PathVariable Long id) {
+        try {
+            List<WorldGeneratorPhase> phases = generatorService.getPhasesByWorldGenerator(id);
+            return ResponseEntity.ok(phases);
+        } catch (Exception e) {
+            log.error("Error retrieving phases for world generator {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/worlds/{id}/phases")
+    public ResponseEntity<WorldGeneratorPhase> addPhaseToWorldGenerator(
+            @PathVariable Long id, @RequestBody Map<String, Object> request) {
+        try {
+            String phaseType = (String) request.get("phaseType");
+            Integer phaseOrder = (Integer) request.get("phaseOrder");
+            @SuppressWarnings("unchecked")
+            Map<String, String> parameters = (Map<String, String>) request.get("parameters");
+
+            WorldGeneratorPhase phase = generatorService.addPhaseToWorldGenerator(id, phaseType, phaseOrder, parameters);
+            return ResponseEntity.status(HttpStatus.CREATED).body(phase);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error adding phase to world generator {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/phases/{phaseId}/progress")
+    public ResponseEntity<Map<String, String>> updatePhaseProgress(
+            @PathVariable Long phaseId, @RequestBody Map<String, Object> request) {
+        try {
+            Integer progressPercentage = (Integer) request.get("progressPercentage");
+            boolean updated = generatorService.updatePhaseProgress(phaseId, progressPercentage);
+            if (updated) {
+                return ResponseEntity.ok(Map.of("message", "Phase progress updated successfully"));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error updating phase progress for phase {}", phaseId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/phases/{phaseId}/complete")
+    public ResponseEntity<Map<String, String>> completePhase(
+            @PathVariable Long phaseId, @RequestBody Map<String, Object> request) {
+        try {
+            String resultSummary = (String) request.get("resultSummary");
+            boolean completed = generatorService.completePhase(phaseId, resultSummary);
+            if (completed) {
+                return ResponseEntity.ok(Map.of("message", "Phase completed successfully"));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error completing phase {}", phaseId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/phases/{phaseId}/fail")
+    public ResponseEntity<Map<String, String>> failPhase(
+            @PathVariable Long phaseId, @RequestBody Map<String, Object> request) {
+        try {
+            String errorMessage = (String) request.get("errorMessage");
+            boolean failed = generatorService.failPhase(phaseId, errorMessage);
+            if (failed) {
+                return ResponseEntity.ok(Map.of("message", "Phase failed"));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error failing phase {}", phaseId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/worlds/{id}")
+    public ResponseEntity<Map<String, String>> deleteWorldGenerator(@PathVariable Long id) {
+        try {
+            boolean deleted = generatorService.deleteWorldGenerator(id);
+            if (deleted) {
+                return ResponseEntity.ok(Map.of("message", "World generator deleted successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "World generator not found"));
+            }
+        } catch (Exception e) {
+            log.error("Error deleting world generator {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PostMapping("/phases/{phaseId}/archive")
-    public ResponseEntity<Void> archivePhase(@PathVariable Long phaseId) {
+    public ResponseEntity<Map<String, String>> archivePhase(@PathVariable Long phaseId) {
         try {
-            generatorService.archivePhase(phaseId);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            boolean archived = generatorService.archivePhase(phaseId);
+            if (archived) {
+                return ResponseEntity.ok(Map.of("message", "Phase archived successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Phase not found"));
+            }
+        } catch (Exception e) {
+            log.error("Error archiving phase {}", phaseId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
