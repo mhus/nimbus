@@ -2,8 +2,6 @@ package de.mhus.nimbus.worldgenerator.service;
 
 import de.mhus.nimbus.worldgenerator.entity.WorldGenerator;
 import de.mhus.nimbus.worldgenerator.entity.WorldGeneratorPhase;
-import de.mhus.nimbus.worldgenerator.model.PhaseInfo;
-import de.mhus.nimbus.worldgenerator.processor.PhaseProcessor;
 import de.mhus.nimbus.worldgenerator.repository.WorldGeneratorRepository;
 import de.mhus.nimbus.worldgenerator.repository.WorldGeneratorPhaseRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -22,153 +20,237 @@ public class GeneratorService {
 
     private final WorldGeneratorRepository worldGeneratorRepository;
     private final WorldGeneratorPhaseRepository worldGeneratorPhaseRepository;
-    private final Map<String, PhaseProcessor> phaseProcessors;
 
     @Transactional
-    public WorldGenerator createWorldGenerator(String name, String description, Map<String, Object> parameters) {
-        log.info("Creating new world generator: {}", name);
+    public WorldGenerator createWorldGenerator(String worldId, String name, String description, Map<String, String> parameters) {
+        log.info("Creating new world generator: {} ({})", name, worldId);
 
-        if (worldGeneratorRepository.findByName(name).isPresent()) {
-            throw new IllegalArgumentException("World generator with name '" + name + "' already exists");
+        if (worldGeneratorRepository.findByWorldId(worldId).isPresent()) {
+            throw new IllegalArgumentException("World generator with worldId '" + worldId + "' already exists");
         }
 
         WorldGenerator worldGenerator = WorldGenerator.builder()
+                .worldId(worldId)
                 .name(name)
                 .description(description)
-                .status("INITIALIZED")
+                .status(WorldGenerator.GenerationStatus.PENDING)
                 .parameters(parameters)
+                .totalPhases(8)
+                .completedPhases(0)
                 .build();
 
-        return worldGeneratorRepository.save(worldGenerator);
+        WorldGenerator savedGenerator = worldGeneratorRepository.save(worldGenerator);
+
+        // Erstelle alle Standard-Phasen
+        List<WorldGeneratorPhase> phases = createDefaultPhases(savedGenerator);
+        worldGeneratorPhaseRepository.saveAll(phases);
+
+        log.info("Created world generator {} with {} phases", savedGenerator.getId(), phases.size());
+        return savedGenerator;
+    }
+
+    private List<WorldGeneratorPhase> createDefaultPhases(WorldGenerator worldGenerator) {
+        String[] phaseTypes = WorldGeneratorPhase.getDefaultPhaseTypes();
+
+        return IntStream.range(0, phaseTypes.length)
+                .mapToObj(i -> WorldGeneratorPhase.builder()
+                        .worldGenerator(worldGenerator)
+                        .phaseType(phaseTypes[i])
+                        .phaseOrder(i + 1)
+                        .status(WorldGeneratorPhase.PhaseStatus.PENDING)
+                        .parameters(new HashMap<>())
+                        .progressPercentage(0)
+                        .build())
+                .toList();
+    }
+
+    public List<WorldGenerator> getAllWorldGenerators() {
+        return worldGeneratorRepository.findAll();
+    }
+
+    public Optional<WorldGenerator> getWorldGeneratorById(Long id) {
+        return worldGeneratorRepository.findById(id);
+    }
+
+    public Optional<WorldGenerator> getWorldGeneratorByWorldId(String worldId) {
+        return worldGeneratorRepository.findByWorldId(worldId);
+    }
+
+    public List<WorldGenerator> getWorldGeneratorsByStatus(WorldGenerator.GenerationStatus status) {
+        return worldGeneratorRepository.findByStatus(status);
     }
 
     @Transactional
-    public WorldGeneratorPhase addPhase(Long worldGeneratorId, String processor, String name,
-                                       String description, Integer phaseOrder, Map<String, Object> parameters) {
-        log.info("Adding phase '{}' to world generator {}", name, worldGeneratorId);
+    public boolean startGeneration(Long worldGeneratorId) {
+        log.info("Starting generation for world generator {}", worldGeneratorId);
 
-        WorldGenerator worldGenerator = worldGeneratorRepository.findById(worldGeneratorId)
+        Optional<WorldGenerator> optionalGenerator = worldGeneratorRepository.findById(worldGeneratorId);
+        if (optionalGenerator.isEmpty()) {
+            return false;
+        }
+
+        WorldGenerator generator = optionalGenerator.get();
+        generator.setStatus(WorldGenerator.GenerationStatus.RUNNING);
+        generator.setStartedAt(LocalDateTime.now());
+        worldGeneratorRepository.save(generator);
+
+        // Starte erste Phase
+        List<WorldGeneratorPhase> phases = getPhasesByWorldGenerator(worldGeneratorId);
+        if (!phases.isEmpty()) {
+            WorldGeneratorPhase firstPhase = phases.get(0);
+            firstPhase.setStatus(WorldGeneratorPhase.PhaseStatus.RUNNING);
+            firstPhase.setStartedAt(LocalDateTime.now());
+            worldGeneratorPhaseRepository.save(firstPhase);
+
+            generator.setCurrentPhase(firstPhase.getPhaseType());
+            worldGeneratorRepository.save(generator);
+
+            log.info("Started phase {} for world generator {}", firstPhase.getPhaseType(), worldGeneratorId);
+        }
+
+        return true;
+    }
+
+    @Transactional
+    public boolean completePhase(Long phaseId, String resultSummary) {
+        log.info("Completing phase {}", phaseId);
+
+        Optional<WorldGeneratorPhase> optionalPhase = worldGeneratorPhaseRepository.findById(phaseId);
+        if (optionalPhase.isEmpty()) {
+            return false;
+        }
+
+        WorldGeneratorPhase phase = optionalPhase.get();
+        phase.setStatus(WorldGeneratorPhase.PhaseStatus.COMPLETED);
+        phase.setCompletedAt(LocalDateTime.now());
+        phase.setProgressPercentage(100);
+        phase.setResultSummary(resultSummary);
+        worldGeneratorPhaseRepository.save(phase);
+
+        // Update World Generator
+        WorldGenerator generator = phase.getWorldGenerator();
+        generator.setCompletedPhases(generator.getCompletedPhases() + 1);
+
+        // Starte nächste Phase oder beende Generierung
+        List<WorldGeneratorPhase> allPhases = getPhasesByWorldGenerator(generator.getId());
+        Optional<WorldGeneratorPhase> nextPhase = allPhases.stream()
+                .filter(p -> p.getStatus() == WorldGeneratorPhase.PhaseStatus.PENDING)
+                .min(Comparator.comparing(WorldGeneratorPhase::getPhaseOrder));
+
+        if (nextPhase.isPresent()) {
+            WorldGeneratorPhase next = nextPhase.get();
+            next.setStatus(WorldGeneratorPhase.PhaseStatus.RUNNING);
+            next.setStartedAt(LocalDateTime.now());
+            worldGeneratorPhaseRepository.save(next);
+
+            generator.setCurrentPhase(next.getPhaseType());
+            log.info("Started next phase {} for world generator {}", next.getPhaseType(), generator.getId());
+        } else {
+            // Alle Phasen abgeschlossen
+            generator.setStatus(WorldGenerator.GenerationStatus.COMPLETED);
+            generator.setCompletedAt(LocalDateTime.now());
+            generator.setCurrentPhase(null);
+            log.info("Completed all phases for world generator {}", generator.getId());
+        }
+
+        worldGeneratorRepository.save(generator);
+        return true;
+    }
+
+    @Transactional
+    public boolean completeGeneration(Long worldGeneratorId) {
+        log.info("Completing generation for world generator {}", worldGeneratorId);
+
+        Optional<WorldGenerator> optionalGenerator = worldGeneratorRepository.findById(worldGeneratorId);
+        if (optionalGenerator.isEmpty()) {
+            return false;
+        }
+
+        WorldGenerator generator = optionalGenerator.get();
+        generator.setStatus(WorldGenerator.GenerationStatus.COMPLETED);
+        generator.setCompletedAt(LocalDateTime.now());
+        generator.setCompletedPhases(generator.getTotalPhases());
+        worldGeneratorRepository.save(generator);
+
+        return true;
+    }
+
+    @Transactional
+    public boolean failPhase(Long phaseId, String errorMessage) {
+        log.error("Failing phase {}: {}", phaseId, errorMessage);
+
+        Optional<WorldGeneratorPhase> optionalPhase = worldGeneratorPhaseRepository.findById(phaseId);
+        if (optionalPhase.isEmpty()) {
+            return false;
+        }
+
+        WorldGeneratorPhase phase = optionalPhase.get();
+        phase.setStatus(WorldGeneratorPhase.PhaseStatus.FAILED);
+        phase.setErrorMessage(errorMessage);
+        phase.setCompletedAt(LocalDateTime.now());
+        worldGeneratorPhaseRepository.save(phase);
+
+        // Markiere World Generator als fehlgeschlagen
+        WorldGenerator generator = phase.getWorldGenerator();
+        generator.setStatus(WorldGenerator.GenerationStatus.FAILED);
+        generator.setErrorMessage(errorMessage);
+        worldGeneratorRepository.save(generator);
+
+        return true;
+    }
+
+    public List<WorldGeneratorPhase> getPhasesByWorldGenerator(Long worldGeneratorId) {
+        return worldGeneratorPhaseRepository.findByWorldGeneratorIdOrderByPhaseOrder(worldGeneratorId);
+    }
+
+    @Transactional
+    public boolean updatePhaseProgress(Long phaseId, Integer progressPercentage) {
+        Optional<WorldGeneratorPhase> optionalPhase = worldGeneratorPhaseRepository.findById(phaseId);
+        if (optionalPhase.isEmpty()) {
+            return false;
+        }
+
+        WorldGeneratorPhase phase = optionalPhase.get();
+        phase.setProgressPercentage(progressPercentage);
+        worldGeneratorPhaseRepository.save(phase);
+
+        log.debug("Updated progress for phase {} to {}%", phaseId, progressPercentage);
+        return true;
+    }
+
+    @Transactional
+    public WorldGeneratorPhase addPhaseToWorldGenerator(Long worldGeneratorId,
+                                                       String phaseType,
+                                                       Integer phaseOrder,
+                                                       Map<String, String> parameters) {
+        log.info("Adding phase {} to world generator {}", phaseType, worldGeneratorId);
+
+        WorldGenerator generator = worldGeneratorRepository.findById(worldGeneratorId)
                 .orElseThrow(() -> new IllegalArgumentException("World generator not found: " + worldGeneratorId));
 
         WorldGeneratorPhase phase = WorldGeneratorPhase.builder()
-                .worldGenerator(worldGenerator)
-                .processor(processor)
-                .name(name)
-                .description(description)
+                .worldGenerator(generator)
+                .phaseType(phaseType)
                 .phaseOrder(phaseOrder)
-                .status("PENDING")
+                .status(WorldGeneratorPhase.PhaseStatus.PENDING)
                 .parameters(parameters)
+                .progressPercentage(0)
                 .build();
 
         return worldGeneratorPhaseRepository.save(phase);
     }
 
     @Transactional
-    public void startGeneration(Long worldGeneratorId) {
-        log.info("Starting generation for world generator {}", worldGeneratorId);
+    public boolean deleteWorldGenerator(Long worldGeneratorId) {
+        log.info("Deleting world generator {}", worldGeneratorId);
 
-        WorldGenerator worldGenerator = worldGeneratorRepository.findById(worldGeneratorId)
-                .orElseThrow(() -> new IllegalArgumentException("World generator not found: " + worldGeneratorId));
-
-        worldGenerator.setStatus("GENERATING");
-        worldGeneratorRepository.save(worldGenerator);
-
-        // Process phases in order
-        List<WorldGeneratorPhase> phases = worldGeneratorPhaseRepository
-                .findActivePhasesByWorldGeneratorId(worldGeneratorId);
-
-        for (WorldGeneratorPhase phase : phases) {
-            if ("PENDING".equals(phase.getStatus())) {
-                processPhase(phase);
-            }
+        Optional<WorldGenerator> optionalGenerator = worldGeneratorRepository.findById(worldGeneratorId);
+        if (optionalGenerator.isEmpty()) {
+            return false;
         }
 
-        // Check if all phases are completed
-        boolean allCompleted = phases.stream()
-                .allMatch(phase -> "COMPLETED".equals(phase.getStatus()));
-
-        if (allCompleted) {
-            worldGenerator.setStatus("COMPLETED");
-            worldGeneratorRepository.save(worldGenerator);
-            log.info("World generation completed for generator {}", worldGeneratorId);
-        }
-    }
-
-    @Transactional
-    public void processPhase(WorldGeneratorPhase phase) {
-        log.info("Processing phase: {} with processor: {}", phase.getName(), phase.getProcessor());
-
-        PhaseProcessor processor = phaseProcessors.get(phase.getProcessor());
-        if (processor == null) {
-            throw new IllegalArgumentException("No processor found for type: " + phase.getProcessor());
-        }
-
-        phase.setStatus("IN_PROGRESS");
-        worldGeneratorPhaseRepository.save(phase);
-
-        try {
-            PhaseInfo phaseInfo = PhaseInfo.builder()
-                    .phaseId(phase.getId())
-                    .worldGeneratorId(phase.getWorldGenerator().getId())
-                    .processor(phase.getProcessor())
-                    .name(phase.getName())
-                    .description(phase.getDescription())
-                    .phaseOrder(phase.getPhaseOrder())
-                    .status(phase.getStatus())
-                    .parameters(phase.getParameters())
-                    .build();
-
-            processor.processPhase(phaseInfo);
-
-            phase.setStatus("COMPLETED");
-            log.info("Phase '{}' completed successfully", phase.getName());
-
-        } catch (Exception e) {
-            log.error("Error processing phase '{}': {}", phase.getName(), e.getMessage(), e);
-            phase.setStatus("ERROR");
-        } finally {
-            // Stelle sicher, dass die Phase immer gespeichert wird
-            worldGeneratorPhaseRepository.save(phase);
-        }
-    }
-
-    public List<WorldGenerator> getAllWorldGenerators() {
-        return worldGeneratorRepository.findAllOrderByUpdatedAtDesc();
-    }
-
-    public Optional<WorldGenerator> getWorldGenerator(Long id) {
-        return worldGeneratorRepository.findById(id);
-    }
-
-    public Optional<WorldGenerator> getWorldGeneratorByName(String name) {
-        return worldGeneratorRepository.findByName(name);
-    }
-
-    public List<WorldGenerator> getWorldGeneratorsByStatus(String status) {
-        return worldGeneratorRepository.findByStatus(status);
-    }
-
-    public List<WorldGeneratorPhase> getPhases(Long worldGeneratorId) {
-        return worldGeneratorPhaseRepository.findByWorldGeneratorIdOrderByPhaseOrder(worldGeneratorId);
-    }
-
-    public List<WorldGeneratorPhase> getActivePhases(Long worldGeneratorId) {
-        return worldGeneratorPhaseRepository.findActivePhasesByWorldGeneratorId(worldGeneratorId);
-    }
-
-    @Transactional
-    public void deleteWorldGenerator(Long id) {
-        log.info("Deleting world generator {}", id);
-        worldGeneratorRepository.deleteById(id);
-    }
-
-    @Transactional
-    public void archivePhase(Long phaseId) {
-        log.info("Archiving phase {}", phaseId);
-        WorldGeneratorPhase phase = worldGeneratorPhaseRepository.findById(phaseId)
-                .orElseThrow(() -> new IllegalArgumentException("Phase not found: " + phaseId));
-
-        phase.setArchived(true);
-        worldGeneratorPhaseRepository.save(phase);
+        WorldGenerator generator = optionalGenerator.get();
+        worldGeneratorRepository.delete(generator);
+        return true;
     }
 }

@@ -462,3 +462,318 @@ curl -X GET "${GENERATOR_URL}/api/generator/1/phases" \
   -H "Authorization: Bearer ${GENERATOR_TOKEN}" \
   | jq '.[] | select(.processor | startswith("simple"))'
 ```
+
+# Generator Beispiele
+
+## Übersicht
+
+Dieses Dokument zeigt Beispiele für die Verwendung des World Generators mit den verschiedenen Generator-Phasen.
+
+## Vollständige Welt-Generierung
+
+### Beispiel 1: Standard-Fantasywelt
+
+```json
+{
+  "worldId": "fantasy-world-001",
+  "name": "Eldoria",
+  "description": "Eine mittelalterliche Fantasywelt mit Magie und mythischen Kreaturen",
+  "parameters": {
+    "worldSize": "large",
+    "biomeVariety": "high",
+    "magicLevel": "medium",
+    "technologyLevel": "medieval"
+  },
+  "phases": [
+    {
+      "phaseType": "INITIALIZATION",
+      "phaseOrder": 1,
+      "parameters": {
+        "seed": "12345",
+        "worldDimensions": "2048x2048",
+        "seaLevel": "64",
+        "climateZones": "temperate,arctic,tropical"
+      }
+    },
+    {
+      "phaseType": "ASSET_MATERIAL_GENERATION",
+      "phaseOrder": 2,
+      "parameters": {
+        "textureQuality": "high",
+        "materialVariety": "fantasy",
+        "customAssets": "enabled"
+      }
+    },
+    {
+      "phaseType": "CONTINENT_GENERATION",
+      "phaseOrder": 3,
+      "parameters": {
+        "continentCount": "3",
+        "oceanPercentage": "60",
+        "islandDensity": "medium"
+      }
+    },
+    {
+      "phaseType": "TERRAIN_GENERATION",
+      "phaseOrder": 4,
+      "parameters": {
+        "mountainHeight": "high",
+        "riverDensity": "medium",
+        "forestCoverage": "40",
+        "desertPercentage": "15"
+      }
+    },
+    {
+      "phaseType": "HISTORICAL_GENERATION",
+      "phaseOrder": 5,
+      "parameters": {
+        "civilizationCount": "5",
+        "historicalDepth": "1000_years",
+        "conflictLevel": "medium",
+        "culturalDiversity": "high"
+      }
+    },
+    {
+      "phaseType": "STRUCTURE_GENERATION",
+      "phaseOrder": 6,
+      "parameters": {
+        "cityCount": "12",
+        "villageCount": "40",
+        "ruinPercentage": "10",
+        "dungeonDensity": "medium"
+      }
+    },
+    {
+      "phaseType": "ITEM_GENERATION",
+      "phaseOrder": 7,
+      "parameters": {
+        "itemRarity": "balanced",
+        "magicItemPercentage": "20",
+        "uniqueArtifacts": "15"
+      }
+    },
+    {
+      "phaseType": "QUEST_GENERATION",
+      "phaseOrder": 8,
+      "parameters": {
+        "questComplexity": "varied",
+        "mainQuestlines": "3",
+        "sideQuests": "50",
+        "dynamicQuests": "enabled"
+      }
+    }
+  ]
+}
+```
+
+### Beispiel 2: Sci-Fi Weltraum-Station
+
+```json
+{
+  "worldId": "space-station-alpha",
+  "name": "Station Alpha-7",
+  "description": "Eine große Weltraum-Station in einem fernen Sonnensystem",
+  "parameters": {
+    "worldType": "space_station",
+    "technologyLevel": "advanced",
+    "gravity": "artificial",
+    "atmosphere": "controlled"
+  },
+  "phases": [
+    {
+      "phaseType": "INITIALIZATION",
+      "phaseOrder": 1,
+      "parameters": {
+        "stationSize": "massive",
+        "moduleCount": "200",
+        "powergridCapacity": "unlimited"
+      }
+    },
+    {
+      "phaseType": "ASSET_MATERIAL_GENERATION",
+      "phaseOrder": 2,
+      "parameters": {
+        "materialStyle": "sci_fi",
+        "hologramSupport": "enabled",
+        "neonLighting": "extensive"
+      }
+    },
+    {
+      "phaseType": "STRUCTURE_GENERATION",
+      "phaseOrder": 3,
+      "parameters": {
+        "livingQuarters": "1000",
+        "commercialAreas": "50",
+        "industrialSections": "30",
+        "recreationalAreas": "20"
+      }
+    },
+    {
+      "phaseType": "ITEM_GENERATION",
+      "phaseOrder": 4,
+      "parameters": {
+        "techLevel": "futuristic",
+        "weaponTypes": "energy_projectile",
+        "toolVariety": "engineering_medical"
+      }
+    },
+    {
+      "phaseType": "QUEST_GENERATION",
+      "phaseOrder": 5,
+      "parameters": {
+        "questThemes": "exploration,diplomacy,technical",
+        "emergencyScenarios": "enabled",
+        "tradeRoutes": "galactic"
+      }
+    }
+  ]
+}
+```
+
+### Beispiel 3: Benutzerdefinierte Phasen
+
+```json
+{
+  "worldId": "custom-world",
+  "name": "Angepasste Welt",
+  "description": "Eine Welt mit benutzerdefinierten Generierungsphasen",
+  "parameters": {
+    "worldType": "custom",
+    "complexity": "high"
+  },
+  "phases": [
+    {
+      "phaseType": "INITIALIZATION",
+      "phaseOrder": 1,
+      "parameters": {
+        "customSeed": "abc123"
+      }
+    },
+    {
+      "phaseType": "CUSTOM_BIOME_GENERATION",
+      "phaseOrder": 2,
+      "parameters": {
+        "biomeTypes": "crystal_caves,floating_islands,underwater_cities",
+        "magicalElements": "enabled"
+      }
+    },
+    {
+      "phaseType": "WEATHER_SYSTEM_GENERATION",
+      "phaseOrder": 3,
+      "parameters": {
+        "dynamicWeather": "enabled",
+        "seasonalChanges": "enabled",
+        "extremeEvents": "magical_storms,time_rifts"
+      }
+    },
+    {
+      "phaseType": "TERRAIN_GENERATION",
+      "phaseOrder": 4,
+      "parameters": {
+        "terrainComplexity": "extreme",
+        "verticalLayers": "5"
+      }
+    },
+    {
+      "phaseType": "CUSTOM_CIVILIZATION_GENERATION",
+      "phaseOrder": 5,
+      "parameters": {
+        "civilizationTypes": "elemental_beings,ancient_robots,interdimensional_traders",
+        "interactionLevel": "complex"
+      }
+    }
+  ]
+}
+```
+
+## Einzelne Phasen
+
+### Phase: Terrain-Generierung
+
+```json
+{
+  "worldId": "test-terrain",
+  "name": "Terrain Test",
+  "phases": [
+    {
+      "phaseType": "TERRAIN_GENERATION",
+      "phaseOrder": 1,
+      "parameters": {
+        "heightmapResolution": "1024x1024",
+        "noiseType": "perlin",
+        "erosionSimulation": "enabled",
+        "biomeBlending": "smooth",
+        "riverGeneration": "automatic",
+        "caveGeneration": "sparse"
+      }
+    }
+  ]
+}
+```
+
+### Phase: Struktur-Generierung
+
+```json
+{
+  "worldId": "structure-test",
+  "name": "Structure Test",
+  "phases": [
+    {
+      "phaseType": "STRUCTURE_GENERATION",
+      "phaseOrder": 1,
+      "parameters": {
+        "buildingStyles": "medieval,fantasy",
+        "roadNetworks": "enabled",
+        "bridgeGeneration": "automatic",
+        "defensiveStructures": "walls,towers",
+        "commercialBuildings": "markets,inns,shops",
+        "residentialDensity": "medium"
+      }
+    }
+  ]
+}
+```
+
+## REST API Beispiele
+
+### Einzelne Phase ausführen
+
+```bash
+curl -X POST http://localhost:8080/api/generator/worlds/example-world/phases \
+  -H "Content-Type: application/json" \
+  -H "X-Shared-Secret: your-secret" \
+  -d '{
+    "phaseType": "TERRAIN_GENERATION",
+    "phaseOrder": 1,
+    "parameters": {
+      "mountainHeight": "medium",
+      "riverDensity": "high"
+    }
+  }'
+```
+
+### Phase-Status abfragen
+
+```bash
+curl -X GET http://localhost:8080/api/generator/worlds/example-world/phases/TERRAIN_GENERATION \
+  -H "X-Shared-Secret: your-secret"
+```
+
+## Verfügbare Standard-Phasentypen
+
+Das System stellt folgende vordefinierte Phasentypen zur Verfügung:
+
+- **INITIALIZATION** - Initialisierung
+- **ASSET_MATERIAL_GENERATION** - Asset/Material-Generierung  
+- **CONTINENT_GENERATION** - Kontinent-Generierung
+- **TERRAIN_GENERATION** - Terrain-Generierung
+- **HISTORICAL_GENERATION** - Historische Generierung
+- **STRUCTURE_GENERATION** - Struktur-Generierung
+- **ITEM_GENERATION** - Item-Generierung
+- **QUEST_GENERATION** - Quest-Generierung
+
+Zusätzlich können beliebige benutzerdefinierte Phasentypen verwendet werden, z.B.:
+- WEATHER_SYSTEM_GENERATION
+- CUSTOM_BIOME_GENERATION
+- MAGIC_SYSTEM_GENERATION
+- ECONOMIC_SYSTEM_GENERATION
