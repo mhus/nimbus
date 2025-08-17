@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = GeneratorController.class)
-@TestPropertySource(properties = {"nimbus.shared-secret=test-secret"})
+@TestPropertySource(properties = {"nimbus.world.shared.secret=test-secret"})
 @WithMockUser
 class GeneratorControllerTest {
 

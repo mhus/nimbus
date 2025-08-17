@@ -6,15 +6,16 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootApplication
+@SpringBootApplication(
+    scanBasePackages = {
+        "de.mhus.nimbus.worldgenerator",
+        "de.mhus.nimbus.world.shared"
+    }
+)
 public class WorldGeneratorApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
         SpringApplication.run(WorldGeneratorApplication.class, args);
     }
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 }

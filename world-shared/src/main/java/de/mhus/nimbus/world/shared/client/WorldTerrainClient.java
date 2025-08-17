@@ -1,4 +1,4 @@
-package de.mhus.nimbus.worldshared.client;
+package de.mhus.nimbus.world.shared.client;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ public class WorldTerrainClient {
 
     public WorldTerrainClient(RestTemplate restTemplate,
                               @Value("${nimbus.service.world-terrain.url:http://localhost:7083}") String worldTerrainServiceUrl,
-                              @Value("${nimbus.shared.secret:default-secret}") String sharedSecret) {
+                              @Value("${nimbus.world.shared.secret}") String sharedSecret) {
         this.restTemplate = restTemplate;
         this.worldTerrainServiceUrl = worldTerrainServiceUrl;
         this.sharedSecret = sharedSecret;

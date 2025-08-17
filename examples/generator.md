@@ -7,8 +7,8 @@ Diese Datei enthält curl-Beispiele für alle Endpunkte des World Generator Serv
 Alle API-Aufrufe benötigen einen Bearer Token mit dem Shared Secret:
 
 ```bash
-export GENERATOR_TOKEN="generator-secret-key-2024"
-export GENERATOR_URL="http://localhost:8083"
+export GENERATOR_TOKEN="nimbus-world-secret"
+export GENERATOR_URL="http://localhost:7084"
 ```
 
 ## 1. World Generator erstellen

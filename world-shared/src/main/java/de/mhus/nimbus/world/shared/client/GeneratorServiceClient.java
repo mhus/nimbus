@@ -1,9 +1,9 @@
-package de.mhus.nimbus.world.client;
+package de.mhus.nimbus.world.shared.client;
 
-import de.mhus.nimbus.world.dto.AddPhaseRequest;
-import de.mhus.nimbus.world.dto.CreateWorldGeneratorRequest;
-import de.mhus.nimbus.world.entity.WorldGenerator;
-import de.mhus.nimbus.world.entity.WorldGeneratorPhase;
+import de.mhus.nimbus.world.shared.dto.AddPhaseRequest;
+import de.mhus.nimbus.world.shared.dto.CreateWorldGeneratorRequest;
+import de.mhus.nimbus.world.shared.entity.WorldGenerator;
+import de.mhus.nimbus.world.shared.entity.WorldGeneratorPhase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +26,7 @@ public class GeneratorServiceClient {
     @Value("${nimbus.generator.service.url:http://localhost:8083}")
     private String generatorServiceUrl;
 
-    @Value("${nimbus.generator.shared-secret}")
+    @Value("${nimbus.world.shared.secret}")
     private String sharedSecret;
 
     private HttpHeaders createHeaders() {

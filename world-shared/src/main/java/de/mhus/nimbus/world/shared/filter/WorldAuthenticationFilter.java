@@ -17,12 +17,18 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class WorldAuthenticationFilter extends OncePerRequestFilter {
 
     @Value("${nimbus.world.shared.secret}")
     private String authSecret;
+
+    public WorldAuthenticationFilter() {
+    }
+
+    public WorldAuthenticationFilter(String sharedSecret) {
+        this.authSecret = sharedSecret;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,

@@ -1,8 +1,10 @@
 package de.mhus.nimbus.worldgenerator.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import de.mhus.nimbus.world.shared.filter.WorldAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -11,21 +13,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${nimbus.shared-secret:default-secret}")
-    private String sharedSecret;
+    private final WorldAuthenticationFilter worldAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(new SharedSecretAuthenticationFilter(sharedSecret),
-                            UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(authz -> authz
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .build();
+            .addFilterBefore(worldAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 }

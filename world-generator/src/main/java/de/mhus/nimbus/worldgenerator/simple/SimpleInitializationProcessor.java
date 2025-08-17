@@ -3,7 +3,7 @@ package de.mhus.nimbus.worldgenerator.simple;
 import de.mhus.nimbus.worldgenerator.model.PhaseInfo;
 import de.mhus.nimbus.worldgenerator.processor.PhaseProcessor;
 import de.mhus.nimbus.worldgenerator.service.GeneratorService;
-import de.mhus.nimbus.worldshared.client.WorldTerrainClient;
+import de.mhus.nimbus.world.shared.client.WorldTerrainClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
