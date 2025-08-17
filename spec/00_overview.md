@@ -17,6 +17,21 @@ Die Welten werden in 3D dargestellt, wobei die Spieler in einer 2.5D-Ansicht int
 wird als Würfel dargestellt, der in der 3D-Welt platziert ist. Es werden nicht immer alle Seiten des Würfels
 für die Anzeige benötig, da immer von schräg vorne geschaut wird.
 
+Ein Feld ist ein Würfel mit Texturen auf den Seiten, die die verschiedenen
+Materialien darstellen. Die Texturen werden aus Assets generiert, die in der Datenbank gespeichert
+sind. Das Rotieren der Texturen erfolgt über dien Client, der die Texturen in der 2.5D-Welt anzeigt.
+
+## Avatar surrounding Area
+
+Die Avatar focus Area ist der Bereich um den Avatar des Spielers herum, die anders sichtbar ist.
+
+Für jedes Feld und Sprite kann es zwei verschiedene Texturen von oben geben:
+* Nähe Textur (focus): Diese Textur wird verwendet, wenn der Avatar des Spielers in der Nähe des Feldes ist.
+* Ferne Textur: Diese Textur wird verwendet, wenn der Avatar des Spielers weiter entfernt ist.
+
+Die Ferne Textur ist die standard Textur. Wird eine Focus Textur benötigt, wird diese
+entsprechend hinterlegt.
+
 ## World 
 
 World Terrain Data bestehen aus Map, Sprites, Assets und Terrain-Gruppen. Die Daten werden in Clustern organisiert, 
@@ -124,11 +139,17 @@ Nimbus ist in mehrere Komponenten unterteilt, die jeweils eine bestimmte Funktio
   - Beim öffnen der WebSocket-Verbindung wird der Client authentifiziert und erhält ein JWT-Token.
   - Der Client kann sich an Welten anmelden, um Updates zu erhalten. Dabei baut die Bridge eine WebSocket-Verbindung zur entsprechenden Welt-Bridge auf.
 - **client**: Ein Client, der die Welten rendert. 
-  - Er ist eine Webanwendung, die in einem Browser läuft und die Welten in 2D darstellt.
+  - Er ist eine Webanwendung, die in einem Browser läuft und die Welten in 2.5D darstellt.
   - Er kommuniziert über WebSockets mit der Client Bridge, um Updates von den Welten zu erhalten.
   - Er ermöglicht es den Spielern, in den Welten zu interagieren, indem sie Aktionen ausführen, wie z.B. das Bewegen von Sprites oder das Interagieren mit Lebewesen.
   - Es wird typescript verwendet, um die Logik des Clients zu implementieren.
   - Er wird auch in Maven verwaltet und mit jetty gestartet/bereitgestellt, Beispiel https://github.com/pkaul/maven-typescript-example/tree/master
+- **client-2d**: Ein simpler Client, der die Welten rendert. Er dient als Test-Client und ist nicht für den produktiven Einsatz gedacht.
+    - Er ist eine Webanwendung, die in einem Browser läuft und die Welten in 2D von oben darstellt.
+    - Er kommuniziert über WebSockets mit der Client Bridge, um Updates von den Welten zu erhalten.
+    - Er ermöglicht es den Spielern, in den Welten zu interagieren, indem sie Aktionen ausführen, wie z.B. das Bewegen von Sprites oder das Interagieren mit Lebewesen.
+    - Es wird typescript verwendet, um die Logik des Clients zu implementieren.
+    - Er wird auch in Maven verwaltet und mit jetty gestartet/bereitgestellt, Beispiel https://github.com/pkaul/maven-typescript-example/tree/master
 - **server-shared**: Eine Java-Bibliothek, die gemeinsame Funktionen und Datenstrukturen für alle Services bereitstellt.
   Sie enthält Klassen für die Kommunikation zwischen den Services (Client-Klassen), die Verwaltung von Daten und andere Hilfsfunktionen.
 - **client-shared**: Eine Java-Bibliothek, die gemeinsame Funktionen und Datenstrukturen für alle Clients bereitstellt.

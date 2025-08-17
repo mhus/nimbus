@@ -144,8 +144,12 @@ Sprites bestehen aus einem 3D Gitter.
 * **groups**: Jedes Sprite kann zu Terrain-Gruppen gehören, die durch eine ID (Long) definiert ist.
   Gruppen haben Eigenschaften, die für alle Sprites und Felder in der Gruppe gelten.
 * **zsize**: Int. Jedes Sprite hat eine Größe, die seine Ausdehnung in Z-Richtung nach unten definiert.
-* **rasterType**: String. Der Typ der Raster-Darstellung des Sprites (z.B. "png", "jpg").
-* **raster**: Blob. Darstellung des Sprites.
+* **rasterType**: String. Der Typ der Raster-Darstellung des Sprites (z.B. "material", "png", "jpg").
+* **rasterMaterial**: Int. Material, alternativ zu Data
+* **rasterData**: Blob. Darstellung des Sprites. Kann null sein wenn rasterMaterial genutzt wird.
+* **focusType**: String. Der Typ der Raster-Darstellung des Sprites (z.B. "material", "png", "jpg").
+* **focusMaterial**: Int. Material, alternativ zu Data
+* **focusData**: Blob. Darstellung des Sprites. Kann null sein.
 * **type**: String. Jedes Sprite hat einen Typ, der seine Funktion in der Welt definiert (z.B. "tree", "rock").
 * **parameters**: Jedes Sprite kann zusätzliche Parameter haben, die seine Eigenschaften erweitern.
   Diese Parameter sind in einem JSON-Format gespeichert und können beliebige Schlüssel-Wert-Paare enthalten.
