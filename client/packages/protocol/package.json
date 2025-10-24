@@ -16,6 +16,7 @@
     "generate": "pbjs -t static-module -w es6 -o src/generated/protocol.js proto/*.proto && pbts -o src/generated/protocol.d.ts src/generated/protocol.js"
   },
   "dependencies": {
+    "@voxel-02/core": "workspace:*",
     "protobufjs": "^7.4.0"
   },
   "devDependencies": {
