@@ -2,7 +2,7 @@
  * World Generator interface
  */
 
-import type { ChunkData, XZ } from '@voxel-02/core';
+import type { ChunkData, XZ } from '@nimbus-client/core';
 
 /**
  * Base interface for world generators

@@ -1,5 +1,5 @@
 {
-  "name": "@voxel-02/core",
+  "name": "@nimbus-client/core",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",

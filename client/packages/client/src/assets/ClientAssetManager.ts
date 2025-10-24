@@ -4,7 +4,7 @@
  * Manages asset loading from server with caching
  */
 
-import type { AssetManifest, AssetMetadata } from '@voxel-02/core';
+import type { AssetManifest, AssetMetadata } from '@nimbus-client/core';
 
 export class ClientAssetManager {
   private manifest: AssetManifest | null = null;

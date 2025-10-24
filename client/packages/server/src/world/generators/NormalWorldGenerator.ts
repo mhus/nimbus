@@ -3,8 +3,8 @@
  */
 
 import { makeNoise2D } from 'open-simplex-noise';
-import type { ChunkData, XZ } from '@voxel-02/core';
-import { setBlockEdgeOffsets } from '@voxel-02/core';
+import type { ChunkData, XZ } from '@nimbus-client/core';
+import { setBlockEdgeOffsets } from '@nimbus-client/core';
 import type { WorldGenerator } from './WorldGenerator.js';
 import type { Registry } from '../../registry/Registry.js';
 

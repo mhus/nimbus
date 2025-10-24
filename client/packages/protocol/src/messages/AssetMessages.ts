@@ -4,7 +4,7 @@
  * Messages for asset manifest and delivery
  */
 
-import type { AssetManifest, AssetMetadata } from '@voxel-02/core';
+import type { AssetManifest, AssetMetadata } from '@nimbus-client/core';
 
 export enum AssetMessageType {
   ASSET_MANIFEST = 'asset_manifest',

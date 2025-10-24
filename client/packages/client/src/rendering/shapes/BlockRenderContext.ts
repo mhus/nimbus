@@ -5,7 +5,7 @@
  */
 
 import type { Matrix, Mesh, Scene, Sprite } from '@babylonjs/core';
-import type { BlockType, BlockModifier } from '@voxel-02/core';
+import type { BlockType, BlockModifier } from '@nimbus-client/core';
 import type { BlockFaceUVs } from '../TextureAtlas';
 import type { MaterialManager } from '../MaterialManager';
 import type { SpriteManagerRegistry } from '../SpriteManagerRegistry';

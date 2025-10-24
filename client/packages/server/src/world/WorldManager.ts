@@ -4,7 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { WorldConfig, WorldMetadata } from '@voxel-02/core';
+import type { WorldConfig, WorldMetadata } from '@nimbus-client/core';
 import { World } from './World.js';
 import type { WorldGenerator } from './generators/WorldGenerator.js';
 import type { Registry } from '../registry/Registry.js';

@@ -6,7 +6,7 @@
  */
 
 import { DynamicTexture, StandardMaterial, Color3, Scene, RawTexture } from '@babylonjs/core';
-import type { BlockType } from '@voxel-02/core';
+import type { BlockType } from '@nimbus-client/core';
 import type { ClientAssetManager } from '../assets/ClientAssetManager';
 
 /**

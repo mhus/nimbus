@@ -41,19 +41,19 @@ Du kannst schritt fuer schritt die anwendung migrieren:
   - Monorepo mit 4 Packages erstellt (core, protocol, server, client)
   - Moderne Dependencies: TypeScript 5.7, Babylon.js 7.37, Protobuf 7.4
 
-  2. Core Package (@voxel-02/core)
+  2. Core Package (@nimbus-client/core)
 
   - Types: XYZ, XZ, Vector3, Rotation
   - Helpers: Chunk-Koordinaten-Transformation, Seeds
   - Models: Entity, World, Chunk, Block, Item, Inventory
 
-  3. Protocol Package (@voxel-02/protocol)
+  3. Protocol Package (@nimbus-client/protocol)
 
   - Proto-Dateien kopiert: client.proto, server.proto, world.proto
   - Handler-Interfaces für Client/Server
   - Basis für Protobuf-Integration
 
-  4. Server Package (@voxel-02/server) ⭐
+  4. Server Package (@nimbus-client/server) ⭐
 
   - Registry-System: Blocks, Items, Commands mit ID-Verwaltung
   - World-Manager: Multi-World-Support, Chunk-Cache, Auto-Save
@@ -63,7 +63,7 @@ Du kannst schritt fuer schritt die anwendung migrieren:
   - Entity-Manager: UUID-basiert, Position/Rotation, Tick-System
   - WebSocket-Server: Client-Verbindungen, Message-Handling
 
-  5. Client Package (@voxel-02/client) ⭐
+  5. Client Package (@nimbus-client/client) ⭐
 
   - Babylon.js 7.x Integration
   - Scene mit FreeCamera (WASD-Steuerung)
@@ -186,7 +186,7 @@ Im Walk Modus, wenn man an einen Block stößt, soll man automatisch, maximal ei
 ---
 Im ursprünglichen Projekt werden auch blocks mit namen, nicht integer ids unterstuetzt. In 
 `/client/tmp/voxelsrv-server/src/default/blocks.ts` werden alle moeglichen Blocktypen definiert. Uebernehem die Konfiguration
-in das package `@voxel-02/core` als EntryTypen. Uebernehem fehlende Attribute aus
+in das package `@nimbus-client/core` als EntryTypen. Uebernehem fehlende Attribute aus
 `/client/tmp/voxelsrv-server/src/lib/registry.ts' Block in EntryType.
 Fuege die Daten sinnvoll hinzu damit server und client die Typen benutzen koennen und das das system flexibel bleibt.
 Pruefe die Option, das der Server die Blocktypen/EntityTypen dynamisch ausliefern kann, anstelle von statischen Konfigurationen im Client.
@@ -273,10 +273,10 @@ client in den server und passe server und client an.
 
   Erfolgreich gebaut:
 
-  - ✅ @voxel-02/core
-  - ✅ @voxel-02/protocol
-  - ✅ @voxel-02/server
-  - ✅ @voxel-02/client
+  - ✅ @nimbus-client/core
+  - ✅ @nimbus-client/protocol
+  - ✅ @nimbus-client/server
+  - ✅ @nimbus-client/client
 
   System-Architektur:
 
@@ -450,7 +450,7 @@ Kurze Frage zum wording: Ich glaube das das Wort Block mehrfache Bedeutung hat. 
 ```text
 Aktuelle Konzepte im Code:
 
-  1. BlockType (in @voxel-02/core):
+  1. BlockType (in @nimbus-client/core):
     - Ist die Definition/Template eines Blocks
     - Enthält: id, name, shape, texture, material, properties
     - Beispiel: "grass", "stone", "water"

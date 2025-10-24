@@ -9,9 +9,9 @@ import {
   Scene,
   Matrix
 } from '@babylonjs/core';
-import type { ChunkData } from '@voxel-02/core';
+import type { ChunkData } from '@nimbus-client/core';
 import type { TextureAtlas } from './TextureAtlas';
-import type { BlockType } from '@voxel-02/core';
+import type { BlockType } from '@nimbus-client/core';
 import type { ClientRegistry } from '../registry/ClientRegistry';
 import type { MaterialManager, MaterialConfig } from './MaterialManager';
 import {
@@ -20,7 +20,7 @@ import {
   getBlockModifier,
   applyModifier,
   BlockShape
-} from '@voxel-02/core';
+} from '@nimbus-client/core';
 import {
   ShapeRenderer,
   CubeRenderer,

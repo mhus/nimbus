@@ -15,7 +15,7 @@ import {
   getAssetTypeFromPath,
   getCategoryFromPath,
   getMimeType,
-} from '@voxel-02/core';
+} from '@nimbus-client/core';
 
 export class AssetManager {
   private assetsDir: string;

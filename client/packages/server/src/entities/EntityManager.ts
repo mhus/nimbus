@@ -3,8 +3,8 @@
  */
 
 import { v4 as uuid } from 'uuid';
-import type { IEntity, EntityData, IEntityObject } from '@voxel-02/core';
-import { globalToChunk } from '@voxel-02/core';
+import type { IEntity, EntityData, IEntityObject } from '@nimbus-client/core';
+import { globalToChunk } from '@nimbus-client/core';
 import type { World } from '../world/World.js';
 
 /**

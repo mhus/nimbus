@@ -4,7 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { BlockType, ItemType, BlockShape, ToolType, BlockOptions } from '@voxel-02/core';
+import type { BlockType, ItemType, BlockShape, ToolType, BlockOptions } from '@nimbus-client/core';
 
 export interface BlockDefinition {
   id?: number;

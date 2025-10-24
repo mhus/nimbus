@@ -73,19 +73,19 @@ Nach dem Connect: **WASD** bewegen, **Maus** umschauen.
 
 ## Packages
 
-### @voxel-02/core
+### @nimbus-client/core
 Gemeinsame Typen, Modelle und Utilities:
 - **Types**: XYZ, XZ, Vector3, Rotation
 - **Helpers**: Chunk-Koordinaten-Transformation, Seeds
 - **Models**: Entity, World, Chunk, Block, Item, Inventory
 
-### @voxel-02/protocol
+### @nimbus-client/protocol
 Protobuf-basierte Netzwerk-Kommunikation:
 - **Proto Files**: client.proto, server.proto, world.proto
 - **Handlers**: Client- und Server-seitige Message-Handler
 - **Messages**: Login, Movement, Block-Updates, Entity-Updates, Chat
 
-### @voxel-02/server
+### @nimbus-client/server
 Node.js Server mit WebSocket:
 - World-Management (Chunks, Entities)
 - Player-Management
@@ -94,7 +94,7 @@ Node.js Server mit WebSocket:
 - Chat-System
 - Permissions-System
 
-### @voxel-02/client
+### @nimbus-client/client
 Browser-basierter 3D Client:
 - Babylon.js 7.x für Rendering
 - Vite für Dev-Server und Build

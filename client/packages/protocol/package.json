@@ -1,5 +1,5 @@
 {
-  "name": "@voxel-02/protocol",
+  "name": "@nimbus-client/protocol",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,7 +16,7 @@
     "generate": "pbjs -t static-module -w es6 -o src/generated/protocol.js proto/*.proto && pbts -o src/generated/protocol.d.ts src/generated/protocol.js"
   },
   "dependencies": {
-    "@voxel-02/core": "workspace:*",
+    "@nimbus-client/core": "workspace:*",
     "protobufjs": "^7.4.0"
   },
   "devDependencies": {

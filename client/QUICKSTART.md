@@ -202,7 +202,7 @@ const server = new VoxelServer({
 
 Vite verwendet automatisch den nächsten freien Port (3001, 3002, etc.)
 
-### "Cannot find module '@voxel-02/core'"
+### "Cannot find module '@nimbus-client/core'"
 
 ```bash
 # Build ausführen

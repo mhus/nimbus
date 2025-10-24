@@ -6,8 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as zlib from 'zlib';
 import { promisify } from 'util';
-import type { XYZ, XZ, WorldMetadata, ChunkData } from '@voxel-02/core';
-import { chunkIDToKey, keyToChunkID, globalToChunk, CHUNK_SIZE } from '@voxel-02/core';
+import type { XYZ, XZ, WorldMetadata, ChunkData } from '@nimbus-client/core';
+import { chunkIDToKey, keyToChunkID, globalToChunk, CHUNK_SIZE } from '@nimbus-client/core';
 import type { WorldGenerator } from './generators/WorldGenerator.js';
 
 const deflate = promisify(zlib.deflate);

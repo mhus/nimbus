@@ -75,7 +75,7 @@ Mit modernen Imports.
    Implementiere:
    - parseToMessage() - Client → Server
    - parseToObject() - Server → Client
-   - Nutze @voxel-02/protocol
+   - Nutze @nimbus-client/protocol
    ```
 
 3. **Connection-Manager**

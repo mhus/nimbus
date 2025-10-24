@@ -9,17 +9,17 @@
 - Monorepo-Struktur mit 4 Packages angelegt
 - Dependencies auf neueste Versionen aktualisiert
 
-#### Core Package (@voxel-02/core)
+#### Core Package (@nimbus-client/core)
 - Types: XYZ, XZ, Vector3, Rotation
 - Helpers: Chunk-Koordinaten-Transformation
 - Models: Entity, World, Chunk, Inventory
 
-#### Protocol Package (@voxel-02/protocol)
+#### Protocol Package (@nimbus-client/protocol)
 - Proto-Dateien kopiert (client.proto, server.proto, world.proto)
 - Handler-Interfaces erstellt
 - Basis für Protobuf-Integration
 
-#### Server Package (@voxel-02/server)
+#### Server Package (@nimbus-client/server)
 - **Registry-System**: Blocks, Items, Commands mit automatischer ID-Vergabe
 - **World-Manager**: Multi-World-Support, Chunk-Cache, Auto-Save
 - **World-Generatoren**:
@@ -30,7 +30,7 @@
 - **Auto-Save**: Alle 30 Sekunden
 - **Chunk-Persistence**: Komprimierte Speicherung (zlib)
 
-#### Client Package (@voxel-02/client)
+#### Client Package (@nimbus-client/client)
 - **Babylon.js 7.x Integration**: Engine, Scene, Camera, Lights
 - **Main Menu GUI**:
   - Server-Auswahl (Name, Adresse, Port)

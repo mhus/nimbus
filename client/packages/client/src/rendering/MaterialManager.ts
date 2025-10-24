@@ -10,8 +10,8 @@
  */
 
 import { Material, StandardMaterial, ShaderMaterial, Scene, Texture, Color3 } from '@babylonjs/core';
-import type { BlockType } from '@voxel-02/core';
-import type { BlockModifier } from '@voxel-02/core';
+import type { BlockType } from '@nimbus-client/core';
+import type { BlockModifier } from '@nimbus-client/core';
 import type { TextureAtlas } from './TextureAtlas';
 import type { WindShader } from './WindShader';
 import type { FluidWaveShader } from './FluidWaveShader';

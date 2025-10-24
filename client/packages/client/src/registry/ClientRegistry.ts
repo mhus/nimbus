@@ -5,7 +5,7 @@
  * Client does not assign IDs - it uses what the server sends.
  */
 
-import type { BlockType, ItemType, EntityType } from '@voxel-02/core';
+import type { BlockType, ItemType, EntityType } from '@nimbus-client/core';
 
 /**
  * Client-side registry for blocks, items, and entities

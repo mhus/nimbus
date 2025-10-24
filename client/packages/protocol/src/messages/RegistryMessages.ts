@@ -5,7 +5,7 @@
  * from server to client at connection time.
  */
 
-import type { BlockType, ItemType, EntityType } from '@voxel-02/core';
+import type { BlockType, ItemType, EntityType } from '@nimbus-client/core';
 
 /**
  * Message types for registry synchronization

@@ -19,8 +19,8 @@ npm run build:deps
 ```
 
 Dies baut:
-- `@voxel-02/core` → `packages/core/dist/`
-- `@voxel-02/protocol` → `packages/protocol/dist/`
+- `@nimbus-client/core` → `packages/core/dist/`
+- `@nimbus-client/protocol` → `packages/protocol/dist/`
 
 ### 3. Server starten
 
@@ -68,7 +68,7 @@ Client wird automatisch neu geladen (Vite HMR).
 
 ## Troubleshooting
 
-### "Cannot find module '@voxel-02/core'"
+### "Cannot find module '@nimbus-client/core'"
 
 ```bash
 npm run build:deps

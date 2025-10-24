@@ -7,7 +7,7 @@ import type { Scene } from '@babylonjs/core';
 import { ChunkRenderer } from '../rendering/ChunkRenderer';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 import type { ClientRegistry } from '../registry/ClientRegistry';
-import type { ChunkData } from '@voxel-02/core';
+import type { ChunkData } from '@nimbus-client/core';
 import type { MaterialManager } from '../rendering/MaterialManager';
 import { SpriteManagerRegistry } from '../rendering/SpriteManagerRegistry';
 import type { WindManager } from '../wind/WindManager';

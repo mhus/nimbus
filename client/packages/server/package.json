@@ -1,5 +1,5 @@
 {
-  "name": "@voxel-02/server",
+  "name": "@nimbus-client/server",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,8 +10,8 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@voxel-02/core": "workspace:*",
-    "@voxel-02/protocol": "workspace:*",
+    "@nimbus-client/core": "workspace:*",
+    "@nimbus-client/protocol": "workspace:*",
     "ws": "^8.18.0",
     "chalk": "^5.3.0",
     "open-simplex-noise": "^2.5.0",

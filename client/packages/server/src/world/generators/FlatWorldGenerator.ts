@@ -2,7 +2,7 @@
  * Flat world generator
  */
 
-import type { ChunkData, XZ } from '@voxel-02/core';
+import type { ChunkData, XZ } from '@nimbus-client/core';
 import type { WorldGenerator } from './WorldGenerator.js';
 import type { Registry } from '../../registry/Registry.js';
 

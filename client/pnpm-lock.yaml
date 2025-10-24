@@ -26,13 +26,13 @@ importers:
       '@babylonjs/materials':
         specifier: ^7.37.1
         version: 7.54.3(@babylonjs/core@7.54.3)
-      '@voxel-02/core':
+      '@nimbus-client/core':
         specifier: '*'
         version: link:../core
-      '@voxel-02/protocol':
+      '@nimbus-client/protocol':
         specifier: '*'
         version: link:../protocol
-      '@voxel-02/server':
+      '@nimbus-client/server':
         specifier: '*'
         version: link:../server
     devDependencies:
@@ -54,7 +54,7 @@ importers:
 
   packages/protocol:
     dependencies:
-      '@voxel-02/core':
+      '@nimbus-client/core':
         specifier: workspace:*
         version: link:../core
       protobufjs:
@@ -67,10 +67,10 @@ importers:
 
   packages/server:
     dependencies:
-      '@voxel-02/core':
+      '@nimbus-client/core':
         specifier: workspace:*
         version: link:../core
-      '@voxel-02/protocol':
+      '@nimbus-client/protocol':
         specifier: workspace:*
         version: link:../protocol
       chalk:

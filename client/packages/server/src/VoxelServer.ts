@@ -10,8 +10,8 @@ import { FlatWorldGenerator } from './world/generators/FlatWorldGenerator.js';
 import { NormalWorldGenerator } from './world/generators/NormalWorldGenerator.js';
 import { AssetManager } from './assets/AssetManager.js';
 import { AssetServer } from './assets/AssetServer.js';
-import { ALL_DEFAULT_BLOCKS } from '@voxel-02/core';
-import { createRegistrySyncMessage, createAssetManifestMessage } from '@voxel-02/protocol';
+import { ALL_DEFAULT_BLOCKS } from '@nimbus-client/core';
+import { createRegistrySyncMessage, createAssetManifestMessage } from '@nimbus-client/protocol';
 import type { World } from './world/World.js';
 import * as path from 'path';
 
@@ -67,7 +67,7 @@ export class VoxelServer {
   }
 
   /**
-   * Register default blocks from @voxel-02/core
+   * Register default blocks from @nimbus-client/core
    */
   private registerDefaultBlocks(): void {
     console.log(`[Server] Registering ${ALL_DEFAULT_BLOCKS.length} default blocks...`);

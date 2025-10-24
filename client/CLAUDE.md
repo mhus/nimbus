@@ -88,18 +88,18 @@ To avoid confusion, we use the following terms consistently:
 
 ## Code Structure
 
-### Core Package (`@voxel-02/core`)
+### Core Package (`@nimbus-client/core`)
 - Shared types and interfaces
 - BlockType definitions
 - Protocol definitions
 
-### Client Package (`@voxel-02/client`)
+### Client Package (`@nimbus-client/client`)
 - Babylon.js rendering
 - Player controls
 - GUI components
 - Block editor
 
-### Server Package (`@voxel-02/server`)
+### Server Package (`@nimbus-client/server`)
 - World generation
 - Chunk management
 - Game logic

@@ -20,8 +20,8 @@ import { Color3 } from '@babylonjs/core';
 import type { BlockSelector, SelectedBlock } from '../player/BlockSelector';
 import type { ClientRegistry } from '../registry/ClientRegistry';
 import type { ChunkManager } from '../world/ChunkManager';
-import type { BlockType, BlockModifier } from '@voxel-02/core';
-import { BlockShape, getBlockEdgeOffsets, setBlockEdgeOffsets } from '@voxel-02/core';
+import type { BlockType, BlockModifier } from '@nimbus-client/core';
+import { BlockShape, getBlockEdgeOffsets, setBlockEdgeOffsets } from '@nimbus-client/core';
 import {
   addLabel,
   addSectionTitle,
