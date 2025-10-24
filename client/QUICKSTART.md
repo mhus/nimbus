@@ -5,24 +5,40 @@ Schnelleinstieg in das migrierte VoxelSrv-Projekt.
 ## Voraussetzungen
 
 - Node.js 18+
-- npm 9+
+- pnpm 8+ (wird automatisch installiert falls nicht vorhanden)
 - Git
 
 ## Installation
 
 ```bash
+# pnpm global installieren (einmalig)
+npm install -g pnpm
+
 cd client
-npm install
+pnpm install
 ```
 
-Dies installiert alle Dependencies für alle Packages im Monorepo.
+Dies installiert alle Dependencies für alle Packages im Monorepo mit pnpm's effizienter Workspace-Verwaltung.
 
 ## Development-Modus
+
+### Schnellstart (empfohlen)
+
+```bash
+# 1. Dependencies kompilieren
+pnpm run build:deps
+
+# 2. Server starten
+pnpm run dev:server
+
+# 3. Client starten
+pnpm run dev:client
+```
 
 ### Server starten
 
 ```bash
-npm run dev:server
+pnpm run dev:server
 ```
 
 Der Server startet auf Port **3001** und:
@@ -44,7 +60,7 @@ Der Server startet auf Port **3001** und:
 ### Client starten
 
 ```bash
-npm run dev:client
+pnpm run dev:client
 ```
 
 Der Client startet auf Port **3000** und öffnet automatisch im Browser:

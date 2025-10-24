@@ -11,17 +11,19 @@ client/
 │   ├── protocol/       # Protobuf Definitionen und Handler
 │   ├── server/         # Server mit World-Generator
 │   └── client/         # 3D Client (Babylon.js + Vite)
-├── tmp/                # Alte Projekte (voxelsrv, voxelsrv-server)
+├── pnpm-workspace.yaml # pnpm Workspace-Konfiguration
 ├── package.json        # Root Workspace Config
-└── MIGRATION_PLAN.md  # Detaillierter Migrationsplan
+└── MIGRATION_PLAN.md   # Detaillierter Migrationsplan
 ```
 
 ## Status
 
 ### ✅ Phase 1 & 2 Abgeschlossen (2025-10-17)
+### ✅ Migration zu pnpm Abgeschlossen (2025-10-24)
 
 - **Projekt-Analyse**: Alte Codebases vollständig analysiert
 - **Monorepo-Struktur**: 4 Packages (core, protocol, server, client)
+- **Package Manager**: ✅ Von npm zu pnpm migriert für bessere Monorepo-Unterstützung
 - **Core Package**: Vollständig implementiert (Types, Helpers, Models)
 - **Protocol Package**: Proto-Dateien migriert, Handler-Basis fertig
 - **Server Package**: ✅ Basis-Implementation komplett
@@ -46,8 +48,54 @@ Siehe [STATUS.md](./STATUS.md) für detaillierten Fortschritt!
 ## Installation
 
 ```bash
+# pnpm global installieren (falls noch nicht vorhanden)
+npm install -g pnpm
+
 # Dependencies installieren
-npm install
+pnpm install
+
+# Alle Packages kompilieren
+pnpm run build
+
+# Dependencies für Core und Protocol kompilieren
+pnpm run build:deps
+```
+
+## Development
+
+```bash
+# Client entwickeln (Vite Dev Server)
+pnpm run dev:client
+
+# Server entwickeln (mit Hot Reload)
+pnpm run dev:server
+
+# Einzelne Packages entwickeln
+pnpm --filter @voxel-02/client run dev
+pnpm --filter @voxel-02/server run dev
+pnpm --filter @voxel-02/core run build
+pnpm --filter @voxel-02/protocol run build
+```
+
+## Workspace-Struktur
+
+Das Projekt verwendet pnpm workspaces für bessere Monorepo-Verwaltung:
+
+- **Workspace-Abhängigkeiten**: `workspace:*` für interne Package-Referenzen
+- **TypeScript Project References**: Korrekte Typisierung zwischen Packages
+- **Effiziente Builds**: Nur geänderte Packages werden neu kompiliert
+- **Geteilte Dependencies**: Reduzierter Speicherverbrauch durch pnpm's Symlink-System
+
+## Package-Dependencies
+
+```
+@voxel-02/core (Basis-Types und Utilities)
+    ↑
+@voxel-02/protocol (Protobuf + Core)
+    ↑
+@voxel-02/server (Protocol + Core)
+@voxel-02/client (Protocol + Core)
+```
 
 # Alle Packages bauen
 npm run build

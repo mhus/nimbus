@@ -4,28 +4,34 @@
 
 Nach dem Checkout oder nach Code-Änderungen:
 
-### 1. Dependencies installieren
+### 1. pnpm installieren (falls noch nicht vorhanden)
 
 ```bash
-npm install
+npm install -g pnpm
 ```
 
-### 2. Core & Protocol Packages bauen
+### 2. Dependencies installieren
+
+```bash
+pnpm install
+```
+
+### 3. Core & Protocol Packages bauen
 
 Die Packages `core` und `protocol` müssen vor dem Server/Client gebaut werden:
 
 ```bash
-npm run build:deps
+pnpm run build:deps
 ```
 
 Dies baut:
-- `@nimbus-client/core` → `packages/core/dist/`
-- `@nimbus-client/protocol` → `packages/protocol/dist/`
+- `@voxel-02/core` → `packages/core/dist/`
+- `@voxel-02/protocol` → `packages/protocol/dist/`
 
-### 3. Server starten
+### 4. Server starten
 
 ```bash
-npm run dev:server
+pnpm run dev:server
 ```
 
 Ausgabe:
@@ -40,15 +46,48 @@ Ausgabe:
 [Server] Generator: normal
 ```
 
-### 4. Client starten (optional)
+### 5. Client starten (optional)
 
 ```bash
-npm run dev:client
+pnpm run dev:client
 ```
 
 Client läuft auf: http://localhost:3000
 
 ## Bei Code-Änderungen
+
+### Core/Protocol geändert
+```bash
+pnpm run build:deps
+```
+
+### Nur ein Package entwickeln
+```bash
+# Nur Client entwickeln
+pnpm --filter @voxel-02/client run dev
+
+# Nur Server entwickeln  
+pnpm --filter @voxel-02/server run dev
+
+# Nur Protocol kompilieren
+pnpm --filter @voxel-02/protocol run build
+```
+
+## pnpm Workspace-Befehle
+
+```bash
+# Alle Packages auflisten
+pnpm list -r
+
+# Abhängigkeiten hinzufügen
+pnpm add <package> --filter @voxel-02/client
+
+# Build-Status prüfen
+pnpm run build
+
+# Workspace komplett aufräumen
+pnpm run clean
+```
 
 ### Änderungen in Core oder Protocol
 

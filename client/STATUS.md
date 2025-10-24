@@ -1,7 +1,7 @@
 # client Migration Status
 
-**Datum**: 2025-10-17
-**Status**: ✅ Phase 1 & 2 Abgeschlossen - Grundstruktur fertig
+**Datum**: 2025-10-24
+**Status**: ✅ Phase 1, 2 & pnpm Migration Abgeschlossen
 
 ## Abgeschlossene Arbeiten
 
@@ -29,213 +29,86 @@
   - Command-Registry
   - Palette-System (Speichern/Laden von Block-IDs)
 
-- **World Manager**:
-  - Multi-World-Support
-  - Chunk-Verwaltung mit Cache
-  - Auto-Save (30s Intervall)
-  - Chunk-Unloading (alte Chunks)
-  - Persistent Storage (komprimiert)
+- **World-Manager**:
+  - Chunk-System mit automatischem Speichern
+  - World-Generatoren (Flat, Normal/Terrain)
+  - Simplex-Noise Integration
 
-- **World Generators**:
-  - FlatWorldGenerator (flache Welt)
-  - NormalWorldGenerator (Simplex-Noise-Terrain)
-  - Erweiterbar für eigene Generatoren
+- **Entity-Manager**:
+  - Player-Entity Verwaltung
+  - Position-Tracking
 
-- **Entity Manager**:
-  - Entity-Erstellung mit UUIDs
-  - Position/Rotation/Teleport
-  - Tick-System
-  - Serialisierung
+- **WebSocket-Server**:
+  - Basis-Implementation
+  - Handler-System vorbereitet
 
-- **VoxelServer**:
-  - WebSocket-Server (ws)
-  - World-Initialisierung
-  - Client-Verbindung
-  - Message-Handling (Basis)
+### ✅ Phase 4: Client-Basis & Assets
+- **Client Package**:
+  - Babylon.js Integration
+  - Vite Build-System
+  - 3D-Rendering Basis
 
-### ✅ Phase 4: Assets
-- **1896 Asset-Dateien** kopiert:
-  - Texturen (Blöcke, Items, UI)
-  - Audio (Sounds, Musik)
-  - Fonts
-  - 3D-Models
+- **Assets Migration**:
+  - 1896 Dateien kopiert (Texturen, Audio, Fonts, Models)
+  - Verzeichnisstruktur beibehalten
 
-### ✅ Phase 5: Client-Basis
-- **Babylon.js Integration**:
-  - Engine-Setup
-  - Scene mit Kamera
-  - Licht-System
-  - Placeholder Ground & Box
-  - Render-Loop
+### ✅ pnpm Migration (2025-10-24)
+- **Package Manager**: Von npm zu pnpm umgestellt
+- **Workspace-Konfiguration**: 
+  - `pnpm-workspace.yaml` erstellt
+  - Alle Scripts auf pnpm-Syntax umgestellt
+  - Workspace-Dependencies mit `workspace:*` definiert
+- **TypeScript-Optimierungen**:
+  - DOM-Bibliothek für console-Support hinzugefügt
+  - Projektreferenzen für bessere Typisierung konfiguriert
+  - Build-Abhängigkeiten korrekt aufgelöst
+- **Build-System**: Alle 4 Packages kompilieren erfolgreich
+- **Dokumentation**: README, SETUP, QUICKSTART für pnpm aktualisiert
 
-- **HTML/CSS**:
-  - Responsive Canvas
-  - Loading-Screen
-  - Basis-Styling
+## Aktueller Build-Status
 
-- **Main Menu GUI** ⭐ NEU:
-  - Server-Name Input
-  - Server-Adresse Input
-  - Port Input
-  - "Connect to Server" Button
-  - "Play Singleplayer" Button
-  - Logo-Integration
-  - Styled mit Babylon.js GUI
-
-## Projektstruktur
-
-```
-client/
-├── packages/
-│   ├── core/                 ✅ Fertig
-│   │   ├── src/
-│   │   │   ├── types.ts
-│   │   │   ├── helpers.ts
-│   │   │   ├── models/
-│   │   │   │   ├── Entity.ts
-│   │   │   │   ├── World.ts
-│   │   │   │   └── Inventory.ts
-│   │   │   └── index.ts
-│   │   └── package.json
-│   │
-│   ├── protocol/             ✅ Struktur fertig
-│   │   ├── proto/
-│   │   │   ├── client.proto
-│   │   │   ├── server.proto
-│   │   │   └── world.proto
-│   │   ├── src/
-│   │   │   ├── handlers/
-│   │   │   └── index.ts
-│   │   └── package.json
-│   │
-│   ├── server/               ✅ Fertig (Basis)
-│   │   ├── src/
-│   │   │   ├── registry/
-│   │   │   │   └── Registry.ts
-│   │   │   ├── world/
-│   │   │   │   ├── World.ts
-│   │   │   │   ├── WorldManager.ts
-│   │   │   │   └── generators/
-│   │   │   │       ├── WorldGenerator.ts
-│   │   │   │       ├── FlatWorldGenerator.ts
-│   │   │   │       └── NormalWorldGenerator.ts
-│   │   │   ├── entities/
-│   │   │   │   └── EntityManager.ts
-│   │   │   ├── VoxelServer.ts
-│   │   │   └── index.ts
-│   │   └── package.json
-│   │
-│   └── client/               ✅ Basis fertig
-│       ├── public/
-│       │   ├── textures/     (1896 Dateien)
-│       │   ├── audio/
-│       │   ├── fonts/
-│       │   └── models/
-│       ├── src/
-│       │   ├── VoxelClient.ts
-│       │   └── index.ts
-│       ├── index.html
-│       └── package.json
-│
-├── package.json              ✅ Workspace Config
-├── tsconfig.json             ✅ Root Config
-├── MIGRATION_PLAN.md         ✅ Detaillierter Plan
-├── README.md                 ✅ Dokumentation
-└── STATUS.md                 ✅ Dieser Status
-
+```bash
+✅ @voxel-02/core      - 248ms
+✅ @voxel-02/protocol  - 241ms  
+✅ @voxel-02/server    - 497ms
+✅ @voxel-02/client    - 5.5s (Vite-Build ~6MB)
 ```
 
-## Statistiken
+## Package-Dependencies
 
-- **Packages**: 4 (core, protocol, server, client)
-- **TypeScript Files**: ~25 Dateien
-- **Lines of Code**: ~2000 Zeilen (geschätzt)
-- **Assets**: 1896 Dateien (Texturen, Audio, Fonts, Models)
-- **Dependencies**:
-  - TypeScript 5.7.3
-  - Babylon.js 7.37.1
-  - Protobufjs 7.4.0
-  - WebSocket (ws) 8.18.0
-  - Open-Simplex-Noise 2.5.0
+```
+@voxel-02/core (Basis-Types und Utilities)
+    ↑
+@voxel-02/protocol (Protobuf + Core)
+    ↑
+@voxel-02/server (Protocol + Core)
+@voxel-02/client (Protocol + Core)
+```
 
 ## Nächste Schritte (Optional)
 
-### 🔧 Server-Erweiterungen
-- [ ] Player-Management (Login, Spawn, Inventar)
-- [ ] Chat-System
-- [ ] Permissions-System
-- [ ] Console-Commands
-- [ ] Protobuf-Integration (statt JSON)
-- [ ] gRPC-Unterstützung
+### 📋 Phase 5: Multiplayer-Features
+- WebSocket-Protokoll vollständig implementieren
+- Player-Management & Inventar
+- Chat-System
+- Permissions-System
 
-### 🎨 Client-Erweiterungen
-- [ ] Chunk-Rendering-System
-- [ ] Block-Mesh-Generierung
-- [ ] Texture-Atlas
-- [ ] Entity-Rendering
-- [ ] GUI-System (Menu, HUD, Chat, Inventory)
-- [ ] Input-System (WASD, Maus, Touch)
-- [ ] Network-Integration (WebSocket zu Server)
-- [ ] Physics-Integration
+### 📋 Phase 6: Client-Features
+- Chunk-Rendering im 3D-Client
+- GUI-System (Menu, HUD, Inventory)
+- Input-Handling (Bewegung, Block-Platzierung)
 
-### 🔗 Integration
-- [ ] Client-Server-Kommunikation
-- [ ] Chunk-Streaming vom Server
-- [ ] Block-Updates in Echtzeit
-- [ ] Entity-Synchronisation
-- [ ] Multiplayer-Testing
+### 📋 Phase 7: Optimierung
+- Protobuf-Integration (aktuell JSON)
+- Multiplayer-Testing
+- Performance-Optimierung
+- Asset-Pipeline
 
-### 📦 Weiteres
-- [ ] Unit Tests
-- [ ] Performance-Optimierung
-- [ ] Build-Pipeline
-- [ ] Docker-Setup
-- [ ] CI/CD
+## Technologie-Stack
 
-## Wie starten?
-
-### Installation
-```bash
-cd client
-npm install
-```
-
-### Development
-
-**Server starten:**
-```bash
-npm run dev:server
-```
-
-**Client starten:**
-```bash
-npm run dev:client
-```
-
-### Builds
-```bash
-npm run build
-```
-
-## Notizen
-
-### Vorteile der neuen Struktur
-- ✅ Moderne Dependencies (alles aktuell)
-- ✅ TypeScript 5.x mit strikter Konfiguration
-- ✅ ESM statt CommonJS
-- ✅ Vite statt Webpack (viel schneller)
-- ✅ Babylon.js 7.x stabil (statt Alpha-Version)
-- ✅ Monorepo mit Workspaces (einfaches Code-Sharing)
-- ✅ Saubere Trennung (Core, Protocol, Server, Client)
-
-### Herausforderungen gemeistert
-- ❌ noa-engine → ✅ Native Babylon.js
-- ❌ voxelservercore → ✅ Eigene Core-Implementation
-- ❌ Alte ndarray → ✅ Uint16Array direkt
-- ❌ CommonJS → ✅ ESM
-- ❌ Veraltete Dependencies → ✅ Alle aktualisiert
-
-## Credits
-
-Basiert auf **VoxelSrv** von **Patbox** (https://github.com/VoxelSrv)
-Migriert zu moderner TypeScript/ESM-Architektur
+- **Package Manager**: pnpm (Workspace-Management)
+- **Build-System**: TypeScript 5.x + Vite
+- **3D-Engine**: Babylon.js
+- **Server**: Node.js + WebSocket
+- **Protokoll**: JSON (Protobuf vorbereitet)
+- **World-Generation**: Simplex-Noise
