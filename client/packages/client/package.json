@@ -1,0 +1,24 @@
+{
+  "name": "@voxel-02/client",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^7.37.1",
+    "@babylonjs/gui": "^7.37.1",
+    "@babylonjs/loaders": "^7.37.1",
+    "@babylonjs/materials": "^7.37.1",
+    "@voxel-02/core": "*",
+    "@voxel-02/protocol": "*",
+    "@voxel-02/server": "*"
+  },
+  "devDependencies": {
+    "canvas": "^3.2.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7"
+  }
+}
