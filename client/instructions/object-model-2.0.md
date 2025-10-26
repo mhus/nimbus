@@ -126,3 +126,75 @@ Keine optional Werte, wenn nicht explizit sinnvoll.
 - originalBlockType : Block-Type
 - customizedBlockType : Client-Block-Type
 - status : String
+
+## AnimationData
+
+Eine Animation ist eine Abfolge von Effekten, die abgespielt werden. Der Ort wird
+ausserhalb der Animation definiert. ggf wird kein Ort benötigt.
+
+TODO: Noch nicht final definiert!
+
+```json
+{
+  "name": "block_bounce", // Name der Animation
+  "duration": 1000,      // Dauer in Millisekunden
+  "effects": [           // Liste der Effekte
+    {
+      "type": "scale",   // Effekt-Typ (z.B. scale, rotate, translate, colorChange)
+      "params": {        // Parameter für den Effekt
+        "from": 1.0,
+        "to": 1.2,
+        "easing": "easeInOut"
+      },
+      "startTime": 0,    // Startzeit relativ zur Animation
+      "endTime": 500     // Endzeit relativ zur Animation
+    },
+    {
+      "type": "scale",
+      "params": {
+        "from": 1.2,
+        "to": 1.0,
+        "easing": "easeInOut"
+      },
+      "startTime": 500,
+      "endTime": 1000
+    }
+  ]
+}
+```
+
+
+## BlockData
+
+Siehe Block
+
+TODO?
+
+## AreaData
+
+```json
+{
+  "a": {"x": 0, "y": 0, "z": 0}, // start
+  "b": {"x": 15, "y": 255, "z": 15}, // stop
+  "e": [ // effects
+    EffectData,
+    ...
+  ]
+}
+```
+
+## EffectData
+
+```json
+{
+  "n": "rain", // name
+  "p": { // parameters
+    "intensity": 0.5,
+    "color": "#aabbff"
+  }
+}
+```
+
+## EntityData
+
+TODO

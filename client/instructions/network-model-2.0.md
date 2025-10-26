@@ -136,7 +136,7 @@ Der Server sendet angefragte Chunks an den Client.
 }
 ```
 
-chunkDataTransferObject:
+## chunkDataTransferObject
 
 ```json
 {
@@ -160,45 +160,11 @@ chunkDataTransferObject:
 }
 ```
 
-HeightDataIntegers:
+## HeightDataIntegers
 
 ```json
 [maxHeight, minHeigth, groundLevel, waterHeight]
 ```
-
-BlockData:
-
-siehe Model Block Model 2.0
-
-AreaData:
-
-```json
-{
-  "a": {"x": 0, "y": 0, "z": 0}, // start
-  "b": {"x": 15, "y": 255, "z": 15}, // stop
-  "e": [ // effects
-    EffectData,
-    ...
-  ]
-}
-
-EffectData:
-
-```json
-{
-  "n": "rain", // name
-  "p": { // parameters
-    "intensity": 0.5,
-    "color": "#aabbff"
-  }
-}
-
-EntityData:
-
-Siehe Model Entity Model 2.0
-
-```
-
 
 ## Block Update (Server -> Client)
 
