@@ -132,7 +132,8 @@ export class TextureAtlas {
     this.atlasContext.fillRect(0, 0, this.maxAtlasSize, this.maxAtlasSize);
 
     // Create dynamic texture from our canvas
-    this.atlasTexture = new DynamicTexture('dynamicAtlas', this.maxAtlasSize, this.scene, false);
+    this.atlasTexture = new DynamicTexture('dynamicAtlas', this.maxAtlasSize, this.scene, false,
+        RawTexture.NEAREST_NEAREST);
 
     // Initial update from canvas
     this.updateAtlasTexture();

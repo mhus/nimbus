@@ -156,7 +156,7 @@ export class SpriteManagerRegistry {
 
     // Configure transparency immediately and after texture loads
     // Set blend mode for proper alpha blending (2 = ALPHA_COMBINE)
-    manager.blendMode = 2;
+    manager.blendMode = 2; // Babylon.SpriteManager.ALPHA_COMBINE
 
     // Apply transparency settings to texture
     if (manager.texture) {
@@ -170,7 +170,7 @@ export class SpriteManagerRegistry {
           manager.texture.hasAlpha = true;
           manager.texture.getAlphaFromRGB = false;
           // Force texture update
-          manager.texture.updateSamplingMode(1); // Babylon.Texture.BILINEAR_SAMPLINGMODE
+          manager.texture.updateSamplingMode(8); // NEAREST_NEAREST
         }
       });
     }

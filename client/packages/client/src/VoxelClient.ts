@@ -93,10 +93,17 @@ export class VoxelClient {
     this.camera.minZ = 0.01;
 
     // Create light
-    const light = new HemisphericLight('light', new Vector3(0, 1, 0), this.scene);
+    const light1 = new HemisphericLight('light', new Vector3(0.2, 1, 0), this.scene);
+//    const light1 = new HemisphericLight('light', new Vector3(0.2, 0.7, 0), this.scene);
     // const light = new DirectionalLight("DirectionalLight", new Vector3(0, -1, 0), this.scene);
     //const light = new SpotLight("spotLight", new Vector3(0, 30, -10), new Vector3(0, -1, 0), Math.PI / 3, 2, this.scene);
-    light.intensity = 0.7;
+    light1.intensity = 0.7;
+    // const light2 = new HemisphericLight('light', new Vector3(1, 0, 0), this.scene);
+    // light2.intensity = 0.5;
+    // const light3 = new HemisphericLight('light', new Vector3(0, 0, 1), this.scene);
+    // light3.intensity = 0.5;
+    // const light4 = new HemisphericLight('light', new Vector3(-1, 0, 0), this.scene);
+    // light4.intensity = 0.5;
 
 
     // Initialize texture atlas (will be configured with server URL later)
