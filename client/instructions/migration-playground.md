@@ -54,3 +54,32 @@ z.B.
 - Vom Server kommt ein neuer chunk, ChunkService erstellt den Chunk, ChunkRenderService rendert den Chunk, Sound Srvicer spielt evtl. Sound ab, etc.
 
 ## Network Protocoll
+
+Die Kommunikation wird auf zwei Kanäle aufgeteilt:
+* WebSocket Kanal für Echtzeit Kommunikation (Block Änderungen, Entity Bewegungen, Effekte, etc.)
+* HTTP Kanal für nicht Echtzeit Kommunikation (Laden von Texturen, Modellen, etc.)
+
+Die WebSocket Communikation wird vorerst als JSON5 Nachrichten implementiert, so dass es später durch einen
+optimiertes Verfahren der Serialisierung ersetzt werden kann. Das Basis-Object für Nachrichten ist:
+
+```json
+{
+  "i": "identifier", // optional, wenn eine Antwort erwartet wird
+  "r": "responseTo", // optional, verweist auf die ID der Nachricht auf die geantwortet wird
+  "t": "messageType",
+  "d": "payloadData" // sting, object oder byte array oder null, aktuell nur object oder null
+}
+``` 
+
+z.b.
+```json
+{"i": "12345","t": "p"} // ping message
+```
+
+Siehe network-model-2.0.md für die komplette Liste der Nachrichten.
+
+## Details
+
+* 'Solid' ist keine Materialeigenschaft!
+* 'Textures' sollen incl. png endung angegeben werden, damit verschiedene Formate möglich sind (jpg, webp, etc.)
+* 'Block Textures' werden mit kompletten pfad angegeben, z.B. 'block/grass.png'
