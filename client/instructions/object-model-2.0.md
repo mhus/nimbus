@@ -198,3 +198,12 @@ TODO?
 ## EntityData
 
 TODO
+
+- id
+- type: string (npc, player)
+- visibility
+  - modelPath
+
+- position
+- rotation
+- walkToPosition

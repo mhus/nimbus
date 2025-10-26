@@ -17,4 +17,5 @@ export { StairRenderer } from './StairRenderer';
 export { BillboardRenderer } from './BillboardRenderer';
 export { SpriteRenderer } from './SpriteRenderer';
 export { FlameRenderer } from './FlameRenderer';
+export { ModelRenderer } from './ModelRenderer';
 export type { BlockRenderContext, MaterialMeshData } from './BlockRenderContext';

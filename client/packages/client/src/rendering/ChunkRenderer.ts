@@ -36,6 +36,7 @@ import {
   BillboardRenderer,
   SpriteRenderer,
   FlameRenderer,
+  ModelRenderer,
   type BlockRenderContext,
   type MaterialMeshData
 } from './shapes';
@@ -77,6 +78,7 @@ export class ChunkRenderer {
     this.shapeRenderers.set(BlockShape.BILLBOARD, new BillboardRenderer());
     this.shapeRenderers.set(BlockShape.SPRITE, new SpriteRenderer());
     this.shapeRenderers.set(BlockShape.FLAME, new FlameRenderer());
+    this.shapeRenderers.set(BlockShape.MODEL, new ModelRenderer());
 
     console.log('[ChunkRenderer] Initialized with texture atlas and shape renderers');
   }
@@ -213,7 +215,8 @@ export class ChunkRenderer {
           const createsSeparateMesh =
             shape === BlockShape.BILLBOARD ||
             shape === BlockShape.SPRITE ||
-            shape === BlockShape.FLAME;
+            shape === BlockShape.FLAME ||
+            shape === BlockShape.MODEL;
 
           // For shapes that create separate meshes, skip material creation
           if (createsSeparateMesh) {
@@ -248,6 +251,8 @@ export class ChunkRenderer {
               spriteManagerRegistry: this.spriteManagerRegistry,
               // Sprite collection array
               sprites,
+              // Texture atlas for asset loading
+              textureAtlas: this.atlas,
             };
 
             // Render the block (will create separate mesh)
@@ -328,6 +333,8 @@ export class ChunkRenderer {
             spriteManagerRegistry: this.spriteManagerRegistry,
             // Sprite collection array
             sprites,
+            // Texture atlas for asset loading
+            textureAtlas: this.atlas,
           };
 
           // Add wind properties to context for blocks that need them

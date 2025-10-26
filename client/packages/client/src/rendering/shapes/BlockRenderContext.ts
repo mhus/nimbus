@@ -6,7 +6,7 @@
 
 import type { Matrix, Mesh, Scene, Sprite } from '@babylonjs/core';
 import type { BlockType, BlockModifier } from '@nimbus-client/core';
-import type { BlockFaceUVs } from '../TextureAtlas';
+import type { BlockFaceUVs, TextureAtlas } from '../TextureAtlas';
 import type { MaterialManager } from '../MaterialManager';
 import type { SpriteManagerRegistry } from '../SpriteManagerRegistry';
 
@@ -74,4 +74,7 @@ export interface BlockRenderContext {
   // Array to collect sprites created during rendering
   // These will be stored in the chunk mesh metadata for proper disposal
   sprites: Sprite[];
+
+  // Texture atlas for accessing asset server URL and texture loading
+  textureAtlas: TextureAtlas;
 }
