@@ -60,6 +60,7 @@ export class VoxelClient {
   private windManager: WindManager;
   private skyManager?: SkyManager;
   private lastServerInfo?: ServerInfo; // Store last connection info for reconnects
+  private positionUpdateInterval?: NodeJS.Timeout; // Interval for sending position updates
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -414,6 +415,9 @@ export class VoxelClient {
           alert(`Disconnected: ${data.reason}`);
           this.disconnect();
         });
+
+        // Start sending position updates to server
+        this.startPositionUpdates();
 
       } catch (error) {
         console.error('[Client] Connection failed:', error);
@@ -892,9 +896,52 @@ export class VoxelClient {
   }
 
   /**
+   * Start sending position updates to server
+   */
+  private startPositionUpdates(): void {
+    // Clear any existing interval
+    this.stopPositionUpdates();
+
+    // Send position updates every 100ms (10 times per second)
+    this.positionUpdateInterval = setInterval(() => {
+      if (this.camera && this.socket && this.connected) {
+        const position = this.camera.position;
+        const rotation = this.camera.rotation;
+
+        this.socket.send('player_position', {
+          x: position.x,
+          y: position.y,
+          z: position.z,
+          rotationX: rotation.x,
+          rotationY: rotation.y,
+          rotationZ: rotation.z,
+        }).catch((error) => {
+          console.error('[Client] Failed to send position update:', error);
+        });
+      }
+    }, 100);
+
+    console.log('[Client] Started sending position updates');
+  }
+
+  /**
+   * Stop sending position updates to server
+   */
+  private stopPositionUpdates(): void {
+    if (this.positionUpdateInterval) {
+      clearInterval(this.positionUpdateInterval);
+      this.positionUpdateInterval = undefined;
+      console.log('[Client] Stopped sending position updates');
+    }
+  }
+
+  /**
    * Disconnect from server
    */
   private disconnect(): void {
+    // Stop position updates
+    this.stopPositionUpdates();
+
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;

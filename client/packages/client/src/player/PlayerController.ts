@@ -62,6 +62,9 @@ export class PlayerController {
   private orbitRotateDown = false;
   private orbitSpeed = 1.0; // Radians per second for orbit rotation
 
+  // Auto-unstuck tracking
+  private lastUnstuckLog = 0;
+
   constructor(scene: Scene, camera: FreeCamera, chunkManager: ChunkManager, registry: ClientRegistry) {
     this.scene = scene;
     this.camera = camera;
@@ -193,6 +196,9 @@ export class PlayerController {
     // Handle camera rotation
     this.updateCameraRotation(deltaTime);
 
+    // Check if player is stuck in a block and auto-unstuck
+    this.handleAutoUnstuck(deltaTime);
+
     if (this.mode === MovementMode.WALK) {
       this.updateWalkMode(deltaTime);
     } else {
@@ -214,6 +220,24 @@ export class PlayerController {
 
     // Note: Vertical camera rotation (pitch) is handled by mouse in flight mode
     // In walk mode, pitch would be handled here if enabled via keyboard
+  }
+
+  /**
+   * Auto-unstuck: If player is stuck in a solid block, push them upward
+   */
+  private handleAutoUnstuck(deltaTime: number): void {
+    // Check if player is currently stuck in a block
+    if (this.checkCollisionAtPosition(this.camera.position)) {
+      // Player is stuck! Push them upward
+      const unstuckSpeed = 5.0; // Blocks per second to push upward
+      this.camera.position.y += unstuckSpeed * deltaTime;
+
+      // Only log once per second to avoid spam
+      if (!this.lastUnstuckLog || Date.now() - this.lastUnstuckLog > 1000) {
+        console.log('[PlayerController] Player stuck in block, pushing upward...');
+        this.lastUnstuckLog = Date.now();
+      }
+    }
   }
 
   /**

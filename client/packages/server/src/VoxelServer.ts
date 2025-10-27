@@ -46,6 +46,7 @@ export class VoxelServer {
   private mainWorld?: World;
   private running = false;
   private clients: Set<WebSocket> = new Set();
+  private playerData: Map<WebSocket, { x: number; y: number; z: number; rotationX: number; rotationY: number; rotationZ: number; worldName?: string }> = new Map();
 
   constructor(config: ServerConfig) {
     this.config = config;
@@ -244,11 +245,25 @@ export class VoxelServer {
     ws.on('close', () => {
       console.log('[Server] Client disconnected');
       this.clients.delete(ws);
+      this.playerData.delete(ws);
+
+      // Remove player entity from world
+      if (this.mainWorld) {
+        const entities = this.mainWorld.getAllEntities();
+        for (const [id, entity] of entities.entries()) {
+          if (entity.client === ws && entity.type === 'player') {
+            this.mainWorld.removeEntity(id);
+            console.log(`[Server] Removed player entity ${id}`);
+            break;
+          }
+        }
+      }
     });
 
     ws.on('error', (error) => {
       console.error('[Server] WebSocket error:', error);
       this.clients.delete(ws);
+      this.playerData.delete(ws);
     });
 
     // Send welcome message
@@ -355,6 +370,60 @@ export class VoxelServer {
   }
 
   /**
+   * Handle player position update
+   */
+  private handlePlayerPosition(ws: WebSocket, message: any): void {
+    const { x, y, z, rotationX, rotationY, rotationZ } = message;
+
+    // Store player position
+    const currentData = this.playerData.get(ws);
+    this.playerData.set(ws, {
+      x,
+      y,
+      z,
+      rotationX,
+      rotationY,
+      rotationZ,
+      worldName: currentData?.worldName || 'main',
+    });
+
+    // Create or update player entity
+    if (this.mainWorld) {
+      // Find existing player entity for this client
+      const entities = this.mainWorld.getAllEntities();
+      let playerEntityId: string | null = null;
+
+      for (const [id, entity] of entities.entries()) {
+        if (entity.client === ws && entity.type === 'player') {
+          playerEntityId = id;
+          break;
+        }
+      }
+
+      if (!playerEntityId) {
+        // Create new player entity
+        const entityId = `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        this.mainWorld.setEntity(entityId, {
+          id: entityId,
+          type: 'player',
+          position: { x, y, z },
+          rotation: { x: rotationX, y: rotationY, z: rotationZ },
+          client: ws,
+        });
+        console.log(`[Server] Created player entity ${entityId} at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
+      } else {
+        // Update existing player entity
+        const entity = this.mainWorld.getEntity(playerEntityId);
+        if (entity) {
+          entity.position = { x, y, z };
+          entity.rotation = { x: rotationX, y: rotationY, z: rotationZ };
+          this.mainWorld.setEntity(playerEntityId, entity);
+        }
+      }
+    }
+  }
+
+  /**
    * Handle incoming message
    */
   private handleMessage(ws: WebSocket, data: Buffer): void {
@@ -370,6 +439,10 @@ export class VoxelServer {
 
         case 'select_world':
           this.handleWorldSelection(ws, message.world);
+          break;
+
+        case 'player_position':
+          this.handlePlayerPosition(ws, message);
           break;
 
         case 'request_chunk':

@@ -418,6 +418,34 @@ export class World {
   }
 
   /**
+   * Add or update an entity
+   */
+  setEntity(id: string, entity: any): void {
+    this.entities.set(id, entity);
+  }
+
+  /**
+   * Get an entity by ID
+   */
+  getEntity(id: string): any | undefined {
+    return this.entities.get(id);
+  }
+
+  /**
+   * Remove an entity
+   */
+  removeEntity(id: string): void {
+    this.entities.delete(id);
+  }
+
+  /**
+   * Get all entities
+   */
+  getAllEntities(): Map<string, any> {
+    return this.entities;
+  }
+
+  /**
    * Shutdown world (save and cleanup)
    */
   async shutdown(): Promise<void> {

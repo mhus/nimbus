@@ -182,8 +182,8 @@ export class IPCServer {
       throw new Error(`World "${worldName}" not found`);
     }
 
-    // Get all entities
-    const entities = this.voxelServer.entityManager.getAll();
+    // Get all entities from world
+    const entities = world.getAllEntities();
 
     // Find player entity (type: 'player')
     let playerEntity = null;
@@ -200,10 +200,8 @@ export class IPCServer {
 
     return {
       playerId: playerEntity.id,
-      position: playerEntity.data.position,
-      rotation: playerEntity.data.rotation,
-      pitch: playerEntity.data.pitch,
-      chunkId: playerEntity.chunkID,
+      position: playerEntity.position,
+      rotation: playerEntity.rotation,
       world: worldName,
     };
   }
@@ -212,18 +210,23 @@ export class IPCServer {
    * Get all players
    */
   private async getAllPlayers(): Promise<any[]> {
-    const entities = this.voxelServer.entityManager.getAll();
     const players: any[] = [];
 
-    for (const entity of entities.values()) {
-      if (entity.type === 'player') {
-        players.push({
-          playerId: entity.id,
-          position: entity.data.position,
-          rotation: entity.data.rotation,
-          pitch: entity.data.pitch,
-          chunkId: entity.chunkID,
-        });
+    // Get all loaded worlds
+    const worlds = this.voxelServer.worldManager.getAllWorlds();
+
+    for (const [worldName, world] of worlds.entries()) {
+      const entities = world.getAllEntities();
+
+      for (const entity of entities.values()) {
+        if (entity.type === 'player') {
+          players.push({
+            playerId: entity.id,
+            position: entity.position,
+            rotation: entity.rotation,
+            world: worldName,
+          });
+        }
       }
     }
 
@@ -251,7 +254,21 @@ export class IPCServer {
   /**
    * Get entity count
    */
-  private async getEntityCount(): Promise<number> {
-    return this.voxelServer.entityManager.getAll().size;
+  private async getEntityCount(params?: { worldName?: string }): Promise<number> {
+    if (params?.worldName) {
+      const world = this.voxelServer.worldManager.get(params.worldName);
+      if (!world) {
+        throw new Error(`World "${params.worldName}" not found`);
+      }
+      return world.getAllEntities().size;
+    }
+
+    // Count entities across all worlds
+    let total = 0;
+    const worlds = this.voxelServer.worldManager.getAllWorlds();
+    for (const world of worlds.values()) {
+      total += world.getAllEntities().size;
+    }
+    return total;
   }
 }

@@ -160,7 +160,7 @@ export class IPCClient {
   /**
    * Get entity count from live server
    */
-  async getEntityCount(): Promise<number> {
-    return this.request('getEntityCount');
+  async getEntityCount(params?: { worldName?: string }): Promise<number> {
+    return this.request('getEntityCount', params);
   }
 }
