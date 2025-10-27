@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run build:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(pnpm tsx:*)",
+      "Bash(kill:*)",
+      "Bash(pnpm run dev)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(pkill:*)",
+      "Read(//Users/hummel/.config/claude-code/**)",
+      "Bash(pnpm run mcp:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -6,9 +6,11 @@ import { VoxelServer } from './VoxelServer.js';
 
 const server = new VoxelServer({
   port: 3003,
-  worldName: 'world',
-  worldSeed: Math.floor(Math.random() * 1000000),
-  generator: 'normal',  // 'flat' or 'normal'
+  worldName: 'main',
+  worldSeed: 12345,
+  generator: 'flat',  // 'flat' or 'normal'
+  enableMCP: true,  // Enable MCP server integration
+  enableIPC: true,  // Enable IPC server for external communication
 });
 
 server.start().catch((error) => {

@@ -10,6 +10,8 @@ import { FlatWorldGenerator } from './world/generators/FlatWorldGenerator.js';
 import { NormalWorldGenerator } from './world/generators/NormalWorldGenerator.js';
 import { AssetManager } from './assets/AssetManager.js';
 import { AssetServer } from './assets/AssetServer.js';
+import { NimbusMCPServer } from './mcp/NimbusMCPServer.js';
+import { IPCServer } from './ipc/IPCServer.js';
 import { ALL_DEFAULT_BLOCKS } from '@nimbus-client/core';
 import { createRegistrySyncMessage, createAssetManifestMessage } from '@nimbus-client/protocol';
 import type { World } from './world/World.js';
@@ -22,6 +24,8 @@ export interface ServerConfig {
   worldSeed: number;
   generator: 'flat' | 'normal';
   assetsDir?: string;  // Optional assets directory (defaults to './assets')
+  enableMCP?: boolean;  // Enable MCP server integration (defaults to false)
+  enableIPC?: boolean;  // Enable IPC server for external communication (defaults to false)
 }
 
 /**
@@ -31,6 +35,8 @@ export class VoxelServer {
   private config: ServerConfig;
   private wss?: WebSocketServer;
   private assetServer?: AssetServer;
+  private mcpServer?: NimbusMCPServer;
+  private ipcServer?: IPCServer;
 
   readonly registry: Registry;
   readonly worldManager: WorldManager;
@@ -134,7 +140,7 @@ export class VoxelServer {
 
     // Start asset HTTP server
     const httpPort = this.config.httpPort || this.config.port + 1;
-    this.assetServer = new AssetServer(this.assetManager, httpPort);
+    this.assetServer = new AssetServer(this.assetManager, httpPort, this.worldManager);
     await this.assetServer.start();
 
     // Finalize registry
@@ -168,6 +174,20 @@ export class VoxelServer {
 
     this.running = true;
 
+    // Start IPC server if enabled
+    if (this.config.enableIPC) {
+      this.ipcServer = new IPCServer(this);
+      await this.ipcServer.start();
+      console.log('[Server] IPC server enabled');
+    }
+
+    // Start MCP server if enabled
+    if (this.config.enableMCP) {
+      this.mcpServer = new NimbusMCPServer(this);
+      await this.mcpServer.start();
+      console.log('[Server] MCP server enabled');
+    }
+
     console.log(`[Server] Server started on port ${this.config.port}`);
     console.log(`[Server] Asset HTTP server on port ${httpPort}`);
     console.log(`[Server] World: ${this.config.worldName} (seed: ${this.config.worldSeed})`);
@@ -181,6 +201,16 @@ export class VoxelServer {
     console.log('[Server] Stopping server...');
 
     this.running = false;
+
+    // Stop MCP server if running
+    if (this.mcpServer) {
+      await this.mcpServer.stop();
+    }
+
+    // Stop IPC server if running
+    if (this.ipcServer) {
+      await this.ipcServer.stop();
+    }
 
     // Close asset HTTP server
     if (this.assetServer) {
@@ -280,6 +310,51 @@ export class VoxelServer {
   }
 
   /**
+   * Handle world selection from client
+   */
+  private async handleWorldSelection(ws: WebSocket, worldName: string): Promise<void> {
+    console.log(`[Server] Client requested world: ${worldName}`);
+
+    try {
+      // Check if world is already loaded
+      let world: any = this.worldManager.get(worldName);
+
+      if (!world) {
+        // Try to load the world
+        console.log(`[Server] Loading world: ${worldName}`);
+        world = await this.worldManager.load(worldName);
+      }
+
+      if (!world) {
+        // World doesn't exist
+        console.error(`[Server] World "${worldName}" not found`);
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: `World "${worldName}" not found`,
+        }));
+        return;
+      }
+
+      // Update client's main world
+      this.mainWorld = world;
+
+      // Send confirmation
+      ws.send(JSON.stringify({
+        type: 'world_selected',
+        world: worldName,
+      }));
+
+      console.log(`[Server] Client connected to world: ${worldName}`);
+    } catch (error) {
+      console.error('[Server] Error loading world:', error);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: `Failed to load world: ${error instanceof Error ? error.message : String(error)}`,
+      }));
+    }
+  }
+
+  /**
    * Handle incoming message
    */
   private handleMessage(ws: WebSocket, data: Buffer): void {
@@ -291,6 +366,10 @@ export class VoxelServer {
       switch (message.type) {
         case 'ping':
           ws.send(JSON.stringify({ type: 'pong', time: Date.now() }));
+          break;
+
+        case 'select_world':
+          this.handleWorldSelection(ws, message.world);
           break;
 
         case 'request_chunk':

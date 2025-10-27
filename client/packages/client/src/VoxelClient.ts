@@ -59,6 +59,7 @@ export class VoxelClient {
   private serverCommandController?: CommandController;
   private windManager: WindManager;
   private skyManager?: SkyManager;
+  private lastServerInfo?: ServerInfo; // Store last connection info for reconnects
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -174,13 +175,13 @@ export class VoxelClient {
   /**
    * Show main menu
    */
-  private showMainMenu(): void {
+  private async showMainMenu(): Promise<void> {
     if (!this.scene) return;
 
     this.mainMenu = new MainMenu(this.scene);
-    this.mainMenu.show((serverInfo: ServerInfo) => {
+    await this.mainMenu.show((serverInfo: ServerInfo) => {
       this.connectToServer(serverInfo);
-    });
+    }, this.lastServerInfo);
   }
 
   /**
@@ -315,6 +316,9 @@ export class VoxelClient {
   private async connectToServer(serverInfo: ServerInfo): Promise<void> {
     console.log('[Client] Connecting to server:', serverInfo);
 
+    // Store server info for reconnects
+    this.lastServerInfo = serverInfo;
+
     if (!this.scene) {
       console.error('[Client] Scene not initialized');
       return;
@@ -380,7 +384,15 @@ export class VoxelClient {
         // Connect to server
         await this.socket.connect(serverUrl);
 
-        console.log('[Client] Connected successfully, waiting for registry sync...');
+        console.log('[Client] Connected successfully');
+
+        // Send world selection if specified
+        if (serverInfo.world) {
+          console.log(`[Client] Selecting world: ${serverInfo.world}`);
+          await this.socket.send('select_world', { world: serverInfo.world });
+        }
+
+        console.log('[Client] Waiting for registry sync...');
 
         // Create player controller for physics and collision
         this.playerController = new PlayerController(this.scene, this.camera, this.chunkManager, this.registry);

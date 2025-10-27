@@ -12,6 +12,12 @@ export interface ServerInfo {
   wireframeMode: boolean;
   renderDistance: number;
   unloadDistance: number;
+  world?: string;  // Selected world name
+}
+
+export interface WorldInfo {
+  name: string;
+  loaded: boolean;
 }
 
 /**
@@ -24,6 +30,8 @@ export class MainMenu {
   private scene: Scene;
   private testCube?: any;
   private selectedPreset: 'gaston' | 'dilbert' | 'popeye' | 'godzilla' = 'gaston';
+  private availableWorlds: WorldInfo[] = [];
+  private selectedWorld?: string;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -64,15 +72,42 @@ export class MainMenu {
   }
 
   /**
+   * Fetch available worlds from server
+   */
+  private async fetchWorlds(address: string, port: number): Promise<WorldInfo[]> {
+    try {
+      // Calculate HTTP port (WebSocket port + 1)
+      const httpPort = port + 1;
+      const response = await fetch(`http://${address}:${httpPort}/worlds`);
+
+      if (!response.ok) {
+        console.warn('[MainMenu] Failed to fetch worlds:', response.statusText);
+        return [];
+      }
+
+      const data = await response.json();
+      return data.worlds || [];
+    } catch (error) {
+      console.warn('[MainMenu] Error fetching worlds:', error);
+      return [];
+    }
+  }
+
+  /**
    * Show the main menu
    */
-  show(onConnect: (server: ServerInfo) => void): void {
+  async show(onConnect: (server: ServerInfo) => void, preselectedServerInfo?: ServerInfo): Promise<void> {
     this.onConnect = onConnect;
+
+    // Use preselected world if provided
+    if (preselectedServerInfo?.world) {
+      this.selectedWorld = preselectedServerInfo.world;
+    }
 
     // Main container
     this.mainContainer = new Rectangle('mainContainer');
     this.mainContainer.width = '400px';
-    this.mainContainer.height = '550px';
+    this.mainContainer.height = '650px';
     this.mainContainer.thickness = 2;
     this.mainContainer.cornerRadius = 10;
     this.mainContainer.background = '#1a1a1aee';
@@ -124,7 +159,7 @@ export class MainMenu {
     nameInput.color = 'white';
     nameInput.background = '#333333';
     nameInput.placeholderText = 'My Server';
-    nameInput.text = 'Local Server';
+    nameInput.text = preselectedServerInfo?.name || 'Local Server';
     nameInput.thickness = 1;
     nameInput.paddingBottom = '15px';
 
@@ -145,7 +180,7 @@ export class MainMenu {
     addressInput.color = 'white';
     addressInput.background = '#333333';
     addressInput.placeholderText = 'localhost';
-    addressInput.text = 'localhost';
+    addressInput.text = preselectedServerInfo?.address || 'localhost';
     addressInput.thickness = 1;
     addressInput.paddingBottom = '15px';
 
@@ -166,9 +201,110 @@ export class MainMenu {
     portInput.color = 'white';
     portInput.background = '#333333';
     portInput.placeholderText = '3003';
-    portInput.text = '3003';
+    portInput.text = preselectedServerInfo?.port?.toString() || '3003';
     portInput.thickness = 1;
     portInput.paddingBottom = '15px';
+
+    // World Selection Label
+    const worldLabel = new TextBlock('worldLabel', 'World:');
+    worldLabel.height = '25px';
+    worldLabel.fontSize = 14;
+    worldLabel.color = 'white';
+    worldLabel.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+    worldLabel.paddingLeft = '40px';
+    worldLabel.paddingBottom = '5px';
+
+    // World Selection Container
+    const worldContainer = new StackPanel('worldContainer');
+    worldContainer.isVertical = false;
+    worldContainer.height = '40px';
+    worldContainer.width = '320px';
+    worldContainer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+    worldContainer.paddingBottom = '15px';
+
+    // World loading text
+    const worldLoadingText = new TextBlock('worldLoadingText', 'Loading worlds...');
+    worldLoadingText.height = '40px';
+    worldLoadingText.fontSize = 14;
+    worldLoadingText.color = '#aaaaaa';
+    worldContainer.addControl(worldLoadingText);
+
+    // Function to fetch and update worlds
+    const updateWorlds = async () => {
+      const address = addressInput.text || 'localhost';
+      const port = parseInt(portInput.text) || 3003;
+
+      worldLoadingText.text = 'Loading worlds...';
+      worldContainer.clearControls();
+      worldContainer.addControl(worldLoadingText);
+
+      const worlds = await this.fetchWorlds(address, port);
+      this.availableWorlds = worlds;
+
+      worldContainer.clearControls();
+
+      if (worlds.length === 0) {
+        const noWorldsText = new TextBlock('noWorldsText', 'No worlds available');
+        noWorldsText.height = '40px';
+        noWorldsText.fontSize = 14;
+        noWorldsText.color = '#ff6666';
+        worldContainer.addControl(noWorldsText);
+        this.selectedWorld = undefined;
+      } else {
+        // Set default selected world
+        this.selectedWorld = worlds[0].name;
+
+        // Create world buttons
+        worlds.forEach((world) => {
+          const worldButton = Button.CreateSimpleButton(`world_${world.name}`, world.name);
+          worldButton.width = `${320 / worlds.length - 5}px`;
+          worldButton.height = '40px';
+          worldButton.fontSize = 12;
+          worldButton.color = 'white';
+          worldButton.background = this.selectedWorld === world.name ? '#4CAF50' : '#333333';
+          worldButton.cornerRadius = 3;
+          worldButton.thickness = 1;
+          worldButton.paddingRight = '5px';
+
+          worldButton.onPointerClickObservable.add(() => {
+            this.selectedWorld = world.name;
+            // Update all button colors
+            worldContainer.children.forEach((child: any) => {
+              if (child.name && child.name.startsWith('world_')) {
+                child.background = '#333333';
+              }
+            });
+            worldButton.background = '#4CAF50';
+          });
+
+          worldButton.onPointerEnterObservable.add(() => {
+            if (this.selectedWorld !== world.name) {
+              worldButton.background = '#444444';
+            }
+          });
+
+          worldButton.onPointerOutObservable.add(() => {
+            if (this.selectedWorld !== world.name) {
+              worldButton.background = '#333333';
+            }
+          });
+
+          worldContainer.addControl(worldButton);
+        });
+      }
+    };
+
+    // Fetch worlds on address/port change
+    addressInput.onTextChangedObservable.add(() => {
+      updateWorlds();
+    });
+
+    portInput.onTextChangedObservable.add(() => {
+      updateWorlds();
+    });
+
+    // Initial world fetch
+    updateWorlds();
 
     // Terrain Preset Label
     const presetLabel = new TextBlock('presetLabel', 'Terrain Detail:');
@@ -286,6 +422,7 @@ export class MainMenu {
         wireframeMode: false, // Wireframe removed
         renderDistance,
         unloadDistance,
+        world: this.selectedWorld,  // Add selected world
       };
 
       this.hide();
@@ -304,6 +441,8 @@ export class MainMenu {
     stack.addControl(addressInput);
     stack.addControl(portLabel);
     stack.addControl(portInput);
+    stack.addControl(worldLabel);
+    stack.addControl(worldContainer);
     stack.addControl(presetLabel);
     stack.addControl(presetContainer);
     stack.addControl(connectButton);

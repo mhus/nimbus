@@ -8,14 +8,17 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { AssetManager } from './AssetManager.js';
+import type { WorldManager } from '../world/WorldManager.js';
 
 export class AssetServer {
   private server: http.Server;
   private assetManager: AssetManager;
+  private worldManager?: WorldManager;
   private port: number;
 
-  constructor(assetManager: AssetManager, port: number) {
+  constructor(assetManager: AssetManager, port: number, worldManager?: WorldManager) {
     this.assetManager = assetManager;
+    this.worldManager = worldManager;
     this.port = port;
 
     // Create HTTP server
@@ -78,6 +81,8 @@ export class AssetServer {
     // Route requests
     if (url === '/manifest' || url === '/manifest.json') {
       this.serveManifest(res);
+    } else if (url === '/worlds' || url === '/worlds.json') {
+      this.serveWorlds(res);
     } else if (url.startsWith('/assets/')) {
       this.serveAsset(url.substring(8), res); // Remove '/assets/' prefix
     } else if (url === '/' || url === '/health') {
@@ -153,6 +158,68 @@ export class AssetServer {
       });
     } catch (error) {
       console.error('[AssetServer] Error serving asset:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Internal server error' }));
+    }
+  }
+
+  /**
+   * Serve worlds list
+   */
+  private serveWorlds(res: http.ServerResponse): void {
+    try {
+      if (!this.worldManager) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'World manager not available' }));
+        return;
+      }
+
+      // Get loaded worlds
+      const loadedWorlds = this.worldManager.getAllWorlds();
+      const loadedWorldNames = new Set(Array.from(loadedWorlds.keys()));
+
+      // Get all worlds from disk
+      const worldsDir = './worlds';
+      const worldList: Array<{ name: string; loaded: boolean }> = [];
+
+      if (fs.existsSync(worldsDir)) {
+        const entries = fs.readdirSync(worldsDir, { withFileTypes: true });
+
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const worldPath = path.join(worldsDir, entry.name);
+            const metadataPath = path.join(worldPath, 'world.json');
+
+            // Check if it's a valid world (has world.json)
+            if (fs.existsSync(metadataPath)) {
+              worldList.push({
+                name: entry.name,
+                loaded: loadedWorldNames.has(entry.name),
+              });
+            }
+          }
+        }
+      }
+
+      // Sort worlds: loaded first, then alphabetically
+      worldList.sort((a, b) => {
+        if (a.loaded === b.loaded) {
+          return a.name.localeCompare(b.name);
+        }
+        return a.loaded ? -1 : 1;
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache', // Don't cache world list
+      });
+
+      res.end(JSON.stringify({
+        worlds: worldList,
+        defaultWorld: worldList.length > 0 ? worldList[0].name : null,
+      }));
+    } catch (error) {
+      console.error('[AssetServer] Error serving worlds:', error);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Internal server error' }));
     }

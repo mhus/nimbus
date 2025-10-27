@@ -31,4 +31,4 @@ Thumbs.db
 node_modules
 dist
 tmp/
-/client/packages/server/worlds/world/chunks/
+chunks/

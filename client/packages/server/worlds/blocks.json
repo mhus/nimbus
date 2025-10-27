@@ -93,5 +93,6 @@
   "cyan_concrete": 91,
   "brown_concrete": 92,
   "blue_concrete": 93,
-  "black_concrete": 94
+  "black_concrete": 94,
+  "test_glowing_cube": 95
 }
