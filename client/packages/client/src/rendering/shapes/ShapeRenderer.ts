@@ -68,6 +68,7 @@ export abstract class ShapeRenderer {
   /**
    * Add a single face to the geometry arrays
    * Handles rotation, UV mapping, and vertex colors
+   * @param uvRotation UV rotation in 90-degree steps (0, 1, 2, 3 for 0°, 90°, 180°, 270° counter-clockwise)
    */
   protected addFace(
     v1: number[],
@@ -86,7 +87,8 @@ export abstract class ShapeRenderer {
     normals: number[],
     uvs: number[],
     colors: number[],
-    vertexIndex: number
+    vertexIndex: number,
+    uvRotation: number = 0
   ): void {
     // Apply rotation if matrix exists
     const vertices = [v1, v2, v3, v4];
@@ -122,15 +124,29 @@ export abstract class ShapeRenderer {
     }
 
     // UVs (texture coordinates from atlas)
+    // Apply UV rotation (0 = no rotation, 1 = 90° CCW, 2 = 180°, 3 = 270° CCW)
+    const uvCoords = [
+      [atlasUV.u0, atlasUV.v0], // Bottom-left
+      [atlasUV.u1, atlasUV.v0], // Bottom-right
+      [atlasUV.u1, atlasUV.v1], // Top-right
+      [atlasUV.u0, atlasUV.v1], // Top-left
+    ];
+
+    // Rotate UV coordinates by shifting array
+    const rotatedUVs = uvCoords.slice();
+    if (uvRotation !== 0) {
+      const rotSteps = ((uvRotation % 4) + 4) % 4; // Normalize to 0-3
+      for (let i = 0; i < rotSteps; i++) {
+        const last = rotatedUVs.pop()!;
+        rotatedUVs.unshift(last);
+      }
+    }
+
     uvs.push(
-      atlasUV.u0,
-      atlasUV.v0, // Bottom-left
-      atlasUV.u1,
-      atlasUV.v0, // Bottom-right
-      atlasUV.u1,
-      atlasUV.v1, // Top-right
-      atlasUV.u0,
-      atlasUV.v1 // Top-left
+      ...rotatedUVs[0], // Bottom-left
+      ...rotatedUVs[1], // Bottom-right
+      ...rotatedUVs[2], // Top-right
+      ...rotatedUVs[3]  // Top-left
     );
 
     // Colors (RGBA for all 4 vertices)

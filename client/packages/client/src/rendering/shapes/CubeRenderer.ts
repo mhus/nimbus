@@ -124,7 +124,8 @@ export class CubeRenderer extends ShapeRenderer {
       normals,
       uvs,
       colors,
-      currentVertexIndex
+      currentVertexIndex,
+      1 // Rotate UV 90° counter-clockwise (left)
     );
     currentVertexIndex += 4;
 
@@ -146,7 +147,8 @@ export class CubeRenderer extends ShapeRenderer {
       normals,
       uvs,
       colors,
-      currentVertexIndex
+      currentVertexIndex,
+      1 // Rotate UV 90° counter-clockwise (left)
     );
     currentVertexIndex += 4;
 
@@ -168,7 +170,8 @@ export class CubeRenderer extends ShapeRenderer {
       normals,
       uvs,
       colors,
-      currentVertexIndex
+      currentVertexIndex,
+      1 // Rotate UV 90° counter-clockwise (left)
     );
     currentVertexIndex += 4;
 
@@ -190,7 +193,8 @@ export class CubeRenderer extends ShapeRenderer {
       normals,
       uvs,
       colors,
-      currentVertexIndex
+      currentVertexIndex,
+      1 // Rotate UV 90° counter-clockwise (left)
     );
 
     // Add wind properties if rendering transparent blocks
