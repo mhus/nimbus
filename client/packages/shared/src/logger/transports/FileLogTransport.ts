@@ -24,6 +24,7 @@
 
 import type { LogEntry } from '../LogEntry';
 import { LogLevelNames } from '../LogLevel';
+import { ExceptionHandler } from '../../errors/ExceptionHandler';
 
 export interface FileLogTransportOptions {
   /** Log filename */
@@ -82,32 +83,40 @@ export class FileLogTransport {
    * Must be called before logging
    */
   async initialize(): Promise<void> {
-    if (this.initialized) {
-      return;
-    }
+    try {
+      if (this.initialized) {
+        return;
+      }
 
-    // Check if File System Access API is available
-    this.useFileSystemAPI =
-      this.options.useFileSystemAPI &&
-      typeof window !== 'undefined' &&
-      'showSaveFilePicker' in window;
+      // Check if File System Access API is available
+      this.useFileSystemAPI =
+        this.options.useFileSystemAPI &&
+        typeof window !== 'undefined' &&
+        'showSaveFilePicker' in window;
 
-    if (this.useFileSystemAPI) {
-      await this.initializeFileSystemAPI();
-    } else {
+      if (this.useFileSystemAPI) {
+        await this.initializeFileSystemAPI();
+      } else {
+        console.info(
+          '[FileLogTransport] Using download fallback (File System Access API not available)'
+        );
+      }
+
+      // Start auto-flush timer
+      this.startAutoFlush();
+
+      this.initialized = true;
+
       console.info(
-        '[FileLogTransport] Using download fallback (File System Access API not available)'
+        `[FileLogTransport] Initialized: ${this.options.filename} (${this.options.maxSizeMB} MB max, ${this.useFileSystemAPI ? 'File System API' : 'Download API'})`
+      );
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'FileLogTransport.initialize',
+        { options: this.options }
       );
     }
-
-    // Start auto-flush timer
-    this.startAutoFlush();
-
-    this.initialized = true;
-
-    console.info(
-      `[FileLogTransport] Initialized: ${this.options.filename} (${this.options.maxSizeMB} MB max, ${this.useFileSystemAPI ? 'File System API' : 'Download API'})`
-    );
   }
 
   /**
@@ -151,18 +160,23 @@ export class FileLogTransport {
    * Transport function for LoggerFactory
    */
   transport = (entry: LogEntry): void => {
-    if (!this.initialized) {
-      console.warn('[FileLogTransport] Not initialized, call initialize() first');
-      return;
-    }
+    try {
+      if (!this.initialized) {
+        console.warn('[FileLogTransport] Not initialized, call initialize() first');
+        return;
+      }
 
-    const line = this.formatEntry(entry);
-    this.buffer.push(line);
-    this.bufferSize += line.length;
+      const line = this.formatEntry(entry);
+      this.buffer.push(line);
+      this.bufferSize += line.length;
 
-    // Flush if buffer is getting large (>100KB)
-    if (this.bufferSize > 100 * 1024) {
-      this.flush();
+      // Flush if buffer is getting large (>100KB)
+      if (this.bufferSize > 100 * 1024) {
+        this.flush();
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'FileLogTransport.transport', { entry });
+      // Don't rethrow - transport errors should not break logging
     }
   };
 
@@ -194,25 +208,30 @@ export class FileLogTransport {
    * Flush buffer to file
    */
   async flush(): Promise<void> {
-    if (this.buffer.length === 0) {
-      return;
-    }
+    try {
+      if (this.buffer.length === 0) {
+        return;
+      }
 
-    const content = this.buffer.join('');
-    this.buffer = [];
-    this.bufferSize = 0;
+      const content = this.buffer.join('');
+      this.buffer = [];
+      this.bufferSize = 0;
 
-    if (this.useFileSystemAPI && this.writable) {
-      try {
-        await this.writable.write(content);
-      } catch (error) {
-        console.error('[FileLogTransport] Failed to write:', error);
-        // Fallback to download
+      if (this.useFileSystemAPI && this.writable) {
+        try {
+          await this.writable.write(content);
+        } catch (error) {
+          console.error('[FileLogTransport] Failed to write:', error);
+          // Fallback to download
+          this.downloadLog(content);
+        }
+      } else {
+        // Fallback: append to download buffer
         this.downloadLog(content);
       }
-    } else {
-      // Fallback: append to download buffer
-      this.downloadLog(content);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'FileLogTransport.flush');
+      // Don't rethrow - flush errors should not break the application
     }
   }
 
@@ -220,13 +239,18 @@ export class FileLogTransport {
    * Download log content
    */
   private downloadLog(content: string): void {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = this.options.filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = this.options.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'FileLogTransport.downloadLog');
+      // Don't rethrow - download errors should not break the application
+    }
   }
 
   /**
@@ -252,25 +276,32 @@ export class FileLogTransport {
    * Close file transport
    */
   async close(): Promise<void> {
-    this.stopAutoFlush();
+    try {
+      this.stopAutoFlush();
 
-    // Flush remaining buffer
-    await this.flush();
+      // Flush remaining buffer
+      await this.flush();
 
-    // Close writable stream
-    if (this.writable) {
-      try {
-        await this.writable.close();
-      } catch (error) {
-        console.error('[FileLogTransport] Failed to close:', error);
+      // Close writable stream
+      if (this.writable) {
+        try {
+          await this.writable.close();
+        } catch (error) {
+          console.error('[FileLogTransport] Failed to close:', error);
+        }
+        this.writable = null;
       }
-      this.writable = null;
+
+      this.fileHandle = null;
+      this.initialized = false;
+
+      console.info('[FileLogTransport] Closed');
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'FileLogTransport.close'
+      );
     }
-
-    this.fileHandle = null;
-    this.initialized = false;
-
-    console.info('[FileLogTransport] Closed');
   }
 
   /**

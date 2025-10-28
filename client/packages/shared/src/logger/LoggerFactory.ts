@@ -4,6 +4,7 @@
 
 import { Logger, type LoggerConfig } from './Logger';
 import { LogLevel, parseLogLevel } from './LogLevel';
+import { ExceptionHandler } from '../errors/ExceptionHandler';
 
 /**
  * Global logger configuration
@@ -98,52 +99,57 @@ class LoggerFactoryImpl {
    * Configure from environment
    */
   configureFromEnv(): void {
-    // Check environment variable for log level
-    let envLevel: string | undefined;
+    try {
+      // Check environment variable for log level
+      let envLevel: string | undefined;
 
-    // Node.js environment
-    if (typeof process !== 'undefined' && process.env) {
-      envLevel = process.env.LOG_LEVEL;
-    }
-
-    // Vite environment (browser)
-    if (!envLevel && typeof import.meta !== 'undefined') {
-      const meta = import.meta as any;
-      if (meta.env) {
-        envLevel = meta.env.VITE_LOG_LEVEL;
+      // Node.js environment
+      if (typeof process !== 'undefined' && process.env) {
+        envLevel = process.env.LOG_LEVEL;
       }
-    }
 
-    if (envLevel) {
-      const level = parseLogLevel(envLevel);
-      this.setDefaultLevel(level);
-    }
-
-    // Check for per-logger levels (format: "NetworkService=DEBUG,ChunkService=TRACE")
-    let envLoggers: string | undefined;
-
-    // Node.js environment
-    if (typeof process !== 'undefined' && process.env) {
-      envLoggers = process.env.LOG_LOGGERS;
-    }
-
-    // Vite environment (browser)
-    if (!envLoggers && typeof import.meta !== 'undefined') {
-      const meta = import.meta as any;
-      if (meta.env) {
-        envLoggers = meta.env.VITE_LOG_LOGGERS;
-      }
-    }
-
-    if (envLoggers) {
-      const parts = envLoggers.split(',');
-      parts.forEach((part: string) => {
-        const [name, levelStr] = part.split('=');
-        if (name && levelStr) {
-          const level = parseLogLevel(levelStr.trim());
-          this.setLoggerLevel(name.trim(), level);
+      // Vite environment (browser)
+      if (!envLevel && typeof import.meta !== 'undefined') {
+        const meta = import.meta as any;
+        if (meta.env) {
+          envLevel = meta.env.VITE_LOG_LEVEL;
         }
-      });
+      }
+
+      if (envLevel) {
+        const level = parseLogLevel(envLevel);
+        this.setDefaultLevel(level);
+      }
+
+      // Check for per-logger levels (format: "NetworkService=DEBUG,ChunkService=TRACE")
+      let envLoggers: string | undefined;
+
+      // Node.js environment
+      if (typeof process !== 'undefined' && process.env) {
+        envLoggers = process.env.LOG_LOGGERS;
+      }
+
+      // Vite environment (browser)
+      if (!envLoggers && typeof import.meta !== 'undefined') {
+        const meta = import.meta as any;
+        if (meta.env) {
+          envLoggers = meta.env.VITE_LOG_LOGGERS;
+        }
+      }
+
+      if (envLoggers) {
+        const parts = envLoggers.split(',');
+        parts.forEach((part: string) => {
+          const [name, levelStr] = part.split('=');
+          if (name && levelStr) {
+            const level = parseLogLevel(levelStr.trim());
+            this.setLoggerLevel(name.trim(), level);
+          }
+        });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'LoggerFactory.configureFromEnv');
+      // Don't rethrow - configuration errors should not break initialization
     }
   }
 

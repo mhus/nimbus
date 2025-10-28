@@ -286,6 +286,155 @@ LoggerFactory.setLoggerLevel('NetworkService', LogLevel.TRACE);
 
 See `packages/shared/src/logger/LOGGER_USAGE.md` for detailed documentation.
 
+### Exception Handling
+
+**CRITICAL: All exceptions must be handled using the central ExceptionHandler.**
+
+The project uses a central exception handler (`@nimbus/shared/ExceptionHandler`) to ensure all exceptions are properly logged and can be handled uniformly.
+
+#### When to Use Try-Catch Blocks
+
+Add try-catch blocks in these scenarios:
+
+1. **Top-level initialization code** - Main entry points, constructors
+2. **Async operations** - Network calls, file I/O, database operations
+3. **Event handlers** - User interactions, timers, callbacks
+4. **Service boundaries** - Public API methods, message handlers
+5. **Resource management** - File handles, connections, cleanup operations
+
+#### How to Use ExceptionHandler
+
+```typescript
+import { ExceptionHandler } from '@nimbus/shared';
+
+// Pattern 1: Handle and rethrow (for initialization, critical operations)
+try {
+  // Critical operation that must succeed
+  await initializeService();
+} catch (error) {
+  throw ExceptionHandler.handleAndRethrow(
+    error,
+    'ServiceName.methodName',
+    { contextData: 'optional' }
+  );
+}
+
+// Pattern 2: Handle without rethrowing (for non-critical operations)
+try {
+  // Operation that can fail gracefully
+  await savePreferences();
+} catch (error) {
+  ExceptionHandler.handle(error, 'ServiceName.methodName', { context });
+  // Continue execution with fallback behavior
+}
+
+// Pattern 3: Wrap async functions
+const wrappedFunction = ExceptionHandler.wrapAsync(
+  async () => { /* ... */ },
+  'ServiceName.methodName'
+);
+
+// Pattern 4: Wrap sync functions
+const wrappedSync = ExceptionHandler.wrap(
+  () => { /* ... */ },
+  'ServiceName.methodName'
+);
+```
+
+#### Exception Handling Guidelines
+
+**✅ DO:**
+- Use try-catch at boundaries where errors cannot be propagated further
+- Always call `ExceptionHandler.handle()` or `ExceptionHandler.handleAndRethrow()`
+- Provide meaningful context names: `'ClassName.methodName'`
+- Include context data: `{ userId, operation, state }`
+- Decide whether to rethrow based on criticality
+
+**❌ DON'T:**
+- Use bare try-catch without ExceptionHandler
+- Swallow exceptions silently (always log via ExceptionHandler)
+- Use generic context names like 'error' or 'exception'
+- Catch exceptions you can't handle properly
+
+#### Context Naming Convention
+
+Use this format for context parameter: `'ClassName.methodName'`
+
+Examples:
+- `'NetworkService.connect'`
+- `'ChunkRenderer.generateMesh'`
+- `'FileLogTransport.initialize'`
+- `'NimbusClient.init'`
+
+#### Examples from Codebase
+
+**Example 1: Critical initialization (rethrow)**
+```typescript
+// packages/shared/src/logger/transports/FileLogTransport.ts
+async initialize(): Promise<void> {
+  try {
+    // ... initialization logic
+  } catch (error) {
+    throw ExceptionHandler.handleAndRethrow(
+      error,
+      'FileLogTransport.initialize',
+      { options: this.options }
+    );
+  }
+}
+```
+
+**Example 2: Non-critical operation (don't rethrow)**
+```typescript
+// packages/shared/src/logger/transports/FileLogTransport.ts
+private downloadLog(content: string): void {
+  try {
+    // ... download logic
+  } catch (error) {
+    ExceptionHandler.handle(error, 'FileLogTransport.downloadLog');
+    // Don't rethrow - download errors should not break the application
+  }
+}
+```
+
+**Example 3: Transport errors (never rethrow)**
+```typescript
+// packages/shared/src/logger/transports/FileLogTransport.ts
+transport = (entry: LogEntry): void => {
+  try {
+    // ... transport logic
+  } catch (error) {
+    ExceptionHandler.handle(error, 'FileLogTransport.transport', { entry });
+    // Don't rethrow - transport errors should not break logging
+  }
+};
+```
+
+#### Custom Error Handlers
+
+You can register a custom handler for user-facing error notifications:
+
+```typescript
+import { ExceptionHandler } from '@nimbus/shared';
+
+// Register custom handler (e.g., show error dialog)
+ExceptionHandler.registerHandler((error, context, data) => {
+  // Show user-friendly error message
+  showErrorDialog({
+    title: 'An error occurred',
+    message: error.message,
+    details: context,
+  });
+});
+
+// Later: unregister
+ExceptionHandler.registerHandler(null);
+```
+
+**Important:** All exceptions are ALWAYS logged via the logger, regardless of custom handlers. Custom handlers are for additional actions like showing UI dialogs.
+
+See `packages/shared/src/logger/ExceptionHandler.ts` for implementation details.
+
 ### File Organization
 
 Each data structure should have its own file. Enums, status types, etc. related to a specific type can be defined in the same file as long as they are only relevant to that type.

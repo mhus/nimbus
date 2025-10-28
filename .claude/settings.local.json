@@ -15,7 +15,8 @@
       "Bash(pnpm build:editor:*)",
       "Bash(pnpm build:shared:*)",
       "Bash(pnpm build:server)",
-      "Bash(pnpm build:viewer:*)"
+      "Bash(pnpm build:viewer:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
