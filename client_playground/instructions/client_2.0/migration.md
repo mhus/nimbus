@@ -6,7 +6,7 @@
 > rename client nach client_playground
 > create new client folder for client 2.0
 
-Der code in 'client_playground' ist ein erster prototyp für die 3D client engine.
+Zur Info: Der code in 'client_playground' ist ein erster prototyp für die 3D client engine.
 Der neue Code soll in 'client' für die version 2.0 der client engine entwickelt werden.
 Die Entwicklung soll schritt für schritt einen bereich nach dem anderen neu implementieren.
 Die Erkenntnisse und verbesserungen aus dem prototypen sollen dabei einfliessen. Es wird
@@ -32,15 +32,17 @@ Der client wird in verschiedenen builds in unterschiedlichen versionen bereitges
 
 [x] Erstelle in client eine CLAUDE.md datei mit den informationen zur nutzung von claude für die entwicklung.
 [x] Erstelle in pnpm ein monorepo mit den packages: shared, client, server. Für Typescript. Die App dateien sollen NimbusClient und NimbusServer heissen.
-===
+[ ] Erstelle builds im client für viewer und editor. Mit pnpm run build:viewer und pnpm run build:editor.
+
 ## Basic Shared Types
 
-Jede Datenstruktur soll seine eigene Datei bekommen. Enums, status, etc. zu dem Type Können in der gelchen Datei definiert sein, solange sie nur für 
+Zur Info: Jede Datenstruktur soll seine eigene Datei bekommen. Enums, status, etc. zu dem Type Können in der gelchen Datei definiert sein, solange sie nur für 
 diesen Type relevant sind.
 
-[ ] Lege die Typen aus client/instructions/client_2.0/object-model-2.0.md in shared/types an.
-[ ] Lege die Network Messages aus client/instructions/client_2.0/network-model-2.0.md in shared/network an.
-
+[x] Lege die Typen aus client/instructions/client_2.0/object-model-2.0.md in shared/types an.
+[x] Lege die Network Messages aus client/instructions/client_2.0/network-model-2.0.md in shared/network an.
+[ ] Hast du Anmerkungen zu den erzeugten Typen?
+===
 ## Basic Client Types
 
 [ ] AppContext: Enthält referenzen auf alle services, konfigurationen, etc. die der client braucht. Lege im main den appContext an.

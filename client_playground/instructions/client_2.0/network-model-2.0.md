@@ -316,7 +316,7 @@ Der Server sendet Benachrichtigungen an den Client (z.B. Systemmeldungen, Chat-N
 ```json
 {"t": "n", "d": 
   {
-    "t": "system", // type: system, chat, warning, error
+    "t": 1, // type: 1=system, 2=chat, 3=warning, 4=error
     "f": "Server", // from: optional, z.B. bei chat Nachrichten
     "m": "Welcome to the server!", // message
     "ts": 1234567890 // UTC timestamp
