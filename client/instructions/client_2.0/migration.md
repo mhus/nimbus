@@ -43,21 +43,46 @@ diesen Type relevant sind.
 
 [ ] AppContext: Enthält referenzen auf alle services, konfigurationen, etc. die der client braucht. Lege im main den appContext an.
 [ ] Services: Lege die services aus client/instructions/client_2.0/migration-concepts.md in client/services an.
+[ ] InputController und InputService anlegen, InputController wid im InputService erstellt und gehalten. InputService im AppContent
 
 ## Basic Network Protocoll
 
-[ ] Implementiere die network messages aus client/instructions/client_2.0/network-model-2.0.md im client/network.
-[ ] Implementiere den WebSocket Client im ConnectionService.
-[ ] Implementiere die Login Nachricht und die Ping/Pong Nachrichten im ConnectionService.
-[ ] Implementiere die Chunk Registration Nachricht im ConnectionService.
-[ ] Implementiere die Chunk Anfrage Nachricht im ConnectionService.
-[ ] Implementiere die Chunk Update Nachricht im ConnectionService.
+[ ] Implementiere die network messages aus client/instructions/client_2.0/network-model-2.0.md im client/network. Jeweils in einem eigenen Handler als dummy.
+[ ] Implementiere den WebSocket Client im NetworkService.
+[ ] Implementiere die Login Nachricht und die Ping/Pong Nachrichten im NetworkService.
+[ ] 
 
-## Basic Chunk Rendering
+## Start Screen
 
-[ ] Implementiere den ChunkService mit der Fähigkeit Chunks zu verwalten.
-[ ] Implementiere den ChunkRenderService mit der Fähigkeit Chunks zu rendern.
-[ ] Implementiere die Grundlegende Darstellung von Chunks mit Blöcken im ChunkRenderService.
+[ ] Implementiere einen einfachen Start Screen im client der die Login Nachricht sendet und auf die Antwort wartet.
+[ ] Login Credentials sind vorerst als env variablen im client hinterlegt.
+    - CLIENT_USERNAME
+    - CLIENT_PASSWORD
+[ ] Server credentials sind vorerst als env variablen im client hinterlegt.
+    - SERVER_WEBSOCKET_URL
+    - SERVER_API_URL
+[ ] Der StartScreen zeigt eine Liste von Welten an, in die der Spieler einloggen kann. Die Welten können via
+    - Siehe client_playground/packages/client/src/VoxelClient.ts + client_playground/packages/client/src/gui/MainMenu.ts
+    - Der StartScreen soll aber in einer eigenen Datei StartScreen.ts sein.
+    - Erstelle eine Klasse Engine in Engine.ts die das eigentliche 3D initiiert und verwaltet, auch die scene wird hier gehalten.
+    - SERVER_API_URL/worlds abgerufen werden
+    - Wnn die Welt ausgew
+[ ] Nach erfolgreichem Login wird der screen angezeigt und das laden der chunks beginnt.
+    - Wird in Engine.ts dargestellt 
+[ ] Vor dem Starten den InputService initialisieren und den InputController anlegen.
+    - InputController ist ein abstracter Controller der die input events aus dem system aufnimmt und die 
+      entsprechenden InputActions auslöst. Ableitungen: BrowserInputController, XBoxInputController, etc.
+    - InputController stellt slots bereit in die InputActions abgelegt werden können. 
+      z.b. BrowserInputController bietet den Slot "key_q", "key_w", "key_e", "key_r", "key_shift_a", "key_arrow_up", "mouse_left", "mouse_right", etc. an.
+    - Default ist BrowserInputController und dieser soll auch angelegt werden. Der InputService legt dann den InputController an und legt erstmal const actions in die Slots (später per settings)
+    - InputService ist ein Singleton wird in AppContext abgelegt.
+    - InputAction als abstracte Klasse anlegen. Ableitungen: MoveForwardAction, MoveBackwardAction, JumpAction, etc.
+      So anlegen, das sowohl single actions (keys, buttons) also auch maus oder controller steuerung moeglich ist.
+[ ] CamControl Klasse anlegen, die die Kamera steuert. Anlegen der InputActions in InputService, die die Camera 
+    ueber CamControl steuern.
 
+## Networking und Server
 
-
+[ ] Im Client NetworkService anlegen, der die WebSocket zum Server verwaltet. hier connectSocket() aufrufen wenn die Welt
+im StartScreen ausgewählt wurde.
+[ ] Das login und Ping 
