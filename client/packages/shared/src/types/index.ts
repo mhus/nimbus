@@ -4,6 +4,8 @@
 
 // Core types
 export * from './Vector3';
+export * from './Rotation';
+export * from './Color';
 export * from './Shape';
 
 // Block types
@@ -15,9 +17,13 @@ export * from './BlockMetadata';
 // Chunk types
 export * from './ChunkData';
 
-// Client block types
+// World types
+export * from './World';
+
+// Client types
 export * from './ClientBlockType';
 export * from './ClientBlock';
+export * from './ClientChunk';
 
 // Animation and effects
 export * from './AnimationData';

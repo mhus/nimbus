@@ -3,17 +3,7 @@
  */
 
 import type { BaseMessage } from '../BaseMessage';
-
-/**
- * Rotation data (yaw and pitch)
- */
-export interface Rotation {
-  /** Yaw (horizontal rotation) */
-  y: number;
-
-  /** Pitch (vertical rotation) */
-  p: number;
-}
+import type { Rotation } from '../../types/Rotation';
 
 /**
  * User movement update data

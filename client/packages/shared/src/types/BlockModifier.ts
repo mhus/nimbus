@@ -78,25 +78,191 @@ export enum TransparencyMode {
 }
 
 /**
- * Direction flags
+ * Direction flags (bitfield)
  */
 export enum Direction {
-  NORTH = 1,
-  SOUTH = 2,
-  EAST = 4,
-  WEST = 8,
-  UP = 16,
-  DOWN = 32,
+  NORTH = 1 << 0,  // 0b000001 = 1
+  SOUTH = 1 << 1,  // 0b000010 = 2
+  EAST = 1 << 2,   // 0b000100 = 4
+  WEST = 1 << 3,   // 0b001000 = 8
+  UP = 1 << 4,     // 0b010000 = 16
+  DOWN = 1 << 5,   // 0b100000 = 32
 }
+
+/**
+ * Helper utilities for Direction bitfield operations
+ */
+export namespace DirectionHelper {
+  /**
+   * Check if a direction is set in bitfield
+   * @param value Direction bitfield value
+   * @param dir Direction to check
+   * @returns True if direction is set
+   */
+  export function hasDirection(value: number, dir: Direction): boolean {
+    return (value & dir) !== 0;
+  }
+
+  /**
+   * Add direction to bitfield
+   * @param value Current bitfield value
+   * @param dir Direction to add
+   * @returns Updated bitfield value
+   */
+  export function addDirection(value: number, dir: Direction): number {
+    return value | dir;
+  }
+
+  /**
+   * Remove direction from bitfield
+   * @param value Current bitfield value
+   * @param dir Direction to remove
+   * @returns Updated bitfield value
+   */
+  export function removeDirection(value: number, dir: Direction): number {
+    return value & ~dir;
+  }
+
+  /**
+   * Toggle direction in bitfield
+   * @param value Current bitfield value
+   * @param dir Direction to toggle
+   * @returns Updated bitfield value
+   */
+  export function toggleDirection(value: number, dir: Direction): number {
+    return value ^ dir;
+  }
+
+  /**
+   * Get all directions in bitfield
+   * @param value Direction bitfield value
+   * @returns Array of direction names
+   */
+  export function getDirections(value: number): string[] {
+    const directions: string[] = [];
+    if (hasDirection(value, Direction.NORTH)) directions.push('north');
+    if (hasDirection(value, Direction.SOUTH)) directions.push('south');
+    if (hasDirection(value, Direction.EAST)) directions.push('east');
+    if (hasDirection(value, Direction.WEST)) directions.push('west');
+    if (hasDirection(value, Direction.UP)) directions.push('up');
+    if (hasDirection(value, Direction.DOWN)) directions.push('down');
+    return directions;
+  }
+
+  /**
+   * Count number of directions set
+   * @param value Direction bitfield value
+   * @returns Number of directions (0-6)
+   */
+  export function countDirections(value: number): number {
+    let count = 0;
+    let bits = value & 0b00111111; // Mask to 6 bits
+    while (bits) {
+      count += bits & 1;
+      bits >>= 1;
+    }
+    return count;
+  }
+
+  /**
+   * Create direction bitfield from direction names
+   * @param directions Array of direction names
+   * @returns Direction bitfield value
+   */
+  export function fromDirections(directions: string[]): number {
+    let value = 0;
+    directions.forEach((dir) => {
+      switch (dir.toLowerCase()) {
+        case 'north':
+          value = addDirection(value, Direction.NORTH);
+          break;
+        case 'south':
+          value = addDirection(value, Direction.SOUTH);
+          break;
+        case 'east':
+          value = addDirection(value, Direction.EAST);
+          break;
+        case 'west':
+          value = addDirection(value, Direction.WEST);
+          break;
+        case 'up':
+          value = addDirection(value, Direction.UP);
+          break;
+        case 'down':
+          value = addDirection(value, Direction.DOWN);
+          break;
+      }
+    });
+    return value;
+  }
+
+  /**
+   * Check if any horizontal direction is set
+   * @param value Direction bitfield value
+   * @returns True if north, south, east, or west is set
+   */
+  export function hasHorizontalDirection(value: number): boolean {
+    return (
+      hasDirection(value, Direction.NORTH) ||
+      hasDirection(value, Direction.SOUTH) ||
+      hasDirection(value, Direction.EAST) ||
+      hasDirection(value, Direction.WEST)
+    );
+  }
+
+  /**
+   * Check if any vertical direction is set
+   * @param value Direction bitfield value
+   * @returns True if up or down is set
+   */
+  export function hasVerticalDirection(value: number): boolean {
+    return hasDirection(value, Direction.UP) || hasDirection(value, Direction.DOWN);
+  }
+
+  /**
+   * Get opposite direction
+   * @param dir Direction
+   * @returns Opposite direction
+   */
+  export function getOpposite(dir: Direction): Direction {
+    switch (dir) {
+      case Direction.NORTH:
+        return Direction.SOUTH;
+      case Direction.SOUTH:
+        return Direction.NORTH;
+      case Direction.EAST:
+        return Direction.WEST;
+      case Direction.WEST:
+        return Direction.EAST;
+      case Direction.UP:
+        return Direction.DOWN;
+      case Direction.DOWN:
+        return Direction.UP;
+      default:
+        return dir;
+    }
+  }
+
+  /**
+   * Convert to string representation for debugging
+   * @param value Direction bitfield value
+   * @returns String representation
+   */
+  export function toString(value: number): string {
+    const directions = getDirections(value);
+    return `Direction(${directions.join(' | ')})`;
+  }
+}
+
 
 /**
  * UV mapping coordinates
  */
 export interface UVMapping {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
 }
 
 /**

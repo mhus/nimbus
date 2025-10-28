@@ -10,7 +10,16 @@ export * from './types';
 // Network
 export * from './network';
 
-// Utils (to be added)
-// export * from './utils';
+// Validators
+export * from './validators';
+
+// Utils
+export * from './utils';
+
+// Constants
+export * from './constants';
+
+// Errors
+export * from './errors';
 
 export const SHARED_VERSION = '2.0.0';

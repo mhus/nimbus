@@ -68,7 +68,7 @@ const receivedBlock: Block = JSON.parse(message).d[0];
 ```typescript
 interface ClientBlock {
   block: Block;                    // Original network data
-  chunkXZ: { x: number; z: number };
+  chunk: { cx: number; cz: number };
 
   // Cached references (resolved from IDs)
   blockType: BlockType;            // Resolved from registry
@@ -94,7 +94,7 @@ const networkBlock: Block = receiveFromNetwork();
 // Client creates ClientBlock with resolved references
 const clientBlock: ClientBlock = {
   block: networkBlock,
-  chunkXZ: { x: 0, z: 0 },
+  chunk: { cx: 0, cz: 0 },
 
   // Resolve references
   blockType: registry.getBlockType(networkBlock.blockTypeId),
@@ -161,6 +161,14 @@ onMessage((message) => {
     clientBlock.isDirty = true;
   });
 });
+
+function worldToChunk(position: Vector3): { cx: number; cz: number } {
+  const chunkSize = 16;
+  return {
+    cx: Math.floor(position.x / chunkSize),
+    cz: Math.floor(position.z / chunkSize)
+  };
+}
 ```
 
 ### 3. Client Resolves References
@@ -182,7 +190,7 @@ function createClientBlock(block: Block): ClientBlock {
 
   return {
     block,
-    chunkXZ: worldToChunk(block.position),
+    chunk: worldToChunk(block.position),
     blockType,
     metadata: block.metadata,
     currentModifier,
@@ -316,7 +324,7 @@ sendMessage({ t: 'b.u', d: [block] });
 // 3. Client receives and processes
 const clientBlock: ClientBlock = {
   block: block,
-  chunkXZ: { x: 0, z: 0 },
+  chunk: { cx: 0, cz: 0 },
   blockType: registry.getBlockType(42),
   currentModifier: registry.getBlockType(42).modifiers[0],
   clientBlockType: createClientBlockType(...),

@@ -43,8 +43,11 @@ diesen Type relevant sind.
 [x] Lege die Network Messages aus client/instructions/client_2.0/network-model-2.0.md in shared/network an.
 [ ] Hast du Anmerkungen zu den erzeugten Typen?
 [x] Kurze Anmerkung: Bitte Coordinaten immer richtig benennen: x, y, z für Welt-Coordinaten, cx, cy, cz für Chunk-Coordinaten, lx, ly, lz für Local-Coordinaten (vermeiden).
-    Bitte fü´ge das noch in die CLAUDE.md datei hinzu und aktualisiere ChunkData entsprechend.
+    Bitte füge das noch in die CLAUDE.md datei hinzu und aktualisiere ChunkData entsprechend.
 [x] Passe noch client/instructions/client_2.0/object-model-2.0.md und client/instructions/client_2.0/network-model-2.0.md mit den Aenderungen an.
+[ ] Verschiebe alle Client related typen (ClientChunk ClientBlock etc.) in client/types.
+[ ] Verschiebe alle Server related typen (ServerChunk ServerBlock etc.) in server/types. (Gibt es welche?)
+
 ===
 ## Basic Client Types
 

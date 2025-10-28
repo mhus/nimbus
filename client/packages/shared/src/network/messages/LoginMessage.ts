@@ -4,47 +4,7 @@
 
 import type { RequestMessage, ResponseMessage } from '../BaseMessage';
 import type { ClientType } from '../MessageTypes';
-import type { Vector3 } from '../../types/Vector3';
-
-/**
- * World information
- */
-export interface WorldInfo {
-  worldId: string;
-  name: string;
-  description?: string;
-  start: Vector3;
-  stop: Vector3;
-  chunkSize: number;
-  assetPath: string;
-  assetPort?: number;
-  worldGroupId?: string;
-  status: number;
-  createdAt: string;
-  updatedAt: string;
-  owner: {
-    user: string;
-    displayName: string;
-    email?: string;
-  };
-  settings: {
-    maxPlayers: number;
-    allowGuests: boolean;
-    pvpEnabled: boolean;
-    pingInterval: number;
-  };
-  license?: {
-    type: string;
-    expiresAt?: string;
-  };
-  startArea?: {
-    x: number;
-    y: number;
-    z: number;
-    radius: number;
-    rotation: number;
-  };
-}
+import type { WorldInfo } from '../../types/World';
 
 /**
  * Login request with username/password

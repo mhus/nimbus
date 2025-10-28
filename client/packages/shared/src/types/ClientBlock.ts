@@ -18,8 +18,8 @@ export interface ClientBlock {
   /** Original block instance (network data) */
   block: Block;
 
-  /** Chunk XZ coordinates */
-  chunkXZ: { x: number; z: number };
+  /** Chunk coordinates */
+  chunk: { cx: number; cz: number };
 
   // Cached references (resolved from IDs)
 

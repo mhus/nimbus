@@ -225,7 +225,7 @@ Wird NICHT über Netzwerk übertragen!
 
 Parameters:
 - block : Block (original network data)
-- chunkXZ : { cx: number, cz: number } (chunk coordinates)
+- chunk : { cx: number, cz: number } (chunk coordinates)
 - blockType : BlockType (cached, resolved from block.blockTypeId)
 - ?metadata : BlockMetadata (cached)
 - currentModifier : BlockModifier (cached, resolved from status)

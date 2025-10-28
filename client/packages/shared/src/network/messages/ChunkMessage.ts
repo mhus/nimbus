@@ -14,8 +14,8 @@ import type { EntityData } from '../../types/EntityData';
  * Chunk coordinates (XZ only, Y is complete column)
  */
 export interface ChunkCoordinate {
-  x: number;
-  z: number;
+  cx: number;
+  cz: number;
 }
 
 /**
