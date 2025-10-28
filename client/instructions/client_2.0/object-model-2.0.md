@@ -1,22 +1,69 @@
 # Block Model
 
-Block-Type
-- id
-- BlockModifiers
-- ?status=BlockModifier
+## Block-Type
 
-Block
+Parameters:
+- id
+- ?initialStatus : int (default = 0)
+- status=BlockModifier
+
+Status ist ein Integer und definiert einen status.
+
+### Status
+
+0 = default status
+1 = open
+2 = closed
+3 = gesperrt
+5 = zerstört
+
+10 = winter
+11 = winter/frühling (alternativ 10)
+12 = frühling
+13 = frühling/sommer (alternativ 12)
+14 = sommer
+15 = sommer/herbst (alternativ 14)
+16 = herbst
+17 = herbst/winter (alternativ 16)
+
+Ab 100: Custom Status der Welt
+
+z.b.
+
+666 = Die Apokalypse ist eingetreten
+
+
+## Block
+
+Parameters:
 - Position
 - BlockType-ID
 - offsets (edgeOffset, array of 8 byte)
 - faceVisibility (1 byte, 6 bit + 1 bit for fixed or auto)
-- ?BlockModifier
-- ?status=BlockModifier
+- ?BlockType
 - ?BlockMetadata
 
-BlockModifier
-// visibility - Alles als Map hinterlegen, meist keine default werte
-- vision
+Blöcke haben möglichst wenige Parameter, deshalb werden Standard-Situationen
+durch BlockTypen definiert. Diese haben die gleichen Modifier wie ein Block zusätzlich haben kann.
+Zusätzlich kann ein Block auch Metadaten haben, die immer block-spezifisch sind.
+
+### Metadaten mergen
+
+world status ist by default = 0
+Welt Status: Wenn die Welt einen Status-Switch fordert und der Status verfügbar ist, z.b. Switche alle 0 auf 666 (Apokalypse)
+
+Metadaten werden von oben nach unten durch gemerged (first match winns)
+
+1. Block-BlockType-status-Metadaten (Insance status)
+2. Block-BlockType-ID status-Metadaten (Instance status=world status)
+3. Block-BlockType-ID status-Metadaten (Base status)
+4. Block-BlockType-ID status-Metadaten (Base status=world status)
+5. Default Werte für Metadaten, z.b. shape=0
+
+## BlockModifier
+
+Parameters:
+- visibility
   - ?shape : string - z.B. cube, cross, model, flat, sphere, column, round_cube, steps, stair, billboard, sprite, flame, ocean, river, water, lava, fog
   - ?effect - z.B. water, wind, flipbox, lava, fog (shader-effekte)
   - ?effectParameters (Map mit effekt-spezifischen werten)
@@ -27,8 +74,7 @@ BlockModifier
   - ?rotationX
   - ?rotationY
   - ?path (string - path to model file, for shape=model)
-  - texture[0..x] (array of texture paths with UV mapping info ':x,y,w,h')
-    - name (string: top, bottom, left, right, front, back, side, all, diffuse, distortion, opacity
+  - textures (map of texture paths with UV mapping info ':x,y,w,h'), key ist ein integer
     - path
     - uvMapping (x,y,w,h)
     - ?rotation (für jede texture(6): 0,90,180,270, flip 0,90,180,270; byte 0=0, 1=90, 2=180, 3=270, + 4 für flip -> 4,5,6,7  )
@@ -45,14 +91,14 @@ BlockModifier
 - ?illumination (?)
   - color
   - strength
-- behavior
+- ?physics
   - ?solid (true/false) - Collision
   - ?resistance (laufwiederstand)
   - ?climbable (int fuer kletter-wiederstand?)
   - ?autoMoveXYZ (?) - Bewegt dich automatisch nach, mit geschwindigkeit X wenn du darauf stehst
   - ?interactive
   - ?gateFromDirection (byte, z.B. north,south,east,west,up,down) - Ermöglicht das durchgehen von einer Seite
-- effects
+- ?effects
   - ?forceEgoView
   - ?sky
     - intensity
@@ -63,22 +109,50 @@ BlockModifier
   - ?walkVolume
   - ?permanent
   - ?permanentVolume
-  - ?changeStatus - Wenn der status wechselt? oder als Effekt?
+  - ?changeStatus - Wenn der status wechselt? oder als Effekt? TODO
   - ?changeStatusVolume
 
+Alle Parameter und sub trukturen sind Optional um die Menge an übertragenen und gespeicherten Daten
+zu minimieren. Die Parameter-Namen werden ggf. gekürzt oder durch Zahlen ersetzt,
+um die Datenmenge zu reduzieren.
 
-BlockMetadata
+Regel für das Rendern: Offsets → Scale → Rotation
+??? TODO Oder  Scale → Rotation -> Offsets
+
+### Texture Keys
+
+0 = alle seiten
+1 = top
+2 = bottom
+3 = left
+4 = right
+5 = front
+6 = back
+7 = side
+8 = diffuse
+9 = distortion
+10 = opacity
+
+Ab 100: ggf. für bestimmte shape typen spezielle texturen.
+
+## BlockMetadata
+
+Parameters:
 - displayName
 - name
 - groupId
 
-Shape
-- air (0 - Block is invisible)
+## Shape
+
+Parameters:
+- air (0 - Block ist ein pseudoblock, keine Modifier möglich, wirklich nur für 'kein block')
+- invisible (1 - nicht sichtbar, kann aber Modifier haben, 'echter' Block, der renderer macht aber nichts, z.b. effects)
 - cube
 - cross
 - hash
 - model
 - glass (a cube of glass)
+- glass_flat (a flat glass)
 - flat
 - sphere
 - column
@@ -88,13 +162,19 @@ Shape
 - billboard
 - sprite
 - flame
-- ocean (water of ocean)
-- river (water of river)
+- ocean (water of ocean, flat)
+- ocean_coast
+- ocean_mahlstrom
+- river (water of river, flat, needs a direction)
+- river_waterfall
+- river_waterfall_whirlpool
 - water (a cube of water)
 - lava
 - fog
 
 # Server Block Model
+
+Parameters:
 - block
 - chunk : Chunk
 - ...?
@@ -106,6 +186,7 @@ fuer schnellen Zugriff. Werte werden aus Block-Type, Block und status
 dynamisch zusammengebaut. Beic ändern des Status wird aktualisiert.
 Keine optional Werte, wenn nicht explizit sinnvoll.
 
+Parameters:
 - type : Block-Type
 - attributes : Map
 - shape
@@ -121,6 +202,7 @@ Keine optional Werte, wenn nicht explizit sinnvoll.
 
 # Client Block Model
 
+Parameters:
 - block : Block
 - chunkXZ
 - originalBlockType : Block-Type

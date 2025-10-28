@@ -1,20 +1,24 @@
 {
+  "hooks": {
+    "PreCompact": [{
+      "matcher": "manual",
+      "hooks": [{
+        "type": "command",
+        "command": "node -e \"const fs = require('fs'); const path = require('path'); const input = JSON.parse(fs.readFileSync(0, 'utf-8')); const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd(); const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5); const exportDir = path.join(projectDir, '.claude', 'exports'); fs.mkdirSync(exportDir, {recursive: true}); const targetPath = path.join(exportDir, \\`conversation-\\${timestamp}.jsonl\\`); fs.copyFileSync(input.transcript_path, targetPath); console.log(\\`Conversation exported to: \\${targetPath}\\`);\"",
+        "timeout": 30
+      }]
+    }, {
+      "matcher": "auto",
+      "hooks": [{
+        "type": "command",
+        "command": "node -e \"const fs = require('fs'); const path = require('path'); const input = JSON.parse(fs.readFileSync(0, 'utf-8')); const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd(); const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5); const exportDir = path.join(projectDir, '.claude', 'exports'); fs.mkdirSync(exportDir, {recursive: true}); const targetPath = path.join(exportDir, \\`conversation-auto-\\${timestamp}.jsonl\\`); fs.copyFileSync(input.transcript_path, targetPath); console.log(\\`Conversation auto-exported to: \\${targetPath}\\`);\"",
+        "timeout": 30
+      }]
+    }]
+  },
   "permissions": {
     "allow": [
-      "WebSearch",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm run build:*)",
-      "mcp__ide__getDiagnostics",
-      "Bash(pnpm tsx:*)",
-      "Bash(kill:*)",
-      "Bash(pnpm run dev)",
-      "Bash(lsof:*)",
-      "Bash(xargs kill -9)",
-      "Bash(pkill:*)",
-      "Read(//Users/hummel/.config/claude-code/**)",
-      "Bash(pnpm run mcp:*)",
-      "Bash(curl:*)",
-      "Bash(pnpm tsc:*)"
+      "*"
     ],
     "deny": [],
     "ask": []

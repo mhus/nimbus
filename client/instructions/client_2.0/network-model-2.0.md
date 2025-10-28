@@ -43,8 +43,9 @@ Der Server antwortet mit einer Login-Antwort-Nachricht:
       "stop": {"x": 1000, "y": 256, "z": 1000},
       "chunkSize": 16,
       "assetPath": "/world123/assets",
-      "assetPort": 3001,                  // optional
+      "assetPort": 3001,            // optional
       "worldGroupId": "group123",
+      "status": 0,                  // current world status
       "createdAt": "2024-01-01T12:00:00Z",
       "updatedAt": "2024-06-01T12:00:00Z",
       "owner": {
@@ -102,7 +103,23 @@ Der Server antwortet mit einer Pong-Nachricht:
 
 Wird langer als `pingInterval` (+ 10 Sekunden Puffer) Sekunden kein Ping empfangen, wird die Verbindung getrennt.
 
+> deadline = lastPingAt + pingInterval*1000 + 10000.
+
+## Update world status (Server -> Client)
+
+Der Server sendet einen neuen status der welt an den Client, damit werden alle chunks neu gerendert - wenn sich der status geändert hat (!)
+
+```json
+{"t": "w.su", "d": 
+          {
+            "s": 1 // new status value
+          }
+}
+```
+
 ## Chunk Registration (Client -> Server)
+
+Chunks sind immer Colums mit X und Z Koordinate. Die Y-Richtung wird immer komplett geliefert und gerendert.
 
 Der Client registriert die Chunks, die er vom Server empfangen möchte, basierend auf seiner Position und Sichtweite.
 
@@ -110,7 +127,7 @@ Die Registrierung wird als Liste von Chunk-Koordinaten (x,z) gesendet, alle nich
 nicht mehr gesendet.
 
 ```json
-{"t": "c.r", "d": "0,0;1,0;0,2"}
+{"t": "c.r", "d": {"c": [{"x":0,"z":0},{"x":1,"z":0},{"x":0,"z":2}]}}
 ```
 
 Für alle Chunks, die noch nicht registriert waren, sendet der Server automatisch die Chunk Daten.
@@ -120,7 +137,7 @@ Für alle Chunks, die noch nicht registriert waren, sendet der Server automatisc
 Der Client kann gezielt Chunks anfragen, z.B. wenn der Spieler sich bewegt oder die Sichtweite ändert.
 
 ```json
-{"t": "c.q", "d": "1,0;2,0"}
+{"t": "c.q", "d": {"c": [{"x":0,"z":0},{"x":1,"z":0},{"x":0,"z":2}]}}
 ```
 
 ## Chunk Update (Server -> Client)
@@ -184,13 +201,13 @@ Der Server sendet Block-Änderungen an den Client.
 Der Server sendet Block-Status-Änderungen an den Client (z.B. für Animationen, Effekte, etc.).
 
 ```json
-{"t": "b.su", "d": 
+{"t": "b.s.u", "d": 
         [
           {
             "x": 10,
             "y": 64,
             "z": 10,
-            "s": "new status value",
+            "s": 1 // new status value
             "aa": [  // Optionale Animationen vor dem Statuswechsel
               AnimationData,
               ...
@@ -302,7 +319,7 @@ Der Server sendet Benachrichtigungen an den Client (z.B. Systemmeldungen, Chat-N
     "t": "system", // type: system, chat, warning, error
     "f": "Server", // from: optional, z.B. bei chat Nachrichten
     "m": "Welcome to the server!", // message
-    "t": 1234567890 // UTC timestamp
+    "ts": 1234567890 // UTC timestamp
   }
 }
 ```
@@ -329,7 +346,8 @@ Der Server sendet eine Anweisung zum Öffnen eines NPC-Dialogs an den Client.
 ```json
 {"t": "npc.o", "d": 
   {
-    "chatId": "5555",
+    "chatId": "5555",         // eine eindeutige ID für diese Chat-Sitzung
+    "dialogId": "1277788238", // die ID genau dieses Dialogs
     "npcId": "npc123",
     "picturePath": "/assets/npc123.png", // optional
     "dialogData": {
@@ -344,19 +362,43 @@ Der Server sendet eine Anweisung zum Öffnen eines NPC-Dialogs an den Client.
 }
 ```
 
-### NPC Dialog Response (Client -> Server)
+### NPC Dialog Auswahl (Client -> Server)
 
-Der Client sendet die Antwort des Spielers im NPC-Dialog an den Server.
+Der Client sendet die Antwort/Selektion des Spielers im NPC-Dialog an den Server.
 
 ```json
-{"t": "npc.r", "d": 
+{"t": "npc.se", "d": 
   {
     "npcId": "npc123",
+    "dialogId": "1277788238",
     "chatId": "5555",
     "selectedOptionId": "1"
   }
 }
 ```
+
+## NPC Dialog Update (Server -> Client)
+
+Der Server sendet eine Anweisung zum Ändern des NPC-Dialogs an den Client.
+
+```json
+{"t": "npc.u", "d": 
+  {
+    "chatId": "5555",
+    "dialogId": "1277788238",
+    "npcId": "npc123",
+    "dialogData": {
+      "title": "About this place",
+      "text": "This is a land of adventure and mystery.",
+      "options": [
+        {"id": "1", "text": "Tell me more.", "severity": "info"},
+        {"id": "2", "text": "Goodbye.", "severity": "neutral"}
+      ]
+    }
+  }
+}
+```
+
 
 ### NPC Dialog Close (Server -> Client)
 
@@ -384,13 +426,36 @@ Der Client bestätigt das Schließen des NPC-Dialogs gegenüber dem Server.
 }
 ```
 
-## Logout
+## Logout (Client -> Server)
 
 Der Client sendet eine Logout-Nachricht an den Server, wenn der Spieler die Welt verlässt.
+Die Session wird nicht mehr vorgehalten.
 
 ```json
 {"t": "logout", "d": {}}
 ```
 
+## Abkürzungen
+
+### Objekte
+
+* c: chunk
+* b: block
+* a: Animation
+* e: Effekt
+* s: Status
+* i: id
+* rq: request
+* rs: response
+* t: type
+* ts: Timestamp
+
+### Verben
+
+* c: close
+* o: open
+* u: update
+* q: query
+* r: register
 
 
