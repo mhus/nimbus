@@ -31,7 +31,7 @@ Der client wird in verschiedenen builds in unterschiedlichen versionen bereitges
 - editor: 3D engine + editor funktionen + console
 
 [x] Erstelle in client eine CLAUDE.md datei mit den informationen zur nutzung von claude für die entwicklung.
-[ ] Erstelle in pnpm ein monorepo mit den packages: shared, client, editor, server. Für Typescript. Die App dateien sollen NimbusClient und NimbusServer heissen.
+[x] Erstelle in pnpm ein monorepo mit den packages: shared, client, server. Für Typescript. Die App dateien sollen NimbusClient und NimbusServer heissen.
 ===
 ## Basic Shared Types
 
