@@ -15,12 +15,14 @@ Erstelle nicht selbstständig code im 'client' ordner ausser es ist in den aufga
 Du sollst aber hinweise und verbesserungen für den prototypen code in 'client_playground' geben
 die dann diskutiert und ggf. umgesetzt werden können.
 
-Frontend: TypeScript + Vite + Vue3 + Babylon.js
+Frontend 3D: TypeScript + Vite + Babylon.js 
+Frontend Forms: TypeScript + Vite + Vue3 + tailwind css (Werden später entwickelt und per IFrame eingebunden) 
 Testing: Jest (unit)
+Package Manager: pnpm
 
 Das Projekt soll in verschiedene packages aufgeteilt werden
 
-shared: Code der sowohl vom client als auch vom server genutzt wird. Gemeinsamme datentypen, protocoll definitionen, utils, etc.
+shared: Code der sowohl vom client, Forms als auch vom server genutzt wird. Gemeinsame datentypen, protocoll definitionen, utils, etc.
 client: 3D Engine code mit Babylon js, UI, Input handling, etc. Editor etc
 server: Simple server implementation, die den client mit welt daten versorgt. Dies ist nicht der haupt fokus, sondern dient nur zum testen des clients.
 
@@ -28,9 +30,9 @@ Der client wird in verschiedenen builds in unterschiedlichen versionen bereitges
 - viewer: Nur die 3D engine zum anschauen der welt
 - editor: 3D engine + editor funktionen + console
 
-[ ] Erstelle in client eine CLAUDE.md datei mit den informationen zur nutzung von claude für die entwicklung.
+[x] Erstelle in client eine CLAUDE.md datei mit den informationen zur nutzung von claude für die entwicklung.
 [ ] Erstelle in pnpm ein monorepo mit den packages: shared, client, editor, server. Für Typescript. Die App dateien sollen NimbusClient und NimbusServer heissen.
-
+===
 ## Basic Shared Types
 
 Jede Datenstruktur soll seine eigene Datei bekommen. Enums, status, etc. zu dem Type Können in der gelchen Datei definiert sein, solange sie nur für 
@@ -64,11 +66,11 @@ diesen Type relevant sind.
 [ ] Der StartScreen zeigt eine Liste von Welten an, in die der Spieler einloggen kann. Die Welten können via
     - Siehe client_playground/packages/client/src/VoxelClient.ts + client_playground/packages/client/src/gui/MainMenu.ts
     - Der StartScreen soll aber in einer eigenen Datei StartScreen.ts sein.
-    - Erstelle eine Klasse Engine in Engine.ts die das eigentliche 3D initiiert und verwaltet, auch die scene wird hier gehalten.
+    - Erstelle eine Klasse RenderService in RenderService.ts die das eigentliche 3D initiiert und verwaltet, auch die scene wird hier gehalten.
     - SERVER_API_URL/worlds abgerufen werden
     - Wnn die Welt ausgew
 [ ] Nach erfolgreichem Login wird der screen angezeigt und das laden der chunks beginnt.
-    - Wird in Engine.ts dargestellt 
+    - Wird in RenderService.ts dargestellt 
 [ ] Vor dem Starten den InputService initialisieren und den InputController anlegen.
     - InputController ist ein abstracter Controller der die input events aus dem system aufnimmt und die 
       entsprechenden InputActions auslöst. Ableitungen: BrowserInputController, XBoxInputController, etc.
