@@ -8,15 +8,33 @@
  * Unreachable code is eliminated by the bundler based on __EDITOR__ and __VIEWER__ flags
  */
 
-import { SHARED_VERSION } from '@nimbus/shared';
+import { SHARED_VERSION, getLogger, LoggerFactory, LogLevel } from '@nimbus/shared';
 
 const CLIENT_VERSION = '2.0.0';
 
+// Initialize logger
+const logger = getLogger('NimbusClient');
+
+// Configure logging from environment
+LoggerFactory.configureFromEnv();
+
+// Set appropriate log level for build mode
+if (import.meta.env.PROD) {
+  // Production: only warnings and errors
+  LoggerFactory.setDefaultLevel(LogLevel.WARN);
+} else if (__EDITOR__) {
+  // Editor development: verbose logging
+  LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
+} else {
+  // Viewer development: normal logging
+  LoggerFactory.setDefaultLevel(LogLevel.INFO);
+}
+
 // Build mode info
 const buildMode = __EDITOR__ ? 'Editor' : 'Viewer';
-console.log(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
-console.log(`Shared Library v${SHARED_VERSION}`);
-console.log(`Build Mode: ${__BUILD_MODE__}`);
+logger.info(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
+logger.info(`Shared Library v${SHARED_VERSION}`);
+logger.debug(`Build Mode: ${__BUILD_MODE__}`);
 
 // TODO: Initialize AppContext
 // TODO: Initialize Services
@@ -25,7 +43,7 @@ console.log(`Build Mode: ${__BUILD_MODE__}`);
 
 // Editor-specific initialization (tree-shaken in viewer build)
 if (__EDITOR__) {
-  console.log('Editor mode: Initializing editor functions...');
+  logger.info('Editor mode: Initializing editor functions...');
   // TODO: Initialize EditorService
   // TODO: Initialize CommandConsole
   // TODO: Load editor UI components

@@ -69,6 +69,10 @@ Passe die Docu an.
 - pnpm dev:viewer
 ...
 
+[x] Fuege einen log-Framework hinzu.
+[ ] Erstelle einen Logger Writer, der zum testen im DEV mode die Logs auf die lokale HD speichern kann. Ist das moeglich?
+[ ] Erstelle die ersten unit tests.
+
 ## Basic Shared Types
 
 Zur Info: Jede Datenstruktur soll seine eigene Datei bekommen. Enums, status, etc. zu dem Type Können in der gelchen Datei definiert sein, solange sie nur für 

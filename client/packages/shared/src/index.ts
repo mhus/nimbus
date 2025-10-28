@@ -22,4 +22,7 @@ export * from './constants';
 // Errors
 export * from './errors';
 
+// Logger
+export * from './logger';
+
 export const SHARED_VERSION = '2.0.0';

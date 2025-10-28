@@ -242,6 +242,50 @@ Samples:
 
 ## Development Guidelines
 
+### Logging
+
+The project uses a built-in logging framework (`@nimbus/shared/logger`).
+
+**DO NOT use console.log** - use the logger instead:
+
+```typescript
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('MyService');
+
+logger.info('Service started');
+logger.debug('Debug info', { data });
+logger.error('Error occurred', { context }, error);
+```
+
+**Log levels** (from highest to lowest priority):
+- `FATAL` - System must stop
+- `ERROR` - Operation failed
+- `WARN` - May cause issues
+- `INFO` - Informational (default)
+- `DEBUG` - Debug information
+- `TRACE` - Verbose logging
+
+**Configuration**:
+```typescript
+import { LoggerFactory, LogLevel } from '@nimbus/shared';
+
+// Apply environment config (.env: LOG_LEVEL=DEBUG)
+LoggerFactory.configureFromEnv();
+
+// Set level programmatically
+LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
+LoggerFactory.setLoggerLevel('NetworkService', LogLevel.TRACE);
+```
+
+**Best practices**:
+- Use named loggers per service/class: `getLogger('ServiceName')`
+- Include context data: `logger.info('Message', { key: 'value' })`
+- Use appropriate levels (errors are ERROR, debug info is DEBUG)
+- Check level before expensive operations: `if (logger.isLevelEnabled(LogLevel.DEBUG))`
+
+See `packages/shared/src/logger/LOGGER_USAGE.md` for detailed documentation.
+
 ### File Organization
 
 Each data structure should have its own file. Enums, status types, etc. related to a specific type can be defined in the same file as long as they are only relevant to that type.
