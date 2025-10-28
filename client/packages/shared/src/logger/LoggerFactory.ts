@@ -108,11 +108,19 @@ class LoggerFactoryImpl {
         envLevel = process.env.LOG_LEVEL;
       }
 
-      // Vite environment (browser)
-      if (!envLevel && typeof import.meta !== 'undefined') {
-        const meta = import.meta as any;
-        if (meta.env) {
-          envLevel = meta.env.VITE_LOG_LEVEL;
+      // Vite environment (browser) - skip in test environment
+      if (!envLevel && typeof process === 'undefined') {
+        try {
+          // @ts-ignore - import.meta is not available in all environments
+          if (typeof import.meta !== 'undefined') {
+            // @ts-ignore
+            const meta = import.meta as any;
+            if (meta && meta.env) {
+              envLevel = meta.env.VITE_LOG_LEVEL;
+            }
+          }
+        } catch {
+          // Ignore errors in test environment
         }
       }
 
@@ -129,11 +137,19 @@ class LoggerFactoryImpl {
         envLoggers = process.env.LOG_LOGGERS;
       }
 
-      // Vite environment (browser)
-      if (!envLoggers && typeof import.meta !== 'undefined') {
-        const meta = import.meta as any;
-        if (meta.env) {
-          envLoggers = meta.env.VITE_LOG_LOGGERS;
+      // Vite environment (browser) - skip in test environment
+      if (!envLoggers && typeof process === 'undefined') {
+        try {
+          // @ts-ignore - import.meta is not available in all environments
+          if (typeof import.meta !== 'undefined') {
+            // @ts-ignore
+            const meta = import.meta as any;
+            if (meta && meta.env) {
+              envLoggers = meta.env.VITE_LOG_LOGGERS;
+            }
+          }
+        } catch {
+          // Ignore errors in test environment
         }
       }
 

@@ -72,7 +72,8 @@ Passe die Docu an.
 [x] Fuege einen log-Framework hinzu.
 [x] Erstelle einen Logger Writer, der zum testen im DEV mode die Logs auf die lokale HD speichern kann. Ist das moeglich?
 [x] Erstelle ueberall, wo Fehler nicht mehr abgefangen werden keonnen, Try-Catch Bloecke und schreibe den Fehler in den Logger. Erweitere CLAUDE.md.
-[ ] Erstelle die ersten unit tests.
+[x] Erstelle die ersten unit tests.
+[ ] Teste auch bestehende Klassen, z.B. BlockSerializer, ChunkSerializer, etc.
 
 ## Basic Shared Types
 

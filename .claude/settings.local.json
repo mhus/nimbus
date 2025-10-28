@@ -16,7 +16,10 @@
       "Bash(pnpm build:shared:*)",
       "Bash(pnpm build:server)",
       "Bash(pnpm build:viewer:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm --filter @nimbus/shared add:*)",
+      "Bash(pnpm --filter @nimbus/shared test:*)"
     ],
     "deny": [],
     "ask": []

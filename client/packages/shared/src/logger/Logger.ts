@@ -92,7 +92,14 @@ export class Logger {
 
     // Use custom transports or console
     if (this.config.transports && this.config.transports.length > 0) {
-      this.config.transports.forEach((transport) => transport(entry));
+      this.config.transports.forEach((transport) => {
+        try {
+          transport(entry);
+        } catch (error) {
+          // Transport errors should not break logging
+          console.error('[Logger] Transport error:', error);
+        }
+      });
     } else {
       this.consoleTransport(entry, formatted);
     }
@@ -152,7 +159,12 @@ export class Logger {
     let message = `${timestamp}[${level}] [${entry.name}] ${entry.message}`;
 
     if (entry.data !== undefined) {
-      message += `\n  Data: ${JSON.stringify(entry.data, null, 2)}`;
+      try {
+        message += `\n  Data: ${JSON.stringify(entry.data, null, 2)}`;
+      } catch (error) {
+        // Handle circular references
+        message += `\n  Data: [Circular or non-serializable]`;
+      }
     }
 
     if (entry.error) {

@@ -38,7 +38,7 @@ export const LogLevelNames: Record<LogLevel, string> = {
  * Parse log level from string
  */
 export function parseLogLevel(level: string): LogLevel {
-  const upper = level.toUpperCase();
+  const upper = level.trim().toUpperCase();
   switch (upper) {
     case 'FATAL':
       return LogLevel.FATAL;
