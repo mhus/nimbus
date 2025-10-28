@@ -8,7 +8,13 @@
  * Unreachable code is eliminated by the bundler based on __EDITOR__ and __VIEWER__ flags
  */
 
-import { SHARED_VERSION, getLogger, LoggerFactory, LogLevel } from '@nimbus/shared';
+import {
+  SHARED_VERSION,
+  getLogger,
+  LoggerFactory,
+  LogLevel,
+  FileLogTransport,
+} from '@nimbus/shared';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -28,6 +34,30 @@ if (import.meta.env.PROD) {
 } else {
   // Viewer development: normal logging
   LoggerFactory.setDefaultLevel(LogLevel.INFO);
+}
+
+// Development: Optional file logging (prompts user for file location)
+if (import.meta.env.DEV && FileLogTransport.isFileSystemAPISupported()) {
+  // Uncomment to enable file logging in development:
+  /*
+  const fileTransport = new FileLogTransport({
+    filename: __EDITOR__ ? 'nimbus-editor.log' : 'nimbus-viewer.log',
+    maxSizeMB: 5,
+    flushIntervalMs: 1000,
+  });
+
+  fileTransport
+    .initialize()
+    .then(() => {
+      LoggerFactory.configure({
+        transports: [fileTransport.transport],
+      });
+      logger.info('File logging enabled');
+    })
+    .catch((error) => {
+      logger.warn('File logging not available', error);
+    });
+  */
 }
 
 // Build mode info
