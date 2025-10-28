@@ -5,10 +5,12 @@
  * This type is NOT transmitted over network - it's only used client-side.
  */
 
-import type { Block } from './Block';
-import type { BlockType } from './BlockType';
-import type { BlockMetadata } from './BlockMetadata';
-import type { BlockModifier } from './BlockModifier';
+import type {
+  Block,
+  BlockType,
+  BlockMetadata,
+  BlockModifier,
+} from '@nimbus/shared';
 import type { ClientBlockType } from './ClientBlockType';
 
 /**

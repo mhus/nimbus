@@ -20,9 +20,11 @@ Shared data types for Nimbus client and server, based on the object model 2.0.
   - Modifier interfaces: Visibility, Wind, Illumination, Physics, Effects, Sound
 - **BlockMetadata.ts** - Additional metadata for block instances
 
-### Client-Side Types
-- **ClientBlockType.ts** - Optimized block type for client rendering with Facing enum
-- **ClientBlock.ts** - Client-side block instance with resolved types
+### Chunk Types
+- **ChunkData.ts** - Internal chunk representation with Uint16Array storage
+
+### World Types
+- **World.ts** - World information and settings
 
 ### Animation & Effects
 - **AnimationData.ts** - Animation sequences with AnimationEffectType and EasingType enums
@@ -39,10 +41,12 @@ import {
   BlockType,
   Block,
   Shape,
-  ClientBlockType
+  ChunkData
 } from '@nimbus/shared';
 
-// All types are available through the main package export
+// All shared types are available through the main package export
+// Client-specific types (ClientBlock, ClientChunk, ClientBlockType)
+// are in @nimbus/client package
 ```
 
 ## Type Hierarchy
@@ -51,19 +55,23 @@ import {
 BlockType (Registry)
   ↓ references (by ID)
 Block (Instance in world)
-  ↓ extends
-ClientBlock (Client-side with resolved types)
+  ↓ network transmission
+  ↓ client-side resolution
+ClientBlock (in @nimbus/client)
   ↓ uses
-ClientBlockType (Optimized for rendering)
+ClientBlockType (in @nimbus/client)
 ```
 
 ## Design Principles
 
 1. **Minimal Data**: All optional fields minimize transmission/storage
 2. **Type Safety**: Full TypeScript strict mode compliance
-3. **Client Optimization**: Separate client types for fast rendering access
+3. **Network/Server Focus**: Shared types are for network transmission and server logic
 4. **Metadata Merging**: Priority system for block properties
 5. **Extensibility**: Custom status values (100+) for world-specific states
+
+**Note**: Client-specific types (ClientBlock, ClientChunk, ClientBlockType) with caching
+and rendering optimizations are located in the `@nimbus/client` package.
 
 ## Metadata Merging Priority
 

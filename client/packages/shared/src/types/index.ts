@@ -20,11 +20,6 @@ export * from './ChunkData';
 // World types
 export * from './World';
 
-// Client types
-export * from './ClientBlockType';
-export * from './ClientBlock';
-export * from './ClientChunk';
-
 // Animation and effects
 export * from './AnimationData';
 export * from './AreaData';

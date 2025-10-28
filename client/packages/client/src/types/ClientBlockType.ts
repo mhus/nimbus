@@ -8,9 +8,7 @@
  * No optional values unless explicitly meaningful.
  */
 
-import type { BlockType } from './BlockType';
-import type { Shape } from './Shape';
-import type { Vector3 } from './Vector3';
+import type { BlockType, Shape, Vector3 } from '@nimbus/shared';
 
 /**
  * Facing direction

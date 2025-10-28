@@ -10,6 +10,7 @@
     "jsx": "preserve",
     "declaration": true,
     "declarationMap": true,
+    "emitDeclarationOnly": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",

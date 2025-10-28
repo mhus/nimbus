@@ -3,9 +3,21 @@
   "version": "2.0.0",
   "description": "Nimbus Voxel Engine - 3D Client (Viewer)",
   "type": "module",
+  "main": "./dist/NimbusClient.js",
+  "types": "./dist/NimbusClient.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/NimbusClient.d.ts",
+      "default": "./dist/NimbusClient.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc",
     "preview": "vite preview",
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "jest",

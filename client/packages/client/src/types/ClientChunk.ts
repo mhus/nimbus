@@ -7,7 +7,7 @@
  * Analog to ClientBlock for chunks.
  */
 
-import type { ChunkData } from './ChunkData';
+import type { ChunkData } from '@nimbus/shared';
 import type { ClientBlock } from './ClientBlock';
 
 /**

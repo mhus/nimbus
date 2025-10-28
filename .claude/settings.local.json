@@ -7,7 +7,10 @@
       "Bash(pnpm -r exec:*)",
       "Bash(pnpm build:*)",
       "Bash(tree:*)",
-      "Bash(pnpm --filter @nimbus/shared build:*)"
+      "Bash(pnpm --filter @nimbus/shared build:*)",
+      "Bash(pnpm clean:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm --filter @nimbus/client build:*)"
     ],
     "deny": [],
     "ask": []

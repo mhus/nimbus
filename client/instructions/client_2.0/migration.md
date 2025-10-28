@@ -33,6 +33,30 @@ Der client wird in verschiedenen builds in unterschiedlichen versionen bereitges
 [x] Erstelle in client eine CLAUDE.md datei mit den informationen zur nutzung von claude für die entwicklung.
 [x] Erstelle in pnpm ein monorepo mit den packages: shared, client, server. Für Typescript. Die App dateien sollen NimbusClient und NimbusServer heissen.
 [ ] Erstelle builds im client für viewer und editor. Mit pnpm run build:viewer und pnpm run build:editor.
+```text
+Ein Code, aber per ENV/Define baust du ein Viewer- oder ein Editor-Artefakt. Unerreichbarer Code wird vom Bundler eliminiert.
+
+// vite.config.ts
+export default defineConfig(({ mode }) => ({
+  define: {
+    __EDITOR__: JSON.stringify(mode === "editor"), // bools als globale Konstante
+  },
+}));
+
+// App.tsx
+let Editor: React.ComponentType | null = null;
+if (__EDITOR__) {
+  Editor = React.lazy(() => import("./editor/Editor")); // wird aus Viewer-Build entfernt
+}
+
+{
+  "scripts": {
+    "build:viewer": "vite build --mode viewer",
+    "build:editor": "vite build --mode editor"
+  }
+}
+```
+Passe die Docu an.
 
 ## Basic Shared Types
 
@@ -41,12 +65,12 @@ diesen Type relevant sind.
 
 [x] Lege die Typen aus client/instructions/client_2.0/object-model-2.0.md in shared/types an.
 [x] Lege die Network Messages aus client/instructions/client_2.0/network-model-2.0.md in shared/network an.
-[ ] Hast du Anmerkungen zu den erzeugten Typen?
+[x] Hast du Anmerkungen zu den erzeugten Typen?
 [x] Kurze Anmerkung: Bitte Coordinaten immer richtig benennen: x, y, z für Welt-Coordinaten, cx, cy, cz für Chunk-Coordinaten, lx, ly, lz für Local-Coordinaten (vermeiden).
     Bitte füge das noch in die CLAUDE.md datei hinzu und aktualisiere ChunkData entsprechend.
 [x] Passe noch client/instructions/client_2.0/object-model-2.0.md und client/instructions/client_2.0/network-model-2.0.md mit den Aenderungen an.
-[ ] Verschiebe alle Client related typen (ClientChunk ClientBlock etc.) in client/types.
-[ ] Verschiebe alle Server related typen (ServerChunk ServerBlock etc.) in server/types. (Gibt es welche?)
+[x] Verschiebe alle Client related typen (ClientChunk ClientBlock etc.) in client/types.
+[-] Verschiebe alle Server related typen (ServerChunk ServerBlock etc.) in server/types. (Gibt es welche?)
 
 ===
 ## Basic Client Types
