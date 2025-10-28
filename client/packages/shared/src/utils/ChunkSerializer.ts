@@ -216,7 +216,7 @@ export namespace ChunkSerializer {
     try {
       const data = JSON.parse(json);
 
-      if (!data || typeof data !== 'object') {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
         return null;
       }
 
