@@ -1,7 +1,7 @@
 {
   "name": "@nimbus/client",
   "version": "2.0.0",
-  "description": "Nimbus Voxel Engine - 3D Client (Viewer)",
+  "description": "Nimbus Voxel Engine - 3D Client (Viewer + Editor builds)",
   "type": "module",
   "main": "./dist/NimbusClient.js",
   "types": "./dist/NimbusClient.d.ts",
@@ -16,9 +16,13 @@
     }
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && tsc",
+    "dev": "vite --mode viewer",
+    "dev:editor": "vite --mode editor",
+    "build": "pnpm build:viewer && pnpm build:editor && tsc",
+    "build:viewer": "vite build --mode viewer",
+    "build:editor": "vite build --mode editor",
     "preview": "vite preview",
+    "preview:editor": "vite preview --outDir dist/editor",
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "jest",
     "lint": "eslint src --ext .ts"

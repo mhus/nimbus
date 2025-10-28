@@ -46,21 +46,40 @@ pnpm install
 ### Development
 
 ```bash
-# Start client in development mode
-pnpm dev:client
-
-# Start server in development mode
-pnpm dev:server
-
 # Build all packages
 pnpm build
 
-# Run tests
-pnpm test
+# Development servers
+pnpm dev:server     # Test server (port 3000)
+pnpm dev:client     # Client viewer (port 3001)
+pnpm dev:viewer     # Alias for viewer
+pnpm dev:editor     # Client editor (port 3001)
 
-# Clean all builds
-pnpm clean
+# Build specific packages
+pnpm build:shared   # Shared types only
+pnpm build:server   # Server only
+pnpm build:client   # Client (both variants)
+pnpm build:viewer   # Viewer variant only
+pnpm build:editor   # Editor variant only
+
+# Utilities
+pnpm test           # Run all tests
+pnpm lint           # Run all linters
+pnpm clean          # Clean all builds
 ```
+
+**Typical workflow:**
+```bash
+# Terminal 1: Start server
+pnpm dev:server
+
+# Terminal 2: Start client
+pnpm dev:client
+# OR
+pnpm dev:editor
+```
+
+See [SCRIPTS.md](./SCRIPTS.md) for detailed script documentation.
 
 ### Environment Configuration
 
@@ -91,13 +110,23 @@ Shared types, protocols and utilities used by both client and server.
 - Utility functions
 
 ### @nimbus/client
-3D voxel engine client - viewer build (read-only).
+3D voxel engine client with two build variants:
 
+**Viewer** (~12.5 KB gzipped):
 - Babylon.js 3D rendering
 - WebSocket client
 - Chunk loading and rendering
 - Camera controls
 - Input handling
+
+**Editor** (~15-18 KB gzipped):
+- All viewer features
+- Block editing tools
+- Command console
+- Terrain modification
+- World export
+
+See [packages/client/BUILD_VARIANTS.md](./packages/client/BUILD_VARIANTS.md) for details.
 
 ### @nimbus/server
 Simple test server for client development.
@@ -131,10 +160,21 @@ This is a **step-by-step migration** from the prototype:
 
 ## Build Variants
 
-The client can be built in different configurations:
+The client uses **conditional compilation** to produce two builds from a single codebase:
 
-- **viewer** (current): Read-only 3D engine
-- **editor** (future): Full editor with tools and console
+- **viewer**: Read-only 3D engine for viewing worlds
+- **editor**: Full 3D engine with editing capabilities and command console
+
+Unreachable code is eliminated by the bundler (tree-shaking).
+
+```typescript
+// Editor-only code (removed from viewer build)
+if (__EDITOR__) {
+  initializeEditor();
+}
+```
+
+See [packages/client/BUILD_VARIANTS.md](./packages/client/BUILD_VARIANTS.md) for implementation details.
 
 ## Contributing
 
@@ -146,7 +186,14 @@ This is the Version 2.0 development. Key principles:
 - Test as you go
 - Document decisions
 
-## Resources
+## Documentation
+
+- [SCRIPTS.md](./SCRIPTS.md) - Build and development scripts
+- [CLAUDE.md](./CLAUDE.md) - Architecture and development guide
+- [packages/client/BUILD_VARIANTS.md](./packages/client/BUILD_VARIANTS.md) - Build variants
+- [packages/client/MIGRATION_CLIENT_TYPES.md](./packages/client/MIGRATION_CLIENT_TYPES.md) - Type migration
+
+### Prototype Resources
 
 - **Prototype**: `../client_playground/`
 - **Instructions**: `../client_playground/instructions/client_2.0/`

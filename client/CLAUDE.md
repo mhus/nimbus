@@ -38,8 +38,45 @@ client/
 
 ### Build Variants
 
+The client uses **conditional compilation** with Vite to produce two separate builds from a single codebase. Unreachable code is eliminated by the bundler (tree-shaking).
+
 - **viewer**: Read-only 3D engine for viewing worlds
+  - Build command: `pnpm build:viewer`
+  - Output: `dist/viewer/`
+  - Global constant: `__EDITOR__ = false`, `__VIEWER__ = true`
+
 - **editor**: Full 3D engine + editor functions + console
+  - Build command: `pnpm build:editor`
+  - Output: `dist/editor/`
+  - Global constant: `__EDITOR__ = true`, `__VIEWER__ = false`
+
+**Implementation:**
+```typescript
+// vite.config.ts - Injects global constants
+export default defineConfig(({ mode }) => ({
+  define: {
+    __EDITOR__: JSON.stringify(mode === 'editor'),
+    __VIEWER__: JSON.stringify(mode === 'viewer' || mode === 'development'),
+    __BUILD_MODE__: JSON.stringify(mode),
+  },
+}));
+
+// Code example - Editor code is tree-shaken in viewer build
+if (__EDITOR__) {
+  // This code is completely removed from viewer build
+  console.log('Editor mode active');
+  // Initialize EditorService, CommandConsole, etc.
+}
+```
+
+**Development:**
+- `pnpm dev` - Run viewer mode (default)
+- `pnpm dev:editor` - Run editor mode
+
+**Build:**
+- `pnpm build` - Build both variants + TypeScript declarations
+- `pnpm build:viewer` - Build only viewer
+- `pnpm build:editor` - Build only editor
 
 ## Terminology / Begriffsdefinitionen
 

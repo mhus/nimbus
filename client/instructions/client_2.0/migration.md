@@ -32,7 +32,7 @@ Der client wird in verschiedenen builds in unterschiedlichen versionen bereitges
 
 [x] Erstelle in client eine CLAUDE.md datei mit den informationen zur nutzung von claude für die entwicklung.
 [x] Erstelle in pnpm ein monorepo mit den packages: shared, client, server. Für Typescript. Die App dateien sollen NimbusClient und NimbusServer heissen.
-[ ] Erstelle builds im client für viewer und editor. Mit pnpm run build:viewer und pnpm run build:editor.
+[x] Erstelle builds im client für viewer und editor. Mit pnpm run build:viewer und pnpm run build:editor.
 ```text
 Ein Code, aber per ENV/Define baust du ein Viewer- oder ein Editor-Artefakt. Unerreichbarer Code wird vom Bundler eliminiert.
 
@@ -57,6 +57,17 @@ if (__EDITOR__) {
 }
 ```
 Passe die Docu an.
+[x] Auch der server soll min pnpm erstellt und gestartet werden koennen. Implementiere:
+- pnpm build:server
+- pnpm build:client
+- pnpm build:editor
+- pnpm build:viewer
+- pnpm build  (Build alle)
+- pnpm dev:server
+- pnpm dev:client
+- pnpm dev:editor
+- pnpm dev:viewer
+...
 
 ## Basic Shared Types
 
@@ -75,8 +86,9 @@ diesen Type relevant sind.
 ===
 ## Basic Client Types
 
-[ ] AppContext: Enthält referenzen auf alle services, konfigurationen, etc. die der client braucht. Lege im main den appContext an.
-[ ] Services: Lege die services aus client/instructions/client_2.0/migration-concepts.md in client/services an.
+[ ] AppContext: Enthält referenzen auf alle services, konfigurationen, etc. die der client braucht. 
+Lege im main den appContext an. Muss noch nicht vollstaendig sein, wird mit der Zeit erweitert.
+[-] Services: Lege die services aus client/instructions/client_2.0/migration-concepts.md in client/services an.
 [ ] InputController und InputService anlegen, InputController wid im InputService erstellt und gehalten. InputService im AppContent
 
 ## Basic Network Protocoll
@@ -84,7 +96,6 @@ diesen Type relevant sind.
 [ ] Implementiere die network messages aus client/instructions/client_2.0/network-model-2.0.md im client/network. Jeweils in einem eigenen Handler als dummy.
 [ ] Implementiere den WebSocket Client im NetworkService.
 [ ] Implementiere die Login Nachricht und die Ping/Pong Nachrichten im NetworkService.
-[ ] 
 
 ## Start Screen
 

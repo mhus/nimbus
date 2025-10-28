@@ -10,7 +10,12 @@
       "Bash(pnpm --filter @nimbus/shared build:*)",
       "Bash(pnpm clean:*)",
       "Bash(pnpm exec tsc:*)",
-      "Bash(pnpm --filter @nimbus/client build:*)"
+      "Bash(pnpm --filter @nimbus/client build:*)",
+      "Bash(cd:*)",
+      "Bash(pnpm build:editor:*)",
+      "Bash(pnpm build:shared:*)",
+      "Bash(pnpm build:server)",
+      "Bash(pnpm build:viewer:*)"
     ],
     "deny": [],
     "ask": []
