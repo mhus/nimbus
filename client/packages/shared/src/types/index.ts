@@ -12,6 +12,9 @@ export * from './Block';
 export * from './BlockModifier';
 export * from './BlockMetadata';
 
+// Chunk types
+export * from './ChunkData';
+
 // Client block types
 export * from './ClientBlockType';
 export * from './ClientBlock';

@@ -20,19 +20,24 @@ export interface ChunkCoordinate {
 
 /**
  * Height data for chunk
- * [maxHeight, minHeight, groundLevel, waterHeight]
+ * Array of 4 values describing height information
  */
-export type HeightData = [number, number, number, number];
+export type HeightData = readonly [
+  maxHeight: number,
+  minHeight: number,
+  groundLevel: number,
+  waterHeight: number
+];
 
 /**
  * Chunk data transfer object
  */
 export interface ChunkDataTransferObject {
   /** Chunk X coordinate */
-  c: number;
+  cx: number;
 
   /** Chunk Z coordinate */
-  z: number;
+  cz: number;
 
   /** Block data */
   b: Block[];

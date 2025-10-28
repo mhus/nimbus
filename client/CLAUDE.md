@@ -67,6 +67,65 @@ To avoid confusion, we use the following terms consistently:
 - Use **German terms** in user-facing UI where appropriate
 - Be consistent with terminology across the codebase
 
+#### Coordinate Naming
+
+Always use consistent coordinate naming to avoid confusion:
+
+- **World Coordinates**: `x`, `y`, `z` - Absolute position in the world
+- **Chunk Coordinates**: `cx`, `cy`, `cz` - Chunk position in chunk space
+- **Local Coordinates**: `lx`, `ly`, `lz` - Position within a chunk (avoid if possible, prefer clear context)
+
+**Examples:**
+```typescript
+// ✅ Good - Clear coordinate types
+interface Block {
+  x: number;  // World coordinate
+  y: number;
+  z: number;
+}
+
+interface Chunk {
+  cx: number;  // Chunk coordinate
+  cz: number;
+}
+
+// ✅ Good - Function parameters with clear naming
+function getBlock(worldX: number, worldY: number, worldZ: number): Block;
+function getChunk(chunkX: number, chunkZ: number): Chunk;
+
+// ❌ Avoid - Ambiguous coordinate names
+interface BadBlock {
+  x: number;  // World or local?
+  chunkX: number;  // Should be cx
+}
+
+// ✅ Good - Local coordinates in context
+function setBlockInChunk(chunk: Chunk, localX: number, localY: number, localZ: number, blockId: number) {
+  // Clear that these are local coordinates
+  const index = localX + localZ * chunk.size + localY * chunk.size * chunk.size;
+  chunk.blocks[index] = blockId;
+}
+```
+
+**Conversion helpers should make intent clear:**
+```typescript
+// Convert world to chunk coordinates
+function worldToChunk(worldX: number, worldZ: number, chunkSize: number): { cx: number; cz: number } {
+  return {
+    cx: Math.floor(worldX / chunkSize),
+    cz: Math.floor(worldZ / chunkSize)
+  };
+}
+
+// Convert world to local coordinates within chunk
+function worldToLocal(worldX: number, worldZ: number, chunkSize: number): { localX: number; localZ: number } {
+  return {
+    localX: worldX % chunkSize,
+    localZ: worldZ % chunkSize
+  };
+}
+```
+
 ## Architecture Overview
 
 ### Core Concepts

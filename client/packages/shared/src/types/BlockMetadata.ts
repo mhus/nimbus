@@ -9,6 +9,8 @@
  * 5. Default values (e.g., shape = 0)
  */
 
+import type { BlockModifier } from './BlockModifier';
+
 export interface BlockMetadata {
   /**
    * Display name for UI
@@ -24,4 +26,19 @@ export interface BlockMetadata {
    * Group ID for organization/categorization
    */
   groupId?: number;
+
+  /**
+   * Instance-specific modifiers map: status → BlockModifier
+   *
+   * Optional block instance overrides for specific status values.
+   * These override the BlockType modifiers for this specific block instance.
+   *
+   * Use case: A specific door that looks different than the standard door type.
+   *
+   * @example
+   * modifiers: {
+   *   1: { visibility: { shape: Shape.CUBE, textures: {...} } }  // custom open state
+   * }
+   */
+  modifiers?: Record<number, BlockModifier>;
 }

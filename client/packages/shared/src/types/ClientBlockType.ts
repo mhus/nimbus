@@ -43,7 +43,7 @@ export interface ClientBlockType {
   /** Asset textures */
   assetTextures: any[]; // TODO: Define texture type
 
-  /** Offsets (24 bytes) */
+  /** Geometry offsets (shape-dependent, see Offsets type) */
   offsets: number[];
 
   /** Scaling XYZ */

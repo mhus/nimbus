@@ -1,13 +1,20 @@
 # Block Model
 
+## Koordinaten-Namenskonvention
+
+**Wichtig:** Koordinaten müssen konsistent benannt werden:
+- **x, y, z** = Welt-Koordinaten (world coordinates)
+- **cx, cy, cz** = Chunk-Koordinaten (chunk coordinates)
+- **localX, localY, localZ** = Lokale Koordinaten innerhalb eines Chunks (vermeiden wenn möglich)
+
 ## Block-Type
 
 Parameters:
 - id
 - ?initialStatus : int (default = 0)
-- status=BlockModifier
+- modifiers : Record<number, BlockModifier> (status → BlockModifier map)
 
-Status ist ein Integer und definiert einen status.
+Status ist ein Integer und definiert einen status. Jeder Status hat einen eigenen BlockModifier.
 
 ### Status
 
@@ -36,12 +43,19 @@ z.b.
 ## Block
 
 Parameters:
-- Position
-- BlockType-ID
-- offsets (edgeOffset, array of 8 byte)
-- faceVisibility (1 byte, 6 bit + 1 bit for fixed or auto)
-- ?BlockType
-- ?BlockMetadata
+- position : Vector3 (x, y, z - world coordinates)
+- blockTypeId : number
+- ?offsets : number[] (flexible array, shape-dependent, trailing zeros can be omitted for network optimization)
+  - For cubes: 8 corners × 3 axes = up to 24 values (range: -127 to 127)
+  - For other shapes: shape-specific offset data
+- ?faceVisibility : number (1 byte bitfield, 6 bits for faces + 1 bit for fixed/auto mode)
+  - Bit 0-5: TOP, BOTTOM, LEFT, RIGHT, FRONT, BACK
+  - Bit 6: FIXED mode (1) or AUTO mode (0)
+- ?status : number (current status, references modifier in BlockType.modifiers or metadata.modifiers)
+- ?metadata : BlockMetadata
+
+**Wichtig:** Block wird über Netzwerk übertragen und auf Server verwendet.
+Keine cached Werte (wie blockType reference) - diese gehören in ClientBlock!
 
 Blöcke haben möglichst wenige Parameter, deshalb werden Standard-Situationen
 durch BlockTypen definiert. Diese haben die gleichen Modifier wie ein Block zusätzlich haben kann.
@@ -138,9 +152,13 @@ Ab 100: ggf. für bestimmte shape typen spezielle texturen.
 ## BlockMetadata
 
 Parameters:
-- displayName
-- name
-- groupId
+- ?displayName : string
+- ?name : string
+- ?groupId : number
+- ?modifiers : Record<number, BlockModifier> (optional instance-specific modifier overrides)
+
+Metadata können eigene Modifier enthalten, die die BlockType Modifier für diese spezifische Block-Instanz überschreiben.
+Use case: Eine spezielle Tür, die anders aussieht als der Standard-Türtyp.
 
 ## Shape
 
@@ -202,48 +220,121 @@ Parameters:
 
 # Client Block Model
 
+ClientBlock ist die client-seitige Repräsentation mit aufgelösten Referenzen und Caches.
+Wird NICHT über Netzwerk übertragen!
+
 Parameters:
-- block : Block
-- chunkXZ
-- originalBlockType : Block-Type
-- customizedBlockType : Client-Block-Type
-- status : String
+- block : Block (original network data)
+- chunkXZ : { cx: number, cz: number } (chunk coordinates)
+- blockType : BlockType (cached, resolved from block.blockTypeId)
+- ?metadata : BlockMetadata (cached)
+- currentModifier : BlockModifier (cached, resolved from status)
+- clientBlockType : ClientBlockType (optimized for rendering)
+- ?statusName : string (debug string, e.g., "OPEN", "WINTER")
+- ?isVisible : boolean (culling flag)
+- ?lastUpdate : number (timestamp)
+- ?isDirty : boolean (needs re-render)
 
 ## AnimationData
 
-Eine Animation ist eine Abfolge von Effekten, die abgespielt werden. Der Ort wird
-ausserhalb der Animation definiert. ggf wird kein Ort benötigt.
+Timeline-basiertes Animation-System. Animationen sind Abfolgen von Effekten, die parallel
+oder sequenziell ausgeführt werden. Effekte können positions-basiert sein, mit Support für
+mehrere Positionen (z.B. Projektil von A nach B).
 
-TODO: Noch nicht final definiert!
+**Use Cases:**
+1. Server-definiert: Server sendet komplette Animation mit festen Positionen
+2. Client-definiert: Client hat Template, füllt Positionen aus, sendet zurück an Server für Broadcast
+
+**Beispiel:** Pfeilschuss von Spieler auf NPC:
+- Effekt 1: Projektil fliegt von A nach B (parallel, 0-1000ms)
+- Effekt 2: Himmel wird dunkel (parallel, 0-500ms)
+- Effekt 3: Explosion bei B (sequential, 1000-1300ms)
+- Effekt 4: Himmel wird hell (sequential, 1300-2000ms)
 
 ```json
 {
-  "name": "block_bounce", // Name der Animation
-  "duration": 1000,      // Dauer in Millisekunden
-  "effects": [           // Liste der Effekte
+  "id": "arrow_shot_123",
+  "name": "arrow_shot",
+  "duration": 2000,
+  "placeholders": ["shooter", "target", "impact"],  // To be filled by client
+  "effects": [
     {
-      "type": "scale",   // Effekt-Typ (z.B. scale, rotate, translate, colorChange)
-      "params": {        // Parameter für den Effekt
-        "from": 1.0,
-        "to": 1.2,
-        "easing": "easeInOut"
+      "id": "projectile",
+      "type": "projectile",
+      "positions": [
+        {"type": "placeholder", "name": "shooter"},
+        {"type": "placeholder", "name": "target"}
+      ],
+      "params": {
+        "projectileModel": "/models/arrow.babylon",
+        "speed": 50,
+        "trajectory": "arc"
       },
-      "startTime": 0,    // Startzeit relativ zur Animation
-      "endTime": 500     // Endzeit relativ zur Animation
+      "startTime": 0,
+      "duration": 1000,
+      "blocking": true
     },
     {
-      "type": "scale",
+      "id": "sky_darken",
+      "type": "skyChange",
+      "positions": [],
       "params": {
-        "from": 1.2,
-        "to": 1.0,
-        "easing": "easeInOut"
+        "color": "#333333",
+        "lightIntensity": 0.3,
+        "easing": "easeIn"
       },
-      "startTime": 500,
-      "endTime": 1000
+      "startTime": 0,
+      "duration": 500
+    },
+    {
+      "id": "explosion",
+      "type": "explosion",
+      "positions": [
+        {"type": "fixed", "position": {"x": 10, "y": 65, "z": 10}}
+      ],
+      "params": {
+        "radius": 5,
+        "explosionIntensity": 1.0
+      },
+      "startTime": 1000,
+      "duration": 300
+    },
+    {
+      "id": "sky_brighten",
+      "type": "skyChange",
+      "positions": [],
+      "params": {
+        "color": "#87CEEB",
+        "lightIntensity": 1.0,
+        "easing": "easeOut"
+      },
+      "startTime": 1300,
+      "duration": 700
     }
-  ]
+  ],
+  "source": {
+    "type": "client",
+    "playerId": "player123"
+  }
 }
 ```
+
+### Effect Types
+- Transform: scale, rotate, translate
+- Visual: colorChange, fade, flash
+- Particle/Object: projectile, explosion, particles, spawnEntity
+- Environment: skyChange, lightChange, cameraShake
+- Sound: playSound
+- Block: blockBreak, blockPlace, blockChange
+
+### Position References
+- Fixed: `{"type": "fixed", "position": {"x": 10, "y": 64, "z": 5}}`
+- Placeholder: `{"type": "placeholder", "name": "player"}` (filled by client)
+
+### Timeline
+- **Parallel**: Effects mit gleicher startTime laufen gleichzeitig
+- **Sequential**: blocking=true wartet auf Abschluss vor nächstem Effekt
+- **Duration**: Wird aus effects berechnet wenn nicht gesetzt
 
 
 ## BlockData

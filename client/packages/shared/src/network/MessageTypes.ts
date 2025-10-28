@@ -61,14 +61,14 @@ export enum ClientType {
 }
 
 /**
- * Notification type
+ * Notification type (numeric for network efficiency)
  */
 export enum NotificationType {
-  SYSTEM = 'system',
-  CHAT = 'chat',
-  WARNING = 'warning',
-  ERROR = 'error',
-  INFO = 'info',
+  SYSTEM = 0,
+  CHAT = 1,
+  WARNING = 2,
+  ERROR = 3,
+  INFO = 4,
 }
 
 /**

@@ -1,3 +1,11 @@
+# Network Model 2.0
+
+## Koordinaten-Namenskonvention
+
+**Wichtig:** Koordinaten müssen konsistent benannt werden:
+- **x, y, z** = Welt-Koordinaten (world coordinates)
+- **cx, cy, cz** = Chunk-Koordinaten (chunk coordinates)
+- **localX, localY, localZ** = Lokale Koordinaten innerhalb eines Chunks (vermeiden wenn möglich)
 
 ## Login
 
@@ -119,16 +127,18 @@ Der Server sendet einen neuen status der welt an den Client, damit werden alle c
 
 ## Chunk Registration (Client -> Server)
 
-Chunks sind immer Colums mit X und Z Koordinate. Die Y-Richtung wird immer komplett geliefert und gerendert.
+Chunks sind immer Colums mit X und Z Koordinate (cx, cz). Die Y-Richtung wird immer komplett geliefert und gerendert.
 
 Der Client registriert die Chunks, die er vom Server empfangen möchte, basierend auf seiner Position und Sichtweite.
 
-Die Registrierung wird als Liste von Chunk-Koordinaten (x,z) gesendet, alle nicht aufgeführten Chunks werden vom Server
+Die Registrierung wird als Liste von Chunk-Koordinaten (cx, cz) gesendet, alle nicht aufgeführten Chunks werden vom Server
 nicht mehr gesendet.
 
 ```json
 {"t": "c.r", "d": {"c": [{"x":0,"z":0},{"x":1,"z":0},{"x":0,"z":2}]}}
 ```
+
+**Hinweis:** Im JSON bleiben die kurzen Namen `x`, `z` für Netzwerk-Optimierung. Im Code verwenden wir `cx`, `cz`.
 
 Für alle Chunks, die noch nicht registriert waren, sendet der Server automatisch die Chunk Daten.
 
@@ -139,6 +149,8 @@ Der Client kann gezielt Chunks anfragen, z.B. wenn der Spieler sich bewegt oder 
 ```json
 {"t": "c.q", "d": {"c": [{"x":0,"z":0},{"x":1,"z":0},{"x":0,"z":2}]}}
 ```
+
+**Hinweis:** Im JSON: `x`, `z` (kurz). Im Code: `cx`, `cz` (eindeutig).
 
 ## Chunk Update (Server -> Client)
 
@@ -157,30 +169,44 @@ Der Server sendet angefragte Chunks an den Client.
 
 ```json
 {
-  "c": 0,
-  "z": 0,
-  "b":[
+  "cx": 0,   // Chunk X coordinate (benannt cx im Code für Eindeutigkeit)
+  "cz": 0,   // Chunk Z coordinate (benannt cz im Code für Eindeutigkeit)
+  "b":[      // Block array (nur non-air blocks)
     BlockData,
     ...
   ],
-  "h": [
+  "h": [     // Height data array
     HeightDataIntegers,
     ...
-  ], 
-  "a": [
+  ],
+  "a": [     // Area data (optional)
     AreaData
   ],
-  "e" : [
+  "e" : [    // Entity data (optional)
     EntityData,
     ...
   ]
 }
 ```
 
+**Hinweis:** Im JSON werden die Chunk-Koordinaten als `cx` und `cz` übertragen (geändert von `c` und `z`).
+
 ## HeightDataIntegers
 
+Named tuple mit 4 Werten:
+
 ```json
-[maxHeight, minHeigth, groundLevel, waterHeight]
+[maxHeight, minHeight, groundLevel, waterHeight]
+```
+
+Im TypeScript Code als `readonly` tuple definiert:
+```typescript
+type HeightData = readonly [
+  maxHeight: number,
+  minHeight: number,
+  groundLevel: number,
+  waterHeight: number
+];
 ```
 
 ## Block Update (Server -> Client)
@@ -250,20 +276,78 @@ Der Client sendet Block-Änderungen an den Server (z.B. durch den Editor).
 Als Antwort sendet der Server ein Block Update an alle Spieler, die den Chunk registriert haben.
 (Auch der Client bekommt die Änderung zurück)
 
-## Animation Execution (Server -> Client)
+## Animation Execution (Server -> Client oder Client -> Server)
+
+**Server → Client:** Server sendet Animation mit festen Positionen
+**Client → Server:** Client sendet gefüllte Animation Template für Broadcast an alle Spieler
 
 Der Server sendet eine Anweisung zum Starten einer Animation an den Client.
 
 ```json
-{"t": "a.s", "d": 
+{"t": "a.s", "d":
   [
-        {
-          "x": 10,
-          "y": 64,
-          "z": 10,
-          "animation": AnimationData
-        },
+    {
+      "x": 10,      // World coordinate (reference position)
+      "y": 64,
+      "z": 10,
+      "animation": AnimationData
+    },
     ...
+  ]
+}
+```
+
+**Animation Flow (Client-definiert):**
+1. Client hat Template mit Placeholders (z.B. "arrow_shot")
+2. Player schießt Pfeil → Client füllt Positionen (shooter, target, impact)
+3. Client spielt Animation lokal (sofortiges Feedback)
+4. Client sendet gefüllte Animation an Server
+5. Server validiert und broadcastet an alle anderen Spieler
+6. Andere Clients empfangen und spielen Animation
+
+**Animation Flow (Server-definiert):**
+1. Server erstellt Animation mit festen Positionen (z.B. Tür öffnet)
+2. Server sendet an alle betroffenen Clients
+3. Clients spielen Animation
+
+### AnimationData Structure
+
+Siehe object-model-2.0.md für vollständige AnimationData Struktur mit:
+- Timeline-basierte Effekte (parallel/sequential)
+- Multi-Position Support (Placeholder oder Fixed)
+- Effect Types (projectile, explosion, skyChange, etc.)
+- Position References (fixed vs placeholder)
+
+**Beispiel:** Pfeilschuss mit Explosion und Sky-Effekt
+```json
+{
+  "name": "arrow_shot",
+  "duration": 2000,
+  "effects": [
+    {
+      "type": "projectile",
+      "positions": [
+        {"type": "fixed", "position": {"x": 0, "y": 65, "z": 0}},
+        {"type": "fixed", "position": {"x": 10, "y": 65, "z": 10}}
+      ],
+      "params": {"speed": 50, "trajectory": "arc"},
+      "startTime": 0,
+      "duration": 1000,
+      "blocking": true
+    },
+    {
+      "type": "skyChange",
+      "params": {"color": "#333", "lightIntensity": 0.3},
+      "startTime": 0,
+      "duration": 500
+    },
+    {
+      "type": "explosion",
+      "positions": [{"type": "fixed", "position": {"x": 10, "y": 65, "z": 10}}],
+      "params": {"radius": 5},
+      "startTime": 1000,
+      "duration": 300
+    }
   ]
 }
 ```
@@ -314,14 +398,23 @@ Fail Response:
 Der Server sendet Benachrichtigungen an den Client (z.B. Systemmeldungen, Chat-Nachrichten, etc.).
 
 ```json
-{"t": "n", "d": 
+{"t": "n", "d":
   {
-    "t": 1, // type: 1=system, 2=chat, 3=warning, 4=error
+    "t": 0, // type: 0=system, 1=chat, 2=warning, 3=error, 4=info
     "f": "Server", // from: optional, z.B. bei chat Nachrichten
     "m": "Welcome to the server!", // message
     "ts": 1234567890 // UTC timestamp
   }
 }
+```
+
+### NotificationType Enum
+```
+0 = SYSTEM
+1 = CHAT
+2 = WARNING
+3 = ERROR
+4 = INFO
 ```
 
 ## Player Teleport (Server -> Client)

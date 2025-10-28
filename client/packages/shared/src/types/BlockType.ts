@@ -5,6 +5,8 @@
  * BlockType instances in the world only store the BlockType ID.
  */
 
+import type { BlockModifier } from './BlockModifier';
+
 /**
  * Block status values
  * 0 = default status
@@ -49,7 +51,17 @@ export interface BlockType {
   initialStatus?: number;
 
   /**
-   * Block modifier defining visual and behavioral properties
+   * Modifiers map: status → BlockModifier
+   *
+   * Defines visual and behavioral properties for each status.
+   * Status 0 (DEFAULT) should always be present.
+   *
+   * @example
+   * modifiers: {
+   *   0: { visibility: { shape: Shape.CUBE }, ... },  // default
+   *   1: { visibility: { shape: Shape.CUBE }, ... },  // open
+   *   2: { visibility: { shape: Shape.CUBE }, ... }   // closed
+   * }
    */
-  status: number; // References BlockModifier for this status
+  modifiers: Record<number, BlockModifier>;
 }
