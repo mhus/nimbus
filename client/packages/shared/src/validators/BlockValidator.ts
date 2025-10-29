@@ -6,6 +6,7 @@ import type { Block, Offsets } from '../types/Block';
 import type { BlockType } from '../types/BlockType';
 import type { BlockMetadata } from '../types/BlockMetadata';
 import { BlockStatus } from '../types/BlockType';
+import { BlockConstants } from '../constants/NimbusConstants';
 
 /**
  * Validation result
@@ -26,7 +27,11 @@ export namespace BlockValidator {
    * @returns True if valid
    */
   export function isValidBlockTypeId(id: number): boolean {
-    return Number.isInteger(id) && id >= 0 && id <= 65535;
+    return (
+      Number.isInteger(id) &&
+      id >= BlockConstants.MIN_BLOCK_TYPE_ID &&
+      id <= BlockConstants.MAX_BLOCK_TYPE_ID
+    );
   }
 
   /**
@@ -35,7 +40,11 @@ export namespace BlockValidator {
    * @returns True if valid
    */
   export function isValidStatus(status: number): boolean {
-    return Number.isInteger(status) && status >= 0 && status <= 255;
+    return (
+      Number.isInteger(status) &&
+      status >= BlockConstants.MIN_STATUS &&
+      status <= BlockConstants.MAX_STATUS
+    );
   }
 
   /**
@@ -58,8 +67,13 @@ export namespace BlockValidator {
         errors.push(`Offset[${index}] is not a finite number: ${value}`);
       }
 
-      if (value < -127 || value > 127) {
-        errors.push(`Offset[${index}] out of range (-127 to 127): ${value}`);
+      if (
+        value < BlockConstants.MIN_OFFSET ||
+        value > BlockConstants.MAX_OFFSET
+      ) {
+        errors.push(
+          `Offset[${index}] out of range (${BlockConstants.MIN_OFFSET} to ${BlockConstants.MAX_OFFSET}): ${value}`
+        );
       }
 
       if (!Number.isInteger(value)) {
@@ -84,7 +98,9 @@ export namespace BlockValidator {
    */
   export function isValidFaceVisibility(value: number): boolean {
     // Should be 7-bit value (6 faces + 1 fixed flag)
-    return Number.isInteger(value) && value >= 0 && value <= 127;
+    return (
+      Number.isInteger(value) && value >= 0 && value <= BlockConstants.MAX_FACE_VISIBILITY
+    );
   }
 
   /**
@@ -119,7 +135,7 @@ export namespace BlockValidator {
     // Validate block type ID
     if (!isValidBlockTypeId(block.blockTypeId)) {
       errors.push(
-        `Invalid block type ID: ${block.blockTypeId} (must be 0-65535)`
+        `Invalid block type ID: ${block.blockTypeId} (must be ${BlockConstants.MIN_BLOCK_TYPE_ID}-${BlockConstants.MAX_BLOCK_TYPE_ID})`
       );
     }
 
@@ -136,14 +152,16 @@ export namespace BlockValidator {
     if (block.faceVisibility) {
       if (!isValidFaceVisibility(block.faceVisibility.value)) {
         errors.push(
-          `Invalid face visibility: ${block.faceVisibility.value} (must be 0-127)`
+          `Invalid face visibility: ${block.faceVisibility.value} (must be 0-${BlockConstants.MAX_FACE_VISIBILITY})`
         );
       }
     }
 
     // Validate status if present
     if (block.status !== undefined && !isValidStatus(block.status)) {
-      errors.push(`Invalid status: ${block.status} (must be 0-255)`);
+      errors.push(
+        `Invalid status: ${block.status} (must be ${BlockConstants.MIN_STATUS}-${BlockConstants.MAX_STATUS})`
+      );
     }
 
     // Validate metadata if present
@@ -304,7 +322,7 @@ export namespace BlockValidator {
       },
       blockTypeId: isValidBlockTypeId(block.blockTypeId)
         ? block.blockTypeId
-        : 0,
+        : BlockConstants.AIR_BLOCK_ID,
     };
 
     // Copy optional fields if valid

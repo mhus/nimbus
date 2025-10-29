@@ -5,6 +5,7 @@
 import type { BaseMessage } from '../network/BaseMessage';
 import { MessageType } from '../network/MessageTypes';
 import type { ValidationResult } from './BlockValidator';
+import { NetworkConstants } from '../constants/NimbusConstants';
 
 /**
  * Message validators
@@ -16,7 +17,11 @@ export namespace MessageValidator {
    * @returns True if valid
    */
   export function isValidMessageId(id: string): boolean {
-    return typeof id === 'string' && id.length > 0 && id.length <= 100;
+    return (
+      typeof id === 'string' &&
+      id.length > 0 &&
+      id.length <= NetworkConstants.MESSAGE_ID_MAX_LENGTH
+    );
   }
 
   /**
@@ -91,10 +96,9 @@ export namespace MessageValidator {
     }
 
     // Check message size
-    if (jsonStr.length > 10 * 1024 * 1024) {
-      // 10 MB
+    if (jsonStr.length > NetworkConstants.MAX_MESSAGE_SIZE) {
       warnings.push(
-        `Message is very large: ${(jsonStr.length / 1024 / 1024).toFixed(2)} MB`
+        `Message is very large: ${(jsonStr.length / 1024 / 1024).toFixed(2)} MB (max: ${NetworkConstants.MAX_MESSAGE_SIZE / 1024 / 1024} MB)`
       );
     }
 

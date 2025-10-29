@@ -6,6 +6,7 @@ import type { EntityData } from '../types/EntityData';
 import { EntityType } from '../types/EntityData';
 import type { ValidationResult } from './BlockValidator';
 import { BlockValidator } from './BlockValidator';
+import { EntityConstants, LimitConstants } from '../constants/NimbusConstants';
 
 /**
  * Entity validators
@@ -17,7 +18,11 @@ export namespace EntityValidator {
    * @returns True if valid
    */
   export function isValidEntityId(id: string): boolean {
-    return typeof id === 'string' && id.length > 0 && id.length <= 100;
+    return (
+      typeof id === 'string' &&
+      id.length > 0 &&
+      id.length <= EntityConstants.ENTITY_ID_MAX_LENGTH
+    );
   }
 
   /**
@@ -129,8 +134,13 @@ export namespace EntityValidator {
       warnings.push('Player missing userId');
     }
 
-    if (entity.username && entity.username.length > 50) {
-      warnings.push(`Username too long: ${entity.username.length} chars`);
+    if (
+      entity.username &&
+      entity.username.length > EntityConstants.USERNAME_MAX_LENGTH
+    ) {
+      warnings.push(
+        `Username too long: ${entity.username.length} chars (max: ${EntityConstants.USERNAME_MAX_LENGTH})`
+      );
     }
 
     if (entity.health) {
@@ -190,7 +200,7 @@ export namespace EntityValidator {
    */
   export function validateEntityArray(
     entities: EntityData[],
-    maxCount: number = 1000
+    maxCount: number = LimitConstants.MAX_ENTITIES_PER_MESSAGE
   ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];

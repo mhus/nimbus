@@ -3,9 +3,16 @@
  */
 
 import type { ChunkData } from '../types/ChunkData';
-import type { ChunkDataTransferObject, ChunkCoordinate } from '../network/messages/ChunkMessage';
+import type {
+  ChunkDataTransferObject,
+  ChunkCoordinate,
+} from '../network/messages/ChunkMessage';
 import type { ValidationResult } from './BlockValidator';
 import { BlockValidator } from './BlockValidator';
+import {
+  ChunkConstants,
+  LimitConstants,
+} from '../constants/NimbusConstants';
 
 /**
  * Chunk validators
@@ -32,12 +39,12 @@ export namespace ChunkValidator {
    * @returns True if valid
    */
   export function isValidChunkSize(size: number): boolean {
-    // Must be power of 2: 8, 16, 32, 64
+    // Must be a supported chunk size
     return (
       Number.isInteger(size) &&
-      size > 0 &&
-      size <= 128 &&
-      (size & (size - 1)) === 0
+      size >= ChunkConstants.SIZE_MIN &&
+      size <= ChunkConstants.SIZE_MAX &&
+      (size & (size - 1)) === 0 // Power of 2
     );
   }
 
@@ -62,7 +69,7 @@ export namespace ChunkValidator {
     // Validate size
     if (!isValidChunkSize(chunk.size)) {
       errors.push(
-        `Invalid chunk size: ${chunk.size} (must be power of 2: 8, 16, 32, 64)`
+        `Invalid chunk size: ${chunk.size} (must be power of 2 between ${ChunkConstants.SIZE_MIN} and ${ChunkConstants.SIZE_MAX})`
       );
     }
 
@@ -145,7 +152,7 @@ export namespace ChunkValidator {
     } else {
       const blockValidation = BlockValidator.validateBlockArray(
         transferObj.b,
-        100000
+        LimitConstants.MAX_BLOCKS_PER_MESSAGE
       );
       errors.push(...blockValidation.errors);
       if (blockValidation.warnings) {
@@ -211,7 +218,7 @@ export namespace ChunkValidator {
    */
   export function validateChunkCoordinates(
     coordinates: ChunkCoordinate[],
-    maxCount: number = 1000
+    maxCount: number = LimitConstants.MAX_CHUNK_COORDINATES
   ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
