@@ -95,6 +95,10 @@ export class PhysicsService {
    */
   registerEntity(entity: PhysicsEntity): void {
     this.entities.set(entity.entityId, entity);
+
+    // Clamp to world bounds on registration (in case entity spawns outside)
+    this.clampToWorldBounds(entity);
+
     logger.debug('Entity registered', { entityId: entity.entityId, mode: entity.movementMode });
   }
 
@@ -150,11 +154,69 @@ export class PhysicsService {
       entity.position.addInPlace(entity.velocity.scale(deltaTime));
     }
 
+    // Clamp to world boundaries
+    this.clampToWorldBounds(entity);
+
     // Ground check with block collision
     this.checkGroundCollision(entity);
 
     // Auto-push-up if inside block
     this.checkAndPushUp(entity);
+  }
+
+  /**
+   * Clamp entity position to world boundaries
+   */
+  private clampToWorldBounds(entity: PhysicsEntity): void {
+    const worldInfo = this.appContext.worldInfo;
+    if (!worldInfo || !worldInfo.start || !worldInfo.stop) {
+      return;
+    }
+
+    const start = worldInfo.start;
+    const stop = worldInfo.stop;
+    let clamped = false;
+
+    // Clamp X
+    if (entity.position.x < start.x) {
+      entity.position.x = start.x;
+      entity.velocity.x = 0;
+      clamped = true;
+    } else if (entity.position.x > stop.x) {
+      entity.position.x = stop.x;
+      entity.velocity.x = 0;
+      clamped = true;
+    }
+
+    // Clamp Y
+    if (entity.position.y < start.y) {
+      entity.position.y = start.y;
+      entity.velocity.y = 0;
+      clamped = true;
+    } else if (entity.position.y > stop.y) {
+      entity.position.y = stop.y;
+      entity.velocity.y = 0;
+      clamped = true;
+    }
+
+    // Clamp Z
+    if (entity.position.z < start.z) {
+      entity.position.z = start.z;
+      entity.velocity.z = 0;
+      clamped = true;
+    } else if (entity.position.z > stop.z) {
+      entity.position.z = stop.z;
+      entity.velocity.z = 0;
+      clamped = true;
+    }
+
+    if (clamped) {
+      logger.debug('Entity clamped to world bounds', {
+        entityId: entity.entityId,
+        position: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
+        bounds: { start, stop },
+      });
+    }
   }
 
   /**
@@ -351,6 +413,9 @@ export class PhysicsService {
     // No gravity in fly mode
     // Velocity is directly controlled by input (no damping in fly mode for precise control)
     // Position is updated in moveForward/moveRight/moveUp methods
+
+    // Clamp to world boundaries
+    this.clampToWorldBounds(entity);
   }
 
   /**

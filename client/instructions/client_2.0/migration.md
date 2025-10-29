@@ -255,7 +255,9 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 - Wie Agieren der PlayerService und der PhysicsService miteinander?
 - Gestartet wird im Walk Modus
 
-[ ] PhysicsService sollte auch darauf achten, dass ich die grenzen der welt (WorldInfo) nicht ueberschreite, auch nach oben und unten nicht.
+[x] PhysicsService sollte auch darauf achten, dass ich die grenzen der welt (WorldInfo) nicht ueberschreite, auch nach oben und unten nicht.
+- wenn ich ausserhalb der grenzen bin, werde ich automatisch an die naechste grenze geleitet.
+
 
 [ ] Die Mausrichtung links und rechts; hoch und runter sind verkert herum gebaut.
 
