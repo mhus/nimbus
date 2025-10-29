@@ -104,7 +104,7 @@ diesen Type relevant sind.
 anstelle von direktem halten des transports immer eine static methode mit 'logge das jetzt' anlegen und hier
 den transport zentral halten. Der Transport kann dann jederzeit getauscht werden.
 
-[ ] ChunkData (client/packages/shared/src/types/ChunkData.ts)
+[?] ChunkData (client/packages/shared/src/types/ChunkData.ts)
 - ChunkData wurde in client/instructions/client_2.0/network-model-2.0.md unter 'Chunk Update' genau beschrieben, ist aber anders umgesetzt.
 - Server: Ueber das Netzwerk soll Block serilisiert in ChunkData, in einem Array uebertragen werden. Das kann ja im chunk direkt 
   vom Storage weg geschickt werden ohne die Daten in Objekte umzuformen, nur wenn daten manipuliert werden, muss das 
@@ -112,6 +112,9 @@ den transport zentral halten. Der Transport kann dann jederzeit getauscht werden
   diese daten serilisiert und verschickt.
 - Client: Im client werden die daten in Objekte deserilisiert und in einen ClientChunk mit ClientBlock umgewandelt, da drin
   wird das vorher deserialisierte Block Objekt rein gelegt.
+[?] Im Server muss ein ServerChunk implementiert werden. Dieser Chunk sortiert die Blocks in ein Map und bietet CRUD werkzeuge
+    an um den Chunk anzupassen. Ein ServerChunkHelper kann die Helperfunktionen bereitstellen. Und auch wieder die Umformung von  
+    ServerChunk in ChunkData. Der ServerChunk wird dann benuztz um addBlocks oder deleteBlocks zu implementieren.
 
 ## Basic Client Services
 

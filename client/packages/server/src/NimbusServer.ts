@@ -203,7 +203,7 @@ class NimbusServer {
       // Get or generate chunk
       let chunk = world.chunks.get(key);
       if (!chunk) {
-        chunk = this.terrainGenerator.generateChunk(cx, cz, world.chunkSize, 256);
+        chunk = this.terrainGenerator.generateChunk(cx, cz, world.chunkSize);
         world.chunks.set(key, chunk);
       }
 
