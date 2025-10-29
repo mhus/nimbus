@@ -89,13 +89,32 @@ diesen Type relevant sind.
 [x] Verschiebe alle Client related typen (ClientChunk ClientBlock etc.) in client/types.
 [-] Verschiebe alle Server related typen (ServerChunk ServerBlock etc.) in server/types. (Gibt es welche?)
 
+> Netzwerk Protokoll: 'ClientCommand' und 'ClientCommandResponse'
+> Shape AIR wird BlockType AIR (0), Shape 0 wird INVISIBLE, Constante für BlockType AIR.
+> Displayname und Name aus dem BlockMetadata entfernen. - Kann später über REST geladen werden.
+> Rest Route für Block Metadaten.
+
+[ ] Neuer Netzwerk Befehlt "cmd", "cmd.msg" und "cmd.rs" in client/shared/network anlegen. 
+[ ] DTOs für REST Kommunikation aus client/instructions/client_2.0/server_rest_api.md in client/shared/rest anlegen. 
+
 ===
-## Basic Client Types
+
+## Basic Client Services
+
+Da sehr viele Services ertellt werden müssen, die ineinander greifen, müssen sie Schritt für Schritt implementiert werden.
+Für den Anfang werden einige Services als Mock erstellt und später richtig implementiert werden.
+
+Start mit zentralen Strukturen:
 
 [ ] AppContext: Enthält referenzen auf alle services, konfigurationen, etc. die der client braucht. 
-Lege im main den appContext an. Muss noch nicht vollstaendig sein, wird mit der Zeit erweitert.
-[-] Services: Lege die services aus client/instructions/client_2.0/migration-concepts.md in client/services an.
-[ ] InputController und InputService anlegen, InputController wid im InputService erstellt und gehalten. InputService im AppContent
+Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird mit der Zeit erweitert.
+[ ] ClientService: Lege eine Client Service in den AppContext der beim Starten in NimbusClient erstellt wird.
+- Er benötigt Zugriff auf den HTTP-Request, User-Agent, Language um den aktuellen Client, Sprache festzustellen.
+- Implementiere Client: WEB_BROWSER, XBOX, MOBILE_IOS, MOBILE_ANDROID, MOBILE
+- Implementiere UserAgent : string
+- Implementiere Language
+- Implementiere isEditor()
+
 
 ## Basic Network Protocoll
 

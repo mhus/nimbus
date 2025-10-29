@@ -222,18 +222,6 @@ export namespace BlockValidator {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Validate display name length
-    if (metadata.displayName && metadata.displayName.length > 100) {
-      warnings.push(
-        `Display name is very long: ${metadata.displayName.length} chars`
-      );
-    }
-
-    // Validate name length
-    if (metadata.name && metadata.name.length > 50) {
-      warnings.push(`Name is very long: ${metadata.name.length} chars`);
-    }
-
     // Validate group ID
     if (metadata.groupId !== undefined) {
       if (!Number.isInteger(metadata.groupId) || metadata.groupId < 0) {

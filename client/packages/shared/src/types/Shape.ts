@@ -3,90 +3,86 @@
  */
 
 export enum Shape {
-  /** Pseudo-block, no modifiers possible, truly empty space */
-  AIR = 0,
-
   /** Not visible but can have modifiers (effects, etc.) */
-  INVISIBLE = 1,
+  INVISIBLE = 0,
 
   /** Standard cube */
-  CUBE = 2,
+  CUBE = 1,
 
   /** Cross shape (two intersecting planes) */
-  CROSS = 3,
+  CROSS = 2,
 
   /** Hash/grid pattern */
-  HASH = 4,
+  HASH = 3,
 
   /** Custom 3D model */
-  MODEL = 5,
+  MODEL = 4,
 
   /** Glass cube */
-  GLASS = 6,
+  GLASS = 5,
 
   /** Flat glass pane */
-  GLASS_FLAT = 7,
+  GLASS_FLAT = 6,
 
   /** Flat surface */
-  FLAT = 8,
+  FLAT = 7,
 
   /** Sphere */
-  SPHERE = 9,
+  SPHERE = 8,
 
   /** Column/pillar */
-  COLUMN = 10,
+  COLUMN = 9,
 
   /** Rounded cube */
-  ROUND_CUBE = 11,
+  ROUND_CUBE = 10,
 
   /** Steps */
-  STEPS = 12,
+  STEPS = 11,
 
   /** Stairs */
-  STAIR = 13,
+  STAIR = 12,
 
   /** Billboard (always faces camera) */
-  BILLBOARD = 14,
+  BILLBOARD = 13,
 
   /** Sprite */
-  SPRITE = 15,
+  SPRITE = 14,
 
   /** Flame effect */
-  FLAME = 16,
+  FLAME = 15,
 
   /** Ocean water (flat) */
-  OCEAN = 17,
+  OCEAN = 16,
 
   /** Ocean coast variation */
-  OCEAN_COAST = 18,
+  OCEAN_COAST = 17,
 
   /** Ocean maelstrom variation */
-  OCEAN_MAELSTROM = 19,
+  OCEAN_MAELSTROM = 18,
 
   /** River water (flat, directional) */
-  RIVER = 20,
+  RIVER = 19,
 
   /** River waterfall */
-  RIVER_WATERFALL = 21,
+  RIVER_WATERFALL = 20,
 
   /** River waterfall with whirlpool */
-  RIVER_WATERFALL_WHIRLPOOL = 22,
+  RIVER_WATERFALL_WHIRLPOOL = 21,
 
   /** Water cube */
-  WATER = 23,
+  WATER = 22,
 
   /** Lava */
-  LAVA = 24,
+  LAVA = 23,
 
   /** Fog */
-  FOG = 25,
+  FOG = 24,
 }
 
 /**
  * Human-readable shape names
  */
 export const ShapeNames: Record<Shape, string> = {
-  [Shape.AIR]: 'air',
   [Shape.INVISIBLE]: 'invisible',
   [Shape.CUBE]: 'cube',
   [Shape.CROSS]: 'cross',

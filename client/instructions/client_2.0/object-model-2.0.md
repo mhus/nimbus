@@ -152,8 +152,6 @@ Ab 100: ggf. für bestimmte shape typen spezielle texturen.
 ## BlockMetadata
 
 Parameters:
-- ?displayName : string
-- ?name : string
 - ?groupId : number
 - ?modifiers : Record<number, BlockModifier> (optional instance-specific modifier overrides)
 
@@ -163,11 +161,10 @@ Use case: Eine spezielle Tür, die anders aussieht als der Standard-Türtyp.
 ## Shape
 
 Parameters:
-- air (0 - Block ist ein pseudoblock, keine Modifier möglich, wirklich nur für 'kein block')
-- invisible (1 - nicht sichtbar, kann aber Modifier haben, 'echter' Block, der renderer macht aber nichts, z.b. effects)
-- cube
-- cross
-- hash
+- invisible (0 - nicht sichtbar, kann aber Modifier haben, 'echter' Block, der renderer macht aber nichts, z.b. effects)
+- cube (1 - normaler Würfel)
+- cross (2 - Kreuzpflanze)
+- hash (3 - Hash-Pflanze)
 - model
 - glass (a cube of glass)
 - glass_flat (a flat glass)
@@ -205,7 +202,7 @@ dynamisch zusammengebaut. Beic ändern des Status wird aktualisiert.
 Keine optional Werte, wenn nicht explizit sinnvoll.
 
 Parameters:
-- type : Block-Type
+- type : Block-Type (0 - AIR)
 - attributes : Map
 - shape
 - assets : array of string

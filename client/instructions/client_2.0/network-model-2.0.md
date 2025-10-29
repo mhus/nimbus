@@ -519,6 +519,68 @@ Der Client bestätigt das Schließen des NPC-Dialogs gegenüber dem Server.
 }
 ```
 
+### Client Command (Client -> Server)
+
+Der Client sendet einen Client-Befehl an den Server.
+Als Antwort kann er "cmd.msg" schicken, abschließend schickt er mindestens eine
+"cmd.rs" message als successful (rc=0) oder failed (rc!=0).
+
+Negative rc sind System Fehler:
+
+* -1 = Command not found
+* -2 = Command not allowed (permission denied)
+* -3 = Invalid arguments
+* -4 = Internal error
+
+Positive rc werden vom Command zurückgegeben und sind individuell.
+
+* 0 = OK bzw. "true".
+* 1 = Error bzw. "false".
+
+```json
+{"i": "123", "t": "cmd", "d": 
+  {
+    "cmd": "say",
+    "args": [
+      "Hello, world!"
+    ]
+  }
+}
+```
+
+Response Streaming Message (Server -> Client):
+
+```json
+{"r":"123", "t": "cmd.msg", "d": {
+    "message": "Processing..."
+  }
+}
+```
+
+Response Finished Successfully (Server -> Client):
+
+```json
+{"r":"123", "t": "cmd.rs", "d": 
+  {
+    "rc": 0,
+    "message": "Hello, world!"
+  }
+}
+```
+
+Response Finished Failed (Server -> Client):
+
+```json
+{"r":"123", "t": "cmd.rs", "d": 
+  {
+    "rc": 1,
+    "message": "Command not found."
+  }
+}
+```
+
+
+
 ## Logout (Client -> Server)
 
 Der Client sendet eine Logout-Nachricht an den Server, wenn der Spieler die Welt verlässt.

@@ -128,3 +128,26 @@ Als BlockType Id in der EInzelabfrage kann entweder die numerische ID oder der e
 
 BlockType ist hier nicht vollständig dargestellt, siehe Objekt Modell Dokumentation für alle Felder.
 
+## Block Metadaten
+
+Gibt nur die Metadaten eines Blocks zurück, die nicht in der Block Definition enthalten sind.
+Das Metadatum 'groupId' im Block ist eine visuelle Gruppierung um mehrere Blocks gleichzeitig zu gruppieren
+und um Aktionen auszuführen.
+
+GET /api/worlds/{worldId}/blocks/{x}/{y}/{z}/metadata
+
+Response:
+
+```json
+{
+  "x": 1,
+  "y": 2,
+  "z": 3,
+  "id": "uuid",
+  "groups": ["uuid1"],
+  "groupNames": ["name1"],
+  "inheritedGroups": ["uuid2"],
+  "inheritedGroupNames": ["name2"],
+  "displayName": "Custom Block Name"
+}
+```

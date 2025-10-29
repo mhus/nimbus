@@ -12,15 +12,6 @@
 import type { BlockModifier } from './BlockModifier';
 
 export interface BlockMetadata {
-  /**
-   * Display name for UI
-   */
-  displayName?: string;
-
-  /**
-   * Internal name
-   */
-  name?: string;
 
   /**
    * Group ID for organization/categorization
