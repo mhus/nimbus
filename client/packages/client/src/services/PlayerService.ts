@@ -37,6 +37,9 @@ export class PlayerService {
   // Player as physics entity
   private playerEntity: PhysicsEntity;
 
+  // Last known position (for change detection)
+  private lastPosition: { x: number; y: number; z: number };
+
   // Event system
   private eventListeners: Map<string, EventListener[]> = new Map();
 
@@ -51,6 +54,13 @@ export class PlayerService {
       velocity: Vector3.Zero(),
       movementMode: 'walk' as MovementMode,
       isOnGround: false,
+    };
+
+    // Initialize last position for change detection
+    this.lastPosition = {
+      x: this.playerEntity.position.x,
+      y: this.playerEntity.position.y,
+      z: this.playerEntity.position.z,
     };
 
     // Initialize player position and sync camera
@@ -173,8 +183,19 @@ export class PlayerService {
     // Just sync camera after physics update
     this.syncCameraToPlayer();
 
-    // Emit position change if moved
-    // TODO: Only emit if position actually changed
+    // Emit position change if moved (for chunk loading, etc.)
+    const currentPos = this.playerEntity.position;
+    if (
+      currentPos.x !== this.lastPosition.x ||
+      currentPos.y !== this.lastPosition.y ||
+      currentPos.z !== this.lastPosition.z
+    ) {
+      this.lastPosition.x = currentPos.x;
+      this.lastPosition.y = currentPos.y;
+      this.lastPosition.z = currentPos.z;
+
+      this.emit('position:changed', currentPos.clone());
+    }
   }
 
   /**

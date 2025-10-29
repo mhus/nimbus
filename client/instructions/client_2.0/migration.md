@@ -264,7 +264,7 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 
 > Umstellung:
 
-[ ] Die methode ClientService.getBlockAt() muss ClientBlock zurueck geben, d.h. 
+[x] Die methode ClientService.getBlockAt() muss ClientBlock zurueck geben, d.h. 
 - in ClientChunk muss ein neues ClientChunkData object anstelle des ChunkDataTransferObject benutzt werden.
 - ClientChunkData:
   - transfer: ChunkDataTransferObject
@@ -279,6 +279,10 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
        4. Block-BlockType-ID status-Metadaten (Base status=world status)
        5. Default Werte für Metadaten, z.b. shape=0
 - In Physics kann direkt auf clientBlock.currentModifier.physics.solid geprueft werden ohne alles zu mergen.
+
+
+[x] Wenn der Player sich bewegt werden keine chunks mehr nachgeladen.
+[x] Wenn ein chonk nicht geladen wurde muss der PhsyicsService den Player daran hindern diesen bereich zu betreten.
 
 ===
 

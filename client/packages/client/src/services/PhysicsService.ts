@@ -191,6 +191,47 @@ export class PhysicsService {
   }
 
   /**
+   * Check if chunk at position is loaded
+   */
+  private isChunkLoaded(worldX: number, worldZ: number): boolean {
+    if (!this.chunkService) {
+      return true; // If no chunk service, allow movement
+    }
+
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+    const chunkX = Math.floor(worldX / chunkSize);
+    const chunkZ = Math.floor(worldZ / chunkSize);
+
+    const chunk = this.chunkService.getChunk(chunkX, chunkZ);
+    return chunk !== undefined;
+  }
+
+  /**
+   * Clamp entity to loaded chunk boundaries
+   * Prevents player from moving into unloaded chunks
+   */
+  private clampToLoadedChunks(entity: PhysicsEntity, oldX: number, oldZ: number): void {
+    if (!this.chunkService) {
+      return;
+    }
+
+    // Check if new position is in a loaded chunk
+    if (!this.isChunkLoaded(entity.position.x, entity.position.z)) {
+      // Not loaded - revert position
+      entity.position.x = oldX;
+      entity.position.z = oldZ;
+      entity.velocity.x = 0;
+      entity.velocity.z = 0;
+
+      logger.debug('Movement blocked - chunk not loaded', {
+        entityId: entity.entityId,
+        attemptedX: entity.position.x,
+        attemptedZ: entity.position.z,
+      });
+    }
+  }
+
+  /**
    * Clamp entity position to world boundaries
    */
   private clampToWorldBounds(entity: PhysicsEntity): void {
@@ -459,8 +500,13 @@ export class PhysicsService {
       entity.position.x += dx;
       entity.position.z += dz;
 
-      // Auto-climb 1 block step
-      this.tryAutoClimb(entity, oldX, oldZ);
+      // Check if moved into unloaded chunk
+      this.clampToLoadedChunks(entity, oldX, oldZ);
+
+      // Auto-climb 1 block step (only if not blocked by chunk boundary)
+      if (entity.position.x !== oldX || entity.position.z !== oldZ) {
+        this.tryAutoClimb(entity, oldX, oldZ);
+      }
     } else if (entity.movementMode === 'fly') {
       // Fly mode: Move in camera direction (including pitch)
       const dx = Math.sin(cameraYaw) * Math.cos(cameraPitch) * distance;
@@ -470,6 +516,9 @@ export class PhysicsService {
       entity.position.x += dx;
       entity.position.y += dy;
       entity.position.z += dz;
+
+      // Check if moved into unloaded chunk
+      this.clampToLoadedChunks(entity, oldX, oldZ);
     }
   }
 
@@ -491,8 +540,11 @@ export class PhysicsService {
     entity.position.x += dx;
     entity.position.z += dz;
 
-    // Auto-climb 1 block step (Walk mode only)
-    if (entity.movementMode === 'walk') {
+    // Check if moved into unloaded chunk
+    this.clampToLoadedChunks(entity, oldX, oldZ);
+
+    // Auto-climb 1 block step (Walk mode only, and only if not blocked by chunk boundary)
+    if (entity.movementMode === 'walk' && (entity.position.x !== oldX || entity.position.z !== oldZ)) {
       this.tryAutoClimb(entity, oldX, oldZ);
     }
   }

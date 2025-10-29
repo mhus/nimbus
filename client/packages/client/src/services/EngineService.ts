@@ -146,6 +146,15 @@ export class EngineService {
       this.inputService.setController(webInputController);
       logger.debug('InputService initialized');
 
+      // Listen to player position changes to update chunks
+      this.playerService.on('position:changed', (position) => {
+        const chunkService = this.appContext.services.chunk;
+        if (chunkService) {
+          chunkService.updateChunksAroundPosition(position.x, position.z);
+        }
+      });
+      logger.debug('Player position listener registered');
+
       // Handle window resize
       window.addEventListener('resize', this.onResize);
 

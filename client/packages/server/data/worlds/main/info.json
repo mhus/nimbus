@@ -3,12 +3,12 @@
   "description": "Default main world",
   "chunkSize": 32,
   "dimensions": {
-    "minX": -128,
-    "maxX": 128,
+    "minX": -1028,
+    "maxX": 1028,
     "minY": -64,
     "maxY": 192,
-    "minZ": -128,
-    "maxZ": 128
+    "minZ": -1028,
+    "maxZ": 1028
   },
   "seaLevel": 0,
   "groundLevel": 64,
