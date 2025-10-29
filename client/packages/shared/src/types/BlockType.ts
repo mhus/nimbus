@@ -51,6 +51,11 @@ export interface BlockType {
   initialStatus?: number;
 
   /**
+   * Detailed description of the block type to be used by AI systems.
+   */
+  description?: string;
+
+  /**
    * Modifiers map: status → BlockModifier
    *
    * Defines visual and behavioral properties for each status.
