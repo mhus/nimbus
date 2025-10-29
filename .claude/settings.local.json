@@ -22,7 +22,9 @@
       "Bash(pnpm --filter @nimbus/shared test:*)",
       "Bash(pnpm test:*)",
       "Bash(pnpm test:shared:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(pnpm dev)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
