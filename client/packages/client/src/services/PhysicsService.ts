@@ -9,7 +9,6 @@ import { Vector3 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
-import type { BlockTypeService } from './BlockTypeService';
 
 const logger = getLogger('PhysicsService');
 
@@ -36,6 +35,14 @@ export interface PhysicsEntity {
 
   /** Entity ID for logging */
   entityId: string;
+
+  /** Auto-climb state (for smooth animation) */
+  climbState?: {
+    active: boolean;
+    startY: number;
+    targetY: number;
+    progress: number; // 0.0 to 1.0
+  };
 }
 
 /**
@@ -50,14 +57,12 @@ export interface PhysicsEntity {
 export class PhysicsService {
   private appContext: AppContext;
   private chunkService?: ChunkService;
-  private blockTypeService?: BlockTypeService;
 
   // Physics constants
   private readonly gravity: number = -20.0; // blocks per second²
   private readonly walkSpeed: number = 5.0; // blocks per second
   private readonly flySpeed: number = 10.0; // blocks per second
   private readonly jumpSpeed: number = 8.0; // blocks per second (2 blocks high)
-  private readonly autoClimbHeight: number = 1.0; // Can climb 1 block
   private readonly playerHeight: number = 1.8; // Player height in blocks
   private readonly playerWidth: number = 0.6; // Player width in blocks
 
@@ -80,14 +85,6 @@ export class PhysicsService {
   setChunkService(chunkService: ChunkService): void {
     this.chunkService = chunkService;
     logger.debug('ChunkService set for collision detection');
-  }
-
-  /**
-   * Set BlockTypeService for collision detection (called after BlockTypeService is created)
-   */
-  setBlockTypeService(blockTypeService: BlockTypeService): void {
-    this.blockTypeService = blockTypeService;
-    logger.debug('BlockTypeService set for collision detection');
   }
 
   /**
@@ -141,6 +138,12 @@ export class PhysicsService {
    * Update entity in Walk mode
    */
   private updateWalkMode(entity: PhysicsEntity, deltaTime: number): void {
+    // Handle auto-climb animation
+    if (entity.climbState?.active) {
+      this.updateClimbAnimation(entity, deltaTime);
+      return; // Skip normal physics during climb
+    }
+
     // Apply gravity
     if (!entity.isOnGround) {
       entity.velocity.y += this.gravity * deltaTime;
@@ -162,6 +165,29 @@ export class PhysicsService {
 
     // Auto-push-up if inside block
     this.checkAndPushUp(entity);
+  }
+
+  /**
+   * Update smooth climb animation
+   */
+  private updateClimbAnimation(entity: PhysicsEntity, deltaTime: number): void {
+    if (!entity.climbState) return;
+
+    // Increment progress (3.5 = ~0.29 seconds for smooth climb)
+    entity.climbState.progress += deltaTime * 3.5;
+
+    if (entity.climbState.progress >= 1.0) {
+      // Climb complete
+      entity.position.y = entity.climbState.targetY;
+      entity.climbState = undefined;
+      entity.isOnGround = true;
+      entity.velocity.y = 0;
+    } else {
+      // Smooth interpolation with ease-out for natural feel
+      const t = entity.climbState.progress;
+      const eased = 1 - Math.pow(1 - t, 3); // Cubic ease-out
+      entity.position.y = entity.climbState.startY + (entity.climbState.targetY - entity.climbState.startY) * eased;
+    }
   }
 
   /**
@@ -223,7 +249,7 @@ export class PhysicsService {
    * Check if block at position is solid
    */
   private isBlockSolid(x: number, y: number, z: number): boolean {
-    if (!this.chunkService || !this.blockTypeService) {
+    if (!this.chunkService) {
       return false;
     }
 
@@ -232,39 +258,20 @@ export class PhysicsService {
     const blockY = Math.floor(y);
     const blockZ = Math.floor(z);
 
-    const block = this.chunkService.getBlockAt(blockX, blockY, blockZ);
-    if (!block) {
-      // Log when no block found during ground search
-      if (blockY >= 51 && blockY <= 64 && Math.random() < 0.02) {
-        logger.info('No block found at position', {
-          pos: { x: blockX, y: blockY, z: blockZ },
-          loadedChunks: this.chunkService.getLoadedChunkCount(),
-        });
-      }
+    const clientBlock = this.chunkService.getBlockAt(blockX, blockY, blockZ);
+    if (!clientBlock) {
       return false; // No block = not solid
     }
 
-    const blockType = this.blockTypeService.getBlockType(block.blockTypeId);
-    if (!blockType) {
-      logger.warn('BlockType not found', { blockTypeId: block.blockTypeId });
-      return false;
-    }
-
-    // Get modifier for default status (0)
-    const modifier = blockType.modifiers[0];
-    if (!modifier) {
-      return false;
-    }
-
-    // Check if block has solid physics
-    return modifier.physics?.solid === true;
+    // Direct access to pre-merged modifier (much faster!)
+    return clientBlock.currentModifier.physics?.solid === true;
   }
 
   /**
    * Check ground collision and update entity state
    */
   private checkGroundCollision(entity: PhysicsEntity): void {
-    if (!this.chunkService || !this.blockTypeService) {
+    if (!this.chunkService) {
       // Fallback to simple ground check
       if (entity.position.y <= 64 && entity.velocity.y <= 0) {
         entity.position.y = 64;
@@ -342,7 +349,7 @@ export class PhysicsService {
    * Check if player is inside a block and push up if needed
    */
   private checkAndPushUp(entity: PhysicsEntity): void {
-    if (!this.chunkService || !this.blockTypeService) {
+    if (!this.chunkService) {
       return;
     }
 
@@ -369,7 +376,7 @@ export class PhysicsService {
    * @param oldZ Previous Z position
    */
   private tryAutoClimb(entity: PhysicsEntity, oldX: number, oldZ: number): void {
-    if (!this.chunkService || !this.blockTypeService) {
+    if (!this.chunkService) {
       return;
     }
 
@@ -396,8 +403,22 @@ export class PhysicsService {
     const hasGroundAtStepUp = this.isBlockSolid(entity.position.x, oneStepUpY - 1, entity.position.z);
 
     if (isOneStepUpFree && hasGroundAtStepUp) {
-      // Can climb! Lift player up by one block
-      entity.position.y = oneStepUpY;
+      // Can climb! Start smooth climb animation
+      // Only trigger if not already climbing
+      if (!entity.climbState?.active) {
+        entity.climbState = {
+          active: true,
+          startY: feetY,
+          targetY: oneStepUpY,
+          progress: 0.0,
+        };
+        entity.isOnGround = false;
+        logger.debug('Auto-climb animation started', {
+          entityId: entity.entityId,
+          startY: feetY,
+          targetY: oneStepUpY,
+        });
+      }
     } else {
       // Can't climb - block is too high or blocked above
       // Revert horizontal movement

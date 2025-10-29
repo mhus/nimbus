@@ -119,13 +119,9 @@ export class EngineService {
       // Initialize physics
       this.physicsService = new PhysicsService(this.appContext);
 
-      // Connect physics with chunk and blocktype services for collision detection
+      // Connect physics with chunk service for collision detection
       if (this.appContext.services.chunk) {
         this.physicsService.setChunkService(this.appContext.services.chunk);
-      }
-
-      if (this.appContext.services.blockType) {
-        this.physicsService.setBlockTypeService(this.appContext.services.blockType);
       }
 
       logger.debug('PhysicsService initialized');

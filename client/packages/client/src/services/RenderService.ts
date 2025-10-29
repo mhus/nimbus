@@ -98,8 +98,8 @@ export class RenderService {
    * Handle single chunk loaded event
    */
   private onChunkLoaded(clientChunk: any): void {
-    // ClientChunk has a 'data' property that contains ChunkDataTransferObject
-    const chunk = clientChunk.data || clientChunk;
+    // ClientChunk.data is now ClientChunkData with .transfer property
+    const chunk = clientChunk.data?.transfer || clientChunk;
 
     logger.debug('Chunk loaded, rendering', { cx: chunk.cx, cz: chunk.cz });
 
@@ -134,7 +134,7 @@ export class RenderService {
         return;
       }
 
-      logger.debug('Rendering chunk', { cx: chunk.cx, cz: chunk.cz, blockCount: chunk.b.length });
+      logger.debug('Rendering chunk', { cx: chunk.cx, cz: chunk.cz, blockCount: chunk.b?.length || 0 });
 
       // Build mesh data
       const faceData: FaceData = {
@@ -152,8 +152,9 @@ export class RenderService {
         return;
       }
 
-      // Render each block
-      for (const block of chunk.b) {
+      // Render each block (chunk.b is the array from ChunkDataTransferObject)
+      const blocks = chunk.b || [];
+      for (const block of blocks) {
         // Validate block data
         if (!block || typeof block.blockTypeId === 'undefined' || !block.position) {
           logger.warn('Invalid block data', { block });

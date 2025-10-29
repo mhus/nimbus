@@ -259,6 +259,26 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 - wenn ich ausserhalb der grenzen bin, werde ich automatisch an die naechste grenze geleitet.
 
 [x] Die Mausrichtung links und rechts; hoch und runter sind verkert herum gebaut.
+[?] Kann man das nach oben klettern um 1 Block etwas mehr animieren, in mehreren schritten tun.
+[ ] Wenn man nicht weiter kann, weil vor einem ein block ist und der block hat physics.climbable > 0 gesetzt, dann kann man anstatt vorwaerts nach oben klettern.
+
+> Umstellung:
+
+[ ] Die methode ClientService.getBlockAt() muss ClientBlock zurueck geben, d.h. 
+- in ClientChunk muss ein neues ClientChunkData object anstelle des ChunkDataTransferObject benutzt werden.
+- ClientChunkData:
+  - transfer: ChunkDataTransferObject
+  - data : Map<string, ClientBlock>
+- Beim erstellen muss die struktur mit ClientBlock initialisiert werden.
+- Alle ClientBlock muss initiiert werden mit einem gemerged BlockModifier fuer einen schnellen Zugriff.
+  - Merge Regeln
+    Metadaten werden von oben nach unten durch gemerged (first match winns)
+       1. Block-BlockType-status-Metadaten (Insance status)
+       2. Block-BlockType-ID status-Metadaten (Instance status=world status)
+       3. Block-BlockType-ID status-Metadaten (Base status)
+       4. Block-BlockType-ID status-Metadaten (Base status=world status)
+       5. Default Werte für Metadaten, z.b. shape=0
+- In Physics kann direkt auf clientBlock.currentModifier.physics.solid geprueft werden ohne alles zu mergen.
 
 ===
 

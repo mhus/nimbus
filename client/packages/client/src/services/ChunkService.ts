@@ -17,13 +17,15 @@ import {
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
-import type { ClientChunk } from '../types/ClientChunk';
+import type { ClientChunk, ClientChunkData } from '../types/ClientChunk';
+import type { ClientBlock } from '../types/ClientBlock';
 import {
   worldToChunk,
   getChunkKey,
   getBrowserSpecificRenderDistance,
   getBrowserSpecificUnloadDistance,
 } from '../utils/ChunkUtils';
+import { mergeBlockModifier, getBlockPositionKey } from '../utils/BlockModifierMerge';
 
 const logger = getLogger('ChunkService');
 
@@ -162,8 +164,8 @@ export class ChunkService {
     try {
       for (const [key, chunk] of this.chunks) {
         const distance = Math.max(
-          Math.abs(chunk.data.cx - playerCx),
-          Math.abs(chunk.data.cz - playerCz)
+          Math.abs(chunk.data.transfer.cx - playerCx),
+          Math.abs(chunk.data.transfer.cz - playerCz)
         );
 
         if (distance > this.unloadDistance) {
@@ -174,8 +176,8 @@ export class ChunkService {
           this.emit('chunk:unloaded', chunk);
 
           logger.debug('Unloaded chunk', {
-            cx: chunk.data.cx,
-            cz: chunk.data.cz,
+            cx: chunk.data.transfer.cx,
+            cz: chunk.data.transfer.cz,
             distance,
           });
         }
@@ -198,8 +200,11 @@ export class ChunkService {
       chunks.forEach(chunkData => {
         const key = getChunkKey(chunkData.cx, chunkData.cz);
 
+        // Process blocks into ClientBlocks with merged modifiers
+        const clientChunkData = this.processChunkData(chunkData);
+
         const clientChunk: ClientChunk = {
-          data: chunkData,
+          data: clientChunkData,
           isRendered: false,
           lastAccessTime: Date.now(),
         };
@@ -213,6 +218,7 @@ export class ChunkService {
           cx: chunkData.cx,
           cz: chunkData.cz,
           blocks: chunkData.b.length,
+          clientBlocks: clientChunkData.data.size,
         });
       });
     } catch (error) {
@@ -220,6 +226,61 @@ export class ChunkService {
         count: chunks.length,
       });
     }
+  }
+
+  /**
+   * Process chunk data from server into ClientChunkData with ClientBlocks
+   *
+   * @param chunkData Raw chunk data from server
+   * @returns Processed ClientChunkData with merged modifiers
+   */
+  private processChunkData(chunkData: ChunkDataTransferObject): ClientChunkData {
+    const clientBlocksMap = new Map<string, ClientBlock>();
+    const blockTypeService = this.appContext.services.blockType;
+
+    if (!blockTypeService) {
+      logger.warn('BlockTypeService not available - cannot process blocks');
+      return {
+        transfer: chunkData,
+        data: clientBlocksMap,
+      };
+    }
+
+    // Process each block in the chunk
+    for (const block of chunkData.b) {
+      const blockType = blockTypeService.getBlockType(block.blockTypeId);
+      if (!blockType) {
+        logger.warn('BlockType not found for block', {
+          blockTypeId: block.blockTypeId,
+          position: block.position,
+        });
+        continue;
+      }
+
+      // Merge block modifiers according to priority rules
+      const currentModifier = mergeBlockModifier(block, blockType);
+
+      // Create ClientBlock
+      const clientBlock: ClientBlock = {
+        block,
+        chunk: { cx: chunkData.cx, cz: chunkData.cz },
+        blockType,
+        currentModifier,
+        clientBlockType: blockType as any, // TODO: Convert to ClientBlockType
+        isVisible: true,
+        isDirty: false,
+        lastUpdate: Date.now(),
+      };
+
+      // Add to map with position key
+      const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+      clientBlocksMap.set(posKey, clientBlock);
+    }
+
+    return {
+      transfer: chunkData,
+      data: clientBlocksMap,
+    };
   }
 
   /**
@@ -239,9 +300,9 @@ export class ChunkService {
    * @param x - World X coordinate
    * @param y - World Y coordinate
    * @param z - World Z coordinate
-   * @returns Block or undefined if not found
+   * @returns ClientBlock or undefined if not found
    */
-  getBlockAt(x: number, y: number, z: number): Block | undefined {
+  getBlockAt(x: number, y: number, z: number): ClientBlock | undefined {
     const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
     const chunkCoord = worldToChunk(x, z, chunkSize);
     const chunk = this.getChunk(chunkCoord.cx, chunkCoord.cz);
@@ -250,8 +311,9 @@ export class ChunkService {
       return undefined;
     }
 
-    // Find block in sparse array (using position.x/y/z from Block interface)
-    return chunk.data.b.find(b => b.position.x === x && b.position.y === y && b.position.z === z);
+    // Look up block in processed data map
+    const posKey = getBlockPositionKey(x, y, z);
+    return chunk.data.data.get(posKey);
   }
 
   /**
