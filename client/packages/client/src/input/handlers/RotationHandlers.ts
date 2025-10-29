@@ -24,8 +24,8 @@ export class RotateHandler extends InputHandler {
    * @param deltaY Mouse Y movement in pixels
    */
   setDelta(deltaX: number, deltaY: number): void {
-    this.deltaYaw = -deltaX * this.sensitivity;
-    this.deltaPitch = -deltaY * this.sensitivity;
+    this.deltaYaw = deltaX * this.sensitivity;
+    this.deltaPitch = deltaY * this.sensitivity;
   }
 
   protected onActivate(value: number): void {
