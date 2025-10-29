@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/oxeye_daisy.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

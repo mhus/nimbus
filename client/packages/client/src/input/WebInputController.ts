@@ -14,8 +14,10 @@ import {
   MoveBackwardHandler,
   MoveLeftHandler,
   MoveRightHandler,
+  MoveUpHandler,
+  MoveDownHandler,
 } from './handlers/MovementHandlers';
-import { JumpHandler } from './handlers/ActionHandlers';
+import { JumpHandler, ToggleMovementModeHandler } from './handlers/ActionHandlers';
 import { RotateHandler } from './handlers/RotationHandlers';
 
 const logger = getLogger('WebInputController');
@@ -36,7 +38,9 @@ interface KeyBinding {
  * - S: Move backward
  * - A: Move left
  * - D: Move right
- * - Space: Jump
+ * - Space: Jump (Walk mode) / Move up (Fly mode)
+ * - Shift: Move down (Fly mode only)
+ * - F: Toggle Walk/Fly mode (Editor only)
  * - Mouse: Look around (when pointer locked)
  */
 export class WebInputController implements InputController {
@@ -51,7 +55,10 @@ export class WebInputController implements InputController {
   private moveBackwardHandler: MoveBackwardHandler;
   private moveLeftHandler: MoveLeftHandler;
   private moveRightHandler: MoveRightHandler;
+  private moveUpHandler: MoveUpHandler;
+  private moveDownHandler: MoveDownHandler;
   private jumpHandler: JumpHandler;
+  private toggleMovementModeHandler?: ToggleMovementModeHandler;
   private rotateHandler: RotateHandler;
 
   // Pointer lock state
@@ -66,17 +73,31 @@ export class WebInputController implements InputController {
     this.moveBackwardHandler = new MoveBackwardHandler(playerService);
     this.moveLeftHandler = new MoveLeftHandler(playerService);
     this.moveRightHandler = new MoveRightHandler(playerService);
+    this.moveUpHandler = new MoveUpHandler(playerService);
+    this.moveDownHandler = new MoveDownHandler(playerService);
     this.jumpHandler = new JumpHandler(playerService);
     this.rotateHandler = new RotateHandler(playerService);
+
+    // Toggle movement mode handler (Editor only)
+    if (__EDITOR__) {
+      this.toggleMovementModeHandler = new ToggleMovementModeHandler(playerService);
+    }
 
     this.handlers = [
       this.moveForwardHandler,
       this.moveBackwardHandler,
       this.moveLeftHandler,
       this.moveRightHandler,
+      this.moveUpHandler,
+      this.moveDownHandler,
       this.jumpHandler,
       this.rotateHandler,
     ];
+
+    // Add toggle handler to handlers list if available
+    if (this.toggleMovementModeHandler) {
+      this.handlers.push(this.toggleMovementModeHandler);
+    }
 
     // Setup key bindings
     this.setupKeyBindings();
@@ -96,7 +117,9 @@ export class WebInputController implements InputController {
     this.keyBindings.set('A', this.moveLeftHandler);
     this.keyBindings.set('d', this.moveRightHandler);
     this.keyBindings.set('D', this.moveRightHandler);
-    this.keyBindings.set(' ', this.jumpHandler); // Space
+    // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
+    // Shift: Move down in Fly mode (handled dynamically)
+    // F: Toggle Walk/Fly mode (Editor only, handled dynamically)
   }
 
   /**
@@ -120,6 +143,47 @@ export class WebInputController implements InputController {
    * Handle keydown event
    */
   private onKeyDown = (event: KeyboardEvent): void => {
+    // Handle Space key dynamically based on movement mode
+    if (event.key === ' ') {
+      const mode = this.playerService.getMovementMode();
+      if (mode === 'walk') {
+        // Walk mode: Jump
+        if (!this.jumpHandler.isActive()) {
+          this.jumpHandler.activate();
+          event.preventDefault();
+        }
+      } else if (mode === 'fly') {
+        // Fly mode: Move up
+        if (!this.moveUpHandler.isActive()) {
+          this.moveUpHandler.activate();
+          event.preventDefault();
+        }
+      }
+      return;
+    }
+
+    // Handle Shift key for Fly mode down movement
+    if (event.key === 'Shift') {
+      const mode = this.playerService.getMovementMode();
+      if (mode === 'fly') {
+        if (!this.moveDownHandler.isActive()) {
+          this.moveDownHandler.activate();
+          event.preventDefault();
+        }
+      }
+      return;
+    }
+
+    // Handle F key for toggling movement mode (Editor only)
+    if ((event.key === 'f' || event.key === 'F') && this.toggleMovementModeHandler) {
+      if (!this.toggleMovementModeHandler.isActive()) {
+        this.toggleMovementModeHandler.activate();
+        event.preventDefault();
+      }
+      return;
+    }
+
+    // Handle other keys via bindings
     const handler = this.keyBindings.get(event.key);
     if (handler && !handler.isActive()) {
       handler.activate();
@@ -131,6 +195,47 @@ export class WebInputController implements InputController {
    * Handle keyup event
    */
   private onKeyUp = (event: KeyboardEvent): void => {
+    // Handle Space key dynamically based on movement mode
+    if (event.key === ' ') {
+      const mode = this.playerService.getMovementMode();
+      if (mode === 'walk') {
+        // Walk mode: Jump
+        if (this.jumpHandler.isActive()) {
+          this.jumpHandler.deactivate();
+          event.preventDefault();
+        }
+      } else if (mode === 'fly') {
+        // Fly mode: Move up
+        if (this.moveUpHandler.isActive()) {
+          this.moveUpHandler.deactivate();
+          event.preventDefault();
+        }
+      }
+      return;
+    }
+
+    // Handle Shift key for Fly mode down movement
+    if (event.key === 'Shift') {
+      const mode = this.playerService.getMovementMode();
+      if (mode === 'fly') {
+        if (this.moveDownHandler.isActive()) {
+          this.moveDownHandler.deactivate();
+          event.preventDefault();
+        }
+      }
+      return;
+    }
+
+    // Handle F key for toggling movement mode (Editor only)
+    if ((event.key === 'f' || event.key === 'F') && this.toggleMovementModeHandler) {
+      if (this.toggleMovementModeHandler.isActive()) {
+        this.toggleMovementModeHandler.deactivate();
+        event.preventDefault();
+      }
+      return;
+    }
+
+    // Handle other keys via bindings
     const handler = this.keyBindings.get(event.key);
     if (handler && handler.isActive()) {
       handler.deactivate();

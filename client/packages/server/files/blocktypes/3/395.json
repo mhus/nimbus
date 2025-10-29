@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/lily_pad.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

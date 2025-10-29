@@ -1,0 +1,481 @@
+/**
+ * PhysicsService - Physics simulation for entities
+ *
+ * Handles movement physics for locally managed entities (player, etc.).
+ * Supports two movement modes: Walk and Fly.
+ */
+
+import { Vector3 } from '@babylonjs/core';
+import { getLogger } from '@nimbus/shared';
+import type { AppContext } from '../AppContext';
+import type { ChunkService } from './ChunkService';
+import type { BlockTypeService } from './BlockTypeService';
+
+const logger = getLogger('PhysicsService');
+
+/**
+ * Movement mode
+ */
+export type MovementMode = 'walk' | 'fly';
+
+/**
+ * Entity with physics
+ */
+export interface PhysicsEntity {
+  /** Entity position */
+  position: Vector3;
+
+  /** Entity velocity */
+  velocity: Vector3;
+
+  /** Movement mode */
+  movementMode: MovementMode;
+
+  /** Is entity on ground? (Walk mode only) */
+  isOnGround: boolean;
+
+  /** Entity ID for logging */
+  entityId: string;
+}
+
+/**
+ * PhysicsService - Manages physics for entities
+ *
+ * Features:
+ * - Walk mode: XZ movement, gravity, jumping, auto-climb
+ * - Fly mode: Full 3D movement, no gravity
+ * - Block collision detection
+ * - Auto-push-up when inside block
+ */
+export class PhysicsService {
+  private appContext: AppContext;
+  private chunkService?: ChunkService;
+  private blockTypeService?: BlockTypeService;
+
+  // Physics constants
+  private readonly gravity: number = -20.0; // blocks per second²
+  private readonly walkSpeed: number = 5.0; // blocks per second
+  private readonly flySpeed: number = 10.0; // blocks per second
+  private readonly jumpSpeed: number = 8.0; // blocks per second (2 blocks high)
+  private readonly autoClimbHeight: number = 1.0; // Can climb 1 block
+  private readonly playerHeight: number = 1.8; // Player height in blocks
+  private readonly playerWidth: number = 0.6; // Player width in blocks
+
+  // Entities managed by physics
+  private entities: Map<string, PhysicsEntity> = new Map();
+
+  constructor(appContext: AppContext) {
+    this.appContext = appContext;
+
+    logger.info('PhysicsService initialized', {
+      gravity: this.gravity,
+      walkSpeed: this.walkSpeed,
+      flySpeed: this.flySpeed,
+    });
+  }
+
+  /**
+   * Set ChunkService for collision detection (called after ChunkService is created)
+   */
+  setChunkService(chunkService: ChunkService): void {
+    this.chunkService = chunkService;
+    logger.debug('ChunkService set for collision detection');
+  }
+
+  /**
+   * Set BlockTypeService for collision detection (called after BlockTypeService is created)
+   */
+  setBlockTypeService(blockTypeService: BlockTypeService): void {
+    this.blockTypeService = blockTypeService;
+    logger.debug('BlockTypeService set for collision detection');
+  }
+
+  /**
+   * Register an entity for physics simulation
+   */
+  registerEntity(entity: PhysicsEntity): void {
+    this.entities.set(entity.entityId, entity);
+    logger.debug('Entity registered', { entityId: entity.entityId, mode: entity.movementMode });
+  }
+
+  /**
+   * Unregister an entity
+   */
+  unregisterEntity(entityId: string): void {
+    this.entities.delete(entityId);
+    logger.debug('Entity unregistered', { entityId });
+  }
+
+  /**
+   * Get an entity
+   */
+  getEntity(entityId: string): PhysicsEntity | undefined {
+    return this.entities.get(entityId);
+  }
+
+  /**
+   * Update all entities
+   */
+  update(deltaTime: number): void {
+    for (const entity of this.entities.values()) {
+      this.updateEntity(entity, deltaTime);
+    }
+  }
+
+  /**
+   * Update a single entity
+   */
+  private updateEntity(entity: PhysicsEntity, deltaTime: number): void {
+    if (entity.movementMode === 'walk') {
+      this.updateWalkMode(entity, deltaTime);
+    } else if (entity.movementMode === 'fly') {
+      this.updateFlyMode(entity, deltaTime);
+    }
+  }
+
+  /**
+   * Update entity in Walk mode
+   */
+  private updateWalkMode(entity: PhysicsEntity, deltaTime: number): void {
+    // Apply gravity
+    if (!entity.isOnGround) {
+      entity.velocity.y += this.gravity * deltaTime;
+    } else {
+      // On ground, reset vertical velocity
+      entity.velocity.y = 0;
+    }
+
+    // Apply velocity to position
+    if (entity.velocity.lengthSquared() > 0) {
+      entity.position.addInPlace(entity.velocity.scale(deltaTime));
+    }
+
+    // Ground check with block collision
+    this.checkGroundCollision(entity);
+
+    // Auto-push-up if inside block
+    this.checkAndPushUp(entity);
+  }
+
+  /**
+   * Check if block at position is solid
+   */
+  private isBlockSolid(x: number, y: number, z: number): boolean {
+    if (!this.chunkService || !this.blockTypeService) {
+      return false;
+    }
+
+    // Floor coordinates to get block position
+    const blockX = Math.floor(x);
+    const blockY = Math.floor(y);
+    const blockZ = Math.floor(z);
+
+    const block = this.chunkService.getBlockAt(blockX, blockY, blockZ);
+    if (!block) {
+      // Log when no block found during ground search
+      if (blockY >= 51 && blockY <= 64 && Math.random() < 0.02) {
+        logger.info('No block found at position', {
+          pos: { x: blockX, y: blockY, z: blockZ },
+          loadedChunks: this.chunkService.getLoadedChunkCount(),
+        });
+      }
+      return false; // No block = not solid
+    }
+
+    const blockType = this.blockTypeService.getBlockType(block.blockTypeId);
+    if (!blockType) {
+      logger.warn('BlockType not found', { blockTypeId: block.blockTypeId });
+      return false;
+    }
+
+    // Get modifier for default status (0)
+    const modifier = blockType.modifiers[0];
+    if (!modifier) {
+      return false;
+    }
+
+    // Check if block has solid physics
+    return modifier.physics?.solid === true;
+  }
+
+  /**
+   * Check ground collision and update entity state
+   */
+  private checkGroundCollision(entity: PhysicsEntity): void {
+    if (!this.chunkService || !this.blockTypeService) {
+      // Fallback to simple ground check
+      if (entity.position.y <= 64 && entity.velocity.y <= 0) {
+        entity.position.y = 64;
+        entity.velocity.y = 0;
+        entity.isOnGround = true;
+      } else if (entity.velocity.y > 0) {
+        entity.isOnGround = false;
+      }
+      return;
+    }
+
+    // Check multiple Y levels to prevent falling through
+    const feetY = entity.position.y;
+
+    // Check center and corners for more robust collision
+    const checkPoints = [
+      { x: entity.position.x, z: entity.position.z }, // Center
+      { x: entity.position.x - this.playerWidth / 2, z: entity.position.z - this.playerWidth / 2 }, // Corner
+      { x: entity.position.x + this.playerWidth / 2, z: entity.position.z - this.playerWidth / 2 }, // Corner
+      { x: entity.position.x - this.playerWidth / 2, z: entity.position.z + this.playerWidth / 2 }, // Corner
+      { x: entity.position.x + this.playerWidth / 2, z: entity.position.z + this.playerWidth / 2 }, // Corner
+    ];
+
+    // Search downward for ground
+    let foundGround = false;
+    let groundY = -1;
+
+    // Check from current position down to 3 blocks below (to catch fast falling)
+    for (let checkY = Math.floor(feetY); checkY >= Math.floor(feetY - 3); checkY--) {
+      for (const point of checkPoints) {
+        if (this.isBlockSolid(point.x, checkY, point.z)) {
+          // Found solid ground at this Y level
+          const blockTopY = checkY + 1;
+
+          // Only snap if we're falling and at or below this level
+          if (feetY <= blockTopY + 0.1) {
+            foundGround = true;
+            groundY = blockTopY;
+            break;
+          }
+        }
+      }
+      if (foundGround) break;
+    }
+
+    if (foundGround && entity.velocity.y <= 0) {
+      // Snap to top of block
+      entity.position.y = groundY;
+      entity.velocity.y = 0;
+      entity.isOnGround = true;
+      logger.debug('Snapped to ground', {
+        entityId: entity.entityId,
+        groundY,
+        velocityY: entity.velocity.y,
+      });
+    } else if (entity.velocity.y > 0) {
+      // Jumping up
+      entity.isOnGround = false;
+    } else {
+      // Falling but no ground found
+      entity.isOnGround = false;
+      if (entity.velocity.y <= 0) {
+        logger.debug('No ground found - falling', {
+          entityId: entity.entityId,
+          feetY,
+          velocityY: entity.velocity.y,
+          posX: entity.position.x,
+          posZ: entity.position.z,
+        });
+      }
+    }
+  }
+
+  /**
+   * Check if player is inside a block and push up if needed
+   */
+  private checkAndPushUp(entity: PhysicsEntity): void {
+    if (!this.chunkService || !this.blockTypeService) {
+      return;
+    }
+
+    // Check from feet to head for solid blocks
+    const feetY = entity.position.y;
+    const headY = entity.position.y + this.playerHeight;
+
+    // Check if any part of player is inside a solid block
+    for (let y = Math.floor(feetY); y <= Math.floor(headY); y++) {
+      if (this.isBlockSolid(entity.position.x, y, entity.position.z)) {
+        // Push player up to top of this block
+        entity.position.y = y + 1;
+        entity.velocity.y = 0;
+        return;
+      }
+    }
+  }
+
+  /**
+   * Try to auto-climb 1 block step when moving horizontally
+   *
+   * @param entity Entity to check
+   * @param oldX Previous X position
+   * @param oldZ Previous Z position
+   */
+  private tryAutoClimb(entity: PhysicsEntity, oldX: number, oldZ: number): void {
+    if (!this.chunkService || !this.blockTypeService) {
+      return;
+    }
+
+    // Only auto-climb if on ground
+    if (!entity.isOnGround) {
+      return;
+    }
+
+    const feetY = entity.position.y;
+    const currentBlockY = Math.floor(feetY);
+
+    // Check if there's a block in front of the player at their current level
+    const hasBlockInFront = this.isBlockSolid(entity.position.x, currentBlockY, entity.position.z);
+
+    if (!hasBlockInFront) {
+      return; // No obstruction, no need to climb
+    }
+
+    // Check if the block above (one step up) is free
+    const oneStepUpY = currentBlockY + 1;
+    const isOneStepUpFree = !this.isBlockSolid(entity.position.x, oneStepUpY, entity.position.z);
+
+    // Check if there's a solid block to stand on at the step up position
+    const hasGroundAtStepUp = this.isBlockSolid(entity.position.x, oneStepUpY - 1, entity.position.z);
+
+    if (isOneStepUpFree && hasGroundAtStepUp) {
+      // Can climb! Lift player up by one block
+      entity.position.y = oneStepUpY;
+    } else {
+      // Can't climb - block is too high or blocked above
+      // Revert horizontal movement
+      entity.position.x = oldX;
+      entity.position.z = oldZ;
+    }
+  }
+
+  /**
+   * Update entity in Fly mode
+   */
+  private updateFlyMode(entity: PhysicsEntity, deltaTime: number): void {
+    // No gravity in fly mode
+    // Velocity is directly controlled by input (no damping in fly mode for precise control)
+    // Position is updated in moveForward/moveRight/moveUp methods
+  }
+
+  /**
+   * Move entity forward/backward (relative to camera)
+   *
+   * @param entity Entity to move
+   * @param distance Distance to move (positive = forward)
+   * @param cameraYaw Camera yaw rotation in radians
+   * @param cameraPitch Camera pitch rotation in radians
+   */
+  moveForward(entity: PhysicsEntity, distance: number, cameraYaw: number, cameraPitch: number): void {
+    const oldX = entity.position.x;
+    const oldZ = entity.position.z;
+
+    if (entity.movementMode === 'walk') {
+      // Walk mode: Only move in XZ plane (ignore pitch)
+      const dx = Math.sin(cameraYaw) * distance;
+      const dz = Math.cos(cameraYaw) * distance;
+
+      entity.position.x += dx;
+      entity.position.z += dz;
+
+      // Auto-climb 1 block step
+      this.tryAutoClimb(entity, oldX, oldZ);
+    } else if (entity.movementMode === 'fly') {
+      // Fly mode: Move in camera direction (including pitch)
+      const dx = Math.sin(cameraYaw) * Math.cos(cameraPitch) * distance;
+      const dy = -Math.sin(cameraPitch) * distance;
+      const dz = Math.cos(cameraYaw) * Math.cos(cameraPitch) * distance;
+
+      entity.position.x += dx;
+      entity.position.y += dy;
+      entity.position.z += dz;
+    }
+  }
+
+  /**
+   * Move entity right/left (strafe)
+   *
+   * @param entity Entity to move
+   * @param distance Distance to move (positive = right)
+   * @param cameraYaw Camera yaw rotation in radians
+   */
+  moveRight(entity: PhysicsEntity, distance: number, cameraYaw: number): void {
+    const oldX = entity.position.x;
+    const oldZ = entity.position.z;
+
+    // Both modes: Move perpendicular to camera yaw (in XZ plane)
+    const dx = Math.sin(cameraYaw + Math.PI / 2) * distance;
+    const dz = Math.cos(cameraYaw + Math.PI / 2) * distance;
+
+    entity.position.x += dx;
+    entity.position.z += dz;
+
+    // Auto-climb 1 block step (Walk mode only)
+    if (entity.movementMode === 'walk') {
+      this.tryAutoClimb(entity, oldX, oldZ);
+    }
+  }
+
+  /**
+   * Move entity up/down (Fly mode only)
+   *
+   * @param entity Entity to move
+   * @param distance Distance to move (positive = up)
+   */
+  moveUp(entity: PhysicsEntity, distance: number): void {
+    if (entity.movementMode === 'fly') {
+      entity.position.y += distance;
+    }
+  }
+
+  /**
+   * Jump (Walk mode only)
+   */
+  jump(entity: PhysicsEntity): void {
+    if (entity.movementMode === 'walk' && entity.isOnGround) {
+      entity.velocity.y = this.jumpSpeed;
+      entity.isOnGround = false;
+      logger.debug('Entity jumped', { entityId: entity.entityId });
+    }
+  }
+
+  /**
+   * Set movement mode
+   */
+  setMovementMode(entity: PhysicsEntity, mode: MovementMode): void {
+    // Fly mode only available in editor
+    if (mode === 'fly' && !__EDITOR__) {
+      logger.warn('Fly mode only available in Editor build');
+      return;
+    }
+
+    entity.movementMode = mode;
+    logger.info('Movement mode changed', { entityId: entity.entityId, mode });
+
+    // Reset velocity when switching modes
+    entity.velocity.set(0, 0, 0);
+
+    // In fly mode, no ground state
+    if (mode === 'fly') {
+      entity.isOnGround = false;
+    }
+  }
+
+  /**
+   * Toggle between Walk and Fly modes
+   */
+  toggleMovementMode(entity: PhysicsEntity): void {
+    const newMode = entity.movementMode === 'walk' ? 'fly' : 'walk';
+    this.setMovementMode(entity, newMode);
+  }
+
+  /**
+   * Get current move speed for entity
+   */
+  getMoveSpeed(entity: PhysicsEntity): number {
+    return entity.movementMode === 'walk' ? this.walkSpeed : this.flySpeed;
+  }
+
+  /**
+   * Dispose physics service
+   */
+  dispose(): void {
+    this.entities.clear();
+    logger.info('PhysicsService disposed');
+  }
+}

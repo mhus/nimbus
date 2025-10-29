@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/grass_plant_yellow.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

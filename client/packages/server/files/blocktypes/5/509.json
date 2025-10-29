@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/redstone_dust_line_overlay.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

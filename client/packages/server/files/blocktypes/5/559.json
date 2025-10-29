@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/stone_bricks1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

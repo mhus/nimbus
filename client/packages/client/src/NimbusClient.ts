@@ -83,7 +83,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const loginHandler = new LoginMessageHandler(appContext, networkService);
     networkService.registerHandler(loginHandler);
 
-    const pingHandler = new PingMessageHandler(networkService);
+    const pingHandler = new PingMessageHandler(networkService, appContext);
     networkService.registerHandler(pingHandler);
 
     // Add error handler to prevent unhandled errors

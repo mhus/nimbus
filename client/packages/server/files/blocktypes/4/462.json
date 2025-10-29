@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/polished_andesite.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

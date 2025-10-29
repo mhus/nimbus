@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/structure_block_load.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/quartz_pillar.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

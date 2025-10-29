@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/grass_block_snow.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

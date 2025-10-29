@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/dark_oak_fence_gate.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

@@ -15,6 +15,7 @@ import { EnvironmentService } from './EnvironmentService';
 import { PlayerService } from './PlayerService';
 import { RenderService } from './RenderService';
 import { InputService } from './InputService';
+import { PhysicsService } from './PhysicsService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -44,6 +45,7 @@ export class EngineService {
   private cameraService?: CameraService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
+  private physicsService?: PhysicsService;
   private playerService?: PlayerService;
   private inputService?: InputService;
 
@@ -114,8 +116,23 @@ export class EngineService {
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
       logger.debug('EnvironmentService initialized');
 
+      // Initialize physics
+      this.physicsService = new PhysicsService(this.appContext);
+
+      // Connect physics with chunk and blocktype services for collision detection
+      if (this.appContext.services.chunk) {
+        this.physicsService.setChunkService(this.appContext.services.chunk);
+      }
+
+      if (this.appContext.services.blockType) {
+        this.physicsService.setBlockTypeService(this.appContext.services.blockType);
+      }
+
+      logger.debug('PhysicsService initialized');
+
       // Initialize player
       this.playerService = new PlayerService(this.appContext, this.cameraService);
+      this.playerService.setPhysicsService(this.physicsService);
       logger.debug('PlayerService initialized');
 
       // Initialize render service
@@ -171,6 +188,7 @@ export class EngineService {
 
         // Update services
         this.inputService?.update(deltaTime);
+        this.physicsService?.update(deltaTime); // Physics before player
         this.playerService?.update(deltaTime);
         this.cameraService?.update(deltaTime);
         this.environmentService?.update(deltaTime);
@@ -249,6 +267,13 @@ export class EngineService {
   }
 
   /**
+   * Get the physics service
+   */
+  getPhysicsService(): PhysicsService | undefined {
+    return this.physicsService;
+  }
+
+  /**
    * Get the player service
    */
   getPlayerService(): PlayerService | undefined {
@@ -295,6 +320,7 @@ export class EngineService {
     this.inputService?.dispose();
     this.renderService?.dispose();
     this.playerService?.dispose();
+    this.physicsService?.dispose();
     this.environmentService?.dispose();
     this.cameraService?.dispose();
     this.materialService?.dispose();

@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/piston_top_sticky.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

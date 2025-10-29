@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/wheat_stage5.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

@@ -56,26 +56,66 @@ const generateDescription = (textureName) => {
   return `${name} block`;
 };
 
+// Check if block should be solid
+const isSolidBlock = (textureName) => {
+  // Solid blocks: stone, grass, dirt, planks, and most building materials
+  if (textureName.includes('stone')) return true;
+  if (textureName.includes('grass')) return true;
+  if (textureName.includes('dirt')) return true;
+  if (textureName.includes('planks')) return true;
+  if (textureName.includes('log') || textureName.includes('wood')) return true;
+  if (textureName.includes('brick')) return true;
+  if (textureName.includes('ore')) return true;
+  if (textureName.includes('sand')) return true;
+  if (textureName.includes('gravel')) return true;
+  if (textureName.includes('clay')) return true;
+  if (textureName.includes('concrete')) return true;
+  if (textureName.includes('bedrock')) return true;
+
+  // Non-solid blocks
+  if (textureName.includes('glass')) return false;
+  if (textureName.includes('flower')) return false;
+  if (textureName.includes('plant')) return false;
+  if (textureName.includes('sapling')) return false;
+  if (textureName.includes('leaves')) return false;
+  if (textureName.includes('water')) return false;
+  if (textureName.includes('lava')) return false;
+  if (textureName.includes('air')) return false;
+
+  // Default: solid
+  return true;
+};
+
 // Create BlockType JSON
 const createBlockType = (id, textureName) => {
   const shape = getShape(textureName);
-  const basePath = `assets/textures/block/basic/${textureName}.png`;
+  const basePath = `textures/block/basic/${textureName}.png`; // Removed 'assets/' prefix
   const name = toReadableName(textureName);
   const description = generateDescription(textureName);
+  const isSolid = isSolidBlock(textureName);
+
+  const modifier = {
+    visibility: {
+      shape,
+      textures: {
+        0: basePath // ALL texture key
+      }
+    }
+  };
+
+  // Add physics property if block is solid
+  if (isSolid) {
+    modifier.physics = {
+      solid: true
+    };
+  }
 
   return {
     id,
     name,
     description,
     modifiers: {
-      0: { // DEFAULT status
-        visibility: {
-          shape,
-          textures: {
-            0: basePath // ALL texture key
-          }
-        }
-      }
+      0: modifier // DEFAULT status
     }
   };
 };

@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/composter_compost.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

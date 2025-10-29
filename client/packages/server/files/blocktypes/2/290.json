@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/end_portal_frame_eye.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

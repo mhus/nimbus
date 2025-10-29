@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/nether_wart_stage1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

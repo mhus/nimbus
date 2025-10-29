@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/blue_ice.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/observer_front1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

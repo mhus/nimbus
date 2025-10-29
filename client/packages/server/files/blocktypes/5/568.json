@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/stripped_jungle_log.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

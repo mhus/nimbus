@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/gold_ore1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

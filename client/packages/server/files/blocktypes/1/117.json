@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/attached_melon_stem.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

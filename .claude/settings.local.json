@@ -27,7 +27,11 @@
       "Bash(curl:*)",
       "Bash(chmod:*)",
       "Bash(node scripts/generate-blocktypes.js:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(echo:*)",
+      "Bash(pnpm build:client:*)",
+      "Bash(pnpm --filter @nimbus/client exec tsc:*)",
+      "Bash(pnpm --filter @nimbus/client build:editor:*)"
     ],
     "deny": [],
     "ask": []

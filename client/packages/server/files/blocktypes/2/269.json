@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/dead_tube_coral_fan.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

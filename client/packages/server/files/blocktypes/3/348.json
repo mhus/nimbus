@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/iron_block.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

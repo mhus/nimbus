@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/farmland_moist.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

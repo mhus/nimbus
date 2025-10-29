@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/cartography_table_side1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

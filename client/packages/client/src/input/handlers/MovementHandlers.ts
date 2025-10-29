@@ -78,3 +78,39 @@ export class MoveRightHandler extends InputHandler {
     this.playerService.moveRight(distance);
   }
 }
+
+/**
+ * Move Up Handler (Fly mode only)
+ */
+export class MoveUpHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Activation handled in update
+  }
+
+  protected onDeactivate(): void {
+    // Deactivation handled in update
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
+    this.playerService.moveUp(distance);
+  }
+}
+
+/**
+ * Move Down Handler (Fly mode only)
+ */
+export class MoveDownHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Activation handled in update
+  }
+
+  protected onDeactivate(): void {
+    // Deactivation handled in update
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
+    this.playerService.moveUp(-distance);
+  }
+}

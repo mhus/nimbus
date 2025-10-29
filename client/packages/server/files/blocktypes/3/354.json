@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/item_frame_border.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

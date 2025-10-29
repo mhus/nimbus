@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/diamond_block.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

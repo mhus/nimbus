@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/stone1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

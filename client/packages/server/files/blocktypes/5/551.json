@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/spruce_trapdoor.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

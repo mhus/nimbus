@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/brown_concrete_powder.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

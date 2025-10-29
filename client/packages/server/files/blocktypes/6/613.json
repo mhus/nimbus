@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/white_tulip.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

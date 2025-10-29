@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/grindstone_round.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

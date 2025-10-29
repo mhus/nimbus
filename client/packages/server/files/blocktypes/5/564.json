@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/stonecutter_saw.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

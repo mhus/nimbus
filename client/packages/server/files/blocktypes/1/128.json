@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/bee_nest_front_honey.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

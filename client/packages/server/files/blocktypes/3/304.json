@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/glowstone.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

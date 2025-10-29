@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/pink_concrete.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

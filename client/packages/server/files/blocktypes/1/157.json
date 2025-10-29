@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/blue_orchid.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

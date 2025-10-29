@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/light_blue_glazed_terracotta.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

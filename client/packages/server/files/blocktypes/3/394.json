@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/lily_of_the_valley.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

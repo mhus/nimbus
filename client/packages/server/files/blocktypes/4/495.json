@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/red_sand1.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

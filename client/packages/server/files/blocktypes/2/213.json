@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/coal_block.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

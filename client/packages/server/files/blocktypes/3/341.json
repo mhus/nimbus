@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/hopper_outside.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }

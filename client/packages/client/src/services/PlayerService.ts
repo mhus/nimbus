@@ -9,6 +9,7 @@ import { Vector3 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
+import type { PhysicsService, PhysicsEntity, MovementMode } from './PhysicsService';
 
 const logger = getLogger('PlayerService');
 
@@ -31,18 +32,10 @@ type EventListener = (...args: any[]) => void;
 export class PlayerService {
   private appContext: AppContext;
   private cameraService: CameraService;
+  private physicsService?: PhysicsService;
 
-  // Player state
-  private position: Vector3 = new Vector3(0, 64, 0);
-  private velocity: Vector3 = Vector3.Zero();
-
-  // Movement parameters
-  private readonly moveSpeed: number = 5.0; // blocks per second
-  private readonly jumpSpeed: number = 8.0; // blocks per second
-  private readonly gravity: number = -20.0; // blocks per second squared
-
-  // State flags
-  private isOnGround: boolean = false;
+  // Player as physics entity
+  private playerEntity: PhysicsEntity;
 
   // Event system
   private eventListeners: Map<string, EventListener[]> = new Map();
@@ -51,20 +44,38 @@ export class PlayerService {
     this.appContext = appContext;
     this.cameraService = cameraService;
 
+    // Create player physics entity (starts in Walk mode)
+    this.playerEntity = {
+      entityId: 'player',
+      position: new Vector3(0, 64, 0),
+      velocity: Vector3.Zero(),
+      movementMode: 'walk' as MovementMode,
+      isOnGround: false,
+    };
+
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
 
     logger.info('PlayerService initialized', {
-      position: this.position,
-      moveSpeed: this.moveSpeed,
+      position: this.playerEntity.position,
+      movementMode: this.playerEntity.movementMode,
     });
+  }
+
+  /**
+   * Set physics service (called after PhysicsService is created)
+   */
+  setPhysicsService(physicsService: PhysicsService): void {
+    this.physicsService = physicsService;
+    this.physicsService.registerEntity(this.playerEntity);
+    logger.debug('PhysicsService set and player registered');
   }
 
   /**
    * Get player position
    */
   getPosition(): Vector3 {
-    return this.position.clone();
+    return this.playerEntity.position.clone();
   }
 
   /**
@@ -75,24 +86,9 @@ export class PlayerService {
    * @param z World Z coordinate
    */
   setPosition(x: number, y: number, z: number): void {
-    this.position.set(x, y, z);
+    this.playerEntity.position.set(x, y, z);
     this.syncCameraToPlayer();
-    this.emit('position:changed', this.position.clone());
-  }
-
-  /**
-   * Move player relative to current position
-   *
-   * @param dx Delta X
-   * @param dy Delta Y
-   * @param dz Delta Z
-   */
-  move(dx: number, dy: number, dz: number): void {
-    this.position.x += dx;
-    this.position.y += dy;
-    this.position.z += dz;
-    this.syncCameraToPlayer();
-    this.emit('position:changed', this.position.clone());
+    this.emit('position:changed', this.playerEntity.position.clone());
   }
 
   /**
@@ -101,14 +97,18 @@ export class PlayerService {
    * @param distance Distance to move (positive = forward, negative = backward)
    */
   moveForward(distance: number): void {
+    if (!this.physicsService) return;
+
     const cameraRotation = this.cameraService.getRotation();
-    const yaw = cameraRotation.y;
+    this.physicsService.moveForward(
+      this.playerEntity,
+      distance,
+      cameraRotation.y, // yaw
+      cameraRotation.x  // pitch
+    );
 
-    // Calculate forward direction based on camera yaw
-    const dx = Math.sin(yaw) * distance;
-    const dz = Math.cos(yaw) * distance;
-
-    this.move(dx, 0, dz);
+    this.syncCameraToPlayer();
+    this.emit('position:changed', this.playerEntity.position.clone());
   }
 
   /**
@@ -117,28 +117,40 @@ export class PlayerService {
    * @param distance Distance to move (positive = right, negative = left)
    */
   moveRight(distance: number): void {
+    if (!this.physicsService) return;
+
     const cameraRotation = this.cameraService.getRotation();
-    const yaw = cameraRotation.y;
+    this.physicsService.moveRight(
+      this.playerEntity,
+      distance,
+      cameraRotation.y // yaw
+    );
 
-    // Calculate right direction based on camera yaw (perpendicular to forward)
-    const dx = Math.sin(yaw + Math.PI / 2) * distance;
-    const dz = Math.cos(yaw + Math.PI / 2) * distance;
-
-    this.move(dx, 0, dz);
+    this.syncCameraToPlayer();
+    this.emit('position:changed', this.playerEntity.position.clone());
   }
 
   /**
-   * Jump (if on ground)
+   * Move player up/down (Fly mode only)
+   *
+   * @param distance Distance to move (positive = up, negative = down)
+   */
+  moveUp(distance: number): void {
+    if (!this.physicsService) return;
+
+    this.physicsService.moveUp(this.playerEntity, distance);
+
+    this.syncCameraToPlayer();
+    this.emit('position:changed', this.playerEntity.position.clone());
+  }
+
+  /**
+   * Jump (Walk mode only, if on ground)
    */
   jump(): void {
-    if (!this.isOnGround) {
-      return;
-    }
+    if (!this.physicsService) return;
 
-    this.velocity.y = this.jumpSpeed;
-    this.isOnGround = false;
-
-    logger.debug('Player jumped');
+    this.physicsService.jump(this.playerEntity);
   }
 
   /**
@@ -152,29 +164,17 @@ export class PlayerService {
   }
 
   /**
-   * Update player physics and movement
+   * Update player (physics is handled by PhysicsService)
    *
    * @param deltaTime Time since last frame in seconds
    */
   update(deltaTime: number): void {
-    // Apply gravity
-    if (!this.isOnGround) {
-      this.velocity.y += this.gravity * deltaTime;
-    }
+    // Physics is now handled by PhysicsService
+    // Just sync camera after physics update
+    this.syncCameraToPlayer();
 
-    // Apply velocity to position
-    if (this.velocity.lengthSquared() > 0) {
-      this.position.addInPlace(this.velocity.scale(deltaTime));
-      this.syncCameraToPlayer();
-      this.emit('position:changed', this.position.clone());
-    }
-
-    // Simple ground check (replace with proper collision detection later)
-    if (this.position.y <= 64 && this.velocity.y <= 0) {
-      this.position.y = 64;
-      this.velocity.y = 0;
-      this.isOnGround = true;
-    }
+    // Emit position change if moved
+    // TODO: Only emit if position actually changed
   }
 
   /**
@@ -183,21 +183,49 @@ export class PlayerService {
   private syncCameraToPlayer(): void {
     // In ego-view, camera is at player eye level (add 1.6 blocks for eye height)
     const eyeHeight = 1.6;
-    this.cameraService.setPosition(this.position.x, this.position.y + eyeHeight, this.position.z);
+    this.cameraService.setPosition(
+      this.playerEntity.position.x,
+      this.playerEntity.position.y + eyeHeight,
+      this.playerEntity.position.z
+    );
   }
 
   /**
    * Get current move speed
    */
   getMoveSpeed(): number {
-    return this.moveSpeed;
+    if (!this.physicsService) return 5.0;
+    return this.physicsService.getMoveSpeed(this.playerEntity);
   }
 
   /**
    * Check if player is on ground
    */
   isPlayerOnGround(): boolean {
-    return this.isOnGround;
+    return this.playerEntity.isOnGround;
+  }
+
+  /**
+   * Get current movement mode
+   */
+  getMovementMode(): MovementMode {
+    return this.playerEntity.movementMode;
+  }
+
+  /**
+   * Set movement mode
+   */
+  setMovementMode(mode: MovementMode): void {
+    if (!this.physicsService) return;
+    this.physicsService.setMovementMode(this.playerEntity, mode);
+  }
+
+  /**
+   * Toggle between Walk and Fly modes
+   */
+  toggleMovementMode(): void {
+    if (!this.physicsService) return;
+    this.physicsService.toggleMovementMode(this.playerEntity);
   }
 
   /**

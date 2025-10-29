@@ -9,6 +9,9 @@
         "textures": {
           "0": "textures/block/basic/dispenser_front_vertical.png"
         }
+      },
+      "physics": {
+        "solid": true
       }
     }
   }
