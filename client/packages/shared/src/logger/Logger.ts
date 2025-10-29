@@ -4,6 +4,7 @@
 
 import { LogLevel, LogLevelNames } from './LogLevel';
 import type { LogEntry, LogFormatter, LogTransport } from './LogEntry';
+import { createConsoleTransport } from './transports/ConsoleTransport';
 
 /**
  * Logger configuration
@@ -34,10 +35,20 @@ export class Logger {
 
   constructor(name: string, config: Partial<LoggerConfig> = {}) {
     this.name = name;
+
+    // Use ConsoleTransport as default if no transports provided
+    const defaultTransports = [
+      createConsoleTransport({
+        includeTimestamp: config.includeTimestamp ?? true,
+        includeStack: config.includeStack ?? true,
+      }),
+    ];
+
     this.config = {
       minLevel: LogLevel.INFO,
       includeTimestamp: true,
       includeStack: true,
+      transports: defaultTransports,
       ...config,
     };
   }
@@ -85,12 +96,7 @@ export class Logger {
       entry.stack = error.stack;
     }
 
-    // Use custom formatter or default
-    const formatted = this.config.formatter
-      ? this.config.formatter(entry)
-      : this.defaultFormatter(entry);
-
-    // Use custom transports or console
+    // Use transports to output log entry
     if (this.config.transports && this.config.transports.length > 0) {
       this.config.transports.forEach((transport) => {
         try {
@@ -100,8 +106,6 @@ export class Logger {
           console.error('[Logger] Transport error:', error);
         }
       });
-    } else {
-      this.consoleTransport(entry, formatted);
     }
   }
 
@@ -145,59 +149,5 @@ export class Logger {
    */
   trace(message: string, data?: any): void {
     this.log(LogLevel.TRACE, message, data);
-  }
-
-  /**
-   * Default formatter
-   */
-  private defaultFormatter(entry: LogEntry): string {
-    const level = LogLevelNames[entry.level].padEnd(5);
-    const timestamp = this.config.includeTimestamp
-      ? `[${new Date(entry.timestamp).toISOString()}] `
-      : '';
-
-    let message = `${timestamp}[${level}] [${entry.name}] ${entry.message}`;
-
-    if (entry.data !== undefined) {
-      try {
-        message += `\n  Data: ${JSON.stringify(entry.data, null, 2)}`;
-      } catch (error) {
-        // Handle circular references
-        message += `\n  Data: [Circular or non-serializable]`;
-      }
-    }
-
-    if (entry.error) {
-      message += `\n  Error: ${entry.error.message}`;
-      if (entry.stack && this.config.includeStack) {
-        message += `\n  Stack: ${entry.stack}`;
-      }
-    }
-
-    return message;
-  }
-
-  /**
-   * Console transport with colored output
-   */
-  private consoleTransport(entry: LogEntry, formatted: string): void {
-    switch (entry.level) {
-      case LogLevel.FATAL:
-      case LogLevel.ERROR:
-        console.error(formatted);
-        break;
-      case LogLevel.WARN:
-        console.warn(formatted);
-        break;
-      case LogLevel.INFO:
-        console.info(formatted);
-        break;
-      case LogLevel.DEBUG:
-      case LogLevel.TRACE:
-        console.debug(formatted);
-        break;
-      default:
-        console.log(formatted);
-    }
   }
 }
