@@ -197,20 +197,20 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 
 ## Basic 3D Engine
 
-[?] Prüfe ob der Server schon texturen ausliefert. 
+[x] Prüfe ob der Server schon texturen ausliefert. 
 - Texturen sollen Lazy ausgeleifert werden.
 - Texturen liegen in files/assets/textures, im BlockType werden sie "assets/textures/block/basic/acacia_fence.png" angegeben.
 - Wie in client/instructions/client_2.0/server_rest_api.md soll es einen asset endpunkt im server geben.
-[?] Lege einen TextureService im client an, der texturen vom Server laden kann. Referenz in AppContext anlegen.
+[x] Lege einen TextureService im client an, der texturen vom Server laden kann. Referenz in AppContext anlegen.
 - Texturen werden nur einmal geladen und im TextureService gecached. Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
 
 [?] Prüfe ob der Server bereits einen WebSocketServer bereit stellt und hier die 'Chunk Registration' und 'Chunk Update' Nachrichten implementiert sind.
-[?] lege im Client einen NetworkService an der die WebSocket Verbindung oeffnen und login automatisch macht. Referenz in AppContext anlegen.
+[x] lege im Client einen NetworkService an der die WebSocket Verbindung oeffnen und login automatisch macht. Referenz in AppContext anlegen.
 - Als weltId soll vorerst 'main' benutzt werden.
 - Die WeltInfo muss an den AppContext geschrieben werden.
 - Bei einem Reconnect der WebSocket soll automatisch der Login und die letzte 'Chunk Registration' neu verschickt werden
 - Sende den Ping regelmaesig, beachte die Ping zeit in WordInfo
-[?] Lege einen ChunkService im client der sich an chunks registriert und der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
+[x] Lege einen ChunkService im client der sich an chunks registriert und der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
 - Siehe auch client_playground/packages/client/src/world/ChunkManager.ts
 
 [x] Der TextureService soll die Texturen ueber den NetworkManager laden lassen.
@@ -219,19 +219,19 @@ Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal u
 
 - Nicht mehr als noetig umsetzten, das ziel ist eine erste begehbare 3D welt die noch verbessert werden kann.
 - Zu details kannst du in 
-[?] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
+[x] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
 - Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
 - BlockTypes werden nur einmal geladen und im BlockTypeService gecached.
-[?] Lege den EngineService im client an der die 3D engine initialisiert. Referenz in AppContext anlegen.
-[?] Lege einen RenderService im client an der die Chunks rendert. Referenz in EngineService anlegen.
+[x] Lege den EngineService im client an der die 3D engine initialisiert. Referenz in AppContext anlegen.
+[x] Lege einen RenderService im client an der die Chunks rendert. Referenz in EngineService anlegen.
 - Siehe auch client_playground/packages/client/src/rendering/ChunkRenderer.ts
 - Lege zuerst nur den BlockRenderer an. Alle Typen ausser INVISIBLE werden erstmal an den BlockRenderer zum Rendern weiter gegeben.
-[?] Lege eine CameraService an der in der EngineService referenziert ist. Der Service 
+[x] Lege eine CameraService an der in der EngineService referenziert ist. Der Service 
 - Camera hat einen egoView eigenschaft.
-[?] Lege einen PlayerService an, der Service hält die aktuelle Position des Spielers und 
+[x] Lege einen PlayerService an, der Service hält die aktuelle Position des Spielers und 
     referenziert den CameraService um die Kamera zu steuern. Und Rendert später auch den Player in der Third-Person-Ansicht
-[?] Lege einen EnvironmentService an der in EnineService liegt. Das Environment macht das Licht an.
-[?] Lege einen InputService und einen InputController ableitung WebInputController an.
+[x] Lege einen EnvironmentService an der in EnineService liegt. Das Environment macht das Licht an.
+[x] Lege einen InputService und einen InputController ableitung WebInputController an.
 - Lege InputHandler fuer jede Aktion an. MoveLeft, MoveRight, MoveForward, MoveBackward, Jump, RotateLeft RotateRigth, PitchUp, PitchDown, etc
 - Die InputHandler steuern den PlayerService und die CameraService
 - InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
@@ -242,7 +242,7 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 - Flat: Einfach flache Ebene XZ
 - Normal: Einen huegeligen, algorithm siehe client_playground/packages/server/src/world/generators/NormalWorldGenerator.ts
 
-[?] Es soll einen Flug und Walk modus geben
+[x] Es soll einen Flug und Walk modus geben
 - Flug: Der Spieler kann sich in der Welt bewegen wie im flug, keine Gravitation, Vor und Rueckwaerts in richtung des Kamera Pitches
   - Kein Sprung möglich
   - Nur im Editor modus Möglich
@@ -255,11 +255,13 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 - Wie Agieren der PlayerService und der PhysicsService miteinander?
 - Gestartet wird im Walk Modus
 
+> Aktuell im Flgmodus keine Collisions
+
 [x] PhysicsService sollte auch darauf achten, dass ich die grenzen der welt (WorldInfo) nicht ueberschreite, auch nach oben und unten nicht.
 - wenn ich ausserhalb der grenzen bin, werde ich automatisch an die naechste grenze geleitet.
 
 [x] Die Mausrichtung links und rechts; hoch und runter sind verkert herum gebaut.
-[?] Kann man das nach oben klettern um 1 Block etwas mehr animieren, in mehreren schritten tun.
+[x] Kann man das nach oben klettern um 1 Block etwas mehr animieren, in mehreren schritten tun.
 [ ] Wenn man nicht weiter kann, weil vor einem ein block ist und der block hat physics.climbable > 0 gesetzt, dann kann man anstatt vorwaerts nach oben klettern.
 
 > Umstellung:
@@ -290,6 +292,12 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 Extra:
 [x] in BlockModifier den Parameter 'effect' Typisieren 'none' | 'water' | 'wind' | 'flipbox' | 'lava' | 'fog'
 [x] Funktiomiert der Ping af WebSocket in NetworkService, ich bekomme session timeouts
+
+## Networking und Server
+
+[x] Im Client NetworkService anlegen, der die WebSocket zum Server verwaltet. hier connectSocket() aufrufen wenn die Welt
+im StartScreen ausgewählt wurde.
+[x] Das login und Ping
 
 ===
 
@@ -327,9 +335,3 @@ Extra:
       So anlegen, das sowohl single actions (keys, buttons) also auch maus oder controller steuerung moeglich ist.
 [ ] CamControl Klasse anlegen, die die Kamera steuert. Anlegen der InputActions in InputService, die die Camera 
     ueber CamControl steuern.
-
-## Networking und Server
-
-[ ] Im Client NetworkService anlegen, der die WebSocket zum Server verwaltet. hier connectSocket() aufrufen wenn die Welt
-im StartScreen ausgewählt wurde.
-[ ] Das login und Ping 
