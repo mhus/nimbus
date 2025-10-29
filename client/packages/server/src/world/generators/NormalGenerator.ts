@@ -135,38 +135,34 @@ export class NormalGenerator implements WorldGenerator {
         // Get terrain height at this position
         const terrainHeight = this.getHeight(worldX, worldZ);
 
-        // Generate column
-        for (let worldY = 0; worldY <= terrainHeight; worldY++) {
-          let blockTypeId: number;
+        // Only generate top 2 layers of terrain and surface liquids
+        // This keeps the world sparse and efficient
 
-          // Layer selection
-          if (worldY === 0) {
-            // Bedrock at bottom
-            blockTypeId = this.getBlockId('bedrock');
-          } else if (worldY === terrainHeight) {
-            // Surface layer
-            if (terrainHeight <= this.waterLevel) {
-              // Underwater: sand
-              blockTypeId = this.getBlockId('sand');
-            } else {
-              // Above water: grass
-              blockTypeId = this.getBlockId('grass');
-            }
-          } else if (worldY >= terrainHeight - 3) {
-            // Subsurface (3 blocks below surface): dirt
-            blockTypeId = this.getBlockId('dirt');
-          } else {
-            // Deep underground: stone
-            blockTypeId = this.getBlockId('stone');
-          }
+        // Top surface layer (terrainHeight)
+        let surfaceBlockId: number;
 
-          // Skip air blocks
-          if (blockTypeId === 0) continue;
+        if (terrainHeight <= this.waterLevel) {
+          // Underwater: sand
+          surfaceBlockId = this.getBlockId('sand');
+        } else {
+          // Above water: grass
+          surfaceBlockId = this.getBlockId('grass');
+        }
 
-          // Add block
+        if (surfaceBlockId !== 0) {
           chunk.setBlock({
-            position: { x: worldX, y: worldY, z: worldZ },
-            blockTypeId,
+            position: { x: worldX, y: terrainHeight, z: worldZ },
+            blockTypeId: surfaceBlockId,
+            status: 0,
+          });
+        }
+
+        // Second layer below surface (terrainHeight - 1)
+        const dirtId = this.getBlockId('dirt');
+        if (dirtId !== 0 && terrainHeight > 0) {
+          chunk.setBlock({
+            position: { x: worldX, y: terrainHeight - 1, z: worldZ },
+            blockTypeId: dirtId,
             status: 0,
           });
         }
