@@ -137,10 +137,12 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 
 ## Basic 3D Engine
 
-[ ] Lege einen TextureService an, der aber aktuell nichts tut. 
-[ ] Lege den EngineService an und er wird in NimbusClient erstellt und in den AppContext gespeichert.
-
-
+[ ] Lege einen TextureService an, der aber aktuell nichts tut. Referenz in AppContext anlegen.
+[ ] Lege einen BlockTypeService an, der aber aktuell nur 0 und 100 kennt und zurück gibt. Referenz in AppContext anlegen.
+- 0 = AIR Block: Lege hierfür in BlockType einen constanten Block mit shape:0 an.
+- 100 = Dummy: Lege hierfür einen constanten Block mit shape:CUBE und color '#00ff00'an in BlockTypeService an. - wird später wieder gelöscht.
+[ ] Lege einen ChunkService an, der immer eine Horizontale Ebene auf Y=0 ausgibt mit der BlockTypeId 100. Referenz in AppContext anlegen.
+[ ] Lege den EngineService an und er wird in NimbusClient erstellt und in den AppContext gespeichert. Referenz in AppContext anlegen.
 
 ## Basic Network Protocoll
 
