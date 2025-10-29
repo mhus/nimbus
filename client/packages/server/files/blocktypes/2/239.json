@@ -1,0 +1,15 @@
+{
+  "id": 239,
+  "name": "Cyan Terracotta",
+  "description": "Cyan Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cyan_terracotta.png"
+        }
+      }
+    }
+  }
+}

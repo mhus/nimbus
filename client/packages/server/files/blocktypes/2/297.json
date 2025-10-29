@@ -1,0 +1,15 @@
+{
+  "id": 297,
+  "name": "Fern1",
+  "description": "Fern1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/fern1.png"
+        }
+      }
+    }
+  }
+}

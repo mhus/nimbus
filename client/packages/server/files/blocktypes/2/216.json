@@ -1,0 +1,15 @@
+{
+  "id": 216,
+  "name": "Coal Ore2",
+  "description": "Coal Ore2 - Mineable resource",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/coal_ore2.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 326,
+  "name": "Gray Concrete Powder",
+  "description": "Gray Concrete Powder block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/gray_concrete_powder.png"
+        }
+      }
+    }
+  }
+}

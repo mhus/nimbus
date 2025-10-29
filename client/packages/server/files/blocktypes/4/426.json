@@ -1,0 +1,15 @@
+{
+  "id": 426,
+  "name": "Note Block",
+  "description": "Note Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/note_block.png"
+        }
+      }
+    }
+  }
+}

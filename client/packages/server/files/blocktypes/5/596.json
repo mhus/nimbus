@@ -1,0 +1,15 @@
+{
+  "id": 596,
+  "name": "Water Still",
+  "description": "Water Still block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/water_still.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 512,
+  "name": "Redstone Lamp On",
+  "description": "Redstone Lamp On - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_lamp_on.png"
+        }
+      }
+    }
+  }
+}

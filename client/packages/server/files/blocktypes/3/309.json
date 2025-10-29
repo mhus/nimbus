@@ -1,0 +1,15 @@
+{
+  "id": 309,
+  "name": "Granite1",
+  "description": "Granite1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/granite1.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 510,
+  "name": "Redstone Dust Overlay",
+  "description": "Redstone Dust Overlay - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_dust_overlay.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 594,
+  "name": "Water Flow",
+  "description": "Water Flow block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/water_flow.png"
+        }
+      }
+    }
+  }
+}

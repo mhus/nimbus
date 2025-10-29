@@ -1,0 +1,15 @@
+{
+  "id": 197,
+  "name": "Cartography Table Side1",
+  "description": "Cartography Table Side1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cartography_table_side1.png"
+        }
+      }
+    }
+  }
+}

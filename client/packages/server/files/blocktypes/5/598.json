@@ -1,0 +1,15 @@
+{
+  "id": 598,
+  "name": "Wheat Stage0",
+  "description": "Wheat Stage0 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/wheat_stage0.png"
+        }
+      }
+    }
+  }
+}

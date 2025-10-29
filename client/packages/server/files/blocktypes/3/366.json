@@ -1,0 +1,15 @@
+{
+  "id": 366,
+  "name": "Jungle Trapdoor",
+  "description": "Jungle Trapdoor block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/jungle_trapdoor.png"
+        }
+      }
+    }
+  }
+}

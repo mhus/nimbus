@@ -1,0 +1,15 @@
+{
+  "id": 586,
+  "name": "Tube Coral",
+  "description": "Tube Coral block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/tube_coral.png"
+        }
+      }
+    }
+  }
+}

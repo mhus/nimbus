@@ -1,0 +1,15 @@
+{
+  "id": 354,
+  "name": "Item Frame Border",
+  "description": "Item Frame Border block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/item_frame_border.png"
+        }
+      }
+    }
+  }
+}

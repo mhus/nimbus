@@ -1,0 +1,15 @@
+{
+  "id": 162,
+  "name": "Bookshelf1",
+  "description": "Bookshelf1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/bookshelf1.png"
+        }
+      }
+    }
+  }
+}

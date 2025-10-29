@@ -1,0 +1,15 @@
+{
+  "id": 238,
+  "name": "Cyan Stained Glass",
+  "description": "Cyan Stained Glass - Transparent block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cyan_stained_glass.png"
+        }
+      }
+    }
+  }
+}

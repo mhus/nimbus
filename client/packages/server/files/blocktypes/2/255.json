@@ -1,0 +1,15 @@
+{
+  "id": 255,
+  "name": "Dead Brain Coral Block",
+  "description": "Dead Brain Coral Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_brain_coral_block.png"
+        }
+      }
+    }
+  }
+}

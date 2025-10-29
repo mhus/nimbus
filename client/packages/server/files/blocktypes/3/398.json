@@ -1,0 +1,15 @@
+{
+  "id": 398,
+  "name": "Lime Concrete Powder",
+  "description": "Lime Concrete Powder block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lime_concrete_powder.png"
+        }
+      }
+    }
+  }
+}

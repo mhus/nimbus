@@ -1,0 +1,15 @@
+{
+  "id": 251,
+  "name": "Dark Oak Sapling",
+  "description": "Dark Oak Sapling block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/dark_oak_sapling.png"
+        }
+      }
+    }
+  }
+}

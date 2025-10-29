@@ -1,0 +1,15 @@
+{
+  "id": 395,
+  "name": "Lily Pad",
+  "description": "Lily Pad block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lily_pad.png"
+        }
+      }
+    }
+  }
+}

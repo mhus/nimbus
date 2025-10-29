@@ -1,0 +1,15 @@
+{
+  "id": 350,
+  "name": "Iron Ore",
+  "description": "Iron Ore - Mineable resource",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/iron_ore.png"
+        }
+      }
+    }
+  }
+}

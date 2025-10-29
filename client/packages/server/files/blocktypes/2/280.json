@@ -1,0 +1,15 @@
+{
+  "id": 280,
+  "name": "Dirt1",
+  "description": "Dirt1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dirt1.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 394,
+  "name": "Lily Of The Valley",
+  "description": "Lily Of The Valley block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lily_of_the_valley.png"
+        }
+      }
+    }
+  }
+}

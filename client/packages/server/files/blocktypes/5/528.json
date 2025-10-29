@@ -1,0 +1,15 @@
+{
+  "id": 528,
+  "name": "Sea Pickle",
+  "description": "Sea Pickle block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sea_pickle.png"
+        }
+      }
+    }
+  }
+}

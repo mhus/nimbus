@@ -1,0 +1,15 @@
+{
+  "id": 534,
+  "name": "Slime Block4",
+  "description": "Slime Block4 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/slime_block4.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 276,
+  "name": "Diamond Ore1",
+  "description": "Diamond Ore1 - Mineable resource",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/diamond_ore1.png"
+        }
+      }
+    }
+  }
+}

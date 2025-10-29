@@ -1,0 +1,15 @@
+{
+  "id": 357,
+  "name": "Jungle Fence Gate",
+  "description": "Jungle Fence Gate block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/jungle_fence_gate.png"
+        }
+      }
+    }
+  }
+}

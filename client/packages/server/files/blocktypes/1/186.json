@@ -1,0 +1,15 @@
+{
+  "id": 186,
+  "name": "Bubble Coral Block",
+  "description": "Bubble Coral Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/bubble_coral_block.png"
+        }
+      }
+    }
+  }
+}

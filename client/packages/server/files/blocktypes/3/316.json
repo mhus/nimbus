@@ -1,0 +1,15 @@
+{
+  "id": 316,
+  "name": "Grass Block Top2",
+  "description": "Grass Block Top2 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/grass_block_top2.png"
+        }
+      }
+    }
+  }
+}

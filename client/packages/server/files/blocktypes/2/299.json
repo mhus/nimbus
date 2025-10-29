@@ -1,0 +1,15 @@
+{
+  "id": 299,
+  "name": "Fire Coral Block",
+  "description": "Fire Coral Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/fire_coral_block.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 590,
+  "name": "Turtle Egg Slightly Cracked",
+  "description": "Turtle Egg Slightly Cracked block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/turtle_egg_slightly_cracked.png"
+        }
+      }
+    }
+  }
+}

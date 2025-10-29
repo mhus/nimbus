@@ -1,0 +1,15 @@
+{
+  "id": 564,
+  "name": "Stonecutter Saw",
+  "description": "Stonecutter Saw - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stonecutter_saw.png"
+        }
+      }
+    }
+  }
+}

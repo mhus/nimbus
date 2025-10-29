@@ -1,0 +1,15 @@
+{
+  "id": 174,
+  "name": "Bricks5",
+  "description": "Bricks5 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/bricks5.png"
+        }
+      }
+    }
+  }
+}

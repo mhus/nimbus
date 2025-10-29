@@ -1,0 +1,15 @@
+{
+  "id": 388,
+  "name": "Light Gray Concrete",
+  "description": "Light Gray Concrete block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_gray_concrete.png"
+        }
+      }
+    }
+  }
+}

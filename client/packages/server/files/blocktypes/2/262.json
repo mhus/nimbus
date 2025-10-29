@@ -1,0 +1,15 @@
+{
+  "id": 262,
+  "name": "Dead Fire Coral Block",
+  "description": "Dead Fire Coral Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_fire_coral_block.png"
+        }
+      }
+    }
+  }
+}

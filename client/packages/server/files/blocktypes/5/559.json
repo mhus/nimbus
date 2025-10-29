@@ -1,0 +1,15 @@
+{
+  "id": 559,
+  "name": "Stone Bricks1",
+  "description": "Stone Bricks1 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stone_bricks1.png"
+        }
+      }
+    }
+  }
+}

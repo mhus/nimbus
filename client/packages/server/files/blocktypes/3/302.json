@@ -1,0 +1,15 @@
+{
+  "id": 302,
+  "name": "Furnace Front On",
+  "description": "Furnace Front On block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/furnace_front_on.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 363,
+  "name": "Jungle Planks1",
+  "description": "Jungle Planks1 - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/jungle_planks1.png"
+        }
+      }
+    }
+  }
+}

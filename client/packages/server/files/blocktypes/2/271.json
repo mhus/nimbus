@@ -1,0 +1,15 @@
+{
+  "id": 271,
+  "name": "Debug2",
+  "description": "Debug2 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/debug2.png"
+        }
+      }
+    }
+  }
+}

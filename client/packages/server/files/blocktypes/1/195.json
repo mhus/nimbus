@@ -1,0 +1,15 @@
+{
+  "id": 195,
+  "name": "Carrots Stage2",
+  "description": "Carrots Stage2 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/carrots_stage2.png"
+        }
+      }
+    }
+  }
+}

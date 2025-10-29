@@ -1,0 +1,15 @@
+{
+  "id": 572,
+  "name": "Structure Block Corner",
+  "description": "Structure Block Corner block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/structure_block_corner.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 386,
+  "name": "Light Blue Terracotta",
+  "description": "Light Blue Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_blue_terracotta.png"
+        }
+      }
+    }
+  }
+}

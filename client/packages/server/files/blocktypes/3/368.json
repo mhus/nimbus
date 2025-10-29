@@ -1,0 +1,15 @@
+{
+  "id": 368,
+  "name": "Kelp Plant",
+  "description": "Kelp Plant - Decorative plant",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/kelp_plant.png"
+        }
+      }
+    }
+  }
+}

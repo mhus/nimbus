@@ -1,0 +1,15 @@
+{
+  "id": 387,
+  "name": "Light Blue Wool",
+  "description": "Light Blue Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_blue_wool.png"
+        }
+      }
+    }
+  }
+}

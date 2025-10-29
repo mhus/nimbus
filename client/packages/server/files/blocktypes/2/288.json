@@ -1,0 +1,15 @@
+{
+  "id": 288,
+  "name": "Emerald Ore",
+  "description": "Emerald Ore - Mineable resource",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/emerald_ore.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 232,
+  "name": "Cracked Stone Bricks",
+  "description": "Cracked Stone Bricks - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cracked_stone_bricks.png"
+        }
+      }
+    }
+  }
+}

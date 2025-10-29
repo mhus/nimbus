@@ -1,0 +1,15 @@
+{
+  "id": 622,
+  "name": "Yellow Wool",
+  "description": "Yellow Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/yellow_wool.png"
+        }
+      }
+    }
+  }
+}

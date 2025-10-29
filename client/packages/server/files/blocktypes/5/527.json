@@ -1,0 +1,15 @@
+{
+  "id": 527,
+  "name": "Sea Lantern",
+  "description": "Sea Lantern block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sea_lantern.png"
+        }
+      }
+    }
+  }
+}

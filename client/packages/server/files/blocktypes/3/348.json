@@ -1,0 +1,15 @@
+{
+  "id": 348,
+  "name": "Iron Block",
+  "description": "Iron Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/iron_block.png"
+        }
+      }
+    }
+  }
+}

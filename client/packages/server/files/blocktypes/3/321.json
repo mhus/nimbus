@@ -1,0 +1,15 @@
+{
+  "id": 321,
+  "name": "Grass Plant",
+  "description": "Grass Plant - Decorative plant",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/grass_plant.png"
+        }
+      }
+    }
+  }
+}

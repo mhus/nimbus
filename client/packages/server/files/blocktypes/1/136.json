@@ -1,0 +1,15 @@
+{
+  "id": 136,
+  "name": "Birch Fence Gate",
+  "description": "Birch Fence Gate block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/birch_fence_gate.png"
+        }
+      }
+    }
+  }
+}

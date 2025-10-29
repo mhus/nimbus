@@ -1,0 +1,15 @@
+{
+  "id": 550,
+  "name": "Spruce Sapling",
+  "description": "Spruce Sapling block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/spruce_sapling.png"
+        }
+      }
+    }
+  }
+}

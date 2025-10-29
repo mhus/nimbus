@@ -1,0 +1,15 @@
+{
+  "id": 477,
+  "name": "Purple Concrete Powder",
+  "description": "Purple Concrete Powder block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/purple_concrete_powder.png"
+        }
+      }
+    }
+  }
+}

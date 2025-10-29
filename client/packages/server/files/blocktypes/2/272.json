@@ -1,0 +1,15 @@
+{
+  "id": 272,
+  "name": "Detector Rail",
+  "description": "Detector Rail block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/detector_rail.png"
+        }
+      }
+    }
+  }
+}

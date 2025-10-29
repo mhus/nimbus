@@ -1,0 +1,15 @@
+{
+  "id": 301,
+  "name": "Flower Pot",
+  "description": "Flower Pot - Decorative plant",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/flower_pot.png"
+        }
+      }
+    }
+  }
+}

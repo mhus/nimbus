@@ -1,0 +1,15 @@
+{
+  "id": 459,
+  "name": "Planks",
+  "description": "Planks - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/planks.png"
+        }
+      }
+    }
+  }
+}

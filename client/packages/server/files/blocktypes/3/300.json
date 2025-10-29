@@ -1,0 +1,15 @@
+{
+  "id": 300,
+  "name": "Fire Coral Fan",
+  "description": "Fire Coral Fan block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/fire_coral_fan.png"
+        }
+      }
+    }
+  }
+}

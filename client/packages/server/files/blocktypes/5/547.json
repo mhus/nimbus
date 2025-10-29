@@ -1,0 +1,15 @@
+{
+  "id": 547,
+  "name": "Spruce Planks",
+  "description": "Spruce Planks - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/spruce_planks.png"
+        }
+      }
+    }
+  }
+}

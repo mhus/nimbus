@@ -1,0 +1,15 @@
+{
+  "id": 307,
+  "name": "Gold Ore1",
+  "description": "Gold Ore1 - Mineable resource",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/gold_ore1.png"
+        }
+      }
+    }
+  }
+}

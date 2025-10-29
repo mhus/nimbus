@@ -1,0 +1,15 @@
+{
+  "id": 189,
+  "name": "Cake Inner",
+  "description": "Cake Inner block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cake_inner.png"
+        }
+      }
+    }
+  }
+}

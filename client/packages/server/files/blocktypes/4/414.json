@@ -1,0 +1,15 @@
+{
+  "id": 414,
+  "name": "Mossy Stone Bricks",
+  "description": "Mossy Stone Bricks - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/mossy_stone_bricks.png"
+        }
+      }
+    }
+  }
+}

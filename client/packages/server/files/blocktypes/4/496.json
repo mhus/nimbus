@@ -1,0 +1,15 @@
+{
+  "id": 496,
+  "name": "Red Sand2",
+  "description": "Red Sand2 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/red_sand2.png"
+        }
+      }
+    }
+  }
+}

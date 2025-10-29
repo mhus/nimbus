@@ -1,0 +1,15 @@
+{
+  "id": 455,
+  "name": "Pink Tulip",
+  "description": "Pink Tulip block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/pink_tulip.png"
+        }
+      }
+    }
+  }
+}

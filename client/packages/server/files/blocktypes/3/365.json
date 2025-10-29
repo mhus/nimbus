@@ -1,0 +1,15 @@
+{
+  "id": 365,
+  "name": "Jungle Sapling",
+  "description": "Jungle Sapling block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/jungle_sapling.png"
+        }
+      }
+    }
+  }
+}

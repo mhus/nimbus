@@ -1,0 +1,15 @@
+{
+  "id": 619,
+  "name": "Yellow Glazed Terracotta",
+  "description": "Yellow Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/yellow_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

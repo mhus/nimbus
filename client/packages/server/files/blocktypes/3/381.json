@@ -1,0 +1,15 @@
+{
+  "id": 381,
+  "name": "Lever",
+  "description": "Lever block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lever.png"
+        }
+      }
+    }
+  }
+}

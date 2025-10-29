@@ -1,0 +1,15 @@
+{
+  "id": 588,
+  "name": "Tube Coral Fan",
+  "description": "Tube Coral Fan block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/tube_coral_fan.png"
+        }
+      }
+    }
+  }
+}

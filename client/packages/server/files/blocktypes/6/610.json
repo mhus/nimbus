@@ -1,0 +1,15 @@
+{
+  "id": 610,
+  "name": "White Glazed Terracotta",
+  "description": "White Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/white_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

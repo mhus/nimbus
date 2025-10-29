@@ -1,0 +1,15 @@
+{
+  "id": 408,
+  "name": "Magenta Stained Glass",
+  "description": "Magenta Stained Glass - Transparent block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/magenta_stained_glass.png"
+        }
+      }
+    }
+  }
+}

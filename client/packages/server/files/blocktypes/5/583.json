@@ -1,0 +1,15 @@
+{
+  "id": 583,
+  "name": "Torch",
+  "description": "Torch block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/torch.png"
+        }
+      }
+    }
+  }
+}

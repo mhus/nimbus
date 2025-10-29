@@ -1,0 +1,15 @@
+{
+  "id": 375,
+  "name": "Lava Still",
+  "description": "Lava Still block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lava_still.png"
+        }
+      }
+    }
+  }
+}

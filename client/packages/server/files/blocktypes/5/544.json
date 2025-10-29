@@ -1,0 +1,15 @@
+{
+  "id": 544,
+  "name": "Spruce Leaves1",
+  "description": "Spruce Leaves1 - Tree foliage",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/spruce_leaves1.png"
+        }
+      }
+    }
+  }
+}

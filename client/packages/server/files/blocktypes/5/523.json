@@ -1,0 +1,15 @@
+{
+  "id": 523,
+  "name": "Sand3",
+  "description": "Sand3 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sand3.png"
+        }
+      }
+    }
+  }
+}

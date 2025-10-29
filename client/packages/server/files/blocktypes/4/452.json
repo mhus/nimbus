@@ -1,0 +1,15 @@
+{
+  "id": 452,
+  "name": "Pink Glazed Terracotta",
+  "description": "Pink Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/pink_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

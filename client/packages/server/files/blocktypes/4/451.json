@@ -1,0 +1,15 @@
+{
+  "id": 451,
+  "name": "Pink Concrete Powder",
+  "description": "Pink Concrete Powder block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/pink_concrete_powder.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 222,
+  "name": "Cocoa Stage0",
+  "description": "Cocoa Stage0 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cocoa_stage0.png"
+        }
+      }
+    }
+  }
+}

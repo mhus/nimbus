@@ -1,0 +1,15 @@
+{
+  "id": 411,
+  "name": "Magma",
+  "description": "Magma block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/magma.png"
+        }
+      }
+    }
+  }
+}

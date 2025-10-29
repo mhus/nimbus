@@ -1,0 +1,15 @@
+{
+  "id": 259,
+  "name": "Dead Bubble Coral Fan",
+  "description": "Dead Bubble Coral Fan block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_bubble_coral_fan.png"
+        }
+      }
+    }
+  }
+}

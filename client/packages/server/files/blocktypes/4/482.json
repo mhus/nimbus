@@ -1,0 +1,15 @@
+{
+  "id": 482,
+  "name": "Purpur Block",
+  "description": "Purpur Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/purpur_block.png"
+        }
+      }
+    }
+  }
+}

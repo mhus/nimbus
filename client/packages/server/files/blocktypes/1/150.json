@@ -1,0 +1,15 @@
+{
+  "id": 150,
+  "name": "Black Terracotta",
+  "description": "Black Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/black_terracotta.png"
+        }
+      }
+    }
+  }
+}

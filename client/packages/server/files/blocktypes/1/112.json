@@ -1,0 +1,15 @@
+{
+  "id": 112,
+  "name": "Activator Rail On",
+  "description": "Activator Rail On block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/activator_rail_on.png"
+        }
+      }
+    }
+  }
+}

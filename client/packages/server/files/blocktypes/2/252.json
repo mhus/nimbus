@@ -1,0 +1,15 @@
+{
+  "id": 252,
+  "name": "Dark Oak Trapdoor",
+  "description": "Dark Oak Trapdoor block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/dark_oak_trapdoor.png"
+        }
+      }
+    }
+  }
+}

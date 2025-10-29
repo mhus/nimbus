@@ -1,0 +1,15 @@
+{
+  "id": 616,
+  "name": "Yellow Concrete",
+  "description": "Yellow Concrete block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/yellow_concrete.png"
+        }
+      }
+    }
+  }
+}

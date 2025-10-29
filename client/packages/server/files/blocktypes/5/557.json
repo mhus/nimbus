@@ -1,0 +1,15 @@
+{
+  "id": 557,
+  "name": "Stone5",
+  "description": "Stone5 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stone5.png"
+        }
+      }
+    }
+  }
+}

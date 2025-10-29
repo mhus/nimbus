@@ -1,0 +1,15 @@
+{
+  "id": 225,
+  "name": "Command Block Conditional",
+  "description": "Command Block Conditional block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/command_block_conditional.png"
+        }
+      }
+    }
+  }
+}

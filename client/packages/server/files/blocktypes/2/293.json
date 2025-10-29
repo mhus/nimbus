@@ -1,0 +1,15 @@
+{
+  "id": 293,
+  "name": "End Stone Bricks",
+  "description": "End Stone Bricks - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/end_stone_bricks.png"
+        }
+      }
+    }
+  }
+}

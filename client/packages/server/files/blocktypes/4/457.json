@@ -1,0 +1,15 @@
+{
+  "id": 457,
+  "name": "Piston Inner",
+  "description": "Piston Inner block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/piston_inner.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 110,
+  "name": "Acacia Trapdoor",
+  "description": "Acacia Trapdoor block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/acacia_trapdoor.png"
+        }
+      }
+    }
+  }
+}

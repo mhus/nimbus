@@ -1,0 +1,15 @@
+{
+  "id": 235,
+  "name": "Cyan Concrete",
+  "description": "Cyan Concrete block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cyan_concrete.png"
+        }
+      }
+    }
+  }
+}

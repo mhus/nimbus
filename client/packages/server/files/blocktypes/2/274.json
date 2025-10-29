@@ -1,0 +1,15 @@
+{
+  "id": 274,
+  "name": "Diamond Block",
+  "description": "Diamond Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/diamond_block.png"
+        }
+      }
+    }
+  }
+}

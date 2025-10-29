@@ -1,0 +1,15 @@
+{
+  "id": 570,
+  "name": "Stripped Spruce Log",
+  "description": "Stripped Spruce Log - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stripped_spruce_log.png"
+        }
+      }
+    }
+  }
+}

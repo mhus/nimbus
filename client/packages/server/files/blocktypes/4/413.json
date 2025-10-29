@@ -1,0 +1,15 @@
+{
+  "id": 413,
+  "name": "Mossy Cobblestone",
+  "description": "Mossy Cobblestone - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/mossy_cobblestone.png"
+        }
+      }
+    }
+  }
+}

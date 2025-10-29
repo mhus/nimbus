@@ -1,0 +1,15 @@
+{
+  "id": 355,
+  "name": "Jack O Lantern",
+  "description": "Jack O Lantern block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/jack_o_lantern.png"
+        }
+      }
+    }
+  }
+}

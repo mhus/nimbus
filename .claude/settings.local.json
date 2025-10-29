@@ -24,7 +24,10 @@
       "Bash(pnpm test:shared:*)",
       "Bash(find:*)",
       "Bash(pnpm dev)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(node scripts/generate-blocktypes.js:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,15 @@
+{
+  "id": 585,
+  "name": "Tripwire Hook",
+  "description": "Tripwire Hook block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/tripwire_hook.png"
+        }
+      }
+    }
+  }
+}

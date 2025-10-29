@@ -1,0 +1,15 @@
+{
+  "id": 483,
+  "name": "Purpur Pillar",
+  "description": "Purpur Pillar block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/purpur_pillar.png"
+        }
+      }
+    }
+  }
+}

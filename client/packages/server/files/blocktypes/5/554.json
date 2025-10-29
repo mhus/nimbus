@@ -1,0 +1,15 @@
+{
+  "id": 554,
+  "name": "Stone2",
+  "description": "Stone2 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stone2.png"
+        }
+      }
+    }
+  }
+}

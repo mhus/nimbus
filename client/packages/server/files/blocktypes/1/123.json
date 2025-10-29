@@ -1,0 +1,15 @@
+{
+  "id": 123,
+  "name": "Bamboo Stage0",
+  "description": "Bamboo Stage0 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/bamboo_stage0.png"
+        }
+      }
+    }
+  }
+}

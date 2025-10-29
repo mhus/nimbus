@@ -1,0 +1,15 @@
+{
+  "id": 352,
+  "name": "Iron Trapdoor",
+  "description": "Iron Trapdoor block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/iron_trapdoor.png"
+        }
+      }
+    }
+  }
+}

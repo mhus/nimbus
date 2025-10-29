@@ -1,0 +1,15 @@
+{
+  "id": 138,
+  "name": "Birch Leaves1",
+  "description": "Birch Leaves1 - Tree foliage",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/birch_leaves1.png"
+        }
+      }
+    }
+  }
+}

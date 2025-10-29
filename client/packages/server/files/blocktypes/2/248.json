@@ -1,0 +1,15 @@
+{
+  "id": 248,
+  "name": "Dark Oak Planks",
+  "description": "Dark Oak Planks - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dark_oak_planks.png"
+        }
+      }
+    }
+  }
+}

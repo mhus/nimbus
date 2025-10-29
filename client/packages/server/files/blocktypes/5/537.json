@@ -1,0 +1,15 @@
+{
+  "id": 537,
+  "name": "Snow",
+  "description": "Snow block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/snow.png"
+        }
+      }
+    }
+  }
+}

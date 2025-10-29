@@ -1,0 +1,15 @@
+{
+  "id": 292,
+  "name": "End Stone",
+  "description": "End Stone - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/end_stone.png"
+        }
+      }
+    }
+  }
+}

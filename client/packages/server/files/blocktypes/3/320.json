@@ -1,0 +1,15 @@
+{
+  "id": 320,
+  "name": "Grass Path Top1",
+  "description": "Grass Path Top1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/grass_path_top1.png"
+        }
+      }
+    }
+  }
+}

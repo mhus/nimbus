@@ -1,0 +1,15 @@
+{
+  "id": 371,
+  "name": "Lapis Block",
+  "description": "Lapis Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lapis_block.png"
+        }
+      }
+    }
+  }
+}

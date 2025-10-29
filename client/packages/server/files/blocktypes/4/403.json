@@ -1,0 +1,15 @@
+{
+  "id": 403,
+  "name": "Log",
+  "description": "Log - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/log.png"
+        }
+      }
+    }
+  }
+}

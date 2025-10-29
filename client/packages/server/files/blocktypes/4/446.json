@@ -1,0 +1,15 @@
+{
+  "id": 446,
+  "name": "Orange Tulip",
+  "description": "Orange Tulip block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/orange_tulip.png"
+        }
+      }
+    }
+  }
+}

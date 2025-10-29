@@ -1,0 +1,15 @@
+{
+  "id": 264,
+  "name": "Dead Horn Coral",
+  "description": "Dead Horn Coral block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_horn_coral.png"
+        }
+      }
+    }
+  }
+}

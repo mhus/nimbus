@@ -1,0 +1,15 @@
+{
+  "id": 443,
+  "name": "Orange Glazed Terracotta",
+  "description": "Orange Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/orange_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

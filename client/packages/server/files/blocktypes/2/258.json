@@ -1,0 +1,15 @@
+{
+  "id": 258,
+  "name": "Dead Bubble Coral Block",
+  "description": "Dead Bubble Coral Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_bubble_coral_block.png"
+        }
+      }
+    }
+  }
+}

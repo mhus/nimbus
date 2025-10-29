@@ -1,0 +1,15 @@
+{
+  "id": 571,
+  "name": "Structure Block",
+  "description": "Structure Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/structure_block.png"
+        }
+      }
+    }
+  }
+}

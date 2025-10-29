@@ -1,0 +1,15 @@
+{
+  "id": 290,
+  "name": "End Portal Frame Eye",
+  "description": "End Portal Frame Eye block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/end_portal_frame_eye.png"
+        }
+      }
+    }
+  }
+}

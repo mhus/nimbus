@@ -1,0 +1,15 @@
+{
+  "id": 423,
+  "name": "Nether Wart Stage1",
+  "description": "Nether Wart Stage1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/nether_wart_stage1.png"
+        }
+      }
+    }
+  }
+}

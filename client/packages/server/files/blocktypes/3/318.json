@@ -1,0 +1,15 @@
+{
+  "id": 318,
+  "name": "Grass Block Top Extra",
+  "description": "Grass Block Top Extra block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/grass_block_top_extra.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 502,
+  "name": "Red Tulip",
+  "description": "Red Tulip block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/red_tulip.png"
+        }
+      }
+    }
+  }
+}

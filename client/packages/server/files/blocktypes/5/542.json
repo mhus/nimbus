@@ -1,0 +1,15 @@
+{
+  "id": 542,
+  "name": "Spruce Fence Gate",
+  "description": "Spruce Fence Gate block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/spruce_fence_gate.png"
+        }
+      }
+    }
+  }
+}

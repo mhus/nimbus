@@ -1,0 +1,15 @@
+{
+  "id": 507,
+  "name": "Redstone Dust Line0",
+  "description": "Redstone Dust Line0 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_dust_line0.png"
+        }
+      }
+    }
+  }
+}

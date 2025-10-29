@@ -1,0 +1,15 @@
+{
+  "id": 540,
+  "name": "Sponge",
+  "description": "Sponge block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sponge.png"
+        }
+      }
+    }
+  }
+}

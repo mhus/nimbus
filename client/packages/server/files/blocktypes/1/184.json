@@ -1,0 +1,15 @@
+{
+  "id": 184,
+  "name": "Brown Wool",
+  "description": "Brown Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/brown_wool.png"
+        }
+      }
+    }
+  }
+}

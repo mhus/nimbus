@@ -1,0 +1,15 @@
+{
+  "id": 535,
+  "name": "Smoker Front On",
+  "description": "Smoker Front On block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/smoker_front_on.png"
+        }
+      }
+    }
+  }
+}

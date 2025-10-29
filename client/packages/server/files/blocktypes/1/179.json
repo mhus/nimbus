@@ -1,0 +1,15 @@
+{
+  "id": 179,
+  "name": "Brown Glazed Terracotta",
+  "description": "Brown Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/brown_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

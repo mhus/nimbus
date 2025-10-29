@@ -1,0 +1,15 @@
+{
+  "id": 391,
+  "name": "Light Gray Stained Glass",
+  "description": "Light Gray Stained Glass - Transparent block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_gray_stained_glass.png"
+        }
+      }
+    }
+  }
+}

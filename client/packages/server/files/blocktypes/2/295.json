@@ -1,0 +1,15 @@
+{
+  "id": 295,
+  "name": "Farmland Moist",
+  "description": "Farmland Moist block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/farmland_moist.png"
+        }
+      }
+    }
+  }
+}

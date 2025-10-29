@@ -1,0 +1,15 @@
+{
+  "id": 146,
+  "name": "Black Concrete",
+  "description": "Black Concrete block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/black_concrete.png"
+        }
+      }
+    }
+  }
+}

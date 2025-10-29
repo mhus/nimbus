@@ -1,0 +1,15 @@
+{
+  "id": 323,
+  "name": "Grass Snow",
+  "description": "Grass Snow block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/grass_snow.png"
+        }
+      }
+    }
+  }
+}

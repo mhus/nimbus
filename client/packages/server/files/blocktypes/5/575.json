@@ -1,0 +1,15 @@
+{
+  "id": 575,
+  "name": "Structure Block Save",
+  "description": "Structure Block Save block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/structure_block_save.png"
+        }
+      }
+    }
+  }
+}

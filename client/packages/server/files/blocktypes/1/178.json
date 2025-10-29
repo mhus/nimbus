@@ -1,0 +1,15 @@
+{
+  "id": 178,
+  "name": "Brown Concrete Powder",
+  "description": "Brown Concrete Powder block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/brown_concrete_powder.png"
+        }
+      }
+    }
+  }
+}

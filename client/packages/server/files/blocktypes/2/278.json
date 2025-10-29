@@ -1,0 +1,15 @@
+{
+  "id": 278,
+  "name": "Diorite1",
+  "description": "Diorite1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/diorite1.png"
+        }
+      }
+    }
+  }
+}

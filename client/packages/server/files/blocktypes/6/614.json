@@ -1,0 +1,15 @@
+{
+  "id": 614,
+  "name": "White Wool",
+  "description": "White Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/white_wool.png"
+        }
+      }
+    }
+  }
+}

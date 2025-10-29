@@ -1,0 +1,15 @@
+{
+  "id": 432,
+  "name": "Oak Log1",
+  "description": "Oak Log1 - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/oak_log1.png"
+        }
+      }
+    }
+  }
+}

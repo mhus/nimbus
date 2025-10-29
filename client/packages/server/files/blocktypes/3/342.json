@@ -1,0 +1,15 @@
+{
+  "id": 342,
+  "name": "Horn Coral",
+  "description": "Horn Coral block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/horn_coral.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 245,
+  "name": "Dark Oak Leaves1",
+  "description": "Dark Oak Leaves1 - Tree foliage",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dark_oak_leaves1.png"
+        }
+      }
+    }
+  }
+}

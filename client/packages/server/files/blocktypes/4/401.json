@@ -1,0 +1,15 @@
+{
+  "id": 401,
+  "name": "Lime Terracotta",
+  "description": "Lime Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lime_terracotta.png"
+        }
+      }
+    }
+  }
+}

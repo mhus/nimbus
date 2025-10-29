@@ -1,0 +1,15 @@
+{
+  "id": 425,
+  "name": "Netherrack",
+  "description": "Netherrack block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/netherrack.png"
+        }
+      }
+    }
+  }
+}

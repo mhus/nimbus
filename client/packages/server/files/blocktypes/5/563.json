@@ -1,0 +1,15 @@
+{
+  "id": 563,
+  "name": "Stonebrick",
+  "description": "Stonebrick - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stonebrick.png"
+        }
+      }
+    }
+  }
+}

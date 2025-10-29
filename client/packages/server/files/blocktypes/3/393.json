@@ -1,0 +1,15 @@
+{
+  "id": 393,
+  "name": "Light Gray Wool",
+  "description": "Light Gray Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_gray_wool.png"
+        }
+      }
+    }
+  }
+}

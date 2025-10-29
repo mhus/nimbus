@@ -1,0 +1,15 @@
+{
+  "id": 469,
+  "name": "Potatoes Stage2",
+  "description": "Potatoes Stage2 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/potatoes_stage2.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 418,
+  "name": "Nether Bricks Fence",
+  "description": "Nether Bricks Fence - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/nether_bricks_fence.png"
+        }
+      }
+    }
+  }
+}

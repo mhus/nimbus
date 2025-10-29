@@ -1,0 +1,15 @@
+{
+  "id": 475,
+  "name": "Pumpkin Stem",
+  "description": "Pumpkin Stem block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/pumpkin_stem.png"
+        }
+      }
+    }
+  }
+}

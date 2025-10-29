@@ -1,0 +1,15 @@
+{
+  "id": 525,
+  "name": "Sandstone1",
+  "description": "Sandstone1 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sandstone1.png"
+        }
+      }
+    }
+  }
+}

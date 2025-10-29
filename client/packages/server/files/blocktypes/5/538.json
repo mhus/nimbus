@@ -1,0 +1,15 @@
+{
+  "id": 538,
+  "name": "Soul Sand",
+  "description": "Soul Sand block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/soul_sand.png"
+        }
+      }
+    }
+  }
+}

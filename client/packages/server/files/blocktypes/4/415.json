@@ -1,0 +1,15 @@
+{
+  "id": 415,
+  "name": "Mushroom Block Inside",
+  "description": "Mushroom Block Inside block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/mushroom_block_inside.png"
+        }
+      }
+    }
+  }
+}

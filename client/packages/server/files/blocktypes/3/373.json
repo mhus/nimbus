@@ -1,0 +1,15 @@
+{
+  "id": 373,
+  "name": "Lapis Ore1",
+  "description": "Lapis Ore1 - Mineable resource",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lapis_ore1.png"
+        }
+      }
+    }
+  }
+}

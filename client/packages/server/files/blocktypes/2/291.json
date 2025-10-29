@@ -1,0 +1,15 @@
+{
+  "id": 291,
+  "name": "End Rod",
+  "description": "End Rod block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/end_rod.png"
+        }
+      }
+    }
+  }
+}

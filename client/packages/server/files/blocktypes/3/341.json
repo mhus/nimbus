@@ -1,0 +1,15 @@
+{
+  "id": 341,
+  "name": "Hopper Outside",
+  "description": "Hopper Outside block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/hopper_outside.png"
+        }
+      }
+    }
+  }
+}

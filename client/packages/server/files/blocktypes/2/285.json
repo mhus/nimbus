@@ -1,0 +1,15 @@
+{
+  "id": 285,
+  "name": "Dragon Egg",
+  "description": "Dragon Egg block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dragon_egg.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 256,
+  "name": "Dead Brain Coral Fan",
+  "description": "Dead Brain Coral Fan block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_brain_coral_fan.png"
+        }
+      }
+    }
+  }
+}

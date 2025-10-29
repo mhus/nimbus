@@ -1,0 +1,15 @@
+{
+  "id": 167,
+  "name": "Brewing Stand",
+  "description": "Brewing Stand block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/brewing_stand.png"
+        }
+      }
+    }
+  }
+}

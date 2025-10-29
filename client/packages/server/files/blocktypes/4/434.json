@@ -1,0 +1,15 @@
+{
+  "id": 434,
+  "name": "Oak Planks1",
+  "description": "Oak Planks1 - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/oak_planks1.png"
+        }
+      }
+    }
+  }
+}

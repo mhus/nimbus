@@ -1,0 +1,15 @@
+{
+  "id": 574,
+  "name": "Structure Block Load",
+  "description": "Structure Block Load block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/structure_block_load.png"
+        }
+      }
+    }
+  }
+}

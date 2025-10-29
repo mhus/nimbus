@@ -1,0 +1,15 @@
+{
+  "id": 436,
+  "name": "Oak Sapling",
+  "description": "Oak Sapling block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/oak_sapling.png"
+        }
+      }
+    }
+  }
+}

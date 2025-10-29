@@ -1,0 +1,15 @@
+{
+  "id": 122,
+  "name": "Bamboo Small Leaves",
+  "description": "Bamboo Small Leaves - Tree foliage",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/bamboo_small_leaves.png"
+        }
+      }
+    }
+  }
+}

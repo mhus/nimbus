@@ -1,0 +1,15 @@
+{
+  "id": 106,
+  "name": "Acacia Planks",
+  "description": "Acacia Planks - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/acacia_planks.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 447,
+  "name": "Orange Wool",
+  "description": "Orange Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/orange_wool.png"
+        }
+      }
+    }
+  }
+}

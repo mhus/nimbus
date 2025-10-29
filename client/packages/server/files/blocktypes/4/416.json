@@ -1,0 +1,15 @@
+{
+  "id": 416,
+  "name": "Mushroom Stem",
+  "description": "Mushroom Stem block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/mushroom_stem.png"
+        }
+      }
+    }
+  }
+}

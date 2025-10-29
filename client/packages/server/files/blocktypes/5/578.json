@@ -1,0 +1,15 @@
+{
+  "id": 578,
+  "name": "Sweet Berry Bush Stage0",
+  "description": "Sweet Berry Bush Stage0 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sweet_berry_bush_stage0.png"
+        }
+      }
+    }
+  }
+}

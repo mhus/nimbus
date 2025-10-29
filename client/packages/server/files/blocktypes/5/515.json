@@ -1,0 +1,15 @@
+{
+  "id": 515,
+  "name": "Redstone Torch",
+  "description": "Redstone Torch - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_torch.png"
+        }
+      }
+    }
+  }
+}

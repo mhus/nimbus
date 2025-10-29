@@ -1,0 +1,15 @@
+{
+  "id": 203,
+  "name": "Chiseled Quartz Block",
+  "description": "Chiseled Quartz Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/chiseled_quartz_block.png"
+        }
+      }
+    }
+  }
+}

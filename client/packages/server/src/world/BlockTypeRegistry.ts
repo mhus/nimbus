@@ -1,78 +1,109 @@
 /**
  * BlockType Registry
+ * Loads BlockTypes on-demand from filesystem
  */
 
-import { getLogger, BlockConstants, Shape } from '@nimbus/shared';
+import fs from 'fs';
+import path from 'path';
+import { getLogger } from '@nimbus/shared';
 import type { BlockType } from '@nimbus/shared';
-import { BlockStatus } from '@nimbus/shared';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const logger = getLogger('BlockTypeRegistry');
 
 export class BlockTypeRegistry {
-  private blockTypes = new Map<number, BlockType>();
+  private blocktypesDir: string;
 
   constructor() {
-    this.initializeDefaultBlocks();
+    this.blocktypesDir = path.join(__dirname, '../../files/blocktypes');
+    logger.info('BlockTypeRegistry initialized (lazy loading from filesystem)');
   }
 
-  private initializeDefaultBlocks(): void {
-    // AIR (ID: 0) - Required
-    this.registerBlockType({
-      id: BlockConstants.AIR_BLOCK_ID,
-      modifiers: {
-        [BlockStatus.DEFAULT]: {
-          visibility: {
-            shape: Shape.INVISIBLE,
-          },
-        },
-      },
-    });
-
-    // Stone (ID: 1)
-    this.registerBlockType({
-      id: 1,
-      modifiers: {
-        [BlockStatus.DEFAULT]: {
-          visibility: {
-            shape: Shape.CUBE,
-          },
-        },
-      },
-    });
-
-    // Grass (ID: 2)
-    this.registerBlockType({
-      id: 2,
-      modifiers: {
-        [BlockStatus.DEFAULT]: {
-          visibility: {
-            shape: Shape.CUBE,
-          },
-        },
-      },
-    });
-
-    logger.info(`Initialized ${this.blockTypes.size} block types`);
+  /**
+   * Get file path for BlockType ID
+   * Schema: (id / 100)/id.json
+   */
+  private getBlockTypeFilePath(id: number): string {
+    const subDir = Math.floor(id / 100);
+    return path.join(this.blocktypesDir, subDir.toString(), `${id}.json`);
   }
 
-  registerBlockType(blockType: BlockType): void {
-    this.blockTypes.set(blockType.id, blockType);
-  }
-
+  /**
+   * Load BlockType from filesystem on-demand
+   * @param id BlockType ID
+   * @returns BlockType or undefined if not found
+   */
   getBlockType(id: number): BlockType | undefined {
-    return this.blockTypes.get(id);
+    try {
+      const filePath = this.getBlockTypeFilePath(id);
+
+      if (!fs.existsSync(filePath)) {
+        logger.debug(`BlockType ${id} not found at ${filePath}`);
+        return undefined;
+      }
+
+      const data = fs.readFileSync(filePath, 'utf-8');
+      const blockType = JSON.parse(data) as BlockType;
+
+      logger.debug(`Loaded BlockType ${id} from filesystem`);
+      return blockType;
+    } catch (error) {
+      logger.error(`Failed to load BlockType ${id}`, {}, error as Error);
+      return undefined;
+    }
   }
 
-  getAllBlockTypes(): BlockType[] {
-    return Array.from(this.blockTypes.values());
-  }
-
+  /**
+   * Get range of BlockTypes
+   * @param from Start ID (inclusive)
+   * @param to End ID (inclusive)
+   * @returns Array of BlockTypes
+   */
   getBlockTypeRange(from: number, to: number): BlockType[] {
     const result: BlockType[] = [];
+
     for (let id = from; id <= to; id++) {
-      const blockType = this.blockTypes.get(id);
-      if (blockType) result.push(blockType);
+      const blockType = this.getBlockType(id);
+      if (blockType) {
+        result.push(blockType);
+      }
     }
+
+    logger.debug(`Loaded ${result.length} BlockTypes from range ${from}-${to}`);
     return result;
+  }
+
+  /**
+   * Get all available BlockTypes (reads manifest)
+   * @returns Array of all BlockTypes
+   */
+  getAllBlockTypes(): BlockType[] {
+    try {
+      const manifestPath = path.join(this.blocktypesDir, 'manifest.json');
+
+      if (!fs.existsSync(manifestPath)) {
+        logger.warn('Manifest not found, returning empty array');
+        return [];
+      }
+
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      const blockTypes: BlockType[] = [];
+
+      manifest.forEach((entry: any) => {
+        const blockType = this.getBlockType(entry.id);
+        if (blockType) {
+          blockTypes.push(blockType);
+        }
+      });
+
+      logger.info(`Loaded ${blockTypes.length} BlockTypes from manifest`);
+      return blockTypes;
+    } catch (error) {
+      logger.error('Failed to load BlockTypes from manifest', {}, error as Error);
+      return [];
+    }
   }
 }

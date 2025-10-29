@@ -1,0 +1,15 @@
+{
+  "id": 449,
+  "name": "Packed Ice",
+  "description": "Packed Ice block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/packed_ice.png"
+        }
+      }
+    }
+  }
+}

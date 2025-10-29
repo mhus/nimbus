@@ -1,0 +1,15 @@
+{
+  "id": 359,
+  "name": "Jungle Leaves1",
+  "description": "Jungle Leaves1 - Tree foliage",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/jungle_leaves1.png"
+        }
+      }
+    }
+  }
+}

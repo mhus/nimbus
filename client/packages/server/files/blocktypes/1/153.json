@@ -1,0 +1,15 @@
+{
+  "id": 153,
+  "name": "Blue Concrete",
+  "description": "Blue Concrete block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/blue_concrete.png"
+        }
+      }
+    }
+  }
+}

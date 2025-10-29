@@ -1,0 +1,15 @@
+{
+  "id": 404,
+  "name": "Log Spruce1",
+  "description": "Log Spruce1 - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/log_spruce1.png"
+        }
+      }
+    }
+  }
+}

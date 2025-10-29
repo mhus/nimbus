@@ -1,0 +1,15 @@
+{
+  "id": 237,
+  "name": "Cyan Glazed Terracotta",
+  "description": "Cyan Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cyan_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

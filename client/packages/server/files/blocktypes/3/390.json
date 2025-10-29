@@ -1,0 +1,15 @@
+{
+  "id": 390,
+  "name": "Light Gray Glazed Terracotta",
+  "description": "Light Gray Glazed Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_gray_glazed_terracotta.png"
+        }
+      }
+    }
+  }
+}

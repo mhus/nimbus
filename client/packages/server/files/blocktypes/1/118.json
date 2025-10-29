@@ -1,0 +1,15 @@
+{
+  "id": 118,
+  "name": "Attached Pumpkin Stem",
+  "description": "Attached Pumpkin Stem block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/attached_pumpkin_stem.png"
+        }
+      }
+    }
+  }
+}

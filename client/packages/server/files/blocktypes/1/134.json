@@ -1,0 +1,15 @@
+{
+  "id": 134,
+  "name": "Beetroots Stage3",
+  "description": "Beetroots Stage3 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/beetroots_stage3.png"
+        }
+      }
+    }
+  }
+}

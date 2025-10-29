@@ -1,0 +1,15 @@
+{
+  "id": 445,
+  "name": "Orange Terracotta",
+  "description": "Orange Terracotta block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/orange_terracotta.png"
+        }
+      }
+    }
+  }
+}

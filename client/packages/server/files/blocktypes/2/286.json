@@ -1,0 +1,15 @@
+{
+  "id": 286,
+  "name": "Dropper Front Vertical",
+  "description": "Dropper Front Vertical block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dropper_front_vertical.png"
+        }
+      }
+    }
+  }
+}

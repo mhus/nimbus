@@ -1,0 +1,15 @@
+{
+  "id": 513,
+  "name": "Redstone Ore",
+  "description": "Redstone Ore - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_ore.png"
+        }
+      }
+    }
+  }
+}

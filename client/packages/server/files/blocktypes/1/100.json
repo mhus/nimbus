@@ -1,0 +1,15 @@
+{
+  "id": 100,
+  "name": "Acacia Fence",
+  "description": "Acacia Fence block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/acacia_fence.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": 0,
+  "name": "Air",
+  "description": "Empty air block (invisible)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0
+      }
+    }
+  }
+}

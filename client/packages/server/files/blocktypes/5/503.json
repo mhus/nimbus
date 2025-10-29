@@ -1,0 +1,15 @@
+{
+  "id": 503,
+  "name": "Red Wool",
+  "description": "Red Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/red_wool.png"
+        }
+      }
+    }
+  }
+}

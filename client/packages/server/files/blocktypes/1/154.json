@@ -1,0 +1,15 @@
+{
+  "id": 154,
+  "name": "Blue Concrete Powder",
+  "description": "Blue Concrete Powder block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/blue_concrete_powder.png"
+        }
+      }
+    }
+  }
+}

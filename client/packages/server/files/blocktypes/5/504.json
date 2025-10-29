@@ -1,0 +1,15 @@
+{
+  "id": 504,
+  "name": "Redstone Block",
+  "description": "Redstone Block - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_block.png"
+        }
+      }
+    }
+  }
+}

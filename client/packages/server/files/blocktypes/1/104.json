@@ -1,0 +1,15 @@
+{
+  "id": 104,
+  "name": "Acacia Log",
+  "description": "Acacia Log - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/acacia_log.png"
+        }
+      }
+    }
+  }
+}

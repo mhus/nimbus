@@ -1,0 +1,15 @@
+{
+  "id": 456,
+  "name": "Pink Wool",
+  "description": "Pink Wool block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/pink_wool.png"
+        }
+      }
+    }
+  }
+}

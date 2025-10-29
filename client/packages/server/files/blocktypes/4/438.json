@@ -1,0 +1,15 @@
+{
+  "id": 438,
+  "name": "Observer Back On",
+  "description": "Observer Back On block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/observer_back_on.png"
+        }
+      }
+    }
+  }
+}

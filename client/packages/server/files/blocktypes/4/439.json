@@ -1,0 +1,15 @@
+{
+  "id": 439,
+  "name": "Observer Front1",
+  "description": "Observer Front1 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/observer_front1.png"
+        }
+      }
+    }
+  }
+}

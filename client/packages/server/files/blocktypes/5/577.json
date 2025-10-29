@@ -1,0 +1,15 @@
+{
+  "id": 577,
+  "name": "Sugar Cane Extra",
+  "description": "Sugar Cane Extra block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/sugar_cane_extra.png"
+        }
+      }
+    }
+  }
+}

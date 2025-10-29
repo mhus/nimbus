@@ -1,0 +1,15 @@
+{
+  "id": 374,
+  "name": "Lava Flow",
+  "description": "Lava Flow block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lava_flow.png"
+        }
+      }
+    }
+  }
+}

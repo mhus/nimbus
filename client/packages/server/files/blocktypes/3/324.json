@@ -1,0 +1,15 @@
+{
+  "id": 324,
+  "name": "Gravel",
+  "description": "Gravel block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/gravel.png"
+        }
+      }
+    }
+  }
+}

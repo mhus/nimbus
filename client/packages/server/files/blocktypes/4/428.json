@@ -1,0 +1,15 @@
+{
+  "id": 428,
+  "name": "Oak Fence Gate",
+  "description": "Oak Fence Gate block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 3,
+        "textures": {
+          "0": "assets/textures/block/basic/oak_fence_gate.png"
+        }
+      }
+    }
+  }
+}

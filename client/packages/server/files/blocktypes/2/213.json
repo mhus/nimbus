@@ -1,0 +1,15 @@
+{
+  "id": 213,
+  "name": "Coal Block",
+  "description": "Coal Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/coal_block.png"
+        }
+      }
+    }
+  }
+}

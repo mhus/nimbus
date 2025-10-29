@@ -1,0 +1,15 @@
+{
+  "id": 102,
+  "name": "Acacia Leaves",
+  "description": "Acacia Leaves - Tree foliage",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/acacia_leaves.png"
+        }
+      }
+    }
+  }
+}

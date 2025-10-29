@@ -1,0 +1,15 @@
+{
+  "id": 109,
+  "name": "Acacia Sapling",
+  "description": "Acacia Sapling block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "assets/textures/block/basic/acacia_sapling.png"
+        }
+      }
+    }
+  }
+}

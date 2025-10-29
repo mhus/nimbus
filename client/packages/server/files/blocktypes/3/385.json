@@ -1,0 +1,15 @@
+{
+  "id": 385,
+  "name": "Light Blue Stained Glass",
+  "description": "Light Blue Stained Glass - Transparent block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/light_blue_stained_glass.png"
+        }
+      }
+    }
+  }
+}

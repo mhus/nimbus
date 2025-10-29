@@ -1,0 +1,15 @@
+{
+  "id": 128,
+  "name": "Bee Nest Front Honey",
+  "description": "Bee Nest Front Honey block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/bee_nest_front_honey.png"
+        }
+      }
+    }
+  }
+}

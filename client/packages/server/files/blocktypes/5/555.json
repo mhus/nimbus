@@ -1,0 +1,15 @@
+{
+  "id": 555,
+  "name": "Stone3",
+  "description": "Stone3 - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/stone3.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 158,
+  "name": "Blue Stained Glass",
+  "description": "Blue Stained Glass - Transparent block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/blue_stained_glass.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 505,
+  "name": "Redstone Dust Cross Overlay",
+  "description": "Redstone Dust Cross Overlay - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/redstone_dust_cross_overlay.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 202,
+  "name": "Chain Command Block Conditional",
+  "description": "Chain Command Block Conditional block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/chain_command_block_conditional.png"
+        }
+      }
+    }
+  }
+}

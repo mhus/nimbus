@@ -1,0 +1,15 @@
+{
+  "id": 615,
+  "name": "Wither Rose",
+  "description": "Wither Rose block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/wither_rose.png"
+        }
+      }
+    }
+  }
+}

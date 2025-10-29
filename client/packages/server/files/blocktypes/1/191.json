@@ -1,0 +1,15 @@
+{
+  "id": 191,
+  "name": "Campfire Log",
+  "description": "Campfire Log - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/campfire_log.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 142,
+  "name": "Birch Planks1",
+  "description": "Birch Planks1 - Processed wood",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/birch_planks1.png"
+        }
+      }
+    }
+  }
+}

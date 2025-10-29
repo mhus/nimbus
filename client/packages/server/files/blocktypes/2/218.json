@@ -1,0 +1,15 @@
+{
+  "id": 218,
+  "name": "Cobblestone",
+  "description": "Cobblestone - Building material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/cobblestone.png"
+        }
+      }
+    }
+  }
+}

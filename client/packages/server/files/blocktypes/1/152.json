@@ -1,0 +1,15 @@
+{
+  "id": 152,
+  "name": "Blast Furnace Front On",
+  "description": "Blast Furnace Front On block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/blast_furnace_front_on.png"
+        }
+      }
+    }
+  }
+}

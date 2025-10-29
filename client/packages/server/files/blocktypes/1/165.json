@@ -1,0 +1,15 @@
+{
+  "id": 165,
+  "name": "Brain Coral Block",
+  "description": "Brain Coral Block block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/brain_coral_block.png"
+        }
+      }
+    }
+  }
+}

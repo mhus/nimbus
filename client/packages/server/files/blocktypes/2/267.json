@@ -1,0 +1,15 @@
+{
+  "id": 267,
+  "name": "Dead Tube Coral",
+  "description": "Dead Tube Coral block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_tube_coral.png"
+        }
+      }
+    }
+  }
+}

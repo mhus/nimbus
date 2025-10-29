@@ -1,0 +1,15 @@
+{
+  "id": 260,
+  "name": "Dead Bush",
+  "description": "Dead Bush block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dead_bush.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 412,
+  "name": "Melon Stem",
+  "description": "Melon Stem block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/melon_stem.png"
+        }
+      }
+    }
+  }
+}

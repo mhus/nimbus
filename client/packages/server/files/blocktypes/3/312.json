@@ -1,0 +1,15 @@
+{
+  "id": 312,
+  "name": "Grass2",
+  "description": "Grass2 block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/grass2.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": 200,
+  "name": "Carved Pumpkin",
+  "description": "Carved Pumpkin block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/carved_pumpkin.png"
+        }
+      }
+    }
+  }
+}

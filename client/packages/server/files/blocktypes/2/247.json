@@ -1,0 +1,15 @@
+{
+  "id": 247,
+  "name": "Dark Oak Log1",
+  "description": "Dark Oak Log1 - Natural wood material",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/dark_oak_log1.png"
+        }
+      }
+    }
+  }
+}

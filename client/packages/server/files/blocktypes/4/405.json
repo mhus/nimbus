@@ -1,0 +1,15 @@
+{
+  "id": 405,
+  "name": "Magenta Concrete",
+  "description": "Magenta Concrete block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/magenta_concrete.png"
+        }
+      }
+    }
+  }
+}

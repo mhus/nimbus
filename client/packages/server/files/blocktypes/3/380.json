@@ -1,0 +1,15 @@
+{
+  "id": 380,
+  "name": "Lectern Sides",
+  "description": "Lectern Sides block",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "assets/textures/block/basic/lectern_sides.png"
+        }
+      }
+    }
+  }
+}
