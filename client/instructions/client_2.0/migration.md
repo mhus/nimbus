@@ -97,6 +97,10 @@ diesen Type relevant sind.
 [x] Neuer Netzwerk Befehlt "cmd", "cmd.msg" und "cmd.rs" in client/shared/network anlegen. 
 [x] DTOs für REST Kommunikation aus client/instructions/client_2.0/server_rest_api.md in client/shared/rest anlegen. 
 
+[x] Logger erweitern:
+- default ConsoleTransport anstelle default logging in Logger zur Console.
+- NullTransport: Logger wird nicht geschrieben.
+
 ===
 
 ## Basic Client Services
@@ -133,7 +137,8 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 - Implementiere die wichtigsten Nachrichten im WebSocket Protocoll: Login (aktuell werden alle zugelassen), Ping/Pong
 - Die Daten werden wieder in chunks gespeichert, die in memory gehalten werden.
 - Neu sind Block-Metadaten, diese werden später implementiert, gib in der REST-Funktion vorerst keine Gruppen zurück (leer).
-- Neu sind ClientCommands, es gibt aktuell keine Commands, lege einen CommandService an und CommandHandler, aber noch keien Commands.
+- Neu sind ClientCommands, es gibt aktuell keine Commands, lege einen CommandService an und CommandHandler, aber noch keine Commands.
+
 
 ## Basic 3D Engine
 

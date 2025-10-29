@@ -11,7 +11,7 @@ export const ChunkConstants = {
   SIZE_DEFAULT: 16,
 
   /** Supported chunk sizes (must be power of 2) */
-  SUPPORTED_SIZES: [8, 16, 32, 64] as const,
+  SUPPORTED_SIZES: [8, 16, 32, 64, 128] as const,
 
   /** Maximum chunk size */
   SIZE_MAX: 128,
@@ -24,20 +24,32 @@ export const ChunkConstants = {
  * World configuration constants
  */
 export const WorldConstants = {
-  /** Default world height (Y-axis) */
-  HEIGHT_DEFAULT: 256,
 
-  /** Maximum world height */
-  HEIGHT_MAX: 512,
+  /** Default world minimum (Y-axis) */
+  WORLD_FROM_MIN: -512,
+  WORLD_FROM_MAX: 0,
+  WORLD_FROM_DEFAULT: -64,
 
-  /** Minimum world height */
-  HEIGHT_MIN: 64,
+  WORLD_TO_MIN: -512,
+  WORLD_TO_MAX: 0,
+  WORLD_TO_DEFAULT: -64,
 
   /** Default sea level */
-  SEA_LEVEL_DEFAULT: 62,
+  SEA_LEVEL_DEFAULT: 0,
 
   /** Default ground level */
-  GROUND_LEVEL_DEFAULT: 64,
+  GROUND_LEVEL_DEFAULT: 1,
+
+  WORLD_WIDTH_MAX: 65536,
+  WORLD_WIDTH_MIN: 256,
+  WORLD_WIDTH_DEFAULT: 4096,
+
+  WORLD_LENGTH_MAX: 65536,
+  WORLD_LENGTH_MIN: 256,
+  WORLD_LENGTH_DEFAULT: 4096,
+
+  DEFAULT_WORLD_STATUS: 0,
+
 } as const;
 
 /**
@@ -58,6 +70,9 @@ export const BlockConstants = {
 
   /** Maximum status value (1 byte) */
   MAX_STATUS: 255,
+
+  /** Minimum status value (1 byte) */
+  MIN_STATUS: 0,
 
   /** Maximum offset value (signed byte) */
   MAX_OFFSET: 127,
@@ -96,11 +111,6 @@ export const NetworkConstants = {
  * Entity constants
  */
 export const EntityConstants = {
-  /** Default player health */
-  PLAYER_HEALTH_DEFAULT: 20,
-
-  /** Default player max health */
-  PLAYER_MAX_HEALTH_DEFAULT: 20,
 
   /** Default player walk speed (blocks/second) */
   PLAYER_WALK_SPEED: 4.3,
@@ -112,7 +122,10 @@ export const EntityConstants = {
   PLAYER_CROUCH_SPEED: 1.3,
 
   /** Default player jump height (blocks) */
-  PLAYER_JUMP_HEIGHT: 1.25,
+  PLAYER_JUMP_HEIGHT: 2.25,
+
+  /** Automatic Climb Height in Walk Mode */
+  PLAYER_WALK_CLIMB_HEIGHT: 1.00,
 
   /** Entity ID max length */
   ENTITY_ID_MAX_LENGTH: 100,
@@ -188,29 +201,65 @@ export const PhysicsConstants = {
  * Camera constants
  */
 export const CameraConstants = {
-  /** Default field of view (degrees) */
-  FOV_DEFAULT: 70,
-
-  /** Minimum FOV */
-  FOV_MIN: 30,
-
-  /** Maximum FOV */
-  FOV_MAX: 110,
-
-  /** Default mouse sensitivity */
-  SENSITIVITY_DEFAULT: 0.1,
-
-  /** Maximum pitch angle (degrees) */
-  PITCH_MAX: 89,
-
-  /** Minimum pitch angle (degrees) */
-  PITCH_MIN: -89,
-
   /** Near clipping plane */
   NEAR_PLANE: 0.1,
 
   /** Far clipping plane */
   FAR_PLANE: 1000,
+
+  /** First-person camera settings */
+  FIRST_PERSON: {
+    /** Default field of view (degrees) */
+    FOV_DEFAULT: 75,
+
+    /** Minimum FOV */
+    FOV_MIN: 60,
+
+    /** Maximum FOV */
+    FOV_MAX: 90,
+
+    /** Default mouse sensitivity */
+    SENSITIVITY_DEFAULT: 0.1,
+
+    /** Maximum pitch angle (degrees) */
+    PITCH_MAX: 89,
+
+    /** Minimum pitch angle (degrees) */
+    PITCH_MIN: -89,
+  },
+
+  /** Third-person camera settings */
+  THIRD_PERSON: {
+    /** Default field of view (degrees) */
+    FOV_DEFAULT: 60,
+
+    /** Minimum FOV */
+    FOV_MIN: 45,
+
+    /** Maximum FOV */
+    FOV_MAX: 80,
+
+    /** Default mouse sensitivity */
+    SENSITIVITY_DEFAULT: 0.15,
+
+    /** Maximum pitch angle (degrees) */
+    PITCH_MAX: 89,
+
+    /** Minimum pitch angle (degrees) */
+    PITCH_MIN: -45,
+
+    /** Default camera distance from target */
+    DISTANCE_DEFAULT: 5,
+
+    /** Minimum camera distance */
+    DISTANCE_MIN: 2,
+
+    /** Maximum camera distance */
+    DISTANCE_MAX: 15,
+
+    /** Camera height offset from target */
+    HEIGHT_OFFSET: 1.5,
+  },
 } as const;
 
 /**
