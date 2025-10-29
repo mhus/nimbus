@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 2,
         "textures": {
-          "0": "assets/textures/block/basic/lily_pad_flowers.png"
+          "0": "textures/block/basic/lily_pad_flowers.png"
         }
       }
     }

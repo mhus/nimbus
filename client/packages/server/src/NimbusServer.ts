@@ -179,7 +179,9 @@ class NimbusServer {
     session.registeredChunks.clear();
 
     chunks.forEach((coord: any) => {
-      const key = getChunkKey(coord.x, coord.z);
+      const cx = coord.cx ?? coord.x;
+      const cz = coord.cz ?? coord.z;
+      const key = getChunkKey(cx, cz);
       session.registeredChunks.add(key);
     });
 
@@ -201,8 +203,8 @@ class NimbusServer {
     if (!world) return;
 
     const chunkData = coords.map((coord: any) => {
-      const cx = coord.x;
-      const cz = coord.z;
+      const cx = coord.cx ?? coord.x;
+      const cz = coord.cz ?? coord.z;
       const key = getChunkKey(cx, cz);
 
       // Get or generate chunk
@@ -212,24 +214,14 @@ class NimbusServer {
         world.chunks.set(key, chunk);
       }
 
-      // Convert ServerChunk to ChunkData, then to transfer format
+      // Convert ServerChunk to ChunkData
       const chunkData = chunk.toChunkData();
 
-      // Map blocks to BlockData format (network protocol)
-      const blockData = chunkData.blocks.map(block => ({
-        x: block.position.x,
-        y: block.position.y,
-        z: block.position.z,
-        bt: block.blockTypeId,
-        s: block.status || 0,
-        mi: block.offsets,
-        d: block.metadata,
-      }));
-
+      // Use Block type directly from @nimbus/shared (no compression)
       return {
         cx,
         cz,
-        b: blockData,
+        b: chunkData.blocks, // Use blocks as-is (already in correct Block format)
         h: chunkData.heightData
           ? Array.from({ length: world.chunkSize * world.chunkSize }, (_, i) => {
               const offset = i * 4;

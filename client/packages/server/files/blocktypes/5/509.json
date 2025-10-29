@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "assets/textures/block/basic/redstone_dust_line_overlay.png"
+          "0": "textures/block/basic/redstone_dust_line_overlay.png"
         }
       }
     }

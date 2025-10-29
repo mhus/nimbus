@@ -85,40 +85,38 @@ export class RenderService {
       return;
     }
 
-    chunkService.on('chunk:loaded', (chunks: ChunkDataTransferObject[]) => {
-      this.onChunksLoaded(chunks);
+    chunkService.on('chunk:loaded', (chunk: any) => {
+      this.onChunkLoaded(chunk);
     });
 
-    chunkService.on('chunk:unloaded', (coords: { cx: number; cz: number }[]) => {
-      this.onChunksUnloaded(coords);
+    chunkService.on('chunk:unloaded', (coord: { cx: number; cz: number }) => {
+      this.onChunkUnloaded(coord);
     });
   }
 
   /**
-   * Handle chunks loaded event
+   * Handle single chunk loaded event
    */
-  private onChunksLoaded(chunks: ChunkDataTransferObject[]): void {
-    logger.debug('Chunks loaded, rendering', { count: chunks.length });
+  private onChunkLoaded(clientChunk: any): void {
+    // ClientChunk has a 'data' property that contains ChunkDataTransferObject
+    const chunk = clientChunk.data || clientChunk;
 
-    for (const chunk of chunks) {
-      this.renderChunk(chunk).catch((error) => {
-        ExceptionHandler.handle(error, 'RenderService.onChunksLoaded', {
-          cx: chunk.cx,
-          cz: chunk.cz,
-        });
+    logger.debug('Chunk loaded, rendering', { cx: chunk.cx, cz: chunk.cz });
+
+    this.renderChunk(chunk).catch((error) => {
+      ExceptionHandler.handle(error, 'RenderService.onChunkLoaded', {
+        cx: chunk.cx,
+        cz: chunk.cz,
       });
-    }
+    });
   }
 
   /**
-   * Handle chunks unloaded event
+   * Handle single chunk unloaded event
    */
-  private onChunksUnloaded(coords: { cx: number; cz: number }[]): void {
-    logger.debug('Chunks unloaded, cleaning up', { count: coords.length });
-
-    for (const coord of coords) {
-      this.unloadChunk(coord.cx, coord.cz);
-    }
+  private onChunkUnloaded(coord: { cx: number; cz: number }): void {
+    logger.debug('Chunk unloaded, cleaning up', { cx: coord.cx, cz: coord.cz });
+    this.unloadChunk(coord.cx, coord.cz);
   }
 
   /**
@@ -148,12 +146,29 @@ export class RenderService {
 
       let vertexOffset = 0;
 
+      // Check if block types are loaded
+      if (!this.blockTypeService.isLoaded()) {
+        logger.error('BlockTypes not loaded yet, cannot render chunk', { cx: chunk.cx, cz: chunk.cz });
+        return;
+      }
+
       // Render each block
       for (const block of chunk.b) {
+        // Validate block data
+        if (!block || typeof block.blockTypeId === 'undefined' || !block.position) {
+          logger.warn('Invalid block data', { block });
+          continue;
+        }
+
         // Get block type
         const blockType = this.blockTypeService.getBlockType(block.blockTypeId);
         if (!blockType) {
-          logger.warn('Unknown block type', { blockTypeId: block.blockTypeId });
+          // Only log first occurrence to avoid spam
+          logger.warn('BlockType not found in registry', {
+            blockTypeId: block.blockTypeId,
+            position: block.position,
+            totalBlockTypesLoaded: this.blockTypeService.getBlockTypeCount()
+          });
           continue;
         }
 

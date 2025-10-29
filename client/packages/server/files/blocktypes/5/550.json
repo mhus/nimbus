@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 2,
         "textures": {
-          "0": "assets/textures/block/basic/spruce_sapling.png"
+          "0": "textures/block/basic/spruce_sapling.png"
         }
       }
     }

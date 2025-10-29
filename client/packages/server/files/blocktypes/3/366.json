@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 3,
         "textures": {
-          "0": "assets/textures/block/basic/jungle_trapdoor.png"
+          "0": "textures/block/basic/jungle_trapdoor.png"
         }
       }
     }

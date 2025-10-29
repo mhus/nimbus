@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "assets/textures/block/basic/sweet_berry_bush_stage3.png"
+          "0": "textures/block/basic/sweet_berry_bush_stage3.png"
         }
       }
     }

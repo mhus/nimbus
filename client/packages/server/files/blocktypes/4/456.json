@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "assets/textures/block/basic/pink_wool.png"
+          "0": "textures/block/basic/pink_wool.png"
         }
       }
     }

@@ -35,6 +35,25 @@ export class CubeRenderer {
   }
 
   /**
+   * Normalize texture - convert string or TextureDefinition to TextureDefinition
+   */
+  private normalizeTexture(texture: any): TextureDefinition | null {
+    if (!texture) return null;
+
+    // If it's already a TextureDefinition object with 'path'
+    if (typeof texture === 'object' && texture.path) {
+      return texture as TextureDefinition;
+    }
+
+    // If it's a string, convert to TextureDefinition
+    if (typeof texture === 'string') {
+      return { path: texture };
+    }
+
+    return null;
+  }
+
+  /**
    * Render a cube block into the mesh data
    *
    * @param block Block instance
@@ -72,9 +91,9 @@ export class CubeRenderer {
 
     // Get texture definitions for each face
     // TextureKey: ALL=0, TOP=1, BOTTOM=2, LEFT=3, RIGHT=4, FRONT=5, BACK=6, SIDE=7
-    const topTexture = textures[1] || textures[0] || textures[7]; // TOP, ALL, or SIDE
-    const bottomTexture = textures[2] || textures[0] || textures[7]; // BOTTOM, ALL, or SIDE
-    const sideTexture = textures[7] || textures[0]; // SIDE or ALL
+    const topTexture = this.normalizeTexture(textures[1] || textures[0] || textures[7]); // TOP, ALL, or SIDE
+    const bottomTexture = this.normalizeTexture(textures[2] || textures[0] || textures[7]); // BOTTOM, ALL, or SIDE
+    const sideTexture = this.normalizeTexture(textures[7] || textures[0]); // SIDE or ALL
 
     if (!topTexture || !bottomTexture || !sideTexture) {
       logger.warn('Missing required textures for cube', { blockTypeId: block.blockTypeId });

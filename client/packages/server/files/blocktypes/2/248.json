@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "assets/textures/block/basic/dark_oak_planks.png"
+          "0": "textures/block/basic/dark_oak_planks.png"
         }
       }
     }

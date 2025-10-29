@@ -7,7 +7,7 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "assets/textures/block/basic/nether_wart_stage1.png"
+          "0": "textures/block/basic/nether_wart_stage1.png"
         }
       }
     }
