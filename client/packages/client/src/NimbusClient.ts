@@ -106,6 +106,12 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
 
       networkService.once('login:success', () => {
         logger.info('Login successful');
+
+        // Start ping interval after successful login
+        const pingInterval = appContext.worldInfo?.settings?.pingInterval || 30;
+        pingHandler.startPingInterval(pingInterval);
+        logger.info('Ping interval started', { intervalSeconds: pingInterval });
+
         resolve();
       });
 

@@ -289,14 +289,37 @@ export interface TextureDefinition {
 }
 
 /**
+ * Block effect types
+ */
+export enum BlockEffect {
+  /** No effect */
+  NONE = 0,
+
+  /** Water effect */
+  WATER = 1,
+
+  /** Wind effect */
+  WIND = 2,
+
+  /** Flipbox effect */
+  FLIPBOX = 3,
+
+  /** Lava effect */
+  LAVA = 4,
+
+  /** Fog effect */
+  FOG = 5,
+}
+
+/**
  * Visibility properties
  */
 export interface VisibilityModifier {
   /** Shape type */
   shape?: Shape;
 
-  /** Effect name (e.g., water, wind, flipbox, lava, fog) */
-  effect?: string;
+  /** Effect type (0=none, 1=water, 2=wind, 3=flipbox, 4=lava, 5=fog) */
+  effect?: BlockEffect;
 
   /** Effect-specific parameters */
   effectParameters?: Record<string, any>;

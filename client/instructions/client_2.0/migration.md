@@ -284,14 +284,14 @@ ist die art des Generators und weiter Infos, z.b. ein seed.
 [x] Wenn der Player sich bewegt werden keine chunks mehr nachgeladen.
 [x] Wenn ein chonk nicht geladen wurde muss der PhsyicsService den Player daran hindern diesen bereich zu betreten.
 
-===
-
 [ ] Erste Tests mit BabylonJS NullEngine
 - Erstelle einen Test, der nur den CubeRenderer testet mit NullEngine
 
 Extra:
-[ ] in BlockModifier den Parameter 'effect' Typisieren 'none' | 'water' | 'wind' | 'flipbox' | 'lava' | 'fog'
+[x] in BlockModifier den Parameter 'effect' Typisieren 'none' | 'water' | 'wind' | 'flipbox' | 'lava' | 'fog'
+[x] Funktiomiert der Ping af WebSocket in NetworkService, ich bekomme session timeouts
 
+===
 
 ## Basic Network Protocoll
 
