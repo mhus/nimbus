@@ -102,7 +102,7 @@ interface CommandMessageData {
 **Example JSON:**
 ```json
 {
-  "r": "123",
+  "r": "cmd-123",
   "t": "cmd.msg",
   "d": {
     "message": "Processing..."
@@ -138,7 +138,7 @@ interface CommandResultData {
 **Example JSON (Success):**
 ```json
 {
-  "r": "123",
+  "r": "cmd-123",
   "t": "cmd.rs",
   "d": {
     "rc": 0,
@@ -150,7 +150,7 @@ interface CommandResultData {
 **Example JSON (Error):**
 ```json
 {
-  "r": "123",
+  "r": "cmd-123",
   "t": "cmd.rs",
   "d": {
     "rc": -1,
