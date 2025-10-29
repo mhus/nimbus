@@ -5,6 +5,7 @@
 
 import type { ClientConfig } from './config/ClientConfig';
 import type { ClientService } from './services/ClientService';
+import type { TextureService } from './services/TextureService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -29,13 +30,15 @@ export interface Services {
   /** Client service for platform detection and configuration */
   client: ClientService;
 
+  /** Texture service for texture loading and caching */
+  texture?: TextureService;
+
   // Future services will be added here:
   // network?: NetworkService;
   // engine?: EngineService;
   // render?: RenderService;
   // chunk?: ChunkService;
   // blockType?: BlockTypeService;
-  // texture?: TextureService;
   // shader?: ShaderService;
   // input?: InputService;
   // camera?: CameraControl;

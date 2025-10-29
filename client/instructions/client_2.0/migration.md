@@ -197,17 +197,31 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 
 ## Basic 3D Engine
 
-[ ] Prüfe ob der Server schon texturen ausliefert. 
+[?] Prüfe ob der Server schon texturen ausliefert. 
 - Texturen sollen Lazy ausgeleifert werden.
 - Texturen liegen in files/assets/textures, im BlockType werden sie "assets/textures/block/basic/acacia_fence.png" angegeben.
 - Wie in client/instructions/client_2.0/server_rest_api.md soll es einen asset endpunkt im server geben.
-[ ] Lege einen TextureService im client an, der texturen vom Server laden kann. Referenz in AppContext anlegen.
+[?] Lege einen TextureService im client an, der texturen vom Server laden kann. Referenz in AppContext anlegen.
 - Texturen werden nur einmal geladen und im TextureService gecached. Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
-[ ] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
+
+[ ] Prüfe ob der Server bereits einen WebSocketServer bereit stellt und hier die 'Chunk Registration' und 'Chunk Update' Nachrichten implementiert sind.
+[ ] lege im Client einen NetworkService an der die WebSocket Verbindung oeffnen und login automatisch macht. Referenz in AppContext anlegen.
+- Als weltId soll vorerst 'main' benutzt werden.
+- Die WeltInfo muss an den AppContext geschrieben werden.
+- Bei einem Reconnect der WebSocket soll automatisch der Login und die letzte 'Chunk Registration' neu verschickt werden
+- Sende den Ping regelmaesig, beachte die Ping zeit in WordInfo
+[ ] Lege einen ChunkService im client der sich an chunks registriert und der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
+- Siehe auch client_playground/packages/client/src/world/ChunkManager.ts
+
+[ ] Der TextureService soll die Texturen ueber den NetworkManager laden lassen.
+
+Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal umgesetzt werden: 
+
+- Nicht mehr als noetig umsetzten, das ziel ist eine erste begehbare 3D welt die noch verbessert werden kann.
+- Zu details kannst du in 
+- [ ] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
 - Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
 - BlockTypes werden nur einmal geladen und im BlockTypeService gecached.
-[ ] Lege einen ChunkService im client an der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
-- Siehe auch client_playground/packages/client/src/world/ChunkManager.ts
 [ ] Lege den EngineService im client an der die 3D engine initialisiert. Referenz in AppContext anlegen.
 [ ] Lege einen RenderService im client an der die Chunks rendert. Referenz in EngineService anlegen.
 - Siehe auch client_playground/packages/client/src/rendering/ChunkRenderer.ts
@@ -223,6 +237,8 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 - InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
 
 ===
+
+[ ] Erste Tests mit BabylonJS NullEngine
 
 ## Basic Network Protocoll
 

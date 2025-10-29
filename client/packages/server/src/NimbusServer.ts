@@ -11,6 +11,7 @@ import { WorldManager } from './world/WorldManager';
 import { TerrainGenerator } from './world/TerrainGenerator';
 import { createAuthMiddleware } from './api/middleware/auth';
 import { createWorldRoutes } from './api/routes/worldRoutes';
+import { createAssetRoutes } from './api/routes/assetRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 
@@ -49,6 +50,8 @@ class NimbusServer {
       const authMiddleware = createAuthMiddleware(config);
 
       // REST API routes
+      // Note: Asset routes must be registered BEFORE auth middleware (public access)
+      this.app.use('/api/worlds', createAssetRoutes());
       this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager));
 
       // Health check
@@ -161,6 +164,8 @@ class NimbusServer {
           seaLevel: world.seaLevel,
           groundLevel: world.groundLevel,
           status: world.status,
+          assetPath: `/api/worlds/${world.worldId}/assets`,
+          // assetPort can be omitted (uses same server port)
         } : null,
         sessionId: session.sessionId,
       },
