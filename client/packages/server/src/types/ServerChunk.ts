@@ -77,7 +77,7 @@ export class ServerChunk {
    * Add or update block
    */
   setBlock(block: Block): void {
-    const key = `${block.x},${block.y},${block.z}`;
+    const key = `${block.position.x},${block.position.y},${block.position.z}`;
     this.blocks.set(key, block);
     this.isDirty = true;
     this.lastModified = Date.now();
@@ -153,7 +153,7 @@ export class ServerChunk {
 
     // Load all blocks into Map
     for (const block of data.blocks) {
-      const key = `${block.x},${block.y},${block.z}`;
+      const key = `${block.position.x},${block.position.y},${block.position.z}`;
       chunk.blocks.set(key, block);
     }
 

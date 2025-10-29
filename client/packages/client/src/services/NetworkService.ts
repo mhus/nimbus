@@ -1,0 +1,424 @@
+/**
+ * NetworkService - WebSocket connection and message routing
+ *
+ * Manages WebSocket connection to server, handles automatic login,
+ * routes messages to handlers, and manages reconnection.
+ */
+
+import {
+  BaseMessage,
+  RequestMessage,
+  MessageType,
+  ClientType,
+  LoginRequestData,
+  getLogger,
+  ExceptionHandler,
+} from '@nimbus/shared';
+import type { AppContext } from '../AppContext';
+import type { MessageHandler } from '../network/MessageHandler';
+
+const logger = getLogger('NetworkService');
+
+/**
+ * Connection state
+ */
+export enum ConnectionState {
+  DISCONNECTED = 'DISCONNECTED',
+  CONNECTING = 'CONNECTING',
+  CONNECTED = 'CONNECTED',
+  RECONNECTING = 'RECONNECTING',
+}
+
+/**
+ * Pending request for request/response correlation
+ */
+interface PendingRequest {
+  resolve: (data: any) => void;
+  reject: (error: Error) => void;
+  timeout: NodeJS.Timeout;
+}
+
+/**
+ * Event listener
+ */
+type EventListener = (...args: any[]) => void;
+
+/**
+ * NetworkService - Manages WebSocket connection and message routing
+ *
+ * Features:
+ * - WebSocket connection management
+ * - Automatic login after connect
+ * - Message ID generation
+ * - Handler registration and message routing
+ * - Request/response correlation
+ * - Automatic reconnection with exponential backoff
+ * - Ping/pong keep
+
+alive handled by PingMessageHandler
+ */
+export class NetworkService {
+  private ws?: WebSocket;
+  private websocketUrl: string;
+  private apiUrl: string;
+  private connectionState: ConnectionState = ConnectionState.DISCONNECTED;
+
+  private messageIdCounter: number = 0;
+  private handlers: Map<MessageType, MessageHandler[]> = new Map();
+  private pendingRequests: Map<string, PendingRequest> = new Map();
+  private eventListeners: Map<string, EventListener[]> = new Map();
+
+  private lastLoginMessage?: RequestMessage<LoginRequestData>;
+  private reconnectAttempt: number = 0;
+  private maxReconnectAttempts: number = 5;
+  private shouldReconnect: boolean = true;
+
+  constructor(private appContext: AppContext) {
+    this.websocketUrl = appContext.config.websocketUrl;
+    this.apiUrl = appContext.config.apiUrl;
+
+    logger.info('NetworkService initialized', {
+      websocketUrl: this.websocketUrl,
+      apiUrl: this.apiUrl,
+    });
+  }
+
+  /**
+   * Connect to WebSocket server and automatically send login
+   */
+  async connect(): Promise<void> {
+    if (this.connectionState !== ConnectionState.DISCONNECTED) {
+      logger.warn('Already connected or connecting');
+      return;
+    }
+
+    try {
+      this.connectionState = ConnectionState.CONNECTING;
+      logger.info('Connecting to WebSocket server', { url: this.websocketUrl });
+
+      this.ws = new WebSocket(this.websocketUrl);
+
+      this.ws.onopen = () => this.onOpen();
+      this.ws.onmessage = (event) => this.onMessage(event);
+      this.ws.onerror = (error) => this.onError(error);
+      this.ws.onclose = () => this.onClose();
+
+      // Wait for connection
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Connection timeout'));
+        }, 10000);
+
+        this.once('connected', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+
+        this.once('error', (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        });
+      });
+    } catch (error) {
+      this.connectionState = ConnectionState.DISCONNECTED;
+      throw ExceptionHandler.handleAndRethrow(error, 'NetworkService.connect');
+    }
+  }
+
+  /**
+   * Disconnect from WebSocket server
+   */
+  async disconnect(): Promise<void> {
+    this.shouldReconnect = false;
+
+    if (this.ws) {
+      this.ws.close();
+      this.ws = undefined;
+    }
+
+    this.connectionState = ConnectionState.DISCONNECTED;
+    logger.info('Disconnected from WebSocket server');
+  }
+
+  /**
+   * Send a message to the server
+   */
+  send<T>(message: BaseMessage<T>): void {
+    if (!this.isConnected()) {
+      throw new Error('Not connected to server');
+    }
+
+    try {
+      const json = JSON.stringify(message);
+      this.ws!.send(json);
+
+      logger.debug('Sent message', { type: message.t, id: message.i });
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(error, 'NetworkService.send', { message });
+    }
+  }
+
+  /**
+   * Send a request and wait for response
+   */
+  async request<T, R>(message: RequestMessage<T>): Promise<R> {
+    if (!message.i) {
+      throw new Error('Request message must have an ID');
+    }
+
+    return new Promise<R>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.pendingRequests.delete(message.i!);
+        reject(new Error(`Request timeout: ${message.t}`));
+      }, 30000); // 30 second timeout
+
+      this.pendingRequests.set(message.i, {
+        resolve,
+        reject,
+        timeout,
+      });
+
+      this.send(message);
+    });
+  }
+
+  /**
+   * Register a message handler
+   */
+  registerHandler(handler: MessageHandler): void {
+    const handlers = this.handlers.get(handler.messageType) || [];
+    handlers.push(handler);
+    this.handlers.set(handler.messageType, handlers);
+
+    logger.debug('Registered handler', { messageType: handler.messageType });
+  }
+
+  /**
+   * Check if connected to server
+   */
+  isConnected(): boolean {
+    return this.connectionState === ConnectionState.CONNECTED && this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  /**
+   * Get current connection state
+   */
+  getConnectionState(): ConnectionState {
+    return this.connectionState;
+  }
+
+  /**
+   * Generate unique message ID
+   */
+  generateMessageId(): string {
+    return `msg_${Date.now()}_${++this.messageIdCounter}`;
+  }
+
+  /**
+   * Add event listener
+   */
+  on(event: string, listener: EventListener): void {
+    const listeners = this.eventListeners.get(event) || [];
+    listeners.push(listener);
+    this.eventListeners.set(event, listeners);
+  }
+
+  /**
+   * Add one-time event listener
+   */
+  once(event: string, listener: EventListener): void {
+    const onceListener = (...args: any[]) => {
+      this.off(event, onceListener);
+      listener(...args);
+    };
+    this.on(event, onceListener);
+  }
+
+  /**
+   * Remove event listener
+   */
+  off(event: string, listener: EventListener): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      const index = listeners.indexOf(listener);
+      if (index !== -1) {
+        listeners.splice(index, 1);
+      }
+    }
+  }
+
+  /**
+   * Emit event
+   */
+  emit(event: string, ...args: any[]): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.forEach(listener => {
+        try {
+          listener(...args);
+        } catch (error) {
+          ExceptionHandler.handle(error, 'NetworkService.emit', { event });
+        }
+      });
+    }
+  }
+
+  /**
+   * WebSocket opened
+   */
+  private onOpen(): void {
+    const isReconnect = this.reconnectAttempt > 0;
+
+    this.connectionState = ConnectionState.CONNECTED;
+    this.reconnectAttempt = 0;
+
+    if (isReconnect) {
+      logger.info('Reconnected to WebSocket server');
+      this.emit('reconnected');
+
+      // Resend login
+      if (this.lastLoginMessage) {
+        logger.info('Resending login after reconnect');
+        this.send(this.lastLoginMessage);
+      }
+    } else {
+      logger.info('Connected to WebSocket server');
+      this.emit('connected');
+
+      // Send initial login
+      this.sendLogin();
+    }
+  }
+
+  /**
+   * WebSocket message received
+   */
+  private onMessage(event: MessageEvent): void {
+    try {
+      const message: BaseMessage = JSON.parse(event.data);
+
+      logger.debug('Received message', { type: message.t, responseId: message.r });
+
+      // Handle response to pending request
+      if (message.r) {
+        const pending = this.pendingRequests.get(message.r);
+        if (pending) {
+          clearTimeout(pending.timeout);
+          this.pendingRequests.delete(message.r);
+          pending.resolve(message.d);
+          return;
+        }
+      }
+
+      // Route to handlers
+      const handlers = this.handlers.get(message.t);
+      if (handlers && handlers.length > 0) {
+        handlers.forEach(handler => {
+          try {
+            handler.handle(message);
+          } catch (error) {
+            ExceptionHandler.handle(error, 'NetworkService.onMessage.handler', {
+              messageType: message.t,
+            });
+          }
+        });
+      } else {
+        logger.debug('No handler registered for message type', { type: message.t });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NetworkService.onMessage', {
+        data: event.data,
+      });
+    }
+  }
+
+  /**
+   * WebSocket error
+   */
+  private onError(error: Event): void {
+    logger.error('WebSocket error', {}, error as any);
+    this.emit('error', error);
+  }
+
+  /**
+   * WebSocket closed
+   */
+  private onClose(): void {
+    const wasConnected = this.connectionState === ConnectionState.CONNECTED;
+
+    this.connectionState = ConnectionState.DISCONNECTED;
+    logger.info('WebSocket connection closed');
+
+    this.emit('disconnected');
+
+    // Attempt reconnection
+    if (this.shouldReconnect && wasConnected) {
+      this.attemptReconnect();
+    }
+  }
+
+  /**
+   * Attempt to reconnect with exponential backoff
+   */
+  private attemptReconnect(): void {
+    if (this.reconnectAttempt >= this.maxReconnectAttempts) {
+      logger.error('Max reconnection attempts reached');
+      this.emit('reconnect_failed');
+      return;
+    }
+
+    this.reconnectAttempt++;
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempt - 1), 16000);
+
+    logger.info('Attempting reconnect', {
+      attempt: this.reconnectAttempt,
+      delay,
+    });
+
+    this.connectionState = ConnectionState.RECONNECTING;
+    this.emit('reconnecting', this.reconnectAttempt);
+
+    setTimeout(() => {
+      if (this.shouldReconnect) {
+        this.connect().catch(error => {
+          ExceptionHandler.handle(error, 'NetworkService.attemptReconnect');
+        });
+      }
+    }, delay);
+  }
+
+  /**
+   * Send login message
+   */
+  private sendLogin(): void {
+    const loginMessage: RequestMessage<LoginRequestData> = {
+      i: this.generateMessageId(),
+      t: MessageType.LOGIN,
+      d: {
+        username: this.appContext.config.username,
+        password: this.appContext.config.password,
+        worldId: 'main', // Hardcoded for now as per requirements
+        clientType: ClientType.WEB,
+      },
+    };
+
+    this.lastLoginMessage = loginMessage;
+    this.send(loginMessage);
+
+    logger.info('Sent login message', { username: loginMessage.d!.username, worldId: loginMessage.d!.worldId });
+  }
+
+  /**
+   * Get API URL for REST calls
+   */
+  getApiUrl(): string {
+    return this.apiUrl;
+  }
+
+  /**
+   * Get WebSocket URL
+   */
+  getWebSocketUrl(): string {
+    return this.websocketUrl;
+  }
+}

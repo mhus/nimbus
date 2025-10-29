@@ -9,6 +9,7 @@ export * from './Color';
 export * from './Shape';
 
 // Block types
+export * from './Block';
 export * from './BlockType';
 export * from './BlockModifier';
 

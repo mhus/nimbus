@@ -204,13 +204,13 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 [?] Lege einen TextureService im client an, der texturen vom Server laden kann. Referenz in AppContext anlegen.
 - Texturen werden nur einmal geladen und im TextureService gecached. Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
 
-[ ] Prüfe ob der Server bereits einen WebSocketServer bereit stellt und hier die 'Chunk Registration' und 'Chunk Update' Nachrichten implementiert sind.
-[ ] lege im Client einen NetworkService an der die WebSocket Verbindung oeffnen und login automatisch macht. Referenz in AppContext anlegen.
+[?] Prüfe ob der Server bereits einen WebSocketServer bereit stellt und hier die 'Chunk Registration' und 'Chunk Update' Nachrichten implementiert sind.
+[?] lege im Client einen NetworkService an der die WebSocket Verbindung oeffnen und login automatisch macht. Referenz in AppContext anlegen.
 - Als weltId soll vorerst 'main' benutzt werden.
 - Die WeltInfo muss an den AppContext geschrieben werden.
 - Bei einem Reconnect der WebSocket soll automatisch der Login und die letzte 'Chunk Registration' neu verschickt werden
 - Sende den Ping regelmaesig, beachte die Ping zeit in WordInfo
-[ ] Lege einen ChunkService im client der sich an chunks registriert und der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
+[?] Lege einen ChunkService im client der sich an chunks registriert und der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
 - Siehe auch client_playground/packages/client/src/world/ChunkManager.ts
 
 [ ] Der TextureService soll die Texturen ueber den NetworkManager laden lassen.
@@ -235,6 +235,8 @@ Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal u
 - Lege InputHandler fuer jede Aktion an. MoveLeft, MoveRight, MoveForward, MoveBackward, Jump, RotateLeft RotateRigth, PitchUp, PitchDown, etc
 - Die InputHandler steuern den PlayerService und die CameraService
 - InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
+
+[ ] Pruefe ob die Chunk Registration (Anforderung) richtig implementiert ist. Auch beim Start.
 
 ===
 

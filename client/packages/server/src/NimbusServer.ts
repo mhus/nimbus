@@ -217,12 +217,12 @@ class NimbusServer {
 
       // Map blocks to BlockData format (network protocol)
       const blockData = chunkData.blocks.map(block => ({
-        x: block.x,
-        y: block.y,
-        z: block.z,
+        x: block.position.x,
+        y: block.position.y,
+        z: block.position.z,
         bt: block.blockTypeId,
         s: block.status || 0,
-        mi: block.modifierIndex,
+        mi: block.offsets,
         d: block.metadata,
       }));
 

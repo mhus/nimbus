@@ -18,9 +18,11 @@ export class TerrainGenerator {
     for (let localX = 0; localX < chunkSize; localX++) {
       for (let localZ = 0; localZ < chunkSize; localZ++) {
         chunk.setBlock({
-          x: worldX + localX,
-          y: 0,
-          z: worldZ + localZ,
+          position: {
+            x: worldX + localX,
+            y: 0,
+            z: worldZ + localZ,
+          },
           blockTypeId: 220, // Stone
           status: 0,
         });

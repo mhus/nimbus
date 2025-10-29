@@ -7,18 +7,7 @@
  * Chunks are always columns (XZ coordinates, full Y height).
  */
 
-/**
- * Block instance in chunk (sparse storage)
- */
-export interface Block {
-  x: number;
-  y: number;
-  z: number;
-  blockTypeId: number;
-  status?: number;
-  modifierIndex?: number;
-  metadata?: any;
-}
+import type { Block } from './Block';
 
 /**
  * Chunk size (blocks per side)
