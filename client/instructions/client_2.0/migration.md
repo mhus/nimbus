@@ -104,7 +104,7 @@ diesen Type relevant sind.
 anstelle von direktem halten des transports immer eine static methode mit 'logge das jetzt' anlegen und hier
 den transport zentral halten. Der Transport kann dann jederzeit getauscht werden.
 
-[?] ChunkData (client/packages/shared/src/types/ChunkData.ts)
+[x] ChunkData (client/packages/shared/src/types/ChunkData.ts)
 - ChunkData wurde in client/instructions/client_2.0/network-model-2.0.md unter 'Chunk Update' genau beschrieben, ist aber anders umgesetzt.
 - Server: Ueber das Netzwerk soll Block serilisiert in ChunkData, in einem Array uebertragen werden. Das kann ja im chunk direkt 
   vom Storage weg geschickt werden ohne die Daten in Objekte umzuformen, nur wenn daten manipuliert werden, muss das 
@@ -112,7 +112,7 @@ den transport zentral halten. Der Transport kann dann jederzeit getauscht werden
   diese daten serilisiert und verschickt.
 - Client: Im client werden die daten in Objekte deserilisiert und in einen ClientChunk mit ClientBlock umgewandelt, da drin
   wird das vorher deserialisierte Block Objekt rein gelegt.
-[?] Im Server muss ein ServerChunk implementiert werden. Dieser Chunk sortiert die Blocks in ein Map und bietet CRUD werkzeuge
+[x] Im Server muss ein ServerChunk implementiert werden. Dieser Chunk sortiert die Blocks in ein Map und bietet CRUD werkzeuge
     an um den Chunk anzupassen. Ein ServerChunkHelper kann die Helperfunktionen bereitstellen. Und auch wieder die Umformung von  
     ServerChunk in ChunkData. Der ServerChunk wird dann benuztz um addBlocks oder deleteBlocks zu implementieren.
 [?] Der Server soll chunks speichern und laden. Siehe dazu auch client_playground/packages/server/src/world/World.ts
@@ -170,7 +170,7 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 
 ## Server Implementation
 
-[?] Implementiere den Server in NimbusServer.
+[x] Implementiere den Server in NimbusServer.
 - orientiere dich am prototypen code in client_playground/packages/server
 - Die WebSocket ist nun ein JSON Protokoll, protocoll ist unter client/instructions/client_2.0/network-model-2.0.md beschrieben.
 - Die Daten werden wieder in chunks gespeichert, die in memory gehalten werden.
@@ -195,16 +195,34 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 [x] Schreibe Tests, die den laufenden Server testen und testen, das blocktypes richtig ausgeleifert werden.
 - Der Port soll 3011 sein fuer den server. Kannst du bei den tests den Port 3111 nehmen damit sich das nicht mit einem leufenden server colidiert.
 
-===
-
 ## Basic 3D Engine
 
-[ ] Lege einen TextureService an, der aber aktuell nichts tut. Referenz in AppContext anlegen.
-[ ] Lege einen BlockTypeService an, der aber aktuell nur 0 und 100 kennt und zurück gibt. Referenz in AppContext anlegen.
-- 0 = AIR Block: Lege hierfür in BlockType einen constanten Block mit shape:0 an.
-- 100 = Dummy: Lege hierfür einen constanten Block mit shape:CUBE und color '#00ff00'an in BlockTypeService an. - wird später wieder gelöscht.
-[ ] Lege einen ChunkService an, der immer eine Horizontale Ebene auf Y=0 ausgibt mit der BlockTypeId 100. Referenz in AppContext anlegen.
-[ ] Lege den EngineService an und er wird in NimbusClient erstellt und in den AppContext gespeichert. Referenz in AppContext anlegen.
+[ ] Prüfe ob der Server schon texturen ausliefert. 
+- Texturen sollen Lazy ausgeleifert werden.
+- Texturen liegen in files/assets/textures, im BlockType werden sie "assets/textures/block/basic/acacia_fence.png" angegeben.
+- Wie in client/instructions/client_2.0/server_rest_api.md soll es einen asset endpunkt im server geben.
+[ ] Lege einen TextureService im client an, der texturen vom Server laden kann. Referenz in AppContext anlegen.
+- Texturen werden nur einmal geladen und im TextureService gecached. Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
+[ ] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
+- Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
+- BlockTypes werden nur einmal geladen und im BlockTypeService gecached.
+[ ] Lege einen ChunkService im client an der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
+- Siehe auch client_playground/packages/client/src/world/ChunkManager.ts
+[ ] Lege den EngineService im client an der die 3D engine initialisiert. Referenz in AppContext anlegen.
+[ ] Lege einen RenderService im client an der die Chunks rendert. Referenz in EngineService anlegen.
+- Siehe auch client_playground/packages/client/src/rendering/ChunkRenderer.ts
+- Lege zuerst nur den BlockRenderer an. Alle Typen ausser INVISIBLE werden erstmal an den BlockRenderer zum Rendern weiter gegeben.
+[ ] Lege eine CameraService an der in der EngineService referenziert ist. Der Service 
+- Camera hat einen egoView eigenschaft.
+[ ] Lege einen PlayerService an, der Service hält die aktuelle Position des Spielers und 
+    referenziert den CameraService um die Kamera zu steuern. Und Rendert später auch den Player in der Third-Person-Ansicht
+[ ] Lege einen EnvironmentService an der in EnineService liegt. Das Environment macht das Licht an.
+[ ] Lege einen InputService und einen InputController ableitung WebInputController an.
+- Lege InputHandler fuer jede Aktion an. MoveLeft, MoveRight, MoveForward, MoveBackward, Jump, RotateLeft RotateRigth, PitchUp, PitchDown, etc
+- Die InputHandler steuern den PlayerService und die CameraService
+- InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
+
+===
 
 ## Basic Network Protocoll
 
