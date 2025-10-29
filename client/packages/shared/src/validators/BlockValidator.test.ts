@@ -293,8 +293,6 @@ describe('BlockValidator', () => {
 
     it('should validate correct metadata', () => {
       const metadata: BlockMetadata = {
-        name: 'TestBlock',
-        displayName: 'Test Block',
         groupId: 1,
       };
 
@@ -302,24 +300,17 @@ describe('BlockValidator', () => {
       expect(result.valid).toBe(true);
     });
 
-    it('should warn about very long display name', () => {
+    it('should validate metadata with modifiers', () => {
       const metadata: BlockMetadata = {
-        displayName: 'A'.repeat(150),
+        groupId: 1,
+        modifiers: {
+          0: { visibility: { shape: 1 } },
+          1: { visibility: { shape: 2 } },
+        },
       };
 
       const result = BlockValidator.validateBlockMetadata(metadata);
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings!.some((w) => w.includes('Display name is very long'))).toBe(true);
-    });
-
-    it('should warn about very long name', () => {
-      const metadata: BlockMetadata = {
-        name: 'A'.repeat(70),
-      };
-
-      const result = BlockValidator.validateBlockMetadata(metadata);
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings!.some((w) => w.includes('Name is very long'))).toBe(true);
+      expect(result.valid).toBe(true);
     });
 
     it('should reject invalid group ID', () => {

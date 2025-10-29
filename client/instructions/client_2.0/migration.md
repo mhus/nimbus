@@ -95,7 +95,7 @@ diesen Type relevant sind.
 > Rest Route für Block Metadaten.
 
 [x] Neuer Netzwerk Befehlt "cmd", "cmd.msg" und "cmd.rs" in client/shared/network anlegen. 
-[ ] DTOs für REST Kommunikation aus client/instructions/client_2.0/server_rest_api.md in client/shared/rest anlegen. 
+[x] DTOs für REST Kommunikation aus client/instructions/client_2.0/server_rest_api.md in client/shared/rest anlegen. 
 
 ===
 
@@ -114,6 +114,14 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 - Implementiere UserAgent : string
 - Implementiere Language
 - Implementiere isEditor()
+- Implementiere isDevMode() - wenn mit pnpm run dev:* gestartet.
+- Implementiere isLogToConsole() - wird aus dotenv gelesen. Kann mit setLogToConsole(true) gesetzt werden.
+
+[ ] Starte den Logger mit richtigem Modus in ClientService 'setupLogger()':
+- isDevMode() == true: FileLogTransport, prüfe isLogToConsole(), dann auch consoleLogTransport
+- isDevMode() == false && isLogToConsole(): ConsoleLogTransport ansonsten NullLogTransport
+
+[ ] Wenn in ClientService setLogToConsole() genutzt wird und sich der status ändert, muss setupLogger() auch aufgerufen werden.
 
 ## Server Implementation
 

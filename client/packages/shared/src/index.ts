@@ -10,6 +10,9 @@ export * from './types';
 // Network
 export * from './network';
 
+// REST API DTOs
+export * from './rest';
+
 // Validators
 export * from './validators';
 
