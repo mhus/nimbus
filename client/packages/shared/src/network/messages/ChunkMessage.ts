@@ -23,6 +23,8 @@ export interface ChunkCoordinate {
  * Array of 4 values describing height information
  */
 export type HeightData = readonly [
+  x: number,
+  z: number,
   maxHeight: number,
   minHeight: number,
   groundLevel: number,

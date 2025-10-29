@@ -115,6 +115,18 @@ den transport zentral halten. Der Transport kann dann jederzeit getauscht werden
 [?] Im Server muss ein ServerChunk implementiert werden. Dieser Chunk sortiert die Blocks in ein Map und bietet CRUD werkzeuge
     an um den Chunk anzupassen. Ein ServerChunkHelper kann die Helperfunktionen bereitstellen. Und auch wieder die Umformung von  
     ServerChunk in ChunkData. Der ServerChunk wird dann benuztz um addBlocks oder deleteBlocks zu implementieren.
+[?] Der Server soll chunks speichern und laden. Siehe dazu auch client_playground/packages/server/src/world/World.ts
+- Gespeichert werden ChunkData chunks und zwar so, das sie via Netzwerk direkt aus Daten ausgeleifert werden koennen.
+- Beim Anfrage durch den Client auf ChunkData wird folgender Algorithmus verwendet: 
+  1. geprüft ob die Welt diese chunk gerade bearbeitet (ServerChunk) wenn ja, dann dann wird der ServerChunk in ChunkData gewandelt und zurueckgegeben
+  2. pruefen ob ein gespeicherter ChunkData auf dem Speicher existiert, wenn ja zurückgeben
+  3. aus Generator einen ServerChunk erstellen lassen, in der Welt ablegen, in ChunkData wandeln und zurueckgeben
+- ServerChunks in der Welt wird automatisch gespeichert und deallociert.
+- Wenn zum Server ein Block change geschickt wird, wird der Chunk geladen/generiert und manipuliert und automatisch gespeichert.
+[-] Heigth Daten erzeugen und persistieren
+- Wenn ein ChunkData angefragt wird, dann muessen auch HightData (client/packages/shared/src/network/messages/ChunkMessage.ts)
+  zurück gegeben werden. Die HighData koennen aus dem Chunk errechnet werden
+- Wenn keine HightData verfuegbar sind, werden im Client die Defaultwerte genommen.
 
 ## Basic Client Services
 
