@@ -89,9 +89,15 @@ export interface ClientChunk {
 
   /**
    * Cached ClientBlock instances for non-air blocks in this chunk
-   * Map: blockIndex → ClientBlock
+   * Map: position key ("x,y,z") → ClientBlock
+   *
+   * This is a SPARSE cache - only non-air blocks are present.
+   * Air blocks are simply not in the map.
+   *
+   * Note: This parallels ChunkData.blocks structure but contains
+   * ClientBlock (with resolved references) instead of Block.
    */
-  blocks?: Map<number, ClientBlock>;
+  blocks?: Map<string, ClientBlock>;
 
   /**
    * Cached neighbor chunks (for face culling)

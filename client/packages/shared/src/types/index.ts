@@ -10,9 +10,7 @@ export * from './Shape';
 
 // Block types
 export * from './BlockType';
-export * from './Block';
 export * from './BlockModifier';
-export * from './BlockMetadata';
 
 // Chunk types
 export * from './ChunkData';

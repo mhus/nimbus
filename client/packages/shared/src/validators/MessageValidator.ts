@@ -4,7 +4,7 @@
 
 import type { BaseMessage } from '../network/BaseMessage';
 import { MessageType } from '../network/MessageTypes';
-import type { ValidationResult } from './BlockValidator';
+import type { ValidationResult } from './EntityValidator';
 import { NetworkConstants } from '../constants/NimbusConstants';
 
 /**

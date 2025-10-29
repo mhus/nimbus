@@ -3,21 +3,29 @@
  *
  * Contains the block instance with resolved client-side types and caches.
  * This type is NOT transmitted over network - it's only used client-side.
+ *
+ * Per specification (network-model-2.0.md):
+ * - Server sends BlockData (serialized) over network
+ * - Client deserializes BlockData into Block objects
+ * - ClientBlock wraps Block with resolved references and rendering caches
  */
 
-import type {
-  Block,
-  BlockType,
-  BlockMetadata,
-  BlockModifier,
-} from '@nimbus/shared';
+import type { Block, BlockType, BlockModifier } from '@nimbus/shared';
 import type { ClientBlockType } from './ClientBlockType';
 
 /**
  * Client-side block instance with caches and resolved references
+ *
+ * This wraps a Block instance (deserialized from BlockData) with:
+ * - Resolved references (BlockType, BlockModifier from registry)
+ * - Client-optimized rendering data (ClientBlockType)
+ * - Visibility and dirty flags
  */
 export interface ClientBlock {
-  /** Original block instance (network data) */
+  /**
+   * Original block instance (deserialized from BlockData)
+   * Contains: x, y, z, blockTypeId, status, modifierIndex, metadata
+   */
   block: Block;
 
   /** Chunk coordinates */
@@ -31,11 +39,6 @@ export interface ClientBlock {
    */
   blockType: BlockType;
 
-  /**
-   * Cached BlockMetadata reference
-   * Resolved from block.metadata
-   */
-  metadata?: BlockMetadata;
 
   /**
    * Cached current BlockModifier

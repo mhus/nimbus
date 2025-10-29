@@ -4,9 +4,16 @@
 
 import type { EntityData } from '../types/EntityData';
 import { EntityType } from '../types/EntityData';
-import type { ValidationResult } from './BlockValidator';
-import { BlockValidator } from './BlockValidator';
 import { EntityConstants, LimitConstants } from '../constants/NimbusConstants';
+
+/**
+ * Validation result
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings?: string[];
+}
 
 /**
  * Entity validators
@@ -183,7 +190,7 @@ export namespace EntityValidator {
   ): void {
     if (entity.itemTypeId === undefined) {
       errors.push('Item missing itemTypeId');
-    } else if (!BlockValidator.isValidBlockTypeId(entity.itemTypeId)) {
+    } else if (entity.itemTypeId < 0 || entity.itemTypeId > 65535) {
       errors.push(`Invalid itemTypeId: ${entity.itemTypeId}`);
     }
 
