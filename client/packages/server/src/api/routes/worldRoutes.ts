@@ -25,6 +25,17 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
     return res.json(world);
   });
 
+  // GET /api/worlds/:id/blocktypes - Get all BlockTypes
+  router.get('/:id/blocktypes', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const blockTypes = worldManager.getBlockTypeRegistry().getAllBlockTypes();
+    res.json({ blockTypes });
+  });
+
   // GET /api/worlds/:id/blocktypes/:blockId - Get single BlockType
   router.get('/:id/blocktypes/:blockId', (req, res) => {
     const blockType = worldManager.getBlockTypeRegistry().getBlockType(Number(req.params.blockId));

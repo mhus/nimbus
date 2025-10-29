@@ -76,7 +76,7 @@ export class BlockTypeService {
 
       const worldId = this.appContext.worldInfo?.worldId || 'main';
       const apiUrl = networkService.getApiUrl();
-      const url = `${apiUrl}/api/world/${worldId}/blocktypes`;
+      const url = `${apiUrl}/api/worlds/${worldId}/blocktypes`;
 
       logger.info('Loading block types from server', { url });
 

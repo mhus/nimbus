@@ -71,11 +71,24 @@ export class EngineService {
     try {
       logger.info('Initializing 3D engine');
 
+      // Check WebGL support
+      const gl = this.canvas.getContext('webgl') || this.canvas.getContext('webgl2');
+      if (!gl) {
+        throw new Error('WebGL not supported by this browser. Please use a modern browser with WebGL support.');
+      }
+
+      logger.debug('WebGL supported');
+
       // Create Babylon.js Engine
       this.engine = new Engine(this.canvas, true, {
         preserveDrawingBuffer: true,
         stencil: true,
+        antialias: false, // Disable for better performance
       });
+
+      if (!this.engine) {
+        throw new Error('Failed to create Babylon.js Engine');
+      }
 
       logger.debug('Babylon.js Engine created');
 

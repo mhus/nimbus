@@ -236,9 +236,9 @@ Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal u
 - Die InputHandler steuern den PlayerService und die CameraService
 - InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
 mach das
-[ ] Pruefe ob die Chunk Registration (Anforderung) richtig implementiert ist. Auch beim Start.
 
 [ ] Erste Tests mit BabylonJS NullEngine
+- Erstelle einen Test, der nur den CubeRenderer testet mit NullEngine
 
 Extra:
 [ ] in BlockModifier den Parameter 'effect' Typisieren 'none' | 'water' | 'wind' | 'flipbox' | 'lava' | 'fog'

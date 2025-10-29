@@ -18,6 +18,9 @@ import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
+import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
+import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
+import { PingMessageHandler } from './network/handlers/PingMessageHandler';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -75,17 +78,41 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const networkService = new NetworkService(appContext);
     appContext.services.network = networkService;
 
+    // Register message handlers BEFORE connecting
+    logger.debug('Registering message handlers...');
+    const loginHandler = new LoginMessageHandler(appContext, networkService);
+    networkService.registerHandler(loginHandler);
+
+    const pingHandler = new PingMessageHandler(networkService);
+    networkService.registerHandler(pingHandler);
+
+    // Add error handler to prevent unhandled errors
+    networkService.on('error', (error) => {
+      logger.error('Network error', undefined, error);
+    });
+
     // Connect to server
     logger.info('Connecting to server...');
     await networkService.connect();
     logger.info('Connected to server');
 
     // Wait for login response and world info
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
+      // Add error handler
+      networkService.once('login:error', (error) => {
+        logger.error('Login failed', undefined, error);
+        reject(error);
+      });
+
       networkService.once('login:success', () => {
         logger.info('Login successful');
         resolve();
       });
+
+      // Add timeout
+      setTimeout(() => {
+        reject(new Error('Login timeout'));
+      }, 30000);
     });
 
     // Initialize BlockTypeService
@@ -107,6 +134,10 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.info('Initializing ChunkService...');
     const chunkService = new ChunkService(networkService, appContext);
     appContext.services.chunk = chunkService;
+
+    // Register ChunkMessageHandler
+    const chunkHandler = new ChunkMessageHandler(chunkService);
+    networkService.registerHandler(chunkHandler);
 
     logger.info('Core services initialized');
   } catch (error) {
@@ -182,8 +213,25 @@ appContextPromise
       // Show progress
       showLoadingMessage(canvas, 'Initializing 3D engine...');
 
-      // Initialize 3D engine
-      await initializeEngine(appContext, canvas);
+      // Clear canvas and prepare for WebGL
+      // BabylonJS needs a fresh canvas without existing 2D context
+      const parent = canvas.parentElement;
+      if (parent) {
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = 'renderCanvas';
+        newCanvas.width = window.innerWidth;
+        newCanvas.height = window.innerHeight;
+        newCanvas.style.width = '100%';
+        newCanvas.style.height = '100%';
+        parent.replaceChild(newCanvas, canvas);
+
+        logger.debug('Canvas replaced for WebGL initialization');
+
+        // Initialize 3D engine with new canvas
+        await initializeEngine(appContext, newCanvas);
+      } else {
+        throw new Error('Canvas has no parent element');
+      }
 
       // Hide loading screen
       const loadingElement = document.getElementById('loading');

@@ -2,10 +2,12 @@
  * World Manager - Manages world instances
  */
 
-import { getLogger, type ChunkData } from '@nimbus/shared';
+import { getLogger, type ChunkData, ExceptionHandler } from '@nimbus/shared';
 import type { WorldInstance } from '../types/ServerTypes';
 import { BlockTypeRegistry } from './BlockTypeRegistry';
 import { ChunkStorage } from '../storage/ChunkStorage';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const logger = getLogger('WorldManager');
 
@@ -16,10 +18,114 @@ export class WorldManager {
 
   constructor() {
     this.blockTypeRegistry = new BlockTypeRegistry();
-    this.initializeTestWorlds();
+
+    // Load worlds from data directory
+    this.loadWorldsFromDirectory();
+
+    // If no worlds loaded, initialize test worlds
+    if (this.worlds.size === 0) {
+      logger.warn('No worlds found in data directory, initializing test worlds');
+      this.initializeTestWorlds();
+    }
 
     // Start auto-save interval (every 30 seconds)
     this.startAutoSave();
+  }
+
+  /**
+   * Load worlds from data directory
+   * Scans ./data/worlds/ for world folders containing info.json
+   */
+  private loadWorldsFromDirectory(): void {
+    const dataDir = path.join(process.cwd(), 'data', 'worlds');
+
+    // Check if data directory exists
+    if (!fs.existsSync(dataDir)) {
+      logger.info('Data directory does not exist, creating it', { path: dataDir });
+      try {
+        fs.mkdirSync(dataDir, { recursive: true });
+      } catch (error) {
+        ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory.mkdir', { dataDir });
+        return;
+      }
+    }
+
+    try {
+      const entries = fs.readdirSync(dataDir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+
+        const worldPath = path.join(dataDir, entry.name);
+        const infoPath = path.join(worldPath, 'info.json');
+
+        // Check if info.json exists
+        if (!fs.existsSync(infoPath)) {
+          logger.debug('World directory missing info.json, skipping', { path: worldPath });
+          continue;
+        }
+
+        // Load and parse info.json
+        try {
+          const infoContent = fs.readFileSync(infoPath, 'utf-8');
+          const worldInfo = JSON.parse(infoContent);
+
+          // Create world instance
+          this.createWorldFromInfo(entry.name, worldInfo);
+
+          logger.info('Loaded world from directory', {
+            worldId: entry.name,
+            name: worldInfo.name || entry.name
+          });
+        } catch (error) {
+          ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory.loadWorld', {
+            worldPath,
+            infoPath
+          });
+        }
+      }
+
+      logger.info(`Loaded ${this.worlds.size} worlds from data directory`);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory', { dataDir });
+    }
+  }
+
+  /**
+   * Create world from info.json data
+   */
+  private createWorldFromInfo(worldId: string, info: any): void {
+    const now = new Date().toISOString();
+
+    const world: WorldInstance = {
+      worldId,
+      name: info.name || worldId,
+      description: info.description || '',
+      chunkSize: info.chunkSize || 32,
+      dimensions: info.dimensions || {
+        minX: -128,
+        maxX: 128,
+        minY: -64,
+        maxY: 192,
+        minZ: -128,
+        maxZ: 128,
+      },
+      seaLevel: info.seaLevel ?? 0,
+      groundLevel: info.groundLevel ?? 64,
+      status: info.status ?? 0,
+      chunks: new Map(),
+      createdAt: info.createdAt || now,
+      updatedAt: now,
+    };
+
+    this.worlds.set(worldId, world);
+
+    // Initialize chunk storage for this world
+    const storage = new ChunkStorage(worldId);
+    storage.initialize().catch((error) => {
+      logger.error('Failed to initialize chunk storage', { worldId }, error);
+    });
+    this.chunkStorages.set(worldId, storage);
   }
 
   private initializeTestWorlds(): void {

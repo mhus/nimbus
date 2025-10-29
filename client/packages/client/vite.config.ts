@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: isEditor ? 'dist/editor' : 'dist/viewer',
       emptyOutDir: true,
+      chunkSizeWarningLimit: 2000, // Increase to 2MB for BabylonJS
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),

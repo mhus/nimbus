@@ -397,7 +397,7 @@ export class NetworkService {
       d: {
         username: this.appContext.config.username,
         password: this.appContext.config.password,
-        worldId: 'main', // Hardcoded for now as per requirements
+        worldId: this.appContext.config.worldId,
         clientType: ClientType.WEB,
       },
     };

@@ -53,7 +53,7 @@ export function loadServerConfig(): ServerConfig {
     cors: process.env.CORS_ENABLED !== 'false',
     corsOrigins: process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(',')
-      : ['http://localhost:5173', 'http://localhost:5174'],
+      : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'],
     authUsername: process.env.AUTH_USERNAME,
     authPassword: process.env.AUTH_PASSWORD,
     pingInterval: parseInt(process.env.PING_INTERVAL || '30', 10),

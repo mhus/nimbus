@@ -44,7 +44,18 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
       // Success response
       const successData = data as LoginResponseData;
 
-      // Update AppContext with WorldInfo
+      // Debug log the response structure
+      logger.debug('Login response data', { data: successData });
+
+      // Validate worldInfo exists
+      if (!successData.worldInfo) {
+        const error = 'Server error: Login response missing worldInfo. Please check server configuration.';
+        logger.error(error, { data: successData });
+        this.networkService.emit('login:error', new Error(error));
+        return;
+      }
+
+      // Update AppContext with WorldInfo from server
       this.appContext.worldInfo = successData.worldInfo;
 
       logger.info('Login successful', {

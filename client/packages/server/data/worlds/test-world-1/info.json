@@ -1,0 +1,16 @@
+{
+  "name": "Test World 1",
+  "description": "A simple test world",
+  "chunkSize": 16,
+  "dimensions": {
+    "minX": -64,
+    "maxX": 64,
+    "minY": -64,
+    "maxY": 64,
+    "minZ": -64,
+    "maxZ": 64
+  },
+  "seaLevel": 0,
+  "groundLevel": 1,
+  "status": 0
+}

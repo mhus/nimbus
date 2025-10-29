@@ -23,6 +23,9 @@ export interface ClientConfig {
   /** REST API server URL */
   apiUrl: string;
 
+  /** World ID to connect to */
+  worldId: string;
+
   /** Enable console logging */
   logToConsole: boolean;
 }
@@ -43,6 +46,7 @@ export function loadClientConfig(): ClientConfig {
   const password = env.CLIENT_PASSWORD;
   const websocketUrl = env.SERVER_WEBSOCKET_URL;
   const apiUrl = env.SERVER_API_URL;
+  const worldId = env.WORLD_ID || 'main'; // Default to 'main' if not specified
 
   // Validate required fields
   const missing: string[] = [];
@@ -65,6 +69,7 @@ export function loadClientConfig(): ClientConfig {
     password: password!,
     websocketUrl: websocketUrl!,
     apiUrl: apiUrl!,
+    worldId,
     logToConsole,
   };
 
@@ -72,6 +77,7 @@ export function loadClientConfig(): ClientConfig {
     username,
     websocketUrl,
     apiUrl,
+    worldId,
     logToConsole,
   });
 
@@ -96,6 +102,7 @@ function getEnvironment(): Record<string, string | undefined> {
       CLIENT_PASSWORD: env.VITE_CLIENT_PASSWORD,
       SERVER_WEBSOCKET_URL: env.VITE_SERVER_WEBSOCKET_URL,
       SERVER_API_URL: env.VITE_SERVER_API_URL,
+      WORLD_ID: env.VITE_WORLD_ID,
       LOG_TO_CONSOLE: env.VITE_LOG_TO_CONSOLE,
     };
   }

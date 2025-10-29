@@ -1,0 +1,16 @@
+{
+  "name": "Main World",
+  "description": "Default main world",
+  "chunkSize": 32,
+  "dimensions": {
+    "minX": -128,
+    "maxX": 128,
+    "minY": -64,
+    "maxY": 192,
+    "minZ": -128,
+    "maxZ": 128
+  },
+  "seaLevel": 0,
+  "groundLevel": 64,
+  "status": 0
+}
