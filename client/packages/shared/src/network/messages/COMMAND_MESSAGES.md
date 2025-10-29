@@ -11,8 +11,23 @@ The command system allows the client to send commands to the server for executio
 Three message types are defined for command execution:
 
 1. **`cmd`** - Command execution request (Client → Server)
-2. **`cmd.msg`** - Command messages during execution (Server → Client)
-3. **`cmd.rs`** - Command result/status (Server → Client)
+2. **`cmd.msg`** - Command progress/info messages during execution (Server → Client)
+3. **`cmd.rs`** - Command result (Server → Client)
+
+## Return Codes
+
+The server responds with return codes (rc) in the `cmd.rs` message:
+
+**Negative rc = System errors:**
+- `-1` = Command not found
+- `-2` = Command not allowed (permission denied)
+- `-3` = Invalid arguments
+- `-4` = Internal error
+
+**Positive rc = Command-specific:**
+- `0` = OK / true (success)
+- `1` = Error / false (command-level error)
+- Other positive values are command-specific
 
 ## Message Flow
 
@@ -46,59 +61,62 @@ interface CommandData {
 
   /** Command arguments */
   args?: string[];
-
-  /** Additional context data */
-  ctx?: Record<string, any>;
 }
 ```
 
-**Example:**
+**Example JSON:**
+```json
+{
+  "i": "123",
+  "t": "cmd",
+  "d": {
+    "cmd": "say",
+    "args": ["Hello, world!"]
+  }
+}
+```
+
+**Example TypeScript:**
 ```typescript
 const message: CommandMessage = {
   i: 'cmd-123',
-  t: MessageType.CMD,
+  t: 'cmd',
   d: {
     cmd: 'setblock',
     args: ['10', '64', '20', 'stone'],
-    ctx: {
-      playerId: 'player-1',
-    },
   },
 };
 ```
 
 ### CommandMessageData (CMD_MESSAGE)
 
-Informational messages sent by server during command execution.
+Progress/informational messages sent by server during command execution.
 
 ```typescript
 interface CommandMessageData {
   /** Message text */
-  msg: string;
-
-  /** Message severity */
-  severity?: CommandSeverity;
-
-  /** Additional data */
-  data?: any;
-}
-
-enum CommandSeverity {
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARNING = 'warning',
-  ERROR = 'error',
+  message: string;
 }
 ```
 
-**Example:**
+**Example JSON:**
+```json
+{
+  "r": "123",
+  "t": "cmd.msg",
+  "d": {
+    "message": "Processing..."
+  }
+}
+```
+
+**Example TypeScript:**
 ```typescript
 const message: CommandMessageMessage = {
   r: 'cmd-123',  // References command request
-  t: MessageType.CMD_MESSAGE,
+  t: 'cmd.msg',
   d: {
-    msg: 'Setting block at (10, 64, 20)...',
-    severity: CommandSeverity.INFO,
+    message: 'Setting block at (10, 64, 20)...',
   },
 };
 ```
@@ -109,66 +127,58 @@ Final result of command execution sent by server.
 
 ```typescript
 interface CommandResultData {
-  /** Execution status */
-  status: CommandStatus;
+  /** Return code (negative = system error, 0 = success, positive = command-specific) */
+  rc: number;
 
-  /** Result message */
-  msg?: string;
-
-  /** Result data */
-  result?: any;
-
-  /** Error information (if status is ERROR) */
-  error?: {
-    message: string;
-    code?: string;
-    details?: any;
-  };
-
-  /** Execution time in milliseconds */
-  executionTime?: number;
-}
-
-enum CommandStatus {
-  PENDING = 'pending',
-  EXECUTING = 'executing',
-  SUCCESS = 'success',
-  ERROR = 'error',
-  CANCELLED = 'cancelled',
+  /** Result/error message */
+  message: string;
 }
 ```
 
-**Example (Success):**
+**Example JSON (Success):**
+```json
+{
+  "r": "123",
+  "t": "cmd.rs",
+  "d": {
+    "rc": 0,
+    "message": "Hello, world!"
+  }
+}
+```
+
+**Example JSON (Error):**
+```json
+{
+  "r": "123",
+  "t": "cmd.rs",
+  "d": {
+    "rc": -1,
+    "message": "Command not found."
+  }
+}
+```
+
+**Example TypeScript (Success):**
 ```typescript
 const message: CommandResultMessage = {
   r: 'cmd-123',  // References command request
-  t: MessageType.CMD_RESULT,
+  t: 'cmd.rs',
   d: {
-    status: CommandStatus.SUCCESS,
-    msg: 'Block set successfully',
-    result: {
-      blockId: 1,
-      position: { x: 10, y: 64, z: 20 },
-    },
-    executionTime: 42,
+    rc: 0,
+    message: 'Block set successfully',
   },
 };
 ```
 
-**Example (Error):**
+**Example TypeScript (Error):**
 ```typescript
 const message: CommandResultMessage = {
   r: 'cmd-123',  // References command request
-  t: MessageType.CMD_RESULT,
+  t: 'cmd.rs',
   d: {
-    status: CommandStatus.ERROR,
-    msg: 'Failed to set block',
-    error: {
-      message: 'Invalid block type',
-      code: 'INVALID_BLOCK_TYPE',
-      details: { blockType: 'invalid_block' },
-    },
-    executionTime: 10,
+    rc: -3,  // Invalid arguments
+    message: 'Invalid block type: stone_invalid',
   },
 };
 ```
@@ -178,21 +188,17 @@ const message: CommandResultMessage = {
 ### Client: Send Command
 
 ```typescript
-import { MessageType } from '@nimbus/shared';
 import type { CommandMessage, CommandData } from '@nimbus/shared';
 
 // Create command message
 const commandData: CommandData = {
   cmd: 'tp',
   args: ['player1', '100', '64', '200'],
-  ctx: {
-    source: 'console',
-  },
 };
 
 const message: CommandMessage = {
   i: generateMessageId(),
-  t: MessageType.CMD,
+  t: 'cmd',
   d: commandData,
 };
 
@@ -203,55 +209,47 @@ networkService.send(message);
 ### Server: Handle Command
 
 ```typescript
-import { MessageType, CommandStatus, CommandSeverity } from '@nimbus/shared';
 import type { CommandMessage, CommandMessageMessage, CommandResultMessage } from '@nimbus/shared';
 
 // Handle command message
 function handleCommand(message: CommandMessage) {
-  const { cmd, args, ctx } = message.d;
+  const { cmd, args } = message.d;
   const requestId = message.i!;
 
   // Send progress message
-  sendCommandMessage(requestId, 'Executing teleport...', CommandSeverity.INFO);
+  sendCommandMessage(requestId, 'Executing teleport...');
 
   try {
     // Execute command
-    const result = executeCommand(cmd, args, ctx);
+    const result = executeCommand(cmd, args);
 
     // Send success result
     sendCommandResult(requestId, {
-      status: CommandStatus.SUCCESS,
-      msg: 'Command executed successfully',
-      result,
-      executionTime: Date.now() - startTime,
+      rc: 0,
+      message: `Teleported player to ${args[1]}, ${args[2]}, ${args[3]}`,
     });
   } catch (error) {
     // Send error result
     sendCommandResult(requestId, {
-      status: CommandStatus.ERROR,
-      msg: 'Command execution failed',
-      error: {
-        message: error.message,
-        code: error.code,
-      },
-      executionTime: Date.now() - startTime,
+      rc: -4,  // Internal error
+      message: `Command execution failed: ${error.message}`,
     });
   }
 }
 
-function sendCommandMessage(requestId: string, msg: string, severity: CommandSeverity) {
-  const message: CommandMessageMessage = {
+function sendCommandMessage(requestId: string, message: string) {
+  const msg: CommandMessageMessage = {
     r: requestId,
-    t: MessageType.CMD_MESSAGE,
-    d: { msg, severity },
+    t: 'cmd.msg',
+    d: { message },
   };
-  connection.send(message);
+  connection.send(msg);
 }
 
 function sendCommandResult(requestId: string, data: CommandResultData) {
   const message: CommandResultMessage = {
     r: requestId,
-    t: MessageType.CMD_RESULT,
+    t: 'cmd.rs',
     d: data,
   };
   connection.send(message);
@@ -261,35 +259,35 @@ function sendCommandResult(requestId: string, data: CommandResultData) {
 ### Client: Handle Command Messages and Results
 
 ```typescript
-import { MessageType } from '@nimbus/shared';
 import type { CommandMessageMessage, CommandResultMessage } from '@nimbus/shared';
 
 // Register handlers
-networkService.on(MessageType.CMD_MESSAGE, handleCommandMessage);
-networkService.on(MessageType.CMD_RESULT, handleCommandResult);
+networkService.on('cmd.msg', handleCommandMessage);
+networkService.on('cmd.rs', handleCommandResult);
 
 function handleCommandMessage(message: CommandMessageMessage) {
-  const { msg, severity, data } = message.d;
+  const { message: msg } = message.d;
 
   // Display message to user
-  console.log(`[${severity}] ${msg}`, data);
+  console.log(`[INFO] ${msg}`);
 
   // Update UI with progress
-  updateCommandProgress(message.r!, msg, severity);
+  updateCommandProgress(message.r!, msg);
 }
 
 function handleCommandResult(message: CommandResultMessage) {
-  const { status, msg, result, error, executionTime } = message.d;
+  const { rc, message: msg } = message.d;
 
-  if (status === CommandStatus.SUCCESS) {
-    console.log(`✓ ${msg}`, result);
-    console.log(`Execution time: ${executionTime}ms`);
-  } else if (status === CommandStatus.ERROR) {
-    console.error(`✗ ${msg}`, error);
+  if (rc === 0) {
+    console.log(`✓ ${msg}`);
+  } else if (rc < 0) {
+    console.error(`✗ System error (${rc}): ${msg}`);
+  } else {
+    console.error(`✗ Command error (${rc}): ${msg}`);
   }
 
   // Complete command execution
-  completeCommand(message.r!, status, result || error);
+  completeCommand(message.r!, rc, msg);
 }
 ```
 
@@ -324,11 +322,10 @@ Example commands that can be executed:
 ## Best Practices
 
 1. **Always provide message IDs** - Use `i` field in command requests for proper correlation
-2. **Send progress updates** - Use CMD_MESSAGE for long-running commands
-3. **Include execution time** - Helps with performance monitoring
-4. **Use appropriate severity levels** - INFO for progress, WARNING for issues, ERROR for failures
-5. **Provide detailed error information** - Include error code and details for debugging
-6. **Include context** - Use `ctx` field to pass relevant context (player, editor state, etc.)
+2. **Send progress updates** - Use `cmd.msg` for long-running commands
+3. **Use correct return codes** - Negative for system errors, 0 for success, positive for command-specific errors
+4. **Provide descriptive messages** - Include helpful information in the message field
+5. **Document custom return codes** - If your command uses custom positive rc values, document them
 
 ## Security Considerations
 
@@ -347,27 +344,24 @@ Example commands that can be executed:
 
 ## Error Handling
 
-All errors should be reported via CMD_RESULT with status ERROR:
+All errors should be reported via `cmd.rs` with appropriate return codes:
 
 ```typescript
 {
-  status: CommandStatus.ERROR,
-  msg: 'Human-readable error message',
-  error: {
-    message: 'Detailed error message',
-    code: 'ERROR_CODE',  // e.g., 'INVALID_ARGS', 'PERMISSION_DENIED'
-    details: { /* additional context */ }
-  }
+  rc: -1,  // or other appropriate error code
+  message: 'Human-readable error message'
 }
 ```
 
-Common error codes:
-- `INVALID_COMMAND` - Unknown command
-- `INVALID_ARGS` - Invalid arguments
-- `PERMISSION_DENIED` - User lacks permission
-- `EXECUTION_FAILED` - Command execution failed
-- `TIMEOUT` - Command execution timed out
-- `CANCELLED` - Command was cancelled
+**System Error Codes (negative):**
+- `-1` - Command not found
+- `-2` - Permission denied
+- `-3` - Invalid arguments
+- `-4` - Internal error
+
+**Command-Specific Errors (positive):**
+- `1` - Generic command error/false
+- `>1` - Command-specific error codes (document these in your command implementation)
 
 ## Testing
 
@@ -390,12 +384,24 @@ describe('CommandMessage', () => {
     await sendCommand({ cmd: 'test', args: [] });
 
     // Expect progress message
-    const progressMsg = await waitForMessage(MessageType.CMD_MESSAGE, commandId);
-    expect(progressMsg.d.severity).toBe(CommandSeverity.INFO);
+    const progressMsg = await waitForMessage('cmd.msg', commandId);
+    expect(progressMsg.d.message).toBeDefined();
 
     // Expect result
-    const result = await waitForMessage(MessageType.CMD_RESULT, commandId);
-    expect(result.d.status).toBe(CommandStatus.SUCCESS);
+    const result = await waitForMessage('cmd.rs', commandId);
+    expect(result.d.rc).toBe(0);  // Success
+  });
+
+  it('should handle command errors', async () => {
+    const commandId = 'cmd-124';
+
+    // Send invalid command
+    await sendCommand({ cmd: 'invalid_command', args: [] });
+
+    // Expect error result
+    const result = await waitForMessage('cmd.rs', commandId);
+    expect(result.d.rc).toBe(-1);  // Command not found
+    expect(result.d.message).toContain('not found');
   });
 });
 ```

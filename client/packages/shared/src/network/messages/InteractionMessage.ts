@@ -19,9 +19,6 @@ export interface InteractionRequestData {
 
   /** Group ID of block (optional) */
   g?: string;
-
-  /** ID of block (optional) */
-  i?: string;
 }
 
 /**

@@ -375,8 +375,7 @@ Der Client sendet eine Interaktionsanfrage an den Server (z.B. wenn der Spieler 
     "x": 10,
     "y": 64,
     "z": 10,
-    "g": "123", // groupId des Blocks, optional
-    "i": "123"  // id des Blocks, optional
+    "g": "123" // groupId des Blocks, optional
   }
 }
 ```
