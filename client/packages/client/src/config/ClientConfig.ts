@@ -1,0 +1,106 @@
+/**
+ * Client configuration
+ * Loads configuration from environment variables
+ */
+
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ClientConfig');
+
+/**
+ * Client configuration interface
+ */
+export interface ClientConfig {
+  /** Username for authentication */
+  username: string;
+
+  /** Password for authentication */
+  password: string;
+
+  /** WebSocket server URL */
+  websocketUrl: string;
+
+  /** REST API server URL */
+  apiUrl: string;
+
+  /** Enable console logging */
+  logToConsole: boolean;
+}
+
+/**
+ * Load client configuration from environment variables
+ * @returns Client configuration
+ * @throws Error if required environment variables are missing
+ */
+export function loadClientConfig(): ClientConfig {
+  logger.debug('Loading client configuration from environment');
+
+  // Get environment based on build tool
+  const env = getEnvironment();
+
+  // Load required variables
+  const username = env.CLIENT_USERNAME;
+  const password = env.CLIENT_PASSWORD;
+  const websocketUrl = env.SERVER_WEBSOCKET_URL;
+  const apiUrl = env.SERVER_API_URL;
+
+  // Validate required fields
+  const missing: string[] = [];
+  if (!username) missing.push('CLIENT_USERNAME');
+  if (!password) missing.push('CLIENT_PASSWORD');
+  if (!websocketUrl) missing.push('SERVER_WEBSOCKET_URL');
+  if (!apiUrl) missing.push('SERVER_API_URL');
+
+  if (missing.length > 0) {
+    const error = `Missing required environment variables: ${missing.join(', ')}`;
+    logger.error(error);
+    throw new Error(error);
+  }
+
+  // Load optional variables
+  const logToConsole = env.LOG_TO_CONSOLE === 'true';
+
+  const config: ClientConfig = {
+    username: username!,
+    password: password!,
+    websocketUrl: websocketUrl!,
+    apiUrl: apiUrl!,
+    logToConsole,
+  };
+
+  logger.info('Client configuration loaded', {
+    username,
+    websocketUrl,
+    apiUrl,
+    logToConsole,
+  });
+
+  return config;
+}
+
+/**
+ * Get environment variables based on runtime environment
+ */
+function getEnvironment(): Record<string, string | undefined> {
+  // Check if we're in Node.js environment (tests)
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env as Record<string, string | undefined>;
+  }
+
+  // Check if we're in Vite environment (browser)
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    // Vite prefixes env vars with VITE_
+    const env = import.meta.env as Record<string, string | undefined>;
+    return {
+      CLIENT_USERNAME: env.VITE_CLIENT_USERNAME,
+      CLIENT_PASSWORD: env.VITE_CLIENT_PASSWORD,
+      SERVER_WEBSOCKET_URL: env.VITE_SERVER_WEBSOCKET_URL,
+      SERVER_API_URL: env.VITE_SERVER_API_URL,
+      LOG_TO_CONSOLE: env.VITE_LOG_TO_CONSOLE,
+    };
+  }
+
+  // Fallback: empty environment
+  logger.warn('Unable to detect environment, using empty config');
+  return {};
+}
