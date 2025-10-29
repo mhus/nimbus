@@ -421,4 +421,19 @@ export class NetworkService {
   getWebSocketUrl(): string {
     return this.websocketUrl;
   }
+
+  /**
+   * Get asset URL for a given asset path
+   *
+   * Constructs full URL using apiUrl and worldInfo.assetPath
+   *
+   * @param assetPath - Normalized asset path (e.g., "textures/block/basic/stone.png")
+   * @returns Full asset URL
+   */
+  getAssetUrl(assetPath: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const worldAssetPath = this.appContext.worldInfo?.assetPath || `/api/worlds/${worldId}/assets`;
+
+    return `${this.apiUrl}${worldAssetPath}/${assetPath}`;
+  }
 }

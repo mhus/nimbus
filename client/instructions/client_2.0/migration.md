@@ -213,7 +213,7 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 [?] Lege einen ChunkService im client der sich an chunks registriert und der ChunkData vom Server bekommt und als ClientChunk registriert, Referenz in AppContext anlegen.
 - Siehe auch client_playground/packages/client/src/world/ChunkManager.ts
 
-[ ] Der TextureService soll die Texturen ueber den NetworkManager laden lassen.
+[x] Der TextureService soll die Texturen ueber den NetworkManager laden lassen.
 
 Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal umgesetzt werden: 
 

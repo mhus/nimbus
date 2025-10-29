@@ -3,19 +3,13 @@
  *
  * Provides lazy loading of textures from the server asset endpoint.
  * Textures are cached to prevent duplicate downloads.
+ * Uses NetworkService for all HTTP requests.
  */
 
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import type { AppContext } from '../AppContext';
 
 const logger = getLogger('TextureService');
-
-export interface TextureServiceConfig {
-  /** Asset server base URL (e.g., "http://localhost:3000/api/worlds/test-world-1/assets") */
-  assetServerUrl: string;
-
-  /** Optional timeout for texture loading in milliseconds */
-  timeout?: number;
-}
 
 /**
  * TextureService - Handles texture loading and caching
@@ -25,19 +19,15 @@ export interface TextureServiceConfig {
  * - Caching: Each texture is only loaded once, subsequent requests return cached image
  * - Path normalization: Handles various path formats
  * - Error handling: Provides fallback for missing textures
+ * - Uses NetworkService from AppContext for REST API calls
  */
 export class TextureService {
   private imageCache: Map<string, HTMLImageElement> = new Map();
   private loadingPromises: Map<string, Promise<HTMLImageElement>> = new Map();
-  private config: Required<TextureServiceConfig>;
+  private timeout: number = 10000;
 
-  constructor(config: TextureServiceConfig) {
-    this.config = {
-      timeout: 10000, // 10 seconds default
-      ...config,
-    };
-
-    logger.info('TextureService initialized', { assetServerUrl: this.config.assetServerUrl });
+  constructor(private appContext: AppContext) {
+    logger.info('TextureService initialized');
   }
 
   /**
@@ -87,38 +77,53 @@ export class TextureService {
 
   /**
    * Internal texture loading implementation
+   * Uses NetworkService from AppContext to construct URL
    */
-  private loadTextureInternal(normalizedPath: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      const url = `${this.config.assetServerUrl}/${normalizedPath}`;
+  private async loadTextureInternal(normalizedPath: string): Promise<HTMLImageElement> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const image = new Image();
 
-      // Set up timeout
-      const timeoutId = setTimeout(() => {
-        image.src = ''; // Cancel loading
-        reject(new Error(`Texture loading timeout: ${normalizedPath}`));
-      }, this.config.timeout);
+        // Build URL using NetworkService
+        const networkService = this.appContext.services.network;
+        if (!networkService) {
+          reject(new Error('NetworkService not available in AppContext'));
+          return;
+        }
 
-      image.onload = () => {
-        clearTimeout(timeoutId);
-        logger.debug('Texture loaded successfully', {
-          path: normalizedPath,
-          width: image.width,
-          height: image.height,
-        });
-        resolve(image);
-      };
+        const url = networkService.getAssetUrl(normalizedPath);
 
-      image.onerror = () => {
-        clearTimeout(timeoutId);
-        const error = new Error(`Failed to load texture: ${normalizedPath}`);
-        logger.error('Texture loading failed', { path: normalizedPath, url }, error);
+        // Set up timeout
+        const timeoutId = setTimeout(() => {
+          image.src = ''; // Cancel loading
+          reject(new Error(`Texture loading timeout: ${normalizedPath}`));
+        }, this.timeout);
+
+        image.onload = () => {
+          clearTimeout(timeoutId);
+          logger.debug('Texture loaded successfully', {
+            path: normalizedPath,
+            width: image.width,
+            height: image.height,
+          });
+          resolve(image);
+        };
+
+        image.onerror = () => {
+          clearTimeout(timeoutId);
+          const error = new Error(`Failed to load texture: ${normalizedPath}`);
+          logger.error('Texture loading failed', { path: normalizedPath, url }, error);
+          reject(error);
+        };
+
+        // Start loading via browser's image loader
+        // Note: Image loading is handled by browser, not via fetch()
+        // NetworkService provides the apiUrl, actual loading is via Image element
+        image.crossOrigin = 'anonymous'; // Enable CORS
+        image.src = url;
+      } catch (error) {
         reject(error);
-      };
-
-      // Start loading
-      image.crossOrigin = 'anonymous'; // Enable CORS
-      image.src = url;
+      }
     });
   }
 
@@ -224,13 +229,5 @@ export class TextureService {
       cachedCount: this.imageCache.size,
       loadingCount: this.loadingPromises.size,
     };
-  }
-
-  /**
-   * Update asset server URL (e.g., when switching worlds)
-   */
-  setAssetServerUrl(assetServerUrl: string): void {
-    this.config.assetServerUrl = assetServerUrl;
-    logger.info('Asset server URL updated', { assetServerUrl });
   }
 }
