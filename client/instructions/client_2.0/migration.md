@@ -219,28 +219,31 @@ Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal u
 
 - Nicht mehr als noetig umsetzten, das ziel ist eine erste begehbare 3D welt die noch verbessert werden kann.
 - Zu details kannst du in 
-- [ ] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
+[?] Lege einen BlockTypeService im client an, der BlockTypes aus dem Server laden kann. Referenz in AppContext anlegen.
 - Siehe auch client_playground/packages/client/src/rendering/TextureAtlas.ts
 - BlockTypes werden nur einmal geladen und im BlockTypeService gecached.
-[ ] Lege den EngineService im client an der die 3D engine initialisiert. Referenz in AppContext anlegen.
-[ ] Lege einen RenderService im client an der die Chunks rendert. Referenz in EngineService anlegen.
+[?] Lege den EngineService im client an der die 3D engine initialisiert. Referenz in AppContext anlegen.
+[?] Lege einen RenderService im client an der die Chunks rendert. Referenz in EngineService anlegen.
 - Siehe auch client_playground/packages/client/src/rendering/ChunkRenderer.ts
 - Lege zuerst nur den BlockRenderer an. Alle Typen ausser INVISIBLE werden erstmal an den BlockRenderer zum Rendern weiter gegeben.
-[ ] Lege eine CameraService an der in der EngineService referenziert ist. Der Service 
+[?] Lege eine CameraService an der in der EngineService referenziert ist. Der Service 
 - Camera hat einen egoView eigenschaft.
-[ ] Lege einen PlayerService an, der Service hält die aktuelle Position des Spielers und 
+[?] Lege einen PlayerService an, der Service hält die aktuelle Position des Spielers und 
     referenziert den CameraService um die Kamera zu steuern. Und Rendert später auch den Player in der Third-Person-Ansicht
-[ ] Lege einen EnvironmentService an der in EnineService liegt. Das Environment macht das Licht an.
-[ ] Lege einen InputService und einen InputController ableitung WebInputController an.
+[?] Lege einen EnvironmentService an der in EnineService liegt. Das Environment macht das Licht an.
+[?] Lege einen InputService und einen InputController ableitung WebInputController an.
 - Lege InputHandler fuer jede Aktion an. MoveLeft, MoveRight, MoveForward, MoveBackward, Jump, RotateLeft RotateRigth, PitchUp, PitchDown, etc
 - Die InputHandler steuern den PlayerService und die CameraService
 - InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
-
+mach das
 [ ] Pruefe ob die Chunk Registration (Anforderung) richtig implementiert ist. Auch beim Start.
 
-===
-
 [ ] Erste Tests mit BabylonJS NullEngine
+
+Extra:
+[ ] in BlockModifier den Parameter 'effect' Typisieren 'none' | 'water' | 'wind' | 'flipbox' | 'lava' | 'fog'
+
+===
 
 ## Basic Network Protocoll
 

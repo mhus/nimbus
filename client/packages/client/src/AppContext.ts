@@ -8,6 +8,9 @@ import type { ClientService } from './services/ClientService';
 import type { TextureService } from './services/TextureService';
 import type { NetworkService } from './services/NetworkService';
 import type { ChunkService } from './services/ChunkService';
+import type { BlockTypeService } from './services/BlockTypeService';
+import type { ShaderService } from './services/ShaderService';
+import type { EngineService } from './services/EngineService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -41,13 +44,21 @@ export interface Services {
   /** Chunk service for chunk management and loading */
   chunk?: ChunkService;
 
+  /** Block type service for block type registry */
+  blockType?: BlockTypeService;
+
+  /** Shader service for shader effect management */
+  shader?: ShaderService;
+
+  /** Engine service for 3D rendering */
+  engine?: EngineService;
+
   // Future services will be added here:
-  // engine?: EngineService;
   // render?: RenderService;
-  // blockType?: BlockTypeService;
-  // shader?: ShaderService;
   // input?: InputService;
-  // camera?: CameraControl;
+  // camera?: CameraService;
+  // environment?: EnvironmentService;
+  // player?: PlayerService;
 }
 
 /**
