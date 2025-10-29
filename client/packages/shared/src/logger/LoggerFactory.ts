@@ -5,6 +5,8 @@
 import { Logger, type LoggerConfig } from './Logger';
 import { LogLevel, parseLogLevel } from './LogLevel';
 import { ExceptionHandler } from '../errors/ExceptionHandler';
+import { TransportManager } from './TransportManager';
+import type { LogTransport } from './LogEntry';
 
 /**
  * Global logger configuration
@@ -15,6 +17,12 @@ interface GlobalLoggerConfig extends Partial<LoggerConfig> {
 
   /** Per-logger level overrides (name → level) */
   loggerLevels?: Record<string, LogLevel>;
+
+  /** Transports for all loggers (managed by TransportManager) */
+  transports?: LogTransport[];
+
+  /** Include timestamp in logs */
+  includeTimestamp?: boolean;
 }
 
 /**
@@ -24,8 +32,8 @@ class LoggerFactoryImpl {
   private loggers = new Map<string, Logger>();
   private config: GlobalLoggerConfig = {
     defaultLevel: LogLevel.INFO,
-    includeTimestamp: true,
     includeStack: true,
+    includeTimestamp: true,
   };
 
   /**
@@ -40,9 +48,6 @@ class LoggerFactoryImpl {
 
       logger = new Logger(name, {
         minLevel: level,
-        formatter: this.config.formatter,
-        transports: this.config.transports,
-        includeTimestamp: this.config.includeTimestamp,
         includeStack: this.config.includeStack,
       });
 
@@ -57,6 +62,22 @@ class LoggerFactoryImpl {
    */
   configure(config: GlobalLoggerConfig): void {
     this.config = { ...this.config, ...config };
+
+    // Update transport manager if transports provided
+    if (config.transports !== undefined) {
+      TransportManager.setTransports(config.transports);
+    }
+
+    // Update transport manager configuration
+    if (
+      config.includeTimestamp !== undefined ||
+      config.includeStack !== undefined
+    ) {
+      TransportManager.configure({
+        includeTimestamp: config.includeTimestamp,
+        includeStack: config.includeStack,
+      });
+    }
 
     // Update existing loggers
     this.loggers.forEach((logger, name) => {
@@ -174,6 +195,37 @@ class LoggerFactoryImpl {
    */
   getLoggerNames(): string[] {
     return Array.from(this.loggers.keys());
+  }
+
+  /**
+   * Set transports at runtime (affects all loggers immediately)
+   */
+  setTransports(transports: LogTransport[]): void {
+    TransportManager.setTransports(transports);
+    this.config.transports = transports;
+  }
+
+  /**
+   * Add a transport at runtime (affects all loggers immediately)
+   */
+  addTransport(transport: LogTransport): void {
+    TransportManager.addTransport(transport);
+  }
+
+  /**
+   * Clear all transports (disables logging)
+   */
+  clearTransports(): void {
+    TransportManager.clearTransports();
+    this.config.transports = [];
+  }
+
+  /**
+   * Reset transports to default (console transport)
+   */
+  resetTransports(): void {
+    TransportManager.reset();
+    this.config.transports = undefined;
   }
 
   /**

@@ -2,9 +2,9 @@
  * Logger implementation
  */
 
-import { LogLevel, LogLevelNames } from './LogLevel';
-import type { LogEntry, LogFormatter, LogTransport } from './LogEntry';
-import { createConsoleTransport } from './transports/ConsoleTransport';
+import { LogLevel } from './LogLevel';
+import type { LogEntry } from './LogEntry';
+import { TransportManager } from './TransportManager';
 
 /**
  * Logger configuration
@@ -12,15 +12,6 @@ import { createConsoleTransport } from './transports/ConsoleTransport';
 export interface LoggerConfig {
   /** Minimum log level to process */
   minLevel: LogLevel;
-
-  /** Custom formatter (optional) */
-  formatter?: LogFormatter;
-
-  /** Custom transports (optional) */
-  transports?: LogTransport[];
-
-  /** Enable timestamp in logs */
-  includeTimestamp?: boolean;
 
   /** Enable stack traces for errors */
   includeStack?: boolean;
@@ -35,20 +26,9 @@ export class Logger {
 
   constructor(name: string, config: Partial<LoggerConfig> = {}) {
     this.name = name;
-
-    // Use ConsoleTransport as default if no transports provided
-    const defaultTransports = [
-      createConsoleTransport({
-        includeTimestamp: config.includeTimestamp ?? true,
-        includeStack: config.includeStack ?? true,
-      }),
-    ];
-
     this.config = {
       minLevel: LogLevel.INFO,
-      includeTimestamp: true,
       includeStack: true,
-      transports: defaultTransports,
       ...config,
     };
   }
@@ -96,17 +76,8 @@ export class Logger {
       entry.stack = error.stack;
     }
 
-    // Use transports to output log entry
-    if (this.config.transports && this.config.transports.length > 0) {
-      this.config.transports.forEach((transport) => {
-        try {
-          transport(entry);
-        } catch (error) {
-          // Transport errors should not break logging
-          console.error('[Logger] Transport error:', error);
-        }
-      });
-    }
+    // Use central transport manager to log entry
+    TransportManager.log(entry);
   }
 
   /**

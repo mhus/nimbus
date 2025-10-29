@@ -100,6 +100,9 @@ diesen Type relevant sind.
 [x] Logger erweitern:
 - default ConsoleTransport anstelle default logging in Logger zur Console.
 - NullTransport: Logger wird nicht geschrieben.
+[x] Logger Transport muss in laufzeit auswechselbar sein, d.h. hier muss noch eine Capselung implementiert werden. z.b.
+anstelle von direktem halten des transports immer eine static methode mit 'logge das jetzt' anlegen und hier
+den transport zentral halten. Der Transport kann dann jederzeit getauscht werden.
 
 ===
 
@@ -114,11 +117,11 @@ Start mit zentralen Strukturen:
 Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird mit der Zeit erweitert.
 [ ] ClientService: Lege einen ClientService in den AppContext der beim Starten in NimbusClient erstellt wird.
 - Er benötigt Zugriff auf den HTTP-Request, User-Agent, Language um den aktuellen Client, Sprache festzustellen.
-- Implementiere Client: WEB_BROWSER, XBOX, MOBILE_IOS, MOBILE_ANDROID, MOBILE
-- Implementiere UserAgent : string
-- Implementiere Language
-- Implementiere isEditor()
-- Implementiere isDevMode() - wenn mit pnpm run dev:* gestartet.
+- Implementiere getClientType() : network MessageTypes.ClientType
+- Implementiere getUserAgent() : string
+- Implementiere getLanguage() : string
+- Implementiere isEditor() : boolean (NimbusClient __EDITOR__)
+- Implementiere isDevMode() : boolean - wenn mit pnpm run dev:* gestartet - (not import.meta.env.PROD)
 - Implementiere isLogToConsole() - wird aus dotenv gelesen. Kann mit setLogToConsole(true) gesetzt werden.
 
 [ ] Starte den Logger mit richtigem Modus in ClientService 'setupLogger()':

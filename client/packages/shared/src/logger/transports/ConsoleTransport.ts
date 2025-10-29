@@ -16,8 +16,6 @@ export interface ConsoleTransportOptions {
   /** Include stack traces for errors */
   includeStack?: boolean;
 
-  /** Use colored output (if supported) */
-  useColors?: boolean;
 }
 
 /**
@@ -26,11 +24,7 @@ export interface ConsoleTransportOptions {
 export function createConsoleTransport(
   options: ConsoleTransportOptions = {}
 ): LogTransport {
-  const {
-    includeTimestamp = true,
-    includeStack = true,
-    useColors = true,
-  } = options;
+  const { includeTimestamp = true, includeStack = true } = options;
 
   return (entry: LogEntry): void => {
     const formatted = formatLogEntry(entry, includeTimestamp, includeStack);

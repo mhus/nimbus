@@ -5,6 +5,7 @@
 import { Logger } from './Logger';
 import { LogLevel } from './LogLevel';
 import type { LogEntry } from './LogEntry';
+import { TransportManager } from './TransportManager';
 
 describe('Logger', () => {
   let logger: Logger;
@@ -17,10 +18,17 @@ describe('Logger', () => {
       entries.push(entry);
     });
 
+    // Configure TransportManager with test transport
+    TransportManager.setTransports([transport]);
+
     logger = new Logger('TestLogger', {
       minLevel: LogLevel.TRACE,
-      transports: [transport],
     });
+  });
+
+  afterEach(() => {
+    // Reset TransportManager to default after each test
+    TransportManager.reset();
   });
 
   describe('constructor', () => {
@@ -32,7 +40,6 @@ describe('Logger', () => {
     it('should create logger with custom config', () => {
       const customLogger = new Logger('CustomLogger', {
         minLevel: LogLevel.ERROR,
-        includeTimestamp: false,
         includeStack: false,
       });
       expect(customLogger).toBeInstanceOf(Logger);
@@ -183,9 +190,11 @@ describe('Logger', () => {
       const transport2 = jest.fn();
       const transport3 = jest.fn();
 
+      // Configure TransportManager with multiple transports
+      TransportManager.setTransports([transport1, transport2, transport3]);
+
       const multiLogger = new Logger('MultiLogger', {
         minLevel: LogLevel.INFO,
-        transports: [transport1, transport2, transport3],
       });
 
       multiLogger.info('Test message');
@@ -201,9 +210,11 @@ describe('Logger', () => {
       });
       const goodTransport = jest.fn();
 
+      // Configure TransportManager with error and good transport
+      TransportManager.setTransports([errorTransport, goodTransport]);
+
       const errorLogger = new Logger('ErrorLogger', {
         minLevel: LogLevel.INFO,
-        transports: [errorTransport, goodTransport],
       });
 
       // Should not throw
@@ -241,10 +252,12 @@ describe('Logger', () => {
     });
 
     it('should not include stack if includeStack is false', () => {
+      // Clear previous entries
+      entries = [];
+
       const noStackLogger = new Logger('NoStackLogger', {
         minLevel: LogLevel.ERROR,
         includeStack: false,
-        transports: [transport],
       });
 
       const error = new Error('Test error');
