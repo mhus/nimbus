@@ -108,8 +108,24 @@ den transport zentral halten. Der Transport kann dann jederzeit getauscht werden
 
 ## Basic Client Services
 
-Da sehr viele Services ertellt werden müssen, die ineinander greifen, müssen sie Schritt für Schritt implementiert werden.
+Da sehr viele Services erstellt werden müssen, die ineinander greifen, müssen sie Schritt für Schritt implementiert werden.
 Für den Anfang werden einige Services als Mock erstellt und später richtig implementiert werden.
+
+Typen (etc.) in shared wurden bereits angelegt und geprüft.
+
+Plan:
+* Zentrale Strukturen in Client
+* Server Implementation 
+  - wird konzeptionell von Playground übernommen, Netzwerk und Typen wurden angepasst
+  - REST API teilweise neu implementiert
+  - BlockType werden nun von Server ausgeleifert -> BlockTypes als JSON Dateien anlegen im Filesystem anlegen
+  - Tests gegen den laufenden Server um die Implementierung zu testen
+* Basic 3D Engine
+* Start Screen
+* InputService und Input-System anlegen
+* Network Protocoll
+* Editor und Console anlegen
+* Client/3D Engine im Detail erweitern
 
 Start mit zentralen Strukturen:
 
