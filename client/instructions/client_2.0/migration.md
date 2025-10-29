@@ -104,7 +104,7 @@ diesen Type relevant sind.
 anstelle von direktem halten des transports immer eine static methode mit 'logge das jetzt' anlegen und hier
 den transport zentral halten. Der Transport kann dann jederzeit getauscht werden.
 
-===
+[ ] ChunkData:
 
 ## Basic Client Services
 
@@ -131,7 +131,7 @@ Start mit zentralen Strukturen:
 
 [x] AppContext: Enthält später Referenzen auf alle services, konfigurationen, etc. die der client braucht. 
 Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird mit der Zeit erweitert.
-[?] ClientService: Lege einen ClientService in den AppContext der beim Starten in NimbusClient erstellt wird.
+[x] ClientService: Lege einen ClientService in den AppContext der beim Starten in NimbusClient erstellt wird.
 - Er benötigt Zugriff auf den HTTP-Request, User-Agent, Language um den aktuellen Client, Sprache festzustellen.
 - Implementiere getClientType() : network MessageTypes.ClientType
 - Implementiere getUserAgent() : string
@@ -140,11 +140,11 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 - Implementiere isDevMode() : boolean - wenn mit pnpm run dev:* gestartet - (not import.meta.env.PROD)
 - Implementiere isLogToConsole() - wird aus dotenv gelesen. Kann mit setLogToConsole(true) gesetzt werden.
 
-[ ] Starte den Logger mit richtigem Modus in ClientService 'setupLogger()':
+[x] Starte den Logger mit richtigem Modus in ClientService 'setupLogger()':
 - isDevMode() == true: FileLogTransport, prüfe isLogToConsole(), dann auch consoleLogTransport
 - isDevMode() == false && isLogToConsole(): ConsoleLogTransport ansonsten NullLogTransport
 
-[ ] Wenn in ClientService setLogToConsole() genutzt wird und sich der status ändert, muss setupLogger() auch aufgerufen werden.
+[x] Wenn in ClientService setLogToConsole() genutzt wird und sich der status ändert, muss setupLogger() auch aufgerufen werden.
 
 ## Server Implementation
 
@@ -170,7 +170,10 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 - Schmeisse die programmatischen BlockTypen raus, das brauchen wir nicht. Lege 0/0.json noch als default im filesystem an.
 - Der server soll nicht beim starten alle files einlesen, sondern die bei request aus dem filesystem lesen und zurueckgeben. Geht das so? Damit koennen sich auch dateien waehrend der laufzeit aendern ohne durchstart.
 
-[ ] Schreibe Tests, die den laufenden Server testen und testen, das blocktypes richtig ausgeleifert werden.
+[x] Schreibe Tests, die den laufenden Server testen und testen, das blocktypes richtig ausgeleifert werden.
+- Der Port soll 3011 sein fuer den server. Kannst du bei den tests den Port 3111 nehmen damit sich das nicht mit einem leufenden server colidiert.
+
+===
 
 ## Basic 3D Engine
 

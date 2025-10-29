@@ -132,13 +132,11 @@ class LoggerFactoryImpl {
       // Vite environment (browser) - skip in test environment
       if (!envLevel && typeof process === 'undefined') {
         try {
-          // @ts-ignore - import.meta is not available in all environments
-          if (typeof import.meta !== 'undefined') {
-            // @ts-ignore
-            const meta = import.meta as any;
-            if (meta && meta.env) {
-              envLevel = meta.env.VITE_LOG_LEVEL;
-            }
+          // Use eval to defer import.meta parsing (not available in Jest/Node)
+          // @ts-ignore
+          const meta = eval('import.meta');
+          if (meta && meta.env) {
+            envLevel = meta.env.VITE_LOG_LEVEL;
           }
         } catch {
           // Ignore errors in test environment
@@ -161,13 +159,11 @@ class LoggerFactoryImpl {
       // Vite environment (browser) - skip in test environment
       if (!envLoggers && typeof process === 'undefined') {
         try {
-          // @ts-ignore - import.meta is not available in all environments
-          if (typeof import.meta !== 'undefined') {
-            // @ts-ignore
-            const meta = import.meta as any;
-            if (meta && meta.env) {
-              envLoggers = meta.env.VITE_LOG_LOGGERS;
-            }
+          // Use eval to defer import.meta parsing (not available in Jest/Node)
+          // @ts-ignore
+          const meta = eval('import.meta');
+          if (meta && meta.env) {
+            envLoggers = meta.env.VITE_LOG_LOGGERS;
           }
         } catch {
           // Ignore errors in test environment

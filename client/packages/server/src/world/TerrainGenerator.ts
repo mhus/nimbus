@@ -16,7 +16,7 @@ export class TerrainGenerator {
       for (let z = 0; z < chunkSize; z++) {
         const y = 0; // Ground level
         const index = x + z * chunkSize + y * chunkSize * chunkSize;
-        blocks[index] = 1; // Stone
+        blocks[index] = 220; // Stone
       }
     }
 

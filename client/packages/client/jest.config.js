@@ -12,6 +12,8 @@ export default {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@nimbus/shared$': '<rootDir>/../shared/src/index.ts',
+    '^@nimbus/shared/(.*)$': '<rootDir>/../shared/src/$1',
   },
   transform: {
     '^.+\\.tsx?$': [
@@ -19,11 +21,17 @@ export default {
       {
         tsconfig: {
           module: 'esnext',
+          moduleResolution: 'node',
           target: 'ES2022',
-          lib: ['ES2022'],
+          lib: ['ES2022', 'DOM'],
+          types: ['jest', 'node'],
+          esModuleInterop: true,
         },
       },
     ],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!@nimbus/shared)',
+  ],
   verbose: true,
 };

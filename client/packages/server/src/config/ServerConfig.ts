@@ -48,7 +48,7 @@ export function loadServerConfig(): ServerConfig {
   logger.debug('Loading server configuration from environment');
 
   const config: ServerConfig = {
-    port: parseInt(process.env.PORT || '3000', 10),
+    port: parseInt(process.env.PORT || '3011', 10),
     host: process.env.HOST || '0.0.0.0',
     cors: process.env.CORS_ENABLED !== 'false',
     corsOrigins: process.env.CORS_ORIGINS

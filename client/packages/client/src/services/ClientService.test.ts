@@ -2,9 +2,9 @@
  * Tests for ClientService
  */
 
-import { ClientService, ClientType } from './ClientService';
-import type { ClientConfig } from '../config/ClientConfig';
-import { TransportManager } from '@nimbus/shared';
+import { ClientService } from './ClientService';
+import { TransportManager, ClientType } from '@nimbus/shared';
+import { ClientConfig } from '../config/ClientConfig';
 
 describe('ClientService', () => {
   let mockConfig: ClientConfig;

@@ -3,7 +3,7 @@
  * Provides client platform detection, configuration, and logger setup
  */
 
-import { getLogger, TransportManager } from '@nimbus/shared';
+import { getLogger, TransportManager, ClientType } from '@nimbus/shared';
 import {
   createConsoleTransport,
   createNullTransport,
@@ -12,15 +12,6 @@ import {
 import type { ClientConfig } from '../config/ClientConfig';
 
 const logger = getLogger('ClientService');
-
-/**
- * Client type enum matching MessageTypes.ClientType
- */
-export enum ClientType {
-  WEB = 'web',
-  XBOX = 'xbox',
-  MOBILE = 'mobile',
-}
 
 /**
  * Client Service
@@ -109,8 +100,15 @@ export class ClientService {
    */
   isDevMode(): boolean {
     // Check Vite environment
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-      return !import.meta.env.PROD;
+    try {
+      // Use eval to defer import.meta parsing (not available in Jest/Node)
+      // @ts-ignore
+      const importMeta = eval('import.meta');
+      if (importMeta && importMeta.env) {
+        return !importMeta.env.PROD;
+      }
+    } catch (e) {
+      // import.meta not available, fall through to Node.js check
     }
 
     // Check Node.js environment
