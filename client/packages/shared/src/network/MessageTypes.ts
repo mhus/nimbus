@@ -48,6 +48,11 @@ export enum MessageType {
 
   // Notifications
   NOTIFICATION = 'n',
+
+  // Commands
+  CMD = 'cmd',
+  CMD_MESSAGE = 'cmd.msg',
+  CMD_RESULT = 'cmd.rs',
 }
 
 /**

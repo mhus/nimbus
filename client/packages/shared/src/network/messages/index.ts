@@ -33,3 +33,6 @@ export * from './NPCMessage';
 
 // Notifications
 export * from './NotificationMessage';
+
+// Commands
+export * from './CommandMessage';

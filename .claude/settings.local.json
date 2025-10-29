@@ -20,7 +20,8 @@
       "Bash(pnpm add:*)",
       "Bash(pnpm --filter @nimbus/shared add:*)",
       "Bash(pnpm --filter @nimbus/shared test:*)",
-      "Bash(pnpm test:*)"
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:shared:*)"
     ],
     "deny": [],
     "ask": []

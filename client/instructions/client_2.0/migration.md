@@ -94,7 +94,7 @@ diesen Type relevant sind.
 > Displayname und Name aus dem BlockMetadata entfernen. - Kann später über REST geladen werden.
 > Rest Route für Block Metadaten.
 
-[ ] Neuer Netzwerk Befehlt "cmd", "cmd.msg" und "cmd.rs" in client/shared/network anlegen. 
+[x] Neuer Netzwerk Befehlt "cmd", "cmd.msg" und "cmd.rs" in client/shared/network anlegen. 
 [ ] DTOs für REST Kommunikation aus client/instructions/client_2.0/server_rest_api.md in client/shared/rest anlegen. 
 
 ===
@@ -106,14 +106,32 @@ Für den Anfang werden einige Services als Mock erstellt und später richtig imp
 
 Start mit zentralen Strukturen:
 
-[ ] AppContext: Enthält referenzen auf alle services, konfigurationen, etc. die der client braucht. 
+[ ] AppContext: Enthält später Referenzen auf alle services, konfigurationen, etc. die der client braucht. 
 Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird mit der Zeit erweitert.
-[ ] ClientService: Lege eine Client Service in den AppContext der beim Starten in NimbusClient erstellt wird.
+[ ] ClientService: Lege einen ClientService in den AppContext der beim Starten in NimbusClient erstellt wird.
 - Er benötigt Zugriff auf den HTTP-Request, User-Agent, Language um den aktuellen Client, Sprache festzustellen.
 - Implementiere Client: WEB_BROWSER, XBOX, MOBILE_IOS, MOBILE_ANDROID, MOBILE
 - Implementiere UserAgent : string
 - Implementiere Language
 - Implementiere isEditor()
+
+## Server Implementation
+
+[ ] Implementiere den Server in NimbusServer.
+- orientiere dich am prototypen code in client_playground/packages/server
+- Die WebSocket ist nun ein JSON Protokoll, protocoll ist unter client/instructions/client_2.0/network-model-2.0.md beschrieben.
+- Die Daten werden wieder in chunks gespeichert, die in memory gehalten werden.
+- Implementiere die REST API routes unter client/instructions/client_2.0/server_rest_api.md
+- Implementiere die wichtigsten Nachrichten im WebSocket Protocoll: Login (aktuell werden alle zugelassen), Ping/Pong
+- Die Daten werden wieder in chunks gespeichert, die in memory gehalten werden.
+- Neu sind Block-Metadaten, diese werden später implementiert, gib in der REST-Funktion vorerst keine Gruppen zurück (leer).
+- Neu sind ClientCommands, es gibt aktuell keine Commands, lege einen CommandService an und CommandHandler, aber noch keien Commands.
+
+## Basic 3D Engine
+
+[ ] Lege einen TextureService an, der aber aktuell nichts tut. 
+[ ] Lege den EngineService an und er wird in NimbusClient erstellt und in den AppContext gespeichert.
+
 
 
 ## Basic Network Protocoll
