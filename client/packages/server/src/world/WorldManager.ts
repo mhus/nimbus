@@ -6,6 +6,8 @@ import { getLogger, type ChunkData, ExceptionHandler } from '@nimbus/shared';
 import type { WorldInstance } from '../types/ServerTypes';
 import { BlockTypeRegistry } from './BlockTypeRegistry';
 import { ChunkStorage } from '../storage/ChunkStorage';
+import { GeneratorFactory } from './generators/GeneratorFactory';
+import type { WorldGenerator } from './generators/WorldGenerator';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -70,12 +72,28 @@ export class WorldManager {
           const infoContent = fs.readFileSync(infoPath, 'utf-8');
           const worldInfo = JSON.parse(infoContent);
 
-          // Create world instance
-          this.createWorldFromInfo(entry.name, worldInfo);
+          // Load generator.json if exists
+          const generatorPath = path.join(worldPath, 'generator.json');
+          let generatorConfig = null;
+          if (fs.existsSync(generatorPath)) {
+            try {
+              const generatorContent = fs.readFileSync(generatorPath, 'utf-8');
+              generatorConfig = JSON.parse(generatorContent);
+              logger.debug('Loaded generator config', { worldId: entry.name, type: generatorConfig.type });
+            } catch (error) {
+              logger.warn('Failed to load generator.json, using default', { worldId: entry.name });
+            }
+          } else {
+            logger.debug('No generator.json found, using default', { worldId: entry.name });
+          }
+
+          // Create world instance with generator
+          this.createWorldFromInfo(entry.name, worldInfo, generatorConfig);
 
           logger.info('Loaded world from directory', {
             worldId: entry.name,
-            name: worldInfo.name || entry.name
+            name: worldInfo.name || entry.name,
+            generator: generatorConfig?.type || 'default'
           });
         } catch (error) {
           ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory.loadWorld', {
@@ -94,8 +112,25 @@ export class WorldManager {
   /**
    * Create world from info.json data
    */
-  private createWorldFromInfo(worldId: string, info: any): void {
+  private createWorldFromInfo(worldId: string, info: any, generatorConfig?: any): void {
     const now = new Date().toISOString();
+
+    // Create generator if config provided
+    let generator: WorldGenerator | undefined;
+    if (generatorConfig) {
+      try {
+        generator = GeneratorFactory.createGenerator(generatorConfig, this.blockTypeRegistry);
+      } catch (error) {
+        logger.error('Failed to create generator', { worldId, generatorConfig }, error as Error);
+      }
+    }
+
+    // If no generator created, use default normal generator
+    if (!generator) {
+      const defaultConfig = GeneratorFactory.createDefaultConfig('normal', info.seed);
+      generator = GeneratorFactory.createGenerator(defaultConfig, this.blockTypeRegistry);
+      logger.info('Using default normal generator', { worldId });
+    }
 
     const world: WorldInstance = {
       worldId,
@@ -114,6 +149,7 @@ export class WorldManager {
       groundLevel: info.groundLevel ?? 64,
       status: info.status ?? 0,
       chunks: new Map(),
+      generator,
       createdAt: info.createdAt || now,
       updatedAt: now,
     };
@@ -213,12 +249,16 @@ export class WorldManager {
   async getChunkData(
     worldId: string,
     cx: number,
-    cz: number,
-    terrainGenerator: any
+    cz: number
   ): Promise<ChunkData | null> {
     const world = this.worlds.get(worldId);
     if (!world) {
       logger.warn('World not found', { worldId });
+      return null;
+    }
+
+    if (!world.generator) {
+      logger.error('World has no generator', { worldId });
       return null;
     }
 
@@ -244,9 +284,9 @@ export class WorldManager {
       return storedChunk;
     }
 
-    // Step 3: Generate new chunk
-    logger.debug('Generating new chunk', { cx, cz });
-    const newServerChunk = terrainGenerator.generateChunk(cx, cz, world.chunkSize);
+    // Step 3: Generate new chunk using world's generator
+    logger.debug('Generating new chunk', { cx, cz, generator: world.generator.name });
+    const newServerChunk = world.generator.generateChunk(cx, cz, world.chunkSize);
     world.chunks.set(key, newServerChunk);
 
     return newServerChunk.toChunkData();

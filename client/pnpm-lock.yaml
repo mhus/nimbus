@@ -66,6 +66,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.21.2
+      open-simplex-noise:
+        specifier: ^2.5.0
+        version: 2.5.0
       ws:
         specifier: ^8.16.0
         version: 8.18.3
@@ -3401,6 +3404,10 @@ packages:
     dependencies:
       mimic-fn: 2.1.0
     dev: true
+
+  /open-simplex-noise@2.5.0:
+    resolution: {integrity: sha512-co7x8uWxGcgFtsJNBFqI9ylq+5Isotz2hZR7dsD5Sl+RDPGBeMEG41KAfF+5gF10ksi9Pg6DNpMHEoyTKLbejQ==}
+    dev: false
 
   /p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}

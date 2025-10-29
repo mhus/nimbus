@@ -1,0 +1,13 @@
+{
+  "type": "flat",
+  "seed": 11111,
+  "parameters": {
+    "groundLevel": 64,
+    "layers": [
+      { "blockType": "bedrock", "thickness": 1 },
+      { "blockType": "stone", "thickness": 50 },
+      { "blockType": "dirt", "thickness": 3 },
+      { "blockType": "grass", "thickness": 1 }
+    ]
+  }
+}

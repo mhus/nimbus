@@ -210,7 +210,11 @@ class NimbusServer {
       // Get or generate chunk
       let chunk = world.chunks.get(key);
       if (!chunk) {
-        chunk = this.terrainGenerator.generateChunk(cx, cz, world.chunkSize);
+        if (!world.generator) {
+          logger.error('World has no generator', { worldId: world.worldId });
+          return null;
+        }
+        chunk = world.generator.generateChunk(cx, cz, world.chunkSize);
         world.chunks.set(key, chunk);
       }
 

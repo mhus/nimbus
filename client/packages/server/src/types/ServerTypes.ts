@@ -4,6 +4,7 @@
 
 import type WebSocket from 'ws';
 import type { ServerChunk } from './ServerChunk';
+import type { WorldGenerator } from '../world/generators/WorldGenerator';
 
 /**
  * Client session data
@@ -92,6 +93,9 @@ export interface WorldInstance {
 
   /** Loaded chunks */
   chunks: Map<string, ServerChunk>;
+
+  /** Terrain generator for this world */
+  generator?: WorldGenerator;
 
   /** Created timestamp */
   createdAt: string;

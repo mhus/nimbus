@@ -237,6 +237,25 @@ Nun soll die 3D engine von BabylonJs verwendet werden, es muss viel auf einmal u
 - InputHandler werden im InputService registriert und vorerst hart im WebInputController an Keys und Mouse fest vertratet.
 mach das
 
+[ ] Kannst du noch meherere Generatoren erstellen und in generator.json im Welt Ordner ablegen. In der generator.json
+ist die art des Generators und weiter Infos, z.b. ein seed.
+- Flat: Einfach flache Ebene XZ
+- Normal: Einen huegeligen, algorithm siehe client_playground/packages/server/src/world/generators/NormalWorldGenerator.ts
+
+[ ] Es soll einen Flug und Walk modus geben
+- Flug: Der Spieler kann sich in der Welt bewegen wie im flug, keine Gravitation, Vor und Rueckwaerts in richtung des Kamera Pitches
+  - Kein Sprung möglich
+  - Nur im Editor modus Möglich
+- Walk: Der Spieler kann sich in der Welt bewegen in der XZ Ebene, Vor und Rueckwaerts in richtung um die Y Achse
+  - Es gibt Gravitation, d.h. nach unten fallen
+  - Sprung mit Space, zwei Blocks hoch
+  - Ein Block wird automatisch erklommen wenn der Spieler dagegen läuft
+- Wenn man zufällig in einem Block steht, dann wird man automatisch einen Block nach oben gehoben.
+- Diese Implementierung sollte in einem PhysicsService liegen und dort fuer alle local managed Entities gueltung haben.
+- Wie Agieren der PlayerService und der PhysicsService miteinander?
+- Gestartet wird im Walk Modus
+
+
 [ ] Erste Tests mit BabylonJS NullEngine
 - Erstelle einen Test, der nur den CubeRenderer testet mit NullEngine
 
