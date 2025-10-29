@@ -2,8 +2,8 @@
  * Server-specific types
  */
 
-import type { ChunkData } from '@nimbus/shared';
 import type WebSocket from 'ws';
+import type { ServerChunk } from './ServerChunk';
 
 /**
  * Client session data
@@ -91,7 +91,7 @@ export interface WorldInstance {
   status: number;
 
   /** Loaded chunks */
-  chunks: Map<string, ChunkData>;
+  chunks: Map<string, ServerChunk>;
 
   /** Created timestamp */
   createdAt: string;

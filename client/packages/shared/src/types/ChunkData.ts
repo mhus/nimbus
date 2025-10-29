@@ -55,4 +55,9 @@ export interface ChunkData {
    */
   blocks: Block[];
 
+  /**
+   * Height data per XZ position (optional)
+   * Flat array of height values
+   */
+  heightData?: number[];
 }

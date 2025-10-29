@@ -2,14 +2,13 @@
  * Terrain Generator - Simple flat plane for testing
  */
 
-import type { ChunkData } from '@nimbus/shared';
 import { ServerChunk, ChunkStatus } from '../types/ServerChunk';
 
 export class TerrainGenerator {
   /**
    * Generate a flat plane at Y=0 with stone (blockTypeId: 220)
    */
-  generateChunk(cx: number, cz: number, chunkSize: number): ChunkData {
+  generateChunk(cx: number, cz: number, chunkSize: number): ServerChunk {
     const chunk = new ServerChunk(cx, cz, chunkSize);
 
     // Fill Y=0 with stone (blockTypeId: 220)
@@ -29,8 +28,6 @@ export class TerrainGenerator {
     }
 
     chunk.status = ChunkStatus.READY;
-
-    // Convert to ChunkData for network/storage
-    return chunk.toChunkData();
+    return chunk;
   }
 }

@@ -207,12 +207,35 @@ class NimbusServer {
         world.chunks.set(key, chunk);
       }
 
-      // Convert to transfer format
+      // Convert ServerChunk to ChunkData, then to transfer format
+      const chunkData = chunk.toChunkData();
+
+      // Map blocks to BlockData format (network protocol)
+      const blockData = chunkData.blocks.map(block => ({
+        x: block.x,
+        y: block.y,
+        z: block.z,
+        bt: block.blockTypeId,
+        s: block.status || 0,
+        mi: block.modifierIndex,
+        d: block.metadata,
+      }));
+
       return {
         cx,
         cz,
-        b: [], // Sparse blocks (empty for now)
-        h: Array.from({ length: world.chunkSize * world.chunkSize }, () => [0, 0, 1, 0]),
+        b: blockData,
+        h: chunkData.heightData
+          ? Array.from({ length: world.chunkSize * world.chunkSize }, (_, i) => {
+              const offset = i * 4;
+              return [
+                chunkData.heightData![offset],
+                chunkData.heightData![offset + 1],
+                chunkData.heightData![offset + 2],
+                chunkData.heightData![offset + 3],
+              ] as [number, number, number, number];
+            })
+          : undefined,
       };
     });
 
