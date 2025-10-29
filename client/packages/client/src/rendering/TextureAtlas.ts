@@ -241,7 +241,8 @@ export class TextureAtlas {
 
       img.onload = () => resolve(img);
       img.onerror = (e) => {
-        logger.error('Failed to load image', { url }, e as Error);
+        const error = e instanceof Error ? e : new Error('Failed to load image');
+        logger.error('Failed to load image', { url }, error);
         reject(new Error(`Failed to load image: ${url}`));
       };
 

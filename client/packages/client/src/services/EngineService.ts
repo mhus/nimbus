@@ -260,7 +260,11 @@ export class EngineService {
    * Check if engine is initialized
    */
   isReady(): boolean {
-    return this.isInitialized && this.textureAtlas?.isReady() && this.materialService?.isReady();
+    return (
+      this.isInitialized &&
+      (this.textureAtlas?.isReady() ?? false) &&
+      (this.materialService?.isReady() ?? false)
+    );
   }
 
   /**
