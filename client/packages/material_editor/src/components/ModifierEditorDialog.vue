@@ -19,7 +19,7 @@
                   @update:model-value="toggleVisibility"
                   :default-open="true"
                 >
-                  <VisibilityEditor v-model="modifierData.visibility" />
+                  <VisibilityEditor v-model="modifierData.visibility" :world-id="worldId" />
                 </CollapsibleSection>
 
                 <!-- Physics Section -->
@@ -126,6 +126,7 @@ import SoundEditor from './editors/SoundEditor.vue';
 interface Props {
   modifier: BlockModifier;
   statusNumber: number;
+  worldId: string;
 }
 
 const props = defineProps<Props>();

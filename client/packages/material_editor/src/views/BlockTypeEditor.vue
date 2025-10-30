@@ -59,6 +59,7 @@
       v-if="isModifierEditorOpen && editingModifier"
       :modifier="editingModifier.modifier"
       :status-number="editingModifier.status"
+      :world-id="currentWorldId!"
       @close="closeModifierEditor"
       @save="handleModifierSaved"
     />

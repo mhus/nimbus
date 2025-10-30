@@ -103,10 +103,22 @@
           class="input input-bordered input-sm flex-1"
           :placeholder="`textures/block/my_${name}.png`"
         />
+        <!-- Asset Picker Button (Zauberstab) -->
+        <button
+          class="btn btn-ghost btn-sm btn-square"
+          @click="openAssetPicker(parseInt(key))"
+          title="Select from assets"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+          </svg>
+        </button>
+        <!-- Remove Button -->
         <button
           v-if="getTextureValue(parseInt(key))"
           class="btn btn-ghost btn-sm btn-square"
           @click="removeTexture(parseInt(key))"
+          title="Remove texture"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -115,16 +127,26 @@
       </div>
     </div>
   </div>
+
+  <!-- Asset Picker Dialog -->
+  <AssetPickerDialog
+    v-if="isAssetPickerOpen"
+    :world-id="worldId"
+    :current-path="getTextureValue(selectedTextureKey)"
+    @close="closeAssetPicker"
+    @select="handleAssetSelected"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { VisibilityModifier } from '@nimbus/shared';
 import { Shape, ShapeNames, TextureKey, TextureKeyNames } from '@nimbus/shared';
-import CollapsibleSection from '../CollapsibleSection.vue';
+import AssetPickerDialog from '../AssetPickerDialog.vue';
 
 interface Props {
   modelValue?: VisibilityModifier;
+  worldId?: string; // Need worldId for AssetPickerDialog
 }
 
 const props = defineProps<Props>();
@@ -182,5 +204,23 @@ const removeTexture = (key: number) => {
   if (localValue.value.textures) {
     delete localValue.value.textures[key];
   }
+};
+
+// Asset Picker
+const isAssetPickerOpen = ref(false);
+const selectedTextureKey = ref<number>(0);
+
+const openAssetPicker = (key: number) => {
+  selectedTextureKey.value = key;
+  isAssetPickerOpen.value = true;
+};
+
+const closeAssetPicker = () => {
+  isAssetPickerOpen.value = false;
+};
+
+const handleAssetSelected = (path: string) => {
+  setTextureValue(selectedTextureKey.value, path);
+  closeAssetPicker();
 };
 </script>
