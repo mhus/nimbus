@@ -56,14 +56,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import type { Asset } from '../services/AssetService';
-import { useWorld } from '../composables/useWorld';
-import { useAssets } from '../composables/useAssets';
-import SearchInput from '../components/SearchInput.vue';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
-import ErrorAlert from '../components/ErrorAlert.vue';
-import AssetGrid from '../components/AssetGrid.vue';
-import AssetUploadDialog from '../components/AssetUploadDialog.vue';
+import type { Asset } from '@/services/AssetService';
+import { useWorld } from '@/composables/useWorld';
+import { useAssets } from '@/composables/useAssets';
+import SearchInput from '@components/SearchInput.vue';
+import LoadingSpinner from '@components/LoadingSpinner.vue';
+import ErrorAlert from '@components/ErrorAlert.vue';
+import AssetGrid from '@material/components/AssetGrid.vue';
+import AssetUploadDialog from '@material/components/AssetUploadDialog.vue';
 
 const { currentWorldId } = useWorld();
 

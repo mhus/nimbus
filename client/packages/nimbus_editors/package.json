@@ -1,8 +1,8 @@
 {
-  "name": "@nimbus/material_editor",
+  "name": "@nimbus/nimbus_editors",
   "version": "2.0.0",
   "type": "module",
-  "description": "Material Editor for Nimbus - Block Types, Textures, Assets management",
+  "description": "Multi-page editor suite for Nimbus - Block Types, Assets, Block Instances, and more",
   "main": "./dist/index.js",
   "scripts": {
     "dev": "vite",

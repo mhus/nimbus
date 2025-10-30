@@ -116,12 +116,12 @@
 import { ref, computed, watch } from 'vue';
 import type { BlockModifier } from '@nimbus/shared';
 import CollapsibleSection from './CollapsibleSection.vue';
-import VisibilityEditor from './editors/VisibilityEditor.vue';
-import PhysicsEditor from './editors/PhysicsEditor.vue';
-import WindEditor from './editors/WindEditor.vue';
-import EffectsEditor from './editors/EffectsEditor.vue';
-import IlluminationEditor from './editors/IlluminationEditor.vue';
-import SoundEditor from './editors/SoundEditor.vue';
+import VisibilityEditor from '@editors/VisibilityEditor.vue';
+import PhysicsEditor from '@editors/PhysicsEditor.vue';
+import WindEditor from '@editors/WindEditor.vue';
+import EffectsEditor from '@editors/EffectsEditor.vue';
+import IlluminationEditor from '@editors/IlluminationEditor.vue';
+import SoundEditor from '@editors/SoundEditor.vue';
 
 interface Props {
   modifier: BlockModifier;

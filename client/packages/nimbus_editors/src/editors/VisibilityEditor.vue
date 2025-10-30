@@ -149,7 +149,7 @@
 import { ref, watch } from 'vue';
 import type { VisibilityModifier } from '@nimbus/shared';
 import { Shape, ShapeNames, TextureKey, TextureKeyNames } from '@nimbus/shared';
-import AssetPickerDialog from '../AssetPickerDialog.vue';
+import AssetPickerDialog from '@components/AssetPickerDialog.vue';
 import OffsetsEditor from './OffsetsEditor.vue';
 
 interface Props {

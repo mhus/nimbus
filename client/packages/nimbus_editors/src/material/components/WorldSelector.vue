@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useWorld } from '../composables/useWorld';
+import { useWorld } from '@/composables/useWorld';
 
 const { currentWorld, currentWorldId, worlds, loading, error, loadWorlds, selectWorld } = useWorld();
 

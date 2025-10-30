@@ -69,14 +69,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import type { BlockType } from '@nimbus/shared';
-import { useWorld } from '../composables/useWorld';
-import { useBlockTypes } from '../composables/useBlockTypes';
-import SearchInput from '../components/SearchInput.vue';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
-import ErrorAlert from '../components/ErrorAlert.vue';
-import BlockTypeList from '../components/BlockTypeList.vue';
-import BlockTypeEditorPanel from '../components/BlockTypeEditorPanel.vue';
-import ModifierEditorDialog from '../components/ModifierEditorDialog.vue';
+import { useWorld } from '@/composables/useWorld';
+import { useBlockTypes } from '@/composables/useBlockTypes';
+import SearchInput from '@components/SearchInput.vue';
+import LoadingSpinner from '@components/LoadingSpinner.vue';
+import ErrorAlert from '@components/ErrorAlert.vue';
+import BlockTypeList from '@material/components/BlockTypeList.vue';
+import BlockTypeEditorPanel from '@material/components/BlockTypeEditorPanel.vue';
+import ModifierEditorDialog from '@components/ModifierEditorDialog.vue';
 
 const { currentWorldId } = useWorld();
 

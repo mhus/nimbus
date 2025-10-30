@@ -145,7 +145,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import type { BlockType, BlockModifier } from '@nimbus/shared';
-import { useBlockTypes } from '../composables/useBlockTypes';
+import { useBlockTypes } from '@/composables/useBlockTypes';
 
 interface Props {
   blockType: BlockType | null;

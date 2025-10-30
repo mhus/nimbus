@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Asset } from '../services/AssetService';
+import type { Asset } from '@/services/AssetService';
 
 interface Props {
   assets: Asset[];

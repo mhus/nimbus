@@ -18,6 +18,6 @@
 </template>
 
 <script setup lang="ts">
-import AppHeader from './components/AppHeader.vue';
-import TabNavigation from './components/TabNavigation.vue';
+import AppHeader from '@material/components/AppHeader.vue';
+import TabNavigation from '@material/components/TabNavigation.vue';
 </script>

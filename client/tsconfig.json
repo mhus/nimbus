@@ -4,6 +4,6 @@
     { "path": "./packages/shared" },
     { "path": "./packages/client" },
     { "path": "./packages/server" },
-    { "path": "./packages/material_editor" }
+    { "path": "./packages/nimbus_editors" }
   ]
 }

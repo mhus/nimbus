@@ -133,7 +133,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
-import { useAssets } from '../composables/useAssets';
+import { useAssets } from '@/composables/useAssets';
 
 interface Props {
   worldId: string;
