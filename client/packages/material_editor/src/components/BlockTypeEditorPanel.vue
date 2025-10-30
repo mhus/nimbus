@@ -79,7 +79,13 @@
                     <div class="card-body p-4">
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                          <div class="badge badge-primary">Status {{ status }}</div>
+                          <div
+                            class="badge badge-primary cursor-pointer hover:badge-secondary"
+                            @click="changeStatusId(status)"
+                            title="Click to change status ID"
+                          >
+                            Status {{ status }}
+                          </div>
                           <div class="text-sm text-base-content/70">
                             {{ getModifierSummary(status) }}
                           </div>
@@ -229,13 +235,65 @@ const addStatus = () => {
   const existingStatuses = statusList.value;
   const nextStatus = existingStatuses.length > 0 ? Math.max(...existingStatuses) + 1 : 1;
 
+  const statusId = prompt(`Enter status ID (default: ${nextStatus}):`, nextStatus.toString());
+
+  if (statusId === null) return; // Cancelled
+
+  const newStatusId = parseInt(statusId, 10);
+
+  if (isNaN(newStatusId)) {
+    alert('Invalid status ID');
+    return;
+  }
+
+  if (formData.value.modifiers && formData.value.modifiers[newStatusId]) {
+    alert(`Status ${newStatusId} already exists`);
+    return;
+  }
+
   if (!formData.value.modifiers) {
     formData.value.modifiers = {};
   }
 
-  formData.value.modifiers[nextStatus] = {
+  formData.value.modifiers[newStatusId] = {
     visibility: { shape: 1, textures: {} }
   };
+};
+
+// Change status ID
+const changeStatusId = (oldStatus: number) => {
+  if (oldStatus === 0) {
+    alert('Cannot change status 0 (default status)');
+    return;
+  }
+
+  const newStatusIdStr = prompt(`Change status ID from ${oldStatus} to:`, oldStatus.toString());
+
+  if (newStatusIdStr === null) return; // Cancelled
+
+  const newStatusId = parseInt(newStatusIdStr, 10);
+
+  if (isNaN(newStatusId)) {
+    alert('Invalid status ID');
+    return;
+  }
+
+  if (newStatusId === oldStatus) return; // No change
+
+  if (formData.value.modifiers && formData.value.modifiers[newStatusId]) {
+    alert(`Status ${newStatusId} already exists`);
+    return;
+  }
+
+  if (!formData.value.modifiers || !formData.value.modifiers[oldStatus]) {
+    return;
+  }
+
+  // Copy modifier to new status ID
+  formData.value.modifiers[newStatusId] = formData.value.modifiers[oldStatus];
+
+  // Delete old status
+  delete formData.value.modifiers[oldStatus];
 };
 
 // Remove status

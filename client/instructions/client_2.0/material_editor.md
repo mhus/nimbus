@@ -110,4 +110,4 @@ Assets (siehe Asset Editor). Der pfad wird übernommen.
 - glass_flat: wie flat
 Alle anderen erstmal keine offsets.
 
-[ ] Bei 'Add Status' muss man die status Id angeben koennen.
+[x] Bei 'Add Status' muss man die status Id angeben koennen. / Alternativ kann man die id durch click auf das 'status 0' label aendern.
