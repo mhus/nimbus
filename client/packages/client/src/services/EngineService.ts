@@ -16,7 +16,7 @@ import { PlayerService } from './PlayerService';
 import { RenderService } from './RenderService';
 import { InputService } from './InputService';
 import { PhysicsService } from './PhysicsService';
-import { SelectService } from './SelectService';
+import { SelectService, SelectMode } from './SelectService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -144,7 +144,7 @@ export class EngineService {
 
       // Initialize input service
       this.inputService = new InputService(this.appContext, this.playerService);
-      const webInputController = new WebInputController(this.canvas, this.playerService);
+      const webInputController = new WebInputController(this.canvas, this.playerService, this.appContext);
       this.inputService.setController(webInputController);
       logger.debug('InputService initialized');
 
@@ -158,6 +158,15 @@ export class EngineService {
         );
         this.appContext.services.select = this.selectService;
         logger.debug('SelectService initialized');
+
+        // Set auto-select mode based on build mode
+        if (__EDITOR__) {
+          this.selectService.autoSelectMode = SelectMode.BLOCK;
+          logger.debug('Auto-select mode set to BLOCK (Editor build)');
+        } else if (__VIEWER__) {
+          this.selectService.autoSelectMode = SelectMode.INTERACTIVE;
+          logger.debug('Auto-select mode set to INTERACTIVE (Viewer build)');
+        }
       } else {
         logger.warn('SelectService not initialized: missing ChunkService, PlayerService, or Scene');
       }

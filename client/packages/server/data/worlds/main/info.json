@@ -1,6 +1,6 @@
 {
   "name": "Main World",
-  "description": "Default main world",
+  "description": "Default main world for testing and development",
   "chunkSize": 32,
   "dimensions": {
     "minX": -1028,
@@ -12,5 +12,25 @@
   },
   "seaLevel": 0,
   "groundLevel": 64,
-  "status": 0
+  "status": 0,
+  "editorUrl": "http://localhost:3002/",
+  "createdAt": "2025-10-30T00:00:00.000Z",
+  "owner": {
+    "user": "admin",
+    "displayName": "Administrator",
+    "email": "admin@nimbus.local"
+  },
+  "settings": {
+    "maxPlayers": 10,
+    "allowGuests": true,
+    "pvpEnabled": false,
+    "pingInterval": 5000
+  },
+  "startArea": {
+    "x": 0,
+    "y": 65,
+    "z": 0,
+    "radius": 10,
+    "rotation": 0
+  }
 }

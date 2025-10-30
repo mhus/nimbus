@@ -6,6 +6,7 @@
 
 import { getLogger } from '@nimbus/shared';
 import type { PlayerService } from '../services/PlayerService';
+import type { AppContext } from '../AppContext';
 
 const logger = getLogger('InputHandler');
 
@@ -27,10 +28,12 @@ export interface InputState {
  */
 export abstract class InputHandler {
   protected playerService: PlayerService;
+  protected appContext?: AppContext;
   protected state: InputState = { active: false, value: 0 };
 
-  constructor(playerService: PlayerService) {
+  constructor(playerService: PlayerService, appContext?: AppContext) {
     this.playerService = playerService;
+    this.appContext = appContext;
   }
 
   /**

@@ -160,18 +160,7 @@ class NimbusServer {
         success: true,
         userId: session.userId,
         displayName: session.displayName,
-        worldInfo: world ? {
-          worldId: world.worldId,
-          name: world.name,
-          description: world.description,
-          chunkSize: world.chunkSize,
-          ...world.dimensions,
-          seaLevel: world.seaLevel,
-          groundLevel: world.groundLevel,
-          status: world.status,
-          assetPath: `/api/worlds/${world.worldId}/assets`,
-          // assetPort can be omitted (uses same server port)
-        } : null,
+        worldInfo: world ? world.worldInfo : null,
         sessionId: session.sessionId,
       },
     }));

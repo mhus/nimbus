@@ -270,10 +270,24 @@ export class SelectService {
   private createAirClientBlock(x: number, y: number, z: number): ClientBlock {
     // Get AIR blockType from registry (id 0)
     const blockTypeService = this.appContext.services.blockType;
-    const airBlockType = blockTypeService?.getBlockType(0);
+    let airBlockType = blockTypeService?.getBlockType(0);
 
+    // Fallback: Create minimal AIR BlockType if not found
     if (!airBlockType) {
-      throw new Error('AIR BlockType (id 0) not found in registry');
+      airBlockType = {
+        id: 0,
+        initialStatus: 0,
+        modifiers: {
+          0: {
+            visibility: {
+              shape: 0, // INVISIBLE
+            },
+            physics: {
+              solid: false,
+            },
+          },
+        },
+      };
     }
 
     // Get chunk coordinates

@@ -436,4 +436,27 @@ export class NetworkService {
 
     return `${this.apiUrl}${worldAssetPath}/${assetPath}`;
   }
+
+  /**
+   * Create block editor URL with coordinates
+   *
+   * Constructs editor URL from worldInfo.editorUrl with block coordinates as query parameters
+   *
+   * @param x - Block X coordinate
+   * @param y - Block Y coordinate
+   * @param z - Block Z coordinate
+   * @returns Editor URL with coordinates or null if no editor URL configured
+   */
+  createBlockEditorUrl(x: number, y: number, z: number): string | null {
+    const editorUrl = this.appContext.worldInfo?.editorUrl;
+
+    if (!editorUrl) {
+      logger.warn('No editor URL configured for this world');
+      return null;
+    }
+
+    // Add coordinates as query parameters
+    const separator = editorUrl.includes('?') ? '&' : '?';
+    return `${editorUrl}block-editor.html${separator}x=${x}&y=${y}&z=${z}`;
+  }
 }

@@ -65,6 +65,11 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
         worldName: successData.worldInfo.name,
       });
 
+      // Log complete WorldInfo for debugging
+      logger.info('Received WorldInfo from server', {
+        worldInfo: successData.worldInfo,
+      });
+
       // Emit event for other services
       this.networkService.emit('login:success', successData);
     } else {

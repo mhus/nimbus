@@ -2,7 +2,7 @@
  * World Manager - Manages world instances
  */
 
-import { getLogger, type ChunkData, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, type ChunkData, type WorldInfo, ExceptionHandler } from '@nimbus/shared';
 import type { WorldInstance } from '../types/ServerTypes';
 import { BlockTypeRegistry } from './BlockTypeRegistry';
 import { AssetManager } from '../assets/AssetManager';
@@ -135,19 +135,52 @@ export class WorldManager {
       logger.info('Using default normal generator', { worldId });
     }
 
+    // Get dimensions with defaults
+    const dimensions = info.dimensions || {
+      minX: -128,
+      maxX: 128,
+      minY: -64,
+      maxY: 192,
+      minZ: -128,
+      maxZ: 128,
+    };
+
+    // Build WorldInfo for client transmission (shared type)
+    const worldInfo: WorldInfo = {
+      worldId,
+      name: info.name || worldId,
+      description: info.description || '',
+      chunkSize: info.chunkSize || 32,
+      status: info.status ?? 0,
+      assetPath: `/api/worlds/${worldId}/assets`,
+      editorUrl: info.editorUrl, // Optional from info.json
+      start: {
+        x: dimensions.minX,
+        y: dimensions.minY,
+        z: dimensions.minZ,
+      },
+      stop: {
+        x: dimensions.maxX,
+        y: dimensions.maxY,
+        z: dimensions.maxZ,
+      },
+      createdAt: info.createdAt || now,
+      updatedAt: now,
+      // Optional fields from info.json
+      owner: info.owner,
+      settings: info.settings,
+      license: info.license,
+      startArea: info.startArea,
+      worldGroupId: info.worldGroupId,
+      assetPort: info.assetPort,
+    };
+
     const world: WorldInstance = {
       worldId,
       name: info.name || worldId,
       description: info.description || '',
       chunkSize: info.chunkSize || 32,
-      dimensions: info.dimensions || {
-        minX: -128,
-        maxX: 128,
-        minY: -64,
-        maxY: 192,
-        minZ: -128,
-        maxZ: 128,
-      },
+      dimensions,
       seaLevel: info.seaLevel ?? 0,
       groundLevel: info.groundLevel ?? 64,
       status: info.status ?? 0,
@@ -155,6 +188,7 @@ export class WorldManager {
       generator,
       createdAt: info.createdAt || now,
       updatedAt: now,
+      worldInfo, // Shared WorldInfo for client
     };
 
     this.worlds.set(worldId, world);
@@ -209,13 +243,37 @@ export class WorldManager {
     logger.info(`Initialized ${this.worlds.size} test worlds`);
   }
 
-  private createWorld(params: Omit<WorldInstance, 'chunks' | 'createdAt' | 'updatedAt'>): void {
+  private createWorld(params: Omit<WorldInstance, 'chunks' | 'createdAt' | 'updatedAt' | 'worldInfo'>): void {
     const now = new Date().toISOString();
+
+    // Build WorldInfo for client transmission
+    const worldInfo: WorldInfo = {
+      worldId: params.worldId,
+      name: params.name,
+      description: params.description,
+      chunkSize: params.chunkSize,
+      status: params.status,
+      assetPath: `/api/worlds/${params.worldId}/assets`,
+      start: {
+        x: params.dimensions.minX,
+        y: params.dimensions.minY,
+        z: params.dimensions.minZ,
+      },
+      stop: {
+        x: params.dimensions.maxX,
+        y: params.dimensions.maxY,
+        z: params.dimensions.maxZ,
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+
     const world: WorldInstance = {
       ...params,
       chunks: new Map(),
       createdAt: now,
       updatedAt: now,
+      worldInfo,
     };
     this.worlds.set(world.worldId, world);
 

@@ -32,7 +32,37 @@ export class BlockTypeService {
   private loadingPromise?: Promise<void>;
 
   constructor(private appContext: AppContext) {
+    // Register static AIR BlockType (id 0)
+    // This ensures AIR is always available, even before server block types are loaded
+    this.registerAirBlockType();
+
     logger.info('BlockTypeService initialized');
+  }
+
+  /**
+   * Register static AIR BlockType (id 0)
+   *
+   * AIR is a special block type that represents empty space.
+   * It must always be available for the SelectService and other systems.
+   */
+  private registerAirBlockType(): void {
+    const airBlockType: BlockType = {
+      id: 0,
+      initialStatus: 0,
+      modifiers: {
+        0: {
+          visibility: {
+            shape: 0, // INVISIBLE shape
+          },
+          physics: {
+            solid: false,
+          },
+        },
+      },
+    };
+
+    this.blockTypes.set(0, airBlockType);
+    logger.debug('Static AIR BlockType (id 0) registered');
   }
 
   /**
@@ -151,6 +181,11 @@ export class BlockTypeService {
    * @returns BlockType or undefined if not found
    */
   getBlockType(id: number): BlockType | undefined {
+    // AIR (id 0) is always available, even before loading
+    if (id === 0) {
+      return this.blockTypes.get(0);
+    }
+
     if (!this.loaded) {
       logger.warn('Attempting to get block type before loading', { id });
       return undefined;
@@ -196,6 +231,10 @@ export class BlockTypeService {
     this.blockTypes.clear();
     this.loaded = false;
     this.loadingPromise = undefined;
+
+    // Re-register static AIR BlockType
+    this.registerAirBlockType();
+
     logger.info('Block type cache cleared');
   }
 }

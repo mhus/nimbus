@@ -4,29 +4,19 @@
  */
 
 import { apiService } from './ApiService';
+import type { WorldInfo } from '@nimbus/shared';
 
-export interface WorldInfo {
-  worldId: string;
-  name: string;
-  description: string;
-  chunkSize: number;
-  status: number;
-}
-
-export interface WorldListResponse {
-  worldId: string;
-  name: string;
-  description: string;
-  chunkSize: number;
-  status: number;
-}
+/**
+ * @deprecated Use WorldInfo from @nimbus/shared instead
+ */
+export type WorldListResponse = WorldInfo;
 
 export class WorldService {
   /**
    * Get all worlds
    */
-  async getWorlds(): Promise<WorldListResponse[]> {
-    return apiService.get<WorldListResponse[]>('/api/worlds');
+  async getWorlds(): Promise<WorldInfo[]> {
+    return apiService.get<WorldInfo[]>('/api/worlds');
   }
 
   /**

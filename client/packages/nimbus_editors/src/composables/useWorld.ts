@@ -4,14 +4,14 @@
  */
 
 import { ref, computed } from 'vue';
-import { worldService, type WorldListResponse } from '../services/WorldService';
-import { getLogger } from '@nimbus/shared';
+import { worldService } from '../services/WorldService';
+import { getLogger, type WorldInfo } from '@nimbus/shared';
 
 const logger = getLogger('useWorld');
 
 // Shared state across all instances
 const currentWorldId = ref<string>(import.meta.env.VITE_WORLD_ID || 'test-world-1');
-const worlds = ref<WorldListResponse[]>([]);
+const worlds = ref<WorldInfo[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 

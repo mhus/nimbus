@@ -8,6 +8,7 @@
 import { getLogger } from '@nimbus/shared';
 import type { InputController } from '../services/InputService';
 import type { PlayerService } from '../services/PlayerService';
+import type { AppContext } from '../AppContext';
 import type { InputHandler } from './InputHandler';
 import {
   MoveForwardHandler,
@@ -19,6 +20,10 @@ import {
 } from './handlers/MovementHandlers';
 import { JumpHandler, ToggleMovementModeHandler } from './handlers/ActionHandlers';
 import { RotateHandler } from './handlers/RotationHandlers';
+import {
+  EditSelectionRotatorHandler,
+  EditorActivateHandler,
+} from './handlers/EditorHandlers';
 
 const logger = getLogger('WebInputController');
 
@@ -41,11 +46,14 @@ interface KeyBinding {
  * - Space: Jump (Walk mode) / Move up (Fly mode)
  * - Shift: Move down (Fly mode only)
  * - F: Toggle Walk/Fly mode (Editor only)
+ * - . (Period): Rotate selection mode (Editor only)
+ * - / (Slash): Open block editor (Editor only)
  * - Mouse: Look around (when pointer locked)
  */
 export class WebInputController implements InputController {
   private canvas: HTMLCanvasElement;
   private playerService: PlayerService;
+  private appContext: AppContext;
 
   private handlers: InputHandler[] = [];
   private keyBindings: Map<string, InputHandler> = new Map();
@@ -61,12 +69,17 @@ export class WebInputController implements InputController {
   private toggleMovementModeHandler?: ToggleMovementModeHandler;
   private rotateHandler: RotateHandler;
 
+  // Editor handlers (Editor only)
+  private editSelectionRotatorHandler?: EditSelectionRotatorHandler;
+  private editorActivateHandler?: EditorActivateHandler;
+
   // Pointer lock state
   private pointerLocked: boolean = false;
 
-  constructor(canvas: HTMLCanvasElement, playerService: PlayerService) {
+  constructor(canvas: HTMLCanvasElement, playerService: PlayerService, appContext: AppContext) {
     this.canvas = canvas;
     this.playerService = playerService;
+    this.appContext = appContext;
 
     // Create handlers
     this.moveForwardHandler = new MoveForwardHandler(playerService);
@@ -81,6 +94,8 @@ export class WebInputController implements InputController {
     // Toggle movement mode handler (Editor only)
     if (__EDITOR__) {
       this.toggleMovementModeHandler = new ToggleMovementModeHandler(playerService);
+      this.editSelectionRotatorHandler = new EditSelectionRotatorHandler(playerService, appContext);
+      this.editorActivateHandler = new EditorActivateHandler(playerService, appContext);
     }
 
     this.handlers = [
@@ -94,9 +109,15 @@ export class WebInputController implements InputController {
       this.rotateHandler,
     ];
 
-    // Add toggle handler to handlers list if available
+    // Add editor handlers to handlers list if available
     if (this.toggleMovementModeHandler) {
       this.handlers.push(this.toggleMovementModeHandler);
+    }
+    if (this.editSelectionRotatorHandler) {
+      this.handlers.push(this.editSelectionRotatorHandler);
+    }
+    if (this.editorActivateHandler) {
+      this.handlers.push(this.editorActivateHandler);
     }
 
     // Setup key bindings
@@ -117,9 +138,20 @@ export class WebInputController implements InputController {
     this.keyBindings.set('A', this.moveLeftHandler);
     this.keyBindings.set('d', this.moveRightHandler);
     this.keyBindings.set('D', this.moveRightHandler);
+
+    // Editor-only key bindings
+    if (this.editSelectionRotatorHandler) {
+      this.keyBindings.set('.', this.editSelectionRotatorHandler);
+    }
+    if (this.editorActivateHandler) {
+      this.keyBindings.set('/', this.editorActivateHandler);
+    }
+
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)
     // F: Toggle Walk/Fly mode (Editor only, handled dynamically)
+    // . : Rotate selection mode (Editor only)
+    // / : Open block editor (Editor only)
   }
 
   /**

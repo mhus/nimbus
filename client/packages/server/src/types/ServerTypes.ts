@@ -5,6 +5,7 @@
 import type WebSocket from 'ws';
 import type { ServerChunk } from './ServerChunk';
 import type { WorldGenerator } from '../world/generators/WorldGenerator';
+import type { WorldInfo } from '@nimbus/shared';
 
 /**
  * Client session data
@@ -102,4 +103,7 @@ export interface WorldInstance {
 
   /** Updated timestamp */
   updatedAt: string;
+
+  /** Shared WorldInfo for client transmission */
+  worldInfo: WorldInfo;
 }
