@@ -1,0 +1,33 @@
+{
+  "name": "@nimbus/material_editor",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "Material Editor for Nimbus - Block Types, Textures, Assets management",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc",
+    "preview": "vite preview",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "lint": "eslint src --ext .ts,.vue"
+  },
+  "dependencies": {
+    "@nimbus/shared": "workspace:*",
+    "vue": "^3.4.0",
+    "@headlessui/vue": "^1.7.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/eslint-config-typescript": "^12.0.0",
+    "autoprefixer": "^10.4.0",
+    "daisyui": "^4.4.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.19.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "vue-tsc": "^1.8.0"
+  }
+}

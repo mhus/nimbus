@@ -29,7 +29,7 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 
 ## Setup
 
-[ ] Erstelle ein neues Packet material_editor das auch die sourcen in 'shared' nutzt.
+[?] Erstelle ein neues Packet material_editor das auch die sourcen in 'shared' nutzt.
 - Richte Vite mit Vue3 und tailwind css ein.
 - Erstelle die Grundstruktur der Applikation mit den benötigten Komponenten.
 - In einer dotnet Datei wird die aktuelle API_URL fest hinterlegt.
@@ -49,3 +49,32 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
   - Liste der Textures und Assets mit Suchfunktion, wenn ein bekanntes Format (Bilddatei, png, ...) dann Preview anzeigen
   - Button um neue Textures und Assets zu erstellen und zu Löschen.
   - Es gibt keinen richtigen Editor, da es sich um Binärdaten handelt.
+
+```text
+  🚀 Anwendung starten:
+
+  # Von Root-Verzeichnis aus:
+  cd /Users/hummel/sources/mhus/nimbus/client
+
+  # Material Editor starten (Port 3002):
+  pnpm dev:material_editor
+
+  # Oder direkt im Package:
+  cd packages/material_editor
+  pnpm dev
+
+  🔧 Build für Production:
+
+  # Von Root:
+  pnpm build:material_editor
+
+  # Oder direkt:
+  cd packages/material_editor
+  pnpm build
+
+  📝 Konfiguration:
+
+  Die Datei /packages/material_editor/.env.local enthält:
+  - VITE_API_URL=http://localhost:3000 (Server URL)
+  - VITE_WORLD_ID=test-world-1 (Default World)
+```

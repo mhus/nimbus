@@ -1,0 +1,80 @@
+/**
+ * BlockType Service
+ * Manages block type CRUD operations
+ */
+
+import type { BlockType } from '@nimbus/shared';
+import { apiService } from './ApiService';
+
+export interface BlockTypeListResponse {
+  blockTypes: BlockType[];
+}
+
+export interface BlockTypeCreateResponse {
+  id: number;
+}
+
+export class BlockTypeService {
+  /**
+   * Get all block types or search
+   */
+  async getBlockTypes(worldId: string, query?: string): Promise<BlockType[]> {
+    const params = query ? { query } : undefined;
+    const response = await apiService.get<BlockTypeListResponse>(
+      `/api/worlds/${worldId}/blocktypes`,
+      params
+    );
+    return response.blockTypes;
+  }
+
+  /**
+   * Get single block type by ID
+   */
+  async getBlockType(worldId: string, id: number): Promise<BlockType> {
+    return apiService.get<BlockType>(`/api/worlds/${worldId}/blocktypes/${id}`);
+  }
+
+  /**
+   * Create new block type
+   */
+  async createBlockType(worldId: string, blockType: Partial<BlockType>): Promise<number> {
+    const response = await apiService.post<BlockTypeCreateResponse>(
+      `/api/worlds/${worldId}/blocktypes`,
+      blockType
+    );
+    return response.id;
+  }
+
+  /**
+   * Update existing block type
+   */
+  async updateBlockType(worldId: string, id: number, blockType: Partial<BlockType>): Promise<BlockType> {
+    return apiService.put<BlockType>(
+      `/api/worlds/${worldId}/blocktypes/${id}`,
+      blockType
+    );
+  }
+
+  /**
+   * Delete block type
+   */
+  async deleteBlockType(worldId: string, id: number): Promise<void> {
+    return apiService.delete<void>(`/api/worlds/${worldId}/blocktypes/${id}`);
+  }
+
+  /**
+   * Get next available block type ID
+   */
+  async getNextAvailableId(worldId: string): Promise<number> {
+    // The server automatically assigns IDs if not provided
+    // This is a helper to get next ID from existing block types
+    const blockTypes = await this.getBlockTypes(worldId);
+    if (blockTypes.length === 0) {
+      return 100; // Start at 100
+    }
+    const maxId = Math.max(...blockTypes.map(bt => bt.id));
+    return maxId + 1;
+  }
+}
+
+export const blockTypeService = new BlockTypeService();

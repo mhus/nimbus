@@ -1,0 +1,139 @@
+<template>
+  <div class="space-y-4">
+    <!-- Header with Search and Actions -->
+    <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+      <div class="flex-1">
+        <SearchInput
+          v-model="searchQuery"
+          placeholder="Search assets..."
+          @update:modelValue="handleSearch"
+        />
+      </div>
+      <div class="flex gap-2">
+        <button
+          class="btn btn-primary"
+          @click="openUploadDialog"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Upload Asset
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <LoadingSpinner v-if="loading && assets.length === 0" />
+
+    <!-- Error State -->
+    <ErrorAlert v-else-if="error" :message="error" />
+
+    <!-- Empty State -->
+    <div v-else-if="!loading && assets.length === 0" class="text-center py-12">
+      <p class="text-base-content/70 text-lg">No assets found</p>
+      <p class="text-base-content/50 text-sm mt-2">Upload your first asset to get started</p>
+    </div>
+
+    <!-- Asset Grid -->
+    <AssetGrid
+      v-else
+      :assets="assets"
+      :get-url="getAssetUrl"
+      :is-image="isImage"
+      :get-icon="getIcon"
+      @delete="handleDelete"
+    />
+
+    <!-- Upload Dialog -->
+    <AssetUploadDialog
+      v-if="isUploadDialogOpen"
+      :world-id="currentWorldId!"
+      @close="closeUploadDialog"
+      @uploaded="handleUploaded"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue';
+import type { Asset } from '../services/AssetService';
+import { useWorld } from '../composables/useWorld';
+import { useAssets } from '../composables/useAssets';
+import SearchInput from '../components/SearchInput.vue';
+import LoadingSpinner from '../components/LoadingSpinner.vue';
+import ErrorAlert from '../components/ErrorAlert.vue';
+import AssetGrid from '../components/AssetGrid.vue';
+import AssetUploadDialog from '../components/AssetUploadDialog.vue';
+
+const { currentWorldId } = useWorld();
+
+const assetsComposable = computed(() => {
+  if (!currentWorldId.value) return null;
+  return useAssets(currentWorldId.value);
+});
+
+const assets = computed(() => assetsComposable.value?.assets.value || []);
+const loading = computed(() => assetsComposable.value?.loading.value || false);
+const error = computed(() => assetsComposable.value?.error.value || null);
+const getAssetUrl = computed(() => assetsComposable.value?.getAssetUrl || (() => ''));
+const isImage = computed(() => assetsComposable.value?.isImage || (() => false));
+const getIcon = computed(() => assetsComposable.value?.getIcon || (() => '📦'));
+const searchQuery = ref('');
+
+const isUploadDialogOpen = ref(false);
+
+// Load assets when world changes
+watch(currentWorldId, () => {
+  if (currentWorldId.value) {
+    assetsComposable.value?.loadAssets();
+  }
+}, { immediate: true });
+
+/**
+ * Handle search
+ */
+const handleSearch = (query: string) => {
+  if (!assetsComposable.value) return;
+  assetsComposable.value.searchAssets(query);
+};
+
+/**
+ * Open upload dialog
+ */
+const openUploadDialog = () => {
+  isUploadDialogOpen.value = true;
+};
+
+/**
+ * Close upload dialog
+ */
+const closeUploadDialog = () => {
+  isUploadDialogOpen.value = false;
+};
+
+/**
+ * Handle uploaded
+ */
+const handleUploaded = () => {
+  closeUploadDialog();
+};
+
+/**
+ * Handle delete
+ */
+const handleDelete = async (asset: Asset) => {
+  if (!assetsComposable.value) return;
+
+  if (!confirm(`Are you sure you want to delete "${asset.path}"?`)) {
+    return;
+  }
+
+  await assetsComposable.value.deleteAsset(asset.path);
+};
+
+onMounted(() => {
+  if (currentWorldId.value && assetsComposable.value) {
+    assetsComposable.value.loadAssets();
+  }
+});
+</script>
