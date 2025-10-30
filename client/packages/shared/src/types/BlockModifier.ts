@@ -349,7 +349,7 @@ export interface VisibilityModifier {
   path?: string;
 
   /** Texture definitions (key = TextureKey) */
-  textures?: Record<number, TextureDefinition>;
+  textures?: Record<number, TextureDefinition | string>;
 }
 
 /**
@@ -506,12 +506,12 @@ export namespace TextureHelper {
    * Get texture from visibility modifier
    * @param visibility Visibility modifier
    * @param key Texture key
-   * @returns Texture definition or undefined
+   * @returns Texture definition, string, or undefined
    */
   export function getTexture(
     visibility: VisibilityModifier,
     key: TextureKey
-  ): TextureDefinition | undefined {
+  ): TextureDefinition | string | undefined {
     if (!visibility.textures) {
       return undefined;
     }
@@ -523,12 +523,12 @@ export namespace TextureHelper {
    * Set texture in visibility modifier
    * @param visibility Visibility modifier
    * @param key Texture key
-   * @param texture Texture definition
+   * @param texture Texture definition or path string
    */
   export function setTexture(
     visibility: VisibilityModifier,
     key: TextureKey,
-    texture: TextureDefinition
+    texture: TextureDefinition | string
   ): void {
     if (!visibility.textures) {
       visibility.textures = {};
@@ -606,13 +606,15 @@ export namespace TextureHelper {
    */
   export function cloneTextures(
     visibility: VisibilityModifier
-  ): Record<number, TextureDefinition> | undefined {
+  ): Record<number, TextureDefinition | string> | undefined {
     if (!visibility.textures) {
       return undefined;
     }
-    const cloned: Record<number, TextureDefinition> = {};
+    const cloned: Record<number, TextureDefinition | string> = {};
     for (const [key, texture] of Object.entries(visibility.textures)) {
-      cloned[parseInt(key, 10)] = { ...texture };
+      const index = parseInt(key, 10);
+      // If texture is a string, just copy it; if it's an object, spread it
+      cloned[index] = typeof texture === 'string' ? texture : { ...texture };
     }
     return cloned;
   }
@@ -621,12 +623,12 @@ export namespace TextureHelper {
    * Get texture by name (for convenience)
    * @param visibility Visibility modifier
    * @param name Texture name ('top', 'bottom', etc.)
-   * @returns Texture definition or undefined
+   * @returns Texture definition, string, or undefined
    */
   export function getTextureByName(
     visibility: VisibilityModifier,
     name: string
-  ): TextureDefinition | undefined {
+  ): TextureDefinition | string | undefined {
     const key = getTextureKeyByName(name);
     if (key === undefined) {
       return undefined;
@@ -638,12 +640,12 @@ export namespace TextureHelper {
    * Set texture by name (for convenience)
    * @param visibility Visibility modifier
    * @param name Texture name ('top', 'bottom', etc.)
-   * @param texture Texture definition
+   * @param texture Texture definition or path string
    */
   export function setTextureByName(
     visibility: VisibilityModifier,
     name: string,
-    texture: TextureDefinition
+    texture: TextureDefinition | string
   ): void {
     const key = getTextureKeyByName(name);
     if (key !== undefined) {
@@ -698,13 +700,32 @@ export namespace TextureHelper {
   }
 
   /**
+   * Normalize texture to TextureDefinition
+   * Converts string path to TextureDefinition object
+   * @param texture Texture definition or path string
+   * @returns TextureDefinition object
+   */
+  export function normalizeTexture(texture: TextureDefinition | string): TextureDefinition {
+    return typeof texture === 'string' ? { path: texture } : texture;
+  }
+
+  /**
+   * Check if texture is a string (simple path)
+   * @param texture Texture definition or path string
+   * @returns True if texture is a string
+   */
+  export function isStringTexture(texture: TextureDefinition | string): texture is string {
+    return typeof texture === 'string';
+  }
+
+  /**
    * Set all cube face textures to same texture
    * @param visibility Visibility modifier
-   * @param texture Texture definition
+   * @param texture Texture definition or path string
    */
   export function setAllFaces(
     visibility: VisibilityModifier,
-    texture: TextureDefinition
+    texture: TextureDefinition | string
   ): void {
     setTexture(visibility, TextureKey.TOP, texture);
     setTexture(visibility, TextureKey.BOTTOM, texture);
@@ -717,11 +738,11 @@ export namespace TextureHelper {
   /**
    * Set side faces (left, right, front, back) to same texture
    * @param visibility Visibility modifier
-   * @param texture Texture definition
+   * @param texture Texture definition or path string
    */
   export function setSideFaces(
     visibility: VisibilityModifier,
-    texture: TextureDefinition
+    texture: TextureDefinition | string
   ): void {
     setTexture(visibility, TextureKey.LEFT, texture);
     setTexture(visibility, TextureKey.RIGHT, texture);

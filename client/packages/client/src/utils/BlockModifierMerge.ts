@@ -22,7 +22,8 @@ export function mergeBlockModifier(
   block: Block,
   blockType: BlockType
 ): BlockModifier {
-  const status = block.status || 0;
+  // Status is determined from BlockType.initialStatus (default: 0)
+  const status = blockType.initialStatus || 0;
 
   // Priority 1: Block instance metadata modifiers (if block has custom metadata)
   if (block.metadata?.modifiers && block.metadata.modifiers[status]) {

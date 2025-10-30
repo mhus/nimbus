@@ -173,8 +173,8 @@ export class RenderService {
           continue;
         }
 
-        // Get shape from modifier
-        const status = block.status ?? 0;
+        // Get shape from modifier (status from BlockType.initialStatus)
+        const status = blockType.initialStatus ?? 0;
         const modifier = blockType.modifiers[status];
         if (!modifier || !modifier.visibility) {
           continue;

@@ -73,8 +73,8 @@ export class CubeRenderer {
     faceData: FaceData,
     vertexOffset: number
   ): Promise<number> {
-    // Get block modifier for current status
-    const status = block.status ?? 0;
+    // Get block modifier for current status (from BlockType.initialStatus)
+    const status = blockType.initialStatus ?? 0;
     const modifier = blockType.modifiers[status];
 
     if (!modifier || !modifier.visibility) {

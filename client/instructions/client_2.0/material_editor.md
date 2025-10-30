@@ -78,3 +78,20 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
   - VITE_API_URL=http://localhost:3000 (Server URL)
   - VITE_WORLD_ID=test-world-1 (Default World)
 ```
+
+## Block Type Editor
+
+[ ] Das Editieren der status Sections soll besser untertuetzt werden.
+- Du kannst einen neuen Dialog aufmachen im einene Status zu bearbeiten.
+- Referenz in 'client/packages/shared/src/types/BlockModifier.ts'
+- Die Bereiche sollen ausklappbar sein. Sind sie eingeklappt, wird das optionale Feld als Empty gespeichert (Daten gehen verloren) - Oder noch schöner, neben dem Titel des bereichs ist eine checkbox, die steuert ob der Bereich dann empty wird.
+- Erstelle einen Bereich für 'visibility' und Biete Elemente an zum Bearbeiten (chckboxen, textfelder, dropdowns, ...)
+  - Die IDs für Texturen sind normiert, siehe Type Docu 'TextureKey'
+  - Texturen koennen zwei moeglichkeiten haben: Entweder direkt der Pfad oder ein Objekt mit vuModifier, etc (siehe TextureDefinition)
+- Erstelle einen Bereich für 'physics' und Biete Elemente an zum Bearbeiten (chckboxen, textfelder, dropdowns, ...)
+- Erstelle einen Bereich für 'wind'.
+- Erstelle ein Dropdown für 'effect'
+- Erstelle ein textFeld für 'spriteCount'
+- Erstelle ein textFeld für 'alpha'
+- Erstelle einen Bereich für 'illumination'
+- Erstelle einen bereich für 'sound'

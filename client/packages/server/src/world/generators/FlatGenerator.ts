@@ -83,7 +83,6 @@ export class FlatGenerator implements WorldGenerator {
               chunk.setBlock({
                 position: { x: worldX, y: worldY, z: worldZ },
                 blockTypeId: blockType.id,
-                status: 0,
               });
             }
           }

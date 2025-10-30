@@ -279,13 +279,6 @@ export interface Block {
   faceVisibility?: FaceVisibility;
 
   /**
-   * Current status of this block instance
-   * References a modifier in BlockType.modifiers or metadata.modifiers
-   * @default 0 (BlockStatus.DEFAULT)
-   */
-  status?: number;
-
-  /**
    * Block-specific metadata (optional)
    *
    * Contains instance-specific data like display name and optional modifier overrides.

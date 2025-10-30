@@ -24,7 +24,6 @@ export class TerrainGenerator {
             z: worldZ + localZ,
           },
           blockTypeId: 220, // Stone
-          status: 0,
         });
       }
     }

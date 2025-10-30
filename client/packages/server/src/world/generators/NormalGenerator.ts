@@ -68,12 +68,13 @@ export class NormalGenerator implements WorldGenerator {
    * Find block ID by name
    */
   private findBlockIdByName(name: string): number | null {
-    // Try to load all block types and find by name
+    // Try to load all block types and find by description
     // This is inefficient but works for initialization
     const allBlockTypes = this.registry.getAllBlockTypes();
 
     for (const blockType of allBlockTypes) {
-      if (blockType.name?.toLowerCase() === name.toLowerCase()) {
+      // Search in description (case-insensitive)
+      if (blockType.description?.toLowerCase().includes(name.toLowerCase())) {
         return blockType.id;
       }
     }
@@ -147,7 +148,6 @@ export class NormalGenerator implements WorldGenerator {
           chunk.setBlock({
             position: { x: worldX, y: terrainHeight, z: worldZ },
             blockTypeId: surfaceBlockId,
-            status: 0,
           });
         }
 
@@ -157,7 +157,6 @@ export class NormalGenerator implements WorldGenerator {
           chunk.setBlock({
             position: { x: worldX, y: terrainHeight - 1, z: worldZ },
             blockTypeId: dirtId,
-            status: 0,
           });
         }
 
@@ -168,7 +167,6 @@ export class NormalGenerator implements WorldGenerator {
             chunk.setBlock({
               position: { x: worldX, y: this.waterLevel, z: worldZ },
               blockTypeId: waterBlockId,
-              status: 0,
             });
           }
         }

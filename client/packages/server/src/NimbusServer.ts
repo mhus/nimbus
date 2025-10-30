@@ -43,7 +43,11 @@ class NimbusServer {
       // Setup Express middleware
       this.app.use(express.json());
       if (config.cors) {
-        this.app.use(cors({ origin: config.corsOrigins }));
+        // Allow all origins in development
+        this.app.use(cors({
+          origin: true, // Allow all origins
+          credentials: true, // Allow credentials
+        }));
       }
 
       // Auth middleware
