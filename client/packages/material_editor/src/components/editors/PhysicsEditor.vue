@@ -79,15 +79,11 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: PhysicsModifier | undefined): void;
 }>();
 
-const localValue = ref<PhysicsModifier>(props.modelValue || {});
+const localValue = ref<PhysicsModifier>(
+  props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : {}
+);
 
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
-}, { deep: true });
-
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    localValue.value = JSON.parse(JSON.stringify(newValue));
-  }
 }, { deep: true });
 </script>

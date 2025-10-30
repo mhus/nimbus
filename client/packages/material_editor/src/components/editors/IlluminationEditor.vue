@@ -42,15 +42,11 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: IlluminationModifier | undefined): void;
 }>();
 
-const localValue = ref<IlluminationModifier>(props.modelValue || {});
+const localValue = ref<IlluminationModifier>(
+  props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : {}
+);
 
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
-}, { deep: true });
-
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    localValue.value = JSON.parse(JSON.stringify(newValue));
-  }
 }, { deep: true });
 </script>

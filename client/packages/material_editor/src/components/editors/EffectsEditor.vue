@@ -62,7 +62,9 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: EffectsModifier | undefined): void;
 }>();
 
-const localValue = ref<EffectsModifier>(props.modelValue || {});
+const localValue = ref<EffectsModifier>(
+  props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : {}
+);
 
 const skyEffect = computed({
   get: () => localValue.value.sky || {},
@@ -77,11 +79,5 @@ const skyEffect = computed({
 
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
-}, { deep: true });
-
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    localValue.value = JSON.parse(JSON.stringify(newValue));
-  }
 }, { deep: true });
 </script>

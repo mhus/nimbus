@@ -96,6 +96,9 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 - Erstelle einen Bereich für 'illumination'
 - Erstelle einen bereich für 'sound'
 
+[ ] Bei texture noch einen Button mit einem Zauberstab: Dann geht ein Dialog auf mit einer Suche nach 
+Assets (siehe Asset Editor). Der pfad wird übernommen.
+
 [ ] offsets anzeigen und bearbeiten mit verschiedenen Bezeichnern.
 - invisible: keine
 - cube: Alle ecken (XYZ) 'top front left', 'top front right', 'top back left', 'top back right', 'bottom front left', 'bottom front right', 'bottom back left', 'bottom back right'
@@ -103,4 +106,5 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 - sphere: Erster Punkt (XYZ) ist radios offset, Zweiter Punkt (XYZ) ist verschiebung
 - hash: Alle Punkte (XYZ) wie bei cube
 - cross: Alle Punkte (XYZ) wie bei cube
-- 
+- flat: Die Vier ersten Punkte: 'front left', 'front right', 'back left', 'back right'
+- glass_flat: wie flat

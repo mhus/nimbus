@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, toRef } from 'vue';
 
 interface Props {
   title: string;
@@ -41,16 +41,11 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void;
 }>();
 
-const isEnabled = ref(props.modelValue);
+const isEnabled = toRef(props, 'modelValue');
 const isOpen = ref(props.defaultOpen);
-
-watch(() => props.modelValue, (newValue) => {
-  isEnabled.value = newValue;
-});
 
 const toggleEnabled = (event: Event) => {
   const newValue = (event.target as HTMLInputElement).checked;
-  isEnabled.value = newValue;
   emit('update:modelValue', newValue);
 
   // Auto-open when enabling

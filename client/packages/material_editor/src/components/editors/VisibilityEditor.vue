@@ -133,16 +133,13 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: VisibilityModifier | undefined): void;
 }>();
 
-const localValue = ref<VisibilityModifier>(props.modelValue || { shape: 1, textures: {} });
+const localValue = ref<VisibilityModifier>(
+  props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : { shape: 1, textures: {} }
+);
 
+// Only watch localValue changes to emit updates (one-way)
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
-}, { deep: true });
-
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    localValue.value = JSON.parse(JSON.stringify(newValue));
-  }
 }, { deep: true });
 
 // Shape options

@@ -132,60 +132,70 @@ const emit = defineEmits<{
 // Working copy of modifier
 const modifierData = ref<BlockModifier>(JSON.parse(JSON.stringify(props.modifier)));
 
-// Track which sections are enabled
-const hasVisibility = ref(!!modifierData.value.visibility);
-const hasPhysics = ref(!!modifierData.value.physics);
-const hasWind = ref(!!modifierData.value.wind);
-const hasEffects = ref(!!modifierData.value.effects);
-const hasIllumination = ref(!!modifierData.value.illumination);
-const hasSound = ref(!!modifierData.value.sound);
-
-// Watch section toggles to set/unset data
-watch(hasVisibility, (enabled) => {
-  if (!enabled) {
-    modifierData.value.visibility = undefined;
-  } else if (!modifierData.value.visibility) {
-    modifierData.value.visibility = { shape: 1, textures: {} };
+// Track which sections are enabled (computed from modifierData)
+const hasVisibility = computed({
+  get: () => !!modifierData.value.visibility,
+  set: (enabled) => {
+    if (!enabled) {
+      modifierData.value.visibility = undefined;
+    } else if (!modifierData.value.visibility) {
+      modifierData.value.visibility = { shape: 1, textures: {} };
+    }
   }
 });
 
-watch(hasPhysics, (enabled) => {
-  if (!enabled) {
-    modifierData.value.physics = undefined;
-  } else if (!modifierData.value.physics) {
-    modifierData.value.physics = {};
+const hasPhysics = computed({
+  get: () => !!modifierData.value.physics,
+  set: (enabled) => {
+    if (!enabled) {
+      modifierData.value.physics = undefined;
+    } else if (!modifierData.value.physics) {
+      modifierData.value.physics = {};
+    }
   }
 });
 
-watch(hasWind, (enabled) => {
-  if (!enabled) {
-    modifierData.value.wind = undefined;
-  } else if (!modifierData.value.wind) {
-    modifierData.value.wind = {};
+const hasWind = computed({
+  get: () => !!modifierData.value.wind,
+  set: (enabled) => {
+    if (!enabled) {
+      modifierData.value.wind = undefined;
+    } else if (!modifierData.value.wind) {
+      modifierData.value.wind = {};
+    }
   }
 });
 
-watch(hasEffects, (enabled) => {
-  if (!enabled) {
-    modifierData.value.effects = undefined;
-  } else if (!modifierData.value.effects) {
-    modifierData.value.effects = {};
+const hasEffects = computed({
+  get: () => !!modifierData.value.effects,
+  set: (enabled) => {
+    if (!enabled) {
+      modifierData.value.effects = undefined;
+    } else if (!modifierData.value.effects) {
+      modifierData.value.effects = {};
+    }
   }
 });
 
-watch(hasIllumination, (enabled) => {
-  if (!enabled) {
-    modifierData.value.illumination = undefined;
-  } else if (!modifierData.value.illumination) {
-    modifierData.value.illumination = {};
+const hasIllumination = computed({
+  get: () => !!modifierData.value.illumination,
+  set: (enabled) => {
+    if (!enabled) {
+      modifierData.value.illumination = undefined;
+    } else if (!modifierData.value.illumination) {
+      modifierData.value.illumination = {};
+    }
   }
 });
 
-watch(hasSound, (enabled) => {
-  if (!enabled) {
-    modifierData.value.sound = undefined;
-  } else if (!modifierData.value.sound) {
-    modifierData.value.sound = {};
+const hasSound = computed({
+  get: () => !!modifierData.value.sound,
+  set: (enabled) => {
+    if (!enabled) {
+      modifierData.value.sound = undefined;
+    } else if (!modifierData.value.sound) {
+      modifierData.value.sound = {};
+    }
   }
 });
 
