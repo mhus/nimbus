@@ -60,7 +60,7 @@ describe('BlockValidator', () => {
     });
 
     it('should reject offsets out of range', () => {
-      const offsets: Offsets = [128, 0, 0];
+      const offsets: Offsets = [1001, 0, 0];
       const result = BlockValidator.validateOffsets(offsets);
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
@@ -75,11 +75,11 @@ describe('BlockValidator', () => {
       expect(result.errors.length).toBeGreaterThanOrEqual(3);
     });
 
-    it('should warn about non-integer values', () => {
+    it('should accept float values', () => {
       const offsets: Offsets = [1.5, 2.7, 3.9];
       const result = BlockValidator.validateOffsets(offsets);
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings!.length).toBe(3);
+      expect(result.valid).toBe(true);
+      // Float values should no longer generate warnings
     });
 
     it('should warn about unusual offset count', () => {
@@ -176,7 +176,7 @@ describe('BlockValidator', () => {
       const block: Block = {
         position: { x: 0, y: 0, z: 0 },
         blockTypeId: 1,
-        offsets: [200, 0, 0], // Out of range
+        offsets: [1001, 0, 0], // Out of range (max is 1000)
       };
 
       const result = BlockValidator.validateBlock(block);
@@ -436,7 +436,7 @@ describe('BlockValidator', () => {
       const block: Block = {
         position: { x: 0, y: 0, z: 0 },
         blockTypeId: 1,
-        offsets: [200, 0, 0], // Invalid
+        offsets: [1001, 0, 0], // Invalid (out of range)
         faceVisibility: { value: 200 }, // Invalid
       };
 

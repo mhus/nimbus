@@ -74,11 +74,11 @@ export const BlockConstants = {
   /** Minimum status value (1 byte) */
   MIN_STATUS: 0,
 
-  /** Maximum offset value (signed byte) */
-  MAX_OFFSET: 127,
+  /** Maximum offset value (for validation, supports floats) */
+  MAX_OFFSET: 1000,
 
-  /** Minimum offset value (signed byte) */
-  MIN_OFFSET: -127,
+  /** Minimum offset value (for validation, supports floats) */
+  MIN_OFFSET: -1000,
 
   /** Maximum face visibility value (7 bits) */
   MAX_FACE_VISIBILITY: 127,

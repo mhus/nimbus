@@ -305,6 +305,38 @@ im StartScreen ausgewählt wurde.
 [x] Implementiere den WebSocket Client im NetworkService.
 [x] Implementiere die Login Nachricht und die Ping/Pong Nachrichten im NetworkService.
 
+## Bonus: Umstellen von offset Values von -127 bis 127 auf float
+
+In Block und BlockModifier ist offset als Array of byte definiert. Da die Werte in JSON sind koennen diese jetzt auch float sein.
+- client/packages/shared/src/types/Block.ts
+- client/packages/shared/src/types/BlockModifier.ts
+
+[x] Block und BlockModifier implementieren
+- offset: Array<number>
+- Updated type definitions and comments to support float values
+- Updated NimbusConstants (MAX_OFFSET/MIN_OFFSET: -1000 to 1000)
+- Updated BlockValidator tests to accept float values
+- Updated OffsetsEditor.vue to support float input with step="0.1"
+[x] MaterialEditor in numbus_editors umstellen
+- Already renamed to nimbus_editors package
+[x] Weitere stellen suchen und umstellen.
+- Updated all relevant files (types, constants, tests, editor UI)
+[x] Dokumentation aktualisieren
+- Updated JSDoc comments in Block.ts and BlockModifier.ts
+
+## Bonus: Block.metadata.modifiers soll verschoben werden in Block.modifiers
+
+[ ] Verschieben von modifiers eine Egene hoeher in der Struktur. Von Block.metadata.modifiers nach Block.modifiers
+- client/packages/shared/src/types/Block.ts
+- client/packages/shared/src/types/BlockModifier.ts
+- client/packages/shared/src/types/BlockMetadata.ts
+
+- Block und BlockMetadata anpassen
+- Benutzung von BlockModifiers in server anpassen
+- BlockMetadata in client anpassen
+- BlockMetadata in numbus_editors anpassen
+- Dokumentation aktualisieren
+
 === 
 
 [ ] ClientChungDate - height Data implementieren

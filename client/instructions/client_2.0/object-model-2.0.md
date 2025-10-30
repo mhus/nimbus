@@ -46,7 +46,7 @@ Parameters:
 - position : Vector3 (x, y, z - world coordinates)
 - blockTypeId : number
 - ?offsets : number[] (flexible array, shape-dependent, trailing zeros can be omitted for network optimization)
-  - For cubes: 8 corners × 3 axes = up to 24 values (range: -127 to 127)
+  - For cubes: 8 corners × 3 axes = up to 24 values (supports float values)
   - For other shapes: shape-specific offset data
 - ?faceVisibility : number (1 byte bitfield, 6 bits for faces + 1 bit for fixed/auto mode)
   - Bit 0-5: TOP, BOTTOM, LEFT, RIGHT, FRONT, BACK
@@ -81,7 +81,7 @@ Parameters:
   - ?shape : string - z.B. cube, cross, model, flat, sphere, column, round_cube, steps, stair, billboard, sprite, flame, ocean, river, water, lava, fog
   - ?effect - z.B. water, wind, flipbox, lava, fog (shader-effekte)
   - ?effectParameters (Map mit effekt-spezifischen werten)
-  - ?offsets (array of 8 x XYZ offsets for each corner at cubes or other offsets, max 24 bytes -127 - 127)
+  - ?offsets (array of 8 x XYZ offsets for each corner at cubes or other offsets, supports float values)
   - ?scalingX
   - ?scalingY
   - ?scalingZ

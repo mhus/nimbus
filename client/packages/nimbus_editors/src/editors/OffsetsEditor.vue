@@ -7,30 +7,27 @@
 
     <!-- CUBE, HASH, CROSS: 8 corners (24 values) -->
     <div v-else-if="isCubeType" class="space-y-3">
-      <p class="text-sm text-base-content/70 mb-2">8 corners × XYZ (-127 to 127 each)</p>
+      <p class="text-sm text-base-content/70 mb-2">8 corners × XYZ (supports float values)</p>
       <div v-for="(corner, index) in cubeCorners" :key="index" class="grid grid-cols-4 gap-2 items-center">
         <span class="text-xs text-base-content/70">{{ corner }}:</span>
         <input
           v-model.number="offsets[index * 3]"
           type="number"
-          min="-127"
-          max="127"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[index * 3 + 1]"
           type="number"
-          min="-127"
-          max="127"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Y"
         />
         <input
           v-model.number="offsets[index * 3 + 2]"
           type="number"
-          min="-127"
-          max="127"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -39,7 +36,7 @@
 
     <!-- COLUMN: 4 points (special meaning) -->
     <div v-else-if="shape === 9" class="space-y-3">
-      <p class="text-sm text-base-content/70 mb-2">Column offsets</p>
+      <p class="text-sm text-base-content/70 mb-2">Column offsets (supports float values)</p>
 
       <!-- Point 1: Radius offset top (XZ) -->
       <div class="grid grid-cols-3 gap-2 items-center">
@@ -47,12 +44,14 @@
         <input
           v-model.number="offsets[0]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[2]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -64,12 +63,14 @@
         <input
           v-model.number="offsets[3]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[5]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -81,18 +82,21 @@
         <input
           v-model.number="offsets[6]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[7]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Y"
         />
         <input
           v-model.number="offsets[8]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -104,18 +108,21 @@
         <input
           v-model.number="offsets[9]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[10]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Y"
         />
         <input
           v-model.number="offsets[11]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -124,7 +131,7 @@
 
     <!-- SPHERE: 2 points -->
     <div v-else-if="shape === 8" class="space-y-3">
-      <p class="text-sm text-base-content/70 mb-2">Sphere offsets</p>
+      <p class="text-sm text-base-content/70 mb-2">Sphere offsets (supports float values)</p>
 
       <!-- Point 1: Radius offset (XYZ) -->
       <div class="grid grid-cols-4 gap-2 items-center">
@@ -132,18 +139,21 @@
         <input
           v-model.number="offsets[0]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[1]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Y"
         />
         <input
           v-model.number="offsets[2]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -155,18 +165,21 @@
         <input
           v-model.number="offsets[3]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[4]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Y"
         />
         <input
           v-model.number="offsets[5]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />
@@ -175,24 +188,27 @@
 
     <!-- FLAT, GLASS_FLAT: 4 corners (12 values) -->
     <div v-else-if="shape === 7 || shape === 6" class="space-y-3">
-      <p class="text-sm text-base-content/70 mb-2">4 corners × XYZ</p>
+      <p class="text-sm text-base-content/70 mb-2">4 corners × XYZ (supports float values)</p>
       <div v-for="(corner, index) in flatCorners" :key="index" class="grid grid-cols-4 gap-2 items-center">
         <span class="text-xs text-base-content/70">{{ corner }}:</span>
         <input
           v-model.number="offsets[index * 3]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="X"
         />
         <input
           v-model.number="offsets[index * 3 + 1]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Y"
         />
         <input
           v-model.number="offsets[index * 3 + 2]"
           type="number"
+          step="0.1"
           class="input input-bordered input-sm"
           placeholder="Z"
         />

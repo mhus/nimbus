@@ -325,8 +325,8 @@ export interface VisibilityModifier {
   effectParameters?: Record<string, any>;
 
   /**
-   * Corner offsets (8 corners × 3 axes = 24 bytes)
-   * Values range from -127 to 127
+   * Corner offsets (8 corners × 3 axes = 24 values)
+   * Values are numbers (supports both integers and floats)
    */
   offsets?: number[];
 

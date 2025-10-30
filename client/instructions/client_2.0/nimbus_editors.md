@@ -694,3 +694,11 @@ Result:
 
   Der Material Editor funktioniert weiterhin vollständig, und die Architektur ist bereit für Block Editor, Entity Editor, World Editor, etc.! 🎉
 ```
+
+## Integration
+
+[ ] In client wird ein SelectService benoetigt, der von PlayerService die position und rotation des players
+nimmt und eine Block vor dem player max 5 (konfigurierbar) vor dem Player findet und abgefragt werden kann.
+- Es gibt den Modus new Block, dann findet der Selector einen Block auch zwei vor dem Player, auch wenn dort kein block ist.
+- Im System soll es einen Modus showSelected geben, dann wird der selektierte Block highlightet. Das kann im EngineService sein.
+- Modus: NONE, 

@@ -14,12 +14,13 @@ import type { BlockMetadata } from './BlockMetadata';
 /**
  * Offsets for block geometry modification
  *
- * Flexible array that can contain different types of offsets depending on block shape:
+ * Flexible array that can contain different types of offsets depending on block shape.
+ * Values are stored as floats in JSON for precise geometry manipulation.
  *
  * **For Cubes (Edge/Corner offsets):**
  * - 8 corners × 3 axes = up to 24 values
  * - Values: [corner0.x, corner0.y, corner0.z, corner1.x, corner1.y, corner1.z, ...]
- * - Each value ranges from -127 to 127 (1 byte per axis)
+ * - Each value is a number (supports both integers and floats)
  * - Corner order: bottom (0-3), top (4-7)
  *
  * **For other shapes:**
@@ -33,8 +34,12 @@ import type { BlockMetadata } from './BlockMetadata';
  * - Reduces network data transmission
  *
  * @example
- * // Full cube with all corners offset
+ * // Full cube with integer offsets
  * offsets: [1, 0, 0, -1, 0, 0, 1, 0, 0, -1, 0, 0, 1, 2, 0, -1, 2, 0, 1, 2, 0, -1, 2, 0]
+ *
+ * @example
+ * // Cube with precise float offsets for smooth geometry
+ * offsets: [0.5, 0.25, 0, -0.5, 0.25, 0]
  *
  * @example
  * // Only first 3 values (corner 0), rest default to 0

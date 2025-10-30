@@ -3,17 +3,17 @@
 ## Rendern
 
 [x] Beim Rendern werden Blocks mit shape Spheren als Cube dargestellt.
-[x] Es koennten noch die Werte aus edgeOffsets genutzt werden um die Sphere zu manipulieren. Ein Offset von -127 bis 128.
+[x] Es koennten noch die Werte aus edgeOffsets genutzt werden um die Sphere zu manipulieren. Offset values support floats.
 - Left-Back-Button um die Sphere zu verschieben
 - Right-Back-Button um den Radius (X Y Z) oben zu verkleinern
   [x] Beim Rendern werden Blocks mit shape Column als Cube dargestellt, nicht als Column.
-  [x] Es koennten noch die Werte aus edgeOffsets genutzt werden um die Column zu manipulieren. Ein Offset von -127 bis 128.
+  [x] Es koennten noch die Werte aus edgeOffsets genutzt werden um die Column zu manipulieren. Offset values support floats.
 - Left-Back-Button um die Column unten zu verschieben
 - Left-Back-Top um die Column oben zu verschieben
 - Right-Back-Button um den Radius oben zu verkleinern
 - Right-Back-Top um den Radius unten zu verkleinern
   [x] Beim Rendern werden Blocks mit shape Cross nicht richtig dargestellt, es wird nur ein teil des cross angezeigt.
-  [x] Es koennten noch die Werte aus edgeOffsets genutzt werden um das Cross zu manipulieren. Ein Offset von -127 bis 127.
+  [x] Es koennten noch die Werte aus edgeOffsets genutzt werden um das Cross zu manipulieren. Offset values support floats.
   Wie bei Cube auch, koennen die Werte alle 8 Ecken des Cross verschieben.
   [x] Beim rendern wird der Parameter 'rotation' nicht beruecksichtigt. Der Parameter kann alle shapes beeinflussen.
   [x] Beim rendern wird der Parameter 'facing' nicht beruecksichtigt. Der Parameter kann alle shapes beeinflussen.
