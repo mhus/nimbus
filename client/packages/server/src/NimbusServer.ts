@@ -50,8 +50,9 @@ class NimbusServer {
       const authMiddleware = createAuthMiddleware(config);
 
       // REST API routes
-      // Note: Asset routes must be registered BEFORE auth middleware (public access)
-      this.app.use('/api/worlds', createAssetRoutes());
+      // Note: Management routes (GET/POST/PUT/DELETE for assets metadata) require auth
+      // Asset file serving (GET /assets/*) routes are public
+      this.app.use('/api/worlds', authMiddleware, createAssetRoutes(this.worldManager));
       this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager));
 
       // Health check

@@ -25,15 +25,25 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
     return res.json(world);
   });
 
-  // GET /api/worlds/:id/blocktypes - Get all BlockTypes
+  // GET /api/worlds/:id/blocktypes - Get all BlockTypes or search
   router.get('/:id/blocktypes', (req, res) => {
     const world = worldManager.getWorld(req.params.id);
     if (!world) {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    const blockTypes = worldManager.getBlockTypeRegistry().getAllBlockTypes();
-    res.json({ blockTypes });
+    const query = req.query.query as string | undefined;
+    const registry = worldManager.getBlockTypeRegistry();
+
+    if (query) {
+      // Search BlockTypes
+      const blockTypes = registry.searchBlockTypes(query);
+      return res.json({ blockTypes });
+    } else {
+      // Get all BlockTypes
+      const blockTypes = registry.getAllBlockTypes();
+      return res.json({ blockTypes });
+    }
   });
 
   // GET /api/worlds/:id/blocktypes/:blockId - Get single BlockType
@@ -51,6 +61,85 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
     const to = Number(req.params.to);
     const blockTypes = worldManager.getBlockTypeRegistry().getBlockTypeRange(from, to);
     res.json(blockTypes);
+  });
+
+  // POST /api/worlds/:id/blocktypes - Create new BlockType
+  router.post('/:id/blocktypes', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const blockTypeData = req.body;
+    const registry = worldManager.getBlockTypeRegistry();
+
+    // If no ID provided, get next available
+    if (!blockTypeData.id) {
+      blockTypeData.id = registry.getNextAvailableId();
+    }
+
+    // Validate required fields
+    if (!blockTypeData.modifiers || Object.keys(blockTypeData.modifiers).length === 0) {
+      return res.status(400).json({ error: 'BlockType must have at least one modifier (status 0)' });
+    }
+
+    // Create BlockType
+    const createdBlockType = registry.createBlockType(blockTypeData);
+
+    if (!createdBlockType) {
+      return res.status(400).json({ error: 'Failed to create BlockType (may already exist)' });
+    }
+
+    return res.status(201).json({ id: createdBlockType.id });
+  });
+
+  // PUT /api/worlds/:id/blocktypes/:blockTypeId - Update BlockType
+  router.put('/:id/blocktypes/:blockTypeId', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const blockTypeId = Number(req.params.blockTypeId);
+    const blockTypeData = req.body;
+    const registry = worldManager.getBlockTypeRegistry();
+
+    // Ensure ID matches URL parameter
+    blockTypeData.id = blockTypeId;
+
+    // Validate required fields
+    if (!blockTypeData.modifiers || Object.keys(blockTypeData.modifiers).length === 0) {
+      return res.status(400).json({ error: 'BlockType must have at least one modifier (status 0)' });
+    }
+
+    // Update BlockType
+    const updatedBlockType = registry.updateBlockType(blockTypeData);
+
+    if (!updatedBlockType) {
+      return res.status(404).json({ error: 'BlockType not found' });
+    }
+
+    return res.json(updatedBlockType);
+  });
+
+  // DELETE /api/worlds/:id/blocktypes/:blockTypeId - Delete BlockType
+  router.delete('/:id/blocktypes/:blockTypeId', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const blockTypeId = Number(req.params.blockTypeId);
+    const registry = worldManager.getBlockTypeRegistry();
+
+    // Delete BlockType
+    const deleted = registry.deleteBlockType(blockTypeId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'BlockType not found' });
+    }
+
+    return res.status(204).send();
   });
 
   return router;

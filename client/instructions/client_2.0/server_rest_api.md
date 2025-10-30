@@ -66,18 +66,150 @@ Response:
 
 ## Assets
 
-GET /api/worlds/{worldId}/assets/{path}
+### Asset-Verwaltung
 
-Ruft eine Asset-Datei (z.B. Textur, Modell) für die angegebene Welt ab. Assets werden inclusive dateierweiterung 
-angefragt, z.B. /textures/block/stone.png
+#### GET /api/worlds/{worldId}/assets
+
+Ruft alle Assets ab oder sucht nach Assets.
+
+Query Parameter:
+- `query` (optional): Suchbegriff für die Suche in Asset-Pfaden und Kategorien
+
+Response:
+
+```json
+{
+  "assets": [
+    {
+      "path": "textures/block/basic/stone.png",
+      "size": 2048,
+      "mimeType": "image/png",
+      "lastModified": "2024-01-01T12:00:00Z",
+      "extension": ".png",
+      "category": "textures"
+    },
+    ...
+  ]
+}
+```
+
+Beispiele:
+- `GET /api/worlds/world123/assets` - Alle Assets
+- `GET /api/worlds/world123/assets?query=stone` - Suche nach "stone"
+
+#### POST /api/worlds/{worldId}/assets/{assetPath}
+
+Erstellt ein neues Asset am angegebenen Pfad.
+
+Request:
+- URL: `/api/worlds/world123/assets/textures/block/custom/my_block.png`
+- Body: Binärdaten (Raw Binary)
+- Content-Type: Beliebig (z.B. `image/png`, `application/octet-stream`)
+
+Response:
+
+```json
+{
+  "path": "textures/block/custom/my_block.png",
+  "size": 2048,
+  "mimeType": "image/png",
+  "lastModified": "2024-01-01T12:00:00Z",
+  "extension": ".png",
+  "category": "textures"
+}
+```
+
+HTTP Status Codes:
+- `201 Created` - Asset erfolgreich erstellt
+- `400 Bad Request` - Ungültige Daten oder Asset existiert bereits
+- `404 Not Found` - Welt nicht gefunden
+
+#### PUT /api/worlds/{worldId}/assets/{assetPath}
+
+Aktualisiert ein existierendes Asset.
+
+Request:
+- URL: `/api/worlds/world123/assets/textures/block/basic/stone.png`
+- Body: Binärdaten (Raw Binary)
+- Content-Type: Beliebig
+
+Response:
+
+```json
+{
+  "path": "textures/block/basic/stone.png",
+  "size": 2048,
+  "mimeType": "image/png",
+  "lastModified": "2024-01-01T12:00:00Z",
+  "extension": ".png",
+  "category": "textures"
+}
+```
+
+HTTP Status Codes:
+- `200 OK` - Asset erfolgreich aktualisiert
+- `404 Not Found` - Welt oder Asset nicht gefunden
+
+#### DELETE /api/worlds/{worldId}/assets/{assetPath}
+
+Löscht ein Asset.
+
+Request:
+- URL: `/api/worlds/world123/assets/textures/block/custom/my_block.png`
+
+Response: Keine Daten (HTTP 204)
+
+HTTP Status Codes:
+- `204 No Content` - Asset erfolgreich gelöscht
+- `404 Not Found` - Welt oder Asset nicht gefunden
+
+### Asset-Download
+
+#### GET /api/worlds/{worldId}/assets/{path}
+
+Ruft eine Asset-Datei (z.B. Textur, Modell) für die angegebene Welt ab. Assets werden inklusive Dateierweiterung
+angefragt, z.B. `/textures/block/stone.png`
+
+Beispiel:
+- `GET /api/worlds/world123/assets/textures/block/basic/stone.png`
+
+Response:
+- Binärdaten mit passendem Content-Type
+- Cache-Control Header für Browser-Caching
 
 ## Block Types
 
-GET /api/worlds/{worldId}/blocktypes/{id}
+### GET /api/worlds/{worldId}/blocktypes
 
-GET /api/worlds/{worldId}/blocktypes/{from}/{to}
+Ruft alle BlockTypes ab oder sucht nach BlockTypes.
 
-Gibt eine oder ein Array von BlockType Definitionen zurück.
+Query Parameter:
+- `query` (optional): Suchbegriff für die Suche in BlockType-Beschreibungen und IDs
+
+Response:
+
+```json
+{
+  "blockTypes": [
+    {
+      "id": 100,
+      "description": "Acacia fence",
+      "modifiers": {
+        "0": { ... }
+      }
+    },
+    ...
+  ]
+}
+```
+
+Beispiele:
+- `GET /api/worlds/world123/blocktypes` - Alle BlockTypes
+- `GET /api/worlds/world123/blocktypes?query=fence` - Suche nach "fence"
+
+### GET /api/worlds/{worldId}/blocktypes/{id}
+
+Ruft einen einzelnen BlockType ab.
 
 Response:
 
@@ -105,7 +237,15 @@ Response:
 }
 ```
 
-Oder als Array:
+Als BlockType Id kann entweder die numerische ID oder der eindeutige Name genutzt werden.
+
+BlockType ist hier nicht vollständig dargestellt, siehe Objekt Modell Dokumentation für alle Felder.
+
+### GET /api/worlds/{worldId}/blocktypes/{from}/{to}
+
+Ruft einen Bereich von BlockTypes ab.
+
+Response (Array):
 
 ```json
 [
@@ -124,9 +264,90 @@ Oder als Array:
 
 Es können BlockType IDs in der Liste fehlen, wenn diese nicht definiert sind.
 
-Als BlockType Id in der EInzelabfrage kann entweder die numerische ID oder der eindeutige Name genutzt werden.
+### POST /api/worlds/{worldId}/blocktypes
 
-BlockType ist hier nicht vollständig dargestellt, siehe Objekt Modell Dokumentation für alle Felder.
+Erstellt einen neuen BlockType.
+
+Request Body:
+
+```json
+{
+  "id": 999,
+  "description": "My custom block",
+  "initialStatus": 0,
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": "CUBE"
+      },
+      "physical": {
+        "solid": true
+      }
+    }
+  }
+}
+```
+
+Falls `id` nicht angegeben wird, wird automatisch die nächste verfügbare ID vergeben.
+
+Response:
+
+```json
+{
+  "id": 999
+}
+```
+
+HTTP Status Codes:
+- `201 Created` - BlockType erfolgreich erstellt
+- `400 Bad Request` - Ungültige Daten oder BlockType existiert bereits
+- `404 Not Found` - Welt nicht gefunden
+
+### PUT /api/worlds/{worldId}/blocktypes/{blockTypeId}
+
+Aktualisiert einen existierenden BlockType.
+
+Request Body:
+
+```json
+{
+  "description": "Updated description",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": "CUBE"
+      }
+    }
+  }
+}
+```
+
+Die `id` im Body wird ignoriert und durch die ID in der URL ersetzt.
+
+Response:
+
+```json
+{
+  "id": 999,
+  "description": "Updated description",
+  "modifiers": { ... }
+}
+```
+
+HTTP Status Codes:
+- `200 OK` - BlockType erfolgreich aktualisiert
+- `400 Bad Request` - Ungültige Daten
+- `404 Not Found` - Welt oder BlockType nicht gefunden
+
+### DELETE /api/worlds/{worldId}/blocktypes/{blockTypeId}
+
+Löscht einen BlockType.
+
+Response: Keine Daten (HTTP 204)
+
+HTTP Status Codes:
+- `204 No Content` - BlockType erfolgreich gelöscht
+- `404 Not Found` - Welt oder BlockType nicht gefunden
 
 ## Block Metadaten
 

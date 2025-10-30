@@ -299,13 +299,22 @@ Extra:
 im StartScreen ausgewählt wurde.
 [x] Das login und Ping
 
-===
-
 ## Basic Network Protocoll
 
-[ ] Implementiere die network messages aus client/instructions/client_2.0/network-model-2.0.md im client/network. Jeweils in einem eigenen Handler als dummy.
-[ ] Implementiere den WebSocket Client im NetworkService.
-[ ] Implementiere die Login Nachricht und die Ping/Pong Nachrichten im NetworkService.
+[x] Implementiere die network messages aus client/instructions/client_2.0/network-model-2.0.md im client/network. Jeweils in einem eigenen Handler als dummy.
+[x] Implementiere den WebSocket Client im NetworkService.
+[x] Implementiere die Login Nachricht und die Ping/Pong Nachrichten im NetworkService.
+
+=== 
+
+[ ] ClientChungDate - height Data implementieren
+
+## Material
+
+[ ] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen
+- der key besteht aus allen teilen von modifier die ein Material unique machen
+- effect(shader), uvMapping, texture path, samplingMode, color, transparency
+[ ] MaterialService implementieren
 
 ## Start Screen
 

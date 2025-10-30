@@ -9,11 +9,153 @@ import express, { Router } from 'express';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { getLogger } from '@nimbus/shared';
+import type { WorldManager } from '../../world/WorldManager';
 
 const logger = getLogger('AssetRoutes');
 
-export function createAssetRoutes(): Router {
+export function createAssetRoutes(worldManager: WorldManager): Router {
   const router = express.Router();
+
+  // GET /api/worlds/:worldId/assets - List/search assets
+  router.get('/:worldId/assets', async (req, res) => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const query = req.query.query as string | undefined;
+    const assetManager = worldManager.getAssetManager();
+
+    try {
+      if (query) {
+        // Search assets
+        const assets = await assetManager.searchAssets(query);
+        return res.json({ assets });
+      } else {
+        // Get all assets
+        const assets = await assetManager.getAllAssets();
+        return res.json({ assets });
+      }
+    } catch (error) {
+      logger.error('Failed to get assets', { worldId, query }, error as Error);
+      return res.status(500).json({ error: 'Failed to get assets' });
+    }
+  });
+
+  // POST /api/worlds/:worldId/assets/* - Create new asset
+  router.post('/:worldId/assets/*', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    try {
+      // Extract asset path after /assets/
+      const fullPath = req.path;
+      const assetsIndex = fullPath.indexOf('/assets/');
+      const assetPath = assetsIndex !== -1 ? fullPath.substring(assetsIndex + '/assets/'.length) : '';
+
+      if (!assetPath) {
+        return res.status(400).json({ error: 'Asset path is required' });
+      }
+
+      // Get asset data from request body
+      const assetData = req.body as Buffer;
+
+      if (!assetData || assetData.length === 0) {
+        return res.status(400).json({ error: 'Asset data is required' });
+      }
+
+      const assetManager = worldManager.getAssetManager();
+      const createdAsset = await assetManager.createAsset(assetPath, assetData);
+
+      if (!createdAsset) {
+        return res.status(400).json({ error: 'Failed to create asset (may already exist)' });
+      }
+
+      return res.status(201).json(createdAsset);
+    } catch (error) {
+      logger.error('Failed to create asset', { worldId }, error as Error);
+      return res.status(500).json({ error: 'Failed to create asset' });
+    }
+  });
+
+  // PUT /api/worlds/:worldId/assets/* - Update existing asset
+  router.put('/:worldId/assets/*', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    try {
+      // Extract asset path after /assets/
+      const fullPath = req.path;
+      const assetsIndex = fullPath.indexOf('/assets/');
+      const assetPath = assetsIndex !== -1 ? fullPath.substring(assetsIndex + '/assets/'.length) : '';
+
+      if (!assetPath) {
+        return res.status(400).json({ error: 'Asset path is required' });
+      }
+
+      // Get asset data from request body
+      const assetData = req.body as Buffer;
+
+      if (!assetData || assetData.length === 0) {
+        return res.status(400).json({ error: 'Asset data is required' });
+      }
+
+      const assetManager = worldManager.getAssetManager();
+      const updatedAsset = await assetManager.updateAsset(assetPath, assetData);
+
+      if (!updatedAsset) {
+        return res.status(404).json({ error: 'Asset not found' });
+      }
+
+      return res.json(updatedAsset);
+    } catch (error) {
+      logger.error('Failed to update asset', { worldId }, error as Error);
+      return res.status(500).json({ error: 'Failed to update asset' });
+    }
+  });
+
+  // DELETE /api/worlds/:worldId/assets/* - Delete asset
+  router.delete('/:worldId/assets/*', async (req, res) => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    try {
+      // Extract asset path after /assets/
+      const fullPath = req.path;
+      const assetsIndex = fullPath.indexOf('/assets/');
+      const assetPath = assetsIndex !== -1 ? fullPath.substring(assetsIndex + '/assets/'.length) : '';
+
+      if (!assetPath) {
+        return res.status(400).json({ error: 'Asset path is required' });
+      }
+
+      const assetManager = worldManager.getAssetManager();
+      const deleted = await assetManager.deleteAsset(assetPath);
+
+      if (!deleted) {
+        return res.status(404).json({ error: 'Asset not found' });
+      }
+
+      return res.status(204).send();
+    } catch (error) {
+      logger.error('Failed to delete asset', { worldId }, error as Error);
+      return res.status(500).json({ error: 'Failed to delete asset' });
+    }
+  });
 
   /**
    * GET /api/worlds/:worldId/assets/*

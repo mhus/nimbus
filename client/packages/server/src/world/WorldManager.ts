@@ -5,6 +5,7 @@
 import { getLogger, type ChunkData, ExceptionHandler } from '@nimbus/shared';
 import type { WorldInstance } from '../types/ServerTypes';
 import { BlockTypeRegistry } from './BlockTypeRegistry';
+import { AssetManager } from '../assets/AssetManager';
 import { ChunkStorage } from '../storage/ChunkStorage';
 import { GeneratorFactory } from './generators/GeneratorFactory';
 import type { WorldGenerator } from './generators/WorldGenerator';
@@ -16,10 +17,12 @@ const logger = getLogger('WorldManager');
 export class WorldManager {
   private worlds = new Map<string, WorldInstance>();
   private blockTypeRegistry: BlockTypeRegistry;
+  private assetManager: AssetManager;
   private chunkStorages = new Map<string, ChunkStorage>();
 
   constructor() {
     this.blockTypeRegistry = new BlockTypeRegistry();
+    this.assetManager = new AssetManager();
 
     // Load worlds from data directory
     this.loadWorldsFromDirectory();
@@ -234,6 +237,10 @@ export class WorldManager {
 
   getBlockTypeRegistry(): BlockTypeRegistry {
     return this.blockTypeRegistry;
+  }
+
+  getAssetManager(): AssetManager {
+    return this.assetManager;
   }
 
   getChunkStorage(worldId: string): ChunkStorage | undefined {
