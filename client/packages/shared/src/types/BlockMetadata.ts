@@ -13,4 +13,5 @@ export interface BlockMetadata {
    */
   groupId?: number;
 
+  interactive?: boolean;
 }

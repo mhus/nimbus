@@ -153,6 +153,7 @@ Ab 100: ggf. für bestimmte shape typen spezielle texturen.
 
 Parameters:
 - ?groupId : number
+- ?interactive: boolean - wenn gesetzt, dann ist der Block interaktiv und kann im viewer selektiert werden
 
 Metadata enthalten organisatorische Daten wie Gruppen-IDs.
 Modifier sind jetzt direkt in Block.modifiers statt in metadata.modifiers.
