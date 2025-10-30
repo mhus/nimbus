@@ -18,6 +18,7 @@ import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
+import { ModalService } from './services/ModalService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
@@ -53,6 +54,12 @@ async function initializeApp(): Promise<AppContext> {
     // Create AppContext
     logger.info('Creating AppContext...');
     const appContext = createAppContext(config, clientService);
+
+    // Initialize ModalService (no dependencies, UI-only)
+    logger.info('Initializing ModalService...');
+    const modalService = new ModalService(appContext);
+    appContext.services.modal = modalService;
+    logger.debug('ModalService initialized');
 
     logger.info('App initialization complete', {
       clientType: clientService.getClientType(),

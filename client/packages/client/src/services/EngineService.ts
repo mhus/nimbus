@@ -149,16 +149,17 @@ export class EngineService {
       logger.debug('InputService initialized');
 
       // Initialize select service (requires ChunkService and PlayerService)
-      if (this.appContext.services.chunk && this.playerService) {
+      if (this.appContext.services.chunk && this.playerService && this.scene) {
         this.selectService = new SelectService(
           this.appContext,
           this.appContext.services.chunk,
-          this.playerService
+          this.playerService,
+          this.scene
         );
         this.appContext.services.select = this.selectService;
         logger.debug('SelectService initialized');
       } else {
-        logger.warn('SelectService not initialized: missing ChunkService or PlayerService');
+        logger.warn('SelectService not initialized: missing ChunkService, PlayerService, or Scene');
       }
 
       // Listen to player position changes to update chunks
@@ -211,6 +212,7 @@ export class EngineService {
         this.physicsService?.update(deltaTime); // Physics before player
         this.playerService?.update(deltaTime);
         this.cameraService?.update(deltaTime);
+        this.selectService?.update(deltaTime); // Update block selection and highlighting
         this.environmentService?.update(deltaTime);
 
         // Render scene

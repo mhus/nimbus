@@ -708,7 +708,19 @@ nimmt und eine Block vor dem player max (radius) vor dem Player findet und abgef
 - Wenn ein AIR Block zurueckgegeben wird, wird ein neuer ClientBlock mit einem Block mit der BlockTypeId 0 und den Coordinaten zurueckgegeben.
 - SelectService hat eine Referenz auf den ChunkServcie um die Daten abzufragen.
 
-[ ] Im client soll es einen select mode geben (Auto Select im SelectService) der auf den Selected Block highlight macht.
+[?] Im client soll es einen auto select mode geben (Auto Select im SelectService) der auf den Selected Block highlight macht.
 - Der autoSelectMode wird wie der selectMode gesetzt: NONE, INTERACTIVE, BLOCK, AIR, ALL
 - Es kann auch ein AIR Block sein auf den highlight gemacht wird.
 - Optional & Clever? Der RenderService koennte eine Referenz auf den Mesh im ClientBlock hinterlegen, hier kann dann das Highlight gemacht werden.
+
+[ ] Lege einen ModalService an, der IFrames in Modalen anzeigt. Es soll eine moeglichkeit geben, das Modal, z.b. mit 'X' oben rechts zu schliessen, Des Modal kann oben einen Titel haben. also openModal(title, url, size?) : referenz und
+closeModal(referenz), closeAll()
+
+[ ] Viewer und Editor
+- Im Viewer Modus soll autoSelectMode beim Starten auf INTERACTIVE gesetzt werden.
+- Im Editor Modus soll autoSelectMode beim Starten auf BLOCK gesetzt werden.
+- Im Editor Modus werden zwei neue InputController registrier
+  - Eine neue Variable editorUrl wird benoetigt. Diese wird in WordInfo (World.ts) mitgeleifert.
+  - Der NetzwerkService soll eine neue Methode 'createBlockEditorUrl(x,y,z)' bereitstellen.
+  - EditSelectionRotator auf Key '.': Wenn '.' gedrueck wird, springt der Modus immer weiter und fängt nach ALL wieder bei NONE an.
+  - EditorActivate auf Key '/': Wenn '/' gedrueckt wird, wird ein IFrame mit der editorUrl vom NetzwerkService geladen.

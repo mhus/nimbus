@@ -12,6 +12,7 @@
 
 import type { Block, BlockType, BlockModifier } from '@nimbus/shared';
 import type { ClientBlockType } from './ClientBlockType';
+import type { Mesh } from '@babylonjs/core';
 
 /**
  * Client-side block instance with caches and resolved references
@@ -74,4 +75,12 @@ export interface ClientBlock {
    * Dirty flag (needs re-render)
    */
   isDirty?: boolean;
+
+  /**
+   * Optional reference to the rendered mesh for this block
+   * Can be used for direct highlighting or manipulation
+   * Note: In chunked rendering, blocks are merged into chunk meshes,
+   * so this reference is only available for individually rendered blocks
+   */
+  mesh?: Mesh;
 }

@@ -3,9 +3,10 @@
  *
  * Provides raycasting functionality to find blocks in the player's line of sight.
  * Supports different selection modes: INTERACTIVE, BLOCK, AIR, ALL, NONE.
+ * Includes auto-select mode with visual highlighting.
  */
 
-import { Vector3 } from '@babylonjs/core';
+import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
@@ -45,20 +46,38 @@ export enum SelectMode {
  * - Multiple selection modes
  * - Distance-based selection (radius)
  * - AIR block creation for empty spaces
+ * - Auto-select mode with visual highlighting
  */
 export class SelectService {
   private appContext: AppContext;
   private chunkService: ChunkService;
   private playerService: PlayerService;
+  private scene?: Scene;
+
+  // Auto-select mode
+  private _autoSelectMode: SelectMode = SelectMode.NONE;
+  private autoSelectRadius: number = 5.0;
+  private currentSelectedBlock: ClientBlock | null = null;
+
+  // Highlight rendering
+  private highlightMesh?: Mesh;
+  private highlightMaterial?: StandardMaterial;
 
   constructor(
     appContext: AppContext,
     chunkService: ChunkService,
-    playerService: PlayerService
+    playerService: PlayerService,
+    scene?: Scene
   ) {
     this.appContext = appContext;
     this.chunkService = chunkService;
     this.playerService = playerService;
+    this.scene = scene;
+
+    // Initialize highlighting if scene is available
+    if (scene) {
+      this.initializeHighlight();
+    }
 
     logger.info('SelectService initialized');
   }
@@ -322,9 +341,182 @@ export class SelectService {
   }
 
   /**
+   * Initialize highlight mesh for selected blocks
+   */
+  private initializeHighlight(): void {
+    if (!this.scene) {
+      logger.warn('Cannot initialize highlight: scene not available');
+      return;
+    }
+
+    try {
+      // Create wireframe box for highlighting
+      this.highlightMesh = MeshBuilder.CreateBox(
+        'blockHighlight',
+        { size: 1.0 },
+        this.scene
+      );
+
+      // Create highlight material
+      this.highlightMaterial = new StandardMaterial('highlightMaterial', this.scene);
+      this.highlightMaterial.emissiveColor = new Color3(1, 1, 0); // Yellow
+      this.highlightMaterial.wireframe = true;
+      this.highlightMaterial.alpha = 0.8;
+
+      this.highlightMesh.material = this.highlightMaterial;
+      this.highlightMesh.isPickable = false;
+      this.highlightMesh.renderingGroupId = 1; // Render on top
+      this.highlightMesh.setEnabled(false); // Hidden by default
+
+      logger.debug('Highlight mesh initialized');
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.initializeHighlight');
+    }
+  }
+
+  /**
+   * Get current auto-select mode
+   */
+  get autoSelectMode(): SelectMode {
+    return this._autoSelectMode;
+  }
+
+  /**
+   * Set auto-select mode
+   *
+   * @param mode Selection mode for auto-select
+   */
+  set autoSelectMode(mode: SelectMode) {
+    this._autoSelectMode = mode;
+
+    // Hide highlight when mode is NONE
+    if (mode === SelectMode.NONE) {
+      this.hideHighlight();
+      this.currentSelectedBlock = null;
+    }
+
+    logger.debug('Auto-select mode set', { mode });
+  }
+
+  /**
+   * Get auto-select radius
+   */
+  getAutoSelectRadius(): number {
+    return this.autoSelectRadius;
+  }
+
+  /**
+   * Set auto-select radius
+   *
+   * @param radius Maximum search distance for auto-select
+   */
+  setAutoSelectRadius(radius: number): void {
+    this.autoSelectRadius = Math.max(1.0, Math.min(radius, 20.0)); // Clamp between 1 and 20
+  }
+
+  /**
+   * Get currently selected block (from auto-select)
+   */
+  getCurrentSelectedBlock(): ClientBlock | null {
+    return this.currentSelectedBlock;
+  }
+
+  /**
+   * Update auto-select (called each frame)
+   *
+   * @param deltaTime Time since last frame in seconds
+   */
+  update(deltaTime: number): void {
+    // Skip if auto-select is disabled
+    if (this._autoSelectMode === SelectMode.NONE) {
+      return;
+    }
+
+    try {
+      // Get selected block using auto-select mode
+      const selectedBlock = this.getSelectedBlockFromPlayer(
+        this._autoSelectMode,
+        this.autoSelectRadius
+      );
+
+      // Update current selection
+      this.currentSelectedBlock = selectedBlock;
+
+      // Update highlight
+      if (selectedBlock) {
+        this.showHighlight(selectedBlock);
+      } else {
+        this.hideHighlight();
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.update');
+    }
+  }
+
+  /**
+   * Show highlight at block position
+   *
+   * @param clientBlock Block to highlight
+   */
+  private showHighlight(clientBlock: ClientBlock): void {
+    if (!this.highlightMesh || !this.scene) {
+      return;
+    }
+
+    const pos = clientBlock.block.position;
+
+    // Position highlight at block center
+    this.highlightMesh.position.set(
+      pos.x + 0.5,
+      pos.y + 0.5,
+      pos.z + 0.5
+    );
+
+    // Scale slightly larger than block for better visibility
+    const scale = 1.02;
+    this.highlightMesh.scaling.set(scale, scale, scale);
+
+    // Enable highlight
+    this.highlightMesh.setEnabled(true);
+  }
+
+  /**
+   * Hide highlight
+   */
+  private hideHighlight(): void {
+    if (this.highlightMesh) {
+      this.highlightMesh.setEnabled(false);
+    }
+  }
+
+  /**
+   * Set highlight color
+   *
+   * @param color Color as Color3 or hex string
+   */
+  setHighlightColor(color: Color3 | string): void {
+    if (!this.highlightMaterial) {
+      return;
+    }
+
+    if (typeof color === 'string') {
+      // Parse hex color
+      this.highlightMaterial.emissiveColor = Color3.FromHexString(color);
+    } else {
+      this.highlightMaterial.emissiveColor = color;
+    }
+  }
+
+  /**
    * Dispose service
    */
   dispose(): void {
+    // Dispose highlight resources
+    this.highlightMesh?.dispose();
+    this.highlightMaterial?.dispose();
+
+    this.currentSelectedBlock = null;
+
     logger.info('SelectService disposed');
   }
 }

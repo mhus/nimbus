@@ -12,6 +12,7 @@ import type { BlockTypeService } from './services/BlockTypeService';
 import type { ShaderService } from './services/ShaderService';
 import type { EngineService } from './services/EngineService';
 import type { SelectService } from './services/SelectService';
+import type { ModalService } from './services/ModalService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -56,6 +57,9 @@ export interface Services {
 
   /** Select service for block selection in front of player */
   select?: SelectService;
+
+  /** Modal service for displaying IFrame modals */
+  modal?: ModalService;
 
   // Future services will be added here:
   // render?: RenderService;

@@ -1,0 +1,179 @@
+/**
+ * Nimbus Modal Styles
+ *
+ * Styles for ModalService HTML IFrame modals
+ */
+
+/* Backdrop - semi-transparent overlay */
+.nimbus-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Centered backdrop uses flexbox */
+.nimbus-modal-backdrop.nimbus-modal-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal container */
+.nimbus-modal-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 95vw;
+  max-height: 95vh;
+}
+
+/* Modal header */
+.nimbus-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+/* Modal title */
+.nimbus-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Close button */
+.nimbus-modal-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.nimbus-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.nimbus-modal-close:active {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* IFrame */
+.nimbus-modal-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  flex-grow: 1;
+  background-color: #ffffff;
+}
+
+/* Animations */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.nimbus-modal-backdrop {
+  animation: modalFadeIn 0.2s ease-in-out;
+}
+
+.nimbus-modal-container {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .nimbus-modal-container {
+    width: 95% !important;
+    height: 90% !important;
+    max-width: none;
+    max-height: none;
+  }
+
+  .nimbus-modal-header {
+    padding: 12px 16px;
+  }
+
+  .nimbus-modal-title {
+    font-size: 16px;
+  }
+
+  .nimbus-modal-close {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .nimbus-modal-container {
+    background-color: #2a2a2a;
+  }
+
+  .nimbus-modal-header {
+    background-color: #1e1e1e;
+    border-bottom-color: #404040;
+  }
+
+  .nimbus-modal-title {
+    color: #e0e0e0;
+  }
+
+  .nimbus-modal-close {
+    color: #999;
+  }
+
+  .nimbus-modal-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .nimbus-modal-iframe {
+    background-color: #2a2a2a;
+  }
+}
