@@ -697,8 +697,18 @@ Result:
 
 ## Integration
 
-[ ] In client wird ein SelectService benoetigt, der von PlayerService die position und rotation des players
-nimmt und eine Block vor dem player max 5 (konfigurierbar) vor dem Player findet und abgefragt werden kann.
-- Es gibt den Modus new Block, dann findet der Selector einen Block auch zwei vor dem Player, auch wenn dort kein block ist.
-- Im System soll es einen Modus showSelected geben, dann wird der selektierte Block highlightet. Das kann im EngineService sein.
-- Modus: NONE, 
+[?] In client wird ein SelectService benoetigt, der von PlayerService die position und rotation des players
+nimmt und eine Block vor dem player max (radius) vor dem Player findet und abgefragt werden kann.
+- Modus: NONE, INTERACTIVE, BLOCK, AIR, ALL
+- getSelectedBlock(modus, position, rotation, radius) : ClientBlock | null
+- INTERACTIVE: Gibt nur einen Block zurueck, der block.metatdata.interactive == true hat.
+- BLOCK: Gibt jeden gefundenen Block zurueck.
+- AIR: Gibt nur AIR Blocks zuruek, also Blocks die es noch nicht gibt, der Abstand zur Position ist dann 'radius' oder kleiner.
+- ALL: Findet Blocks oder, wenn nicht gefunden einen AIR Block.
+- Wenn ein AIR Block zurueckgegeben wird, wird ein neuer ClientBlock mit einem Block mit der BlockTypeId 0 und den Coordinaten zurueckgegeben.
+- SelectService hat eine Referenz auf den ChunkServcie um die Daten abzufragen.
+
+[ ] Im client soll es einen select mode geben (Auto Select im SelectService) der auf den Selected Block highlight macht.
+- Der autoSelectMode wird wie der selectMode gesetzt: NONE, INTERACTIVE, BLOCK, AIR, ALL
+- Es kann auch ein AIR Block sein auf den highlight gemacht wird.
+- Optional & Clever? Der RenderService koennte eine Referenz auf den Mesh im ClientBlock hinterlegen, hier kann dann das Highlight gemacht werden.

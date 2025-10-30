@@ -11,6 +11,7 @@ import type { ChunkService } from './services/ChunkService';
 import type { BlockTypeService } from './services/BlockTypeService';
 import type { ShaderService } from './services/ShaderService';
 import type { EngineService } from './services/EngineService';
+import type { SelectService } from './services/SelectService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -52,6 +53,9 @@ export interface Services {
 
   /** Engine service for 3D rendering */
   engine?: EngineService;
+
+  /** Select service for block selection in front of player */
+  select?: SelectService;
 
   // Future services will be added here:
   // render?: RenderService;

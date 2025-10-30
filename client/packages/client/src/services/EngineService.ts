@@ -16,6 +16,7 @@ import { PlayerService } from './PlayerService';
 import { RenderService } from './RenderService';
 import { InputService } from './InputService';
 import { PhysicsService } from './PhysicsService';
+import { SelectService } from './SelectService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -48,6 +49,7 @@ export class EngineService {
   private physicsService?: PhysicsService;
   private playerService?: PlayerService;
   private inputService?: InputService;
+  private selectService?: SelectService;
 
   private isInitialized: boolean = false;
   private isRunning: boolean = false;
@@ -145,6 +147,19 @@ export class EngineService {
       const webInputController = new WebInputController(this.canvas, this.playerService);
       this.inputService.setController(webInputController);
       logger.debug('InputService initialized');
+
+      // Initialize select service (requires ChunkService and PlayerService)
+      if (this.appContext.services.chunk && this.playerService) {
+        this.selectService = new SelectService(
+          this.appContext,
+          this.appContext.services.chunk,
+          this.playerService
+        );
+        this.appContext.services.select = this.selectService;
+        logger.debug('SelectService initialized');
+      } else {
+        logger.warn('SelectService not initialized: missing ChunkService or PlayerService');
+      }
 
       // Listen to player position changes to update chunks
       this.playerService.on('position:changed', (position) => {
@@ -323,6 +338,7 @@ export class EngineService {
 
     // Dispose sub-services
     this.inputService?.dispose();
+    this.selectService?.dispose();
     this.renderService?.dispose();
     this.playerService?.dispose();
     this.physicsService?.dispose();
