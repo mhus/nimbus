@@ -91,6 +91,13 @@
       </div>
     </div>
 
+    <!-- Offsets -->
+    <div class="divider text-sm">Geometry Offsets</div>
+    <OffsetsEditor
+      v-model="localValue.offsets"
+      :shape="localValue.shape"
+    />
+
     <!-- Textures -->
     <div class="divider text-sm">Textures</div>
     <div class="space-y-2">
@@ -143,6 +150,7 @@ import { ref, watch } from 'vue';
 import type { VisibilityModifier } from '@nimbus/shared';
 import { Shape, ShapeNames, TextureKey, TextureKeyNames } from '@nimbus/shared';
 import AssetPickerDialog from '../AssetPickerDialog.vue';
+import OffsetsEditor from './OffsetsEditor.vue';
 
 interface Props {
   modelValue?: VisibilityModifier;

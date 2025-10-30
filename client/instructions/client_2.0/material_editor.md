@@ -99,7 +99,7 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 [x] Bei texture noch einen Button mit einem Zauberstab: Dann geht ein Dialog auf mit einer Suche nach 
 Assets (siehe Asset Editor). Der pfad wird übernommen.
 
-[ ] offsets anzeigen und bearbeiten mit verschiedenen Bezeichnern.
+[x] offsets anzeigen und bearbeiten mit verschiedenen Bezeichnern.
 - invisible: keine
 - cube: Alle ecken (XYZ) 'top front left', 'top front right', 'top back left', 'top back right', 'bottom front left', 'bottom front right', 'bottom back left', 'bottom back right'
 - column: Erste Punkt: XZ ist Radius offest oben, Zweiter Punkt XZ ist Radius Offset Unten, dritter Punkt (XYZ) ist verschiebung Oben, vierter Punkt ist verschiebung Unten
@@ -109,3 +109,5 @@ Assets (siehe Asset Editor). Der pfad wird übernommen.
 - flat: Die Vier ersten Punkte: 'front left', 'front right', 'back left', 'back right'
 - glass_flat: wie flat
 Alle anderen erstmal keine offsets.
+
+[ ] Bei 'Add Status' muss man die status Id angeben koennen.
