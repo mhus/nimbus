@@ -1,30 +1,44 @@
 <template>
-  <div class="collapse collapse-arrow bg-base-200 rounded-box">
-    <input
-      type="checkbox"
-      :checked="isOpen && isEnabled"
-      @change="toggleOpen"
-      :disabled="!isEnabled"
-    />
-    <div class="collapse-title font-medium flex items-center gap-2">
-      <input
-        type="checkbox"
-        class="checkbox checkbox-sm"
-        :checked="isEnabled"
-        @change="toggleEnabled"
-        @click.stop
-      />
-      <span :class="{ 'text-base-content/40': !isEnabled }">{{ title }}</span>
-      <span v-if="!isEnabled" class="badge badge-ghost badge-sm">disabled</span>
-    </div>
-    <div class="collapse-content" v-if="isEnabled">
-      <slot />
+  <div class="card bg-base-200 rounded-box">
+    <!-- Header with checkbox and collapse toggle -->
+    <div class="card-body p-3">
+      <div class="flex items-center gap-2">
+        <input
+          type="checkbox"
+          class="checkbox checkbox-sm"
+          :checked="modelValue"
+          @click="handleCheckboxClick"
+        />
+        <button
+          class="flex-1 text-left font-medium flex items-center justify-between"
+          @click="toggleOpen"
+          :disabled="!modelValue"
+        >
+          <span :class="{ 'text-base-content/40': !modelValue }">{{ title }}</span>
+          <span v-if="!modelValue" class="badge badge-ghost badge-sm mr-2">disabled</span>
+          <svg
+            v-if="modelValue"
+            class="w-4 h-4 transition-transform"
+            :class="{ 'rotate-180': isOpen }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div v-if="modelValue && isOpen" class="mt-3 pt-3 border-t border-base-300">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, toRef } from 'vue';
+import { ref } from 'vue';
 
 interface Props {
   title: string;
@@ -41,21 +55,21 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void;
 }>();
 
-const isEnabled = toRef(props, 'modelValue');
 const isOpen = ref(props.defaultOpen);
 
-const toggleEnabled = (event: Event) => {
+const handleCheckboxClick = (event: Event) => {
+  event.stopPropagation();
   const newValue = (event.target as HTMLInputElement).checked;
   emit('update:modelValue', newValue);
 
   // Auto-open when enabling
-  if (newValue && !isOpen.value) {
+  if (newValue) {
     isOpen.value = true;
   }
 };
 
 const toggleOpen = () => {
-  if (isEnabled.value) {
+  if (props.modelValue) {
     isOpen.value = !isOpen.value;
   }
 };

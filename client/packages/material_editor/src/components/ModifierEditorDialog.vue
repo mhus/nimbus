@@ -15,7 +15,8 @@
                 <!-- Visibility Section -->
                 <CollapsibleSection
                   title="Visibility"
-                  v-model="hasVisibility"
+                  :model-value="!!modifierData.visibility"
+                  @update:model-value="toggleVisibility"
                   :default-open="true"
                 >
                   <VisibilityEditor v-model="modifierData.visibility" />
@@ -24,7 +25,8 @@
                 <!-- Physics Section -->
                 <CollapsibleSection
                   title="Physics"
-                  v-model="hasPhysics"
+                  :model-value="!!modifierData.physics"
+                  @update:model-value="togglePhysics"
                 >
                   <PhysicsEditor v-model="modifierData.physics" />
                 </CollapsibleSection>
@@ -32,7 +34,8 @@
                 <!-- Wind Section -->
                 <CollapsibleSection
                   title="Wind"
-                  v-model="hasWind"
+                  :model-value="!!modifierData.wind"
+                  @update:model-value="toggleWind"
                 >
                   <WindEditor v-model="modifierData.wind" />
                 </CollapsibleSection>
@@ -40,7 +43,8 @@
                 <!-- Effects Section -->
                 <CollapsibleSection
                   title="Effects"
-                  v-model="hasEffects"
+                  :model-value="!!modifierData.effects"
+                  @update:model-value="toggleEffects"
                 >
                   <EffectsEditor v-model="modifierData.effects" />
                 </CollapsibleSection>
@@ -48,7 +52,8 @@
                 <!-- Illumination Section -->
                 <CollapsibleSection
                   title="Illumination"
-                  v-model="hasIllumination"
+                  :model-value="!!modifierData.illumination"
+                  @update:model-value="toggleIllumination"
                 >
                   <IlluminationEditor v-model="modifierData.illumination" />
                 </CollapsibleSection>
@@ -56,7 +61,8 @@
                 <!-- Sound Section -->
                 <CollapsibleSection
                   title="Sound"
-                  v-model="hasSound"
+                  :model-value="!!modifierData.sound"
+                  @update:model-value="toggleSound"
                 >
                   <SoundEditor v-model="modifierData.sound" />
                 </CollapsibleSection>
@@ -132,72 +138,54 @@ const emit = defineEmits<{
 // Working copy of modifier
 const modifierData = ref<BlockModifier>(JSON.parse(JSON.stringify(props.modifier)));
 
-// Track which sections are enabled (computed from modifierData)
-const hasVisibility = computed({
-  get: () => !!modifierData.value.visibility,
-  set: (enabled) => {
-    if (!enabled) {
-      modifierData.value.visibility = undefined;
-    } else if (!modifierData.value.visibility) {
-      modifierData.value.visibility = { shape: 1, textures: {} };
-    }
+// Toggle functions for each section
+const toggleVisibility = (enabled: boolean) => {
+  if (!enabled) {
+    modifierData.value.visibility = undefined;
+  } else if (!modifierData.value.visibility) {
+    modifierData.value.visibility = { shape: 1, textures: {} };
   }
-});
+};
 
-const hasPhysics = computed({
-  get: () => !!modifierData.value.physics,
-  set: (enabled) => {
-    if (!enabled) {
-      modifierData.value.physics = undefined;
-    } else if (!modifierData.value.physics) {
-      modifierData.value.physics = {};
-    }
+const togglePhysics = (enabled: boolean) => {
+  if (!enabled) {
+    modifierData.value.physics = undefined;
+  } else if (!modifierData.value.physics) {
+    modifierData.value.physics = {};
   }
-});
+};
 
-const hasWind = computed({
-  get: () => !!modifierData.value.wind,
-  set: (enabled) => {
-    if (!enabled) {
-      modifierData.value.wind = undefined;
-    } else if (!modifierData.value.wind) {
-      modifierData.value.wind = {};
-    }
+const toggleWind = (enabled: boolean) => {
+  if (!enabled) {
+    modifierData.value.wind = undefined;
+  } else if (!modifierData.value.wind) {
+    modifierData.value.wind = {};
   }
-});
+};
 
-const hasEffects = computed({
-  get: () => !!modifierData.value.effects,
-  set: (enabled) => {
-    if (!enabled) {
-      modifierData.value.effects = undefined;
-    } else if (!modifierData.value.effects) {
-      modifierData.value.effects = {};
-    }
+const toggleEffects = (enabled: boolean) => {
+  if (!enabled) {
+    modifierData.value.effects = undefined;
+  } else if (!modifierData.value.effects) {
+    modifierData.value.effects = {};
   }
-});
+};
 
-const hasIllumination = computed({
-  get: () => !!modifierData.value.illumination,
-  set: (enabled) => {
-    if (!enabled) {
-      modifierData.value.illumination = undefined;
-    } else if (!modifierData.value.illumination) {
-      modifierData.value.illumination = {};
-    }
+const toggleIllumination = (enabled: boolean) => {
+  if (!enabled) {
+    modifierData.value.illumination = undefined;
+  } else if (!modifierData.value.illumination) {
+    modifierData.value.illumination = {};
   }
-});
+};
 
-const hasSound = computed({
-  get: () => !!modifierData.value.sound,
-  set: (enabled) => {
-    if (!enabled) {
-      modifierData.value.sound = undefined;
-    } else if (!modifierData.value.sound) {
-      modifierData.value.sound = {};
-    }
+const toggleSound = (enabled: boolean) => {
+  if (!enabled) {
+    modifierData.value.sound = undefined;
+  } else if (!modifierData.value.sound) {
+    modifierData.value.sound = {};
   }
-});
+};
 
 const handleSave = () => {
   emit('save', modifierData.value);
