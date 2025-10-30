@@ -42,7 +42,7 @@ export interface ClientBlock {
 
   /**
    * Cached current BlockModifier
-   * Resolved from blockType.modifiers[block.status] or metadata.modifiers[block.status]
+   * Resolved from block.modifiers[block.status] or blockType.modifiers[block.status]
    */
   currentModifier: BlockModifier;
 

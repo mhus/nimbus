@@ -10,6 +10,7 @@
 
 import type { Vector3 } from './Vector3';
 import type { BlockMetadata } from './BlockMetadata';
+import type { BlockModifier } from './BlockModifier';
 
 /**
  * Offsets for block geometry modification
@@ -284,9 +285,39 @@ export interface Block {
   faceVisibility?: FaceVisibility;
 
   /**
+   * Current status (0-255)
+   *
+   * Status determines which modifier is active for this block instance.
+   * References modifiers in Block.modifiers or BlockType.modifiers.
+   *
+   * Standard status values:
+   * - 0: DEFAULT (always required in BlockType)
+   * - 1: OPEN
+   * - 2: CLOSED
+   * - 10-17: Seasonal (WINTER, SPRING, SUMMER, AUTUMN)
+   * - 100+: Custom world-specific states
+   */
+  status?: number;
+
+  /**
+   * Instance-specific modifiers map: status → BlockModifier
+   *
+   * Optional block instance overrides for specific status values.
+   * These override the BlockType modifiers for this specific block instance.
+   *
+   * Use case: A specific door that looks different than the standard door type.
+   *
+   * @example
+   * modifiers: {
+   *   1: { visibility: { shape: Shape.CUBE, textures: {...} } }  // custom open state
+   * }
+   */
+  modifiers?: Record<number, BlockModifier>;
+
+  /**
    * Block-specific metadata (optional)
    *
-   * Contains instance-specific data like display name and optional modifier overrides.
+   * Contains instance-specific data like display name and group membership.
    * Transmitted over network only when present.
    * @see BlockMetadata
    */

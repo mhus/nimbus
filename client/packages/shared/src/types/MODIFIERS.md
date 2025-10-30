@@ -14,15 +14,15 @@ BlockType (Registry)
 Block (Instance)
   ├─ blockTypeId: number
   ├─ status: number
-  └─ metadata?: BlockMetadata
-       └─ modifiers?: Record<number, BlockModifier> (instance overrides)
+  ├─ modifiers?: Record<number, BlockModifier> (instance overrides)
+  └─ metadata?: BlockMetadata (organizational data)
 ```
 
 ## Status → Modifier Resolution
 
 When rendering a block, modifiers are resolved in this priority order:
 
-1. **Block.metadata.modifiers[status]** - Instance-specific modifier override
+1. **Block.modifiers[status]** - Instance-specific modifier override
 2. **BlockType.modifiers[status]** - Type-defined modifier for status
 3. **BlockType.modifiers[0]** - Fallback to DEFAULT status
 
@@ -90,30 +90,30 @@ const specialDoor: Block = {
   position: { x: 5, y: 64, z: 5 },
   blockTypeId: 42,  // wooden door
   status: 1,        // open
-  metadata: {
-    displayName: 'Ancient Door',
-    modifiers: {
-      // Override open state for this specific door
-      1: {
-        visibility: {
-          shape: Shape.MODEL,
-          path: '/models/ancient_door_open.babylon',
-          textures: {
-            [TextureKey.DIFFUSE]: { path: '/ancient_wood.png' }
-          }
-        },
-        effects: {
-          sky: {
-            intensity: 0.8,
-            color: '#ffaa00'
-          }
+  modifiers: {
+    // Override open state for this specific door
+    1: {
+      visibility: {
+        shape: Shape.MODEL,
+        path: '/models/ancient_door_open.babylon',
+        textures: {
+          [TextureKey.DIFFUSE]: { path: '/ancient_wood.png' }
+        }
+      },
+      effects: {
+        sky: {
+          intensity: 0.8,
+          color: '#ffaa00'
         }
       }
     }
+  },
+  metadata: {
+    groupId: 1  // Organizational data
   }
 };
 
-// Renderer resolves: Block.metadata.modifiers[1] → ancient door (override)
+// Renderer resolves: Block.modifiers[1] → ancient door (override)
 ```
 
 ## Status Values
@@ -156,15 +156,13 @@ The server can trigger global status changes that affect all blocks:
 // Blocks without modifiers[10] keep their current appearance
 ```
 
-## Metadata Merging
+## Modifier Merging
 
-When resolving block properties, metadata is merged with this priority (first match wins):
+When resolving block properties, modifiers are merged with this priority (first match wins):
 
-1. Block.metadata.modifiers[instance.status] (instance-specific)
-2. BlockType.modifiers[instance.status] (instance status from world)
-3. BlockType.modifiers[base_status] (base status)
-4. BlockType.modifiers[base_status] (base status from world)
-5. BlockType.modifiers[0] (DEFAULT fallback)
+1. Block.modifiers[status] (instance-specific override)
+2. BlockType.modifiers[status] (type-defined modifier for status)
+3. BlockType.modifiers[0] (DEFAULT fallback)
 
 ## Use Cases
 
@@ -185,12 +183,12 @@ block.status = block.status === BlockStatus.CLOSED
 ### 3. Unique Instances
 ```typescript
 // Special boss door with custom appearance
+block.modifiers = {
+  [BlockStatus.CLOSED]: { /* epic closed appearance */ },
+  [BlockStatus.OPEN]: { /* epic open appearance */ }
+};
 block.metadata = {
-  displayName: 'Boss Door',
-  modifiers: {
-    [BlockStatus.CLOSED]: { /* epic closed appearance */ },
-    [BlockStatus.OPEN]: { /* epic open appearance */ }
-  }
+  groupId: 100  // Boss room group
 };
 ```
 
@@ -203,7 +201,7 @@ block.status = BlockStatus.DESTROYED;
 ## Performance Considerations
 
 - **BlockType.modifiers** are shared across all instances (memory efficient)
-- **Block.metadata.modifiers** are per-instance (use sparingly)
+- **Block.modifiers** are per-instance (use sparingly)
 - Status changes trigger re-rendering only if modifier exists
 - Missing status values fall back to DEFAULT (no error)
 
@@ -212,7 +210,7 @@ block.status = BlockStatus.DESTROYED;
 Modifiers are transmitted differently:
 
 - **BlockType.modifiers**: Sent once during registry sync
-- **Block.metadata.modifiers**: Only sent for blocks with overrides
+- **Block.modifiers**: Only sent for blocks with overrides
 - **Block.status**: Always sent with block data (small integer)
 
 ## Example: Door Block

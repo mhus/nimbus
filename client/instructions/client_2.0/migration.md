@@ -326,7 +326,7 @@ In Block und BlockModifier ist offset als Array of byte definiert. Da die Werte 
 
 ## Bonus: Block.metadata.modifiers soll verschoben werden in Block.modifiers
 
-[ ] Verschieben von modifiers eine Egene hoeher in der Struktur. Von Block.metadata.modifiers nach Block.modifiers
+[x] Verschieben von modifiers eine Egene hoeher in der Struktur. Von Block.metadata.modifiers nach Block.modifiers
 - client/packages/shared/src/types/Block.ts
 - client/packages/shared/src/types/BlockModifier.ts
 - client/packages/shared/src/types/BlockMetadata.ts

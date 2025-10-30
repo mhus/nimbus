@@ -2,11 +2,10 @@
  * BlockModifierMerge - Merge block modifiers according to priority rules
  *
  * Merge priority (first match wins):
- * 1. Block-BlockType-status-Metadata (Instance status)
- * 2. Block-BlockType-ID status-Metadata (Instance status = world status)
- * 3. Block-BlockType-ID status-Metadata (Base status)
- * 4. Block-BlockType-ID status-Metadata (Base status = world status)
- * 5. Default values for metadata (e.g., shape = 0)
+ * 1. Block.modifiers[status] (Instance-specific modifier)
+ * 2. BlockType.modifiers[status] (Type-defined modifier for status)
+ * 3. BlockType.modifiers[0] (Default status fallback)
+ * 4. Default values (e.g., shape = 0)
  */
 
 import { BlockModifier, BlockType, Block } from '@nimbus/shared';
@@ -25,9 +24,9 @@ export function mergeBlockModifier(
   // Status is determined from BlockType.initialStatus (default: 0)
   const status = blockType.initialStatus || 0;
 
-  // Priority 1: Block instance metadata modifiers (if block has custom metadata)
-  if (block.metadata?.modifiers && block.metadata.modifiers[status]) {
-    return block.metadata.modifiers[status];
+  // Priority 1: Block instance modifiers (if block has custom modifiers)
+  if (block.modifiers && block.modifiers[status]) {
+    return block.modifiers[status];
   }
 
   // Priority 2: BlockType base modifiers for this status

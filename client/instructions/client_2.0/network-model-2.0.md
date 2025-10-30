@@ -262,6 +262,8 @@ Der Server sendet Entity-Änderungen an den Client.
 
 ## Block Update (Client -> Server)
 
+Deprecated:
+
 Der Client sendet Block-Änderungen an den Server (z.B. durch den Editor).
 
 ```json

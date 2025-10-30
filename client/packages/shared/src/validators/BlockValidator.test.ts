@@ -300,19 +300,6 @@ describe('BlockValidator', () => {
       expect(result.valid).toBe(true);
     });
 
-    it('should validate metadata with modifiers', () => {
-      const metadata: BlockMetadata = {
-        groupId: 1,
-        modifiers: {
-          0: { visibility: { shape: 1 } },
-          1: { visibility: { shape: 2 } },
-        },
-      };
-
-      const result = BlockValidator.validateBlockMetadata(metadata);
-      expect(result.valid).toBe(true);
-    });
-
     it('should reject invalid group ID', () => {
       const metadata: BlockMetadata = {
         groupId: -1,
@@ -321,17 +308,6 @@ describe('BlockValidator', () => {
       const result = BlockValidator.validateBlockMetadata(metadata);
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.includes('Invalid group ID'))).toBe(true);
-    });
-
-    it('should reject invalid modifier status', () => {
-      const metadata: any = {
-        modifiers: {
-          300: { visibility: { shape: 1 } },
-        },
-      };
-
-      const result = BlockValidator.validateBlockMetadata(metadata);
-      expect(result.valid).toBe(false);
     });
   });
 

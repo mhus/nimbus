@@ -51,28 +51,28 @@ Parameters:
 - ?faceVisibility : number (1 byte bitfield, 6 bits for faces + 1 bit for fixed/auto mode)
   - Bit 0-5: TOP, BOTTOM, LEFT, RIGHT, FRONT, BACK
   - Bit 6: FIXED mode (1) or AUTO mode (0)
-- ?status : number (current status, references modifier in BlockType.modifiers or metadata.modifiers)
-- ?metadata : BlockMetadata
+- ?status : number (current status, references modifier in BlockType.modifiers or Block.modifiers)
+- ?modifiers : Record<number, BlockModifier> (optional instance-specific modifier overrides)
+- ?metadata : BlockMetadata (organizational data like groupId)
 
 **Wichtig:** Block wird über Netzwerk übertragen und auf Server verwendet.
 Keine cached Werte (wie blockType reference) - diese gehören in ClientBlock!
 
 Blöcke haben möglichst wenige Parameter, deshalb werden Standard-Situationen
 durch BlockTypen definiert. Diese haben die gleichen Modifier wie ein Block zusätzlich haben kann.
-Zusätzlich kann ein Block auch Metadaten haben, die immer block-spezifisch sind.
+Zusätzlich kann ein Block auch eigene Modifiers haben, die die BlockType Modifier überschreiben.
 
-### Metadaten mergen
+### Modifier mergen
 
 world status ist by default = 0
 Welt Status: Wenn die Welt einen Status-Switch fordert und der Status verfügbar ist, z.b. Switche alle 0 auf 666 (Apokalypse)
 
-Metadaten werden von oben nach unten durch gemerged (first match winns)
+Modifier werden von oben nach unten durch gemerged (first match wins)
 
-1. Block-BlockType-status-Metadaten (Insance status)
-2. Block-BlockType-ID status-Metadaten (Instance status=world status)
-3. Block-BlockType-ID status-Metadaten (Base status)
-4. Block-BlockType-ID status-Metadaten (Base status=world status)
-5. Default Werte für Metadaten, z.b. shape=0
+1. Block.modifiers[status] (Instance-specific modifier)
+2. BlockType.modifiers[status] (Type-defined modifier for status)
+3. BlockType.modifiers[0] (Default status fallback)
+4. Default Werte, z.b. shape=0
 
 ## BlockModifier
 
@@ -153,10 +153,9 @@ Ab 100: ggf. für bestimmte shape typen spezielle texturen.
 
 Parameters:
 - ?groupId : number
-- ?modifiers : Record<number, BlockModifier> (optional instance-specific modifier overrides)
 
-Metadata können eigene Modifier enthalten, die die BlockType Modifier für diese spezifische Block-Instanz überschreiben.
-Use case: Eine spezielle Tür, die anders aussieht als der Standard-Türtyp.
+Metadata enthalten organisatorische Daten wie Gruppen-IDs.
+Modifier sind jetzt direkt in Block.modifiers statt in metadata.modifiers.
 
 ## Shape
 
@@ -221,11 +220,10 @@ ClientBlock ist die client-seitige Repräsentation mit aufgelösten Referenzen u
 Wird NICHT über Netzwerk übertragen!
 
 Parameters:
-- block : Block (original network data)
+- block : Block (original network data, includes block.modifiers for instance overrides)
 - chunk : { cx: number, cz: number } (chunk coordinates)
 - blockType : BlockType (cached, resolved from block.blockTypeId)
-- ?metadata : BlockMetadata (cached)
-- currentModifier : BlockModifier (cached, resolved from status)
+- currentModifier : BlockModifier (cached, resolved from block.modifiers or blockType.modifiers)
 - clientBlockType : ClientBlockType (optimized for rendering)
 - ?statusName : string (debug string, e.g., "OPEN", "WINTER")
 - ?isVisible : boolean (culling flag)
