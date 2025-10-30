@@ -46,10 +46,21 @@
     <!-- Editor Dialog -->
     <BlockTypeEditorPanel
       v-if="isEditorOpen"
+      ref="blockTypeEditorRef"
       :block-type="selectedBlockType"
       :world-id="currentWorldId!"
       @close="closeEditor"
       @saved="handleSaved"
+      @edit-modifier="handleEditModifier"
+    />
+
+    <!-- Modifier Editor Dialog (separate, higher level) -->
+    <ModifierEditorDialog
+      v-if="isModifierEditorOpen && editingModifier"
+      :modifier="editingModifier.modifier"
+      :status-number="editingModifier.status"
+      @close="closeModifierEditor"
+      @save="handleModifierSaved"
     />
   </div>
 </template>
@@ -64,6 +75,7 @@ import LoadingSpinner from '../components/LoadingSpinner.vue';
 import ErrorAlert from '../components/ErrorAlert.vue';
 import BlockTypeList from '../components/BlockTypeList.vue';
 import BlockTypeEditorPanel from '../components/BlockTypeEditorPanel.vue';
+import ModifierEditorDialog from '../components/ModifierEditorDialog.vue';
 
 const { currentWorldId } = useWorld();
 
@@ -79,6 +91,9 @@ const searchQuery = ref('');
 
 const isEditorOpen = ref(false);
 const selectedBlockType = ref<BlockType | null>(null);
+const isModifierEditorOpen = ref(false);
+const editingModifier = ref<{ blockType: BlockType; status: number; modifier: any } | null>(null);
+const blockTypeEditorRef = ref<any>(null);
 
 // Load block types when world changes
 watch(currentWorldId, () => {
@@ -137,6 +152,33 @@ const handleDelete = async (blockType: BlockType) => {
   }
 
   await blockTypesComposable.value.deleteBlockType(blockType.id);
+};
+
+/**
+ * Handle edit modifier
+ */
+const handleEditModifier = (data: { blockType: BlockType; status: number; modifier: any }) => {
+  editingModifier.value = data;
+  isModifierEditorOpen.value = true;
+};
+
+/**
+ * Close modifier editor
+ */
+const closeModifierEditor = () => {
+  isModifierEditorOpen.value = false;
+  editingModifier.value = null;
+};
+
+/**
+ * Handle modifier saved
+ */
+const handleModifierSaved = (modifier: any) => {
+  if (editingModifier.value && blockTypeEditorRef.value) {
+    // Update the modifier directly in BlockTypeEditorPanel
+    blockTypeEditorRef.value.updateModifier(editingModifier.value.status, modifier);
+  }
+  closeModifierEditor();
 };
 
 onMounted(() => {

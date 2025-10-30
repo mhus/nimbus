@@ -29,7 +29,7 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 
 ## Setup
 
-[?] Erstelle ein neues Packet material_editor das auch die sourcen in 'shared' nutzt.
+[x] Erstelle ein neues Packet material_editor das auch die sourcen in 'shared' nutzt.
 - Richte Vite mit Vue3 und tailwind css ein.
 - Erstelle die Grundstruktur der Applikation mit den benötigten Komponenten.
 - In einer dotnet Datei wird die aktuelle API_URL fest hinterlegt.
@@ -81,7 +81,7 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 
 ## Block Type Editor
 
-[ ] Das Editieren der status Sections soll besser untertuetzt werden.
+[?] Das Editieren der status Sections soll besser untertuetzt werden.
 - Du kannst einen neuen Dialog aufmachen im einene Status zu bearbeiten.
 - Referenz in 'client/packages/shared/src/types/BlockModifier.ts'
 - Die Bereiche sollen ausklappbar sein. Sind sie eingeklappt, wird das optionale Feld als Empty gespeichert (Daten gehen verloren) - Oder noch schöner, neben dem Titel des bereichs ist eine checkbox, die steuert ob der Bereich dann empty wird.
@@ -95,3 +95,12 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 - Erstelle ein textFeld für 'alpha'
 - Erstelle einen Bereich für 'illumination'
 - Erstelle einen bereich für 'sound'
+
+[ ] offsets anzeigen und bearbeiten mit verschiedenen Bezeichnern.
+- invisible: keine
+- cube: Alle ecken (XYZ) 'top front left', 'top front right', 'top back left', 'top back right', 'bottom front left', 'bottom front right', 'bottom back left', 'bottom back right'
+- column: Erste Punkt: XZ ist Radius offest oben, Zweiter Punkt XZ ist Radius Offset Unten, dritter Punkt (XYZ) ist verschiebung Oben, vierter Punkt ist verschiebung Unten
+- sphere: Erster Punkt (XYZ) ist radios offset, Zweiter Punkt (XYZ) ist verschiebung
+- hash: Alle Punkte (XYZ) wie bei cube
+- cross: Alle Punkte (XYZ) wie bei cube
+- 
