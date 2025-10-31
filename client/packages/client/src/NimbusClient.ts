@@ -27,6 +27,7 @@ import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
 import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
 import { CommandResultHandler } from './network/handlers/CommandResultHandler';
+import { ServerCommandHandler } from './network/handlers/ServerCommandHandler';
 import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
@@ -194,6 +195,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       const commandResultHandler = new CommandResultHandler(commandService);
       networkService.registerHandler(commandResultHandler);
       logger.debug('CommandResultHandler registered for message type: cmd.rs');
+
+      // Register ServerCommandHandler for server -> client commands
+      const serverCommandHandler = new ServerCommandHandler(commandService);
+      networkService.registerHandler(serverCommandHandler);
+      logger.debug('ServerCommandHandler registered for message type: scmd');
     }
 
     logger.info('Core services initialized');

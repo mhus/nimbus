@@ -36,3 +36,4 @@ export * from './NotificationMessage';
 
 // Commands
 export * from './CommandMessage';
+export * from './ServerCommandMessage';

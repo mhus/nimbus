@@ -12,8 +12,10 @@ import {
   ExceptionHandler,
   MessageType,
   RequestMessage,
+  ResponseMessage,
   CommandData,
   CommandResultData,
+  ServerCommandResultData,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CommandHandler } from '../commands/CommandHandler';
@@ -296,6 +298,89 @@ export class CommandService {
       pending.resolve(result);
     } else {
       pending.reject(new Error(`Command failed (rc=${result.rc}): ${result.message}`));
+    }
+  }
+
+  /**
+   * Handle server command (scmd)
+   * Server requests client to execute a command
+   * Called by ServerCommandHandler
+   *
+   * @param requestId Server's request ID (i field)
+   * @param cmd Command name
+   * @param args Command arguments
+   */
+  async handleServerCommand(requestId: string, cmd: string, args: string[] = []): Promise<void> {
+    const networkService = this.appContext.services.network;
+
+    if (!networkService) {
+      logger.error('NetworkService not available for server command response');
+      return;
+    }
+
+    try {
+      const handler = this.handlers.get(cmd);
+
+      // Command not found
+      if (!handler) {
+        logger.warn(`Server command not found: ${cmd}`);
+
+        this.sendServerCommandResult(networkService, requestId, {
+          rc: -1, // Command not found
+          message: `Command '${cmd}' not found on client`,
+        });
+        return;
+      }
+
+      logger.debug(`Executing server command '${cmd}'`, { requestId, args });
+
+      // Execute command
+      const result = await handler.execute(args);
+
+      logger.debug(`Server command '${cmd}' executed successfully`, { requestId, result });
+
+      // Send success result
+      this.sendServerCommandResult(networkService, requestId, {
+        rc: 0,
+        message: typeof result === 'string' ? result : JSON.stringify(result),
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CommandService.handleServerCommand', {
+        cmd,
+        args,
+        requestId,
+      });
+
+      // Send error result
+      this.sendServerCommandResult(networkService, requestId, {
+        rc: -4, // Internal error
+        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+    }
+  }
+
+  /**
+   * Send server command result back to server (scmd.rs)
+   * @param networkService Network service
+   * @param requestId Original request ID from server
+   * @param result Command result
+   */
+  private sendServerCommandResult(
+    networkService: any,
+    requestId: string,
+    result: ServerCommandResultData
+  ): void {
+    try {
+      const response: ResponseMessage<ServerCommandResultData> = {
+        r: requestId,
+        t: MessageType.SCMD_RESULT,
+        d: result,
+      };
+
+      networkService.send(response);
+      logger.debug('Sent server command result', { requestId, rc: result.rc });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CommandService.sendServerCommandResult', { requestId });
     }
   }
 }

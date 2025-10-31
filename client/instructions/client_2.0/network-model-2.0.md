@@ -592,7 +592,6 @@ Als Antwort bekommt er eine "cmd.rs" message als successful (rc=0) oder failed (
 Negative rc sind System Fehler:
 
 * -1 = Command not found
-* -2 = Command not allowed (permission denied)
 * -3 = Invalid arguments
 * -4 = Internal error
 
@@ -602,7 +601,7 @@ Positive rc werden vom Command zurückgegeben und sind individuell.
 * 1 = Error bzw. "false".
 
 ```json
-{"i": "123", "t": "cmd", "d": 
+{"i": "123", "t": "scmd", "d": 
   {
     "cmd": "say",
     "args": [
@@ -615,7 +614,7 @@ Positive rc werden vom Command zurückgegeben und sind individuell.
 Response Finished Successfully (Client -> Server):
 
 ```json
-{"r":"123", "t": "cmd.rs", "d": 
+{"r":"123", "t": "scmd.rs", "d": 
   {
     "rc": 0,
     "message": "Hello, world!"
@@ -626,7 +625,7 @@ Response Finished Successfully (Client -> Server):
 Response Finished Failed (Client -> Server):
 
 ```json
-{"r":"123", "t": "cmd.rs", "d": 
+{"r":"123", "t": "scmd.rs", "d": 
   {
     "rc": 1,
     "message": "Command not found."

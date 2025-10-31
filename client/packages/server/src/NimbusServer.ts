@@ -17,6 +17,7 @@ import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
 import { CommandService } from './commands/CommandService';
 import { HelpCommand } from './commands/HelpCommand';
+import { LoopCommand } from './commands/LoopCommand';
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -50,6 +51,7 @@ class NimbusServer {
 
     // Register command handlers
     this.commandService.registerHandler(new HelpCommand(this.commandService));
+    this.commandService.registerHandler(new LoopCommand());
   }
 
   /**

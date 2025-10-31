@@ -49,10 +49,14 @@ export enum MessageType {
   // Notifications
   NOTIFICATION = 'n',
 
-  // Commands
+  // Commands (Client -> Server)
   CMD = 'cmd',
   CMD_MESSAGE = 'cmd.msg',
   CMD_RESULT = 'cmd.rs',
+
+  // Server Commands (Server -> Client)
+  SCMD = 'scmd',
+  SCMD_RESULT = 'scmd.rs',
 }
 
 /**
