@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="navbar bg-base-300 shadow-lg">
+    <!-- Header (hidden in embedded mode) -->
+    <header v-if="!isEmbedded()" class="navbar bg-base-300 shadow-lg">
       <div class="flex-1">
         <h1 class="text-xl font-bold px-4">Nimbus Block Instance Editor</h1>
       </div>
@@ -15,8 +15,8 @@
       <BlockInstanceEditor />
     </main>
 
-    <!-- Footer -->
-    <footer class="footer footer-center p-4 bg-base-300 text-base-content">
+    <!-- Footer (hidden in embedded mode) -->
+    <footer v-if="!isEmbedded()" class="footer footer-center p-4 bg-base-300 text-base-content">
       <div>
         <p>Nimbus Block Editor v2.0.0</p>
       </div>
@@ -27,6 +27,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import BlockInstanceEditor from './views/BlockInstanceEditor.vue';
+import { useModal } from '@/composables/useModal';
+
+// Modal composable for embedded detection
+const { isEmbedded } = useModal();
 
 // Get world ID from URL or env
 const params = new URLSearchParams(window.location.search);

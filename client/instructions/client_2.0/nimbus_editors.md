@@ -1045,7 +1045,7 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 - Erstelle die Endpunkte
 - Erweitere die Dokumentation in 'client/instructions/client_2.0/server_rest_api.md'
 
-[ ] Beim ändern von Blocks im Server muss an alle Clients ein Update der Blocks/Chunk gesendet werden.
+[?] Beim ändern von Blocks im Server muss an alle Clients ein Update der Blocks/Chunk gesendet werden.
 Das kann cumulativ beim Speichern der Chunks passieren. Es gibt hierfuer bereits eine Netzwerk Funktion
 Siehe 'client/instructions/client_2.0/network-model-2.0.md'.
 Muss das angepasst werden?
@@ -1151,7 +1151,7 @@ Muss das angepasst werden?
  ✅ Konfigurierbar (FLUSH_INTERVAL, MAX_BATCH_SIZE)
 ```
 
-[ ] Block Editor in modal_editors implementieren
+[?] Block Editor in modal_editors implementieren
 - Der Editor existiert bereits, ist aber noch nicht implementiert.
 - Implementiere das Formular fuer Block (Block.ts)
 - BlockModifer (BlockModifier.ts)
@@ -1161,3 +1161,8 @@ Muss das angepasst werden?
 - Erstelle Delete/Save/Apply/Cancel Buttons.
 - Im Embedded Modus soll der Titel/Header nicht angezeigt werden, das wird schon am IFrame angezeigt.
 - Nutze den ModalService um das Modal zu schliessen und notifications zu senden.
+
+[ ] Client soll auf die Netzwerk-Nachricht 'b.u' reagieren
+- Geanderte Blocks austauschen (type 0 = DELETED)
+- ClientBlock / ClientChunk aktualisieren
+- Neu rendern
