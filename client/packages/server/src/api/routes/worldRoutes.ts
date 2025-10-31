@@ -207,8 +207,11 @@ export function createWorldRoutes(
     const block = {
       position: { x, y, z },
       blockTypeId: blockData.blockTypeId,
-      status: blockData.status ?? 0,
-      metadata: blockData.metadata ?? {},
+      status: blockData.status,
+      offsets: blockData.offsets,
+      faceVisibility: blockData.faceVisibility,
+      modifiers: blockData.modifiers,
+      metadata: blockData.metadata,
     };
 
     const success = await worldManager.setBlock(req.params.id, block);
@@ -256,12 +259,15 @@ export function createWorldRoutes(
       return res.status(400).json({ error: 'Invalid blockTypeId' });
     }
 
-    // Update block
+    // Update block (preserve existing values if not provided)
     const block = {
       position: { x, y, z },
       blockTypeId: blockData.blockTypeId,
-      status: blockData.status ?? existingBlock.status,
-      metadata: blockData.metadata ?? existingBlock.metadata,
+      status: blockData.status !== undefined ? blockData.status : existingBlock.status,
+      offsets: blockData.offsets !== undefined ? blockData.offsets : existingBlock.offsets,
+      faceVisibility: blockData.faceVisibility !== undefined ? blockData.faceVisibility : existingBlock.faceVisibility,
+      modifiers: blockData.modifiers !== undefined ? blockData.modifiers : existingBlock.modifiers,
+      metadata: blockData.metadata !== undefined ? blockData.metadata : existingBlock.metadata,
     };
 
     const success = await worldManager.setBlock(req.params.id, block);

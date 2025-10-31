@@ -1151,7 +1151,7 @@ Muss das angepasst werden?
  ✅ Konfigurierbar (FLUSH_INTERVAL, MAX_BATCH_SIZE)
 ```
 
-[?] Block Editor in modal_editors implementieren
+[x] Block Editor in modal_editors implementieren
 - Der Editor existiert bereits, ist aber noch nicht implementiert.
 - Implementiere das Formular fuer Block (Block.ts)
 - BlockModifer (BlockModifier.ts)
@@ -1162,7 +1162,7 @@ Muss das angepasst werden?
 - Im Embedded Modus soll der Titel/Header nicht angezeigt werden, das wird schon am IFrame angezeigt.
 - Nutze den ModalService um das Modal zu schliessen und notifications zu senden.
 
-[ ] Client soll auf die Netzwerk-Nachricht 'b.u' reagieren
-- Geanderte Blocks austauschen (type 0 = DELETED)
-- ClientBlock / ClientChunk aktualisieren
+[ ] Client soll auf die Netzwerk-Nachricht 'b.u' reagieren (client/instructions/client_2.0/network-model-2.0.md)
+- Geänderte Blocks austauschen (type 0 = DELETED)
+- ClientBlock / ClientChunk aktualisieren - wie schon beim laden von chunks (die gleiche methode nutzen)
 - Neu rendern

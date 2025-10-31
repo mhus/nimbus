@@ -396,17 +396,27 @@ Request Body:
 {
   "blockTypeId": 1,
   "status": 0,
+  "offsets": [0.5, 0.25, 0, -0.5, 0.25, 0],
+  "faceVisibility": { "value": 63 },
+  "modifiers": {
+    "1": {
+      "visibility": { "shape": 1, "textures": {} }
+    }
+  },
   "metadata": {
-    "displayName": "My Custom Block",
-    "groups": ["group-uuid"]
+    "groupId": 123,
+    "interactive": true
   }
 }
 ```
 
 Felder:
 - `blockTypeId` (required): ID des BlockType
-- `status` (optional): Block-Status (default: 0)
-- `metadata` (optional): Zusätzliche Metadaten (default: {})
+- `status` (optional): Block-Status (0-255)
+- `offsets` (optional): Geometrie-Offsets (array von Zahlen)
+- `faceVisibility` (optional): Sichtbarkeits-Flags für Flächen
+- `modifiers` (optional): Block-spezifische Modifiers pro Status
+- `metadata` (optional): Zusätzliche Metadaten
 
 Response:
 
@@ -445,9 +455,16 @@ Request Body:
 {
   "blockTypeId": 2,
   "status": 1,
+  "offsets": [1, 0, 0],
+  "faceVisibility": { "value": 31 },
+  "modifiers": {
+    "0": {
+      "visibility": { "shape": 1, "textures": {} }
+    }
+  },
   "metadata": {
-    "displayName": "Updated Block",
-    "groups": ["new-group"]
+    "groupId": 456,
+    "interactive": false
   }
 }
 ```
@@ -455,6 +472,9 @@ Request Body:
 Felder:
 - `blockTypeId` (required): ID des BlockType
 - `status` (optional): Block-Status (behält alten Wert, wenn nicht angegeben)
+- `offsets` (optional): Geometrie-Offsets (behält alte Offsets, wenn nicht angegeben)
+- `faceVisibility` (optional): Sichtbarkeits-Flags (behält alte Werte, wenn nicht angegeben)
+- `modifiers` (optional): Block-spezifische Modifiers (behält alte Modifiers, wenn nicht angegeben)
 - `metadata` (optional): Zusätzliche Metadaten (behält alte Metadaten, wenn nicht angegeben)
 
 Response:
