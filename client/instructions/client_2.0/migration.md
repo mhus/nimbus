@@ -477,7 +477,7 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 - wenn nicht: tiefster Block finden, das ist 
 > manuell
 
-[ ] Water Level in WorldInfo wird nicht benoetigt, muss auch nicht gerendert werden (RenderService.ts)
+[x] Water Level in WorldInfo wird nicht benoetigt, muss auch nicht gerendert werden (RenderService.ts)
 
 ## Material
 

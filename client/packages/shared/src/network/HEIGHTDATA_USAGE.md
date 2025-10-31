@@ -2,16 +2,37 @@
 
 Named tuple for chunk height information with clear semantics.
 
-## Type Definition
+## Type Definitions
+
+### Network HeightData (ChunkData.ts)
+
+For network transfer between server and client:
 
 ```typescript
 type HeightData = readonly [
+  x: number,           // Local X coordinate in chunk
+  z: number,           // Local Z coordinate in chunk
+  maxHeight: number,   // Highest block in this column
+  groundLevel: number  // First solid block from bottom
+];
+```
+
+### Client HeightData (ClientChunk.ts)
+
+Extended version for client-side processing:
+
+```typescript
+type ClientHeightData = readonly [
+  x: number,
+  z: number,
   maxHeight: number,
   minHeight: number,
   groundLevel: number,
-  waterHeight: number
+  waterHeight?: number  // Optional: highest water block (future feature)
 ];
 ```
+
+**Note:** Water level is **not stored in WorldInfo** and water blocks are **not specially rendered**.
 
 ## Benefits of Named Tuple
 
@@ -22,23 +43,23 @@ type HeightData = readonly [
 
 ## Usage Examples
 
-### 1. Creating HeightData
+### 1. Creating HeightData (Network)
 
 ```typescript
-// Create height data for a chunk
+// Create height data for a chunk position
 const heightData: HeightData = [
+  0,    // x (local coordinate)
+  0,    // z (local coordinate)
   128,  // maxHeight
-  0,    // minHeight
-  64,   // groundLevel
-  62    // waterHeight
+  64    // groundLevel
 ];
 
 // With named parameters (visible in IDE)
 const heightData: HeightData = [
+  /*x*/ 0,
+  /*z*/ 0,
   /*maxHeight*/ 128,
-  /*minHeight*/ 0,
-  /*groundLevel*/ 64,
-  /*waterHeight*/ 62
+  /*groundLevel*/ 64
 ];
 ```
 
@@ -46,46 +67,46 @@ const heightData: HeightData = [
 
 ```typescript
 // Destructure with clear names
-const [maxHeight, minHeight, groundLevel, waterHeight] = heightData;
+const [x, z, maxHeight, groundLevel] = heightData;
 
-console.log(`Max: ${maxHeight}, Min: ${minHeight}`);
-console.log(`Ground: ${groundLevel}, Water: ${waterHeight}`);
+console.log(`Position: (${x}, ${z})`);
+console.log(`Max: ${maxHeight}, Ground: ${groundLevel}`);
 
-// Partial destructuring
-const [max, min] = heightData;
-console.log(`Height range: ${min} to ${max}`);
+// Partial destructuring (skip position)
+const [, , maxHeight, groundLevel] = heightData;
+console.log(`Height: ${maxHeight}, Ground: ${groundLevel}`);
 ```
 
-### 3. Accessing by Index (still possible)
+### 3. Accessing by Index
 
 ```typescript
-const maxHeight = heightData[0];
-const minHeight = heightData[1];
-const groundLevel = heightData[2];
-const waterHeight = heightData[3];
+const x = heightData[0];
+const z = heightData[1];
+const maxHeight = heightData[2];
+const groundLevel = heightData[3];
 ```
 
 ### 4. In ChunkDataTransferObject
 
 ```typescript
 interface ChunkDataTransferObject {
-  c: number;
-  z: number;
+  cx: number;  // Chunk X coordinate
+  cz: number;  // Chunk Z coordinate
   b: Block[];
-  h: HeightData[];  // Array of height data
+  h: HeightData[];  // Array of height data for each (x,z) position
   a?: AreaData[];
   e?: EntityData[];
 }
 
 // Create chunk with height data
 const chunkData: ChunkDataTransferObject = {
-  c: 0,
-  z: 0,
+  cx: 0,
+  cz: 0,
   b: [],
   h: [
-    [128, 0, 64, 62],  // Position (0, 0)
-    [130, 2, 65, 62],  // Position (1, 0)
-    [125, 0, 63, 62],  // Position (2, 0)
+    [0, 0, 128, 64],  // Position (0, 0): maxHeight=128, groundLevel=64
+    [1, 0, 130, 65],  // Position (1, 0): maxHeight=130, groundLevel=65
+    [2, 0, 125, 63],  // Position (2, 0): maxHeight=125, groundLevel=63
     // ... more height data for each XZ position in chunk
   ]
 };
@@ -95,21 +116,13 @@ const chunkData: ChunkDataTransferObject = {
 
 ```typescript
 function analyzeChunk(chunk: ChunkDataTransferObject) {
-  chunk.h.forEach((heightData, index) => {
-    const [maxHeight, minHeight, groundLevel, waterHeight] = heightData;
+  chunk.h?.forEach((heightData) => {
+    const [x, z, maxHeight, groundLevel] = heightData;
 
-    // Calculate terrain metrics
-    const terrainHeight = maxHeight - minHeight;
-    const isUnderwater = groundLevel < waterHeight;
-    const waterDepth = Math.max(0, waterHeight - groundLevel);
-
-    console.log(`Position ${index}:`);
-    console.log(`  Terrain height: ${terrainHeight}`);
+    console.log(`Position (${x}, ${z}):`);
+    console.log(`  Max height: ${maxHeight}`);
     console.log(`  Ground level: ${groundLevel}`);
-    console.log(`  Underwater: ${isUnderwater}`);
-    if (isUnderwater) {
-      console.log(`  Water depth: ${waterDepth}`);
-    }
+    console.log(`  Height difference: ${maxHeight - groundLevel}`);
   });
 }
 ```
@@ -117,27 +130,28 @@ function analyzeChunk(chunk: ChunkDataTransferObject) {
 ### 6. Generating Height Data
 
 ```typescript
-function generateHeightData(x: number, z: number): HeightData {
+function generateHeightData(localX: number, localZ: number): HeightData {
   // Use noise function or other terrain generation
-  const groundLevel = getTerrainHeight(x, z);
-  const waterHeight = 62; // Sea level
+  const groundLevel = getTerrainHeight(localX, localZ);
 
-  // Calculate bounds
-  const minHeight = Math.max(0, groundLevel - 5);
+  // Calculate max height (e.g., add trees, structures)
   const maxHeight = Math.min(255, groundLevel + 10);
 
-  return [maxHeight, minHeight, groundLevel, waterHeight];
+  return [localX, localZ, maxHeight, groundLevel];
 }
 
 // Generate for entire chunk
-function generateChunkHeightData(chunkX: number, chunkZ: number): HeightData[] {
+function generateChunkHeightData(chunkX: number, chunkZ: number, chunkSize: number): HeightData[] {
   const heightData: HeightData[] = [];
 
-  for (let z = 0; z < 16; z++) {
-    for (let x = 0; x < 16; x++) {
-      const worldX = chunkX * 16 + x;
-      const worldZ = chunkZ * 16 + z;
-      heightData.push(generateHeightData(worldX, worldZ));
+  for (let z = 0; z < chunkSize; z++) {
+    for (let x = 0; x < chunkSize; x++) {
+      const worldX = chunkX * chunkSize + x;
+      const worldZ = chunkZ * chunkSize + z;
+      const groundLevel = getTerrainHeight(worldX, worldZ);
+      const maxHeight = Math.min(255, groundLevel + 10);
+
+      heightData.push([x, z, maxHeight, groundLevel]);
     }
   }
 
@@ -149,17 +163,17 @@ function generateChunkHeightData(chunkX: number, chunkZ: number): HeightData[] {
 
 ```typescript
 function isValidHeightData(data: HeightData): boolean {
-  const [maxHeight, minHeight, groundLevel, waterHeight] = data;
+  const [x, z, maxHeight, groundLevel] = data;
 
-  // Validate bounds
-  if (minHeight < 0 || maxHeight > 255) return false;
-  if (minHeight > maxHeight) return false;
+  // Validate position within chunk
+  if (x < 0 || x >= 16 || z < 0 || z >= 16) return false;
 
-  // Validate ground level is within range
-  if (groundLevel < minHeight || groundLevel > maxHeight) return false;
+  // Validate height bounds
+  if (maxHeight < -512 || maxHeight > 512) return false;
+  if (groundLevel < -512 || groundLevel > 512) return false;
 
-  // Validate water height
-  if (waterHeight < 0 || waterHeight > 255) return false;
+  // Validate ground level is not above max height
+  if (groundLevel > maxHeight) return false;
 
   return true;
 }
@@ -177,10 +191,10 @@ function deserializeHeightData(data: number[]): HeightData | null {
   if (data.length !== 4) return null;
 
   const heightData: HeightData = [
-    data[0], // maxHeight
-    data[1], // minHeight
-    data[2], // groundLevel
-    data[3]  // waterHeight
+    data[0], // x
+    data[1], // z
+    data[2], // maxHeight
+    data[3]  // groundLevel
   ];
 
   return isValidHeightData(heightData) ? heightData : null;
@@ -192,12 +206,12 @@ function deserializeHeightData(data: number[]): HeightData | null {
 ```typescript
 // Calculate optimal LOD based on height data
 function calculateLOD(heightData: HeightData, cameraY: number): number {
-  const [maxHeight, minHeight, groundLevel] = heightData;
+  const [, , maxHeight, groundLevel] = heightData;
 
   const distanceToGround = Math.abs(cameraY - groundLevel);
-  const terrainComplexity = maxHeight - minHeight;
+  const terrainHeight = maxHeight - groundLevel;
 
-  if (distanceToGround > 100 || terrainComplexity < 5) {
+  if (distanceToGround > 100 || terrainHeight < 5) {
     return 3; // Low detail
   } else if (distanceToGround > 50) {
     return 2; // Medium detail
@@ -206,18 +220,15 @@ function calculateLOD(heightData: HeightData, cameraY: number): number {
   }
 }
 
-// Determine chunk rendering priority
+// Determine chunk rendering priority based on height variation
 function getChunkPriority(chunk: ChunkDataTransferObject): number {
+  if (!chunk.h || chunk.h.length === 0) return 0;
+
   let priority = 0;
 
-  chunk.h.forEach(([maxHeight, minHeight, groundLevel, waterHeight]) => {
+  chunk.h.forEach(([, , maxHeight, groundLevel]) => {
     // Higher priority for chunks with more variation
-    priority += maxHeight - minHeight;
-
-    // Higher priority for chunks with water
-    if (waterHeight > groundLevel) {
-      priority += 10;
-    }
+    priority += maxHeight - groundLevel;
   });
 
   return priority / chunk.h.length;
@@ -230,36 +241,43 @@ function getChunkPriority(chunk: ChunkDataTransferObject): number {
 // Get average ground level for chunk
 function getAverageGroundLevel(heightData: HeightData[]): number {
   const sum = heightData.reduce(
-    (acc, [, , groundLevel]) => acc + groundLevel,
+    (acc, [, , , groundLevel]) => acc + groundLevel,
     0
   );
   return sum / heightData.length;
 }
 
-// Check if chunk has water
-function hasWater(heightData: HeightData[]): boolean {
-  return heightData.some(
-    ([, , groundLevel, waterHeight]) => waterHeight > groundLevel
-  );
-}
-
 // Get height range for chunk
-function getHeightRange(heightData: HeightData[]): [number, number] {
+function getHeightRange(heightData: HeightData[]): { min: number; max: number } {
   let min = Infinity;
   let max = -Infinity;
 
-  heightData.forEach(([maxHeight, minHeight]) => {
-    min = Math.min(min, minHeight);
+  heightData.forEach(([, , maxHeight, groundLevel]) => {
+    min = Math.min(min, groundLevel);
     max = Math.max(max, maxHeight);
   });
 
-  return [min, max];
+  return { min, max };
 }
 
 // Check if chunk is flat
 function isFlat(heightData: HeightData[], threshold = 5): boolean {
-  const [min, max] = getHeightRange(heightData);
+  const { min, max } = getHeightRange(heightData);
   return max - min <= threshold;
+}
+
+// Find position with highest terrain
+function findHighestPoint(heightData: HeightData[]): { x: number; z: number; height: number } | null {
+  if (heightData.length === 0) return null;
+
+  let highest = heightData[0];
+  for (const data of heightData) {
+    if (data[2] > highest[2]) { // Compare maxHeight
+      highest = data;
+    }
+  }
+
+  return { x: highest[0], z: highest[1], height: highest[2] };
 }
 ```
 
@@ -268,10 +286,10 @@ function isFlat(heightData: HeightData[], threshold = 5): boolean {
 When you type `heightData[` in your IDE, you'll see:
 
 ```
-heightData[0] - maxHeight: number
-heightData[1] - minHeight: number
-heightData[2] - groundLevel: number
-heightData[3] - waterHeight: number
+heightData[0] - x: number
+heightData[1] - z: number
+heightData[2] - maxHeight: number
+heightData[3] - groundLevel: number
 ```
 
 This makes the code self-documenting and reduces errors.
@@ -289,16 +307,16 @@ const height = heightData[2];
 ### After (named tuple)
 ```typescript
 type HeightData = readonly [
+  x: number,
+  z: number,
   maxHeight: number,
-  minHeight: number,
-  groundLevel: number,
-  waterHeight: number
+  groundLevel: number
 ];
 
 // Clear meaning! ✅
-const [, , groundLevel] = heightData;
+const [x, z, maxHeight, groundLevel] = heightData;
 // or
-const groundLevel = heightData[2]; // IDE shows: groundLevel: number
+const maxHeight = heightData[2]; // IDE shows: maxHeight: number
 ```
 
 ## Best Practices
