@@ -22,7 +22,7 @@ import type { PlayerInfo } from '@nimbus/shared';
  * - Run speed: 7.0 blocks/second (sprint)
  * - Underwater speed: 3.0 blocks/second (swimming)
  * - Jump speed: 8.0 blocks/second (results in ~1.25 block jump height)
- * - Head height: 1.6 blocks (eye level for camera)
+ * - Eye height: 1.6 blocks (eye level for first-person camera)
  */
 export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   // Identity
@@ -46,7 +46,7 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   effectiveJumpSpeed: 8.0,
 
   // Dimensions
-  headHeight: 1.6,
+  eyeHeight: 1.6,
 
   // Stealth
   stealthRange: 8.0,

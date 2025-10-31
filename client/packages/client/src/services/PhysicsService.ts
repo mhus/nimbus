@@ -564,9 +564,9 @@ export class PhysicsService {
       return;
     }
 
-    // Get entity height (PlayerEntity uses headHeight * 1.125)
+    // Get entity height (PlayerEntity uses eyeHeight * 1.125)
     const entityHeight = isPlayerEntity(entity)
-      ? entity.playerInfo.headHeight * 1.125
+      ? entity.playerInfo.eyeHeight * 1.125
       : this.defaultEntityHeight;
 
     // Check from feet to head for solid blocks

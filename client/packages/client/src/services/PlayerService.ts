@@ -220,7 +220,7 @@ export class PlayerService {
    */
   private syncCameraToPlayer(): void {
     // In ego-view, camera is at player eye level (from PlayerInfo)
-    const eyeHeight = this.playerEntity.playerInfo.headHeight;
+    const eyeHeight = this.playerEntity.playerInfo.eyeHeight;
     this.cameraService.setPosition(
       this.playerEntity.position.x,
       this.playerEntity.position.y + eyeHeight,
@@ -262,7 +262,7 @@ export class PlayerService {
     // Emit event so all services can react
     this.emit('playerInfo:updated', this.playerEntity.playerInfo);
 
-    // Sync camera in case headHeight changed (direct update for immediate feedback)
+    // Sync camera in case eyeHeight changed (direct update for immediate feedback)
     this.syncCameraToPlayer();
   }
 

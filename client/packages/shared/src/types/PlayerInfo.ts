@@ -73,8 +73,8 @@ export interface PlayerInfo {
   // Player Dimensions
   // ============================================
 
-  /** Player head/eye height in blocks (for camera position and raycast) */
-  headHeight: number;
+  /** Player eye height in blocks (for camera position and raycast origin) */
+  eyeHeight: number;
 
   // ============================================
   // Stealth & Detection
