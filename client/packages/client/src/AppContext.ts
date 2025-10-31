@@ -16,6 +16,7 @@ import type { ModalService } from './services/ModalService';
 import type { NotificationService } from './services/NotificationService';
 import type { CommandService } from './services/CommandService';
 import type { CameraService } from './services/CameraService';
+import type { EnvironmentService } from './services/EnvironmentService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -73,10 +74,12 @@ export interface Services {
   /** Camera service for camera control and underwater effects */
   camera?: CameraService;
 
+  /** Environment service for lighting, wind, and environmental effects */
+  environment?: EnvironmentService;
+
   // Future services will be added here:
   // render?: RenderService;
   // input?: InputService;
-  // environment?: EnvironmentService;
   // player?: PlayerService;
 }
 

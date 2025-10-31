@@ -517,6 +517,26 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 
 ===
 
+## Player
+
+[ ] Player info anlegen
+- displayName
+- playerId
+- walkSpeed
+- underWaterSpeed
+- headHeight
+- jumpHeight
+- jumpSpeed
+- runSpeed
+- crawlSpeed
+- stealthRange
+- ridingSpeed
+- turnSpeed
+Und in AppContext registrieren.
+aktuell standartwerte uebernehmen.
+Im PhysicsService die Werte nutzen fuer die Player-Physik. Am besten den Player in 
+die PlayerEntity laden, denn es kann noch andere PlayerEntity akteure geben.
+
 ## Start Screen
 
 [ ] Implementiere einen einfachen Start Screen im client der die Login Nachricht sendet und auf die Antwort wartet.

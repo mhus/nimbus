@@ -119,6 +119,22 @@ export class EngineService {
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
       logger.debug('EnvironmentService initialized');
 
+      // Initialize ShaderService with scene and connect to EnvironmentService
+      const shaderService = this.appContext.services.shader;
+      if (shaderService) {
+        shaderService.initialize(this.scene);
+        shaderService.setEnvironmentService(this.environmentService);
+
+        // Connect MaterialService with ShaderService
+        this.materialService.setShaderService(shaderService);
+
+        logger.debug('ShaderService initialized with scene and connected to EnvironmentService');
+        logger.debug('MaterialService connected to ShaderService');
+      }
+
+      // Store environment service reference for access
+      this.appContext.services.environment = this.environmentService;
+
       // Initialize physics
       this.physicsService = new PhysicsService(this.appContext);
 

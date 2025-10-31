@@ -33,6 +33,12 @@ import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
 import { SendCommand } from './commands/SendCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
+import {
+  WindDirectionCommand,
+  WindStrengthCommand,
+  WindGustStrengthCommand,
+  WindSwayFactorCommand,
+} from './commands/wind';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -89,7 +95,14 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ClearCommand());
     commandService.registerHandler(new SendCommand(commandService));
     commandService.registerHandler(new NotificationCommand(appContext));
-    logger.debug('CommandService initialized with example commands');
+
+    // Register wind commands
+    commandService.registerHandler(new WindDirectionCommand(appContext));
+    commandService.registerHandler(new WindStrengthCommand(appContext));
+    commandService.registerHandler(new WindGustStrengthCommand(appContext));
+    commandService.registerHandler(new WindSwayFactorCommand(appContext));
+
+    logger.debug('CommandService initialized with commands');
 
     logger.info('App initialization complete', {
       clientType: clientService.getClientType(),

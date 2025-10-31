@@ -193,6 +193,18 @@ export class MaterialService {
   }
 
   /**
+   * Check if BlockModifier has wind properties
+   */
+  private hasWindProperties(modifier: BlockModifier): boolean {
+    return !!(
+      (modifier.wind?.leafiness && modifier.wind.leafiness > 0) ||
+      (modifier.wind?.stability && modifier.wind.stability > 0) ||
+      (modifier.wind?.leverUp && modifier.wind.leverUp > 0) ||
+      (modifier.wind?.leverDown && modifier.wind.leverDown > 0)
+    );
+  }
+
+  /**
    * Get or create a material for a block based on BlockModifier and textureIndex
    *
    * This method:
@@ -232,17 +244,25 @@ export class MaterialService {
       const textureDef = TextureHelper.normalizeTexture(texture);
 
       // Determine final effect (Texture.effect overrides BlockModifier.effect)
-      const finalEffect =
+      let finalEffect =
         textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
+
+      // Auto-detect wind effect if wind properties are present
+      if (finalEffect === BlockEffect.NONE && this.hasWindProperties(modifier)) {
+        finalEffect = BlockEffect.WIND;
+        logger.debug('Auto-detected wind properties, using WIND effect', { cacheKey });
+      }
 
       // Try to create shader material if effect is specified
       let material: Material | null = null;
       if (finalEffect !== BlockEffect.NONE && this.shaderService) {
         const effectName = BlockEffect[finalEffect].toLowerCase();
         if (this.shaderService.hasEffect(effectName)) {
+          // Load texture first for shader
+          const bTexture = await this.loadTexture(textureDef);
           material = this.shaderService.createMaterial(
             effectName,
-            modifier.visibility?.effectParameters
+            { texture: bTexture, name: cacheKey, ...modifier.visibility?.effectParameters }
           );
           logger.debug('Created shader material', { effectName, cacheKey });
         }
