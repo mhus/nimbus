@@ -20,10 +20,14 @@ import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
 import { ModalService } from './services/ModalService';
 import { NotificationService } from './services/NotificationService';
+import { CommandService } from './services/CommandService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
+import { HelpCommand } from './commands/HelpCommand';
+import { InfoCommand } from './commands/InfoCommand';
+import { ClearCommand } from './commands/ClearCommand';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -68,6 +72,17 @@ async function initializeApp(): Promise<AppContext> {
     const notificationService = new NotificationService(appContext);
     appContext.services.notification = notificationService;
     logger.debug('NotificationService initialized');
+
+    // Initialize CommandService (available in both EDITOR and VIEWER modes)
+    logger.info('Initializing CommandService...');
+    const commandService = new CommandService(appContext);
+    appContext.services.command = commandService;
+
+    // Register command handlers
+    commandService.registerHandler(new HelpCommand(commandService));
+    commandService.registerHandler(new InfoCommand(appContext));
+    commandService.registerHandler(new ClearCommand());
+    logger.debug('CommandService initialized with example commands');
 
     logger.info('App initialization complete', {
       clientType: clientService.getClientType(),
@@ -273,8 +288,14 @@ appContextPromise
     // Editor-specific initialization (tree-shaken in viewer build)
     if (__EDITOR__) {
       logger.info('Editor mode active');
+
+      // Expose commands to browser console
+      const commandService = appContext.services.command;
+      if (commandService) {
+        commandService.exposeToBrowserConsole();
+      }
+
       // TODO: Initialize EditorService
-      // TODO: Initialize CommandConsole
       // TODO: Load editor UI components
     }
 

@@ -14,6 +14,7 @@ import type { EngineService } from './services/EngineService';
 import type { SelectService } from './services/SelectService';
 import type { ModalService } from './services/ModalService';
 import type { NotificationService } from './services/NotificationService';
+import type { CommandService } from './services/CommandService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -64,6 +65,9 @@ export interface Services {
 
   /** Notification service for displaying toast notifications */
   notification?: NotificationService;
+
+  /** Command service for command registration and execution */
+  command?: CommandService;
 
   // Future services will be added here:
   // render?: RenderService;

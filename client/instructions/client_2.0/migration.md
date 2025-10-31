@@ -421,14 +421,13 @@ Es soll einen NotificationService geben der Notificationen entgegennimmt und anz
   Die Notifications werden korrekt über dem 3D-Canvas angezeigt und blockieren keine Mouse-Events!
 ```
 
-[ ] In EditorHandlers.ts 'EditSelectionRotatorHandler' soll beim aneder des Select modes eine
+[x] In EditorHandlers.ts 'EditSelectionRotatorHandler' soll beim aneder des Select modes eine
 System Info notification mit dem neuen Selection Mode anzeigen.
 
-=== 
 ## Console
 
-[ ] Console wird nun ueber die Browser Console umgesetzt. d.h. es wird keine Console Ansicht benoetigt.
-- Es wird ein CommandService implementiert.
+[x] Console wird nun ueber die Browser Console umgesetzt. d.h. es wird keine Console Ansicht benoetigt.
+- Es wird ein CommandService in client implementiert.
 - Commandos haben einen namen und parameter, immer erstmal als string.
 - Es wird ein CommandHandler implementiert der abgeleitet wird fuer jedes command.
   - execute(parameters[]) : result
@@ -443,6 +442,8 @@ System Info notification mit dem neuen Selection Mode anzeigen.
   z.b. command help -> doHelp() funktion in der Console. weather type -> doWeather(parameters... : string) und wird intern zu wether weiter gegeben.
 
 [ ] Command 'server' implementieren
+
+===
 
 ## Block Data
 
