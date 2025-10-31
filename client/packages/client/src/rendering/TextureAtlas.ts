@@ -5,6 +5,19 @@
  * at runtime for efficient rendering.
  *
  * Adapted for Client 2.0 with BlockType/BlockModifier system.
+ *
+ * @deprecated TextureAtlas is deprecated in favor of MaterialService.getMaterial()
+ * which loads textures directly and supports per-material properties like
+ * opacity, transparency modes, sampling modes, and shader effects.
+ *
+ * The new approach allows for:
+ * - Individual texture properties per material
+ * - Shader effect support
+ * - Better caching based on complete material properties
+ * - Direct integration with ShaderService
+ *
+ * This class is kept for backwards compatibility but should not be used
+ * for new implementations.
  */
 
 import { DynamicTexture, StandardMaterial, Color3, Scene, RawTexture } from '@babylonjs/core';
@@ -39,6 +52,8 @@ export interface BlockFaceUVs {
 
 /**
  * Dynamic Texture Atlas - Builds runtime atlas from server textures
+ *
+ * @deprecated Use MaterialService.getMaterial() instead
  */
 export class TextureAtlas {
   private scene: Scene;

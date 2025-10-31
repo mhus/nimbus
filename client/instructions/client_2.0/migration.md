@@ -494,7 +494,7 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 
 ## Material
 
-[ ] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen
+[?] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen, damit wird das material gecached
 - der key besteht aus allen teilen von modifier die ein Material unique machen wird ein key erzeugt der das Material eindeutig beschreibt: 
  - path
  - uvMapping: x,y,w,h,uScale,vScale,uOffset,vOffset,wrapU,wrapV,uRotationCenter,vRotationCenter,wAng,uAng,vAng
@@ -506,6 +506,16 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
  - color
 - Im MaterialService material laden implementieren, ggf. wird TextureAtlas dadurch obsolate
 - Der ShaderService liefert shader fuer die effekte (werden noch implementiert), aktuell so tun als ob es ein effekt ist.
+- Die modifier sollen in die Materialerzeugung uebernommen werden.
+- 'effect' wird im BlockModifier und in der Textur definiert, die Textur schlaegt BlockModifier.
+
+[ ] Du kannst das wind system von client_playground/packages/client uebernehmen.
+- Wind Parameter in EnvironmentSerivce
+- Commandos in CommandService um Wind-Prameter zu setzen
+- Wind Shader in ShaderService bei effekt 'wind' nutzen
+- Wind parameter am BlockModifier auslesen und nutzen fuer den Block
+
+===
 
 ## Start Screen
 
