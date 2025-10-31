@@ -25,9 +25,12 @@ import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
+import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
+import { CommandResultHandler } from './network/handlers/CommandResultHandler';
 import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
+import { SendCommand } from './commands/SendCommand';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -82,6 +85,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new HelpCommand(commandService));
     commandService.registerHandler(new InfoCommand(appContext));
     commandService.registerHandler(new ClearCommand());
+    commandService.registerHandler(new SendCommand(commandService));
     logger.debug('CommandService initialized with example commands');
 
     logger.info('App initialization complete', {
@@ -179,6 +183,18 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const blockUpdateHandler = new BlockUpdateHandler(chunkService);
     networkService.registerHandler(blockUpdateHandler);
     logger.info('🔵 BlockUpdateHandler registered for message type: b.u');
+
+    // Register CommandMessageHandler and CommandResultHandler
+    const commandService = appContext.services.command;
+    if (commandService) {
+      const commandMessageHandler = new CommandMessageHandler(commandService);
+      networkService.registerHandler(commandMessageHandler);
+      logger.debug('CommandMessageHandler registered for message type: cmd.msg');
+
+      const commandResultHandler = new CommandResultHandler(commandService);
+      networkService.registerHandler(commandResultHandler);
+      logger.debug('CommandResultHandler registered for message type: cmd.rs');
+    }
 
     logger.info('Core services initialized');
   } catch (error) {

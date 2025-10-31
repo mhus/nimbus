@@ -441,7 +441,20 @@ System Info notification mit dem neuen Selection Mode anzeigen.
 - Im EDITOR Modus werden in der BrowserConsole fuer jedes command eine Funtkion bereitgestellt die mit 'do' geprefixt ist.
   z.b. command help -> doHelp() funktion in der Console. weather type -> doWeather(parameters... : string) und wird intern zu wether weiter gegeben.
 
-[ ] Command 'server' implementieren
+[?] Command 'send' implementieren, das commands zum Server schickt
+- In 'client/instructions/client_2.0/network-model-2.0.md' abschnitt '### Client Command (Client -> Server)' benutzen
+- Auf die Rueckgabe (cmd.rs) wartet und ausgibt, timeout 30 sec. Dazwischen auch (cmd.msg) mit der r(id) ausgibt.
+- Eine Funktion um Commands am Server auszufuehren kann im CommandService implementiert werden.
+
+[?] Implementiere im server einen CommandService an dem Commands Registriert werden koennen (server side). Wenn
+ein command nicht gefunden wird wird eine antwort mit -1 (not found) gesendet.
+- Implementiere ein help command.
+
+[ ] Es gibt ein neues ServerCommand interface in 'client/instructions/client_2.0/network-model-2.0.md'. Erstelle
+in 'shared/src/network' die entsprechende Klasse.
+- Verbinde im 'client' den Handler mit dem CommandService, so das vom Server aus commands im Client aufgerufen werden koennen.
+- Erstelle im 'server' einen CommandHandler 'loop' der die erhaltenen command parameter an den Client zurueck sendet (erster parameter ist dann das command fuer den client).
+
 
 ===
 
