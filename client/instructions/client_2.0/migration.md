@@ -509,7 +509,7 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 - Die modifier sollen in die Materialerzeugung uebernommen werden.
 - 'effect' wird im BlockModifier und in der Textur definiert, die Textur schlaegt BlockModifier.
 
-[ ] Du kannst das wind system von client_playground/packages/client uebernehmen.
+[?] Du kannst das wind system von client_playground/packages/client uebernehmen.
 - Wind Parameter in EnvironmentSerivce
 - Commandos in CommandService um Wind-Prameter zu setzen
 - Wind Shader in ShaderService bei effekt 'wind' nutzen
@@ -519,7 +519,7 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 
 ## Player
 
-[ ] Player info anlegen
+[?] Player info anlegen
 - displayName
 - playerId
 - walkSpeed
@@ -536,6 +536,20 @@ Und in AppContext registrieren.
 aktuell standartwerte uebernehmen.
 Im PhysicsService die Werte nutzen fuer die Player-Physik. Am besten den Player in 
 die PlayerEntity laden, denn es kann noch andere PlayerEntity akteure geben.
+
+[ ] Anpassung PlayerInfo
+Die Anforderungen muessen nochmal ueberdacht werden. Attribute wie speed ergeben sich aus
+vielen effekten, deshalb muss der PlayerInfo nochmal angepasst werden.
+zusaetzlich
+- effectiveWalkSpeed 
+- effectiveJumpSpeed
+Das sollte dann uebernommen werden.
+
+Ausserdem sind viele Services n den PlayerInfo und dne Updates interessiert, es ist schlauer
+ein event zu machen, wenn sich PlayerInfo geandert hat und alle die es interessiert bekommen ein event.
+- PhysicsService - geschwindigkeit
+- CameraService - Augen Hoehe
+- SelectionService - Augen Hoehe (aktuell selektiert der SelectionService am ground, das ist zu tief)
 
 ## Start Screen
 

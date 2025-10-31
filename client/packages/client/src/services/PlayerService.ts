@@ -9,7 +9,8 @@ import { Vector3 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
-import type { PhysicsService, PhysicsEntity, MovementMode } from './PhysicsService';
+import type { PhysicsService, MovementMode } from './PhysicsService';
+import type { PlayerEntity } from '../types/PlayerEntity';
 
 const logger = getLogger('PlayerService');
 
@@ -34,8 +35,8 @@ export class PlayerService {
   private cameraService: CameraService;
   private physicsService?: PhysicsService;
 
-  // Player as physics entity
-  private playerEntity: PhysicsEntity;
+  // Player as physics entity with player info
+  private playerEntity: PlayerEntity;
 
   // Last known position (for change detection)
   private lastPosition: { x: number; y: number; z: number };
@@ -47,13 +48,19 @@ export class PlayerService {
     this.appContext = appContext;
     this.cameraService = cameraService;
 
-    // Create player physics entity (starts in Walk mode)
+    // Get PlayerInfo from AppContext (must be initialized before PlayerService)
+    if (!appContext.playerInfo) {
+      throw new Error('PlayerInfo must be initialized in AppContext before creating PlayerService');
+    }
+
+    // Create player entity (starts in Walk mode)
     this.playerEntity = {
       entityId: 'player',
       position: new Vector3(0, 64, 0),
       velocity: Vector3.Zero(),
       movementMode: 'walk' as MovementMode,
       isOnGround: false,
+      playerInfo: appContext.playerInfo,
     };
 
     // Initialize last position for change detection
@@ -69,6 +76,7 @@ export class PlayerService {
     logger.info('PlayerService initialized', {
       position: this.playerEntity.position,
       movementMode: this.playerEntity.movementMode,
+      displayName: this.playerEntity.playerInfo.displayName,
     });
   }
 
@@ -202,13 +210,33 @@ export class PlayerService {
    * Sync camera position to player position
    */
   private syncCameraToPlayer(): void {
-    // In ego-view, camera is at player eye level (add 1.6 blocks for eye height)
-    const eyeHeight = 1.6;
+    // In ego-view, camera is at player eye level (from PlayerInfo)
+    const eyeHeight = this.playerEntity.playerInfo.headHeight;
     this.cameraService.setPosition(
       this.playerEntity.position.x,
       this.playerEntity.position.y + eyeHeight,
       this.playerEntity.position.z
     );
+  }
+
+  /**
+   * Get PlayerEntity (for advanced access)
+   */
+  getPlayerEntity(): PlayerEntity {
+    return this.playerEntity;
+  }
+
+  /**
+   * Update player info dynamically (for power-ups, equipment, status effects)
+   *
+   * @param updates Partial PlayerInfo with values to update
+   */
+  updatePlayerInfo(updates: Partial<import('@nimbus/shared').PlayerInfo>): void {
+    Object.assign(this.playerEntity.playerInfo, updates);
+    logger.debug('PlayerInfo updated', { updates });
+
+    // Sync camera in case headHeight changed
+    this.syncCameraToPlayer();
   }
 
   /**

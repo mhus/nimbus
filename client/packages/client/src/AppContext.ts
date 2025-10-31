@@ -17,7 +17,7 @@ import type { NotificationService } from './services/NotificationService';
 import type { CommandService } from './services/CommandService';
 import type { CameraService } from './services/CameraService';
 import type { EnvironmentService } from './services/EnvironmentService';
-import type { WorldInfo } from '@nimbus/shared';
+import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
  * Server information (received after login)
@@ -99,6 +99,9 @@ export interface AppContext {
 
   /** Current world information (after world selection) */
   worldInfo: WorldInfo | null;
+
+  /** Player information and properties (dynamically updatable) */
+  playerInfo: PlayerInfo | null;
 }
 
 /**
@@ -118,5 +121,6 @@ export function createAppContext(
     config,
     serverInfo: null,
     worldInfo: null,
+    playerInfo: null, // Will be initialized later with DEFAULT_PLAYER_INFO
   };
 }

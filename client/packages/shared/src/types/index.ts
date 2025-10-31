@@ -27,5 +27,8 @@ export * from './EffectData';
 // Entity types
 export * from './EntityData';
 
+// Player types
+export * from './PlayerInfo';
+
 // Modal types (for IFrame communication)
 export * from './Modal';

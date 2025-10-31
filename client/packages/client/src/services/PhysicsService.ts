@@ -3,12 +3,16 @@
  *
  * Handles movement physics for locally managed entities (player, etc.).
  * Supports two movement modes: Walk and Fly.
+ *
+ * For PlayerEntity, uses dynamic values from PlayerInfo.
+ * For other entities, uses default physics constants.
  */
 
 import { Vector3 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
+import type { PlayerEntity } from '../types/PlayerEntity';
 
 const logger = getLogger('PhysicsService');
 
@@ -46,6 +50,13 @@ export interface PhysicsEntity {
 }
 
 /**
+ * Type guard to check if entity is a PlayerEntity
+ */
+function isPlayerEntity(entity: PhysicsEntity): entity is PlayerEntity {
+  return 'playerInfo' in entity;
+}
+
+/**
  * PhysicsService - Manages physics for entities
  *
  * Features:
@@ -55,20 +66,25 @@ export interface PhysicsEntity {
  * - Block collision detection
  * - Auto-push-up when inside block
  * - Water detection from ClientHeightData
+ *
+ * For PlayerEntity: Uses dynamic values from PlayerInfo
+ * For other entities: Uses default physics constants
  */
 export class PhysicsService {
   private appContext: AppContext;
   private chunkService?: ChunkService;
 
-  // Physics constants
+  // Physics constants (global, not player-specific)
   private readonly gravity: number = -20.0; // blocks per second²
   private readonly underwaterGravity: number = -2.0; // blocks per second² (10% of normal, slow sinking)
-  private readonly walkSpeed: number = 5.0; // blocks per second
-  private readonly flySpeed: number = 10.0; // blocks per second
-  private readonly jumpSpeed: number = 8.0; // blocks per second (2 blocks high)
-  private readonly playerHeight: number = 1.8; // Player height in blocks
-  private readonly playerWidth: number = 0.6; // Player width in blocks
-  private readonly underwaterSpeed: number = 3.0; // blocks per second (slower than walk/fly)
+
+  // Default values for non-player entities
+  private readonly defaultWalkSpeed: number = 5.0; // blocks per second
+  private readonly defaultFlySpeed: number = 10.0; // blocks per second
+  private readonly defaultJumpSpeed: number = 8.0; // blocks per second
+  private readonly defaultEntityHeight: number = 1.8; // Entity height in blocks
+  private readonly defaultEntityWidth: number = 0.6; // Entity width in blocks
+  private readonly defaultUnderwaterSpeed: number = 3.0; // blocks per second
 
   // Entities managed by physics
   private entities: Map<string, PhysicsEntity> = new Map();
@@ -86,9 +102,9 @@ export class PhysicsService {
     logger.info('PhysicsService initialized', {
       gravity: this.gravity,
       underwaterGravity: this.underwaterGravity,
-      walkSpeed: this.walkSpeed,
-      flySpeed: this.flySpeed,
-      underwaterSpeed: this.underwaterSpeed,
+      defaultWalkSpeed: this.defaultWalkSpeed,
+      defaultFlySpeed: this.defaultFlySpeed,
+      defaultUnderwaterSpeed: this.defaultUnderwaterSpeed,
     });
   }
 
@@ -475,16 +491,19 @@ export class PhysicsService {
       return;
     }
 
+    // Get entity width (for now same for all entities, but can be PlayerInfo-based later)
+    const entityWidth = this.defaultEntityWidth;
+
     // Check multiple Y levels to prevent falling through
     const feetY = entity.position.y;
 
     // Check center and corners for more robust collision
     const checkPoints = [
       { x: entity.position.x, z: entity.position.z }, // Center
-      { x: entity.position.x - this.playerWidth / 2, z: entity.position.z - this.playerWidth / 2 }, // Corner
-      { x: entity.position.x + this.playerWidth / 2, z: entity.position.z - this.playerWidth / 2 }, // Corner
-      { x: entity.position.x - this.playerWidth / 2, z: entity.position.z + this.playerWidth / 2 }, // Corner
-      { x: entity.position.x + this.playerWidth / 2, z: entity.position.z + this.playerWidth / 2 }, // Corner
+      { x: entity.position.x - entityWidth / 2, z: entity.position.z - entityWidth / 2 }, // Corner
+      { x: entity.position.x + entityWidth / 2, z: entity.position.z - entityWidth / 2 }, // Corner
+      { x: entity.position.x - entityWidth / 2, z: entity.position.z + entityWidth / 2 }, // Corner
+      { x: entity.position.x + entityWidth / 2, z: entity.position.z + entityWidth / 2 }, // Corner
     ];
 
     // Search downward for ground
@@ -545,9 +564,14 @@ export class PhysicsService {
       return;
     }
 
+    // Get entity height (PlayerEntity uses headHeight * 1.125)
+    const entityHeight = isPlayerEntity(entity)
+      ? entity.playerInfo.headHeight * 1.125
+      : this.defaultEntityHeight;
+
     // Check from feet to head for solid blocks
     const feetY = entity.position.y;
-    const headY = entity.position.y + this.playerHeight;
+    const headY = entity.position.y + entityHeight;
 
     // Check if any part of player is inside a solid block
     for (let y = Math.floor(feetY); y <= Math.floor(headY); y++) {
@@ -719,12 +743,24 @@ export class PhysicsService {
 
   /**
    * Jump (Walk mode only)
+   *
+   * For PlayerEntity: Uses dynamic jumpSpeed from PlayerInfo
+   * For other entities: Uses default jumpSpeed
    */
   jump(entity: PhysicsEntity): void {
     if (entity.movementMode === 'walk' && entity.isOnGround) {
-      entity.velocity.y = this.jumpSpeed;
+      // Get jump speed based on entity type
+      const jumpSpeed = isPlayerEntity(entity)
+        ? entity.playerInfo.jumpSpeed
+        : this.defaultJumpSpeed;
+
+      entity.velocity.y = jumpSpeed;
       entity.isOnGround = false;
-      logger.debug('Entity jumped', { entityId: entity.entityId });
+
+      logger.debug('Entity jumped', {
+        entityId: entity.entityId,
+        jumpSpeed,
+      });
     }
   }
 
@@ -761,15 +797,60 @@ export class PhysicsService {
   /**
    * Get current move speed for entity
    *
-   * Returns appropriate speed based on movement mode and underwater state
+   * Returns appropriate speed based on movement mode, underwater state, and PlayerInfo.
+   * For PlayerEntity: Uses dynamic values from PlayerInfo
+   * For other entities: Uses default constants
+   *
+   * TODO: Add support for sprint/crawl/riding states
    */
   getMoveSpeed(entity: PhysicsEntity): number {
-    // TODO: Return underwaterSpeed when underwater
-    if (this.isUnderwater) {
-      return this.underwaterSpeed;
+    if (isPlayerEntity(entity)) {
+      // Player: Use dynamic PlayerInfo values
+      if (this.isUnderwater) {
+        return entity.playerInfo.underwaterSpeed;
+      }
+
+      // TODO: Check player state for speed modifiers
+      // if (entity.isSprinting) return entity.playerInfo.runSpeed;
+      // if (entity.isCrouching) return entity.playerInfo.crawlSpeed;
+      // if (entity.isRiding) return entity.playerInfo.ridingSpeed;
+
+      return entity.movementMode === 'walk'
+        ? entity.playerInfo.walkSpeed
+        : entity.playerInfo.runSpeed; // Fly mode uses run speed
+    } else {
+      // Other entities: Use default constants
+      if (this.isUnderwater) {
+        return this.defaultUnderwaterSpeed;
+      }
+
+      return entity.movementMode === 'walk' ? this.defaultWalkSpeed : this.defaultFlySpeed;
+    }
+  }
+
+  /**
+   * Update PlayerInfo for a PlayerEntity
+   *
+   * Allows dynamic modification of player properties during gameplay
+   * (e.g., power-ups, status effects, equipment changes)
+   *
+   * @param entity PlayerEntity to update
+   * @param updates Partial PlayerInfo with values to update
+   */
+  updatePlayerInfo(entity: PhysicsEntity, updates: Partial<import('@nimbus/shared').PlayerInfo>): void {
+    if (!isPlayerEntity(entity)) {
+      logger.warn('Cannot update PlayerInfo for non-player entity', {
+        entityId: entity.entityId,
+      });
+      return;
     }
 
-    return entity.movementMode === 'walk' ? this.walkSpeed : this.flySpeed;
+    Object.assign(entity.playerInfo, updates);
+
+    logger.info('PlayerInfo updated', {
+      entityId: entity.entityId,
+      updates,
+    });
   }
 
   /**
