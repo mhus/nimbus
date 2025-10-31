@@ -33,9 +33,8 @@ All messages follow the base structure:
 - **c.q** - Chunk query (client requests specific chunks)
 - **c.u** - Chunk update (server sends chunk data)
 
-### Blocks (Client ↔ Server)
+### Blocks (Server → Client)
 - **b.u** - Block update (server → client)
-- **b.cu** - Block client update (client → server, e.g., from editor)
 - **b.s.u** - Block status update with optional animations
 
 ### Entities (Server → Client)
@@ -51,15 +50,6 @@ All messages follow the base structure:
 ### Interaction (Client ↔ Server)
 - **int.r** - Interaction request (client → server)
 - **int.rs** - Interaction response (server → client)
-
-### NPC Dialog (Client ↔ Server)
-- **npc.o** - Open NPC dialog (server → client)
-- **npc.se** - NPC dialog selection (client → server)
-- **npc.u** - Update NPC dialog (server → client)
-- **npc.c** - Close NPC dialog (bidirectional)
-
-### Notifications (Server → Client)
-- **n** - Server notification (system, chat, warning, error)
 
 ## Naming Conventions
 
@@ -101,12 +91,6 @@ Server → Client: {"r":"ping123","t":"p"}
 ```
 Client → Server: {"t":"c.r","d":{"c":[{"x":0,"z":0}]}}
 Server → Client: {"t":"c.u","d":[{...chunkData...}]}
-```
-
-### Block Update (Editor)
-```
-Client → Server: {"i":"12345","t":"b.cu","d":[{...blockData...}]}
-Server → All:    {"t":"b.u","d":[{...blockData...}]}
 ```
 
 ## Connection Management
@@ -158,8 +142,8 @@ Array of 4 integers per chunk position:
 - `AnimationMessage.ts` - Animation execution
 - `UserMessage.ts` - User movement and teleport
 - `InteractionMessage.ts` - Block interaction
-- `NPCMessage.ts` - NPC dialog system
-- `NotificationMessage.ts` - Server notifications
+- `CommandMessage.ts` - Client commands
+- `ServerCommandMessage.ts` - Server commands
 
 ## Usage
 

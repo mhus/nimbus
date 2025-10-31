@@ -458,6 +458,15 @@ in 'shared/src/network' die entsprechende Klasse.
 [x] Erstelle ein Commando im 'client' mit dem eine Nachricht gesetzt wird im NotificationService.
 - NotificationCommand (type,from,message)
 
+[x] Bonus Entferne alte Strukturen aus dem Netzwerk Protokoll
+die folgende Struktur ist veraltet (client/instructions/client_2.0/network-model-2.0.md):
+- ## Block Update (Client -> Server)
+- ## Server Notifications (Server -> Client)
+- ## NPC Communication (Server <-> Client) - Komplett
+Die Strukture in client/packages/shared/src/network entfernen.
+In der Docu entfernen.
+Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
+
 ===
 
 ## Block Data
@@ -468,7 +477,11 @@ in 'shared/src/network' die entsprechende Klasse.
 
 [ ] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen
 - der key besteht aus allen teilen von modifier die ein Material unique machen
-- uvMapping, texture path, samplingMode, transparency, backFaceCulling, 
+ - uvMapping
+ - texture path
+ - samplingMode
+ - transparency
+ - backFaceCulling 
 [ ] MaterialService implementieren
 
 ## Start Screen

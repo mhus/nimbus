@@ -260,24 +260,6 @@ Der Server sendet Entity-Änderungen an den Client.
 }
 ```
 
-## Block Update (Client -> Server)
-
-Deprecated:
-
-Der Client sendet Block-Änderungen an den Server (z.B. durch den Editor).
-
-```json
-{"i":"12345", "t": "b.cu", "d": 
-        [
-          BlockData,
-          ...
-      ]
-}
-```
-
-Als Antwort sendet der Server ein Block Update an alle Spieler, die den Chunk registriert haben.
-(Auch der Client bekommt die Änderung zurück)
-
 ## Animation Execution (Server -> Client oder Client -> Server)
 
 **Server → Client:** Server sendet Animation mit festen Positionen
@@ -372,7 +354,7 @@ Der Client sendet seine aktuelle Position und Rotation an den Server.
 Der Client sendet eine Interaktionsanfrage an den Server (z.B. wenn der Spieler mit einem Block interagiert).
 
 ```json
-{"i":"12346", "t": "int.r", "d": 
+{"i":"12346", "t": "int.r", "d":
   {
     "x": 10,
     "y": 64,
@@ -385,7 +367,7 @@ Der Client sendet eine Interaktionsanfrage an den Server (z.B. wenn der Spieler 
 Fail Response:
 
 ```json
-{"r":"12346", "t": "int.rs", "d": 
+{"r":"12346", "t": "int.rs", "d":
   {
     "success": false,
     "errorCode": 403,
@@ -394,38 +376,12 @@ Fail Response:
 }
 ```
 
-## Server Notifications (Server -> Client)
-
-Deprecated !
-
-Der Server sendet Benachrichtigungen an den Client (z.B. Systemmeldungen, Chat-Nachrichten, etc.).
-
-```json
-{"t": "n", "d":
-  {
-    "t": 0, // type: 0=system, 1=chat, 2=warning, 3=error, 4=info
-    "f": "Server", // from: optional, z.B. bei chat Nachrichten
-    "m": "Welcome to the server!", // message
-    "ts": 1234567890 // UTC timestamp
-  }
-}
-```
-
-### NotificationType Enum
-```
-0 = SYSTEM
-1 = CHAT
-2 = WARNING
-3 = ERROR
-4 = INFO
-```
-
 ## Player Teleport (Server -> Client)
 
 Der Server sendet eine Teleport-Anweisung an den Client.
 
 ```json
-{"t": "p.t", "d": 
+{"t": "p.t", "d":
   {
     "p": {"x": 0.0, "y": 64.0, "z": 0.0}, // position
     "r": {"y": 0.0, "p": 0.0}  // rotation: yaw, pitch
@@ -433,98 +389,7 @@ Der Server sendet eine Teleport-Anweisung an den Client.
 }
 ```
 
-## NPC Communication (Server <-> Client)
-
-Deprecated !
-
-### Open NPC Dialog (Server -> Client)
-
-Der Server sendet eine Anweisung zum Öffnen eines NPC-Dialogs an den Client.
-
-```json
-{"t": "npc.o", "d": 
-  {
-    "chatId": "5555",         // eine eindeutige ID für diese Chat-Sitzung
-    "dialogId": "1277788238", // die ID genau dieses Dialogs
-    "npcId": "npc123",
-    "picturePath": "/assets/npc123.png", // optional
-    "dialogData": {
-      "title": "Greetings, traveler!",
-      "text": "What would you like to know?",
-      "options": [
-        {"id": "1", "text": "Tell me about this place.", "severity": "info"},
-        {"id": "2", "text": "Goodbye.", "severity": "neutral"}
-      ]
-    }
-  }
-}
-```
-
-### NPC Dialog Auswahl (Client -> Server)
-
-Der Client sendet die Antwort/Selektion des Spielers im NPC-Dialog an den Server.
-
-```json
-{"t": "npc.se", "d": 
-  {
-    "npcId": "npc123",
-    "dialogId": "1277788238",
-    "chatId": "5555",
-    "selectedOptionId": "1"
-  }
-}
-```
-
-## NPC Dialog Update (Server -> Client)
-
-Der Server sendet eine Anweisung zum Ändern des NPC-Dialogs an den Client.
-
-```json
-{"t": "npc.u", "d": 
-  {
-    "chatId": "5555",
-    "dialogId": "1277788238",
-    "npcId": "npc123",
-    "dialogData": {
-      "title": "About this place",
-      "text": "This is a land of adventure and mystery.",
-      "options": [
-        {"id": "1", "text": "Tell me more.", "severity": "info"},
-        {"id": "2", "text": "Goodbye.", "severity": "neutral"}
-      ]
-    }
-  }
-}
-```
-
-
-### NPC Dialog Close (Server -> Client)
-
-Der Server sendet eine Anweisung zum Schließen des NPC-Dialogs an den Client.
-
-```json
-{"t": "npc.c", "d": 
-  {
-    "chatId": "5555",
-    "npcId": "npc123"
-  }
-}
-```
-
-### NPC Dialog Close (Client -> Server)
-
-Der Client bestätigt das Schließen des NPC-Dialogs gegenüber dem Server.
-
-```json
-{"t": "npc.c", "d": 
-  {
-    "chatId": "5555",
-    "npcId": "npc123"
-  }
-}
-```
-
-### Client Command (Client -> Server)
+## Client Command (Client -> Server)
 
 Der Client sendet einen Client-Befehl an den Server.
 Als Antwort kann er "cmd.msg" schicken, abschließend schickt er mindestens eine

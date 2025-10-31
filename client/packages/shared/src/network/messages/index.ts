@@ -28,12 +28,6 @@ export * from './AnimationMessage';
 export * from './UserMessage';
 export * from './InteractionMessage';
 
-// NPC
-export * from './NPCMessage';
-
-// Notifications
-export * from './NotificationMessage';
-
 // Commands
 export * from './CommandMessage';
 export * from './ServerCommandMessage';

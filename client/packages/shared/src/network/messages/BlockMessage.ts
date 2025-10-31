@@ -2,7 +2,7 @@
  * Block-related messages
  */
 
-import type { BaseMessage, RequestMessage } from '../BaseMessage';
+import type { BaseMessage } from '../BaseMessage';
 import type { Block } from '../../types/Block';
 import type { AnimationData } from '../../types/AnimationData';
 
@@ -11,13 +11,6 @@ import type { AnimationData } from '../../types/AnimationData';
  * Server sends block changes to client
  */
 export type BlockUpdateMessage = BaseMessage<Block[]>;
-
-/**
- * Block client update (Client -> Server)
- * Client sends block changes to server (e.g., from editor)
- * Server will send block update to all players with registered chunk
- */
-export type BlockClientUpdateMessage = RequestMessage<Block[]>;
 
 /**
  * Block status update data
