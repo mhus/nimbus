@@ -5,7 +5,16 @@
  * Initial implementation supports ego-view (first-person) only.
  */
 
-import { FreeCamera, Vector3, Scene } from '@babylonjs/core';
+import {
+  FreeCamera,
+  Vector3,
+  Scene,
+  MeshBuilder,
+  StandardMaterial,
+  Color3,
+  Color4,
+  Mesh,
+} from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
@@ -17,6 +26,7 @@ const logger = getLogger('CameraService');
  * Features:
  * - First-person camera (ego-view)
  * - Position and rotation control
+ * - Underwater water sphere rendering
  * - Future: Third-person view support
  */
 export class CameraService {
@@ -25,6 +35,13 @@ export class CameraService {
 
   private camera?: FreeCamera;
   private _egoView: boolean = true;
+
+  // Underwater effects
+  private waterSphereMesh?: Mesh;
+  private waterMaterial?: StandardMaterial;
+  private isUnderwater: boolean = false;
+  private originalFogDensity: number = 0;
+  private originalFogColor: Color3 = Color3.White();
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -166,16 +183,162 @@ export class CameraService {
 
   /**
    * Update camera (called each frame if needed)
+   *
+   * Updates water sphere position to follow camera
    */
   update(deltaTime: number): void {
-    // Future: Add camera animation, smoothing, etc.
+    // Update water sphere position to follow camera
+    if (this.waterSphereMesh && this.camera && this.isUnderwater) {
+      this.waterSphereMesh.position.copyFrom(this.camera.position);
+    }
   }
 
   /**
-   * Dispose camera
+   * Set underwater state and render water sphere
+   *
+   * When underwater (below waterHeight in ClientHeightData):
+   * - Renders a translucent water sphere around the camera
+   * - Adds blue-tinted fog effect
+   * - Reduces visibility for underwater atmosphere
+   *
+   * @param underwater True if camera is underwater
+   */
+  setUnderwater(underwater: boolean): void {
+    try {
+      // No state change, skip
+      if (this.isUnderwater === underwater) {
+        return;
+      }
+
+      this.isUnderwater = underwater;
+
+      if (underwater) {
+        this.enableUnderwaterEffects();
+      } else {
+        this.disableUnderwaterEffects();
+      }
+
+      logger.info('Underwater state changed', { underwater });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CameraService.setUnderwater', { underwater });
+    }
+  }
+
+  /**
+   * Enable underwater visual effects
+   */
+  private enableUnderwaterEffects(): void {
+    if (!this.camera) {
+      logger.warn('💧 Cannot enable underwater effects: camera not initialized');
+      return;
+    }
+
+    logger.info('💧 ENABLING UNDERWATER EFFECTS');
+
+    // Create water sphere mesh around camera
+    if (!this.waterSphereMesh) {
+      this.waterSphereMesh = MeshBuilder.CreateSphere(
+        'waterSphere',
+        {
+          diameter: 8, // 8 block radius around camera
+          segments: 16, // Lower segments for performance
+        },
+        this.scene
+      );
+
+      // Flip normals so sphere is visible from inside
+      this.waterSphereMesh.flipFaces(true);
+
+      // Create water material
+      this.waterMaterial = new StandardMaterial('waterMaterial', this.scene);
+      this.waterMaterial.diffuseColor = new Color3(0.1, 0.3, 0.6); // Blue color
+      this.waterMaterial.alpha = 0.3; // Semi-transparent
+      this.waterMaterial.backFaceCulling = false; // Render from inside
+
+      this.waterSphereMesh.material = this.waterMaterial;
+
+      // Position at camera
+      this.waterSphereMesh.position.copyFrom(this.camera.position);
+
+      logger.info('💧 Water sphere created', {
+        position: this.waterSphereMesh.position,
+        diameter: 8,
+        material: {
+          color: this.waterMaterial.diffuseColor,
+          alpha: this.waterMaterial.alpha,
+        },
+      });
+    }
+
+    // Show water sphere
+    this.waterSphereMesh.isVisible = true;
+    logger.info('💧 Water sphere visible:', this.waterSphereMesh.isVisible);
+
+    // Store original fog settings
+    this.originalFogDensity = this.scene.fogDensity;
+    this.originalFogColor = this.scene.fogColor.clone();
+
+    // Enable fog with blue tint
+    this.scene.fogMode = Scene.FOGMODE_EXP2;
+    this.scene.fogDensity = 0.05; // Moderate fog density
+    this.scene.fogColor = new Color3(0.1, 0.4, 0.7); // Blue fog
+
+    // Optionally reduce ambient light
+    // this.scene.ambientColor = new Color3(0.3, 0.4, 0.5);
+
+    logger.info('💧 Underwater effects enabled', {
+      fogMode: this.scene.fogMode,
+      fogDensity: this.scene.fogDensity,
+      fogColor: { r: this.scene.fogColor.r, g: this.scene.fogColor.g, b: this.scene.fogColor.b },
+      sphereVisible: this.waterSphereMesh.isVisible,
+    });
+  }
+
+  /**
+   * Disable underwater visual effects
+   */
+  private disableUnderwaterEffects(): void {
+    logger.info('💧 DISABLING UNDERWATER EFFECTS');
+
+    // Hide water sphere
+    if (this.waterSphereMesh) {
+      this.waterSphereMesh.isVisible = false;
+      logger.info('💧 Water sphere hidden');
+    }
+
+    // Restore original fog settings
+    this.scene.fogMode = Scene.FOGMODE_NONE;
+    this.scene.fogDensity = this.originalFogDensity;
+    this.scene.fogColor = this.originalFogColor;
+
+    // Restore ambient light
+    // this.scene.ambientColor = new Color3(1, 1, 1);
+
+    logger.info('💧 Underwater effects disabled', {
+      fogMode: this.scene.fogMode,
+      fogRestored: true,
+    });
+  }
+
+  /**
+   * Dispose camera and underwater effects
    */
   dispose(): void {
+    // Dispose water sphere
+    if (this.waterSphereMesh) {
+      this.waterSphereMesh.dispose();
+      this.waterSphereMesh = undefined;
+    }
+
+    // Dispose water material
+    if (this.waterMaterial) {
+      this.waterMaterial.dispose();
+      this.waterMaterial = undefined;
+    }
+
+    // Dispose camera
     this.camera?.dispose();
+
     logger.info('Camera disposed');
   }
 }

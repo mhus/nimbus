@@ -112,6 +112,7 @@ export class EngineService {
 
       // Initialize camera
       this.cameraService = new CameraService(this.scene, this.appContext);
+      this.appContext.services.camera = this.cameraService;
       logger.debug('CameraService initialized');
 
       // Initialize environment

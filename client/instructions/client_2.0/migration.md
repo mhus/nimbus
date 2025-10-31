@@ -479,6 +479,19 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 
 [x] Water Level in WorldInfo wird nicht benoetigt, muss auch nicht gerendert werden (RenderService.ts)
 
+[x] In PhysicService beachte die Daten aus ClientHeightData - IMPLEMENTED
+- min und max height sind die boundaries - ✅ Implemented in PhysicsService.checkUnderwaterState()
+- wenn waterHight gesetzt und unter waterHight dann soll im CamerService setUnderwarter() gesetzt werden. wenn wieder drueber wieder auf false - ✅ Implemented
+- Wenn unterwasser, dann ist Graviatation ausser kraft und der bewegungsmodus eher wie fliegen, aber mit collisions. - ✅ Implemented
+- Im CameraService soll um die Cam herum eine 'water' Shpere gezeichnet werden um Wasser zu zeigen. - ✅ Implemented
+**Implementation Details:**
+- PhysicsService.checkUnderwaterState(): Detects water from ClientHeightData, clamps to min/max boundaries
+- PhysicsService underwater physics: Gravity disabled, fly-like movement, underwaterSpeed (3.0 blocks/s)
+- CameraService.setUnderwater(): Water sphere mesh (8 block diameter), translucent blue material, fog effects
+- ChunkService.processHeightData(): Calculates waterHeight from blocks with "water" in description
+- Water sphere follows camera in update loop
+**See:** client/src/services/UNDERWATER_IMPLEMENTATION.md for complete documentation
+
 ## Material
 
 [ ] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen

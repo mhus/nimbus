@@ -18,6 +18,7 @@ export type HeightData = readonly [
   z: number,
   maxHeight: number,
   groundLevel: number,
+  waterLevel?: number
 ];
 
 /**

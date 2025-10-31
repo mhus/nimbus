@@ -51,8 +51,10 @@ export interface PhysicsEntity {
  * Features:
  * - Walk mode: XZ movement, gravity, jumping, auto-climb
  * - Fly mode: Full 3D movement, no gravity
+ * - Underwater mode: Fly-like movement with gravity disabled, collisions enabled
  * - Block collision detection
  * - Auto-push-up when inside block
+ * - Water detection from ClientHeightData
  */
 export class PhysicsService {
   private appContext: AppContext;
@@ -60,22 +62,33 @@ export class PhysicsService {
 
   // Physics constants
   private readonly gravity: number = -20.0; // blocks per second²
+  private readonly underwaterGravity: number = -2.0; // blocks per second² (10% of normal, slow sinking)
   private readonly walkSpeed: number = 5.0; // blocks per second
   private readonly flySpeed: number = 10.0; // blocks per second
   private readonly jumpSpeed: number = 8.0; // blocks per second (2 blocks high)
   private readonly playerHeight: number = 1.8; // Player height in blocks
   private readonly playerWidth: number = 0.6; // Player width in blocks
+  private readonly underwaterSpeed: number = 3.0; // blocks per second (slower than walk/fly)
 
   // Entities managed by physics
   private entities: Map<string, PhysicsEntity> = new Map();
+
+  // Underwater state (TODO: Track per entity instead of global)
+  private isUnderwater: boolean = false;
+
+  // Last checked block coordinates for underwater detection (optimization)
+  // Only check underwater state when block coordinates change
+  private lastCheckedBlockCoords: Map<string, { blockX: number; blockY: number; blockZ: number }> = new Map();
 
   constructor(appContext: AppContext) {
     this.appContext = appContext;
 
     logger.info('PhysicsService initialized', {
       gravity: this.gravity,
+      underwaterGravity: this.underwaterGravity,
       walkSpeed: this.walkSpeed,
       flySpeed: this.flySpeed,
+      underwaterSpeed: this.underwaterSpeed,
     });
   }
 
@@ -104,6 +117,7 @@ export class PhysicsService {
    */
   unregisterEntity(entityId: string): void {
     this.entities.delete(entityId);
+    this.lastCheckedBlockCoords.delete(entityId); // Clean up block coordinate tracking
     logger.debug('Entity unregistered', { entityId });
   }
 
@@ -127,6 +141,9 @@ export class PhysicsService {
    * Update a single entity
    */
   private updateEntity(entity: PhysicsEntity, deltaTime: number): void {
+    // Check underwater state only if position changed (optimization)
+    this.checkUnderwaterStateIfMoved(entity);
+
     if (entity.movementMode === 'walk') {
       this.updateWalkMode(entity, deltaTime);
     } else if (entity.movementMode === 'fly') {
@@ -135,7 +152,131 @@ export class PhysicsService {
   }
 
   /**
+   * Check if entity block coordinates have changed and run underwater check
+   *
+   * Optimization: Only check underwater state when entity moves to a different block
+   * to avoid expensive chunk lookups every frame.
+   *
+   * Since waterHeight is per block column, we only need to check when:
+   * - Block X coordinate changes (Math.floor(x))
+   * - Block Y coordinate changes (Math.floor(y))
+   * - Block Z coordinate changes (Math.floor(z))
+   *
+   * @param entity Entity to check
+   */
+  private checkUnderwaterStateIfMoved(entity: PhysicsEntity): void {
+    const currentBlockX = Math.floor(entity.position.x);
+    const currentBlockY = Math.floor(entity.position.y);
+    const currentBlockZ = Math.floor(entity.position.z);
+
+    const lastCoords = this.lastCheckedBlockCoords.get(entity.entityId);
+
+    // Check if block coordinates changed
+    const blockChanged = !lastCoords ||
+      currentBlockX !== lastCoords.blockX ||
+      currentBlockY !== lastCoords.blockY ||
+      currentBlockZ !== lastCoords.blockZ;
+
+    if (blockChanged) {
+      // Block changed - run underwater check
+      this.checkUnderwaterState(entity);
+
+      // Update last checked block coordinates
+      this.lastCheckedBlockCoords.set(entity.entityId, {
+        blockX: currentBlockX,
+        blockY: currentBlockY,
+        blockZ: currentBlockZ,
+      });
+    }
+  }
+
+  /**
+   * Check if entity is underwater based on ClientHeightData
+   *
+   * Gets ClientHeightData for entity's column and:
+   * - Checks if entity.position.y < waterHeight
+   * - Calls CameraService.setUnderwater(true/false) on state change
+   * - Uses minHeight/maxHeight as boundaries for physics
+   *
+   * @param entity Entity to check
+   */
+  private checkUnderwaterState(entity: PhysicsEntity): void {
+    if (!this.chunkService) {
+      logger.warn('💧 ChunkService not available!', { entityId: entity.entityId });
+      return;
+    }
+
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+    const chunkX = Math.floor(entity.position.x / chunkSize);
+    const chunkZ = Math.floor(entity.position.z / chunkSize);
+    const chunk = this.chunkService.getChunk(chunkX, chunkZ);
+
+    if (!chunk) {
+      return;
+    }
+
+    // Calculate local coordinates within chunk (handle negative positions correctly)
+    const localX = ((entity.position.x % chunkSize) + chunkSize) % chunkSize;
+    const localZ = ((entity.position.z % chunkSize) + chunkSize) % chunkSize;
+    const heightKey = `${Math.floor(localX)},${Math.floor(localZ)}`;
+    const heightData = chunk.data.hightData.get(heightKey);
+
+    if (heightData && heightData[5] !== undefined) {
+      const [x, z, maxHeight, minHeight, groundLevel, waterHeight] = heightData;
+      const wasUnderwater = this.isUnderwater;
+
+      // Player is underwater when camera/eyes are below water surface
+      // waterHeight = Y of highest water block (bottom face = surface)
+      // Add offset so player is "underwater" when partially submerged
+      const waterSurfaceY = waterHeight + 1.0; // Raise surface by 1.0 blocks
+      const eyeY = entity.position.y + 1.6; // Eye level for first-person camera
+      this.isUnderwater = eyeY <= waterSurfaceY;
+
+      // Notify CameraService on state change
+      if (wasUnderwater !== this.isUnderwater) {
+        const cameraService = this.appContext.services.camera;
+        if (cameraService) {
+          cameraService.setUnderwater(this.isUnderwater);
+          logger.info('💧 UNDERWATER STATE CHANGED', {
+            entityId: entity.entityId,
+            underwater: this.isUnderwater,
+            waterBlockY: waterHeight,
+            waterSurfaceY: waterSurfaceY,
+            entityY: entity.position.y.toFixed(2),
+            eyeY: eyeY.toFixed(2),
+          });
+        }
+      }
+
+      // Clamp to min/max height boundaries
+      if (entity.position.y < minHeight) {
+        entity.position.y = minHeight;
+        entity.velocity.y = 0;
+      } else if (entity.position.y > maxHeight) {
+        entity.position.y = maxHeight;
+        entity.velocity.y = 0;
+      }
+    } else {
+      // No waterHeight data - definitely not underwater!
+      const wasUnderwater = this.isUnderwater;
+      this.isUnderwater = false;
+
+      // Notify CameraService if state changed from underwater to not underwater
+      if (wasUnderwater) {
+        const cameraService = this.appContext.services.camera;
+        if (cameraService) {
+          cameraService.setUnderwater(false);
+          logger.info('💧 Left water area', { entityId: entity.entityId });
+        }
+      }
+    }
+  }
+
+  /**
    * Update entity in Walk mode
+   *
+   * When underwater, physics behave like fly mode (no gravity)
+   * but with collision detection enabled.
    */
   private updateWalkMode(entity: PhysicsEntity, deltaTime: number): void {
     // Handle auto-climb animation
@@ -144,12 +285,22 @@ export class PhysicsService {
       return; // Skip normal physics during climb
     }
 
-    // Apply gravity
-    if (!entity.isOnGround) {
-      entity.velocity.y += this.gravity * deltaTime;
+    // Apply gravity (reduced when underwater)
+    if (!this.isUnderwater) {
+      // Normal gravity on land
+      if (!entity.isOnGround) {
+        entity.velocity.y += this.gravity * deltaTime;
+      } else {
+        // On ground, reset vertical velocity
+        entity.velocity.y = 0;
+      }
     } else {
-      // On ground, reset vertical velocity
-      entity.velocity.y = 0;
+      // Underwater: Reduced gravity (slow sinking)
+      // Player slowly sinks but can swim up
+      entity.velocity.y += this.underwaterGravity * deltaTime;
+
+      // Apply water drag to limit sink speed
+      entity.velocity.y *= 0.95; // Damping factor
     }
 
     // Apply velocity to position
@@ -483,6 +634,8 @@ export class PhysicsService {
   /**
    * Move entity forward/backward (relative to camera)
    *
+   * TODO: When underwater, use fly-like movement (including pitch) but with collisions
+   *
    * @param entity Entity to move
    * @param distance Distance to move (positive = forward)
    * @param cameraYaw Camera yaw rotation in radians
@@ -492,7 +645,7 @@ export class PhysicsService {
     const oldX = entity.position.x;
     const oldZ = entity.position.z;
 
-    if (entity.movementMode === 'walk') {
+    if (entity.movementMode === 'walk' && !this.isUnderwater) {
       // Walk mode: Only move in XZ plane (ignore pitch)
       const dx = Math.sin(cameraYaw) * distance;
       const dz = Math.cos(cameraYaw) * distance;
@@ -507,8 +660,9 @@ export class PhysicsService {
       if (entity.position.x !== oldX || entity.position.z !== oldZ) {
         this.tryAutoClimb(entity, oldX, oldZ);
       }
-    } else if (entity.movementMode === 'fly') {
-      // Fly mode: Move in camera direction (including pitch)
+    } else if (entity.movementMode === 'fly' || this.isUnderwater) {
+      // Fly mode OR Underwater: Move in camera direction (including pitch)
+      // TODO: Add collision detection when underwater
       const dx = Math.sin(cameraYaw) * Math.cos(cameraPitch) * distance;
       const dy = -Math.sin(cameraPitch) * distance;
       const dz = Math.cos(cameraYaw) * Math.cos(cameraPitch) * distance;
@@ -550,13 +704,15 @@ export class PhysicsService {
   }
 
   /**
-   * Move entity up/down (Fly mode only)
+   * Move entity up/down (Fly mode or underwater)
+   *
+   * TODO: Underwater movement should also allow up/down movement
    *
    * @param entity Entity to move
    * @param distance Distance to move (positive = up)
    */
   moveUp(entity: PhysicsEntity, distance: number): void {
-    if (entity.movementMode === 'fly') {
+    if (entity.movementMode === 'fly' || this.isUnderwater) {
       entity.position.y += distance;
     }
   }
@@ -604,8 +760,15 @@ export class PhysicsService {
 
   /**
    * Get current move speed for entity
+   *
+   * Returns appropriate speed based on movement mode and underwater state
    */
   getMoveSpeed(entity: PhysicsEntity): number {
+    // TODO: Return underwaterSpeed when underwater
+    if (this.isUnderwater) {
+      return this.underwaterSpeed;
+    }
+
     return entity.movementMode === 'walk' ? this.walkSpeed : this.flySpeed;
   }
 
@@ -614,6 +777,7 @@ export class PhysicsService {
    */
   dispose(): void {
     this.entities.clear();
+    this.lastCheckedBlockCoords.clear();
     logger.info('PhysicsService disposed');
   }
 }
