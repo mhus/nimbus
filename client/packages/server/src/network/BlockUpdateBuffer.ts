@@ -71,22 +71,28 @@ export class BlockUpdateBuffer {
       // Add block to buffer
       blocks.push(block);
 
-      logger.debug('Block update added to buffer', {
+      logger.info('🔵 SERVER: Block update added to buffer', {
         worldId,
         position: block.position,
         blockTypeId: block.blockTypeId,
         bufferedCount: blocks.length,
+        maxBatchSize: this.config.maxBatchSize,
       });
 
       // Check if we should flush immediately (size-based)
       if (blocks.length >= this.config.maxBatchSize) {
-        logger.debug('Max batch size reached, flushing immediately', {
+        logger.info('🔵 SERVER: Max batch size reached, flushing immediately', {
           worldId,
           count: blocks.length,
         });
         this.flushWorld(worldId);
       } else {
         // Schedule timer-based flush
+        logger.info('🔵 SERVER: Scheduling timer-based flush', {
+          worldId,
+          bufferedCount: blocks.length,
+          flushInterval: this.config.flushInterval,
+        });
         this.scheduleFlush();
       }
     } catch (error) {
@@ -123,13 +129,19 @@ export class BlockUpdateBuffer {
     }
 
     try {
-      logger.debug('Flushing block updates for world', {
+      logger.info('🔵 SERVER: BlockUpdateBuffer flushing', {
         worldId,
         count: blocks.length,
+        blocks: blocks.map(b => ({
+          position: b.position,
+          blockTypeId: b.blockTypeId,
+        })),
       });
 
       // Call the flush callback
       this.flushCallback(worldId, blocks);
+
+      logger.info('✅ SERVER: Flush callback completed');
 
       // Clear blocks for this world
       this.pendingUpdates.delete(worldId);

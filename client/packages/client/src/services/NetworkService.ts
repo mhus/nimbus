@@ -297,7 +297,16 @@ export class NetworkService {
     try {
       const message: BaseMessage = JSON.parse(event.data);
 
-      logger.debug('Received message', { type: message.t, responseId: message.r });
+      // Log ALL incoming messages (especially b.u for debugging)
+      if (message.t === 'b.u') {
+        logger.info('🔵 INCOMING WebSocket Message: b.u', {
+          type: message.t,
+          dataLength: message.d?.length,
+          rawData: event.data,
+        });
+      } else {
+        logger.debug('Received message', { type: message.t, responseId: message.r });
+      }
 
       // Handle response to pending request
       if (message.r) {
@@ -313,6 +322,9 @@ export class NetworkService {
       // Route to handlers
       const handlers = this.handlers.get(message.t);
       if (handlers && handlers.length > 0) {
+        if (message.t === 'b.u') {
+          logger.info(`🔵 Found ${handlers.length} handler(s) for b.u, routing...`);
+        }
         handlers.forEach(handler => {
           try {
             handler.handle(message);
@@ -323,7 +335,10 @@ export class NetworkService {
           }
         });
       } else {
-        logger.debug('No handler registered for message type', { type: message.t });
+        logger.warn('🔴 NO HANDLER registered for message type', {
+          type: message.t,
+          registeredTypes: Array.from(this.handlers.keys()),
+        });
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'NetworkService.onMessage', {

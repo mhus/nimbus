@@ -8,7 +8,8 @@
 import { Mesh, VertexData, Scene } from '@babylonjs/core';
 import { getLogger, ExceptionHandler, Shape } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
-import type { ChunkDataTransferObject } from '@nimbus/shared';
+import type { ClientChunk } from '../types/ClientChunk';
+import type { ClientBlock } from '../types/ClientBlock';
 import type { MaterialService } from './MaterialService';
 import type { BlockTypeService } from './BlockTypeService';
 import { CubeRenderer } from '../rendering/CubeRenderer';
@@ -89,6 +90,10 @@ export class RenderService {
       this.onChunkLoaded(chunk);
     });
 
+    chunkService.on('chunk:updated', (chunk: any) => {
+      this.onChunkUpdated(chunk);
+    });
+
     chunkService.on('chunk:unloaded', (coord: { cx: number; cz: number }) => {
       this.onChunkUnloaded(coord);
     });
@@ -97,18 +102,45 @@ export class RenderService {
   /**
    * Handle single chunk loaded event
    */
-  private onChunkLoaded(clientChunk: any): void {
-    // ClientChunk.data is now ClientChunkData with .transfer property
-    const chunk = clientChunk.data?.transfer || clientChunk;
+  private onChunkLoaded(clientChunk: ClientChunk): void {
+    const cx = clientChunk.data.transfer.cx;
+    const cz = clientChunk.data.transfer.cz;
 
-    logger.debug('Chunk loaded, rendering', { cx: chunk.cx, cz: chunk.cz });
+    logger.debug('Chunk loaded, rendering', { cx, cz });
 
-    this.renderChunk(chunk).catch((error) => {
+    this.renderChunk(clientChunk).catch((error) => {
       ExceptionHandler.handle(error, 'RenderService.onChunkLoaded', {
-        cx: chunk.cx,
-        cz: chunk.cz,
+        cx,
+        cz,
       });
     });
+  }
+
+  /**
+   * Handle chunk updated event (blocks changed via b.u message)
+   */
+  private onChunkUpdated(clientChunk: ClientChunk): void {
+    const cx = clientChunk.data.transfer.cx;
+    const cz = clientChunk.data.transfer.cz;
+
+    logger.info('🔵 RenderService: Chunk updated, re-rendering', {
+      cx,
+      cz,
+      blockCount: clientChunk.data.data.size,
+    });
+
+    // Remove old mesh first
+    this.unloadChunk(cx, cz);
+
+    // Re-render chunk with updated ClientBlocks
+    this.renderChunk(clientChunk).catch((error) => {
+      ExceptionHandler.handle(error, 'RenderService.onChunkUpdated', {
+        cx,
+        cz,
+      });
+    });
+
+    logger.info('🔵 Chunk re-render complete', { cx, cz });
   }
 
   /**
@@ -122,9 +154,10 @@ export class RenderService {
   /**
    * Render a chunk
    *
-   * @param chunk Chunk data from server
+   * @param clientChunk Client-side chunk with processed ClientBlocks
    */
-  async renderChunk(chunk: ChunkDataTransferObject): Promise<void> {
+  async renderChunk(clientChunk: ClientChunk): Promise<void> {
+    const chunk = clientChunk.data.transfer; // Get transfer object for chunk coordinates
     try {
       const chunkKey = this.getChunkKey(chunk.cx, chunk.cz);
 
@@ -134,7 +167,14 @@ export class RenderService {
         return;
       }
 
-      logger.debug('Rendering chunk', { cx: chunk.cx, cz: chunk.cz, blockCount: chunk.b?.length || 0 });
+      const clientBlocksMap = clientChunk.data.data;
+      const blockCount = clientBlocksMap.size;
+
+      logger.debug('Rendering chunk from ClientBlocks', {
+        cx: chunk.cx,
+        cz: chunk.cz,
+        blockCount,
+      });
 
       // Build mesh data
       const faceData: FaceData = {
@@ -152,30 +192,20 @@ export class RenderService {
         return;
       }
 
-      // Render each block (chunk.b is the array from ChunkDataTransferObject)
-      const blocks = chunk.b || [];
-      for (const block of blocks) {
+      // Render each ClientBlock from the Map
+      for (const clientBlock of clientBlocksMap.values()) {
+        const block = clientBlock.block;
+
         // Validate block data
         if (!block || typeof block.blockTypeId === 'undefined' || !block.position) {
-          logger.warn('Invalid block data', { block });
+          logger.warn('Invalid block data in ClientBlock', { block });
           continue;
         }
 
-        // Get block type
-        const blockType = this.blockTypeService.getBlockType(block.blockTypeId);
-        if (!blockType) {
-          // Only log first occurrence to avoid spam
-          logger.warn('BlockType not found in registry', {
-            blockTypeId: block.blockTypeId,
-            position: block.position,
-            totalBlockTypesLoaded: this.blockTypeService.getBlockTypeCount()
-          });
-          continue;
-        }
+        // Use cached references from ClientBlock
+        const blockType = clientBlock.blockType;
+        const modifier = clientBlock.currentModifier; // ← Already merged!
 
-        // Get shape from modifier (status from BlockType.initialStatus)
-        const status = blockType.initialStatus ?? 0;
-        const modifier = blockType.modifiers[status];
         if (!modifier || !modifier.visibility) {
           continue;
         }

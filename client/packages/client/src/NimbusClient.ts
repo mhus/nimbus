@@ -22,6 +22,7 @@ import { ModalService } from './services/ModalService';
 import { NotificationService } from './services/NotificationService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
+import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
 
 const CLIENT_VERSION = '2.0.0';
@@ -158,6 +159,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     // Register ChunkMessageHandler
     const chunkHandler = new ChunkMessageHandler(chunkService);
     networkService.registerHandler(chunkHandler);
+
+    // Register BlockUpdateHandler
+    const blockUpdateHandler = new BlockUpdateHandler(chunkService);
+    networkService.registerHandler(blockUpdateHandler);
+    logger.info('🔵 BlockUpdateHandler registered for message type: b.u');
 
     logger.info('Core services initialized');
   } catch (error) {

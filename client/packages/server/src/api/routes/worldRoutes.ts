@@ -221,6 +221,11 @@ export function createWorldRoutes(
     }
 
     // Add to update buffer for broadcasting to clients
+    console.log('🔵 REST API: Adding block to update buffer', {
+      worldId: req.params.id,
+      position: block.position,
+      blockTypeId: block.blockTypeId,
+    });
     blockUpdateBuffer.addUpdate(req.params.id, block);
 
     return res.status(201).json(block);
@@ -277,6 +282,11 @@ export function createWorldRoutes(
     }
 
     // Add to update buffer for broadcasting to clients
+    console.log('🔵 REST API (PUT): Adding block to update buffer', {
+      worldId: req.params.id,
+      position: block.position,
+      blockTypeId: block.blockTypeId,
+    });
     blockUpdateBuffer.addUpdate(req.params.id, block);
 
     return res.json(block);
@@ -310,6 +320,11 @@ export function createWorldRoutes(
       status: 0,
       metadata: {},
     };
+    console.log('🔵 REST API (DELETE): Adding deletion to update buffer', {
+      worldId: req.params.id,
+      position: { x, y, z },
+      blockTypeId: 0,
+    });
     blockUpdateBuffer.addUpdate(req.params.id, deletionBlock);
 
     return res.status(204).send();

@@ -5,3 +5,6 @@
 - block changed client-> server raus, dafuer schickt der client server commands.
 - command mit data : any senden koennen
 - command timeout nach 30s abbruch, aber nur bei inaktivitaet, wenn zwischendurch ne message kommt, dann timeout auf 0 setzen
+
+- Connection Timeout im Server ist aktuell disabled, das muss noch repariert werden
+- 

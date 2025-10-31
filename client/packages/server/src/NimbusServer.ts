@@ -135,7 +135,9 @@ class NimbusServer {
       });
     });
 
-    // Ping interval
+    // Ping interval - DISABLED for debugging
+    // TODO: Re-enable after debugging block updates
+    /*
     setInterval(() => {
       this.sessions.forEach((session) => {
         if (Date.now() - session.lastPingAt > config.pingInterval * 1000 + 10000) {
@@ -144,6 +146,8 @@ class NimbusServer {
         }
       });
     }, 5000);
+    */
+    logger.info('Session timeout check DISABLED for debugging');
 
     logger.info('WebSocket server ready');
   }
@@ -280,6 +284,12 @@ class NimbusServer {
         return;
       }
 
+      logger.info('🔵 SERVER: Starting broadcastBlockUpdates', {
+        worldId,
+        blockCount: blocks.length,
+        totalSessions: this.sessions.size,
+      });
+
       // Get world to access chunk size
       const world = this.worldManager.getWorld(worldId);
       if (!world) {
@@ -302,17 +312,33 @@ class NimbusServer {
         chunkBlocks.push(block);
       }
 
-      logger.debug('Broadcasting block updates', {
+      logger.info('🔵 SERVER: Blocks grouped by chunks', {
         worldId,
         totalBlocks: blocks.length,
         affectedChunks: blocksByChunk.size,
+        chunkKeys: Array.from(blocksByChunk.keys()),
       });
 
       // Send updates to relevant clients
       let clientCount = 0;
+      let skippedCount = 0;
+
       for (const [sessionId, session] of this.sessions) {
+        logger.info('🔵 SERVER: Checking session', {
+          sessionId,
+          username: session.username,
+          sessionWorld: session.worldId,
+          targetWorld: worldId,
+          registeredChunks: Array.from(session.registeredChunks),
+        });
+
         // Skip if not in this world
         if (session.worldId !== worldId) {
+          logger.info('🔴 SERVER: Session in different world, skipping', {
+            sessionId,
+            sessionWorld: session.worldId,
+          });
+          skippedCount++;
           continue;
         }
 
@@ -321,34 +347,58 @@ class NimbusServer {
         for (const [chunkKey, chunkBlocks] of blocksByChunk) {
           if (session.registeredChunks.has(chunkKey)) {
             clientBlocks.push(...chunkBlocks);
+            logger.info('🔵 SERVER: Client has chunk registered', {
+              sessionId,
+              chunkKey,
+              blockCount: chunkBlocks.length,
+            });
+          } else {
+            logger.info('🔴 SERVER: Client does NOT have chunk registered', {
+              sessionId,
+              chunkKey,
+            });
           }
         }
 
         // Send if client has any relevant blocks
         if (clientBlocks.length > 0) {
           try {
-            session.ws.send(
-              JSON.stringify({
-                t: 'b.u',
-                d: clientBlocks,
-              })
-            );
-            clientCount++;
+            const message = {
+              t: 'b.u',
+              d: clientBlocks,
+            };
+            const messageStr = JSON.stringify(message);
 
-            logger.debug('Sent block updates to client', {
+            logger.info('🔵 SERVER: Sending b.u message to client', {
               sessionId,
               username: session.username,
               blockCount: clientBlocks.length,
+              messageLength: messageStr.length,
+              wsReadyState: session.ws.readyState,
+            });
+
+            session.ws.send(messageStr);
+            clientCount++;
+
+            logger.info('✅ SERVER: Message sent successfully', {
+              sessionId,
+              username: session.username,
             });
           } catch (error) {
-            logger.error('Failed to send block updates to client', { sessionId }, error as Error);
+            logger.error('❌ SERVER: Failed to send block updates to client', { sessionId }, error as Error);
           }
+        } else {
+          logger.info('🔴 SERVER: No relevant blocks for this client', {
+            sessionId,
+            username: session.username,
+          });
         }
       }
 
-      logger.debug('Block updates broadcast complete', {
+      logger.info('🔵 SERVER: Block updates broadcast complete', {
         worldId,
         clientCount,
+        skippedCount,
         totalBlocks: blocks.length,
       });
     } catch (error) {

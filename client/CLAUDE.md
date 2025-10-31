@@ -217,10 +217,18 @@ Key services:
 
 ### 3D Engine
 - **EngineService**: Core 3D engine class that initializes and manages Babylon.js, the scene, and rendering (singleton)
-  - It holds all the other services that are directly related to the 3D engine, e.g., `RenderService` 
+  - It holds all the other services that are directly related to the 3D engine, e.g., `RenderService`
 - **NetworkService**: Manages WebSocket connection and message routing (singleton, AppContext)
 - **RenderService**: Manages Babylon.js scene and rendering (singleton, Engine)
+  - **IMPORTANT**: RenderService MUST work with `ClientChunk` and `ClientBlock`, NOT with `ChunkDataTransferObject`
+  - ClientChunk contains optimized data: cached BlockType references, merged modifiers, ClientBlockType
+  - Never convert back to ChunkDataTransferObject for rendering
+  - `renderChunk(clientChunk: ClientChunk)` iterates over `clientChunk.data.data` Map (ClientBlocks)
+  - Uses `clientBlock.currentModifier` (already merged) instead of registry lookups
 - **ChunkService**: Manages chunk loading and management (singleton, AppContext)
+  - Converts ChunkDataTransferObject → ClientChunk (with optimizations)
+  - Maintains ClientChunk Map as single source of truth
+  - Block updates modify ClientBlock Map, then emit 'chunk:updated' event
 - **BlockTypeService**: Manages block type registry (singleton, AppContext)
 - **WorldService**: Manages world selection and loading (singleton, AppContext)
 - **CameraControl**: Manages camera movement and rotation (singleton, Engine)
@@ -239,6 +247,44 @@ Samples:
 2. **User Input** → InputController → InputActions → Game Logic
 3. **World Data** → ChunkService → RenderService → Babylon.js Scene
 4. **Block Registry** → RegistryService → Type System
+
+#### Chunk and Block Update Flow
+
+**IMPORTANT: Data Layer Separation**
+
+1. **Network Layer** (ChunkDataTransferObject, Block)
+   - Server sends: ChunkDataTransferObject with Block array
+   - Minimal data for network efficiency
+   - Only IDs (blockTypeId), no resolved references
+
+2. **Client Layer** (ClientChunk, ClientBlock)
+   - ChunkService converts: ChunkDataTransferObject → ClientChunk
+   - ClientBlock contains optimizations:
+     - `blockType: BlockType` - Cached reference (not just ID)
+     - `currentModifier: BlockModifier` - Merged from Block + BlockType
+     - `clientBlockType: ClientBlockType` - Pre-processed for rendering
+   - Single source of truth: `ClientChunk.data.data` Map
+
+3. **Rendering Layer** (RenderService)
+   - **MUST use ClientChunk/ClientBlock** (NOT ChunkDataTransferObject!)
+   - Iterates over ClientBlock Map: `clientChunk.data.data.values()`
+   - Uses cached references: `clientBlock.blockType`, `clientBlock.currentModifier`
+   - Never do registry lookups during rendering
+
+**Block Update Flow:**
+```
+REST API → BlockUpdateBuffer (1s batch) → WebSocket b.u message
+  → BlockUpdateHandler → ChunkService.onBlockUpdate()
+  → Update ClientBlock Map → Emit 'chunk:updated'
+  → RenderService.onChunkUpdated() → renderChunk(clientChunk)
+  → Render from ClientBlock Map
+```
+
+**DO NOT:**
+- ❌ Convert ClientChunk back to ChunkDataTransferObject for rendering
+- ❌ Use chunk.b array in RenderService
+- ❌ Do BlockType registry lookups during rendering
+- ❌ Re-merge modifiers in RenderService (already done in ClientBlock)
 
 ## Development Guidelines
 

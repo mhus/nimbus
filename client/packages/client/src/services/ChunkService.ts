@@ -317,6 +317,121 @@ export class ChunkService {
   }
 
   /**
+   * Handle block updates from server (called by BlockUpdateHandler)
+   *
+   * Updates individual blocks in loaded chunks. Blocks with blockTypeId: 0 are deleted.
+   *
+   * @param blocks - Array of block updates from server
+   */
+  onBlockUpdate(blocks: Block[]): void {
+    try {
+      logger.info('🔵 ChunkService.onBlockUpdate called', {
+        blockCount: blocks.length,
+      });
+
+      const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+      const blockTypeService = this.appContext.services.blockType;
+
+      if (!blockTypeService) {
+        logger.warn('BlockTypeService not available - cannot process block updates');
+        return;
+      }
+
+      // Track affected chunks for re-rendering
+      const affectedChunks = new Set<string>();
+
+      for (const block of blocks) {
+        // Calculate chunk coordinates from block position
+        const chunkCoord = worldToChunk(block.position.x, block.position.z, chunkSize);
+        const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
+
+        // Get chunk
+        const clientChunk = this.chunks.get(chunkKey);
+        if (!clientChunk) {
+          // Chunk not loaded on client - ignore update
+          logger.debug('Block update for unloaded chunk, ignoring', {
+            position: block.position,
+            cx: chunkCoord.cx,
+            cz: chunkCoord.cz,
+          });
+          continue;
+        }
+
+        // Get position key
+        const posKey = getBlockPositionKey(
+          block.position.x,
+          block.position.y,
+          block.position.z
+        );
+
+        // Handle deletion (blockTypeId: 0)
+        if (block.blockTypeId === 0) {
+          const wasDeleted = clientChunk.data.data.delete(posKey);
+          if (wasDeleted) {
+            logger.debug('Block deleted', { position: block.position });
+            affectedChunks.add(chunkKey);
+          }
+          continue;
+        }
+
+        // Handle update/create
+        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        if (!blockType) {
+          logger.warn('BlockType not found for block update', {
+            blockTypeId: block.blockTypeId,
+            position: block.position,
+          });
+          continue;
+        }
+
+        // Merge block modifiers
+        const currentModifier = mergeBlockModifier(block, blockType);
+
+        // Create/update ClientBlock
+        const clientBlock: ClientBlock = {
+          block,
+          chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
+          blockType,
+          currentModifier,
+          clientBlockType: blockType as any,
+          isVisible: true,
+          isDirty: true,
+          lastUpdate: Date.now(),
+        };
+
+        // Update in chunk
+        clientChunk.data.data.set(posKey, clientBlock);
+        affectedChunks.add(chunkKey);
+
+        logger.debug('Block updated', {
+          position: block.position,
+          blockTypeId: block.blockTypeId,
+        });
+      }
+
+      // Emit events for affected chunks (triggers re-rendering)
+      for (const chunkKey of affectedChunks) {
+        const chunk = this.chunks.get(chunkKey);
+        if (chunk) {
+          // Mark for re-rendering
+          chunk.isRendered = false;
+          this.emit('chunk:updated', chunk);
+          logger.info('🔵 Emitting chunk:updated event', { chunkKey });
+        }
+      }
+
+      logger.info('🔵 Block updates applied', {
+        totalBlocks: blocks.length,
+        affectedChunks: affectedChunks.size,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ChunkService.onBlockUpdate', {
+        count: blocks.length,
+      });
+    }
+  }
+
+  /**
    * Resend last chunk registration (called after reconnect)
    */
   resendLastRegistration(): void {
