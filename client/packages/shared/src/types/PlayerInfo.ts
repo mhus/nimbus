@@ -87,9 +87,15 @@ export interface PlayerInfo {
   // Camera Control
   // ============================================
 
-  /** Base mouse sensitivity for camera rotation */
+  /** Base mouse sensitivity for camera rotation (on land) */
   baseTurnSpeed: number;
 
   /** Effective mouse sensitivity (base + modifiers, e.g., dizzy effects) */
   effectiveTurnSpeed: number;
+
+  /** Base mouse sensitivity for camera rotation (underwater) */
+  baseUnderwaterTurnSpeed: number;
+
+  /** Effective underwater mouse sensitivity (base + modifiers) */
+  effectiveUnderwaterTurnSpeed: number;
 }

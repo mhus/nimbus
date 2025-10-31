@@ -550,12 +550,12 @@ ein event zu machen, wenn sich PlayerInfo geandert hat und alle die es interessi
 - SelectionService - Augen Hoehe (aktuell selektiert der SelectionService am ground, das ist zu tief)
 
 [?] In CameraService wird evtl noch die turnSpeed von PlayerInfo benutzt.
-[ ] Separaten underwaterTurnSpeed implementieren in PlayerInfo und CameraService. (effectiveUnderwaterTurnSpeed)
+[x] Separaten underwaterTurnSpeed implementieren in PlayerInfo und CameraService. (effectiveUnderwaterTurnSpeed)
 
 [x] PlayerInfo muss in das packet 'shared' verschoben werden.
-[ ] Umbenennen von headHeight in eyeHeight. ?
+[ ] Umbenennen von headHeight in eyeHeight.
 [ ] SelectionService benutzt headHeight aus PlayerInfo um die selection hoehe zu bestimmen.
-[ ] Commando im client, das eine neue PlayerInfo setzt.
+[ ] Commando im client, das eine neue PlayerInfo setzt. Im CommandService registrieren.
 
 [ ] Commando im client das teleportiert, dafuer teleport aus Netzwerk entfernen. Das Commando kann gleich eine System 
 nachricht beinhalten (System Info).

@@ -40,7 +40,8 @@ export class CameraService {
   private _egoView: boolean = true;
 
   // Camera control
-  private effectiveTurnSpeed: number = 0.003; // Mouse sensitivity (updated via event)
+  private effectiveTurnSpeed: number = 0.003; // Mouse sensitivity on land (updated via event)
+  private effectiveUnderwaterTurnSpeed: number = 0.002; // Mouse sensitivity underwater (updated via event)
 
   // Underwater effects
   private waterSphereMesh?: Mesh;
@@ -53,9 +54,10 @@ export class CameraService {
     this.scene = scene;
     this.appContext = appContext;
 
-    // Initialize turn speed from PlayerInfo
+    // Initialize turn speeds from PlayerInfo
     if (appContext.playerInfo) {
       this.effectiveTurnSpeed = appContext.playerInfo.effectiveTurnSpeed;
+      this.effectiveUnderwaterTurnSpeed = appContext.playerInfo.effectiveUnderwaterTurnSpeed;
     }
 
     this.initializeCamera();
@@ -78,8 +80,10 @@ export class CameraService {
     // Subscribe to PlayerInfo updates
     playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
       this.effectiveTurnSpeed = info.effectiveTurnSpeed;
+      this.effectiveUnderwaterTurnSpeed = info.effectiveUnderwaterTurnSpeed;
       logger.debug('CameraService: turnSpeed updated', {
         turnSpeed: this.effectiveTurnSpeed,
+        underwaterTurnSpeed: this.effectiveUnderwaterTurnSpeed,
       });
     });
 
@@ -179,6 +183,7 @@ export class CameraService {
    * Rotate camera by delta
    *
    * Applies effectiveTurnSpeed scaling for player-controlled sensitivity.
+   * Uses separate underwater turn speed for realistic underwater feel.
    *
    * @param deltaPitch Pitch delta (from mouse movement)
    * @param deltaYaw Yaw delta (from mouse movement)
@@ -188,10 +193,15 @@ export class CameraService {
       return;
     }
 
+    // Use appropriate turn speed based on underwater state
+    const turnSpeed = this.isUnderwater
+      ? this.effectiveUnderwaterTurnSpeed // Slower/more realistic underwater
+      : this.effectiveTurnSpeed;          // Normal on land
+
     // Apply effective turn speed scaling (for dynamic sensitivity control)
     // Note: RotationHandlers already applies a base sensitivity,
     // this adds player-specific sensitivity from PlayerInfo
-    const scaleFactor = this.effectiveTurnSpeed / 0.003; // Normalize against default
+    const scaleFactor = turnSpeed / 0.003; // Normalize against default
 
     this.camera.rotation.x += deltaPitch * scaleFactor;
     this.camera.rotation.y += deltaYaw * scaleFactor;

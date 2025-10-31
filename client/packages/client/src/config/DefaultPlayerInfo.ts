@@ -54,4 +54,6 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   // Camera control
   baseTurnSpeed: 0.003,
   effectiveTurnSpeed: 0.003,
+  baseUnderwaterTurnSpeed: 0.002, // 33% slower underwater for realistic feel
+  effectiveUnderwaterTurnSpeed: 0.002,
 };
