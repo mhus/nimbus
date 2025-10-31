@@ -1049,6 +1049,107 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 Das kann cumulativ beim Speichern der Chunks passieren. Es gibt hierfuer bereits eine Netzwerk Funktion
 Siehe 'client/instructions/client_2.0/network-model-2.0.md'.
 Muss das angepasst werden?
+- Ein DELETE schickt als Block den BlockType '0', das ist dan ein Loeschen.
+- Ist es nicht sinnvoller immer kurz zu warten, falls mehrere Blocks nacheinander geandert werden kann man dann einen 
+  batch an die clients schicken. ggf. immer eine sekunde warten und changes sammeln.
+```text
+ Plan: Block-Update-Broadcast mit Batching implementieren
+
+ Änderungen:
+
+ 1. Neue Klasse: BlockUpdateBuffer (src/network/BlockUpdateBuffer.ts)
+
+ class BlockUpdateBuffer {
+   private pendingUpdates: Map<string, Block[]>; // worldId -> blocks[]
+   private flushTimer: NodeJS.Timeout | null = null;
+   private readonly FLUSH_INTERVAL = 1000; // 1 Sekunde warten
+   private readonly MAX_BATCH_SIZE = 100; // Oder bei 100 Blocks sofort flushen
+
+   addUpdate(worldId: string, block: Block): void
+   flush(): void // Sendet alle gesammelten Updates
+   private scheduleFlush(): void
+ }
+
+ Logik:
+ - addUpdate() sammelt Block-Änderungen
+ - Startet Timer beim ersten Block (1 Sekunde)
+ - Bei 100+ Blocks: sofort flushen (nicht warten)
+ - Timer läuft ab: alle gesammelten Blocks broadcasten
+
+ 2. NimbusServer erweitern (src/NimbusServer.ts)
+
+ - Singleton-Pattern: static getInstance() und private static instance
+ - Neue Instanz-Variable: private blockUpdateBuffer: BlockUpdateBuffer
+ - Neue Methode: broadcastBlockUpdates(worldId: string, blocks: Block[])
+   - Findet alle Sessions mit registrierten Chunks
+   - Berechnet betroffene Chunks aus Block-Positionen
+   - Sendet {"t": "b.u", "d": [blocks]} nur an relevante Clients
+
+ 3. REST-Endpunkte erweitern (src/api/routes/worldRoutes.ts)
+
+ POST /blocks/:x/:y/:z - Nach erfolgreichem setBlock:
+ blockUpdateBuffer.addUpdate(worldId, block);
+
+ PUT /blocks/:x/:y/:z - Nach erfolgreichem setBlock:
+ blockUpdateBuffer.addUpdate(worldId, block);
+
+ DELETE /blocks/:x/:y/:z - Nach erfolgreichem deleteBlock:
+ const deletionBlock = {
+   position: { x, y, z },
+   blockTypeId: 0,  // 0 = Löschen
+   status: 0,
+   metadata: {}
+ };
+ blockUpdateBuffer.addUpdate(worldId, deletionBlock);
+
+ 4. Broadcast-Logik Details
+
+ Chunk-Berechnung:
+ const cx = Math.floor(block.position.x / chunkSize);
+ const cz = Math.floor(block.position.z / chunkSize);
+ const chunkKey = `${cx},${cz}`;
+
+ Client-Filterung:
+ - Iteriert über alle Sessions mit session.worldId === worldId
+ - Prüft ob session.registeredChunks.has(chunkKey)
+ - Sendet Block-Updates nur an relevante Clients
+
+ Nachrichtenformat (gemäß network-model-2.0.md):
+ {
+   "t": "b.u",
+   "d": [
+     {
+       "position": {"x": 10, "y": 64, "z": 5},
+       "blockTypeId": 1,
+       "status": 0,
+       "metadata": {}
+     }
+   ]
+ }
+
+ Batching-Verhalten:
+
+ Szenario 1: Editor platziert 50 Blocks schnell
+ - Alle 50 Blocks werden gesammelt
+ - Nach 1 Sekunde: 1 Nachricht mit 50 Blocks
+
+ Szenario 2: Bulk-Operation mit 150 Blocks
+ - Bei Block 100: sofort flush (MAX_BATCH_SIZE)
+ - Restliche 50 Blocks: nach 1 Sekunde
+
+ Szenario 3: Einzelner Block
+ - Block wird gesammelt
+ - Nach 1 Sekunde: Nachricht mit 1 Block
+
+ Vorteile:
+
+ ✅ Effizient bei Bulk-Operationen (1 Nachricht statt 100)
+ ✅ Reduzierter Netzwerk-Traffic
+ ✅ Clients rendern einmal statt nach jedem Block
+ ✅ Nutzt bestehendes b.u Protokoll
+ ✅ DELETE wird korrekt als blockTypeId: 0 gesendet
+ ✅ Konfigurierbar (FLUSH_INTERVAL, MAX_BATCH_SIZE)
+```
 
 [ ] Block Editor in modal_editors implementieren
 - Der Editor existiert bereits, ist aber noch nicht implementiert.

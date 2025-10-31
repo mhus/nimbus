@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import type { WorldManager } from '../../world/WorldManager';
+import type { BlockUpdateBuffer } from '../../network/BlockUpdateBuffer';
 
-export function createWorldRoutes(worldManager: WorldManager): Router {
+export function createWorldRoutes(
+  worldManager: WorldManager,
+  blockUpdateBuffer: BlockUpdateBuffer
+): Router {
   const router = Router();
 
   // GET /api/worlds - List all worlds
@@ -213,6 +217,9 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
       return res.status(500).json({ error: 'Failed to create block' });
     }
 
+    // Add to update buffer for broadcasting to clients
+    blockUpdateBuffer.addUpdate(req.params.id, block);
+
     return res.status(201).json(block);
   });
 
@@ -263,6 +270,9 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
       return res.status(500).json({ error: 'Failed to update block' });
     }
 
+    // Add to update buffer for broadcasting to clients
+    blockUpdateBuffer.addUpdate(req.params.id, block);
+
     return res.json(block);
   });
 
@@ -286,6 +296,15 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
     if (!deleted) {
       return res.status(404).json({ error: 'Block not found at position' });
     }
+
+    // Broadcast deletion as block with blockTypeId: 0
+    const deletionBlock = {
+      position: { x, y, z },
+      blockTypeId: 0, // 0 = deletion
+      status: 0,
+      metadata: {},
+    };
+    blockUpdateBuffer.addUpdate(req.params.id, deletionBlock);
 
     return res.status(204).send();
   });

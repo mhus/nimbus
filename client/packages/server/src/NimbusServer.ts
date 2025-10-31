@@ -5,7 +5,7 @@
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel } from '@nimbus/shared';
+import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block } from '@nimbus/shared';
 import { loadServerConfig } from './config/ServerConfig';
 import { WorldManager } from './world/WorldManager';
 import { TerrainGenerator } from './world/TerrainGenerator';
@@ -14,6 +14,7 @@ import { createWorldRoutes } from './api/routes/worldRoutes';
 import { createAssetRoutes } from './api/routes/assetRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
+import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -22,16 +23,41 @@ const logger = getLogger('NimbusServer');
 LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
 
 class NimbusServer {
+  private static instance: NimbusServer | null = null;
+
   private app: express.Application;
   private wsServer: WebSocketServer | null = null;
   private worldManager: WorldManager;
   private terrainGenerator: TerrainGenerator;
   private sessions = new Map<string, ClientSession>();
+  private blockUpdateBuffer: BlockUpdateBuffer;
 
-  constructor() {
+  private constructor() {
     this.app = express();
     this.worldManager = new WorldManager();
     this.terrainGenerator = new TerrainGenerator();
+
+    // Initialize block update buffer with broadcast callback
+    this.blockUpdateBuffer = new BlockUpdateBuffer((worldId, blocks) => {
+      this.broadcastBlockUpdates(worldId, blocks);
+    });
+  }
+
+  /**
+   * Get singleton instance
+   */
+  static getInstance(): NimbusServer {
+    if (!NimbusServer.instance) {
+      NimbusServer.instance = new NimbusServer();
+    }
+    return NimbusServer.instance;
+  }
+
+  /**
+   * Get block update buffer (for REST endpoints)
+   */
+  getBlockUpdateBuffer(): BlockUpdateBuffer {
+    return this.blockUpdateBuffer;
   }
 
   async initialize() {
@@ -57,7 +83,7 @@ class NimbusServer {
       // Note: Management routes (GET/POST/PUT/DELETE for assets metadata) require auth
       // Asset file serving (GET /assets/*) routes are public
       this.app.use('/api/worlds', authMiddleware, createAssetRoutes(this.worldManager));
-      this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager));
+      this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager, this.blockUpdateBuffer));
 
       // Health check
       this.app.get('/health', (_req, res) => res.json({ status: 'ok', version: SERVER_VERSION }));
@@ -241,10 +267,98 @@ class NimbusServer {
 
     logger.debug(`Sent ${chunkData.length} chunks to ${session.username}`);
   }
+
+  /**
+   * Broadcast block updates to all clients that have the affected chunks registered
+   *
+   * @param worldId World ID
+   * @param blocks Blocks to broadcast
+   */
+  private broadcastBlockUpdates(worldId: string, blocks: Block[]): void {
+    try {
+      if (blocks.length === 0) {
+        return;
+      }
+
+      // Get world to access chunk size
+      const world = this.worldManager.getWorld(worldId);
+      if (!world) {
+        logger.warn('Cannot broadcast block updates: world not found', { worldId });
+        return;
+      }
+
+      // Group blocks by chunk for efficient filtering
+      const blocksByChunk = new Map<string, Block[]>();
+      for (const block of blocks) {
+        const cx = Math.floor(block.position.x / world.chunkSize);
+        const cz = Math.floor(block.position.z / world.chunkSize);
+        const chunkKey = getChunkKey(cx, cz);
+
+        let chunkBlocks = blocksByChunk.get(chunkKey);
+        if (!chunkBlocks) {
+          chunkBlocks = [];
+          blocksByChunk.set(chunkKey, chunkBlocks);
+        }
+        chunkBlocks.push(block);
+      }
+
+      logger.debug('Broadcasting block updates', {
+        worldId,
+        totalBlocks: blocks.length,
+        affectedChunks: blocksByChunk.size,
+      });
+
+      // Send updates to relevant clients
+      let clientCount = 0;
+      for (const [sessionId, session] of this.sessions) {
+        // Skip if not in this world
+        if (session.worldId !== worldId) {
+          continue;
+        }
+
+        // Collect blocks for this client (only chunks they have registered)
+        const clientBlocks: Block[] = [];
+        for (const [chunkKey, chunkBlocks] of blocksByChunk) {
+          if (session.registeredChunks.has(chunkKey)) {
+            clientBlocks.push(...chunkBlocks);
+          }
+        }
+
+        // Send if client has any relevant blocks
+        if (clientBlocks.length > 0) {
+          try {
+            session.ws.send(
+              JSON.stringify({
+                t: 'b.u',
+                d: clientBlocks,
+              })
+            );
+            clientCount++;
+
+            logger.debug('Sent block updates to client', {
+              sessionId,
+              username: session.username,
+              blockCount: clientBlocks.length,
+            });
+          } catch (error) {
+            logger.error('Failed to send block updates to client', { sessionId }, error as Error);
+          }
+        }
+      }
+
+      logger.debug('Block updates broadcast complete', {
+        worldId,
+        clientCount,
+        totalBlocks: blocks.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.broadcastBlockUpdates', { worldId });
+    }
+  }
 }
 
-// Start server
-const server = new NimbusServer();
+// Start server (using singleton)
+const server = NimbusServer.getInstance();
 server.initialize().catch((error) => {
   logger.fatal('Failed to start server', {}, error);
   process.exit(1);
