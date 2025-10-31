@@ -8,3 +8,4 @@
 export * from './ClientBlockType';
 export * from './ClientBlock';
 export * from './ClientChunk';
+export * from './Notification';

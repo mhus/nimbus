@@ -337,9 +337,101 @@ In Block und BlockModifier ist offset als Array of byte definiert. Da die Werte 
 - BlockMetadata in numbus_editors anpassen
 - Dokumentation aktualisieren
 
-=== 
+[x] NotificationService im client implementieren
+Es soll einen NotificationService geben der Notificationen entgegennimmt und anzeigt.
+- newNotification(type: int, from : string | null, message : string)
+- notificationsVisible(bool) - unterdrueckt das anzeigen von Notificationen
+- clearChatNotifications() - cleanup der chat notifications
+- Es gibt vier bereiche in denen Notificationen angezeigt werden sollen:
+  - System messages unten links - mehrere Nachrichten untereinander (max 5), verschwinden pro nachricht nach 5 sekunden
+  - Chat unten rechts - mehrere Nachrichten untereinander (max 5), verschwinden nicht, koennen mit methode gecleart werden
+  - Aktuelle Quest oben rechts - bleiben stehen 
+  - Overlay messages in der Mitte ueber ganzen Bildschirm - beiben nur 2 sekunden stehen, verschwinden dann
+- Typen:
+  - 0: System Info - Toast left white
+  - 1: System Error - Toast left red
+  - 3: Command Result - Toast left green
+  - 10: Chat Info Message (Joined, leaved) - Toast right white
+  - 11: Chat Group Message - Toast right yellow
+  - 12: Chat Private Message - Toast right blue
+  - 20: Overlay Message big - Center, big message
+  - 21: Overlay Message small - Center, small message
+  - 30: Current Quest Name Change - Top right
+  - 31: Current Quest Current Taget Change - Top right under Quest Name
 
-[ ] ClientChungDate - height Data implementieren
+```text
+⏺ ✅ NotificationService erfolgreich implementiert!
+
+  Der NotificationService ist fertig und wurde erfolgreich gebaut. Hier ist eine Zusammenfassung:
+
+  Was wurde implementiert:
+
+  1. Type System (src/types/Notification.ts)
+  - NotificationType Enum (0-31 wie spezifiziert)
+  - NotificationArea Enum (system, chat, overlay, quest)
+  - Mapping von Types zu Areas und Styles
+  - Konfiguration pro Area (max count, auto-hide delays)
+
+  2. HTML/CSS Overlay System
+  - 4 Container-DIVs in index.html hinzugefügt
+  - CSS mit pointer-events: none für Container (Events gehen durch zum Canvas)
+  - Styling für alle Notification-Typen und -Größen
+  - Animationen (fade-in/fade-out)
+
+  3. NotificationService (src/services/NotificationService.ts)
+  - ✅ newNotification(type, from, message) - Erstellt und zeigt Notification
+  - ✅ notificationsVisible(bool) - Unterdrückt/Aktiviert Notifications
+  - ✅ clearChatNotifications() - Löscht Chat-Notifications
+  - Auto-Hide Management (System: 5s, Overlay: 2s)
+  - Max-Count Management pro Area
+
+  4. Integration
+  - In AppContext registriert
+  - In NimbusClient.ts initialisiert
+  - Test-Funktionen für Browser-Console hinzugefügt
+
+  Wie testen:
+
+  1. Dev-Server starten:
+  cd client && pnpm dev
+  2. Im Browser öffnen und Console öffnen (F12)
+  3. Test-Funktionen ausführen:
+  testNotifications()              // Alle Typen testen
+  testSystemNotifications()        // System-Bereich
+  testChatNotifications()          // Chat-Bereich
+  testOverlayNotifications()       // Overlay-Bereich
+  testQuestNotifications()         // Quest-Bereich
+  clearChat()                      // Chat löschen
+  toggleNotifications(false)       // Deaktivieren
+  toggleNotifications(true)        // Aktivieren
+
+  Notification-Typen:
+
+  - 0: System Info (weiß, links unten)
+  - 1: System Error (rot, links unten)
+  - 3: Command Result (grün, links unten)
+  - 10: Chat Info (weiß, rechts unten)
+  - 11: Chat Group (gelb, rechts unten)
+  - 12: Chat Private (blau, rechts unten)
+  - 20: Overlay Big (weiß groß, center)
+  - 21: Overlay Small (weiß klein, center)
+  - 30: Quest Name (weiß, rechts oben)
+  - 31: Quest Target (weiß, rechts oben)
+
+  Die Notifications werden korrekt über dem 3D-Canvas angezeigt und blockieren keine Mouse-Events!
+```
+
+[ ] In EditorHandlers.ts 'EditSelectionRotatorHandler' soll beim aneder des Select modes eine
+System Info notification mit dem neuen Selection Mode anzeigen.
+
+=== 
+## Console
+
+Console wird nun ueber die 
+
+## Block Data
+
+[ ] ClientChunkDate - height Data implementieren
 
 ## Material
 

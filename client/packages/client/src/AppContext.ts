@@ -13,6 +13,7 @@ import type { ShaderService } from './services/ShaderService';
 import type { EngineService } from './services/EngineService';
 import type { SelectService } from './services/SelectService';
 import type { ModalService } from './services/ModalService';
+import type { NotificationService } from './services/NotificationService';
 import type { WorldInfo } from '@nimbus/shared';
 
 /**
@@ -60,6 +61,9 @@ export interface Services {
 
   /** Modal service for displaying IFrame modals */
   modal?: ModalService;
+
+  /** Notification service for displaying toast notifications */
+  notification?: NotificationService;
 
   // Future services will be added here:
   // render?: RenderService;

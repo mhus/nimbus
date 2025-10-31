@@ -724,3 +724,89 @@ closeModal(referenz), closeAll()
   - Der NetzwerkService soll eine neue Methode 'createBlockEditorUrl(x,y,z)' bereitstellen.
   - EditSelectionRotator auf Key '.': Wenn '.' gedrueck wird, springt der Modus immer weiter und fängt nach ALL wieder bei NONE an.
   - EditorActivate auf Key '/': Wenn '/' gedrueckt wird, wird ein IFrame mit der editorUrl vom NetzwerkService geladen.
+
+[ ] Mehr IFrame Features
+- Wenn IFrame auf gemacht werden, soll ein name mitgegeben werden, der name ist dann der referenz key
+- Wenn ein frame mit dem referenz key schon da ist, wird der aktualisiert (neue url?), aber kein neuer aauf gemacht
+- SIZE_PRESETS sollen nicht nur die size, sondern auch die position mit beinhalten: 
+  - left: gamze linke seite (mit margins)
+  - right: gamze rechte seite (mit margins)
+  - top: gamze obere seite (mit margins)
+  - bottom: gamze untere seite (mit margins)
+  - center_small: gamze mitte small (wie bisher)
+  - center_medium: gamze mitte medium (wie bisher)
+  - center_large: gamze mitte large (wie bisher)
+  - left_top: Quadrant links oben
+  - left_bottom, right_top, right_bottom
+- Beim erstellen soll es eine Option geben, die mit bits arbeiten:
+  - ob das IFrame immer geschlossen werden soll. FLAGS.CLOSEABLE
+  - ob der Rand duenn sein soll (dann kein titel, kein close, etc. ) FLAGS.NO_BORDERS
+  - ob ein break out button angezeigt werden soll. FLAGS.BREAK_OUT
+  - z.b. openModal("editor", "Editor", "http://localhost/editor, SIZE_PRESETS.LEFT, FLAGS.CLOSEABLE | FLAGS.BREAK_OUT)
+- Beim aufmachen des IFrame wird immer an die url 'embedded=true' angehängt. Die Breakout funktion oeffnen die URL in 
+  einem neuen Fenster mit 'embedded=false' und schliesst das urspruengliche iframe
+- Es soll eine kommunikation zwischen dem IFrame und dem Viewer geben. Funktionen:
+  - closeModal(reason) - schliesst dieses Modal
+  - changePosition('name of preset') - Ändert die Position dieses Modals
+  - notification(type, from, message) wird an den NotificationServcie geschickt.
+
+Beispiel fuer die Implementierung:
+```typescript
+Kind:
+
+// z.B. https://child.example.com:8443
+type ParentMsg = { type: "IFRAME_READY" } | { type: "REQUEST_CLOSE"; reason?: string };
+
+function notifyReady() {
+  const msg: ParentMsg = { type: "IFRAME_READY" };
+  window.parent.postMessage(msg, "https://parent.example.com:3000"); // exaktes targetOrigin inkl. Port!
+}
+
+function requestClose(reason?: string) {
+  const msg: ParentMsg = { type: "REQUEST_CLOSE", reason };
+  window.parent.postMessage(msg, "https://parent.example.com:3000");
+}
+
+// Beispiel: Button klickt "Close"
+document.getElementById("closeBtn")?.addEventListener("click", () => requestClose("done"));
+
+Parent:
+
+// z.B. https://parent.example.com:3000
+type ChildMsg = { type: "IFRAME_READY" } | { type: "REQUEST_CLOSE"; reason?: string };
+
+const iframe = document.getElementById("childFrame") as HTMLIFrameElement;
+const ALLOWED_CHILD_ORIGIN = "https://child.example.com:8443"; // inkl. Port prüfen!
+
+window.addEventListener("message", (event: MessageEvent<ChildMsg>) => {
+  // 1) Sicherheit: nur erlaubte Origin akzeptieren
+  if (event.origin !== ALLOWED_CHILD_ORIGIN) return;
+
+  // 2) Optional: prüfen, dass die Nachricht wirklich von *diesem* iFrame stammt
+  if (event.source !== iframe.contentWindow) return;
+
+  // 3) Routing nach Nachrichtentyp
+  switch (event.data?.type) {
+    case "IFRAME_READY":
+      console.log("iFrame ist bereit.");
+      break;
+    case "REQUEST_CLOSE":
+      console.log("iFrame will schließen. Grund:", event.data.reason);
+      // iFrame entfernen/schließen:
+      iframe.remove(); // oder verstecken: iframe.style.display = "none";
+      break;
+  }
+});
+
+IFrmame:
+
+<iframe
+  id="childFrame"
+  src="https://child.example.com:8443/app"
+  referrerpolicy="no-referrer"
+  sandbox="allow-scripts allow-forms"
+  style="border:0; width:100%; height:600px;"
+></iframe>
+```
+  
+  

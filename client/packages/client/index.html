@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nimbus Client - Viewer</title>
     <link rel="stylesheet" href="/src/styles/modal.css" />
+    <link rel="stylesheet" href="/src/styles/notifications.css" />
     <style>
       * {
         margin: 0;
@@ -63,6 +64,13 @@
       <div id="loading-text">Loading Nimbus Client...</div>
     </div>
     <canvas id="renderCanvas"></canvas>
+
+    <!-- Notification containers -->
+    <div id="notifications-system" class="notification-container system"></div>
+    <div id="notifications-chat" class="notification-container chat"></div>
+    <div id="notifications-overlay" class="notification-container overlay"></div>
+    <div id="notifications-quest" class="notification-container quest"></div>
+
     <script type="module" src="/src/NimbusClient.ts"></script>
   </body>
 </html>

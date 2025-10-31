@@ -396,6 +396,8 @@ Fail Response:
 
 ## Server Notifications (Server -> Client)
 
+Deprecated !
+
 Der Server sendet Benachrichtigungen an den Client (z.B. Systemmeldungen, Chat-Nachrichten, etc.).
 
 ```json
@@ -432,6 +434,8 @@ Der Server sendet eine Teleport-Anweisung an den Client.
 ```
 
 ## NPC Communication (Server <-> Client)
+
+Deprecated !
 
 ### Open NPC Dialog (Server -> Client)
 

@@ -19,6 +19,7 @@ import { ShaderService } from './services/ShaderService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
 import { ModalService } from './services/ModalService';
+import { NotificationService } from './services/NotificationService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
@@ -60,6 +61,12 @@ async function initializeApp(): Promise<AppContext> {
     const modalService = new ModalService(appContext);
     appContext.services.modal = modalService;
     logger.debug('ModalService initialized');
+
+    // Initialize NotificationService (no dependencies, UI-only)
+    logger.info('Initializing NotificationService...');
+    const notificationService = new NotificationService(appContext);
+    appContext.services.notification = notificationService;
+    logger.debug('NotificationService initialized');
 
     logger.info('App initialization complete', {
       clientType: clientService.getClientType(),
@@ -321,3 +328,112 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 10);
   }
 }
+
+/**
+ * Test functions for NotificationService
+ * Call from browser console:
+ * - testNotifications() - Test all notification types
+ * - testSystemNotifications() - Test system area
+ * - testChatNotifications() - Test chat area
+ * - testOverlayNotifications() - Test overlay area
+ * - testQuestNotifications() - Test quest area
+ */
+
+// Make test functions globally available
+(window as any).testNotifications = () => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) {
+      console.error('NotificationService not initialized');
+      return;
+    }
+
+    logger.info('Testing all notification types...');
+
+    // System notifications
+    ns.newNotification(0, null, 'System Info: Client initialized');
+    setTimeout(() => ns.newNotification(1, null, 'System Error: Connection failed'), 500);
+    setTimeout(() => ns.newNotification(3, null, 'Command Result: Build successful'), 1000);
+
+    // Chat notifications
+    setTimeout(() => ns.newNotification(10, null, 'Player joined the game'), 1500);
+    setTimeout(() => ns.newNotification(11, 'Max', 'Hello everyone!'), 2000);
+    setTimeout(() => ns.newNotification(12, 'Anna', 'Hi there!'), 2500);
+
+    // Overlay notifications
+    setTimeout(() => ns.newNotification(20, null, 'LEVEL UP!'), 3000);
+    setTimeout(() => ns.newNotification(21, null, 'Achievement unlocked'), 5500);
+
+    // Quest notifications
+    setTimeout(() => ns.newNotification(30, null, 'Quest: Find the Crystal'), 6000);
+    setTimeout(() => ns.newNotification(31, null, 'Target: Search the cave (0/5)'), 6500);
+
+    console.log('Test sequence started. Notifications will appear over 7 seconds.');
+  });
+};
+
+(window as any).testSystemNotifications = () => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) return;
+    ns.newNotification(0, null, 'System Info Message');
+    ns.newNotification(1, null, 'System Error Message');
+    ns.newNotification(3, null, 'Command Result Message');
+  });
+};
+
+(window as any).testChatNotifications = () => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) return;
+    ns.newNotification(10, null, 'Player joined');
+    ns.newNotification(11, 'GroupChat', 'This is a group message');
+    ns.newNotification(12, 'PrivateUser', 'This is a private message');
+  });
+};
+
+(window as any).testOverlayNotifications = () => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) return;
+    ns.newNotification(20, null, 'BIG OVERLAY MESSAGE');
+    setTimeout(() => ns.newNotification(21, null, 'Small overlay message'), 2500);
+  });
+};
+
+(window as any).testQuestNotifications = () => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) return;
+    ns.newNotification(30, null, 'Quest: Explore the Dungeon');
+    ns.newNotification(31, null, 'Kill 10 monsters (3/10)');
+  });
+};
+
+(window as any).clearChat = () => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) return;
+    ns.clearChatNotifications();
+    console.log('Chat notifications cleared');
+  });
+};
+
+(window as any).toggleNotifications = (visible: boolean) => {
+  appContextPromise.then((appContext) => {
+    const ns = appContext.services.notification;
+    if (!ns) return;
+    ns.notificationsVisible(visible);
+    console.log(`Notifications ${visible ? 'enabled' : 'disabled'}`);
+  });
+};
+
+console.log('=== Notification Test Functions ===');
+console.log('testNotifications() - Test all types');
+console.log('testSystemNotifications() - System area');
+console.log('testChatNotifications() - Chat area');
+console.log('testOverlayNotifications() - Overlay area');
+console.log('testQuestNotifications() - Quest area');
+console.log('clearChat() - Clear chat notifications');
+console.log('toggleNotifications(true/false) - Enable/disable');
+console.log('===================================');
