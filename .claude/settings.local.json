@@ -35,7 +35,10 @@
       "Bash(pnpm --filter @nimbus/shared exec tsc --noEmit)",
       "Bash(pnpm --filter nimbus_editors exec vue-tsc:*)",
       "Bash(pnpm exec vue-tsc:*)",
-      "Bash(pnpm --filter @nimbus/server exec tsc:*)"
+      "Bash(pnpm --filter @nimbus/server exec tsc:*)",
+      "WebSearch",
+      "WebFetch(domain:doc.babylonjs.com)",
+      "WebFetch(domain:babylonjs.medium.com)"
     ],
     "deny": [],
     "ask": []

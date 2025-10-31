@@ -78,6 +78,19 @@ export enum TransparencyMode {
 }
 
 /**
+ * Texture wrap mode
+ * Controls texture coordinate wrapping behavior at boundaries
+ */
+export enum WrapMode {
+  /** Clamp coordinates to [0, 1] range */
+  CLAMP = 0,
+  /** Repeat texture infinitely (tiling) */
+  REPEAT = 1,
+  /** Mirror texture at each repeat */
+  MIRROR = 2,
+}
+
+/**
  * Direction flags (bitfield)
  */
 export enum Direction {
@@ -257,12 +270,98 @@ export namespace DirectionHelper {
 
 /**
  * UV mapping coordinates
+ *
+ * This interface serves two purposes:
+ * 1. **Atlas Extraction**: x, y, w, h define which region of a source image to extract
+ * 2. **Mesh Transformation**: us, vs, uo, vo, wu, wv, uc, vc define how the texture is displayed on the mesh
+ *
+ * @example Atlas extraction from tileset
+ * ```typescript
+ * uvMapping: { x: 32, y: 48, w: 16, h: 16 }
+ * ```
+ *
+ * @example Texture tiling and offset on mesh
+ * ```typescript
+ * uvMapping: {
+ *   x: 0, y: 0, w: 16, h: 16,  // Extract full 16x16 texture
+ *   us: 2.0, vs: 2.0,           // Repeat 2x2 on mesh
+ *   uo: 0.25, vo: 0.0           // Offset by 25% horizontally
+ * }
+ * ```
  */
 export interface UVMapping {
+  // ========================================
+  // Atlas Extraction (Source Image Region)
+  // ========================================
+
+  /** X position in source image (pixels) */
   readonly x: number;
+
+  /** Y position in source image (pixels) */
   readonly y: number;
+
+  /** Width of extracted region (pixels) */
   readonly w: number;
+
+  /** Height of extracted region (pixels) */
   readonly h: number;
+
+  // ========================================
+  // Mesh UV Transformation (Display)
+  // Maps to Babylon.js Texture properties
+  // ========================================
+
+  /** uScale - Texture tiling in U direction (Babylon.js: texture.uScale)
+   * @default 1.0
+   * @example 2.0 = repeat texture 2 times horizontally
+   */
+  readonly us?: number;
+
+  /** vScale - Texture tiling in V direction (Babylon.js: texture.vScale)
+   * @default 1.0
+   * @example 2.0 = repeat texture 2 times vertically
+   */
+  readonly vs?: number;
+
+  /** uOffset - Texture offset in U direction (Babylon.js: texture.uOffset)
+   * @default 0.0
+   * @range [0.0, 1.0]
+   * @example 0.25 = shift texture 25% to the right
+   */
+  readonly uo?: number;
+
+  /** vOffset - Texture offset in V direction (Babylon.js: texture.vOffset)
+   * @default 0.0
+   * @range [0.0, 1.0]
+   * @example 0.5 = shift texture 50% down
+   */
+  readonly vo?: number;
+
+  /** wrapU - Wrap mode for U coordinate (Babylon.js: texture.wrapU)
+   * @default 1 (REPEAT)
+   * @see WrapMode
+   */
+  readonly wu?: number;
+
+  /** wrapV - Wrap mode for V coordinate (Babylon.js: texture.wrapV)
+   * @default 1 (REPEAT)
+   * @see WrapMode
+   */
+  readonly wv?: number;
+
+  /** uRotationCenter - Rotation center for U axis (Babylon.js: texture.uRotationCenter)
+   * @default 0.5
+   * @range [0.0, 1.0]
+   * @example 0.5 = center, 0.0 = left edge, 1.0 = right edge
+   */
+  readonly uc?: number;
+
+  /** vRotationCenter - Rotation center for V axis (Babylon.js: texture.vRotationCenter)
+   * @default 0.5
+   * @range [0.0, 1.0]
+   * @example 0.5 = center, 0.0 = top edge, 1.0 = bottom edge
+   */
+  readonly vc?: number;
 }
 
 /**

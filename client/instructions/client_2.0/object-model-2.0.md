@@ -88,9 +88,23 @@ Parameters:
   - ?rotationX
   - ?rotationY
   - ?path (string - path to model file, for shape=model)
-  - textures (map of texture paths with UV mapping info ':x,y,w,h'), key ist ein integer
-    - path
-    - uvMapping (x,y,w,h)
+  - textures (map of texture paths with UV mapping info), key ist ein integer
+    - path (string - Pfad zur Textur-Datei)
+    - ?uvMapping (UV-Mapping für Atlas-Extraktion und Mesh-Transformation)
+      - **Atlas-Extraktion** (welcher Bereich aus dem Source-Image):
+        - x (number - X Position im Source-Image in Pixeln)
+        - y (number - Y Position im Source-Image in Pixeln)
+        - w (number - Breite des Ausschnitts in Pixeln)
+        - h (number - Höhe des Ausschnitts in Pixeln)
+      - **Mesh UV-Transformation** (wie Textur auf Mesh dargestellt wird):
+        - ?us (number - uScale, Texture Tiling U, default: 1.0)
+        - ?vs (number - vScale, Texture Tiling V, default: 1.0)
+        - ?uo (number - uOffset, Texture Offset U, default: 0.0, range: 0.0-1.0)
+        - ?vo (number - vOffset, Texture Offset V, default: 0.0, range: 0.0-1.0)
+        - ?wu (number - wrapU, Wrap Mode U, default: 1=REPEAT, siehe WrapMode)
+        - ?wv (number - wrapV, Wrap Mode V, default: 1=REPEAT, siehe WrapMode)
+        - ?uc (number - uRotationCenter, Rotation Center U, default: 0.5, range: 0.0-1.0)
+        - ?vc (number - vRotationCenter, Rotation Center V, default: 0.5, range: 0.0-1.0)
     - ?rotation (für jede texture(6): 0,90,180,270, flip 0,90,180,270; byte 0=0, 1=90, 2=180, 3=270, + 4 für flip -> 4,5,6,7  )
     - ?samplingMode (nearest, linear, mipmap... ; byte/enum)
     - ?transparencyMode (none, hasAlpha, getAlphaFromRGB; byte/enum)
@@ -148,6 +162,73 @@ Regel für das Rendern: Offsets → Scale → Rotation
 10 = opacity
 
 Ab 100: ggf. für bestimmte shape typen spezielle texturen.
+
+### Wrap Modes
+
+Wrap Modes kontrollieren das Verhalten der Textur-Koordinaten an den Grenzen:
+
+0 = CLAMP - Koordinaten werden auf [0, 1] begrenzt, Randpixel werden gestreckt
+1 = REPEAT - Textur wird unendlich wiederholt (Tiling), Standard für Kachel-Texturen
+2 = MIRROR - Textur wird gespiegelt bei jeder Wiederholung
+
+### UV-Mapping Beispiele
+
+**Beispiel 1: Atlas-Extraktion aus Tileset**
+```json
+{
+  "path": "textures/tileset.png",
+  "uvMapping": {
+    "x": 32,
+    "y": 48,
+    "w": 16,
+    "h": 16
+  }
+}
+```
+Extrahiert einen 16×16 Pixel Bereich aus Position (32, 48) im Tileset.
+
+**Beispiel 2: Textur-Tiling für große Flächen (Gras, Wasser)**
+```json
+{
+  "path": "textures/grass.png",
+  "uvMapping": {
+    "x": 0, "y": 0, "w": 16, "h": 16,
+    "us": 4.0,
+    "vs": 4.0,
+    "wu": 1,
+    "wv": 1
+  }
+}
+```
+Textur wird 4×4 mal wiederholt auf dem Mesh (seamless tiling).
+
+**Beispiel 3: Textur-Offset für Variationen**
+```json
+{
+  "path": "textures/wood.png",
+  "uvMapping": {
+    "x": 0, "y": 0, "w": 32, "h": 32,
+    "uo": 0.25,
+    "vo": 0.125
+  }
+}
+```
+Textur wird um 25% horizontal und 12.5% vertikal verschoben für Variation.
+
+**Beispiel 4: Kombiniertes Atlas-Extraktion + Transformation**
+```json
+{
+  "path": "textures/atlas.png",
+  "uvMapping": {
+    "x": 64, "y": 0, "w": 32, "h": 32,
+    "us": 2.0,
+    "vs": 2.0,
+    "wu": 1,
+    "wv": 1
+  }
+}
+```
+Extrahiert 32×32 Bereich aus Atlas und wiederholt ihn 2×2 auf dem Mesh.
 
 ## BlockMetadata
 

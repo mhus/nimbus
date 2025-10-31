@@ -468,7 +468,7 @@ in 'shared/src/network' die entsprechende Klasse.
 
 [ ] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen
 - der key besteht aus allen teilen von modifier die ein Material unique machen
-- effect(shader), uvMapping, texture path, samplingMode, color, transparency
+- effect(shader), uvMapping, texture path, samplingMode, color, transparency, backFaceCulling, 
 [ ] MaterialService implementieren
 
 ## Start Screen
