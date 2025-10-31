@@ -9,6 +9,7 @@ import type { BaseMessage } from '../BaseMessage';
 import type { Block } from '../../types/Block';
 import type { AreaData } from '../../types/AreaData';
 import type { EntityData } from '../../types/EntityData';
+import type { HeightData } from '../../types/ChunkData';
 
 /**
  * Chunk coordinates (XZ only, Y is complete column)
@@ -17,19 +18,6 @@ export interface ChunkCoordinate {
   cx: number;
   cz: number;
 }
-
-/**
- * Height data for chunk
- * Array of 4 values describing height information
- */
-export type HeightData = readonly [
-  x: number,
-  z: number,
-  maxHeight: number,
-  minHeight: number,
-  groundLevel: number,
-  waterHeight: number
-];
 
 /**
  * Chunk data transfer object
@@ -44,8 +32,8 @@ export interface ChunkDataTransferObject {
   /** Block data */
   b: Block[];
 
-  /** Height data */
-  h: HeightData[];
+  /** Height data, maximum height */
+  h?: HeightData[];
 
   /** Area data with effects */
   a?: AreaData[];

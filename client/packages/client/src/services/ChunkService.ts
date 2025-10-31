@@ -17,7 +17,7 @@ import {
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
-import type { ClientChunk, ClientChunkData } from '../types/ClientChunk';
+import type { ClientChunk, ClientChunkData, ClientHeightData } from '../types/ClientChunk';
 import type { ClientBlock } from '../types/ClientBlock';
 import {
   worldToChunk,
@@ -229,6 +229,89 @@ export class ChunkService {
   }
 
   /**
+   * Process height data for chunk
+   *
+   * Calculates height information for each column (x, z) in the chunk:
+   * - maxHeight: highest block position or world max
+   * - minHeight: lowest block position or world min
+   * - groundLevel: first solid block from bottom
+   * - waterHeight: highest water block (currently undefined, needs BlockType info)
+   *
+   * @param chunkData Raw chunk data from server
+   * @returns Map of position key -> ClientHeightData
+   */
+  private processHeightData(chunkData: ChunkDataTransferObject): Map<string, ClientHeightData> {
+    const heightData = new Map<string, ClientHeightData>();
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+
+    // World bounds for fallback values
+    const worldMaxY = this.appContext.worldInfo?.stop?.y ?? 256;
+    const worldMinY = this.appContext.worldInfo?.start?.y ?? -64;
+
+    // Process existing height data from server if available
+    if (chunkData.h) {
+      for (const entry of chunkData.h) {
+        const [x, z, maxHeight, groundLevel] = entry;
+        const heightKey = `${x},${z}`;
+        // Server provides maxHeight and groundLevel, calculate minHeight from blocks
+        heightData.set(heightKey, [x, z, maxHeight, worldMinY, groundLevel, undefined]);
+      }
+    }
+
+    // Group blocks by column (x, z)
+    const blocksByColumn = new Map<string, Block[]>();
+    if (chunkData.b) {
+      for (const block of chunkData.b) {
+        // Calculate local x, z coordinates within chunk
+        const localX = block.position.x % chunkSize;
+        const localZ = block.position.z % chunkSize;
+        const columnKey = `${localX},${localZ}`;
+
+        if (!blocksByColumn.has(columnKey)) {
+          blocksByColumn.set(columnKey, []);
+        }
+        blocksByColumn.get(columnKey)!.push(block);
+      }
+    }
+
+    // Calculate height data for each position in chunk
+    for (let x = 0; x < chunkSize; x++) {
+      for (let z = 0; z < chunkSize; z++) {
+        const heightKey = `${x},${z}`;
+
+        // Skip if we already have server-provided height data
+        if (heightData.has(heightKey)) {
+          continue;
+        }
+
+        // Get blocks in this column
+        const columnBlocks = blocksByColumn.get(heightKey) || [];
+
+        let maxHeight = worldMaxY;
+        let minHeight = worldMinY;
+        let groundLevel = worldMinY;
+        const waterHeight: number | undefined = undefined; // TODO: needs BlockType service to identify water blocks
+
+        if (columnBlocks.length > 0) {
+          // Find min and max Y positions
+          const yPositions = columnBlocks.map(b => b.position.y);
+          maxHeight = Math.max(...yPositions);
+          minHeight = Math.min(...yPositions);
+
+          // Find ground level: first solid block from bottom (lowest non-air block)
+          // Sort blocks by Y position ascending
+          const sortedBlocks = [...columnBlocks].sort((a, b) => a.position.y - b.position.y);
+          const firstBlock = sortedBlocks[0];
+          groundLevel = firstBlock ? firstBlock.position.y : worldMinY;
+        }
+
+        heightData.set(heightKey, [x, z, maxHeight, minHeight, groundLevel, waterHeight]);
+      }
+    }
+
+    return heightData;
+  }
+  /**
    * Process chunk data from server into ClientChunkData with ClientBlocks
    *
    * @param chunkData Raw chunk data from server
@@ -240,9 +323,11 @@ export class ChunkService {
 
     if (!blockTypeService) {
       logger.warn('BlockTypeService not available - cannot process blocks');
+      const heightData = this.processHeightData(chunkData);
       return {
         transfer: chunkData,
         data: clientBlocksMap,
+        hightData: heightData,
       };
     }
 
@@ -277,9 +362,12 @@ export class ChunkService {
       clientBlocksMap.set(posKey, clientBlock);
     }
 
+    const hightData = this.processHeightData(chunkData);
+
     return {
       transfer: chunkData,
       data: clientBlocksMap,
+      hightData: hightData,
     };
   }
 

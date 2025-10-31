@@ -10,6 +10,17 @@
 import type { Block } from './Block';
 
 /**
+ * Height data for chunk column
+ * Array of 4 values describing height information for a specific XZ position
+ */
+export type HeightData = readonly [
+  x: number,
+  z: number,
+  maxHeight: number,
+  groundLevel: number,
+];
+
+/**
  * Chunk size (blocks per side)
  * Typically 16 or 32, defined by world settings
  */
@@ -48,5 +59,5 @@ export interface ChunkData {
    * Height data per XZ position (optional)
    * Flat array of height values
    */
-  heightData?: number[];
+  heightData?: HeightData[];
 }

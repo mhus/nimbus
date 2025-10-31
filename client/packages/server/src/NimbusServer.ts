@@ -5,7 +5,7 @@
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block } from '@nimbus/shared';
+import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block, type HeightData } from '@nimbus/shared';
 import { loadServerConfig } from './config/ServerConfig';
 import { WorldManager } from './world/WorldManager';
 import { TerrainGenerator } from './world/TerrainGenerator';
@@ -284,17 +284,7 @@ class NimbusServer {
         cx,
         cz,
         b: chunkData.blocks, // Use blocks as-is (already in correct Block format)
-        h: chunkData.heightData
-          ? Array.from({ length: world.chunkSize * world.chunkSize }, (_, i) => {
-              const offset = i * 4;
-              return [
-                chunkData.heightData![offset],
-                chunkData.heightData![offset + 1],
-                chunkData.heightData![offset + 2],
-                chunkData.heightData![offset + 3],
-              ] as [number, number, number, number];
-            })
-          : undefined,
+        h: chunkData.heightData, // HeightData[] already contains x, z, maxHeight, groundLevel
       };
     });
 

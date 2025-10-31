@@ -471,18 +471,28 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 
 ## Block Data
 
-[ ] ClientChunkDate - height Data implementieren
+[x] ClientChunk - height Data implementieren:
+- eine Map<string,HeightData> key: X,Z, also fuer jede column in dem chunk
+- Wenn ein highData geleifert wird, diese uebernehen
+- wenn nicht: tiefster Block finden, das ist 
+> manuell
+
+[ ] Water Level in WorldInfo wird nicht benoetigt, muss auch nicht gerendert werden (RenderService.ts)
 
 ## Material
 
 [ ] mit getMaterialKey(BlockModifier,textureIndex : int) : string einen MaterialKey erzeugen
-- der key besteht aus allen teilen von modifier die ein Material unique machen
- - uvMapping
- - texture path
+- der key besteht aus allen teilen von modifier die ein Material unique machen wird ein key erzeugt der das Material eindeutig beschreibt: 
+ - path
+ - uvMapping: x,y,w,h,uScale,vScale,uOffset,vOffset,wrapU,wrapV,uRotationCenter,vRotationCenter,wAng,uAng,vAng
  - samplingMode
- - transparency
- - backFaceCulling 
-[ ] MaterialService implementieren
+ - transparencyMode
+ - opacity
+ - shaderParameters
+ - effect
+ - color
+- Im MaterialService material laden implementieren, ggf. wird TextureAtlas dadurch obsolate
+- Der ShaderService liefert shader fuer die effekte (werden noch implementiert), aktuell so tun als ob es ein effekt ist.
 
 ## Start Screen
 

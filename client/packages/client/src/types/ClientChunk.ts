@@ -9,14 +9,29 @@ import type { ChunkDataTransferObject } from '@nimbus/shared';
 import type { ClientBlock } from './ClientBlock';
 
 /**
+ * Height data for chunk
+ * Array of 4 values describing height information
+ */
+export type ClientHeightData = readonly [
+  x: number,
+  z: number,
+  maxHeight: number,
+  minHeight: number,
+  groundLevel: number,
+  waterHeight?: number
+];
+
+/**
  * Client-side chunk data with processed blocks
  */
 export interface ClientChunkData {
   /** Original transfer object from server */
   transfer: ChunkDataTransferObject;
 
-  /** Map of block position key -> ClientBlock (with merged modifiers) */
+  /** Map of block position key(x,y,z) -> ClientBlock (with merged modifiers) */
   data: Map<string, ClientBlock>;
+  /** Map of height position key(x,z) -> ClientHeightData */
+  hightData: Map<string, ClientHeightData>;
 }
 
 /**
