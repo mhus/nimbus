@@ -32,6 +32,7 @@ import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
 import { SendCommand } from './commands/SendCommand';
+import { NotificationCommand } from './commands/NotificationCommand';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -87,6 +88,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new InfoCommand(appContext));
     commandService.registerHandler(new ClearCommand());
     commandService.registerHandler(new SendCommand(commandService));
+    commandService.registerHandler(new NotificationCommand(appContext));
     logger.debug('CommandService initialized with example commands');
 
     logger.info('App initialization complete', {

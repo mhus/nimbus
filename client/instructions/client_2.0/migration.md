@@ -455,6 +455,9 @@ in 'shared/src/network' die entsprechende Klasse.
 - Verbinde im 'client' den Handler mit dem CommandService, so das vom Server aus commands im Client aufgerufen werden koennen.
 - Erstelle im 'server' einen CommandHandler 'loop' der die erhaltenen command parameter an den Client zurueck sendet (erster parameter ist dann das command fuer den client).
 
+[x] Erstelle ein Commando im 'client' mit dem eine Nachricht gesetzt wird im NotificationService.
+- NotificationCommand (type,from,message)
+
 ===
 
 ## Block Data
