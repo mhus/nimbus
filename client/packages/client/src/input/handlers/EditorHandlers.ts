@@ -37,6 +37,7 @@ export class EditSelectionRotatorHandler extends InputHandler {
 
   protected onActivate(value: number): void {
     const selectService = this.appContext?.services.select;
+    const notificationService = this.appContext?.services.notification;
 
     if (!selectService) {
       logger.warn('SelectService not available');
@@ -55,6 +56,11 @@ export class EditSelectionRotatorHandler extends InputHandler {
     selectService.autoSelectMode = nextMode;
 
     logger.info(`Selection mode changed: ${currentMode} → ${nextMode}`);
+
+    // Show notification about mode change
+    if (notificationService) {
+      notificationService.newNotification(0, null, `Selection Mode: ${nextMode}`);
+    }
   }
 
   protected onDeactivate(): void {

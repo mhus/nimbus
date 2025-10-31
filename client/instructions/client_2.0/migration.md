@@ -427,7 +427,22 @@ System Info notification mit dem neuen Selection Mode anzeigen.
 === 
 ## Console
 
-Console wird nun ueber die 
+[ ] Console wird nun ueber die Browser Console umgesetzt. d.h. es wird keine Console Ansicht benoetigt.
+- Es wird ein CommandService implementiert.
+- Commandos haben einen namen und parameter, immer erstmal als string.
+- Es wird ein CommandHandler implementiert der abgeleitet wird fuer jedes command.
+  - execute(parameters[]) : result
+  - name() : string gibt name zureueck
+  - description() : string gibt eine kurze beschreibung des commands zurueck
+- CommandHandler koennen asynchron arbeiten, d.h. execute kann ein Promise zurueckgeben.
+- CommandHandler koennen Fehler werfen, die dann in der Console angezeigt werden.
+- CommandHandler koennen ein result object zurueckgeben, das in der Console angezeigt wird.
+- CommandService hat methoden um CommandHandler zu registrieren und commands auszufuehren.
+- Alle CommandHandler werden in CommandService registriert.
+- Im EDITOR Modus werden in der BrowserConsole fuer jedes command eine Funtkion bereitgestellt die mit 'do' geprefixt ist.
+  z.b. command help -> doHelp() funktion in der Console. weather type -> doWeather(parameters... : string) und wird intern zu wether weiter gegeben.
+
+[ ] Command 'server' implementieren
 
 ## Block Data
 
