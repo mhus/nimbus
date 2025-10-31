@@ -7,6 +7,9 @@
  * - Player equipment
  * - Status effects / power-ups
  * - World-specific settings
+ *
+ * Initially, effective values equal base values.
+ * Effective values are modified by power-ups, equipment, status effects, etc.
  */
 
 import type { PlayerInfo } from '@nimbus/shared';
@@ -26,15 +29,21 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   playerId: 'local_player',
   displayName: 'Player',
 
-  // Movement speeds (blocks per second)
-  walkSpeed: 5.0,
-  runSpeed: 7.0,
-  underwaterSpeed: 3.0,
-  crawlSpeed: 2.5,
-  ridingSpeed: 8.0,
+  // Base movement speeds (blocks per second)
+  baseWalkSpeed: 5.0,
+  baseRunSpeed: 7.0,
+  baseUnderwaterSpeed: 3.0,
+  baseCrawlSpeed: 2.5,
+  baseRidingSpeed: 8.0,
+  baseJumpSpeed: 8.0,
 
-  // Physics
-  jumpSpeed: 8.0,
+  // Effective movement speeds (initially same as base)
+  effectiveWalkSpeed: 5.0,
+  effectiveRunSpeed: 7.0,
+  effectiveUnderwaterSpeed: 3.0,
+  effectiveCrawlSpeed: 2.5,
+  effectiveRidingSpeed: 8.0,
+  effectiveJumpSpeed: 8.0,
 
   // Dimensions
   headHeight: 1.6,

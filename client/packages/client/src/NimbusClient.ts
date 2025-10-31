@@ -78,7 +78,8 @@ async function initializeApp(): Promise<AppContext> {
     appContext.playerInfo = { ...DEFAULT_PLAYER_INFO };
     logger.info('PlayerInfo initialized', {
       displayName: appContext.playerInfo.displayName,
-      walkSpeed: appContext.playerInfo.walkSpeed,
+      baseWalkSpeed: appContext.playerInfo.baseWalkSpeed,
+      effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
     });
 
     // Initialize ModalService (no dependencies, UI-only)

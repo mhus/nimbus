@@ -744,14 +744,14 @@ export class PhysicsService {
   /**
    * Jump (Walk mode only)
    *
-   * For PlayerEntity: Uses dynamic jumpSpeed from PlayerInfo
+   * For PlayerEntity: Uses cached effectiveJumpSpeed
    * For other entities: Uses default jumpSpeed
    */
   jump(entity: PhysicsEntity): void {
     if (entity.movementMode === 'walk' && entity.isOnGround) {
       // Get jump speed based on entity type
       const jumpSpeed = isPlayerEntity(entity)
-        ? entity.playerInfo.jumpSpeed
+        ? entity.effectiveJumpSpeed // Use cached effective value
         : this.defaultJumpSpeed;
 
       entity.velocity.y = jumpSpeed;
@@ -797,27 +797,27 @@ export class PhysicsService {
   /**
    * Get current move speed for entity
    *
-   * Returns appropriate speed based on movement mode, underwater state, and PlayerInfo.
-   * For PlayerEntity: Uses dynamic values from PlayerInfo
+   * Returns appropriate speed based on movement mode, underwater state, and PlayerEntity cached values.
+   * For PlayerEntity: Uses cached effective values (updated via 'playerInfo:updated' event)
    * For other entities: Uses default constants
    *
    * TODO: Add support for sprint/crawl/riding states
    */
   getMoveSpeed(entity: PhysicsEntity): number {
     if (isPlayerEntity(entity)) {
-      // Player: Use dynamic PlayerInfo values
+      // Player: Use cached effective values (performance optimized)
       if (this.isUnderwater) {
-        return entity.playerInfo.underwaterSpeed;
+        return entity.effectiveUnderwaterSpeed;
       }
 
       // TODO: Check player state for speed modifiers
-      // if (entity.isSprinting) return entity.playerInfo.runSpeed;
-      // if (entity.isCrouching) return entity.playerInfo.crawlSpeed;
-      // if (entity.isRiding) return entity.playerInfo.ridingSpeed;
+      // if (entity.isSprinting) return entity.effectiveRunSpeed;
+      // if (entity.isCrouching) return entity.effectiveCrawlSpeed;
+      // if (entity.isRiding) return entity.effectiveRidingSpeed;
 
       return entity.movementMode === 'walk'
-        ? entity.playerInfo.walkSpeed
-        : entity.playerInfo.runSpeed; // Fly mode uses run speed
+        ? entity.effectiveWalkSpeed
+        : entity.effectiveRunSpeed; // Fly mode uses run speed
     } else {
       // Other entities: Use default constants
       if (this.isUnderwater) {
@@ -826,31 +826,6 @@ export class PhysicsService {
 
       return entity.movementMode === 'walk' ? this.defaultWalkSpeed : this.defaultFlySpeed;
     }
-  }
-
-  /**
-   * Update PlayerInfo for a PlayerEntity
-   *
-   * Allows dynamic modification of player properties during gameplay
-   * (e.g., power-ups, status effects, equipment changes)
-   *
-   * @param entity PlayerEntity to update
-   * @param updates Partial PlayerInfo with values to update
-   */
-  updatePlayerInfo(entity: PhysicsEntity, updates: Partial<import('@nimbus/shared').PlayerInfo>): void {
-    if (!isPlayerEntity(entity)) {
-      logger.warn('Cannot update PlayerInfo for non-player entity', {
-        entityId: entity.entityId,
-      });
-      return;
-    }
-
-    Object.assign(entity.playerInfo, updates);
-
-    logger.info('PlayerInfo updated', {
-      entityId: entity.entityId,
-      updates,
-    });
   }
 
   /**

@@ -515,8 +515,6 @@ Die Strukturen sollten nicht genutzt worden sien, bitte vorher pruefen.
 - Wind Shader in ShaderService bei effekt 'wind' nutzen
 - Wind parameter am BlockModifier auslesen und nutzen fuer den Block
 
-===
-
 ## Player
 
 [?] Player info anlegen
@@ -537,7 +535,7 @@ aktuell standartwerte uebernehmen.
 Im PhysicsService die Werte nutzen fuer die Player-Physik. Am besten den Player in 
 die PlayerEntity laden, denn es kann noch andere PlayerEntity akteure geben.
 
-[ ] Anpassung PlayerInfo
+[?] Anpassung PlayerInfo
 Die Anforderungen muessen nochmal ueberdacht werden. Attribute wie speed ergeben sich aus
 vielen effekten, deshalb muss der PlayerInfo nochmal angepasst werden.
 zusaetzlich
@@ -547,9 +545,19 @@ Das sollte dann uebernommen werden.
 
 Ausserdem sind viele Services n den PlayerInfo und dne Updates interessiert, es ist schlauer
 ein event zu machen, wenn sich PlayerInfo geandert hat und alle die es interessiert bekommen ein event.
-- PhysicsService - geschwindigkeit
+- PhysicsService - geschwindigkeit Die werte sollten in PlayerEntity uebernommen werden (copy).
 - CameraService - Augen Hoehe
 - SelectionService - Augen Hoehe (aktuell selektiert der SelectionService am ground, das ist zu tief)
+
+[ ] PlayerInfo muss in das packet 'shared' verschoben werden.
+[ ] Umbenennen von headHeight in eyeHeight. ?
+[ ] SelectionService benutzt headHeight aus PlayerInfo um die selection hoehe zu bestimmen.
+[ ] Commando im client, das eine neue PlayerInfo setzt.
+
+[ ] Commando im client das teleportiert, dafuer teleport aus Netzwerk entfernen. Das Commando kann gleich eine System 
+nachricht beinhalten (System Info).
+
+===
 
 ## Start Screen
 

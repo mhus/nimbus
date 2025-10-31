@@ -63,6 +63,9 @@ export class SelectService {
   private highlightMesh?: Mesh;
   private highlightMaterial?: StandardMaterial;
 
+  // Cached player head height for raycast origin (updated via event)
+  private playerHeadHeight: number = 1.6; // Default value
+
   constructor(
     appContext: AppContext,
     chunkService: ChunkService,
@@ -74,12 +77,28 @@ export class SelectService {
     this.playerService = playerService;
     this.scene = scene;
 
+    // Initialize player head height from PlayerInfo
+    if (appContext.playerInfo) {
+      this.playerHeadHeight = appContext.playerInfo.headHeight;
+    }
+
+    // Subscribe to PlayerInfo updates
+    playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
+      // Update cached head height for raycast
+      this.playerHeadHeight = info.headHeight;
+      logger.debug('SelectService: headHeight updated', {
+        headHeight: this.playerHeadHeight,
+      });
+    });
+
     // Initialize highlighting if scene is available
     if (scene) {
       this.initializeHighlight();
     }
 
-    logger.info('SelectService initialized');
+    logger.info('SelectService initialized', {
+      headHeight: this.playerHeadHeight,
+    });
   }
 
   /**
@@ -322,6 +341,10 @@ export class SelectService {
   /**
    * Get selected block using current player position and rotation
    *
+   * FIX: Raycast now starts from eye level (player.position + headHeight)
+   * instead of from feet (player.position). This gives correct block selection
+   * matching where the player is actually looking.
+   *
    * @param mode Selection mode
    * @param radius Maximum search distance
    * @returns ClientBlock or null
@@ -331,8 +354,12 @@ export class SelectService {
     radius: number = 5.0
   ): ClientBlock | null {
     try {
-      // Get player position
-      const position = this.playerService.getPosition();
+      // Get player feet position
+      const feetPosition = this.playerService.getPosition();
+
+      // FIX: Start raycast from eye level, not feet!
+      const eyePosition = feetPosition.clone();
+      eyePosition.y += this.playerHeadHeight; // Add cached head height
 
       // Get camera rotation from CameraService via reflection
       // (PlayerService doesn't expose rotation directly)
@@ -344,7 +371,8 @@ export class SelectService {
 
       const rotation = cameraService.getRotation();
 
-      return this.getSelectedBlock(mode, position, rotation, radius);
+      // Use eye position for raycast (not feet!)
+      return this.getSelectedBlock(mode, eyePosition, rotation, radius);
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.getSelectedBlockFromPlayer', {
         mode,

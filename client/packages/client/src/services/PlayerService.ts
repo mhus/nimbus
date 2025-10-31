@@ -61,6 +61,13 @@ export class PlayerService {
       movementMode: 'walk' as MovementMode,
       isOnGround: false,
       playerInfo: appContext.playerInfo,
+      // Initialize cached effective values from PlayerInfo
+      effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
+      effectiveRunSpeed: appContext.playerInfo.effectiveRunSpeed,
+      effectiveUnderwaterSpeed: appContext.playerInfo.effectiveUnderwaterSpeed,
+      effectiveCrawlSpeed: appContext.playerInfo.effectiveCrawlSpeed,
+      effectiveRidingSpeed: appContext.playerInfo.effectiveRidingSpeed,
+      effectiveJumpSpeed: appContext.playerInfo.effectiveJumpSpeed,
     };
 
     // Initialize last position for change detection
@@ -229,13 +236,29 @@ export class PlayerService {
   /**
    * Update player info dynamically (for power-ups, equipment, status effects)
    *
+   * Updates PlayerInfo and emits 'playerInfo:updated' event so all services
+   * can react to the changes (PhysicsService, CameraService, SelectService, etc.)
+   *
    * @param updates Partial PlayerInfo with values to update
    */
   updatePlayerInfo(updates: Partial<import('@nimbus/shared').PlayerInfo>): void {
+    // Update PlayerInfo
     Object.assign(this.playerEntity.playerInfo, updates);
+
+    // Update cached effective values on entity
+    this.playerEntity.effectiveWalkSpeed = this.playerEntity.playerInfo.effectiveWalkSpeed;
+    this.playerEntity.effectiveRunSpeed = this.playerEntity.playerInfo.effectiveRunSpeed;
+    this.playerEntity.effectiveUnderwaterSpeed = this.playerEntity.playerInfo.effectiveUnderwaterSpeed;
+    this.playerEntity.effectiveCrawlSpeed = this.playerEntity.playerInfo.effectiveCrawlSpeed;
+    this.playerEntity.effectiveRidingSpeed = this.playerEntity.playerInfo.effectiveRidingSpeed;
+    this.playerEntity.effectiveJumpSpeed = this.playerEntity.playerInfo.effectiveJumpSpeed;
+
     logger.debug('PlayerInfo updated', { updates });
 
-    // Sync camera in case headHeight changed
+    // Emit event so all services can react
+    this.emit('playerInfo:updated', this.playerEntity.playerInfo);
+
+    // Sync camera in case headHeight changed (direct update for immediate feedback)
     this.syncCameraToPlayer();
   }
 

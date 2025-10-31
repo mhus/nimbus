@@ -4,6 +4,11 @@
  * Contains all player-specific parameters that can change dynamically
  * during gameplay (e.g., through power-ups, status effects, equipment).
  *
+ * **Base vs Effective Values:**
+ * - Base values: Original unmodified values
+ * - Effective values: Base + modifiers (power-ups, equipment, status effects)
+ * - Services use effective values for actual gameplay
+ *
  * Movement speeds are in blocks per second.
  */
 
@@ -18,36 +23,57 @@ export interface PlayerInfo {
   displayName: string;
 
   // ============================================
-  // Movement Speeds (blocks per second)
+  // Base Movement Speeds (blocks per second)
+  // Original unmodified values
   // ============================================
 
-  /** Normal walking speed */
-  walkSpeed: number;
+  /** Base normal walking speed */
+  baseWalkSpeed: number;
 
-  /** Sprint/running speed (faster than walk) */
-  runSpeed: number;
+  /** Base sprint/running speed */
+  baseRunSpeed: number;
 
-  /** Swimming/underwater movement speed */
-  underwaterSpeed: number;
+  /** Base swimming/underwater movement speed */
+  baseUnderwaterSpeed: number;
 
-  /** Sneaking/crouching speed (slower, stealthy) */
-  crawlSpeed: number;
+  /** Base sneaking/crouching speed */
+  baseCrawlSpeed: number;
 
-  /** Speed when riding a mount or vehicle */
-  ridingSpeed: number;
+  /** Base speed when riding a mount or vehicle */
+  baseRidingSpeed: number;
+
+  /** Base jump vertical velocity */
+  baseJumpSpeed: number;
 
   // ============================================
-  // Physics Properties
+  // Effective Movement Speeds (blocks per second)
+  // Base + modifiers (power-ups, equipment, status effects)
+  // These values are used by PhysicsService
   // ============================================
 
-  /** Jump vertical velocity (determines jump height with gravity) */
-  jumpSpeed: number;
+  /** Effective walking speed (base + modifiers) */
+  effectiveWalkSpeed: number;
+
+  /** Effective sprint/running speed (base + modifiers) */
+  effectiveRunSpeed: number;
+
+  /** Effective swimming/underwater speed (base + modifiers) */
+  effectiveUnderwaterSpeed: number;
+
+  /** Effective sneaking/crouching speed (base + modifiers) */
+  effectiveCrawlSpeed: number;
+
+  /** Effective riding speed (base + modifiers) */
+  effectiveRidingSpeed: number;
+
+  /** Effective jump vertical velocity (base + modifiers) */
+  effectiveJumpSpeed: number;
 
   // ============================================
   // Player Dimensions
   // ============================================
 
-  /** Player head/eye height in blocks (for camera position) */
+  /** Player head/eye height in blocks (for camera position and raycast) */
   headHeight: number;
 
   // ============================================
