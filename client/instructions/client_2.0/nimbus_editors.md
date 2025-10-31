@@ -725,7 +725,7 @@ closeModal(referenz), closeAll()
   - EditSelectionRotator auf Key '.': Wenn '.' gedrueck wird, springt der Modus immer weiter und fängt nach ALL wieder bei NONE an.
   - EditorActivate auf Key '/': Wenn '/' gedrueckt wird, wird ein IFrame mit der editorUrl vom NetzwerkService geladen.
 
-[ ] Mehr IFrame Features
+[?] Mehr IFrame Features
 - Wenn IFrame auf gemacht werden, soll ein name mitgegeben werden, der name ist dann der referenz key
 - Wenn ein frame mit dem referenz key schon da ist, wird der aktualisiert (neue url?), aber kein neuer aauf gemacht
 - SIZE_PRESETS sollen nicht nur die size, sondern auch die position mit beinhalten: 
@@ -808,5 +808,141 @@ IFrmame:
   style="border:0; width:100%; height:600px;"
 ></iframe>
 ```
-  
-  
+
+```text
+⏺ Alle IFrame-Features wurden erfolgreich implementiert! Hier ist eine Zusammenfassung der Änderungen:
+
+  Implementierte Features
+
+  1. Referenz-Keys für IFrames
+
+  - Beim Öffnen eines IFrames kann ein referenceKey mitgegeben werden
+  - Wenn ein Frame mit diesem Key bereits existiert, wird er wiederverwendet und die URL aktualisiert
+  - Beispiel: modalService.openModal('editor', 'Editor', url, ...)
+
+  2. Erweiterte SIZE_PRESETS
+
+  Neue Presets mit Position und Größe:
+  - Seitenpanels: left, right (50% Breite, volle Höhe)
+  - Oben/Unten: top, bottom (volle Breite, 50% Höhe)
+  - Zentriert: center_small, center_medium, center_large
+  - Quadranten: left_top, left_bottom, right_top, right_bottom
+  - Alle mit 20px Margins auf allen Seiten
+
+  3. Bitflags für Optionen
+
+  ModalFlags.CLOSEABLE    // Modal kann geschlossen werden
+  ModalFlags.NO_BORDERS   // Keine Ränder (kein Titel, kein Close-Button)
+  ModalFlags.BREAK_OUT    // Break-out-Button anzeigen
+  Verwendung: ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT
+
+  4. embedded=true Parameter
+
+  - Wird automatisch an alle IFrame-URLs angehängt
+  - Bei Break-out wird embedded=false verwendet
+
+  5. postMessage-Kommunikation
+
+  Der IFrameHelper bietet folgende Funktionen für IFrame-Content:
+  IFrameHelper.notifyReady()
+  IFrameHelper.requestClose(reason)
+  IFrameHelper.requestPositionChange(preset)
+  IFrameHelper.sendNotification(type, from, message)
+  IFrameHelper.isEmbedded()
+  IFrameHelper.isInIFrame()
+
+  6. Break-out-Funktionalität
+
+  - Button öffnet die URL in einem neuen Fenster mit embedded=false
+  - Original-Modal wird automatisch geschlossen
+
+  Geänderte Dateien
+
+  Neue Dateien:
+  - /client/packages/client/src/services/IFrameHelper.ts - Helper für IFrame-Kommunikation
+  - /client/packages/client/src/services/index.ts - Service-Exports
+  - /client/packages/client/src/services/MODAL_SERVICE_USAGE.md - Dokumentation
+
+  Aktualisierte Dateien:
+  - /client/packages/client/src/types/Modal.ts - Neue Types und Enums
+  - /client/packages/client/src/services/ModalService.ts - Erweiterte Implementierung
+  - /client/packages/client/src/types/index.ts - Modal-Exports hinzugefügt
+  - /client/packages/client/src/input/handlers/EditorHandlers.ts - Neue API verwendet
+
+  Verwendungsbeispiel
+
+  import { ModalService, ModalFlags } from '@nimbus/client/services';
+
+  // Modal öffnen mit allen Features
+  const modal = modalService.openModal(
+    'editor',                          // referenceKey
+    'Block Editor',                    // title
+    'http://localhost:8080/editor',   // url
+    'left',                            // preset
+    ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT  // flags
+  );
+
+  // Im IFrame:
+  import { IFrameHelper } from '@nimbus/client/services';
+
+  IFrameHelper.notifyReady();
+  IFrameHelper.requestPositionChange('right');
+  IFrameHelper.sendNotification('info', 'Editor', 'Saved');
+  IFrameHelper.requestClose('done');
+
+  Die TypeScript-Kompilierung wurde erfolgreich getestet. Die vollständige Dokumentation finden Sie in MODAL_SERVICE_USAGE.md (src/services/ModalService.ts:7, src/types/Modal.ts:57, src/services/IFrameHelper.ts:1).
+
+⏺ Perfekt! Ich habe das ModalSizePreset von einem String-Union-Type in ein Enum umgewandelt.
+
+  Änderungen:
+
+  1. Enum statt Type
+
+  export enum ModalSizePreset {
+    LEFT = 'left',
+    RIGHT = 'right',
+    TOP = 'top',
+    BOTTOM = 'bottom',
+    CENTER_SMALL = 'center_small',
+    CENTER_MEDIUM = 'center_medium',
+    CENTER_LARGE = 'center_large',
+    LEFT_TOP = 'left_top',
+    LEFT_BOTTOM = 'left_bottom',
+    RIGHT_TOP = 'right_top',
+    RIGHT_BOTTOM = 'right_bottom',
+  }
+
+  2. Verwendung
+
+  // Vorher (String):
+  modalService.openModal('editor', 'Editor', url, 'left', ModalFlags.CLOSEABLE);
+
+  // Nachher (Enum):
+  modalService.openModal('editor', 'Editor', url, ModalSizePreset.LEFT, ModalFlags.CLOSEABLE);
+
+  3. Vorteile:
+
+  - Typsicherheit: Tippfehler wie "rigth-pane" werden zur Compile-Zeit erkannt
+  - Autovervollständigung: IDE kann alle verfügbaren Presets vorschlagen
+  - Refactoring: Einfacher umzubenennen
+  - Dokumentation: Jeder Enum-Wert hat einen Kommentar
+
+  4. Geänderte Dateien:
+
+  - ✅ Modal.ts - Enum definiert
+  - ✅ ModalService.ts - SIZE_PRESETS und Default-Wert aktualisiert
+  - ✅ IFrameHelper.ts - Import aktualisiert
+  - ✅ EditorHandlers.ts - Verwendung aktualisiert (Tippfehler korrigiert!)
+  - ✅ MODAL_SERVICE_USAGE.md - Dokumentation aktualisiert
+
+  Die TypeScript-Kompilierung ist erfolgreich! (Modal.ts:41, ModalService.ts:25, EditorHandlers.ts:133)
+
+```
+
+[ ] Erstelle in nimbus_editors ein Modul/Component, das diese Schnittstelle aus Kind/IFrame sicht bereitstellt und dort genutzt werden kann
+ - isEmbedded()
+ - closeModal(reason) - schliesst dieses Modal
+ - changePosition('name of preset') - Ändert die Position dieses Modals
+ - notification(type, from, message) wird an den NotificationServcie geschickt.
+ - Du kannst gemeinsamme Constanten 'ModalSizePreset, ModalFlags' in das package 'shared' verschieben, damit client und nimbus_editors darauf zugreifen keonnen.
+

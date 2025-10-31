@@ -458,6 +458,6 @@ export class NetworkService {
     // Add coordinates as query parameters
     const separator = editorUrl.includes('?') ? '&' : '?';
     const worldId = this.appContext.worldInfo?.worldId;
-    return `${editorUrl}block-editor.html${separator}embedded=true&world=${worldId}&x=${x}&y=${y}&z=${z}`;
+    return `${editorUrl}block-editor.html${separator}world=${worldId}&x=${x}&y=${y}&z=${z}`;
   }
 }

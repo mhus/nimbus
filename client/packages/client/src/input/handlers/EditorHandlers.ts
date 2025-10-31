@@ -10,6 +10,7 @@ import { InputHandler } from '../InputHandler';
 import type { PlayerService } from '../../services/PlayerService';
 import type { AppContext } from '../../AppContext';
 import { SelectMode } from '../../services/SelectService';
+import { ModalFlags, ModalSizePreset } from '../../types/Modal';
 
 const logger = getLogger('EditorHandlers');
 
@@ -126,14 +127,11 @@ export class EditorActivateHandler extends InputHandler {
     logger.info('Opening block editor', { position: pos });
 
     modalService.openModal(
+      'block-editor', // referenceKey - reuse same modal for editor
       `Block Editor (${pos.x}, ${pos.y}, ${pos.z})`,
       editorUrl,
-      {
-        size: 'large',
-        position: 'center',
-        closeOnEsc: true,
-        closeOnBackdrop: false, // Don't close accidentally while editing
-      }
+      ModalSizePreset.RIGHT,
+      ModalFlags.CLOSEABLE
     );
   }
 

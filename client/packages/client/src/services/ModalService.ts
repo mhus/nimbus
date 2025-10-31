@@ -11,18 +11,69 @@ import type {
   ModalReference,
   ModalSize,
   ModalPosition,
-  ModalSizePreset,
+  ModalSizePositionPreset,
+  IFrameMessageFromChild,
 } from '../types/Modal';
+import { ModalFlags, IFrameMessageType, ModalSizePreset } from '../types/Modal';
 
 const logger = getLogger('ModalService');
 
 /**
- * Default modal size presets
+ * Default modal size and position presets
+ * Margins: 20px on all sides
  */
-const SIZE_PRESETS: Record<ModalSizePreset, ModalSize> = {
-  small: { width: '600px', height: '400px' },
-  medium: { width: '800px', height: '600px' },
-  large: { width: '90%', height: '90%' },
+const SIZE_PRESETS: Record<ModalSizePreset, ModalSizePositionPreset> = {
+  // Side panels (full height, with margins)
+  [ModalSizePreset.LEFT]: {
+    size: { width: 'calc(50% - 30px)', height: 'calc(100vh - 40px)' },
+    position: { x: '20px', y: '20px' },
+  },
+  [ModalSizePreset.RIGHT]: {
+    size: { width: 'calc(50% - 30px)', height: 'calc(100vh - 40px)' },
+    position: { x: 'calc(50% + 10px)', y: '20px' },
+  },
+
+  // Top/Bottom panels (full width, with margins)
+  [ModalSizePreset.TOP]: {
+    size: { width: 'calc(100vw - 40px)', height: 'calc(50% - 30px)' },
+    position: { x: '20px', y: '20px' },
+  },
+  [ModalSizePreset.BOTTOM]: {
+    size: { width: 'calc(100vw - 40px)', height: 'calc(50% - 30px)' },
+    position: { x: '20px', y: 'calc(50% + 10px)' },
+  },
+
+  // Center (small, medium, large)
+  [ModalSizePreset.CENTER_SMALL]: {
+    size: { width: '600px', height: '400px' },
+    position: { x: 'center', y: 'center' },
+  },
+  [ModalSizePreset.CENTER_MEDIUM]: {
+    size: { width: '800px', height: '600px' },
+    position: { x: 'center', y: 'center' },
+  },
+  [ModalSizePreset.CENTER_LARGE]: {
+    size: { width: '90vw', height: '90vh' },
+    position: { x: 'center', y: 'center' },
+  },
+
+  // Quadrants (with margins)
+  [ModalSizePreset.LEFT_TOP]: {
+    size: { width: 'calc(50% - 30px)', height: 'calc(50% - 30px)' },
+    position: { x: '20px', y: '20px' },
+  },
+  [ModalSizePreset.LEFT_BOTTOM]: {
+    size: { width: 'calc(50% - 30px)', height: 'calc(50% - 30px)' },
+    position: { x: '20px', y: 'calc(50% + 10px)' },
+  },
+  [ModalSizePreset.RIGHT_TOP]: {
+    size: { width: 'calc(50% - 30px)', height: 'calc(50% - 30px)' },
+    position: { x: 'calc(50% + 10px)', y: '20px' },
+  },
+  [ModalSizePreset.RIGHT_BOTTOM]: {
+    size: { width: 'calc(50% - 30px)', height: 'calc(50% - 30px)' },
+    position: { x: 'calc(50% + 10px)', y: 'calc(50% + 10px)' },
+  },
 };
 
 /**
@@ -34,15 +85,23 @@ const SIZE_PRESETS: Record<ModalSizePreset, ModalSize> = {
  * - Configurable position (center or absolute)
  * - Close via X button, ESC key, or backdrop click
  * - Multiple modals support with z-index management
+ * - Reference key support for reusing modals
+ * - Bitflags for options (CLOSEABLE, NO_BORDERS, BREAK_OUT)
+ * - PostMessage communication with IFrame content
  */
 export class ModalService {
   private appContext: AppContext;
   private modals: Map<string, ModalReference> = new Map();
+  private modalsByReferenceKey: Map<string, ModalReference> = new Map();
   private nextModalId: number = 1;
   private baseZIndex: number = 10000;
+  private messageHandler: ((event: MessageEvent<IFrameMessageFromChild>) => void) | null = null;
 
   constructor(appContext: AppContext) {
     this.appContext = appContext;
+
+    // Setup postMessage listener for IFrame communication
+    this.setupPostMessageListener();
 
     logger.info('ModalService initialized');
   }
@@ -50,56 +109,83 @@ export class ModalService {
   /**
    * Open a modal with IFrame content
    *
+   * @param referenceKey Reference key for reusing modals (optional)
    * @param title Modal title
    * @param url URL to load in IFrame
-   * @param options Modal options (size, position, behavior)
+   * @param preset Size/position preset (optional, defaults to 'center_medium')
+   * @param flags Behavior flags (optional, bitflags: CLOSEABLE, NO_BORDERS, BREAK_OUT)
    * @returns Modal reference for closing
    */
-  openModal(title: string, url: string, options?: ModalOptions): ModalReference {
+  openModal(
+    referenceKey: string | null,
+    title: string,
+    url: string,
+    preset?: ModalSizePreset,
+    flags: number = ModalFlags.CLOSEABLE
+  ): ModalReference {
     try {
+      // Check if modal with this reference key already exists
+      if (referenceKey) {
+        const existingModal = this.modalsByReferenceKey.get(referenceKey);
+        if (existingModal) {
+          // Update existing modal with new URL
+          logger.debug('Reusing existing modal', { referenceKey, url });
+          this.updateModalURL(existingModal, url);
+          return existingModal;
+        }
+      }
+
       // Generate unique modal ID
       const id = `modal-${this.nextModalId++}`;
 
-      // Resolve options with defaults
-      const resolvedOptions: Required<ModalOptions> = {
-        size: options?.size ?? 'medium',
-        position: options?.position ?? 'center',
-        closeOnBackdrop: options?.closeOnBackdrop ?? true,
-        closeOnEsc: options?.closeOnEsc ?? true,
-      };
+      // Use preset or default
+      const sizePreset = preset ?? ModalSizePreset.CENTER_MEDIUM;
+
+      // Add embedded=true to URL
+      const embeddedUrl = this.addEmbeddedParameter(url, true);
 
       // Create modal DOM structure
-      const { backdrop, modalContainer } = this.createModalDOM(
+      const { backdrop, modalContainer, iframe } = this.createModalDOM(
         id,
         title,
-        url,
-        resolvedOptions
+        embeddedUrl,
+        sizePreset,
+        flags
       );
 
       // Create modal reference
       const modalRef: ModalReference = {
         id,
+        referenceKey: referenceKey ?? undefined,
         element: backdrop,
-        close: () => this.closeModal(modalRef),
+        iframe,
+        close: (reason?: string) => this.closeModal(modalRef, reason),
+        changePosition: (newPreset: ModalSizePreset) =>
+          this.changeModalPosition(modalRef, newPreset),
       };
 
       // Store reference
       this.modals.set(id, modalRef);
+      if (referenceKey) {
+        this.modalsByReferenceKey.set(referenceKey, modalRef);
+      }
 
       // Setup event handlers
-      this.setupEventHandlers(modalRef, resolvedOptions);
+      this.setupEventHandlers(modalRef, flags);
 
       // Add to DOM
       document.body.appendChild(backdrop);
 
-      logger.debug('Modal opened', { id, title, url, options: resolvedOptions });
+      logger.debug('Modal opened', { id, referenceKey, title, url, preset: sizePreset, flags });
 
       return modalRef;
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openModal', {
+        referenceKey,
         title,
         url,
-        options,
+        preset,
+        flags,
       });
     }
   }
@@ -108,8 +194,9 @@ export class ModalService {
    * Close a specific modal
    *
    * @param ref Modal reference to close
+   * @param reason Optional reason for closing
    */
-  closeModal(ref: ModalReference): void {
+  closeModal(ref: ModalReference, reason?: string): void {
     try {
       // Remove from DOM
       if (ref.element.parentNode) {
@@ -118,10 +205,20 @@ export class ModalService {
 
       // Remove from tracking
       this.modals.delete(ref.id);
+      if (ref.referenceKey) {
+        this.modalsByReferenceKey.delete(ref.referenceKey);
+      }
 
-      logger.debug('Modal closed', { id: ref.id });
+      // Cleanup event listener
+      const escHandler = (ref as any)._escHandler;
+      if (escHandler) {
+        document.removeEventListener('keydown', escHandler);
+        delete (ref as any)._escHandler;
+      }
+
+      logger.debug('Modal closed', { id: ref.id, referenceKey: ref.referenceKey, reason });
     } catch (error) {
-      ExceptionHandler.handle(error, 'ModalService.closeModal', { ref });
+      ExceptionHandler.handle(error, 'ModalService.closeModal', { ref, reason });
     }
   }
 
@@ -156,10 +253,21 @@ export class ModalService {
     id: string,
     title: string,
     url: string,
-    options: Required<ModalOptions>
-  ): { backdrop: HTMLElement; modalContainer: HTMLElement } {
+    preset: ModalSizePreset,
+    flags: number
+  ): { backdrop: HTMLElement; modalContainer: HTMLElement; iframe: HTMLIFrameElement } {
     // Calculate z-index (each modal gets higher z-index)
     const zIndex = this.baseZIndex + this.modals.size * 2;
+
+    // Get preset configuration
+    const presetConfig = SIZE_PRESETS[preset];
+    const size = presetConfig.size;
+    const position = presetConfig.position;
+
+    // Check flags
+    const isCloseable = (flags & ModalFlags.CLOSEABLE) !== 0;
+    const noBorders = (flags & ModalFlags.NO_BORDERS) !== 0;
+    const hasBreakOut = (flags & ModalFlags.BREAK_OUT) !== 0;
 
     // Create backdrop
     const backdrop = document.createElement('div');
@@ -167,9 +275,8 @@ export class ModalService {
     backdrop.id = `${id}-backdrop`;
     backdrop.style.zIndex = zIndex.toString();
 
-    // Determine if centered or absolute positioning
-    const isCentered = options.position === 'center';
-
+    // Determine if centered
+    const isCentered = position.x === 'center' && position.y === 'center';
     if (isCentered) {
       backdrop.classList.add('nimbus-modal-centered');
     }
@@ -179,57 +286,68 @@ export class ModalService {
     modalContainer.className = 'nimbus-modal-container';
     modalContainer.id = id;
 
+    // Apply NO_BORDERS styling
+    if (noBorders) {
+      modalContainer.classList.add('nimbus-modal-no-borders');
+    }
+
     // Apply size
-    const size = this.resolveSize(options.size);
     modalContainer.style.width = size.width;
     modalContainer.style.height = size.height;
 
-    // Apply position (only for non-centered modals)
-    if (!isCentered) {
-      const position = options.position as ModalPosition;
-      this.applyPosition(modalContainer, position);
+    // Apply position
+    this.applyPosition(modalContainer, position);
+
+    // Create header (unless NO_BORDERS)
+    if (!noBorders) {
+      const header = document.createElement('div');
+      header.className = 'nimbus-modal-header';
+
+      // Title
+      const titleElement = document.createElement('h2');
+      titleElement.className = 'nimbus-modal-title';
+      titleElement.textContent = title;
+      header.appendChild(titleElement);
+
+      // Buttons container
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.className = 'nimbus-modal-buttons';
+
+      // Break-out button (if enabled)
+      if (hasBreakOut) {
+        const breakOutButton = document.createElement('button');
+        breakOutButton.className = 'nimbus-modal-breakout';
+        breakOutButton.innerHTML = '&#x2197;'; // ↗ arrow
+        breakOutButton.setAttribute('aria-label', 'Open in new window');
+        breakOutButton.setAttribute('data-url', url);
+        buttonsContainer.appendChild(breakOutButton);
+      }
+
+      // Close button (if closeable)
+      if (isCloseable) {
+        const closeButton = document.createElement('button');
+        closeButton.className = 'nimbus-modal-close';
+        closeButton.innerHTML = '&times;';
+        closeButton.setAttribute('aria-label', 'Close modal');
+        buttonsContainer.appendChild(closeButton);
+      }
+
+      header.appendChild(buttonsContainer);
+      modalContainer.appendChild(header);
     }
-
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'nimbus-modal-header';
-
-    // Title
-    const titleElement = document.createElement('h2');
-    titleElement.className = 'nimbus-modal-title';
-    titleElement.textContent = title;
-
-    // Close button
-    const closeButton = document.createElement('button');
-    closeButton.className = 'nimbus-modal-close';
-    closeButton.innerHTML = '&times;';
-    closeButton.setAttribute('aria-label', 'Close modal');
-
-    header.appendChild(titleElement);
-    header.appendChild(closeButton);
 
     // Create IFrame
     const iframe = document.createElement('iframe');
     iframe.className = 'nimbus-modal-iframe';
     iframe.src = url;
     iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups');
+    iframe.setAttribute('data-modal-id', id);
 
     // Assemble structure
-    modalContainer.appendChild(header);
     modalContainer.appendChild(iframe);
     backdrop.appendChild(modalContainer);
 
-    return { backdrop, modalContainer };
-  }
-
-  /**
-   * Resolve size from preset or custom
-   */
-  private resolveSize(size: ModalSizePreset | ModalSize): ModalSize {
-    if (typeof size === 'string') {
-      return SIZE_PRESETS[size];
-    }
-    return size;
+    return { backdrop, modalContainer, iframe };
   }
 
   /**
@@ -265,38 +383,48 @@ export class ModalService {
   /**
    * Setup event handlers for modal
    */
-  private setupEventHandlers(
-    modalRef: ModalReference,
-    options: Required<ModalOptions>
-  ): void {
+  private setupEventHandlers(modalRef: ModalReference, flags: number): void {
     const backdrop = modalRef.element;
+    const isCloseable = (flags & ModalFlags.CLOSEABLE) !== 0;
+    const hasBreakOut = (flags & ModalFlags.BREAK_OUT) !== 0;
 
     // Close button click
     const closeButton = backdrop.querySelector('.nimbus-modal-close');
-    if (closeButton) {
+    if (closeButton && isCloseable) {
       closeButton.addEventListener('click', () => {
-        modalRef.close();
+        modalRef.close('user_closed');
       });
     }
 
-    // Backdrop click (close if enabled)
-    if (options.closeOnBackdrop) {
-      backdrop.addEventListener('click', (e) => {
-        // Only close if clicking directly on backdrop, not on modal content
-        if (e.target === backdrop) {
-          modalRef.close();
+    // Break-out button click
+    const breakOutButton = backdrop.querySelector('.nimbus-modal-breakout');
+    if (breakOutButton && hasBreakOut) {
+      breakOutButton.addEventListener('click', () => {
+        const url = breakOutButton.getAttribute('data-url');
+        if (url) {
+          this.breakOutModal(modalRef, url);
         }
       });
     }
 
-    // ESC key (close if enabled)
-    if (options.closeOnEsc) {
+    // Backdrop click (only close if closeable)
+    if (isCloseable) {
+      backdrop.addEventListener('click', (e) => {
+        // Only close if clicking directly on backdrop, not on modal content
+        if (e.target === backdrop) {
+          modalRef.close('backdrop_click');
+        }
+      });
+    }
+
+    // ESC key (only if closeable)
+    if (isCloseable) {
       const escHandler = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           // Only close top-most modal
           const topModal = this.getTopModal();
           if (topModal && topModal.id === modalRef.id) {
-            modalRef.close();
+            modalRef.close('escape_key');
           }
         }
       };
@@ -320,11 +448,198 @@ export class ModalService {
   }
 
   /**
+   * Add embedded parameter to URL
+   */
+  private addEmbeddedParameter(url: string, embedded: boolean): string {
+    try {
+      const urlObj = new URL(url, window.location.href);
+      urlObj.searchParams.set('embedded', embedded.toString());
+      return urlObj.toString();
+    } catch (error) {
+      // If URL parsing fails, append as query string
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}embedded=${embedded}`;
+    }
+  }
+
+  /**
+   * Update modal URL (for reusing existing modals)
+   */
+  private updateModalURL(modalRef: ModalReference, url: string): void {
+    try {
+      const embeddedUrl = this.addEmbeddedParameter(url, true);
+      modalRef.iframe.src = embeddedUrl;
+
+      // Update break-out button URL if present
+      const breakOutButton = modalRef.element.querySelector('.nimbus-modal-breakout');
+      if (breakOutButton) {
+        breakOutButton.setAttribute('data-url', embeddedUrl);
+      }
+
+      logger.debug('Modal URL updated', { id: modalRef.id, url: embeddedUrl });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModalService.updateModalURL', { modalRef, url });
+    }
+  }
+
+  /**
+   * Change modal position to a new preset
+   */
+  private changeModalPosition(modalRef: ModalReference, preset: ModalSizePreset): void {
+    try {
+      const presetConfig = SIZE_PRESETS[preset];
+      const size = presetConfig.size;
+      const position = presetConfig.position;
+
+      // Find modal container
+      const modalContainer = modalRef.element.querySelector('.nimbus-modal-container') as HTMLElement;
+      if (!modalContainer) {
+        logger.warn('Modal container not found', { id: modalRef.id });
+        return;
+      }
+
+      // Apply new size
+      modalContainer.style.width = size.width;
+      modalContainer.style.height = size.height;
+
+      // Apply new position
+      this.applyPosition(modalContainer, position);
+
+      // Update backdrop centering class
+      const isCentered = position.x === 'center' && position.y === 'center';
+      if (isCentered) {
+        modalRef.element.classList.add('nimbus-modal-centered');
+      } else {
+        modalRef.element.classList.remove('nimbus-modal-centered');
+      }
+
+      logger.debug('Modal position changed', { id: modalRef.id, preset });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModalService.changeModalPosition', { modalRef, preset });
+    }
+  }
+
+  /**
+   * Break out modal to new window
+   */
+  private breakOutModal(modalRef: ModalReference, url: string): void {
+    try {
+      // Open URL in new window with embedded=false
+      const breakOutUrl = this.addEmbeddedParameter(url, false);
+      window.open(breakOutUrl, '_blank');
+
+      // Close this modal
+      modalRef.close('break_out');
+
+      logger.debug('Modal broken out', { id: modalRef.id, url: breakOutUrl });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModalService.breakOutModal', { modalRef, url });
+    }
+  }
+
+  /**
+   * Setup postMessage listener for IFrame communication
+   */
+  private setupPostMessageListener(): void {
+    this.messageHandler = (event: MessageEvent<IFrameMessageFromChild>) => {
+      try {
+        // Security: Check if message is from one of our iframes
+        const iframe = Array.from(this.modals.values())
+          .map((ref) => ref.iframe)
+          .find((iframe) => iframe.contentWindow === event.source);
+
+        if (!iframe) {
+          // Message not from our iframe, ignore
+          return;
+        }
+
+        // Get modal reference
+        const modalId = iframe.getAttribute('data-modal-id');
+        if (!modalId) {
+          logger.warn('IFrame missing data-modal-id attribute');
+          return;
+        }
+
+        const modalRef = this.modals.get(modalId);
+        if (!modalRef) {
+          logger.warn('Modal not found for IFrame message', { modalId });
+          return;
+        }
+
+        // Handle message
+        this.handleIFrameMessage(modalRef, event.data);
+      } catch (error) {
+        ExceptionHandler.handle(error, 'ModalService.messageHandler', { event });
+      }
+    };
+
+    window.addEventListener('message', this.messageHandler);
+  }
+
+  /**
+   * Handle IFrame message
+   */
+  private handleIFrameMessage(modalRef: ModalReference, message: IFrameMessageFromChild): void {
+    try {
+      switch (message.type) {
+        case IFrameMessageType.IFRAME_READY:
+          logger.debug('IFrame ready', { id: modalRef.id });
+          break;
+
+        case IFrameMessageType.REQUEST_CLOSE:
+          logger.debug('IFrame requests close', { id: modalRef.id, reason: message.reason });
+          modalRef.close(message.reason ?? 'iframe_request');
+          break;
+
+        case IFrameMessageType.REQUEST_POSITION_CHANGE:
+          logger.debug('IFrame requests position change', {
+            id: modalRef.id,
+            preset: message.preset,
+          });
+          modalRef.changePosition(message.preset);
+          break;
+
+        case IFrameMessageType.NOTIFICATION:
+          logger.debug('IFrame notification', {
+            id: modalRef.id,
+            notificationType: message.notificationType,
+            from: message.from,
+            message: message.message,
+          });
+
+          // Forward to NotificationService if available
+          if (this.appContext.services?.notification) {
+            // Parse notificationType string to NotificationType enum
+            const notificationType =
+              parseInt(message.notificationType, 10) || 0; // Default to SYSTEM_INFO
+            this.appContext.services.notification.newNotification(
+              notificationType,
+              message.from,
+              message.message
+            );
+          }
+          break;
+
+        default:
+          logger.warn('Unknown IFrame message type', { message });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModalService.handleIFrameMessage', { modalRef, message });
+    }
+  }
+
+  /**
    * Dispose service and close all modals
    */
   dispose(): void {
     try {
       this.closeAll();
+
+      // Remove postMessage listener
+      if (this.messageHandler) {
+        window.removeEventListener('message', this.messageHandler);
+        this.messageHandler = null;
+      }
 
       // Remove any remaining event listeners
       this.modals.forEach((modalRef) => {
@@ -335,6 +650,7 @@ export class ModalService {
       });
 
       this.modals.clear();
+      this.modalsByReferenceKey.clear();
 
       logger.info('ModalService disposed');
     } catch (error) {
@@ -342,3 +658,8 @@ export class ModalService {
     }
   }
 }
+
+/**
+ * Export SIZE_PRESETS for external use
+ */
+export { SIZE_PRESETS };
