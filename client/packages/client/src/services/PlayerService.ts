@@ -68,6 +68,7 @@ export class PlayerService {
       effectiveCrawlSpeed: appContext.playerInfo.effectiveCrawlSpeed,
       effectiveRidingSpeed: appContext.playerInfo.effectiveRidingSpeed,
       effectiveJumpSpeed: appContext.playerInfo.effectiveJumpSpeed,
+      effectiveTurnSpeed: appContext.playerInfo.effectiveTurnSpeed,
     };
 
     // Initialize last position for change detection
@@ -252,6 +253,7 @@ export class PlayerService {
     this.playerEntity.effectiveCrawlSpeed = this.playerEntity.playerInfo.effectiveCrawlSpeed;
     this.playerEntity.effectiveRidingSpeed = this.playerEntity.playerInfo.effectiveRidingSpeed;
     this.playerEntity.effectiveJumpSpeed = this.playerEntity.playerInfo.effectiveJumpSpeed;
+    this.playerEntity.effectiveTurnSpeed = this.playerEntity.playerInfo.effectiveTurnSpeed;
 
     logger.debug('PlayerInfo updated', { updates });
 

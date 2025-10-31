@@ -51,6 +51,7 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   // Stealth
   stealthRange: 8.0,
 
-  // Camera
-  turnSpeed: 0.003,
+  // Camera control
+  baseTurnSpeed: 0.003,
+  effectiveTurnSpeed: 0.003,
 };

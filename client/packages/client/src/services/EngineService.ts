@@ -150,6 +150,10 @@ export class EngineService {
       this.playerService.setPhysicsService(this.physicsService);
       logger.debug('PlayerService initialized');
 
+      // Connect CameraService with PlayerService for turnSpeed updates
+      this.cameraService.setPlayerService(this.playerService);
+      logger.debug('CameraService connected to PlayerService');
+
       // Initialize render service
       this.renderService = new RenderService(
         this.scene,

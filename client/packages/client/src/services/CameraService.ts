@@ -17,6 +17,7 @@ import {
 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import type { PlayerService } from './PlayerService';
 
 const logger = getLogger('CameraService');
 
@@ -26,15 +27,20 @@ const logger = getLogger('CameraService');
  * Features:
  * - First-person camera (ego-view)
  * - Position and rotation control
+ * - Dynamic turn speed from PlayerInfo (updated via events)
  * - Underwater water sphere rendering
  * - Future: Third-person view support
  */
 export class CameraService {
   private scene: Scene;
   private appContext: AppContext;
+  private playerService?: PlayerService;
 
   private camera?: FreeCamera;
   private _egoView: boolean = true;
+
+  // Camera control
+  private effectiveTurnSpeed: number = 0.003; // Mouse sensitivity (updated via event)
 
   // Underwater effects
   private waterSphereMesh?: Mesh;
@@ -47,9 +53,37 @@ export class CameraService {
     this.scene = scene;
     this.appContext = appContext;
 
+    // Initialize turn speed from PlayerInfo
+    if (appContext.playerInfo) {
+      this.effectiveTurnSpeed = appContext.playerInfo.effectiveTurnSpeed;
+    }
+
     this.initializeCamera();
 
-    logger.info('CameraService initialized');
+    logger.info('CameraService initialized', {
+      turnSpeed: this.effectiveTurnSpeed,
+    });
+  }
+
+  /**
+   * Set PlayerService and subscribe to PlayerInfo updates
+   *
+   * Called after PlayerService is created to avoid circular dependency.
+   *
+   * @param playerService PlayerService instance
+   */
+  setPlayerService(playerService: PlayerService): void {
+    this.playerService = playerService;
+
+    // Subscribe to PlayerInfo updates
+    playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
+      this.effectiveTurnSpeed = info.effectiveTurnSpeed;
+      logger.debug('CameraService: turnSpeed updated', {
+        turnSpeed: this.effectiveTurnSpeed,
+      });
+    });
+
+    logger.debug('PlayerService connected to CameraService');
   }
 
   /**
@@ -144,16 +178,23 @@ export class CameraService {
   /**
    * Rotate camera by delta
    *
-   * @param deltaPitch Pitch delta in radians
-   * @param deltaYaw Yaw delta in radians
+   * Applies effectiveTurnSpeed scaling for player-controlled sensitivity.
+   *
+   * @param deltaPitch Pitch delta (from mouse movement)
+   * @param deltaYaw Yaw delta (from mouse movement)
    */
   rotate(deltaPitch: number, deltaYaw: number): void {
     if (!this.camera) {
       return;
     }
 
-    this.camera.rotation.x += deltaPitch;
-    this.camera.rotation.y += deltaYaw;
+    // Apply effective turn speed scaling (for dynamic sensitivity control)
+    // Note: RotationHandlers already applies a base sensitivity,
+    // this adds player-specific sensitivity from PlayerInfo
+    const scaleFactor = this.effectiveTurnSpeed / 0.003; // Normalize against default
+
+    this.camera.rotation.x += deltaPitch * scaleFactor;
+    this.camera.rotation.y += deltaYaw * scaleFactor;
 
     // Clamp pitch to prevent camera flip
     const maxPitch = Math.PI / 2 - 0.01; // Slightly less than 90 degrees

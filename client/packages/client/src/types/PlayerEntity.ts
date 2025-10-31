@@ -47,4 +47,7 @@ export interface PlayerEntity extends PhysicsEntity {
 
   /** Cached effective jump speed for physics calculations */
   effectiveJumpSpeed: number;
+
+  /** Cached effective turn speed for camera control */
+  effectiveTurnSpeed: number;
 }

@@ -87,6 +87,9 @@ export interface PlayerInfo {
   // Camera Control
   // ============================================
 
-  /** Mouse sensitivity for camera rotation */
-  turnSpeed: number;
+  /** Base mouse sensitivity for camera rotation */
+  baseTurnSpeed: number;
+
+  /** Effective mouse sensitivity (base + modifiers, e.g., dizzy effects) */
+  effectiveTurnSpeed: number;
 }
