@@ -157,6 +157,24 @@
           v-if="isTextureExpanded(parseInt(key))"
           class="ml-28 pl-4 border-l-2 border-base-300 space-y-3"
         >
+          <!-- Texture Preview Canvas -->
+          <div>
+            <div class="text-xs font-semibold text-base-content/70 mb-2">Preview</div>
+            <div class="relative bg-base-200 rounded-lg p-2 flex items-center justify-center">
+              <canvas
+                :ref="(el) => setCanvasRef(parseInt(key), el as HTMLCanvasElement | null)"
+                width="256"
+                height="256"
+                class="border border-base-300"
+                style="image-rendering: pixelated;"
+              />
+              <!-- Loading Indicator -->
+              <div v-if="isTextureLoading(parseInt(key))" class="absolute inset-0 flex items-center justify-center bg-base-200/80 rounded-lg">
+                <span class="loading loading-spinner loading-md"></span>
+              </div>
+            </div>
+          </div>
+
           <!-- Atlas Extraction -->
           <div>
             <div class="text-xs font-semibold text-base-content/70 mb-2">Atlas Extraction (Source Region)</div>
@@ -467,6 +485,7 @@ import type { VisibilityModifier, TextureDefinition } from '@nimbus/shared';
 import { Shape, ShapeNames, TextureKey, TextureKeyNames } from '@nimbus/shared';
 import AssetPickerDialog from '@components/AssetPickerDialog.vue';
 import OffsetsEditor from './OffsetsEditor.vue';
+import { assetService } from '../services/AssetService';
 
 interface Props {
   modelValue?: VisibilityModifier;
@@ -485,6 +504,33 @@ const localValue = ref<VisibilityModifier>(
 
 // Track which textures are expanded
 const expandedTextures = ref<Set<number>>(new Set());
+
+// Canvas References per Texture Key
+const previewCanvasRefs = ref<Map<number, HTMLCanvasElement>>(new Map());
+
+// Loading state per texture
+const textureLoadingState = ref<Map<number, boolean>>(new Map());
+
+// Image Cache (reuse loaded images across renders)
+const textureImageCache = ref<Map<string, HTMLImageElement>>(new Map());
+
+// Error Cache (track failed texture loads to prevent retry loops)
+const textureErrorCache = ref<Map<string, Error>>(new Map());
+
+// Helper to set canvas ref
+const setCanvasRef = (key: number, el: HTMLCanvasElement | null) => {
+  if (el) {
+    previewCanvasRefs.value.set(key, el);
+    // Render preview when canvas is mounted
+    setTimeout(() => renderTexturePreview(key), 100);
+  } else {
+    previewCanvasRefs.value.delete(key);
+  }
+};
+
+const isTextureLoading = (key: number): boolean => {
+  return textureLoadingState.value.get(key) ?? false;
+};
 
 // Only watch localValue changes to emit updates (one-way)
 watch(localValue, (newValue) => {
@@ -547,6 +593,8 @@ const setTexturePath = (key: number, path: string) => {
     localValue.value.textures = {};
   }
 
+  const oldPath = getTexturePathValue(key);
+
   if (path.trim()) {
     // Keep as TextureDefinition if expanded, otherwise string
     if (expandedTextures.value.has(key)) {
@@ -560,6 +608,11 @@ const setTexturePath = (key: number, path: string) => {
       }
     } else {
       localValue.value.textures[key] = path.trim();
+    }
+
+    // Clear error cache when path changes (allow retry)
+    if (oldPath !== path.trim()) {
+      textureErrorCache.value.delete(path.trim());
     }
   } else {
     delete localValue.value.textures[key];
@@ -639,6 +692,207 @@ const radiansToDegreesDisplay = (radians: number | undefined): number | '' => {
   if (radians === undefined || radians === null) return '';
   return Math.round(radians * (180 / Math.PI) * 100) / 100; // Round to 2 decimal places
 };
+
+// ============================================
+// Texture Preview Rendering
+// ============================================
+
+const loadTextureImage = async (texturePath: string): Promise<HTMLImageElement> => {
+  // Check success cache first
+  if (textureImageCache.value.has(texturePath)) {
+    return textureImageCache.value.get(texturePath)!;
+  }
+
+  // Check error cache - don't retry failed loads
+  if (textureErrorCache.value.has(texturePath)) {
+    throw textureErrorCache.value.get(texturePath)!;
+  }
+
+  // Load image
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      // Cache successful load
+      textureImageCache.value.set(texturePath, img);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      // Cache error to prevent retry loops
+      const error = new Error(`Failed to load texture: ${texturePath}`);
+      textureErrorCache.value.set(texturePath, error);
+      reject(error);
+    };
+
+    // Use AssetService to construct correct URL
+    if (!props.worldId) {
+      const error = new Error('World ID not provided');
+      textureErrorCache.value.set(texturePath, error);
+      reject(error);
+      return;
+    }
+    const assetUrl = assetService.getAssetUrl(props.worldId, texturePath);
+    img.src = assetUrl;
+  });
+};
+
+const renderTexturePreview = async (key: number) => {
+  const canvas = previewCanvasRefs.value.get(key);
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Clear canvas with checkerboard pattern
+  ctx.clearRect(0, 0, 256, 256);
+  drawCheckerboard(ctx, 256, 256);
+
+  // Get texture path
+  const texturePath = getTexturePathValue(key);
+  if (!texturePath) {
+    // Draw placeholder
+    ctx.fillStyle = '#666';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('No texture selected', 128, 128);
+    return;
+  }
+
+  textureLoadingState.value.set(key, true);
+
+  try {
+    // Load image
+    const img = await loadTextureImage(texturePath);
+
+    // Get UV parameters
+    const uvMapping = {
+      x: getTextureDefValue(key, 'uvMapping.x') ?? 0,
+      y: getTextureDefValue(key, 'uvMapping.y') ?? 0,
+      w: getTextureDefValue(key, 'uvMapping.w') ?? img.width,
+      h: getTextureDefValue(key, 'uvMapping.h') ?? img.height,
+      uScale: getTextureDefValue(key, 'uvMapping.uScale') ?? 1,
+      vScale: getTextureDefValue(key, 'uvMapping.vScale') ?? 1,
+      uOffset: getTextureDefValue(key, 'uvMapping.uOffset') ?? 0,
+      vOffset: getTextureDefValue(key, 'uvMapping.vOffset') ?? 0,
+      wAng: getTextureDefValue(key, 'uvMapping.wAng') ?? 0,
+      wrapU: getTextureDefValue(key, 'uvMapping.wrapU') ?? 1,
+      wrapV: getTextureDefValue(key, 'uvMapping.wrapV') ?? 1,
+      uRotationCenter: getTextureDefValue(key, 'uvMapping.uRotationCenter') ?? 0.5,
+      vRotationCenter: getTextureDefValue(key, 'uvMapping.vRotationCenter') ?? 0.5,
+    };
+
+    // Apply UV transformations
+    applyUVTransformations(ctx, img, uvMapping);
+
+  } catch (error) {
+    // Show error on canvas (from cache or new error)
+    ctx.fillStyle = '#ff0000';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Failed to load texture', 128, 118);
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.fillText('(Check texture path)', 128, 138);
+    console.error('Texture preview error:', error);
+  } finally {
+    textureLoadingState.value.set(key, false);
+  }
+};
+
+const drawCheckerboard = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const squareSize = 8;
+  ctx.fillStyle = '#e0e0e0';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#c0c0c0';
+  for (let y = 0; y < height; y += squareSize) {
+    for (let x = 0; x < width; x += squareSize) {
+      if ((x / squareSize + y / squareSize) % 2 === 0) {
+        ctx.fillRect(x, y, squareSize, squareSize);
+      }
+    }
+  }
+};
+
+const applyUVTransformations = (
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  uv: any
+) => {
+  ctx.save();
+
+  // Extract source region (Atlas Extraction)
+  const sourceX = Math.max(0, Math.min(uv.x, img.width));
+  const sourceY = Math.max(0, Math.min(uv.y, img.height));
+  const sourceW = Math.max(1, Math.min(uv.w, img.width - sourceX));
+  const sourceH = Math.max(1, Math.min(uv.h, img.height - sourceY));
+
+  // Calculate rotation center in canvas space
+  const rotCenterX = 128 + (uv.uRotationCenter - 0.5) * 256;
+  const rotCenterY = 128 + (uv.vRotationCenter - 0.5) * 256;
+
+  // Move to rotation center
+  ctx.translate(rotCenterX, rotCenterY);
+
+  // Apply rotation (wAng)
+  if (uv.wAng) {
+    ctx.rotate(uv.wAng);
+  }
+
+  // Apply scale
+  ctx.scale(uv.uScale, uv.vScale);
+
+  // Move back from rotation center
+  ctx.translate(-rotCenterX, -rotCenterY);
+
+  // Apply offset (in UV space 0-1, convert to canvas space)
+  const offsetX = uv.uOffset * 256;
+  const offsetY = uv.vOffset * 256;
+  ctx.translate(offsetX, offsetY);
+
+  // Handle wrap modes
+  if (uv.wrapU === 1 && uv.wrapV === 1) {
+    // REPEAT mode - create pattern
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = sourceW;
+    tempCanvas.height = sourceH;
+    const tempCtx = tempCanvas.getContext('2d')!;
+    tempCtx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, sourceW, sourceH);
+
+    const pattern = ctx.createPattern(tempCanvas, 'repeat');
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, 256, 256);
+    }
+  } else if (uv.wrapU === 2 || uv.wrapV === 2) {
+    // MIRROR mode - draw mirrored copies (simplified)
+    ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 256, 256);
+  } else {
+    // CLAMP mode - single draw
+    ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 256, 256);
+  }
+
+  ctx.restore();
+};
+
+// Watch for texture changes and re-render preview (debounced)
+let previewRenderTimeout: number | null = null;
+watch(
+  () => localValue.value.textures,
+  () => {
+    // Debounce re-render
+    if (previewRenderTimeout) {
+      clearTimeout(previewRenderTimeout);
+    }
+    previewRenderTimeout = window.setTimeout(() => {
+      expandedTextures.value.forEach((key) => {
+        renderTexturePreview(key);
+      });
+    }, 300);
+  },
+  { deep: true }
+);
 
 // ============================================
 // Asset Picker
