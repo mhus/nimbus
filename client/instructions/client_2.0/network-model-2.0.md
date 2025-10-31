@@ -584,7 +584,55 @@ Response Finished Failed (Server -> Client):
 }
 ```
 
+### Server Command (Server -> Client)
 
+Der Server sendet einen Server-Befehl an den Client.
+Als Antwort bekommt er eine "cmd.rs" message als successful (rc=0) oder failed (rc!=0).
+
+Negative rc sind System Fehler:
+
+* -1 = Command not found
+* -2 = Command not allowed (permission denied)
+* -3 = Invalid arguments
+* -4 = Internal error
+
+Positive rc werden vom Command zurückgegeben und sind individuell.
+
+* 0 = OK bzw. "true".
+* 1 = Error bzw. "false".
+
+```json
+{"i": "123", "t": "cmd", "d": 
+  {
+    "cmd": "say",
+    "args": [
+      "Hello, world!"
+    ]
+  }
+}
+```
+
+Response Finished Successfully (Client -> Server):
+
+```json
+{"r":"123", "t": "cmd.rs", "d": 
+  {
+    "rc": 0,
+    "message": "Hello, world!"
+  }
+}
+```
+
+Response Finished Failed (Client -> Server):
+
+```json
+{"r":"123", "t": "cmd.rs", "d": 
+  {
+    "rc": 1,
+    "message": "Command not found."
+  }
+}
+```
 
 ## Logout (Client -> Server)
 

@@ -15,6 +15,8 @@ import { createAssetRoutes } from './api/routes/assetRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
+import { CommandService } from './commands/CommandService';
+import { HelpCommand } from './commands/HelpCommand';
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -31,6 +33,7 @@ class NimbusServer {
   private terrainGenerator: TerrainGenerator;
   private sessions = new Map<string, ClientSession>();
   private blockUpdateBuffer: BlockUpdateBuffer;
+  private commandService: CommandService;
 
   private constructor() {
     this.app = express();
@@ -41,6 +44,12 @@ class NimbusServer {
     this.blockUpdateBuffer = new BlockUpdateBuffer((worldId, blocks) => {
       this.broadcastBlockUpdates(worldId, blocks);
     });
+
+    // Initialize command service
+    this.commandService = new CommandService();
+
+    // Register command handlers
+    this.commandService.registerHandler(new HelpCommand(this.commandService));
   }
 
   /**
@@ -169,6 +178,9 @@ class NimbusServer {
       case 'c.q': // Chunk query
         this.handleChunkQuery(session, d);
         break;
+      case 'cmd': // Command execution
+        this.handleCommand(session, i, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -218,6 +230,26 @@ class NimbusServer {
   private handleChunkQuery(session: ClientSession, data: any) {
     const chunks = data.c || [];
     this.sendChunks(session, chunks);
+  }
+
+  private handleCommand(session: ClientSession, messageId: string, data: any) {
+    const { cmd, args } = data;
+
+    if (!cmd) {
+      logger.warn('Received command message without cmd field', {
+        sessionId: session.sessionId,
+      });
+      return;
+    }
+
+    logger.debug(`Received command: ${cmd}`, {
+      sessionId: session.sessionId,
+      username: session.username,
+      args,
+    });
+
+    // Execute command via CommandService
+    this.commandService.executeCommand(session, messageId, cmd, args || []);
   }
 
   private sendChunks(session: ClientSession, coords: any[]) {

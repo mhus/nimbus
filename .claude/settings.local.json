@@ -34,7 +34,8 @@
       "Bash(pnpm --filter @nimbus/client build:editor:*)",
       "Bash(pnpm --filter @nimbus/shared exec tsc --noEmit)",
       "Bash(pnpm --filter nimbus_editors exec vue-tsc:*)",
-      "Bash(pnpm exec vue-tsc:*)"
+      "Bash(pnpm exec vue-tsc:*)",
+      "Bash(pnpm --filter @nimbus/server exec tsc:*)"
     ],
     "deny": [],
     "ask": []
