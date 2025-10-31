@@ -5,12 +5,11 @@
  * These handlers are only available in Editor build mode.
  */
 
-import { getLogger } from '@nimbus/shared';
+import { getLogger, ModalFlags, ModalSizePreset } from '@nimbus/shared';
 import { InputHandler } from '../InputHandler';
 import type { PlayerService } from '../../services/PlayerService';
 import type { AppContext } from '../../AppContext';
 import { SelectMode } from '../../services/SelectService';
-import { ModalFlags, ModalSizePreset } from '../../types/Modal';
 
 const logger = getLogger('EditorHandlers');
 

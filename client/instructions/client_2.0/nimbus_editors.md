@@ -10,7 +10,7 @@ Er erlaubt es Block Typen, Texturen, Assets zu erstellen, zu bearbeiten und zu s
 ## Server
 
 [x] Im Server werden REST Endpunkte benötigt um Block Typen zu bearbeiten
-die üeber die Definition in 'client/instructions/client_2.0/server_rest_api.md' hinausgehen.
+die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' hinausgehen.
 - GET /api/worlds/{worldId}/blocktypes?query={query}
 - POST /api/worlds/{worldId}/blocktypes
 Response: {id: number}
@@ -939,10 +939,124 @@ IFrmame:
 
 ```
 
-[ ] Erstelle in nimbus_editors ein Modul/Component, das diese Schnittstelle aus Kind/IFrame sicht bereitstellt und dort genutzt werden kann
+[?] Erstelle in nimbus_editors ein Modul/Component, das diese Schnittstelle aus Kind/IFrame sicht bereitstellt und dort genutzt werden kann
  - isEmbedded()
  - closeModal(reason) - schliesst dieses Modal
  - changePosition('name of preset') - Ändert die Position dieses Modals
  - notification(type, from, message) wird an den NotificationServcie geschickt.
  - Du kannst gemeinsamme Constanten 'ModalSizePreset, ModalFlags' in das package 'shared' verschieben, damit client und nimbus_editors darauf zugreifen keonnen.
+```text
+⏺ Perfekt! Ich habe das Modul für nimbus_editors erfolgreich erstellt. Hier ist eine Zusammenfassung:
 
+  Was wurde implementiert:
+
+  1. Gemeinsame Konstanten nach shared verschoben
+
+  Neue Datei: /packages/shared/src/types/Modal.ts
+  - ModalSizePreset enum (alle Position-Presets)
+  - ModalFlags enum (CLOSEABLE, NO_BORDERS, BREAK_OUT)
+  - IFrameMessageType enum (Message-Typen)
+  - IFrameMessageFromChild type (Message-Struktur)
+
+  Aktualisiert: /packages/shared/src/types/index.ts
+  - Export der neuen Modal-Types
+
+  2. Client-Package aktualisiert
+
+  Alle Imports wurden angepasst, um die gemeinsamen Types aus @nimbus/shared zu verwenden:
+  - ✅ packages/client/src/types/Modal.ts - Re-exports von shared
+  - ✅ packages/client/src/services/ModalService.ts - Import aus shared
+  - ✅ packages/client/src/services/IFrameHelper.ts - Import aus shared
+  - ✅ packages/client/src/input/handlers/EditorHandlers.ts - Import aus shared
+
+  3. nimbus_editors Composable erstellt
+
+  Neue Datei: /packages/nimbus_editors/src/composables/useModal.ts
+
+  Vue 3 Composable mit folgenden Funktionen:
+
+  const {
+    isEmbedded,       // Check if running in embedded mode
+    isInIFrame,       // Check if running in iframe
+    closeModal,       // Close this modal
+    changePosition,   // Change modal position
+    sendNotification, // Send notification to parent
+    notifyReady       // Notify parent that iframe is ready
+  } = useModal();
+
+  4. Dokumentation erstellt
+
+  Neue Datei: /packages/nimbus_editors/src/composables/USEMODAL_USAGE.md
+  - Vollständige API-Dokumentation
+  - Verwendungsbeispiele
+  - Best Practices
+  - TypeScript-Integration
+  - Sicherheitshinweise
+
+  Verwendung in nimbus_editors:
+
+  <template>
+    <div>
+      <button @click="handleSave">Save</button>
+      <button v-if="isEmbedded()" @click="handleClose">Close</button>
+    </div>
+  </template>
+
+  <script setup lang="ts">
+  import { onMounted } from 'vue';
+  import { useModal, ModalSizePreset } from '@/composables/useModal';
+
+  const { isEmbedded, closeModal, sendNotification, notifyReady } = useModal();
+
+  onMounted(() => {
+    if (isEmbedded()) {
+      notifyReady();
+    }
+  });
+
+  async function handleSave() {
+    // Save logic...
+    sendNotification('0', 'Editor', 'Saved successfully');
+    closeModal('saved');
+  }
+
+  function handleClose() {
+    closeModal('user_cancelled');
+  }
+  </script>
+
+  Vorteile:
+
+  1. Type-Safe: Alle Enums und Types werden von shared geteilt
+  2. Vue 3 Integration: Native Composable-API
+  3. Einfache Verwendung: Klare, intuitive API
+  4. Dokumentiert: Vollständige Dokumentation mit Beispielen
+  5. Getestet: TypeScript-Kompilierung erfolgreich für alle Packages
+
+  Die Implementierung ist abgeschlossen und alle TypeScript-Prüfungen sind erfolgreich! (packages/nimbus_editors/src/composables/useModal.ts:1, packages/shared/src/types/Modal.ts:1)
+```
+
+[?] Im Server werden REST Endpunkte benötigt um Blocke zu bearbeiten
+die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' hinausgehen.
+- POST /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+- PUT /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+- DELETE /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+
+- Erstelle die Endpunkte
+- Erweitere die Dokumentation in 'client/instructions/client_2.0/server_rest_api.md'
+
+[ ] Beim ändern von Blocks im Server muss an alle Clients ein Update der Blocks/Chunk gesendet werden.
+Das kann cumulativ beim Speichern der Chunks passieren. Es gibt hierfuer bereits eine Netzwerk Funktion
+Siehe 'client/instructions/client_2.0/network-model-2.0.md'.
+Muss das angepasst werden?
+
+[ ] Block Editor in modal_editors implementieren
+- Der Editor existiert bereits, ist aber noch nicht implementiert.
+- Implementiere das Formular fuer Block (Block.ts)
+- BlockModifer (BlockModifier.ts)
+- BlockMetadata (BlockMetadata.ts)
+- Nutze den bestehenden BlockModifier Dialog/Form
+- Nutze /packages/shared/src/types/Modal.ts um festzustellen ob im Embedded Modus gearbeitet wird.
+- Erstelle Delete/Save/Apply/Cancel Buttons.
+- Im Embedded Modus soll der Titel/Header nicht angezeigt werden, das wird schon am IFrame angezeigt.
+- Nutze den ModalService um das Modal zu schliessen und notifications zu senden.

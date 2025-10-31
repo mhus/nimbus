@@ -22,7 +22,7 @@
  * ```
  */
 
-import { IFrameMessageType, ModalSizePreset } from '../types/Modal';
+import { IFrameMessageType, ModalSizePreset } from '@nimbus/shared';
 
 /**
  * IFrameHelper class

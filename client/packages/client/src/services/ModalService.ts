@@ -4,7 +4,8 @@
  * Provides modal dialogs with IFrame content, configurable size and position.
  */
 
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, ModalFlags, IFrameMessageType, ModalSizePreset } from '@nimbus/shared';
+import type { IFrameMessageFromChild } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type {
   ModalOptions,
@@ -12,9 +13,7 @@ import type {
   ModalSize,
   ModalPosition,
   ModalSizePositionPreset,
-  IFrameMessageFromChild,
 } from '../types/Modal';
-import { ModalFlags, IFrameMessageType, ModalSizePreset } from '../types/Modal';
 
 const logger = getLogger('ModalService');
 

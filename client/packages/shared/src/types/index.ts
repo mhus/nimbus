@@ -26,3 +26,6 @@ export * from './EffectData';
 
 // Entity types
 export * from './EntityData';
+
+// Modal types (for IFrame communication)
+export * from './Modal';

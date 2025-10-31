@@ -142,5 +142,153 @@ export function createWorldRoutes(worldManager: WorldManager): Router {
     return res.status(204).send();
   });
 
+  // GET /api/worlds/:id/blocks/:x/:y/:z - Get block at position
+  router.get('/:id/blocks/:x/:y/:z', async (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const x = Number(req.params.x);
+    const y = Number(req.params.y);
+    const z = Number(req.params.z);
+
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+
+    const block = await worldManager.getBlock(req.params.id, x, y, z);
+
+    if (!block) {
+      return res.status(404).json({ error: 'Block not found at position' });
+    }
+
+    return res.json(block);
+  });
+
+  // POST /api/worlds/:id/blocks/:x/:y/:z - Create block at position
+  router.post('/:id/blocks/:x/:y/:z', async (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const x = Number(req.params.x);
+    const y = Number(req.params.y);
+    const z = Number(req.params.z);
+
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+
+    // Validate request body
+    const blockData = req.body;
+    if (!blockData.blockTypeId) {
+      return res.status(400).json({ error: 'blockTypeId is required' });
+    }
+
+    // Verify blockTypeId exists
+    const blockType = worldManager.getBlockTypeRegistry().getBlockType(blockData.blockTypeId);
+    if (!blockType) {
+      return res.status(400).json({ error: 'Invalid blockTypeId' });
+    }
+
+    // Check if block already exists at position
+    const existingBlock = await worldManager.getBlock(req.params.id, x, y, z);
+    if (existingBlock) {
+      return res.status(400).json({ error: 'Block already exists at position' });
+    }
+
+    // Create block
+    const block = {
+      position: { x, y, z },
+      blockTypeId: blockData.blockTypeId,
+      status: blockData.status ?? 0,
+      metadata: blockData.metadata ?? {},
+    };
+
+    const success = await worldManager.setBlock(req.params.id, block);
+
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to create block' });
+    }
+
+    return res.status(201).json(block);
+  });
+
+  // PUT /api/worlds/:id/blocks/:x/:y/:z - Update block at position
+  router.put('/:id/blocks/:x/:y/:z', async (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const x = Number(req.params.x);
+    const y = Number(req.params.y);
+    const z = Number(req.params.z);
+
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+
+    // Check if block exists
+    const existingBlock = await worldManager.getBlock(req.params.id, x, y, z);
+    if (!existingBlock) {
+      return res.status(404).json({ error: 'Block not found at position' });
+    }
+
+    // Validate request body
+    const blockData = req.body;
+    if (!blockData.blockTypeId) {
+      return res.status(400).json({ error: 'blockTypeId is required' });
+    }
+
+    // Verify blockTypeId exists
+    const blockType = worldManager.getBlockTypeRegistry().getBlockType(blockData.blockTypeId);
+    if (!blockType) {
+      return res.status(400).json({ error: 'Invalid blockTypeId' });
+    }
+
+    // Update block
+    const block = {
+      position: { x, y, z },
+      blockTypeId: blockData.blockTypeId,
+      status: blockData.status ?? existingBlock.status,
+      metadata: blockData.metadata ?? existingBlock.metadata,
+    };
+
+    const success = await worldManager.setBlock(req.params.id, block);
+
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to update block' });
+    }
+
+    return res.json(block);
+  });
+
+  // DELETE /api/worlds/:id/blocks/:x/:y/:z - Delete block at position
+  router.delete('/:id/blocks/:x/:y/:z', async (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const x = Number(req.params.x);
+    const y = Number(req.params.y);
+    const z = Number(req.params.z);
+
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+
+    const deleted = await worldManager.deleteBlock(req.params.id, x, y, z);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Block not found at position' });
+    }
+
+    return res.status(204).send();
+  });
+
   return router;
 }

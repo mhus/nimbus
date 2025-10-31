@@ -349,6 +349,152 @@ HTTP Status Codes:
 - `204 No Content` - BlockType erfolgreich gelöscht
 - `404 Not Found` - Welt oder BlockType nicht gefunden
 
+## Block Operations
+
+### GET /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+
+Ruft einen Block an der angegebenen Position ab.
+
+URL Parameter:
+- `worldId`: World ID
+- `x`, `y`, `z`: Block-Koordinaten (world coordinates)
+
+Response:
+
+```json
+{
+  "position": {
+    "x": 10,
+    "y": 64,
+    "z": 5
+  },
+  "blockTypeId": 1,
+  "status": 0,
+  "metadata": {
+    "displayName": "Custom Stone",
+    "groups": ["building-group"]
+  }
+}
+```
+
+HTTP Status Codes:
+- `200 OK` - Block gefunden
+- `404 Not Found` - Welt nicht gefunden oder Block existiert nicht an Position
+- `400 Bad Request` - Ungültige Koordinaten
+
+### POST /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+
+Erstellt einen neuen Block an der angegebenen Position.
+
+URL Parameter:
+- `worldId`: World ID
+- `x`, `y`, `z`: Block-Koordinaten (world coordinates)
+
+Request Body:
+
+```json
+{
+  "blockTypeId": 1,
+  "status": 0,
+  "metadata": {
+    "displayName": "My Custom Block",
+    "groups": ["group-uuid"]
+  }
+}
+```
+
+Felder:
+- `blockTypeId` (required): ID des BlockType
+- `status` (optional): Block-Status (default: 0)
+- `metadata` (optional): Zusätzliche Metadaten (default: {})
+
+Response:
+
+```json
+{
+  "position": {
+    "x": 10,
+    "y": 64,
+    "z": 5
+  },
+  "blockTypeId": 1,
+  "status": 0,
+  "metadata": {
+    "displayName": "My Custom Block",
+    "groups": ["group-uuid"]
+  }
+}
+```
+
+HTTP Status Codes:
+- `201 Created` - Block erfolgreich erstellt
+- `400 Bad Request` - Ungültige Daten, Block existiert bereits, oder ungültige blockTypeId
+- `404 Not Found` - Welt nicht gefunden
+
+### PUT /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+
+Aktualisiert einen existierenden Block an der angegebenen Position.
+
+URL Parameter:
+- `worldId`: World ID
+- `x`, `y`, `z`: Block-Koordinaten (world coordinates)
+
+Request Body:
+
+```json
+{
+  "blockTypeId": 2,
+  "status": 1,
+  "metadata": {
+    "displayName": "Updated Block",
+    "groups": ["new-group"]
+  }
+}
+```
+
+Felder:
+- `blockTypeId` (required): ID des BlockType
+- `status` (optional): Block-Status (behält alten Wert, wenn nicht angegeben)
+- `metadata` (optional): Zusätzliche Metadaten (behält alte Metadaten, wenn nicht angegeben)
+
+Response:
+
+```json
+{
+  "position": {
+    "x": 10,
+    "y": 64,
+    "z": 5
+  },
+  "blockTypeId": 2,
+  "status": 1,
+  "metadata": {
+    "displayName": "Updated Block",
+    "groups": ["new-group"]
+  }
+}
+```
+
+HTTP Status Codes:
+- `200 OK` - Block erfolgreich aktualisiert
+- `400 Bad Request` - Ungültige Daten oder ungültige blockTypeId
+- `404 Not Found` - Welt oder Block nicht gefunden
+
+### DELETE /api/worlds/{worldId}/blocks/{x}/{y}/{z}
+
+Löscht einen Block an der angegebenen Position.
+
+URL Parameter:
+- `worldId`: World ID
+- `x`, `y`, `z`: Block-Koordinaten (world coordinates)
+
+Response: Keine Daten (HTTP 204)
+
+HTTP Status Codes:
+- `204 No Content` - Block erfolgreich gelöscht
+- `404 Not Found` - Welt oder Block nicht gefunden
+- `400 Bad Request` - Ungültige Koordinaten
+
 ## Block Metadaten
 
 Gibt nur die Metadaten eines Blocks zurück, die nicht in der Block Definition enthalten sind.

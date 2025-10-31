@@ -2,13 +2,14 @@
  * World Manager - Manages world instances
  */
 
-import { getLogger, type ChunkData, type WorldInfo, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, type ChunkData, type WorldInfo, type Block, ExceptionHandler } from '@nimbus/shared';
 import type { WorldInstance } from '../types/ServerTypes';
 import { BlockTypeRegistry } from './BlockTypeRegistry';
 import { AssetManager } from '../assets/AssetManager';
 import { ChunkStorage } from '../storage/ChunkStorage';
 import { GeneratorFactory } from './generators/GeneratorFactory';
 import type { WorldGenerator } from './generators/WorldGenerator';
+import { ServerChunk, ChunkStatus } from '../types/ServerChunk';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -423,5 +424,182 @@ export class WorldManager {
     }
 
     logger.info('Saved all chunks', { count: savedCount });
+  }
+
+  /**
+   * Get block at world coordinates
+   *
+   * @param worldId World ID
+   * @param x World X coordinate
+   * @param y World Y coordinate
+   * @param z World Z coordinate
+   * @returns Block or undefined if not found
+   */
+  async getBlock(worldId: string, x: number, y: number, z: number): Promise<Block | undefined> {
+    const world = this.worlds.get(worldId);
+    if (!world) {
+      logger.warn('World not found', { worldId });
+      return undefined;
+    }
+
+    // Calculate chunk coordinates
+    const cx = Math.floor(x / world.chunkSize);
+    const cz = Math.floor(z / world.chunkSize);
+
+    // Get or load chunk
+    const chunkKey = `${cx},${cz}`;
+    let serverChunk = world.chunks.get(chunkKey);
+
+    if (!serverChunk) {
+      // Try to load from storage
+      const storage = this.chunkStorages.get(worldId);
+      if (storage) {
+        const chunkData = await storage.load(cx, cz);
+        if (chunkData) {
+          serverChunk = ServerChunk.fromChunkData(chunkData);
+          world.chunks.set(chunkKey, serverChunk);
+        }
+      }
+    }
+
+    if (!serverChunk) {
+      // Chunk doesn't exist (not generated yet or no block at position)
+      return undefined;
+    }
+
+    return serverChunk.getBlock(x, y, z);
+  }
+
+  /**
+   * Set block at world coordinates
+   *
+   * @param worldId World ID
+   * @param block Block to set
+   * @returns Success status
+   */
+  async setBlock(worldId: string, block: Block): Promise<boolean> {
+    try {
+      const world = this.worlds.get(worldId);
+      if (!world) {
+        logger.warn('World not found', { worldId });
+        return false;
+      }
+
+      const { x, y, z } = block.position;
+
+      // Validate coordinates within world bounds
+      if (
+        x < world.dimensions.minX ||
+        x > world.dimensions.maxX ||
+        y < world.dimensions.minY ||
+        y > world.dimensions.maxY ||
+        z < world.dimensions.minZ ||
+        z > world.dimensions.maxZ
+      ) {
+        logger.warn('Block position outside world bounds', {
+          worldId,
+          position: block.position,
+          bounds: world.dimensions,
+        });
+        return false;
+      }
+
+      // Calculate chunk coordinates
+      const cx = Math.floor(x / world.chunkSize);
+      const cz = Math.floor(z / world.chunkSize);
+
+      // Get or create chunk
+      const chunkKey = `${cx},${cz}`;
+      let serverChunk = world.chunks.get(chunkKey);
+
+      if (!serverChunk) {
+        // Try to load from storage
+        const storage = this.chunkStorages.get(worldId);
+        if (storage) {
+          const chunkData = await storage.load(cx, cz);
+          if (chunkData) {
+            serverChunk = ServerChunk.fromChunkData(chunkData);
+          } else {
+            // Create new chunk if it doesn't exist
+            serverChunk = new ServerChunk(cx, cz, world.chunkSize);
+            serverChunk.status = ChunkStatus.READY;
+          }
+          world.chunks.set(chunkKey, serverChunk);
+        }
+      }
+
+      if (!serverChunk) {
+        logger.error('Failed to get or create chunk', { worldId, cx, cz });
+        return false;
+      }
+
+      // Set block
+      serverChunk.setBlock(block);
+
+      logger.debug('Block set', { worldId, position: block.position, blockTypeId: block.blockTypeId });
+      return true;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'WorldManager.setBlock', { worldId, block });
+      return false;
+    }
+  }
+
+  /**
+   * Delete block at world coordinates
+   *
+   * @param worldId World ID
+   * @param x World X coordinate
+   * @param y World Y coordinate
+   * @param z World Z coordinate
+   * @returns Success status
+   */
+  async deleteBlock(worldId: string, x: number, y: number, z: number): Promise<boolean> {
+    try {
+      const world = this.worlds.get(worldId);
+      if (!world) {
+        logger.warn('World not found', { worldId });
+        return false;
+      }
+
+      // Calculate chunk coordinates
+      const cx = Math.floor(x / world.chunkSize);
+      const cz = Math.floor(z / world.chunkSize);
+
+      // Get chunk
+      const chunkKey = `${cx},${cz}`;
+      let serverChunk = world.chunks.get(chunkKey);
+
+      if (!serverChunk) {
+        // Try to load from storage
+        const storage = this.chunkStorages.get(worldId);
+        if (storage) {
+          const chunkData = await storage.load(cx, cz);
+          if (chunkData) {
+            serverChunk = ServerChunk.fromChunkData(chunkData);
+            world.chunks.set(chunkKey, serverChunk);
+          }
+        }
+      }
+
+      if (!serverChunk) {
+        // Chunk doesn't exist, block can't exist either
+        logger.debug('Chunk not found, block does not exist', { worldId, cx, cz });
+        return false;
+      }
+
+      // Delete block
+      const deleted = serverChunk.deleteBlock(x, y, z);
+
+      if (deleted) {
+        logger.debug('Block deleted', { worldId, x, y, z });
+      } else {
+        logger.debug('Block not found at position', { worldId, x, y, z });
+      }
+
+      return deleted;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'WorldManager.deleteBlock', { worldId, x, y, z });
+      return false;
+    }
   }
 }
