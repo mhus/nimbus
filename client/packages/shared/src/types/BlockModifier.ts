@@ -348,6 +348,23 @@ export interface UVMapping {
    * @example 0.5 = center, 0.0 = top edge, 1.0 = bottom edge
    */
   readonly vRotationCenter?: number;
+
+  /** Rotation angle around W axis in radians (Babylon.js: texture.wAng)
+   * @default 0
+   * @example Math.PI / 4 = 45° rotation
+   * @example Math.PI / 2 = 90° rotation
+   */
+  readonly wAng?: number;
+
+  /** Rotation angle around U axis in radians (Babylon.js: texture.uAng)
+   * @default 0
+   */
+  readonly uAng?: number;
+
+  /** Rotation angle around V axis in radians (Babylon.js: texture.vAng)
+   * @default 0
+   */
+  readonly vAng?: number;
 }
 
 /**
@@ -377,6 +394,8 @@ export interface TextureDefinition {
   */
   effect?: BlockEffect;
 
+  /** Tint color */
+  color?: string;
 }
 
 /**

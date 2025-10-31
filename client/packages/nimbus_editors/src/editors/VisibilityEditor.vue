@@ -346,23 +346,50 @@
             </div>
           </div>
 
-          <!-- Texture Rotation -->
+          <!-- Texture Rotation Angles -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Texture Rotation</div>
-            <select
-              :value="getTextureDefValue(parseInt(key), 'rotation') ?? 0"
-              @change="setTextureDefValue(parseInt(key), 'rotation', parseInt(($event.target as HTMLSelectElement).value))"
-              class="select select-bordered select-xs w-full"
-            >
-              <option :value="0">0°</option>
-              <option :value="1">90°</option>
-              <option :value="2">180°</option>
-              <option :value="3">270°</option>
-              <option :value="4">Flip 0°</option>
-              <option :value="5">Flip 90°</option>
-              <option :value="6">Flip 180°</option>
-              <option :value="7">Flip 270°</option>
-            </select>
+            <div class="text-xs font-semibold text-base-content/70 mb-2">Rotation Angles (Degrees)</div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="form-control">
+                <label class="label py-0">
+                  <span class="label-text text-xs">wAng (W-Axis)</span>
+                </label>
+                <input
+                  :value="radiansToDegreesDisplay(getTextureDefValue(parseInt(key), 'uvMapping.wAng'))"
+                  @input="setTextureDefValue(parseInt(key), 'uvMapping.wAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
+                  type="number"
+                  step="1"
+                  class="input input-bordered input-xs"
+                  placeholder="0"
+                />
+              </div>
+              <div class="form-control">
+                <label class="label py-0">
+                  <span class="label-text text-xs">uAng (U-Axis)</span>
+                </label>
+                <input
+                  :value="radiansToDegreesDisplay(getTextureDefValue(parseInt(key), 'uvMapping.uAng'))"
+                  @input="setTextureDefValue(parseInt(key), 'uvMapping.uAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
+                  type="number"
+                  step="1"
+                  class="input input-bordered input-xs"
+                  placeholder="0"
+                />
+              </div>
+              <div class="form-control">
+                <label class="label py-0">
+                  <span class="label-text text-xs">vAng (V-Axis)</span>
+                </label>
+                <input
+                  :value="radiansToDegreesDisplay(getTextureDefValue(parseInt(key), 'uvMapping.vAng'))"
+                  @input="setTextureDefValue(parseInt(key), 'uvMapping.vAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
+                  type="number"
+                  step="1"
+                  class="input input-bordered input-xs"
+                  placeholder="0"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Sampling Mode -->
@@ -597,6 +624,20 @@ const setTextureDefValue = (key: number, path: string, value: any) => {
   } else {
     delete obj[lastPart];
   }
+};
+
+// ============================================
+// Degrees ↔ Radians Conversion
+// ============================================
+
+const degreesToRadians = (degrees: number): number => {
+  if (isNaN(degrees)) return 0;
+  return degrees * (Math.PI / 180);
+};
+
+const radiansToDegreesDisplay = (radians: number | undefined): number | '' => {
+  if (radians === undefined || radians === null) return '';
+  return Math.round(radians * (180 / Math.PI) * 100) / 100; // Round to 2 decimal places
 };
 
 // ============================================

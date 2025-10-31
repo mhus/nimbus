@@ -1171,3 +1171,4 @@ Muss das angepasst werden?
 Beides soll moeglich sein. du kannst am texture TextField rechts daneben zusaetzlich noch ein symbol machen, das unter
 dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe variante gespeichert, wenn nicht, nur der string. 
 
+[ ] Ist es moeglich im VisibilityEditor einen preview berechen und anzuzeigen aus dne eingegebenen werten? 

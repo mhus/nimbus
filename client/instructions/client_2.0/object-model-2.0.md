@@ -105,10 +105,13 @@ Parameters:
         - ?wrapV (number - Wrap Mode V, default: 1=REPEAT, siehe WrapMode)
         - ?uRotationCenter (number - Rotation Center U, default: 0.5, range: 0.0-1.0)
         - ?vRotationCenter (number - Rotation Center V, default: 0.5, range: 0.0-1.0)
-    - ?rotation (für jede texture(6): 0,90,180,270, flip 0,90,180,270; byte 0=0, 1=90, 2=180, 3=270, + 4 für flip -> 4,5,6,7  )
+        - ?wAng (number - Rotation W-Achse in Radians, default: 0, z.B. Math.PI/2 = 90°)
+        - ?uAng (number - Rotation U-Achse in Radians, default: 0)
+        - ?vAng (number - Rotation V-Achse in Radians, default: 0)
     - ?samplingMode (nearest, linear, mipmap... ; byte/enum)
     - ?transparencyMode (none, hasAlpha, getAlphaFromRGB; byte/enum)
-    - ?color
+    - ?opacity (number - 0.0 bis 1.0, default: 1.0)
+    - ?color (string - Tint Color, z.B. "#ffffff")
 - ?wind
   - leafiness
   - stability
@@ -229,6 +232,26 @@ Textur wird um 25% horizontal und 12.5% vertikal verschoben für Variation.
 }
 ```
 Extrahiert 32×32 Bereich aus Atlas und wiederholt ihn 2×2 auf dem Mesh.
+
+**Beispiel 5: Texture Rotation (kontinuierlich)**
+```json
+{
+  "path": "textures/wood.png",
+  "uvMapping": {
+    "x": 0, "y": 0, "w": 32, "h": 32,
+    "wAng": 0.785398,
+    "uRotationCenter": 0.5,
+    "vRotationCenter": 0.5
+  }
+}
+```
+Textur wird um 45° (Math.PI/4 = 0.785398 Radians) um die W-Achse rotiert, Pivot in der Mitte (0.5, 0.5).
+
+**Hinweis zu Rotation:**
+- wAng, uAng, vAng sind in **Radians** (nicht Degrees)
+- Konvertierung: Degrees → Radians = `degrees * (Math.PI / 180)`
+- Beispiele: 45° = 0.785398, 90° = 1.5708, 180° = 3.14159
+- uRotationCenter/vRotationCenter definieren den Pivot-Punkt (0.5 = Mitte)
 
 ## BlockMetadata
 
