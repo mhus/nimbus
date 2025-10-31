@@ -1166,3 +1166,8 @@ Muss das angepasst werden?
 - Geänderte Blocks austauschen (type 0 = DELETED)
 - ClientBlock / ClientChunk aktualisieren - wie schon beim laden von chunks (die gleiche methode nutzen)
 - Neu rendern
+
+[x] Jetzt muss noch der editor erweitert werden. Eine texture kann nur den path haben oder eine komplexere konfiguration. 
+Beides soll moeglich sein. du kannst am texture TextField rechts daneben zusaetzlich noch ein symbol machen, das unter
+dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe variante gespeichert, wenn nicht, nur der string. 
+
