@@ -97,14 +97,14 @@ Parameters:
         - w (number - Breite des Ausschnitts in Pixeln)
         - h (number - Höhe des Ausschnitts in Pixeln)
       - **Mesh UV-Transformation** (wie Textur auf Mesh dargestellt wird):
-        - ?us (number - uScale, Texture Tiling U, default: 1.0)
-        - ?vs (number - vScale, Texture Tiling V, default: 1.0)
-        - ?uo (number - uOffset, Texture Offset U, default: 0.0, range: 0.0-1.0)
-        - ?vo (number - vOffset, Texture Offset V, default: 0.0, range: 0.0-1.0)
-        - ?wu (number - wrapU, Wrap Mode U, default: 1=REPEAT, siehe WrapMode)
-        - ?wv (number - wrapV, Wrap Mode V, default: 1=REPEAT, siehe WrapMode)
-        - ?uc (number - uRotationCenter, Rotation Center U, default: 0.5, range: 0.0-1.0)
-        - ?vc (number - vRotationCenter, Rotation Center V, default: 0.5, range: 0.0-1.0)
+        - ?uScale (number - Texture Tiling U, default: 1.0)
+        - ?vScale (number - Texture Tiling V, default: 1.0)
+        - ?uOffset (number - Texture Offset U, default: 0.0, range: 0.0-1.0)
+        - ?vOffset (number - Texture Offset V, default: 0.0, range: 0.0-1.0)
+        - ?wrapU (number - Wrap Mode U, default: 1=REPEAT, siehe WrapMode)
+        - ?wrapV (number - Wrap Mode V, default: 1=REPEAT, siehe WrapMode)
+        - ?uRotationCenter (number - Rotation Center U, default: 0.5, range: 0.0-1.0)
+        - ?vRotationCenter (number - Rotation Center V, default: 0.5, range: 0.0-1.0)
     - ?rotation (für jede texture(6): 0,90,180,270, flip 0,90,180,270; byte 0=0, 1=90, 2=180, 3=270, + 4 für flip -> 4,5,6,7  )
     - ?samplingMode (nearest, linear, mipmap... ; byte/enum)
     - ?transparencyMode (none, hasAlpha, getAlphaFromRGB; byte/enum)
@@ -193,10 +193,10 @@ Extrahiert einen 16×16 Pixel Bereich aus Position (32, 48) im Tileset.
   "path": "textures/grass.png",
   "uvMapping": {
     "x": 0, "y": 0, "w": 16, "h": 16,
-    "us": 4.0,
-    "vs": 4.0,
-    "wu": 1,
-    "wv": 1
+    "uScale": 4.0,
+    "vScale": 4.0,
+    "wrapU": 1,
+    "wrapV": 1
   }
 }
 ```
@@ -208,8 +208,8 @@ Textur wird 4×4 mal wiederholt auf dem Mesh (seamless tiling).
   "path": "textures/wood.png",
   "uvMapping": {
     "x": 0, "y": 0, "w": 32, "h": 32,
-    "uo": 0.25,
-    "vo": 0.125
+    "uOffset": 0.25,
+    "vOffset": 0.125
   }
 }
 ```
@@ -221,10 +221,10 @@ Textur wird um 25% horizontal und 12.5% vertikal verschoben für Variation.
   "path": "textures/atlas.png",
   "uvMapping": {
     "x": 64, "y": 0, "w": 32, "h": 32,
-    "us": 2.0,
-    "vs": 2.0,
-    "wu": 1,
-    "wv": 1
+    "uScale": 2.0,
+    "vScale": 2.0,
+    "wrapU": 1,
+    "wrapV": 1
   }
 }
 ```

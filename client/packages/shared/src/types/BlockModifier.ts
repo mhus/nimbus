@@ -46,20 +46,6 @@ export const TextureKeyNames: Record<TextureKey, string> = {
 };
 
 /**
- * Texture rotation values
- */
-export enum TextureRotation {
-  R0 = 0,
-  R90 = 1,
-  R180 = 2,
-  R270 = 3,
-  FLIP_0 = 4,
-  FLIP_90 = 5,
-  FLIP_180 = 6,
-  FLIP_270 = 7,
-}
-
-/**
  * Texture sampling mode
  */
 export enum SamplingMode {
@@ -283,9 +269,9 @@ export namespace DirectionHelper {
  * @example Texture tiling and offset on mesh
  * ```typescript
  * uvMapping: {
- *   x: 0, y: 0, w: 16, h: 16,  // Extract full 16x16 texture
- *   us: 2.0, vs: 2.0,           // Repeat 2x2 on mesh
- *   uo: 0.25, vo: 0.0           // Offset by 25% horizontally
+ *   x: 0, y: 0, w: 16, h: 16,      // Extract full 16x16 texture
+ *   uScale: 2.0, vScale: 2.0,      // Repeat 2x2 on mesh
+ *   uOffset: 0.25, vOffset: 0.0    // Offset by 25% horizontally
  * }
  * ```
  */
@@ -311,57 +297,57 @@ export interface UVMapping {
   // Maps to Babylon.js Texture properties
   // ========================================
 
-  /** uScale - Texture tiling in U direction (Babylon.js: texture.uScale)
+  /** Texture tiling in U direction (Babylon.js: texture.uScale)
    * @default 1.0
    * @example 2.0 = repeat texture 2 times horizontally
    */
-  readonly us?: number;
+  readonly uScale?: number;
 
-  /** vScale - Texture tiling in V direction (Babylon.js: texture.vScale)
+  /** Texture tiling in V direction (Babylon.js: texture.vScale)
    * @default 1.0
    * @example 2.0 = repeat texture 2 times vertically
    */
-  readonly vs?: number;
+  readonly vScale?: number;
 
-  /** uOffset - Texture offset in U direction (Babylon.js: texture.uOffset)
+  /** Texture offset in U direction (Babylon.js: texture.uOffset)
    * @default 0.0
    * @range [0.0, 1.0]
    * @example 0.25 = shift texture 25% to the right
    */
-  readonly uo?: number;
+  readonly uOffset?: number;
 
-  /** vOffset - Texture offset in V direction (Babylon.js: texture.vOffset)
+  /** Texture offset in V direction (Babylon.js: texture.vOffset)
    * @default 0.0
    * @range [0.0, 1.0]
    * @example 0.5 = shift texture 50% down
    */
-  readonly vo?: number;
+  readonly vOffset?: number;
 
-  /** wrapU - Wrap mode for U coordinate (Babylon.js: texture.wrapU)
+  /** Wrap mode for U coordinate (Babylon.js: texture.wrapU)
    * @default 1 (REPEAT)
    * @see WrapMode
    */
-  readonly wu?: number;
+  readonly wrapU?: number;
 
-  /** wrapV - Wrap mode for V coordinate (Babylon.js: texture.wrapV)
+  /** Wrap mode for V coordinate (Babylon.js: texture.wrapV)
    * @default 1 (REPEAT)
    * @see WrapMode
    */
-  readonly wv?: number;
+  readonly wrapV?: number;
 
-  /** uRotationCenter - Rotation center for U axis (Babylon.js: texture.uRotationCenter)
+  /** Rotation center for U axis (Babylon.js: texture.uRotationCenter)
    * @default 0.5
    * @range [0.0, 1.0]
    * @example 0.5 = center, 0.0 = left edge, 1.0 = right edge
    */
-  readonly uc?: number;
+  readonly uRotationCenter?: number;
 
-  /** vRotationCenter - Rotation center for V axis (Babylon.js: texture.vRotationCenter)
+  /** Rotation center for V axis (Babylon.js: texture.vRotationCenter)
    * @default 0.5
    * @range [0.0, 1.0]
    * @example 0.5 = center, 0.0 = top edge, 1.0 = bottom edge
    */
-  readonly vc?: number;
+  readonly vRotationCenter?: number;
 }
 
 /**
@@ -374,17 +360,23 @@ export interface TextureDefinition {
   /** UV mapping coordinates */
   uvMapping?: UVMapping;
 
-  /** Texture rotation */
-  rotation?: TextureRotation;
-
   /** Sampling mode */
   samplingMode?: SamplingMode;
 
   /** Transparency mode */
   transparencyMode?: TransparencyMode;
 
-  /** Tint color */
-  color?: string;
+  /** Opacity (0.0 - 1.0) */
+  opacity?: number;
+
+  /** Shader Parameters, e.g. spriteCount */
+  shaderParameters?: string;
+
+  /** Effect type (0=none, 1=water, 2=wind, 3=flipbox, 4=lava, 5=fog)
+  Default is the effect from the block
+  */
+  effect?: BlockEffect;
+
 }
 
 /**
@@ -417,7 +409,9 @@ export interface VisibilityModifier {
   /** Shape type */
   shape?: Shape;
 
-  /** Effect type (0=none, 1=water, 2=wind, 3=flipbox, 4=lava, 5=fog) */
+  /** Effect type (0=none, 1=water, 2=wind, 3=flipbox, 4=lava, 5=fog)
+  generally for the box
+  */
   effect?: BlockEffect;
 
   /** Effect-specific parameters */
@@ -559,9 +553,6 @@ export interface BlockModifier {
 
   /** Wind properties */
   wind?: WindModifier;
-
-  /** Sprite count */
-  spriteCount?: number;
 
   /** Alpha/transparency */
   alpha?: number;
