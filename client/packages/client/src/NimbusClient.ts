@@ -34,6 +34,7 @@ import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
 import { SendCommand } from './commands/SendCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
+import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import {
   WindDirectionCommand,
   WindStrengthCommand,
@@ -105,6 +106,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ClearCommand());
     commandService.registerHandler(new SendCommand(commandService));
     commandService.registerHandler(new NotificationCommand(appContext));
+    commandService.registerHandler(new SetPlayerInfoCommand(appContext));
 
     // Register wind commands
     commandService.registerHandler(new WindDirectionCommand(appContext));

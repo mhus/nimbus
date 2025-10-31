@@ -555,8 +555,124 @@ ein event zu machen, wenn sich PlayerInfo geandert hat und alle die es interessi
 [x] PlayerInfo muss in das packet 'shared' verschoben werden.
 [x] Umbenennen von headHeight in eyeHeight.
 [ ] SelectionService benutzt eyeHeight aus PlayerInfo um die selection hoehe zu bestimmen, etwas hoeher, nicht mehr auf dem boden.
-[ ] Commando im client, das eine neue PlayerInfo setzt (als parameter uebergeben und umwandeln, try-catch nicht vergessen). Im CommandService registrieren.
+[x] Commando im client, das eine neue PlayerInfo setzt (als parameter uebergeben und umwandeln, try-catch nicht vergessen). Im CommandService registrieren.
+```text
+⏺ Hier sind praktische Beispiele für die Browser Console:
 
+  Browser Console Beispiele für doSetPlayerInfo()
+
+  1. Aktuelle PlayerInfo anzeigen:
+
+  doSetPlayerInfo()
+  Gibt die komplette PlayerInfo als JSON zurück.
+
+  2. Speed Boost (schneller laufen):
+
+  doSetPlayerInfo({"effectiveWalkSpeed": 10})
+  Player läuft 2x schneller (normal: 5.0).
+
+  3. Super Jump:
+
+  doSetPlayerInfo({"effectiveJumpSpeed": 15})
+  Player springt viel höher (normal: 8.0).
+
+  4. Speed Boost + Super Jump kombiniert:
+
+  doSetPlayerInfo({"effectiveWalkSpeed": 10, "effectiveJumpSpeed": 15})
+
+  5. Schneller Sprint/Fly:
+
+  doSetPlayerInfo({"effectiveRunSpeed": 15})
+  Fly-Modus ist jetzt 2x schneller.
+
+  6. Aquaman Mode (schnell unter Wasser):
+
+  doSetPlayerInfo({"effectiveUnderwaterSpeed": 8, "effectiveUnderwaterTurnSpeed": 0.003})
+  Normale Geschwindigkeit und Drehung unter Wasser.
+
+  7. Hohe Mouse Sensitivity:
+
+  doSetPlayerInfo({"effectiveTurnSpeed": 0.01})
+  Viel empfindlichere Kamera-Steuerung.
+
+  8. Langsame Mouse (Präzision):
+
+  doSetPlayerInfo({"effectiveTurnSpeed": 0.001})
+
+  9. Dizzy Effect (Schwindelgefühl):
+
+  doSetPlayerInfo({"effectiveTurnSpeed": 0.0005, "effectiveWalkSpeed": 2})
+  Sehr langsame Kamera + reduzierte Bewegung.
+
+  10. Schleichen/Sneak Mode:
+
+  doSetPlayerInfo({"effectiveWalkSpeed": 2.5})
+  Langsame, vorsichtige Bewegung.
+
+  11. Schwere Rüstung:
+
+  doSetPlayerInfo({
+    "effectiveWalkSpeed": 3,
+    "effectiveRunSpeed": 4.5,
+    "effectiveJumpSpeed": 6
+  })
+
+  12. Leaping Potion:
+
+  doSetPlayerInfo({"effectiveJumpSpeed": 12})
+
+  13. Alles auf Maximum (Cheat Mode):
+
+  doSetPlayerInfo({
+    "effectiveWalkSpeed": 20,
+    "effectiveRunSpeed": 30,
+    "effectiveJumpSpeed": 20,
+    "effectiveUnderwaterSpeed": 15,
+    "effectiveTurnSpeed": 0.005
+  })
+
+  14. Zurück zu Defaults:
+
+  doSetPlayerInfo({
+    "effectiveWalkSpeed": 5.0,
+    "effectiveRunSpeed": 7.0,
+    "effectiveJumpSpeed": 8.0,
+    "effectiveUnderwaterSpeed": 3.0,
+    "effectiveTurnSpeed": 0.003,
+    "effectiveUnderwaterTurnSpeed": 0.002
+  })
+
+  15. Eye Height ändern (größerer Spieler):
+
+  doSetPlayerInfo({"eyeHeight": 2.5})
+  Kamera ist jetzt höher!
+
+  16. Stealth Range erhöhen:
+
+  doSetPlayerInfo({"stealthRange": 15})
+
+  Tipps:
+
+  - JSON Format wichtig: Anführungszeichen um Property-Namen!
+  - Dezimalzahlen: Mit Punkt (0.003) nicht Komma
+  - Mehrere Werte: Komma-separiert im gleichen Objekt
+  - Fehler? Command zeigt "Invalid JSON" mit Fehlermeldung
+
+  Testing Workflow:
+
+  // 1. Aktuelle Werte checken
+  doSetPlayerInfo()
+
+  // 2. Wert ändern
+  doSetPlayerInfo({"effectiveWalkSpeed": 10})
+
+  // 3. Testen...
+
+  // 4. Zurücksetzen
+  doSetPlayerInfo({"effectiveWalkSpeed": 5.0})
+
+  Alle diese Commands triggern automatisch das 'playerInfo:updated' Event und alle Services (PhysicsService, CameraService, SelectService) werden sofort aktualisiert!
+```
 [ ] Bonus: Commando im client das teleportiert, dafuer teleport aus Netzwerk entfernen. Das Commando kann gleich eine System 
 nachricht beinhalten (System Info).
 

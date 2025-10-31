@@ -17,6 +17,7 @@ import type { NotificationService } from './services/NotificationService';
 import type { CommandService } from './services/CommandService';
 import type { CameraService } from './services/CameraService';
 import type { EnvironmentService } from './services/EnvironmentService';
+import type { PlayerService } from './services/PlayerService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -77,10 +78,12 @@ export interface Services {
   /** Environment service for lighting, wind, and environmental effects */
   environment?: EnvironmentService;
 
+  /** Player service for player state and movement */
+  player?: PlayerService;
+
   // Future services will be added here:
   // render?: RenderService;
   // input?: InputService;
-  // player?: PlayerService;
 }
 
 /**

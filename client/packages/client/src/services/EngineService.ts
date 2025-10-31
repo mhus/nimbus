@@ -148,6 +148,7 @@ export class EngineService {
       // Initialize player
       this.playerService = new PlayerService(this.appContext, this.cameraService);
       this.playerService.setPhysicsService(this.physicsService);
+      this.appContext.services.player = this.playerService;
       logger.debug('PlayerService initialized');
 
       // Connect CameraService with PlayerService for turnSpeed updates
