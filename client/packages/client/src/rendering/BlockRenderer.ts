@@ -21,9 +21,8 @@ export abstract class BlockRenderer {
    * @returns Number of vertices added to the geometry arrays (or Promise for async renderers)
    */
   abstract render(
-      renderService : RenderService,
-      block: ClientBlock,
-      renderContext: RenderContext
+      renderContext: RenderContext,
+      block: ClientBlock
 ): void | Promise<void>;
 
 }

@@ -14,18 +14,20 @@ export default {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@nimbus/shared$': '<rootDir>/../shared/src/index.ts',
     '^@nimbus/shared/(.*)$': '<rootDir>/../shared/src/$1',
+    '@babylonjs/core': '<rootDir>/src/rendering/__mocks__/@babylonjs/core.ts',
   },
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
       {
         tsconfig: {
-          module: 'esnext',
+          module: 'commonjs',
           moduleResolution: 'node',
           target: 'ES2022',
           lib: ['ES2022', 'DOM'],
           types: ['jest', 'node'],
           esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
         },
       },
     ],

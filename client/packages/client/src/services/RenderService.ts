@@ -31,6 +31,7 @@ interface FaceData {
  * Render context passed to block renderers
  */
 export interface RenderContext {
+  renderService: RenderService;
   faceData: FaceData;
   vertexOffset: number;
 }
@@ -193,6 +194,7 @@ export class RenderService {
       };
 
       const renderContext: RenderContext = {
+        renderService: this,
         faceData,
         vertexOffset: 0
       };
@@ -231,9 +233,8 @@ export class RenderService {
         // Only render cubes for now
         if (shape === Shape.CUBE) {
           await this.cubeRenderer.render(
-            this,
+            renderContext,
             clientBlock,
-            renderContext
           );
         } else {
           logger.debug('Unsupported shape, skipping', {

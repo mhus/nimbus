@@ -68,11 +68,10 @@ export class CubeRenderer extends BlockRenderer {
     * @returns Number of vertices added to the mesh data
    */
   async render(
-      renderService : RenderService,
-      block: ClientBlock,
       renderContext: RenderContext,
+      block: ClientBlock,
   ): Promise<void> {
-
+    const renderService = renderContext.renderService;
     const worldX = block.block.position.x;
     const worldY = block.block.position.y;
     const worldZ = block.block.position.z;
