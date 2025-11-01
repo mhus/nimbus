@@ -396,6 +396,10 @@ export interface TextureDefinition {
 
   /** Tint color */
   color?: string;
+
+  /**  Back Face Culling */
+  backFaceCulling?: boolean;
+
 }
 
 /**

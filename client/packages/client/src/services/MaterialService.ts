@@ -122,6 +122,8 @@ export class MaterialService {
     // 1. Path (required)
     parts.push(textureDef.path || modifier.visibility?.path || 'none');
 
+    parts.push(textureDef.backFaceCulling !== undefined ? `bfc:${textureDef.backFaceCulling}` : 'bfc:true');
+
     // 2. UV Mapping (if defined)
     if (textureDef.uvMapping) {
       const uv = textureDef.uvMapping;
@@ -416,6 +418,11 @@ export class MaterialService {
         material.diffuseColor = color;
       }
     }
+
+    if (textureDef.backFaceCulling) {
+        material.backFaceCulling = textureDef.backFaceCulling;
+    }
+
   }
 
   /**

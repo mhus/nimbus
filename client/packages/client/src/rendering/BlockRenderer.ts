@@ -5,8 +5,8 @@
  */
 
 import { Matrix, Vector3 } from '@babylonjs/core';
-import { RednerService } from '../services/RenderService';
-import type { ClientBlock } from '@nimbus/shared';
+import type { RenderService } from '../services/RenderService';
+import type { ClientBlock } from '../types';
 
 /**
  * Abstract base class for shape renderers
@@ -15,7 +15,13 @@ import type { ClientBlock } from '@nimbus/shared';
 export abstract class BlockRenderer {
   /**
    * Render a block using the provided context
-   * @param context - All data needed to render the block
+   * @param renderService - The render service instance
+   * @param block - The client block to render
+   * @param worldX - World X position of the block
+   * @param worldY - World Y position of the block
+   * @param worldZ - World Z position of the block
+   * @param faceData - Face data to append geometry to
+   * @param vertexOffset - Current vertex offset for indices
    * @returns Number of vertices added to the geometry arrays (or Promise for async renderers)
    */
   abstract render(
@@ -23,7 +29,9 @@ export abstract class BlockRenderer {
       block: ClientBlock,
       worldX: number,
       worldY: number,
-      worldZ: number
+      worldZ: number,
+      faceData: any,
+      vertexOffset: number
 ): number | Promise<number>;
 
 }

@@ -40,7 +40,7 @@ interface FaceData {
 export class RenderService {
   private scene: Scene;
   private appContext: AppContext;
-  private materialService: MaterialService;
+  public materialService: MaterialService;
   private blockTypeService: BlockTypeService;
   private textureAtlas: TextureAtlas;
 
@@ -219,9 +219,9 @@ export class RenderService {
 
         // Only render cubes for now
         if (shape === Shape.CUBE) {
-          vertexOffset = await this.cubeRenderer.renderCube(
-            block,
-            blockType,
+          vertexOffset = await this.cubeRenderer.render(
+            this,
+            clientBlock,
             block.position.x,
             block.position.y,
             block.position.z,
