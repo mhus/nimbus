@@ -22,6 +22,17 @@ export type HeightData = readonly [
 ];
 
 /**
+ * Block status data for chunk if not default. Block address + status.
+ * Array of 4 values: x, y, z, status
+ */
+export type Status = [
+    x: number,
+    y: number,
+    z: number,
+    s: number
+];
+
+/**
  * Chunk size (blocks per side)
  * Typically 16 or 32, defined by world settings
  */
@@ -61,4 +72,6 @@ export interface ChunkData {
    * Flat array of height values
    */
   heightData?: HeightData[];
+
+  status?: Status[];
 }

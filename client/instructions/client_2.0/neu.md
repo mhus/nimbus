@@ -8,10 +8,13 @@
 
 - Connection Timeout im Server ist aktuell disabled, das muss noch repariert werden
 - Texturen auch als base64:... angeben koennen (wird von babylon unterstuetzt!), nur kleine erlaubt
-- Brauchen ein show status System: Leben, Gesundheit, Energie, ... Die dann angezeigt werden koennen, hier Netzwerk Erweiterung oder Command?
+- Brauchen ein show status System: Leben, Gesundheit, Energie, Luft unter wasser... Die dann angezeigt werden koennen, hier Netzwerk Erweiterung oder Command?
 - Brauchen Kompass System, in welche richtung ist was auf dem Kompass, via Command, da selten updates
 - Brauchen Gruppe Info System (Gesundgeit + Name, Position), hier Netzwerk Erweiterung oder Command?, vermutlich Netzwerk
 
 - Umstellen der '/' Taste von BlockEditor auf BlockAction, die wird als command zum server geschickt, hier ist eine Action
   hinterlegt, z.b. delet, create block xy, copy/select, paste, move to, open BlockEditor (edit), via View in nimbus_editors
   steuerbar.
+
+- Status in BlockModifierMerge.ts richtig analysieren: WorldStatus und Season aus EnvironmentStatus holen
+  - Bei season langsam durch eine raster funktion(x,y,z) von 0 - 100% auffuellen bis alle im neuen season sind.

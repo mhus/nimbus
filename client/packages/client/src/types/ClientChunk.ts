@@ -32,6 +32,8 @@ export interface ClientChunkData {
   data: Map<string, ClientBlock>;
   /** Map of height position key(x,z) -> ClientHeightData */
   hightData: Map<string, ClientHeightData>;
+
+  statusData: Map<string, number>;
 }
 
 /**

@@ -341,6 +341,19 @@ export class ChunkService {
 
     return heightData;
   }
+
+  private processStatusData(chunkData: ChunkDataTransferObject): Map<string, number> {
+      const statusData = new Map<string, number>();
+      // Extract status from blocks instead of non-existent 's' property
+      for (const block of chunkData.b || []) {
+        if (block.status !== undefined) {
+          const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+          statusData.set(posKey, block.status);
+        }
+      }
+      return statusData;
+  }
+
   /**
    * Process chunk data from server into ClientChunkData with ClientBlocks
    *
@@ -350,6 +363,7 @@ export class ChunkService {
   private processChunkData(chunkData: ChunkDataTransferObject): ClientChunkData {
     const clientBlocksMap = new Map<string, ClientBlock>();
     const blockTypeService = this.appContext.services.blockType;
+    const statusData = this.processStatusData(chunkData);
 
     if (!blockTypeService) {
       logger.warn('BlockTypeService not available - cannot process blocks');
@@ -358,6 +372,7 @@ export class ChunkService {
         transfer: chunkData,
         data: clientBlocksMap,
         hightData: heightData,
+        statusData: statusData
       };
     }
 
@@ -372,8 +387,11 @@ export class ChunkService {
         continue;
       }
 
+      // Get position key for this block
+      const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+
       // Merge block modifiers according to priority rules
-      const currentModifier = mergeBlockModifier(block, blockType);
+      const currentModifier = mergeBlockModifier(this.appContext, block, blockType, statusData.get(posKey));
 
       // Create ClientBlock
       const clientBlock: ClientBlock = {
@@ -388,7 +406,6 @@ export class ChunkService {
       };
 
       // Add to map with position key
-      const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
       clientBlocksMap.set(posKey, clientBlock);
     }
 
@@ -398,6 +415,7 @@ export class ChunkService {
       transfer: chunkData,
       data: clientBlocksMap,
       hightData: hightData,
+      statusData: statusData,
     };
   }
 
@@ -503,7 +521,7 @@ export class ChunkService {
         }
 
         // Merge block modifiers
-        const currentModifier = mergeBlockModifier(block, blockType);
+        const currentModifier = mergeBlockModifier(this.appContext, block, blockType, clientChunk.data.statusData.get(posKey));
 
         // Create/update ClientBlock
         const clientBlock: ClientBlock = {

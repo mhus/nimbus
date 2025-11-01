@@ -321,7 +321,7 @@ export class SelectService {
     };
 
     // Get merged modifier using utility function
-    const currentModifier = mergeBlockModifier(block, airBlockType);
+    const currentModifier = mergeBlockModifier(this.appContext, block, airBlockType);
 
     // Create ClientBlock
     const clientBlock: ClientBlock = {

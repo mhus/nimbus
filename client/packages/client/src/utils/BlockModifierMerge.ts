@@ -9,6 +9,7 @@
  */
 
 import { BlockModifier, BlockType, Block } from '@nimbus/shared';
+import type { AppContext } from '../AppContext.js';
 
 /**
  * Merge BlockModifier according to priority rules
@@ -18,11 +19,13 @@ import { BlockModifier, BlockType, Block } from '@nimbus/shared';
  * @returns Merged BlockModifier
  */
 export function mergeBlockModifier(
+  appContext: AppContext,
   block: Block,
-  blockType: BlockType
+  blockType: BlockType,
+  overwriteStatus?: number
 ): BlockModifier {
   // Status is determined from BlockType.initialStatus (default: 0)
-  const status = blockType.initialStatus || 0;
+  const status = mergeStatus(appContext, block, blockType, overwriteStatus);
 
   // Priority 1: Block instance modifiers (if block has custom modifiers)
   if (block.modifiers && block.modifiers[status]) {
@@ -46,6 +49,30 @@ export function mergeBlockModifier(
       textures: {},
     },
   };
+}
+
+export function mergeStatus(
+  appContext: AppContext,
+  block: Block,
+  blockType: BlockType,
+  overwriteStatus?: number
+): number {
+
+    // TODO worldStatus
+    // seasonalStatus if seasonal status is defined in block modifier
+
+  // Use overwriteStatus if provided
+  if (overwriteStatus !== undefined) {
+    return overwriteStatus;
+  }
+
+  // Use block's own status if defined
+  if (block.status !== undefined) {
+    return block.status;
+  }
+
+  // Fallback to BlockType's initialStatus or default to 0
+  return blockType.initialStatus ?? 0;
 }
 
 /**
