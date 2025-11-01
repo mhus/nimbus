@@ -7,6 +7,8 @@
 import { VertexData, Vector3 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { Block, BlockType, TextureDefinition, TextureKey } from '@nimbus/shared';
+import { BlockRenderer} from './BlockRenderer';
+import { RenderService } from '../services/RenderService';
 import type { TextureAtlas, AtlasUV } from './TextureAtlas';
 
 const logger = getLogger('CubeRenderer');
@@ -27,7 +29,7 @@ interface FaceData {
  * Creates optimized mesh data for cube-shaped blocks.
  * Supports face culling and UV mapping from texture atlas.
  */
-export class CubeRenderer {
+export class CubeRenderer extends BlockRenderer {
   private textureAtlas: TextureAtlas;
 
   constructor(textureAtlas: TextureAtlas) {
@@ -56,29 +58,26 @@ export class CubeRenderer {
   /**
    * Render a cube block into the mesh data
    *
-   * @param block Block instance
-   * @param blockType Block type definition
-   * @param worldX World X coordinate
-   * @param worldY World Y coordinate
-   * @param worldZ World Z coordinate
-   * @param faceData Face data arrays to append to
-   * @param vertexOffset Current vertex offset
+    * @param renderService - The RenderService instance
+    * @param block - The block to render
+    * @param worldX - World X position of the block
+    * @param worldY - World Y position of the block
+    * @param worldZ - World Z position of the block
+    * @returns Number of vertices added to the mesh data
    */
-  async renderCube(
-    block: Block,
-    blockType: BlockType,
-    worldX: number,
-    worldY: number,
-    worldZ: number,
-    faceData: FaceData,
-    vertexOffset: number
+  async render(
+      renderService : RenderService,
+      block: ClientBlock,
+      worldX: number,
+      worldY: number,
+      worldZ: number
   ): Promise<number> {
     // Get block modifier for current status (from BlockType.initialStatus)
-    const status = blockType.initialStatus ?? 0;
-    const modifier = blockType.modifiers[status];
+
+    const modifier = block.currentModifier;
 
     if (!modifier || !modifier.visibility) {
-      logger.warn('Block has no visibility modifier', { blockTypeId: block.blockTypeId, status });
+      logger.debug('Block has no visibility modifier', { blockTypeId: block.blockTypeId, status });
       return vertexOffset;
     }
 
@@ -89,153 +88,73 @@ export class CubeRenderer {
       return vertexOffset;
     }
 
-    // Get texture definitions for each face
-    // TextureKey: ALL=0, TOP=1, BOTTOM=2, LEFT=3, RIGHT=4, FRONT=5, BACK=6, SIDE=7
-    const topTexture = this.normalizeTexture(textures[1] || textures[0] || textures[7]); // TOP, ALL, or SIDE
-    const bottomTexture = this.normalizeTexture(textures[2] || textures[0] || textures[7]); // BOTTOM, ALL, or SIDE
-    const sideTexture = this.normalizeTexture(textures[7] || textures[0]); // SIDE or ALL
+    const topIndex = texture[1] ? 1 : 0;
+    const bottomIndex = texture[2] ? 2 : 0;
+    const leftIndex = texture[3] ? 3 : (texture[7] ? 7 : 0);
+    const rightIndex = texture[4] ? 4 : (texture[7] ? 7 : 0);
+    const frontIndex = texture[5] ? 5 : (texture[7] ? 7 : 0);
+    const backIndex = texture[6] ? 6 : (texture[7] ? 7 : 0);
 
-    if (!topTexture || !bottomTexture || !sideTexture) {
-      logger.warn('Missing required textures for cube', { blockTypeId: block.blockTypeId });
-      return vertexOffset;
+    const topMaterial = topIndex && (!block.faceVisibility || Block.isVisible(block.faceVisibility, FaceFlag.TOP)) ? renderService.materialService.getMaterial(modifier, topIndex) : null;
+    const bottomMaterial = bottomTexture && (!block.faceVisibility || Block.isVisible(block.faceVisibility, FaceFlag.BOTTOM)) ? renderService.materialService.getMaterialForTexture(bottomTexture, modifier): null;
+    const leftMaterial = leftTexture && (!block.faceVisibility || Block.isVisible(block.faceVisibility, FaceFlag.LEFT)) ? renderService.materialService.getMaterialForTexture(sideTexture, modifier) : null;
+    const rightMaterial = rightTexture && (!block.faceVisibility || Block.isVisible(block.faceVisibility, FaceFlag.RIGHT)) ? renderService.materialService.getMaterialForTexture(sideTexture, modifier) : null;
+    const frontMaterial = frontTexture && (!block.faceVisibility || Block.isVisible(block.faceVisibility, FaceFlag.FRONT)) ? renderService.materialService.getMaterialForTexture(sideTexture, modifier) : null;
+    const backMaterial = backTexture && (!block.faceVisibility || Block.isVisible(block.faceVisibility, FaceFlag.BACK)) ? renderService.materialService.getMaterialForTexture(sideTexture, modifier) : null;
+
+    const size = 1;
+
+    // Block center for rotation
+    const centerX = worldX + size / 2;
+    const centerY = worldY + size / 2;
+    const centerZ = worldZ + size / 2;
+
+    const corners = [
+      // Bottom face (y = y)
+      [worldX, worldY, worldZ], // 0: left-back-bottom
+      [worldX + size, worldY, worldZ], // 1: right-back-bottom
+      [worldX + size, worldY, worldZ + size], // 2: right-front-bottom
+      [worldX, worldY, worldZ + size], // 3: left-front-bottom
+      // Top face (y = y + size)
+      [worldX, worldY + size, worldZ], // 4: left-back-top
+      [worldX + size, worldY + size, worldZ], // 5: right-back-top
+      [worldX + size, worldY + size, worldZ + size], // 6: right-front-top
+      [worldX, worldY + size, worldZ + size], // 7: left-front-top
+    ];
+
+    // Apply edge offsets if available
+    const offsets = block.offsets;
+    if (offsets) {
+      for (let i = 0; i < 8; i++) {
+        const offsetX = offsets[i * 3];
+        const offsetY = offsets[i * 3 + 1];
+        const offsetZ = offsets[i * 3 + 2];
+
+        corners[i][0] += offsetX ? offsetX : 0;
+        corners[i][1] += offsetY ? offsetY : 0;
+        corners[i][2] += offsetZ ? offsetZ : 0;
+      }
     }
 
-    // Load textures and get UVs
-    const topUV = await this.textureAtlas.getTextureUV(topTexture);
-    const bottomUV = await this.textureAtlas.getTextureUV(bottomTexture);
-    const sideUV = await this.textureAtlas.getTextureUV(sideTexture);
+    // Calculate rotation matrix from modifier
+    let rotationMatrix: Matrix | null = null;
+    // TODO apply rotation if specified in modifier.visibility
 
-    // Render all 6 faces
-    // TODO: Implement face culling based on block.faceVisibility
-    vertexOffset = this.addFace(faceData, vertexOffset, worldX, worldY, worldZ, 'top', topUV);
-    vertexOffset = this.addFace(faceData, vertexOffset, worldX, worldY, worldZ, 'bottom', bottomUV);
-    vertexOffset = this.addFace(faceData, vertexOffset, worldX, worldY, worldZ, 'north', sideUV);
-    vertexOffset = this.addFace(faceData, vertexOffset, worldX, worldY, worldZ, 'south', sideUV);
-    vertexOffset = this.addFace(faceData, vertexOffset, worldX, worldY, worldZ, 'east', sideUV);
-    vertexOffset = this.addFace(faceData, vertexOffset, worldX, worldY, worldZ, 'west', sideUV);
+    // TODO rotate corners if rotationMatrix exists
+
+    let vertexOffset = 0;
+    // TODO Render all 6 faces if material exists, implement addFace method
+//     if (topMaterial) {
+//         vertexOffset = this.addFace(
+//                 corners[?],
+//                 corners[?],
+//                 corners[?],
+//                 corners[?],
+//                 topMaterial
+//             );
+//     }
 
     return vertexOffset;
   }
 
-  /**
-   * Add a cube face to the mesh data
-   */
-  private addFace(
-    faceData: FaceData,
-    vertexOffset: number,
-    x: number,
-    y: number,
-    z: number,
-    face: string,
-    uv: AtlasUV
-  ): number {
-    const { positions, normals } = this.getFaceGeometry(face, x, y, z);
-
-    // Add positions
-    faceData.positions.push(...positions);
-
-    // Add normals
-    faceData.normals.push(...normals);
-
-    // Add UVs (4 vertices per face)
-    faceData.uvs.push(uv.u0, uv.v1); // Bottom-left
-    faceData.uvs.push(uv.u1, uv.v1); // Bottom-right
-    faceData.uvs.push(uv.u1, uv.v0); // Top-right
-    faceData.uvs.push(uv.u0, uv.v0); // Top-left
-
-    // Add indices (2 triangles per face)
-    faceData.indices.push(
-      vertexOffset + 0,
-      vertexOffset + 1,
-      vertexOffset + 2, // Triangle 1
-      vertexOffset + 0,
-      vertexOffset + 2,
-      vertexOffset + 3 // Triangle 2
-    );
-
-    return vertexOffset + 4;
-  }
-
-  /**
-   * Get geometry data for a cube face
-   */
-  private getFaceGeometry(
-    face: string,
-    x: number,
-    y: number,
-    z: number
-  ): { positions: number[]; normals: number[] } {
-    const positions: number[] = [];
-    const normals: number[] = [];
-
-    switch (face) {
-      case 'top':
-        // Top face (Y+)
-        positions.push(
-          x, y + 1, z,     // 0
-          x + 1, y + 1, z, // 1
-          x + 1, y + 1, z + 1, // 2
-          x, y + 1, z + 1  // 3
-        );
-        normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0);
-        break;
-
-      case 'bottom':
-        // Bottom face (Y-)
-        positions.push(
-          x, y, z + 1,     // 0
-          x + 1, y, z + 1, // 1
-          x + 1, y, z,     // 2
-          x, y, z          // 3
-        );
-        normals.push(0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0);
-        break;
-
-      case 'north':
-        // North face (Z-)
-        positions.push(
-          x + 1, y, z,     // 0
-          x, y, z,         // 1
-          x, y + 1, z,     // 2
-          x + 1, y + 1, z  // 3
-        );
-        normals.push(0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1);
-        break;
-
-      case 'south':
-        // South face (Z+)
-        positions.push(
-          x, y, z + 1,     // 0
-          x + 1, y, z + 1, // 1
-          x + 1, y + 1, z + 1, // 2
-          x, y + 1, z + 1  // 3
-        );
-        normals.push(0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1);
-        break;
-
-      case 'west':
-        // West face (X-)
-        positions.push(
-          x, y, z,         // 0
-          x, y, z + 1,     // 1
-          x, y + 1, z + 1, // 2
-          x, y + 1, z      // 3
-        );
-        normals.push(-1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0);
-        break;
-
-      case 'east':
-        // East face (X+)
-        positions.push(
-          x + 1, y, z + 1,     // 0
-          x + 1, y, z,         // 1
-          x + 1, y + 1, z,     // 2
-          x + 1, y + 1, z + 1  // 3
-        );
-        normals.push(1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0);
-        break;
-    }
-
-    return { positions, normals };
-  }
 }

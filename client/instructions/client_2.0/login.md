@@ -67,3 +67,13 @@ Diese Logik kann jeder System selbst definieren.
 Das kann jeder System selbst definieren. Grundlegend sollte es eine WriteOnUpdate Branch vom 'main'. Es sit aber ein
 eindeutige, andere WeltId, meist mit branch in der Id, z.B. 'kakatanien' (main), 'kakatanien-dev' (dev branch).
 
+## Items
+
+Item Crafter erstellt items, signiert diese mit seinem key, schick die ans system, das system akzeptiert diese und sigiert sie
+mit dem system key. Zieht die Kosten ein.
+Items werden nicht zentral in der Datenbank gespeichert, sondern in Amblagen. Die Signatur zeichnet sie als echte 
+Items der Systems aus. Items haben also immer alle eigenschaften, effekte etc. im Packet dabei.
+
+## TODO
+
+- Wie genau werden Items Systemuebergreifend verwaltet
