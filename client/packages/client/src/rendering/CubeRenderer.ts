@@ -9,7 +9,7 @@ import { getLogger, FaceFlag, FaceVisibilityHelper } from '@nimbus/shared';
 import type { Block, BlockType, TextureDefinition, TextureKey } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer} from './BlockRenderer';
-import { RenderService } from '../services/RenderService';
+import { RenderService, RenderContext } from '../services/RenderService';
 import type { TextureAtlas, AtlasUV } from './TextureAtlas';
 
 const logger = getLogger('CubeRenderer');
@@ -70,26 +70,26 @@ export class CubeRenderer extends BlockRenderer {
   async render(
       renderService : RenderService,
       block: ClientBlock,
-      worldX: number,
-      worldY: number,
-      worldZ: number,
-      faceData: FaceData,
-      vertexOffset: number
-  ): Promise<number> {
+      renderContext: RenderContext,
+  ): Promise<void> {
+
+    const worldX = block.block.position.x;
+    const worldY = block.block.position.y;
+    const worldZ = block.block.position.z;
 
     // Get block modifier for current status (from BlockType.initialStatus)
     const modifier = block.currentModifier;
 
     if (!modifier || !modifier.visibility) {
       logger.debug('Block has no visibility modifier', { blockTypeId: block.blockType.id });
-      return vertexOffset;
+      return;
     }
 
     // Get textures from modifier
     const textures = modifier.visibility.textures;
     if (!textures) {
       logger.warn('Block has no textures', { blockTypeId: block.blockType.id });
-      return vertexOffset;
+      return;
     }
 
     logger.debug('Rendering cube block', {
@@ -231,12 +231,11 @@ export class CubeRenderer extends BlockRenderer {
     // Top face (y = y + size)
     if (isTopVisible) {
       const texture = textures[topIndex] ? this.normalizeTexture(textures[topIndex]) : null;
-      vertexOffset = await this.addFace(
+      await this.addFace(
         corners[4], corners[5], corners[6], corners[7],  // left-back, right-back, right-front, left-front
         [0, 1, 0],  // Normal pointing up
         texture,
-        faceData,
-        vertexOffset
+        renderContext
       );
       facesRendered++;
     }
@@ -244,12 +243,11 @@ export class CubeRenderer extends BlockRenderer {
     // Bottom face (y = y)
     if (isBottomVisible) {
       const texture = textures[bottomIndex] ? this.normalizeTexture(textures[bottomIndex]) : null;
-      vertexOffset = await this.addFace(
+      await this.addFace(
         corners[0], corners[3], corners[2], corners[1],  // left-back, left-front, right-front, right-back
         [0, -1, 0],  // Normal pointing down
         texture,
-        faceData,
-        vertexOffset
+        renderContext
       );
       facesRendered++;
     }
@@ -257,12 +255,11 @@ export class CubeRenderer extends BlockRenderer {
     // Left face (x = x)
     if (isLeftVisible) {
       const texture = textures[leftIndex] ? this.normalizeTexture(textures[leftIndex]) : null;
-      vertexOffset = await this.addFace(
+      await this.addFace(
         corners[0], corners[4], corners[7], corners[3],  // back-bottom, back-top, front-top, front-bottom
         [-1, 0, 0],  // Normal pointing left
         texture,
-        faceData,
-        vertexOffset
+        renderContext
       );
       facesRendered++;
     }
@@ -270,12 +267,11 @@ export class CubeRenderer extends BlockRenderer {
     // Right face (x = x + size)
     if (isRightVisible) {
       const texture = textures[rightIndex] ? this.normalizeTexture(textures[rightIndex]) : null;
-      vertexOffset = await this.addFace(
+      await this.addFace(
         corners[1], corners[2], corners[6], corners[5],  // back-bottom, front-bottom, front-top, back-top
         [1, 0, 0],  // Normal pointing right
         texture,
-        faceData,
-        vertexOffset
+        renderContext
       );
       facesRendered++;
     }
@@ -283,12 +279,11 @@ export class CubeRenderer extends BlockRenderer {
     // Front face (z = z + size)
     if (isFrontVisible) {
       const texture = textures[frontIndex] ? this.normalizeTexture(textures[frontIndex]) : null;
-      vertexOffset = await this.addFace(
+      await this.addFace(
         corners[3], corners[7], corners[6], corners[2],  // left-bottom, left-top, right-top, right-bottom
         [0, 0, 1],  // Normal pointing forward
         texture,
-        faceData,
-        vertexOffset
+        renderContext
       );
       facesRendered++;
     }
@@ -296,12 +291,11 @@ export class CubeRenderer extends BlockRenderer {
     // Back face (z = z)
     if (isBackVisible) {
       const texture = textures[backIndex] ? this.normalizeTexture(textures[backIndex]) : null;
-      vertexOffset = await this.addFace(
+      await this.addFace(
         corners[0], corners[1], corners[5], corners[4],  // left-bottom, right-bottom, right-top, left-top
         [0, 0, -1],  // Normal pointing backward
         texture,
-        faceData,
-        vertexOffset
+        renderContext
       );
       facesRendered++;
     }
@@ -309,11 +303,9 @@ export class CubeRenderer extends BlockRenderer {
     logger.debug('Cube rendered', {
       blockTypeId: block.blockType.id,
       position: { x: worldX, y: worldY, z: worldZ },
-      facesRendered,
-      vertexOffset
+      facesRendered
     });
 
-    return vertexOffset;
   }
 
   /**
@@ -335,9 +327,9 @@ export class CubeRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
-    faceData: FaceData,
-    vertexOffset: number
-  ): Promise<number> {
+    renderContext : RenderContext
+  ): Promise<void> {
+      const faceData = renderContext.faceData;
     // Add 4 vertices (positions)
     faceData.positions.push(
       corner0[0], corner0[1], corner0[2],
@@ -372,17 +364,17 @@ export class CubeRenderer extends BlockRenderer {
     }
 
     // Add 6 indices (2 triangles)
-    const i0 = vertexOffset;
-    const i1 = vertexOffset + 1;
-    const i2 = vertexOffset + 2;
-    const i3 = vertexOffset + 3;
+    const i0 = renderContext.vertexOffset;
+    const i1 = renderContext.vertexOffset + 1;
+    const i2 = renderContext.vertexOffset + 2;
+    const i3 = renderContext.vertexOffset + 3;
 
     // Triangle 1: 0-1-2 (counter-clockwise for front face)
     faceData.indices.push(i0, i1, i2);
     // Triangle 2: 0-2-3 (counter-clockwise for front face)
     faceData.indices.push(i0, i2, i3);
 
-    return vertexOffset + 4;  // 4 vertices added
+    renderContext.vertexOffset += 4;  // 4 vertices added
   }
 
 }

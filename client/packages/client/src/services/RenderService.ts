@@ -28,6 +28,14 @@ interface FaceData {
 }
 
 /**
+ * Render context passed to block renderers
+ */
+export interface RenderContext {
+  faceData: FaceData;
+  vertexOffset: number;
+}
+
+/**
  * RenderService - Manages chunk rendering
  *
  * Features:
@@ -184,7 +192,10 @@ export class RenderService {
         normals: [],
       };
 
-      let vertexOffset = 0;
+      const renderContext: RenderContext = {
+        faceData,
+        vertexOffset: 0
+      };
 
       // Check if block types are loaded
       if (!this.blockTypeService.isLoaded()) {
@@ -219,14 +230,10 @@ export class RenderService {
 
         // Only render cubes for now
         if (shape === Shape.CUBE) {
-          vertexOffset = await this.cubeRenderer.render(
+          await this.cubeRenderer.render(
             this,
             clientBlock,
-            block.position.x,
-            block.position.y,
-            block.position.z,
-            faceData,
-            vertexOffset
+            renderContext
           );
         } else {
           logger.debug('Unsupported shape, skipping', {
