@@ -92,6 +92,13 @@ export class CubeRenderer extends BlockRenderer {
       return vertexOffset;
     }
 
+    logger.debug('Rendering cube block', {
+      blockTypeId: block.blockType.id,
+      position: { x: worldX, y: worldY, z: worldZ },
+      hasTextures: !!textures,
+      textureCount: Object.keys(textures).length
+    });
+
     // Determine texture indices for each face
     // Use texture[index] if available, otherwise use default texture[7] or texture[0]
     const topIndex = textures[1] ? 1 : (textures[7] ? 7 : 0);
@@ -101,19 +108,32 @@ export class CubeRenderer extends BlockRenderer {
     const frontIndex = textures[5] ? 5 : (textures[7] ? 7 : 0);
     const backIndex = textures[6] ? 6 : (textures[7] ? 7 : 0);
 
-    // Get materials for each face if visible
-    const topMaterial = topIndex && (!block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.TOP))
-      ? await renderService.materialService.getMaterial(modifier, topIndex) : null;
-    const bottomMaterial = bottomIndex && (!block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM))
-      ? await renderService.materialService.getMaterial(modifier, bottomIndex): null;
-    const leftMaterial = leftIndex && (!block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.LEFT))
-      ? await renderService.materialService.getMaterial(modifier, leftIndex) : null;
-    const rightMaterial = rightIndex && (!block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.RIGHT))
-      ? await renderService.materialService.getMaterial(modifier, rightIndex) : null;
-    const frontMaterial = frontIndex && (!block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT))
-      ? await renderService.materialService.getMaterial(modifier, frontIndex) : null;
-    const backMaterial = backIndex && (!block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK))
-      ? await renderService.materialService.getMaterial(modifier, backIndex) : null;
+    // Check face visibility (default: all faces visible if no faceVisibility)
+    const isTopVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.TOP);
+    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
+    const isLeftVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.LEFT);
+    const isRightVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.RIGHT);
+    const isFrontVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
+    const isBackVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK);
+
+    // Get materials for visible faces
+    const topMaterial = isTopVisible && topIndex ? await renderService.materialService.getMaterial(modifier, topIndex) : null;
+    const bottomMaterial = isBottomVisible && bottomIndex ? await renderService.materialService.getMaterial(modifier, bottomIndex) : null;
+    const leftMaterial = isLeftVisible && leftIndex ? await renderService.materialService.getMaterial(modifier, leftIndex) : null;
+    const rightMaterial = isRightVisible && rightIndex ? await renderService.materialService.getMaterial(modifier, rightIndex) : null;
+    const frontMaterial = isFrontVisible && frontIndex ? await renderService.materialService.getMaterial(modifier, frontIndex) : null;
+    const backMaterial = isBackVisible && backIndex ? await renderService.materialService.getMaterial(modifier, backIndex) : null;
+
+    logger.debug('Face visibility and materials', {
+      faces: {
+        top: { visible: isTopVisible, hasMaterial: !!topMaterial },
+        bottom: { visible: isBottomVisible, hasMaterial: !!bottomMaterial },
+        left: { visible: isLeftVisible, hasMaterial: !!leftMaterial },
+        right: { visible: isRightVisible, hasMaterial: !!rightMaterial },
+        front: { visible: isFrontVisible, hasMaterial: !!frontMaterial },
+        back: { visible: isBackVisible, hasMaterial: !!backMaterial }
+      }
+    });
 
     const size = 1;
 
@@ -205,9 +225,11 @@ export class CubeRenderer extends BlockRenderer {
       }
     }
 
-    // Render all 6 faces if material exists
+    // Render visible faces (with or without material)
+    let facesRendered = 0;
+
     // Top face (y = y + size)
-    if (topMaterial) {
+    if (isTopVisible) {
       const texture = textures[topIndex] ? this.normalizeTexture(textures[topIndex]) : null;
       vertexOffset = await this.addFace(
         corners[4], corners[5], corners[6], corners[7],  // left-back, right-back, right-front, left-front
@@ -216,10 +238,11 @@ export class CubeRenderer extends BlockRenderer {
         faceData,
         vertexOffset
       );
+      facesRendered++;
     }
 
     // Bottom face (y = y)
-    if (bottomMaterial) {
+    if (isBottomVisible) {
       const texture = textures[bottomIndex] ? this.normalizeTexture(textures[bottomIndex]) : null;
       vertexOffset = await this.addFace(
         corners[0], corners[3], corners[2], corners[1],  // left-back, left-front, right-front, right-back
@@ -228,10 +251,11 @@ export class CubeRenderer extends BlockRenderer {
         faceData,
         vertexOffset
       );
+      facesRendered++;
     }
 
     // Left face (x = x)
-    if (leftMaterial) {
+    if (isLeftVisible) {
       const texture = textures[leftIndex] ? this.normalizeTexture(textures[leftIndex]) : null;
       vertexOffset = await this.addFace(
         corners[0], corners[4], corners[7], corners[3],  // back-bottom, back-top, front-top, front-bottom
@@ -240,10 +264,11 @@ export class CubeRenderer extends BlockRenderer {
         faceData,
         vertexOffset
       );
+      facesRendered++;
     }
 
     // Right face (x = x + size)
-    if (rightMaterial) {
+    if (isRightVisible) {
       const texture = textures[rightIndex] ? this.normalizeTexture(textures[rightIndex]) : null;
       vertexOffset = await this.addFace(
         corners[1], corners[2], corners[6], corners[5],  // back-bottom, front-bottom, front-top, back-top
@@ -252,10 +277,11 @@ export class CubeRenderer extends BlockRenderer {
         faceData,
         vertexOffset
       );
+      facesRendered++;
     }
 
     // Front face (z = z + size)
-    if (frontMaterial) {
+    if (isFrontVisible) {
       const texture = textures[frontIndex] ? this.normalizeTexture(textures[frontIndex]) : null;
       vertexOffset = await this.addFace(
         corners[3], corners[7], corners[6], corners[2],  // left-bottom, left-top, right-top, right-bottom
@@ -264,10 +290,11 @@ export class CubeRenderer extends BlockRenderer {
         faceData,
         vertexOffset
       );
+      facesRendered++;
     }
 
     // Back face (z = z)
-    if (backMaterial) {
+    if (isBackVisible) {
       const texture = textures[backIndex] ? this.normalizeTexture(textures[backIndex]) : null;
       vertexOffset = await this.addFace(
         corners[0], corners[1], corners[5], corners[4],  // left-bottom, right-bottom, right-top, left-top
@@ -276,7 +303,15 @@ export class CubeRenderer extends BlockRenderer {
         faceData,
         vertexOffset
       );
+      facesRendered++;
     }
+
+    logger.debug('Cube rendered', {
+      blockTypeId: block.blockType.id,
+      position: { x: worldX, y: worldY, z: worldZ },
+      facesRendered,
+      vertexOffset
+    });
 
     return vertexOffset;
   }
