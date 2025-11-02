@@ -503,20 +503,31 @@ export interface PhysicsModifier {
   /** Solid collision */
   solid?: boolean;
 
-  /** Movement resistance */
+  /** Movement resistance - speed reduction if on(solid)/in(!solid) the block, default: 0 */
   resistance?: number;
 
-  /** Climbable with resistance factor */
+  /** Climbable with resistance factor - if move forward will move upward with resistance of this - 0 or undefined means disabled, default; 0 */
   climbable?: number;
 
-  /** Auto-move velocity when standing on block */
+  /** Auto climb one (this) block, default: false */
+  autoClimbable?: boolean;
+
+  /** Auto-move velocity when standing on(solid)/in(!solid) block - moves the entity with speed, default: 0 */
+  // TODO rename to 'autoMove'
   autoMoveXYZ?: Vector3;
 
-  /** Interactive block */
+  /** Auto-orientation Y axis when standing on(solid)/in(!solid) block - rotates the entity to this Y angle, default: undefined (disabled) */
+  autoOrientationY?: number;
+
+  /** Interactive block - player can send a interact command for this block to the server, default: false */
   interactive?: boolean;
 
-  /** Gate passable from specific directions */
+  /** Gate passable from specific directions - even if the block is solid, from this sind the entity can move like it's not solid, default: none (0) */
+  // rename to 'passableFrom'
   gateFromDirection?: Direction;
+
+  /** Auto-jump when walking into the block - like fence gate, default: false */
+  autoJump?: boolean;
 }
 
 /**
