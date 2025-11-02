@@ -1174,3 +1174,17 @@ dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe v
 [x] Ist es moeglich im VisibilityEditor einen preview berechen und anzuzeigen aus dne eingegebenen werten? 
 
 [?] Bei einem Fehler soll nicht versucht werden nochmal zu laden, sons kommt eine endlosschleife.
+
+## Refactoring
+
+[ ] Umbenennen von 'nimbus_editors' in components 'controls'.
+[ ] Umbenennen 'client' in 'engine'
+[ ] Umbenennen von server in test_server
+
+## Engine Dialogs neue Eigenschaft
+
+[ ] Neue Eigenschaft NO_BACKGROUND_LOCK: hitergrund wird nicht gesperrt/grau, Dialog geht nicht zu wenn in den hintergrund geklcikt wird.
+[ ] MOVEABLE, RESIZEABLE
+
+## Block Model Editor
+

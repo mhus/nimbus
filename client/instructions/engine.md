@@ -1,0 +1,20 @@
+# Engine Enhancements
+
+## Compass
+
+[ ] Zeige im oberen Bereich eine Compass Bar der in einem CompassService verwaltet wird. Einhaegen in AppContext.
+- Die bar soll den komplette 360 bereich anzeigen.
+- Es sollen sich Marker fuer Nord, Ost, Sued, West befinden.
+- Am CompassService keonnen Marker hinzugefuegt werden. Die Marker haben immer World Block Koordinaten)
+- Der Compass soll drehen wenn sich die Kamera bewegt
+- Die Darstellung kann asynchron/versetzt erfolgen
+
+Marker:
+- Position - World Block Koordinaten
+- Farbe - Rot
+- Darstellung - Kreis, Raute, Dreieck, Pfeil /\
+- Position: Oben (oberhalb der bar), mitte, unten
+- close() - Marker wird geschlossen
+- setPosition() - Marker wird neu positioniert, wenn sich das ziel bewegt hat
+- range - Wie weit der Marker von der Position aus sichtbar ist (-1 = unendlich)
+
