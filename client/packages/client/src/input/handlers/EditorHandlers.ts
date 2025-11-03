@@ -175,7 +175,7 @@ export class EditorActivateHandler extends InputHandler {
 }
 
 /**
- * BlockEditorActivate Handler (Key: F11)
+ * BlockEditorActivate Handler (Key: F10)
  *
  * Opens block editor for currently selected block
  */
@@ -215,7 +215,7 @@ export class BlockEditorActivateHandler extends InputHandler {
     const pos = selectedBlock.block.position;
 
     // Open block editor directly
-    logger.info('Opening block editor (triggered by F11 key)', { position: pos });
+    logger.info('Opening block editor (triggered by F10 key)', { position: pos });
 
     try {
       modalService.openBlockEditor(pos.x, pos.y, pos.z);
@@ -239,7 +239,7 @@ export class BlockEditorActivateHandler extends InputHandler {
 }
 
 /**
- * EditConfigActivate Handler (Key: F12)
+ * EditConfigActivate Handler (Key: F9)
  *
  * Opens edit configuration modal to change edit action settings
  */
@@ -258,7 +258,7 @@ export class EditConfigActivateHandler extends InputHandler {
     }
 
     // Open EditConfiguration modal
-    logger.info('Opening edit configuration modal (triggered by F12 key)');
+    logger.info('Opening edit configuration modal (triggered by F9 key)');
 
     try {
       modalService.openEditConfiguration();

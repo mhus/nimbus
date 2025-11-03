@@ -1212,7 +1212,7 @@ soll der Block grün dargestellt werden (wie ein selektierter block nur gruen an
 [x] Bonus: Erweitere HelpCommand im client so, dass man einen parameter mit dem command angeben kann. Dann wird die Description des
     Commands angezeigt. Das gleiche im 'server/src/commands/HelpCommand.ts'
 
-[~] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
+[x] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
   und die hinterlegte Aktion ausfuehrt.
 - Es soll im client immer das Commando 'setSelectedEditBlock' aufgerufen werden, damit der Block hier sichtbar selektiert wird.
 Aktionen sind:
@@ -1241,9 +1241,9 @@ Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
 sondern im Server das commando 'setSelectedEditBlock' aufgerufen werden.
 [x] Bringt das 'setSelectedEditBlock' command einen Fehler, dann gib eine system meldung ab (NotificationService) und oeffne den EditConfiguration Editor.
 
-[?] Wird der 'F12' key gedrueckt, dann soll immer das 'edit config' modal geoeffnet werden.
-- Korrektur nicht '?' sondern F12 zum oeffnen des edit config. - nur im EDITOR Modus (wie bei '/')
-[?] Wird F11 gedrueckt, dann soll das 'block edit' geofnet werden. - nur im EDITOR Modus (wie bei '/')
+[x] Wird der 'F9' key gedrueckt, dann soll immer das 'edit config' modal geoeffnet werden.
+- Korrektur nicht '?' sondern F9 zum oeffnen des edit config. - nur im EDITOR Modus (wie bei '/') - F12 brauche ich fuer die browser console
+[x] Wird F10 gedrueckt, dann soll das 'block edit' geofnet werden. - nur im EDITOR Modus (wie bei '/') - F11 wird von browser blockiert
 
 [ ] Erweiter BlockEditor und EditorConfig um ein eigenstaendiges Component 'MoveSelectedBlockComponent'
 - Die COmponent zeigt elegant die drei richtungen x y z an (ggf durch eine SVG grafik?) jeweils mit der option + und -

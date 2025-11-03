@@ -50,8 +50,8 @@ interface KeyBinding {
  * - F: Toggle Walk/Fly mode (Editor only)
  * - . (Period): Rotate selection mode (Editor only)
  * - / (Slash): Activate selected block editor (Editor only)
- * - F11: Open block editor for selected block (Editor only)
- * - F12: Open edit configuration (Editor only)
+ * - F9: Open edit configuration (Editor only)
+ * - F10: Open block editor for selected block (Editor only)
  * - Mouse: Look around (when pointer locked)
  */
 export class WebInputController implements InputController {
@@ -160,11 +160,11 @@ export class WebInputController implements InputController {
     if (this.editorActivateHandler) {
       this.keyBindings.set('/', this.editorActivateHandler);
     }
-    if (this.blockEditorActivateHandler) {
-      this.keyBindings.set('F11', this.blockEditorActivateHandler);
-    }
     if (this.editConfigActivateHandler) {
-      this.keyBindings.set('F12', this.editConfigActivateHandler);
+      this.keyBindings.set('F9', this.editConfigActivateHandler);
+    }
+    if (this.blockEditorActivateHandler) {
+      this.keyBindings.set('F10', this.blockEditorActivateHandler);
     }
 
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
@@ -172,8 +172,8 @@ export class WebInputController implements InputController {
     // F: Toggle Walk/Fly mode (Editor only, handled dynamically)
     // . : Rotate selection mode (Editor only)
     // / : Activate selected block editor (Editor only)
-    // F11: Open block editor for selected block (Editor only)
-    // F12: Open edit configuration (Editor only)
+    // F9: Open edit configuration (Editor only)
+    // F10: Open block editor for selected block (Editor only)
   }
 
   /**
