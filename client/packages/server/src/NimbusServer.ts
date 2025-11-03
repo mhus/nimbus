@@ -53,7 +53,7 @@ class NimbusServer {
     // Register command handlers
     this.commandService.registerHandler(new HelpCommand(this.commandService));
     this.commandService.registerHandler(new LoopCommand());
-    this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager));
+    this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager, this.blockUpdateBuffer));
   }
 
   /**

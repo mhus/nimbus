@@ -23,6 +23,8 @@ import { RotateHandler } from './handlers/RotationHandlers';
 import {
   EditSelectionRotatorHandler,
   EditorActivateHandler,
+  BlockEditorActivateHandler,
+  EditConfigActivateHandler,
 } from './handlers/EditorHandlers';
 
 const logger = getLogger('WebInputController');
@@ -47,7 +49,9 @@ interface KeyBinding {
  * - Shift: Move down (Fly mode only)
  * - F: Toggle Walk/Fly mode (Editor only)
  * - . (Period): Rotate selection mode (Editor only)
- * - / (Slash): Open block editor (Editor only)
+ * - / (Slash): Activate selected block editor (Editor only)
+ * - F11: Open block editor for selected block (Editor only)
+ * - F12: Open edit configuration (Editor only)
  * - Mouse: Look around (when pointer locked)
  */
 export class WebInputController implements InputController {
@@ -72,6 +76,8 @@ export class WebInputController implements InputController {
   // Editor handlers (Editor only)
   private editSelectionRotatorHandler?: EditSelectionRotatorHandler;
   private editorActivateHandler?: EditorActivateHandler;
+  private blockEditorActivateHandler?: BlockEditorActivateHandler;
+  private editConfigActivateHandler?: EditConfigActivateHandler;
 
   // Pointer lock state
   private pointerLocked: boolean = false;
@@ -96,6 +102,8 @@ export class WebInputController implements InputController {
       this.toggleMovementModeHandler = new ToggleMovementModeHandler(playerService);
       this.editSelectionRotatorHandler = new EditSelectionRotatorHandler(playerService, appContext);
       this.editorActivateHandler = new EditorActivateHandler(playerService, appContext);
+      this.blockEditorActivateHandler = new BlockEditorActivateHandler(playerService, appContext);
+      this.editConfigActivateHandler = new EditConfigActivateHandler(playerService, appContext);
     }
 
     this.handlers = [
@@ -118,6 +126,12 @@ export class WebInputController implements InputController {
     }
     if (this.editorActivateHandler) {
       this.handlers.push(this.editorActivateHandler);
+    }
+    if (this.blockEditorActivateHandler) {
+      this.handlers.push(this.blockEditorActivateHandler);
+    }
+    if (this.editConfigActivateHandler) {
+      this.handlers.push(this.editConfigActivateHandler);
     }
 
     // Setup key bindings
@@ -146,12 +160,20 @@ export class WebInputController implements InputController {
     if (this.editorActivateHandler) {
       this.keyBindings.set('/', this.editorActivateHandler);
     }
+    if (this.blockEditorActivateHandler) {
+      this.keyBindings.set('F11', this.blockEditorActivateHandler);
+    }
+    if (this.editConfigActivateHandler) {
+      this.keyBindings.set('F12', this.editConfigActivateHandler);
+    }
 
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)
     // F: Toggle Walk/Fly mode (Editor only, handled dynamically)
     // . : Rotate selection mode (Editor only)
-    // / : Open block editor (Editor only)
+    // / : Activate selected block editor (Editor only)
+    // F11: Open block editor for selected block (Editor only)
+    // F12: Open edit configuration (Editor only)
   }
 
   /**

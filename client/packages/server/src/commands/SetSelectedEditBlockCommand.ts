@@ -11,16 +11,19 @@
 import { CommandHandler, CommandContext, CommandResult } from './CommandHandler';
 import { MessageType, EditAction, type Block } from '@nimbus/shared';
 import type { WorldManager } from '../world/WorldManager';
+import type { BlockUpdateBuffer } from '../network/BlockUpdateBuffer';
 
 /**
  * SetSelectedEditBlock command - Sets selected edit block and executes action
  */
 export class SetSelectedEditBlockCommand extends CommandHandler {
   private worldManager: WorldManager;
+  private blockUpdateBuffer: BlockUpdateBuffer;
 
-  constructor(worldManager: WorldManager) {
+  constructor(worldManager: WorldManager, blockUpdateBuffer: BlockUpdateBuffer) {
     super();
     this.worldManager = worldManager;
+    this.blockUpdateBuffer = blockUpdateBuffer;
   }
 
   name(): string {
@@ -178,6 +181,14 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
       return { rc: 1, message: 'Failed to copy block' };
     }
 
+    // Broadcast block update
+    console.log(`[COPY_BLOCK] Adding copy to update buffer`, {
+      worldId,
+      targetPosition,
+      blockTypeId: targetBlock.blockTypeId,
+    });
+    this.blockUpdateBuffer.addUpdate(worldId, targetBlock);
+
     return {
       rc: 0,
       message: `Block copied from (${context.session.markedEditBlock.x}, ${context.session.markedEditBlock.y}, ${context.session.markedEditBlock.z}) to (${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z})`,
@@ -196,11 +207,30 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
       return { rc: 1, message: 'No world selected' };
     }
 
+    console.log(`[DELETE_BLOCK] Attempting to delete block at (${position.x}, ${position.y}, ${position.z}) in world ${worldId}`);
+
     const success = await this.worldManager.deleteBlock(worldId, position.x, position.y, position.z);
 
     if (!success) {
-      return { rc: 1, message: 'Failed to delete block (block may not exist)' };
+      console.error(`[DELETE_BLOCK] Failed to delete block at (${position.x}, ${position.y}, ${position.z})`);
+      return { rc: 1, message: `Failed to delete block at (${position.x}, ${position.y}, ${position.z}) - block may not exist` };
     }
+
+    console.log(`[DELETE_BLOCK] Successfully deleted block at (${position.x}, ${position.y}, ${position.z})`);
+
+    // Broadcast deletion as block with blockTypeId: 0
+    const deletionBlock: Block = {
+      position: { x: position.x, y: position.y, z: position.z },
+      blockTypeId: 0, // 0 = deletion
+      status: 0,
+      metadata: {},
+    };
+    console.log(`[DELETE_BLOCK] Adding deletion to update buffer`, {
+      worldId,
+      position,
+      blockTypeId: 0,
+    });
+    this.blockUpdateBuffer.addUpdate(worldId, deletionBlock);
 
     // Clear selection after deletion
     context.session.selectedEditBlock = null;
@@ -256,6 +286,14 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
       return { rc: 1, message: 'Failed to copy block to new position' };
     }
 
+    // Broadcast new block update
+    console.log(`[MOVE_BLOCK] Adding new block position to update buffer`, {
+      worldId,
+      targetPosition,
+      blockTypeId: targetBlock.blockTypeId,
+    });
+    this.blockUpdateBuffer.addUpdate(worldId, targetBlock);
+
     // Delete old position
     const deleteSuccess = await this.worldManager.deleteBlock(
       worldId,
@@ -271,6 +309,24 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
         message: `Block copied but failed to delete old position at (${context.session.markedEditBlock.x}, ${context.session.markedEditBlock.y}, ${context.session.markedEditBlock.z})`,
       };
     }
+
+    // Broadcast deletion of old position
+    const deletionBlock: Block = {
+      position: {
+        x: context.session.markedEditBlock.x,
+        y: context.session.markedEditBlock.y,
+        z: context.session.markedEditBlock.z,
+      },
+      blockTypeId: 0, // 0 = deletion
+      status: 0,
+      metadata: {},
+    };
+    console.log(`[MOVE_BLOCK] Adding deletion of old position to update buffer`, {
+      worldId,
+      oldPosition: context.session.markedEditBlock,
+      blockTypeId: 0,
+    });
+    this.blockUpdateBuffer.addUpdate(worldId, deletionBlock);
 
     // Clear marked block after successful move
     const sourcePos = context.session.markedEditBlock;

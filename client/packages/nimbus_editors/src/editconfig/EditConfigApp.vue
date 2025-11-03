@@ -10,100 +10,91 @@
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 container mx-auto px-4 py-6 max-w-2xl">
+    <!-- Main Content - Compact for iframe -->
+    <main class="flex-1 p-2">
       <!-- Error Display -->
-      <div v-if="error" class="alert alert-error shadow-lg mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+      <div v-if="error" class="alert alert-error alert-sm mb-2 text-xs">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span>{{ error }}</span>
       </div>
 
-      <!-- Edit Action Configuration -->
-      <div class="card bg-base-100 shadow-xl mb-4">
-        <div class="card-body">
-          <h2 class="card-title">Edit Action</h2>
-          <p class="text-sm text-base-content/70 mb-4">
-            Choose the action to perform when selecting a block
-          </p>
+      <!-- Edit Action Configuration - Compact -->
+      <div class="card bg-base-100 shadow-sm mb-2">
+        <div class="card-body p-3">
+          <h2 class="card-title text-sm mb-2">Edit Action</h2>
 
           <div class="form-control w-full">
-            <label class="label">
-              <span class="label-text">Current Action</span>
-            </label>
             <select
               v-model="currentEditAction"
-              class="select select-bordered w-full"
+              class="select select-bordered select-sm w-full text-xs"
               :disabled="saving"
             >
               <option v-for="action in editActions" :key="action" :value="action">
                 {{ formatActionName(action) }}
               </option>
             </select>
-            <label class="label">
-              <span class="label-text-alt">{{ getActionDescription(currentEditAction) }}</span>
+            <label class="label py-1">
+              <span class="label-text-alt text-xs">{{ getActionDescription(currentEditAction) }}</span>
             </label>
           </div>
 
-          <div class="card-actions justify-end mt-4">
+          <div class="card-actions justify-end mt-2">
             <button
-              class="btn btn-primary"
+              class="btn btn-primary btn-sm btn-block"
               @click="saveEditAction"
               :disabled="saving || !hasChanges"
             >
-              <span v-if="saving" class="loading loading-spinner loading-sm"></span>
+              <span v-if="saving" class="loading loading-spinner loading-xs"></span>
               {{ saving ? 'Saving...' : 'Save' }}
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Selected Block Display -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">Selected Block</h2>
-          <p class="text-sm text-base-content/70 mb-4">
-            Current block selection (updates automatically)
-          </p>
+      <!-- Selected Block Display - Compact -->
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body p-3">
+          <h2 class="card-title text-sm mb-2">Selected Block</h2>
 
-          <div v-if="selectedBlock" class="stats shadow w-full">
-            <div class="stat place-items-center">
-              <div class="stat-title">X</div>
-              <div class="stat-value text-primary">{{ selectedBlock.x }}</div>
+          <div v-if="selectedBlock" class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-primary/10 rounded p-2">
+              <div class="text-xs text-base-content/70">X</div>
+              <div class="text-lg font-bold text-primary">{{ selectedBlock.x }}</div>
             </div>
-            <div class="stat place-items-center">
-              <div class="stat-title">Y</div>
-              <div class="stat-value text-secondary">{{ selectedBlock.y }}</div>
+            <div class="bg-secondary/10 rounded p-2">
+              <div class="text-xs text-base-content/70">Y</div>
+              <div class="text-lg font-bold text-secondary">{{ selectedBlock.y }}</div>
             </div>
-            <div class="stat place-items-center">
-              <div class="stat-title">Z</div>
-              <div class="stat-value text-accent">{{ selectedBlock.z }}</div>
+            <div class="bg-accent/10 rounded p-2">
+              <div class="text-xs text-base-content/70">Z</div>
+              <div class="text-lg font-bold text-accent">{{ selectedBlock.z }}</div>
             </div>
           </div>
 
-          <div v-else class="alert alert-info shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <div v-else class="alert alert-info alert-sm text-xs">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span>No block selected</span>
           </div>
 
-          <!-- Marked Block Display -->
-          <div v-if="markedBlock" class="mt-4">
-            <h3 class="font-semibold mb-2">Marked Block (for copy/move)</h3>
-            <div class="stats shadow w-full bg-warning/10">
-              <div class="stat place-items-center">
-                <div class="stat-title">X</div>
-                <div class="stat-value text-sm">{{ markedBlock.x }}</div>
+          <!-- Marked Block Display - Compact -->
+          <div v-if="markedBlock" class="mt-2">
+            <h3 class="text-xs font-semibold mb-1 text-base-content/70">Marked (copy/move)</h3>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-warning/10 rounded p-1">
+                <div class="text-xs text-base-content/70">X</div>
+                <div class="text-sm font-bold">{{ markedBlock.x }}</div>
               </div>
-              <div class="stat place-items-center">
-                <div class="stat-title">Y</div>
-                <div class="stat-value text-sm">{{ markedBlock.y }}</div>
+              <div class="bg-warning/10 rounded p-1">
+                <div class="text-xs text-base-content/70">Y</div>
+                <div class="text-sm font-bold">{{ markedBlock.y }}</div>
               </div>
-              <div class="stat place-items-center">
-                <div class="stat-title">Z</div>
-                <div class="stat-value text-sm">{{ markedBlock.z }}</div>
+              <div class="bg-warning/10 rounded p-1">
+                <div class="text-xs text-base-content/70">Z</div>
+                <div class="text-sm font-bold">{{ markedBlock.z }}</div>
               </div>
             </div>
           </div>
@@ -171,17 +162,17 @@ function formatActionName(action: EditAction): string {
 function getActionDescription(action: EditAction): string {
   switch (action) {
     case 'OPEN_CONFIG_DIALOG':
-      return 'Opens the config dialog when selecting a block';
+      return 'Opens config dialog on block select';
     case 'OPEN_EDITOR':
-      return 'Opens the block editor at the selected position';
+      return 'Opens block editor on select';
     case 'MARK_BLOCK':
-      return 'Marks the block for copy/move operations';
+      return 'Marks block for copy/move';
     case 'COPY_BLOCK':
-      return 'Copies the marked block to the selected position';
+      return 'Copies marked block to position';
     case 'DELETE_BLOCK':
-      return 'Deletes the block at the selected position';
+      return 'Deletes block at position';
     case 'MOVE_BLOCK':
-      return 'Moves the marked block to the selected position';
+      return 'Moves marked block to position';
     default:
       return '';
   }

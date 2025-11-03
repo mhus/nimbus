@@ -546,10 +546,15 @@ async function executeDeleteBlock(
     throw new Error('No world selected');
   }
 
+  console.log(`[DELETE_BLOCK REST] Attempting to delete block at (${position.x}, ${position.y}, ${position.z}) in world ${worldId}`);
+
   const success = await worldManager.deleteBlock(worldId, position.x, position.y, position.z);
   if (!success) {
-    throw new Error('Failed to delete block (block may not exist)');
+    console.error(`[DELETE_BLOCK REST] Failed to delete block at (${position.x}, ${position.y}, ${position.z})`);
+    throw new Error(`Failed to delete block at (${position.x}, ${position.y}, ${position.z}) - block may not exist`);
   }
+
+  console.log(`[DELETE_BLOCK REST] Successfully deleted block at (${position.x}, ${position.y}, ${position.z})`);
 
   // Clear selection after deletion
   session.selectedEditBlock = null;

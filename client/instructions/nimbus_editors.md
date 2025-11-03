@@ -1212,7 +1212,7 @@ soll der Block grün dargestellt werden (wie ein selektierter block nur gruen an
 [x] Bonus: Erweitere HelpCommand im client so, dass man einen parameter mit dem command angeben kann. Dann wird die Description des
     Commands angezeigt. Das gleiche im 'server/src/commands/HelpCommand.ts'
 
-[?] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
+[~] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
   und die hinterlegte Aktion ausfuehrt.
 - Es soll im client immer das Commando 'setSelectedEditBlock' aufgerufen werden, damit der Block hier sichtbar selektiert wird.
 Aktionen sind:
@@ -1228,7 +1228,7 @@ Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
 - GET /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Gibt selectedEditBlock und auch ggf. markierte Block Position mit aus.
 - Lege im Server REST PUT /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Setzt selectedEditBlock im Server, es wird auch im client sofort das commando 'setSelectedEditBlock' aufgerufen, damit der Block dort sichtbar wird.
 
-[?] Erstelle einen Editor 'EditConfiguration' in 'nimbus_editors'. Der Editor bekommt via URL Parameter die worldId und sessionId mitgegeben.
+[x] Erstelle einen Editor 'EditConfiguration' in 'nimbus_editors'. Der Editor bekommt via URL Parameter die worldId und sessionId mitgegeben.
 - Der Editor liest die editAction via REST API aus und zeigt sie in einem Select an.
 - Der Editor hat einen Save Button, der die editAction via REST API setzt.
 - Der Editor ruft regelmäßig selectedEditBlock auf und zeigt die aktuell selektierte Block Position an.
@@ -1237,9 +1237,13 @@ Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
 
 [x] prüfe ob die EditAction OPEN_CONFIG_DIALOG im server implementiert ist und das command openComponent 'edit_config' aufruft.
 
-[?] Wenn jetzt im client der Key '/' gedrueckt wird (EditorHandler) soll nicht mehr der BlockEditor direkt auf gemacht werden,
+[x] Wenn jetzt im client der Key '/' gedrueckt wird (EditorHandler) soll nicht mehr der BlockEditor direkt auf gemacht werden,
 sondern im Server das commando 'setSelectedEditBlock' aufgerufen werden.
-[?] Bringt das 'setSelectedEditBlock' command einen Fehler, dann gib eine system meldung ab (NotificationService) und oeffne den EditConfiguration Editor.
+[x] Bringt das 'setSelectedEditBlock' command einen Fehler, dann gib eine system meldung ab (NotificationService) und oeffne den EditConfiguration Editor.
+
+[?] Wird der 'F12' key gedrueckt, dann soll immer das 'edit config' modal geoeffnet werden.
+- Korrektur nicht '?' sondern F12 zum oeffnen des edit config. - nur im EDITOR Modus (wie bei '/')
+[?] Wird F11 gedrueckt, dann soll das 'block edit' geofnet werden. - nur im EDITOR Modus (wie bei '/')
 
 [ ] Erweiter BlockEditor und EditorConfig um ein eigenstaendiges Component 'MoveSelectedBlockComponent'
 - Die COmponent zeigt elegant die drei richtungen x y z an (ggf durch eine SVG grafik?) jeweils mit der option + und -
@@ -1248,6 +1252,10 @@ sondern im Server das commando 'setSelectedEditBlock' aufgerufen werden.
 - Der BlockEditor wechselt seinen angezeigten Block
 - Der EditConfig zeigt neue Coordinaten an.
 
+[ ] Füge in BlockEditor einen link auf den BlockTypeEditor in neuem Tab, mit der id des BlockTypes des aktuellen Blocks ein.
+- Lasse den BlockTypeEditor die id auswerten und sofort anzeigen.
+
+[ ] Gehe beim oeffnen des openBlockEditor() und openEditorConfig() aus dem Screen Pointer Lock modus heraus.
 
 ## Asset Info
 

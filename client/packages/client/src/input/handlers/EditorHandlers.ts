@@ -173,3 +173,111 @@ export class EditorActivateHandler extends InputHandler {
     // Editor activation doesn't need continuous updates
   }
 }
+
+/**
+ * BlockEditorActivate Handler (Key: F11)
+ *
+ * Opens block editor for currently selected block
+ */
+export class BlockEditorActivateHandler extends InputHandler {
+  constructor(playerService: PlayerService, appContext: AppContext) {
+    super(playerService, appContext);
+  }
+
+  protected onActivate(value: number): void {
+    const selectService = this.appContext?.services.select;
+    const modalService = this.appContext?.services.modal;
+    const notificationService = this.appContext?.services.notification;
+
+    // Check service availability
+    if (!selectService) {
+      logger.warn('SelectService not available');
+      return;
+    }
+
+    if (!modalService) {
+      logger.warn('ModalService not available');
+      return;
+    }
+
+    // Get currently selected block
+    const selectedBlock = selectService.getCurrentSelectedBlock();
+
+    if (!selectedBlock) {
+      logger.warn('No block selected - aim at a block to edit');
+      if (notificationService) {
+        notificationService.newNotification(0, null, 'No block selected - aim at a block to edit');
+      }
+      return;
+    }
+
+    // Get block position
+    const pos = selectedBlock.block.position;
+
+    // Open block editor directly
+    logger.info('Opening block editor (triggered by F11 key)', { position: pos });
+
+    try {
+      modalService.openBlockEditor(pos.x, pos.y, pos.z);
+    } catch (error) {
+      logger.error('Failed to open block editor', { error });
+
+      if (notificationService) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        notificationService.newNotification(0, null, `Failed to open block editor: ${errorMessage}`);
+      }
+    }
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Editor activation doesn't need continuous updates
+  }
+}
+
+/**
+ * EditConfigActivate Handler (Key: F12)
+ *
+ * Opens edit configuration modal to change edit action settings
+ */
+export class EditConfigActivateHandler extends InputHandler {
+  constructor(playerService: PlayerService, appContext: AppContext) {
+    super(playerService, appContext);
+  }
+
+  protected onActivate(value: number): void {
+    const modalService = this.appContext?.services.modal;
+
+    // Check service availability
+    if (!modalService) {
+      logger.warn('ModalService not available');
+      return;
+    }
+
+    // Open EditConfiguration modal
+    logger.info('Opening edit configuration modal (triggered by F12 key)');
+
+    try {
+      modalService.openEditConfiguration();
+    } catch (error) {
+      logger.error('Failed to open edit configuration modal', { error });
+
+      const notificationService = this.appContext?.services.notification;
+      if (notificationService) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        notificationService.newNotification(0, null, `Failed to open edit config: ${errorMessage}`);
+      }
+    }
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Config activation doesn't need continuous updates
+  }
+}
