@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import type { WorldManager } from '../../world/WorldManager';
 import type { BlockUpdateBuffer } from '../../network/BlockUpdateBuffer';
+import type { ClientSession } from '../../types/ServerTypes';
+import { EditAction, MessageType } from '@nimbus/shared';
 
 export function createWorldRoutes(
   worldManager: WorldManager,
-  blockUpdateBuffer: BlockUpdateBuffer
+  blockUpdateBuffer: BlockUpdateBuffer,
+  sessions: Map<string, ClientSession>
 ): Router {
   const router = Router();
 
@@ -330,5 +333,277 @@ export function createWorldRoutes(
     return res.status(204).send();
   });
 
+  // GET /api/worlds/:worldId/session/:sessionId/editAction - Get current editAction
+  router.get('/:worldId/session/:sessionId/editAction', (req, res) => {
+    const session = sessions.get(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    return res.json({ editAction: session.editAction || EditAction.OPEN_CONFIG_DIALOG });
+  });
+
+  // PUT /api/worlds/:worldId/session/:sessionId/editAction - Set editAction
+  router.put('/:worldId/session/:sessionId/editAction', (req, res) => {
+    const session = sessions.get(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const { editAction } = req.body;
+
+    // Validate editAction
+    if (!editAction || !Object.values(EditAction).includes(editAction)) {
+      return res.status(400).json({ error: 'Invalid editAction. Must be one of: ' + Object.values(EditAction).join(', ') });
+    }
+
+    session.editAction = editAction;
+
+    return res.json({ editAction: session.editAction });
+  });
+
+  // GET /api/worlds/:worldId/session/:sessionId/selectedEditBlock - Get selectedEditBlock and markedEditBlock
+  router.get('/:worldId/session/:sessionId/selectedEditBlock', (req, res) => {
+    const session = sessions.get(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    return res.json({
+      selectedEditBlock: session.selectedEditBlock || null,
+      markedEditBlock: session.markedEditBlock || null,
+    });
+  });
+
+  // PUT /api/worlds/:worldId/session/:sessionId/selectedEditBlock - Set selectedEditBlock and execute action
+  router.put('/:worldId/session/:sessionId/selectedEditBlock', async (req, res) => {
+    const session = sessions.get(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const { x, y, z } = req.body;
+
+    // If no coordinates provided, clear selection
+    if (x === undefined && y === undefined && z === undefined) {
+      session.selectedEditBlock = null;
+
+      // Send setSelectedEditBlock to client to clear highlight
+      const requestId = `scmd_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      session.ws.send(JSON.stringify({
+        i: requestId,
+        t: MessageType.SCMD,
+        d: { cmd: 'setSelectedEditBlock', args: [] },
+      }));
+
+      return res.json({ success: true, selectedEditBlock: null });
+    }
+
+    // Validate coordinates
+    if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
+      return res.status(400).json({ error: 'Invalid coordinates. Expected numbers for x, y, z' });
+    }
+
+    const position = { x, y, z };
+    session.selectedEditBlock = position;
+
+    // Send setSelectedEditBlock to client to show green highlight
+    const requestId = `scmd_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    session.ws.send(JSON.stringify({
+      i: requestId,
+      t: MessageType.SCMD,
+      d: {
+        cmd: 'setSelectedEditBlock',
+        args: [x.toString(), y.toString(), z.toString()],
+      },
+    }));
+
+    // Execute action based on editAction
+    const action = session.editAction || EditAction.OPEN_CONFIG_DIALOG;
+    try {
+      await executeEditAction(session, action, position, worldManager);
+    } catch (error) {
+      return res.status(500).json({
+        error: 'Action execution failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
+    return res.json({ success: true, selectedEditBlock: position });
+  });
+
   return router;
+}
+
+/**
+ * Execute edit action for REST API endpoint
+ */
+async function executeEditAction(
+  session: ClientSession,
+  action: EditAction,
+  position: { x: number; y: number; z: number },
+  worldManager: WorldManager
+): Promise<void> {
+  switch (action) {
+    case EditAction.OPEN_CONFIG_DIALOG:
+      // Send openComponent command to client
+      sendClientCommand(session, 'openComponent', ['edit_config']);
+      break;
+
+    case EditAction.OPEN_EDITOR:
+      // Send openComponent command to client with position
+      sendClientCommand(session, 'openComponent', [
+        'block_editor',
+        position.x.toString(),
+        position.y.toString(),
+        position.z.toString(),
+      ]);
+      break;
+
+    case EditAction.MARK_BLOCK:
+      // Store marked block (server-side only)
+      session.markedEditBlock = position;
+      break;
+
+    case EditAction.COPY_BLOCK:
+      await executeCopyBlock(session, position, worldManager);
+      break;
+
+    case EditAction.DELETE_BLOCK:
+      await executeDeleteBlock(session, position, worldManager);
+      break;
+
+    case EditAction.MOVE_BLOCK:
+      await executeMoveBlock(session, position, worldManager);
+      break;
+
+    default:
+      throw new Error(`Unknown action: ${action}`);
+  }
+}
+
+/**
+ * Send command to client (SCMD) - fire and forget
+ */
+function sendClientCommand(session: ClientSession, cmd: string, args: string[]): void {
+  const requestId = `scmd_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  session.ws.send(JSON.stringify({
+    i: requestId,
+    t: MessageType.SCMD,
+    d: { cmd, args },
+  }));
+}
+
+/**
+ * Execute COPY_BLOCK action
+ */
+async function executeCopyBlock(
+  session: ClientSession,
+  targetPosition: { x: number; y: number; z: number },
+  worldManager: WorldManager
+): Promise<void> {
+  if (!session.markedEditBlock) {
+    throw new Error('No block marked for copy. Use MARK_BLOCK action first.');
+  }
+
+  const worldId = session.worldId;
+  if (!worldId) {
+    throw new Error('No world selected');
+  }
+
+  const sourceBlock = await worldManager.getBlock(
+    worldId,
+    session.markedEditBlock.x,
+    session.markedEditBlock.y,
+    session.markedEditBlock.z
+  );
+
+  if (!sourceBlock) {
+    throw new Error(`No block found at marked position (${session.markedEditBlock.x}, ${session.markedEditBlock.y}, ${session.markedEditBlock.z})`);
+  }
+
+  const targetBlock = {
+    ...sourceBlock,
+    position: targetPosition,
+  };
+
+  const success = await worldManager.setBlock(worldId, targetBlock);
+  if (!success) {
+    throw new Error('Failed to copy block');
+  }
+}
+
+/**
+ * Execute DELETE_BLOCK action
+ */
+async function executeDeleteBlock(
+  session: ClientSession,
+  position: { x: number; y: number; z: number },
+  worldManager: WorldManager
+): Promise<void> {
+  const worldId = session.worldId;
+  if (!worldId) {
+    throw new Error('No world selected');
+  }
+
+  const success = await worldManager.deleteBlock(worldId, position.x, position.y, position.z);
+  if (!success) {
+    throw new Error('Failed to delete block (block may not exist)');
+  }
+
+  // Clear selection after deletion
+  session.selectedEditBlock = null;
+  sendClientCommand(session, 'setSelectedEditBlock', []);
+}
+
+/**
+ * Execute MOVE_BLOCK action
+ */
+async function executeMoveBlock(
+  session: ClientSession,
+  targetPosition: { x: number; y: number; z: number },
+  worldManager: WorldManager
+): Promise<void> {
+  if (!session.markedEditBlock) {
+    throw new Error('No block marked for move. Use MARK_BLOCK action first.');
+  }
+
+  const worldId = session.worldId;
+  if (!worldId) {
+    throw new Error('No world selected');
+  }
+
+  const sourceBlock = await worldManager.getBlock(
+    worldId,
+    session.markedEditBlock.x,
+    session.markedEditBlock.y,
+    session.markedEditBlock.z
+  );
+
+  if (!sourceBlock) {
+    throw new Error(`No block found at marked position (${session.markedEditBlock.x}, ${session.markedEditBlock.y}, ${session.markedEditBlock.z})`);
+  }
+
+  const targetBlock = {
+    ...sourceBlock,
+    position: targetPosition,
+  };
+
+  const copySuccess = await worldManager.setBlock(worldId, targetBlock);
+  if (!copySuccess) {
+    throw new Error('Failed to copy block to new position');
+  }
+
+  const deleteSuccess = await worldManager.deleteBlock(
+    worldId,
+    session.markedEditBlock.x,
+    session.markedEditBlock.y,
+    session.markedEditBlock.z
+  );
+
+  if (!deleteSuccess) {
+    throw new Error(`Block copied but failed to delete old position at (${session.markedEditBlock.x}, ${session.markedEditBlock.y}, ${session.markedEditBlock.z})`);
+  }
+
+  session.markedEditBlock = null;
 }

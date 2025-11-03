@@ -1212,7 +1212,7 @@ soll der Block grün dargestellt werden (wie ein selektierter block nur gruen an
 [x] Bonus: Erweitere HelpCommand im client so, dass man einen parameter mit dem command angeben kann. Dann wird die Description des
     Commands angezeigt. Das gleiche im 'server/src/commands/HelpCommand.ts'
 
-[ ] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
+[?] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
   und die hinterlegte Aktion ausfuehrt.
 - Es soll im client immer das Commando 'setSelectedEditBlock' aufgerufen werden, damit der Block hier sichtbar selektiert wird.
 Aktionen sind:
@@ -1224,13 +1224,24 @@ Aktionen sind:
 - MOVE_BLOCK - verschiebt den markierten Block an die neue Stelle, die alte stelle wird leer gemacht.
 Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
 - GET /api/worlds/{worldId}/session/{sessionId}/editAction
-- PUT /api/worlds/{worldId}/blocks/{sessionId}/editAction
+- PUT /api/worlds/{worldId}/session/{sessionId}/editAction
 - GET /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Gibt selectedEditBlock und auch ggf. markierte Block Position mit aus.
+- Lege im Server REST PUT /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Setzt selectedEditBlock im Server, es wird auch im client sofort das commando 'setSelectedEditBlock' aufgerufen, damit der Block dort sichtbar wird.
 
 [ ] Erstelle einen Editor 'EditConfiguration' in 'nimbus_editors'. Der Editor bekommt via URL Parameter die worldId und sessionId mitgegeben.
 - Der Editor liest die editAction via REST API aus und zeigt sie in einem Select an.
 - Der Editor hat einen Save Button, der die editAction via REST API setzt.
 - Der Editor ruft regelmäßig selectedEditBlock auf und zeigt die aktuell selektierte Block Position an.
+- Der Editor soll in ModalService mit openEditConfiguration() Links Oben im Bildschirm als modal geoffnet werden.
+- Via modalService.openComponent() kann der Editor auch geoeffnet werden
+
+[ ] Erweiter BlockEditor und EditorConfig um ein eigenstaendiges Component 'MoveSelectedBlockComponent'
+- Die COmponent zeigt elegant die drei richtungen x y z an (ggf durch eine SVG grafik?) jeweils mit der option + und -
+- Clickt man auf eine der optionen wird der aktuelle Wert von selectedEditBlock ausgelesen, je nach gecklickte option 
+  angepasst und selectedEditBlock mit PUT wirder geschrieben.
+- Der BlockEditor wechselt seinen angezeigten Block
+- Der EditConfig zeigt neue Coordinaten an.
+
 
 ## Asset Info
 

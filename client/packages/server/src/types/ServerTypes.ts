@@ -5,7 +5,7 @@
 import type WebSocket from 'ws';
 import type { ServerChunk } from './ServerChunk';
 import type { WorldGenerator } from '../world/generators/WorldGenerator';
-import type { WorldInfo } from '@nimbus/shared';
+import type { WorldInfo, EditAction } from '@nimbus/shared';
 
 /**
  * Client session data
@@ -40,6 +40,15 @@ export interface ClientSession {
 
   /** Is authenticated */
   isAuthenticated: boolean;
+
+  /** Selected edit block position (for editing operations) */
+  selectedEditBlock?: { x: number; y: number; z: number } | null;
+
+  /** Marked edit block position (for copy/move operations) */
+  markedEditBlock?: { x: number; y: number; z: number } | null;
+
+  /** Current edit action (determines behavior when setting selectedEditBlock) */
+  editAction?: EditAction;
 }
 
 /**

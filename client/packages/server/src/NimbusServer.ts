@@ -18,6 +18,7 @@ import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
 import { CommandService } from './commands/CommandService';
 import { HelpCommand } from './commands/HelpCommand';
 import { LoopCommand } from './commands/LoopCommand';
+import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -52,6 +53,7 @@ class NimbusServer {
     // Register command handlers
     this.commandService.registerHandler(new HelpCommand(this.commandService));
     this.commandService.registerHandler(new LoopCommand());
+    this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager));
   }
 
   /**
@@ -94,7 +96,7 @@ class NimbusServer {
       // Note: Management routes (GET/POST/PUT/DELETE for assets metadata) require auth
       // Asset file serving (GET /assets/*) routes are public
       this.app.use('/api/worlds', authMiddleware, createAssetRoutes(this.worldManager));
-      this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager, this.blockUpdateBuffer));
+      this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager, this.blockUpdateBuffer, this.sessions));
 
       // Health check
       this.app.get('/health', (_req, res) => res.json({ status: 'ok', version: SERVER_VERSION }));

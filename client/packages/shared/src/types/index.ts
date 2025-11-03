@@ -32,3 +32,6 @@ export * from './PlayerInfo';
 
 // Modal types (for IFrame communication)
 export * from './Modal';
+
+// Edit action types
+export * from './EditAction';
