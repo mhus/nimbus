@@ -19,6 +19,7 @@ import { CommandService } from './commands/CommandService';
 import { HelpCommand } from './commands/HelpCommand';
 import { LoopCommand } from './commands/LoopCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
+import { NavigateSelectedBlockCommand } from './commands/NavigateSelectedBlockCommand';
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -54,6 +55,7 @@ class NimbusServer {
     this.commandService.registerHandler(new HelpCommand(this.commandService));
     this.commandService.registerHandler(new LoopCommand());
     this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager, this.blockUpdateBuffer));
+    this.commandService.registerHandler(new NavigateSelectedBlockCommand());
   }
 
   /**

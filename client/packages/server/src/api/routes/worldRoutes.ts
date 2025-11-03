@@ -375,6 +375,54 @@ export function createWorldRoutes(
     });
   });
 
+  // POST /api/worlds/:worldId/session/:sessionId/selectedEditBlock/navigate - Navigate to block (selection only, no action)
+  router.post('/:worldId/session/:sessionId/selectedEditBlock/navigate', async (req, res) => {
+    const session = sessions.get(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const { x, y, z } = req.body;
+
+    // If no coordinates provided, clear selection
+    if (x === undefined && y === undefined && z === undefined) {
+      session.selectedEditBlock = null;
+
+      // Send setSelectedEditBlock to client to clear highlight
+      const requestId = `scmd_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      session.ws.send(JSON.stringify({
+        i: requestId,
+        t: MessageType.SCMD,
+        d: { cmd: 'setSelectedEditBlock', args: [] },
+      }));
+
+      return res.json({ success: true, selectedEditBlock: null });
+    }
+
+    // Validate coordinates
+    if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
+      return res.status(400).json({ error: 'Invalid coordinates. Expected numbers for x, y, z' });
+    }
+
+    const position = { x, y, z };
+    session.selectedEditBlock = position;
+
+    // Send setSelectedEditBlock to client to show green highlight
+    const requestId = `scmd_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    session.ws.send(JSON.stringify({
+      i: requestId,
+      t: MessageType.SCMD,
+      d: {
+        cmd: 'setSelectedEditBlock',
+        args: [x.toString(), y.toString(), z.toString()],
+      },
+    }));
+
+    // NOTE: Do NOT execute editAction here - this is navigate only!
+
+    return res.json({ success: true, selectedEditBlock: position });
+  });
+
   // PUT /api/worlds/:worldId/session/:sessionId/selectedEditBlock - Set selectedEditBlock and execute action
   router.put('/:worldId/session/:sessionId/selectedEditBlock', async (req, res) => {
     const session = sessions.get(req.params.sessionId);

@@ -33,6 +33,17 @@
             </div>
           </div>
 
+          <!-- Navigate Selected Block Component -->
+          <div class="mt-4">
+            <NavigateSelectedBlockComponent
+              :selected-block="blockCoordinates"
+              :step="1"
+              :size="280"
+              :show-execute-button="false"
+              @navigate="handleNavigate"
+            />
+          </div>
+
           <!-- Block Type Selection -->
           <div class="form-control">
             <label class="label">
@@ -325,9 +336,10 @@ import SearchInput from '@/components/SearchInput.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 import OffsetsEditor from '@editors/OffsetsEditor.vue';
 import ModifierEditorDialog from '@/components/ModifierEditorDialog.vue';
+import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 
-// Parse URL parameters (reactive)
-const blockCoordinates = computed(() => {
+// Parse URL parameters
+function parseBlockCoordinates(): { x: number; y: number; z: number } | null {
   const params = new URLSearchParams(window.location.search);
 
   // Support two formats:
@@ -357,7 +369,10 @@ const blockCoordinates = computed(() => {
   }
 
   return null;
-});
+}
+
+// Block coordinates (reactive ref, not computed)
+const blockCoordinates = ref<{ x: number; y: number; z: number } | null>(parseBlockCoordinates());
 
 // Get worldId from URL (once, not reactive - needed for composables)
 const params = new URLSearchParams(window.location.search);
@@ -445,6 +460,48 @@ const currentShape = computed(() => {
   // Default to CUBE
   return 1;
 });
+
+// Handle navigation from NavigateSelectedBlockComponent
+async function handleNavigate(position: { x: number; y: number; z: number }) {
+  // Update URL parameters
+  const params = new URLSearchParams(window.location.search);
+  params.set('x', position.x.toString());
+  params.set('y', position.y.toString());
+  params.set('z', position.z.toString());
+
+  // Update URL without page reload
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.pushState({}, '', newUrl);
+
+  // Update blockCoordinates ref to trigger reactivity
+  // This will automatically trigger the watcher which calls loadBlock()
+  blockCoordinates.value = { ...position };
+
+  // Also notify server to update selection highlight in 3D client
+  try {
+    const sessionId = params.get('sessionId');
+    if (sessionId) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(
+        `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/selectedEditBlock/navigate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(position),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn('Failed to update server selection:', response.statusText);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to notify server about navigation:', err);
+    // Don't block the UI if server notification fails
+  }
+}
 
 // BlockType search and selection
 async function handleBlockTypeSearch(query: string) {
