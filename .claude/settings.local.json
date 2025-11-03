@@ -38,7 +38,8 @@
       "Bash(pnpm --filter @nimbus/server exec tsc:*)",
       "WebSearch",
       "WebFetch(domain:doc.babylonjs.com)",
-      "WebFetch(domain:babylonjs.medium.com)"
+      "WebFetch(domain:babylonjs.medium.com)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

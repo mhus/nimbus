@@ -1175,12 +1175,6 @@ dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe v
 
 [?] Bei einem Fehler soll nicht versucht werden nochmal zu laden, sons kommt eine endlosschleife.
 
-## Refactoring
-
-[ ] Umbenennen von 'nimbus_editors' in components 'controls'.
-[ ] Umbenennen 'client' in 'engine'
-[ ] Umbenennen von server in test_server
-
 ## Engine Dialogs neue Eigenschaft
 
 [ ] Neue Eigenschaft NO_BACKGROUND_LOCK: hitergrund wird nicht gesperrt/grau, Dialog geht nicht zu wenn in den hintergrund geklcikt wird.
@@ -1191,8 +1185,53 @@ dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe v
 > In Engine Selektieren von Block
 > Editor Next Block:  up down left right back forward Buttons
 
-Erstelle im SelectService einen 'SelectedEditBlock' Vektor der auch null sein kann. Wird der Vektor gesetzt,
+[ ] Erstelle im SelectService einen 'SelectedEditBlock' Vector der auch null sein kann. Wird der Vektor gesetzt,
 soll der Block grün dargestellt werden (wie ein selektierter block nur gruen anstelle von weiss).
 - Erstelle im client ein Commando 'setSelectedEditBlock' mit dem man den Wert setzen kann, sind die parameter leer, wird
   die selektion zurückgesetzt.
-- Erstelle im clint ein Commando 'getSelectedEditBlock' der die Vektor-Werte zurück gibt.
+- Erstelle im client ein Commando 'getSelectedEditBlock' der die Vektor-Werte zurück gibt.
+- Beim aufrufen von Iframes (bzw. new Tab) soll zusatzlich zu 'embedded=' immer die 'worldId=' und die 'sessionId=' mitgegeben werden.
+
+[ ] Erstelle im client ein Command 'openComponent name attributes*' das definierte componenten im client oeffnet
+- Erstelle dafuer einen ComponentsService der in AppContext registriert wird mit der methode openComponent(component : string, attributes : string[])
+- Aktuell wird der BlockEditor beim druecken vom Key '/' geoeffnet, verschiebe die Funktionalitaet in den
+  Service 'ComponentsService' mit der methode 'openBlockEditor(x,y,z)'
+- Erweitere openComponent(), das mit dem dem component 'block_editor' die methode openBlockEditor()
+
+[ ] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
+  und die hinterlegte Aktion ausfuehrt.
+Aktionen sind:
+- OPEN_CONFIG_DIALOG - schickt das commando
+- OPEN_EDITOR - schickt das commando 'openComponent 'block_editor' x y z' an den client.
+- MARK_BLOCK - merkt sich den Block 
+- COPY_BLOCK - kopiert den markierten Block an die neue Stelle
+- DELETE_BLOCK - löscht den Block
+- MOVE_BLOCK - verschiebt den markierten Block an die neue Stelle, die alte stelle wird leer gemacht.
+
+[ ] Erstelle einen 
+
+## Asset Info
+
+[ ] Neben jedem asset soll auch eine asset info datei liegen koennen. Die Datei hat dann immer den anmen des assets = '.info',
+z.B. 'textures/block/grass.png' dann ist die info datei 'textures/block/grass.png.info'.
+- Info Dateien sollen nicht bei der suche via RETS API im server gefunden werden.
+- Info Dateien sind json Dateien, wenn im AssetEditor ein Asset bearbeitet wird, soll die infod atei geladen werden
+  und kann bearbeitet werden.
+- Info dateien sind reine key-value objekte, mit nicht definierten attributen, ausser 'description' das soll immer
+  vorhanden sein. Im Editor keonnen dann neue werte hinzugefuegt, bzw. geloescht werden.
+- Die info Datei kann wie ein anderes Asset geladen und aktuelisiert werden.
+
+[ ] Erstelle ein python script, dass im ordner Assets alle bilder findet, analysiert und die folgenden Werte findet
+- width
+- height
+- color (rgb hex) - meist genutzte farbe / farb durchschnitt
+- Kannst du irgendwie analysieren was auf dem bild ist? ggf. claude oder gemini (ich habe einen api key) aufrufen mit der bild datei? - description
+Erfasse alle Werte in einer json datei und speichere diese als <asset file name>.info im ordner Assets.
+
+===
+
+## Refactoring
+
+[ ] Umbenennen von 'nimbus_editors' in components 'controls'.
+[ ] Umbenennen 'client' in 'engine'
+[ ] Umbenennen von server in test_server

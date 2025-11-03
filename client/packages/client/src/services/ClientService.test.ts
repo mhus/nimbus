@@ -16,6 +16,7 @@ describe('ClientService', () => {
       password: 'testpass',
       websocketUrl: 'ws://localhost:3000',
       apiUrl: 'http://localhost:3000',
+      worldId: 'test-world',
       logToConsole: true,
     };
 

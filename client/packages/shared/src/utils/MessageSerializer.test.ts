@@ -207,7 +207,7 @@ describe('MessageSerializer', () => {
 
     it('should keep empty strings', () => {
       const message: BaseMessage = {
-        t: MessageType.NOTIFICATION,
+        t: MessageType.CMD_MESSAGE,
         d: {
           message: '',
           title: 'Alert',
@@ -464,7 +464,7 @@ describe('MessageSerializer', () => {
 
     it('should handle message with special characters', () => {
       const message: BaseMessage = {
-        t: MessageType.NOTIFICATION,
+        t: MessageType.CMD_MESSAGE,
         d: {
           message: 'Hello "World"\nNew line\tTab\r\nSpecial: äöü',
           emoji: '🎮🌍✨',

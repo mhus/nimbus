@@ -37,7 +37,7 @@ export class ClientService {
    * @returns Client type
    */
   getClientType(): ClientType {
-    if (typeof navigator === 'undefined') {
+    if (typeof navigator === 'undefined' || !navigator.userAgent) {
       // Server-side or test environment
       return ClientType.WEB;
     }

@@ -83,7 +83,7 @@ describe('CubeRenderer', () => {
 
     // Initialize render context
     renderContext = {
-      renderService: mockRenderService,
+      renderService: mockRenderService as any,
       faceData: {
         positions: [],
         indices: [],
@@ -291,7 +291,7 @@ describe('CubeRenderer', () => {
 
       for (const flag of faceFlags) {
         renderContext = {
-      renderService: mockRenderService,
+          renderService: mockRenderService as any,
           faceData: {
             positions: [],
             indices: [],
@@ -361,7 +361,7 @@ describe('CubeRenderer', () => {
 
       const block = createTestBlock(0, 0, 0, undefined, textures);
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       // Should still render all faces using fallback textures
       expect(renderContext.faceData.positions.length).toBe(24 * 3);
@@ -381,7 +381,7 @@ describe('CubeRenderer', () => {
         scalingZ: 1.5
       };
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -424,7 +424,7 @@ describe('CubeRenderer', () => {
         rotationY: 45
       };
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -456,7 +456,7 @@ describe('CubeRenderer', () => {
         -0.1, -0.2, -0.3, // Corner 1 offset
       ];
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       // Should still render the cube
       expect(renderContext.faceData.positions.length).toBe(24 * 3);
@@ -503,7 +503,7 @@ describe('CubeRenderer', () => {
         0.15, 0.2, -0.15,  // Corner 7: left-front-top
       ];
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -553,7 +553,7 @@ describe('CubeRenderer', () => {
         // Corner 3-7 offsets omitted (should default to 0)
       ];
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -606,7 +606,7 @@ describe('CubeRenderer', () => {
         -0.2, -0.2, -0.2,  // Corner 7: shrink inward
       ];
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -651,7 +651,7 @@ describe('CubeRenderer', () => {
         0.5, 0, 0.5,  // Corner 7: move outward
       ];
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -704,7 +704,7 @@ describe('CubeRenderer', () => {
         scalingZ: 2
       };
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions = renderContext.faceData.positions;
 
@@ -745,13 +745,13 @@ describe('CubeRenderer', () => {
       // Test with undefined offsets
       block.block.offsets = undefined;
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions1 = [...renderContext.faceData.positions];
 
       // Reset context for second test
       renderContext = {
-      renderService: mockRenderService,
+        renderService: mockRenderService as any,
         faceData: {
           positions: [],
           indices: [],
@@ -764,7 +764,7 @@ describe('CubeRenderer', () => {
       // Test with empty array
       block.block.offsets = [];
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const positions2 = renderContext.faceData.positions;
 
@@ -791,7 +791,7 @@ describe('CubeRenderer', () => {
       const block = createTestBlock();
       block.currentModifier = {} as any; // No visibility modifier
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       // Should not render anything
       expect(renderContext.faceData.positions.length).toBe(0);
@@ -802,7 +802,7 @@ describe('CubeRenderer', () => {
       const block = createTestBlock();
       block.currentModifier.visibility!.textures = undefined;
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       // Should not render anything
       expect(renderContext.faceData.positions.length).toBe(0);
@@ -816,7 +816,7 @@ describe('CubeRenderer', () => {
         1: undefined as any
       };
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       // Should still render with default UVs
       expect(renderContext.faceData.positions.length).toBe(24 * 3);
@@ -828,7 +828,7 @@ describe('CubeRenderer', () => {
     it('should generate correct indices for triangulation', async () => {
       const block = createTestBlock();
 
-      await cubeRenderer.render(mockRenderService as any, block, renderContext);
+      await cubeRenderer.render(renderContext, block);
 
       const indices = renderContext.faceData.indices;
 
@@ -865,11 +865,11 @@ describe('CubeRenderer', () => {
       const block2 = createTestBlock(1, 0, 0);
 
       // Render first block
-      await cubeRenderer.render(mockRenderService as any, block1, renderContext);
+      await cubeRenderer.render(renderContext, block1);
       expect(renderContext.vertexOffset).toBe(24);
 
       // Render second block
-      await cubeRenderer.render(mockRenderService as any, block2, renderContext);
+      await cubeRenderer.render(renderContext, block2);
       expect(renderContext.vertexOffset).toBe(48);
 
       // Check that indices for second block use correct offset
