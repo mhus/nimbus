@@ -1255,7 +1255,9 @@ sondern im Server das commando 'setSelectedEditBlock' aufgerufen werden.
 [ ] Füge in BlockEditor einen link auf den BlockTypeEditor in neuem Tab, mit der id des BlockTypes des aktuellen Blocks ein.
 - Lasse den BlockTypeEditor die id auswerten und sofort anzeigen.
 
-[ ] Gehe beim oeffnen des openBlockEditor() und openEditorConfig() aus dem Screen Pointer Lock modus heraus.
+[x] Gehe beim oeffnen des openBlockEditor() und openEditorConfig() aus dem Screen Pointer Lock modus heraus.
+
+[ ] im SelectorService wird auc ein AIR Block gefunden, der Block ist zu nah an de kamera, finde erst bloecke, die mindestens 2 entfernt sind.
 
 ## Asset Info
 

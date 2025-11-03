@@ -919,6 +919,12 @@ export class ModalService {
    */
   openBlockEditor(x: number, y: number, z: number): ModalReference {
     try {
+      // Exit pointer lock so user can interact with modal
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+        logger.debug('Exited pointer lock for block editor');
+      }
+
       // Get component base URL from NetworkService
       const componentBaseUrl = this.appContext?.services.network?.getComponentBaseUrl();
 
@@ -953,6 +959,12 @@ export class ModalService {
    */
   openEditConfiguration(): ModalReference {
     try {
+      // Exit pointer lock so user can interact with modal
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+        logger.debug('Exited pointer lock for edit configuration');
+      }
+
       // Get editor base URL from NetworkService
       const componentBaseUrl = this.appContext?.services.network?.getComponentBaseUrl();
 
