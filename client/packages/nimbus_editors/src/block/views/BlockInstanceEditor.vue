@@ -55,9 +55,19 @@
                     <span v-if="selectedBlockType">{{ selectedBlockType.description || 'Unnamed' }}</span>
                     <span v-else class="text-base-content/50 italic">(BlockType details not loaded)</span>
                   </div>
-                  <button class="btn btn-sm btn-ghost" @click="clearBlockType">
-                    Change
-                  </button>
+                  <div class="flex gap-2">
+                    <a
+                      :href="getBlockTypeEditorUrl(blockData.blockTypeId)"
+                      target="_blank"
+                      class="btn btn-sm btn-primary"
+                      title="Open BlockType in new tab"
+                    >
+                      Edit Type
+                    </a>
+                    <button class="btn btn-sm btn-ghost" @click="clearBlockType">
+                      Change
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Search Field (shown when changing or no block type selected) -->
@@ -467,6 +477,22 @@ const currentShape = computed(() => {
   return 1;
 });
 
+// Generate BlockTypeEditor URL with blockTypeId parameter
+function getBlockTypeEditorUrl(blockTypeId: number): string {
+  const params = new URLSearchParams(window.location.search);
+
+  // Use relative path to material-editor.html
+  const baseUrl = 'material-editor.html';
+
+  // Preserve world and sessionId parameters, add blockTypeId
+  const newParams = new URLSearchParams();
+  if (params.get('world')) newParams.set('world', params.get('world')!);
+  if (params.get('sessionId')) newParams.set('sessionId', params.get('sessionId')!);
+  newParams.set('id', blockTypeId.toString());
+
+  return `${baseUrl}?${newParams.toString()}`;
+}
+
 // Handle navigation from NavigateSelectedBlockComponent
 async function handleNavigate(position: { x: number; y: number; z: number }) {
   // Update URL parameters
@@ -540,6 +566,22 @@ function clearBlockType() {
   showBlockTypeSearch.value = true; // Show search when changing
 }
 
+// Load BlockType details
+async function loadBlockTypeDetails(blockTypeId: number) {
+  try {
+    const blockType = await getBlockType(blockTypeId);
+    if (blockType) {
+      loadedBlockType.value = blockType;
+    } else {
+      console.warn(`BlockType ${blockTypeId} not found`);
+      loadedBlockType.value = null;
+    }
+  } catch (err) {
+    console.error('Failed to load BlockType details:', err);
+    loadedBlockType.value = null;
+  }
+}
+
 // Load block data
 async function loadBlock() {
   if (!blockCoordinates.value) {
@@ -588,7 +630,13 @@ async function loadBlock() {
 
       blockData.value = block;
       originalBlock.value = JSON.parse(JSON.stringify(block));
-      loadedBlockType.value = null;
+
+      // Load BlockType details if blockTypeId is set
+      if (block.blockTypeId && block.blockTypeId > 0) {
+        await loadBlockTypeDetails(block.blockTypeId);
+      } else {
+        loadedBlockType.value = null;
+      }
     } else {
       throw new Error(`Failed to load block: ${response.statusText}`);
     }

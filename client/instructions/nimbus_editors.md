@@ -1260,8 +1260,11 @@ und der gezeigte block im editor wechseln. Deshalb:
 
 [x] Im EditConfig geht das schon, aber im BlockEditor nicht, wenn ich auf dei elemente clicke flackert es zwar, aber die Block Coordinate aendert sich nicht, auch nicht die selektierte, es gibt auch keinen fehler im log
 
-[ ] Füge in BlockEditor einen link auf den BlockTypeEditor in neuem Tab, mit der id des BlockTypes des aktuellen Blocks ein.
+[x] Füge in BlockEditor einen link auf den BlockTypeEditor in neuem Tab, mit der id des BlockTypes des aktuellen Blocks ein.
 - Lasse den BlockTypeEditor die id auswerten und sofort anzeigen.
+
+[x] Beim starten des BlockEditors steht immer neben dem blockType: (BlockType details not loaded)
+Bitte details immer gleich laden
 
 [x] Gehe beim oeffnen des openBlockEditor() und openEditorConfig() aus dem Screen Pointer Lock modus heraus.
 

@@ -182,9 +182,22 @@ const handleModifierSaved = (modifier: any) => {
   closeModifierEditor();
 };
 
-onMounted(() => {
+onMounted(async () => {
   if (currentWorldId.value && blockTypesComposable.value) {
-    blockTypesComposable.value.loadBlockTypes();
+    await blockTypesComposable.value.loadBlockTypes();
+
+    // Check if there's a block type ID in the URL
+    const params = new URLSearchParams(window.location.search);
+    const blockTypeIdParam = params.get('id');
+
+    if (blockTypeIdParam) {
+      const blockTypeId = parseInt(blockTypeIdParam, 10);
+      if (!isNaN(blockTypeId)) {
+        // Set search query to the ID to show the block type in the list
+        searchQuery.value = blockTypeId.toString();
+        handleSearch(searchQuery.value);
+      }
+    }
   }
 });
 </script>
