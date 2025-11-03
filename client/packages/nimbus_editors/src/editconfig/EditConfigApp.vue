@@ -11,7 +11,7 @@
     </header>
 
     <!-- Main Content - Compact for iframe -->
-    <main class="flex-1 p-2">
+    <main class="flex-1 px-1 py-2">
       <!-- Error Display -->
       <div v-if="error" class="alert alert-error alert-sm mb-2 text-xs">
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -20,13 +20,13 @@
         <span>{{ error }}</span>
       </div>
 
-      <!-- Two-column layout: Form left, Navigator right -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+      <!-- Two-column layout: Form left (70%), Navigator right (30%) -->
+      <div class="grid gap-1" style="grid-template-columns: 70% 30%;">
         <!-- Left Column: Form and Info -->
-        <div class="space-y-2">
+        <div class="space-y-1">
           <!-- Edit Action Configuration - Compact -->
           <div class="card bg-base-100 shadow-sm">
-            <div class="card-body p-3">
+            <div class="card-body p-2">
               <h2 class="card-title text-sm mb-2">Edit Action</h2>
 
               <div class="form-control w-full">
@@ -40,26 +40,18 @@
                   </option>
                 </select>
                 <label class="label py-1">
-                  <span class="label-text-alt text-xs">{{ getActionDescription(currentEditAction) }}</span>
+                  <span class="label-text-alt text-xs">
+                    {{ getActionDescription(currentEditAction) }}
+                    <span v-if="saving" class="loading loading-spinner loading-xs ml-2"></span>
+                  </span>
                 </label>
-              </div>
-
-              <div class="card-actions justify-end mt-2">
-                <button
-                  class="btn btn-primary btn-sm btn-block"
-                  @click="saveEditAction"
-                  :disabled="saving || !hasChanges"
-                >
-                  <span v-if="saving" class="loading loading-spinner loading-xs"></span>
-                  {{ saving ? 'Saving...' : 'Save' }}
-                </button>
               </div>
             </div>
           </div>
 
           <!-- Selected Block Display - Compact -->
           <div class="card bg-base-100 shadow-sm">
-            <div class="card-body p-3">
+            <div class="card-body p-2">
               <h2 class="card-title text-sm mb-2">Selected Block</h2>
 
               <div v-if="selectedBlock" class="grid grid-cols-3 gap-2 text-center">
@@ -108,13 +100,12 @@
 
         <!-- Right Column: Navigate Component -->
         <div class="flex items-start justify-center">
-          <div class="card bg-base-100 shadow-sm w-full max-w-sm">
-            <div class="card-body p-3">
-              <h2 class="card-title text-sm mb-2">Navigate</h2>
+          <div class="card bg-base-100 shadow-sm w-full">
+            <div class="card-body p-2">
               <NavigateSelectedBlockComponent
                 :selected-block="selectedBlock"
                 :step="1"
-                :size="280"
+                :size="224"
                 :show-execute-button="true"
                 @navigate="handleNavigate"
                 @execute="executeAction"
@@ -135,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useModal } from '@/composables/useModal';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 
@@ -170,9 +161,6 @@ const saving = ref(false);
 
 // Polling interval
 let pollInterval: number | null = null;
-
-// Computed
-const hasChanges = computed(() => currentEditAction.value !== savedEditAction.value);
 
 // Format action name for display
 function formatActionName(action: EditAction): string {
@@ -350,6 +338,18 @@ async function executeAction() {
     console.error('Failed to execute action:', err);
   }
 }
+
+// Watch for edit action changes and auto-save
+watch(currentEditAction, async (newAction, oldAction) => {
+  // Skip if this is the initial load (both are same)
+  if (oldAction === undefined) return;
+
+  // Skip if already saved
+  if (newAction === savedEditAction.value) return;
+
+  // Auto-save
+  await saveEditAction();
+});
 
 // Lifecycle hooks
 onMounted(async () => {

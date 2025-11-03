@@ -1245,7 +1245,7 @@ sondern im Server das commando 'setSelectedEditBlock' aufgerufen werden.
 - Korrektur nicht '?' sondern F9 zum oeffnen des edit config. - nur im EDITOR Modus (wie bei '/') - F12 brauche ich fuer die browser console
 [x] Wird F10 gedrueckt, dann soll das 'block edit' geofnet werden. - nur im EDITOR Modus (wie bei '/') - F11 wird von browser blockiert
 
-[ ] Entferne aus EditorConfig Componente den 'Save' button, es soll beim wechseln der Edit Action automatisch gespeichert werden
+[x] Entferne aus EditorConfig Componente den 'Save' button, es soll beim wechseln der Edit Action automatisch gespeichert werden
 
 [x] Erweiter BlockEditor und EditorConfig um ein eigenstaendiges Component 'NavigateSelectedBlockComponent'
 - Die Component zeigt elegant die drei richtungen x y z an (ggf durch eine SVG grafik?) jeweils mit der option + und -
@@ -1258,14 +1258,14 @@ und der gezeigte block im editor wechseln. Deshalb:
 - Erweitere EditorConfig um ein Commando 'navigateSelectedBlock' das nur zum Client 'setSelectedEditBlock' schickt
 - Das ausloesen der aktion 'PUT selectedEditBlock' mus anders ausgeloest werden, z.b. durch einen knopf in der mitte.
 
-[?] Im EditConfig geht das schon, aber im BlockEditor nicht, wenn ich auf dei elemente clicke flackert es zwar, aber die Block Coordinate aendert sich nicht, auch nicht die selektierte, es gibt auch keinen fehler im log
+[x] Im EditConfig geht das schon, aber im BlockEditor nicht, wenn ich auf dei elemente clicke flackert es zwar, aber die Block Coordinate aendert sich nicht, auch nicht die selektierte, es gibt auch keinen fehler im log
 
 [ ] Füge in BlockEditor einen link auf den BlockTypeEditor in neuem Tab, mit der id des BlockTypes des aktuellen Blocks ein.
 - Lasse den BlockTypeEditor die id auswerten und sofort anzeigen.
 
 [x] Gehe beim oeffnen des openBlockEditor() und openEditorConfig() aus dem Screen Pointer Lock modus heraus.
 
-[ ] im SelectorService wird auc ein AIR Block gefunden, der Block ist zu nah an de kamera, finde erst bloecke, die mindestens 2 entfernt sind.
+[ ] im SelectorService wird auc ein AIR Block gefunden, der Block ist zu nah an de kamera, finde erst bloecke, die mindestens 2 oder 3 (konfigurierbar als constante) entfernt sind.
 
 ## Asset Info
 

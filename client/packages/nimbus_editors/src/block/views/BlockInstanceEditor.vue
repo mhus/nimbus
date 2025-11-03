@@ -24,7 +24,7 @@
       <!-- Block Info Card -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between mb-4">
             <h2 class="card-title">
               Block at ({{ blockCoordinates.x }}, {{ blockCoordinates.y }}, {{ blockCoordinates.z }})
             </h2>
@@ -33,89 +33,95 @@
             </div>
           </div>
 
-          <!-- Navigate Selected Block Component -->
-          <div class="mt-4">
-            <NavigateSelectedBlockComponent
-              :selected-block="blockCoordinates"
-              :step="1"
-              :size="280"
-              :show-execute-button="false"
-              @navigate="handleNavigate"
-            />
-          </div>
+          <!-- Two-column layout: BlockType/Status left (70%), Navigation right (30%) -->
+          <div class="grid gap-2 mb-4" style="grid-template-columns: 70% 30%;">
+            <!-- Left Column: Block Type and Status -->
+            <div class="space-y-4">
+              <!-- Block Type Selection -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Block Type</span>
+                  <span class="label-text-alt text-error" v-if="!blockData.blockTypeId">Required</span>
+                </label>
 
-          <!-- Block Type Selection -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Block Type</span>
-              <span class="label-text-alt text-error" v-if="!blockData.blockTypeId">Required</span>
-            </label>
-
-            <!-- Currently Selected Block Type -->
-            <div
-              v-if="blockData.blockTypeId > 0 && !showBlockTypeSearch"
-              class="p-3 bg-base-200 rounded-lg flex items-center justify-between mb-2"
-            >
-              <div>
-                <span class="font-mono font-bold">ID {{ blockData.blockTypeId }}</span>
-                <span class="mx-2">-</span>
-                <span v-if="selectedBlockType">{{ selectedBlockType.description || 'Unnamed' }}</span>
-                <span v-else class="text-base-content/50 italic">(BlockType details not loaded)</span>
-              </div>
-              <button class="btn btn-sm btn-ghost" @click="clearBlockType">
-                Change
-              </button>
-            </div>
-
-            <!-- Search Field (shown when changing or no block type selected) -->
-            <div v-if="showBlockTypeSearch || blockData.blockTypeId === 0">
-              <SearchInput
-                v-model="blockTypeSearch"
-                placeholder="Search block types by ID or description... (Press Enter)"
-                @keyup.enter="handleBlockTypeSearch(blockTypeSearch)"
-              />
-
-              <!-- Search Results (shown when searching) -->
-              <div
-                v-if="blockTypeSearch && blockTypeSearchResults.length > 0"
-                class="mt-2 border border-base-300 rounded-lg max-h-60 overflow-y-auto bg-base-100"
-              >
+                <!-- Currently Selected Block Type -->
                 <div
-                  v-for="blockType in blockTypeSearchResults"
-                  :key="blockType.id"
-                  class="p-3 hover:bg-base-200 cursor-pointer border-b border-base-300 last:border-b-0"
-                  @click="selectBlockType(blockType)"
+                  v-if="blockData.blockTypeId > 0 && !showBlockTypeSearch"
+                  class="p-3 bg-base-200 rounded-lg flex items-center justify-between mb-2"
                 >
-                  <span class="font-mono font-bold">ID {{ blockType.id }}</span>
-                  <span class="mx-2">-</span>
-                  <span>{{ blockType.description || 'Unnamed' }}</span>
+                  <div>
+                    <span class="font-mono font-bold">ID {{ blockData.blockTypeId }}</span>
+                    <span class="mx-2">-</span>
+                    <span v-if="selectedBlockType">{{ selectedBlockType.description || 'Unnamed' }}</span>
+                    <span v-else class="text-base-content/50 italic">(BlockType details not loaded)</span>
+                  </div>
+                  <button class="btn btn-sm btn-ghost" @click="clearBlockType">
+                    Change
+                  </button>
+                </div>
+
+                <!-- Search Field (shown when changing or no block type selected) -->
+                <div v-if="showBlockTypeSearch || blockData.blockTypeId === 0">
+                  <SearchInput
+                    v-model="blockTypeSearch"
+                    placeholder="Search block types by ID or description... (Press Enter)"
+                    @keyup.enter="handleBlockTypeSearch(blockTypeSearch)"
+                  />
+
+                  <!-- Search Results (shown when searching) -->
+                  <div
+                    v-if="blockTypeSearch && blockTypeSearchResults.length > 0"
+                    class="mt-2 border border-base-300 rounded-lg max-h-60 overflow-y-auto bg-base-100"
+                  >
+                    <div
+                      v-for="blockType in blockTypeSearchResults"
+                      :key="blockType.id"
+                      class="p-3 hover:bg-base-200 cursor-pointer border-b border-base-300 last:border-b-0"
+                      @click="selectBlockType(blockType)"
+                    >
+                      <span class="font-mono font-bold">ID {{ blockType.id }}</span>
+                      <span class="mx-2">-</span>
+                      <span>{{ blockType.description || 'Unnamed' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- No Results -->
+                  <div
+                    v-else-if="blockTypeSearch && blockTypeSearchResults.length === 0 && !loadingBlockTypes"
+                    class="mt-2 p-4 text-center text-base-content/50 text-sm"
+                  >
+                    No block types found for "{{ blockTypeSearch }}"
+                  </div>
                 </div>
               </div>
 
-              <!-- No Results -->
-              <div
-                v-else-if="blockTypeSearch && blockTypeSearchResults.length === 0 && !loadingBlockTypes"
-                class="mt-2 p-4 text-center text-base-content/50 text-sm"
-              >
-                No block types found for "{{ blockTypeSearch }}"
+              <!-- Status -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Status</span>
+                  <span class="label-text-alt">0-255</span>
+                </label>
+                <input
+                  v-model.number="blockData.status"
+                  type="number"
+                  min="0"
+                  max="255"
+                  class="input input-bordered"
+                  placeholder="0"
+                />
               </div>
             </div>
-          </div>
 
-          <!-- Status -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Status</span>
-              <span class="label-text-alt">0-255</span>
-            </label>
-            <input
-              v-model.number="blockData.status"
-              type="number"
-              min="0"
-              max="255"
-              class="input input-bordered"
-              placeholder="0"
-            />
+            <!-- Right Column: Navigate Component -->
+            <div class="flex items-start justify-center">
+              <NavigateSelectedBlockComponent
+                :selected-block="blockCoordinates"
+                :step="1"
+                :size="140"
+                :show-execute-button="false"
+                @navigate="handleNavigate"
+              />
+            </div>
           </div>
 
           <!-- Geometry Offsets Section -->

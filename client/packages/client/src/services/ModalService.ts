@@ -942,7 +942,7 @@ export class ModalService {
 
       return this.openModal(
         'block-editor', // referenceKey - reuse same modal for editor
-        `Block Editor (${x}, ${y}, ${z})`,
+        `Block Editor`,
         editorUrl,
         ModalSizePreset.RIGHT,
         ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK
