@@ -113,6 +113,7 @@ export class ModalService {
    * @param url URL to load in IFrame
    * @param preset Size/position preset (optional, defaults to 'center_medium')
    * @param flags Behavior flags (optional, bitflags: CLOSEABLE, NO_BORDERS, BREAK_OUT)
+   * @param onClose Optional callback function executed when modal closes
    * @returns Modal reference for closing
    */
   openModal(
@@ -120,7 +121,8 @@ export class ModalService {
     title: string,
     url: string,
     preset?: ModalSizePreset,
-    flags: number = ModalFlags.CLOSEABLE
+    flags: number = ModalFlags.CLOSEABLE,
+    onClose?: (reason?: string) => void
   ): ModalReference {
     try {
       // Check if modal with this reference key already exists
@@ -161,6 +163,7 @@ export class ModalService {
         close: (reason?: string) => this.closeModal(modalRef, reason),
         changePosition: (newPreset: ModalSizePreset) =>
           this.changeModalPosition(modalRef, newPreset),
+        onClose,
       };
 
       // Store reference
@@ -197,6 +200,18 @@ export class ModalService {
    */
   closeModal(ref: ModalReference, reason?: string): void {
     try {
+      // Execute onClose callback if provided
+      if (ref.onClose) {
+        try {
+          ref.onClose(reason);
+        } catch (error) {
+          ExceptionHandler.handle(error, 'ModalService.closeModal.onCloseCallback', {
+            modalId: ref.id,
+            reason,
+          });
+        }
+      }
+
       // Remove from DOM
       if (ref.element.parentNode) {
         ref.element.parentNode.removeChild(ref.element);
@@ -208,11 +223,34 @@ export class ModalService {
         this.modalsByReferenceKey.delete(ref.referenceKey);
       }
 
-      // Cleanup event listener
+      // Cleanup event listeners
       const escHandler = (ref as any)._escHandler;
       if (escHandler) {
         document.removeEventListener('keydown', escHandler);
         delete (ref as any)._escHandler;
+      }
+
+      // Cleanup moveable handlers
+      const moveHandlers = (ref as any)._moveHandlers;
+      if (moveHandlers) {
+        moveHandlers.header.removeEventListener('mousedown', moveHandlers.onMouseDown);
+        document.removeEventListener('mousemove', moveHandlers.onMouseMove);
+        document.removeEventListener('mouseup', moveHandlers.onMouseUp);
+        delete (ref as any)._moveHandlers;
+      }
+
+      // Cleanup resizeable handlers
+      const resizeHandles = (ref as any)._resizeHandles;
+      if (resizeHandles) {
+        resizeHandles.forEach((handle: HTMLElement) => {
+          const handlers = (handle as any)._resizeHandlers;
+          if (handlers) {
+            handle.removeEventListener('mousedown', handlers.onMouseDown);
+            document.removeEventListener('mousemove', handlers.onMouseMove);
+            document.removeEventListener('mouseup', handlers.onMouseUp);
+          }
+        });
+        delete (ref as any)._resizeHandles;
       }
 
       logger.debug('Modal closed', { id: ref.id, referenceKey: ref.referenceKey, reason });
@@ -267,12 +305,20 @@ export class ModalService {
     const isCloseable = (flags & ModalFlags.CLOSEABLE) !== 0;
     const noBorders = (flags & ModalFlags.NO_BORDERS) !== 0;
     const hasBreakOut = (flags & ModalFlags.BREAK_OUT) !== 0;
+    const noBackgroundLock = (flags & ModalFlags.NO_BACKGROUND_LOCK) !== 0;
+    const isMoveable = (flags & ModalFlags.MOVEABLE) !== 0;
+    const isResizeable = (flags & ModalFlags.RESIZEABLE) !== 0;
 
     // Create backdrop
     const backdrop = document.createElement('div');
     backdrop.className = 'nimbus-modal-backdrop';
     backdrop.id = `${id}-backdrop`;
     backdrop.style.zIndex = zIndex.toString();
+
+    // Apply NO_BACKGROUND_LOCK styling
+    if (noBackgroundLock) {
+      backdrop.classList.add('nimbus-modal-no-background-lock');
+    }
 
     // Determine if centered
     const isCentered = position.x === 'center' && position.y === 'center';
@@ -290,6 +336,16 @@ export class ModalService {
       modalContainer.classList.add('nimbus-modal-no-borders');
     }
 
+    // Apply MOVEABLE styling
+    if (isMoveable) {
+      modalContainer.classList.add('nimbus-modal-moveable');
+    }
+
+    // Apply RESIZEABLE styling
+    if (isResizeable) {
+      modalContainer.classList.add('nimbus-modal-resizeable');
+    }
+
     // Apply size
     modalContainer.style.width = size.width;
     modalContainer.style.height = size.height;
@@ -301,6 +357,11 @@ export class ModalService {
     if (!noBorders) {
       const header = document.createElement('div');
       header.className = 'nimbus-modal-header';
+
+      // Add moveable class to header
+      if (isMoveable) {
+        header.classList.add('nimbus-modal-header-moveable');
+      }
 
       // Title
       const titleElement = document.createElement('h2');
@@ -386,6 +447,9 @@ export class ModalService {
     const backdrop = modalRef.element;
     const isCloseable = (flags & ModalFlags.CLOSEABLE) !== 0;
     const hasBreakOut = (flags & ModalFlags.BREAK_OUT) !== 0;
+    const noBackgroundLock = (flags & ModalFlags.NO_BACKGROUND_LOCK) !== 0;
+    const isMoveable = (flags & ModalFlags.MOVEABLE) !== 0;
+    const isResizeable = (flags & ModalFlags.RESIZEABLE) !== 0;
 
     // Close button click
     const closeButton = backdrop.querySelector('.nimbus-modal-close');
@@ -406,8 +470,8 @@ export class ModalService {
       });
     }
 
-    // Backdrop click (only close if closeable)
-    if (isCloseable) {
+    // Backdrop click (only close if closeable AND not NO_BACKGROUND_LOCK)
+    if (isCloseable && !noBackgroundLock) {
       backdrop.addEventListener('click', (e) => {
         // Only close if clicking directly on backdrop, not on modal content
         if (e.target === backdrop) {
@@ -433,6 +497,201 @@ export class ModalService {
       // Store handler for cleanup
       (modalRef as any)._escHandler = escHandler;
     }
+
+    // Setup MOVEABLE functionality
+    if (isMoveable) {
+      this.setupMoveableModal(modalRef);
+    }
+
+    // Setup RESIZEABLE functionality
+    if (isResizeable) {
+      this.setupResizeableModal(modalRef);
+    }
+  }
+
+  /**
+   * Setup moveable modal (drag by header)
+   */
+  private setupMoveableModal(modalRef: ModalReference): void {
+    const backdrop = modalRef.element;
+    const modalContainer = backdrop.querySelector('.nimbus-modal-container') as HTMLElement;
+    const header = backdrop.querySelector('.nimbus-modal-header') as HTMLElement;
+
+    if (!modalContainer || !header) {
+      return;
+    }
+
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let modalStartLeft = 0;
+    let modalStartTop = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      // Only start drag if clicking on header (not buttons)
+      if (
+        e.target === header ||
+        (e.target as HTMLElement).classList.contains('nimbus-modal-title')
+      ) {
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+
+        // Get current position
+        const rect = modalContainer.getBoundingClientRect();
+        modalStartLeft = rect.left;
+        modalStartTop = rect.top;
+
+        // Convert to absolute positioning if not already
+        if (modalContainer.style.position !== 'absolute') {
+          modalContainer.style.position = 'absolute';
+          modalContainer.style.left = `${modalStartLeft}px`;
+          modalContainer.style.top = `${modalStartTop}px`;
+          modalContainer.style.transform = 'none';
+        }
+
+        e.preventDefault();
+      }
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const deltaX = e.clientX - dragStartX;
+      const deltaY = e.clientY - dragStartY;
+
+      const newLeft = modalStartLeft + deltaX;
+      const newTop = modalStartTop + deltaY;
+
+      modalContainer.style.left = `${newLeft}px`;
+      modalContainer.style.top = `${newTop}px`;
+    };
+
+    const onMouseUp = () => {
+      isDragging = false;
+    };
+
+    header.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    // Store handlers for cleanup
+    (modalRef as any)._moveHandlers = { onMouseDown, onMouseMove, onMouseUp, header };
+  }
+
+  /**
+   * Setup resizeable modal (resize by edges/corners)
+   */
+  private setupResizeableModal(modalRef: ModalReference): void {
+    const backdrop = modalRef.element;
+    const modalContainer = backdrop.querySelector('.nimbus-modal-container') as HTMLElement;
+
+    if (!modalContainer) {
+      return;
+    }
+
+    // Create resize handles
+    const handles = [
+      { class: 'nimbus-resize-handle-n', cursor: 'ns-resize', edge: 'top' },
+      { class: 'nimbus-resize-handle-s', cursor: 'ns-resize', edge: 'bottom' },
+      { class: 'nimbus-resize-handle-e', cursor: 'ew-resize', edge: 'right' },
+      { class: 'nimbus-resize-handle-w', cursor: 'ew-resize', edge: 'left' },
+      { class: 'nimbus-resize-handle-ne', cursor: 'nesw-resize', edge: 'top-right' },
+      { class: 'nimbus-resize-handle-nw', cursor: 'nwse-resize', edge: 'top-left' },
+      { class: 'nimbus-resize-handle-se', cursor: 'nwse-resize', edge: 'bottom-right' },
+      { class: 'nimbus-resize-handle-sw', cursor: 'nesw-resize', edge: 'bottom-left' },
+    ];
+
+    const resizeHandles: HTMLElement[] = [];
+
+    handles.forEach(({ class: className, cursor, edge }) => {
+      const handle = document.createElement('div');
+      handle.className = className;
+      handle.style.cursor = cursor;
+      handle.setAttribute('data-edge', edge);
+      modalContainer.appendChild(handle);
+      resizeHandles.push(handle);
+
+      let isResizing = false;
+      let resizeStartX = 0;
+      let resizeStartY = 0;
+      let modalStartWidth = 0;
+      let modalStartHeight = 0;
+      let modalStartLeft = 0;
+      let modalStartTop = 0;
+
+      const onMouseDown = (e: MouseEvent) => {
+        isResizing = true;
+        resizeStartX = e.clientX;
+        resizeStartY = e.clientY;
+
+        const rect = modalContainer.getBoundingClientRect();
+        modalStartWidth = rect.width;
+        modalStartHeight = rect.height;
+        modalStartLeft = rect.left;
+        modalStartTop = rect.top;
+
+        // Convert to absolute positioning if not already
+        if (modalContainer.style.position !== 'absolute') {
+          modalContainer.style.position = 'absolute';
+          modalContainer.style.left = `${modalStartLeft}px`;
+          modalContainer.style.top = `${modalStartTop}px`;
+          modalContainer.style.transform = 'none';
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+        if (!isResizing) return;
+
+        const deltaX = e.clientX - resizeStartX;
+        const deltaY = e.clientY - resizeStartY;
+
+        let newWidth = modalStartWidth;
+        let newHeight = modalStartHeight;
+        let newLeft = modalStartLeft;
+        let newTop = modalStartTop;
+
+        // Handle different edges
+        if (edge.includes('right')) {
+          newWidth = Math.max(200, modalStartWidth + deltaX);
+        }
+        if (edge.includes('left')) {
+          newWidth = Math.max(200, modalStartWidth - deltaX);
+          newLeft = modalStartLeft + deltaX;
+          if (newWidth === 200) newLeft = modalStartLeft + modalStartWidth - 200;
+        }
+        if (edge.includes('bottom')) {
+          newHeight = Math.max(150, modalStartHeight + deltaY);
+        }
+        if (edge.includes('top')) {
+          newHeight = Math.max(150, modalStartHeight - deltaY);
+          newTop = modalStartTop + deltaY;
+          if (newHeight === 150) newTop = modalStartTop + modalStartHeight - 150;
+        }
+
+        modalContainer.style.width = `${newWidth}px`;
+        modalContainer.style.height = `${newHeight}px`;
+        modalContainer.style.left = `${newLeft}px`;
+        modalContainer.style.top = `${newTop}px`;
+      };
+
+      const onMouseUp = () => {
+        isResizing = false;
+      };
+
+      handle.addEventListener('mousedown', onMouseDown);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+
+      // Store handlers for cleanup
+      (handle as any)._resizeHandlers = { onMouseDown, onMouseMove, onMouseUp };
+    });
+
+    // Store resize handles for cleanup
+    (modalRef as any)._resizeHandles = resizeHandles;
   }
 
   /**

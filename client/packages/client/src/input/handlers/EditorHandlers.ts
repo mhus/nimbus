@@ -130,7 +130,7 @@ export class EditorActivateHandler extends InputHandler {
       `Block Editor (${pos.x}, ${pos.y}, ${pos.z})`,
       editorUrl,
       ModalSizePreset.RIGHT,
-      ModalFlags.CLOSEABLE
+      ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK,
     );
   }
 

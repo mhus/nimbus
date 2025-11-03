@@ -149,6 +149,139 @@
   }
 }
 
+/* NO_BACKGROUND_LOCK - Transparent backdrop, no interaction blocking */
+.nimbus-modal-backdrop.nimbus-modal-no-background-lock {
+  background-color: transparent;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.nimbus-modal-backdrop.nimbus-modal-no-background-lock .nimbus-modal-container {
+  pointer-events: auto;
+}
+
+/* MOVEABLE - Draggable header */
+.nimbus-modal-header-moveable {
+  cursor: move;
+  user-select: none;
+}
+
+/* RESIZEABLE - Resize handles */
+.nimbus-modal-resizeable {
+  position: relative;
+}
+
+/* Edge resize handles */
+.nimbus-resize-handle-n,
+.nimbus-resize-handle-s,
+.nimbus-resize-handle-e,
+.nimbus-resize-handle-w {
+  position: absolute;
+  background-color: transparent;
+  z-index: 10;
+}
+
+.nimbus-resize-handle-n {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.nimbus-resize-handle-s {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.nimbus-resize-handle-e {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.nimbus-resize-handle-w {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+/* Corner resize handles */
+.nimbus-resize-handle-ne,
+.nimbus-resize-handle-nw,
+.nimbus-resize-handle-se,
+.nimbus-resize-handle-sw {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: transparent;
+  z-index: 11;
+}
+
+.nimbus-resize-handle-ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.nimbus-resize-handle-nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.nimbus-resize-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+
+.nimbus-resize-handle-sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+/* Visual indicator for resize handles (optional) */
+.nimbus-modal-resizeable:hover .nimbus-resize-handle-se::after,
+.nimbus-modal-resizeable:hover .nimbus-resize-handle-sw::after,
+.nimbus-modal-resizeable:hover .nimbus-resize-handle-ne::after,
+.nimbus-modal-resizeable:hover .nimbus-resize-handle-nw::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.nimbus-resize-handle-se::after {
+  bottom: 2px;
+  right: 2px;
+}
+
+.nimbus-resize-handle-sw::after {
+  bottom: 2px;
+  left: 2px;
+}
+
+.nimbus-resize-handle-ne::after {
+  top: 2px;
+  right: 2px;
+}
+
+.nimbus-resize-handle-nw::after {
+  top: 2px;
+  left: 2px;
+}
+
 /* Dark mode support (optional) */
 @media (prefers-color-scheme: dark) {
   .nimbus-modal-container {
@@ -175,5 +308,13 @@
 
   .nimbus-modal-iframe {
     background-color: #2a2a2a;
+  }
+
+  /* Dark mode resize handle indicators */
+  .nimbus-modal-resizeable:hover .nimbus-resize-handle-se::after,
+  .nimbus-modal-resizeable:hover .nimbus-resize-handle-sw::after,
+  .nimbus-modal-resizeable:hover .nimbus-resize-handle-ne::after,
+  .nimbus-modal-resizeable:hover .nimbus-resize-handle-nw::after {
+    background-color: rgba(255, 255, 255, 0.3);
   }
 }

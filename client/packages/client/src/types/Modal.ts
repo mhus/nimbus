@@ -86,4 +86,7 @@ export interface ModalReference {
 
   /** Change position of this modal */
   changePosition: (preset: ModalSizePreset) => void;
+
+  /** Optional callback executed when modal closes */
+  onClose?: (reason?: string) => void;
 }

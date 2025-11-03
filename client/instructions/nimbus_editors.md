@@ -1177,8 +1177,9 @@ dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe v
 
 ## Engine Dialogs neue Eigenschaft
 
-[ ] Neue Eigenschaft NO_BACKGROUND_LOCK: hitergrund wird nicht gesperrt/grau, Dialog geht nicht zu wenn in den hintergrund geklcikt wird.
-[ ] MOVEABLE, RESIZEABLE
+[x] Beim oeffnen eines Modals (ModalService) Neue Eigenschaft NO_BACKGROUND_LOCK: hintergrund wird nicht gesperrt/grau, Dialog geht nicht zu wenn in den hintergrund geklickt wird.
+[x] Neue Eigenschaften: MOVEABLE, RESIZEABLE
+[x] Beim oeffnen eines Modals (modalService.openModal()) soll eine lambda funktion mitgegeben werden koennen, die bei onClose ausgefuehrt wird.
 
 ## Block Model Editor
 

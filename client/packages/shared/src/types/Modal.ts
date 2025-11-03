@@ -57,6 +57,15 @@ export enum ModalFlags {
 
   /** Show break-out button to open in new window */
   BREAK_OUT = 1 << 2, // 4
+
+  /** No background lock (background not grayed out, no close on background click) */
+  NO_BACKGROUND_LOCK = 1 << 3, // 8
+
+  /** Modal can be moved by dragging the header */
+  MOVEABLE = 1 << 4, // 16
+
+  /** Modal can be resized by dragging edges/corners */
+  RESIZEABLE = 1 << 5, // 32
 }
 
 /**
