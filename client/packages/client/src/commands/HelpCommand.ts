@@ -21,7 +21,7 @@ export class HelpCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Lists all available commands with descriptions';
+    return 'Lists all available commands or shows details for a specific command (help [commandName])';
   }
 
   execute(parameters: any[]): any {
@@ -31,7 +31,36 @@ export class HelpCommand extends CommandHandler {
       return 'No commands available';
     }
 
-    // Build formatted output
+    // If a command name is provided, show details for that command
+    if (parameters.length > 0) {
+      const commandName = parameters[0].toString();
+      const handler = handlers.get(commandName);
+
+      if (!handler) {
+        const error = `Command '${commandName}' not found. Use 'help' to see all available commands.`;
+        console.error(error);
+        return { error };
+      }
+
+      // Show detailed help for this command
+      const lines: string[] = [];
+      lines.push(`Command: ${commandName}`);
+      lines.push('');
+      lines.push(`Description:`);
+      lines.push(`  ${handler.description()}`);
+      lines.push('');
+
+      // Generate function name for display
+      const functionName = 'do' + commandName.charAt(0).toUpperCase() + commandName.slice(1);
+      lines.push(`Usage in browser console:`);
+      lines.push(`  ${functionName}(parameters...)`);
+
+      const output = lines.join('\n');
+      console.log(output);
+      return output;
+    }
+
+    // Build formatted output - list all commands
     const lines: string[] = [];
     lines.push('Available Commands:');
     lines.push('');
@@ -41,6 +70,9 @@ export class HelpCommand extends CommandHandler {
       const functionName = 'do' + name.charAt(0).toUpperCase() + name.slice(1);
       lines.push(`  ${functionName.padEnd(20)} - ${handler.description()}`);
     }
+
+    lines.push('');
+    lines.push('Use "help <commandName>" for detailed information about a specific command.');
 
     const output = lines.join('\n');
 

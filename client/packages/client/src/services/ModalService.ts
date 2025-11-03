@@ -706,17 +706,40 @@ export class ModalService {
   }
 
   /**
-   * Add embedded parameter to URL
+   * Add embedded, worldId, and sessionId parameters to URL
    */
   private addEmbeddedParameter(url: string, embedded: boolean): string {
     try {
       const urlObj = new URL(url, window.location.href);
+
+      // Add embedded parameter
       urlObj.searchParams.set('embedded', embedded.toString());
+
+      // Add worldId if available
+      if (this.appContext.worldInfo?.worldId) {
+        urlObj.searchParams.set('worldId', this.appContext.worldInfo.worldId);
+      }
+
+      // Add sessionId if available
+      if (this.appContext.sessionId) {
+        urlObj.searchParams.set('sessionId', this.appContext.sessionId);
+      }
+
       return urlObj.toString();
     } catch (error) {
       // If URL parsing fails, append as query string
       const separator = url.includes('?') ? '&' : '?';
-      return `${url}${separator}embedded=${embedded}`;
+      let params = `embedded=${embedded}`;
+
+      if (this.appContext.worldInfo?.worldId) {
+        params += `&worldId=${this.appContext.worldInfo.worldId}`;
+      }
+
+      if (this.appContext.sessionId) {
+        params += `&sessionId=${this.appContext.sessionId}`;
+      }
+
+      return `${url}${separator}${params}`;
     }
   }
 
@@ -883,6 +906,84 @@ export class ModalService {
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ModalService.handleIFrameMessage', { modalRef, message });
+    }
+  }
+
+  /**
+   * Open block editor modal for a specific block position
+   *
+   * @param x World X coordinate
+   * @param y World Y coordinate
+   * @param z World Z coordinate
+   * @returns Modal reference
+   */
+  openBlockEditor(x: number, y: number, z: number): ModalReference {
+    try {
+      // Create editor URL with block coordinates
+      const editorUrl = this.appContext?.services.network?.createBlockEditorUrl(x, y, z);
+        if (!editorUrl) {
+          logger.warn('No editor URL configured for this world');
+          throw new Error('Block editor is not available in this world');
+        }
+
+      logger.info('Opening block editor', { position: { x, y, z } });
+
+      return this.openModal(
+        'block-editor', // referenceKey - reuse same modal for editor
+        `Block Editor (${x}, ${y}, ${z})`,
+        editorUrl,
+        ModalSizePreset.RIGHT,
+        ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK
+      );
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openBlockEditor', { x, y, z });
+    }
+  }
+
+  /**
+   * Open a predefined component modal
+   *
+   * @param component Component name (e.g., 'block_editor', 'settings', 'inventory')
+   * @param attributes Component-specific attributes
+   * @returns Modal reference
+   */
+  openComponent(component: string, attributes: string[]): ModalReference {
+    try {
+      logger.debug('Opening component modal', { component, attributes });
+
+      // Handle different component types
+      switch (component.toLowerCase()) {
+        case 'block_editor':
+          // Expect attributes: [x, y, z]
+          if (attributes.length < 3) {
+            throw new Error('block_editor requires 3 attributes: x, y, z');
+          }
+          const x = parseFloat(attributes[0]);
+          const y = parseFloat(attributes[1]);
+          const z = parseFloat(attributes[2]);
+
+          if (isNaN(x) || isNaN(y) || isNaN(z)) {
+            throw new Error('block_editor coordinates must be valid numbers');
+          }
+
+          return this.openBlockEditor(x, y, z);
+
+        // Future components can be added here:
+        // case 'settings':
+        //   return this.openSettings(attributes);
+        // case 'inventory':
+        //   return this.openInventory(attributes);
+        // case 'map':
+        //   return this.openMap(attributes);
+
+        default:
+          throw new Error(`Unknown component: ${component}`);
+      }
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openComponent', {
+        component,
+        attributes,
+      });
     }
   }
 

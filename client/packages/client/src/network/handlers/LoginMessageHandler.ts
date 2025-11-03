@@ -55,14 +55,16 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
         return;
       }
 
-      // Update AppContext with WorldInfo from server
+      // Update AppContext with WorldInfo and sessionId from server
       this.appContext.worldInfo = successData.worldInfo;
+      this.appContext.sessionId = successData.sessionId;
 
       logger.info('Login successful', {
         userId: successData.userId,
         displayName: successData.displayName,
         worldId: successData.worldInfo.worldId,
         worldName: successData.worldInfo.name,
+        sessionId: successData.sessionId,
       });
 
       // Log complete WorldInfo for debugging

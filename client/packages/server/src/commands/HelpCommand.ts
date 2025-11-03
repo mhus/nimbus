@@ -21,7 +21,7 @@ export class HelpCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Lists all available server commands with descriptions';
+    return 'Lists all available server commands or shows details for a specific command (help [commandName])';
   }
 
   execute(context: CommandContext, args: any[]): CommandResult {
@@ -34,7 +34,37 @@ export class HelpCommand extends CommandHandler {
       };
     }
 
-    // Build formatted output
+    // If a command name is provided, show details for that command
+    if (args.length > 0) {
+      const commandName = args[0].toString();
+      const handler = handlers.get(commandName);
+
+      if (!handler) {
+        return {
+          rc: 1,
+          message: `Command '${commandName}' not found. Use 'help' to see all available commands.`,
+        };
+      }
+
+      // Show detailed help for this command
+      const lines: string[] = [];
+      lines.push(`Command: ${commandName}`);
+      lines.push('');
+      lines.push(`Description:`);
+      lines.push(`  ${handler.description()}`);
+      lines.push('');
+      lines.push(`Usage:`);
+      lines.push(`  send ${commandName} [args...]`);
+
+      const output = lines.join('\n');
+
+      return {
+        rc: 0,
+        message: output,
+      };
+    }
+
+    // Build formatted output - list all commands
     const lines: string[] = [];
     lines.push('Available Server Commands:');
     lines.push('');
@@ -44,6 +74,7 @@ export class HelpCommand extends CommandHandler {
     }
 
     lines.push('');
+    lines.push('Use "help <commandName>" for detailed information about a specific command.');
     lines.push('Usage: send <command> [args...]');
 
     const output = lines.join('\n');

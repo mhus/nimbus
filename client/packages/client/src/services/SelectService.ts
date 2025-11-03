@@ -63,6 +63,11 @@ export class SelectService {
   private highlightMesh?: Mesh;
   private highlightMaterial?: StandardMaterial;
 
+  // Edit block selection (green highlight)
+  private selectedEditBlock: Vector3 | null = null;
+  private editHighlightMesh?: Mesh;
+  private editHighlightMaterial?: StandardMaterial;
+
   // Cached player eye height for raycast origin (updated via event)
   private playerEyeHeight: number = 1.6; // Default value
 
@@ -392,14 +397,14 @@ export class SelectService {
     }
 
     try {
-      // Create wireframe box for highlighting
+      // Create wireframe box for highlighting (yellow)
       this.highlightMesh = MeshBuilder.CreateBox(
         'blockHighlight',
         { size: 1.0 },
         this.scene
       );
 
-      // Create highlight material
+      // Create highlight material (yellow for selected block)
       this.highlightMaterial = new StandardMaterial('highlightMaterial', this.scene);
       this.highlightMaterial.emissiveColor = new Color3(1, 1, 0); // Yellow
       this.highlightMaterial.wireframe = true;
@@ -410,7 +415,25 @@ export class SelectService {
       this.highlightMesh.renderingGroupId = 1; // Render on top
       this.highlightMesh.setEnabled(false); // Hidden by default
 
-      logger.debug('Highlight mesh initialized');
+      // Create wireframe box for edit block highlighting (green)
+      this.editHighlightMesh = MeshBuilder.CreateBox(
+        'editBlockHighlight',
+        { size: 1.0 },
+        this.scene
+      );
+
+      // Create edit highlight material (green for edit block)
+      this.editHighlightMaterial = new StandardMaterial('editHighlightMaterial', this.scene);
+      this.editHighlightMaterial.emissiveColor = new Color3(1, 0, 0); // Red
+      this.editHighlightMaterial.wireframe = true;
+      this.editHighlightMaterial.alpha = 0.8;
+
+      this.editHighlightMesh.material = this.editHighlightMaterial;
+      this.editHighlightMesh.isPickable = false;
+      this.editHighlightMesh.renderingGroupId = 1; // Render on top
+      this.editHighlightMesh.setEnabled(false); // Hidden by default
+
+      logger.debug('Highlight meshes initialized');
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.initializeHighlight');
     }
@@ -490,6 +513,13 @@ export class SelectService {
       } else {
         this.hideHighlight();
       }
+
+      // Update edit block highlight
+      if (this.selectedEditBlock) {
+        this.showEditHighlight(this.selectedEditBlock);
+      } else {
+        this.hideEditHighlight();
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.update');
     }
@@ -550,14 +580,93 @@ export class SelectService {
   }
 
   /**
+   * Set selected edit block (green highlight)
+   *
+   * @param x World X coordinate (optional, null to clear)
+   * @param y World Y coordinate (optional)
+   * @param z World Z coordinate (optional)
+   */
+  setSelectedEditBlock(x?: number, y?: number, z?: number): void {
+    try {
+      // Clear selection if no parameters provided
+      if (x === undefined || y === undefined || z === undefined) {
+        this.selectedEditBlock = null;
+        this.hideEditHighlight();
+        logger.debug('Edit block selection cleared');
+        return;
+      }
+
+      // Set new selection
+      this.selectedEditBlock = new Vector3(x, y, z);
+      logger.debug('Edit block selected', { x, y, z });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.setSelectedEditBlock', { x, y, z });
+    }
+  }
+
+  /**
+   * Get selected edit block position
+   *
+   * @returns Vector3 with block coordinates or null
+   */
+  getSelectedEditBlock(): { x: number; y: number; z: number } | null {
+    if (!this.selectedEditBlock) {
+      return null;
+    }
+
+    return {
+      x: this.selectedEditBlock.x,
+      y: this.selectedEditBlock.y,
+      z: this.selectedEditBlock.z,
+    };
+  }
+
+  /**
+   * Show edit highlight at block position (green)
+   *
+   * @param position Block position as Vector3
+   */
+  private showEditHighlight(position: Vector3): void {
+    if (!this.editHighlightMesh || !this.scene) {
+      return;
+    }
+
+    // Position highlight at block center
+    this.editHighlightMesh.position.set(
+      position.x + 0.5,
+      position.y + 0.5,
+      position.z + 0.5
+    );
+
+    // Scale slightly larger than block for better visibility
+    const scale = 1.02;
+    this.editHighlightMesh.scaling.set(scale, scale, scale);
+
+    // Enable highlight
+    this.editHighlightMesh.setEnabled(true);
+  }
+
+  /**
+   * Hide edit highlight
+   */
+  private hideEditHighlight(): void {
+    if (this.editHighlightMesh) {
+      this.editHighlightMesh.setEnabled(false);
+    }
+  }
+
+  /**
    * Dispose service
    */
   dispose(): void {
     // Dispose highlight resources
     this.highlightMesh?.dispose();
     this.highlightMaterial?.dispose();
+    this.editHighlightMesh?.dispose();
+    this.editHighlightMaterial?.dispose();
 
     this.currentSelectedBlock = null;
+    this.selectedEditBlock = null;
 
     logger.info('SelectService disposed');
   }

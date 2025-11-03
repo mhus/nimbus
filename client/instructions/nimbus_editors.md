@@ -1186,28 +1186,44 @@ dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe v
 > In Engine Selektieren von Block
 > Editor Next Block:  up down left right back forward Buttons
 
-[ ] Erstelle im SelectService einen 'SelectedEditBlock' Vector der auch null sein kann. Wird der Vektor gesetzt,
+[x] Erstelle im SelectService einen 'SelectedEditBlock' Vector der auch null sein kann. Wird der Vektor gesetzt,
 soll der Block grün dargestellt werden (wie ein selektierter block nur gruen anstelle von weiss).
-- Erstelle im client ein Commando 'setSelectedEditBlock' mit dem man den Wert setzen kann, sind die parameter leer, wird
+- Erstelle im client ein Commando 'setSelectedEditBlock' (CommandHelper) mit dem man den Wert setzen kann, sind die parameter leer, wird
   die selektion zurückgesetzt.
-- Erstelle im client ein Commando 'getSelectedEditBlock' der die Vektor-Werte zurück gibt.
+- Erstelle im client ein Commando 'getSelectedEditBlock' (CommandHelper) der die Vector-Werte zurück gibt.
 - Beim aufrufen von Iframes (bzw. new Tab) soll zusatzlich zu 'embedded=' immer die 'worldId=' und die 'sessionId=' mitgegeben werden.
 
-[ ] Erstelle im client ein Command 'openComponent name attributes*' das definierte componenten im client oeffnet
-- Erstelle dafuer einen ComponentsService der in AppContext registriert wird mit der methode openComponent(component : string, attributes : string[])
-- Aktuell wird der BlockEditor beim druecken vom Key '/' geoeffnet, verschiebe die Funktionalitaet in den
-  Service 'ComponentsService' mit der methode 'openBlockEditor(x,y,z)'
-- Erweitere openComponent(), das mit dem dem component 'block_editor' die methode openBlockEditor()
+[x] Erstelle im client ein Command 'openModal name attributes*' das definierte componenten im client oeffnet
+- Erstelle dafuer im ModalService die methode openModal(component : string, attributes : string[])
+- Erstelle eine methode 'openBlockEditor(x,y,z)' der den BlockEditor oeffnet
+```text
+    modalService.openModal(
+      'block-editor', // referenceKey - reuse same modal for editor
+      `Block Editor (${pos.x}, ${pos.y}, ${pos.z})`,
+      editorUrl,
+      ModalSizePreset.RIGHT,
+      ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK,
+    );
+```
+- Erweitere openModal(), das mit dem dem component 'block_editor' die methode openBlockEditor()
+
+[x] Korrektur: das command (CommandHandler) openModal soll heissen 'openComponent' und ModalService.openComponent() aufrufen
+
+[x] Bonus: Erweitere HelpCommand im client so, dass man einen parameter mit dem command angeben kann. Dann wird die Description des
+    Commands angezeigt. Das gleiche im 'server/src/commands/HelpCommand.ts'
 
 [ ] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
   und die hinterlegte Aktion ausfuehrt.
 Aktionen sind:
-- OPEN_CONFIG_DIALOG - schickt das commando
-- OPEN_EDITOR - schickt das commando 'openComponent 'block_editor' x y z' an den client.
+- OPEN_CONFIG_DIALOG - schickt das commando "openModal 'edit_config'" an den client - das ist default. (wird spaeter implementiert)
+- OPEN_EDITOR - schickt das commando "openModal 'block_editor','x','y','z'" an den client.
 - MARK_BLOCK - merkt sich den Block 
 - COPY_BLOCK - kopiert den markierten Block an die neue Stelle
 - DELETE_BLOCK - löscht den Block
 - MOVE_BLOCK - verschiebt den markierten Block an die neue Stelle, die alte stelle wird leer gemacht.
+Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
+- GET /api/worlds/{worldId}/session/{sessionId}/editAction
+- PUT /api/worlds/{worldId}/blocks/{sessionId}/editAction
 
 [ ] Erstelle einen 
 

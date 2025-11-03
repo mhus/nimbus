@@ -105,6 +105,9 @@ export interface AppContext {
 
   /** Player information and properties (dynamically updatable) */
   playerInfo: PlayerInfo | null;
+
+  /** Session ID (after login) */
+  sessionId: string | null;
 }
 
 /**
@@ -125,5 +128,6 @@ export function createAppContext(
     serverInfo: null,
     worldInfo: null,
     playerInfo: null, // Will be initialized later with DEFAULT_PLAYER_INFO
+    sessionId: null,
   };
 }
