@@ -148,6 +148,11 @@ export class AssetManager {
           if (entry.isDirectory()) {
             scanDirectory(fullPath, baseDir);
           } else if (entry.isFile()) {
+            // Skip .info files - they should not appear in asset search results
+            if (entry.name.endsWith('.info')) {
+              continue;
+            }
+
             const stats = fs.statSync(fullPath);
             const ext = path.extname(entry.name);
 

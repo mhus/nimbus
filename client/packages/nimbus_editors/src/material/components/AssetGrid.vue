@@ -3,7 +3,8 @@
     <div
       v-for="asset in assets"
       :key="asset.path"
-      class="card bg-base-100 shadow hover:shadow-lg transition-shadow"
+      class="card bg-base-100 shadow hover:shadow-lg transition-shadow cursor-pointer"
+      @click="emit('asset-click', asset)"
     >
       <figure class="h-40 bg-base-200 flex items-center justify-center overflow-hidden">
         <img
@@ -25,7 +26,7 @@
         <div class="card-actions justify-end mt-2">
           <button
             class="btn btn-ghost btn-xs"
-            @click="downloadAsset(asset)"
+            @click.stop="downloadAsset(asset)"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -33,7 +34,7 @@
           </button>
           <button
             class="btn btn-ghost btn-xs text-error"
-            @click="emit('delete', asset)"
+            @click.stop="emit('delete', asset)"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -59,6 +60,7 @@ defineProps<Props>();
 
 const emit = defineEmits<{
   (e: 'delete', asset: Asset): void;
+  (e: 'asset-click', asset: Asset): void;
 }>();
 
 const getFileName = (path: string): string => {

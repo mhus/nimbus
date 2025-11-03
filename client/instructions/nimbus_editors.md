@@ -1272,14 +1272,14 @@ Bitte details immer gleich laden
 
 ## Asset Info
 
-[ ] Neben jedem asset soll auch eine asset info datei liegen koennen. Die Datei hat dann immer den anmen des assets = '.info',
+[x] Neben jedem asset soll auch eine asset info datei liegen koennen. Die Datei hat dann immer den anmen des assets = '.info',
 z.B. 'textures/block/grass.png' dann ist die info datei 'textures/block/grass.png.info'.
-- Info Dateien sollen nicht bei der suche via RETS API im server gefunden werden.
-- Info Dateien sind json Dateien, wenn im AssetEditor ein Asset bearbeitet wird, soll die infod atei geladen werden
-  und kann bearbeitet werden.
+- Info Dateien sollen nicht bei der suche via REST API im server gefunden werden.
+- Info Dateien sind json Dateien, wenn in der AssetEditor-Liste (package nimbus_editors) auf ein asset gecklickt wird, soll ein editor fuer die Info auf gehen.
 - Info dateien sind reine key-value objekte, mit nicht definierten attributen, ausser 'description' das soll immer
   vorhanden sein. Im Editor keonnen dann neue werte hinzugefuegt, bzw. geloescht werden.
-- Die info Datei kann wie ein anderes Asset geladen und aktuelisiert werden.
+- Die info Datei kann wie ein anderes Asset geladen und aktualisiert werden.
+- Die .info datei muss nicht neben dem asset leigen, wenn keine da ist, dann ist das wie leer. erst beim speichern im editor wird die datei dann erstellt / oder eben ueberschrieben.
 
 [ ] Erstelle ein python script, dass im ordner Assets alle bilder findet, analysiert und die folgenden Werte findet
 - width

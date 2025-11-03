@@ -42,6 +42,7 @@
       :is-image="isImage"
       :get-icon="getIcon"
       @delete="handleDelete"
+      @asset-click="handleAssetClick"
     />
 
     <!-- Upload Dialog -->
@@ -50,6 +51,15 @@
       :world-id="currentWorldId!"
       @close="closeUploadDialog"
       @uploaded="handleUploaded"
+    />
+
+    <!-- Asset Info Dialog -->
+    <AssetInfoDialog
+      v-if="isInfoDialogOpen && selectedAsset"
+      :world-id="currentWorldId!"
+      :asset-path="selectedAsset.path"
+      @close="closeInfoDialog"
+      @saved="handleInfoSaved"
     />
   </div>
 </template>
@@ -64,6 +74,7 @@ import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import AssetGrid from '@material/components/AssetGrid.vue';
 import AssetUploadDialog from '@material/components/AssetUploadDialog.vue';
+import AssetInfoDialog from '@material/components/AssetInfoDialog.vue';
 
 const { currentWorldId } = useWorld();
 
@@ -81,6 +92,8 @@ const getIcon = computed(() => assetsComposable.value?.getIcon || (() => '📦')
 const searchQuery = ref('');
 
 const isUploadDialogOpen = ref(false);
+const isInfoDialogOpen = ref(false);
+const selectedAsset = ref<Asset | null>(null);
 
 // Load assets when world changes
 watch(currentWorldId, () => {
@@ -116,6 +129,29 @@ const closeUploadDialog = () => {
  */
 const handleUploaded = () => {
   closeUploadDialog();
+};
+
+/**
+ * Handle asset click (open info dialog)
+ */
+const handleAssetClick = (asset: Asset) => {
+  selectedAsset.value = asset;
+  isInfoDialogOpen.value = true;
+};
+
+/**
+ * Close info dialog
+ */
+const closeInfoDialog = () => {
+  isInfoDialogOpen.value = false;
+  selectedAsset.value = null;
+};
+
+/**
+ * Handle info saved
+ */
+const handleInfoSaved = () => {
+  closeInfoDialog();
 };
 
 /**

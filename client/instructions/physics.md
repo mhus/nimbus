@@ -18,6 +18,11 @@
 [ ] Support PhysicsModifier.climbable
 [ ] Bonus: Rename PhysicsModifier.gateFromDirection to PhysicsModifier.passableFrom
 [ ] Support PhysicsModifier.passableFrom
+- Wenn der Block solid ist, dann funktioniert passableFrom wie eine Aufhebung, d.h. von der seite kannst du rein und auf alle seiten raus, wo kein solid block ist - nach oben moven weil in einem solid block ist aufgehoben sobald passableFrom am Block ist.
+  Damit wird der Block zu einem One-Way-Block. Auch nach oben oder unten wirkt diese Einstellung.
+- Wenn der Block nicht solid ist, dann funktioniert passableFrom wie ein Blocker aus dem block am rand, man kann weder in den block noch raus, wo kein passableFrom angegeben ist, aber der block ist begehbar.
+  Damit wird der block wie eine Wand, du kannst hin, aber nicht drueber hinaus. Auch nach unten oder oben wirk diese Einstellung.
+  Wird aktiv sobald passableFrom am Block haengt.
 
 ## Editor
 

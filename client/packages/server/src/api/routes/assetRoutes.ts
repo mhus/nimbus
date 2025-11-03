@@ -252,6 +252,180 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
     res.status(204).send();
   });
 
+  // GET /api/worlds/:worldId/assets/*.info - Get asset info file
+  router.get('/:worldId/assets/*.info', async (req, res): Promise<void> => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      res.status(404).json({ error: 'World not found' });
+      return;
+    }
+
+    try {
+      // Extract asset path (remove .info suffix)
+      const fullPath = req.path;
+      const assetsIndex = fullPath.indexOf('/assets/');
+      const infoPath = assetsIndex !== -1 ? fullPath.substring(assetsIndex + '/assets/'.length) : '';
+
+      if (!infoPath || !infoPath.endsWith('.info')) {
+        res.status(400).json({ error: 'Invalid .info file path' });
+        return;
+      }
+
+      // Construct file path for .info file
+      const filePath = path.join(process.cwd(), 'files', 'assets', infoPath);
+
+      // Security check: Ensure path doesn't escape the assets directory
+      const normalizedPath = path.normalize(filePath);
+      const assetsDir = path.join(process.cwd(), 'files', 'assets');
+      if (!normalizedPath.startsWith(assetsDir)) {
+        logger.warn('Attempt to access file outside assets directory', { infoPath, worldId });
+        res.status(403).json({ error: 'Access denied' });
+        return;
+      }
+
+      // Check if file exists
+      try {
+        await fs.access(filePath);
+      } catch {
+        // Return empty object with description if .info file doesn't exist
+        logger.debug('Info file not found, returning empty', { infoPath, worldId });
+        res.json({ description: '' });
+        return;
+      }
+
+      // Read and parse JSON file
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const info = JSON.parse(fileContent);
+
+      // Ensure description field exists
+      if (!info.description) {
+        info.description = '';
+      }
+
+      res.json(info);
+      logger.debug('Served asset info', { infoPath, worldId });
+    } catch (error) {
+      logger.error('Error serving asset info', { worldId }, error as Error);
+      res.status(500).json({ error: 'Failed to serve asset info' });
+    }
+  });
+
+  // PUT /api/worlds/:worldId/assets/*.info - Create/update asset info file
+  router.put('/:worldId/assets/*.info', express.json(), async (req, res): Promise<void> => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      res.status(404).json({ error: 'World not found' });
+      return;
+    }
+
+    try {
+      // Extract asset path (remove .info suffix)
+      const fullPath = req.path;
+      const assetsIndex = fullPath.indexOf('/assets/');
+      const infoPath = assetsIndex !== -1 ? fullPath.substring(assetsIndex + '/assets/'.length) : '';
+
+      if (!infoPath || !infoPath.endsWith('.info')) {
+        res.status(400).json({ error: 'Invalid .info file path' });
+        return;
+      }
+
+      // Validate request body
+      const info = req.body;
+      if (!info || typeof info !== 'object') {
+        res.status(400).json({ error: 'Invalid JSON body' });
+        return;
+      }
+
+      // Ensure description field exists
+      if (!info.description || typeof info.description !== 'string') {
+        res.status(400).json({ error: 'description field is required' });
+        return;
+      }
+
+      // Construct file path for .info file
+      const filePath = path.join(process.cwd(), 'files', 'assets', infoPath);
+      const dirPath = path.dirname(filePath);
+
+      // Security check: Ensure path doesn't escape the assets directory
+      const normalizedPath = path.normalize(filePath);
+      const assetsDir = path.join(process.cwd(), 'files', 'assets');
+      if (!normalizedPath.startsWith(assetsDir)) {
+        logger.warn('Attempt to access file outside assets directory', { infoPath, worldId });
+        res.status(403).json({ error: 'Access denied' });
+        return;
+      }
+
+      // Create directory if it doesn't exist
+      await fs.mkdir(dirPath, { recursive: true });
+
+      // Write JSON file
+      await fs.writeFile(filePath, JSON.stringify(info, null, 2), 'utf-8');
+
+      logger.info('Saved asset info', { infoPath, worldId });
+      res.json({ success: true });
+    } catch (error) {
+      logger.error('Error saving asset info', { worldId }, error as Error);
+      res.status(500).json({ error: 'Failed to save asset info' });
+    }
+  });
+
+  // DELETE /api/worlds/:worldId/assets/*.info - Delete asset info file
+  router.delete('/:worldId/assets/*.info', async (req, res): Promise<void> => {
+    const worldId = req.params.worldId;
+    const world = worldManager.getWorld(worldId);
+
+    if (!world) {
+      res.status(404).json({ error: 'World not found' });
+      return;
+    }
+
+    try {
+      // Extract asset path (remove .info suffix)
+      const fullPath = req.path;
+      const assetsIndex = fullPath.indexOf('/assets/');
+      const infoPath = assetsIndex !== -1 ? fullPath.substring(assetsIndex + '/assets/'.length) : '';
+
+      if (!infoPath || !infoPath.endsWith('.info')) {
+        res.status(400).json({ error: 'Invalid .info file path' });
+        return;
+      }
+
+      // Construct file path for .info file
+      const filePath = path.join(process.cwd(), 'files', 'assets', infoPath);
+
+      // Security check: Ensure path doesn't escape the assets directory
+      const normalizedPath = path.normalize(filePath);
+      const assetsDir = path.join(process.cwd(), 'files', 'assets');
+      if (!normalizedPath.startsWith(assetsDir)) {
+        logger.warn('Attempt to access file outside assets directory', { infoPath, worldId });
+        res.status(403).json({ error: 'Access denied' });
+        return;
+      }
+
+      // Check if file exists
+      try {
+        await fs.access(filePath);
+      } catch {
+        logger.debug('Info file not found', { infoPath, worldId });
+        res.status(404).json({ error: 'Info file not found' });
+        return;
+      }
+
+      // Delete file
+      await fs.unlink(filePath);
+
+      logger.info('Deleted asset info', { infoPath, worldId });
+      res.status(204).send();
+    } catch (error) {
+      logger.error('Error deleting asset info', { worldId }, error as Error);
+      res.status(500).json({ error: 'Failed to delete asset info' });
+    }
+  });
+
   logger.info('Asset routes initialized');
   return router;
 }
