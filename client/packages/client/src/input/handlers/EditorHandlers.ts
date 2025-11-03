@@ -5,7 +5,7 @@
  * These handlers are only available in Editor build mode.
  */
 
-import { getLogger, ModalFlags, ModalSizePreset } from '@nimbus/shared';
+import { getLogger } from '@nimbus/shared';
 import { InputHandler } from '../InputHandler';
 import type { PlayerService } from '../../services/PlayerService';
 import type { AppContext } from '../../AppContext';
@@ -75,7 +75,8 @@ export class EditSelectionRotatorHandler extends InputHandler {
 /**
  * EditorActivate Handler (Key: '/')
  *
- * Opens block editor modal for currently selected block
+ * Sends setSelectedEditBlock command to server for currently selected block
+ * The server will then execute the configured editAction (e.g., open editor, config dialog, etc.)
  */
 export class EditorActivateHandler extends InputHandler {
   constructor(playerService: PlayerService, appContext: AppContext) {
@@ -84,7 +85,8 @@ export class EditorActivateHandler extends InputHandler {
 
   protected onActivate(value: number): void {
     const selectService = this.appContext?.services.select;
-    const networkService = this.appContext?.services.network;
+    const commandService = this.appContext?.services.command;
+    const notificationService = this.appContext?.services.notification;
     const modalService = this.appContext?.services.modal;
 
     // Check service availability
@@ -93,13 +95,8 @@ export class EditorActivateHandler extends InputHandler {
       return;
     }
 
-    if (!networkService) {
-      logger.warn('NetworkService not available');
-      return;
-    }
-
-    if (!modalService) {
-      logger.warn('ModalService not available');
+    if (!commandService) {
+      logger.warn('CommandService not available');
       return;
     }
 
@@ -108,30 +105,64 @@ export class EditorActivateHandler extends InputHandler {
 
     if (!selectedBlock) {
       logger.warn('No block selected - aim at a block to edit');
+      if (notificationService) {
+        notificationService.newNotification(0, null, 'No block selected - aim at a block to edit');
+      }
       return;
     }
 
     // Get block position
     const pos = selectedBlock.block.position;
 
-    // Create editor URL with block coordinates
-    const editorUrl = networkService.createBlockEditorUrl(pos.x, pos.y, pos.z);
+    // Send setSelectedEditBlock command to server
+    // Server will execute the configured editAction (OPEN_EDITOR, OPEN_CONFIG_DIALOG, etc.)
+    logger.info('Sending setSelectedEditBlock command to server', { position: pos });
 
-    if (!editorUrl) {
-      logger.warn('No editor URL configured for this world');
-      return;
-    }
+    commandService
+      .sendCommandToServer('setSelectedEditBlock', [pos.x, pos.y, pos.z])
+      .then((result) => {
+        logger.debug('setSelectedEditBlock command result', { result });
+        if (result.rc !== 0) {
+          // Command failed - show notification and open edit configuration
+          logger.warn('setSelectedEditBlock command failed', { message: result.message });
 
-    // Open modal with editor
-    logger.info('Opening block editor', { position: pos });
+          if (notificationService) {
+            notificationService.newNotification(
+              0,
+              null,
+              `Edit command failed: ${result.message}. Opening configuration...`
+            );
+          }
 
-    modalService.openModal(
-      'block-editor', // referenceKey - reuse same modal for editor
-      `Block Editor (${pos.x}, ${pos.y}, ${pos.z})`,
-      editorUrl,
-      ModalSizePreset.RIGHT,
-      ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK,
-    );
+          // Open EditConfiguration modal to let user fix the issue
+          if (modalService) {
+            setTimeout(() => {
+              modalService.openEditConfiguration();
+            }, 500); // Small delay so notification is visible first
+          }
+        }
+      })
+      .catch((error) => {
+        // Network/timeout error - show notification and open edit configuration
+        logger.error('Failed to send setSelectedEditBlock command', { error });
+
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+        if (notificationService) {
+          notificationService.newNotification(
+            0,
+            null,
+            `Failed to communicate with server: ${errorMessage}. Opening configuration...`
+          );
+        }
+
+        // Open EditConfiguration modal
+        if (modalService) {
+          setTimeout(() => {
+            modalService.openEditConfiguration();
+          }, 500); // Small delay so notification is visible first
+        }
+      });
   }
 
   protected onDeactivate(): void {

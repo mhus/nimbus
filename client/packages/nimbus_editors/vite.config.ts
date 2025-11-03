@@ -15,6 +15,7 @@ export default defineConfig({
       '@editors': resolve(__dirname, './src/editors'),
       '@material': resolve(__dirname, './src/material'),
       '@block': resolve(__dirname, './src/block'),
+      '@editconfig': resolve(__dirname, './src/editconfig'),
       '@nimbus/shared': resolve(__dirname, '../shared/src'),
     },
   },
@@ -25,6 +26,7 @@ export default defineConfig({
       input: {
         'material-editor': resolve(__dirname, 'material-editor.html'),
         'block-editor': resolve(__dirname, 'block-editor.html'),
+        'edit-config': resolve(__dirname, 'edit-config.html'),
       },
     },
   },

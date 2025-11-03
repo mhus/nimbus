@@ -1228,12 +1228,18 @@ Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
 - GET /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Gibt selectedEditBlock und auch ggf. markierte Block Position mit aus.
 - Lege im Server REST PUT /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Setzt selectedEditBlock im Server, es wird auch im client sofort das commando 'setSelectedEditBlock' aufgerufen, damit der Block dort sichtbar wird.
 
-[ ] Erstelle einen Editor 'EditConfiguration' in 'nimbus_editors'. Der Editor bekommt via URL Parameter die worldId und sessionId mitgegeben.
+[?] Erstelle einen Editor 'EditConfiguration' in 'nimbus_editors'. Der Editor bekommt via URL Parameter die worldId und sessionId mitgegeben.
 - Der Editor liest die editAction via REST API aus und zeigt sie in einem Select an.
 - Der Editor hat einen Save Button, der die editAction via REST API setzt.
 - Der Editor ruft regelmäßig selectedEditBlock auf und zeigt die aktuell selektierte Block Position an.
 - Der Editor soll in ModalService mit openEditConfiguration() Links Oben im Bildschirm als modal geoffnet werden.
 - Via modalService.openComponent() kann der Editor auch geoeffnet werden
+
+[x] prüfe ob die EditAction OPEN_CONFIG_DIALOG im server implementiert ist und das command openComponent 'edit_config' aufruft.
+
+[?] Wenn jetzt im client der Key '/' gedrueckt wird (EditorHandler) soll nicht mehr der BlockEditor direkt auf gemacht werden,
+sondern im Server das commando 'setSelectedEditBlock' aufgerufen werden.
+[?] Bringt das 'setSelectedEditBlock' command einen Fehler, dann gib eine system meldung ab (NotificationService) und oeffne den EditConfiguration Editor.
 
 [ ] Erweiter BlockEditor und EditorConfig um ein eigenstaendiges Component 'MoveSelectedBlockComponent'
 - Die COmponent zeigt elegant die drei richtungen x y z an (ggf durch eine SVG grafik?) jeweils mit der option + und -

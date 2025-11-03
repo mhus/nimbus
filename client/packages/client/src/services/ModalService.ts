@@ -919,14 +919,20 @@ export class ModalService {
    */
   openBlockEditor(x: number, y: number, z: number): ModalReference {
     try {
-      // Create editor URL with block coordinates
-      const editorUrl = this.appContext?.services.network?.createBlockEditorUrl(x, y, z);
-        if (!editorUrl) {
-          logger.warn('No editor URL configured for this world');
-          throw new Error('Block editor is not available in this world');
-        }
+      // Get component base URL from NetworkService
+      const componentBaseUrl = this.appContext?.services.network?.getComponentBaseUrl();
 
-      logger.info('Opening block editor', { position: { x, y, z } });
+      if (!componentBaseUrl) {
+        logger.warn('No editor URL configured for this world');
+        throw new Error('Block editor is not available in this world');
+      }
+
+      // Build URL with path and parameters
+      const separator = componentBaseUrl.includes('?') ? '&' : '?';
+      const worldId = this.appContext.worldInfo?.worldId || 'main';
+      const editorUrl = `${componentBaseUrl}block-editor.html${separator}world=${worldId}&x=${x}&y=${y}&z=${z}`;
+
+      logger.info('Opening block editor', { position: { x, y, z }, editorUrl });
 
       return this.openModal(
         'block-editor', // referenceKey - reuse same modal for editor
@@ -937,6 +943,42 @@ export class ModalService {
       );
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openBlockEditor', { x, y, z });
+    }
+  }
+
+  /**
+   * Open edit configuration modal (top-left position)
+   *
+   * @returns Modal reference
+   */
+  openEditConfiguration(): ModalReference {
+    try {
+      // Get editor base URL from NetworkService
+      const componentBaseUrl = this.appContext?.services.network?.getComponentBaseUrl();
+
+      if (!componentBaseUrl) {
+        logger.warn('No editor URL configured for this world');
+        throw new Error('Edit configuration editor is not available in this world');
+      }
+
+      // Build URL with path and parameters
+      const separator = componentBaseUrl.includes('?') ? '&' : '?';
+      const worldId = this.appContext.worldInfo?.worldId || 'main';
+      const sessionId = this.appContext.sessionId || '';
+
+      const editorUrl = `${componentBaseUrl}edit-config.html${separator}embedded=true&worldId=${worldId}&sessionId=${sessionId}`;
+
+      logger.info('Opening edit configuration modal', { editorUrl });
+
+      return this.openModal(
+        'edit-config', // referenceKey
+        'Edit Configuration',
+        editorUrl,
+        ModalSizePreset.LEFT_TOP, // Top-left quadrant (50% x 50%)
+        ModalFlags.CLOSEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.RESIZEABLE
+      );
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openEditConfiguration');
     }
   }
 
@@ -967,6 +1009,10 @@ export class ModalService {
           }
 
           return this.openBlockEditor(x, y, z);
+
+        case 'edit_config':
+          // No attributes required
+          return this.openEditConfiguration();
 
         // Future components can be added here:
         // case 'settings':

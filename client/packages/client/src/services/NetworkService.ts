@@ -453,26 +453,19 @@ export class NetworkService {
   }
 
   /**
-   * Create block editor URL with coordinates
+   * Get base editor URL from world configuration
    *
-   * Constructs editor URL from worldInfo.editorUrl with block coordinates as query parameters
-   *
-   * @param x - Block X coordinate
-   * @param y - Block Y coordinate
-   * @param z - Block Z coordinate
-   * @returns Editor URL with coordinates or null if no editor URL configured
+   * @returns Editor base URL or null if no editor URL configured
    */
-  createBlockEditorUrl(x: number, y: number, z: number): string | null {
-    const editorUrl = this.appContext.worldInfo?.editorUrl;
+  getComponentBaseUrl(): string | null {
+    const url = this.appContext.worldInfo?.editorUrl;
 
-    if (!editorUrl) {
+    if (!url) {
       logger.warn('No editor URL configured for this world');
       return null;
     }
 
-    // Add coordinates as query parameters
-    const separator = editorUrl.includes('?') ? '&' : '?';
-    const worldId = this.appContext.worldInfo?.worldId;
-    return `${editorUrl}block-editor.html${separator}world=${worldId}&x=${x}&y=${y}&z=${z}`;
+    return url;
   }
+
 }
