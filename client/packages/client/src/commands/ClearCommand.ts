@@ -16,7 +16,7 @@ export class ClearCommand extends CommandHandler {
     return 'Clears the browser console';
   }
 
-  execute(parameters: string[]): any {
+  execute(parameters: any[]): any {
     console.clear();
     return 'Console cleared';
   }

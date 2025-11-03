@@ -27,14 +27,14 @@ export class SendCommand extends CommandHandler {
     return 'Sends a command to the server for execution';
   }
 
-  async execute(parameters: string[]): Promise<any> {
+  async execute(parameters: any[]): Promise<any> {
     if (parameters.length === 0) {
       console.error('Usage: send <command> [args...]');
       console.error('Example: send say "Hello, world!"');
       return { error: 'No command specified' };
     }
 
-    const cmd = parameters[0];
+    const cmd = parameters[0].toString();
     const args = parameters.slice(1);
 
     console.log(`Sending command to server: ${cmd}`, args.length > 0 ? args : '');

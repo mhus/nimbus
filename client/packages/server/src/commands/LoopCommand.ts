@@ -23,7 +23,7 @@ export class LoopCommand extends CommandHandler {
     return 'Sends a command to the client for execution (loop <client-cmd> [args...])';
   }
 
-  async execute(context: CommandContext, args: string[]): Promise<CommandResult> {
+  async execute(context: CommandContext, args: any[]): Promise<CommandResult> {
     if (args.length === 0) {
       return {
         rc: -3, // Invalid arguments
@@ -31,7 +31,7 @@ export class LoopCommand extends CommandHandler {
       };
     }
 
-    const clientCmd = args[0];
+    const clientCmd = args[0].toString();
     const clientArgs = args.slice(1);
 
     context.sendMessage(`Sending command '${clientCmd}' to client...`);

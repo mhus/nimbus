@@ -24,7 +24,7 @@ export class HelpCommand extends CommandHandler {
     return 'Lists all available server commands with descriptions';
   }
 
-  execute(context: CommandContext, args: string[]): CommandResult {
+  execute(context: CommandContext, args: any[]): CommandResult {
     const handlers = this.commandService.getHandlers();
 
     if (handlers.size === 0) {

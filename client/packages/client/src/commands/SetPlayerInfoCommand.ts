@@ -31,7 +31,7 @@ export class SetPlayerInfoCommand extends CommandHandler {
     return 'Set player info properties (JSON object)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     try {
       // Get PlayerService
       const playerService = this.appContext.services.player;
@@ -46,18 +46,25 @@ export class SetPlayerInfoCommand extends CommandHandler {
         return `Current PlayerInfo:\n${JSON.stringify(info, null, 2)}`;
       }
 
-      // Join all parameters to support JSON with spaces
-      const jsonString = parameters.join(' ');
-
       // Parse JSON
       let updates: any;
-      try {
-        updates = JSON.parse(jsonString);
-      } catch (parseError) {
-        if (parseError instanceof SyntaxError) {
-          return `Invalid JSON: ${parseError.message}\nUsage: setPlayerInfo {"property": value}`;
-        }
-        throw parseError;
+      if (parameters[0] == null) {
+        return 'Error: Missing JSON parameter';
+      }
+      if (typeof parameters[0] === 'string') {
+          try {
+            updates = JSON.parse(parameters[0]);
+          } catch (parseError) {
+            if (parseError instanceof SyntaxError) {
+              return `Invalid JSON: ${parseError.message}\nUsage: setPlayerInfo {"property": value}`;
+            }
+            throw parseError;
+          }
+      } else
+      if (typeof parameters[0] === 'object') {
+        updates = parameters[0];
+      } else {
+        return 'Error: Parameter must be a JSON object string or object';
       }
 
       // Validate that updates is an object

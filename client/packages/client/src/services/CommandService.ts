@@ -80,7 +80,7 @@ export class CommandService {
    * @param parameters Command parameters
    * @returns Command result
    */
-  async executeCommand(name: string, parameters: string[]): Promise<any> {
+  async executeCommand(name: string, parameters: any[]): Promise<any> {
     try {
       const handler = this.handlers.get(name);
 
@@ -191,7 +191,7 @@ export class CommandService {
    */
   async sendCommandToServer(
     cmd: string,
-    args: string[] = [],
+    args: any[] = [],
     onMessage?: (message: string) => void
   ): Promise<CommandResultData> {
     const networkService = this.appContext.services.network;

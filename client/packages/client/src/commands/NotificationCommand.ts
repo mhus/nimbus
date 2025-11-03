@@ -29,7 +29,7 @@ export class NotificationCommand extends CommandHandler {
     return 'Creates a notification (notification <type> <from> <message>)';
   }
 
-  execute(parameters: string[]): any {
+  execute(parameters: any[]): any {
     const notificationService = this.appContext.services.notification;
 
     if (!notificationService) {
@@ -58,7 +58,7 @@ export class NotificationCommand extends CommandHandler {
     }
 
     // Parse from (null or string)
-    const fromParam = parameters[1];
+    const fromParam = parameters[1].toString();
     const from = fromParam.toLowerCase() === 'null' ? null : fromParam;
 
     // Parse message (join remaining parameters)

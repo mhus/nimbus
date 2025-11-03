@@ -1188,3 +1188,11 @@ dem text einen bereich auf klappt. Wennd er bereich auf ist, wird die komplexe v
 
 ## Block Model Editor
 
+> In Engine Selektieren von Block
+> Editor Next Block:  up down left right back forward Buttons
+
+Erstelle im SelectService einen 'SelectedEditBlock' Vektor der auch null sein kann. Wird der Vektor gesetzt,
+soll der Block grün dargestellt werden (wie ein selektierter block nur gruen anstelle von weiss).
+- Erstelle im client ein Commando 'setSelectedEditBlock' mit dem man den Wert setzen kann, sind die parameter leer, wird
+  die selektion zurückgesetzt.
+- Erstelle im clint ein Commando 'getSelectedEditBlock' der die Vektor-Werte zurück gibt.

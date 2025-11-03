@@ -51,7 +51,7 @@ export abstract class CommandHandler {
    */
   abstract execute(
     context: CommandContext,
-    args: string[]
+    args: any[]
   ): Promise<CommandResult> | CommandResult;
 }
 

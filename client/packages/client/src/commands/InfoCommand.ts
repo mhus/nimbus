@@ -27,7 +27,7 @@ export class InfoCommand extends CommandHandler {
     return 'Shows client information (version, build mode, connection status)';
   }
 
-  execute(parameters: string[]): any {
+  execute(parameters: any[]): any {
     const buildMode = __EDITOR__ ? 'Editor' : 'Viewer';
     const clientService = this.appContext.services.client;
     const networkService = this.appContext.services.network;

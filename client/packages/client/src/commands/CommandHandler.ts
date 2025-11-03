@@ -36,5 +36,5 @@ export abstract class CommandHandler {
    * @returns Command result (can be any type, will be logged to console)
    * @throws Error if command execution fails
    */
-  abstract execute(parameters: string[]): Promise<any> | any;
+  abstract execute(parameters: any[]): Promise<any> | any;
 }
