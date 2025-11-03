@@ -18,6 +18,12 @@ import { mergeBlockModifier } from '../utils/BlockModifierMerge';
 const logger = getLogger('SelectService');
 
 /**
+ * Minimum distance from camera to start selecting blocks (in block units)
+ * Prevents selecting blocks too close to the camera/player
+ */
+const MIN_SELECT_DISTANCE = 2.0;
+
+/**
  * Selection modes
  */
 export enum SelectMode {
@@ -182,11 +188,6 @@ export class SelectService {
     direction: Vector3,
     maxDistance: number
   ): ClientBlock | null {
-    // Current position along the ray
-    let currentX = origin.x;
-    let currentY = origin.y;
-    let currentZ = origin.z;
-
     // Step size for ray marching (smaller = more accurate, slower)
     const stepSize = 0.1;
 
@@ -195,8 +196,16 @@ export class SelectService {
     const stepY = direction.y * stepSize;
     const stepZ = direction.z * stepSize;
 
-    // Track distance traveled
-    let distance = 0;
+    // Start ray at minimum distance to avoid selecting blocks too close to camera
+    const startDistance = MIN_SELECT_DISTANCE;
+
+    // Current position along the ray (start at minimum distance)
+    let currentX = origin.x + direction.x * startDistance;
+    let currentY = origin.y + direction.y * startDistance;
+    let currentZ = origin.z + direction.z * startDistance;
+
+    // Track distance traveled (starting from MIN_SELECT_DISTANCE)
+    let distance = startDistance;
 
     // Variables to track last AIR position (for ALL mode fallback)
     let lastAirBlock: { x: number; y: number; z: number } | null = null;

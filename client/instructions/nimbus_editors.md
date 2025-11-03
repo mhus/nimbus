@@ -1268,7 +1268,7 @@ Bitte details immer gleich laden
 
 [x] Gehe beim oeffnen des openBlockEditor() und openEditorConfig() aus dem Screen Pointer Lock modus heraus.
 
-[ ] im SelectorService wird auc ein AIR Block gefunden, der Block ist zu nah an de kamera, finde erst bloecke, die mindestens 2 oder 3 (konfigurierbar als constante) entfernt sind.
+[x] im SelectorService wird auc ein AIR Block gefunden, der Block ist zu nah an de kamera, finde erst bloecke, die mindestens 2 oder 3 (konfigurierbar als constante) entfernt sind.
 
 ## Asset Info
 
