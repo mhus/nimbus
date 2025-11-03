@@ -1214,18 +1214,23 @@ soll der Block grün dargestellt werden (wie ein selektierter block nur gruen an
 
 [ ] Im server soll ein command 'setSelectedEditBlock' implementiert werden, der den SelectedEditBlock für eine Session setzt.
   und die hinterlegte Aktion ausfuehrt.
+- Es soll im client immer das Commando 'setSelectedEditBlock' aufgerufen werden, damit der Block hier sichtbar selektiert wird.
 Aktionen sind:
 - OPEN_CONFIG_DIALOG - schickt das commando "openModal 'edit_config'" an den client - das ist default. (wird spaeter implementiert)
 - OPEN_EDITOR - schickt das commando "openModal 'block_editor','x','y','z'" an den client.
-- MARK_BLOCK - merkt sich den Block 
+- MARK_BLOCK - merkt sich den Block in der client session als 'markedEditBlock'
 - COPY_BLOCK - kopiert den markierten Block an die neue Stelle
 - DELETE_BLOCK - löscht den Block
 - MOVE_BLOCK - verschiebt den markierten Block an die neue Stelle, die alte stelle wird leer gemacht.
 Erweitere die REST API um endpunkte die die editAction lesen und setzen können:
 - GET /api/worlds/{worldId}/session/{sessionId}/editAction
 - PUT /api/worlds/{worldId}/blocks/{sessionId}/editAction
+- GET /api/worlds/{worldId}/session/{sessionId}/selectedEditBlock - Gibt selectedEditBlock und auch ggf. markierte Block Position mit aus.
 
-[ ] Erstelle einen 
+[ ] Erstelle einen Editor 'EditConfiguration' in 'nimbus_editors'. Der Editor bekommt via URL Parameter die worldId und sessionId mitgegeben.
+- Der Editor liest die editAction via REST API aus und zeigt sie in einem Select an.
+- Der Editor hat einen Save Button, der die editAction via REST API setzt.
+- Der Editor ruft regelmäßig selectedEditBlock auf und zeigt die aktuell selektierte Block Position an.
 
 ## Asset Info
 
