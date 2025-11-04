@@ -48,6 +48,11 @@
 - Ist das Feld nicht gesetzt oder 0 ist die funktion aus (keine kletterung)
 - Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
 
+[ ]Wenn vor mir ein climbable block ist, ich nict auf dem boden (unter den fuessen kein block) und ich mich rueckwaerts
+  bewege, dann soll ich mich mit climbable geschwindigkeit nach unten bewegen.
+
+~~[-] Wenn ich nach oben schaue (player pitch) soll ich nach oben gehen, wenn ich nach unten schaue nach unten.~~
+
 [ ] Support PhysicsModifier.passableFrom
 - Aktuell gibt es das Feld PhysicsModifier.gateFromDirection, es soll umbenannt werden in passableFrom
 - Es ist eine Bitmap fuer jede direction ein Bit. BlockModifier.Direction

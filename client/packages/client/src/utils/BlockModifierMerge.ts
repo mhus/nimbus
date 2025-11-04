@@ -7,7 +7,6 @@
  * 3. BlockType.modifiers[0] (Default status fallback)
  * 4. Default values (e.g., shape = 0)
  */
-
 import { BlockModifier, BlockType, Block } from '@nimbus/shared';
 import type { AppContext } from '../AppContext.js';
 
