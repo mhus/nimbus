@@ -48,6 +48,10 @@ export interface PhysicsEntity {
     active: boolean;
     startY: number;
     targetY: number;
+    startX: number;
+    targetX: number;
+    startZ: number;
+    targetZ: number;
     progress: number; // 0.0 to 1.0
   };
 }
@@ -425,24 +429,44 @@ export class PhysicsService {
 
   /**
    * Update smooth climb animation
+   *
+   * Interpolates position diagonally from start to target (X, Y, Z simultaneously)
+   * for a smooth climbing motion that moves forward and upward at the same time.
+   * Climb speed is based on entity's walk speed for consistent movement feel.
    */
   private updateClimbAnimation(entity: PhysicsEntity, deltaTime: number): void {
     if (!entity.climbState) return;
 
-    // Increment progress (5.0 = ~0.2 seconds for fluid climb)
-    entity.climbState.progress += deltaTime * 5.0;
+    // Calculate total distance to climb (diagonal distance)
+    const dx = entity.climbState.targetX - entity.climbState.startX;
+    const dy = entity.climbState.targetY - entity.climbState.startY;
+    const dz = entity.climbState.targetZ - entity.climbState.startZ;
+    const totalDistance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    // Use walk speed to determine climb speed (blocks per second)
+    const climbSpeed = this.getMoveSpeed(entity);
+
+    // Calculate progress based on speed and distance
+    // progress per frame = (speed * deltaTime) / totalDistance
+    const progressIncrement = totalDistance > 0 ? (climbSpeed * deltaTime) / totalDistance : 1.0;
+    entity.climbState.progress += progressIncrement;
 
     if (entity.climbState.progress >= 1.0) {
-      // Climb complete
+      // Climb complete - snap to final position
+      entity.position.x = entity.climbState.targetX;
       entity.position.y = entity.climbState.targetY;
+      entity.position.z = entity.climbState.targetZ;
       entity.climbState = undefined;
       entity.isOnGround = true;
       entity.velocity.y = 0;
     } else {
-      // Smooth interpolation with ease-out for natural feel
+      // Smooth, linear interpolation for steady climbing motion
+      // Move diagonally: X, Y, Z all interpolate simultaneously
       const t = entity.climbState.progress;
-      const eased = 1 - Math.pow(1 - t, 3); // Cubic ease-out
-      entity.position.y = entity.climbState.startY + (entity.climbState.targetY - entity.climbState.startY) * eased;
+
+      entity.position.x = entity.climbState.startX + dx * t;
+      entity.position.y = entity.climbState.startY + dy * t;
+      entity.position.z = entity.climbState.startZ + dz * t;
     }
   }
 
@@ -1143,24 +1167,28 @@ export class PhysicsService {
 
         entity.climbState = {
           active: true,
+          startX: entity.position.x,
           startY: feetY,
+          startZ: entity.position.z,
+          targetX: targetX,
           targetY: targetY,
+          targetZ: targetZ,
           progress: 0.0,
         };
         entity.isOnGround = false;
 
-        // Apply horizontal movement during climb
-        entity.position.x = targetX;
-        entity.position.z = targetZ;
-
-        logger.debug('Auto-climb started', {
+        logger.debug('Auto-climb started (diagonal)', {
           entityId: entity.entityId,
-          from: feetY.toFixed(2),
-          to: targetY,
+          fromY: feetY.toFixed(2),
+          toY: targetY,
+          fromX: entity.position.x.toFixed(2),
+          toX: targetX.toFixed(2),
+          fromZ: entity.position.z.toFixed(2),
+          toZ: targetZ.toFixed(2),
           blockCount: context.currentLevel.blocks.length,
         });
       }
-      return false; // Normal movement with auto-climb
+      return true; // Movement fully handled by climb animation
     }
 
     // Cannot move:
