@@ -3,20 +3,21 @@
     <div
       v-for="asset in assets"
       :key="asset.path"
-      class="card bg-base-100 shadow hover:shadow-lg transition-shadow cursor-pointer"
+      class="card bg-base-100 shadow hover:shadow-lg transition-shadow cursor-pointer flex flex-col"
       @click="emit('asset-click', asset)"
     >
-      <figure class="h-40 bg-base-200 flex items-center justify-center overflow-hidden">
+      <figure class="aspect-square bg-base-200 flex items-center justify-center p-4">
         <img
           v-if="isImage(asset)"
           :src="getUrl(asset.path)"
           :alt="asset.path"
-          class="w-full h-full object-cover"
+          class="w-full h-full object-contain"
+          style="image-rendering: pixelated;"
           @error="(e: Event) => ((e.target as HTMLImageElement).style.display = 'none')"
         />
         <span v-else class="text-6xl">{{ getIcon(asset) }}</span>
       </figure>
-      <div class="card-body p-3">
+      <div class="card-body p-3 flex-shrink-0">
         <h3 class="text-sm font-medium truncate" :title="asset.path">
           {{ getFileName(asset.path) }}
         </h3>
