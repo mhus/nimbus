@@ -267,6 +267,13 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
     appContext.services.compass = compassService;
     logger.debug('CompassService initialized');
 
+    // Initialize ModifierService
+    logger.info('Initializing ModifierService...');
+    const { ModifierService } = await import('./services/ModifierService');
+    const modifierService = new ModifierService();
+    appContext.services.modifier = modifierService;
+    logger.debug('ModifierService initialized');
+
     // Register some chunks around player spawn
     const chunkService = appContext.services.chunk;
     if (chunkService) {

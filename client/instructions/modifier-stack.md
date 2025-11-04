@@ -66,7 +66,7 @@ windModifierByEffect.setValue(40); // results in windForce = 40
 windModifierByEffect.close() // results in windForce = 5 (next lower prio is windModifierByWeater, current value is 5)
 ```
 
-[ ] ModifierService implementieren und in AppContext registrieren.
+[x] ModifierService implementieren und in AppContext registrieren.
 
 ### Auf ModifierStack umstellen
 

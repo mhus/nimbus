@@ -6,3 +6,4 @@
 
 export * from './ModalService';
 export * from './IFrameHelper';
+export * from './ModifierService';

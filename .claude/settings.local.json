@@ -40,7 +40,9 @@
       "WebFetch(domain:doc.babylonjs.com)",
       "WebFetch(domain:babylonjs.medium.com)",
       "Bash(npx tsc:*)",
-      "Bash(pnpm --filter @nimbus/server build:*)"
+      "Bash(pnpm --filter @nimbus/server build:*)",
+      "Bash(pnpm --filter @nimbus/client test ModifierService)",
+      "Bash(pnpm --filter @nimbus/client build:shared:*)"
     ],
     "deny": [],
     "ask": []

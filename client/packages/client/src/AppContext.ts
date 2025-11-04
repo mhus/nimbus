@@ -19,6 +19,7 @@ import type { CameraService } from './services/CameraService';
 import type { EnvironmentService } from './services/EnvironmentService';
 import type { PlayerService } from './services/PlayerService';
 import type { CompassService } from './services/CompassService';
+import type { ModifierService } from './services/ModifierService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -84,6 +85,9 @@ export interface Services {
 
   /** Compass service for compass bar and directional markers */
   compass?: CompassService;
+
+  /** Modifier service for managing modifier stacks */
+  modifier?: ModifierService;
 
   // Future services will be added here:
   // render?: RenderService;
