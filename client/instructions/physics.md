@@ -23,7 +23,7 @@
 [x] Bonus: Rename PhysicsModifier.autoMoveXYZ to PhysicsModifier.autoMove
 - Auch im PhysicsEditor 
 
-[ ] Support PhysicsModifier.autoMove
+[x] Support PhysicsModifier.autoMove
 - Wenn der Player mit den fuessen auf oder in das Feld kommt, wird er automatisch bewegt
 - Default ist kein autoMove (false)
 - Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
@@ -31,6 +31,11 @@
 - Sind mehrere Felder, wird fuer X Y Z das maximum benutzt
 
 [ ] Support PhysicsModifier.autoOrientationY
+- Wenn der Player mit den fuessen oder in das Feld kommt, wird er automatisch in diese richtung gedreht (player orientation), bis er die richtung erreicht hat.
+- Default ist kein autoOrientationY (false)
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
+- Die Drehung soll fluessig sein mit einer standart geschwindigkeit.
+- Sind mehrere Felder, wird fuer die orientation die letzte benutzt.
 
 > Naming:
 > rotation: The physical rotation of an entity in 3D space (i.e. its angle around the X, Y, and Z axes).

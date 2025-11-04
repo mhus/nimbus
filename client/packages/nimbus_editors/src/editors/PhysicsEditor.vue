@@ -72,6 +72,38 @@
 
     <div class="form-control">
       <label class="label">
+        <span class="label-text">Auto Move (velocity when on/in block)</span>
+      </label>
+      <div class="flex gap-2">
+        <input
+          v-model.number="autoMoveX"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm flex-1"
+          placeholder="X"
+        />
+        <input
+          v-model.number="autoMoveY"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm flex-1"
+          placeholder="Y"
+        />
+        <input
+          v-model.number="autoMoveZ"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm flex-1"
+          placeholder="Z"
+        />
+      </div>
+      <label class="label">
+        <span class="label-text-alt">Blocks per second (e.g., 2 0 0 = conveyor belt)</span>
+      </label>
+    </div>
+
+    <div class="form-control">
+      <label class="label">
         <span class="label-text">Gate From Direction (bitfield)</span>
       </label>
       <input
@@ -88,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import type { PhysicsModifier } from '@nimbus/shared';
 
 interface Props {
@@ -104,6 +136,37 @@ const emit = defineEmits<{
 const localValue = ref<PhysicsModifier>(
   props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : {}
 );
+
+// Computed properties for autoMove Vector3 components
+const autoMoveX = computed({
+  get: () => localValue.value.autoMove?.x ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.autoMove) {
+      localValue.value.autoMove = { x: 0, y: 0, z: 0 };
+    }
+    localValue.value.autoMove.x = value;
+  }
+});
+
+const autoMoveY = computed({
+  get: () => localValue.value.autoMove?.y ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.autoMove) {
+      localValue.value.autoMove = { x: 0, y: 0, z: 0 };
+    }
+    localValue.value.autoMove.y = value;
+  }
+});
+
+const autoMoveZ = computed({
+  get: () => localValue.value.autoMove?.z ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.autoMove) {
+      localValue.value.autoMove = { x: 0, y: 0, z: 0 };
+    }
+    localValue.value.autoMove.z = value;
+  }
+});
 
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);

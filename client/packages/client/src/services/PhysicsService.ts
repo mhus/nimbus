@@ -62,6 +62,7 @@ interface PlayerBlockContext {
     hasAutoJump: boolean;
     hasClimbable: boolean;
     resistance: number; // Max resistance from all blocks
+    autoMove: { x: number; y: number; z: number }; // Max velocity per axis
   };
 
   /** Blocks one level above (Y + 1) */
@@ -76,6 +77,7 @@ interface PlayerBlockContext {
     blocks: Array<{ x: number; y: number; z: number; block: any }>;
     hasGround: boolean;
     hasAutoJump: boolean; // AutoJump on block player is standing on
+    autoMove: { x: number; y: number; z: number }; // Max velocity per axis
     groundY: number; // Y coordinate of ground, -1 if no ground
   };
 
@@ -85,6 +87,7 @@ interface PlayerBlockContext {
     hasSolid: boolean;
     hasLiquid: boolean; // For future water/lava detection
     hasAutoJump: boolean; // Trigger auto-jump when inside this block
+    autoMove: { x: number; y: number; z: number }; // Max velocity per axis
   };
 }
 
@@ -374,6 +377,9 @@ export class PhysicsService {
 
     // Auto-jump if standing on/in autoJump block
     this.checkAutoJump(entity);
+
+    // Auto-move if standing on/in autoMove block
+    this.applyAutoMove(entity, deltaTime);
   }
 
   /**
@@ -552,10 +558,10 @@ export class PhysicsService {
     if (!this.chunkService) {
       // No chunk service - return empty context
       return {
-        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, hasClimbable: false, resistance: 0 },
+        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, hasClimbable: false, resistance: 0, autoMove: { x: 0, y: 0, z: 0 } },
         aboveLevel: { blocks: [], hasSolid: false, isClear: true },
-        belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, groundY: -1 },
-        occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false },
+        belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 }, groundY: -1 },
+        occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 } },
       };
     }
 
@@ -582,6 +588,7 @@ export class PhysicsService {
       hasAutoJump: false,
       hasClimbable: false,
       resistance: 0,
+      autoMove: { x: 0, y: 0, z: 0 },
     };
 
     for (const pos of cornerPositions) {
@@ -596,6 +603,12 @@ export class PhysicsService {
         if (physics?.climbable) currentLevel.hasClimbable = true;
         if (physics?.resistance) {
           currentLevel.resistance = Math.max(currentLevel.resistance, physics.resistance);
+        }
+        // Collect autoMove: Use maximum per axis
+        if (physics?.autoMove) {
+          currentLevel.autoMove.x = Math.max(currentLevel.autoMove.x, Math.abs(physics.autoMove.x)) * Math.sign(physics.autoMove.x || 0);
+          currentLevel.autoMove.y = Math.max(currentLevel.autoMove.y, Math.abs(physics.autoMove.y)) * Math.sign(physics.autoMove.y || 0);
+          currentLevel.autoMove.z = Math.max(currentLevel.autoMove.z, Math.abs(physics.autoMove.z)) * Math.sign(physics.autoMove.z || 0);
         }
       }
     }
@@ -623,6 +636,7 @@ export class PhysicsService {
       blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
       hasGround: false,
       hasAutoJump: false,
+      autoMove: { x: 0, y: 0, z: 0 },
       groundY: -1,
     };
 
@@ -642,6 +656,12 @@ export class PhysicsService {
           if (physics?.autoJump && checkY === currentBlockY - 1) {
             belowLevel.hasAutoJump = true;
           }
+          // Collect autoMove from blocks below (standing on)
+          if (physics?.autoMove && checkY === currentBlockY - 1) {
+            belowLevel.autoMove.x = Math.max(belowLevel.autoMove.x, Math.abs(physics.autoMove.x)) * Math.sign(physics.autoMove.x || 0);
+            belowLevel.autoMove.y = Math.max(belowLevel.autoMove.y, Math.abs(physics.autoMove.y)) * Math.sign(physics.autoMove.y || 0);
+            belowLevel.autoMove.z = Math.max(belowLevel.autoMove.z, Math.abs(physics.autoMove.z)) * Math.sign(physics.autoMove.z || 0);
+          }
         }
       }
       if (belowLevel.hasGround) break; // Found ground, stop searching
@@ -653,6 +673,7 @@ export class PhysicsService {
       hasSolid: false,
       hasLiquid: false,
       hasAutoJump: false,
+      autoMove: { x: 0, y: 0, z: 0 },
     };
 
     const headBlockY = Math.floor(y + entityHeight);
@@ -667,6 +688,12 @@ export class PhysicsService {
         }
         if (physics?.autoJump) {
           occupiedBlocks.hasAutoJump = true;
+        }
+        // Collect autoMove from occupied blocks
+        if (physics?.autoMove) {
+          occupiedBlocks.autoMove.x = Math.max(occupiedBlocks.autoMove.x, Math.abs(physics.autoMove.x)) * Math.sign(physics.autoMove.x || 0);
+          occupiedBlocks.autoMove.y = Math.max(occupiedBlocks.autoMove.y, Math.abs(physics.autoMove.y)) * Math.sign(physics.autoMove.y || 0);
+          occupiedBlocks.autoMove.z = Math.max(occupiedBlocks.autoMove.z, Math.abs(physics.autoMove.z)) * Math.sign(physics.autoMove.z || 0);
         }
         // TODO: Add liquid detection when implemented
         // if (block.isLiquid) occupiedBlocks.hasLiquid = true;
@@ -782,6 +809,70 @@ export class PhysicsService {
         entity.velocity.y = 0;
         return;
       }
+    }
+  }
+
+  /**
+   * Apply autoMove velocity to entity based on blocks at feet level or below
+   *
+   * AutoMove is applied when:
+   * - Player is standing on autoMove block (block below feet, Y - 1), OR
+   * - Player has autoMove block at feet level (Y)
+   *
+   * The maximum velocity per axis from all relevant blocks is used.
+   * Movement is smooth and continuous while on/in the block.
+   *
+   * Use case: Conveyor belts, water currents, ice sliding
+   */
+  private applyAutoMove(entity: PhysicsEntity, deltaTime: number): void {
+    if (!this.chunkService) {
+      return;
+    }
+
+    // Only apply autoMove in walk mode
+    if (entity.movementMode !== 'walk') {
+      return;
+    }
+
+    // Get entity dimensions
+    const entityWidth = this.defaultEntityWidth;
+    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
+
+    // Get block context at current position
+    const context = this.getPlayerBlockContext(
+      entity.position.x,
+      entity.position.z,
+      entity.position.y,
+      entityWidth,
+      entityHeight
+    );
+
+    // Collect autoMove from both belowLevel (standing on) and currentLevel (at feet)
+    const autoMoveX = Math.max(Math.abs(context.belowLevel.autoMove.x), Math.abs(context.currentLevel.autoMove.x)) *
+                      (Math.abs(context.belowLevel.autoMove.x) > Math.abs(context.currentLevel.autoMove.x)
+                        ? Math.sign(context.belowLevel.autoMove.x)
+                        : Math.sign(context.currentLevel.autoMove.x));
+
+    const autoMoveY = Math.max(Math.abs(context.belowLevel.autoMove.y), Math.abs(context.currentLevel.autoMove.y)) *
+                      (Math.abs(context.belowLevel.autoMove.y) > Math.abs(context.currentLevel.autoMove.y)
+                        ? Math.sign(context.belowLevel.autoMove.y)
+                        : Math.sign(context.currentLevel.autoMove.y));
+
+    const autoMoveZ = Math.max(Math.abs(context.belowLevel.autoMove.z), Math.abs(context.currentLevel.autoMove.z)) *
+                      (Math.abs(context.belowLevel.autoMove.z) > Math.abs(context.currentLevel.autoMove.z)
+                        ? Math.sign(context.belowLevel.autoMove.z)
+                        : Math.sign(context.currentLevel.autoMove.z));
+
+    // Apply autoMove velocity if any axis has movement
+    if (autoMoveX !== 0 || autoMoveY !== 0 || autoMoveZ !== 0) {
+      entity.position.x += autoMoveX * deltaTime;
+      entity.position.y += autoMoveY * deltaTime;
+      entity.position.z += autoMoveZ * deltaTime;
+
+      logger.debug('Auto-move applied', {
+        entityId: entity.entityId,
+        velocity: { x: autoMoveX, y: autoMoveY, z: autoMoveZ },
+      });
     }
   }
 
