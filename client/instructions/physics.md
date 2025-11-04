@@ -30,7 +30,7 @@
 - Die Bewegung soll fluessig sein mit der geschwindigkeit aus dem parameter bis der user aus/von dem Feld ist. 
 - Sind mehrere Felder, wird fuer X Y Z das maximum benutzt
 
-[ ] Support PhysicsModifier.autoOrientationY
+[x] Support PhysicsModifier.autoOrientationY
 - Wenn der Player mit den fuessen oder in das Feld kommt, wird er automatisch in diese richtung gedreht (player orientation), bis er die richtung erreicht hat.
 - Default ist kein autoOrientationY (false)
 - Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
@@ -43,13 +43,20 @@
 > turn: The rotation delta in time of an object.
 
 [ ] Support PhysicsModifier.climbable
-[ ] Bonus: Rename PhysicsModifier.gateFromDirection to PhysicsModifier.passableFrom
+- Wenn der User an diese Feld lauft (feld ist vor ihm), dann klettert er automatisch nach oben anstelle weiter nach vorn
+- Der Wert in dem Feld ist die klettergeschwindigkeit
+- Ist das Feld nicht gesetzt oder 0 ist die funktion aus (keine kletterung)
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
+
 [ ] Support PhysicsModifier.passableFrom
+- Aktuell gibt es das Feld PhysicsModifier.gateFromDirection, es soll umbenannt werden in passableFrom
+- Es ist eine Bitmap fuer jede direction ein Bit. BlockModifier.Direction
 - Wenn der Block solid ist, dann funktioniert passableFrom wie eine Aufhebung, d.h. von der seite kannst du rein und auf alle seiten raus, wo kein solid block ist - nach oben moven weil in einem solid block ist aufgehoben sobald passableFrom am Block ist.
   Damit wird der Block zu einem One-Way-Block. Auch nach oben oder unten wirkt diese Einstellung.
 - Wenn der Block nicht solid ist, dann funktioniert passableFrom wie ein Blocker aus dem block am rand, man kann weder in den block noch raus, wo kein passableFrom angegeben ist, aber der block ist begehbar.
   Damit wird der block wie eine Wand, du kannst hin, aber nicht drueber hinaus. Auch nach unten oder oben wirk diese Einstellung.
   Wird aktiv sobald passableFrom am Block haengt.
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein, falls noch nicht vorhanden. Benutze checkboxen fuer die flags die in einer Zeile stehen. Ein Button fuer reset um das feld wieder zu loeschen.
 
 ## Editor
 

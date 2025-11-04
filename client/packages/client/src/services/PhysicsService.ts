@@ -31,6 +31,9 @@ export interface PhysicsEntity {
   /** Entity velocity */
   velocity: Vector3;
 
+  /** Entity rotation (Euler angles in radians) */
+  rotation: Vector3;
+
   /** Movement mode */
   movementMode: MovementMode;
 
@@ -63,6 +66,7 @@ interface PlayerBlockContext {
     hasClimbable: boolean;
     resistance: number; // Max resistance from all blocks
     autoMove: { x: number; y: number; z: number }; // Max velocity per axis
+    autoOrientationY: number | undefined; // Last (most recent) orientation from blocks
   };
 
   /** Blocks one level above (Y + 1) */
@@ -78,6 +82,7 @@ interface PlayerBlockContext {
     hasGround: boolean;
     hasAutoJump: boolean; // AutoJump on block player is standing on
     autoMove: { x: number; y: number; z: number }; // Max velocity per axis
+    autoOrientationY: number | undefined; // Last (most recent) orientation from blocks
     groundY: number; // Y coordinate of ground, -1 if no ground
   };
 
@@ -380,6 +385,9 @@ export class PhysicsService {
 
     // Auto-move if standing on/in autoMove block
     this.applyAutoMove(entity, deltaTime);
+
+    // Auto-orientation if standing on/in autoOrientationY block
+    this.applyAutoOrientation(entity, deltaTime);
   }
 
   /**
@@ -558,9 +566,9 @@ export class PhysicsService {
     if (!this.chunkService) {
       // No chunk service - return empty context
       return {
-        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, hasClimbable: false, resistance: 0, autoMove: { x: 0, y: 0, z: 0 } },
+        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, hasClimbable: false, resistance: 0, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined },
         aboveLevel: { blocks: [], hasSolid: false, isClear: true },
-        belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 }, groundY: -1 },
+        belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined, groundY: -1 },
         occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 } },
       };
     }
@@ -589,6 +597,7 @@ export class PhysicsService {
       hasClimbable: false,
       resistance: 0,
       autoMove: { x: 0, y: 0, z: 0 },
+      autoOrientationY: undefined as number | undefined,
     };
 
     for (const pos of cornerPositions) {
@@ -609,6 +618,10 @@ export class PhysicsService {
           currentLevel.autoMove.x = Math.max(currentLevel.autoMove.x, Math.abs(physics.autoMove.x)) * Math.sign(physics.autoMove.x || 0);
           currentLevel.autoMove.y = Math.max(currentLevel.autoMove.y, Math.abs(physics.autoMove.y)) * Math.sign(physics.autoMove.y || 0);
           currentLevel.autoMove.z = Math.max(currentLevel.autoMove.z, Math.abs(physics.autoMove.z)) * Math.sign(physics.autoMove.z || 0);
+        }
+        // Collect autoOrientationY: Use last (most recent) value
+        if (physics?.autoOrientationY !== undefined) {
+          currentLevel.autoOrientationY = physics.autoOrientationY;
         }
       }
     }
@@ -637,6 +650,7 @@ export class PhysicsService {
       hasGround: false,
       hasAutoJump: false,
       autoMove: { x: 0, y: 0, z: 0 },
+      autoOrientationY: undefined as number | undefined,
       groundY: -1,
     };
 
@@ -661,6 +675,10 @@ export class PhysicsService {
             belowLevel.autoMove.x = Math.max(belowLevel.autoMove.x, Math.abs(physics.autoMove.x)) * Math.sign(physics.autoMove.x || 0);
             belowLevel.autoMove.y = Math.max(belowLevel.autoMove.y, Math.abs(physics.autoMove.y)) * Math.sign(physics.autoMove.y || 0);
             belowLevel.autoMove.z = Math.max(belowLevel.autoMove.z, Math.abs(physics.autoMove.z)) * Math.sign(physics.autoMove.z || 0);
+          }
+          // Collect autoOrientationY from blocks below (standing on): Use last value
+          if (physics?.autoOrientationY !== undefined && checkY === currentBlockY - 1) {
+            belowLevel.autoOrientationY = physics.autoOrientationY;
           }
         }
       }
@@ -873,6 +891,93 @@ export class PhysicsService {
         entityId: entity.entityId,
         velocity: { x: autoMoveX, y: autoMoveY, z: autoMoveZ },
       });
+    }
+  }
+
+  /**
+   * Apply autoOrientationY rotation to entity based on blocks at feet level or below
+   *
+   * AutoOrientationY is applied when:
+   * - Player is standing on autoOrientationY block (block below feet, Y - 1), OR
+   * - Player has autoOrientationY block at feet level (Y)
+   *
+   * When multiple blocks have orientation, the last (most recent) value is used.
+   * Rotation is smooth and gradual with a standard rotation speed.
+   *
+   * Use case: Directional blocks (arrows), rotating platforms, alignment zones
+   */
+  private applyAutoOrientation(entity: PhysicsEntity, deltaTime: number): void {
+    if (!this.chunkService) {
+      return;
+    }
+
+    // Only apply autoOrientation in walk mode
+    if (entity.movementMode !== 'walk') {
+      return;
+    }
+
+    // Get entity dimensions
+    const entityWidth = this.defaultEntityWidth;
+    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
+
+    // Get block context at current position
+    const context = this.getPlayerBlockContext(
+      entity.position.x,
+      entity.position.z,
+      entity.position.y,
+      entityWidth,
+      entityHeight
+    );
+
+    // Collect autoOrientationY from belowLevel (standing on) or currentLevel (at feet)
+    // Prefer belowLevel (standing on block) over currentLevel (feet position)
+    const targetOrientationY = context.belowLevel.autoOrientationY !== undefined
+      ? context.belowLevel.autoOrientationY
+      : context.currentLevel.autoOrientationY;
+
+    // Apply smooth rotation if target orientation is defined
+    if (targetOrientationY !== undefined) {
+      const currentRotationY = entity.rotation.y;
+      const targetRotationY = targetOrientationY;
+
+      // Calculate shortest rotation distance (handle wrapping at 2π)
+      let deltaRotation = targetRotationY - currentRotationY;
+
+      // Normalize to [-π, π] range
+      while (deltaRotation > Math.PI) deltaRotation -= Math.PI * 2;
+      while (deltaRotation < -Math.PI) deltaRotation += Math.PI * 2;
+
+      // Standard rotation speed: 2π radians per second (full rotation in 1 second)
+      const rotationSpeed = Math.PI * 2;
+      const maxRotationThisFrame = rotationSpeed * deltaTime;
+
+      // Apply rotation smoothly
+      if (Math.abs(deltaRotation) > 0.01) { // Small threshold to avoid jitter
+        const rotationAmount = Math.sign(deltaRotation) * Math.min(Math.abs(deltaRotation), maxRotationThisFrame);
+        entity.rotation.y = currentRotationY + rotationAmount;
+
+        // Normalize rotation to [0, 2π] range
+        if (entity.rotation.y < 0) entity.rotation.y += Math.PI * 2;
+        if (entity.rotation.y >= Math.PI * 2) entity.rotation.y -= Math.PI * 2;
+
+        // Sync camera rotation for player entity
+        if (isPlayerEntity(entity)) {
+          const cameraService = this.appContext.services.camera;
+          if (cameraService) {
+            const currentCameraRotation = cameraService.getRotation();
+            // Set camera yaw (Y rotation) while keeping pitch (X) unchanged
+            cameraService.setRotation(currentCameraRotation.x, entity.rotation.y, 0);
+          }
+        }
+
+        logger.debug('Auto-orientation applied', {
+          entityId: entity.entityId,
+          from: currentRotationY,
+          to: entity.rotation.y,
+          target: targetRotationY,
+          delta: deltaRotation,
+        });
+      }
     }
   }
 

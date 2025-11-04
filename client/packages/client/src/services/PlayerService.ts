@@ -58,6 +58,7 @@ export class PlayerService {
       entityId: 'player',
       position: new Vector3(0, 64, 0),
       velocity: Vector3.Zero(),
+      rotation: Vector3.Zero(), // Rotation in radians (x: pitch, y: yaw, z: roll)
       movementMode: 'walk' as MovementMode,
       isOnGround: false,
       playerInfo: appContext.playerInfo,

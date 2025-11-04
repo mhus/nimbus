@@ -72,6 +72,22 @@
 
     <div class="form-control">
       <label class="label">
+        <span class="label-text">Auto Orientation Y (rotation angle)</span>
+      </label>
+      <input
+        v-model.number="localValue.autoOrientationY"
+        type="number"
+        step="0.1"
+        class="input input-bordered input-sm"
+        placeholder="Angle in radians (e.g., 0, 1.57, 3.14)"
+      />
+      <label class="label">
+        <span class="label-text-alt">Rotation in radians (0° = 0, 90° = 1.57, 180° = 3.14, 270° = 4.71)</span>
+      </label>
+    </div>
+
+    <div class="form-control">
+      <label class="label">
         <span class="label-text">Auto Move (velocity when on/in block)</span>
       </label>
       <div class="flex gap-2">
