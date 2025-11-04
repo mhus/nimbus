@@ -3,9 +3,24 @@
 
 ## Movement
 
-[ ] Support PhysicsModifier.autoClimbable while moving
+[?] Support PhysicsModifier.autoClimbable while moving
+- Wenn ein User an einem autoClimbable stößt, dann erklimmt er diese automatisch, funktioniert nur bei einem Block, ist bereits implementiert (PhysicsServcie),
+  wird aber aktuell immer gemacht. Soll in Zukunft nur bei Blocks mit dieser Eigenschaft funktionieren.
+- Default ist kein autoClimbable (false)
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
+> Ist es nicht besser dort anzusetzen, wo autoClimb ausgefuehrt wird, anstelle es im nachgang wieder rueckgaengig zu machen?
+- Es wird noch weitere physische eigenschaften von umgebenen bloecken geben, ist es schlau da eine funktion zu bauen, die das alles zusammen macht,
+    - Also erstmal die noetigen Blocke laed, unter dem player, vor dem player und der block(e) in dem player steht.
+    - Dann entscheiden was zu zun ist.
+
 [ ] Support PhysicsModifier.autoJump
+- Wenn ein User auf oder in ein Feld mit dieser eigenschaft kommt, wird automatisch ein jump ausgeloest
+- Default ist kein autoJump (false)
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
+- Baue das da ein, wo jetzt auch autoClimb umgesetzt wird. (?oder ist das anders besser?)
+
 [ ] Bonus: Rename PhysicsModifier.autoMoveXYZ to PhysicsModifier.autoMove
+- Auch im PhysicsEditor 
 [ ] Bonus: Rename autoMoveY to autoMoveZ
 [ ] Support PhysicsModifier.autoMove
 [ ] Support PhysicsModifier.autoOrientationY
@@ -26,7 +41,7 @@
 
 ## Editor
 
-[ ] Die Parameter im PhusicsEditor bearbeitbar machen: autoClimbable, autoJump, autoOrientationY, passableFrom
+[ ] Die Parameter im PhysicsEditor bearbeitbar machen: autoClimbable, autoJump, autoOrientationY, passableFrom
 > [ ] prüfen ob alle Parameter Editierbar sind und einen Effect haben.
 
 ## Bugs

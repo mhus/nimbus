@@ -50,6 +50,42 @@ export interface PhysicsEntity {
 }
 
 /**
+ * Block context around player
+ * Contains all relevant blocks and their aggregated physics properties
+ */
+interface PlayerBlockContext {
+  /** Blocks at feet level (current Y) */
+  currentLevel: {
+    blocks: Array<{ x: number; y: number; z: number; block: any }>;
+    hasSolid: boolean;
+    hasAutoClimbable: boolean;
+    hasClimbable: boolean;
+    resistance: number; // Max resistance from all blocks
+  };
+
+  /** Blocks one level above (Y + 1) */
+  aboveLevel: {
+    blocks: Array<{ x: number; y: number; z: number; block: any }>;
+    hasSolid: boolean;
+    isClear: boolean; // All positions are free
+  };
+
+  /** Blocks below (Y - 1, Y - 2, Y - 3 for ground detection) */
+  belowLevel: {
+    blocks: Array<{ x: number; y: number; z: number; block: any }>;
+    hasGround: boolean;
+    groundY: number; // Y coordinate of ground, -1 if no ground
+  };
+
+  /** Block player is standing in (occupies player's body space) */
+  occupiedBlocks: {
+    blocks: Array<{ x: number; y: number; z: number; block: any }>;
+    hasSolid: boolean;
+    hasLiquid: boolean; // For future water/lava detection
+  };
+}
+
+/**
  * Type guard to check if entity is a PlayerEntity
  */
 function isPlayerEntity(entity: PhysicsEntity): entity is PlayerEntity {
@@ -476,6 +512,150 @@ export class PhysicsService {
   }
 
   /**
+   * Get all relevant blocks around player position and aggregate their physics properties
+   *
+   * This central function collects:
+   * - Blocks at current Y level (for horizontal collision)
+   * - Blocks above (Y + 1, for climb clearance)
+   * - Blocks below (Y - 1 to Y - 3, for ground detection)
+   * - Blocks player occupies (for push-up, water detection, etc.)
+   *
+   * Future physics properties to support:
+   * - resistance (movement speed reduction)
+   * - climbable (ladder-like climbing)
+   * - autoClimbable (auto step-up)
+   * - interactive (button, door, etc.)
+   * - autoMoveXYZ (conveyor belt, water current)
+   * - gateFromDirection (one-way passage)
+   * - liquid properties (water, lava)
+   *
+   * @param x X position (world coordinates)
+   * @param z Z position (world coordinates)
+   * @param y Y position (world coordinates, feet level)
+   * @param entityWidth Entity width for bounding box
+   * @param entityHeight Entity height for body collision
+   * @returns Block context with aggregated properties
+   */
+  private getPlayerBlockContext(
+    x: number,
+    z: number,
+    y: number,
+    entityWidth: number,
+    entityHeight: number
+  ): PlayerBlockContext {
+    if (!this.chunkService) {
+      // No chunk service - return empty context
+      return {
+        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasClimbable: false, resistance: 0 },
+        aboveLevel: { blocks: [], hasSolid: false, isClear: true },
+        belowLevel: { blocks: [], hasGround: false, groundY: -1 },
+        occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false },
+      };
+    }
+
+    const currentBlockY = Math.floor(y);
+
+    // Calculate entity bounds (4 corners)
+    const minX = x - entityWidth / 2;
+    const maxX = x + entityWidth / 2;
+    const minZ = z - entityWidth / 2;
+    const maxZ = z + entityWidth / 2;
+
+    const cornerPositions = [
+      { x: Math.floor(minX), z: Math.floor(minZ) },
+      { x: Math.floor(maxX), z: Math.floor(minZ) },
+      { x: Math.floor(minX), z: Math.floor(maxZ) },
+      { x: Math.floor(maxX), z: Math.floor(maxZ) },
+    ];
+
+    // --- Current Level (feet) ---
+    const currentLevel = {
+      blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
+      hasSolid: false,
+      hasAutoClimbable: false,
+      hasClimbable: false,
+      resistance: 0,
+    };
+
+    for (const pos of cornerPositions) {
+      const block = this.chunkService.getBlockAt(pos.x, currentBlockY, pos.z);
+      if (block) {
+        currentLevel.blocks.push({ x: pos.x, y: currentBlockY, z: pos.z, block });
+        const physics = block.currentModifier.physics;
+
+        if (physics?.solid) currentLevel.hasSolid = true;
+        if (physics?.autoClimbable) currentLevel.hasAutoClimbable = true;
+        if (physics?.climbable) currentLevel.hasClimbable = true;
+        if (physics?.resistance) {
+          currentLevel.resistance = Math.max(currentLevel.resistance, physics.resistance);
+        }
+      }
+    }
+
+    // --- Above Level (Y + 1) ---
+    const aboveLevel = {
+      blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
+      hasSolid: false,
+      isClear: true,
+    };
+
+    for (const pos of cornerPositions) {
+      const block = this.chunkService.getBlockAt(pos.x, currentBlockY + 1, pos.z);
+      if (block) {
+        aboveLevel.blocks.push({ x: pos.x, y: currentBlockY + 1, z: pos.z, block });
+        if (block.currentModifier.physics?.solid) {
+          aboveLevel.hasSolid = true;
+          aboveLevel.isClear = false;
+        }
+      }
+    }
+
+    // --- Below Level (ground detection, Y - 1 to Y - 3) ---
+    const belowLevel = {
+      blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
+      hasGround: false,
+      groundY: -1,
+    };
+
+    // Search downward for ground (up to 3 blocks below for fast falling)
+    for (let checkY = currentBlockY - 1; checkY >= currentBlockY - 3; checkY--) {
+      for (const pos of cornerPositions) {
+        const block = this.chunkService.getBlockAt(pos.x, checkY, pos.z);
+        if (block) {
+          belowLevel.blocks.push({ x: pos.x, y: checkY, z: pos.z, block });
+          if (block.currentModifier.physics?.solid && !belowLevel.hasGround) {
+            belowLevel.hasGround = true;
+            belowLevel.groundY = checkY + 1; // Top of the block
+          }
+        }
+      }
+      if (belowLevel.hasGround) break; // Found ground, stop searching
+    }
+
+    // --- Occupied Blocks (player body space, from Y to Y + entityHeight) ---
+    const occupiedBlocks = {
+      blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
+      hasSolid: false,
+      hasLiquid: false,
+    };
+
+    const headBlockY = Math.floor(y + entityHeight);
+    for (let checkY = currentBlockY; checkY <= headBlockY; checkY++) {
+      const block = this.chunkService.getBlockAt(Math.floor(x), checkY, Math.floor(z));
+      if (block) {
+        occupiedBlocks.blocks.push({ x: Math.floor(x), y: checkY, z: Math.floor(z), block });
+        if (block.currentModifier.physics?.solid) {
+          occupiedBlocks.hasSolid = true;
+        }
+        // TODO: Add liquid detection when implemented
+        // if (block.isLiquid) occupiedBlocks.hasLiquid = true;
+      }
+    }
+
+    return { currentLevel, aboveLevel, belowLevel, occupiedBlocks };
+  }
+
+  /**
    * Check ground collision and update entity state
    */
   private checkGroundCollision(entity: PhysicsEntity): void {
@@ -585,62 +765,90 @@ export class PhysicsService {
   }
 
   /**
-   * Try to auto-climb 1 block step when moving horizontally
+   * Try to move entity horizontally with collision detection and auto-climb
    *
-   * @param entity Entity to check
-   * @param oldX Previous X position
-   * @param oldZ Previous Z position
+   * Uses getPlayerBlockContext() to collect all relevant blocks and their properties.
+   *
+   * Decision flow:
+   * 1. Get block context at target position
+   * 2. No collision → Move
+   * 3. Collision with solid block:
+   *    - Has autoClimbable + space above + on ground → Climb + Move
+   *    - No autoClimbable or blocked above → Block movement
+   *
+   * @param entity Entity to move
+   * @param dx Delta X movement
+   * @param dz Delta Z movement
    */
-  private tryAutoClimb(entity: PhysicsEntity, oldX: number, oldZ: number): void {
+  private tryMoveHorizontal(entity: PhysicsEntity, dx: number, dz: number): void {
     if (!this.chunkService) {
+      // No chunk service - just move
+      entity.position.x += dx;
+      entity.position.z += dz;
       return;
     }
 
-    // Only auto-climb if on ground
-    if (!entity.isOnGround) {
-      return;
-    }
-
+    // Calculate target position
+    const targetX = entity.position.x + dx;
+    const targetZ = entity.position.z + dz;
     const feetY = entity.position.y;
-    const currentBlockY = Math.floor(feetY);
 
-    // Check if there's a block in front of the player at their current level
-    const hasBlockInFront = this.isBlockSolid(entity.position.x, currentBlockY, entity.position.z);
-
-    if (!hasBlockInFront) {
-      return; // No obstruction, no need to climb
+    // Check if target position is in loaded chunk
+    if (!this.isChunkLoaded(targetX, targetZ)) {
+      // Chunk not loaded - don't move
+      return;
     }
 
-    // Check if the block above (one step up) is free
-    const oneStepUpY = currentBlockY + 1;
-    const isOneStepUpFree = !this.isBlockSolid(entity.position.x, oneStepUpY, entity.position.z);
+    // Get entity dimensions
+    const entityWidth = this.defaultEntityWidth;
+    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
 
-    // Check if there's a solid block to stand on at the step up position
-    const hasGroundAtStepUp = this.isBlockSolid(entity.position.x, oneStepUpY - 1, entity.position.z);
+    // Get block context at target position
+    const context = this.getPlayerBlockContext(targetX, targetZ, feetY, entityWidth, entityHeight);
 
-    if (isOneStepUpFree && hasGroundAtStepUp) {
-      // Can climb! Start smooth climb animation
-      // Only trigger if not already climbing
+    // No collision at current level - move freely
+    if (!context.currentLevel.hasSolid) {
+      entity.position.x = targetX;
+      entity.position.z = targetZ;
+      return;
+    }
+
+    // Collision detected - check if we can auto-climb
+    if (context.currentLevel.hasAutoClimbable && entity.isOnGround && context.aboveLevel.isClear) {
+      // Auto-climb conditions met:
+      // 1. Block has autoClimbable property
+      // 2. Entity is on ground
+      // 3. Space above is clear
       if (!entity.climbState?.active) {
+        const targetY = Math.floor(feetY) + 1;
+
         entity.climbState = {
           active: true,
           startY: feetY,
-          targetY: oneStepUpY,
+          targetY: targetY,
           progress: 0.0,
         };
         entity.isOnGround = false;
-        logger.debug('Auto-climb animation started', {
+
+        // Apply horizontal movement during climb
+        entity.position.x = targetX;
+        entity.position.z = targetZ;
+
+        logger.debug('Auto-climb started', {
           entityId: entity.entityId,
-          startY: feetY,
-          targetY: oneStepUpY,
+          from: feetY.toFixed(2),
+          to: targetY,
+          blockCount: context.currentLevel.blocks.length,
         });
       }
-    } else {
-      // Can't climb - block is too high or blocked above
-      // Revert horizontal movement
-      entity.position.x = oldX;
-      entity.position.z = oldZ;
+      return;
     }
+
+    // Cannot move:
+    // - Solid block without autoClimbable, OR
+    // - Has autoClimbable but not on ground, OR
+    // - Has autoClimbable but space above blocked
+    // Do nothing (position stays unchanged)
   }
 
   /**
@@ -666,24 +874,12 @@ export class PhysicsService {
    * @param cameraPitch Camera pitch rotation in radians
    */
   moveForward(entity: PhysicsEntity, distance: number, cameraYaw: number, cameraPitch: number): void {
-    const oldX = entity.position.x;
-    const oldZ = entity.position.z;
-
     if (entity.movementMode === 'walk' && !this.isUnderwater) {
       // Walk mode: Only move in XZ plane (ignore pitch)
       const dx = Math.sin(cameraYaw) * distance;
       const dz = Math.cos(cameraYaw) * distance;
 
-      entity.position.x += dx;
-      entity.position.z += dz;
-
-      // Check if moved into unloaded chunk
-      this.clampToLoadedChunks(entity, oldX, oldZ);
-
-      // Auto-climb 1 block step (only if not blocked by chunk boundary)
-      if (entity.position.x !== oldX || entity.position.z !== oldZ) {
-        this.tryAutoClimb(entity, oldX, oldZ);
-      }
+      this.tryMoveHorizontal(entity, dx, dz);
     } else if (entity.movementMode === 'fly' || this.isUnderwater) {
       // Fly mode OR Underwater: Move in camera direction (including pitch)
       // TODO: Add collision detection when underwater
@@ -694,9 +890,6 @@ export class PhysicsService {
       entity.position.x += dx;
       entity.position.y += dy;
       entity.position.z += dz;
-
-      // Check if moved into unloaded chunk
-      this.clampToLoadedChunks(entity, oldX, oldZ);
     }
   }
 
@@ -708,22 +901,19 @@ export class PhysicsService {
    * @param cameraYaw Camera yaw rotation in radians
    */
   moveRight(entity: PhysicsEntity, distance: number, cameraYaw: number): void {
-    const oldX = entity.position.x;
-    const oldZ = entity.position.z;
+    if (entity.movementMode === 'walk') {
+      // Walk mode: Move perpendicular to camera yaw (in XZ plane) with collision
+      const dx = Math.sin(cameraYaw + Math.PI / 2) * distance;
+      const dz = Math.cos(cameraYaw + Math.PI / 2) * distance;
 
-    // Both modes: Move perpendicular to camera yaw (in XZ plane)
-    const dx = Math.sin(cameraYaw + Math.PI / 2) * distance;
-    const dz = Math.cos(cameraYaw + Math.PI / 2) * distance;
+      this.tryMoveHorizontal(entity, dx, dz);
+    } else {
+      // Fly mode: Direct movement without collision
+      const dx = Math.sin(cameraYaw + Math.PI / 2) * distance;
+      const dz = Math.cos(cameraYaw + Math.PI / 2) * distance;
 
-    entity.position.x += dx;
-    entity.position.z += dz;
-
-    // Check if moved into unloaded chunk
-    this.clampToLoadedChunks(entity, oldX, oldZ);
-
-    // Auto-climb 1 block step (Walk mode only, and only if not blocked by chunk boundary)
-    if (entity.movementMode === 'walk' && (entity.position.x !== oldX || entity.position.z !== oldZ)) {
-      this.tryAutoClimb(entity, oldX, oldZ);
+      entity.position.x += dx;
+      entity.position.z += dz;
     }
   }
 
