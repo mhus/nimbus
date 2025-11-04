@@ -72,6 +72,7 @@ export class CompassService {
   private compassContainer: HTMLElement | null = null;
   private compassBar: HTMLElement | null = null;
   private markersContainer: HTMLElement | null = null;
+  private positionDisplay: HTMLElement | null = null;
   private cardinalMarkers: Map<string, HTMLElement> = new Map();
   private markers: Map<string, CompassMarkerImpl> = new Map();
   private updateInterval: number | null = null;
@@ -136,6 +137,15 @@ export class CompassService {
     this.markersContainer.className = 'compass-markers';
     this.compassBar.appendChild(this.markersContainer);
 
+    // Create position display (only in EDITOR mode)
+    // @ts-ignore - __EDITOR__ is defined by Vite
+    if (typeof __EDITOR__ !== 'undefined' && __EDITOR__) {
+      this.positionDisplay = document.createElement('div');
+      this.positionDisplay.className = 'compass-position-display';
+      this.positionDisplay.textContent = 'X: 0 Y: 0 Z: 0';
+      this.compassContainer.appendChild(this.positionDisplay);
+    }
+
     this.compassContainer.appendChild(this.compassBar);
   }
 
@@ -176,6 +186,15 @@ export class CompassService {
 
       // Update custom markers
       this.updateCustomMarkers(yaw, playerPosition);
+
+      // Update position display (only in EDITOR mode)
+      // @ts-ignore - __EDITOR__ is defined by Vite
+      if (typeof __EDITOR__ !== 'undefined' && __EDITOR__ && this.positionDisplay) {
+        const x = Math.round(playerPosition.x);
+        const y = Math.round(playerPosition.y);
+        const z = Math.round(playerPosition.z);
+        this.positionDisplay.textContent = `X: ${x} Y: ${y} Z: ${z}`;
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'Failed to update compass');
     }

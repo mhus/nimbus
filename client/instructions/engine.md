@@ -24,4 +24,10 @@ Marker:
 Fuege in 'Marker' noch eine Variable hinzu:
 - nearClipDistance - Abstand in Blöcken ab dem der Marker ausgeblendet wird (default 5)
 
-[ ] Wenn im EDITOR modus, zeige rechts neben dem Compass die aktuelle Position des Players an. X Y Z
+[x] Wenn der client im EDITOR modus ist, zeige rechts neben dem Compass die aktuelle Position des Players an. X Y Z
+Implementiere das im CompassService
+
+[x] Erstelle ein Commando playerPositionInfo() im client, das die aktuelle position des players ausgibt, die highData 
+informationen der aktuellen column (XZ), daten zu dem selektierten block. 
+- Gib noch die Daten aus WordInfo und ClientInfo aus.
+
