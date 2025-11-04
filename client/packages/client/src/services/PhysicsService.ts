@@ -1262,6 +1262,7 @@ export class PhysicsService {
 
     // EXIT CHECK: Check the center block only (not corner blocks)
     // This prevents false positives when standing at block boundaries
+    // Check when approaching the edge (at 0.8 or 0.2 depending on direction)
 
     if (this.chunkService) {
       const centerBlock = this.chunkService.getBlockAt(currentBlockX, currentBlockY, currentBlockZ);
@@ -1270,12 +1271,24 @@ export class PhysicsService {
 
         // Check if block has passableFrom
         if (physics?.passableFrom !== undefined) {
-          // canLeaveTo: Check if we can leave towards movementDir
-          const canLeave = this.canLeaveTo(physics.passableFrom, movementDir, physics.solid ?? false);
+          // Check if we're near the edge in the movement direction
+          const posInBlockX = entity.position.x - currentBlockX;
+          const posInBlockZ = entity.position.z - currentBlockZ;
+          const nearEdge =
+            (movementDir === Direction.WEST && posInBlockX < 0.2) ||
+            (movementDir === Direction.EAST && posInBlockX > 0.8) ||
+            (movementDir === Direction.NORTH && posInBlockZ < 0.2) ||
+            (movementDir === Direction.SOUTH && posInBlockZ > 0.8);
 
-          if (!canLeave) {
-            // Cannot exit in this direction - blocked by wall at edge
-            return true; // Movement blocked
+          // Only check exit if near the edge
+          if (nearEdge) {
+            // canLeaveTo: Check if we can leave towards movementDir
+            const canLeave = this.canLeaveTo(physics.passableFrom, movementDir, physics.solid ?? false);
+
+            if (!canLeave) {
+              // Cannot exit in this direction - blocked by wall at edge
+              return true; // Movement blocked
+            }
           }
         }
       }
