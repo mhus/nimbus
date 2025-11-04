@@ -1,0 +1,24 @@
+{
+  "id": 1020,
+  "name": "Cactus",
+  "description": "Cactus block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 2,
+        "textures": {
+          "0": "textures/block/basic/cactus_top.png",
+          "1": "textures/block/basic/cactus_side.png",
+          "2": "textures/block/basic/cactus_bottom.png"
+        },
+        "transparent": true,
+        "opaque": false
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.4,
+        "tool": "any"
+      }
+    }
+  }
+}

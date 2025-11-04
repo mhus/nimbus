@@ -1,0 +1,22 @@
+{
+  "id": 1014,
+  "name": "Glass",
+  "description": "Glass block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 4,
+        "textures": {
+          "0": "textures/block/basic/glass.png"
+        },
+        "transparent": true,
+        "opaque": false
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.3,
+        "tool": "any"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": 1054,
+  "name": "Orange Wool",
+  "description": "Orange Wool block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/orange_wool.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.8,
+        "tool": "any"
+      }
+    }
+  }
+}

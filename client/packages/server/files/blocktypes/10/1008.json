@@ -1,0 +1,22 @@
+{
+  "id": 1008,
+  "name": "Water",
+  "description": "Water block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 5,
+        "textures": {
+          "0": "textures/block/basic/water.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "material": "water",
+        "fluid": true,
+        "fluidDensity": 30,
+        "viscosity": 200.5
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": 1015,
+  "name": "Bookshelf",
+  "description": "Bookshelf block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/planks.png",
+          "1": "textures/block/basic/bookshelf.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 1.5,
+        "tool": "axe"
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": 1023,
+  "name": "Crafting",
+  "description": "Crafting block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/crafting_table_top.png",
+          "1": "textures/block/basic/oak_planks.png",
+          "2": "textures/block/basic/crafting_table_side.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 2.5,
+        "tool": "axe"
+      }
+    }
+  }
+}

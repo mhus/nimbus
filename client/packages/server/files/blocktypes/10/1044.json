@@ -1,0 +1,21 @@
+{
+  "id": 1044,
+  "name": "Oak Sapling",
+  "description": "Oak Sapling block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "textures/block/basic/oak_sapling.png"
+        },
+        "opaque": false
+      },
+      "physics": {
+        "solid": false,
+        "hardness": 0,
+        "tool": "any"
+      }
+    }
+  }
+}

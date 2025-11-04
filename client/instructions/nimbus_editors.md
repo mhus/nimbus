@@ -1294,6 +1294,8 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
   - Du koenntest ein script schreiben, das die block definitionen direkt generieren laesst und ausgibt.
 - Beginne mit der BlockTypeId 1000 + legacy id aus dem playground.
 - Setze die asset pfade richtig.
+
+
 - Ich habe zu jedem asset eine .info datei im gleichen ordner mit gleichem namen + ".info". In der datei steht eine description. Versuche diese mit in die
   description des BlockTypes zu uebernehmen.
 

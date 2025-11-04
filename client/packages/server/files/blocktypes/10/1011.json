@@ -1,0 +1,21 @@
+{
+  "id": 1011,
+  "name": "Yellow Flower",
+  "description": "Yellow Flower block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "textures/block/basic/yellow_flower.png"
+        },
+        "opaque": false
+      },
+      "physics": {
+        "solid": false,
+        "hardness": 0,
+        "tool": "any"
+      }
+    }
+  }
+}

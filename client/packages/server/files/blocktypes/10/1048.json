@@ -1,0 +1,23 @@
+{
+  "id": 1048,
+  "name": "Leaves Yellow",
+  "description": "Leaves Yellow block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 4,
+        "textures": {
+          "0": "textures/block/basic/leaves_yellow.png"
+        },
+        "transparent": true,
+        "opaque": false,
+        "windLeafiness": 1
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.2,
+        "tool": "any"
+      }
+    }
+  }
+}

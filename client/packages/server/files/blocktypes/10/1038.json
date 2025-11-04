@@ -1,0 +1,20 @@
+{
+  "id": 1038,
+  "name": "Lapis Block",
+  "description": "Lapis Block block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/lapis_block.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 3,
+        "tool": "pickaxe"
+      }
+    }
+  }
+}

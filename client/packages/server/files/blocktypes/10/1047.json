@@ -1,0 +1,21 @@
+{
+  "id": 1047,
+  "name": "Grass Plant Yellow",
+  "description": "Grass Plant Yellow block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "textures/block/basic/grass_plant_yellow.png"
+        },
+        "opaque": false
+      },
+      "physics": {
+        "solid": false,
+        "hardness": 0,
+        "tool": "any"
+      }
+    }
+  }
+}

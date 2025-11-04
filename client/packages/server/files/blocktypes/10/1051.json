@@ -1,0 +1,20 @@
+{
+  "id": 1051,
+  "name": "Red Wool",
+  "description": "Red Wool block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/red_wool.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.8,
+        "tool": "any"
+      }
+    }
+  }
+}

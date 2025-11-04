@@ -1,0 +1,22 @@
+{
+  "id": 1072,
+  "name": "Light Blue Stained Glass",
+  "description": "Light Blue Stained Glass block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 4,
+        "textures": {
+          "0": "textures/block/basic/light_blue_stained_glass.png"
+        },
+        "transparent": true,
+        "opaque": false
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.3,
+        "tool": "any"
+      }
+    }
+  }
+}

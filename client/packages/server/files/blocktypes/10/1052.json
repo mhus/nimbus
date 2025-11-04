@@ -1,0 +1,20 @@
+{
+  "id": 1052,
+  "name": "Purple Wool",
+  "description": "Purple Wool block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/purple_wool.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.8,
+        "tool": "any"
+      }
+    }
+  }
+}

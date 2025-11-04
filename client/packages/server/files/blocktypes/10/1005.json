@@ -1,0 +1,21 @@
+{
+  "id": 1005,
+  "name": "Log",
+  "description": "Log block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/log_top.png",
+          "1": "textures/block/basic/log.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 2,
+        "tool": "axe"
+      }
+    }
+  }
+}

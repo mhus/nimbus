@@ -1,0 +1,20 @@
+{
+  "id": 1024,
+  "name": "Stonebrick",
+  "description": "Stonebrick block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/stonebrick.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 1.5,
+        "tool": "pickaxe"
+      }
+    }
+  }
+}

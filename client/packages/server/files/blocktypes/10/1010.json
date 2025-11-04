@@ -1,0 +1,21 @@
+{
+  "id": 1010,
+  "name": "Grass Plant",
+  "description": "Grass Plant block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "textures/block/basic/grass_plant.png"
+        },
+        "opaque": false
+      },
+      "physics": {
+        "solid": false,
+        "hardness": 0,
+        "tool": "any"
+      }
+    }
+  }
+}

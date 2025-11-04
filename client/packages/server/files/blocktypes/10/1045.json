@@ -1,0 +1,21 @@
+{
+  "id": 1045,
+  "name": "Ice",
+  "description": "Ice block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/ice.png"
+        },
+        "transparent": true
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.5,
+        "tool": "pickaxe"
+      }
+    }
+  }
+}

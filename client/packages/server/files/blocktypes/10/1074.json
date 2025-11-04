@@ -1,0 +1,22 @@
+{
+  "id": 1074,
+  "name": "Gray Stained Glass",
+  "description": "Gray Stained Glass block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 4,
+        "textures": {
+          "0": "textures/block/basic/gray_stained_glass.png"
+        },
+        "transparent": true,
+        "opaque": false
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.3,
+        "tool": "any"
+      }
+    }
+  }
+}

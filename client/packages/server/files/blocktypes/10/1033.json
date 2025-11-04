@@ -1,0 +1,22 @@
+{
+  "id": 1033,
+  "name": "Bedrock",
+  "description": "Bedrock block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/bedrock.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0,
+        "miningtime": 0,
+        "tool": "none",
+        "unbreakable": true
+      }
+    }
+  }
+}

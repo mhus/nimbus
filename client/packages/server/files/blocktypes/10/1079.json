@@ -1,0 +1,20 @@
+{
+  "id": 1079,
+  "name": "White Concrete",
+  "description": "White Concrete block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/white_concrete.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 1.8,
+        "tool": "pickaxe"
+      }
+    }
+  }
+}

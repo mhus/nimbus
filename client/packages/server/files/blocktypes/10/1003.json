@@ -1,0 +1,22 @@
+{
+  "id": 1003,
+  "name": "Grass Snow",
+  "description": "Grass Snow block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/snow.png",
+          "1": "textures/block/basic/dirt.png",
+          "2": "textures/block/basic/grass_snow.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.6,
+        "tool": "shovel"
+      }
+    }
+  }
+}

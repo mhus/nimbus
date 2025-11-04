@@ -1,0 +1,20 @@
+{
+  "id": 1001,
+  "name": "Dirt",
+  "description": "Dirt block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/dirt.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 0.5,
+        "tool": "shovel"
+      }
+    }
+  }
+}

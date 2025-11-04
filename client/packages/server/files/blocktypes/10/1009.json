@@ -1,0 +1,21 @@
+{
+  "id": 1009,
+  "name": "Red Flower",
+  "description": "Red Flower block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "textures/block/basic/red_flower.png"
+        },
+        "opaque": false
+      },
+      "physics": {
+        "solid": false,
+        "hardness": 0,
+        "tool": "any"
+      }
+    }
+  }
+}

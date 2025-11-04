@@ -1,0 +1,20 @@
+{
+  "id": 1092,
+  "name": "Blue Concrete",
+  "description": "Blue Concrete block (migrated from playground)",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 0,
+        "textures": {
+          "0": "textures/block/basic/blue_concrete.png"
+        }
+      },
+      "physics": {
+        "solid": true,
+        "hardness": 1.8,
+        "tool": "pickaxe"
+      }
+    }
+  }
+}
