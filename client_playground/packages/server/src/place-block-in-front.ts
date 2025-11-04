@@ -57,7 +57,7 @@ async function main() {
     }
 
     // Place a stone block (ID 2) at the target position
-    await world.setBlock(targetX, targetY, targetZ, 2);
+    await world.setBlock([targetX, targetY, targetZ], 2);
 
     console.log(`[PlaceBlock] ✅ Placed stone block at (${targetX}, ${targetY}, ${targetZ})`);
     console.log('[PlaceBlock] The block should appear in front of you!');

@@ -59,6 +59,13 @@ export class ChunkStorage {
     try {
       const chunkPath = this.getChunkPath(cx, cz);
       const data = await fs.readFile(chunkPath, 'utf-8');
+
+      // Check if file is empty
+      if (!data || data.trim().length === 0) {
+        logger.warn('Chunk file is empty, treating as non-existent', { cx, cz, chunkPath });
+        return null;
+      }
+
       const chunkData = JSON.parse(data) as ChunkData;
 
       logger.debug('Loaded chunk from disk', { cx, cz, blockCount: chunkData.blocks.length });

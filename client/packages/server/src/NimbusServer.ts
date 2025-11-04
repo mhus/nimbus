@@ -135,10 +135,10 @@ class NimbusServer {
 
       logger.info(`Client connected: ${sessionId}`);
 
-      ws.on('message', (data) => {
+      ws.on('message', async (data) => {
         try {
           const message = JSON.parse(data.toString());
-          this.handleMessage(session, message);
+          await this.handleMessage(session, message);
         } catch (error) {
           logger.error('Failed to parse message', {}, error as Error);
         }
@@ -167,7 +167,7 @@ class NimbusServer {
     logger.info('WebSocket server ready');
   }
 
-  private handleMessage(session: ClientSession, message: any) {
+  private async handleMessage(session: ClientSession, message: any) {
     const { t, i, d } = message;
 
     switch (t) {
@@ -179,10 +179,10 @@ class NimbusServer {
         session.ws.send(JSON.stringify({ r: i, t: 'p' }));
         break;
       case 'c.r': // Chunk registration
-        this.handleChunkRegistration(session, d);
+        await this.handleChunkRegistration(session, d);
         break;
       case 'c.q': // Chunk query
-        this.handleChunkQuery(session, d);
+        await this.handleChunkQuery(session, d);
         break;
       case 'cmd': // Command execution
         this.handleCommand(session, i, d);
@@ -216,7 +216,7 @@ class NimbusServer {
     logger.info(`Login successful: ${session.username} in world ${data.worldId}`);
   }
 
-  private handleChunkRegistration(session: ClientSession, data: any) {
+  private async handleChunkRegistration(session: ClientSession, data: any) {
     const chunks = data.c || [];
     session.registeredChunks.clear();
 
@@ -230,12 +230,12 @@ class NimbusServer {
     logger.debug(`Registered ${chunks.length} chunks for ${session.username}`);
 
     // Send chunks
-    this.sendChunks(session, chunks);
+    await this.sendChunks(session, chunks);
   }
 
-  private handleChunkQuery(session: ClientSession, data: any) {
+  private async handleChunkQuery(session: ClientSession, data: any) {
     const chunks = data.c || [];
-    this.sendChunks(session, chunks);
+    await this.sendChunks(session, chunks);
   }
 
   private handleCommand(session: ClientSession, messageId: string, data: any) {
@@ -258,30 +258,27 @@ class NimbusServer {
     this.commandService.executeCommand(session, messageId, cmd, args || []);
   }
 
-  private sendChunks(session: ClientSession, coords: any[]) {
+  private async sendChunks(session: ClientSession, coords: any[]) {
     if (!session.worldId) return;
 
     const world = this.worldManager.getWorld(session.worldId);
     if (!world) return;
 
-    const chunkData = coords.map((coord: any) => {
+    // Use Promise.all to load all chunks in parallel
+    const chunkDataPromises = coords.map(async (coord: any) => {
       const cx = coord.cx ?? coord.x;
       const cz = coord.cz ?? coord.z;
-      const key = getChunkKey(cx, cz);
 
-      // Get or generate chunk
-      let chunk = world.chunks.get(key);
-      if (!chunk) {
-        if (!world.generator) {
-          logger.error('World has no generator', { worldId: world.worldId });
-          return null;
-        }
-        chunk = world.generator.generateChunk(cx, cz, world.chunkSize);
-        world.chunks.set(key, chunk);
+      // Use WorldManager.getChunkData() which handles:
+      // 1. Check memory (world.chunks)
+      // 2. Load from storage
+      // 3. Generate if needed
+      const chunkData = await this.worldManager.getChunkData(session.worldId!, cx, cz);
+
+      if (!chunkData) {
+        logger.error('Failed to get chunk data', { worldId: session.worldId, cx, cz });
+        return null;
       }
-
-      // Convert ServerChunk to ChunkData
-      const chunkData = chunk.toChunkData();
 
       // Use Block type directly from @nimbus/shared (no compression)
       return {
@@ -291,6 +288,8 @@ class NimbusServer {
         h: chunkData.heightData, // HeightData[] already contains x, z, maxHeight, groundLevel
       };
     });
+
+    const chunkData = (await Promise.all(chunkDataPromises)).filter(c => c !== null);
 
     session.ws.send(JSON.stringify({
       t: 'c.u',
@@ -443,7 +442,15 @@ server.initialize().catch((error) => {
 });
 
 // Graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('Shutting down server...');
+  try {
+    // Get WorldManager from server instance
+    const worldManager = server['worldManager'] as WorldManager;
+    await worldManager.saveAll();
+    logger.info('All chunks saved successfully');
+  } catch (error) {
+    logger.error('Failed to save chunks during shutdown', {}, error as Error);
+  }
   process.exit(0);
 });

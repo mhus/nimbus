@@ -12,6 +12,8 @@ import type { WorldGenerator } from './generators/WorldGenerator.js';
 
 const deflate = promisify(zlib.deflate);
 const inflate = promisify(zlib.inflate);
+const writeFile = promisify(fs.writeFile);
+const readFile = promisify(fs.readFile);
 
 interface ChunkMetadata {
   version: number;
@@ -35,6 +37,7 @@ export class World {
 
   private autoSaveInterval?: NodeJS.Timeout;
   private unloadInterval?: NodeJS.Timeout;
+  private isSaving: boolean = false;
 
   private entities: Map<string, any> = new Map();
 
@@ -62,12 +65,16 @@ export class World {
 
     // Start auto-save (every 30 seconds)
     this.autoSaveInterval = setInterval(() => {
-      this.autoSave();
+      this.autoSave().catch(err => {
+        console.error(`[World:${this.metadata.name}] Auto-save error:`, err);
+      });
     }, 30000);
 
     // Start chunk unload (every 5 seconds)
     this.unloadInterval = setInterval(() => {
-      this.unloadOldChunks();
+      this.unloadOldChunks().catch(err => {
+        console.error(`[World:${this.metadata.name}] Chunk unload error:`, err);
+      });
     }, 5000);
 
     console.log(`[World:${this.metadata.name}] Initialized`);
@@ -79,7 +86,12 @@ export class World {
   private async saveMetadata(): Promise<void> {
     const metadataPath = path.join(this.worldPath, 'world.json');
     const data = JSON.stringify(this.metadata, null, 2);
-    fs.writeFileSync(metadataPath, data);
+    try {
+      await writeFile(metadataPath, data, 'utf-8');
+    } catch (err) {
+      console.error(`[World:${this.metadata.name}] Failed to save metadata:`, err);
+      throw err;
+    }
   }
 
   /**
@@ -138,7 +150,7 @@ export class World {
     const key = chunkIDToKey(chunkID[0], chunkID[1]);
     const chunkPath = path.join(this.chunksPath, `${key}.chk`);
 
-    const compressedData = fs.readFileSync(chunkPath);
+    const compressedData = await readFile(chunkPath);
     const data = await inflate(compressedData);
 
     try {
@@ -176,9 +188,13 @@ export class World {
   private async saveChunk(chunkID: XZ): Promise<void> {
     const key = chunkIDToKey(chunkID[0], chunkID[1]);
     const chunk = this.chunks.get(key);
-    if (!chunk) return;
+    if (!chunk) {
+      console.log(`[World:${this.metadata.name}] ⚠️ Chunk ${key} not in memory, skipping save`);
+      return;
+    }
 
     const chunkPath = path.join(this.chunksPath, `${key}.chk`);
+    console.log(`[World:${this.metadata.name}] 💾 Saving chunk ${key} to ${chunkPath}...`);
 
     // New format: JSON with base64-encoded arrays
     const chunkObj: any = {
@@ -238,7 +254,13 @@ export class World {
     const jsonString = JSON.stringify(chunkObj);
     const compressed = await deflate(Buffer.from(jsonString, 'utf-8'));
 
-    fs.writeFileSync(chunkPath, compressed);
+    try {
+      await writeFile(chunkPath, compressed);
+      console.log(`[World:${this.metadata.name}] ✅ Successfully saved chunk ${key} (${compressed.length} bytes)`);
+    } catch (err) {
+      console.error(`[World:${this.metadata.name}] ❌ Failed to save chunk ${key}:`, err);
+      throw err;
+    }
   }
 
   /**
@@ -280,6 +302,7 @@ export class World {
 
     const key = chunkIDToKey(chunkInfo.id[0], chunkInfo.id[1]);
     this.modifiedChunks.add(key);
+    console.log(`[World:${this.metadata.name}] 📝 Block changed at (${pos[0]}, ${pos[1]}, ${pos[2]}), chunk ${key} marked as modified (total: ${this.modifiedChunks.size})`);
   }
 
   /**
@@ -358,17 +381,40 @@ export class World {
   private async autoSave(): Promise<void> {
     if (this.modifiedChunks.size === 0) return;
 
-    console.log(`[World:${this.metadata.name}] Auto-saving ${this.modifiedChunks.size} chunks...`);
-
-    const promises: Promise<void>[] = [];
-    for (const key of this.modifiedChunks) {
-      const chunkID = keyToChunkID(key);
-      promises.push(this.saveChunk(chunkID));
+    // Prevent concurrent saves
+    if (this.isSaving) {
+      console.log(`[World:${this.metadata.name}] Save already in progress, skipping...`);
+      return;
     }
 
-    await Promise.all(promises);
-    this.modifiedChunks.clear();
-    console.log(`[World:${this.metadata.name}] Auto-save complete`);
+    this.isSaving = true;
+
+    try {
+      console.log(`[World:${this.metadata.name}] Auto-saving ${this.modifiedChunks.size} chunks...`);
+
+      // Copy modified chunks to avoid issues if new modifications occur during save
+      const chunksToSave = Array.from(this.modifiedChunks);
+
+      const promises: Promise<void>[] = [];
+      for (const key of chunksToSave) {
+        const chunkID = keyToChunkID(key);
+        promises.push(this.saveChunk(chunkID));
+      }
+
+      await Promise.all(promises);
+
+      // Only clear chunks that were actually saved
+      for (const key of chunksToSave) {
+        this.modifiedChunks.delete(key);
+      }
+
+      console.log(`[World:${this.metadata.name}] Auto-save complete (${chunksToSave.length} chunks saved)`);
+    } catch (err) {
+      console.error(`[World:${this.metadata.name}] Auto-save failed:`, err);
+      throw err;
+    } finally {
+      this.isSaving = false;
+    }
   }
 
   /**
@@ -449,7 +495,7 @@ export class World {
    * Shutdown world (save and cleanup)
    */
   async shutdown(): Promise<void> {
-    console.log(`[World:${this.metadata.name}] Shutting down...`);
+    console.log(`[World:${this.metadata.name}] 🛑 Shutting down... (${this.modifiedChunks.size} modified chunks)`);
 
     // Stop intervals
     if (this.autoSaveInterval) {
@@ -460,8 +506,9 @@ export class World {
     }
 
     // Save all modified chunks
+    console.log(`[World:${this.metadata.name}] 💾 Final save before shutdown...`);
     await this.autoSave();
 
-    console.log(`[World:${this.metadata.name}] Shut down complete`);
+    console.log(`[World:${this.metadata.name}] ✅ Shut down complete`);
   }
 }

@@ -42,7 +42,8 @@
       "Bash(npx tsc:*)",
       "Bash(pnpm --filter @nimbus/server build:*)",
       "Bash(pnpm --filter @nimbus/client test ModifierService)",
-      "Bash(pnpm --filter @nimbus/client build:shared:*)"
+      "Bash(pnpm --filter @nimbus/client build:shared:*)",
+      "Bash(pnpm test:block:*)"
     ],
     "deny": [],
     "ask": []

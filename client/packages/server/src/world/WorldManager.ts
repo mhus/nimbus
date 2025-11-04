@@ -346,7 +346,10 @@ export class WorldManager {
     // Step 2: Check if ChunkData exists in storage
     const storedChunk = await storage.load(cx, cz);
     if (storedChunk) {
-      logger.debug('Returning ChunkData from storage', { cx, cz });
+      logger.debug('Loading ChunkData from storage and caching in memory', { cx, cz });
+      // Convert ChunkData to ServerChunk and store in memory for future modifications
+      const loadedServerChunk = ServerChunk.fromChunkData(storedChunk);
+      world.chunks.set(key, loadedServerChunk);
       return storedChunk;
     }
 
@@ -385,6 +388,12 @@ export class WorldManager {
         if (serverChunk.isDirty) {
           try {
             const chunkData = serverChunk.toChunkData();
+            logger.debug('Saving dirty chunk', {
+              worldId,
+              cx: serverChunk.cx,
+              cz: serverChunk.cz,
+              blockCount: chunkData.blocks.length,
+            });
             await storage.save(chunkData);
             serverChunk.isDirty = false;
             savedCount++;
@@ -536,7 +545,14 @@ export class WorldManager {
       // Set block
       serverChunk.setBlock(block);
 
-      logger.debug('Block set', { worldId, position: block.position, blockTypeId: block.blockTypeId });
+      logger.debug('Block set', {
+        worldId,
+        position: block.position,
+        blockTypeId: block.blockTypeId,
+        chunkKey,
+        blockCount: serverChunk.getAllBlocks().length,
+        isDirty: serverChunk.isDirty,
+      });
       return true;
     } catch (error) {
       ExceptionHandler.handle(error, 'WorldManager.setBlock', { worldId, block });

@@ -23,3 +23,5 @@ Marker:
 [x] Blende Marker die zu nah sind um eine Position anzuzeigen aus (naeher als 5 Blöcke - constante )
 Fuege in 'Marker' noch eine Variable hinzu:
 - nearClipDistance - Abstand in Blöcken ab dem der Marker ausgeblendet wird (default 5)
+
+[ ] Wenn im EDITOR modus, zeige rechts neben dem Compass die aktuelle Position des Players an. X Y Z

@@ -11,6 +11,7 @@
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "jest --testPathIgnorePatterns=integration.test.ts --passWithNoTests",
     "test:integration": "TEST_SERVER_URL=http://localhost:3111 PORT=3111 jest integration.test.ts",
+    "test:block": "tsx test-block-placement.ts",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
