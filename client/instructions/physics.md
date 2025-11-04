@@ -65,12 +65,72 @@
   Wird aktiv sobald passableFrom am Block haengt.
 - Baue das Feld auch im PhysicsEditor (nimbus_editors) um: Benutze checkboxen fuer die flags die in einer Zeile stehen. Ein Button fuer reset um das feld wieder zu loeschen.
 - Es gibt eine funktion, die mich automatisch nach oben schiebt, wenn ich IN einem solid block bin, die funktion soll mich nicht nach oben schieben, wenn passableFrom existiert.
-
 - Wenn der Block nicht solid ist soll das durchgehen in beide richtungen, aber an der kante verhindert werden
   Beispiel: Block NORTH (NORTH ist nicht enabled in passableFrom)
   - Der player kommt von NORTH, kann nicht in den Block rein
   - Der Player kommt von SOUTH, kann in den Block rein, aber nach NORTH nicht raus.
+- Das muesen wir klaeren: passableFrom = east bedeutet von east kann man rein und nach west (opposit) kann man raus.
 
+Noch mal erklaert:
+
+Dieser Block ist solid, man kann nicht rein:
+   +---+ 
+-->|   |<---
+   +---+
+
+Dieser Block ist non solid, und passableFrom != EAST
+   +---+
+------>|<---
+   +---+
+
+Dieser Block ist non solid, und passableFrom != WEST
+   +---+
+-->|<-------
+   +---+
+
+Du brauchts eine tagetBlock (aktuell currentLevel) und einen sourceBlock (der verlassen wird).
+wir kommen von WEST nach EAST, dann pruefst du:
+canLeaveFrom(sourceBlock, EAST)
+canEnterFrom(targetBlock, WEST)
+
+passableFrom ALL But not WEST: (westliche seite ist nicht passierbar)
+   +   +
+-->|<-------
+   +   +
+- von West nach Ost: an der ausseren grenze stoppen
+- von Ost nach West: in den Block hinein, aber dann nicht mehr hinaus. richung West
+
+Wir sprechen von Block 10,10 (Y Achse spielt keine Rolle)
+canLeaveFrom(10,10, EAST) = FALSE
+canEnterFrom(10,10, WEST) = FALSE
+Alle anderen TRUE:
+canLeaveFrom(10,10, WEST) = TRUE
+canEnterFrom(10,10, EAST) = TRUE
+canLeaveFrom(10,10, NORTH) = TRUE
+canEnterFrom(10,10, NORTH) = TRUE
+canLeaveFrom(10,10, SOUTH) = TRUE
+canEnterFrom(10,10, SOUTH) = TRUE
+
+passableFrom = ALL but WEST -> passableFrom=TOB,BOTTOM,TOP,NORTH,SOUTH,EAST
+
+Können Sie bitte ganz klar sagen:
+- Block 10,10 hat passableFrom = ALL but WEST
+- Spieler ist IN Block 10,10 bei Position (10.5, 10.5)
+- Spieler bewegt sich nach WEST zu Position (9.9, 10.5)
+- Sollte diese Bewegung erlaubt oder blockiert sein?
+
+Hier muss aufgerufen werden:
+Hier habe ich eine Verbesserung: canLeaveFrom kann canLeaveTo sein und das kehrt die Richtung um, dann sind beide abfragen aehnich:
+canLeaveTo(10,10, WEST) = FALSE (opposite von canLeaveFrom(10,10, EAST) )
+canEnterFrom(9,10, WEST) = ??? kenne ja den block nicht
+
+
+
+
+
+[ ] Support PhysicsModifier.passableFrom Top/Bottom bei solid = false
+- wenn solid = false und passableFrom !+ undefined und passableFrom != top , dann kann man in den Block nicht hinein fallen, d.h. gravitation hoert hier auf, man ist auf solidem grund
+- wenn solid = false und passableFrom !+ undefined und passableFrom != bottom, dann kann man aus dem Block nach unten nicht raus fallen, obwohl dronter eventuell AIR oder non solid ist.
 
 ## Editor
 
