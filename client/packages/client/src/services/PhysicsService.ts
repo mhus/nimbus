@@ -1257,138 +1257,47 @@ export class PhysicsService {
     const targetBlockX = Math.floor(targetX);
     const targetBlockZ = Math.floor(targetZ);
 
-    logger.info('=== 🚀 tryMoveHorizontal START ===', {
-      entityId: entity.entityId,
-      playerPos: {
-        x: entity.position.x.toFixed(3),
-        y: feetY.toFixed(3),
-        z: entity.position.z.toFixed(3)
-      },
-      sourceBlock: { x: currentBlockX, y: currentBlockY, z: currentBlockZ },
-      targetBlock: { x: targetBlockX, y: currentBlockY, z: targetBlockZ },
-      delta: { dx: dx.toFixed(3), dz: dz.toFixed(3) },
-      movementDir,
-      movementDirName: DirectionHelper.toString(movementDir),
-    });
-
     // Get current block context for exit checks (SOURCE BLOCK)
     const currentContext = this.getPlayerBlockContext(entity.position.x, entity.position.z, feetY, entityWidth, entityHeight);
 
-    // Check if we're crossing a block boundary
-    const crossingBoundary = currentBlockX !== targetBlockX || currentBlockZ !== targetBlockZ;
-
-    // Check if we're moving towards a block boundary (even if not crossing yet)
-    // This is needed to block movement BEFORE we reach the edge
-    const movingTowardsBoundary =
-      (movementDir === Direction.NORTH && (entity.position.z % 1) < 0.5) ||
-      (movementDir === Direction.SOUTH && (entity.position.z % 1) > 0.5) ||
-      (movementDir === Direction.EAST && (entity.position.x % 1) > 0.5) ||
-      (movementDir === Direction.WEST && (entity.position.x % 1) < 0.5);
-
-    logger.info('📍 Boundary check:', {
-      currentBlock: { x: currentBlockX, z: currentBlockZ },
-      targetBlock: { x: targetBlockX, z: targetBlockZ },
-      crossingBoundary,
-      movingTowardsBoundary,
-      posInBlock: {
-        x: (entity.position.x % 1).toFixed(3),
-        z: (entity.position.z % 1).toFixed(3)
-      },
-    });
-
     // EXIT CHECK: Check the center block only (not corner blocks)
     // This prevents false positives when standing at block boundaries
-    logger.info('=== EXIT CHECK: Check center block ===');
 
     if (this.chunkService) {
       const centerBlock = this.chunkService.getBlockAt(currentBlockX, currentBlockY, currentBlockZ);
       if (centerBlock) {
         const physics = centerBlock.currentModifier.physics;
 
-        logger.info('Checking center block for exit:', {
-          blockPos: { x: currentBlockX, y: currentBlockY, z: currentBlockZ },
-          solid: physics?.solid,
-          passableFrom: physics?.passableFrom,
-          passableFromStr: physics?.passableFrom ? DirectionHelper.toString(physics.passableFrom) : 'none',
-        });
-
         // Check if block has passableFrom
         if (physics?.passableFrom !== undefined) {
           // canLeaveTo: Check if we can leave towards movementDir
           const canLeave = this.canLeaveTo(physics.passableFrom, movementDir, physics.solid ?? false);
 
-          logger.warn(`🚪 EXIT CHECK: canLeaveTo(sourceBlock, ${DirectionHelper.toString(movementDir)})`, {
-            sourceBlock: { x: currentBlockX, y: currentBlockY, z: currentBlockZ },
-            targetBlock: { x: targetBlockX, y: currentBlockY, z: targetBlockZ },
-            playerPos: {
-              x: entity.position.x.toFixed(3),
-              y: feetY.toFixed(3),
-              z: entity.position.z.toFixed(3)
-            },
-            solid: physics.solid ?? false,
-            passableFrom: physics.passableFrom,
-            passableFromStr: DirectionHelper.toString(physics.passableFrom),
-            exitDir: movementDir,
-            exitDirName: DirectionHelper.toString(movementDir),
-            canLeaveTo: canLeave,
-          });
-
           if (!canLeave) {
             // Cannot exit in this direction - blocked by wall at edge
-            logger.error('🚫 Movement BLOCKED: canLeaveTo = false');
             return true; // Movement blocked
           }
         }
       }
     }
-    logger.info('✅ EXIT CHECK PASSED');
 
     // Entry check: Only check passableFrom if crossing into a different block
     const crossingIntoNewBlock = currentBlockX !== targetBlockX || currentBlockZ !== targetBlockZ;
 
-    logger.info(`Crossing into new block? ${crossingIntoNewBlock}`);
-    logger.info(`Target has passableFrom? ${context.currentLevel.passableFrom !== undefined}`);
-
     // Entry check: Only run if we're moving to a different block AND it has passableFrom
     // If moving within same block, skip entry check (only exit check matters)
     if (crossingIntoNewBlock && context.currentLevel.passableFrom !== undefined) {
-      logger.info('=== ENTRY CHECK: Target has passableFrom ===', {
-        hasSolid: context.currentLevel.hasSolid,
-        passableFrom: context.currentLevel.passableFrom,
-        passableFromStr: DirectionHelper.toString(context.currentLevel.passableFrom),
-      });
-
       if (context.currentLevel.hasSolid) {
         // Solid block with passableFrom: One-way block
         // Can only enter from specified directions when crossing into new block
         const entrySide = DirectionHelper.getOpposite(movementDir);
         const canEnter = this.canEnterFrom(context.currentLevel.passableFrom, entrySide, true);
 
-        logger.warn(`🚪 ENTRY CHECK: canEnterFrom(targetBlock, ${DirectionHelper.toString(entrySide)})`, {
-          sourceBlock: { x: currentBlockX, y: currentBlockY, z: currentBlockZ },
-          targetBlock: { x: targetBlockX, y: currentBlockY, z: targetBlockZ },
-          playerPos: {
-            x: entity.position.x.toFixed(3),
-            y: feetY.toFixed(3),
-            z: entity.position.z.toFixed(3)
-          },
-          solid: true,
-          passableFrom: context.currentLevel.passableFrom,
-          passableFromStr: DirectionHelper.toString(context.currentLevel.passableFrom),
-          movementDir,
-          movementDirName: DirectionHelper.toString(movementDir),
-          entrySide,
-          entrySideName: DirectionHelper.toString(entrySide),
-          canEnterFrom: canEnter,
-        });
-
         if (!canEnter) {
           // Cannot enter from this direction
-          logger.error('🚫 Movement BLOCKED: cannot enter solid passableFrom block from this direction');
           return true; // Movement blocked
         }
         // Can enter - allow movement
-        logger.debug('✅ Entry allowed (solid passableFrom)');
         entity.position.x = targetX;
         entity.position.z = targetZ;
         return false;
@@ -1398,32 +1307,11 @@ export class PhysicsService {
         const entrySide = DirectionHelper.getOpposite(movementDir);
         const canEnter = this.canEnterFrom(context.currentLevel.passableFrom, entrySide, false);
 
-        logger.warn(`🚪 ENTRY CHECK: canEnterFrom(targetBlock, ${DirectionHelper.toString(entrySide)})`, {
-          sourceBlock: { x: currentBlockX, y: currentBlockY, z: currentBlockZ },
-          targetBlock: { x: targetBlockX, y: currentBlockY, z: targetBlockZ },
-          playerPos: {
-            x: entity.position.x.toFixed(3),
-            y: feetY.toFixed(3),
-            z: entity.position.z.toFixed(3)
-          },
-          solid: false,
-          passableFrom: context.currentLevel.passableFrom,
-          passableFromStr: DirectionHelper.toString(context.currentLevel.passableFrom),
-          movementDir,
-          movementDirName: DirectionHelper.toString(movementDir),
-          entrySide,
-          entrySideName: DirectionHelper.toString(entrySide),
-          canEnterFrom: canEnter,
-        });
-
         if (!canEnter) {
           // Cannot enter from this direction - blocked by wall at edge
-          logger.warn('🚫 Movement BLOCKED: cannot enter non-solid passableFrom block from this direction');
           return true; // Movement blocked
         }
-        // Entry is allowed, also check if we're leaving a passableFrom block
-        // (exit check already done above)
-        logger.debug('✅ Entry allowed (non-solid passableFrom)');
+        // Entry is allowed
         entity.position.x = targetX;
         entity.position.z = targetZ;
         return false;
@@ -1438,66 +1326,34 @@ export class PhysicsService {
       const sourcePassableFrom = sourceBlock?.currentModifier.physics?.passableFrom;
       const alreadyInsidePassableFromBlock = sourcePassableFrom !== undefined;
 
-      logger.info('Check if already inside passableFrom block:', {
-        sourceBlock: { x: currentBlockX, y: currentBlockY, z: currentBlockZ },
-        sourcePassableFrom,
-        sourcePassableFromStr: sourcePassableFrom ? DirectionHelper.toString(sourcePassableFrom) : 'none',
-        alreadyInsidePassableFromBlock,
-      });
-
       if (alreadyInsidePassableFromBlock) {
         // Already inside a block with passableFrom - allow free movement
-        logger.info('✅ Already inside passableFrom block - free movement allowed');
         entity.position.x = targetX;
         entity.position.z = targetZ;
         return false;
       }
 
       // Approaching from outside - check if entry would be allowed
-      logger.info('Approaching passableFrom block from outside - check entry permission');
-
       const entrySide = DirectionHelper.getOpposite(movementDir);
       const canEnter = this.canEnterFrom(context.currentLevel.passableFrom, entrySide, context.currentLevel.hasSolid);
 
-      logger.warn(`🚪 PRE-ENTRY CHECK: canEnterFrom(targetBlock, ${DirectionHelper.toString(entrySide)})`, {
-        targetBlock: { x: targetBlockX, y: currentBlockY, z: targetBlockZ },
-        entrySide,
-        entrySideName: DirectionHelper.toString(entrySide),
-        canEnterFrom: canEnter,
-        passableFrom: context.currentLevel.passableFrom,
-        passableFromStr: DirectionHelper.toString(context.currentLevel.passableFrom),
-      });
-
       if (!canEnter) {
-        logger.error('🚫 Movement BLOCKED: cannot enter block from this direction (pre-entry)');
         return true; // Movement blocked
       }
 
       // Entry allowed - allow movement towards the block
-      logger.info('✅ Pre-entry allowed - movement towards passableFrom block');
       entity.position.x = targetX;
       entity.position.z = targetZ;
       return false;
     }
 
-    // No passableFrom at target - use standard collision logic
-    logger.info('No passableFrom at target - using standard collision logic', {
-      hasSolid: context.currentLevel.hasSolid,
-      hasAutoClimbable: context.currentLevel.hasAutoClimbable,
-      isOnGround: entity.isOnGround,
-      aboveLevelClear: context.aboveLevel.isClear,
-    });
-
     // Standard collision logic
     // No collision at current level - move freely
     if (!context.currentLevel.hasSolid) {
-      logger.info('✅ No collision - movement allowed');
       entity.position.x = targetX;
       entity.position.z = targetZ;
       return false; // Normal movement occurred
     }
-
-    logger.warn('⚠️ Collision detected with solid block');
 
     // Collision detected - check if we can auto-climb
     if (context.currentLevel.hasAutoClimbable && entity.isOnGround && context.aboveLevel.isClear) {
