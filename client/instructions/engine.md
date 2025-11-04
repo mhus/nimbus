@@ -38,3 +38,8 @@ kommen keonnen.
 - maxY soll eigentlich immer, wenn nicht anders geleifert, dax maxY der welt sein. muss dann eigentlich nicht berechnet werden.
 - es gibt eine ausname, wenn ein block hoeher als weltMaxY ist, dann lasse noch 10 platz und setze das als maxY. 
 -> worldMaxY kann tiefer als die hoechsten Berge sein um die welt allgemein zu deckelt.
+
+[?] In 'client_playground/packages/server/src/world/generators/NormalWorldGenerator.ts' hat der World generator noch eine
+funktion um die Bleocke zu kruemmen. Diese Funktion muss noch im server in 'client/packages/server/src/world/TerrainGenerator.ts' implementiert werden.
+- edgeOffset ist jetzt offset
+- Wichtig: edgeOffset haben einen Range von -127 bis 127, offsset sind float und haben die einheit blocks, -127 sollte -1 und 127 sollte 1 entsprechen 
