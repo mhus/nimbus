@@ -877,7 +877,18 @@ export class PhysicsService {
     // Check from current position down to 3 blocks below (to catch fast falling)
     for (let checkY = Math.floor(feetY); checkY >= Math.floor(feetY - 3); checkY--) {
       for (const point of checkPoints) {
-        if (this.isBlockSolid(point.x, checkY, point.z)) {
+        const blockX = Math.floor(point.x);
+        const blockZ = Math.floor(point.z);
+        const clientBlock = this.chunkService.getBlockAt(blockX, checkY, blockZ);
+
+        // Check if block is solid AND does not have passableFrom
+        // Blocks with passableFrom should NOT act as ground
+        if (clientBlock && clientBlock.currentModifier.physics?.solid) {
+          // Skip blocks with passableFrom - they don't act as ground
+          if (clientBlock.currentModifier.physics?.passableFrom !== undefined) {
+            continue;
+          }
+
           // Found solid ground at this Y level
           const blockTopY = checkY + 1;
 
@@ -1223,46 +1234,87 @@ export class PhysicsService {
     // Determine movement direction
     const movementDir = this.getMovementDirection(dx, dz);
 
-    // Check if we're currently in a block with passableFrom (exit check for non-solid blocks)
+    // Get current block context for exit checks
     const currentContext = this.getPlayerBlockContext(entity.position.x, entity.position.z, feetY, entityWidth, entityHeight);
 
-    // Exit check: If currently in a non-solid block with passableFrom, check if we can exit
-    if (currentContext.currentLevel.passableFrom !== undefined && !currentContext.currentLevel.hasSolid) {
-      const canExit = DirectionHelper.hasDirection(currentContext.currentLevel.passableFrom, movementDir);
-      if (!canExit) {
-        // Cannot exit from this direction - blocked by wall
-        return true; // Movement blocked
+    // Exit check: Check if we're leaving a non-solid block with passableFrom
+    // For non-solid blocks, passableFrom acts as walls at edges
+    // Use already collected blocks from currentContext
+    const currentBlockX = Math.floor(entity.position.x);
+    const currentBlockZ = Math.floor(entity.position.z);
+    const targetBlockX = Math.floor(targetX);
+    const targetBlockZ = Math.floor(targetZ);
+
+    // Check if we're crossing a block boundary
+    const crossingBoundary = currentBlockX !== targetBlockX || currentBlockZ !== targetBlockZ;
+
+    if (crossingBoundary) {
+      // Check blocks from currentContext for non-solid passableFrom
+      for (const blockInfo of currentContext.currentLevel.blocks) {
+        const physics = blockInfo.block.currentModifier.physics;
+
+        // If this block is non-solid with passableFrom, check if we can exit
+        if (physics?.passableFrom !== undefined && !physics.solid) {
+          const canExit = DirectionHelper.hasDirection(physics.passableFrom, movementDir);
+
+          logger.debug('Exit check: crossing boundary from non-solid passableFrom block', {
+            entityId: entity.entityId,
+            currentBlock: { x: blockInfo.x, y: blockInfo.y, z: blockInfo.z },
+            targetBlock: { x: targetBlockX, z: targetBlockZ },
+            passableFrom: physics.passableFrom,
+            movementDir,
+            canExit,
+            dx,
+            dz,
+          });
+
+          if (!canExit) {
+            // Cannot exit in this direction - blocked by wall at edge
+            logger.debug('Movement BLOCKED: cannot exit non-solid passableFrom block in this direction');
+            return true; // Movement blocked
+          }
+        }
       }
     }
 
     // Entry check: Check passableFrom logic at target position
     if (context.currentLevel.passableFrom !== undefined) {
-      const canEnter = DirectionHelper.hasDirection(context.currentLevel.passableFrom, movementDir);
-
       if (context.currentLevel.hasSolid) {
         // Solid block with passableFrom: One-way block
-        // Can only enter from specified directions
-        if (!canEnter) {
-          // Cannot enter from this direction
+        // Can only enter from specified directions (from outside)
+        // BUT: If already inside, allow free movement
+        const alreadyInside = currentContext.currentLevel.hasSolid &&
+                              currentContext.currentLevel.passableFrom !== undefined;
+
+        const canEnter = DirectionHelper.hasDirection(context.currentLevel.passableFrom, movementDir);
+
+        if (!canEnter && !alreadyInside) {
+          // Cannot enter from this direction (and not already inside)
           return true; // Movement blocked
         }
-        // Can pass through - allow movement
+        // Can pass through - allow movement (either can enter OR already inside)
         entity.position.x = targetX;
         entity.position.z = targetZ;
         return false;
       } else {
         // Non-solid block with passableFrom: Wall at edges
-        // Can't enter where passableFrom is not set
+        // Can only enter from directions specified in passableFrom
+        const canEnter = DirectionHelper.hasDirection(context.currentLevel.passableFrom, movementDir);
         if (!canEnter) {
-          // Cannot enter from this direction - blocked by wall
+          // Cannot enter from this direction - blocked by wall at edge
           return true; // Movement blocked
         }
-        // Can enter - allow movement
+        // Entry is allowed, also check if we're leaving a passableFrom block
+        // (exit check already done above)
         entity.position.x = targetX;
         entity.position.z = targetZ;
         return false;
       }
     }
+
+    // No passableFrom at target - check if we're exiting a passableFrom block
+    // If currentContext had passableFrom (non-solid), exit check already passed above
+    // So we can move freely here
 
     // No passableFrom - standard collision logic
     // No collision at current level - move freely

@@ -66,7 +66,10 @@
 - Baue das Feld auch im PhysicsEditor (nimbus_editors) um: Benutze checkboxen fuer die flags die in einer Zeile stehen. Ein Button fuer reset um das feld wieder zu loeschen.
 - Es gibt eine funktion, die mich automatisch nach oben schiebt, wenn ich IN einem solid block bin, die funktion soll mich nicht nach oben schieben, wenn passableFrom existiert.
 
-
+- Wenn der Block nicht solid ist soll das durchgehen in beide richtungen, aber an der kante verhindert werden
+  Beispiel: Block NORTH (NORTH ist nicht enabled in passableFrom)
+  - Der player kommt von NORTH, kann nicht in den Block rein
+  - Der Player kommt von SOUTH, kann in den Block rein, aber nach NORTH nicht raus.
 
 
 ## Editor
