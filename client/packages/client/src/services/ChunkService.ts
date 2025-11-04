@@ -228,120 +228,6 @@ export class ChunkService {
     }
   }
 
-  /**
-   * Process height data for chunk
-   *
-   * Calculates height information for each column (x, z) in the chunk:
-   * - maxHeight: highest block position or world max
-   * - minHeight: lowest block position or world min
-   * - groundLevel: first solid block from bottom
-   * - waterHeight: highest water block (currently undefined, needs BlockType info)
-   *
-   * @param chunkData Raw chunk data from server
-   * @returns Map of position key -> ClientHeightData
-   */
-  private processHeightData(chunkData: ChunkDataTransferObject): Map<string, ClientHeightData> {
-    const heightData = new Map<string, ClientHeightData>();
-    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
-
-    // World bounds for fallback values
-    const worldMaxY = this.appContext.worldInfo?.stop?.y ?? 256;
-    const worldMinY = this.appContext.worldInfo?.start?.y ?? -64;
-
-    // Process existing height data from server if available
-    if (chunkData.h) {
-      for (const entry of chunkData.h) {
-        const [x, z, maxHeight, groundLevel, waterLevel] = entry;
-        const heightKey = `${x},${z}`;
-        // Server provides maxHeight, groundLevel, and waterLevel
-        heightData.set(heightKey, [x, z, maxHeight, worldMinY, groundLevel, waterLevel]);
-      }
-    }
-
-    // Group blocks by column (x, z)
-    const blocksByColumn = new Map<string, Block[]>();
-    if (chunkData.b) {
-      for (const block of chunkData.b) {
-        // Calculate local x, z coordinates within chunk
-        // Handle negative coordinates correctly: (-5 % 16) = -5, but we need 11
-        const localX = ((block.position.x % chunkSize) + chunkSize) % chunkSize;
-        const localZ = ((block.position.z % chunkSize) + chunkSize) % chunkSize;
-        const columnKey = `${Math.floor(localX)},${Math.floor(localZ)}`;
-
-        if (!blocksByColumn.has(columnKey)) {
-          blocksByColumn.set(columnKey, []);
-        }
-        blocksByColumn.get(columnKey)!.push(block);
-      }
-    }
-
-    // Calculate height data for each position in chunk
-    for (let x = 0; x < chunkSize; x++) {
-      for (let z = 0; z < chunkSize; z++) {
-        const heightKey = `${x},${z}`;
-
-        // Skip if we already have server-provided height data
-        if (heightData.has(heightKey)) {
-          continue;
-        }
-
-        // Get blocks in this column
-        const columnBlocks = blocksByColumn.get(heightKey) || [];
-
-        let maxHeight = worldMaxY;
-        let minHeight = worldMinY;
-        let groundLevel = worldMinY;
-        let waterHeight: number | undefined = undefined;
-
-        if (columnBlocks.length > 0) {
-          // Find min and max Y positions
-          const yPositions = columnBlocks.map(b => b.position.y);
-          maxHeight = Math.max(...yPositions);
-          minHeight = Math.min(...yPositions);
-
-          // Find ground level: first solid block from bottom (lowest non-air block)
-          // Sort blocks by Y position ascending
-          const sortedBlocks = [...columnBlocks].sort((a, b) => a.position.y - b.position.y);
-          const firstBlock = sortedBlocks[0];
-          groundLevel = firstBlock ? firstBlock.position.y : worldMinY;
-
-          // Find water height: highest water block in column
-          const blockTypeService = this.appContext.services.blockType;
-          if (blockTypeService) {
-            let maxWaterY = -Infinity;
-            let waterBlockCount = 0;
-            for (const block of columnBlocks) {
-              const blockType = blockTypeService.getBlockType(block.blockTypeId);
-              // Check if block is water by description
-              // Water blocks should have 'water' in their description
-              if (blockType?.description?.toLowerCase().includes('water')) {
-                maxWaterY = Math.max(maxWaterY, block.position.y);
-                waterBlockCount++;
-              }
-            }
-            // Set waterHeight only if water blocks were found
-            if (maxWaterY > -Infinity) {
-              waterHeight = maxWaterY; // Water block Y position
-            }
-          }
-        }
-
-        heightData.set(heightKey, [x, z, maxHeight, minHeight, groundLevel, waterHeight]);
-      }
-    }
-
-    // Summary log (only if water found)
-    const waterColumns = Array.from(heightData.values()).filter(h => h[5] !== undefined);
-    if (waterColumns.length > 0) {
-      logger.info('💧 Water found in chunk', {
-        chunk: { cx: chunkData.cx, cz: chunkData.cz },
-        waterColumns: waterColumns.length,
-      });
-    }
-
-    return heightData;
-  }
-
   private processStatusData(chunkData: ChunkDataTransferObject): Map<string, number> {
       const statusData = new Map<string, number>();
       // Extract status from blocks instead of non-existent 's' property
@@ -357,17 +243,48 @@ export class ChunkService {
   /**
    * Process chunk data from server into ClientChunkData with ClientBlocks
    *
+   * Performance-optimized: Processes blocks and height data in a single pass
+   *
    * @param chunkData Raw chunk data from server
-   * @returns Processed ClientChunkData with merged modifiers
+   * @returns Processed ClientChunkData with merged modifiers and height data
    */
   private processChunkData(chunkData: ChunkDataTransferObject): ClientChunkData {
     const clientBlocksMap = new Map<string, ClientBlock>();
     const blockTypeService = this.appContext.services.blockType;
     const statusData = this.processStatusData(chunkData);
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+
+    // World bounds
+    const worldMaxY = this.appContext.worldInfo?.stop?.y ?? 1000;
+    const worldMinY = this.appContext.worldInfo?.start?.y ?? -100;
+
+    // Height data structures for single-pass calculation
+    const heightData = new Map<string, ClientHeightData>();
+
+    // Track blocks per column for height calculation (localX, localZ -> blocks)
+    // Note: maxY is usually worldMaxY, but if blocks exceed it, we add 10 blocks headroom
+    const columnBlocks = new Map<string, {
+      blocks: Block[],
+      minY: number,
+      highestBlockY: number,  // Track highest block for worldMaxY override check
+      groundLevel: number | null,
+      waterLevel: number | null
+    }>();
+
+    // STEP 1: Use server-provided height data if available
+    if (chunkData.h) {
+      for (const entry of chunkData.h) {
+        const [x, z, maxHeight, groundLevel, waterLevel] = entry;
+        const heightKey = `${x},${z}`;
+        // Server provides: [x, z, maxHeight, groundLevel, waterLevel]
+        // ClientHeightData format: [x, z, maxHeight, minHeight, groundLevel, waterHeight]
+        // Use worldMinY as minHeight since server doesn't provide it
+        heightData.set(heightKey, [x, z, maxHeight, worldMinY, groundLevel, waterLevel]);
+      }
+    }
 
     if (!blockTypeService) {
       logger.warn('BlockTypeService not available - cannot process blocks');
-      const heightData = this.processHeightData(chunkData);
       return {
         transfer: chunkData,
         data: clientBlocksMap,
@@ -376,7 +293,7 @@ export class ChunkService {
       };
     }
 
-    // Process each block in the chunk
+    // STEP 2: Process each block - creating ClientBlocks AND collecting height data in ONE pass
     for (const block of chunkData.b) {
       const blockType = blockTypeService.getBlockType(block.blockTypeId);
       if (!blockType) {
@@ -407,14 +324,117 @@ export class ChunkService {
 
       // Add to map with position key
       clientBlocksMap.set(posKey, clientBlock);
+
+      // PERFORMANCE: Calculate height data in same pass
+      // Calculate local x, z coordinates within chunk
+      const localX = ((block.position.x % chunkSize) + chunkSize) % chunkSize;
+      const localZ = ((block.position.z % chunkSize) + chunkSize) % chunkSize;
+      const columnKey = `${Math.floor(localX)},${Math.floor(localZ)}`;
+
+      // Skip if server already provided height data for this column
+      if (heightData.has(columnKey)) {
+        continue;
+      }
+
+      // Track blocks in this column for height calculation
+      if (!columnBlocks.has(columnKey)) {
+        columnBlocks.set(columnKey, {
+          blocks: [],
+          minY: Infinity,
+          highestBlockY: -Infinity,
+          groundLevel: null,
+          waterLevel: null
+        });
+      }
+
+      const columnData = columnBlocks.get(columnKey)!;
+      columnData.blocks.push(block);
+
+      // Update minY and highestBlockY (more efficient than separate pass later)
+      if (block.position.y < columnData.minY) {
+        columnData.minY = block.position.y;
+        // Ground level is the lowest block (first from bottom)
+        columnData.groundLevel = block.position.y;
+      }
+      if (block.position.y > columnData.highestBlockY) {
+        columnData.highestBlockY = block.position.y;
+      }
+
+      // Check for water blocks (only if we need waterLevel)
+      if (blockType.description?.toLowerCase().includes('water')) {
+        if (columnData.waterLevel === null || block.position.y > columnData.waterLevel) {
+          columnData.waterLevel = block.position.y;
+        }
+      }
     }
 
-    const hightData = this.processHeightData(chunkData);
+    // STEP 3: Finalize height data for columns with blocks (already calculated during block processing)
+    for (const [columnKey, columnData] of columnBlocks.entries()) {
+      const [xStr, zStr] = columnKey.split(',');
+      const x = parseInt(xStr, 10);
+      const z = parseInt(zStr, 10);
+
+      // Calculate maxHeight:
+      // - Usually worldMaxY
+      // - Exception: If highest block exceeds worldMaxY, use highestBlock + 10 for headroom
+      let maxHeight = worldMaxY;
+      if (columnData.highestBlockY !== -Infinity && columnData.highestBlockY > worldMaxY) {
+        maxHeight = columnData.highestBlockY + 10;
+        logger.warn('Block exceeds worldMaxY, adding headroom', {
+          cx: chunkData.cx,
+          cz: chunkData.cz,
+          columnKey,
+          highestBlock: columnData.highestBlockY,
+          worldMaxY,
+          newMaxHeight: maxHeight
+        });
+      }
+
+      heightData.set(columnKey, [
+        x,
+        z,
+        maxHeight,
+        columnData.minY !== Infinity ? columnData.minY : worldMinY,
+        columnData.groundLevel !== null ? columnData.groundLevel : worldMinY,
+        columnData.waterLevel !== null ? columnData.waterLevel : undefined
+      ]);
+    }
+
+    // STEP 4: Fill in empty columns with default values (no blocks in column)
+    for (let x = 0; x < chunkSize; x++) {
+      for (let z = 0; z < chunkSize; z++) {
+        const heightKey = `${x},${z}`;
+
+        // Skip if already have data (from server or calculated)
+        if (heightData.has(heightKey)) {
+          continue;
+        }
+
+        // Empty column - use world bounds as defaults
+        heightData.set(heightKey, [
+          x,
+          z,
+          worldMaxY,  // No blocks, so max is world top
+          worldMinY,  // No blocks, so min is world bottom
+          worldMinY,  // No ground level (no blocks)
+          undefined   // No water
+        ]);
+      }
+    }
+
+    // Summary log (only if water found)
+    const waterColumns = Array.from(heightData.values()).filter(h => h[5] !== undefined);
+    if (waterColumns.length > 0) {
+      logger.debug('💧 Water found in chunk', {
+        chunk: { cx: chunkData.cx, cz: chunkData.cz },
+        waterColumns: waterColumns.length,
+      });
+    }
 
     return {
       transfer: chunkData,
       data: clientBlocksMap,
-      hightData: hightData,
+      hightData: heightData,
       statusData: statusData,
     };
   }

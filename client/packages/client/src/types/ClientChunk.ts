@@ -9,8 +9,19 @@ import type { ChunkDataTransferObject } from '@nimbus/shared';
 import type { ClientBlock } from './ClientBlock';
 
 /**
- * Height data for chunk
- * Array of 4 values describing height information
+ * Height data for chunk column
+ *
+ * Describes vertical boundaries and special levels for a single column (x, z) in a chunk.
+ *
+ * @field x - Local X coordinate within chunk (0 to chunkSize-1)
+ * @field z - Local Z coordinate within chunk (0 to chunkSize-1)
+ * @field maxHeight - Maximum Y boundary:
+ *   - Usually world.stop.y (e.g. 1000)
+ *   - Exception: If blocks exceed world.stop.y, set to (highestBlock + 10) for headroom
+ *   - Can be overridden by server via chunkData.h
+ * @field minHeight - Minimum Y boundary (lowest block Y position, or world.start.y if no blocks)
+ * @field groundLevel - Y position of lowest solid block (ground surface)
+ * @field waterHeight - Y position of highest water block (water surface), undefined if no water
  */
 export type ClientHeightData = readonly [
   x: number,

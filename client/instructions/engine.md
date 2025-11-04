@@ -31,3 +31,10 @@ Implementiere das im CompassService
 informationen der aktuellen column (XZ), daten zu dem selektierten block. 
 - Gib noch die Daten aus WordInfo und ClientInfo aus.
 
+[x] Die selektierte funktion 'processHeightData' ist nicht sehr effektiv, wenn in 'processChunkData' schon die hoehen 
+daten mit ermittelt werden, in einem prozess schritt, waehre das vermutlich performanter. Performanze ist hier wichtig.
+Ausserdem werden die default aus den WordInfo nicht richtig uebernommen. Achte darauf, dass heighData auch vom server 
+kommen keonnen. 
+- maxY soll eigentlich immer, wenn nicht anders geleifert, dax maxY der welt sein. muss dann eigentlich nicht berechnet werden.
+- es gibt eine ausname, wenn ein block hoeher als weltMaxY ist, dann lasse noch 10 platz und setze das als maxY. 
+-> worldMaxY kann tiefer als die hoechsten Berge sein um die welt allgemein zu deckelt.
