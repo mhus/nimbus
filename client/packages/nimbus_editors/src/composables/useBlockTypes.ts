@@ -38,18 +38,23 @@ export function useBlockTypes(worldId: string) {
    * Search block types
    */
   const searchBlockTypes = async (query: string) => {
+    console.log('[useBlockTypes] searchBlockTypes called', { query, worldId });
     searchQuery.value = query;
     loading.value = true;
     error.value = null;
 
     try {
+      console.log('[useBlockTypes] Calling blockTypeService.getBlockTypes', { worldId, query: query || undefined });
       blockTypes.value = await blockTypeService.getBlockTypes(worldId, query || undefined);
+      console.log('[useBlockTypes] getBlockTypes returned', { count: blockTypes.value.length, blockTypes: blockTypes.value });
       logger.info('Searched block types', { query, count: blockTypes.value.length, worldId });
     } catch (err) {
+      console.error('[useBlockTypes] Search failed', err);
       error.value = 'Failed to search block types';
       logger.error('Failed to search block types', { worldId, query }, err as Error);
     } finally {
       loading.value = false;
+      console.log('[useBlockTypes] Search completed, loading:', loading.value, 'error:', error.value);
     }
   };
 

@@ -37,15 +37,19 @@
 
     <div class="form-control">
       <label class="label">
-        <span class="label-text">Climbable (resistance factor)</span>
+        <span class="label-text">Climbable (climb speed)</span>
       </label>
       <input
         v-model.number="localValue.climbable"
         type="number"
         step="0.1"
+        min="0"
         class="input input-bordered input-sm"
         placeholder="0 = not climbable"
       />
+      <label class="label">
+        <span class="label-text-alt">Climb speed when moving forward (e.g., 0.5 = ladder, 1.0 = fast)</span>
+      </label>
     </div>
 
     <div class="form-control">

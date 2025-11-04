@@ -74,7 +74,8 @@
                 <div v-if="showBlockTypeSearch || blockData.blockTypeId === 0">
                   <SearchInput
                     v-model="blockTypeSearch"
-                    placeholder="Search block types by ID or description... (Press Enter)"
+                    placeholder="Search block types by ID or description..."
+                    @search="handleBlockTypeSearch"
                     @keyup.enter="handleBlockTypeSearch(blockTypeSearch)"
                   />
 
@@ -338,6 +339,21 @@
       @close="showModifierDialog = false"
       @save="handleModifierSave"
     />
+
+    <!-- Confirm Dialog -->
+    <dialog ref="confirmDialog" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">{{ confirmTitle }}</h3>
+        <p class="py-4">{{ confirmMessage }}</p>
+        <div class="modal-action">
+          <button class="btn" @click="handleConfirmCancel">Cancel</button>
+          <button class="btn btn-error" @click="handleConfirmOk">{{ confirmOkText }}</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="handleConfirmCancel">close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -428,6 +444,13 @@ const blockData = ref<Block>({
 const showModifierDialog = ref(false);
 const editingModifier = ref<BlockModifier | null>(null);
 const editingStatus = ref<number | null>(null);
+
+// Confirm dialog state
+const confirmDialog = ref<HTMLDialogElement | null>(null);
+const confirmTitle = ref('');
+const confirmMessage = ref('');
+const confirmOkText = ref('OK');
+const confirmResolve = ref<((value: boolean) => void) | null>(null);
 
 // Computed
 const isLoading = computed(() => {
@@ -535,18 +558,54 @@ async function handleNavigate(position: { x: number; y: number; z: number }) {
   }
 }
 
+// Confirm dialog helpers
+function showConfirm(title: string, message: string, okText: string = 'OK'): Promise<boolean> {
+  // Use native confirm if not embedded
+  if (!isEmbedded()) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  // Use custom modal if embedded
+  return new Promise((resolve) => {
+    confirmTitle.value = title;
+    confirmMessage.value = message;
+    confirmOkText.value = okText;
+    confirmResolve.value = resolve;
+    confirmDialog.value?.showModal();
+  });
+}
+
+function handleConfirmOk() {
+  confirmDialog.value?.close();
+  confirmResolve.value?.(true);
+  confirmResolve.value = null;
+}
+
+function handleConfirmCancel() {
+  confirmDialog.value?.close();
+  confirmResolve.value?.(false);
+  confirmResolve.value = null;
+}
+
 // BlockType search and selection
 async function handleBlockTypeSearch(query: string) {
+  console.log('[BlockInstanceEditor] handleBlockTypeSearch called', { query, trimmed: query?.trim() });
+
   if (!query || query.trim().length === 0) {
+    console.log('[BlockInstanceEditor] Empty query, clearing results');
     blockTypeSearchResults.value = [];
     return;
   }
 
   try {
+    console.log('[BlockInstanceEditor] Calling searchBlockTypes with query:', query);
     await searchBlockTypes(query);
+    console.log('[BlockInstanceEditor] Search completed, blockTypes.value:', blockTypes.value);
+    console.log('[BlockInstanceEditor] blockTypes.value.length:', blockTypes.value.length);
     blockTypeSearchResults.value = blockTypes.value.slice(0, 20); // Limit to 20 results
+    console.log('[BlockInstanceEditor] Search results:', blockTypeSearchResults.value.length, 'results');
   } catch (err) {
-    console.error('Failed to search block types:', err);
+    console.error('[BlockInstanceEditor] Failed to search block types:', err);
   }
 }
 
@@ -794,7 +853,13 @@ async function saveBlock(closeAfter: boolean = false) {
 async function deleteBlock() {
   if (!blockCoordinates.value || !blockExists.value) return;
 
-  if (!confirm('Are you sure you want to delete this block?')) {
+  const confirmed = await showConfirm(
+    'Delete Block',
+    'Are you sure you want to delete this block?',
+    'Delete'
+  );
+
+  if (!confirmed) {
     return;
   }
 
@@ -843,9 +908,17 @@ async function handleApply() {
   await saveBlock(false); // Save but keep open
 }
 
-function handleCancel() {
-  if (hasChanges.value && !confirm('Discard unsaved changes?')) {
-    return;
+async function handleCancel() {
+  if (hasChanges.value) {
+    const confirmed = await showConfirm(
+      'Discard Changes',
+      'Discard unsaved changes?',
+      'Discard'
+    );
+
+    if (!confirmed) {
+      return;
+    }
   }
 
   if (isEmbedded()) {

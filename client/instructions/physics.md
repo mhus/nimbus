@@ -42,7 +42,7 @@
 > orientation: The direction an entity is facing or moving towards. / could be a rotation if technical
 > turn: The rotation delta in time of an object.
 
-[ ] Support PhysicsModifier.climbable
+[?] Support PhysicsModifier.climbable
 - Wenn der User an diese Feld lauft (feld ist vor ihm), dann klettert er automatisch nach oben anstelle weiter nach vorn
 - Der Wert in dem Feld ist die klettergeschwindigkeit
 - Ist das Feld nicht gesetzt oder 0 ist die funktion aus (keine kletterung)

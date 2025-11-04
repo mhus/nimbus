@@ -63,7 +63,7 @@ interface PlayerBlockContext {
     hasSolid: boolean;
     hasAutoClimbable: boolean;
     hasAutoJump: boolean;
-    hasClimbable: boolean;
+    climbableSpeed: number; // Climb speed when moving forward into this block (0 = not climbable)
     resistance: number; // Max resistance from all blocks
     autoMove: { x: number; y: number; z: number }; // Max velocity per axis
     autoOrientationY: number | undefined; // Last (most recent) orientation from blocks
@@ -566,7 +566,7 @@ export class PhysicsService {
     if (!this.chunkService) {
       // No chunk service - return empty context
       return {
-        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, hasClimbable: false, resistance: 0, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined },
+        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, climbableSpeed: 0, resistance: 0, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined },
         aboveLevel: { blocks: [], hasSolid: false, isClear: true },
         belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined, groundY: -1 },
         occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 } },
@@ -594,7 +594,7 @@ export class PhysicsService {
       hasSolid: false,
       hasAutoClimbable: false,
       hasAutoJump: false,
-      hasClimbable: false,
+      climbableSpeed: 0,
       resistance: 0,
       autoMove: { x: 0, y: 0, z: 0 },
       autoOrientationY: undefined as number | undefined,
@@ -609,7 +609,10 @@ export class PhysicsService {
         if (physics?.solid) currentLevel.hasSolid = true;
         if (physics?.autoClimbable) currentLevel.hasAutoClimbable = true;
         if (physics?.autoJump) currentLevel.hasAutoJump = true;
-        if (physics?.climbable) currentLevel.hasClimbable = true;
+        // Collect climbable speed: Use maximum speed from all blocks
+        if (physics?.climbable && physics.climbable > 0) {
+          currentLevel.climbableSpeed = Math.max(currentLevel.climbableSpeed, physics.climbable);
+        }
         if (physics?.resistance) {
           currentLevel.resistance = Math.max(currentLevel.resistance, physics.resistance);
         }
@@ -1079,6 +1082,25 @@ export class PhysicsService {
     if (!context.currentLevel.hasSolid) {
       entity.position.x = targetX;
       entity.position.z = targetZ;
+      return;
+    }
+
+    // Check for climbable block (ladder-like climbing)
+    if (context.currentLevel.climbableSpeed > 0 && context.aboveLevel.isClear) {
+      // Climbable block: Move forward AND upward at climbable speed
+      // This is continuous climbing (like a ladder) instead of discrete step-up
+      entity.position.x = targetX;
+      entity.position.z = targetZ;
+
+      // Move upward at climbable speed (resistance factor)
+      // Higher climbable value = faster climbing
+      entity.position.y += context.currentLevel.climbableSpeed * Math.abs(dx + dz); // Speed proportional to forward movement
+
+      logger.debug('Climbable climb applied', {
+        entityId: entity.entityId,
+        climbSpeed: context.currentLevel.climbableSpeed,
+        yChange: context.currentLevel.climbableSpeed * Math.abs(dx + dz),
+      });
       return;
     }
 

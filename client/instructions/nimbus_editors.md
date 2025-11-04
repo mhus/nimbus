@@ -1288,6 +1288,14 @@ z.B. 'textures/block/grass.png' dann ist die info datei 'textures/block/grass.pn
 - Kannst du irgendwie analysieren was auf dem bild ist? ggf. claude oder gemini (ich habe einen api key) aufrufen mit der bild datei? - description
 Erfasse alle Werte in einer json datei und speichere diese als <asset file name>.info im ordner Assets.
 
+[ ] Uebernahme von BlockTypes aus dem playground.
+- Im playground in 'client_playground/packages/core/src/registry/defaultBlocks.ts' werden default block types definiert.
+- Rekonstruiere die Block typen und lege in 'client/packages/server/files/blocktypes' block types im json format. Beispiel (client/packages/server/files/blocktypes/1/100.json)
+  - Du koenntest ein script schreiben, das die block definitionen direkt generieren laesst und ausgibt.
+- Beginne mit der BlockTypeId 1000 + legacy id aus dem playground.
+
+[ ] Da wir jetzt info dateien fuer assets haben, 
+
 ===
 
 ## Refactoring

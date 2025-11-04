@@ -19,11 +19,17 @@ export class BlockTypeService {
    * Get all block types or search
    */
   async getBlockTypes(worldId: string, query?: string): Promise<BlockType[]> {
+    console.log('[BlockTypeService] getBlockTypes called', { worldId, query });
     const params = query ? { query } : undefined;
+    console.log('[BlockTypeService] Request params:', params);
+    console.log('[BlockTypeService] Request URL:', `/api/worlds/${worldId}/blocktypes`);
+
     const response = await apiService.get<BlockTypeListResponse>(
       `/api/worlds/${worldId}/blocktypes`,
       params
     );
+    console.log('[BlockTypeService] API response:', response);
+    console.log('[BlockTypeService] Returning blockTypes:', response.blockTypes?.length ?? 0, 'items');
     return response.blockTypes;
   }
 
