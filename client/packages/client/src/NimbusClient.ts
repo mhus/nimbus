@@ -22,6 +22,7 @@ import { EngineService } from './services/EngineService';
 import { ModalService } from './services/ModalService';
 import { NotificationService } from './services/NotificationService';
 import { CommandService } from './services/CommandService';
+import { CompassService } from './services/CompassService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
@@ -259,6 +260,12 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
     // Start render loop
     engineService.startRenderLoop();
     logger.info('Render loop started');
+
+    // Initialize CompassService
+    logger.info('Initializing CompassService...');
+    const compassService = new CompassService(appContext);
+    appContext.services.compass = compassService;
+    logger.debug('CompassService initialized');
 
     // Register some chunks around player spawn
     const chunkService = appContext.services.chunk;
@@ -510,6 +517,133 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
   });
 };
 
+// Compass test functions
+(window as any).testCompass = () => {
+  appContextPromise.then((appContext) => {
+    const compass = appContext.services.compass;
+    const player = appContext.services.player;
+    if (!compass || !player) {
+      console.error('CompassService or PlayerService not initialized');
+      return;
+    }
+
+    const playerPos = player.getPosition();
+    if (!playerPos) {
+      console.error('Player position not available');
+      return;
+    }
+
+    logger.info('Testing compass with markers...');
+
+    // Add markers at different positions relative to player
+    // North marker (Z+)
+    const northMarker = compass.addMarker(
+      { x: playerPos.x, y: playerPos.y, z: playerPos.z + 50 },
+      'red',
+      'arrow',
+      'top',
+      100
+    );
+    console.log('Added North marker (red arrow, 50 blocks North)');
+
+    // East marker (X+)
+    const eastMarker = compass.addMarker(
+      { x: playerPos.x + 50, y: playerPos.y, z: playerPos.z },
+      'yellow',
+      'diamond',
+      'center',
+      100
+    );
+    console.log('Added East marker (yellow diamond, 50 blocks East)');
+
+    // South marker (Z-)
+    const southMarker = compass.addMarker(
+      { x: playerPos.x, y: playerPos.y, z: playerPos.z - 50 },
+      'blue',
+      'triangle',
+      'bottom',
+      100
+    );
+    console.log('Added South marker (blue triangle, 50 blocks South)');
+
+    // West marker (X-)
+    const westMarker = compass.addMarker(
+      { x: playerPos.x - 50, y: playerPos.y, z: playerPos.z },
+      'green',
+      'circle',
+      'center',
+      100
+    );
+    console.log('Added West marker (green circle, 50 blocks West)');
+
+    console.log('Compass test markers added. Move the camera to see them rotate!');
+  });
+};
+
+(window as any).testCompassNearClip = () => {
+  appContextPromise.then((appContext) => {
+    const compass = appContext.services.compass;
+    const player = appContext.services.player;
+    if (!compass || !player) {
+      console.error('CompassService or PlayerService not initialized');
+      return;
+    }
+
+    const playerPos = player.getPosition();
+    if (!playerPos) {
+      console.error('Player position not available');
+      return;
+    }
+
+    console.log('Testing near-clip distance functionality...');
+
+    // Add marker very close (3 blocks) - should be hidden
+    compass.addMarker(
+      { x: playerPos.x + 3, y: playerPos.y, z: playerPos.z },
+      'red',
+      'circle',
+      'center',
+      100,
+      5  // nearClipDistance = 5 blocks
+    );
+    console.log('Added marker 3 blocks away (should be HIDDEN, near clip = 5)');
+
+    // Add marker at medium distance (10 blocks) - should be visible
+    compass.addMarker(
+      { x: playerPos.x + 10, y: playerPos.y, z: playerPos.z },
+      'green',
+      'diamond',
+      'center',
+      100,
+      5  // nearClipDistance = 5 blocks
+    );
+    console.log('Added marker 10 blocks away (should be VISIBLE, near clip = 5)');
+
+    // Add marker with custom near clip (2 blocks)
+    compass.addMarker(
+      { x: playerPos.x, y: playerPos.y, z: playerPos.z + 3 },
+      'yellow',
+      'triangle',
+      'center',
+      100,
+      2  // nearClipDistance = 2 blocks
+    );
+    console.log('Added marker 3 blocks away (should be VISIBLE, near clip = 2)');
+
+    console.log('Move towards the markers to see them disappear when too close!');
+  });
+};
+
+(window as any).clearCompassMarkers = () => {
+  appContextPromise.then((appContext) => {
+    const compass = appContext.services.compass;
+    if (!compass) return;
+
+    // Note: We don't have a clearAll method, but markers will be removed when out of range
+    console.log('Compass markers will be cleared when out of range');
+  });
+};
+
 console.log('=== Notification Test Functions ===');
 console.log('testNotifications() - Test all types');
 console.log('testSystemNotifications() - System area');
@@ -519,3 +653,8 @@ console.log('testQuestNotifications() - Quest area');
 console.log('clearChat() - Clear chat notifications');
 console.log('toggleNotifications(true/false) - Enable/disable');
 console.log('===================================');
+console.log('');
+console.log('=== Compass Test Functions ===');
+console.log('testCompass() - Add test markers at N/E/S/W');
+console.log('testCompassNearClip() - Test near-clip distance functionality');
+console.log('===============================');

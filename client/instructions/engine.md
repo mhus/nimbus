@@ -2,7 +2,7 @@
 
 ## Compass
 
-[ ] Zeige im oberen Bereich eine Compass Bar der in einem CompassService verwaltet wird. Einhaegen in AppContext.
+[x] Zeige im oberen Bereich eine Compass Bar der in einem CompassService verwaltet wird. Einhaegen in AppContext.
 - Die Compass bar ist ein horizontaler Balken der innen leer ist. Es gibt einen TOP, CENTER und BOTTOM bereich. CENTER ist im leeren Bereich der Bar.
 - die componente ist ansonsten durchsichtig und empfaegt keine maus events.
 - Die bar soll den komplette 360 bereich anzeigen.
@@ -20,3 +20,6 @@ Marker:
 - setPosition() - Marker wird neu positioniert, wenn sich das ziel bewegt hat
 - range - Wie weit der Marker von der Position aus sichtbar ist (-1 = unendlich)
 
+[x] Blende Marker die zu nah sind um eine Position anzuzeigen aus (naeher als 5 Blöcke - constante )
+Fuege in 'Marker' noch eine Variable hinzu:
+- nearClipDistance - Abstand in Blöcken ab dem der Marker ausgeblendet wird (default 5)
