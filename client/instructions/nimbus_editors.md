@@ -1281,7 +1281,7 @@ z.B. 'textures/block/grass.png' dann ist die info datei 'textures/block/grass.pn
 - Die info Datei kann wie ein anderes Asset geladen und aktualisiert werden.
 - Die .info datei muss nicht neben dem asset leigen, wenn keine da ist, dann ist das wie leer. erst beim speichern im editor wird die datei dann erstellt / oder eben ueberschrieben.
 
-[ ] Erstelle ein python script, dass im ordner Assets alle bilder findet, analysiert und die folgenden Werte findet
+[x] Erstelle ein python script, dass im ordner Assets alle bilder findet, analysiert und die folgenden Werte findet
 - width
 - height
 - color (rgb hex) - meist genutzte farbe / farb durchschnitt
