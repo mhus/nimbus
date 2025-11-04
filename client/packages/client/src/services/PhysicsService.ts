@@ -358,13 +358,6 @@ export class PhysicsService {
     // Check if player is trying to climb (flag set by tryMoveHorizontal)
     const isClimbing = this.climbableVelocitySetThisFrame.get(entity.entityId) || false;
 
-    console.log('[PhysicsService] updateWalkMode', {
-      entityId: entity.entityId,
-      isClimbing: isClimbing,
-      velocityY: entity.velocity.y.toFixed(3),
-      isUnderwater: this.isUnderwater,
-    });
-
     // Apply gravity (reduced when underwater, disabled when climbing)
     if (!this.isUnderwater && !isClimbing) {
       // Normal gravity on land
@@ -385,11 +378,6 @@ export class PhysicsService {
       // Climbing: No gravity, no damping
       // Velocity.y was already set by tryMoveHorizontal
       // Just keep it as is
-
-      console.log('[PhysicsService] Climbing active', {
-        entityId: entity.entityId,
-        velocityY: entity.velocity.y.toFixed(3),
-      });
     }
 
     // Apply velocity to position
@@ -651,25 +639,12 @@ export class PhysicsService {
         currentLevel.blocks.push({ x: pos.x, y: currentBlockY, z: pos.z, block });
         const physics = block.currentModifier.physics;
 
-        console.log('[PhysicsService] Block at currentLevel', {
-          position: { x: pos.x, y: currentBlockY, z: pos.z },
-          blockTypeId: block.block.blockTypeId,
-          hasPhysics: !!physics,
-          solid: physics?.solid,
-          climbable: physics?.climbable,
-        });
-
         if (physics?.solid) currentLevel.hasSolid = true;
         if (physics?.autoClimbable) currentLevel.hasAutoClimbable = true;
         if (physics?.autoJump) currentLevel.hasAutoJump = true;
         // Collect climbable speed: Use maximum speed from all blocks
         if (physics?.climbable && physics.climbable > 0) {
           currentLevel.climbableSpeed = Math.max(currentLevel.climbableSpeed, physics.climbable);
-          console.log('[PhysicsService] Found climbable block', {
-            position: { x: pos.x, y: currentBlockY, z: pos.z },
-            climbableValue: physics.climbable,
-            maxClimbableSpeed: currentLevel.climbableSpeed,
-          });
         }
         if (physics?.resistance) {
           currentLevel.resistance = Math.max(currentLevel.resistance, physics.resistance);
@@ -1137,16 +1112,6 @@ export class PhysicsService {
     // Get block context at target position
     const context = this.getPlayerBlockContext(targetX, targetZ, feetY, entityWidth, entityHeight);
 
-    // DEBUG: Log context
-    console.log('[PhysicsService] tryMoveHorizontal called', {
-      targetX: targetX.toFixed(2),
-      targetZ: targetZ.toFixed(2),
-      feetY: feetY.toFixed(2),
-      hasSolid: context.currentLevel.hasSolid,
-      climbableSpeed: context.currentLevel.climbableSpeed,
-      aboveClear: context.aboveLevel.isClear,
-      blocksAtCurrentLevel: context.currentLevel.blocks.length,
-    });
 
     // Check for climbable block FIRST (before other collision checks)
     // Climbable blocks can be solid (like ladders)
@@ -1157,12 +1122,6 @@ export class PhysicsService {
       // Mark that climbing velocity was set this frame
       this.climbableVelocitySetThisFrame.set(entity.entityId, true);
 
-      console.log('[PhysicsService] Climbing - velocity.y set', {
-        entityId: entity.entityId,
-        climbSpeed: context.currentLevel.climbableSpeed,
-        velocityY: entity.velocity.y,
-        position: { x: entity.position.x.toFixed(2), y: entity.position.y.toFixed(2), z: entity.position.z.toFixed(2) },
-      });
       return true; // Movement handled by climbing
     }
 
