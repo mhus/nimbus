@@ -521,9 +521,11 @@ export interface PhysicsModifier {
   /** Interactive block - player can send a interact command for this block to the server, default: false */
   interactive?: boolean;
 
-  /** Gate passable from specific directions - even if the block is solid, from this sind the entity can move like it's not solid, default: none (0) */
-  // rename to 'passableFrom'
-  gateFromDirection?: Direction;
+  /** Passable from specific directions - Controls one-way passage through blocks
+   * - If block is solid: Acts as one-way block - can enter from specified directions, block normal movement in other directions
+   * - If block is not solid: Acts as wall on edges - can walk through but not exit where passableFrom is not set
+   * Default: none (0) */
+  passableFrom?: Direction;
 
   /** Auto-jump when walking into the block - like fence gate, default: false */
   autoJump?: boolean;

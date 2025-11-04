@@ -9,7 +9,7 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, Direction, DirectionHelper } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerEntity } from '../types/PlayerEntity';
@@ -71,6 +71,7 @@ interface PlayerBlockContext {
     resistance: number; // Max resistance from all blocks
     autoMove: { x: number; y: number; z: number }; // Max velocity per axis
     autoOrientationY: number | undefined; // Last (most recent) orientation from blocks
+    passableFrom: number | undefined; // Collected passableFrom from blocks (OR combined)
   };
 
   /** Blocks one level above (Y + 1) */
@@ -471,6 +472,58 @@ export class PhysicsService {
   }
 
   /**
+   * Determine the primary movement direction from delta X and Z
+   * Returns the dominant horizontal direction based on movement vector
+   *
+   * @param dx Delta X movement
+   * @param dz Delta Z movement
+   * @returns Primary direction of movement (NORTH, SOUTH, EAST, WEST)
+   */
+  private getMovementDirection(dx: number, dz: number): Direction {
+    // Determine which axis has larger movement
+    const absDx = Math.abs(dx);
+    const absDz = Math.abs(dz);
+
+    if (absDx > absDz) {
+      // X-axis dominant
+      return dx > 0 ? Direction.EAST : Direction.WEST;
+    } else {
+      // Z-axis dominant (or equal, prefer Z)
+      return dz > 0 ? Direction.SOUTH : Direction.NORTH;
+    }
+  }
+
+  /**
+   * Check if movement is passable based on passableFrom flags
+   *
+   * @param passableFrom Direction bitfield from block
+   * @param movementDir Direction of entity movement
+   * @param isSolid Whether the block is solid
+   * @returns true if passage is allowed, false if blocked
+   */
+  private isPassable(passableFrom: number | undefined, movementDir: Direction, isSolid: boolean): boolean {
+    // No passableFrom set - use default behavior
+    if (passableFrom === undefined || passableFrom === 0) {
+      return !isSolid; // Solid blocks block, non-solid blocks allow
+    }
+
+    // passableFrom is set - check movement direction
+    const canPassFrom = DirectionHelper.hasDirection(passableFrom, movementDir);
+
+    if (isSolid) {
+      // Solid block with passableFrom: One-way block
+      // Can enter from specified directions
+      return canPassFrom;
+    } else {
+      // Non-solid block with passableFrom: Wall behavior
+      // Can move through but not exit where not specified
+      // Since we're checking entry, allow entry from anywhere
+      // Exit blocking will be handled when trying to leave
+      return true;
+    }
+  }
+
+  /**
    * Check if chunk at position is loaded
    */
   private isChunkLoaded(worldX: number, worldZ: number): boolean {
@@ -623,7 +676,7 @@ export class PhysicsService {
     if (!this.chunkService) {
       // No chunk service - return empty context
       return {
-        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, climbableSpeed: 0, resistance: 0, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined },
+        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, climbableSpeed: 0, resistance: 0, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined, passableFrom: undefined },
         aboveLevel: { blocks: [], hasSolid: false, isClear: true },
         belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined, groundY: -1 },
         occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 } },
@@ -655,6 +708,7 @@ export class PhysicsService {
       resistance: 0,
       autoMove: { x: 0, y: 0, z: 0 },
       autoOrientationY: undefined as number | undefined,
+      passableFrom: undefined as number | undefined,
     };
 
     for (const pos of cornerPositions) {
@@ -682,6 +736,10 @@ export class PhysicsService {
         // Collect autoOrientationY: Use last (most recent) value
         if (physics?.autoOrientationY !== undefined) {
           currentLevel.autoOrientationY = physics.autoOrientationY;
+        }
+        // Collect passableFrom: OR combine all blocks (union of allowed directions)
+        if (physics?.passableFrom !== undefined) {
+          currentLevel.passableFrom = (currentLevel.passableFrom ?? 0) | physics.passableFrom;
         }
       }
     }
@@ -864,6 +922,8 @@ export class PhysicsService {
 
   /**
    * Check if player is inside a block and push up if needed
+   *
+   * Note: Auto-push-up is DISABLED when block has passableFrom set (as per spec)
    */
   private checkAndPushUp(entity: PhysicsEntity): void {
     if (!this.chunkService) {
@@ -881,7 +941,17 @@ export class PhysicsService {
 
     // Check if any part of player is inside a solid block
     for (let y = Math.floor(feetY); y <= Math.floor(headY); y++) {
-      if (this.isBlockSolid(entity.position.x, y, entity.position.z)) {
+      const blockX = Math.floor(entity.position.x);
+      const blockZ = Math.floor(entity.position.z);
+      const clientBlock = this.chunkService.getBlockAt(blockX, y, blockZ);
+
+      if (clientBlock && clientBlock.currentModifier.physics?.solid) {
+        // Check if block has passableFrom - if so, disable auto-push-up
+        if (clientBlock.currentModifier.physics?.passableFrom !== undefined) {
+          // Block has passableFrom - don't auto-push up
+          return;
+        }
+
         // Push player up to top of this block
         entity.position.y = y + 1;
         entity.velocity.y = 0;
@@ -1139,7 +1209,8 @@ export class PhysicsService {
 
     // Check for climbable block FIRST (before other collision checks)
     // Climbable blocks can be solid (like ladders)
-    if (context.currentLevel.climbableSpeed > 0) {
+    // BUT: If block has passableFrom set, disable climbing (as per spec)
+    if (context.currentLevel.climbableSpeed > 0 && context.currentLevel.passableFrom === undefined) {
       // Climbable block detected: Set upward velocity, no horizontal movement
       entity.velocity.y = context.currentLevel.climbableSpeed;
 
@@ -1149,6 +1220,51 @@ export class PhysicsService {
       return true; // Movement handled by climbing
     }
 
+    // Determine movement direction
+    const movementDir = this.getMovementDirection(dx, dz);
+
+    // Check if we're currently in a block with passableFrom (exit check for non-solid blocks)
+    const currentContext = this.getPlayerBlockContext(entity.position.x, entity.position.z, feetY, entityWidth, entityHeight);
+
+    // Exit check: If currently in a non-solid block with passableFrom, check if we can exit
+    if (currentContext.currentLevel.passableFrom !== undefined && !currentContext.currentLevel.hasSolid) {
+      const canExit = DirectionHelper.hasDirection(currentContext.currentLevel.passableFrom, movementDir);
+      if (!canExit) {
+        // Cannot exit from this direction - blocked by wall
+        return true; // Movement blocked
+      }
+    }
+
+    // Entry check: Check passableFrom logic at target position
+    if (context.currentLevel.passableFrom !== undefined) {
+      const canEnter = DirectionHelper.hasDirection(context.currentLevel.passableFrom, movementDir);
+
+      if (context.currentLevel.hasSolid) {
+        // Solid block with passableFrom: One-way block
+        // Can only enter from specified directions
+        if (!canEnter) {
+          // Cannot enter from this direction
+          return true; // Movement blocked
+        }
+        // Can pass through - allow movement
+        entity.position.x = targetX;
+        entity.position.z = targetZ;
+        return false;
+      } else {
+        // Non-solid block with passableFrom: Wall at edges
+        // Can't enter where passableFrom is not set
+        if (!canEnter) {
+          // Cannot enter from this direction - blocked by wall
+          return true; // Movement blocked
+        }
+        // Can enter - allow movement
+        entity.position.x = targetX;
+        entity.position.z = targetZ;
+        return false;
+      }
+    }
+
+    // No passableFrom - standard collision logic
     // No collision at current level - move freely
     if (!context.currentLevel.hasSolid) {
       entity.position.x = targetX;

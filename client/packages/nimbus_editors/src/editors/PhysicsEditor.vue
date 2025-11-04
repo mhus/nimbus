@@ -124,16 +124,66 @@
 
     <div class="form-control">
       <label class="label">
-        <span class="label-text">Gate From Direction (bitfield)</span>
+        <span class="label-text">Passable From (one-way/wall directions)</span>
       </label>
-      <input
-        v-model.number="localValue.gateFromDirection"
-        type="number"
-        class="input input-bordered input-sm"
-        placeholder="Direction bitfield"
-      />
+      <div class="flex flex-wrap gap-3 p-2 bg-base-200 rounded">
+        <label class="label cursor-pointer gap-2">
+          <input
+            v-model="passableFromNorth"
+            type="checkbox"
+            class="checkbox checkbox-xs"
+          />
+          <span class="label-text text-xs">North</span>
+        </label>
+        <label class="label cursor-pointer gap-2">
+          <input
+            v-model="passableFromSouth"
+            type="checkbox"
+            class="checkbox checkbox-xs"
+          />
+          <span class="label-text text-xs">South</span>
+        </label>
+        <label class="label cursor-pointer gap-2">
+          <input
+            v-model="passableFromEast"
+            type="checkbox"
+            class="checkbox checkbox-xs"
+          />
+          <span class="label-text text-xs">East</span>
+        </label>
+        <label class="label cursor-pointer gap-2">
+          <input
+            v-model="passableFromWest"
+            type="checkbox"
+            class="checkbox checkbox-xs"
+          />
+          <span class="label-text text-xs">West</span>
+        </label>
+        <label class="label cursor-pointer gap-2">
+          <input
+            v-model="passableFromUp"
+            type="checkbox"
+            class="checkbox checkbox-xs"
+          />
+          <span class="label-text text-xs">Up</span>
+        </label>
+        <label class="label cursor-pointer gap-2">
+          <input
+            v-model="passableFromDown"
+            type="checkbox"
+            class="checkbox checkbox-xs"
+          />
+          <span class="label-text text-xs">Down</span>
+        </label>
+        <button
+          @click="resetPassableFrom"
+          class="btn btn-xs btn-ghost"
+        >
+          Reset
+        </button>
+      </div>
       <label class="label">
-        <span class="label-text-alt">North=1, South=2, East=4, West=8, Up=16, Down=32</span>
+        <span class="label-text-alt">Solid: one-way block. Non-solid: wall at edges.</span>
       </label>
     </div>
   </div>
@@ -142,6 +192,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import type { PhysicsModifier } from '@nimbus/shared';
+import { Direction, DirectionHelper } from '@nimbus/shared';
 
 interface Props {
   modelValue?: PhysicsModifier;
@@ -187,6 +238,72 @@ const autoMoveZ = computed({
     localValue.value.autoMove.z = value;
   }
 });
+
+// Computed properties for passableFrom direction flags
+const passableFromNorth = computed({
+  get: () => DirectionHelper.hasDirection(localValue.value.passableFrom ?? 0, Direction.NORTH),
+  set: (value: boolean) => {
+    const current = localValue.value.passableFrom ?? 0;
+    localValue.value.passableFrom = value
+      ? DirectionHelper.addDirection(current, Direction.NORTH)
+      : DirectionHelper.removeDirection(current, Direction.NORTH);
+  }
+});
+
+const passableFromSouth = computed({
+  get: () => DirectionHelper.hasDirection(localValue.value.passableFrom ?? 0, Direction.SOUTH),
+  set: (value: boolean) => {
+    const current = localValue.value.passableFrom ?? 0;
+    localValue.value.passableFrom = value
+      ? DirectionHelper.addDirection(current, Direction.SOUTH)
+      : DirectionHelper.removeDirection(current, Direction.SOUTH);
+  }
+});
+
+const passableFromEast = computed({
+  get: () => DirectionHelper.hasDirection(localValue.value.passableFrom ?? 0, Direction.EAST),
+  set: (value: boolean) => {
+    const current = localValue.value.passableFrom ?? 0;
+    localValue.value.passableFrom = value
+      ? DirectionHelper.addDirection(current, Direction.EAST)
+      : DirectionHelper.removeDirection(current, Direction.EAST);
+  }
+});
+
+const passableFromWest = computed({
+  get: () => DirectionHelper.hasDirection(localValue.value.passableFrom ?? 0, Direction.WEST),
+  set: (value: boolean) => {
+    const current = localValue.value.passableFrom ?? 0;
+    localValue.value.passableFrom = value
+      ? DirectionHelper.addDirection(current, Direction.WEST)
+      : DirectionHelper.removeDirection(current, Direction.WEST);
+  }
+});
+
+const passableFromUp = computed({
+  get: () => DirectionHelper.hasDirection(localValue.value.passableFrom ?? 0, Direction.UP),
+  set: (value: boolean) => {
+    const current = localValue.value.passableFrom ?? 0;
+    localValue.value.passableFrom = value
+      ? DirectionHelper.addDirection(current, Direction.UP)
+      : DirectionHelper.removeDirection(current, Direction.UP);
+  }
+});
+
+const passableFromDown = computed({
+  get: () => DirectionHelper.hasDirection(localValue.value.passableFrom ?? 0, Direction.DOWN),
+  set: (value: boolean) => {
+    const current = localValue.value.passableFrom ?? 0;
+    localValue.value.passableFrom = value
+      ? DirectionHelper.addDirection(current, Direction.DOWN)
+      : DirectionHelper.removeDirection(current, Direction.DOWN);
+  }
+});
+
+// Reset passableFrom to undefined
+const resetPassableFrom = () => {
+  localValue.value.passableFrom = undefined;
+};
 
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);

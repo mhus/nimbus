@@ -3,8 +3,10 @@
 ## Compass
 
 [ ] Zeige im oberen Bereich eine Compass Bar der in einem CompassService verwaltet wird. Einhaegen in AppContext.
+- Die Compass bar ist ein horizontaler Balken der innen leer ist. Es gibt einen TOP, CENTER und BOTTOM bereich. CENTER ist im leeren Bereich der Bar.
+- die componente ist ansonsten durchsichtig und empfaegt keine maus events.
 - Die bar soll den komplette 360 bereich anzeigen.
-- Es sollen sich Marker fuer Nord, Ost, Sued, West befinden.
+- Es sollen sich Marker fuer Nord, Ost, Sued, West befinden (N S E W). Wobei Nord richtung Z > 0 ist.
 - Am CompassService keonnen Marker hinzugefuegt werden. Die Marker haben immer World Block Koordinaten)
 - Der Compass soll drehen wenn sich die Kamera bewegt
 - Die Darstellung kann asynchron/versetzt erfolgen

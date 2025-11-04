@@ -55,7 +55,7 @@
 
 ~~[-] Wenn ich nach oben schaue (player pitch) soll ich nach oben gehen, wenn ich nach unten schaue nach unten.~~
 
-[ ] Support PhysicsModifier.passableFrom
+[?] Support PhysicsModifier.passableFrom in PhysicsService
 - Aktuell gibt es das Feld PhysicsModifier.gateFromDirection, es soll umbenannt werden in passableFrom
 - Es ist eine Bitmap fuer jede direction ein Bit. BlockModifier.Direction
 - Wenn der Block solid ist, dann funktioniert passableFrom wie eine Aufhebung, d.h. von der seite kannst du rein und auf alle seiten raus, wo kein solid block ist - nach oben moven weil in einem solid block ist aufgehoben sobald passableFrom am Block ist.
@@ -63,7 +63,11 @@
 - Wenn der Block nicht solid ist, dann funktioniert passableFrom wie ein Blocker aus dem block am rand, man kann weder in den block noch raus, wo kein passableFrom angegeben ist, aber der block ist begehbar.
   Damit wird der block wie eine Wand, du kannst hin, aber nicht drueber hinaus. Auch nach unten oder oben wirk diese Einstellung.
   Wird aktiv sobald passableFrom am Block haengt.
-- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein, falls noch nicht vorhanden. Benutze checkboxen fuer die flags die in einer Zeile stehen. Ein Button fuer reset um das feld wieder zu loeschen.
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) um: Benutze checkboxen fuer die flags die in einer Zeile stehen. Ein Button fuer reset um das feld wieder zu loeschen.
+- Es gibt eine funktion, die mich automatisch nach oben schiebt, wenn ich IN einem solid block bin, die funktion soll mich nicht nach oben schieben, wenn passableFrom existiert.
+
+
+
 
 ## Editor
 
