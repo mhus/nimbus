@@ -531,7 +531,7 @@ export class PhysicsService {
    * - climbable (ladder-like climbing)
    * - autoClimbable (auto step-up)
    * - interactive (button, door, etc.)
-   * - autoMoveXYZ (conveyor belt, water current)
+   * - autoMove (conveyor belt, water current)
    * - gateFromDirection (one-way passage)
    * - liquid properties (water, lava)
    *

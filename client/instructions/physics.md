@@ -20,8 +20,9 @@
 - Baue das da ein, wo jetzt auch autoClimb umgesetzt wird. (?oder ist das anders besser?)
 >   Beide sollen geprueft werden, der block der fuesse und der darunter. Das sind dann auch alle die geprueft werden sollen.
 
-[ ] Bonus: Rename PhysicsModifier.autoMoveXYZ to PhysicsModifier.autoMove
+[x] Bonus: Rename PhysicsModifier.autoMoveXYZ to PhysicsModifier.autoMove
 - Auch im PhysicsEditor 
+
 [ ] Support PhysicsModifier.autoMove
 - Wenn der Player mit den fuessen auf oder in das Feld kommt, wird er automatisch bewegt
 - Default ist kein autoMove (false)

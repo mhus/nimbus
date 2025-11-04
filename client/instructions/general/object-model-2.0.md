@@ -126,7 +126,7 @@ Parameters:
   - ?solid (true/false) - Collision
   - ?resistance (laufwiederstand)
   - ?climbable (int fuer kletter-wiederstand?)
-  - ?autoMoveXYZ (?) - Bewegt dich automatisch nach, mit geschwindigkeit X wenn du darauf stehst
+  - ?autoMove (?) - Bewegt dich automatisch nach, mit geschwindigkeit X wenn du darauf stehst
   - ?interactive
   - ?gateFromDirection (byte, z.B. north,south,east,west,up,down) - Ermöglicht das durchgehen von einer Seite
 - ?effects

@@ -513,8 +513,7 @@ export interface PhysicsModifier {
   autoClimbable?: boolean;
 
   /** Auto-move velocity when standing on(solid)/in(!solid) block - moves the entity with speed, default: 0 */
-  // TODO rename to 'autoMove'
-  autoMoveXYZ?: Vector3;
+  autoMove?: Vector3;
 
   /** Auto-orientation Y axis when standing on(solid)/in(!solid) block - rotates the entity to this Y angle, default: undefined (disabled) */
   autoOrientationY?: number;
