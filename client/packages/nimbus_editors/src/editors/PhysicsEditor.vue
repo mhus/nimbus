@@ -60,6 +60,17 @@
     </div>
 
     <div class="form-control">
+      <label class="label cursor-pointer justify-start gap-2">
+        <input
+          v-model="localValue.autoJump"
+          type="checkbox"
+          class="checkbox checkbox-sm"
+        />
+        <span class="label-text">Auto Jump (trigger jump automatically)</span>
+      </label>
+    </div>
+
+    <div class="form-control">
       <label class="label">
         <span class="label-text">Gate From Direction (bitfield)</span>
       </label>

@@ -59,6 +59,7 @@ interface PlayerBlockContext {
     blocks: Array<{ x: number; y: number; z: number; block: any }>;
     hasSolid: boolean;
     hasAutoClimbable: boolean;
+    hasAutoJump: boolean;
     hasClimbable: boolean;
     resistance: number; // Max resistance from all blocks
   };
@@ -74,6 +75,7 @@ interface PlayerBlockContext {
   belowLevel: {
     blocks: Array<{ x: number; y: number; z: number; block: any }>;
     hasGround: boolean;
+    hasAutoJump: boolean; // AutoJump on block player is standing on
     groundY: number; // Y coordinate of ground, -1 if no ground
   };
 
@@ -82,6 +84,7 @@ interface PlayerBlockContext {
     blocks: Array<{ x: number; y: number; z: number; block: any }>;
     hasSolid: boolean;
     hasLiquid: boolean; // For future water/lava detection
+    hasAutoJump: boolean; // Trigger auto-jump when inside this block
   };
 }
 
@@ -368,6 +371,9 @@ export class PhysicsService {
 
     // Auto-push-up if inside block
     this.checkAndPushUp(entity);
+
+    // Auto-jump if standing on/in autoJump block
+    this.checkAutoJump(entity);
   }
 
   /**
@@ -376,8 +382,8 @@ export class PhysicsService {
   private updateClimbAnimation(entity: PhysicsEntity, deltaTime: number): void {
     if (!entity.climbState) return;
 
-    // Increment progress (3.5 = ~0.29 seconds for smooth climb)
-    entity.climbState.progress += deltaTime * 3.5;
+    // Increment progress (5.0 = ~0.2 seconds for fluid climb)
+    entity.climbState.progress += deltaTime * 5.0;
 
     if (entity.climbState.progress >= 1.0) {
       // Climb complete
@@ -546,10 +552,10 @@ export class PhysicsService {
     if (!this.chunkService) {
       // No chunk service - return empty context
       return {
-        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasClimbable: false, resistance: 0 },
+        currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, hasClimbable: false, resistance: 0 },
         aboveLevel: { blocks: [], hasSolid: false, isClear: true },
-        belowLevel: { blocks: [], hasGround: false, groundY: -1 },
-        occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false },
+        belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, groundY: -1 },
+        occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false },
       };
     }
 
@@ -573,6 +579,7 @@ export class PhysicsService {
       blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
       hasSolid: false,
       hasAutoClimbable: false,
+      hasAutoJump: false,
       hasClimbable: false,
       resistance: 0,
     };
@@ -585,6 +592,7 @@ export class PhysicsService {
 
         if (physics?.solid) currentLevel.hasSolid = true;
         if (physics?.autoClimbable) currentLevel.hasAutoClimbable = true;
+        if (physics?.autoJump) currentLevel.hasAutoJump = true;
         if (physics?.climbable) currentLevel.hasClimbable = true;
         if (physics?.resistance) {
           currentLevel.resistance = Math.max(currentLevel.resistance, physics.resistance);
@@ -614,6 +622,7 @@ export class PhysicsService {
     const belowLevel = {
       blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
       hasGround: false,
+      hasAutoJump: false,
       groundY: -1,
     };
 
@@ -623,9 +632,15 @@ export class PhysicsService {
         const block = this.chunkService.getBlockAt(pos.x, checkY, pos.z);
         if (block) {
           belowLevel.blocks.push({ x: pos.x, y: checkY, z: pos.z, block });
-          if (block.currentModifier.physics?.solid && !belowLevel.hasGround) {
+          const physics = block.currentModifier.physics;
+
+          if (physics?.solid && !belowLevel.hasGround) {
             belowLevel.hasGround = true;
             belowLevel.groundY = checkY + 1; // Top of the block
+          }
+          // Check for autoJump on ground blocks (the block we're standing on)
+          if (physics?.autoJump && checkY === currentBlockY - 1) {
+            belowLevel.hasAutoJump = true;
           }
         }
       }
@@ -637,6 +652,7 @@ export class PhysicsService {
       blocks: [] as Array<{ x: number; y: number; z: number; block: any }>,
       hasSolid: false,
       hasLiquid: false,
+      hasAutoJump: false,
     };
 
     const headBlockY = Math.floor(y + entityHeight);
@@ -644,8 +660,13 @@ export class PhysicsService {
       const block = this.chunkService.getBlockAt(Math.floor(x), checkY, Math.floor(z));
       if (block) {
         occupiedBlocks.blocks.push({ x: Math.floor(x), y: checkY, z: Math.floor(z), block });
-        if (block.currentModifier.physics?.solid) {
+        const physics = block.currentModifier.physics;
+
+        if (physics?.solid) {
           occupiedBlocks.hasSolid = true;
+        }
+        if (physics?.autoJump) {
+          occupiedBlocks.hasAutoJump = true;
         }
         // TODO: Add liquid detection when implemented
         // if (block.isLiquid) occupiedBlocks.hasLiquid = true;
@@ -761,6 +782,58 @@ export class PhysicsService {
         entity.velocity.y = 0;
         return;
       }
+    }
+  }
+
+  /**
+   * Check if player is on or in a block with autoJump and trigger jump
+   *
+   * AutoJump is triggered when:
+   * - Player is standing on autoJump block (block below feet, Y - 1), OR
+   * - Player has autoJump block at feet level (Y) - for pressure plates
+   *
+   * Only these two levels are checked. No occupiedBlocks check (body).
+   *
+   * Use case: Trampoline blocks (below), pressure plates (at feet level)
+   */
+  private checkAutoJump(entity: PhysicsEntity): void {
+    if (!this.chunkService) {
+      return;
+    }
+
+    // Only trigger autoJump in walk mode
+    if (entity.movementMode !== 'walk') {
+      return;
+    }
+
+    // Get entity dimensions
+    const entityWidth = this.defaultEntityWidth;
+    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
+
+    // Get block context at current position
+    const context = this.getPlayerBlockContext(
+      entity.position.x,
+      entity.position.z,
+      entity.position.y,
+      entityWidth,
+      entityHeight
+    );
+
+    // Check 1: Block below feet (Y - 1) - Trampoline case
+    const onAutoJumpBlock = entity.isOnGround && context.belowLevel.hasAutoJump;
+
+    // Check 2: Block at feet level (Y) - Pressure plate case
+    const atAutoJumpBlock = context.currentLevel.hasAutoJump;
+
+    // Trigger jump if either condition is met
+    if (onAutoJumpBlock || atAutoJumpBlock) {
+      this.jump(entity);
+      logger.debug('Auto-jump triggered', {
+        entityId: entity.entityId,
+        onGround: entity.isOnGround,
+        onBlock: onAutoJumpBlock,
+        atFeetLevel: atAutoJumpBlock,
+      });
     }
   }
 

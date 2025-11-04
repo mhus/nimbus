@@ -3,7 +3,7 @@
 
 ## Movement
 
-[?] Support PhysicsModifier.autoClimbable while moving
+[x] Support PhysicsModifier.autoClimbable while moving
 - Wenn ein User an einem autoClimbable stößt, dann erklimmt er diese automatisch, funktioniert nur bei einem Block, ist bereits implementiert (PhysicsServcie),
   wird aber aktuell immer gemacht. Soll in Zukunft nur bei Blocks mit dieser Eigenschaft funktionieren.
 - Default ist kein autoClimbable (false)
@@ -13,16 +13,22 @@
     - Also erstmal die noetigen Blocke laed, unter dem player, vor dem player und der block(e) in dem player steht.
     - Dann entscheiden was zu zun ist.
 
-[ ] Support PhysicsModifier.autoJump
+[x] Support PhysicsModifier.autoJump
 - Wenn ein User auf oder in ein Feld mit dieser eigenschaft kommt, wird automatisch ein jump ausgeloest
 - Default ist kein autoJump (false)
 - Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
 - Baue das da ein, wo jetzt auch autoClimb umgesetzt wird. (?oder ist das anders besser?)
+>   Beide sollen geprueft werden, der block der fuesse und der darunter. Das sind dann auch alle die geprueft werden sollen.
 
 [ ] Bonus: Rename PhysicsModifier.autoMoveXYZ to PhysicsModifier.autoMove
 - Auch im PhysicsEditor 
-[ ] Bonus: Rename autoMoveY to autoMoveZ
 [ ] Support PhysicsModifier.autoMove
+- Wenn der Player mit den fuessen auf oder in das Feld kommt, wird er automatisch bewegt
+- Default ist kein autoMove (false)
+- Baue das Feld auch im PhysicsEditor (nimbus_editors) ein
+- Die Bewegung soll fluessig sein mit der geschwindigkeit aus dem parameter bis der user aus/von dem Feld ist. 
+- Sind mehrere Felder, wird fuer X Y Z das maximum benutzt
+
 [ ] Support PhysicsModifier.autoOrientationY
 
 > Naming:
