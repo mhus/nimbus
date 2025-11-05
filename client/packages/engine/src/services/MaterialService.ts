@@ -110,71 +110,40 @@ export class MaterialService {
 
     if (!texture) {
       // No texture defined - return default key
-      return 'default';
+      return 'atlas:default';
     }
 
     // Normalize texture (string → TextureDefinition)
     const textureDef = TextureHelper.normalizeTexture(texture);
 
-    // Build key components
-    const parts: string[] = [];
+    // Build key based on MATERIAL PROPERTIES, not texture path
+    // This allows grouping blocks with different textures but same material properties
+    const parts: string[] = ['atlas']; // Always use atlas texture
 
-    // 1. Path (required)
-    parts.push(textureDef.path || modifier.visibility?.path || 'none');
+    // 1. backFaceCulling (default: true)
+    parts.push(`bfc:${textureDef.backFaceCulling ?? true}`);
 
-    parts.push(textureDef.backFaceCulling !== undefined ? `bfc:${textureDef.backFaceCulling}` : 'bfc:true');
-
-    // 2. UV Mapping (if defined)
-    if (textureDef.uvMapping) {
-      const uv = textureDef.uvMapping;
-      parts.push([
-        uv.x ?? 0,
-        uv.y ?? 0,
-        uv.w ?? 0,
-        uv.h ?? 0,
-        uv.uScale ?? 1,
-        uv.vScale ?? 1,
-        uv.uOffset ?? 0,
-        uv.vOffset ?? 0,
-        uv.wrapU ?? 1,
-        uv.wrapV ?? 1,
-        uv.uRotationCenter ?? 0.5,
-        uv.vRotationCenter ?? 0.5,
-        uv.wAng ?? 0,
-        uv.uAng ?? 0,
-        uv.vAng ?? 0,
-      ].join(','));
-    } else {
-      parts.push('uv:default');
-    }
-
-    // 3. Sampling mode (default: LINEAR)
-    parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
-
-    // 4. Transparency mode (default: NONE)
+    // 2. Transparency mode (default: NONE)
     parts.push(`tm:${textureDef.transparencyMode ?? TransparencyMode.NONE}`);
 
-    // 5. Opacity (default: 1.0, only include if != 1.0)
-    if (textureDef.opacity !== undefined && textureDef.opacity !== 1.0) {
-      parts.push(`op:${textureDef.opacity}`);
-    }
+    // 3. Opacity (default: 1.0)
+    parts.push(`op:${textureDef.opacity ?? 1.0}`);
+
+    // 4. Sampling mode (default: LINEAR)
+    parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
+
+    // 5. Effect (Texture.effect overrides BlockModifier.effect)
+    const finalEffect =
+      textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
+    parts.push(`eff:${finalEffect}`);
 
     // 6. Shader parameters (if defined)
     if (textureDef.shaderParameters) {
       parts.push(`sp:${textureDef.shaderParameters}`);
     }
 
-    // 7. Effect (Texture.effect overrides BlockModifier.effect)
-    const finalEffect =
-      textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
-    if (finalEffect !== BlockEffect.NONE) {
-      parts.push(`eff:${finalEffect}`);
-    }
-
-    // 8. Color (if defined)
-    if (textureDef.color) {
-      parts.push(`col:${textureDef.color}`);
-    }
+    // Note: Texture path is NOT part of the key - UVs handle texture selection via atlas
+    // Note: UV mapping is NOT part of the key - handled per-vertex in geometry
 
     // Join all parts with separator
     return parts.join('|');
@@ -195,6 +164,56 @@ export class MaterialService {
   }
 
   /**
+   * Parse material key into properties
+   *
+   * @param materialKey Material key string (e.g., "atlas|bfc:false|tm:0|op:1.0|sm:1|eff:0")
+   * @returns Parsed material properties
+   */
+  private parseMaterialKey(materialKey: string): {
+    backFaceCulling: boolean;
+    transparencyMode: number;
+    opacity: number;
+    samplingMode: number;
+    effect: number;
+    shaderParameters?: string;
+  } {
+    const parts = materialKey.split('|');
+    const props: any = {
+      backFaceCulling: true,
+      transparencyMode: 0,
+      opacity: 1.0,
+      samplingMode: 1,
+      effect: 0,
+    };
+
+    for (const part of parts) {
+      const [key, value] = part.split(':');
+      switch (key) {
+        case 'bfc':
+          props.backFaceCulling = value === 'true';
+          break;
+        case 'tm':
+          props.transparencyMode = parseInt(value);
+          break;
+        case 'op':
+          props.opacity = parseFloat(value);
+          break;
+        case 'sm':
+          props.samplingMode = parseInt(value);
+          break;
+        case 'eff':
+          props.effect = parseInt(value);
+          break;
+        case 'sp':
+          props.shaderParameters = value;
+          break;
+      }
+    }
+
+    return props;
+  }
+
+  /**
    * Check if BlockModifier has wind properties
    */
   private hasWindProperties(modifier: BlockModifier): boolean {
@@ -209,14 +228,13 @@ export class MaterialService {
   /**
    * Get or create a material for a block based on BlockModifier and textureIndex
    *
-   * This method:
-   * 1. Generates a unique material key using getMaterialKey()
+   * NEW IMPLEMENTATION (Property-based grouping):
+   * 1. Generates a material key based on properties (not texture path)
    * 2. Returns cached material if available
-   * 3. Otherwise creates a new material:
-   *    - Loads texture from server
-   *    - Applies UV mapping and texture properties
-   *    - Integrates with ShaderService for effects
-   *    - Caches the result
+   * 3. Otherwise creates a new material with atlas texture and properties
+   *
+   * Note: All materials use the texture atlas. UVs (calculated in RenderService)
+   * determine which part of the atlas each face uses.
    *
    * @param modifier BlockModifier containing material properties
    * @param textureIndex TextureKey indicating which texture to use
@@ -227,7 +245,7 @@ export class MaterialService {
     textureIndex: TextureKey
   ): Promise<Material> {
     try {
-      // Generate cache key
+      // Generate cache key based on properties
       const cacheKey = this.getMaterialKey(modifier, textureIndex);
 
       // Check cache
@@ -235,53 +253,38 @@ export class MaterialService {
         return this.materials.get(cacheKey)!;
       }
 
-      // Extract texture definition
-      const texture = this.getTextureFromModifier(modifier, textureIndex);
-      if (!texture) {
-        // No texture - return default material
-        return this.getOrCreateDefaultMaterial();
-      }
+      // Parse material properties from key
+      const props = this.parseMaterialKey(cacheKey);
 
-      // Normalize texture
-      const textureDef = TextureHelper.normalizeTexture(texture);
-
-      // Determine final effect (Texture.effect overrides BlockModifier.effect)
-      let finalEffect =
-        textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
-
-      // Auto-detect wind effect if wind properties are present
-      if (finalEffect === BlockEffect.NONE && this.hasWindProperties(modifier)) {
-        finalEffect = BlockEffect.WIND;
-        logger.debug('Auto-detected wind properties, using WIND effect', { cacheKey });
-      }
-
-      // Try to create shader material if effect is specified
+      // Create material based on effect
       let material: Material | null = null;
-      if (finalEffect !== BlockEffect.NONE && this.shaderService) {
-        const effectName = BlockEffect[finalEffect].toLowerCase();
+
+      if (props.effect !== BlockEffect.NONE && this.shaderService) {
+        // Create shader material with atlas texture
+        const effectName = BlockEffect[props.effect].toLowerCase();
         if (this.shaderService.hasEffect(effectName)) {
-          // Load texture first for shader
-          const bTexture = await this.loadTexture(textureDef);
+          const atlasTexture = this.textureAtlas?.getTexture();
           material = this.shaderService.createMaterial(
             effectName,
-            { texture: bTexture, name: cacheKey, ...modifier.visibility?.effectParameters }
+            {
+              texture: atlasTexture,
+              name: cacheKey,
+              ...modifier.visibility?.effectParameters
+            }
           );
-          logger.debug('Created shader material', { effectName, cacheKey });
+          logger.debug('Created shader material with atlas', { effectName, cacheKey });
         }
       }
 
-      // Fallback to StandardMaterial if no shader material
+      // Fallback to StandardMaterial
       if (!material) {
-        material = await this.createStandardMaterial(textureDef, cacheKey);
+        material = this.createStandardMaterialWithAtlas(cacheKey, props);
       }
-
-      // Apply common material properties
-      this.applyMaterialProperties(material, textureDef);
 
       // Cache material
       this.materials.set(cacheKey, material);
 
-      logger.debug('Material created and cached', { cacheKey });
+      logger.debug('Material created and cached', { cacheKey, props });
 
       return material;
     } catch (error) {
@@ -294,7 +297,50 @@ export class MaterialService {
   }
 
   /**
-   * Create a StandardMaterial with texture
+   * Create a StandardMaterial with atlas texture and properties
+   *
+   * @param name Material name (cache key)
+   * @param props Material properties parsed from key
+   * @returns StandardMaterial with atlas texture and applied properties
+   */
+  private createStandardMaterialWithAtlas(
+    name: string,
+    props: {
+      backFaceCulling: boolean;
+      transparencyMode: number;
+      opacity: number;
+      samplingMode: number;
+    }
+  ): StandardMaterial {
+    const material = new StandardMaterial(name, this.scene);
+
+    // Use texture atlas
+    const atlasTexture = this.textureAtlas?.getTexture();
+    if (atlasTexture) {
+      material.diffuseTexture = atlasTexture;
+    }
+
+    // Apply properties from key
+    material.backFaceCulling = props.backFaceCulling;
+    material.transparencyMode = props.transparencyMode;
+    material.alpha = props.opacity;
+
+    // Disable specular highlights for blocks
+    material.specularColor = new Color3(0, 0, 0);
+
+    logger.debug('Created StandardMaterial with atlas', {
+      name,
+      backFaceCulling: props.backFaceCulling,
+      transparencyMode: props.transparencyMode,
+      opacity: props.opacity,
+    });
+
+    return material;
+  }
+
+  /**
+   * Create a StandardMaterial with texture (OLD - kept for compatibility)
+   * @deprecated Use createStandardMaterialWithAtlas instead
    */
   private async createStandardMaterial(
     textureDef: TextureDefinition,

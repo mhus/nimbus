@@ -56,8 +56,9 @@ export class RenderService {
   // Renderers
   private cubeRenderer: CubeRenderer;
 
-  // Chunk meshes: Map<chunkKey, Mesh>
-  private chunkMeshes: Map<string, Mesh> = new Map();
+  // Chunk meshes: Map<chunkKey, Map<materialKey, Mesh>>
+  // Each chunk can have multiple meshes (one per material type)
+  private chunkMeshes: Map<string, Map<string, Mesh>> = new Map();
 
   constructor(
     scene: Scene,
@@ -163,6 +164,9 @@ export class RenderService {
   /**
    * Render a chunk
    *
+   * NEW IMPLEMENTATION: Groups blocks by material properties and creates
+   * separate meshes for each material group.
+   *
    * @param clientChunk Client-side chunk with processed ClientBlocks
    */
   async renderChunk(clientChunk: ClientChunk): Promise<void> {
@@ -185,72 +189,99 @@ export class RenderService {
         blockCount,
       });
 
-      // Build mesh data
-      const faceData: FaceData = {
-        positions: [],
-        indices: [],
-        uvs: [],
-        normals: [],
-      };
+      // Group blocks by material key
+      const materialGroups = this.groupBlocksByMaterial(clientChunk);
 
-      const renderContext: RenderContext = {
-        renderService: this,
-        faceData,
-        vertexOffset: 0
-      };
+      logger.debug('Material groups created', {
+        cx: chunk.cx,
+        cz: chunk.cz,
+        groupCount: materialGroups.size,
+        groups: Array.from(materialGroups.keys()),
+      });
 
-      // Note: BlockTypes are loaded on-demand via chunk-based lazy loading
-      // ClientBlocks already have their blockType reference cached
+      // Create mesh for each material group
+      const meshMap = new Map<string, Mesh>();
 
-      // Render each ClientBlock from the Map
-      for (const clientBlock of clientBlocksMap.values()) {
-        const block = clientBlock.block;
+      for (const [materialKey, blocks] of materialGroups) {
+        const faceData: FaceData = {
+          positions: [],
+          indices: [],
+          uvs: [],
+          normals: [],
+        };
 
-        // Validate block data
-        if (!block || typeof block.blockTypeId === 'undefined' || !block.position) {
-          logger.warn('Invalid block data in ClientBlock', { block });
-          continue;
+        const renderContext: RenderContext = {
+          renderService: this,
+          faceData,
+          vertexOffset: 0,
+        };
+
+        // Render all blocks in this material group
+        for (const clientBlock of blocks) {
+          const block = clientBlock.block;
+
+          // Validate block data
+          if (!block || typeof block.blockTypeId === 'undefined' || !block.position) {
+            logger.warn('Invalid block data in ClientBlock', { block });
+            continue;
+          }
+
+          const modifier = clientBlock.currentModifier;
+          if (!modifier || !modifier.visibility) {
+            continue;
+          }
+
+          const shape = modifier.visibility.shape ?? Shape.CUBE;
+
+          // Skip invisible blocks
+          if (shape === Shape.INVISIBLE) {
+            continue;
+          }
+
+          // Only render cubes for now
+          if (shape === Shape.CUBE) {
+            await this.cubeRenderer.render(renderContext, clientBlock);
+          } else {
+            logger.debug('Unsupported shape, skipping', {
+              shape,
+              blockTypeId: block.blockTypeId,
+            });
+          }
         }
 
-        // Use cached references from ClientBlock
-        const blockType = clientBlock.blockType;
-        const modifier = clientBlock.currentModifier; // ← Already merged!
+        // Create mesh if we have any geometry
+        if (faceData.positions.length > 0) {
+          const meshName = `${chunkKey}_${materialKey}`;
+          const mesh = this.createMesh(meshName, faceData);
 
-        if (!modifier || !modifier.visibility) {
-          continue;
-        }
-
-        const shape = modifier.visibility.shape ?? Shape.CUBE;
-
-        // Skip invisible blocks
-        if (shape === Shape.INVISIBLE) {
-          continue;
-        }
-
-        // Only render cubes for now
-        if (shape === Shape.CUBE) {
-          await this.cubeRenderer.render(
-            renderContext,
-            clientBlock,
+          // Get and apply material
+          const material = await this.materialService.getMaterial(
+            blocks[0].currentModifier, // Use first block's modifier to get material
+            0 // textureIndex - doesn't matter for property-based keys
           );
-        } else {
-          logger.debug('Unsupported shape, skipping', {
-            shape,
-            blockTypeId: block.blockTypeId,
+          mesh.material = material;
+
+          meshMap.set(materialKey, mesh);
+
+          logger.debug('Material group mesh created', {
+            cx: chunk.cx,
+            cz: chunk.cz,
+            materialKey,
+            vertices: faceData.positions.length / 3,
+            faces: faceData.indices.length / 3,
+            backFaceCulling: material.backFaceCulling,
           });
         }
       }
 
-      // Create mesh if we have any geometry
-      if (faceData.positions.length > 0) {
-        const mesh = this.createMesh(chunkKey, faceData);
-        this.chunkMeshes.set(chunkKey, mesh);
+      // Store meshes for this chunk
+      if (meshMap.size > 0) {
+        this.chunkMeshes.set(chunkKey, meshMap);
 
         logger.debug('Chunk rendered', {
           cx: chunk.cx,
           cz: chunk.cz,
-          vertices: faceData.positions.length / 3,
-          faces: faceData.indices.length / 3,
+          meshCount: meshMap.size,
         });
       } else {
         logger.debug('Chunk has no renderable blocks', { cx: chunk.cx, cz: chunk.cz });
@@ -264,7 +295,35 @@ export class RenderService {
   }
 
   /**
+   * Group blocks by their material key
+   * Blocks with the same material properties will be grouped together
+   */
+  private groupBlocksByMaterial(clientChunk: ClientChunk): Map<string, ClientBlock[]> {
+    const groups = new Map<string, ClientBlock[]>();
+
+    for (const clientBlock of clientChunk.data.data.values()) {
+      const modifier = clientBlock.currentModifier;
+      if (!modifier || !modifier.visibility) {
+        continue;
+      }
+
+      // Get material key (based on properties, not texture)
+      // Use textureIndex 0 as placeholder - actual texture determined by UVs
+      const materialKey = this.materialService.getMaterialKey(modifier, 0);
+
+      if (!groups.has(materialKey)) {
+        groups.set(materialKey, []);
+      }
+
+      groups.get(materialKey)!.push(clientBlock);
+    }
+
+    return groups;
+  }
+
+  /**
    * Create a mesh from face data
+   * Note: Material is NOT set here - caller must assign it
    */
   private createMesh(name: string, faceData: FaceData): Mesh {
     const mesh = new Mesh(name, this.scene);
@@ -279,24 +338,27 @@ export class RenderService {
     // Apply to mesh
     vertexData.applyToMesh(mesh);
 
-    // Set material
-    mesh.material = this.materialService.getAtlasMaterial();
+    // Material will be set by caller (renderChunk)
+    // mesh.material = ... (assigned after creation)
 
     return mesh;
   }
 
   /**
-   * Unload a chunk and dispose its mesh
+   * Unload a chunk and dispose all its meshes
    */
   private unloadChunk(cx: number, cz: number): void {
     const chunkKey = this.getChunkKey(cx, cz);
-    const mesh = this.chunkMeshes.get(chunkKey);
+    const meshMap = this.chunkMeshes.get(chunkKey);
 
-    if (mesh) {
-      mesh.dispose();
+    if (meshMap) {
+      // Dispose all meshes for this chunk
+      for (const [materialKey, mesh] of meshMap) {
+        mesh.dispose();
+      }
       this.chunkMeshes.delete(chunkKey);
 
-      logger.debug('Chunk mesh disposed', { cx, cz });
+      logger.debug('Chunk meshes disposed', { cx, cz, count: meshMap.size });
     }
   }
 
@@ -309,25 +371,37 @@ export class RenderService {
 
   /**
    * Get all rendered chunk meshes
+   * Returns flattened map of all meshes (chunkKey_materialKey -> Mesh)
    */
   getChunkMeshes(): Map<string, Mesh> {
-    return new Map(this.chunkMeshes);
+    const flatMap = new Map<string, Mesh>();
+    for (const [chunkKey, meshMap] of this.chunkMeshes) {
+      for (const [materialKey, mesh] of meshMap) {
+        flatMap.set(`${chunkKey}_${materialKey}`, mesh);
+      }
+    }
+    return flatMap;
   }
 
   /**
    * Get statistics
    */
-  getStats(): { renderedChunks: number; totalVertices: number; totalFaces: number } {
+  getStats(): { renderedChunks: number; totalVertices: number; totalFaces: number; totalMeshes: number } {
     let totalVertices = 0;
     let totalFaces = 0;
+    let totalMeshes = 0;
 
-    for (const mesh of this.chunkMeshes.values()) {
-      totalVertices += mesh.getTotalVertices();
-      totalFaces += mesh.getTotalIndices() / 3;
+    for (const meshMap of this.chunkMeshes.values()) {
+      for (const mesh of meshMap.values()) {
+        totalVertices += mesh.getTotalVertices();
+        totalFaces += mesh.getTotalIndices() / 3;
+        totalMeshes++;
+      }
     }
 
     return {
       renderedChunks: this.chunkMeshes.size,
+      totalMeshes,
       totalVertices,
       totalFaces,
     };
@@ -337,8 +411,10 @@ export class RenderService {
    * Dispose all chunks and resources
    */
   dispose(): void {
-    for (const mesh of this.chunkMeshes.values()) {
-      mesh.dispose();
+    for (const meshMap of this.chunkMeshes.values()) {
+      for (const mesh of meshMap.values()) {
+        mesh.dispose();
+      }
     }
 
     this.chunkMeshes.clear();

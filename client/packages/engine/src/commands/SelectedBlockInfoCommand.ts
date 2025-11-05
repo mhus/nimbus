@@ -58,7 +58,7 @@ export class SelectedBlockInfoCommand extends CommandHandler {
     lines.push(`  Position     : (${block.position.x}, ${block.position.y}, ${block.position.z})`);
     lines.push(`  Block Type ID: ${block.blockTypeId}`);
     if (blockType) {
-      lines.push(`  Block Type   : ${blockType.name} (${blockType.id})`);
+      lines.push(`  Block Type   : ${blockType.id}`);
     }
     lines.push(`  Chunk        : (${selectedBlock.chunk.cx}, ${selectedBlock.chunk.cz})`);
     lines.push('');
@@ -92,22 +92,14 @@ export class SelectedBlockInfoCommand extends CommandHandler {
           }
         }
 
-        // Geometry offsets
-        if (mod.visibility.geometryOffsets && mod.visibility.geometryOffsets.length > 0) {
-          lines.push('    Geometry Offsets:');
-          for (const [idx, offset] of mod.visibility.geometryOffsets.entries()) {
-            lines.push(`      [${idx}]: ${JSON.stringify(offset)}`);
-          }
-        }
-
         // Scaling
-        if (mod.visibility.scalingX !== undefined || mod.visibility.scalingY !== undefined || mod.visibility.scalingZ !== undefined) {
-          lines.push(`    Scaling    : (${mod.visibility.scalingX ?? 1}, ${mod.visibility.scalingY ?? 1}, ${mod.visibility.scalingZ ?? 1})`);
+        if (mod.visibility.scalingX !== undefined || mod.visibility.scalingY !== undefined) {
+          lines.push(`    Scaling    : (${mod.visibility.scalingX ?? 1}, ${mod.visibility.scalingY ?? 1})`);
         }
 
         // Rotation
-        if (mod.visibility.rotationX !== undefined || mod.visibility.rotationY !== undefined || mod.visibility.rotationZ !== undefined) {
-          lines.push(`    Rotation   : (${mod.visibility.rotationX ?? 0}, ${mod.visibility.rotationY ?? 0}, ${mod.visibility.rotationZ ?? 0})`);
+        if (mod.visibility.rotationX !== undefined || mod.visibility.rotationY !== undefined) {
+          lines.push(`    Rotation   : (${mod.visibility.rotationX ?? 0}, ${mod.visibility.rotationY ?? 0})`);
         }
       }
 
@@ -129,10 +121,10 @@ export class SelectedBlockInfoCommand extends CommandHandler {
       lines.push('');
     }
 
-    // Block modifier (instance-specific)
-    if (block.modifier) {
-      lines.push('Instance Modifier:');
-      lines.push(JSON.stringify(block.modifier, null, 2).split('\n').map(line => '  ' + line).join('\n'));
+    // Block modifiers (instance-specific)
+    if (block.modifiers && Object.keys(block.modifiers).length > 0) {
+      lines.push('Instance Modifiers:');
+      lines.push(JSON.stringify(block.modifiers, null, 2).split('\n').map(line => '  ' + line).join('\n'));
       lines.push('');
     }
 
