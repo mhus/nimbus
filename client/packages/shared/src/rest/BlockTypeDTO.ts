@@ -83,3 +83,21 @@ export type BlockTypeSingleResponseDTO = BlockTypeDTO;
  * Array may have missing IDs if block types are not defined
  */
 export type BlockTypeRangeResponseDTO = BlockTypeDTO[];
+
+/**
+ * BlockType list response with pagination
+ * (GET /api/worlds/{worldId}/blocktypes?query={query}&limit={limit}&offset={offset})
+ */
+export interface BlockTypeListResponseDTO {
+  /** Array of BlockTypes for current page */
+  blockTypes: BlockTypeDTO[];
+
+  /** Total count of BlockTypes (for calculating pages) */
+  count: number;
+
+  /** Number of items per page (max 200) */
+  limit: number;
+
+  /** Current offset (starting position) */
+  offset: number;
+}

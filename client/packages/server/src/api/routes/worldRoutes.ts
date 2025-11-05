@@ -32,7 +32,7 @@ export function createWorldRoutes(
     return res.json(world);
   });
 
-  // GET /api/worlds/:id/blocktypes - Get all BlockTypes or search
+  // GET /api/worlds/:id/blocktypes - Get all BlockTypes or search with pagination
   router.get('/:id/blocktypes', (req, res) => {
     const world = worldManager.getWorld(req.params.id);
     if (!world) {
@@ -40,17 +40,30 @@ export function createWorldRoutes(
     }
 
     const query = req.query.query as string | undefined;
+    const limit = Math.min(Number(req.query.limit) || 200, 200); // Max 200
+    const offset = Number(req.query.offset) || 0;
+
     const registry = worldManager.getBlockTypeRegistry();
 
+    let allBlockTypes;
     if (query) {
       // Search BlockTypes
-      const blockTypes = registry.searchBlockTypes(query);
-      return res.json({ blockTypes });
+      allBlockTypes = registry.searchBlockTypes(query);
     } else {
       // Get all BlockTypes
-      const blockTypes = registry.getAllBlockTypes();
-      return res.json({ blockTypes });
+      allBlockTypes = registry.getAllBlockTypes();
     }
+
+    // Apply pagination
+    const totalCount = allBlockTypes.length;
+    const blockTypes = allBlockTypes.slice(offset, offset + limit);
+
+    return res.json({
+      blockTypes,
+      count: totalCount,
+      limit,
+      offset
+    });
   });
 
   // GET /api/worlds/:id/blocktypes/:blockId - Get single BlockType

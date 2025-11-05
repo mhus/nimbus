@@ -43,6 +43,38 @@
       @delete="handleDelete"
     />
 
+    <!-- Pagination Controls -->
+    <div v-if="!loading && blockTypes.length > 0" class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+      <div class="text-sm text-base-content/70">
+        Showing {{ ((currentPage - 1) * pageSize) + 1 }}-{{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} block types
+      </div>
+      <div class="flex gap-2">
+        <button
+          class="btn btn-sm"
+          :disabled="!hasPreviousPage"
+          @click="handlePreviousPage"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+        <div class="flex items-center gap-2 px-4">
+          <span class="text-sm">Page {{ currentPage }} of {{ totalPages }}</span>
+        </div>
+        <button
+          class="btn btn-sm"
+          :disabled="!hasNextPage"
+          @click="handleNextPage"
+        >
+          Next
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Editor Dialog -->
     <BlockTypeEditorPanel
       v-if="isEditorOpen"
@@ -89,6 +121,14 @@ const blockTypes = computed(() => blockTypesComposable.value?.blockTypes.value |
 const loading = computed(() => blockTypesComposable.value?.loading.value || false);
 const error = computed(() => blockTypesComposable.value?.error.value || null);
 const searchQuery = ref('');
+
+// Paging
+const totalCount = computed(() => blockTypesComposable.value?.totalCount.value || 0);
+const currentPage = computed(() => blockTypesComposable.value?.currentPage.value || 1);
+const pageSize = computed(() => blockTypesComposable.value?.pageSize.value || 50);
+const totalPages = computed(() => blockTypesComposable.value?.totalPages.value || 0);
+const hasNextPage = computed(() => blockTypesComposable.value?.hasNextPage.value || false);
+const hasPreviousPage = computed(() => blockTypesComposable.value?.hasPreviousPage.value || false);
 
 const isEditorOpen = ref(false);
 const selectedBlockType = ref<BlockType | null>(null);
@@ -180,6 +220,22 @@ const handleModifierSaved = (modifier: any) => {
     blockTypeEditorRef.value.updateModifier(editingModifier.value.status, modifier);
   }
   closeModifierEditor();
+};
+
+/**
+ * Handle next page
+ */
+const handleNextPage = () => {
+  if (!blockTypesComposable.value) return;
+  blockTypesComposable.value.nextPage();
+};
+
+/**
+ * Handle previous page
+ */
+const handlePreviousPage = () => {
+  if (!blockTypesComposable.value) return;
+  blockTypesComposable.value.previousPage();
 };
 
 onMounted(async () => {

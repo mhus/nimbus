@@ -8,20 +8,30 @@ import { apiService } from './ApiService';
 
 export interface BlockTypeListResponse {
   blockTypes: BlockType[];
+  count: number;
+  limit: number;
+  offset: number;
 }
 
 export interface BlockTypeCreateResponse {
   id: number;
 }
 
+export interface BlockTypePagingParams {
+  query?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export class BlockTypeService {
   /**
-   * Get all block types or search
+   * Get all block types or search with pagination
    */
-  async getBlockTypes(worldId: string, query?: string): Promise<BlockType[]> {
-    console.log('[BlockTypeService] getBlockTypes called', { worldId, query });
-    const params = query ? { query } : undefined;
-    console.log('[BlockTypeService] Request params:', params);
+  async getBlockTypes(
+    worldId: string,
+    params?: BlockTypePagingParams
+  ): Promise<BlockTypeListResponse> {
+    console.log('[BlockTypeService] getBlockTypes called', { worldId, params });
     console.log('[BlockTypeService] Request URL:', `/api/worlds/${worldId}/blocktypes`);
 
     const response = await apiService.get<BlockTypeListResponse>(
@@ -29,8 +39,13 @@ export class BlockTypeService {
       params
     );
     console.log('[BlockTypeService] API response:', response);
-    console.log('[BlockTypeService] Returning blockTypes:', response.blockTypes?.length ?? 0, 'items');
-    return response.blockTypes;
+    console.log('[BlockTypeService] Returning:', {
+      count: response.count,
+      blockTypes: response.blockTypes?.length ?? 0,
+      limit: response.limit,
+      offset: response.offset
+    });
+    return response;
   }
 
   /**
@@ -74,11 +89,11 @@ export class BlockTypeService {
   async getNextAvailableId(worldId: string): Promise<number> {
     // The server automatically assigns IDs if not provided
     // This is a helper to get next ID from existing block types
-    const blockTypes = await this.getBlockTypes(worldId);
-    if (blockTypes.length === 0) {
+    const response = await this.getBlockTypes(worldId);
+    if (response.blockTypes.length === 0) {
       return 100; // Start at 100
     }
-    const maxId = Math.max(...blockTypes.map(bt => bt.id));
+    const maxId = Math.max(...response.blockTypes.map(bt => bt.id));
     return maxId + 1;
   }
 }

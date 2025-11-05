@@ -3,7 +3,7 @@
  * Manages block type list and operations
  */
 
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { BlockType } from '@nimbus/shared';
 import { blockTypeService } from '../services/BlockTypeService';
 import { getLogger } from '@nimbus/shared';
@@ -16,19 +16,44 @@ export function useBlockTypes(worldId: string) {
   const error = ref<string | null>(null);
   const searchQuery = ref('');
 
+  // Paging state
+  const totalCount = ref(0);
+  const currentPage = ref(1);
+  const pageSize = ref(50);
+
+  // Computed
+  const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
+  const hasNextPage = computed(() => currentPage.value < totalPages.value);
+  const hasPreviousPage = computed(() => currentPage.value > 1);
+
   /**
-   * Load all block types
+   * Load block types with pagination
    */
-  const loadBlockTypes = async () => {
+  const loadBlockTypes = async (page: number = 1) => {
     loading.value = true;
     error.value = null;
+    currentPage.value = page;
 
     try {
-      blockTypes.value = await blockTypeService.getBlockTypes(worldId);
-      logger.info('Loaded block types', { count: blockTypes.value.length, worldId });
+      const offset = (page - 1) * pageSize.value;
+      const response = await blockTypeService.getBlockTypes(worldId, {
+        query: searchQuery.value || undefined,
+        limit: pageSize.value,
+        offset,
+      });
+
+      blockTypes.value = response.blockTypes;
+      totalCount.value = response.count;
+
+      logger.info('Loaded block types', {
+        count: blockTypes.value.length,
+        totalCount: totalCount.value,
+        page,
+        worldId,
+      });
     } catch (err) {
       error.value = 'Failed to load block types';
-      logger.error('Failed to load block types', { worldId }, err as Error);
+      logger.error('Failed to load block types', { worldId, page }, err as Error);
     } finally {
       loading.value = false;
     }
@@ -40,21 +65,34 @@ export function useBlockTypes(worldId: string) {
   const searchBlockTypes = async (query: string) => {
     console.log('[useBlockTypes] searchBlockTypes called', { query, worldId });
     searchQuery.value = query;
-    loading.value = true;
-    error.value = null;
+    currentPage.value = 1; // Reset to first page on search
+    await loadBlockTypes(1);
+  };
 
-    try {
-      console.log('[useBlockTypes] Calling blockTypeService.getBlockTypes', { worldId, query: query || undefined });
-      blockTypes.value = await blockTypeService.getBlockTypes(worldId, query || undefined);
-      console.log('[useBlockTypes] getBlockTypes returned', { count: blockTypes.value.length, blockTypes: blockTypes.value });
-      logger.info('Searched block types', { query, count: blockTypes.value.length, worldId });
-    } catch (err) {
-      console.error('[useBlockTypes] Search failed', err);
-      error.value = 'Failed to search block types';
-      logger.error('Failed to search block types', { worldId, query }, err as Error);
-    } finally {
-      loading.value = false;
-      console.log('[useBlockTypes] Search completed, loading:', loading.value, 'error:', error.value);
+  /**
+   * Go to next page
+   */
+  const nextPage = async () => {
+    if (hasNextPage.value) {
+      await loadBlockTypes(currentPage.value + 1);
+    }
+  };
+
+  /**
+   * Go to previous page
+   */
+  const previousPage = async () => {
+    if (hasPreviousPage.value) {
+      await loadBlockTypes(currentPage.value - 1);
+    }
+  };
+
+  /**
+   * Go to specific page
+   */
+  const goToPage = async (page: number) => {
+    if (page >= 1 && page <= totalPages.value) {
+      await loadBlockTypes(page);
     }
   };
 
@@ -136,8 +174,19 @@ export function useBlockTypes(worldId: string) {
     loading,
     error,
     searchQuery,
+    // Paging
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+    // Methods
     loadBlockTypes,
     searchBlockTypes,
+    nextPage,
+    previousPage,
+    goToPage,
     getBlockType,
     createBlockType,
     updateBlockType,

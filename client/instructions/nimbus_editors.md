@@ -1301,6 +1301,24 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
 
 [ ] Da wir jetzt info dateien fuer assets haben, 
 
+## Paging
+
+[?] Im MaterialEditor (nimbus_editors) sollen die Ergebnisse BlockType in Paging-Ansichten angezeigt werden.
+- Erweitere die REST API
+  - GET /api/worlds/{worldId}/blocktypes?query={query}
+  - GET /api/worlds/{worldId}/blocktypes
+- maximum limit=200
+- Liefere auch den count, damit der Client die anzahl der Seiten errechnen kann
+- Passe die Componenten an um Paging zu ermoeglichen
+
+[ ] Im MaterialEditor (nimbus_editors) sollen die Ergebnisse Assets in Paging-Ansichten angezeigt werden.
+- Erweitere die REST API
+    - GET /api/worlds/{worldId}/assets?query={query}
+    - GET /api/worlds/{worldId}/assets
+- maximum limit=200
+- Liefere auch den count, damit der Client die anzahl der Seiten errechnen kann
+- Passe die Componenten an um Paging zu ermoeglichen
+
 ===
 
 ## Refactoring
