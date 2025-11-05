@@ -6,6 +6,7 @@
         :placeholder="placeholder"
         :value="modelValue"
         @input="handleInput"
+        @keyup.enter="handleSearch"
         class="input input-bordered flex-1 rounded-r-none"
       />
       <button class="btn btn-square rounded-l-none" @click="handleSearch">

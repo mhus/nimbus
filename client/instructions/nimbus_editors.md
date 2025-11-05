@@ -1326,7 +1326,7 @@ Aktualisiere die Beschreibung in den Block Type Dateien.
 - Liefere auch den count, damit der Client die anzahl der Seiten errechnen kann
 - Passe die Componenten an um Paging zu ermoeglichen
 
-[?] Der Server soll eigentlich nur blocktypen laden, die er auch braucht. Aber er kann das in chunks von 100 machen. 
+[x] Der Server soll eigentlich nur blocktypen laden, die er auch braucht. Aber er kann das in chunks von 100 machen. 
 also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn 234 gebraucht wird, laed er 200-299 etc.
 
 ===

@@ -92,15 +92,24 @@
     </div>
 
     <!-- Offsets -->
-    <div class="divider text-sm">Geometry Offsets</div>
-    <OffsetsEditor
-      v-model="localValue.offsets"
-      :shape="localValue.shape"
-    />
+    <CollapsibleSection
+      title="Geometry Offsets"
+      :model-value="true"
+      :default-open="false"
+    >
+      <OffsetsEditor
+        v-model="localValue.offsets"
+        :shape="localValue.shape"
+      />
+    </CollapsibleSection>
 
     <!-- Textures -->
-    <div class="divider text-sm">Textures</div>
-    <div class="space-y-3">
+    <CollapsibleSection
+      title="Textures"
+      :model-value="true"
+      :default-open="true"
+    >
+      <div class="space-y-3 pt-2">
       <div v-for="(name, key) in textureKeyOptions" :key="key" class="space-y-2">
         <!-- Texture Row -->
         <div class="flex items-center gap-2">
@@ -466,7 +475,8 @@
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </CollapsibleSection>
   </div>
 
   <!-- Asset Picker Dialog -->
@@ -484,6 +494,7 @@ import { ref, watch } from 'vue';
 import type { VisibilityModifier, TextureDefinition } from '@nimbus/shared';
 import { Shape, ShapeNames, TextureKey, TextureKeyNames } from '@nimbus/shared';
 import AssetPickerDialog from '@components/AssetPickerDialog.vue';
+import CollapsibleSection from '@components/CollapsibleSection.vue';
 import OffsetsEditor from './OffsetsEditor.vue';
 import { assetService } from '../services/AssetService';
 

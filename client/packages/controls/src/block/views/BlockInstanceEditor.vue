@@ -98,7 +98,7 @@
 
                   <!-- No Results -->
                   <div
-                    v-else-if="blockTypeSearch && blockTypeSearchResults.length === 0 && !loadingBlockTypes"
+                    v-else-if="hasSearched && blockTypeSearch && blockTypeSearchResults.length === 0 && !loadingBlockTypes"
                     class="mt-2 p-4 text-center text-base-content/50 text-sm"
                   >
                     No block types found for "{{ blockTypeSearch }}"
@@ -426,6 +426,7 @@ const blockTypeSearch = ref('');
 const blockTypeSearchResults = ref<BlockType[]>([]);
 const loadedBlockType = ref<BlockType | null>(null);
 const showBlockTypeSearch = ref(false);
+const hasSearched = ref(false); // Track if search has been executed
 
 // State
 const loading = ref(false);
@@ -594,12 +595,14 @@ async function handleBlockTypeSearch(query: string) {
   if (!query || query.trim().length === 0) {
     console.log('[BlockInstanceEditor] Empty query, clearing results');
     blockTypeSearchResults.value = [];
+    hasSearched.value = false;
     return;
   }
 
   try {
     console.log('[BlockInstanceEditor] Calling searchBlockTypes with query:', query);
     await searchBlockTypes(query);
+    hasSearched.value = true; // Mark that search has been executed
     console.log('[BlockInstanceEditor] Search completed, blockTypes.value:', blockTypes.value);
     console.log('[BlockInstanceEditor] blockTypes.value.length:', blockTypes.value.length);
     blockTypeSearchResults.value = blockTypes.value.slice(0, 20); // Limit to 20 results
@@ -622,6 +625,7 @@ function clearBlockType() {
   loadedBlockType.value = null;
   blockTypeSearch.value = '';
   blockTypeSearchResults.value = [];
+  hasSearched.value = false; // Reset search state
   showBlockTypeSearch.value = true; // Show search when changing
 }
 

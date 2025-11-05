@@ -6,7 +6,7 @@
         <SearchInput
           v-model="searchQuery"
           placeholder="Search block types..."
-          @update:modelValue="handleSearch"
+          @search="handleSearch"
         />
       </div>
       <div class="flex gap-2">
