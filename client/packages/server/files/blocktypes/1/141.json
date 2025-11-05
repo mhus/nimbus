@@ -1,7 +1,7 @@
 {
   "id": 141,
   "name": "Birch Planks",
-  "description": "Birch Planks - Processed wood",
+  "description": "Birch Planks are solid, crafted wood blocks made from birch trees. They are used as a basic building material for constructing structures and crafting other items.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Birch Planks - Processed wood"
 }

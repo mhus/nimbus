@@ -1,7 +1,7 @@
 {
   "id": 1041,
   "name": "Mossy Stonebricks",
-  "description": "Mossy Stonebricks block (migrated from playground)",
+  "description": "Mossy Stonebricks are solid, decorative blocks featuring aged stone bricks partially covered in green moss. They provide a weathered aesthetic for constructing walls, structures, and pathways.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Mossy Stonebricks block (migrated from playground)"
 }

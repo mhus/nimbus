@@ -1,7 +1,7 @@
 {
   "id": 388,
   "name": "Light Gray Concrete",
-  "description": "Light Gray Concrete block",
+  "description": "Light Gray Concrete is a solid block that provides a modern, industrial aesthetic. Featuring a light gray concrete texture, it's ideal for building durable and visually appealing structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Gray Concrete block"
 }

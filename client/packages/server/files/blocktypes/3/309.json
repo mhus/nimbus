@@ -1,7 +1,7 @@
 {
   "id": 309,
   "name": "Granite1",
-  "description": "Granite1 block",
+  "description": "Granite1 is a solid, granite-textured block used for constructing durable structures and adding a natural, earthy aesthetic to the game world. Its mottled brown and tan surface provides visual variety when used in large formations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Granite1 block"
 }

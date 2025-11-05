@@ -1,7 +1,7 @@
 {
   "id": 431,
   "name": "Oak Log",
-  "description": "Oak Log - Natural wood material",
+  "description": "The Oak Log block represents a solid, natural wood material sourced from oak trees, providing players with a building component featuring a tileable wood grain texture. It can be used for constructing structures, crafting recipes, and adding rustic detail to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oak Log - Natural wood material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 152,
   "name": "Blast Furnace Front On",
-  "description": "Blast Furnace Front On block",
+  "description": "The Blast Furnace Front On block depicts the active front face of a blast furnace, visually indicating it is in operation with glowing openings. Being a solid block, it serves as a building component of a functional blast furnace for industrial processing.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blast Furnace Front On block"
 }

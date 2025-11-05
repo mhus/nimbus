@@ -1,7 +1,7 @@
 {
   "id": 333,
   "name": "Green Glazed Terracotta",
-  "description": "Green Glazed Terracotta block",
+  "description": "Green Glazed Terracotta is a solid block featuring a stylized, glazed texture. Likely used for decorative building, this block adds a touch of refined color and texture to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Green Glazed Terracotta block"
 }

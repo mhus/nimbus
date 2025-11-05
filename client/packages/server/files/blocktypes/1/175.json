@@ -1,7 +1,7 @@
 {
   "id": 175,
   "name": "Bricks6",
-  "description": "Bricks6 - Building material",
+  "description": "Bricks6 is a solid, reddish-brown brick block used for building structures. Its textured appearance adds visual detail and variation to brick constructions within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bricks6 - Building material"
 }

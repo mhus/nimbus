@@ -1,7 +1,7 @@
 {
   "id": 1028,
   "name": "Spruce Log",
-  "description": "Spruce Log block (migrated from playground)",
+  "description": "The Spruce Log is a solid, opaque block representing a section of a spruce tree trunk, used for building structures and crafting. Its texture depicts the characteristic bark and wood grain of a spruce log.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Spruce Log block (migrated from playground)"
 }

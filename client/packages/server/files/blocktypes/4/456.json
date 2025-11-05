@@ -1,7 +1,7 @@
 {
   "id": 456,
   "name": "Pink Wool",
-  "description": "Pink Wool block",
+  "description": "Pink Wool is a solid block representing soft, pink-colored wool, ideal for building cozy structures and adding decorative flair to your voxel world. Its solid nature allows for sturdy construction.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pink Wool block"
 }

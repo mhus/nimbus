@@ -1,7 +1,7 @@
 {
   "id": 128,
   "name": "Bee Nest Front Honey",
-  "description": "Bee Nest Front Honey block",
+  "description": "The Bee Nest Front Honey block represents the front face of a bee nest overflowing with honey, providing a natural structure for bee-related gameplay. This solid block utilizes textures depicting wooden planks filled with golden honey, indicating its harvestable resource potential.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bee Nest Front Honey block"
 }

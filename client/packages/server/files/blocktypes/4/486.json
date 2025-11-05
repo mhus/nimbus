@@ -1,7 +1,7 @@
 {
   "id": 486,
   "name": "Rail Corner",
-  "description": "Rail Corner block",
+  "description": "The Rail Corner block represents a solid, curved section of railway track, likely used for creating turns in a minecart or transportation system. Its primary function is to allow players to build corner sections of rail networks for transportation within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Rail Corner block"
 }

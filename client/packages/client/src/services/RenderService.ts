@@ -199,11 +199,8 @@ export class RenderService {
         vertexOffset: 0
       };
 
-      // Check if block types are loaded
-      if (!this.blockTypeService.isLoaded()) {
-        logger.error('BlockTypes not loaded yet, cannot render chunk', { cx: chunk.cx, cz: chunk.cz });
-        return;
-      }
+      // Note: BlockTypes are loaded on-demand via chunk-based lazy loading
+      // ClientBlocks already have their blockType reference cached
 
       // Render each ClientBlock from the Map
       for (const clientBlock of clientBlocksMap.values()) {

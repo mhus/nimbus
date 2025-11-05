@@ -1,7 +1,7 @@
 {
   "id": 235,
   "name": "Cyan Concrete",
-  "description": "Cyan Concrete block",
+  "description": "Cyan Concrete is a solid, opaque block used for construction, visually represented by a mottled cyan and blue concrete texture. It can be used to build sturdy structures with a modern, colorful aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cyan Concrete block"
 }

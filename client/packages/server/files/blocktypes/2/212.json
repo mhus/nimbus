@@ -1,7 +1,7 @@
 {
   "id": 212,
   "name": "Clay",
-  "description": "Clay block",
+  "description": "Clay is a solid, reddish-brown block representing natural clay deposits, used for building and crafting. Its blurred texture provides a simple, earthy aesthetic for construction projects.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Clay block"
 }

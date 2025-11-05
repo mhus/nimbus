@@ -1,7 +1,7 @@
 {
   "id": 162,
   "name": "Bookshelf1",
-  "description": "Bookshelf1 block",
+  "description": "The Bookshelf1 block represents a solid, decorative bookshelf, providing a touch of ambiance to interior spaces. Its appearance suggests it's filled with books and can be used to create libraries or cozy reading nooks.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bookshelf1 block"
 }

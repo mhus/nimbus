@@ -1,7 +1,7 @@
 {
   "id": 463,
   "name": "Polished Diorite",
-  "description": "Polished Diorite block",
+  "description": "Polished Diorite is a solid, decorative block crafted from diorite, featuring a smooth, light brown/beige surface. Used primarily for aesthetic purposes, it adds a touch of elegance and refinement to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Polished Diorite block"
 }

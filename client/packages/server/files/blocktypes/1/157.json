@@ -1,7 +1,7 @@
 {
   "id": 157,
   "name": "Blue Orchid",
-  "description": "Blue Orchid block",
+  "description": "The Blue Orchid block represents a solid, decorative flower, featuring a pixelated blue orchid model. It can be used to add aesthetic detail and visual interest to the game environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Orchid block"
 }

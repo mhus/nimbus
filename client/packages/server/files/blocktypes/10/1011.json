@@ -1,7 +1,7 @@
 {
   "id": 1011,
   "name": "Yellow Flower",
-  "description": "Yellow Flower block (migrated from playground)",
+  "description": "The Yellow Flower block is a decorative, non-solid plant featuring a pixelated yellow flower with a green stem and leaves. It adds visual flair to the game world without obstructing movement or gameplay.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Yellow Flower block (migrated from playground)"
 }

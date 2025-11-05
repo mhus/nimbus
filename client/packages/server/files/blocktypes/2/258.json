@@ -1,7 +1,7 @@
 {
   "id": 258,
   "name": "Dead Bubble Coral Block",
-  "description": "Dead Bubble Coral Block block",
+  "description": "The Dead Bubble Coral Block is a solid, decorative block representing lifeless bubble coral found in underwater environments. Its desaturated, gray and purple texture provides visual variety and can be used for building or creating realistic dead reef features.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Bubble Coral Block block"
 }

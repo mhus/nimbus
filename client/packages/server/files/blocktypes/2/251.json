@@ -1,7 +1,7 @@
 {
   "id": 251,
   "name": "Dark Oak Sapling",
-  "description": "Dark Oak Sapling block",
+  "description": "The Dark Oak Sapling block represents a young dark oak tree, visually depicted as a small, pixelated sapling. As a shape 2 block, it likely behaves as a partially transparent, non-solid block used for planting and growing dark oak trees.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Sapling block"
 }

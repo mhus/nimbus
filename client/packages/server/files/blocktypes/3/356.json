@@ -1,7 +1,7 @@
 {
   "id": 356,
   "name": "Jungle Fence",
-  "description": "Jungle Fence block",
+  "description": "The Jungle Fence block is a solid, decorative barrier crafted from jungle wood. Its purpose is to enclose areas and provide a rustic, natural aesthetic in jungle biomes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Fence block"
 }

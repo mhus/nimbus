@@ -1,7 +1,7 @@
 {
   "id": 1048,
   "name": "Leaves Yellow",
-  "description": "Leaves Yellow block (migrated from playground)",
+  "description": "This solid \"Leaves Yellow\" block represents a dense cluster of yellow foliage, providing visual cover or decorative elements in the game world. Due to its solid property, it can be used for basic construction or creating natural-looking barriers.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -19,5 +19,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Leaves Yellow block (migrated from playground)"
 }

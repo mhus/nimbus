@@ -1,7 +1,7 @@
 {
   "id": 276,
   "name": "Diamond Ore1",
-  "description": "Diamond Ore1 - Mineable resource",
+  "description": "Diamond Ore1 is a solid, mineable block representing a cluster of light-blue diamond crystals embedded in rock, used as a resource for crafting and progression.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Diamond Ore1 - Mineable resource"
 }

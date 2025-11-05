@@ -1,7 +1,7 @@
 {
   "id": 1056,
   "name": "Lime Wool",
-  "description": "Lime Wool block (migrated from playground)",
+  "description": "Lime Wool is a solid block resembling dyed wool, providing a lime green building material. Its opaque, default shape makes it ideal for crafting structures and adding color to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Lime Wool block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 117,
   "name": "Attached Melon Stem",
-  "description": "Attached Melon Stem block",
+  "description": "The Attached Melon Stem block represents a solid, green stem connected to a melon, likely indicating its growth stage or allowing melon placement on a block. It functions as a solid support structure for melons within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Attached Melon Stem block"
 }

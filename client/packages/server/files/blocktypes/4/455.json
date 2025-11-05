@@ -1,7 +1,7 @@
 {
   "id": 455,
   "name": "Pink Tulip",
-  "description": "Pink Tulip block",
+  "description": "The Pink Tulip block is a solid, decorative block representing a pixelated pink tulip flower, adding a touch of nature to builds. Due to its solid nature, it can be used to create colorful flowerbeds or other landscaping features.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pink Tulip block"
 }

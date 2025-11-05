@@ -1,7 +1,7 @@
 {
   "id": 238,
   "name": "Cyan Stained Glass",
-  "description": "Cyan Stained Glass - Transparent block",
+  "description": "Cyan Stained Glass is a transparent block featuring a stylized, pixelated texture, allowing light to pass through while adding a decorative, retro aesthetic to structures. This block can be used to create vibrant light effects and ornate architectural details.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Cyan Stained Glass - Transparent block"
 }

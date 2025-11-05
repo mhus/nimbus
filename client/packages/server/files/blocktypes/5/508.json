@@ -1,7 +1,7 @@
 {
   "id": 508,
   "name": "Redstone Dust Line1",
-  "description": "Redstone Dust Line1 - Building material",
+  "description": "Redstone Dust Line1 is a solid block representing a segment of redstone dust that conducts power. Used for building redstone circuits, it allows for horizontal transmission of redstone signals.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Dust Line1 - Building material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 404,
   "name": "Log Spruce1",
-  "description": "Log Spruce1 - Natural wood material",
+  "description": "The Spruce Log block, crafted from natural wood, is a solid, opaque building material textured with a realistic spruce bark pattern. It can be used for constructing rustic structures and natural environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Log Spruce1 - Natural wood material"
 }

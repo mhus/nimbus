@@ -1,7 +1,7 @@
 {
   "id": 303,
   "name": "Glass",
-  "description": "Glass - Transparent block",
+  "description": "The Glass block, identified by ID 303, is a transparent building material, allowing light to pass through. Its texture suggests a window-like appearance, making it suitable for creating structures that offer visibility.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Glass - Transparent block"
 }

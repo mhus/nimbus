@@ -1,7 +1,7 @@
 {
   "id": 1006,
   "name": "Sand",
-  "description": "Sand block (migrated from playground)",
+  "description": "The Sand block, visually represented by a soft, beige-brown texture, is a solid block primarily used for building and terrain generation. Its sandy appearance lends itself to desert-like environments or loose structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "shovel"
       }
     }
-  }
+  },
+  "description_old": "Sand block (migrated from playground)"
 }

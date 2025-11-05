@@ -1,7 +1,7 @@
 {
   "id": 393,
   "name": "Light Gray Wool",
-  "description": "Light Gray Wool block",
+  "description": "Light Gray Wool is a solid block resembling soft, light gray wool, primarily used for building and decorative purposes. Its opaque nature allows for creating enclosed structures and adding subtle, fibrous texture to builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Gray Wool block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 116,
   "name": "Anvil Base",
-  "description": "Anvil Base block",
+  "description": "The Anvil Base block represents the bottom portion of an anvil, featuring a solid shape and a dark gray, textured appearance. It serves as a fundamental component for crafting and repairing items within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Anvil Base block"
 }

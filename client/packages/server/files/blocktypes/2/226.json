@@ -1,7 +1,7 @@
 {
   "id": 226,
   "name": "Comparator",
-  "description": "Comparator block",
+  "description": "The Comparator block (ID: 226) represents a basic electronic component used for logic operations. It is a solid block with a comparator-like texture.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Comparator block"
 }

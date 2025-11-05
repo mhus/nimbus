@@ -1,7 +1,7 @@
 {
   "id": 182,
   "name": "Brown Stained Glass",
-  "description": "Brown Stained Glass - Transparent block",
+  "description": "Brown Stained Glass is a transparent block with a brown, mosaic-like texture, used for decorative purposes and allowing light to filter through. Its stained glass appearance adds a unique visual element to structures while maintaining partial visibility.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Brown Stained Glass - Transparent block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 281,
   "name": "Dirt2",
-  "description": "Dirt2 block",
+  "description": "Dirt2 is a solid block representing a slightly blurred and indistinct version of dirt, primarily used for terrain and ground cover. Its solid nature allows players to build and walk on it within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dirt2 block"
 }

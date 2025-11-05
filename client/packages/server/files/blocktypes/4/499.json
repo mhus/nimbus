@@ -1,7 +1,7 @@
 {
   "id": 499,
   "name": "Red Sandstone2",
-  "description": "Red Sandstone2 - Building material",
+  "description": "Red Sandstone2 is a solid, buildable block representing coarse red sandstone, perfect for creating sturdy structures with a warm, earthy aesthetic. Its textured surface provides a visually appealing building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Sandstone2 - Building material"
 }

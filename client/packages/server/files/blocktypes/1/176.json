@@ -1,7 +1,7 @@
 {
   "id": 176,
   "name": "Bricks7",
-  "description": "Bricks7 - Building material",
+  "description": "Bricks7 are solid, reddish-brown bricks used for building structures. Their stylized, running bond texture makes them a good choice for creating decorative walls and other architectural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bricks7 - Building material"
 }

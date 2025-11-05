@@ -1,7 +1,7 @@
 {
   "id": 137,
   "name": "Birch Leaves",
-  "description": "Birch Leaves - Tree foliage",
+  "description": "Birch Leaves, visually represented by a blurred foliage texture, represent the foliage of birch trees. Their shape suggests a lightweight covering, likely used for decorative purposes or to simulate tree canopies.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Birch Leaves - Tree foliage"
 }

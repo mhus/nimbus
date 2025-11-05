@@ -1,7 +1,7 @@
 {
   "id": 222,
   "name": "Cocoa Stage0",
-  "description": "Cocoa Stage0 block",
+  "description": "Cocoa Stage0 is the first growth stage of a cocoa plant, visually represented with roots, stems, leaves, and buds. This solid block likely serves as a starting point for cocoa bean farming in the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cocoa Stage0 block"
 }

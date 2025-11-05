@@ -1,7 +1,7 @@
 {
   "id": 397,
   "name": "Lime Concrete",
-  "description": "Lime Concrete block",
+  "description": "Lime Concrete is a solid block with a rough, granular texture, visually representing a hardened lime-based concrete material. Due to its solid nature, it can be used as a basic building material for creating sturdy structures and landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lime Concrete block"
 }

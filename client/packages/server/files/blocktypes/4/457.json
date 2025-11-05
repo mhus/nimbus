@@ -1,7 +1,7 @@
 {
   "id": 457,
   "name": "Piston Inner",
-  "description": "Piston Inner block",
+  "description": "The Piston Inner block represents the solid, central component of a piston mechanism, likely used for pushing or moving other blocks. It is a solid block, suggesting it provides structural integrity within the piston assembly.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Piston Inner block"
 }

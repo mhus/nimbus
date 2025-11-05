@@ -1,7 +1,7 @@
 {
   "id": 1047,
   "name": "Grass Plant Yellow",
-  "description": "Grass Plant Yellow block (migrated from playground)",
+  "description": "The Grass Plant Yellow block is a non-solid, decorative plant resembling a clump of yellow grass, adding visual detail to grassy areas. Its transparent nature allows players to see through it, making it suitable for ground cover and enhancing the environment's aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Grass Plant Yellow block (migrated from playground)"
 }

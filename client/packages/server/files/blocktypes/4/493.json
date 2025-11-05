@@ -1,7 +1,7 @@
 {
   "id": 493,
   "name": "Red Nether Bricks",
-  "description": "Red Nether Bricks - Building material",
+  "description": "Red Nether Bricks are solid building blocks crafted from nether materials, featuring a distinctive red brickwork texture. They provide a durable and aesthetically distinct option for construction within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Nether Bricks - Building material"
 }

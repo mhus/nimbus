@@ -1,7 +1,7 @@
 {
   "id": 1072,
   "name": "Light Blue Stained Glass",
-  "description": "Light Blue Stained Glass block (migrated from playground)",
+  "description": "Light Blue Stained Glass is a solid block providing a decorative, translucent surface. Crafted from light blue glass with a pixelated design, it allows light to pass through, adding visual interest to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Light Blue Stained Glass block (migrated from playground)"
 }

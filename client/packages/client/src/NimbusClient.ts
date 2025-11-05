@@ -192,15 +192,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       }, 30000);
     });
 
-    // Initialize BlockTypeService
+    // Initialize BlockTypeService (with lazy loading)
     logger.info('Initializing BlockTypeService...');
     const blockTypeService = new BlockTypeService(appContext);
     appContext.services.blockType = blockTypeService;
-
-    // Load block types
-    logger.info('Loading block types...');
-    await blockTypeService.loadBlockTypes();
-    logger.info('Block types loaded', { count: blockTypeService.getBlockTypeCount() });
+    logger.info('BlockTypeService initialized (chunks will be loaded on-demand)');
 
     // Initialize ShaderService
     logger.info('Initializing ShaderService...');

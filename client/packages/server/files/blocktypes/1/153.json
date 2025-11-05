@@ -1,7 +1,7 @@
 {
   "id": 153,
   "name": "Blue Concrete",
-  "description": "Blue Concrete block",
+  "description": "Blue Concrete is a solid block visually resembling a medium-blue, slightly textured concrete, suitable for constructing durable and aesthetically blue-themed structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Concrete block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 300,
   "name": "Fire Coral Fan",
-  "description": "Fire Coral Fan block",
+  "description": "The Fire Coral Fan is a solid, fan-shaped block representing fire coral, likely used for decoration or underwater environments. Its distinctive red, glowing appearance adds visual interest and detail to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Fire Coral Fan block"
 }

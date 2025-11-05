@@ -1,7 +1,7 @@
 {
   "id": 1021,
   "name": "Deadbush",
-  "description": "Deadbush block (migrated from playground)",
+  "description": "The Deadbush block represents a non-solid, decorative dead bush, adding a touch of barrenness to the game world. Its transparent nature allows players and light to pass through, making it suitable for detailing desolate landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Deadbush block (migrated from playground)"
 }

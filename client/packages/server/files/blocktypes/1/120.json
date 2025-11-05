@@ -1,7 +1,7 @@
 {
   "id": 120,
   "name": "Bamboo Large Leaves",
-  "description": "Bamboo Large Leaves - Tree foliage",
+  "description": "Bamboo Large Leaves are foliage blocks representing the dense, leafy part of bamboo trees, using a repeating light green leaf texture. They likely serve as a decorative element, adding visual detail to bamboo forests or other jungle environments, and are probably not solid.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Bamboo Large Leaves - Tree foliage"
 }

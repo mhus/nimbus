@@ -1,7 +1,7 @@
 {
   "id": 355,
   "name": "Jack O Lantern",
-  "description": "Jack O Lantern block",
+  "description": "The Jack O Lantern block is a solid, glowing pumpkin with a carved face, used for decoration and providing light in the game. Its distinct, pixelated texture gives it a retro aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jack O Lantern block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 443,
   "name": "Orange Glazed Terracotta",
-  "description": "Orange Glazed Terracotta block",
+  "description": "Orange Glazed Terracotta is a solid, decorative block featuring a glazed tile appearance with orange and turquoise geometric patterns. Primarily used for building and adding visual flair to structures, it cannot be seen through.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Orange Glazed Terracotta block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1082,
   "name": "Purple Concrete",
-  "description": "Purple Concrete block (migrated from playground)",
+  "description": "Purple Concrete is a solid, opaque building block with a blurred purple concrete texture. It provides a visually distinct and robust material for constructing structures within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Purple Concrete block (migrated from playground)"
 }

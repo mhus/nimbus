@@ -1,7 +1,7 @@
 {
   "id": 213,
   "name": "Coal Block",
-  "description": "Coal Block block",
+  "description": "The Coal Block is a solid, opaque block representing compressed coal, likely used as a fuel source or building material. Its dark, textured surface mimics the appearance of raw coal.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Coal Block block"
 }

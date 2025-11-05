@@ -1,7 +1,7 @@
 {
   "id": 464,
   "name": "Polished Granite",
-  "description": "Polished Granite block",
+  "description": "Polished Granite is a solid block representing a refined granite surface, often used for decorative building and construction. Its solid nature provides structural integrity, making it suitable for walls, floors, and other architectural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Polished Granite block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1049,
   "name": "White Wool",
-  "description": "White Wool block (migrated from playground)",
+  "description": "This solid White Wool block, represented by a soft, off-white fabric texture, provides a building material for crafting and construction. Its opaque nature makes it suitable for creating walls and structures that block light.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "White Wool block (migrated from playground)"
 }

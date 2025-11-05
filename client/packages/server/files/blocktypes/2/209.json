@@ -1,7 +1,7 @@
 {
   "id": 209,
   "name": "Chorus Flower",
-  "description": "Chorus Flower - Decorative plant",
+  "description": "The Chorus Flower block represents a decorative, purple flower found in the game world. Its shape suggests a non-solid, potentially transparent structure, likely used for aesthetic purposes in player-created builds or naturally occurring environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Chorus Flower - Decorative plant"
 }

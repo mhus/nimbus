@@ -1,7 +1,7 @@
 {
   "id": 280,
   "name": "Dirt1",
-  "description": "Dirt1 block",
+  "description": "Dirt1 is a solid, cube-shaped block representing common soil, used primarily for terrain generation and landscape shaping. Its appearance is a simple, tileable dirt texture.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dirt1 block"
 }

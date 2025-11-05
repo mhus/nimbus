@@ -1,7 +1,7 @@
 {
   "id": 1040,
   "name": "Obsidian",
-  "description": "Obsidian block (migrated from playground)",
+  "description": "Obsidian is a solid, dark, and somewhat blurry-textured block often used for building and decoration. Its high durability likely makes it useful for fortifications or creating visually striking, dark structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Obsidian block (migrated from playground)"
 }

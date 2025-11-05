@@ -1,7 +1,7 @@
 {
   "id": 271,
   "name": "Debug2",
-  "description": "Debug2 block",
+  "description": "The Debug2 block is a solid, brightly colored test block visually representing digital assets or sprites, likely used for debugging purposes within the game world. Its solid nature prevents passage and implies it is a placeholder for future, more functional block types.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Debug2 block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 434,
   "name": "Oak Planks1",
-  "description": "Oak Planks1 - Processed wood",
+  "description": "Oak Planks1 are solid, processed wood blocks used for building structures. Featuring a classic wood plank texture, they offer a fundamental building material for crafting and construction.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oak Planks1 - Processed wood"
 }

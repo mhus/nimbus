@@ -1,7 +1,7 @@
 {
   "id": 144,
   "name": "Birch Sapling",
-  "description": "Birch Sapling block",
+  "description": "The Birch Sapling block represents a young birch tree, likely plantable to grow into a full-sized birch. Its Shape value of 2 suggests it's a non-solid, plant-like block.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Birch Sapling block"
 }

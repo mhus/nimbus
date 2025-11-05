@@ -1,7 +1,7 @@
 {
   "id": 288,
   "name": "Emerald Ore",
-  "description": "Emerald Ore - Mineable resource",
+  "description": "Emerald Ore is a solid, mineable block featuring embedded emeralds within a stone matrix, used as a source for obtaining emeralds in the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Emerald Ore - Mineable resource"
 }

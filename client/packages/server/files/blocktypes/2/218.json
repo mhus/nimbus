@@ -1,7 +1,7 @@
 {
   "id": 218,
   "name": "Cobblestone",
-  "description": "Cobblestone - Building material",
+  "description": "Cobblestone, a solid and readily available building material, features a repeating brown and grey paving stone texture. Used for construction, it provides a sturdy and aesthetically rustic appearance to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cobblestone - Building material"
 }

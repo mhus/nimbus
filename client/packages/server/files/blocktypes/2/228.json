@@ -1,7 +1,7 @@
 {
   "id": 228,
   "name": "Composter Compost",
-  "description": "Composter Compost block",
+  "description": "Composter Compost is a solid block representing partially decomposed organic matter. Likely used in crafting or farming, it features a muted brown and green compost texture.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Composter Compost block"
 }

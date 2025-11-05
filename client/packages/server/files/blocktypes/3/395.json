@@ -1,7 +1,7 @@
 {
   "id": 395,
   "name": "Lily Pad",
-  "description": "Lily Pad block",
+  "description": "The Lily Pad block, represented by a desaturated beige lily pad texture, is a solid block used for decorative purposes, typically placed on water surfaces to add visual interest. While solid, its unique shape suggests it's primarily for aesthetic appeal rather than structural support.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lily Pad block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 449,
   "name": "Packed Ice",
-  "description": "Packed Ice block",
+  "description": "Packed Ice is a solid, light blue block representing compressed ice, likely used for creating slippery surfaces or decorative icy structures. Its solid nature prevents passage and allows for building.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Packed Ice block"
 }

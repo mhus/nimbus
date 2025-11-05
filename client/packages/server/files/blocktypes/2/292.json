@@ -1,7 +1,7 @@
 {
   "id": 292,
   "name": "End Stone",
-  "description": "End Stone - Building material",
+  "description": "End Stone is a solid, beige-brown building material found in the End dimension, characterized by its mottled, blocky texture. It can be used for constructing structures and environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "End Stone - Building material"
 }

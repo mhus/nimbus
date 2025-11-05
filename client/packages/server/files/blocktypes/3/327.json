@@ -1,7 +1,7 @@
 {
   "id": 327,
   "name": "Gray Glazed Terracotta",
-  "description": "Gray Glazed Terracotta block",
+  "description": "Gray Glazed Terracotta is a solid, decorative block with a subtle geometric pattern and weathered gray/brown finish, ideal for constructing durable and aesthetically pleasing structures. Its solid nature makes it suitable for walls, floors, and other load-bearing elements in builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gray Glazed Terracotta block"
 }

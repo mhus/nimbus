@@ -1,7 +1,7 @@
 {
   "id": 223,
   "name": "Cocoa Stage1",
-  "description": "Cocoa Stage1 block",
+  "description": "The Cocoa Stage1 block is a solid, first-stage cocoa bean crop, visually represented by a pixelated brown bean texture. It's likely used in farming systems as an early growth stage of cocoa plants.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cocoa Stage1 block"
 }

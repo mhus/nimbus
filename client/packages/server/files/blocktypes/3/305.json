@@ -1,7 +1,7 @@
 {
   "id": 305,
   "name": "Gold Block",
-  "description": "Gold Block block",
+  "description": "The Gold Block, identified by a pixelated gold texture with layered patterns, is a solid block representing a valuable resource. Likely used for crafting, building, or decoration, its solid nature prevents passage.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gold Block block"
 }

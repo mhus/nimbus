@@ -1,7 +1,7 @@
 {
   "id": 236,
   "name": "Cyan Concrete Powder",
-  "description": "Cyan Concrete Powder block",
+  "description": "Cyan Concrete Powder is a solid block resembling loose, cyan-colored concrete mix. It likely serves as a building material that, when combined with water in-game, could transform into hardened cyan concrete.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cyan Concrete Powder block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 132,
   "name": "Beetroots Stage1",
-  "description": "Beetroots Stage1 block",
+  "description": "Beetroots Stage1 is the initial growth stage of beetroot crops, represented by a solid, green plant block. It likely allows players to cultivate beetroots by planting and nurturing them through various growth stages.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beetroots Stage1 block"
 }

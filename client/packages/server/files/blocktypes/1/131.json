@@ -1,7 +1,7 @@
 {
   "id": 131,
   "name": "Beetroots Stage0",
-  "description": "Beetroots Stage0 block",
+  "description": "The Beetroots Stage0 block represents the first growth stage of a beetroot plant. As a solid block, it prevents movement and likely serves as a visual indicator of crop growth progression within a farming system.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beetroots Stage0 block"
 }

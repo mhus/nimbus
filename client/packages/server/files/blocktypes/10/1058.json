@@ -1,7 +1,7 @@
 {
   "id": 1058,
   "name": "Green Wool",
-  "description": "Green Wool block (migrated from playground)",
+  "description": "Green Wool is a solid, opaque block providing a soft, dark green building material, ideal for crafting and decorative purposes. Its wool texture adds visual variety to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Green Wool block (migrated from playground)"
 }

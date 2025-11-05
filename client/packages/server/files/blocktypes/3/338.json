@@ -1,7 +1,7 @@
 {
   "id": 338,
   "name": "Grindstone Round",
-  "description": "Grindstone Round - Building material",
+  "description": "The Grindstone Round is a solid, stone-like block used for building and decorative purposes, visually representing a section of a grindstone. Its solid nature makes it ideal for constructing structures and landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grindstone Round - Building material"
 }

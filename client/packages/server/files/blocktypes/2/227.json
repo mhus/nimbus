@@ -1,7 +1,7 @@
 {
   "id": 227,
   "name": "Comparator On",
-  "description": "Comparator On block",
+  "description": "The Comparator On block visually represents an active comparator, a logic component that outputs a signal based on input comparison. This solid block likely conducts or controls redstone signals when active.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Comparator On block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 286,
   "name": "Dropper Front Vertical",
-  "description": "Dropper Front Vertical block",
+  "description": "The Dropper Front Vertical block represents a solid, dispenser-like component with a front-facing output, likely used for vertically dispensing items. Its stacked texture suggests a mechanical or storage element, adding a functional aesthetic to builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dropper Front Vertical block"
 }

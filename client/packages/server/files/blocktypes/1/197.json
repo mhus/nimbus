@@ -1,7 +1,7 @@
 {
   "id": 197,
   "name": "Cartography Table Side1",
-  "description": "Cartography Table Side1 block",
+  "description": "The Cartography Table Side1 block represents a solid, textured side panel of a cartography table, likely used for crafting or interacting with maps in the game. Its wooden appearance suggests a decorative or functional element within a cartography station build.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cartography Table Side1 block"
 }

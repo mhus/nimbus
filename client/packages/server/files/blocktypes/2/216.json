@@ -1,7 +1,7 @@
 {
   "id": 216,
   "name": "Coal Ore2",
-  "description": "Coal Ore2 - Mineable resource",
+  "description": "Coal Ore2 is a solid, mineable block representing a deposit of coal embedded in rock. It serves as a source of coal resources for crafting and other gameplay mechanics.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Coal Ore2 - Mineable resource"
 }

@@ -1,7 +1,7 @@
 {
   "id": 479,
   "name": "Purple Stained Glass",
-  "description": "Purple Stained Glass - Transparent block",
+  "description": "Purple Stained Glass is a transparent block used for decorative purposes, allowing light to pass through with a purple tint. Its blurry, pixelated texture evokes a stained glass aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Purple Stained Glass - Transparent block"
 }

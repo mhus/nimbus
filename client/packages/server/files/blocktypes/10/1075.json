@@ -1,7 +1,7 @@
 {
   "id": 1075,
   "name": "Cyan Stained Glass",
-  "description": "Cyan Stained Glass block (migrated from playground)",
+  "description": "Cyan Stained Glass is a solid block that lets light through with a cyan tint, visually resembling stained glass. It's used for decorative windows and structures to add color and light effects to the environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Cyan Stained Glass block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 170,
   "name": "Bricks1",
-  "description": "Bricks1 - Building material",
+  "description": "Bricks1 is a solid block depicting reddish-brown brickwork, ideal for constructing sturdy walls and buildings. Its classic brick texture provides a visually appealing and realistic building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bricks1 - Building material"
 }

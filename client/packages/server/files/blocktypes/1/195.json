@@ -1,7 +1,7 @@
 {
   "id": 195,
   "name": "Carrots Stage2",
-  "description": "Carrots Stage2 block",
+  "description": "Carrots Stage2 is a solid block representing the second growth stage of carrots, visually depicted with two green carrot tops. It likely serves as a component in a farming system, indicating intermediate carrot development.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Carrots Stage2 block"
 }

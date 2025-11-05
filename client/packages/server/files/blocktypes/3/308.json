@@ -1,7 +1,7 @@
 {
   "id": 308,
   "name": "Granite",
-  "description": "Granite block",
+  "description": "The Granite block, a solid and opaque building material, visually simulates natural granite with a mottled texture of brown, gray, and green hues. Its solid nature makes it suitable for constructing durable structures and terrain features.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Granite block"
 }

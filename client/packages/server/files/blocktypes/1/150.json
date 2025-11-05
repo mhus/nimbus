@@ -1,7 +1,7 @@
 {
   "id": 150,
   "name": "Black Terracotta",
-  "description": "Black Terracotta block",
+  "description": "Black Terracotta is a solid, dark brown block resembling fired clay. Its opaque nature and earthen appearance make it suitable for construction and decorative building.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Black Terracotta block"
 }

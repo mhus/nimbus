@@ -1,7 +1,7 @@
 {
   "id": 136,
   "name": "Birch Fence Gate",
-  "description": "Birch Fence Gate block",
+  "description": "The Birch Fence Gate (ID 136) is a solid, light-brown wooden gate used to create walkable openings in birch fences. Featuring a seamless wood plank texture, it allows players to control access while maintaining the aesthetic of a birch fence.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Birch Fence Gate block"
 }

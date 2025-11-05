@@ -1,7 +1,7 @@
 {
   "id": 130,
   "name": "Beehive Front Honey",
-  "description": "Beehive Front Honey block",
+  "description": "The Beehive Front Honey block, a solid variant of a beehive's front, visually represents a honey-filled section with dripping honey textures. Likely used for building beehives or as a decorative block to indicate the presence of honey and bees.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beehive Front Honey block"
 }

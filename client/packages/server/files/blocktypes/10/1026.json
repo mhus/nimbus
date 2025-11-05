@@ -1,7 +1,7 @@
 {
   "id": 1026,
   "name": "Birch Leaves",
-  "description": "Birch Leaves block (migrated from playground)",
+  "description": "The Birch Leaves block, using a blurred foliage texture, represents the leaves of a birch tree. It is a solid block used for decorative purposes and simulating natural foliage.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -19,5 +19,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Birch Leaves block (migrated from playground)"
 }

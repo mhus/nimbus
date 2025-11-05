@@ -1,7 +1,7 @@
 {
   "id": 444,
   "name": "Orange Stained Glass",
-  "description": "Orange Stained Glass - Transparent block",
+  "description": "Orange Stained Glass is a transparent block that allows light to pass through with an orange hue. Primarily used for decorative purposes, it adds a colorful and textured element to builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Orange Stained Glass - Transparent block"
 }

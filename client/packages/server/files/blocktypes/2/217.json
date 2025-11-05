@@ -1,7 +1,7 @@
 {
   "id": 217,
   "name": "Coarse Dirt",
-  "description": "Coarse Dirt block",
+  "description": "Coarse Dirt is a solid, earthy block representing compacted soil, likely used for pathways or terrain decoration. Its visual texture of blurry brown soil adds a rough, unrefined look to the environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Coarse Dirt block"
 }

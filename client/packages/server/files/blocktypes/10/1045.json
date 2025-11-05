@@ -1,7 +1,7 @@
 {
   "id": 1045,
   "name": "Ice",
-  "description": "Ice block (migrated from playground)",
+  "description": "The Ice block, represented by a light blue, textured texture, is a solid block that visually simulates frozen water. It likely serves as a decorative building material, and potentially affects player movement or gameplay due to its icy nature.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Ice block (migrated from playground)"
 }

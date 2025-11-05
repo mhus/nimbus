@@ -1,7 +1,7 @@
 {
   "id": 474,
   "name": "Prismarine Bricks",
-  "description": "Prismarine Bricks - Building material",
+  "description": "Prismarine Bricks are solid, teal and gray building blocks crafted from prismarine, used to construct durable, aquatic-themed structures. Their weathered appearance lends a sense of age and history to any build.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Prismarine Bricks - Building material"
 }

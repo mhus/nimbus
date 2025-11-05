@@ -1,7 +1,7 @@
 {
   "id": 467,
   "name": "Potatoes Stage0",
-  "description": "Potatoes Stage0 block",
+  "description": "This block, representing the initial growth stage of potatoes, is a solid object used to cultivate potato crops in the game. It visually appears as a small patch of vegetation.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Potatoes Stage0 block"
 }

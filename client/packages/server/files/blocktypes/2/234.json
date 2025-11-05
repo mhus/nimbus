@@ -1,7 +1,7 @@
 {
   "id": 234,
   "name": "Cut Sandstone",
-  "description": "Cut Sandstone - Building material",
+  "description": "Cut Sandstone is a solid, light-brown building material featuring a subtly chiselled texture. Its appearance suggests it's intended for creating aesthetically pleasing, structured constructions within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cut Sandstone - Building material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1004,
   "name": "Cobblestone",
-  "description": "Cobblestone block (migrated from playground)",
+  "description": "Cobblestone is a solid, grey-brown block with a repeating paving stone texture, commonly used for building basic structures and pathways. Its solid nature allows it to effectively block movement and shape the environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Cobblestone block (migrated from playground)"
 }

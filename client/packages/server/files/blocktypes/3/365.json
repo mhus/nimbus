@@ -1,7 +1,7 @@
 {
   "id": 365,
   "name": "Jungle Sapling",
-  "description": "Jungle Sapling block",
+  "description": "The Jungle Sapling is a small, transparent plant block representing a young jungle tree. It can be planted to grow into a larger jungle tree over time.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Jungle Sapling block"
 }

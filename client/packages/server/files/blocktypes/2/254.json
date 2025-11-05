@@ -1,7 +1,7 @@
 {
   "id": 254,
   "name": "Dead Brain Coral",
-  "description": "Dead Brain Coral block",
+  "description": "The Dead Brain Coral block (ID 254) represents a solid, non-living coral formation. It likely serves as a decorative element, adding visual variety to underwater environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Brain Coral block"
 }

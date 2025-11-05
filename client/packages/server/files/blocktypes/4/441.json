@@ -1,7 +1,7 @@
 {
   "id": 441,
   "name": "Orange Concrete",
-  "description": "Orange Concrete block",
+  "description": "Orange Concrete is a solid block resembling concrete with a rough, orange texture. Due to its solidity, it can be used for construction and building stable structures within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Orange Concrete block"
 }

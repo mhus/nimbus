@@ -1,7 +1,7 @@
 {
   "id": 331,
   "name": "Green Concrete",
-  "description": "Green Concrete block",
+  "description": "Green Concrete is a solid building block with a blurred, weathered green texture, suitable for creating modern or industrial-themed structures. Its solid nature provides structural integrity and prevents passage, making it ideal for walls, floors, and other load-bearing elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Green Concrete block"
 }

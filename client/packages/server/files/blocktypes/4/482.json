@@ -1,7 +1,7 @@
 {
   "id": 482,
   "name": "Purpur Block",
-  "description": "Purpur Block block",
+  "description": "The Purpur Block is a solid, purplish-pink construction block used for building structures. Its distinctive texture provides a unique aesthetic option for players creating elaborate designs.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Purpur Block block"
 }

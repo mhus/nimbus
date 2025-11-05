@@ -1,7 +1,7 @@
 {
   "id": 360,
   "name": "Jungle Log",
-  "description": "Jungle Log - Natural wood material",
+  "description": "The Jungle Log block represents a solid, natural wood material used in the game's jungle biome. Featuring a wood grain texture, it provides a building component for structures and decorative elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Log - Natural wood material"
 }

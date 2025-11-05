@@ -1,7 +1,7 @@
 {
   "id": 1077,
   "name": "Blue Stained Glass",
-  "description": "Blue Stained Glass block (migrated from playground)",
+  "description": "Blue Stained Glass is a solid block used for decorative purposes, allowing light to filter through with a blue tint. It provides a visually appealing, translucent barrier.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Blue Stained Glass block (migrated from playground)"
 }

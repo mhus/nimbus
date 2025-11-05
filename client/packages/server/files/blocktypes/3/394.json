@@ -1,7 +1,7 @@
 {
   "id": 394,
   "name": "Lily Of The Valley",
-  "description": "Lily Of The Valley block",
+  "description": "The Lily Of The Valley block represents a solid, decorative flower, adding a touch of nature to the environment. It features a pixelated lily of the valley plant texture, allowing players to enhance their builds with floral detail.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lily Of The Valley block"
 }

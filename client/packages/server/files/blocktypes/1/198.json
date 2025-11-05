@@ -1,7 +1,7 @@
 {
   "id": 198,
   "name": "Cartography Table Side2",
-  "description": "Cartography Table Side2 block",
+  "description": "The Cartography Table Side2 block represents a solid, textured side panel of a cartography table, featuring a map and drawer detail. This block is likely used in the construction of cartography tables, decorative structures used for map-related crafting and visual appeal.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cartography Table Side2 block"
 }

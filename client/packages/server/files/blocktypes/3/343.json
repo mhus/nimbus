@@ -1,7 +1,7 @@
 {
   "id": 343,
   "name": "Horn Coral Block",
-  "description": "Horn Coral Block block",
+  "description": "The Horn Coral Block, identified by its yellow and light brown stylized coral texture, is a solid block used for building decorative coral formations. Its solid nature makes it suitable for creating structures and landscapes within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Horn Coral Block block"
 }

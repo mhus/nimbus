@@ -1,7 +1,7 @@
 {
   "id": 346,
   "name": "Iron Bars",
-  "description": "Iron Bars block",
+  "description": "Iron Bars are solid, textured blocks depicting a repeating iron bar structure, likely used as a barrier or decorative element to partially obstruct movement while maintaining visibility.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Iron Bars block"
 }

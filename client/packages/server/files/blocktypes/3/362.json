@@ -1,7 +1,7 @@
 {
   "id": 362,
   "name": "Jungle Planks",
-  "description": "Jungle Planks - Processed wood",
+  "description": "Jungle Planks are solid, processed wood blocks crafted from jungle trees. Ideal for building structures and crafting furniture with a warm, natural aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Planks - Processed wood"
 }

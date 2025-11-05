@@ -1,7 +1,7 @@
 {
   "id": 191,
   "name": "Campfire Log",
-  "description": "Campfire Log - Natural wood material",
+  "description": "The Campfire Log is a solid wood block used to construct campfires and other rustic structures. Its texture depicts charred logs, providing a visually appealing foundation for fire-related gameplay elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Campfire Log - Natural wood material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1059,
   "name": "Gray Wool",
-  "description": "Gray Wool block (migrated from playground)",
+  "description": "Gray Wool is a solid block with a soft, woolen texture used for building and decoration. Its opaque nature makes it ideal for constructing walls and structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Gray Wool block (migrated from playground)"
 }

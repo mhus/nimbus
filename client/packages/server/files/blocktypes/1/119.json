@@ -1,7 +1,7 @@
 {
   "id": 119,
   "name": "Azure Bluet",
-  "description": "Azure Bluet block",
+  "description": "The Azure Bluet block represents a small, solid cluster of blue flowers, likely used for decorative purposes or ground cover. Its solid property indicates it can be walked on and blocks light.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Azure Bluet block"
 }

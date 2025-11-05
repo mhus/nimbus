@@ -1,7 +1,7 @@
 {
   "id": 233,
   "name": "Cut Red Sandstone",
-  "description": "Cut Red Sandstone - Building material",
+  "description": "Cut Red Sandstone is a solid, brick-like block visually resembling worked red sandstone. Used as a building material, it provides a reddish-orange aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cut Red Sandstone - Building material"
 }

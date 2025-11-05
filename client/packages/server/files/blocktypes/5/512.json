@@ -1,7 +1,7 @@
 {
   "id": 512,
   "name": "Redstone Lamp On",
-  "description": "Redstone Lamp On - Building material",
+  "description": "The Redstone Lamp On block is a solid, light-emitting block that resembles an illuminated lamp. Used for decoration and providing light, it is typically activated by a redstone signal.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Lamp On - Building material"
 }

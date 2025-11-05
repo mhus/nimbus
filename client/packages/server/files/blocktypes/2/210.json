@@ -1,7 +1,7 @@
 {
   "id": 210,
   "name": "Chorus Flower Dead",
-  "description": "Chorus Flower Dead - Decorative plant",
+  "description": "The Chorus Flower Dead block represents a non-solid, decorative plant, visually depicting a withered or decayed Chorus Flower with a pixelated purple and gray texture. It serves as an aesthetic element to indicate dead flora within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Chorus Flower Dead - Decorative plant"
 }

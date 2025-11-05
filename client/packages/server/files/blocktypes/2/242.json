@@ -1,7 +1,7 @@
 {
   "id": 242,
   "name": "Dark Oak Fence",
-  "description": "Dark Oak Fence block",
+  "description": "The Dark Oak Fence block, visually represented by a dark oak wood texture, is a solid barrier used for creating fences and decorative boundaries within the game world. Its solid property prevents movement through it, making it ideal for containing entities or defining spaces.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Fence block"
 }

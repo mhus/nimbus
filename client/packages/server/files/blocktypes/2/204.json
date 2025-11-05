@@ -1,7 +1,7 @@
 {
   "id": 204,
   "name": "Chiseled Red Sandstone",
-  "description": "Chiseled Red Sandstone - Building material",
+  "description": "Chiseled Red Sandstone is a solid building block featuring a decorative, carved red sandstone texture. Ideal for adding intricate architectural details and a weathered aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Chiseled Red Sandstone - Building material"
 }

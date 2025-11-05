@@ -1,7 +1,7 @@
 {
   "id": 134,
   "name": "Beetroots Stage3",
-  "description": "Beetroots Stage3 block",
+  "description": "The Beetroots Stage3 block represents a fully grown, harvestable beetroot plant. This solid block visually depicts two mature beetroots with leafy tops, indicating its readiness for harvesting.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beetroots Stage3 block"
 }

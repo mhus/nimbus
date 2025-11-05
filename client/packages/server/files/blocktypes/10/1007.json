@@ -1,7 +1,7 @@
 {
   "id": 1007,
   "name": "Leaves",
-  "description": "Leaves block (migrated from playground)",
+  "description": "The Leaves block represents foliage in the game world, featuring a stylized, pixelated leaf texture. It's a solid block, likely used for creating trees and other natural environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -19,5 +19,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Leaves block (migrated from playground)"
 }

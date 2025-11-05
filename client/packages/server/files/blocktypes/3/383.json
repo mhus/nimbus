@@ -1,7 +1,7 @@
 {
   "id": 383,
   "name": "Light Blue Concrete Powder",
-  "description": "Light Blue Concrete Powder block",
+  "description": "Light Blue Concrete Powder is a solid block with a powdery, light blue appearance, likely used for decorative building or construction, possibly transforming into solid concrete when activated by water. Its solid nature suggests structural applications within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Blue Concrete Powder block"
 }

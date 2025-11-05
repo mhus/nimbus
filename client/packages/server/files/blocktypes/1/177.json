@@ -1,7 +1,7 @@
 {
   "id": 177,
   "name": "Brown Concrete",
-  "description": "Brown Concrete block",
+  "description": "Brown Concrete is a solid block used for construction, visually representing aged and stained concrete with a blurry, brown texture. Its solid nature makes it suitable for building sturdy structures and landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Concrete block"
 }

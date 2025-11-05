@@ -1,7 +1,7 @@
 {
   "id": 301,
   "name": "Flower Pot",
-  "description": "Flower Pot - Decorative plant",
+  "description": "The Flower Pot block is a decorative, non-solid object, visually represented by a simplified brown pixel art texture. It serves to add aesthetic detail to player-built structures and environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Flower Pot - Decorative plant"
 }

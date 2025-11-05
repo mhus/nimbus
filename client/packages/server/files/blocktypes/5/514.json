@@ -1,7 +1,7 @@
 {
   "id": 514,
   "name": "Redstone Ore1",
-  "description": "Redstone Ore1 - Building material",
+  "description": "Redstone Ore1 is a solid, stone-like block embedded with redstone, used for building and potentially as a source of redstone resources. Its texture depicts a gray stone surface with scattered red crystalline formations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Ore1 - Building material"
 }

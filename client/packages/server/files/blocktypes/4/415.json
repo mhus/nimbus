@@ -1,7 +1,7 @@
 {
   "id": 415,
   "name": "Mushroom Block Inside",
-  "description": "Mushroom Block Inside block",
+  "description": "The Mushroom Block Inside block represents the interior part of a mushroom, featuring a blurry, beige-tan texture with brown-purple spots. As a solid block, it is likely used for building within or representing the inner structure of giant mushrooms in the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Mushroom Block Inside block"
 }

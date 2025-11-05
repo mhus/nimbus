@@ -1,7 +1,7 @@
 {
   "id": 407,
   "name": "Magenta Glazed Terracotta",
-  "description": "Magenta Glazed Terracotta block",
+  "description": "Magenta Glazed Terracotta is a solid building block featuring a tileable magenta glazed texture with a raised arrow design. Its solid property allows it to be used for structural construction and decorative purposes within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Magenta Glazed Terracotta block"
 }

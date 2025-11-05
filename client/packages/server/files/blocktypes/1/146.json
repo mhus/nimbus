@@ -1,7 +1,7 @@
 {
   "id": 146,
   "name": "Black Concrete",
-  "description": "Black Concrete block",
+  "description": "Black Concrete is a solid, opaque block representing hardened black concrete, ideal for constructing modern or industrial-themed structures. Its dark gray, mottled texture provides a sleek and durable building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Black Concrete block"
 }

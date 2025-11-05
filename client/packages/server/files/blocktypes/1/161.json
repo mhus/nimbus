@@ -1,7 +1,7 @@
 {
   "id": 161,
   "name": "Bookshelf",
-  "description": "Bookshelf block",
+  "description": "The Bookshelf block, visually represented by a texture of stacked books, is a solid block used for decoration and potentially storage or crafting purposes. Its solid nature means players cannot pass through it.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bookshelf block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 378,
   "name": "Leaves Yellow",
-  "description": "Leaves Yellow - Tree foliage",
+  "description": "Leaves Yellow is a transparent block representing yellow tree foliage, primarily used for decorative purposes and creating realistic forest environments. Its blurred texture suggests a clustered leaf structure, adding visual depth to trees.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Leaves Yellow - Tree foliage"
 }

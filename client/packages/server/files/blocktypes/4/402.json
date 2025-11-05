@@ -1,7 +1,7 @@
 {
   "id": 402,
   "name": "Lime Wool",
-  "description": "Lime Wool block",
+  "description": "Lime Wool is a solid, cube-shaped block that represents dyed sheep's wool, providing a soft, lime-green building material for decorative purposes. Its opaque nature makes it suitable for constructing walls and structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lime Wool block"
 }

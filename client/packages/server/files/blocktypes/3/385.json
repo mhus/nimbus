@@ -1,7 +1,7 @@
 {
   "id": 385,
   "name": "Light Blue Stained Glass",
-  "description": "Light Blue Stained Glass - Transparent block",
+  "description": "Light Blue Stained Glass is a transparent block, visually represented by pixelated light blue glass, allowing light to pass through and offering decorative building options. Its solid shape lets players incorporate it seamlessly into structures while adding a touch of colored illumination.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Light Blue Stained Glass - Transparent block"
 }

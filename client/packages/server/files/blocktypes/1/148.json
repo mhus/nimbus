@@ -1,7 +1,7 @@
 {
   "id": 148,
   "name": "Black Glazed Terracotta",
-  "description": "Black Glazed Terracotta block",
+  "description": "Black Glazed Terracotta is a solid block displaying a dark, geometric glazed pattern. Primarily decorative, its solid nature makes it suitable for building and structural applications with a unique visual style.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Black Glazed Terracotta block"
 }

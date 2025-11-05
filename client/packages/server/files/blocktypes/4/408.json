@@ -1,7 +1,7 @@
 {
   "id": 408,
   "name": "Magenta Stained Glass",
-  "description": "Magenta Stained Glass - Transparent block",
+  "description": "Magenta Stained Glass is a transparent block used for decorative windows and light filtering, featuring a magenta-colored glass pane held within a dark gray metal frame. Its shape allows for standard block placement while permitting light to pass through with a magenta tint.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Magenta Stained Glass - Transparent block"
 }

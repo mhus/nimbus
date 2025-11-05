@@ -1,7 +1,7 @@
 {
   "id": 317,
   "name": "Grass Block Top3",
-  "description": "Grass Block Top3 block",
+  "description": "Grass Block Top3 is a solid block representing a patch of earth or dirt, typically used as the top surface layer of terrain. It provides a walkable surface and contributes to the game world's natural environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Block Top3 block"
 }

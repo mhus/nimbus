@@ -1,7 +1,7 @@
 {
   "id": 1074,
   "name": "Gray Stained Glass",
-  "description": "Gray Stained Glass block (migrated from playground)",
+  "description": "Gray Stained Glass is a solid block used for creating translucent decorative windows or panels, allowing light to pass through while adding a colored tint. Its distinct gray, pixelated texture provides a stained glass appearance.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Gray Stained Glass block (migrated from playground)"
 }

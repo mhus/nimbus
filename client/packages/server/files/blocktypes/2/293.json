@@ -1,7 +1,7 @@
 {
   "id": 293,
   "name": "End Stone Bricks",
-  "description": "End Stone Bricks - Building material",
+  "description": "End Stone Bricks are solid building blocks crafted from end stone, featuring a desaturated yellow-brown brick texture. Primarily used for constructing durable and aesthetically distinct structures, these blocks provide a robust building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "End Stone Bricks - Building material"
 }

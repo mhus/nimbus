@@ -1,7 +1,7 @@
 {
   "id": 270,
   "name": "Debug",
-  "description": "Debug block",
+  "description": "The Debug block, a solid cube displaying a color gradient grid, is likely used for testing purposes. Its visual representation aids developers in identifying issues related to texturing, lighting, or block placement within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Debug block"
 }

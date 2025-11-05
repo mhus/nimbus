@@ -1,7 +1,7 @@
 {
   "id": 374,
   "name": "Lava Flow",
-  "description": "Lava Flow block",
+  "description": "The Lava Flow block represents a source of flowing lava, visually depicted with animated orange and red textures. It's a dangerous, potentially damaging block used to create hazardous environments and visual effects.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Lava Flow block"
 }

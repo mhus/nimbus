@@ -1,7 +1,7 @@
 {
   "id": 194,
   "name": "Carrots Stage1",
-  "description": "Carrots Stage1 block",
+  "description": "The Carrots Stage1 block represents young, growing carrots, visually depicting the leafy tops emerging from the ground. It's a solid block that likely serves as an early stage in a carrot farming system within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Carrots Stage1 block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 257,
   "name": "Dead Bubble Coral",
-  "description": "Dead Bubble Coral block",
+  "description": "Dead Bubble Coral is a solid, decorative block representing bleached coral, used for adding visual variety and a touch of decay to underwater environments. Its greyish-purple, clustered texture provides a distinct, albeit lifeless, aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Bubble Coral block"
 }

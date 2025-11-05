@@ -1,7 +1,7 @@
 {
   "id": 489,
   "name": "Red Flower",
-  "description": "Red Flower - Decorative plant",
+  "description": "The Red Flower block is a decorative, non-solid plant featuring a low-resolution floral sprite. Its primary purpose is to add visual flair and detail to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Red Flower - Decorative plant"
 }

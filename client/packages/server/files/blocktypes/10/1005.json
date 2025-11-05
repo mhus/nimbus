@@ -1,7 +1,7 @@
 {
   "id": 1005,
   "name": "Log",
-  "description": "Log block (migrated from playground)",
+  "description": "The Log block, textured with bark and a wood ring top, is a solid, opaque block representing a felled tree trunk. Likely used for construction and crafting, it provides a natural, woody aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Log block (migrated from playground)"
 }

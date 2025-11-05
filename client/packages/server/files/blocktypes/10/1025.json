@@ -1,7 +1,7 @@
 {
   "id": 1025,
   "name": "Birch Log",
-  "description": "Birch Log block (migrated from playground)",
+  "description": "The Birch Log is a solid, opaque block representing a section of a birch tree trunk, featuring distinct bark and top textures. Primarily used for building structures and crafting, it provides a natural, wooden aesthetic in the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Birch Log block (migrated from playground)"
 }

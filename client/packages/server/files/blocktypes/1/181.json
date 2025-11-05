@@ -1,7 +1,7 @@
 {
   "id": 181,
   "name": "Brown Mushroom Block",
-  "description": "Brown Mushroom Block block",
+  "description": "The Brown Mushroom Block is a solid block representing a large part of a brown mushroom, often used for building mushroom-themed structures. Its blurry, organic texture contributes to the game's visual environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Mushroom Block block"
 }

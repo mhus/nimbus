@@ -1,7 +1,7 @@
 {
   "id": 243,
   "name": "Dark Oak Fence Gate",
-  "description": "Dark Oak Fence Gate block",
+  "description": "The Dark Oak Fence Gate (ID 243) provides a solid, walkable barrier that can be opened and closed, crafted with a dark oak texture. It functions as a functional gate within dark oak fences, allowing passage while maintaining the fence's visual aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Fence Gate block"
 }

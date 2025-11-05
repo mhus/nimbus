@@ -1,7 +1,7 @@
 {
   "id": 344,
   "name": "Horn Coral Fan",
-  "description": "Horn Coral Fan block",
+  "description": "The Horn Coral Fan block is a solid, decorative block depicting a stylized coral fan, adding underwater or fantastical elements to the game environment. Its pixelated texture provides a retro aesthetic, ideal for enhancing visual variety in oceans or crafted structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Horn Coral Fan block"
 }

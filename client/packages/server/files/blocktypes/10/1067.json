@@ -1,7 +1,7 @@
 {
   "id": 1067,
   "name": "Purple Stained Glass",
-  "description": "Purple Stained Glass block (migrated from playground)",
+  "description": "Purple Stained Glass is a solid block used for decorative window panes, allowing light to filter through with a blurry, purple tint. Its stained glass texture and solid nature make it suitable for creating colorful architectural details.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Purple Stained Glass block (migrated from playground)"
 }

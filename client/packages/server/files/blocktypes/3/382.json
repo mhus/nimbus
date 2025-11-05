@@ -1,7 +1,7 @@
 {
   "id": 382,
   "name": "Light Blue Concrete",
-  "description": "Light Blue Concrete block",
+  "description": "Light Blue Concrete is a solid building block that provides a visually smooth, light blue surface. Its opaque nature makes it ideal for constructing walls and structures without allowing light to pass through.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Blue Concrete block"
 }

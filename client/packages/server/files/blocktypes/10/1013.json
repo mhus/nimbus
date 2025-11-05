@@ -1,7 +1,7 @@
 {
   "id": 1013,
   "name": "Planks",
-  "description": "Planks block (migrated from playground)",
+  "description": "Planks are solid, light brown wood blocks used for building structures and crafting. Their horizontally arranged texture provides a classic wooden plank appearance suitable for floors, walls, and furniture.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Planks block (migrated from playground)"
 }

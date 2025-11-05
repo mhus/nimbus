@@ -1,7 +1,7 @@
 {
   "id": 322,
   "name": "Grass Plant Yellow",
-  "description": "Grass Plant Yellow - Decorative plant",
+  "description": "The Grass Plant Yellow block is a solid, decorative plant resembling a small clump of yellow grass, adding visual detail to outdoor environments. Its solid nature allows it to be placed on surfaces, enhancing the landscape.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Plant Yellow - Decorative plant"
 }

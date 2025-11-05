@@ -1288,7 +1288,7 @@ z.B. 'textures/block/grass.png' dann ist die info datei 'textures/block/grass.pn
 - Kannst du irgendwie analysieren was auf dem bild ist? ggf. claude oder gemini (ich habe einen api key) aufrufen mit der bild datei? - description
 Erfasse alle Werte in einer json datei und speichere diese als <asset file name>.info im ordner Assets.
 
-[ ] Uebernahme von BlockTypes aus dem playground.
+[x] Uebernahme von BlockTypes aus dem playground.
 - Im playground in 'client_playground/packages/core/src/registry/defaultBlocks.ts' werden default block types definiert.
 - Rekonstruiere die Block typen und lege in 'client/packages/server/files/blocktypes' block types im json format. Beispiel (client/packages/server/files/blocktypes/1/100.json)
   - Du koenntest ein script schreiben, das die block definitionen direkt generieren laesst und ausgibt.
@@ -1299,7 +1299,7 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
 - Ich habe zu jedem asset eine .info datei im gleichen ordner mit gleichem namen + ".info". In der datei steht eine description. Versuche diese mit in die
   description des BlockTypes zu uebernehmen.
 
-[?] An Assets liegen info dateien mit beschriebung dea assets / texture. Erstelle ein Script das fuer jeden Block Type 
+[x] An Assets liegen info dateien mit beschriebung dea assets / texture. Erstelle ein Script das fuer jeden Block Type 
 (client/packages/server/files/blocktypes) die Assets / Asset Info Dateien sammelt und an Gemini
 Die Daten des Blcok Types, genutze Assets und Asset Beschreibugen sendet und eine Description des Block Types erzeugt.
 Aktualisiere die Beschreibung in den Block Type Dateien.
@@ -1325,6 +1325,9 @@ Aktualisiere die Beschreibung in den Block Type Dateien.
 - maximum limit=200
 - Liefere auch den count, damit der Client die anzahl der Seiten errechnen kann
 - Passe die Componenten an um Paging zu ermoeglichen
+
+[?] Der Server soll eigentlich nur blocktypen laden, die er auch braucht. Aber er kann das in chunks von 100 machen. 
+also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn 234 gebraucht wird, laed er 200-299 etc.
 
 ===
 

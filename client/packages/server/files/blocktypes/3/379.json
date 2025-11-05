@@ -1,7 +1,7 @@
 {
   "id": 379,
   "name": "Lectern Base",
-  "description": "Lectern Base block",
+  "description": "The Lectern Base is a solid block used as the foundational support for a lectern, featuring a simple wooden texture. It likely serves as a crafting station component or a decorative element in libraries or study areas.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lectern Base block"
 }

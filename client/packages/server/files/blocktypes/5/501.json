@@ -1,7 +1,7 @@
 {
   "id": 501,
   "name": "Red Terracotta",
-  "description": "Red Terracotta block",
+  "description": "Red Terracotta is a solid block representing a baked clay material, commonly used for building and decoration. Its reddish-brown, tile-like texture provides a rustic and visually appealing construction option.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Terracotta block"
 }

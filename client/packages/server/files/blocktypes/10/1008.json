@@ -1,7 +1,7 @@
 {
   "id": 1008,
   "name": "Water",
-  "description": "Water block (migrated from playground)",
+  "description": "The Water block represents a solid body of water, likely used for creating lakes, rivers, and oceans within the game world. Its solid property prevents players and other entities from passing through it, simulating a basic water surface.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "viscosity": 200.5
       }
     }
-  }
+  },
+  "description_old": "Water block (migrated from playground)"
 }

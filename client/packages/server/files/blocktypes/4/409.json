@@ -1,7 +1,7 @@
 {
   "id": 409,
   "name": "Magenta Terracotta",
-  "description": "Magenta Terracotta block",
+  "description": "Magenta Terracotta is a solid block representing baked clay, providing a durable building material with a subtly textured magenta appearance. Its solid nature makes it suitable for constructing walls, floors, and other structural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Magenta Terracotta block"
 }

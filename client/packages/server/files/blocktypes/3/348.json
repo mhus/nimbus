@@ -1,7 +1,7 @@
 {
   "id": 348,
   "name": "Iron Block",
-  "description": "Iron Block block",
+  "description": "The Iron Block, represented by a grey, gridded texture, is a solid and opaque building material. It likely serves as a fundamental component for constructing structures or crafting items requiring durable, iron-based resources.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Iron Block block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 414,
   "name": "Mossy Stone Bricks",
-  "description": "Mossy Stone Bricks - Building material",
+  "description": "Mossy Stone Bricks are solid building blocks with a weathered, aged appearance due to the moss covering their surface. Ideal for creating ancient ruins or adding a touch of nature to stone structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Mossy Stone Bricks - Building material"
 }

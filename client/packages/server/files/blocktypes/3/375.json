@@ -1,7 +1,7 @@
 {
   "id": 375,
   "name": "Lava Still",
-  "description": "Lava Still block",
+  "description": "Lava Still is a solid block representing solidified, non-flowing lava, primarily used for environmental hazards or decorative purposes with its vibrant, simmering texture. Its shape suggests a full, opaque block.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Lava Still block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 418,
   "name": "Nether Bricks Fence",
-  "description": "Nether Bricks Fence - Building material",
+  "description": "The Nether Bricks Fence is a solid, decorative barrier crafted from nether brick textures, used for creating secure enclosures or aesthetic boundaries in the game world. Its distinctive, dark brick appearance adds a touch of Nether-themed architectural detail.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Nether Bricks Fence - Building material"
 }

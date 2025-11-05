@@ -1,7 +1,7 @@
 {
   "id": 166,
   "name": "Brain Coral Fan",
-  "description": "Brain Coral Fan block",
+  "description": "The Brain Coral Fan is a solid block representing a pink, fan-shaped cluster of brain coral. Primarily aesthetic, it adds decorative detail to underwater environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brain Coral Fan block"
 }

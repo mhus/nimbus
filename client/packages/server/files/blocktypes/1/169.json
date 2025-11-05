@@ -1,7 +1,7 @@
 {
   "id": 169,
   "name": "Bricks",
-  "description": "Bricks - Building material",
+  "description": "Bricks are solid blocks used for constructing sturdy buildings and structures. Featuring a classic reddish-brown brick texture, they provide a basic and reliable building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bricks - Building material"
 }

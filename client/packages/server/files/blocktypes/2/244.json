@@ -1,7 +1,7 @@
 {
   "id": 244,
   "name": "Dark Oak Leaves",
-  "description": "Dark Oak Leaves - Tree foliage",
+  "description": "Dark Oak Leaves are a translucent block representing the foliage of dark oak trees. Used primarily for decorative purposes, they feature a cluster of stylized dark green leaves.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Leaves - Tree foliage"
 }

@@ -1,7 +1,7 @@
 {
   "id": 171,
   "name": "Bricks2",
-  "description": "Bricks2 - Building material",
+  "description": "Bricks2 is a solid, pixelated brick block, ideal for constructing buildings and structures with a stylized, low-resolution aesthetic. Its red and brown brick texture offers a classic building material look for voxel-based creations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bricks2 - Building material"
 }

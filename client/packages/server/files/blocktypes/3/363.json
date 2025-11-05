@@ -1,7 +1,7 @@
 {
   "id": 363,
   "name": "Jungle Planks1",
-  "description": "Jungle Planks1 - Processed wood",
+  "description": "Jungle Planks1 represents processed jungle wood, likely used for construction. This solid block has a plank-like texture and provides structural integrity.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Planks1 - Processed wood"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1076,
   "name": "Brown Stained Glass",
-  "description": "Brown Stained Glass block (migrated from playground)",
+  "description": "The Brown Stained Glass block, using a pixelated brown texture, is a solid but translucent decorative block. It allows light to filter through, adding colored illumination and visual interest to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Brown Stained Glass block (migrated from playground)"
 }

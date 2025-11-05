@@ -1,7 +1,7 @@
 {
   "id": 1002,
   "name": "Grass",
-  "description": "Grass block (migrated from playground)",
+  "description": "The Grass block, identified as ID 1002, is a solid block representing a patch of grass-covered earth, typically used for creating natural landscapes. It features a green grassy top, dirt sides, and serves as a fundamental building block for terrain generation.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "shovel"
       }
     }
-  }
+  },
+  "description_old": "Grass block (migrated from playground)"
 }

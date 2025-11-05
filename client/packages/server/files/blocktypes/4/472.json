@@ -1,7 +1,7 @@
 {
   "id": 472,
   "name": "Powered Rail On",
-  "description": "Powered Rail On block",
+  "description": "The Powered Rail On block represents an active powered rail track segment, used to propel minecarts. This solid block visibly displays activated rails with yellow and red accents on its wooden supports, providing boosted movement for minecart systems.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Powered Rail On block"
 }

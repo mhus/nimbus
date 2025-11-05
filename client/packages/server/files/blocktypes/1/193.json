@@ -1,7 +1,7 @@
 {
   "id": 193,
   "name": "Carrots Stage0",
-  "description": "Carrots Stage0 block",
+  "description": "This block represents the first growth stage of carrots, visually depicted as bright green sprouts. As a solid block, it likely prevents movement and is used to represent the initial phase of carrot cultivation in the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Carrots Stage0 block"
 }

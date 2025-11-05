@@ -1,7 +1,7 @@
 {
   "id": 1020,
   "name": "Cactus",
-  "description": "Cactus block (migrated from playground)",
+  "description": "The Cactus block represents a solid, desert-dwelling plant, featuring textured sides with spines and a distinct top and bottom. It likely functions as a decorative element or obstacle in desert biomes, adding visual interest and potentially preventing player passage.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -20,5 +20,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Cactus block (migrated from playground)"
 }

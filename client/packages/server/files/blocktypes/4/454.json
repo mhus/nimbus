@@ -1,7 +1,7 @@
 {
   "id": 454,
   "name": "Pink Terracotta",
-  "description": "Pink Terracotta block",
+  "description": "Pink Terracotta is a solid, clay-based block with a soft, textured pinkish-terracotta appearance, ideal for building decorative structures and adding subtle color variations to voxel landscapes. This opaque block provides structural support and visual appeal.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pink Terracotta block"
 }

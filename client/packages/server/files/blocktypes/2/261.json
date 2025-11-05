@@ -1,7 +1,7 @@
 {
   "id": 261,
   "name": "Dead Fire Coral",
-  "description": "Dead Fire Coral block",
+  "description": "Dead Fire Coral is a solid, brown block representing lifeless coral structures, likely used for underwater decoration. The block's texture features a small yellow highlight, possibly indicating a point of interest or interaction within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Fire Coral block"
 }

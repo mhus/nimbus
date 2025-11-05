@@ -1,7 +1,7 @@
 {
   "id": 199,
   "name": "Cartography Table Side3",
-  "description": "Cartography Table Side3 block",
+  "description": "This block represents a solid, wood-textured side panel of a cartography table. It is likely used for constructing or detailing cartography table structures within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cartography Table Side3 block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 325,
   "name": "Gray Concrete",
-  "description": "Gray Concrete block",
+  "description": "Gray Concrete is a solid block representing a concrete material, commonly used for construction and providing a durable, if aesthetically basic, building component. Its texture features a blurry, desaturated gray-brown concrete-like appearance.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gray Concrete block"
 }

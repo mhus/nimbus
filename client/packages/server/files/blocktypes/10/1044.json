@@ -1,7 +1,7 @@
 {
   "id": 1044,
   "name": "Oak Sapling",
-  "description": "Oak Sapling block (migrated from playground)",
+  "description": "The Oak Sapling block represents a young oak tree, visually depicted as a small, pixelated tree with a brown trunk and green canopy. It is non-solid, allowing players to walk through it, and likely serves as a decorative element or a plantable item that grows into a full-sized oak tree.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Oak Sapling block (migrated from playground)"
 }

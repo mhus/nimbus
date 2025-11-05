@@ -1,7 +1,7 @@
 {
   "id": 436,
   "name": "Oak Sapling",
-  "description": "Oak Sapling block",
+  "description": "The Oak Sapling block represents a young oak tree and is visually depicted as a small, pixelated sapling. With its non-solid shape, it's likely used for planting and growing into a full-sized oak tree over time.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Oak Sapling block"
 }

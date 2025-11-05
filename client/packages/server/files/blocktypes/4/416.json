@@ -1,7 +1,7 @@
 {
   "id": 416,
   "name": "Mushroom Stem",
-  "description": "Mushroom Stem block",
+  "description": "The Mushroom Stem block, represented by a light brown and beige fungal texture, is a solid building material used to construct or simulate the stalks of large mushrooms. Its solid nature allows for creating stable fungal structures within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Mushroom Stem block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 450,
   "name": "Pink Concrete",
-  "description": "Pink Concrete block",
+  "description": "Pink Concrete is a solid block used for construction, providing a visually distinct, textured surface with its pink concrete appearance. Due to its solid nature, it blocks light and movement, making it suitable for building structures and barriers.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pink Concrete block"
 }

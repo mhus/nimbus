@@ -1,7 +1,7 @@
 {
   "id": 488,
   "name": "Red Concrete Powder",
-  "description": "Red Concrete Powder block",
+  "description": "Red Concrete Powder is a solid block representing unmixed red concrete, featuring a blurred, granular texture. This block likely hardens into solid red concrete when exposed to water.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Concrete Powder block"
 }

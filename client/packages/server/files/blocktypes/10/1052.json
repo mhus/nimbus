@@ -1,7 +1,7 @@
 {
   "id": 1052,
   "name": "Purple Wool",
-  "description": "Purple Wool block (migrated from playground)",
+  "description": "Purple Wool is a solid block with a soft, blurry purple texture, providing a decorative, wool-like building material. Due to its solid nature, it cannot be seen through and can be used for crafting or constructing opaque structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Purple Wool block (migrated from playground)"
 }

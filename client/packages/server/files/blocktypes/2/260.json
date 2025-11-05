@@ -1,7 +1,7 @@
 {
   "id": 260,
   "name": "Dead Bush",
-  "description": "Dead Bush block",
+  "description": "The Dead Bush block represents a withered, solid shrub, adding desolate or arid decoration to the game world. Being solid, it can obstruct movement, but its primary purpose is environmental storytelling and visual variation.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Bush block"
 }

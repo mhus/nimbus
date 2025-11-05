@@ -1,7 +1,7 @@
 {
   "id": 358,
   "name": "Jungle Leaves",
-  "description": "Jungle Leaves - Tree foliage",
+  "description": "Jungle Leaves represent the foliage of jungle trees, utilizing a semi-transparent texture. With a defined shape, they are used for decorative purposes and to add visual complexity to jungle environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Jungle Leaves - Tree foliage"
 }

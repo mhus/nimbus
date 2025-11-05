@@ -1,7 +1,7 @@
 {
   "id": 252,
   "name": "Dark Oak Trapdoor",
-  "description": "Dark Oak Trapdoor block",
+  "description": "The Dark Oak Trapdoor (ID 252) is a solid, dark-wood variant of the standard trapdoor, allowing for concealable openings in floors and walls. Its texture shows horizontal wooden planks, and being solid, it provides a barrier when closed.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Trapdoor block"
 }

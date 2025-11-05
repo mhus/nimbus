@@ -1,7 +1,7 @@
 {
   "id": 413,
   "name": "Mossy Cobblestone",
-  "description": "Mossy Cobblestone - Building material",
+  "description": "Mossy Cobblestone is a solid building block representing weathered cobblestones overgrown with moss. Its solid nature makes it suitable for constructing durable structures with a rustic, overgrown aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Mossy Cobblestone - Building material"
 }

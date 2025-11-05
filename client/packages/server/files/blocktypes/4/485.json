@@ -1,7 +1,7 @@
 {
   "id": 485,
   "name": "Rail",
-  "description": "Rail block",
+  "description": "The Rail block (ID 485) represents a segment of railroad track, using the 'rail.png' asset to depict wooden ties and parallel black rails. Being a solid block, it likely facilitates the movement of minecarts or other transportation vehicles across the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Rail block"
 }

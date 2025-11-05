@@ -1,7 +1,7 @@
 {
   "id": 282,
   "name": "Dirt3",
-  "description": "Dirt3 block",
+  "description": "Dirt3 is a solid block representing a patch of soft, muddy dirt, likely used for terrain generation or as a building material. Its blurred texture provides a smoother, less detailed dirt surface.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dirt3 block"
 }

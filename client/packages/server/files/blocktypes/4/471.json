@@ -1,7 +1,7 @@
 {
   "id": 471,
   "name": "Powered Rail",
-  "description": "Powered Rail block",
+  "description": "The Powered Rail block (ID 471) is a solid, interactive block used to propel minecarts along a track. Its pixelated texture depicts a rail with golden connectors, essential for creating powered transport systems.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Powered Rail block"
 }

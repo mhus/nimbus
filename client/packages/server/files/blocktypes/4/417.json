@@ -1,7 +1,7 @@
 {
   "id": 417,
   "name": "Nether Bricks",
-  "description": "Nether Bricks - Building material",
+  "description": "Nether Bricks are solid, reddish-brown blocks crafted from materials found in the Nether, used primarily for constructing buildings and structures with a distinct, hellish aesthetic. Their stone-like texture makes them ideal for durable and imposing architectural features.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Nether Bricks - Building material"
 }

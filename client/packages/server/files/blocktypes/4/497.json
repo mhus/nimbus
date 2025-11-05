@@ -1,7 +1,7 @@
 {
   "id": 497,
   "name": "Red Sandstone",
-  "description": "Red Sandstone - Building material",
+  "description": "Red Sandstone is a solid, reddish-orange building block with a rough, brick-like texture. It is primarily used for constructing durable structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Sandstone - Building material"
 }

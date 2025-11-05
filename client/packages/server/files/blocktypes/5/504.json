@@ -1,7 +1,7 @@
 {
   "id": 504,
   "name": "Redstone Block",
-  "description": "Redstone Block - Building material",
+  "description": "The Redstone Block is a solid, opaque building material visually represented by a blurred red texture, and likely used for redstone circuitry and creations within the game. As a solid block, it can also serve as a general building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Block - Building material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 513,
   "name": "Redstone Ore",
-  "description": "Redstone Ore - Building material",
+  "description": "Redstone Ore is a solid, stone-like block that visually represents a deposit of redstone minerals. When mined, it likely yields redstone dust, a valuable resource used for crafting and powering mechanisms.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Ore - Building material"
 }

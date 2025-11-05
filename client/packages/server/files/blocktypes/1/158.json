@@ -1,7 +1,7 @@
 {
   "id": 158,
   "name": "Blue Stained Glass",
-  "description": "Blue Stained Glass - Transparent block",
+  "description": "Blue Stained Glass is a transparent block with a decorative pixelated blue glass texture set in a dark grey frame. It allows light to pass through while adding a colorful, artistic element to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Blue Stained Glass - Transparent block"
 }

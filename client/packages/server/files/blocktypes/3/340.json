@@ -1,7 +1,7 @@
 {
   "id": 340,
   "name": "Hopper Inside",
-  "description": "Hopper Inside block",
+  "description": "The Hopper Inside block represents the internal, solid component of a hopper mechanism, likely used for item transfer. Its dark grey, textured appearance suggests an enclosed space, and its solid nature prevents passage.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Hopper Inside block"
 }

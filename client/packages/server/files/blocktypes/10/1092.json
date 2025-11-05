@@ -1,7 +1,7 @@
 {
   "id": 1092,
   "name": "Blue Concrete",
-  "description": "Blue Concrete block (migrated from playground)",
+  "description": "Blue Concrete is a solid block used for building sturdy, aesthetically pleasing structures. Its texture provides a visually appealing, modern look with its soft blue concrete appearance.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Blue Concrete block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 318,
   "name": "Grass Block Top Extra",
-  "description": "Grass Block Top Extra block",
+  "description": "The Grass Block Top Extra is a solid block visually representing the top of a grass block with a slightly varied, less refined texture. It is likely used for decorative ground cover or to provide a more natural variation in grass surfaces.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Block Top Extra block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1087,
   "name": "Light Blue Concrete",
-  "description": "Light Blue Concrete block (migrated from playground)",
+  "description": "Light Blue Concrete is a solid block used for construction and decorative purposes. Its light blue, slightly blurry texture provides a softened concrete aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Light Blue Concrete block (migrated from playground)"
 }

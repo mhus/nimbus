@@ -1,7 +1,7 @@
 {
   "id": 262,
   "name": "Dead Fire Coral Block",
-  "description": "Dead Fire Coral Block block",
+  "description": "The Dead Fire Coral Block represents lifeless coral formations, featuring a brownish-gray, rocky texture. This solid block can be used for decorative purposes, adding a touch of desolate underwater environments to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Fire Coral Block block"
 }

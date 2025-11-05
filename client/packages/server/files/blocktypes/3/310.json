@@ -1,7 +1,7 @@
 {
   "id": 310,
   "name": "Grass",
-  "description": "Grass block",
+  "description": "The Grass block, identified by ID 310, is a solid block representing a patch of green grass, typically found on the ground surface. Its top face uses a textured image to simulate natural, uneven grass blades.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -15,5 +15,6 @@
         "autoClimbable": true
       }
     }
-  }
+  },
+  "description_old": "Grass block"
 }

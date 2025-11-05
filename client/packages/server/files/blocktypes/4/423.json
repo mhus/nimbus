@@ -1,7 +1,7 @@
 {
   "id": 423,
   "name": "Nether Wart Stage1",
-  "description": "Nether Wart Stage1 block",
+  "description": "The Nether Wart Stage1 block represents the first growth stage of nether wart, a solid, reddish-brown plant found in the Nether dimension. It likely serves as a component in growing more mature nether wart for brewing potions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Nether Wart Stage1 block"
 }

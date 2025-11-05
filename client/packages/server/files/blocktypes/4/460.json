@@ -1,7 +1,7 @@
 {
   "id": 460,
   "name": "Planks Birch",
-  "description": "Planks Birch - Processed wood",
+  "description": "These solid birch planks, crafted from processed wood, provide a versatile building material with a light brown wood texture. Their solid form makes them suitable for constructing floors, walls, and other structural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Planks Birch - Processed wood"
 }

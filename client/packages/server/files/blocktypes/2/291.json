@@ -1,7 +1,7 @@
 {
   "id": 291,
   "name": "End Rod",
-  "description": "End Rod block",
+  "description": "The End Rod is a solid, light-emitting block representing a glowing rod found in the End dimension, likely used for decoration and providing directional lighting. Its peachy-orange texture suggests a warm, ethereal glow.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "End Rod block"
 }

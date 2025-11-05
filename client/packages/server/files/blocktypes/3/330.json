@@ -1,7 +1,7 @@
 {
   "id": 330,
   "name": "Gray Wool",
-  "description": "Gray Wool block",
+  "description": "Gray Wool is a solid, opaque block that represents a soft, fibrous material. It can be used for building structures or crafting items requiring wool in-game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gray Wool block"
 }

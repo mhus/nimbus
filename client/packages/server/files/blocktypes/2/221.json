@@ -1,7 +1,7 @@
 {
   "id": 221,
   "name": "Cobweb",
-  "description": "Cobweb block",
+  "description": "The Cobweb block, represented by a stylized web texture, is a solid block that likely hinders player movement or obscures vision. Its purpose is to add environmental detail and potentially create obstacles within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cobweb block"
 }

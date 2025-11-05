@@ -1,7 +1,7 @@
 {
   "id": 406,
   "name": "Magenta Concrete Powder",
-  "description": "Magenta Concrete Powder block",
+  "description": "Magenta Concrete Powder is a solid block that represents loose, unhardened magenta concrete mix. Its purpose would likely be for crafting hardened magenta concrete when exposed to water.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Magenta Concrete Powder block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 500,
   "name": "Red Stained Glass",
-  "description": "Red Stained Glass - Transparent block",
+  "description": "Red Stained Glass is a transparent block used for decorative purposes, allowing light to pass through with a reddish tint. Its stylized, pixelated texture adds a unique visual element to structures, simulating the look of stained glass windows.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Red Stained Glass - Transparent block"
 }

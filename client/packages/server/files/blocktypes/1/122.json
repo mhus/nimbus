@@ -1,7 +1,7 @@
 {
   "id": 122,
   "name": "Bamboo Small Leaves",
-  "description": "Bamboo Small Leaves - Tree foliage",
+  "description": "This block represents the foliage of small bamboo leaves, using a low-resolution, semi-transparent texture. It likely serves as a decorative element to create dense bamboo forests or add visual interest to bamboo structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Bamboo Small Leaves - Tree foliage"
 }

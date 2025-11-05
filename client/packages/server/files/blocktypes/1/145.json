@@ -1,7 +1,7 @@
 {
   "id": 145,
   "name": "Birch Trapdoor",
-  "description": "Birch Trapdoor block",
+  "description": "The Birch Trapdoor (ID 145) is a solid, hinged birch wood panel used to create concealed openings in floors or ceilings. Its light beige and brown textures allow for seamless integration with birch wood structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Birch Trapdoor block"
 }

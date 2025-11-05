@@ -1,7 +1,7 @@
 {
   "id": 279,
   "name": "Dirt",
-  "description": "Dirt block",
+  "description": "The Dirt block, textured with a brownish soil-like appearance, represents common ground and is a solid, opaque block used for terrain generation and basic construction. Its primary purpose is to form the base layer of landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dirt block"
 }

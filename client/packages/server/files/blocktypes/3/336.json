@@ -1,7 +1,7 @@
 {
   "id": 336,
   "name": "Green Wool",
-  "description": "Green Wool block",
+  "description": "Green Wool is a solid block representing a soft, felt-like material, likely used for crafting, decoration, or building structures in the game. Its opaque nature makes it suitable for creating walls or other solid objects.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Green Wool block"
 }

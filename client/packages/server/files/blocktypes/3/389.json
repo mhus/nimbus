@@ -1,7 +1,7 @@
 {
   "id": 389,
   "name": "Light Gray Concrete Powder",
-  "description": "Light Gray Concrete Powder block",
+  "description": "Light Gray Concrete Powder is a solid, granular block that visually represents uncured concrete mix. Its purpose is likely to be a building material that transforms into a hardened concrete block when interacting with water.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Gray Concrete Powder block"
 }

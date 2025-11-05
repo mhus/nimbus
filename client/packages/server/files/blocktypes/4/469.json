@@ -1,7 +1,7 @@
 {
   "id": 469,
   "name": "Potatoes Stage2",
-  "description": "Potatoes Stage2 block",
+  "description": "Potatoes Stage2 is a solid block representing a young, growing potato plant above ground. It likely serves as an intermediate stage in potato crop cultivation, visually depicting the plant's progress.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Potatoes Stage2 block"
 }

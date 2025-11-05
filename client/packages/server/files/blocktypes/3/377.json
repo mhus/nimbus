@@ -1,7 +1,7 @@
 {
   "id": 377,
   "name": "Leaves Birch",
-  "description": "Leaves Birch - Tree foliage",
+  "description": "The Birch Leaves block (ID: 377) represents the foliage of birch trees, using a stylized, blurred leaf texture. This block is likely transparent, allowing light and players to pass through the canopy.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Leaves Birch - Tree foliage"
 }

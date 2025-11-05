@@ -1,7 +1,7 @@
 {
   "id": 396,
   "name": "Lily Pad Flowers",
-  "description": "Lily Pad Flowers - Decorative plant",
+  "description": "Lily Pad Flowers are decorative, partially transparent plants featuring layered purple, pink, and gold blossoms, used to add visual interest to water surfaces. Due to their Shape property being 2, they likely have a flat, two-dimensional appearance.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Lily Pad Flowers - Decorative plant"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1060,
   "name": "Cyan Wool",
-  "description": "Cyan Wool block (migrated from playground)",
+  "description": "Cyan Wool is a solid block, visually resembling a soft, cyan-colored wool fabric. It can be used for building and decoration, adding a textile aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Cyan Wool block (migrated from playground)"
 }

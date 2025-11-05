@@ -1,7 +1,7 @@
 {
   "id": 229,
   "name": "Composter Ready",
-  "description": "Composter Ready block",
+  "description": "The Composter Ready block represents a full and functional composter, visually depicting the decomposed material inside. It's a solid block, likely used to signify the completion of the composting process, allowing players to collect the resulting fertilizer.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Composter Ready block"
 }

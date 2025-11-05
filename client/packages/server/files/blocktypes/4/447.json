@@ -1,7 +1,7 @@
 {
   "id": 447,
   "name": "Orange Wool",
-  "description": "Orange Wool block",
+  "description": "Orange Wool is a solid, opaque block representing tightly-woven orange sheep's wool, primarily used for building and decorative purposes. Its fuzzy texture and vibrant color add a soft, visually appealing element to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Orange Wool block"
 }

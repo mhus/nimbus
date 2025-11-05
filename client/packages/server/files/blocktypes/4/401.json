@@ -1,7 +1,7 @@
 {
   "id": 401,
   "name": "Lime Terracotta",
-  "description": "Lime Terracotta block",
+  "description": "Lime Terracotta is a solid, opaque block visually resembling lime-colored terracotta, primarily used for building and decorative purposes. Its earthy texture adds a subtle detail to constructions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lime Terracotta block"
 }

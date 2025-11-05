@@ -1,7 +1,7 @@
 {
   "id": 502,
   "name": "Red Tulip",
-  "description": "Red Tulip block",
+  "description": "The Red Tulip block, represented by a pixelated red tulip texture, is a solid block used for decorative purposes. Its bright red flower and green stem add a touch of nature and color to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Tulip block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1073,
   "name": "Green Stained Glass",
-  "description": "Green Stained Glass block (migrated from playground)",
+  "description": "The Green Stained Glass block is a solid, stylized transparent pane used for decorative purposes, allowing light to pass through with a green tint. Its design features a pale green, rounded stained glass shape with a dark grey border.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Green Stained Glass block (migrated from playground)"
 }

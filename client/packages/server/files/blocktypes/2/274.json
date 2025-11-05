@@ -1,7 +1,7 @@
 {
   "id": 274,
   "name": "Diamond Block",
-  "description": "Diamond Block block",
+  "description": "The Diamond Block, a solid and visually striking block textured with a stylized, low-resolution diamond pattern, is likely used for building and potentially crafting valuable items within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Diamond Block block"
 }

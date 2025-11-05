@@ -1,7 +1,7 @@
 {
   "id": 459,
   "name": "Planks",
-  "description": "Planks - Processed wood",
+  "description": "Planks are solid, light brown blocks crafted from processed wood, commonly used for building structures. Their textured appearance provides a realistic wood surface for construction projects.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Planks - Processed wood"
 }

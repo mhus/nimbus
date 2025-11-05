@@ -1,7 +1,7 @@
 {
   "id": 203,
   "name": "Chiseled Quartz Block",
-  "description": "Chiseled Quartz Block block",
+  "description": "The Chiseled Quartz Block is a solid, decorative building block made of light brown quartz, featuring carved geometric patterns. It is used for creating visually appealing structures and adding detail to environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Chiseled Quartz Block block"
 }

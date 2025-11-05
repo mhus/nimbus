@@ -1,7 +1,7 @@
 {
   "id": 185,
   "name": "Bubble Coral",
-  "description": "Bubble Coral block",
+  "description": "Bubble Coral is a solid block with a rounded shape, representing stylized purple bubble coral. Used primarily for decoration, it adds a touch of underwater aesthetic to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bubble Coral block"
 }

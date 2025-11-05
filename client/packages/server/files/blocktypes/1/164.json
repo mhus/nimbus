@@ -1,7 +1,7 @@
 {
   "id": 164,
   "name": "Brain Coral",
-  "description": "Brain Coral block",
+  "description": "The Brain Coral block (ID: 164) represents a solid, pink coral formation found in aquatic environments. It serves as a decorative building block, adding visual interest and mimicking the appearance of real-world brain coral.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brain Coral block"
 }

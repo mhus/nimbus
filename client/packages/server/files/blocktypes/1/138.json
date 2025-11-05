@@ -1,7 +1,7 @@
 {
   "id": 138,
   "name": "Birch Leaves1",
-  "description": "Birch Leaves1 - Tree foliage",
+  "description": "Birch Leaves1 represents the foliage of a birch tree, utilizing a mottled tan and white texture to simulate decaying leaves. This block likely has a shape suitable for foliage and is used for decorative purposes to add realism to birch trees within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Birch Leaves1 - Tree foliage"
 }

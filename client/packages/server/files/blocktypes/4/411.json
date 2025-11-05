@@ -1,7 +1,7 @@
 {
   "id": 411,
   "name": "Magma",
-  "description": "Magma block",
+  "description": "The Magma block represents a solidified, hot, volcanic surface. It is a solid block, likely intended for use in volcanic or fiery environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Magma block"
 }

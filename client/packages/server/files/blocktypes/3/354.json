@@ -1,7 +1,7 @@
 {
   "id": 354,
   "name": "Item Frame Border",
-  "description": "Item Frame Border block",
+  "description": "The Item Frame Border block is a solid, decorative block used to visually define the edges of item frames. Featuring a dark brown fill and black outline, this block adds a distinct frame around displayed items.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Item Frame Border block"
 }

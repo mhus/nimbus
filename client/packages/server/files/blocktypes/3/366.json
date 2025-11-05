@@ -1,7 +1,7 @@
 {
   "id": 366,
   "name": "Jungle Trapdoor",
-  "description": "Jungle Trapdoor block",
+  "description": "The Jungle Trapdoor is a solid, hinged wooden block used for creating concealed entrances or vertical passages in jungle-themed environments. Featuring a distinct jungle wood texture, it blends seamlessly into jungle structures while providing accessible but securable openings.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Trapdoor block"
 }

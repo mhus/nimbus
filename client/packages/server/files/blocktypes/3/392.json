@@ -1,7 +1,7 @@
 {
   "id": 392,
   "name": "Light Gray Terracotta",
-  "description": "Light Gray Terracotta block",
+  "description": "Light Gray Terracotta is a solid block featuring a subtly mottled, light gray surface, useful for constructing walls, floors, and other structural elements in the game. Its solid nature allows it to effectively block light and define enclosed spaces.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Gray Terracotta block"
 }

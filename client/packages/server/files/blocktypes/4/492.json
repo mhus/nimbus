@@ -1,7 +1,7 @@
 {
   "id": 492,
   "name": "Red Mushroom Block",
-  "description": "Red Mushroom Block block",
+  "description": "The Red Mushroom Block represents a solid, decorative element crafted from the cap of a large, red mushroom. Its opaque nature and vibrant red texture provide a distinctive building material for whimsical structures and fungal-themed environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Mushroom Block block"
 }

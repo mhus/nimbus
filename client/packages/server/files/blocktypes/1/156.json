@@ -1,7 +1,7 @@
 {
   "id": 156,
   "name": "Blue Ice",
-  "description": "Blue Ice block",
+  "description": "Blue Ice is a solid block representing frozen water, visually distinct through its light and gray-blue textured surface. Being solid, it can be used for building and creating icy environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Ice block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 380,
   "name": "Lectern Sides",
-  "description": "Lectern Sides block",
+  "description": "The Lectern Sides block, featuring a wooden plank texture, is a solid building component used for constructing the sides of lecterns. Its solid property ensures structural integrity within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lectern Sides block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 174,
   "name": "Bricks5",
-  "description": "Bricks5 - Building material",
+  "description": "Bricks5 are solid, red brick blocks used as a building material. Their tileable texture and solid status make them suitable for constructing walls and other structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bricks5 - Building material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 295,
   "name": "Farmland Moist",
-  "description": "Farmland Moist block",
+  "description": "Farmland Moist is a solid block representing tilled soil ready for planting, visually depicting dark, moist earth. Its primary purpose is to serve as a cultivatable surface for growing crops.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Farmland Moist block"
 }

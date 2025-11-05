@@ -1,7 +1,7 @@
 {
   "id": 466,
   "name": "Portal",
-  "description": "Portal block",
+  "description": "The Portal block, visually represented by rippling purple lines, is a solid block used to create gateways or transition points within the game world. Its solid nature suggests it requires activation or specific placement to function as a portal.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Portal block"
 }

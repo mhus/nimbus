@@ -1,7 +1,7 @@
 {
   "id": 129,
   "name": "Beehive End",
-  "description": "Beehive End block",
+  "description": "The Beehive End block represents the solid, wooden end of a beehive structure. It likely functions as a component in constructing or decorating beehives within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beehive End block"
 }

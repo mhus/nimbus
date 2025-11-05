@@ -1,7 +1,7 @@
 {
   "id": 1014,
   "name": "Glass",
-  "description": "Glass block (migrated from playground)",
+  "description": "The Glass block is a solid, transparent block used for creating windows and allowing light to pass through. Its grid-like texture provides a subtle, visually appealing transparency effect.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Glass block (migrated from playground)"
 }

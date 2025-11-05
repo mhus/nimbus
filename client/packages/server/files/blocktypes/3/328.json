@@ -1,7 +1,7 @@
 {
   "id": 328,
   "name": "Gray Stained Glass",
-  "description": "Gray Stained Glass - Transparent block",
+  "description": "Gray Stained Glass is a transparent block used for decorative windows and light filtering. It allows light to pass through while adding a textured, gray-toned aesthetic to builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Gray Stained Glass - Transparent block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 165,
   "name": "Brain Coral Block",
-  "description": "Brain Coral Block block",
+  "description": "The Brain Coral Block is a solid, decorative block that visually resembles pink brain coral. Its purpose is likely for adding underwater detail and creating coral reef environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brain Coral Block block"
 }

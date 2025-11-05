@@ -1,7 +1,7 @@
 {
   "id": 1064,
   "name": "White Stained Glass",
-  "description": "White Stained Glass block (migrated from playground)",
+  "description": "The White Stained Glass block represents a solid, transparent pane that allows light to filter through its off-white, bumpy glass texture. It is likely used for decorative purposes or to create illuminated spaces within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "White Stained Glass block (migrated from playground)"
 }

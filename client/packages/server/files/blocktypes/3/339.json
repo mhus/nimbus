@@ -1,7 +1,7 @@
 {
   "id": 339,
   "name": "Honeycomb Block",
-  "description": "Honeycomb Block block",
+  "description": "The Honeycomb Block visually represents a solid, tessellated honeycomb structure, likely used for building decorative or bee-related structures in the game. Its solid property suggests it can be used as a building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Honeycomb Block block"
 }

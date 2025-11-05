@@ -1,7 +1,7 @@
 {
   "id": 364,
   "name": "Jungle Planks2",
-  "description": "Jungle Planks2 - Processed wood",
+  "description": "Jungle Planks2 are solid, stylized wooden blocks crafted from processed jungle wood. They are used for building and construction, adding a cartoonish, aged wood aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Planks2 - Processed wood"
 }

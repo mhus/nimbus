@@ -1,7 +1,7 @@
 {
   "id": 1089,
   "name": "Gray Concrete",
-  "description": "Gray Concrete block (migrated from playground)",
+  "description": "Gray Concrete is a solid block representing a basic, desaturated concrete material, often utilized as a foundational building block in structures due to its non-transparent nature and neutral aesthetic. Its blurry, low-resolution texture makes it suitable for backgrounds or large-scale constructions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Gray Concrete block (migrated from playground)"
 }

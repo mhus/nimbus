@@ -1,7 +1,7 @@
 {
   "id": 121,
   "name": "Bamboo Singleleaf",
-  "description": "Bamboo Singleleaf block",
+  "description": "The Bamboo Singleleaf block represents a solid clump of stylized bamboo leaves, used for decorative purposes or to create dense foliage. Its solid property makes it a suitable building material or obstacle within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bamboo Singleleaf block"
 }

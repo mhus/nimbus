@@ -1,7 +1,7 @@
 {
   "id": 255,
   "name": "Dead Brain Coral Block",
-  "description": "Dead Brain Coral Block block",
+  "description": "The Dead Brain Coral Block is a solid decorative block that represents fossilized brain coral. Its muted purple-gray texture provides a detailed, organic aesthetic for builders seeking a weathered or underwater ruins theme.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Brain Coral Block block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 268,
   "name": "Dead Tube Coral Block",
-  "description": "Dead Tube Coral Block block",
+  "description": "This solid Dead Tube Coral Block represents a muted, lifeless coral structure found underwater. Likely used for decorative purposes or as a building material, it offers a blocky, desaturated texture suggestive of its deceased state.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Tube Coral Block block"
 }

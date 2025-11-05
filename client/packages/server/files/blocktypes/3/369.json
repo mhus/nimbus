@@ -1,7 +1,7 @@
 {
   "id": 369,
   "name": "Ladder",
-  "description": "Ladder block",
+  "description": "The Ladder block is a solid, climbable structure crafted from wood, allowing players to ascend and descend vertical surfaces. Visually, it resembles a short, two-rung wooden ladder.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Ladder block"
 }

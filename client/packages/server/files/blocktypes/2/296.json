@@ -1,7 +1,7 @@
 {
   "id": 296,
   "name": "Fern",
-  "description": "Fern block",
+  "description": "The Fern block (ID 296) represents a solid, decorative plant, adding visual interest to the game world with its light brown and green, pixelated fern texture. It can be used to create ground cover or populate forests.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Fern block"
 }

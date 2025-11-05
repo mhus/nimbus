@@ -1,7 +1,7 @@
 {
   "id": 495,
   "name": "Red Sand1",
-  "description": "Red Sand1 block",
+  "description": "Red Sand1 is a solid block representing red-tinted sand, likely used for decorative purposes or terrain generation. Its shape suggests a standard cube, and the solid property indicates it is opaque and cannot be walked through.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Sand1 block"
 }

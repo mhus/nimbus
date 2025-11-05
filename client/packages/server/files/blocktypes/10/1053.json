@@ -1,7 +1,7 @@
 {
   "id": 1053,
   "name": "Pink Wool",
-  "description": "Pink Wool block (migrated from playground)",
+  "description": "Pink Wool is a solid block, visually represented by a soft, fibrous pink texture, commonly used for building and crafting decorative elements. Due to its opaque and solid nature, it can be used as a basic building material for creating walls and structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Pink Wool block (migrated from playground)"
 }

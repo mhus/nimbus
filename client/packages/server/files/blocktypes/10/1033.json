@@ -1,7 +1,7 @@
 {
   "id": 1033,
   "name": "Bedrock",
-  "description": "Bedrock block (migrated from playground)",
+  "description": "Bedrock is an unbreakable and solid block, visually represented by a rough, brownish-grey stone texture. Typically used at the bottom of the world, it prevents players from falling out of the game environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "unbreakable": true
       }
     }
-  }
+  },
+  "description_old": "Bedrock block (migrated from playground)"
 }

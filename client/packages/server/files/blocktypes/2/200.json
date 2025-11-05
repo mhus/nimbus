@@ -1,7 +1,7 @@
 {
   "id": 200,
   "name": "Carved Pumpkin",
-  "description": "Carved Pumpkin block",
+  "description": "The Carved Pumpkin block, a solid, decorative block with a pixelated pumpkin face texture, adds a festive autumn aesthetic to the game world. It can be used for building and decorating structures, offering a thematic touch.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Carved Pumpkin block"
 }

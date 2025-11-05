@@ -1,7 +1,7 @@
 {
   "id": 426,
   "name": "Note Block",
-  "description": "Note Block block",
+  "description": "The Note Block, using a woven straw texture, is a solid block likely used for musical contraptions or interactive sound elements within the game. Its solid nature prevents passage, suggesting it functions as a building material as well as a musical component.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Note Block block"
 }

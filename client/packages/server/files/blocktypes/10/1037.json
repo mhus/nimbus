@@ -1,7 +1,7 @@
 {
   "id": 1037,
   "name": "Lapis Ore",
-  "description": "Lapis Ore block (migrated from playground)",
+  "description": "Lapis Ore is a solid, stone-like block found in the world, identifiable by its embedded bright blue lapis lazuli. It likely serves as a source of lapis lazuli, a valuable resource used for crafting or other in-game purposes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Lapis Ore block (migrated from playground)"
 }

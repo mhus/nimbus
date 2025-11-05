@@ -1,7 +1,7 @@
 {
   "id": 329,
   "name": "Gray Terracotta",
-  "description": "Gray Terracotta block",
+  "description": "Gray Terracotta is a solid, opaque block representing fired clay, often used for building and decorative purposes. Its texture features a blurred, mottled gray-brown appearance, lending a rustic aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gray Terracotta block"
 }

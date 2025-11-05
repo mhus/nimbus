@@ -1,7 +1,7 @@
 {
   "id": 386,
   "name": "Light Blue Terracotta",
-  "description": "Light Blue Terracotta block",
+  "description": "Light Blue Terracotta is a solid building block with a light blue, textured surface, used for decorative construction and creating aesthetically pleasing structures. Its solid nature allows it to function as a standard structural component in the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Blue Terracotta block"
 }

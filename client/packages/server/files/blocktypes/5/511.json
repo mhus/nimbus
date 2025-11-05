@@ -1,7 +1,7 @@
 {
   "id": 511,
   "name": "Redstone Lamp",
-  "description": "Redstone Lamp - Building material",
+  "description": "The Redstone Lamp (ID 511) is a solid, glowing block crafted with redstone, used to provide light and create illuminated structures. Its texture features a pixelated, reddish-brown pattern, suggesting a powered or activated state.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Lamp - Building material"
 }

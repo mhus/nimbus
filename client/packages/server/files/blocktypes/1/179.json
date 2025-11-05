@@ -1,7 +1,7 @@
 {
   "id": 179,
   "name": "Brown Glazed Terracotta",
-  "description": "Brown Glazed Terracotta block",
+  "description": "Brown Glazed Terracotta is a solid block that visually resembles a decorated ceramic tile with a brown and tan floral pattern and blue glaze. This block is likely used for decorative building purposes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Glazed Terracotta block"
 }

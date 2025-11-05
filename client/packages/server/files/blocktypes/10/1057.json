@@ -1,7 +1,7 @@
 {
   "id": 1057,
   "name": "Light Blue Wool",
-  "description": "Light Blue Wool block (migrated from playground)",
+  "description": "Light Blue Wool is a solid, opaque block with a soft, light blue texture, primarily used for building and decorative purposes. Its wool-like appearance adds a touch of warmth and color to structures within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Light Blue Wool block (migrated from playground)"
 }

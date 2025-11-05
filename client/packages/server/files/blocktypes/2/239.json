@@ -1,7 +1,7 @@
 {
   "id": 239,
   "name": "Cyan Terracotta",
-  "description": "Cyan Terracotta block",
+  "description": "Cyan Terracotta is a solid block resembling cyan-colored, fired clay tiles, primarily used for decorative purposes due to its muted teal appearance. Its solid nature makes it suitable for building walls and other structural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cyan Terracotta block"
 }

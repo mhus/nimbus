@@ -1,7 +1,7 @@
 {
   "id": 342,
   "name": "Horn Coral",
-  "description": "Horn Coral block",
+  "description": "Horn Coral is a solid, golden-yellow block resembling branching coral, likely used for decorative purposes or to create underwater environments. Its shape and texture suggest a stylized, organic element within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Horn Coral block"
 }

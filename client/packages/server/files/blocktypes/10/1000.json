@@ -1,7 +1,7 @@
 {
   "id": 1000,
   "name": "Stone",
-  "description": "Stone block (migrated from playground)",
+  "description": "The Stone block, represented by a natural brown and grey texture, is a solid, opaque block used for building and crafting sturdy structures in the game world. Its default shape and solid nature make it a fundamental building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Stone block (migrated from playground)"
 }

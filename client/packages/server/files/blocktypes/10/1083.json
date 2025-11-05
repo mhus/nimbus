@@ -1,7 +1,7 @@
 {
   "id": 1083,
   "name": "Pink Concrete",
-  "description": "Pink Concrete block (migrated from playground)",
+  "description": "Pink Concrete is a solid block that simulates the appearance of cast concrete with a pink hue. Primarily used for construction and decoration, it provides a durable and visually distinct building material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Pink Concrete block (migrated from playground)"
 }

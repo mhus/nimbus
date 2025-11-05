@@ -1,7 +1,7 @@
 {
   "id": 1036,
   "name": "Diamond Block",
-  "description": "Diamond Block block (migrated from playground)",
+  "description": "The Diamond Block is a solid, visually appealing block representing compressed diamonds. Primarily used for decorative purposes and high-value construction, it adds a touch of luxury and brilliance to any structure.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Diamond Block block (migrated from playground)"
 }

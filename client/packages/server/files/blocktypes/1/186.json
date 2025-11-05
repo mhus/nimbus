@@ -1,7 +1,7 @@
 {
   "id": 186,
   "name": "Bubble Coral Block",
-  "description": "Bubble Coral Block block",
+  "description": "The Bubble Coral Block is a solid, opaque block representing a piece of bubble coral reef, visually characterized by its textured purple and lavender rounded shapes. It's likely used for decorative purposes or to create coral reef environments within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bubble Coral Block block"
 }

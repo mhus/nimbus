@@ -1,7 +1,7 @@
 {
   "id": 468,
   "name": "Potatoes Stage1",
-  "description": "Potatoes Stage1 block",
+  "description": "Potatoes Stage1 is a solid block representing young potato plants in their initial growth stage, visually depicted as a small patch of green vegetation. It likely serves as the first stage in a potato farming system within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Potatoes Stage1 block"
 }

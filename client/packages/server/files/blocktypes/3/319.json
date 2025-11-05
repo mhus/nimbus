@@ -1,7 +1,7 @@
 {
   "id": 319,
   "name": "Grass Block Top Extra1",
-  "description": "Grass Block Top Extra1 block",
+  "description": "The Grass Block Top Extra1 is a solid block representing the top surface of grass, featuring a variant texture with scattered blurry blueish shapes. This block is likely used for decorative purposes to add visual variation to grassy landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Block Top Extra1 block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 202,
   "name": "Chain Command Block Conditional",
-  "description": "Chain Command Block Conditional block",
+  "description": "The Chain Command Block Conditional (ID 202) is a solid block used for executing chained commands only when the preceding command block was successful, indicated by its green horseshoe/floral symbol texture. This block allows for complex conditional logic and automation within the game environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Chain Command Block Conditional block"
 }

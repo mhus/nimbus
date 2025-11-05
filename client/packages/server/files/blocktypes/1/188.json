@@ -1,7 +1,7 @@
 {
   "id": 188,
   "name": "Cactus",
-  "description": "Cactus block",
+  "description": "The Cactus block represents a solid, spiky desert plant found in-game. Its texture is a low-resolution pixelated style of a thorny cactus body, likely used for decoration or as a natural obstacle.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cactus block"
 }

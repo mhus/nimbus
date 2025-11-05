@@ -1,7 +1,7 @@
 {
   "id": 347,
   "name": "Iron Bars Hor",
-  "description": "Iron Bars Hor block",
+  "description": "Iron Bars Hor are solid, horizontal iron bars used for creating barriers or decorative cage-like structures. The rounded texture provides a slightly more visually appealing alternative to basic block walls while still maintaining a sense of confinement.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Iron Bars Hor block"
 }

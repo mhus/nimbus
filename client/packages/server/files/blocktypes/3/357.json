@@ -1,7 +1,7 @@
 {
   "id": 357,
   "name": "Jungle Fence Gate",
-  "description": "Jungle Fence Gate block",
+  "description": "The Jungle Fence Gate is a solid, wooden gate block used for creating entrances in jungle-themed fences, visually blending with other jungle fence elements. It allows players to create secure yet accessible pathways within their fenced areas.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Fence Gate block"
 }

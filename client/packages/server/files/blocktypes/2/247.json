@@ -1,7 +1,7 @@
 {
   "id": 247,
   "name": "Dark Oak Log1",
-  "description": "Dark Oak Log1 - Natural wood material",
+  "description": "Dark Oak Log1 is a solid, opaque block representing the textured surface of a dark oak log, likely used for building structures or crafting within the game. Its visual appearance suggests use as a natural wood building component.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Log1 - Natural wood material"
 }

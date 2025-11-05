@@ -11,32 +11,41 @@ import type { AppContext } from '../AppContext';
 const logger = getLogger('BlockTypeService');
 
 /**
- * BlockType response from server API
+ * BlockType response from server API (with paging)
  */
 interface BlockTypesResponse {
   blockTypes: BlockType[];
+  count: number;
+  limit: number;
+  offset: number;
 }
 
 /**
- * BlockTypeService - Manages block type registry
+ * BlockTypeService - Manages block type registry with chunk-based lazy loading
  *
  * Features:
- * - Loads block types from server REST API
- * - Caches block types after initial load
+ * - Lazy loads block types from server in chunks of 100
+ * - Caches loaded chunks
  * - Provides fast lookup by ID
  * - Validates block type data
+ *
+ * Chunk Strategy:
+ * - BlockType ID 15 → loads chunk 0-99
+ * - BlockType ID 234 → loads chunk 200-299
+ * - Each chunk is loaded once and cached
  */
 export class BlockTypeService {
   private blockTypes: Map<number, BlockType> = new Map();
-  private loaded: boolean = false;
-  private loadingPromise?: Promise<void>;
+  private loadedChunks: Set<number> = new Set(); // Track which chunks (0, 1, 2, ...) are loaded
+  private loadingChunks: Map<number, Promise<void>> = new Map(); // Track chunks currently being loaded
+  private readonly CHUNK_SIZE = 100;
 
   constructor(private appContext: AppContext) {
     // Register static AIR BlockType (id 0)
     // This ensures AIR is always available, even before server block types are loaded
     this.registerAirBlockType();
 
-    logger.info('BlockTypeService initialized');
+    logger.info('BlockTypeService initialized with chunk-based lazy loading');
   }
 
   /**
@@ -66,38 +75,57 @@ export class BlockTypeService {
   }
 
   /**
-   * Load block types from server
-   *
-   * This method is idempotent - multiple calls will reuse the same loading promise
-   * and only load once.
+   * Calculate which chunk a BlockType ID belongs to
+   * Example: ID 15 → chunk 0 (0-99), ID 234 → chunk 2 (200-299)
    */
-  async loadBlockTypes(): Promise<void> {
-    // If already loaded, return immediately
-    if (this.loaded) {
-      logger.debug('Block types already loaded');
+  private getChunkIndex(blockTypeId: number): number {
+    return Math.floor(blockTypeId / this.CHUNK_SIZE);
+  }
+
+  /**
+   * Get the range for a chunk
+   * Example: chunk 0 → [0, 99], chunk 2 → [200, 299]
+   */
+  private getChunkRange(chunkIndex: number): { from: number; to: number } {
+    return {
+      from: chunkIndex * this.CHUNK_SIZE,
+      to: (chunkIndex + 1) * this.CHUNK_SIZE - 1,
+    };
+  }
+
+  /**
+   * Load a chunk of BlockTypes from the server
+   * @param chunkIndex The chunk index to load (0, 1, 2, ...)
+   */
+  private async loadChunk(chunkIndex: number): Promise<void> {
+    // Check if chunk is already loaded
+    if (this.loadedChunks.has(chunkIndex)) {
+      logger.debug('Chunk already loaded', { chunkIndex });
       return;
     }
 
-    // If currently loading, return the existing promise
-    if (this.loadingPromise) {
-      logger.debug('Block types loading in progress, waiting...');
-      return this.loadingPromise;
+    // Check if chunk is currently being loaded
+    const existingPromise = this.loadingChunks.get(chunkIndex);
+    if (existingPromise) {
+      logger.debug('Chunk loading in progress, waiting...', { chunkIndex });
+      return existingPromise;
     }
 
-    // Start loading
-    this.loadingPromise = this.doLoadBlockTypes();
+    // Start loading chunk
+    const loadingPromise = this.doLoadChunk(chunkIndex);
+    this.loadingChunks.set(chunkIndex, loadingPromise);
 
     try {
-      await this.loadingPromise;
+      await loadingPromise;
     } finally {
-      this.loadingPromise = undefined;
+      this.loadingChunks.delete(chunkIndex);
     }
   }
 
   /**
-   * Internal method that performs the actual loading
+   * Internal method that performs the actual chunk loading
    */
-  private async doLoadBlockTypes(): Promise<void> {
+  private async doLoadChunk(chunkIndex: number): Promise<void> {
     try {
       const networkService = this.appContext.services.network;
       if (!networkService) {
@@ -106,50 +134,65 @@ export class BlockTypeService {
 
       const worldId = this.appContext.worldInfo?.worldId || 'main';
       const apiUrl = networkService.getApiUrl();
-      const url = `${apiUrl}/api/worlds/${worldId}/blocktypes`;
+      const range = this.getChunkRange(chunkIndex);
 
-      logger.info('Loading block types from server', { url });
+      // Use the range endpoint: /api/worlds/{worldId}/blocktypes/{from}/{to}
+      const url = `${apiUrl}/api/worlds/${worldId}/blocktypes/${range.from}/${range.to}`;
+
+      logger.info('Loading BlockType chunk', { chunkIndex, range, url });
 
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`Failed to load block types: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to load chunk: ${response.status} ${response.statusText}`);
       }
 
-      const data: BlockTypesResponse = await response.json();
+      const blockTypes: BlockType[] = await response.json();
 
-      if (!data.blockTypes || !Array.isArray(data.blockTypes)) {
-        throw new Error('Invalid block types response: missing or invalid blockTypes array');
+      if (!Array.isArray(blockTypes)) {
+        throw new Error('Invalid chunk response: expected array of BlockTypes');
       }
 
-      // Clear existing cache
-      this.blockTypes.clear();
-
-      // Validate and cache block types
+      // Validate and cache block types from this chunk
       let validCount = 0;
-      for (const blockType of data.blockTypes) {
+      for (const blockType of blockTypes) {
         if (this.validateBlockType(blockType)) {
           this.blockTypes.set(blockType.id, blockType);
           validCount++;
         } else {
-          logger.warn('Invalid block type received', { blockType });
+          logger.warn('Invalid block type received in chunk', { blockType, chunkIndex });
         }
       }
 
-      this.loaded = true;
+      // Mark chunk as loaded
+      this.loadedChunks.add(chunkIndex);
 
-      logger.info('Block types loaded successfully', {
-        total: data.blockTypes.length,
+      logger.info('BlockType chunk loaded successfully', {
+        chunkIndex,
+        range,
+        received: blockTypes.length,
         valid: validCount,
-        invalid: data.blockTypes.length - validCount,
+        invalid: blockTypes.length - validCount,
       });
     } catch (error) {
-      this.loaded = false;
       throw ExceptionHandler.handleAndRethrow(
         error,
-        'BlockTypeService.doLoadBlockTypes',
-        { worldId: this.appContext.worldInfo?.worldId }
+        'BlockTypeService.doLoadChunk',
+        { chunkIndex }
       );
+    }
+  }
+
+  /**
+   * Ensure a BlockType is loaded (loads its chunk if needed)
+   * @param blockTypeId The BlockType ID to ensure is loaded
+   */
+  private async ensureBlockTypeLoaded(blockTypeId: number): Promise<void> {
+    const chunkIndex = this.getChunkIndex(blockTypeId);
+
+    // If chunk not loaded, load it
+    if (!this.loadedChunks.has(chunkIndex)) {
+      await this.loadChunk(chunkIndex);
     }
   }
 
@@ -175,44 +218,68 @@ export class BlockTypeService {
   }
 
   /**
-   * Get a block type by ID
+   * Get a block type by ID (synchronous - returns cached value)
+   *
+   * Use this when you need immediate access to a BlockType.
+   * Returns undefined if the chunk containing this BlockType is not loaded yet.
    *
    * @param id Block type ID
-   * @returns BlockType or undefined if not found
+   * @returns BlockType or undefined if not loaded
    */
   getBlockType(id: number): BlockType | undefined {
-    // AIR (id 0) is always available, even before loading
-    if (id === 0) {
-      return this.blockTypes.get(0);
-    }
-
-    if (!this.loaded) {
-      logger.warn('Attempting to get block type before loading', { id });
-      return undefined;
-    }
-
     return this.blockTypes.get(id);
   }
 
   /**
-   * Get all block types
+   * Get a block type by ID (asynchronous - loads chunk if needed)
    *
-   * @returns Array of all loaded block types
+   * Use this when you can await and want to ensure the BlockType is available.
+   * This will automatically load the chunk containing the BlockType if needed.
+   *
+   * @param id Block type ID
+   * @returns BlockType or undefined if not found on server
    */
-  getAllBlockTypes(): BlockType[] {
-    if (!this.loaded) {
-      logger.warn('Attempting to get all block types before loading');
-      return [];
+  async getBlockTypeAsync(id: number): Promise<BlockType | undefined> {
+    // Check if already in cache
+    const cached = this.blockTypes.get(id);
+    if (cached) {
+      return cached;
     }
 
+    // Load the chunk containing this BlockType
+    await this.ensureBlockTypeLoaded(id);
+
+    // Return from cache (may still be undefined if server doesn't have it)
+    return this.blockTypes.get(id);
+  }
+
+  /**
+   * Get all currently loaded block types
+   *
+   * Note: This only returns BlockTypes that have been loaded so far.
+   * Use loadAllChunks() first if you need all BlockTypes.
+   *
+   * @returns Array of loaded block types
+   */
+  getAllBlockTypes(): BlockType[] {
     return Array.from(this.blockTypes.values());
   }
 
   /**
-   * Check if block types are loaded
+   * Check if a specific chunk is loaded
    */
-  isLoaded(): boolean {
-    return this.loaded;
+  isChunkLoaded(chunkIndex: number): boolean {
+    return this.loadedChunks.has(chunkIndex);
+  }
+
+  /**
+   * Get statistics about loaded chunks
+   */
+  getLoadedChunksStats(): { loadedChunks: number; totalBlockTypes: number } {
+    return {
+      loadedChunks: this.loadedChunks.size,
+      totalBlockTypes: this.blockTypes.size,
+    };
   }
 
   /**
@@ -223,14 +290,39 @@ export class BlockTypeService {
   }
 
   /**
+   * Preload multiple chunks at once
+   * Useful for preloading common BlockType ranges
+   *
+   * @param chunkIndices Array of chunk indices to load
+   */
+  async preloadChunks(chunkIndices: number[]): Promise<void> {
+    const promises = chunkIndices.map(index => this.loadChunk(index));
+    await Promise.all(promises);
+  }
+
+  /**
+   * Preload BlockTypes for a list of IDs
+   * Efficiently loads all required chunks
+   *
+   * @param blockTypeIds Array of BlockType IDs to preload
+   */
+  async preloadBlockTypes(blockTypeIds: number[]): Promise<void> {
+    // Calculate unique chunks needed
+    const chunksNeeded = new Set(blockTypeIds.map(id => this.getChunkIndex(id)));
+
+    // Load all chunks in parallel
+    await this.preloadChunks(Array.from(chunksNeeded));
+  }
+
+  /**
    * Clear the cache and reset loaded state
    *
    * Useful for testing or when switching worlds
    */
   clear(): void {
     this.blockTypes.clear();
-    this.loaded = false;
-    this.loadingPromise = undefined;
+    this.loadedChunks.clear();
+    this.loadingChunks.clear();
 
     // Re-register static AIR BlockType
     this.registerAirBlockType();

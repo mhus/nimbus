@@ -1,7 +1,7 @@
 {
   "id": 143,
   "name": "Birch Planks2",
-  "description": "Birch Planks2 - Processed wood",
+  "description": "Birch Planks2 are solid, processed birch wood blocks, visually represented by a light brown, horizontally-arranged plank texture. They likely serve as a common building material for constructing structures and crafting in the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Birch Planks2 - Processed wood"
 }

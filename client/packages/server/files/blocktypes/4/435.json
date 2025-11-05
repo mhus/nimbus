@@ -1,7 +1,7 @@
 {
   "id": 435,
   "name": "Oak Planks2",
-  "description": "Oak Planks2 - Processed wood",
+  "description": "Oak Planks2 are solid, processed wood blocks made from oak, used for construction and crafting. Their texture displays horizontally arranged planks with subtle variations in brown tones.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oak Planks2 - Processed wood"
 }

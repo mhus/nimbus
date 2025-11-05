@@ -1,7 +1,7 @@
 {
   "id": 498,
   "name": "Red Sandstone1",
-  "description": "Red Sandstone1 - Building material",
+  "description": "Red Sandstone1 is a solid, building material block textured with a reddish-brown sandstone brick pattern. Its warm color and rough texture make it suitable for constructing visually appealing and sturdy structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Sandstone1 - Building material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 155,
   "name": "Blue Glazed Terracotta",
-  "description": "Blue Glazed Terracotta block",
+  "description": "Blue Glazed Terracotta is a solid block with a symmetrical, tileable blue glazed texture, ideal for decorative building projects. Its solid nature allows for use in structural elements and creating intricate, visually appealing designs.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Glazed Terracotta block"
 }

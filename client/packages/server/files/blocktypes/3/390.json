@@ -1,7 +1,7 @@
 {
   "id": 390,
   "name": "Light Gray Glazed Terracotta",
-  "description": "Light Gray Glazed Terracotta block",
+  "description": "Light Gray Glazed Terracotta is a solid block featuring a light gray and teal cross/diamond pattern, likely used for decorative building due to its glazed appearance. Its solid nature makes it suitable for constructing walls and structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Gray Glazed Terracotta block"
 }

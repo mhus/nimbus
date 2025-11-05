@@ -1,7 +1,7 @@
 {
   "id": 384,
   "name": "Light Blue Glazed Terracotta",
-  "description": "Light Blue Glazed Terracotta block",
+  "description": "Light Blue Glazed Terracotta is a solid, decorative block featuring intricate light and dark blue glazed tile patterns. It can be used for building visually appealing structures and adding a touch of artisanal detail to voxel-based environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Blue Glazed Terracotta block"
 }

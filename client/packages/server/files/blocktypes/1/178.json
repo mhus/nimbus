@@ -1,7 +1,7 @@
 {
   "id": 178,
   "name": "Brown Concrete Powder",
-  "description": "Brown Concrete Powder block",
+  "description": "Brown Concrete Powder is a solid, granular block used in construction, representing a dry, unmixed form of concrete; it likely transforms into a solid concrete block when mixed with water. Its blurred texture suggests a fine, powdery surface.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Concrete Powder block"
 }

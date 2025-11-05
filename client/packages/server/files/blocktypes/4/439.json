@@ -1,7 +1,7 @@
 {
   "id": 439,
   "name": "Observer Front1",
-  "description": "Observer Front1 block",
+  "description": "The Observer Front1 block is a solid, decorative block resembling a dark, stylized observer with glowing red eyes, likely used for monitoring or aesthetic purposes. Its unique texture provides a distinct, potentially functional, visual element within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Observer Front1 block"
 }

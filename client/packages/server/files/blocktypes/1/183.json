@@ -1,7 +1,7 @@
 {
   "id": 183,
   "name": "Brown Terracotta",
-  "description": "Brown Terracotta block",
+  "description": "Brown Terracotta is a solid block representing baked clay, providing a durable and earthy building material. Its rough, brown-terracotta texture adds a natural, unrefined aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Terracotta block"
 }

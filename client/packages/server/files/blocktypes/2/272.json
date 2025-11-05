@@ -1,7 +1,7 @@
 {
   "id": 272,
   "name": "Detector Rail",
-  "description": "Detector Rail block",
+  "description": "The Detector Rail block, visually represented by a textured rail with detection components, is a solid block used to detect passing minecarts. When triggered, it likely activates a mechanism or signal within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Detector Rail block"
 }

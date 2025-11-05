@@ -1,7 +1,7 @@
 {
   "id": 494,
   "name": "Red Sand",
-  "description": "Red Sand block",
+  "description": "Red Sand is a solid, reddish-orange block representing fine, grainy sand, primarily used for building and terraforming desert-like landscapes. Its solid nature allows it to form stable structures and terrain features.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Sand block"
 }

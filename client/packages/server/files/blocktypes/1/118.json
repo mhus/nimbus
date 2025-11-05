@@ -1,7 +1,7 @@
 {
   "id": 118,
   "name": "Attached Pumpkin Stem",
-  "description": "Attached Pumpkin Stem block",
+  "description": "The Attached Pumpkin Stem block represents the solid, connected stem of a pumpkin plant, visually identifiable by its green, slightly curved shape with a detached piece and light-brown line. It likely serves as a visual component to pumpkin generation or decoration, indicating a pumpkin's presence or origin point.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Attached Pumpkin Stem block"
 }

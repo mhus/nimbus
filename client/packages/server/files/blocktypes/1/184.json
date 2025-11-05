@@ -1,7 +1,7 @@
 {
   "id": 184,
   "name": "Brown Wool",
-  "description": "Brown Wool block",
+  "description": "Brown Wool is a solid block representing a dense, felt-like wool material, likely used for building, decoration, or crafting purposes due to its opaque and buildable nature.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Wool block"
 }

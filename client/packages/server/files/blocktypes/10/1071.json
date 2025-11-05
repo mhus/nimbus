@@ -1,7 +1,7 @@
 {
   "id": 1071,
   "name": "Lime Stained Glass",
-  "description": "Lime Stained Glass block (migrated from playground)",
+  "description": "Lime Stained Glass is a solid block featuring a lime-green stained glass texture, allowing light to pass through while adding a decorative and colorful element to structures. Its solid property means it can be used in construction, potentially offering visually interesting light diffusion.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Lime Stained Glass block (migrated from playground)"
 }

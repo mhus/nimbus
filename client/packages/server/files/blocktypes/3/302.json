@@ -1,7 +1,7 @@
 {
   "id": 302,
   "name": "Furnace Front On",
-  "description": "Furnace Front On block",
+  "description": "The \"Furnace Front On\" block visually represents an active furnace, displaying a lit texture indicative of heating. As a solid block, it likely functions as the interactive face of a furnace used for smelting resources.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Furnace Front On block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1029,
   "name": "Spruce Leaves",
-  "description": "Spruce Leaves block (migrated from playground)",
+  "description": "Spruce Leaves are solid blocks visually representing overlapping spruce foliage, used for decorative purposes or to simulate natural forest canopy. Their solid property allows players to stand on them.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -19,5 +19,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Spruce Leaves block (migrated from playground)"
 }

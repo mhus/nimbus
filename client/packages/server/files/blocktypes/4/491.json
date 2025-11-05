@@ -1,7 +1,7 @@
 {
   "id": 491,
   "name": "Red Mushroom",
-  "description": "Red Mushroom block",
+  "description": "This block represents a solid, placeable Red Mushroom, likely used for decoration or as a resource. Its classic 8-bit aesthetic makes it a charming addition to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Mushroom block"
 }

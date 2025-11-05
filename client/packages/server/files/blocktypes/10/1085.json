@@ -1,7 +1,7 @@
 {
   "id": 1085,
   "name": "Magenta Concrete",
-  "description": "Magenta Concrete block (migrated from playground)",
+  "description": "Magenta Concrete is a solid block with a mottled, low-resolution magenta texture, ideal for constructing visually striking, durable structures. Its solid nature makes it suitable for building foundations, walls, and other structural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Magenta Concrete block (migrated from playground)"
 }

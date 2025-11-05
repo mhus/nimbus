@@ -1,7 +1,7 @@
 {
   "id": 220,
   "name": "Cobblestone2",
-  "description": "Cobblestone2 - Building material",
+  "description": "Cobblestone2 is a solid block representing a blurred cobblestone texture, suitable for construction and terrain generation in areas where a less-defined stone appearance is desired. Its solid nature allows for building structures and defining walkable surfaces.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cobblestone2 - Building material"
 }

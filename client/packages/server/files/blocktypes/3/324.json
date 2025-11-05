@@ -1,7 +1,7 @@
 {
   "id": 324,
   "name": "Gravel",
-  "description": "Gravel block",
+  "description": "The Gravel block, featuring a blurry brown gravel texture, is a solid block representing loose stones or pebbles. It likely functions as a terrain filler or building material in the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gravel block"
 }

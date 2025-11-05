@@ -1,7 +1,7 @@
 {
   "id": 1015,
   "name": "Bookshelf",
-  "description": "Bookshelf block (migrated from playground)",
+  "description": "The Bookshelf block, a solid structure visually composed of wooden planks and filled with colorful books, serves as a decorative element and potential storage container within the game environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Bookshelf block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 430,
   "name": "Oak Leaves1",
-  "description": "Oak Leaves1 - Tree foliage",
+  "description": "Oak Leaves1 represents dense oak foliage, using a blurred, earthy texture to simulate the leaves. Due to its likely non-solid shape, this block is intended for decorative use in building realistic tree canopies and other foliage elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Oak Leaves1 - Tree foliage"
 }

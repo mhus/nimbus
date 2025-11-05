@@ -1,7 +1,7 @@
 {
   "id": 1084,
   "name": "Orange Concrete",
-  "description": "Orange Concrete block (migrated from playground)",
+  "description": "Orange Concrete is a solid, opaque block resembling rough, orange-tinted concrete, often used for construction and decorative purposes. Its durable nature makes it ideal for building stable structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Orange Concrete block (migrated from playground)"
 }

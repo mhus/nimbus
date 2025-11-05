@@ -1,7 +1,7 @@
 {
   "id": 437,
   "name": "Oak Trapdoor",
-  "description": "Oak Trapdoor block",
+  "description": "The Oak Trapdoor is a solid wooden block textured to resemble a hinged oak plank, functioning as a concealable doorway or hatch. Players can likely use it to create hidden passages or access vertical spaces.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oak Trapdoor block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 507,
   "name": "Redstone Dust Line0",
-  "description": "Redstone Dust Line0 - Building material",
+  "description": "Redstone Dust Line0 is a solid block visually representing a redstone dust connection, specifically a cross-shaped intersection. It's likely used for conducting redstone signals, enabling complex circuitry within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Dust Line0 - Building material"
 }

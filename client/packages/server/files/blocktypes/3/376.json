@@ -1,7 +1,7 @@
 {
   "id": 376,
   "name": "Leaves",
-  "description": "Leaves - Tree foliage",
+  "description": "These leafy blocks represent tree foliage, adding visual detail to the environment. Their semi-transparent nature and unique shape contribute to a realistic, albeit stylized, tree canopy.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Leaves - Tree foliage"
 }

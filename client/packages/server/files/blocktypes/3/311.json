@@ -1,7 +1,7 @@
 {
   "id": 311,
   "name": "Grass1",
-  "description": "Grass1 block",
+  "description": "Grass1 is a solid block depicting a stylized tuft of dry grass, often used for decorative purposes or basic ground cover. Due to its solid nature, it acts as an impassable terrain element.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass1 block"
 }

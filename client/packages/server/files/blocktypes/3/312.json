@@ -1,7 +1,7 @@
 {
   "id": 312,
   "name": "Grass2",
-  "description": "Grass2 block",
+  "description": "Grass2 is a solid block representing dense, brownish-yellow grass, visually distinguished by a thin, purple stem; it can be used to create grassy landscapes and environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass2 block"
 }

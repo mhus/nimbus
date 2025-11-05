@@ -1,7 +1,7 @@
 {
   "id": 285,
   "name": "Dragon Egg",
-  "description": "Dragon Egg block",
+  "description": "The Dragon Egg block, textured with a blurred and mottled brown appearance, represents a solid, possibly hatchable dragon egg. It is a solid block that could be used for decorative purposes or as part of a dragon-related quest or breeding mechanic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dragon Egg block"
 }

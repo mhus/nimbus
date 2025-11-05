@@ -1,7 +1,7 @@
 {
   "id": 298,
   "name": "Fire Coral",
-  "description": "Fire Coral block",
+  "description": "Fire Coral is a solid block that visually represents a branching, red coral structure. It's likely used for decorative purposes, adding a stylized and retro aesthetic to underwater or coral reef environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Fire Coral block"
 }

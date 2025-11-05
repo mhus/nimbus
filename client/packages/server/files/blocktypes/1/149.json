@@ -1,7 +1,7 @@
 {
   "id": 149,
   "name": "Black Stained Glass",
-  "description": "Black Stained Glass - Transparent block",
+  "description": "Black Stained Glass is a transparent block used for creating visually striking windows and decorative features. Its dark, textured appearance allows light to pass through with a shadowy, colored tint.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Black Stained Glass - Transparent block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 278,
   "name": "Diorite1",
-  "description": "Diorite1 block",
+  "description": "Diorite1 is a solid block representing diorite stone, commonly used for building and decorative purposes. Its textured surface features light beige and greyish hues, mimicking the granular appearance of natural diorite.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Diorite1 block"
 }

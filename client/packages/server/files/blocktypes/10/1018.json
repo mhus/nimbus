@@ -1,7 +1,7 @@
 {
   "id": 1018,
   "name": "Coal Ore",
-  "description": "Coal Ore block (migrated from playground)",
+  "description": "Coal Ore is a solid, brownish-grey block representing a natural deposit of coal found within rock.  Mining this block yields coal resources for crafting and fuel.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Coal Ore block (migrated from playground)"
 }

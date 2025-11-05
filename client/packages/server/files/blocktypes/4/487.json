@@ -1,7 +1,7 @@
 {
   "id": 487,
   "name": "Red Concrete",
-  "description": "Red Concrete block",
+  "description": "Red Concrete is a solid block, textured to resemble a reddish-brown concrete surface, used for building durable and visually distinct structures. Its opaque nature makes it suitable for creating walls and floors, providing a solid foundation for various constructions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Concrete block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 410,
   "name": "Magenta Wool",
-  "description": "Magenta Wool block",
+  "description": "Magenta Wool is a solid block with a soft, fuzzy texture, used for building and decoration. Its opaque nature makes it suitable for constructing walls and structures while adding a vibrant magenta color to the environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Magenta Wool block"
 }

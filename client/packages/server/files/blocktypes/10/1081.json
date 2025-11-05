@@ -1,7 +1,7 @@
 {
   "id": 1081,
   "name": "Red Concrete",
-  "description": "Red Concrete block (migrated from playground)",
+  "description": "Red Concrete is a solid, opaque block with a reddish-brown, slightly weathered appearance, ideal for constructing durable structures and providing a distinct visual style to buildings. Its solid nature makes it suitable for foundational elements and load-bearing walls.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Red Concrete block (migrated from playground)"
 }

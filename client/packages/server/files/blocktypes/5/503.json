@@ -1,7 +1,7 @@
 {
   "id": 503,
   "name": "Red Wool",
-  "description": "Red Wool block",
+  "description": "Red Wool is a solid block, visually representing a soft, red wool material. It's likely used for crafting, decoration, or construction purposes within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Red Wool block"
 }

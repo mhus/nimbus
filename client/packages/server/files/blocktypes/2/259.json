@@ -1,7 +1,7 @@
 {
   "id": 259,
   "name": "Dead Bubble Coral Fan",
-  "description": "Dead Bubble Coral Fan block",
+  "description": "The Dead Bubble Coral Fan is a solid block representing a deceased coral fan, adding visual variation to underwater environments. While primarily decorative, its solid nature can subtly influence player movement and world interactions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Bubble Coral Fan block"
 }

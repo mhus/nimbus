@@ -1,7 +1,7 @@
 {
   "id": 115,
   "name": "Andesite1",
-  "description": "Andesite1 block",
+  "description": "Andesite1 is a solid block representing a rough-hewn andesite rock, commonly used for construction and terrain generation. Its detailed texture provides a natural, granular appearance.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Andesite1 block"
 }

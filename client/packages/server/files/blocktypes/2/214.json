@@ -1,7 +1,7 @@
 {
   "id": 214,
   "name": "Coal Ore",
-  "description": "Coal Ore - Mineable resource",
+  "description": "Coal Ore is a solid, mineable block visually representing raw coal deposits embedded in rock, used as a resource for crafting and fuel within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Coal Ore - Mineable resource"
 }

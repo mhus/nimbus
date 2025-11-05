@@ -1,7 +1,7 @@
 {
   "id": 359,
   "name": "Jungle Leaves1",
-  "description": "Jungle Leaves1 - Tree foliage",
+  "description": "Jungle Leaves1 is a foliage block, likely used to represent the leaves of jungle trees. Its single shape state and use of a foliage texture suggests it's partially transparent and intended for decorative purposes in jungle environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Jungle Leaves1 - Tree foliage"
 }

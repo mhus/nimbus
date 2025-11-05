@@ -1,7 +1,7 @@
 {
   "id": 215,
   "name": "Coal Ore1",
-  "description": "Coal Ore1 - Mineable resource",
+  "description": "Coal Ore1 is a solid, mineable resource block representing coal deposits found underground. Its texture displays dark gray coal lumps embedded in a light brown-gray stone, allowing players to extract coal for crafting and fuel.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Coal Ore1 - Mineable resource"
 }

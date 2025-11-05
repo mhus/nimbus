@@ -1,7 +1,7 @@
 {
   "id": 433,
   "name": "Oak Planks",
-  "description": "Oak Planks - Processed wood",
+  "description": "Oak Planks are solid, processed wood blocks crafted from oak trees. Their texture depicts horizontal planks and they can be used for building structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oak Planks - Processed wood"
 }

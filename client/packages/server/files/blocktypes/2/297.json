@@ -1,7 +1,7 @@
 {
   "id": 297,
   "name": "Fern1",
-  "description": "Fern1 block",
+  "description": "Fern1 is a solid block representing a small, decorative fern plant, likely used for adding visual detail and natural elements to environments. Its opaque nature means it will block light and movement.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Fern1 block"
 }

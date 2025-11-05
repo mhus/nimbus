@@ -1,7 +1,7 @@
 {
   "id": 1035,
   "name": "Diamond Ore",
-  "description": "Diamond Ore block (migrated from playground)",
+  "description": "Diamond Ore is a solid block found in the game world, representing naturally occurring diamond deposits. It features bright blue diamond crystals embedded in rock and is likely mined to obtain diamonds for crafting.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Diamond Ore block (migrated from playground)"
 }

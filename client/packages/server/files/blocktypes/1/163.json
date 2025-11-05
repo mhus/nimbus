@@ -1,7 +1,7 @@
 {
   "id": 163,
   "name": "Bookshelf2",
-  "description": "Bookshelf2 block",
+  "description": "The Bookshelf2 block represents a solid, decorative bookshelf, providing visual interest with its pixelated texture of colorful books and a blue vase. It can be used to furnish interiors and enhance the ambiance of libraries or living spaces.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bookshelf2 block"
 }

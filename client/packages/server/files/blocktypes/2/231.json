@@ -1,7 +1,7 @@
 {
   "id": 231,
   "name": "Cornflower",
-  "description": "Cornflower - Decorative plant",
+  "description": "The Cornflower block is a decorative, non-solid plant featuring a blue flower and green stem, used for adding visual flair to the game world. Its shape suggests a transparent, partially-formed block.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Cornflower - Decorative plant"
 }

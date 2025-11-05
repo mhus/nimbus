@@ -1,7 +1,7 @@
 {
   "id": 1016,
   "name": "Barrier",
-  "description": "Barrier block (migrated from playground)",
+  "description": "The Barrier block is an unbreakable, solid block designed to prevent player passage or interaction. It serves as a permanent obstacle, typically used to define level boundaries or restrict access to specific areas.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "unbreakable": true
       }
     }
-  }
+  },
+  "description_old": "Barrier block (migrated from playground)"
 }

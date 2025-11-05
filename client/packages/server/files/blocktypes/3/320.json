@@ -1,7 +1,7 @@
 {
   "id": 320,
   "name": "Grass Path Top1",
-  "description": "Grass Path Top1 block",
+  "description": "The Grass Path Top1 block visually represents a well-trodden dirt path covered with sparse grass. As a solid block, it's intended for creating worn pathways and trails in the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Path Top1 block"
 }

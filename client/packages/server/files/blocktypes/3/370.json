@@ -1,7 +1,7 @@
 {
   "id": 370,
   "name": "Lantern",
-  "description": "Lantern block",
+  "description": "The Lantern block (ID 370) is a solid light source, providing illumination with its distinct stacked lantern texture. Placeable in the world, it offers a readily available and decorative way to light up dark areas.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lantern block"
 }

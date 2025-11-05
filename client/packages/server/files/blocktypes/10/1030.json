@@ -1,7 +1,7 @@
 {
   "id": 1030,
   "name": "Spruce Planks",
-  "description": "Spruce Planks block (migrated from playground)",
+  "description": "Spruce Planks are solid blocks crafted from spruce wood, providing a fundamental building material with a classic, warm wood grain texture. They are commonly used for constructing structures and decorative elements within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Spruce Planks block (migrated from playground)"
 }

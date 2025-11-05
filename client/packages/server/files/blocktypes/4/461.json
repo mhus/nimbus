@@ -1,7 +1,7 @@
 {
   "id": 461,
   "name": "Planks Spruce",
-  "description": "Planks Spruce - Processed wood",
+  "description": "Spruce Planks are solid, processed wood blocks crafted from spruce trees, used for building structures and crafting in the game. Their texture features a recognizable wood grain pattern, providing a rustic aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Planks Spruce - Processed wood"
 }

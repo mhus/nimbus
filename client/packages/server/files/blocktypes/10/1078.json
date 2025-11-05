@@ -1,7 +1,7 @@
 {
   "id": 1078,
   "name": "Black Stained Glass",
-  "description": "Black Stained Glass block (migrated from playground)",
+  "description": "Black Stained Glass is a solid block used primarily for decorative windows, providing a darkened, textured visual effect while still allowing some light to pass through. Its distinctive black stained glass texture adds a gothic or modern aesthetic to builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Black Stained Glass block (migrated from playground)"
 }

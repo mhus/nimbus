@@ -1,7 +1,7 @@
 {
   "id": 248,
   "name": "Dark Oak Planks",
-  "description": "Dark Oak Planks - Processed wood",
+  "description": "Dark Oak Planks are solid, dark brown wooden planks crafted from dark oak, providing a basic building material for constructing structures and floors. Their wooden texture adds a rustic aesthetic to player creations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Planks - Processed wood"
 }

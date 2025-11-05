@@ -1,7 +1,7 @@
 {
   "id": 314,
   "name": "Grass Block Snow",
-  "description": "Grass Block Snow block",
+  "description": "The Grass Block Snow is a solid block depicting grass covered in snow, commonly used for building and terrain in snowy environments. Its solid nature makes it suitable for creating walkable surfaces and structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Block Snow block"
 }

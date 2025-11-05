@@ -1,7 +1,7 @@
 {
   "id": 313,
   "name": "Grass Block Side Overlay",
-  "description": "Grass Block Side Overlay block",
+  "description": "This block is a solid, grass-textured overlay applied to the sides of grass blocks, adding visual detail and a more natural edge. It uses a partially transparent texture to blend seamlessly with the underlying block.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Block Side Overlay block"
 }

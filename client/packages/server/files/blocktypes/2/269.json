@@ -1,7 +1,7 @@
 {
   "id": 269,
   "name": "Dead Tube Coral Fan",
-  "description": "Dead Tube Coral Fan block",
+  "description": "The Dead Tube Coral Fan block represents a non-living coral decoration, adding visual variety to underwater environments. While appearing as a static, solid object, it primarily serves an aesthetic purpose rather than providing structural functionality.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Tube Coral Fan block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 505,
   "name": "Redstone Dust Cross Overlay",
-  "description": "Redstone Dust Cross Overlay - Building material",
+  "description": "This block represents a solid, cross-shaped redstone dust overlay used to conduct redstone signals. While visually blank by default, it likely inherits the redstone dust texture when placed, forming redstone circuits.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Dust Cross Overlay - Building material"
 }

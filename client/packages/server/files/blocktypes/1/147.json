@@ -1,7 +1,7 @@
 {
   "id": 147,
   "name": "Black Concrete Powder",
-  "description": "Black Concrete Powder block",
+  "description": "Black Concrete Powder is a solid block that visually represents a matte, dark gray concrete powder. It's likely used as a building material and may react to water, solidifying into black concrete.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Black Concrete Powder block"
 }

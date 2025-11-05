@@ -1,7 +1,7 @@
 {
   "id": 1027,
   "name": "Birch Planks",
-  "description": "Birch Planks block (migrated from playground)",
+  "description": "Birch Planks are solid, light-brown blocks crafted from birch wood, primarily used for building structures and crafting other items. Their default shape and solid nature make them ideal for creating walls, floors, and other architectural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Birch Planks block (migrated from playground)"
 }

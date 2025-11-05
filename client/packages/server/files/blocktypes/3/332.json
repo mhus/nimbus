@@ -1,7 +1,7 @@
 {
   "id": 332,
   "name": "Green Concrete Powder",
-  "description": "Green Concrete Powder block",
+  "description": "Green Concrete Powder is a solid block representing unmixed concrete in powdered form, likely used for crafting concrete blocks within the game. Its grainy, textured appearance suggests it will solidify into a standard green concrete block upon contact with water.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Green Concrete Powder block"
 }

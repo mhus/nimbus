@@ -1,7 +1,7 @@
 {
   "id": 422,
   "name": "Nether Wart Stage0",
-  "description": "Nether Wart Stage0 block",
+  "description": "The Nether Wart Stage0 block represents the initial growth stage of nether wart, featuring a small, reddish-brown clustered shape and acting as a solid block. It is likely used in nether wart farming or as a decorative element representing early growth in the Nether.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Nether Wart Stage0 block"
 }

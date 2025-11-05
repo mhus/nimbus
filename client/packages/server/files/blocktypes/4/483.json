@@ -1,7 +1,7 @@
 {
   "id": 483,
   "name": "Purpur Pillar",
-  "description": "Purpur Pillar block",
+  "description": "The Purpur Pillar is a solid, decorative block representing a stacked purplish-pink brick or pillar, used primarily for building and aesthetic purposes. Its textured appearance provides a unique visual element for constructing structures and enhancing the game's environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Purpur Pillar block"
 }

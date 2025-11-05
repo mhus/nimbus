@@ -1,7 +1,7 @@
 {
   "id": 1042,
   "name": "Tnt",
-  "description": "Tnt block (migrated from playground)",
+  "description": "The Tnt block, identified by its red textures and fuse, is a solid block representing an explosive. Likely used for destruction and creating terrain alterations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Tnt block (migrated from playground)"
 }

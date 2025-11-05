@@ -1,7 +1,7 @@
 {
   "id": 323,
   "name": "Grass Snow",
-  "description": "Grass Snow block",
+  "description": "The Grass Snow block is a solid, opaque block representing grass covered in a layer of snow, likely used for snow-covered terrain. Its solid nature prevents players or entities from passing through it, contributing to the physical structure of the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Snow block"
 }

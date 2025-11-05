@@ -1,7 +1,7 @@
 {
   "id": 307,
   "name": "Gold Ore1",
-  "description": "Gold Ore1 - Mineable resource",
+  "description": "Gold Ore1 is a solid, mineable block representing a source of gold in the game. Its texture features embedded gold nuggets in a rough matrix, indicating its use as a resource to be extracted for crafting or trade.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Gold Ore1 - Mineable resource"
 }

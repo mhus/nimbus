@@ -1,7 +1,7 @@
 {
   "id": 387,
   "name": "Light Blue Wool",
-  "description": "Light Blue Wool block",
+  "description": "Light Blue Wool is a solid block representing soft, light blue wool, primarily used for building and decorative purposes. Its opaque nature makes it suitable for constructing walls and structures that block light.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Light Blue Wool block"
 }

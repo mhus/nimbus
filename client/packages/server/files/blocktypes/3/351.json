@@ -1,7 +1,7 @@
 {
   "id": 351,
   "name": "Iron Ore1",
-  "description": "Iron Ore1 - Mineable resource",
+  "description": "Iron Ore1 is a solid, mineable resource block representing raw iron ore, visually identifiable by its reddish-brown, metallic texture. This ore is likely used in crafting and manufacturing processes within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Iron Ore1 - Mineable resource"
 }

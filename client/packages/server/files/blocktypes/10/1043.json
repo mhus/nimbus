@@ -1,7 +1,7 @@
 {
   "id": 1043,
   "name": "Pumpkin",
-  "description": "Pumpkin block (migrated from playground)",
+  "description": "The Pumpkin block, identified by ID 1043, represents a solid, harvestable gourd used for decoration and crafting. Its texture mimics the appearance of a real pumpkin, adding a seasonal or rustic aesthetic to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Pumpkin block (migrated from playground)"
 }

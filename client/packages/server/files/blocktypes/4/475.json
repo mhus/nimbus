@@ -1,7 +1,7 @@
 {
   "id": 475,
   "name": "Pumpkin Stem",
-  "description": "Pumpkin Stem block",
+  "description": "The Pumpkin Stem block, represented by a pixelated green texture with a brown line, depicts the solid stalk of a pumpkin plant. It is likely used for decoration or to indicate the presence of a nearby pumpkin patch.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pumpkin Stem block"
 }

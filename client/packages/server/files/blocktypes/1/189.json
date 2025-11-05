@@ -1,7 +1,7 @@
 {
   "id": 189,
   "name": "Cake Inner",
-  "description": "Cake Inner block",
+  "description": "The Cake Inner block represents the edible interior portion of a cake, rendered with a light brown, textured appearance. It is a solid block used in crafting and decorating cake structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cake Inner block"
 }

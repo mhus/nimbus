@@ -1,7 +1,7 @@
 {
   "id": 196,
   "name": "Carrots Stage3",
-  "description": "Carrots Stage3 block",
+  "description": "Carrots Stage3 is a solid block representing nearly mature carrots growing in the ground, visually depicted with pixelated graphics. It likely functions as a mid-growth stage crop, providing visual feedback on farming progress.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Carrots Stage3 block"
 }

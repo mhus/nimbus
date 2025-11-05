@@ -1,7 +1,7 @@
 {
   "id": 230,
   "name": "Conduit",
-  "description": "Conduit block",
+  "description": "The Conduit block, a solid structure represented by a patterned texture of dark shapes on beige and orange, likely serves as a channel or pathway for resources or energy within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Conduit block"
 }

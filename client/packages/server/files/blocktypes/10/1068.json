@@ -1,7 +1,7 @@
 {
   "id": 1068,
   "name": "Pink Stained Glass",
-  "description": "Pink Stained Glass block (migrated from playground)",
+  "description": "Pink Stained Glass is a solid block used for decorative construction, offering a translucent, pink-tinted appearance with a distinct, stylized border. Its solid property allows for structural use while adding colorful, diffused light to interiors.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Pink Stained Glass block (migrated from playground)"
 }

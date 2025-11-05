@@ -1,7 +1,7 @@
 {
   "id": 124,
   "name": "Bamboo Stalk",
-  "description": "Bamboo Stalk block",
+  "description": "The Bamboo Stalk block represents a solid, segmented stalk of bamboo. Its soft, green texture provides an organic building material or decorative element in the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Bamboo Stalk block"
 }

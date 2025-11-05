@@ -1,7 +1,7 @@
 {
   "id": 345,
   "name": "Ice",
-  "description": "Ice block",
+  "description": "The Ice block represents frozen water, appearing as a light blue, textured solid. It's likely used for environmental decoration, creating slippery surfaces, or puzzle elements within the game.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Ice block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 480,
   "name": "Purple Terracotta",
-  "description": "Purple Terracotta block",
+  "description": "Purple Terracotta is a solid block with a textured, purple surface, ideal for constructing durable structures and adding a touch of vibrant color to voxel-based builds. Its opaque nature makes it suitable for walls and floors where visibility is not desired.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Purple Terracotta block"
 }

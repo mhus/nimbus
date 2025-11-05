@@ -1,7 +1,7 @@
 {
   "id": 232,
   "name": "Cracked Stone Bricks",
-  "description": "Cracked Stone Bricks - Building material",
+  "description": "Cracked Stone Bricks are solid building blocks visually representing weathered and aged stone construction. Their robust nature allows for sturdy structures with a rustic aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cracked Stone Bricks - Building material"
 }

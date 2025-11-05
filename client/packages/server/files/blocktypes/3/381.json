@@ -1,7 +1,7 @@
 {
   "id": 381,
   "name": "Lever",
-  "description": "Lever block",
+  "description": "The Lever block (ID: 381) is a solid, interactable block depicting a simple lever, likely used for activating mechanisms or triggering events within the game world. Its design suggests a rustic or low-resolution aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lever block"
 }

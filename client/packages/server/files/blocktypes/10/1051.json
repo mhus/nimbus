@@ -1,7 +1,7 @@
 {
   "id": 1051,
   "name": "Red Wool",
-  "description": "Red Wool block (migrated from playground)",
+  "description": "Red Wool is a solid block with a soft, blurred texture, used for building and decoration. Its opaque nature makes it ideal for creating colorful structures and interior design elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Red Wool block (migrated from playground)"
 }

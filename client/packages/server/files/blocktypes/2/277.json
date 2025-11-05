@@ -1,7 +1,7 @@
 {
   "id": 277,
   "name": "Diorite",
-  "description": "Diorite block",
+  "description": "Diorite is a solid block representing a coarse-grained, light-colored igneous rock, used primarily for building and decorative purposes. Its texture is based on a realistic diorite surface.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Diorite block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 510,
   "name": "Redstone Dust Overlay",
-  "description": "Redstone Dust Overlay - Building material",
+  "description": "Redstone Dust Overlay is a solid block used to visually enhance redstone dust paths, likely adding subtle shading or effects. Despite being solid, it likely appears transparent due to the texture, allowing the underlying block to be visible.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Dust Overlay - Building material"
 }

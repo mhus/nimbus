@@ -1,7 +1,7 @@
 {
   "id": 1088,
   "name": "Green Concrete",
-  "description": "Green Concrete block (migrated from playground)",
+  "description": "Green Concrete is a solid block used for construction, featuring a blurred, textured green concrete surface. Its opaque and solid nature makes it suitable for building walls, floors, and other structural elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Green Concrete block (migrated from playground)"
 }

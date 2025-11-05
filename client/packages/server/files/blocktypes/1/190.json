@@ -1,7 +1,7 @@
 {
   "id": 190,
   "name": "Campfire Fire",
-  "description": "Campfire Fire block",
+  "description": "The Campfire Fire block represents animated flames for a campfire, using a looping fire texture. Being solid, it acts as a visual element for campfires, adding a realistic flickering fire effect.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Campfire Fire block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 451,
   "name": "Pink Concrete Powder",
-  "description": "Pink Concrete Powder block",
+  "description": "Pink Concrete Powder is a solid block representing a grainy, pink-hued concrete powder, likely used as a building material that may have unique properties when interacting with water or other game mechanics. Its powdery appearance suggests it might be subject to gravity or transformation upon contact with liquids.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pink Concrete Powder block"
 }

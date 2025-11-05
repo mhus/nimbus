@@ -1,7 +1,7 @@
 {
   "id": 452,
   "name": "Pink Glazed Terracotta",
-  "description": "Pink Glazed Terracotta block",
+  "description": "Pink Glazed Terracotta is a solid, decorative block with a stylized interlocking pink tile texture. This block can be used for building structures or adding a distinct aesthetic to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Pink Glazed Terracotta block"
 }

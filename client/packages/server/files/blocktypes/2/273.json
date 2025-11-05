@@ -1,7 +1,7 @@
 {
   "id": 273,
   "name": "Detector Rail On",
-  "description": "Detector Rail On block",
+  "description": "The Detector Rail On block (ID 273) represents an activated detector rail, visually indicated by red accents on its wooden and metal texture. This solid block likely triggers an event in-game when a minecart passes over it.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Detector Rail On block"
 }

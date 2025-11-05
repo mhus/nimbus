@@ -1,7 +1,7 @@
 {
   "id": 224,
   "name": "Cocoa Stage2",
-  "description": "Cocoa Stage2 block",
+  "description": "Cocoa Stage2 is a solid block representing a mid-stage cocoa plant, used in farming systems. Visually, it's a small, red-brown pixelated bean or processing stage.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cocoa Stage2 block"
 }

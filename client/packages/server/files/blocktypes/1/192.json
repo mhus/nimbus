@@ -1,7 +1,7 @@
 {
   "id": 192,
   "name": "Campfire Log Lit",
-  "description": "Campfire Log Lit - Natural wood material",
+  "description": "The Campfire Log Lit is a solid block depicting a burning log, used to create animated campfires and provide a light source. Its looped texture creates the illusion of flames and smoke, enhancing the campfire effect.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Campfire Log Lit - Natural wood material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1001,
   "name": "Dirt",
-  "description": "Dirt block (migrated from playground)",
+  "description": "The Dirt block, a solid block with a brownish, soil-like texture, is a fundamental building material often found in the game's terrain. Due to its solid nature, it cannot be seen through and players can walk on it.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "shovel"
       }
     }
-  }
+  },
+  "description_old": "Dirt block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 420,
   "name": "Nether Quartz Ore",
-  "description": "Nether Quartz Ore - Mineable resource",
+  "description": "Nether Quartz Ore is a solid, mineable block found in the Nether dimension, characterized by its reddish-brown brick texture with embedded quartz deposits, and is used to obtain raw Nether Quartz.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Nether Quartz Ore - Mineable resource"
 }

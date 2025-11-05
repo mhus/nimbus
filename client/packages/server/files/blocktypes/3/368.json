@@ -1,7 +1,7 @@
 {
   "id": 368,
   "name": "Kelp Plant",
-  "description": "Kelp Plant - Decorative plant",
+  "description": "The Kelp Plant block represents decorative, dark green kelp found underwater. With a transparent shape, it adds visual interest to aquatic environments, simulating natural marine vegetation.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Kelp Plant - Decorative plant"
 }

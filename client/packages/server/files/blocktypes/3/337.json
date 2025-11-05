@@ -1,7 +1,7 @@
 {
   "id": 337,
   "name": "Grindstone Pivot",
-  "description": "Grindstone Pivot - Building material",
+  "description": "The Grindstone Pivot is a solid, dark-textured block representing the central rotating point for a grindstone, likely used in crafting or tool maintenance. As a structural component, it provides a base for functional grindstone setups within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grindstone Pivot - Building material"
 }

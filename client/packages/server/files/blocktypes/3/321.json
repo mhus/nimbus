@@ -1,7 +1,7 @@
 {
   "id": 321,
   "name": "Grass Plant",
-  "description": "Grass Plant - Decorative plant",
+  "description": "The Grass Plant block is a solid, decorative element depicting a clump of stylized green grass. Used for adding natural detail to environments, it provides a visually appealing, yet simple, ground covering.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Grass Plant - Decorative plant"
 }

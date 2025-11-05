@@ -1,7 +1,7 @@
 {
   "id": 151,
   "name": "Black Wool",
-  "description": "Black Wool block",
+  "description": "Black Wool is a solid, opaque block crafted from fibrous material, visually representing a soft, dark wool. It can be used for building, decoration, or crafting purposes requiring black wool material.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Black Wool block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 445,
   "name": "Orange Terracotta",
-  "description": "Orange Terracotta block",
+  "description": "Orange Terracotta is a solid, opaque block representing hardened clay, commonly used for construction and decorative purposes. Its texture provides a rustic, earthy appearance suitable for building structures or landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Orange Terracotta block"
 }

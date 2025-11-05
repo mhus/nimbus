@@ -1,7 +1,7 @@
 {
   "id": 249,
   "name": "Dark Oak Planks1",
-  "description": "Dark Oak Planks1 - Processed wood",
+  "description": "Dark Oak Planks1 are solid, dark brown wooden boards crafted from dark oak, used for building structures. Their rough texture and plank design make them ideal for rustic construction and decorative elements.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Planks1 - Processed wood"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1010,
   "name": "Grass Plant",
-  "description": "Grass Plant block (migrated from playground)",
+  "description": "The Grass Plant block represents a non-solid clump of grass, adding visual detail to the game world. Due to its non-solid property, it allows players and other game elements to move through it, mainly serving an aesthetic purpose.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Grass Plant block (migrated from playground)"
 }

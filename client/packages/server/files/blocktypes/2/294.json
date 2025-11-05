@@ -1,7 +1,7 @@
 {
   "id": 294,
   "name": "Farmland",
-  "description": "Farmland block",
+  "description": "Farmland blocks represent tilled soil for planting crops. These solid blocks provide a surface suitable for agriculture within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Farmland block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 256,
   "name": "Dead Brain Coral Fan",
-  "description": "Dead Brain Coral Fan block",
+  "description": "The Dead Brain Coral Fan block represents a solid, decorative piece of faded brain coral, adding visual variety to underwater environments. It can be used to simulate lifeless coral formations and add a sense of decay to coral reefs.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Brain Coral Fan block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 245,
   "name": "Dark Oak Leaves1",
-  "description": "Dark Oak Leaves1 - Tree foliage",
+  "description": "Dark Oak Leaves1 represents dense foliage from a dark oak tree, providing a leafy aesthetic. With its leafy shape and texture, this block is likely semi-transparent and used to create the canopy of dark oak trees within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Leaves1 - Tree foliage"
 }

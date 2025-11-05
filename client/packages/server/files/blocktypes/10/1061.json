@@ -1,7 +1,7 @@
 {
   "id": 1061,
   "name": "Brown Wool",
-  "description": "Brown Wool block (migrated from playground)",
+  "description": "Brown Wool is a solid block resembling a soft, brown textile, likely used for building and decoration. Its opaque nature makes it suitable for constructing walls and structures where light blocking is desired.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Brown Wool block (migrated from playground)"
 }

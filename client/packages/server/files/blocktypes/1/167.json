@@ -1,7 +1,7 @@
 {
   "id": 167,
   "name": "Brewing Stand",
-  "description": "Brewing Stand block",
+  "description": "The Brewing Stand (ID 167) is a solid block used for crafting potions. It features a distinct texture depicting the stand holding a potion bottle, allowing players to brew various concoctions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brewing Stand block"
 }

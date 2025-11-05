@@ -1,7 +1,7 @@
 {
   "id": 398,
   "name": "Lime Concrete Powder",
-  "description": "Lime Concrete Powder block",
+  "description": "Lime Concrete Powder is a solid block representing unmixed concrete, featuring a granular, pale green texture. It likely serves as a crafting ingredient that solidifies into a harder concrete block upon contact with water or when placed under certain conditions.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lime Concrete Powder block"
 }

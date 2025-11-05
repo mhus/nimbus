@@ -1,7 +1,7 @@
 {
   "id": 263,
   "name": "Dead Fire Coral Fan",
-  "description": "Dead Fire Coral Fan block",
+  "description": "The Dead Fire Coral Fan is a solid block representing a bleached, branching coral structure found underwater. It adds visual detail to underwater environments, simulating dead coral formations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Fire Coral Fan block"
 }

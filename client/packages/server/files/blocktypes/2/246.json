@@ -1,7 +1,7 @@
 {
   "id": 246,
   "name": "Dark Oak Log",
-  "description": "Dark Oak Log - Natural wood material",
+  "description": "The Dark Oak Log is a solid, opaque block representing the trunk of a dark oak tree. Used for construction and crafting, it provides a visually distinct, dark-toned wood resource.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dark Oak Log - Natural wood material"
 }

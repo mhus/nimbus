@@ -1,7 +1,7 @@
 {
   "id": 219,
   "name": "Cobblestone1",
-  "description": "Cobblestone1 - Building material",
+  "description": "Cobblestone1 is a solid, readily available building material crafted to resemble rough-hewn stones. Its textured brown and gray surface makes it ideal for constructing rustic structures and foundations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Cobblestone1 - Building material"
 }

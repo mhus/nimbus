@@ -1,7 +1,7 @@
 {
   "id": 458,
   "name": "Piston Top Sticky",
-  "description": "Piston Top Sticky block",
+  "description": "The Sticky Piston Top block, identified by ID 458, is a solid block with a sticky, wooden surface, likely used as an extendable component for mechanical contraptions that adheres to adjacent blocks upon retraction. Its solid nature prevents passage, making it suitable for pushing and pulling mechanisms.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Piston Top Sticky block"
 }

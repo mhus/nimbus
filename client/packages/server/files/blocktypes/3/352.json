@@ -1,7 +1,7 @@
 {
   "id": 352,
   "name": "Iron Trapdoor",
-  "description": "Iron Trapdoor block",
+  "description": "The Iron Trapdoor block, visually represented by a brown-framed and gridded texture, acts as a solid, closable barrier. It likely functions as a hinged doorway, allowing access while preventing passage when shut.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Iron Trapdoor block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 267,
   "name": "Dead Tube Coral",
-  "description": "Dead Tube Coral block",
+  "description": "This solid, gray-toned Dead Tube Coral block represents lifeless coral formations found in underwater environments. Its texture, depicting stacked tube-like structures, allows for the creation of realistic and desolate coral reef landscapes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Tube Coral block"
 }

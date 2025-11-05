@@ -1,7 +1,7 @@
 {
   "id": 160,
   "name": "Blue Wool",
-  "description": "Blue Wool block",
+  "description": "Blue Wool is a solid block representing a soft, deep blue wool material. Its opaque nature and solid form make it suitable for building and decorative purposes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Wool block"
 }

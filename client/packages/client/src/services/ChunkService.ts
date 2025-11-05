@@ -195,13 +195,14 @@ export class ChunkService {
    *
    * @param chunks - Array of chunk data from server
    */
-  onChunkUpdate(chunks: ChunkDataTransferObject[]): void {
+  async onChunkUpdate(chunks: ChunkDataTransferObject[]): Promise<void> {
     try {
-      chunks.forEach(chunkData => {
+      // Process chunks sequentially to maintain order
+      for (const chunkData of chunks) {
         const key = getChunkKey(chunkData.cx, chunkData.cz);
 
         // Process blocks into ClientBlocks with merged modifiers
-        const clientChunkData = this.processChunkData(chunkData);
+        const clientChunkData = await this.processChunkData(chunkData);
 
         const clientChunk: ClientChunk = {
           data: clientChunkData,
@@ -220,7 +221,7 @@ export class ChunkService {
           blocks: chunkData.b.length,
           clientBlocks: clientChunkData.data.size,
         });
-      });
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.onChunkUpdate', {
         count: chunks.length,
@@ -248,7 +249,7 @@ export class ChunkService {
    * @param chunkData Raw chunk data from server
    * @returns Processed ClientChunkData with merged modifiers and height data
    */
-  private processChunkData(chunkData: ChunkDataTransferObject): ClientChunkData {
+  private async processChunkData(chunkData: ChunkDataTransferObject): Promise<ClientChunkData> {
     const clientBlocksMap = new Map<string, ClientBlock>();
     const blockTypeService = this.appContext.services.blockType;
     const statusData = this.processStatusData(chunkData);
@@ -292,6 +293,18 @@ export class ChunkService {
         statusData: statusData
       };
     }
+
+    // STEP 1.5: Preload all BlockTypes needed for this chunk
+    // Collect unique BlockType IDs
+    const blockTypeIds = new Set(chunkData.b.map(block => block.blockTypeId));
+    logger.debug('Preloading BlockTypes for chunk', {
+      cx: chunkData.cx,
+      cz: chunkData.cz,
+      uniqueBlockTypes: blockTypeIds.size,
+    });
+
+    // Preload all required chunks in parallel
+    await blockTypeService.preloadBlockTypes(Array.from(blockTypeIds));
 
     // STEP 2: Process each block - creating ClientBlocks AND collecting height data in ONE pass
     for (const block of chunkData.b) {

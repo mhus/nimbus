@@ -1,7 +1,7 @@
 {
   "id": 1093,
   "name": "Black Concrete",
-  "description": "Black Concrete block (migrated from playground)",
+  "description": "Black Concrete is a solid, opaque block representing hardened concrete. Its dark gray, mottled texture makes it suitable for constructing modern or industrial-themed structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Black Concrete block (migrated from playground)"
 }

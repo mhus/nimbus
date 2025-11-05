@@ -1,7 +1,7 @@
 {
   "id": 341,
   "name": "Hopper Outside",
-  "description": "Hopper Outside block",
+  "description": "The Hopper Outside block represents the exterior face of a hopper, likely used for item transport or storage systems. It is a solid block, suggesting it is opaque and prevents movement through it.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Hopper Outside block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 334,
   "name": "Green Stained Glass",
-  "description": "Green Stained Glass - Transparent block",
+  "description": "Green Stained Glass is a transparent block used for decorative purposes, allowing light to pass through with a pale green hue. Its pixelated stained glass texture adds a unique aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Green Stained Glass - Transparent block"
 }

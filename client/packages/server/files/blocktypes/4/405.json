@@ -1,7 +1,7 @@
 {
   "id": 405,
   "name": "Magenta Concrete",
-  "description": "Magenta Concrete block",
+  "description": "Magenta Concrete is a solid building block, visually resembling dyed concrete. It provides a sturdy and colorful material for construction and decorative purposes within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Magenta Concrete block"
 }

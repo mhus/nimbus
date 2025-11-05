@@ -1,7 +1,7 @@
 {
   "id": 180,
   "name": "Brown Mushroom",
-  "description": "Brown Mushroom block",
+  "description": "The Brown Mushroom block represents a placeable, solid mushroom found in the game world. It utilizes a pixelated texture of a brown mushroom and can likely be used for decoration or perhaps crafting recipes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brown Mushroom block"
 }

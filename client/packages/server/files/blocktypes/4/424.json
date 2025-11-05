@@ -1,7 +1,7 @@
 {
   "id": 424,
   "name": "Nether Wart Stage2",
-  "description": "Nether Wart Stage2 block",
+  "description": "Nether Wart Stage2 is the second growth stage of the Nether Wart plant, represented by a solid, reddish-brown block. It is likely used as a resource in the Nether or as a decorative element showing the plant's cultivation progress.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Nether Wart Stage2 block"
 }

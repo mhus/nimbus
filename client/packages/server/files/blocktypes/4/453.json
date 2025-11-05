@@ -1,7 +1,7 @@
 {
   "id": 453,
   "name": "Pink Stained Glass",
-  "description": "Pink Stained Glass - Transparent block",
+  "description": "Pink Stained Glass is a transparent block used for decorative purposes, allowing light to pass through while adding a colorful, textured pink hue. Its crenellated border provides a subtle framed appearance within builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Pink Stained Glass - Transparent block"
 }

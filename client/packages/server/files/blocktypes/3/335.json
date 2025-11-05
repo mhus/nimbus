@@ -1,7 +1,7 @@
 {
   "id": 335,
   "name": "Green Terracotta",
-  "description": "Green Terracotta block",
+  "description": "Green Terracotta is a solid, opaque block textured with a blurred, dark green terracotta pattern. Used for building and decoration, it provides a solid surface with an earthy, green aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Green Terracotta block"
 }

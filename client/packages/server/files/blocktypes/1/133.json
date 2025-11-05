@@ -1,7 +1,7 @@
 {
   "id": 133,
   "name": "Beetroots Stage2",
-  "description": "Beetroots Stage2 block",
+  "description": "Beetroots Stage2 is a solid block representing the second growth stage of beetroots, visually depicted as a cluster of bright green leaves. This block likely serves as a visual indicator of crop progress and may be harvested later for beetroot resources.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beetroots Stage2 block"
 }

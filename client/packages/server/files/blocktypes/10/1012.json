@@ -1,7 +1,7 @@
 {
   "id": 1012,
   "name": "Bricks",
-  "description": "Bricks block (migrated from playground)",
+  "description": "The Bricks block is a solid, reddish-brown building material used for constructing structures like walls and buildings. Its classic brick texture provides a familiar and versatile aesthetic for various architectural designs.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Bricks block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 361,
   "name": "Jungle Log1",
-  "description": "Jungle Log1 - Natural wood material",
+  "description": "Jungle Log1 is a solid, natural wood block representing a section of a jungle tree trunk. Its rough, wood-like texture and solid nature make it suitable for building structures and adding realistic foliage to jungle environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Jungle Log1 - Natural wood material"
 }

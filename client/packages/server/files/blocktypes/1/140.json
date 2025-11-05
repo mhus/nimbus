@@ -1,7 +1,7 @@
 {
   "id": 140,
   "name": "Birch Log1",
-  "description": "Birch Log1 - Natural wood material",
+  "description": "Birch Log1 is a solid, stylized block representing a section of birch tree trunk. Featuring a soft-focus birch bark texture, it's ideal for constructing structures and natural environments, particularly where a less-detailed, distant appearance is desired.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Birch Log1 - Natural wood material"
 }

@@ -1,7 +1,7 @@
 {
   "id": 446,
   "name": "Orange Tulip",
-  "description": "Orange Tulip block",
+  "description": "The Orange Tulip block is a solid, decorative item representing a pixelated orange tulip with green stem and leaves. It's intended for adding colorful flora and visual interest to the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Orange Tulip block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 448,
   "name": "Oxeye Daisy",
-  "description": "Oxeye Daisy block",
+  "description": "The Oxeye Daisy block is a solid, decorative block representing a pixelated oxeye daisy flower. It adds visual flair to the game world and can be used for landscaping or other aesthetic purposes.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oxeye Daisy block"
 }

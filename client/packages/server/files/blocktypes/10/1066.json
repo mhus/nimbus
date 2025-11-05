@@ -1,7 +1,7 @@
 {
   "id": 1066,
   "name": "Red Stained Glass",
-  "description": "Red Stained Glass block (migrated from playground)",
+  "description": "Red Stained Glass is a solid block that allows light to pass through with a red tint. Its decorative, stylized glass texture makes it suitable for windows, architectural accents, and creating colorful light effects within structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Red Stained Glass block (migrated from playground)"
 }

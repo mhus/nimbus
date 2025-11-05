@@ -1,7 +1,7 @@
 {
   "id": 275,
   "name": "Diamond Ore",
-  "description": "Diamond Ore - Mineable resource",
+  "description": "Diamond Ore, a solid block found underground, visually distinguished by embedded blue diamond crystals within a brownish-grey rock matrix. Mining this resource yields diamonds, a valuable material used for crafting advanced tools and equipment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Diamond Ore - Mineable resource"
 }

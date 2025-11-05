@@ -1,7 +1,7 @@
 {
   "id": 473,
   "name": "Prismarine",
-  "description": "Prismarine block",
+  "description": "Prismarine is a solid block resembling stacked, underwater prism-like structures, likely used for decorative or architectural purposes in aquatic environments. Its teal and grey-blue texture suggests a building material found underwater.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Prismarine block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 371,
   "name": "Lapis Block",
-  "description": "Lapis Block block",
+  "description": "The Lapis Block is a solid, decorative block crafted from lapis lazuli, used for adding vibrant blue accents to structures and landscapes. Its opaque nature provides full coverage, making it ideal for building solid walls and foundations with a distinctive color.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Lapis Block block"
 }

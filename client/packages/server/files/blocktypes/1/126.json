@@ -1,7 +1,7 @@
 {
   "id": 126,
   "name": "Beacon",
-  "description": "Beacon block",
+  "description": "The Beacon block, using a gold and brown crystalline texture, is a solid structure likely used as a landmark or to project light within the game world. Due to its solid property, it cannot be walked through and serves as a tangible object within the environment.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Beacon block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 1086,
   "name": "Lime Concrete",
-  "description": "Lime Concrete block (migrated from playground)",
+  "description": "Lime Concrete is a solid block resembling a rough, lime-colored concrete surface, ideal for constructing durable structures and adding a modern, industrial aesthetic to builds. Its solid nature makes it suitable for foundations, walls, and other load-bearing elements within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Lime Concrete block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 462,
   "name": "Polished Andesite",
-  "description": "Polished Andesite block",
+  "description": "Polished Andesite is a solid building block representing smoothed, grey-green andesite stone. Its geometric texture provides a refined aesthetic for construction and decoration.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Polished Andesite block"
 }

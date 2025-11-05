@@ -1,7 +1,7 @@
 {
   "id": 427,
   "name": "Oak Fence",
-  "description": "Oak Fence block",
+  "description": "The Oak Fence block visually represents a section of a wooden fence, using a simple oak texture. It is a solid block, likely used for creating barriers and decorative boundaries within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Oak Fence block"
 }

@@ -1,7 +1,7 @@
 {
   "id": 391,
   "name": "Light Gray Stained Glass",
-  "description": "Light Gray Stained Glass - Transparent block",
+  "description": "Light Gray Stained Glass is a transparent block primarily used for decorative windows and light filtering. Its light gray texture with subtle detailing allows light to pass through while adding a touch of aesthetic flair.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -11,5 +11,6 @@
         }
       }
     }
-  }
+  },
+  "description_old": "Light Gray Stained Glass - Transparent block"
 }

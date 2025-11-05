@@ -1,7 +1,7 @@
 {
   "id": 350,
   "name": "Iron Ore",
-  "description": "Iron Ore - Mineable resource",
+  "description": "Iron Ore is a solid, mineable block featuring a reddish-brown mineral deposit and serves as a primary source for crafting iron-based items. It is identifiable by its distinctive pixelated texture.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Iron Ore - Mineable resource"
 }

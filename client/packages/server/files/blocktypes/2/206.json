@@ -1,7 +1,7 @@
 {
   "id": 206,
   "name": "Chiseled Sandstone",
-  "description": "Chiseled Sandstone - Building material",
+  "description": "Chiseled Sandstone is a solid building block featuring a faint, dragon-carved texture and light tan color palette. Used for decorative construction, it adds a touch of ancient artistry to player builds.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Chiseled Sandstone - Building material"
 }

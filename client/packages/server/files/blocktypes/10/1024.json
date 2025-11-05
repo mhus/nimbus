@@ -1,7 +1,7 @@
 {
   "id": 1024,
   "name": "Stonebrick",
-  "description": "Stonebrick block (migrated from playground)",
+  "description": "Stonebrick is a solid, gray-brown block representing a classic brick wall, ideal for constructing buildings and structures. Its opaque nature makes it suitable for providing sturdy and reliable foundations and walls.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Stonebrick block (migrated from playground)"
 }

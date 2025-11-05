@@ -1,7 +1,7 @@
 {
   "id": 168,
   "name": "Brewing Stand Base",
-  "description": "Brewing Stand Base block",
+  "description": "The Brewing Stand Base block, a solid and tiled light brown stone texture with openings, serves as the foundation for constructing a functional brewing stand. These openings are designed to hold ingredients used in potion brewing.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Brewing Stand Base block"
 }

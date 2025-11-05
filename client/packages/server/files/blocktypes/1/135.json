@@ -1,7 +1,7 @@
 {
   "id": 135,
   "name": "Birch Fence",
-  "description": "Birch Fence block",
+  "description": "The Birch Fence block, a solid, fence-shaped building material textured with birch wood, is used to create enclosures and barriers in the game. Its primarily solid nature restricts movement, making it ideal for defining boundaries and decorative fencing.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Birch Fence block"
 }

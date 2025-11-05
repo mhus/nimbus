@@ -1,7 +1,7 @@
 {
   "id": 1032,
   "name": "Gold Block",
-  "description": "Gold Block block (migrated from playground)",
+  "description": "The Gold Block is a solid, opaque block representing refined gold, likely used for decoration or crafting valuable items. Its texture features layered shades of gold, hinting at its precious nature.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Gold Block block (migrated from playground)"
 }

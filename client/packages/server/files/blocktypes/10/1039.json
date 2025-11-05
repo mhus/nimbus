@@ -1,7 +1,7 @@
 {
   "id": 1039,
   "name": "Mossy Cobblestone",
-  "description": "Mossy Cobblestone block (migrated from playground)",
+  "description": "Mossy Cobblestone is a solid, textured block depicting aged cobblestones covered in vibrant green moss, often used for building weathered structures or adding a touch of natural overgrowth. Its solid nature makes it suitable for construction and terrain generation.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Mossy Cobblestone block (migrated from playground)"
 }

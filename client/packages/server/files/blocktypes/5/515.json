@@ -1,7 +1,7 @@
 {
   "id": 515,
   "name": "Redstone Torch",
-  "description": "Redstone Torch - Building material",
+  "description": "The Redstone Torch is a solid block used in redstone circuitry, providing a continuous redstone power source when placed. Its pixelated texture depicts a brown stick base with a red, dust-like head, fitting the game's retro aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Redstone Torch - Building material"
 }

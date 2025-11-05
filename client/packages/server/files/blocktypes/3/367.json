@@ -1,7 +1,7 @@
 {
   "id": 367,
   "name": "Kelp",
-  "description": "Kelp block",
+  "description": "Kelp is a solid, seaweed-like block found underwater, visually represented by a repeating, branching, green texture. It likely serves as decorative flora or potentially as a resource for crafting.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Kelp block"
 }

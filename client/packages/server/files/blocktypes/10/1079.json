@@ -1,7 +1,7 @@
 {
   "id": 1079,
   "name": "White Concrete",
-  "description": "White Concrete block (migrated from playground)",
+  "description": "White Concrete is a solid, off-white building block with a subtly textured surface. Useful for creating modern structures and providing a clean, neutral aesthetic.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "White Concrete block (migrated from playground)"
 }

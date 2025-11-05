@@ -1,7 +1,7 @@
 {
   "id": 1023,
   "name": "Crafting",
-  "description": "Crafting block (migrated from playground)",
+  "description": "The Crafting block is a solid, cube-shaped workbench used for crafting items in the game. Featuring textures resembling a crafting table top, oak planks, and crafting table sides, it provides players with a dedicated space to combine resources and create new tools, weapons, and other useful objects.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "axe"
       }
     }
-  }
+  },
+  "description_old": "Crafting block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 159,
   "name": "Blue Terracotta",
-  "description": "Blue Terracotta block",
+  "description": "Blue Terracotta is a solid, opaque block providing a decorative, medium-dark blue building material with a subtly textured surface. Used primarily for construction and aesthetic design, it offers a visually interesting alternative to standard terracotta.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Terracotta block"
 }

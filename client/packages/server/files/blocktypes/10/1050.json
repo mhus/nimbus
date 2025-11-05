@@ -1,7 +1,7 @@
 {
   "id": 1050,
   "name": "Yellow Wool",
-  "description": "Yellow Wool block (migrated from playground)",
+  "description": "Yellow Wool is a solid block representing a soft, yellowish wool texture. Primarily used for building and decoration, it adds a touch of warmth and visual texture to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Yellow Wool block (migrated from playground)"
 }

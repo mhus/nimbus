@@ -1,7 +1,7 @@
 {
   "id": 266,
   "name": "Dead Horn Coral Fan",
-  "description": "Dead Horn Coral Fan block",
+  "description": "The Dead Horn Coral Fan block represents a solid, bleached sea fan remnant, adding a touch of decaying ocean life to underwater environments. It serves as a decorative element, offering a visual cue of former vibrancy and potentially impacting underwater navigation due to its solid nature.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Horn Coral Fan block"
 }

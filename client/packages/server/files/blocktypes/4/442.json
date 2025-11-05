@@ -1,7 +1,7 @@
 {
   "id": 442,
   "name": "Orange Concrete Powder",
-  "description": "Orange Concrete Powder block",
+  "description": "Orange Concrete Powder is a solid, grainy block used for building and construction. Its orange and brown mottled texture gives it a distinct, unmixed concrete appearance.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Orange Concrete Powder block"
 }

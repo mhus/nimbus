@@ -1,7 +1,7 @@
 {
   "id": 1069,
   "name": "Orange Stained Glass",
-  "description": "Orange Stained Glass block (migrated from playground)",
+  "description": "Orange Stained Glass is a solid block featuring a worn, pixelated orange texture, allowing light to pass through it while adding decorative color to structures. This block can be used to create colorful windows or stained-glass artwork within the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -18,5 +18,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Orange Stained Glass block (migrated from playground)"
 }

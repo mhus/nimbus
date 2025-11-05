@@ -1,7 +1,7 @@
 {
   "id": 265,
   "name": "Dead Horn Coral Block",
-  "description": "Dead Horn Coral Block block",
+  "description": "This solid, beige-colored Dead Horn Coral Block represents a bleached and lifeless coral formation, used primarily for decorative purposes or as a building material with a muted, organic aesthetic. Its solid nature makes it suitable for creating sturdy structures and adding visual variation to underwater environments.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Dead Horn Coral Block block"
 }

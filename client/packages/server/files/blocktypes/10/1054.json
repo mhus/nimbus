@@ -1,7 +1,7 @@
 {
   "id": 1054,
   "name": "Orange Wool",
-  "description": "Orange Wool block (migrated from playground)",
+  "description": "Orange Wool is a solid, opaque block used for building and decorative purposes. Its texture depicts a fuzzy orange wool material, making it suitable for crafting cozy or colorful structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Orange Wool block (migrated from playground)"
 }

@@ -1,7 +1,7 @@
 {
   "id": 484,
   "name": "Quartz Pillar",
-  "description": "Quartz Pillar block",
+  "description": "The Quartz Pillar block is a solid, decorative building component with a light brown, vertically striated texture reminiscent of a stone pillar. Its solid nature allows for structural construction and aesthetic enhancement of structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Quartz Pillar block"
 }

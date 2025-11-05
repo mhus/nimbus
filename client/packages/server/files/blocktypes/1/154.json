@@ -1,7 +1,7 @@
 {
   "id": 154,
   "name": "Blue Concrete Powder",
-  "description": "Blue Concrete Powder block",
+  "description": "Blue Concrete Powder is a solid, granular block used in construction, visually represented by a blurry, blue, powdery texture. It likely acts as a precursor to solid blue concrete, requiring water or another trigger to transform.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Blue Concrete Powder block"
 }

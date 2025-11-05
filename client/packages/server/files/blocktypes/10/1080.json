@@ -1,7 +1,7 @@
 {
   "id": 1080,
   "name": "Yellow Concrete",
-  "description": "Yellow Concrete block (migrated from playground)",
+  "description": "Yellow Concrete is a solid, opaque block providing a vibrant yellow building material with a subtly textured surface, suitable for construction and decoration. Its concrete-like appearance adds a touch of modern or industrial aesthetic to structures.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -16,5 +16,6 @@
         "tool": "pickaxe"
       }
     }
-  }
+  },
+  "description_old": "Yellow Concrete block (migrated from playground)"
 }

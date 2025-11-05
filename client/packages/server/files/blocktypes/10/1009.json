@@ -1,7 +1,7 @@
 {
   "id": 1009,
   "name": "Red Flower",
-  "description": "Red Flower block (migrated from playground)",
+  "description": "The Red Flower block is a non-solid, decorative element featuring a pixelated red flower sprite. Intended for adding visual flair to the game world, it provides aesthetic appeal without obstructing player movement.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -17,5 +17,6 @@
         "tool": "any"
       }
     }
-  }
+  },
+  "description_old": "Red Flower block (migrated from playground)"
 }
