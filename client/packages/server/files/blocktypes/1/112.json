@@ -1,7 +1,7 @@
 {
   "id": 112,
   "name": "Activator Rail On",
-  "description": "Activator Rail On block",
+  "description": "The Activator Rail On block, visually identified by its red activation mechanism and distinctive rail texture, is a solid block used to trigger actions on minecarts passing over it. When active, the rail's properties signal a specific game event or mechanism connected to the minecart's movement.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Activator Rail On block"
 }

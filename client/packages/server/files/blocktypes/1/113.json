@@ -1,7 +1,7 @@
 {
   "id": 113,
   "name": "Allium",
-  "description": "Allium block",
+  "description": "The Allium block represents a solid, decorative purple flower that can be placed in the world. Its solid property prevents movement through it, making it suitable for landscaping and adding visual interest.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Allium block"
 }

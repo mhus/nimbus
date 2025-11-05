@@ -45,7 +45,9 @@
       "Bash(pnpm --filter @nimbus/client build:shared:*)",
       "Bash(pnpm test:block:*)",
       "Bash(node scripts/migrate-playground-blocks.js:*)",
-      "Bash(node scripts/generate-manifest.js:*)"
+      "Bash(node scripts/generate-manifest.js:*)",
+      "Bash(npm install:*)",
+      "Bash(node /Users/hummel/sources/mhus/nimbus/scripts/generate-blocktype-descriptions.js:*)"
     ],
     "deny": [],
     "ask": []

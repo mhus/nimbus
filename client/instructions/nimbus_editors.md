@@ -1299,7 +1299,7 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
 - Ich habe zu jedem asset eine .info datei im gleichen ordner mit gleichem namen + ".info". In der datei steht eine description. Versuche diese mit in die
   description des BlockTypes zu uebernehmen.
 
-[ ] An Assets liegen info dateien mit beschriebung dea assets / texture. Erstelle ein Script das fuer jeden Block Type 
+[?] An Assets liegen info dateien mit beschriebung dea assets / texture. Erstelle ein Script das fuer jeden Block Type 
 (client/packages/server/files/blocktypes) die Assets / Asset Info Dateien sammelt und an Gemini
 Die Daten des Blcok Types, genutze Assets und Asset Beschreibugen sendet und eine Description des Block Types erzeugt.
 Aktualisiere die Beschreibung in den Block Type Dateien.

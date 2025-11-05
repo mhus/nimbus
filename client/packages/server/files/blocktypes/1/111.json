@@ -1,7 +1,7 @@
 {
   "id": 111,
   "name": "Activator Rail",
-  "description": "Activator Rail block",
+  "description": "The Activator Rail block, depicted with distinct metal rails and a red central section, is a solid block used to trigger actions when minecarts pass over it. It likely activates mechanisms or events in the game world.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Activator Rail block"
 }

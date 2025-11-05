@@ -1,7 +1,7 @@
 {
   "id": 114,
   "name": "Andesite",
-  "description": "Andesite block",
+  "description": "Andesite is a solid, grayish-green volcanic rock block used for building and crafting structures with a natural, rough stone appearance. Its non-transparent nature makes it suitable for creating walls and foundations.",
   "modifiers": {
     "0": {
       "visibility": {
@@ -14,5 +14,6 @@
         "solid": true
       }
     }
-  }
+  },
+  "description_old": "Andesite block"
 }

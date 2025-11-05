@@ -1,12 +1,13 @@
 {
   "id": 0,
   "name": "Air",
-  "description": "Empty air block (invisible)",
+  "description": "Air is an invisible and intangible block representing empty space. Its purpose is to define areas where no solid block exists, allowing for movement and visibility.",
   "modifiers": {
     "0": {
       "visibility": {
         "shape": 0
       }
     }
-  }
+  },
+  "description_old": "Empty air block (invisible)"
 }
