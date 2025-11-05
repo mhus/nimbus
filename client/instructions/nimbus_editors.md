@@ -1299,7 +1299,14 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
 - Ich habe zu jedem asset eine .info datei im gleichen ordner mit gleichem namen + ".info". In der datei steht eine description. Versuche diese mit in die
   description des BlockTypes zu uebernehmen.
 
-[ ] Da wir jetzt info dateien fuer assets haben, 
+[ ] An Assets liegen info dateien mit beschriebung dea assets / texture. Erstelle ein Script das fuer jeden Block Type 
+(client/packages/server/files/blocktypes) die Assets / Asset Info Dateien sammelt und an Gemini
+Die Daten des Blcok Types, genutze Assets und Asset Beschreibugen sendet und eine Description des Block Types erzeugt.
+Aktualisiere die Beschreibung in den Block Type Dateien.
+- Ich habe zu jedem assets eine .info datei im gleichen ordner mit gleichem namen + ".info". 
+- Orientiere dich an 'scripts/generate_asset_info.py' bei der anfrage an gemini. Achte auf das Rate Limiting.
+- Schreibe die alte description in einen parameter 'description_old' bevor du die neue description schreibst.
+- Erstelle ein flag, das auf 'description_old' prueft und nur die neue description schreibt wenn 'description_old' noch nicht existiert.
 
 ## Paging
 
@@ -1311,7 +1318,7 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
 - Liefere auch den count, damit der Client die anzahl der Seiten errechnen kann
 - Passe die Componenten an um Paging zu ermoeglichen
 
-[ ] Im MaterialEditor (nimbus_editors) sollen die Ergebnisse Assets in Paging-Ansichten angezeigt werden.
+[?] Im MaterialEditor (nimbus_editors) sollen die Ergebnisse Assets in Paging-Ansichten angezeigt werden.
 - Erweitere die REST API
     - GET /api/worlds/{worldId}/assets?query={query}
     - GET /api/worlds/{worldId}/assets

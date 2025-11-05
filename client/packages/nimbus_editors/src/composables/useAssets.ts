@@ -3,7 +3,7 @@
  * Manages asset list and operations
  */
 
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { assetService, type Asset } from '../services/AssetService';
 import { getLogger } from '@nimbus/shared';
 
@@ -16,19 +16,44 @@ export function useAssets(worldId: string) {
   const searchQuery = ref('');
   const uploadProgress = ref(0);
 
+  // Paging state
+  const totalCount = ref(0);
+  const currentPage = ref(1);
+  const pageSize = ref(50);
+
+  // Computed
+  const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
+  const hasNextPage = computed(() => currentPage.value < totalPages.value);
+  const hasPreviousPage = computed(() => currentPage.value > 1);
+
   /**
-   * Load all assets
+   * Load assets with pagination
    */
-  const loadAssets = async () => {
+  const loadAssets = async (page: number = 1) => {
     loading.value = true;
     error.value = null;
+    currentPage.value = page;
 
     try {
-      assets.value = await assetService.getAssets(worldId);
-      logger.info('Loaded assets', { count: assets.value.length, worldId });
+      const offset = (page - 1) * pageSize.value;
+      const response = await assetService.getAssets(worldId, {
+        query: searchQuery.value || undefined,
+        limit: pageSize.value,
+        offset,
+      });
+
+      assets.value = response.assets;
+      totalCount.value = response.count;
+
+      logger.info('Loaded assets', {
+        count: assets.value.length,
+        totalCount: totalCount.value,
+        page,
+        worldId,
+      });
     } catch (err) {
       error.value = 'Failed to load assets';
-      logger.error('Failed to load assets', { worldId }, err as Error);
+      logger.error('Failed to load assets', { worldId, page }, err as Error);
     } finally {
       loading.value = false;
     }
@@ -39,17 +64,34 @@ export function useAssets(worldId: string) {
    */
   const searchAssets = async (query: string) => {
     searchQuery.value = query;
-    loading.value = true;
-    error.value = null;
+    currentPage.value = 1; // Reset to first page on search
+    await loadAssets(1);
+  };
 
-    try {
-      assets.value = await assetService.getAssets(worldId, query || undefined);
-      logger.info('Searched assets', { query, count: assets.value.length, worldId });
-    } catch (err) {
-      error.value = 'Failed to search assets';
-      logger.error('Failed to search assets', { worldId, query }, err as Error);
-    } finally {
-      loading.value = false;
+  /**
+   * Go to next page
+   */
+  const nextPage = async () => {
+    if (hasNextPage.value) {
+      await loadAssets(currentPage.value + 1);
+    }
+  };
+
+  /**
+   * Go to previous page
+   */
+  const previousPage = async () => {
+    if (hasPreviousPage.value) {
+      await loadAssets(currentPage.value - 1);
+    }
+  };
+
+  /**
+   * Go to specific page
+   */
+  const goToPage = async (page: number) => {
+    if (page >= 1 && page <= totalPages.value) {
+      await loadAssets(page);
     }
   };
 
@@ -137,8 +179,19 @@ export function useAssets(worldId: string) {
     error,
     searchQuery,
     uploadProgress,
+    // Paging
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+    // Methods
     loadAssets,
     searchAssets,
+    nextPage,
+    previousPage,
+    goToPage,
     uploadAsset,
     updateAsset,
     deleteAsset,

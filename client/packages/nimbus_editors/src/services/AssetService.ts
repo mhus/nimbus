@@ -16,19 +16,27 @@ export interface Asset {
 
 export interface AssetListResponse {
   assets: Asset[];
+  count: number;
+  limit: number;
+  offset: number;
+}
+
+export interface AssetPagingParams {
+  query?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export class AssetService {
   /**
-   * Get all assets or search
+   * Get all assets or search with pagination
    */
-  async getAssets(worldId: string, query?: string): Promise<Asset[]> {
-    const params = query ? { query } : undefined;
+  async getAssets(worldId: string, params?: AssetPagingParams): Promise<AssetListResponse> {
     const response = await apiService.get<AssetListResponse>(
       `/api/worlds/${worldId}/assets`,
       params
     );
-    return response.assets;
+    return response;
   }
 
   /**

@@ -16,7 +16,7 @@ const logger = getLogger('AssetRoutes');
 export function createAssetRoutes(worldManager: WorldManager): Router {
   const router = express.Router();
 
-  // GET /api/worlds/:worldId/assets - List/search assets
+  // GET /api/worlds/:worldId/assets - List/search assets with pagination
   router.get('/:worldId/assets', async (req, res) => {
     const worldId = req.params.worldId;
     const world = worldManager.getWorld(worldId);
@@ -26,18 +26,31 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
     }
 
     const query = req.query.query as string | undefined;
+    const limit = Math.min(Number(req.query.limit) || 200, 200); // Max 200
+    const offset = Number(req.query.offset) || 0;
+
     const assetManager = worldManager.getAssetManager();
 
     try {
+      let allAssets;
       if (query) {
         // Search assets
-        const assets = await assetManager.searchAssets(query);
-        return res.json({ assets });
+        allAssets = await assetManager.searchAssets(query);
       } else {
         // Get all assets
-        const assets = await assetManager.getAllAssets();
-        return res.json({ assets });
+        allAssets = await assetManager.getAllAssets();
       }
+
+      // Apply pagination
+      const totalCount = allAssets.length;
+      const assets = allAssets.slice(offset, offset + limit);
+
+      return res.json({
+        assets,
+        count: totalCount,
+        limit,
+        offset
+      });
     } catch (error) {
       logger.error('Failed to get assets', { worldId, query }, error as Error);
       return res.status(500).json({ error: 'Failed to get assets' });

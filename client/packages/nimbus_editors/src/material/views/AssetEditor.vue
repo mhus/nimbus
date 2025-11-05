@@ -45,6 +45,38 @@
       @asset-click="handleAssetClick"
     />
 
+    <!-- Pagination Controls -->
+    <div v-if="!loading && assets.length > 0" class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+      <div class="text-sm text-base-content/70">
+        Showing {{ ((currentPage - 1) * pageSize) + 1 }}-{{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} assets
+      </div>
+      <div class="flex gap-2">
+        <button
+          class="btn btn-sm"
+          :disabled="!hasPreviousPage"
+          @click="handlePreviousPage"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+        <div class="flex items-center gap-2 px-4">
+          <span class="text-sm">Page {{ currentPage }} of {{ totalPages }}</span>
+        </div>
+        <button
+          class="btn btn-sm"
+          :disabled="!hasNextPage"
+          @click="handleNextPage"
+        >
+          Next
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Upload Dialog -->
     <AssetUploadDialog
       v-if="isUploadDialogOpen"
@@ -90,6 +122,14 @@ const getAssetUrl = computed(() => assetsComposable.value?.getAssetUrl || (() =>
 const isImage = computed(() => assetsComposable.value?.isImage || (() => false));
 const getIcon = computed(() => assetsComposable.value?.getIcon || (() => '📦'));
 const searchQuery = ref('');
+
+// Paging
+const totalCount = computed(() => assetsComposable.value?.totalCount.value || 0);
+const currentPage = computed(() => assetsComposable.value?.currentPage.value || 1);
+const pageSize = computed(() => assetsComposable.value?.pageSize.value || 50);
+const totalPages = computed(() => assetsComposable.value?.totalPages.value || 0);
+const hasNextPage = computed(() => assetsComposable.value?.hasNextPage.value || false);
+const hasPreviousPage = computed(() => assetsComposable.value?.hasPreviousPage.value || false);
 
 const isUploadDialogOpen = ref(false);
 const isInfoDialogOpen = ref(false);
@@ -165,6 +205,22 @@ const handleDelete = async (asset: Asset) => {
   }
 
   await assetsComposable.value.deleteAsset(asset.path);
+};
+
+/**
+ * Handle next page
+ */
+const handleNextPage = () => {
+  if (!assetsComposable.value) return;
+  assetsComposable.value.nextPage();
+};
+
+/**
+ * Handle previous page
+ */
+const handlePreviousPage = () => {
+  if (!assetsComposable.value) return;
+  assetsComposable.value.previousPage();
 };
 
 onMounted(() => {
