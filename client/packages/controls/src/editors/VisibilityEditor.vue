@@ -186,7 +186,6 @@
 
           <!-- Atlas Extraction -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Atlas Extraction (Source Region)</div>
             <div class="grid grid-cols-4 gap-2">
               <div class="form-control">
                 <label class="label py-0">
@@ -239,10 +238,9 @@
             </div>
           </div>
 
-          <!-- UV Transformation - Tiling -->
+          <!-- UV Transformation - Scale & Offset (all 4 fields in one row) -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">UV Tiling (Scale)</div>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-4 gap-2">
               <div class="form-control">
                 <label class="label py-0">
                   <span class="label-text text-xs">uScale</span>
@@ -269,13 +267,6 @@
                   placeholder="1.0"
                 />
               </div>
-            </div>
-          </div>
-
-          <!-- UV Transformation - Offset -->
-          <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">UV Offset</div>
-            <div class="grid grid-cols-2 gap-2">
               <div class="form-control">
                 <label class="label py-0">
                   <span class="label-text text-xs">uOffset</span>
@@ -305,10 +296,9 @@
             </div>
           </div>
 
-          <!-- UV Transformation - Wrap Mode -->
+          <!-- UV Transformation - Wrap Mode & Rotation Center (all 4 fields in one row) -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Wrap Mode</div>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-4 gap-2">
               <div class="form-control">
                 <label class="label py-0">
                   <span class="label-text text-xs">wrapU</span>
@@ -337,16 +327,9 @@
                   <option :value="2">MIRROR</option>
                 </select>
               </div>
-            </div>
-          </div>
-
-          <!-- UV Transformation - Rotation Center -->
-          <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Rotation Center</div>
-            <div class="grid grid-cols-2 gap-2">
               <div class="form-control">
                 <label class="label py-0">
-                  <span class="label-text text-xs">uRotationCenter</span>
+                  <span class="label-text text-xs">uRotCenter</span>
                 </label>
                 <input
                   :value="getTextureDefValue(parseInt(key), 'uvMapping.uRotationCenter')"
@@ -359,7 +342,7 @@
               </div>
               <div class="form-control">
                 <label class="label py-0">
-                  <span class="label-text text-xs">vRotationCenter</span>
+                  <span class="label-text text-xs">vRotCenter</span>
                 </label>
                 <input
                   :value="getTextureDefValue(parseInt(key), 'uvMapping.vRotationCenter')"
@@ -375,7 +358,6 @@
 
           <!-- Texture Rotation Angles -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Rotation Angles (Degrees)</div>
             <div class="grid grid-cols-3 gap-2">
               <div class="form-control">
                 <label class="label py-0">
@@ -419,59 +401,116 @@
             </div>
           </div>
 
-          <!-- Sampling Mode -->
+          <!-- Sampling, Transparency, Opacity & Color (all 4 fields in one row) -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Sampling Mode</div>
-            <select
-              :value="getTextureDefValue(parseInt(key), 'samplingMode') ?? 0"
-              @change="setTextureDefValue(parseInt(key), 'samplingMode', parseInt(($event.target as HTMLSelectElement).value))"
-              class="select select-bordered select-xs w-full"
-            >
-              <option :value="0">NEAREST</option>
-              <option :value="1">LINEAR</option>
-              <option :value="2">MIPMAP</option>
-            </select>
+            <div class="grid grid-cols-4 gap-2">
+              <div>
+                <label class="label py-0">
+                  <span class="label-text text-xs">Sampling</span>
+                </label>
+                <select
+                  :value="getTextureDefValue(parseInt(key), 'samplingMode') ?? 0"
+                  @change="setTextureDefValue(parseInt(key), 'samplingMode', parseInt(($event.target as HTMLSelectElement).value))"
+                  class="select select-bordered select-xs w-full"
+                >
+                  <option :value="0">NEAREST</option>
+                  <option :value="1">LINEAR</option>
+                  <option :value="2">MIPMAP</option>
+                </select>
+              </div>
+              <div>
+                <label class="label py-0">
+                  <span class="label-text text-xs">Transparency</span>
+                </label>
+                <select
+                  :value="getTextureDefValue(parseInt(key), 'transparencyMode') ?? 0"
+                  @change="setTextureDefValue(parseInt(key), 'transparencyMode', parseInt(($event.target as HTMLSelectElement).value))"
+                  class="select select-bordered select-xs w-full"
+                >
+                  <option :value="0">NONE</option>
+                  <option :value="1">HAS_ALPHA</option>
+                  <option :value="2">ALPHA_FROM_RGB</option>
+                </select>
+              </div>
+              <div>
+                <label class="label py-0">
+                  <span class="label-text text-xs">Opacity</span>
+                </label>
+                <input
+                  :value="getTextureDefValue(parseInt(key), 'opacity')"
+                  @input="setTextureDefValue(parseInt(key), 'opacity', parseFloat(($event.target as HTMLInputElement).value))"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                  class="input input-bordered input-xs w-full"
+                  placeholder="1.0"
+                />
+              </div>
+              <div>
+                <label class="label py-0">
+                  <span class="label-text text-xs">Tint Color</span>
+                </label>
+                <input
+                  :value="getTextureDefValue(parseInt(key), 'color')"
+                  @input="setTextureDefValue(parseInt(key), 'color', ($event.target as HTMLInputElement).value)"
+                  type="text"
+                  class="input input-bordered input-xs w-full"
+                  placeholder="#ffffff"
+                />
+              </div>
+            </div>
           </div>
 
-          <!-- Transparency Mode -->
+          <!-- Back Face Culling, Effect & Shader Parameters (Shader Parameters with double width) -->
           <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Transparency Mode</div>
-            <select
-              :value="getTextureDefValue(parseInt(key), 'transparencyMode') ?? 0"
-              @change="setTextureDefValue(parseInt(key), 'transparencyMode', parseInt(($event.target as HTMLSelectElement).value))"
-              class="select select-bordered select-xs w-full"
-            >
-              <option :value="0">NONE</option>
-              <option :value="1">HAS_ALPHA</option>
-              <option :value="2">ALPHA_FROM_RGB</option>
-            </select>
-          </div>
-
-          <!-- Opacity -->
-          <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Opacity</div>
-            <input
-              :value="getTextureDefValue(parseInt(key), 'opacity')"
-              @input="setTextureDefValue(parseInt(key), 'opacity', parseFloat(($event.target as HTMLInputElement).value))"
-              type="number"
-              step="0.1"
-              min="0"
-              max="1"
-              class="input input-bordered input-xs w-full"
-              placeholder="1.0"
-            />
-          </div>
-
-          <!-- Color -->
-          <div>
-            <div class="text-xs font-semibold text-base-content/70 mb-2">Tint Color</div>
-            <input
-              :value="getTextureDefValue(parseInt(key), 'color')"
-              @input="setTextureDefValue(parseInt(key), 'color', ($event.target as HTMLInputElement).value)"
-              type="text"
-              class="input input-bordered input-xs w-full"
-              placeholder="#ffffff"
-            />
+            <div class="grid grid-cols-4 gap-2">
+              <div>
+                <label class="label py-0">
+                  <span class="label-text text-xs">Back Face Culling</span>
+                </label>
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      :checked="getTextureDefValue(parseInt(key), 'backFaceCulling') ?? true"
+                      @change="setTextureDefValue(parseInt(key), 'backFaceCulling', ($event.target as HTMLInputElement).checked)"
+                      class="checkbox checkbox-sm"
+                    />
+                    <span class="label-text text-xs">Enable</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="label py-0">
+                  <span class="label-text text-xs">Effect</span>
+                </label>
+                <select
+                  :value="getTextureDefValue(parseInt(key), 'effect') ?? 0"
+                  @change="setTextureDefValue(parseInt(key), 'effect', parseInt(($event.target as HTMLSelectElement).value))"
+                  class="select select-bordered select-xs w-full"
+                >
+                  <option :value="0">NONE</option>
+                  <option :value="1">WATER</option>
+                  <option :value="2">WIND</option>
+                  <option :value="3">FLIPBOX</option>
+                  <option :value="4">LAVA</option>
+                  <option :value="5">FOG</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <label class="label py-0">
+                  <span class="label-text text-xs">Shader Parameters</span>
+                </label>
+                <input
+                  :value="getTextureDefValue(parseInt(key), 'shaderParameters')"
+                  @input="setTextureDefValue(parseInt(key), 'shaderParameters', ($event.target as HTMLInputElement).value)"
+                  type="text"
+                  class="input input-bordered input-xs w-full"
+                  placeholder="e.g. spriteCount=4"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -492,7 +531,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { VisibilityModifier, TextureDefinition } from '@nimbus/shared';
-import { Shape, ShapeNames, TextureKey, TextureKeyNames } from '@nimbus/shared';
+import { Shape, ShapeNames, TextureKey, TextureKeyNames, BlockEffect } from '@nimbus/shared';
 import AssetPickerDialog from '@components/AssetPickerDialog.vue';
 import CollapsibleSection from '@components/CollapsibleSection.vue';
 import OffsetsEditor from './OffsetsEditor.vue';
@@ -576,11 +615,8 @@ const isTextureExpanded = (key: number): boolean => {
 
 const toggleTextureExpansion = (key: number) => {
   if (expandedTextures.value.has(key)) {
-    // Collapse: Convert to simple string
-    const texture = localValue.value.textures?.[key];
-    if (texture && typeof texture !== 'string') {
-      localValue.value.textures![key] = texture.path;
-    }
+    // Collapse: Keep as TextureDefinition object (don't convert back to string)
+    // This preserves all settings like samplingMode, backFaceCulling, etc.
     expandedTextures.value.delete(key);
   } else {
     // Expand: Convert to TextureDefinition if needed
@@ -607,17 +643,18 @@ const setTexturePath = (key: number, path: string) => {
   const oldPath = getTexturePathValue(key);
 
   if (path.trim()) {
-    // Keep as TextureDefinition if expanded, otherwise string
-    if (expandedTextures.value.has(key)) {
-      const existing = localValue.value.textures[key];
-      if (typeof existing === 'string') {
-        localValue.value.textures[key] = { path: path.trim() };
-      } else if (existing) {
-        existing.path = path.trim();
-      } else {
-        localValue.value.textures[key] = { path: path.trim() };
-      }
+    const existing = localValue.value.textures[key];
+
+    // If it's already a TextureDefinition object, keep it as an object
+    // If it's a string, keep it as a string (unless expanded)
+    if (typeof existing === 'object' && existing !== null) {
+      // Already an object, just update the path
+      existing.path = path.trim();
+    } else if (expandedTextures.value.has(key)) {
+      // Not yet an object but expanded, convert to object
+      localValue.value.textures[key] = { path: path.trim() };
     } else {
+      // Simple string, keep as string
       localValue.value.textures[key] = path.trim();
     }
 

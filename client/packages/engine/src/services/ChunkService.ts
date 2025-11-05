@@ -492,7 +492,7 @@ export class ChunkService {
    *
    * @param blocks - Array of block updates from server
    */
-  onBlockUpdate(blocks: Block[]): void {
+  async onBlockUpdate(blocks: Block[]): Promise<void> {
     try {
       logger.info('🔵 ChunkService.onBlockUpdate called', {
         blockCount: blocks.length,
@@ -504,6 +504,20 @@ export class ChunkService {
       if (!blockTypeService) {
         logger.warn('BlockTypeService not available - cannot process block updates');
         return;
+      }
+
+      // Preload all BlockTypes needed for these updates
+      const blockTypeIds = new Set(
+        blocks
+          .filter(block => block.blockTypeId !== 0) // Skip deletions
+          .map(block => block.blockTypeId)
+      );
+
+      if (blockTypeIds.size > 0) {
+        logger.debug('Preloading BlockTypes for block updates', {
+          uniqueBlockTypes: blockTypeIds.size,
+        });
+        await blockTypeService.preloadBlockTypes(Array.from(blockTypeIds));
       }
 
       // Track affected chunks for re-rendering

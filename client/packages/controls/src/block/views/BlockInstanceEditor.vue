@@ -76,7 +76,6 @@
                     v-model="blockTypeSearch"
                     placeholder="Search block types by ID or description..."
                     @search="handleBlockTypeSearch"
-                    @keyup.enter="handleBlockTypeSearch(blockTypeSearch)"
                   />
 
                   <!-- Search Results (shown when searching) -->

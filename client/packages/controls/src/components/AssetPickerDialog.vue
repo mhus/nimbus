@@ -15,7 +15,7 @@
           <SearchInput
             v-model="localSearchQuery"
             placeholder="Search assets..."
-            @update:modelValue="handleSearch"
+            @search="handleSearch"
           />
         </div>
 

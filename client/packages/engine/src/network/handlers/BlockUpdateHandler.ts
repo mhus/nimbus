@@ -31,7 +31,7 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
     super();
   }
 
-  handle(message: BaseMessage<Block[]>): void {
+  async handle(message: BaseMessage<Block[]>): Promise<void> {
     const blocks = message.d;
 
     logger.info('🔵 BLOCK UPDATE MESSAGE RECEIVED (b.u)', {
@@ -54,8 +54,8 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
       })),
     });
 
-    // Forward to ChunkService
-    this.chunkService.onBlockUpdate(blocks);
+    // Forward to ChunkService (await to ensure BlockTypes are loaded)
+    await this.chunkService.onBlockUpdate(blocks);
 
     logger.info('Block updates forwarded to ChunkService');
   }

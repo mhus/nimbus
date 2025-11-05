@@ -1333,8 +1333,8 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 
 ## Refactoring
 
-[ ] Umbenennen von 'nimbus_editors' in components 'controls'.
-[ ] Umbenennen 'client' in 'engine'
-[ ] Umbenennen von server in test_server
+[x] Umbenennen von 'nimbus_editors' in components 'controls'.
+[x] Umbenennen 'client' in 'engine'
+[x] Umbenennen von server in test_server
 
 - Aktualisiere auch alle docu .md dateien

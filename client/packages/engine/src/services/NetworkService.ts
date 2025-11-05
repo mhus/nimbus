@@ -327,7 +327,15 @@ export class NetworkService {
         }
         handlers.forEach(handler => {
           try {
-            handler.handle(message);
+            // Support both sync and async handlers
+            const result = handler.handle(message);
+            if (result instanceof Promise) {
+              result.catch(error => {
+                ExceptionHandler.handle(error, 'NetworkService.onMessage.handler.async', {
+                  messageType: message.t,
+                });
+              });
+            }
           } catch (error) {
             ExceptionHandler.handle(error, 'NetworkService.onMessage.handler', {
               messageType: message.t,
