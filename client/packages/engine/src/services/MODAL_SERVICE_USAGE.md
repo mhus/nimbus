@@ -14,7 +14,7 @@ The ModalService provides advanced IFrame-based modal dialogs with features like
 ### Opening a Modal
 
 ```typescript
-import { ModalService, ModalFlags, ModalSizePreset } from '@nimbus/client/services';
+import { ModalService, ModalFlags, ModalSizePreset } from '@nimbus/engine/services';
 
 // Simple modal (center, closeable)
 const modal = modalService.openModal(
@@ -136,7 +136,7 @@ The ModalService automatically:
 ### Using IFrameHelper in IFrame Content
 
 ```typescript
-import { IFrameHelper } from '@nimbus/client/services';
+import { IFrameHelper } from '@nimbus/engine/services';
 
 // Check if running embedded
 if (IFrameHelper.isEmbedded()) {
@@ -152,7 +152,7 @@ document.getElementById('closeBtn')?.addEventListener('click', () => {
 });
 
 // Request position change
-import { ModalSizePreset } from '@nimbus/client/types';
+import { ModalSizePreset } from '@nimbus/engine/types';
 
 document.getElementById('moveLeft')?.addEventListener('click', () => {
   IFrameHelper.requestPositionChange(ModalSizePreset.LEFT);
@@ -209,7 +209,7 @@ modalService.closeAll();
 ### From IFrame
 
 ```typescript
-import { IFrameHelper } from '@nimbus/client/services';
+import { IFrameHelper } from '@nimbus/engine/services';
 
 // Request close
 IFrameHelper.requestClose('done');
@@ -220,7 +220,7 @@ IFrameHelper.requestClose('done');
 ### From Parent
 
 ```typescript
-import { ModalSizePreset } from '@nimbus/client/types';
+import { ModalSizePreset } from '@nimbus/engine/types';
 
 const modal = modalService.openModal(...);
 
@@ -231,8 +231,8 @@ modal.changePosition(ModalSizePreset.RIGHT);
 ### From IFrame
 
 ```typescript
-import { IFrameHelper } from '@nimbus/client/services';
-import { ModalSizePreset } from '@nimbus/client/types';
+import { IFrameHelper } from '@nimbus/engine/services';
+import { ModalSizePreset } from '@nimbus/engine/types';
 
 // Request position change
 IFrameHelper.requestPositionChange(ModalSizePreset.RIGHT_BOTTOM);
@@ -243,7 +243,7 @@ IFrameHelper.requestPositionChange(ModalSizePreset.RIGHT_BOTTOM);
 ### Parent Application
 
 ```typescript
-import { ModalService, ModalFlags, ModalSizePreset } from '@nimbus/client/services';
+import { ModalService, ModalFlags, ModalSizePreset } from '@nimbus/engine/services';
 
 const modalService = new ModalService(appContext);
 
@@ -269,7 +269,7 @@ modalService.openModal(
 ### IFrame Content
 
 ```typescript
-import { IFrameHelper } from '@nimbus/client/services';
+import { IFrameHelper } from '@nimbus/engine/services';
 
 // Initialize
 if (IFrameHelper.isEmbedded()) {
@@ -294,7 +294,7 @@ document.getElementById('saveBtn')?.addEventListener('click', async () => {
 });
 
 // Move to right side
-import { ModalSizePreset } from '@nimbus/client/types';
+import { ModalSizePreset } from '@nimbus/engine/types';
 
 document.getElementById('moveRight')?.addEventListener('click', () => {
   IFrameHelper.requestPositionChange(ModalSizePreset.RIGHT);
@@ -309,7 +309,7 @@ document.getElementById('moveRight')?.addEventListener('click', () => {
 
 ## TypeScript Types
 
-All types are exported from `@nimbus/client/types`:
+All types are exported from `@nimbus/engine/types`:
 
 ```typescript
 import type {
@@ -319,7 +319,7 @@ import type {
   ModalSizePreset,
   IFrameMessageType,
   IFrameMessageFromChild,
-} from '@nimbus/client/types';
+} from '@nimbus/engine/types';
 ```
 
 ## Styling

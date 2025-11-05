@@ -180,8 +180,8 @@ Lege in NimbusClient den appContext an. Muss noch nicht vollstaendig sein, wird 
 - Neu sind Block-Metadaten, diese werden später implementiert, gib in der REST-Funktion vorerst keine Gruppen zurück (leer).
 - Neu sind ClientCommands, es gibt aktuell keine Commands, lege einen CommandService an und CommandHandler, aber noch keine Commands.
 
-[x] In client/packages/server/files/assets/textures/block/basic liegen texturen und es muessen dafuer BlockTypes erstellt werden.
-- BlockTypes werden in client/packages/server/files/blocktypes angelegt, mit dem schema /(id % 100)/id.json, also z.b. 1/101.json.
+[x] In client/packages/test_server/files/assets/textures/block/basic liegen texturen und es muessen dafuer BlockTypes erstellt werden.
+- BlockTypes werden in client/packages/test_server/files/blocktypes angelegt, mit dem schema /(id % 100)/id.json, also z.b. 1/101.json.
 - Die erste BlockType ID soll 100 sein
 - In client_playground/packages/core/src/registry/defaultBlocks.ts ist ein beispiel wie frueher BlockTypes angelegt wurden, es haben sich natuerlich daten geaendert.
 - Erstelle ein script (python oder nodejs) das fuer jedes asset eine json datei mit dem schema BlockType (client/packages/shared/src/types/BlockType.ts) erstellt und fuehre es aus.

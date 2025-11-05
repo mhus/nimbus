@@ -2,8 +2,8 @@
   "files": [],
   "references": [
     { "path": "./packages/shared" },
-    { "path": "./packages/client" },
-    { "path": "./packages/server" },
-    { "path": "./packages/nimbus_editors" }
+    { "path": "./packages/engine" },
+    { "path": "./packages/test_server" },
+    { "path": "./packages/controls" }
   ]
 }

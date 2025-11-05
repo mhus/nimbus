@@ -1,7 +1,7 @@
 {
-  "name": "@nimbus/client",
+  "name": "@nimbus/engine",
   "version": "2.0.0",
-  "description": "Nimbus Voxel Engine - 3D Client (Viewer + Editor builds)",
+  "description": "Nimbus Voxel Engine - 3D Engine (Viewer + Editor builds)",
   "type": "module",
   "main": "./dist/NimbusClient.js",
   "types": "./dist/NimbusClient.d.ts",

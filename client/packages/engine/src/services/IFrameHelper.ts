@@ -6,7 +6,7 @@
  *
  * Usage in IFrame:
  * ```typescript
- * import { IFrameHelper } from '@nimbus/client';
+ * import { IFrameHelper } from '@nimbus/engine';
  *
  * // Notify parent that iframe is ready
  * IFrameHelper.notifyReady();

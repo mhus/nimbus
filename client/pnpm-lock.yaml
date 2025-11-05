@@ -15,44 +15,7 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
-  packages/client:
-    dependencies:
-      '@babylonjs/core':
-        specifier: ^7.0.0
-        version: 7.54.3
-      '@babylonjs/loaders':
-        specifier: ^7.0.0
-        version: 7.54.3(@babylonjs/core@7.54.3)(babylonjs-gltf2interface@7.54.3)
-      '@babylonjs/materials':
-        specifier: ^7.0.0
-        version: 7.54.3(@babylonjs/core@7.54.3)
-      '@nimbus/shared':
-        specifier: workspace:*
-        version: link:../shared
-      dotenv:
-        specifier: ^16.4.0
-        version: 16.6.1
-    devDependencies:
-      '@types/jest':
-        specifier: ^30.0.0
-        version: 30.0.0
-      '@types/node':
-        specifier: ^20.11.0
-        version: 20.19.23
-      jest:
-        specifier: ^30.2.0
-        version: 30.2.0(@types/node@20.19.23)
-      ts-jest:
-        specifier: ^29.4.5
-        version: 29.4.5(@babel/core@7.28.5)(jest@30.2.0)(typescript@5.9.3)
-      typescript:
-        specifier: ^5.3.3
-        version: 5.9.3
-      vite:
-        specifier: ^5.0.0
-        version: 5.4.21(@types/node@20.19.23)
-
-  packages/material_editor:
+  packages/controls:
     dependencies:
       '@headlessui/vue':
         specifier: ^1.7.0
@@ -101,7 +64,56 @@ importers:
         specifier: ^1.8.0
         version: 1.8.27(typescript@5.9.3)
 
-  packages/server:
+  packages/engine:
+    dependencies:
+      '@babylonjs/core':
+        specifier: ^7.0.0
+        version: 7.54.3
+      '@babylonjs/loaders':
+        specifier: ^7.0.0
+        version: 7.54.3(@babylonjs/core@7.54.3)(babylonjs-gltf2interface@7.54.3)
+      '@babylonjs/materials':
+        specifier: ^7.0.0
+        version: 7.54.3(@babylonjs/core@7.54.3)
+      '@nimbus/shared':
+        specifier: workspace:*
+        version: link:../shared
+      dotenv:
+        specifier: ^16.4.0
+        version: 16.6.1
+    devDependencies:
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.23
+      jest:
+        specifier: ^30.2.0
+        version: 30.2.0(@types/node@20.19.23)
+      ts-jest:
+        specifier: ^29.4.5
+        version: 29.4.5(@babel/core@7.28.5)(jest@30.2.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.23)
+
+  packages/shared:
+    devDependencies:
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      jest:
+        specifier: ^30.2.0
+        version: 30.2.0(@types/node@20.19.23)
+      ts-jest:
+        specifier: ^29.4.5
+        version: 29.4.5(@babel/core@7.28.5)(jest@30.2.0)(typescript@5.9.3)
+
+  packages/test_server:
     dependencies:
       '@nimbus/shared':
         specifier: workspace:*
@@ -152,18 +164,6 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
-
-  packages/shared:
-    devDependencies:
-      '@types/jest':
-        specifier: ^30.0.0
-        version: 30.0.0
-      jest:
-        specifier: ^30.2.0
-        version: 30.2.0(@types/node@20.19.23)
-      ts-jest:
-        specifier: ^29.4.5
-        version: 29.4.5(@babel/core@7.28.5)(jest@30.2.0)(typescript@5.9.3)
 
 packages:
 

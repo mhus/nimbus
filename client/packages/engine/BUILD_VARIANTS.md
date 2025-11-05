@@ -149,7 +149,7 @@ pnpm preview:editor
 ## Output Structure
 
 ```
-packages/client/
+packages/engine/
 ├── dist/
 │   ├── viewer/
 │   │   ├── index.html

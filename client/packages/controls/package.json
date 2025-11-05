@@ -1,8 +1,8 @@
 {
-  "name": "@nimbus/nimbus_editors",
+  "name": "@nimbus/controls",
   "version": "2.0.0",
   "type": "module",
-  "description": "Multi-page editor suite for Nimbus - Block Types, Assets, Block Instances, and more",
+  "description": "UI controls and components for Nimbus",
   "main": "./dist/index.js",
   "scripts": {
     "dev": "vite",

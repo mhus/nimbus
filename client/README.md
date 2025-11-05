@@ -10,8 +10,9 @@ This is **Version 2.0** - a complete rewrite based on learnings from the prototy
 client/
 ├── packages/
 │   ├── shared/          # Shared types, protocols, utils
-│   ├── client/          # 3D Client (Viewer)
-│   └── server/          # Test server
+│   ├── engine/          # 3D Engine (Viewer + Editor)
+│   ├── controls/        # UI controls and components
+│   └── test_server/     # Test server
 ├── CLAUDE.md            # Claude AI development documentation
 ├── package.json         # Root workspace config
 ├── pnpm-workspace.yaml  # pnpm workspace definition
@@ -50,17 +51,19 @@ pnpm install
 pnpm build
 
 # Development servers
-pnpm dev:server     # Test server (port 3000)
-pnpm dev:client     # Client viewer (port 3001)
-pnpm dev:viewer     # Alias for viewer
-pnpm dev:editor     # Client editor (port 3001)
+pnpm dev:test_server # Test server (port 3000)
+pnpm dev:engine      # Engine viewer (port 3001)
+pnpm dev:viewer      # Alias for viewer
+pnpm dev:editor      # Engine editor (port 3001)
+pnpm dev:controls    # UI controls (port 3002)
 
 # Build specific packages
-pnpm build:shared   # Shared types only
-pnpm build:server   # Server only
-pnpm build:client   # Client (both variants)
-pnpm build:viewer   # Viewer variant only
-pnpm build:editor   # Editor variant only
+pnpm build:shared      # Shared types only
+pnpm build:test_server # Test server only
+pnpm build:engine      # Engine (both variants)
+pnpm build:viewer      # Viewer variant only
+pnpm build:editor      # Editor variant only
+pnpm build:controls    # UI controls only
 
 # Utilities
 pnpm test           # Run all tests
@@ -70,11 +73,11 @@ pnpm clean          # Clean all builds
 
 **Typical workflow:**
 ```bash
-# Terminal 1: Start server
-pnpm dev:server
+# Terminal 1: Start test server
+pnpm dev:test_server
 
-# Terminal 2: Start client
-pnpm dev:client
+# Terminal 2: Start engine
+pnpm dev:engine
 # OR
 pnpm dev:editor
 ```
@@ -85,7 +88,7 @@ See [SCRIPTS.md](./SCRIPTS.md) for detailed script documentation.
 
 Each package has its own `.env.example` file. Copy these to `.env` and configure:
 
-**Client** (`packages/client/.env`):
+**Engine** (`packages/engine/.env`):
 ```bash
 CLIENT_USERNAME=username
 CLIENT_PASSWORD=password
@@ -93,7 +96,7 @@ SERVER_WEBSOCKET_URL=ws://localhost:3000
 SERVER_API_URL=http://localhost:3000
 ```
 
-**Server** (`packages/server/.env`):
+**Test Server** (`packages/test_server/.env`):
 ```bash
 PORT=3000
 HOST=0.0.0.0
@@ -109,8 +112,8 @@ Shared types, protocols and utilities used by both client and server.
 - Network protocol messages
 - Utility functions
 
-### @nimbus/client
-3D voxel engine client with two build variants:
+### @nimbus/engine
+3D voxel engine with two build variants:
 
 **Viewer** (~12.5 KB gzipped):
 - Babylon.js 3D rendering
@@ -126,10 +129,13 @@ Shared types, protocols and utilities used by both client and server.
 - Terrain modification
 - World export
 
-See [packages/client/BUILD_VARIANTS.md](./packages/client/BUILD_VARIANTS.md) for details.
+See [packages/engine/BUILD_VARIANTS.md](./packages/engine/BUILD_VARIANTS.md) for details.
 
-### @nimbus/server
-Simple test server for client development.
+### @nimbus/controls
+UI controls and components for Nimbus.
+
+### @nimbus/test_server
+Simple test server for engine development.
 
 - REST API for world data
 - WebSocket server
@@ -190,8 +196,8 @@ This is the Version 2.0 development. Key principles:
 
 - [SCRIPTS.md](./SCRIPTS.md) - Build and development scripts
 - [CLAUDE.md](./CLAUDE.md) - Architecture and development guide
-- [packages/client/BUILD_VARIANTS.md](./packages/client/BUILD_VARIANTS.md) - Build variants
-- [packages/client/MIGRATION_CLIENT_TYPES.md](./packages/client/MIGRATION_CLIENT_TYPES.md) - Type migration
+- [packages/engine/BUILD_VARIANTS.md](./packages/engine/BUILD_VARIANTS.md) - Build variants
+- [packages/engine/MIGRATION_CLIENT_TYPES.md](./packages/engine/MIGRATION_CLIENT_TYPES.md) - Type migration
 
 ### Prototype Resources
 

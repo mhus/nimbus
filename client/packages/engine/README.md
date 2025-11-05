@@ -1,10 +1,10 @@
-# @nimbus/client
+# @nimbus/engine
 
-Nimbus Voxel Engine - 3D Client with Viewer and Editor build variants
+Nimbus Voxel Engine - 3D Engine with Viewer and Editor build variants
 
 ## Overview
 
-The Nimbus Client is a 3D voxel engine built with TypeScript, Vite, and Babylon.js. It provides two build variants from a single codebase using conditional compilation:
+The Nimbus Engine is a 3D voxel engine built with TypeScript, Vite, and Babylon.js. It provides two build variants from a single codebase using conditional compilation:
 
 - **Viewer**: Read-only 3D engine for viewing voxel worlds (~12.5 KB gzipped)
 - **Editor**: Full 3D engine with editing capabilities and command console (~15-18 KB gzipped)
@@ -127,7 +127,7 @@ dist/
 Import client-specific types:
 
 ```typescript
-import { ClientBlock, ClientChunk, ClientBlockType } from '@nimbus/client/types';
+import { ClientBlock, ClientChunk, ClientBlockType } from '@nimbus/engine/types';
 import { Block, BlockType, ChunkData } from '@nimbus/shared';
 ```
 

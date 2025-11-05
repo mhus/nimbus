@@ -10,7 +10,7 @@ Er erlaubt es Block Typen, Texturen, Assets zu erstellen, zu bearbeiten und zu s
 ## Server
 
 [x] Im Server werden REST Endpunkte benötigt um Block Typen zu bearbeiten
-die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' hinausgehen.
+die über die Definition in 'client/instructions/general/server_rest_api.md' hinausgehen.
 - GET /api/worlds/{worldId}/blocktypes?query={query}
 - POST /api/worlds/{worldId}/blocktypes
 Response: {id: number}
@@ -18,10 +18,10 @@ Response: {id: number}
 - DELETE /api/worlds/{worldId}/blocktypes/{blockTypeId}
 
 - Erstelle die Endpunkte
-- Erweitere die Dokumentation in 'client/instructions/client_2.0/server_rest_api.md'
+- Erweitere die Dokumentation in 'client/instructions/general/server_rest_api.md'
 
 [x] Im Server werden REST Endpunkte benötigt um Assets zu bearbeiten
-die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' hinausgehen.
+die über die Definition in 'client/instructions/general/server_rest_api.md' hinausgehen.
 - GET /api/worlds/{worldId}/assets?query={query}
 - POST /api/worlds/{worldId}/assets/{neuerAssetPath}
 - PUT /api/worlds/{worldId}/assets/{assetPath}
@@ -33,7 +33,7 @@ die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' 
 - Richte Vite mit Vue3 und tailwind css ein.
 - Erstelle die Grundstruktur der Applikation mit den benötigten Komponenten.
 - In einer dotnet Datei wird die aktuelle API_URL fest hinterlegt.
-- Rest API Dokumentation: 'client/instructions/client_2.0/server_rest_api.md'
+- Rest API Dokumentation: 'client/instructions/general/server_rest_api.md'
 - Im Header steht die aktuelle 'World', diese ist aktuell immer 'main' (in dotnet Datei WORLD_ID) und kann aber durch click geändert werden.
   - Bei Click wird im Server 'GET /api/worlds' aufgerufen und die worlds angezeigt. 
   - Die ausgewahlte World wird übernommen.
@@ -859,19 +859,19 @@ IFrmame:
   Geänderte Dateien
 
   Neue Dateien:
-  - /client/packages/client/src/services/IFrameHelper.ts - Helper für IFrame-Kommunikation
-  - /client/packages/client/src/services/index.ts - Service-Exports
-  - /client/packages/client/src/services/MODAL_SERVICE_USAGE.md - Dokumentation
+  - /client/packages/engine/src/services/IFrameHelper.ts - Helper für IFrame-Kommunikation
+  - /client/packages/engine/src/services/index.ts - Service-Exports
+  - /client/packages/engine/src/services/MODAL_SERVICE_USAGE.md - Dokumentation
 
   Aktualisierte Dateien:
-  - /client/packages/client/src/types/Modal.ts - Neue Types und Enums
-  - /client/packages/client/src/services/ModalService.ts - Erweiterte Implementierung
-  - /client/packages/client/src/types/index.ts - Modal-Exports hinzugefügt
-  - /client/packages/client/src/input/handlers/EditorHandlers.ts - Neue API verwendet
+  - /client/packages/engine/src/types/Modal.ts - Neue Types und Enums
+  - /client/packages/engine/src/services/ModalService.ts - Erweiterte Implementierung
+  - /client/packages/engine/src/types/index.ts - Modal-Exports hinzugefügt
+  - /client/packages/engine/src/input/handlers/EditorHandlers.ts - Neue API verwendet
 
   Verwendungsbeispiel
 
-  import { ModalService, ModalFlags } from '@nimbus/client/services';
+  import { ModalService, ModalFlags } from '@nimbus/engine/services';
 
   // Modal öffnen mit allen Features
   const modal = modalService.openModal(
@@ -883,7 +883,7 @@ IFrmame:
   );
 
   // Im IFrame:
-  import { IFrameHelper } from '@nimbus/client/services';
+  import { IFrameHelper } from '@nimbus/engine/services';
 
   IFrameHelper.notifyReady();
   IFrameHelper.requestPositionChange('right');
@@ -1037,17 +1037,17 @@ IFrmame:
 ```
 
 [?] Im Server werden REST Endpunkte benötigt um Blocke zu bearbeiten
-die über die Definition in 'client/instructions/client_2.0/server_rest_api.md' hinausgehen.
+die über die Definition in 'client/instructions/general/server_rest_api.md' hinausgehen.
 - POST /api/worlds/{worldId}/blocks/{x}/{y}/{z}
 - PUT /api/worlds/{worldId}/blocks/{x}/{y}/{z}
 - DELETE /api/worlds/{worldId}/blocks/{x}/{y}/{z}
 
 - Erstelle die Endpunkte
-- Erweitere die Dokumentation in 'client/instructions/client_2.0/server_rest_api.md'
+- Erweitere die Dokumentation in 'client/instructions/general/server_rest_api.md'
 
 [?] Beim ändern von Blocks im Server muss an alle Clients ein Update der Blocks/Chunk gesendet werden.
 Das kann cumulativ beim Speichern der Chunks passieren. Es gibt hierfuer bereits eine Netzwerk Funktion
-Siehe 'client/instructions/client_2.0/network-model-2.0.md'.
+Siehe 'client/instructions/general/network-model-2.0.md'.
 Muss das angepasst werden?
 - Ein DELETE schickt als Block den BlockType '0', das ist dan ein Loeschen.
 - Ist es nicht sinnvoller immer kurz zu warten, falls mehrere Blocks nacheinander geandert werden kann man dann einen 
@@ -1162,7 +1162,7 @@ Muss das angepasst werden?
 - Im Embedded Modus soll der Titel/Header nicht angezeigt werden, das wird schon am IFrame angezeigt.
 - Nutze den ModalService um das Modal zu schliessen und notifications zu senden.
 
-[x] Client soll auf die Netzwerk-Nachricht 'b.u' reagieren (client/instructions/client_2.0/network-model-2.0.md)
+[x] Client soll auf die Netzwerk-Nachricht 'b.u' reagieren (client/instructions/general/network-model-2.0.md)
 - Geänderte Blocks austauschen (type 0 = DELETED)
 - ClientBlock / ClientChunk aktualisieren - wie schon beim laden von chunks (die gleiche methode nutzen)
 - Neu rendern
@@ -1290,7 +1290,7 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
 
 [x] Uebernahme von BlockTypes aus dem playground.
 - Im playground in 'client_playground/packages/core/src/registry/defaultBlocks.ts' werden default block types definiert.
-- Rekonstruiere die Block typen und lege in 'client/packages/server/files/blocktypes' block types im json format. Beispiel (client/packages/server/files/blocktypes/1/100.json)
+- Rekonstruiere die Block typen und lege in 'client/packages/test_server/files/blocktypes' block types im json format. Beispiel (client/packages/test_server/files/blocktypes/1/100.json)
   - Du koenntest ein script schreiben, das die block definitionen direkt generieren laesst und ausgibt.
 - Beginne mit der BlockTypeId 1000 + legacy id aus dem playground.
 - Setze die asset pfade richtig.
@@ -1300,7 +1300,7 @@ Erfasse alle Werte in einer json datei und speichere diese als <asset file name>
   description des BlockTypes zu uebernehmen.
 
 [x] An Assets liegen info dateien mit beschriebung dea assets / texture. Erstelle ein Script das fuer jeden Block Type 
-(client/packages/server/files/blocktypes) die Assets / Asset Info Dateien sammelt und an Gemini
+(client/packages/test_server/files/blocktypes) die Assets / Asset Info Dateien sammelt und an Gemini
 Die Daten des Blcok Types, genutze Assets und Asset Beschreibugen sendet und eine Description des Block Types erzeugt.
 Aktualisiere die Beschreibung in den Block Type Dateien.
 - Ich habe zu jedem assets eine .info datei im gleichen ordner mit gleichem namen + ".info". 
@@ -1336,3 +1336,5 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 [ ] Umbenennen von 'nimbus_editors' in components 'controls'.
 [ ] Umbenennen 'client' in 'engine'
 [ ] Umbenennen von server in test_server
+
+- Aktualisiere auch alle docu .md dateien

@@ -1,8 +1,8 @@
-# @nimbus/server
+# @nimbus/test_server
 
 Nimbus Voxel Engine - Test Server
 
-This is a simple server implementation to provide world data to the client. The focus is on **client development**, not server features.
+This is a simple server implementation to provide world data to the engine. The focus is on **engine development**, not server features.
 
 ## Features
 

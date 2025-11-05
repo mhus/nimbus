@@ -378,8 +378,8 @@ Log directory doesn't exist.
 ## Examples
 
 See:
-- `packages/client/src/NimbusClient.ts` - Browser integration
-- `packages/server/src/NimbusServer.ts` - Node.js integration
+- `packages/engine/src/NimbusClient.ts` - Browser integration
+- `packages/test_server/src/NimbusServer.ts` - Node.js integration
 
 ## Summary
 

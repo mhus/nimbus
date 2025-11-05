@@ -146,4 +146,4 @@ import type {
 } from '@nimbus/shared';
 ```
 
-This maintains a clear dependency: `@nimbus/client` depends on `@nimbus/shared`, but not vice versa.
+This maintains a clear dependency: `@nimbus/engine` depends on `@nimbus/shared`, but not vice versa.

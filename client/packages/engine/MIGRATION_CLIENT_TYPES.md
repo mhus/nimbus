@@ -1,7 +1,7 @@
 # Migration: Client Types from Shared to Client Package
 
 **Date**: 2025-10-28
-**Task**: Move all client-specific types from `@nimbus/shared` to `@nimbus/client`
+**Task**: Move all client-specific types from `@nimbus/shared` to `@nimbus/engine`
 
 ## Overview
 
@@ -11,7 +11,7 @@ Client-specific types (ClientBlock, ClientChunk, ClientBlockType) have been move
 
 ### Files Moved
 
-**From `packages/shared/src/types/` to `packages/client/src/types/`:**
+**From `packages/shared/src/types/` to `packages/engine/src/types/`:**
 
 1. **ClientBlockType.ts** (63 lines)
    - Optimized block type for client rendering
@@ -32,15 +32,15 @@ Client-specific types (ClientBlock, ClientChunk, ClientBlockType) have been move
 
 ### Documentation Moved
 
-**From `packages/shared/src/types/` to `packages/client/src/types/docs/`:**
+**From `packages/shared/src/types/` to `packages/engine/src/types/docs/`:**
 
 1. **BLOCK_VS_CLIENTBLOCK.md** - Detailed comparison of Block vs ClientBlock
 2. **CLIENTCHUNK_USAGE.md** - ClientChunk usage patterns and examples
 
 ### New Files Created
 
-1. **packages/client/src/types/index.ts** - Export file for client types
-2. **packages/client/src/types/README.md** - Client types documentation
+1. **packages/engine/src/types/index.ts** - Export file for client types
+2. **packages/engine/src/types/README.md** - Client types documentation
 
 ### Files Modified
 
@@ -49,18 +49,18 @@ Client-specific types (ClientBlock, ClientChunk, ClientBlockType) have been move
 
 2. **packages/shared/src/types/README.md**
    - Updated to reflect removal of client types
-   - Added note that client types are in @nimbus/client package
+   - Added note that client types are in @nimbus/engine package
    - Updated type hierarchy diagram
    - Updated design principles
 
-3. **packages/client/package.json**
+3. **packages/engine/package.json**
    - Added main/types/exports fields for proper package exports
    - Exports: "." (main) and "./types" (client types)
 
-4. **packages/client/tsconfig.json**
+4. **packages/engine/tsconfig.json**
    - Added `emitDeclarationOnly: true` to generate type declarations
 
-5. **packages/client/package.json** (build script)
+5. **packages/engine/package.json** (build script)
    - Changed build order: `vite build && tsc` (was `tsc && vite build`)
    - This ensures vite doesn't overwrite TypeScript declarations
 
@@ -76,7 +76,7 @@ import { ClientBlock, ClientChunk, ClientBlockType } from '@nimbus/shared';
 
 ```typescript
 // Import from client package
-import { ClientBlock, ClientChunk, ClientBlockType } from '@nimbus/client/types';
+import { ClientBlock, ClientChunk, ClientBlockType } from '@nimbus/engine/types';
 
 // Shared types remain in @nimbus/shared
 import { Block, BlockType, ChunkData } from '@nimbus/shared';
@@ -107,10 +107,10 @@ packages/shared/src/types/
 
 **Focus**: Network transmission, server logic, minimal data
 
-### @nimbus/client (Client Types)
+### @nimbus/engine (Client Types)
 
 ```
-packages/client/src/types/
+packages/engine/src/types/
 ├── ClientBlockType.ts
 ├── ClientBlock.ts
 ├── ClientChunk.ts
@@ -128,10 +128,10 @@ packages/client/src/types/
 ```
 @nimbus/shared (network types)
     ↓ (import)
-@nimbus/client (client types + engine)
+@nimbus/engine (client types + engine)
 ```
 
-Client package depends on shared, but shared does NOT depend on client.
+Engine package depends on shared, but shared does NOT depend on engine.
 
 ## Build Verification
 
@@ -142,8 +142,8 @@ Both packages build successfully:
 pnpm --filter @nimbus/shared build
 # ✓ Compiled successfully
 
-# Build client package
-pnpm --filter @nimbus/client build
+# Build engine package
+pnpm --filter @nimbus/engine build
 # ✓ vite build: dist/index.html + dist/assets/main-*.js
 # ✓ tsc: dist/NimbusClient.d.ts + dist/types/*.d.ts
 ```
@@ -168,7 +168,7 @@ export * from './errors';
 - World, EntityData
 - AnimationData, AreaData, EffectData
 
-### @nimbus/client exports
+### @nimbus/engine exports
 
 ```json
 {
@@ -201,7 +201,7 @@ If there are external packages consuming these types, they need to update import
 import { ClientBlock } from '@nimbus/shared';
 
 // After
-import { ClientBlock } from '@nimbus/client/types';
+import { ClientBlock } from '@nimbus/engine/types';
 ```
 
 ### Benefits of Separation
@@ -216,13 +216,13 @@ import { ClientBlock } from '@nimbus/client/types';
 
 ### Server Package
 
-When implementing `@nimbus/server`, it should:
+When implementing `@nimbus/test_server`, it should:
 - Import from `@nimbus/shared` (network types)
-- NOT import from `@nimbus/client` (client types)
+- NOT import from `@nimbus/engine` (client types)
 
 ### Additional Client Types
 
-Any future client-only types should be added to `@nimbus/client/src/types/`:
+Any future client-only types should be added to `@nimbus/engine/src/types/`:
 - ClientEntity (if needed)
 - ClientAnimation (if needed)
 - Rendering-specific types

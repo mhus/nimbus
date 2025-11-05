@@ -148,7 +148,7 @@ Die Integration erfolgt in folgenden Schritten:
 ## Datei-Struktur
 
 ```
-client/packages/client/src/
+client/packages/engine/src/
 ├── NimbusClient.ts              # Haupt-Entry-Point
 ├── AppContext.ts                # Service-Registry
 ├── services/
@@ -313,4 +313,4 @@ service.emit('event:name', data);
 - **BabylonJS Docs:** https://doc.babylonjs.com/
 - **Client 2.0 Doku:** `client/CLAUDE.md`
 - **Migration Plan:** `client/instructions/client_2.0/migration.md`
-- **Playground Referenz:** `client_playground/packages/client/src/rendering/`
+- **Playground Referenz:** `client_playground/packages/client/src/rendering/` (legacy)

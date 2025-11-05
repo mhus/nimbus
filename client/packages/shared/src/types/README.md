@@ -46,7 +46,7 @@ import {
 
 // All shared types are available through the main package export
 // Client-specific types (ClientBlock, ClientChunk, ClientBlockType)
-// are in @nimbus/client package
+// are in @nimbus/engine package
 ```
 
 ## Type Hierarchy
@@ -57,9 +57,9 @@ BlockType (Registry)
 Block (Instance in world)
   ↓ network transmission
   ↓ client-side resolution
-ClientBlock (in @nimbus/client)
+ClientBlock (in @nimbus/engine)
   ↓ uses
-ClientBlockType (in @nimbus/client)
+ClientBlockType (in @nimbus/engine)
 ```
 
 ## Design Principles
@@ -71,7 +71,7 @@ ClientBlockType (in @nimbus/client)
 5. **Extensibility**: Custom status values (100+) for world-specific states
 
 **Note**: Client-specific types (ClientBlock, ClientChunk, ClientBlockType) with caching
-and rendering optimizations are located in the `@nimbus/client` package.
+and rendering optimizations are located in the `@nimbus/engine` package.
 
 ## Metadata Merging Priority
 
