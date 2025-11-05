@@ -25,4 +25,17 @@ export abstract class BlockRenderer {
       block: ClientBlock
 ): void | Promise<void>;
 
+  /**
+   * Determine if this renderer requires a separate mesh for each block
+   *
+   * Most renderers (CUBE) return false - they batch all blocks into a single chunk mesh.
+   * Special renderers (FLIPBOX, BILLBOARD, SPRITE, MODEL) return true - they need
+   * individual meshes with original textures or special shader materials.
+   *
+   * @returns true if this block needs its own mesh, false if it can be batched (default)
+   */
+  needsSeparateMesh(): boolean {
+    return false; // Default: batch into chunk mesh
+  }
+
 }

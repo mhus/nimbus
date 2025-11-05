@@ -139,7 +139,7 @@ export class BlockTypeService {
       // Use the range endpoint: /api/worlds/{worldId}/blocktypes/{from}/{to}
       const url = `${apiUrl}/api/worlds/${worldId}/blocktypes/${range.from}/${range.to}`;
 
-      logger.info('Loading BlockType chunk', { chunkIndex, range, url });
+      logger.debug('Loading BlockType chunk', { chunkIndex, range, url });
 
       const response = await fetch(url);
 
@@ -167,7 +167,7 @@ export class BlockTypeService {
       // Mark chunk as loaded
       this.loadedChunks.add(chunkIndex);
 
-      logger.info('BlockType chunk loaded successfully', {
+      logger.debug('BlockType chunk loaded successfully', {
         chunkIndex,
         range,
         received: blockTypes.length,

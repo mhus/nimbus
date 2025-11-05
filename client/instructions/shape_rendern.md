@@ -62,6 +62,35 @@ sind aber glassiere mit der color die an der texture hinterlegt ist.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
 
+## FlipBox
 
+[ ] Erstelle den FlipBoxRenderer. Er rendert eine Oberflaeche (nur eine TOP Seite) die den Sahder FlipBox aus
+dem ShaderService verwendet.
+- Orientiere dich an CubeRenderer, es werden nur 4 Punkte benoetigt.
+- Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
+- Der FlipShader bekommt parameter aus VisibilityModifier.effectParameters, hier werden 'anzahl,milliseconds,mode' angegeben, die vom shader verarbeitet werden.
+  - anzahl (frameCount): anzahl der bilder
+  - milliseconds: wartezeit zwischen den flips - optional, default 100
+  - mode: bumerang:bilder gehen vor und zurueck (bumerang, reihenfolge: 0,1,2,3,2,1,0,1,2...), rotate: bilder rotieren durch (reihenfolge: 0,1,2,3,0,1,2,3...) - optional, default: rotate
+- Bildausschnitt kommt aus UVMapping: w und h wird nach rechts weiter geflippt
+  - z.b. |0|1|2|3| soll UVMapping den bereich fuer 0 angeben, also u=0,v=0,w=0.25,h=1 fuer 4 bilder nebeneinander.
+- Der Renderer definiert seinen eigenen Mesh, da sonst der Atlas die restlchen Bilder nicht uebernimmt.
 
+## Billboard
 
+- Der Renderer definiert sein eigenes Mesh
+
+## Sprite
+Erstelle einen SpriteRenderer. Er nutzt den SpriteService (service in dieser App) um ein Sprite zu rendern.
+
+Erstelle den SpriteService und haenge ihn in den EngineService ein. Er soll den SpriteManager von BabylonJS nutzen
+und ueber alle chunks hinweg verwalten. Der manager soll pro definierter textur einen SpriteManager erstellen.
+Vorlage aber nicht vollstaendig: client_playground/packages/client/src/rendering/SpriteManagerRegistry.ts
+
+SpriteRenderer:
+- Pro block kann es mehrere Sprites geben. Es wird pro definierter Texture in TextureDefinition ein
+  SpriteManager auf diesem Block erstellt. Wieviele sprites es gibt wird in shaderParameters an TextureDefinition definiert.
+  default 100
+- Nutze scalierung und offset wie in der vorlage um die sprites zu positionieren.
+- Der Renderer definiert sein eigenes Mesh.
+- Sprites bewegen sich im Wind - siehe die vorlage client_playground/packages/client/src/rendering/SpriteManagerRegistry.ts

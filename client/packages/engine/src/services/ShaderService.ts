@@ -67,6 +67,9 @@ export class ShaderService {
     // Register wind shader
     this.registerWindShader();
 
+    // Register flipbox shader
+    this.registerFlipboxShader();
+
     logger.debug('ShaderService initialized with scene');
   }
 
@@ -437,5 +440,197 @@ export class ShaderService {
     material.setFloat('windStrength', params.windStrength);
     material.setFloat('windGustStrength', params.windGustStrength);
     material.setFloat('windSwayFactor', params.windSwayFactor);
+  }
+
+  // ============================================
+  // Flipbox Shader Implementation
+  // ============================================
+
+  /**
+   * Register flipbox shader effect
+   */
+  private registerFlipboxShader(): void {
+    // Register flipbox shaders with Babylon.js
+    this.registerFlipboxShaderCode();
+
+    // Register flipbox effect
+    const flipboxEffect: ShaderEffect = {
+      name: 'flipbox',
+      createMaterial: (params?: Record<string, any>) => {
+        return this.createFlipboxMaterial(params?.texture, params?.shaderParameters, params?.name);
+      },
+    };
+
+    this.registerEffect(flipboxEffect);
+  }
+
+  /**
+   * Register custom flipbox shader code with Babylon.js
+   */
+  private registerFlipboxShaderCode(): void {
+    // Vertex shader - standard pass-through with UV
+    Effect.ShadersStore['flipboxVertexShader'] = `
+      precision highp float;
+
+      // Attributes
+      attribute vec3 position;
+      attribute vec3 normal;
+      attribute vec2 uv;
+
+      // Uniforms
+      uniform mat4 worldViewProjection;
+      uniform mat4 world;
+
+      // Varyings to fragment shader
+      varying vec2 vUV;
+      varying vec3 vNormal;
+
+      void main(void) {
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+        vUV = uv;
+        vNormal = normalize((world * vec4(normal, 0.0)).xyz);
+      }
+    `;
+
+    // Fragment shader - sprite-sheet frame animation
+    Effect.ShadersStore['flipboxFragmentShader'] = `
+      precision highp float;
+
+      // Varyings from vertex shader
+      varying vec2 vUV;
+      varying vec3 vNormal;
+
+      // Uniforms
+      uniform sampler2D textureSampler;
+      uniform vec3 lightDirection;
+      uniform int currentFrame;
+      uniform int frameCount;
+
+      void main(void) {
+        // Calculate frame offset in UV space
+        float frameWidth = 1.0 / float(frameCount);
+        float frameOffset = float(currentFrame) * frameWidth;
+
+        // Adjust UV to sample current frame
+        vec2 frameUV = vec2(vUV.x * frameWidth + frameOffset, vUV.y);
+
+        // Sample texture
+        vec4 texColor = texture2D(textureSampler, frameUV);
+
+        // Alpha test: discard transparent pixels
+        if (texColor.a < 0.5) {
+          discard;
+        }
+
+        // Simple directional lighting
+        float lightIntensity = max(dot(vNormal, lightDirection), 0.3);
+        vec3 finalColor = texColor.rgb * lightIntensity;
+
+        // Output final color
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+
+    logger.debug('Flipbox shader code registered with Babylon.js');
+  }
+
+  /**
+   * Create flipbox shader material
+   *
+   * @param texture Original texture (not atlas) with sprite-sheet frames
+   * @param shaderParameters Format: "frameCount,delayMs" (e.g., "4,100")
+   * @param name Material name
+   */
+  private createFlipboxMaterial(
+    texture: Texture | undefined,
+    shaderParameters: string | undefined,
+    name: string = 'flipboxMaterial'
+  ): ShaderMaterial | null {
+    if (!this.scene) {
+      logger.error('Cannot create flipbox material: Scene not initialized');
+      return null;
+    }
+
+    if (!shaderParameters) {
+      logger.error('Cannot create flipbox material: shaderParameters required (format: "frameCount,delayMs")');
+      return null;
+    }
+
+    // Parse shader parameters: "frameCount,delayMs"
+    const parts = shaderParameters.split(',');
+    if (parts.length !== 2) {
+      logger.error('Invalid flipbox shaderParameters format (expected "frameCount,delayMs")', { shaderParameters });
+      return null;
+    }
+
+    const frameCount = parseInt(parts[0], 10);
+    const delayMs = parseInt(parts[1], 10);
+
+    if (isNaN(frameCount) || isNaN(delayMs) || frameCount < 1 || delayMs < 1) {
+      logger.error('Invalid flipbox shaderParameters values', { frameCount, delayMs });
+      return null;
+    }
+
+    logger.debug('Creating flipbox material', { name, frameCount, delayMs });
+
+    const material = new ShaderMaterial(
+      name,
+      this.scene,
+      {
+        vertex: 'flipbox',
+        fragment: 'flipbox',
+      },
+      {
+        attributes: ['position', 'normal', 'uv'],
+        uniforms: [
+          'worldViewProjection',
+          'world',
+          'currentFrame',
+          'frameCount',
+          'textureSampler',
+          'lightDirection',
+        ],
+        samplers: ['textureSampler'],
+      }
+    );
+
+    // Error handling for shader compilation
+    material.onError = (effect, errors) => {
+      logger.error('Flipbox shader compilation error', { name, errors });
+    };
+
+    material.onCompiled = () => {
+      logger.debug('Flipbox shader compiled successfully', { name });
+    };
+
+    // Set texture if provided
+    if (texture) {
+      material.setTexture('textureSampler', texture);
+    }
+
+    // Set frame count
+    material.setInt('frameCount', frameCount);
+
+    // Set light direction (from above-front)
+    material.setVector3('lightDirection', new Vector3(0.5, 1.0, 0.5));
+
+    // Configure material properties
+    material.backFaceCulling = true; // Default backface culling for flipbox
+
+    // Setup frame animation
+    let currentFrame = 0;
+    let lastFrameTime = Date.now();
+    const scene = this.scene; // Capture scene reference for closure
+
+    scene.onBeforeRenderObservable.add(() => {
+      const now = Date.now();
+      if (now - lastFrameTime >= delayMs) {
+        currentFrame = (currentFrame + 1) % frameCount;
+        material.setInt('currentFrame', currentFrame);
+        lastFrameTime = now;
+      }
+    });
+
+    return material;
   }
 }

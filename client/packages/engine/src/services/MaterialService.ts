@@ -23,7 +23,8 @@ import {
   TextureHelper,
   SamplingMode,
   TransparencyMode,
-  BlockEffect
+  BlockEffect,
+  BlockShader
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
@@ -116,6 +117,28 @@ export class MaterialService {
     // Normalize texture (string → TextureDefinition)
     const textureDef = TextureHelper.normalizeTexture(texture);
 
+    // Check for shader (texture.shader or visibility.shader)
+    const finalShader = textureDef.shader ?? modifier.visibility?.shader ?? BlockShader.NONE;
+
+    // FLIPBOX blocks need original texture (not atlas), so include texture path in key
+    if (finalShader === BlockShader.FLIPBOX) {
+      const parts: string[] = ['flipbox']; // Special prefix for FLIPBOX
+      parts.push(`tex:${textureDef.path}`); // Include texture path
+      parts.push(`bfc:${textureDef.backFaceCulling ?? true}`);
+      parts.push(`tm:${textureDef.transparencyMode ?? TransparencyMode.NONE}`);
+      parts.push(`op:${textureDef.opacity ?? 1.0}`);
+      parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
+      parts.push(`shader:${finalShader}`);
+
+      // Shader parameters (REQUIRED for FLIPBOX: "frameCount,delayMs")
+      const shaderParams = textureDef.shaderParameters ?? modifier.visibility?.shaderParameters;
+      if (shaderParams) {
+        parts.push(`sp:${shaderParams}`);
+      }
+
+      return parts.join('|');
+    }
+
     // Build key based on MATERIAL PROPERTIES, not texture path
     // This allows grouping blocks with different textures but same material properties
     const parts: string[] = ['atlas']; // Always use atlas texture
@@ -132,17 +155,23 @@ export class MaterialService {
     // 4. Sampling mode (default: LINEAR)
     parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
 
-    // 5. Effect (Texture.effect overrides BlockModifier.effect)
+    // 5. Shader (if defined)
+    if (finalShader !== BlockShader.NONE) {
+      parts.push(`shader:${finalShader}`);
+
+      // Shader parameters (if defined)
+      const shaderParams = textureDef.shaderParameters ?? modifier.visibility?.shaderParameters;
+      if (shaderParams) {
+        parts.push(`sp:${shaderParams}`);
+      }
+    }
+
+    // 6. Effect (Texture.effect overrides BlockModifier.effect)
     const finalEffect =
       textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
     parts.push(`eff:${finalEffect}`);
 
-    // 6. Shader parameters (if defined)
-    if (textureDef.shaderParameters) {
-      parts.push(`sp:${textureDef.shaderParameters}`);
-    }
-
-    // Note: Texture path is NOT part of the key - UVs handle texture selection via atlas
+    // Note: Texture path is NOT part of the key (except for FLIPBOX) - UVs handle texture selection via atlas
     // Note: UV mapping is NOT part of the key - handled per-vertex in geometry
 
     // Join all parts with separator
@@ -166,7 +195,7 @@ export class MaterialService {
   /**
    * Parse material key into properties
    *
-   * @param materialKey Material key string (e.g., "atlas|bfc:false|tm:0|op:1.0|sm:1|eff:0")
+   * @param materialKey Material key string (e.g., "atlas|bfc:false|tm:0|op:1.0|sm:1|eff:0|shader:1|sp:4,100")
    * @returns Parsed material properties
    */
   private parseMaterialKey(materialKey: string): {
@@ -175,7 +204,9 @@ export class MaterialService {
     opacity: number;
     samplingMode: number;
     effect: number;
+    shader?: number;
     shaderParameters?: string;
+    texturePath?: string;
   } {
     const parts = materialKey.split('|');
     const props: any = {
@@ -184,6 +215,7 @@ export class MaterialService {
       opacity: 1.0,
       samplingMode: 1,
       effect: 0,
+      shader: BlockShader.NONE,
     };
 
     for (const part of parts) {
@@ -204,8 +236,14 @@ export class MaterialService {
         case 'eff':
           props.effect = parseInt(value);
           break;
+        case 'shader':
+          props.shader = parseInt(value);
+          break;
         case 'sp':
           props.shaderParameters = value;
+          break;
+        case 'tex':
+          props.texturePath = value;
           break;
       }
     }
@@ -256,11 +294,46 @@ export class MaterialService {
       // Parse material properties from key
       const props = this.parseMaterialKey(cacheKey);
 
-      // Create material based on effect
+      // Create material based on shader or effect
       let material: Material | null = null;
 
-      if (props.effect !== BlockEffect.NONE && this.shaderService) {
-        // Create shader material with atlas texture
+      // Check for shader first (e.g., FLIPBOX)
+      if (props.shader !== undefined && props.shader !== BlockShader.NONE && this.shaderService) {
+        const shaderName = BlockShader[props.shader].toLowerCase();
+
+        if (props.shader === BlockShader.FLIPBOX && props.texturePath) {
+          // FLIPBOX shader needs original texture (not atlas)
+          const originalTexture = await this.loadTexture(props.texturePath);
+          material = this.shaderService.createMaterial(
+            shaderName,
+            {
+              texture: originalTexture,
+              shaderParameters: props.shaderParameters,
+              name: cacheKey,
+            }
+          );
+          logger.debug('Created FLIPBOX shader material with original texture', {
+            texturePath: props.texturePath,
+            shaderParameters: props.shaderParameters,
+            cacheKey
+          });
+        } else if (this.shaderService.hasEffect(shaderName)) {
+          // Other shaders use atlas texture
+          const atlasTexture = this.textureAtlas?.getTexture();
+          material = this.shaderService.createMaterial(
+            shaderName,
+            {
+              texture: atlasTexture,
+              shaderParameters: props.shaderParameters,
+              name: cacheKey,
+            }
+          );
+          logger.debug('Created shader material with atlas', { shaderName, cacheKey });
+        }
+      }
+
+      // Check for effect (e.g., WATER, WIND)
+      if (!material && props.effect !== BlockEffect.NONE && this.shaderService) {
         const effectName = BlockEffect[props.effect].toLowerCase();
         if (this.shaderService.hasEffect(effectName)) {
           const atlasTexture = this.textureAtlas?.getTexture();
@@ -328,13 +401,6 @@ export class MaterialService {
     // Disable specular highlights for blocks
     material.specularColor = new Color3(0, 0, 0);
 
-    logger.debug('Created StandardMaterial with atlas', {
-      name,
-      backFaceCulling: props.backFaceCulling,
-      transparencyMode: props.transparencyMode,
-      opacity: props.opacity,
-    });
-
     return material;
   }
 
@@ -363,9 +429,23 @@ export class MaterialService {
   }
 
   /**
-   * Load a Babylon.js Texture from TextureDefinition
+   * Load a Babylon.js Texture from path
    */
-  private async loadTexture(textureDef: TextureDefinition): Promise<Texture | null> {
+  private async loadTexture(pathOrDef: string | TextureDefinition): Promise<Texture | null> {
+    // Handle string path
+    if (typeof pathOrDef === 'string') {
+      const textureDef: TextureDefinition = { path: pathOrDef };
+      return this.loadTextureInternal(textureDef);
+    }
+
+    // Handle TextureDefinition
+    return this.loadTextureInternal(pathOrDef);
+  }
+
+  /**
+   * Load a Babylon.js Texture from TextureDefinition (internal)
+   */
+  private async loadTextureInternal(textureDef: TextureDefinition): Promise<Texture | null> {
     try {
       // Get full URL from NetworkService
       const networkService = this.appContext.services.network;
@@ -472,14 +552,6 @@ export class MaterialService {
       : true;
 
     material.backFaceCulling = backFaceCullingValue;
-
-    logger.debug('Applied backFaceCulling to material', {
-      materialName: material.name,
-      backFaceCulling: backFaceCullingValue,
-      fromTextureDef: textureDef.backFaceCulling,
-      texturePath: textureDef.path,
-    });
-
   }
 
   /**

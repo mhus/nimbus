@@ -386,11 +386,20 @@ export interface TextureDefinition {
   /** Opacity (0.0 - 1.0) */
   opacity?: number;
 
-  /** Shader Parameters, e.g. spriteCount */
+  /** Shader type (FLIPBOX, WIND, etc.)
+   * Shaders are purely visual effects with no gameplay impact
+   */
+  shader?: BlockShader;
+
+  /** Shader Parameters
+   * Format depends on shader type:
+   * - FLIPBOX: "frameCount,delayMs" (e.g., "4,100")
+   */
   shaderParameters?: string;
 
-  /** Effect type (0=none, 1=water, 2=wind, 3=flipbox, 4=lava, 5=fog)
+  /** Effect type (0=none, 1=water, 2=wind, 4=lava, 5=fog)
   Default is the effect from the block
+  NOTE: FLIPBOX is no longer an effect - use shader field instead
   */
   effect?: BlockEffect;
 
@@ -404,6 +413,9 @@ export interface TextureDefinition {
 
 /**
  * Block effect types
+ *
+ * NOTE: FLIPBOX has been moved to shader system (BlockShader enum)
+ * and is no longer a BlockEffect.
  */
 export enum BlockEffect {
   /** No effect */
@@ -415,14 +427,34 @@ export enum BlockEffect {
   /** Wind effect */
   WIND = 2,
 
-  /** Flipbox effect */
-  FLIPBOX = 3,
-
   /** Lava effect */
   LAVA = 4,
 
   /** Fog effect */
   FOG = 5,
+}
+
+/**
+ * Block shader types
+ *
+ * Shaders are visual effects implemented via custom GLSL code.
+ * Unlike BlockEffects, shaders are purely visual and have no gameplay impact.
+ */
+export enum BlockShader {
+  /** No shader */
+  NONE = 0,
+
+  /** Flipbox shader - Sprite-sheet animation cycling through frames
+   * shaderParameters format: "frameCount,delayMs" (e.g., "4,100")
+   * - frameCount: Number of frames in horizontal sprite-sheet
+   * - delayMs: Milliseconds between frame changes
+   */
+  FLIPBOX = 1,
+
+  /** Wind shader - Vertex displacement for wind effect
+   * (Reserved for future implementation)
+   */
+  WIND = 2,
 }
 
 /**
@@ -432,8 +464,19 @@ export interface VisibilityModifier {
   /** Shape type */
   shape?: Shape;
 
-  /** Effect type (0=none, 1=water, 2=wind, 3=flipbox, 4=lava, 5=fog)
+  /** Shader type (FLIPBOX, WIND, etc.) for purely visual effects
+   * NOTE: Use this for FLIPBOX instead of effect field
+   */
+  shader?: BlockShader;
+
+  /** Shader-specific parameters
+   * Format depends on shader type (see BlockShader enum docs)
+   */
+  shaderParameters?: string;
+
+  /** Effect type (0=none, 1=water, 2=wind, 4=lava, 5=fog)
   generally for the box
+  NOTE: FLIPBOX is no longer an effect - use shader field instead
   */
   effect?: BlockEffect;
 
