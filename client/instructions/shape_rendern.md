@@ -32,7 +32,7 @@
 
 ## Cylinder
 
-[ ] Nenne shere type 'Column' um in 'Cylinder' in BlockModifier und in den Editor controls
+[ ] Nenne shape type 'Column' um in 'Cylinder' in BlockModifier und in den Editor controls
 [ ] Erstelle den CylinderRenderer. Er rendert einen Cylinder.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
@@ -41,5 +41,27 @@
   - 1: Radius Bottom
   - 2: Displacement Top (incl Y)
   - 3: Displacement Bottom (incl Y)
+
+## Hash 
+
+[ ] Erstelle den HashRenderer. Er rendert einen Hash (#) shape. Das bedeutet die Seiten sind von
+oben betrachtet wie ein hash angeordnet und verschieben sich mit dem offset einstellungen
+Das bedeutet du brauchst pro seite 4 punkte, also 24 Punkte. da sich drei seiten nicht mehr einen punkt 
+teilen.
+- Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
+- Die offset verschieben nur noch aspekte von jedem punkt. andere aspekte bleiben unveraendert.
+- Wenn alle offsets 0 sind, dannw wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
+
+## Glass
+
+[ ] Erstelle den GlassRenderer. Er rendert einen Cube, wie CubeRenderer, richscheinende bereiche
+sind aber glassiere mit der color die an der texture hinterlegt ist.
+- Der Glass effekt soll kein shader sein. Benutze ein spezielles Material, das den Glass effekt
+  mit den Standard BabylonJS materialien umsetzt. Das Material soll auch im MaterialService verwaltet 
+  werden, ggf. brauchst du zur erstellung eine neue Methode.
+- Orientiere dich an CubeRenderer.
+- Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
+
+
 
 

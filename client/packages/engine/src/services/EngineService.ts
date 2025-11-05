@@ -137,19 +137,24 @@ export class EngineService {
 
       // Initialize physics
       this.physicsService = new PhysicsService(this.appContext);
+      this.appContext.services.physics = this.physicsService;
 
       // Connect physics with chunk service for collision detection
       if (this.appContext.services.chunk) {
         this.physicsService.setChunkService(this.appContext.services.chunk);
       }
 
-      logger.debug('PhysicsService initialized');
+      logger.debug('PhysicsService initialized and registered');
 
       // Initialize player
       this.playerService = new PlayerService(this.appContext, this.cameraService);
       this.playerService.setPhysicsService(this.physicsService);
       this.appContext.services.player = this.playerService;
       logger.debug('PlayerService initialized');
+
+      // Start teleportation mode to prevent falling through world during initial chunk loading
+      this.physicsService.startTeleportation('player');
+      logger.debug('Teleportation mode started for initial spawn');
 
       // Connect CameraService with PlayerService for turnSpeed updates
       this.cameraService.setPlayerService(this.playerService);

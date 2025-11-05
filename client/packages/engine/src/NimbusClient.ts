@@ -40,6 +40,8 @@ import { OpenComponentCommand } from './commands/OpenComponentCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 import { GetSelectedEditBlockCommand } from './commands/GetSelectedEditBlockCommand';
 import { PlayerPositionInfoCommand } from './commands/PlayerPositionInfoCommand';
+import { SelectedBlockInfoCommand } from './commands/SelectedBlockInfoCommand';
+import { MaterialInfoCommand } from './commands/MaterialInfoCommand';
 import {
   WindDirectionCommand,
   WindStrengthCommand,
@@ -116,6 +118,8 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SetSelectedEditBlockCommand(appContext));
     commandService.registerHandler(new GetSelectedEditBlockCommand(appContext));
     commandService.registerHandler(new PlayerPositionInfoCommand(appContext));
+    commandService.registerHandler(new SelectedBlockInfoCommand(appContext));
+    commandService.registerHandler(new MaterialInfoCommand(appContext));
 
     // Register wind commands
     commandService.registerHandler(new WindDirectionCommand(appContext));

@@ -148,6 +148,15 @@ export class PhysicsService {
   // Only check underwater state when block coordinates change
   private lastCheckedBlockCoords: Map<string, { blockX: number; blockY: number; blockZ: number }> = new Map();
 
+  // Physics enabled state - prevents falling through world on initial load
+  // Physics is paused until initial chunks around player are loaded
+  private physicsEnabled: boolean = false;
+
+  // Teleportation pending state - disables physics while waiting for chunks
+  // Used when player is teleported to a new location
+  private teleportationPending: boolean = false;
+  private teleportCheckTimer: NodeJS.Timeout | null = null;
+
   // Track if climbable velocity was set this frame (before updateWalkMode runs)
   private climbableVelocitySetThisFrame: Map<string, boolean> = new Map();
 
@@ -200,9 +209,163 @@ export class PhysicsService {
   }
 
   /**
+   * Enable physics simulation
+   *
+   * Call this after initial chunks are loaded to prevent falling through the world
+   */
+  enablePhysics(): void {
+    if (!this.physicsEnabled) {
+      this.physicsEnabled = true;
+      logger.info('Physics enabled - initial chunks loaded');
+    }
+  }
+
+  /**
+   * Disable physics simulation
+   */
+  disablePhysics(): void {
+    this.physicsEnabled = false;
+    logger.info('Physics disabled');
+  }
+
+  /**
+   * Check if physics is enabled
+   */
+  isPhysicsEnabled(): boolean {
+    return this.physicsEnabled;
+  }
+
+  /**
+   * Start teleportation pending mode
+   *
+   * Disables physics and starts a timer to check for chunk/heightData availability
+   * Once ready, positions player at groundLevel + 4 and re-enables physics
+   *
+   * @param entityId Entity to teleport (usually player)
+   */
+  startTeleportation(entityId: string): void {
+    this.teleportationPending = true;
+    this.physicsEnabled = false;
+
+    // Set player to height 200 so they fall from above
+    const entity = this.entities.get(entityId);
+    if (entity) {
+      entity.position.y = 200;
+      entity.velocity.y = 0; // Reset velocity
+      logger.info('Player positioned at Y=200 for spawn');
+    }
+
+    // Clear existing timer if any
+    if (this.teleportCheckTimer) {
+      clearInterval(this.teleportCheckTimer);
+    }
+
+    logger.info('Teleportation pending - physics disabled, starting chunk check timer');
+
+    // Check every 1 second if chunk and heightData are ready
+    this.teleportCheckTimer = setInterval(() => {
+      this.checkTeleportationReady(entityId);
+    }, 1000);
+
+    // Also check immediately
+    this.checkTeleportationReady(entityId);
+  }
+
+  /**
+   * Check if teleportation target is ready (chunk + heightData + blocks exist)
+   */
+  private checkTeleportationReady(entityId: string): void {
+    const entity = this.entities.get(entityId);
+    if (!entity) {
+      logger.warn('Entity not found for teleportation check', { entityId });
+      this.cancelTeleportation();
+      return;
+    }
+
+    // Get chunk service
+    if (!this.chunkService) {
+      logger.warn('ChunkService not available for teleportation check');
+      return;
+    }
+
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+    const chunkX = Math.floor(entity.position.x / chunkSize);
+    const chunkZ = Math.floor(entity.position.z / chunkSize);
+
+    // Check if chunk is loaded
+    const chunk = this.chunkService.getChunk(chunkX, chunkZ);
+    if (!chunk) {
+      logger.debug('Waiting for chunk to load', { chunkX, chunkZ });
+      return;
+    }
+
+    // Calculate local coordinates
+    const localX = ((Math.floor(entity.position.x) % chunkSize) + chunkSize) % chunkSize;
+    const localZ = ((Math.floor(entity.position.z) % chunkSize) + chunkSize) % chunkSize;
+    const heightKey = `${localX},${localZ}`;
+
+    // Check if heightData exists
+    const heightData = chunk.data.hightData.get(heightKey);
+    if (!heightData) {
+      logger.debug('Waiting for heightData', { localX, localZ });
+      return;
+    }
+
+    const [x, z, maxHeight, minHeight, groundLevel, waterHeight] = heightData;
+
+    // Everything is ready - position player and enable physics
+    const oldY = entity.position.y;
+    // TODO: Reduce offset from 20 to 4 once groundLevel calculation is more accurate
+    const targetY = groundLevel + 20;
+
+    logger.info('Teleportation ready - positioning player', {
+      entityId,
+      oldY,
+      targetY,
+      groundLevel,
+      maxHeight,
+      minHeight,
+      playerX: entity.position.x,
+      playerZ: entity.position.z,
+      localX,
+      localZ,
+    });
+
+    entity.position.y = targetY;
+    entity.velocity.y = 0; // Reset vertical velocity
+
+    logger.info('Teleportation complete - player positioned', {
+      entityId,
+      newY: entity.position.y,
+    });
+
+    // Clear timer and re-enable physics
+    this.cancelTeleportation();
+    this.physicsEnabled = true;
+    logger.info('Physics re-enabled after teleportation');
+  }
+
+  /**
+   * Cancel teleportation pending mode
+   */
+  private cancelTeleportation(): void {
+    this.teleportationPending = false;
+
+    if (this.teleportCheckTimer) {
+      clearInterval(this.teleportCheckTimer);
+      this.teleportCheckTimer = null;
+    }
+  }
+
+  /**
    * Update all entities
    */
   update(deltaTime: number): void {
+    // Skip physics simulation if not enabled or teleportation pending
+    if (!this.physicsEnabled || this.teleportationPending) {
+      return;
+    }
+
     for (const entity of this.entities.values()) {
       this.updateEntity(entity, deltaTime);
     }

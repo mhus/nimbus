@@ -310,7 +310,8 @@ export class MaterialService {
 
     // Disable specular highlights for blocks
     material.specularColor = new Color3(0, 0, 0);
-    material.backFaceCulling = true;
+
+    // Note: backFaceCulling will be set in applyMaterialProperties()
 
     return material;
   }
@@ -419,9 +420,19 @@ export class MaterialService {
       }
     }
 
-    if (textureDef.backFaceCulling) {
-        material.backFaceCulling = textureDef.backFaceCulling;
-    }
+    // Apply backFaceCulling (default: true if not specified)
+    const backFaceCullingValue = textureDef.backFaceCulling !== undefined
+      ? textureDef.backFaceCulling
+      : true;
+
+    material.backFaceCulling = backFaceCullingValue;
+
+    logger.debug('Applied backFaceCulling to material', {
+      materialName: material.name,
+      backFaceCulling: backFaceCullingValue,
+      fromTextureDef: textureDef.backFaceCulling,
+      texturePath: textureDef.path,
+    });
 
   }
 
@@ -591,6 +602,20 @@ export class MaterialService {
     this.materials.clear();
     this.textures.clear();
     logger.info('Material and texture caches cleared');
+  }
+
+  /**
+   * Get all material keys in cache
+   */
+  getAllMaterialKeys(): string[] {
+    return Array.from(this.materials.keys());
+  }
+
+  /**
+   * Get a material by its cache key
+   */
+  getMaterialByKey(key: string): Material | undefined {
+    return this.materials.get(key);
   }
 
   /**

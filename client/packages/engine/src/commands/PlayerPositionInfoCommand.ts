@@ -156,62 +156,6 @@ export class PlayerPositionInfoCommand extends CommandHandler {
       lines.push('');
     }
 
-    // 3. Selected Block Information
-    if (selectService) {
-      const selectedBlock = selectService.getCurrentSelectedBlock();
-      lines.push('Selected Block:');
-
-      if (selectedBlock) {
-        const block = selectedBlock.block;
-        const blockType = selectedBlock.blockType;
-
-        lines.push(`  Position     : (${block.position.x}, ${block.position.y}, ${block.position.z})`);
-        lines.push(`  Block Type ID: ${block.blockTypeId}`);
-        lines.push(`  Chunk        : (${selectedBlock.chunk.cx}, ${selectedBlock.chunk.cz})`);
-
-        // Current modifier info
-        if (selectedBlock.currentModifier) {
-          const mod = selectedBlock.currentModifier;
-          lines.push('  Modifier:');
-
-          if (mod.visibility) {
-            lines.push(`    Shape      : ${mod.visibility.shape}`);
-            if (mod.visibility.effect !== undefined) {
-              lines.push(`    Effect     : ${mod.visibility.effect}`);
-            }
-          }
-          if (mod.physics) {
-            lines.push(`    Solid      : ${mod.physics.solid}`);
-            if (mod.physics.interactive !== undefined) {
-              lines.push(`    Interactive: ${mod.physics.interactive}`);
-            }
-          }
-          if (mod.alpha !== undefined) {
-            lines.push(`    Alpha      : ${mod.alpha}`);
-          }
-        }
-
-        // Block status if available
-        if (block.status !== undefined) {
-          lines.push(`  Status       : ${block.status}`);
-        }
-
-        // Metadata if available
-        if (block.metadata) {
-          lines.push('  Metadata:');
-          for (const [key, value] of Object.entries(block.metadata)) {
-            lines.push(`    ${key}: ${JSON.stringify(value)}`);
-          }
-        }
-      } else {
-        lines.push('  No block selected');
-      }
-    } else {
-      lines.push('Selected Block:');
-      lines.push('  SelectService not available');
-    }
-
-    lines.push('');
     lines.push('============================');
 
     const output = lines.join('\n');
@@ -233,7 +177,6 @@ export class PlayerPositionInfoCommand extends CommandHandler {
         y: position.y,
         z: position.z,
       } : null,
-      selectedBlock: selectService?.getCurrentSelectedBlock() || null,
     };
   }
 }

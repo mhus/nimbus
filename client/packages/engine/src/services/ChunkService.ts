@@ -54,6 +54,10 @@ export class ChunkService {
   private renderDistance: number;
   private unloadDistance: number;
 
+  // Track if initial chunks are loaded (to enable physics)
+  private initialChunksLoaded: boolean = false;
+  private initialPlayerChunk: { cx: number; cz: number } | null = null;
+
   constructor(
     private networkService: NetworkService,
     private appContext: AppContext
@@ -222,10 +226,50 @@ export class ChunkService {
           clientBlocks: clientChunkData.data.size,
         });
       }
+
+      // Check if initial player spawn is ready
+      this.checkInitialSpawnReady();
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.onChunkUpdate', {
         count: chunks.length,
       });
+    }
+  }
+
+  /**
+   * Check if initial player spawn is ready
+   *
+   * Starts teleportation mode for initial spawn on first call
+   */
+  private checkInitialSpawnReady(): void {
+    // Only trigger once
+    if (this.initialChunksLoaded) {
+      return;
+    }
+
+    // Need player service
+    const playerService = this.appContext.services.player;
+    if (!playerService) {
+      return;
+    }
+
+    // Get physics service
+    const physicsService = this.appContext.services.physics;
+    if (!physicsService) {
+      return;
+    }
+
+    // Mark as handled
+    this.initialChunksLoaded = true;
+
+    // Start teleportation mode - PhysicsService will handle the rest
+    // It will check for chunk, heightData, blocks and position player automatically
+    const playerEntity = physicsService.getEntity('player');
+    if (playerEntity) {
+      physicsService.startTeleportation('player');
+      logger.info('Initial spawn - teleportation mode started');
+    } else {
+      logger.warn('Player entity not found for initial spawn');
     }
   }
 

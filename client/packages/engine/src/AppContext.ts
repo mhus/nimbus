@@ -18,6 +18,7 @@ import type { CommandService } from './services/CommandService';
 import type { CameraService } from './services/CameraService';
 import type { EnvironmentService } from './services/EnvironmentService';
 import type { PlayerService } from './services/PlayerService';
+import type { PhysicsService } from './services/PhysicsService';
 import type { CompassService } from './services/CompassService';
 import type { ModifierService } from './services/ModifierService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
@@ -82,6 +83,9 @@ export interface Services {
 
   /** Player service for player state and movement */
   player?: PlayerService;
+
+  /** Physics service for entity physics simulation */
+  physics?: PhysicsService;
 
   /** Compass service for compass bar and directional markers */
   compass?: CompassService;

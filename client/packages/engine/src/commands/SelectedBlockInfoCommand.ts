@@ -1,0 +1,175 @@
+/**
+ * SelectedBlockInfoCommand - Shows detailed information about the currently selected block
+ *
+ * Displays:
+ * - Block position and type
+ * - Current modifier (visibility, physics, alpha)
+ * - Textures with all properties (including backFaceCulling)
+ * - Status and metadata
+ * - Complete block JSON for debugging
+ */
+
+import { CommandHandler } from './CommandHandler';
+import type { AppContext } from '../AppContext';
+
+/**
+ * SelectedBlockInfo command - Shows complete information about the selected block
+ */
+export class SelectedBlockInfoCommand extends CommandHandler {
+  private appContext: AppContext;
+
+  constructor(appContext: AppContext) {
+    super();
+    this.appContext = appContext;
+  }
+
+  name(): string {
+    return 'selectedBlockInfo';
+  }
+
+  description(): string {
+    return 'Shows detailed information about the currently selected block (position, modifier, textures, metadata, complete JSON)';
+  }
+
+  execute(parameters: any[]): any {
+    const selectService = this.appContext.services.select;
+
+    if (!selectService) {
+      console.error('SelectService not available');
+      return { error: 'SelectService not available' };
+    }
+
+    const selectedBlock = selectService.getCurrentSelectedBlock();
+
+    if (!selectedBlock) {
+      console.log('No block currently selected');
+      return { error: 'No block selected' };
+    }
+
+    const lines: string[] = [];
+    lines.push('=== Selected Block Info ===');
+    lines.push('');
+
+    const block = selectedBlock.block;
+    const blockType = selectedBlock.blockType;
+
+    // Basic info
+    lines.push('Block Info:');
+    lines.push(`  Position     : (${block.position.x}, ${block.position.y}, ${block.position.z})`);
+    lines.push(`  Block Type ID: ${block.blockTypeId}`);
+    if (blockType) {
+      lines.push(`  Block Type   : ${blockType.name} (${blockType.id})`);
+    }
+    lines.push(`  Chunk        : (${selectedBlock.chunk.cx}, ${selectedBlock.chunk.cz})`);
+    lines.push('');
+
+    // Current modifier info
+    if (selectedBlock.currentModifier) {
+      const mod = selectedBlock.currentModifier;
+      lines.push('Current Modifier:');
+
+      if (mod.visibility) {
+        lines.push('  Visibility:');
+        lines.push(`    Shape      : ${mod.visibility.shape}`);
+        if (mod.visibility.effect !== undefined) {
+          lines.push(`    Effect     : ${mod.visibility.effect}`);
+        }
+        if (mod.visibility.path !== undefined) {
+          lines.push(`    Path       : ${mod.visibility.path}`);
+        }
+
+        // Show textures in detail
+        if (mod.visibility.textures) {
+          lines.push('    Textures:');
+          for (const [key, texture] of Object.entries(mod.visibility.textures)) {
+            lines.push(`      [${key}]:`);
+            if (typeof texture === 'string') {
+              lines.push(`        Path: ${texture}`);
+            } else {
+              // TextureDefinition object
+              lines.push(`        ${JSON.stringify(texture, null, 2).split('\n').map(line => '        ' + line).join('\n').trim()}`);
+            }
+          }
+        }
+
+        // Geometry offsets
+        if (mod.visibility.geometryOffsets && mod.visibility.geometryOffsets.length > 0) {
+          lines.push('    Geometry Offsets:');
+          for (const [idx, offset] of mod.visibility.geometryOffsets.entries()) {
+            lines.push(`      [${idx}]: ${JSON.stringify(offset)}`);
+          }
+        }
+
+        // Scaling
+        if (mod.visibility.scalingX !== undefined || mod.visibility.scalingY !== undefined || mod.visibility.scalingZ !== undefined) {
+          lines.push(`    Scaling    : (${mod.visibility.scalingX ?? 1}, ${mod.visibility.scalingY ?? 1}, ${mod.visibility.scalingZ ?? 1})`);
+        }
+
+        // Rotation
+        if (mod.visibility.rotationX !== undefined || mod.visibility.rotationY !== undefined || mod.visibility.rotationZ !== undefined) {
+          lines.push(`    Rotation   : (${mod.visibility.rotationX ?? 0}, ${mod.visibility.rotationY ?? 0}, ${mod.visibility.rotationZ ?? 0})`);
+        }
+      }
+
+      if (mod.physics) {
+        lines.push('  Physics:');
+        lines.push(`    Solid      : ${mod.physics.solid}`);
+        if (mod.physics.interactive !== undefined) {
+          lines.push(`    Interactive: ${mod.physics.interactive}`);
+        }
+        if (mod.physics.climbable !== undefined) {
+          lines.push(`    Climbable  : ${mod.physics.climbable}`);
+        }
+      }
+
+      if (mod.alpha !== undefined) {
+        lines.push(`  Alpha        : ${mod.alpha}`);
+      }
+
+      lines.push('');
+    }
+
+    // Block modifier (instance-specific)
+    if (block.modifier) {
+      lines.push('Instance Modifier:');
+      lines.push(JSON.stringify(block.modifier, null, 2).split('\n').map(line => '  ' + line).join('\n'));
+      lines.push('');
+    }
+
+    // Block status if available
+    if (block.status !== undefined) {
+      lines.push(`Status: ${block.status}`);
+      lines.push('');
+    }
+
+    // Metadata if available
+    if (block.metadata) {
+      lines.push('Metadata:');
+      for (const [key, value] of Object.entries(block.metadata)) {
+        lines.push(`  ${key}: ${JSON.stringify(value)}`);
+      }
+      lines.push('');
+    }
+
+    // Output complete block as JSON for debugging
+    lines.push('Complete Block JSON:');
+    lines.push(JSON.stringify(block, null, 2).split('\n').map(line => '  ' + line).join('\n'));
+
+    lines.push('');
+    lines.push('============================');
+
+    const output = lines.join('\n');
+    console.log(output);
+
+    // Return structured data
+    return {
+      block,
+      blockType,
+      chunk: {
+        cx: selectedBlock.chunk.cx,
+        cz: selectedBlock.chunk.cz,
+      },
+      currentModifier: selectedBlock.currentModifier,
+    };
+  }
+}

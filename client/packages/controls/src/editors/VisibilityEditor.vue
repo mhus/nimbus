@@ -720,7 +720,8 @@ const setTextureDefValue = (key: number, path: string, value: any) => {
   const lastPart = parts[parts.length - 1];
 
   // Only set if value is not empty/undefined
-  if (value !== undefined && value !== null && value !== '') {
+  // Note: false is a valid value (e.g., for backFaceCulling), so we allow boolean false
+  if (value !== undefined && value !== null && value !== '' || typeof value === 'boolean') {
     obj[lastPart] = value;
   } else {
     delete obj[lastPart];
