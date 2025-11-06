@@ -18,6 +18,7 @@ import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
 import { FlameRenderer } from '../rendering/FlameRenderer';
+import { OceanRenderer } from '../rendering/OceanRenderer';
 import { DisposableResources } from '../rendering/DisposableResources';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 
@@ -66,6 +67,7 @@ export class RenderService {
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
   private flameRenderer: FlameRenderer;
+  private oceanRenderer: OceanRenderer;
 
   // Chunk meshes: Map<chunkKey, Map<materialKey, Mesh>>
   // Each chunk can have multiple meshes (one per material type)
@@ -94,6 +96,7 @@ export class RenderService {
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
     this.flameRenderer = new FlameRenderer();
+    this.oceanRenderer = new OceanRenderer();
 
     // Listen to chunk events
     this.setupChunkEventListeners();
@@ -368,6 +371,8 @@ export class RenderService {
         return this.spriteRenderer;
       case Shape.FLAME:
         return this.flameRenderer;
+      case Shape.OCEAN:
+        return this.oceanRenderer;
       default:
         return null;
     }

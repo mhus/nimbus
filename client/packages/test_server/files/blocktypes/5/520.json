@@ -11,7 +11,8 @@
         }
       },
       "physics": {
-        "solid": true
+        "solid": true,
+        "autoClimbable": true
       }
     }
   }

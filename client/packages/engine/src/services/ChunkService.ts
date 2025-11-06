@@ -12,6 +12,7 @@ import {
   ChunkRegisterData,
   ChunkDataTransferObject,
   Block,
+  Shape,
   getLogger,
   ExceptionHandler,
 } from '@nimbus/shared';
@@ -417,8 +418,16 @@ export class ChunkService {
         columnData.highestBlockY = block.position.y;
       }
 
-      // Check for water blocks (only if we need waterLevel)
-      if (blockType.description?.toLowerCase().includes('water')) {
+      // Check for water blocks (check shape first, then description fallback)
+      const modifier = clientBlock.currentModifier;
+      const shape = modifier?.visibility?.shape;
+      const isWater = shape === Shape.OCEAN ||
+                        shape === Shape.WATER ||
+                        shape === Shape.RIVER ||
+                        shape === Shape.OCEAN_MAELSTROM ||
+                        shape === Shape.OCEAN_COAST;
+
+      if (isWater) {
         if (columnData.waterLevel === null || block.position.y > columnData.waterLevel) {
           columnData.waterLevel = block.position.y;
         }

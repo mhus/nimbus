@@ -1,0 +1,13 @@
+{
+  "id": 5000,
+  "name": "Ocean",
+  "description": "Ocean",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 16
+      }
+    }
+  },
+  "description_old": "Ocean"
+}

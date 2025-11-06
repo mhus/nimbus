@@ -58,7 +58,7 @@ export class NormalGenerator implements WorldGenerator {
    */
   private resolveBlockIds(): void {
     const blockNames = ['grass', 'dirt', 'stone', 'sand', 'water', 'bedrock'];
-    const blockIds = [ 310, 279, 552, 520, 593, 127 ];
+    const blockIds = [ 310, 279, 552, 520, 5000, 127 ];
 
     for (let i = 0; i < blockNames.length; i++)
         this.blockIds.set(blockNames[i], blockIds[i]);

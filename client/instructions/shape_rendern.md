@@ -113,5 +113,7 @@ SpriteRenderer:
 
 ## Ocean
 
-[ ] Erstelle einen OceanRenderer. Er soll die von BabylonJS bereitgestellten Wasser effekt rendern.
+[?] Erstelle einen OceanRenderer. Er soll die von BabylonJS bereitgestellten Wasser effekt rendern.
 - Es soll eine flache ocean oberflaeche on TOP des Blocks gerendert werden.
+- Der Renderer definiert sein eigenes Mesh
+[ ] client/packages/test_server/src/world/TerrainGenerator.ts soll anste
