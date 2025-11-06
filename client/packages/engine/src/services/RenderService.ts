@@ -12,10 +12,12 @@ import type { ClientChunk } from '../types/ClientChunk';
 import type { ClientBlock } from '../types/ClientBlock';
 import type { MaterialService } from './MaterialService';
 import type { BlockTypeService } from './BlockTypeService';
+import { BlockRenderer } from '../rendering/BlockRenderer';
 import { CubeRenderer } from '../rendering/CubeRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
+import { FlameRenderer } from '../rendering/FlameRenderer';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 
 const logger = getLogger('RenderService');
@@ -61,6 +63,7 @@ export class RenderService {
   private flipboxRenderer: FlipboxRenderer;
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
+  private flameRenderer: FlameRenderer;
 
   // Chunk meshes: Map<chunkKey, Map<materialKey, Mesh>>
   // Each chunk can have multiple meshes (one per material type)
@@ -92,6 +95,7 @@ export class RenderService {
     this.flipboxRenderer = new FlipboxRenderer();
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
+    this.flameRenderer = new FlameRenderer();
 
     // Listen to chunk events
     this.setupChunkEventListeners();
@@ -330,12 +334,47 @@ export class RenderService {
   }
 
   /**
+   * Get appropriate renderer for a block
+   *
+   * Routes blocks to the correct renderer based on shader or shape.
+   *
+   * @param clientBlock Block to get renderer for
+   * @returns BlockRenderer instance or null if not supported
+   */
+  private getRenderer(clientBlock: ClientBlock): BlockRenderer | null {
+    const modifier = clientBlock.currentModifier;
+    if (!modifier || !modifier.visibility) {
+      return null;
+    }
+
+    const shape = modifier.visibility.shape ?? Shape.CUBE;
+    const shader = this.getBlockShader(modifier);
+
+    // Check shader first
+    if (shader === BlockShader.FLIPBOX) {
+      return this.flipboxRenderer;
+    }
+
+    // Then check shape
+    switch (shape) {
+      case Shape.CUBE:
+        return this.cubeRenderer;
+      case Shape.BILLBOARD:
+        return this.billboardRenderer;
+      case Shape.SPRITE:
+        return this.spriteRenderer;
+      case Shape.FLAME:
+        return this.flameRenderer;
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Separate blocks into chunk mesh blocks vs separate mesh blocks
    *
-   * Checks each block's shader and shape to determine if it needs a separate mesh.
-   * Currently:
-   * - FLIPBOX shader needs separate mesh (original texture + animation)
-   * - BILLBOARD shape needs separate mesh (camera-facing behavior)
+   * Uses BlockRenderer.needsSeparateMesh() to determine separation.
+   * This is the clean Strategy Pattern approach - each renderer knows its requirements.
    *
    * @param clientChunk Chunk with all blocks
    * @returns Separated block lists
@@ -348,22 +387,16 @@ export class RenderService {
     const separateMeshBlocks: ClientBlock[] = [];
 
     for (const clientBlock of clientChunk.data.data.values()) {
-      const modifier = clientBlock.currentModifier;
-      if (!modifier || !modifier.visibility) {
-        continue;
+      const renderer = this.getRenderer(clientBlock);
+
+      if (!renderer) {
+        continue; // Skip blocks without renderer
       }
 
-      const shape = modifier.visibility.shape ?? Shape.CUBE;
-      const shader = this.getBlockShader(modifier);
-
-      // Check if needs separate mesh
-      if (shader === BlockShader.FLIPBOX || shape === Shape.BILLBOARD || shape === Shape.SPRITE) {
-        // FLIPBOX shader: needs separate mesh (original texture + animation)
-        // BILLBOARD shape: needs separate mesh (camera-facing behavior)
-        // SPRITE shape: needs separate mesh (SpriteManager rendering)
+      // Use renderer's needsSeparateMesh() to determine grouping
+      if (renderer.needsSeparateMesh()) {
         separateMeshBlocks.push(clientBlock);
       } else {
-        // Standard blocks go into chunk mesh (batched by material)
         chunkMeshBlocks.push(clientBlock);
       }
     }
@@ -440,8 +473,6 @@ export class RenderService {
       return;
     }
 
-    const shape = modifier.visibility.shape ?? Shape.CUBE;
-    const shader = this.getBlockShader(modifier);
     const blockKey = `${chunkKey}_block_${block.position.x}_${block.position.y}_${block.position.z}`;
 
     // Check if already rendered
@@ -451,30 +482,29 @@ export class RenderService {
     }
 
     try {
+      // Get appropriate renderer using getRenderer()
+      const renderer = this.getRenderer(clientBlock);
+      if (!renderer) {
+        logger.warn('No renderer found for separate mesh block', { blockKey });
+        return;
+      }
+
       const renderContext: RenderContext = {
         renderService: this,
         faceData: { positions: [], indices: [], uvs: [], normals: [] }, // Not used by separate renderers
         vertexOffset: 0,
       };
 
-      const shape = modifier.visibility.shape ?? Shape.CUBE;
+      // Render using appropriate renderer
+      await renderer.render(renderContext, clientBlock);
 
-      // Route to appropriate renderer based on shader or shape
-      if (shader === BlockShader.FLIPBOX) {
-        await this.flipboxRenderer.render(renderContext, clientBlock);
-        this.separateMeshes.set(blockKey, null as any); // Placeholder
-        logger.debug('FLIPBOX separate mesh rendered', { blockKey });
-      } else if (shape === Shape.BILLBOARD) {
-        await this.billboardRenderer.render(renderContext, clientBlock);
-        this.separateMeshes.set(blockKey, null as any); // Placeholder
-        logger.debug('BILLBOARD separate mesh rendered', { blockKey });
-      } else if (shape === Shape.SPRITE) {
-        await this.spriteRenderer.render(renderContext, clientBlock);
-        this.separateMeshes.set(blockKey, null as any); // Placeholder (sprites tracked by SpriteService)
-        logger.debug('SPRITE separate mesh rendered', { blockKey });
-      } else {
-        logger.warn('Unknown shader/shape for separate mesh', { shader, shape, blockKey });
-      }
+      // Track the mesh
+      this.separateMeshes.set(blockKey, null as any); // Placeholder
+
+      logger.debug('Separate mesh rendered', {
+        blockKey,
+        renderer: renderer.constructor.name,
+      });
     } catch (error) {
       ExceptionHandler.handle(error, 'RenderService.renderSeparateMeshBlock', { blockKey });
     }

@@ -104,9 +104,14 @@ SpriteRenderer:
 
 ## Flame
 
-[ ] Erstelle einen FlameRenderer. Er rendert einen Flame aus der Textur in TextureDefinition.
+[?] Erstelle einen FlameRenderer. Er rendert einen Flame aus der Textur in TextureDefinition.
 - Das Flame steht immer auf dem Block und ist by default 1 breit und ratio zur breite hoch.
 - Beachte, das das Flame erstmal auf dem Block stehen soll, also der Mittelpunkt ueber 0 sein muss, sonst ist es im Block darunter versunken.
 - Vorlage: client_playground/packages/client/src/rendering/shapes/FlameRenderer.ts
 - Implementiere alle eigenschaften, offset (offset 0 verschiebt den lagepunkt), scaling, rotation wie bei einem Cube.
 - Der Renderer definiert sein eigenes Mesh
+
+## Ocean
+
+[ ] Erstelle einen OceanRenderer. Er soll die von BabylonJS bereitgestellten Wasser effekt rendern.
+- Es soll eine flache ocean oberflaeche on TOP des Blocks gerendert werden.
