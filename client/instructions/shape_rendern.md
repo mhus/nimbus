@@ -62,7 +62,7 @@ teilen.
 
 ## Steps
 
-[ ] Erstelle den StepsRenderer. Er rendert einzelne Steine als Treppe
+[?] Erstelle den StepsRenderer. Er rendert einzelne Steine als Treppe
 - Orientiere dich an CubeRenderer.
 - Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
 - Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StepsRenderer.ts
