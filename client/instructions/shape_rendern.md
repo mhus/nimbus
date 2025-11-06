@@ -44,7 +44,7 @@
 
 ## Hash 
 
-[ ] Erstelle den HashRenderer. Er rendert einen Hash (#) shape. Das bedeutet die Seiten sind von
+[?] Erstelle den HashRenderer. Er rendert einen Hash (#) shape. Das bedeutet die Seiten sind von
 oben betrachtet wie ein hash angeordnet und verschieben sich mit dem offset einstellungen
 Das bedeutet du brauchst pro seite 4 punkte, also 24 Punkte. da sich drei seiten nicht mehr einen punkt 
 teilen.
@@ -52,13 +52,13 @@ teilen.
 - Die offset verschieben nur noch aspekte von jedem punkt. andere aspekte bleiben unveraendert.
 - Wenn alle offsets 0 sind, dannw wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
 
-## Stairs
+## Stair
 
-[ ] Erstelle den StairsRenderer. Er Rendert eine Treppe.
+[ ] Erstelle den StairRenderer. Er Rendert eine Treppe.
 - Orientiere dich an CubeRenderer.
 - Es werden vorerst keine offsets unterstuetzt.
 - Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
-- Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StairsRenderer.ts
+- Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StairRenderer.ts
 
 ## Steps
 

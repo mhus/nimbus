@@ -15,6 +15,7 @@ import type { BlockTypeService } from './BlockTypeService';
 import { BlockRenderer } from '../rendering/BlockRenderer';
 import { CubeRenderer } from '../rendering/CubeRenderer';
 import { CrossRenderer } from '../rendering/CrossRenderer';
+import { HashRenderer } from '../rendering/HashRenderer';
 import { SphereRenderer } from '../rendering/SphereRenderer';
 import { CylinderRenderer } from '../rendering/CylinderRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
@@ -68,6 +69,7 @@ export class RenderService {
   // Renderers
   private cubeRenderer: CubeRenderer;
   private crossRenderer: CrossRenderer;
+  private hashRenderer: HashRenderer;
   private sphereRenderer: SphereRenderer;
   private cylinderRenderer: CylinderRenderer;
   private flipboxRenderer: FlipboxRenderer;
@@ -101,6 +103,7 @@ export class RenderService {
     // Initialize renderers
     this.cubeRenderer = new CubeRenderer(textureAtlas);
     this.crossRenderer = new CrossRenderer(textureAtlas);
+    this.hashRenderer = new HashRenderer(textureAtlas);
     this.sphereRenderer = new SphereRenderer(textureAtlas);
     this.cylinderRenderer = new CylinderRenderer(textureAtlas);
     this.flipboxRenderer = new FlipboxRenderer();
@@ -288,11 +291,13 @@ export class RenderService {
             continue;
           }
 
-          // Render cubes, crosses, spheres, and cylinders
+          // Render cubes, crosses, hashes, spheres, and cylinders
           if (shape === Shape.CUBE) {
             await this.cubeRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.CROSS) {
             await this.crossRenderer.render(renderContext, clientBlock);
+          } else if (shape === Shape.HASH) {
+            await this.hashRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.SPHERE) {
             await this.sphereRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.CYLINDER) {
@@ -390,6 +395,8 @@ export class RenderService {
         return this.cubeRenderer;
       case Shape.CROSS:
         return this.crossRenderer;
+      case Shape.HASH:
+        return this.hashRenderer;
       case Shape.SPHERE:
         return this.sphereRenderer;
       case Shape.CYLINDER:
