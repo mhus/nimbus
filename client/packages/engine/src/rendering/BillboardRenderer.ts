@@ -47,6 +47,11 @@ export class BillboardRenderer extends BlockRenderer {
     const block = clientBlock.block;
     const modifier = clientBlock.currentModifier;
 
+    logger.info('🎯 BillboardRenderer: Rendering billboard', {
+      position: block.position,
+      blockTypeId: block.blockTypeId,
+    });
+
     if (!modifier || !modifier.visibility) {
       logger.warn('BillboardRenderer: No visibility modifier', { block });
       return;
@@ -89,63 +94,20 @@ export class BillboardRenderer extends BlockRenderer {
     const centerY = pos.y + 0.5 + pivotOffsetY;
     const centerZ = pos.z + 0.5 + pivotOffsetZ;
 
-    // Get texture aspect ratio
-    const aspectRatio = await this.getTextureAspectRatio(textureDef.path, renderContext.renderService);
-
-    // Create billboard geometry
-    const faceData = this.createBillboardGeometry(
-      scalingX,
-      scalingY,
-      aspectRatio
-    );
-
-    // Create separate mesh for this billboard
+    // Create separate mesh for this billboard (aspect ratio will be calculated from loaded texture)
     await this.createSeparateMesh(
       clientBlock,
-      faceData,
       new Vector3(centerX, centerY, centerZ),
+      scalingX,
+      scalingY,
       renderContext
     );
-  }
 
-  /**
-   * Get texture aspect ratio (width / height)
-   *
-   * Loads texture to read dimensions and calculate aspect ratio.
-   * If loading fails, returns 1.0 (square).
-   *
-   * @param texturePath Path to texture
-   * @param renderService RenderService for material access
-   * @returns Aspect ratio (width / height)
-   */
-  private async getTextureAspectRatio(
-    texturePath: string,
-    renderService: any
-  ): Promise<number> {
-    try {
-      // Load texture to get dimensions
-      const texture = await renderService.materialService.loadTexture(texturePath) as Texture;
-
-      if (!texture) {
-        logger.warn('Could not load texture for aspect ratio', { texturePath });
-        return 1.0;
-      }
-
-      const size = texture.getSize();
-      const aspectRatio = size.width / size.height;
-
-      logger.debug('Billboard texture aspect ratio', {
-        texturePath,
-        width: size.width,
-        height: size.height,
-        aspectRatio,
-      });
-
-      return aspectRatio;
-    } catch (error) {
-      logger.warn('Failed to get texture aspect ratio, using 1.0', { texturePath, error });
-      return 1.0;
-    }
+    logger.info('🎯 Billboard rendered successfully', {
+      position: block.position,
+      center: { x: centerX, y: centerY, z: centerZ },
+      scaling: { x: scalingX, y: scalingY },
+    });
   }
 
   /**
@@ -210,14 +172,16 @@ export class BillboardRenderer extends BlockRenderer {
    * Creates a new mesh with billboard behavior and material from MaterialService.
    *
    * @param clientBlock Block to create mesh for
-   * @param faceData Geometry data
    * @param centerPosition World position for billboard center
+   * @param scalingX X-axis scaling
+   * @param scalingY Y-axis scaling
    * @param renderContext Render context with resourcesToDispose
    */
   private async createSeparateMesh(
     clientBlock: ClientBlock,
-    faceData: { positions: number[]; indices: number[]; uvs: number[]; normals: number[] },
     centerPosition: Vector3,
+    scalingX: number,
+    scalingY: number,
     renderContext: RenderContext
   ): Promise<void> {
     const block = clientBlock.block;
@@ -225,6 +189,40 @@ export class BillboardRenderer extends BlockRenderer {
 
     // Create mesh name
     const meshName = `billboard_${block.position.x}_${block.position.y}_${block.position.z}`;
+
+    // Get material first to extract texture aspect ratio
+    const material = await renderContext.renderService.materialService.createOriginalTextureMaterial(
+      meshName,
+      clientBlock.currentModifier,
+      0 // TextureKey.ALL
+    );
+
+    // Calculate aspect ratio from loaded texture
+    let aspectRatio = 1.0;
+    const diffuseTexture = material.diffuseTexture as Texture;
+    if (diffuseTexture) {
+      // Wait for texture to be ready
+      await new Promise<void>((resolve) => {
+        if (diffuseTexture.isReady()) {
+          resolve();
+        } else {
+          diffuseTexture.onLoadObservable.addOnce(() => resolve());
+        }
+      });
+
+      const size = diffuseTexture.getSize();
+      if (size && size.width > 0 && size.height > 0) {
+        aspectRatio = size.width / size.height;
+        logger.info('📐 Billboard aspect ratio from texture', {
+          width: size.width,
+          height: size.height,
+          aspectRatio,
+        });
+      }
+    }
+
+    // Create billboard geometry with calculated aspect ratio
+    const faceData = this.createBillboardGeometry(scalingX, scalingY, aspectRatio);
 
     // Create mesh
     const mesh = new Mesh(meshName, scene);
@@ -248,30 +246,34 @@ export class BillboardRenderer extends BlockRenderer {
     // Ensure mesh is visible
     mesh.isVisible = true;
     mesh.visibility = 1.0;
+    mesh.isPickable = false; // Billboards should not be pickable for block selection
 
     // Prevent frustum culling issues
     mesh.alwaysSelectAsActiveMesh = true;
 
-    // Get material from MaterialService
-    // MaterialService will use original texture (not atlas) for billboards
-    const material = await renderContext.renderService.materialService.getMaterial(
-      clientBlock.currentModifier,
-      0 // TextureKey.ALL
-    );
+    // Force mesh to render
+    mesh.refreshBoundingInfo();
+    mesh.computeWorldMatrix(true);
 
-    // Disable backface culling for billboards (visible from both sides)
-    material.backFaceCulling = false;
-
+    // Apply material (already created above to get aspect ratio)
     mesh.material = material;
 
     // Register mesh for automatic disposal when chunk is unloaded
     renderContext.resourcesToDispose.addMesh(mesh);
 
-    logger.debug('BILLBOARD separate mesh created', {
+    logger.info('✅ BILLBOARD mesh created', {
       meshName,
       position: centerPosition,
       vertices: faceData.positions.length / 3,
+      aspectRatio,
       material: material.name,
+      billboardMode: mesh.billboardMode,
+      isVisible: mesh.isVisible,
+      visibility: mesh.visibility,
+      hasTexture: material.diffuseTexture !== null,
+      backFaceCulling: material.backFaceCulling,
+      opacity: material.alpha,
+      transparencyMode: material.transparencyMode,
     });
   }
 }

@@ -404,6 +404,11 @@ export class RenderService {
       // Use renderer's needsSeparateMesh() to determine grouping
       if (renderer.needsSeparateMesh()) {
         separateMeshBlocks.push(clientBlock);
+        logger.debug('Block needs separate mesh', {
+          renderer: renderer.constructor.name,
+          position: clientBlock.block.position,
+          shape: clientBlock.currentModifier?.visibility?.shape,
+        });
       } else {
         chunkMeshBlocks.push(clientBlock);
       }

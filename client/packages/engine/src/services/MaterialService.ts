@@ -675,6 +675,118 @@ export class MaterialService {
   }
 
   /**
+   * Create a material with original texture (not cached)
+   *
+   * Used for blocks that need individual textures (BILLBOARD, SPRITE, etc.)
+   * Applies all material properties from BlockModifier:
+   * - opacity, transparencyMode
+   * - backFaceCulling
+   * - samplingMode
+   * - UV transformations
+   *
+   * @param name Material name (for debugging)
+   * @param modifier BlockModifier containing material properties
+   * @param textureIndex TextureKey indicating which texture to use
+   * @returns New StandardMaterial with original texture (not cached)
+   */
+  async createOriginalTextureMaterial(
+    name: string,
+    modifier: BlockModifier,
+    textureIndex: TextureKey
+  ): Promise<StandardMaterial> {
+    try {
+      // Get texture definition
+      const textures = modifier.visibility?.textures;
+      if (!textures) {
+        throw new Error('No textures defined in modifier');
+      }
+
+      const textureDef = TextureHelper.normalizeTexture(textures[textureIndex]);
+      if (!textureDef) {
+        throw new Error(`No texture found for index ${textureIndex}`);
+      }
+
+      // Create material
+      const material = new StandardMaterial(name, this.scene);
+
+      // Load original texture (not atlas)
+      const texture = await this.loadTexture(textureDef);
+      if (texture) {
+        material.diffuseTexture = texture;
+      } else {
+        logger.warn('Failed to load texture for original material', {
+          name,
+          texturePath: textureDef.path
+        });
+      }
+
+      // Apply material properties from modifier
+      const visibility = modifier.visibility;
+
+      // Opacity & Transparency
+      if (visibility?.opacity !== undefined) {
+        material.alpha = visibility.opacity;
+      }
+
+      if (visibility?.transparencyMode !== undefined) {
+        switch (visibility.transparencyMode) {
+          case TransparencyMode.OPAQUE:
+            material.transparencyMode = Material.MATERIAL_OPAQUE;
+            break;
+          case TransparencyMode.ALPHA_TEST:
+            material.transparencyMode = Material.MATERIAL_ALPHATEST;
+            break;
+          case TransparencyMode.ALPHA_BLEND:
+            material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+            break;
+        }
+      }
+
+      // Backface Culling
+      if (visibility?.backFaceCulling !== undefined) {
+        material.backFaceCulling = visibility.backFaceCulling;
+      } else {
+        // Default: disable backface culling for billboards/sprites (visible from both sides)
+        material.backFaceCulling = false;
+      }
+
+      // Sampling Mode (if texture loaded)
+      if (texture && visibility?.samplingMode !== undefined) {
+        switch (visibility.samplingMode) {
+          case SamplingMode.NEAREST:
+            texture.updateSamplingMode(Texture.NEAREST_NEAREST);
+            break;
+          case SamplingMode.LINEAR:
+            texture.updateSamplingMode(Texture.LINEAR_LINEAR);
+            break;
+          case SamplingMode.TRILINEAR:
+            texture.updateSamplingMode(Texture.TRILINEAR_SAMPLINGMODE);
+            break;
+        }
+      }
+
+      // Disable specular highlights for blocks
+      material.specularColor = new Color3(0, 0, 0);
+
+      logger.info('Created original texture material', {
+        name,
+        texturePath: textureDef.path,
+        opacity: material.alpha,
+        transparencyMode: material.transparencyMode,
+        backFaceCulling: material.backFaceCulling,
+      });
+
+      return material;
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'MaterialService.createOriginalTextureMaterial',
+        { name, textureIndex }
+      );
+    }
+  }
+
+  /**
    * Get material for a block based on effect name
    *
    * This is a placeholder for future shader integration.
