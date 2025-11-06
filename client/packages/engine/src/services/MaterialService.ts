@@ -768,12 +768,9 @@ export class MaterialService {
       // Disable specular highlights for blocks
       material.specularColor = new Color3(0, 0, 0);
 
-      logger.info('Created original texture material', {
+      logger.debug('Created original texture material', {
         name,
         texturePath: textureDef.path,
-        opacity: material.alpha,
-        transparencyMode: material.transparencyMode,
-        backFaceCulling: material.backFaceCulling,
       });
 
       return material;

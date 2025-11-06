@@ -47,11 +47,6 @@ export class BillboardRenderer extends BlockRenderer {
     const block = clientBlock.block;
     const modifier = clientBlock.currentModifier;
 
-    logger.info('🎯 BillboardRenderer: Rendering billboard', {
-      position: block.position,
-      blockTypeId: block.blockTypeId,
-    });
-
     if (!modifier || !modifier.visibility) {
       logger.warn('BillboardRenderer: No visibility modifier', { block });
       return;
@@ -102,12 +97,6 @@ export class BillboardRenderer extends BlockRenderer {
       scalingY,
       renderContext
     );
-
-    logger.info('🎯 Billboard rendered successfully', {
-      position: block.position,
-      center: { x: centerX, y: centerY, z: centerZ },
-      scaling: { x: scalingX, y: scalingY },
-    });
   }
 
   /**
@@ -213,7 +202,7 @@ export class BillboardRenderer extends BlockRenderer {
       const size = diffuseTexture.getSize();
       if (size && size.width > 0 && size.height > 0) {
         aspectRatio = size.width / size.height;
-        logger.info('📐 Billboard aspect ratio from texture', {
+        logger.debug('Billboard aspect ratio calculated', {
           width: size.width,
           height: size.height,
           aspectRatio,
@@ -261,19 +250,10 @@ export class BillboardRenderer extends BlockRenderer {
     // Register mesh for automatic disposal when chunk is unloaded
     renderContext.resourcesToDispose.addMesh(mesh);
 
-    logger.info('✅ BILLBOARD mesh created', {
+    logger.debug('Billboard mesh created', {
       meshName,
       position: centerPosition,
-      vertices: faceData.positions.length / 3,
       aspectRatio,
-      material: material.name,
-      billboardMode: mesh.billboardMode,
-      isVisible: mesh.isVisible,
-      visibility: mesh.visibility,
-      hasTexture: material.diffuseTexture !== null,
-      backFaceCulling: material.backFaceCulling,
-      opacity: material.alpha,
-      transparencyMode: material.transparencyMode,
     });
   }
 }
