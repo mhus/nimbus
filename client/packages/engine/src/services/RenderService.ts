@@ -18,6 +18,7 @@ import { CrossRenderer } from '../rendering/CrossRenderer';
 import { HashRenderer } from '../rendering/HashRenderer';
 import { SphereRenderer } from '../rendering/SphereRenderer';
 import { CylinderRenderer } from '../rendering/CylinderRenderer';
+import { StairRenderer } from '../rendering/StairRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
@@ -72,6 +73,7 @@ export class RenderService {
   private hashRenderer: HashRenderer;
   private sphereRenderer: SphereRenderer;
   private cylinderRenderer: CylinderRenderer;
+  private stairRenderer: StairRenderer;
   private flipboxRenderer: FlipboxRenderer;
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
@@ -106,6 +108,7 @@ export class RenderService {
     this.hashRenderer = new HashRenderer(textureAtlas);
     this.sphereRenderer = new SphereRenderer(textureAtlas);
     this.cylinderRenderer = new CylinderRenderer(textureAtlas);
+    this.stairRenderer = new StairRenderer(textureAtlas);
     this.flipboxRenderer = new FlipboxRenderer();
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
@@ -291,7 +294,7 @@ export class RenderService {
             continue;
           }
 
-          // Render cubes, crosses, hashes, spheres, and cylinders
+          // Render cubes, crosses, hashes, spheres, cylinders, and stairs
           if (shape === Shape.CUBE) {
             await this.cubeRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.CROSS) {
@@ -302,6 +305,8 @@ export class RenderService {
             await this.sphereRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.CYLINDER) {
             await this.cylinderRenderer.render(renderContext, clientBlock);
+          } else if (shape === Shape.STAIR) {
+            await this.stairRenderer.render(renderContext, clientBlock);
           } else {
             logger.debug('Unsupported shape, skipping', {
               shape,
@@ -401,6 +406,8 @@ export class RenderService {
         return this.sphereRenderer;
       case Shape.CYLINDER:
         return this.cylinderRenderer;
+      case Shape.STAIR:
+        return this.stairRenderer;
       case Shape.BILLBOARD:
         return this.billboardRenderer;
       case Shape.SPRITE:

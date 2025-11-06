@@ -54,7 +54,7 @@ teilen.
 
 ## Stair
 
-[ ] Erstelle den StairRenderer. Er Rendert eine Treppe.
+[?] Erstelle den StairRenderer. Er Rendert eine Treppe.
 - Orientiere dich an CubeRenderer.
 - Es werden vorerst keine offsets unterstuetzt.
 - Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
