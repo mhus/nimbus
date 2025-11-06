@@ -16,7 +16,7 @@
 
 ## Cross
 
-[ ] Erstelle einen CrossRenderer der ein Cross Rendert, auf dem die Texturen sind.
+[?] Erstelle einen CrossRenderer der ein Cross Rendert, auf dem die Texturen sind.
 - Ein Cross sind zwei Flaechen, die diagonal, stehend auf einem Block angebracht sind.
 - Implementiere alle eigenschften, offset, scaling, rotation wie bei einem Cube.
 - Orientiere dich an CubeRenderer.
