@@ -223,10 +223,10 @@ export class OceanRenderer extends BlockRenderer {
     // Position at top of block
     plane.position.set(centerX, centerY, centerZ);
 
-    // Create WaterMaterial
+    // Create WaterMaterial with render target size
     const waterMaterial = new WaterMaterial(meshName + '_mat', scene, new Vector2(512, 512));
 
-    // Load bump texture
+    // Load bump texture (REQUIRED for WaterMaterial)
     const bumpTexture = (await renderContext.renderService.materialService.loadTexture(
       bumpTexturePath
     )) as Texture;
@@ -237,19 +237,28 @@ export class OceanRenderer extends BlockRenderer {
       logger.warn('Failed to load bump texture for ocean', { bumpTexturePath });
     }
 
-    // Configure water properties
-    waterMaterial.windForce = windForce;
-    waterMaterial.waveHeight = waveHeight;
-    waterMaterial.bumpHeight = bumpHeight;
-    waterMaterial.waveLength = waveLength;
+    // Configure water properties (adjusted to match Babylon.js example)
+    waterMaterial.windForce = -15; // Negative for natural wave movement
+    waterMaterial.waveHeight = 1.3;
+    waterMaterial.bumpHeight = 0.1;
+    waterMaterial.waveLength = 0.1;
     waterMaterial.waterColor = waterColor;
-    waterMaterial.colorBlendFactor = 0.5;
-
-    // Set wind direction (default: northeast)
+    waterMaterial.colorBlendFactor = 0.3;
     waterMaterial.windDirection = new Vector2(1, 1);
 
-    // Make water semi-transparent
+    // Disable backface culling for water
     waterMaterial.backFaceCulling = false;
+
+    // Add all chunk meshes to render list for reflections/refractions
+    const chunkMeshes = renderContext.renderService.getChunkMeshes();
+    for (const mesh of chunkMeshes.values()) {
+      waterMaterial.addToRenderList(mesh);
+    }
+
+    // TODO: Add skybox to render list when available
+    // if (scene.skybox) {
+    //   waterMaterial.addToRenderList(scene.skybox);
+    // }
 
     // Apply material to mesh
     plane.material = waterMaterial;
