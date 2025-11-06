@@ -64,7 +64,7 @@ sind aber glassiere mit der color die an der texture hinterlegt ist.
 
 ## FlipBox
 
-[ ] Erstelle den FlipBoxRenderer. Er rendert eine Oberflaeche (nur eine TOP Seite) die den Sahder FlipBox aus
+[?] Erstelle den FlipBoxRenderer. Er rendert eine Oberflaeche (nur eine TOP Seite) die den Sahder FlipBox aus
 dem ShaderService verwendet.
 - Orientiere dich an CubeRenderer, es werden nur 4 Punkte benoetigt.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
@@ -78,9 +78,16 @@ dem ShaderService verwendet.
 
 ## Billboard
 
+[ ] Erstelle einen BillboardRenderer. Er rendert ein Billboard aus der ersten Textur in TextureDefinition.
+- Das Billboard steht immer auf dem Block und ist by default 1 breit und ratio zur breite hoch.
+- Beachte, das das Billboard erstmal auf dem Block stehen soll, also der Mittelpunkt ueber 0 sein muss, sonst ist es im Block darunter versunken.
+- Orientiere dich an CubeRenderer.
+- Implementiere alle eigenschaften, offset (offset 0 verschiebt den lagepunkt), scaling, rotation wie bei einem Cube.
 - Der Renderer definiert sein eigenes Mesh
+- Vorlage in: client_playground/packages/client/src/rendering/BillboardRenderer.ts
 
 ## Sprite
+
 Erstelle einen SpriteRenderer. Er nutzt den SpriteService (service in dieser App) um ein Sprite zu rendern.
 
 Erstelle den SpriteService und haenge ihn in den EngineService ein. Er soll den SpriteManager von BabylonJS nutzen

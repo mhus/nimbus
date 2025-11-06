@@ -6,13 +6,14 @@
  */
 
 import { Mesh, VertexData, Scene } from '@babylonjs/core';
-import { getLogger, ExceptionHandler, Shape } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, Shape, BlockShader } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ClientChunk } from '../types/ClientChunk';
 import type { ClientBlock } from '../types/ClientBlock';
 import type { MaterialService } from './MaterialService';
 import type { BlockTypeService } from './BlockTypeService';
 import { CubeRenderer } from '../rendering/CubeRenderer';
+import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 
 const logger = getLogger('RenderService');
@@ -55,10 +56,15 @@ export class RenderService {
 
   // Renderers
   private cubeRenderer: CubeRenderer;
+  private flipboxRenderer: FlipboxRenderer;
 
   // Chunk meshes: Map<chunkKey, Map<materialKey, Mesh>>
   // Each chunk can have multiple meshes (one per material type)
   private chunkMeshes: Map<string, Map<string, Mesh>> = new Map();
+
+  // Separate meshes: Map<blockKey, Mesh>
+  // Blocks that need individual meshes (FLIPBOX, BILLBOARD, SPRITE, etc.)
+  private separateMeshes: Map<string, Mesh> = new Map();
 
   constructor(
     scene: Scene,
@@ -79,6 +85,7 @@ export class RenderService {
 
     // Initialize renderers
     this.cubeRenderer = new CubeRenderer(textureAtlas);
+    this.flipboxRenderer = new FlipboxRenderer();
 
     // Listen to chunk events
     this.setupChunkEventListeners();
@@ -189,8 +196,18 @@ export class RenderService {
         blockCount,
       });
 
-      // Group blocks by material key
-      const materialGroups = this.groupBlocksByMaterial(clientChunk);
+      // Separate blocks into chunk mesh blocks vs separate mesh blocks
+      const { chunkMeshBlocks, separateMeshBlocks } = this.separateBlocksByRenderType(clientChunk);
+
+      logger.debug('Blocks separated by render type', {
+        cx: chunk.cx,
+        cz: chunk.cz,
+        chunkMeshBlocks: chunkMeshBlocks.length,
+        separateMeshBlocks: separateMeshBlocks.length,
+      });
+
+      // 1. Render chunk mesh blocks (batched by material)
+      const materialGroups = this.groupBlocksByMaterial(clientChunk, chunkMeshBlocks);
 
       logger.debug('Material groups created', {
         cx: chunk.cx,
@@ -274,18 +291,30 @@ export class RenderService {
         }
       }
 
-      // Store meshes for this chunk
+      // Store chunk meshes
       if (meshMap.size > 0) {
         this.chunkMeshes.set(chunkKey, meshMap);
 
-        logger.debug('Chunk rendered', {
+        logger.debug('Chunk meshes rendered', {
           cx: chunk.cx,
           cz: chunk.cz,
           meshCount: meshMap.size,
         });
       } else {
-        logger.debug('Chunk has no renderable blocks', { cx: chunk.cx, cz: chunk.cz });
+        logger.debug('Chunk has no chunk mesh blocks', { cx: chunk.cx, cz: chunk.cz });
       }
+
+      // 2. Render separate mesh blocks (individual meshes)
+      for (const clientBlock of separateMeshBlocks) {
+        await this.renderSeparateMeshBlock(clientBlock, chunkKey);
+      }
+
+      logger.debug('Chunk fully rendered', {
+        cx: chunk.cx,
+        cz: chunk.cz,
+        chunkMeshes: meshMap.size,
+        separateMeshes: separateMeshBlocks.length,
+      });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'RenderService.renderChunk', {
         cx: chunk.cx,
@@ -295,13 +324,76 @@ export class RenderService {
   }
 
   /**
-   * Group blocks by their material key
-   * Blocks with the same material properties will be grouped together
+   * Separate blocks into chunk mesh blocks vs separate mesh blocks
+   *
+   * Checks each block's shader to determine if it needs a separate mesh.
+   * Currently: FLIPBOX shader needs separate mesh with original texture.
+   *
+   * @param clientChunk Chunk with all blocks
+   * @returns Separated block lists
    */
-  private groupBlocksByMaterial(clientChunk: ClientChunk): Map<string, ClientBlock[]> {
-    const groups = new Map<string, ClientBlock[]>();
+  private separateBlocksByRenderType(clientChunk: ClientChunk): {
+    chunkMeshBlocks: ClientBlock[];
+    separateMeshBlocks: ClientBlock[];
+  } {
+    const chunkMeshBlocks: ClientBlock[] = [];
+    const separateMeshBlocks: ClientBlock[] = [];
 
     for (const clientBlock of clientChunk.data.data.values()) {
+      const modifier = clientBlock.currentModifier;
+      if (!modifier || !modifier.visibility) {
+        continue;
+      }
+
+      // Check shader field (texture-level or visibility-level)
+      const shader = this.getBlockShader(modifier);
+
+      if (shader === BlockShader.FLIPBOX) {
+        // FLIPBOX needs separate mesh (uses original texture, not atlas)
+        separateMeshBlocks.push(clientBlock);
+      } else {
+        // Standard blocks go into chunk mesh (batched by material)
+        chunkMeshBlocks.push(clientBlock);
+      }
+    }
+
+    return { chunkMeshBlocks, separateMeshBlocks };
+  }
+
+  /**
+   * Get shader from modifier
+   * Checks texture-level shader first, then visibility-level shader
+   */
+  private getBlockShader(modifier: any): BlockShader {
+    // Check texture-level shader (highest priority)
+    if (modifier.visibility?.textures) {
+      for (const texture of Object.values(modifier.visibility.textures)) {
+        if (typeof texture === 'object' && texture !== null && 'shader' in texture) {
+          return (texture as any).shader ?? BlockShader.NONE;
+        }
+      }
+    }
+
+    // Check visibility-level shader
+    return modifier.visibility?.shader ?? BlockShader.NONE;
+  }
+
+  /**
+   * Group blocks by their material key
+   * Blocks with the same material properties will be grouped together
+   *
+   * @param clientChunk Chunk with all blocks
+   * @param blocksToGroup Specific blocks to group (allows filtering)
+   * @returns Grouped blocks by material key
+   */
+  private groupBlocksByMaterial(
+    clientChunk: ClientChunk,
+    blocksToGroup?: ClientBlock[]
+  ): Map<string, ClientBlock[]> {
+    const groups = new Map<string, ClientBlock[]>();
+    const blocks = blocksToGroup || Array.from(clientChunk.data.data.values());
+
+    for (const clientBlock of blocks) {
       const modifier = clientBlock.currentModifier;
       if (!modifier || !modifier.visibility) {
         continue;
@@ -319,6 +411,55 @@ export class RenderService {
     }
 
     return groups;
+  }
+
+  /**
+   * Render a single block with separate mesh
+   *
+   * Used for blocks that need individual meshes (FLIPBOX, BILLBOARD, etc.)
+   *
+   * @param clientBlock Block to render
+   * @param chunkKey Parent chunk key for tracking
+   */
+  private async renderSeparateMeshBlock(clientBlock: ClientBlock, chunkKey: string): Promise<void> {
+    const block = clientBlock.block;
+    const modifier = clientBlock.currentModifier;
+
+    if (!modifier || !modifier.visibility) {
+      return;
+    }
+
+    const shader = this.getBlockShader(modifier);
+    const blockKey = `${chunkKey}_block_${block.position.x}_${block.position.y}_${block.position.z}`;
+
+    // Check if already rendered
+    if (this.separateMeshes.has(blockKey)) {
+      logger.debug('Separate mesh already exists', { blockKey });
+      return;
+    }
+
+    try {
+      // Route to appropriate renderer based on shader
+      if (shader === BlockShader.FLIPBOX) {
+        const renderContext: RenderContext = {
+          renderService: this,
+          faceData: { positions: [], indices: [], uvs: [], normals: [] }, // Not used
+          vertexOffset: 0,
+        };
+
+        await this.flipboxRenderer.render(renderContext, clientBlock);
+
+        // Track the mesh (FlipboxRenderer creates and adds it to scene)
+        // TODO: FlipboxRenderer should return the mesh so we can track it
+        this.separateMeshes.set(blockKey, null as any); // Placeholder for now
+
+        logger.debug('FLIPBOX separate mesh rendered', { blockKey });
+      } else {
+        logger.warn('Unknown shader for separate mesh', { shader, blockKey });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'RenderService.renderSeparateMeshBlock', { blockKey });
+    }
   }
 
   /**
@@ -345,21 +486,47 @@ export class RenderService {
   }
 
   /**
-   * Unload a chunk and dispose all its meshes
+   * Unload a chunk and dispose all its meshes (chunk meshes + separate meshes)
    */
   private unloadChunk(cx: number, cz: number): void {
     const chunkKey = this.getChunkKey(cx, cz);
+
+    // Dispose chunk meshes
     const meshMap = this.chunkMeshes.get(chunkKey);
+    let chunkMeshCount = 0;
 
     if (meshMap) {
-      // Dispose all meshes for this chunk
       for (const [materialKey, mesh] of meshMap) {
         mesh.dispose();
+        chunkMeshCount++;
       }
       this.chunkMeshes.delete(chunkKey);
-
-      logger.debug('Chunk meshes disposed', { cx, cz, count: meshMap.size });
     }
+
+    // Dispose separate meshes belonging to this chunk
+    let separateMeshCount = 0;
+    const keysToDelete: string[] = [];
+
+    for (const [blockKey, mesh] of this.separateMeshes) {
+      if (blockKey.startsWith(chunkKey + '_block_')) {
+        if (mesh) {
+          mesh.dispose();
+        }
+        keysToDelete.push(blockKey);
+        separateMeshCount++;
+      }
+    }
+
+    for (const key of keysToDelete) {
+      this.separateMeshes.delete(key);
+    }
+
+    logger.debug('Chunk unloaded', {
+      cx,
+      cz,
+      chunkMeshes: chunkMeshCount,
+      separateMeshes: separateMeshCount
+    });
   }
 
   /**
@@ -411,13 +578,21 @@ export class RenderService {
    * Dispose all chunks and resources
    */
   dispose(): void {
+    // Dispose chunk meshes
     for (const meshMap of this.chunkMeshes.values()) {
       for (const mesh of meshMap.values()) {
         mesh.dispose();
       }
     }
-
     this.chunkMeshes.clear();
+
+    // Dispose separate meshes
+    for (const mesh of this.separateMeshes.values()) {
+      if (mesh) {
+        mesh.dispose();
+      }
+    }
+    this.separateMeshes.clear();
 
     logger.info('RenderService disposed');
   }

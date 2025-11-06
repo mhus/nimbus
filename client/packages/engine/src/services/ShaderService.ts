@@ -538,7 +538,7 @@ export class ShaderService {
    * Create flipbox shader material
    *
    * @param texture Original texture (not atlas) with sprite-sheet frames
-   * @param shaderParameters Format: "frameCount,delayMs" (e.g., "4,100")
+   * @param shaderParameters Format: "frameCount,delayMs[,mode]" (e.g., "4,100" or "4,100,bumerang")
    * @param name Material name
    */
   private createFlipboxMaterial(
@@ -552,26 +552,32 @@ export class ShaderService {
     }
 
     if (!shaderParameters) {
-      logger.error('Cannot create flipbox material: shaderParameters required (format: "frameCount,delayMs")');
+      logger.error('Cannot create flipbox material: shaderParameters required (format: "frameCount,delayMs[,mode]")');
       return null;
     }
 
-    // Parse shader parameters: "frameCount,delayMs"
+    // Parse shader parameters: "frameCount,delayMs[,mode]"
     const parts = shaderParameters.split(',');
-    if (parts.length !== 2) {
-      logger.error('Invalid flipbox shaderParameters format (expected "frameCount,delayMs")', { shaderParameters });
+    if (parts.length < 2 || parts.length > 3) {
+      logger.error('Invalid flipbox shaderParameters format (expected "frameCount,delayMs[,mode]")', { shaderParameters });
       return null;
     }
 
     const frameCount = parseInt(parts[0], 10);
     const delayMs = parseInt(parts[1], 10);
+    const mode = parts[2]?.trim().toLowerCase() || 'rotate'; // Default: rotate
 
     if (isNaN(frameCount) || isNaN(delayMs) || frameCount < 1 || delayMs < 1) {
       logger.error('Invalid flipbox shaderParameters values', { frameCount, delayMs });
       return null;
     }
 
-    logger.debug('Creating flipbox material', { name, frameCount, delayMs });
+    if (mode !== 'rotate' && mode !== 'bumerang') {
+      logger.error('Invalid flipbox mode (expected "rotate" or "bumerang")', { mode });
+      return null;
+    }
+
+    logger.debug('Creating flipbox material', { name, frameCount, delayMs, mode });
 
     const material = new ShaderMaterial(
       name,
@@ -619,13 +625,28 @@ export class ShaderService {
 
     // Setup frame animation
     let currentFrame = 0;
+    let direction = 1; // 1 = forward, -1 = backward (for bumerang mode)
     let lastFrameTime = Date.now();
     const scene = this.scene; // Capture scene reference for closure
 
     scene.onBeforeRenderObservable.add(() => {
       const now = Date.now();
       if (now - lastFrameTime >= delayMs) {
-        currentFrame = (currentFrame + 1) % frameCount;
+        if (mode === 'bumerang') {
+          // Bumerang mode: 0,1,2,3,2,1,0,1,2,3,2,1...
+          currentFrame += direction;
+
+          // Reverse direction at boundaries
+          if (currentFrame >= frameCount - 1) {
+            direction = -1; // Start going backward
+          } else if (currentFrame <= 0) {
+            direction = 1; // Start going forward
+          }
+        } else {
+          // Rotate mode: 0,1,2,3,0,1,2,3...
+          currentFrame = (currentFrame + 1) % frameCount;
+        }
+
         material.setInt('currentFrame', currentFrame);
         lastFrameTime = now;
       }
