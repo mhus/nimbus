@@ -117,3 +117,19 @@ SpriteRenderer:
 - Es soll eine flache ocean oberflaeche on TOP des Blocks gerendert werden.
 - Der Renderer definiert sein eigenes Mesh
 [ ] client/packages/test_server/src/world/TerrainGenerator.ts soll anste
+
+## Thin Instances
+
+```text
+  - shape: 25 = THIN_INSTANCES
+  - shaderParameters: "150" = 150 Grashalme pro Block
+  - Instanzen werden zufällig im Block verteilt
+
+  🚀 Nächste Schritte:
+
+  1. ✅ System funktioniert - Testen Sie es!
+  2. ⏳ Y-Axis Billboard Shader - Später über NodeMaterial implementieren
+  3. ⏳ GPU Wind - Im Shader integrieren
+
+
+```

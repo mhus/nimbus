@@ -10,6 +10,10 @@
  * - Sprite count configurable via shaderParameters (default: 100)
  * - Random positioning within block bounds using scaling and offset
  * - Wind animation integration
+ *
+ * NOTE: Babylon.js Sprites are ALWAYS full billboards (face camera completely, including up/down).
+ * This cannot be changed - it's a limitation of the Sprite system.
+ * For Y-axis-only billboards (vertical quads), use Shape.BILLBOARD instead.
  */
 
 import { Sprite } from '@babylonjs/core';
@@ -160,6 +164,7 @@ export class SpriteRenderer extends BlockRenderer {
 
     try {
       // Get or create SpriteManager for this texture
+      // Note: spriteCount is used as capacity for the manager (max sprites it can hold)
       const manager = await spriteService.getManager(texturePath, spriteCount);
 
       // Block center position (with offset)

@@ -138,6 +138,14 @@ export class EngineService {
       spriteService.setEnvironmentService(this.environmentService);
       logger.debug('SpriteService initialized with scene and connected to EnvironmentService');
 
+      // Initialize ThinInstancesService with scene and shader service
+      const thinInstancesService = new (await import('./ThinInstancesService')).ThinInstancesService(this.scene, this.appContext);
+      this.appContext.services.thinInstances = thinInstancesService;
+      if (shaderService) {
+        thinInstancesService.setShaderService(shaderService);
+      }
+      logger.debug('ThinInstancesService initialized with scene and ShaderService');
+
       // Store environment service reference for access
       this.appContext.services.environment = this.environmentService;
 

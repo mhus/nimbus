@@ -654,4 +654,24 @@ export class ShaderService {
 
     return material;
   }
+
+  /**
+   * Create material for thin instances with Y-axis billboard and wind animation
+   *
+   * TODO: Implement using Babylon.js NodeMaterial with:
+   * - Y-axis billboard (rotation only around Y to face camera)
+   * - GPU wind animation (vertex displacement)
+   * - Configurable wind parameters
+   *
+   * Reference: https://nme.babylonjs.com/#8WH2KS#22
+   *
+   * @param texturePath Path to texture
+   * @returns Material with Y-axis billboard shader (currently returns null - fallback in ThinInstancesService)
+   */
+  async createThinInstanceMaterial(texturePath: string): Promise<any> {
+    // TODO: Implement NodeMaterial shader
+    // For now, return null so ThinInstancesService uses fallback StandardMaterial
+    logger.debug('ThinInstance shader not yet implemented, using fallback', { texturePath });
+    return null;
+  }
 }

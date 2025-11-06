@@ -81,18 +81,23 @@ export class SpriteService {
    * @returns Promise<SpriteManager> instance
    */
   async getManager(texturePath: string, capacity?: number): Promise<SpriteManager> {
+    const actualCapacity = capacity ?? this.DEFAULT_CAPACITY;
+
+    // Create cache key with capacity to allow different managers for different capacities
+    const cacheKey = `${texturePath}|${actualCapacity}`;
+
     // Check if manager already exists
-    if (this.managers.has(texturePath)) {
-      return this.managers.get(texturePath)!;
+    if (this.managers.has(cacheKey)) {
+      logger.debug('Reusing existing SpriteManager', { texturePath, capacity: actualCapacity });
+      return this.managers.get(cacheKey)!;
     }
 
     // Create new manager
-    const actualCapacity = capacity ?? this.DEFAULT_CAPACITY;
     const manager = await this.createManager(texturePath, actualCapacity);
 
-    // Cache manager
-    this.managers.set(texturePath, manager);
-    logger.debug('Created SpriteManager', { texturePath, capacity: actualCapacity });
+    // Cache manager with capacity-specific key
+    this.managers.set(cacheKey, manager);
+    logger.debug('Created new SpriteManager', { texturePath, capacity: actualCapacity });
 
     return manager;
   }
@@ -157,6 +162,11 @@ export class SpriteService {
         { width: cellWidth, height: cellHeight },
         this.scene
       );
+
+      // Note: Babylon.js Sprites are always full billboards (face camera completely)
+      // There is no built-in Y-axis-only billboard mode for sprites
+      // To achieve Y-axis-only billboards, we would need to use Mesh with BILLBOARDMODE_Y instead
+      // For now, sprites will face the camera completely (including up/down rotation)
 
       // Configure transparency
       manager.blendMode = 2; // ALPHA_COMBINE

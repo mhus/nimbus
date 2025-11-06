@@ -17,6 +17,7 @@ import { CubeRenderer } from '../rendering/CubeRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
+import { ThinInstancesRenderer } from '../rendering/ThinInstancesRenderer';
 import { FlameRenderer } from '../rendering/FlameRenderer';
 import { OceanRenderer } from '../rendering/OceanRenderer';
 import { DisposableResources } from '../rendering/DisposableResources';
@@ -66,6 +67,7 @@ export class RenderService {
   private flipboxRenderer: FlipboxRenderer;
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
+  private thinInstancesRenderer: ThinInstancesRenderer;
   private flameRenderer: FlameRenderer;
   private oceanRenderer: OceanRenderer;
 
@@ -95,6 +97,7 @@ export class RenderService {
     this.flipboxRenderer = new FlipboxRenderer();
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
+    this.thinInstancesRenderer = new ThinInstancesRenderer();
     this.flameRenderer = new FlameRenderer();
     this.oceanRenderer = new OceanRenderer();
 
@@ -369,6 +372,8 @@ export class RenderService {
         return this.billboardRenderer;
       case Shape.SPRITE:
         return this.spriteRenderer;
+      case Shape.THIN_INSTANCES:
+        return this.thinInstancesRenderer;
       case Shape.FLAME:
         return this.flameRenderer;
       case Shape.OCEAN:

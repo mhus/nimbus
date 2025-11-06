@@ -5,12 +5,12 @@
 
 import type { ClientConfig } from './config/ClientConfig';
 import type { ClientService } from './services/ClientService';
-import type { TextureService } from './services/TextureService';
 import type { NetworkService } from './services/NetworkService';
 import type { ChunkService } from './services/ChunkService';
 import type { BlockTypeService } from './services/BlockTypeService';
 import type { ShaderService } from './services/ShaderService';
 import type { SpriteService } from './services/SpriteService';
+import type { ThinInstancesService } from './services/ThinInstancesService';
 import type { EngineService } from './services/EngineService';
 import type { SelectService } from './services/SelectService';
 import type { ModalService } from './services/ModalService';
@@ -46,9 +46,6 @@ export interface Services {
   /** Client service for platform detection and configuration */
   client: ClientService;
 
-  /** Texture service for texture loading and caching */
-  texture?: TextureService;
-
   /** Network service for WebSocket connection and message routing */
   network?: NetworkService;
 
@@ -63,6 +60,9 @@ export interface Services {
 
   /** Sprite service for sprite rendering and animation */
   sprite?: SpriteService;
+
+  /** Thin instances service for high-performance grass/foliage rendering */
+  thinInstances?: ThinInstancesService;
 
   /** Engine service for 3D rendering */
   engine?: EngineService;
