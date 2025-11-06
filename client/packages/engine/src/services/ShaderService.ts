@@ -815,6 +815,11 @@ export class ShaderService {
       const texture = new Texture(url, this.scene);
       texture.hasAlpha = true;
 
+      // Also set after texture loads to ensure it takes effect
+      texture.onLoadObservable.addOnce(() => {
+        texture.updateSamplingMode(Texture.NEAREST_SAMPLINGMODE);
+      });
+
       // Create shader material
       const material = new ShaderMaterial(
         `thinInstanceWind_${texturePath}`,
