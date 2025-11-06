@@ -130,6 +130,6 @@ SpriteRenderer:
   1. ✅ System funktioniert - Testen Sie es!
   2. ⏳ Y-Axis Billboard Shader - Später über NodeMaterial implementieren
   3. ⏳ GPU Wind - Im Shader integrieren
-
-
 ```
+
+[ ] Texture richtig laden

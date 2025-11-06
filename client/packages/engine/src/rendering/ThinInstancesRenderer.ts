@@ -33,11 +33,6 @@ export class ThinInstancesRenderer extends BlockRenderer {
     const block = clientBlock.block;
     const modifier = clientBlock.currentModifier;
 
-    logger.info('🌿 ThinInstancesRenderer: Rendering thin instances', {
-      position: block.position,
-      blockTypeId: block.blockTypeId,
-    });
-
     if (!modifier || !modifier.visibility) {
       logger.warn('ThinInstancesRenderer: No visibility modifier', { block });
       return;
@@ -50,15 +45,11 @@ export class ThinInstancesRenderer extends BlockRenderer {
       return;
     }
 
-    logger.info('🌿 Shape validated as THIN_INSTANCES', { shape });
-
     const thinInstancesService = renderContext.renderService.appContext.services.thinInstances;
     if (!thinInstancesService) {
-      logger.error('🚨 ThinInstancesRenderer: ThinInstancesService not available');
+      logger.error('ThinInstancesRenderer: ThinInstancesService not available');
       return;
     }
-
-    logger.info('✅ ThinInstancesService found');
 
     // Get first texture
     const textures = modifier.visibility.textures;
@@ -84,12 +75,6 @@ export class ThinInstancesRenderer extends BlockRenderer {
       }
     }
 
-    logger.info('🌿 Instance count determined', {
-      shaderParameters: textureDef.shaderParameters,
-      instanceCount,
-      texturePath: textureDef.path,
-    });
-
     // Get chunk key for tracking
     const chunkTransfer = clientBlock.chunk?.data?.transfer;
     const chunkKey = chunkTransfer
@@ -110,19 +95,11 @@ export class ThinInstancesRenderer extends BlockRenderer {
       // Register mesh for disposal
       renderContext.resourcesToDispose.addMesh(mesh);
 
-      logger.info('✅ ThinInstances rendered successfully', {
+      logger.debug('ThinInstances rendered', {
         position: block.position,
         instanceCount,
-        texturePath: textureDef.path,
-        meshName: mesh.name,
-        isVisible: mesh.isVisible,
-        hasMaterial: mesh.material !== null,
       });
     } catch (error) {
-      logger.error('🚨 Failed to render thin instances', {
-        position: block.position,
-        error,
-      });
       ExceptionHandler.handle(error, 'ThinInstancesRenderer.render', {
         position: block.position,
       });

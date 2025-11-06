@@ -70,6 +70,9 @@ export class ShaderService {
     // Register flipbox shader
     this.registerFlipboxShader();
 
+    // Register thin instance wind shader
+    this.registerThinInstanceWindShader();
+
     logger.debug('ShaderService initialized with scene');
   }
 
@@ -656,22 +659,232 @@ export class ShaderService {
   }
 
   /**
+   * Register thin instance wind shader code
+   */
+  private registerThinInstanceWindShader(): void {
+    // Vertex shader for thin instances with Y-axis billboard and wind
+    Effect.ShadersStore['thinInstanceWindVertexShader'] = `
+      precision highp float;
+
+      // Attributes
+      attribute vec3 position;
+      attribute vec3 normal;
+      attribute vec2 uv;
+
+      // Uniforms
+      uniform mat4 viewProjection;
+      uniform mat4 view;
+      uniform vec3 cameraPosition;
+      uniform float time;
+      uniform vec2 windDirection;
+      uniform float windStrength;
+      uniform float windGustStrength;
+      uniform float windSwayFactor;
+
+      // Varyings to fragment shader
+      varying vec2 vUV;
+      varying vec3 vNormal;
+
+      #ifdef INSTANCES
+        attribute vec4 world0;
+        attribute vec4 world1;
+        attribute vec4 world2;
+        attribute vec4 world3;
+      #else
+        uniform mat4 world;
+      #endif
+
+      void main(void) {
+        // Reconstruct world matrix from thin instance attributes
+        #ifdef INSTANCES
+          mat4 world = mat4(world0, world1, world2, world3);
+        #endif
+
+        // Get instance position (from matrix translation)
+        vec3 instancePos = vec3(world[3][0], world[3][1], world[3][2]);
+
+        // Y-Axis Billboard transformation
+        // Calculate direction from instance to camera (XZ plane only)
+        vec3 toCamera = cameraPosition - instancePos;
+        toCamera.y = 0.0; // Ignore Y component (stay vertical)
+        vec3 forward = normalize(toCamera);
+
+        // Calculate right vector (perpendicular to forward in XZ plane)
+        vec3 up = vec3(0.0, 1.0, 0.0);
+        vec3 right = normalize(cross(up, forward));
+
+        // Reconstruct forward to ensure orthogonality
+        forward = cross(right, up);
+
+        // Build billboard rotation matrix (Y-axis only)
+        mat3 billboardRotation = mat3(
+          right,
+          up,
+          forward
+        );
+
+        // Apply billboard rotation to vertex position
+        vec3 rotatedPos = billboardRotation * position;
+
+        // Wind animation (only affects top vertices, Y > 0)
+        float heightFactor = clamp(rotatedPos.y / 2.0, 0.0, 1.0); // 0 at bottom, 1 at top
+
+        if (heightFactor > 0.0) {
+          // Base sway wave
+          float baseWave = sin(time * windSwayFactor + instancePos.x * 0.1 + instancePos.z * 0.1) * windStrength;
+
+          // Gust effect
+          float gustWave = sin(time * windSwayFactor * 2.3 + instancePos.x * 0.1) * windGustStrength;
+          gustWave *= sin(time * windSwayFactor * 0.7);
+
+          // Combine waves
+          float totalWave = (baseWave + gustWave * 0.5) * 0.3;
+
+          // Wind direction
+          vec3 windDir = vec3(windDirection.x, 0.0, windDirection.y);
+          if (length(windDir) > 0.01) {
+            windDir = normalize(windDir);
+          }
+
+          // Apply wind displacement (more at top, none at bottom)
+          rotatedPos += windDir * totalWave * heightFactor;
+        }
+
+        // Transform to world space
+        vec4 worldPosition = world * vec4(rotatedPos, 1.0);
+
+        // Transform to clip space
+        gl_Position = viewProjection * worldPosition;
+
+        // Pass to fragment shader
+        vUV = uv;
+        vNormal = normalize((world * vec4(normal, 0.0)).xyz);
+      }
+    `;
+
+    // Fragment shader (simple textured)
+    Effect.ShadersStore['thinInstanceWindFragmentShader'] = `
+      precision highp float;
+
+      varying vec2 vUV;
+      varying vec3 vNormal;
+
+      uniform sampler2D textureSampler;
+      uniform vec3 lightDirection;
+
+      void main(void) {
+        vec4 texColor = texture2D(textureSampler, vUV);
+
+        // Alpha test
+        if (texColor.a < 0.5) {
+          discard;
+        }
+
+        // Simple diffuse lighting
+        float diffuse = max(dot(vNormal, -lightDirection), 0.3); // Min 0.3 ambient
+        vec3 finalColor = texColor.rgb * diffuse;
+
+        gl_FragColor = vec4(finalColor, texColor.a);
+      }
+    `;
+
+    logger.debug('Thin instance wind shader registered');
+  }
+
+  /**
    * Create material for thin instances with Y-axis billboard and wind animation
    *
-   * TODO: Implement using Babylon.js NodeMaterial with:
-   * - Y-axis billboard (rotation only around Y to face camera)
-   * - GPU wind animation (vertex displacement)
-   * - Configurable wind parameters
-   *
-   * Reference: https://nme.babylonjs.com/#8WH2KS#22
-   *
    * @param texturePath Path to texture
-   * @returns Material with Y-axis billboard shader (currently returns null - fallback in ThinInstancesService)
+   * @returns Material with Y-axis billboard and wind shader
    */
-  async createThinInstanceMaterial(texturePath: string): Promise<any> {
-    // TODO: Implement NodeMaterial shader
-    // For now, return null so ThinInstancesService uses fallback StandardMaterial
-    logger.debug('ThinInstance shader not yet implemented, using fallback', { texturePath });
-    return null;
+  async createThinInstanceMaterial(texturePath: string): Promise<ShaderMaterial | null> {
+    if (!this.scene) {
+      logger.error('Scene not initialized');
+      return null;
+    }
+
+    const networkService = this.appContext.services.network;
+    if (!networkService) {
+      logger.error('NetworkService not available');
+      return null;
+    }
+
+    try {
+      // Load texture
+      const url = networkService.getAssetUrl(texturePath);
+      const texture = new Texture(url, this.scene);
+      texture.hasAlpha = true;
+
+      // Create shader material
+      const material = new ShaderMaterial(
+        `thinInstanceWind_${texturePath}`,
+        this.scene,
+        {
+          vertex: 'thinInstanceWind',
+          fragment: 'thinInstanceWind',
+        },
+        {
+          attributes: ['position', 'normal', 'uv'],
+          uniforms: [
+            'viewProjection',
+            'view',
+            'world',
+            'cameraPosition',
+            'time',
+            'windDirection',
+            'windStrength',
+            'windGustStrength',
+            'windSwayFactor',
+            'lightDirection',
+          ],
+          defines: ['#define INSTANCES'],
+        }
+      );
+
+      // Set texture
+      material.setTexture('textureSampler', texture);
+
+      // Set initial wind parameters
+      if (this.environmentService) {
+        const windParams = this.environmentService.getWindParameters();
+        this.setWindParametersOnMaterial(material, windParams);
+      } else {
+        // Default wind parameters
+        material.setVector2('windDirection', new Vector2(1, 0));
+        material.setFloat('windStrength', 0.5);
+        material.setFloat('windGustStrength', 0.3);
+        material.setFloat('windSwayFactor', 1.0);
+      }
+
+      // Set light direction
+      material.setVector3('lightDirection', new Vector3(0.5, -1, 0.5));
+
+      // Set time uniform (will be updated in render loop)
+      material.setFloat('time', 0);
+
+      // Add to wind materials for automatic updates
+      this.windMaterials.push(material);
+
+      // Disable backface culling
+      material.backFaceCulling = false;
+
+      logger.debug('Thin instance wind material created', { texturePath });
+
+      return material;
+    } catch (error) {
+      logger.error('Failed to create thin instance material', { texturePath, error });
+      return null;
+    }
+  }
+
+  /**
+   * Set wind parameters on a material
+   */
+  private setWindParametersOnMaterial(material: ShaderMaterial, params: WindParameters): void {
+    material.setVector2('windDirection', new Vector2(params.windDirection.x, params.windDirection.z));
+    material.setFloat('windStrength', params.windStrength);
+    material.setFloat('windGustStrength', params.windGustStrength);
+    material.setFloat('windSwayFactor', params.windSwayFactor);
+    material.setFloat('time', params.time);
   }
 }

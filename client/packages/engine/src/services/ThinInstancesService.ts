@@ -89,26 +89,13 @@ export class ThinInstancesService {
       throw new Error('Base mesh not created');
     }
 
-    logger.info('🌿 Creating thin instances', {
-      position: config.blockPosition,
-      count: config.instanceCount,
-      texturePath: config.texturePath,
-    });
-
     // Clone base mesh for this group
     const mesh = this.baseMesh.clone(`thinInstances_${config.blockPosition.x}_${config.blockPosition.y}_${config.blockPosition.z}`);
     mesh.isVisible = true;
 
-    logger.info('📦 Base mesh cloned', { meshName: mesh.name });
-
     // Get or create material
     const material = await this.getMaterial(config.texturePath);
     mesh.material = material;
-
-    logger.info('🎨 Material applied', {
-      materialName: material.name,
-      hasTexture: material.diffuseTexture !== null,
-    });
 
     // Create matrices for instances
     const matricesData = new Float32Array(16 * config.instanceCount);
@@ -138,11 +125,6 @@ export class ThinInstancesService {
     // Set thin instance buffer
     mesh.thinInstanceSetBuffer('matrix', matricesData, 16);
 
-    logger.info('✅ Thin instance buffer set', {
-      instanceCount: config.instanceCount,
-      bufferSize: matricesData.length,
-    });
-
     // Store group data
     const group: ThinInstanceGroup = {
       mesh,
@@ -157,12 +139,10 @@ export class ThinInstancesService {
     }
     this.instanceGroups.get(chunkKey)!.push(group);
 
-    logger.info('✅ Thin instances fully created', {
+    logger.debug('Thin instances created', {
       position: config.blockPosition,
       count: config.instanceCount,
       chunkKey,
-      meshVisible: mesh.isVisible,
-      totalVertices: mesh.getTotalVertices(),
     });
 
     return mesh;
@@ -195,11 +175,9 @@ export class ThinInstancesService {
     }
 
     // Fallback: standard material with texture from NetworkService
-    logger.info('Creating standard material with NetworkService texture', { texturePath });
-
     const networkService = this.appContext.services.network;
     if (!networkService) {
-      logger.error('🚨 NetworkService not available', { texturePath });
+      logger.error('NetworkService not available', { texturePath });
 
       // Ultimate fallback: create material without texture
       const material = new StandardMaterial(`thinInstance_${texturePath}`, this.scene);
@@ -214,8 +192,6 @@ export class ThinInstancesService {
 
     // Load texture directly via NetworkService
     const url = networkService.getAssetUrl(texturePath);
-    logger.info('📥 Loading texture from NetworkService', { texturePath, url });
-
     const texture = new Texture(url, this.scene);
 
     // Configure texture
@@ -229,10 +205,7 @@ export class ThinInstancesService {
     // Cache material
     this.materialCache.set(texturePath, material);
 
-    logger.info('✅ Material created with texture', {
-      texturePath,
-      url,
-    });
+    logger.debug('Material created with texture', { texturePath });
 
     return material;
   }
