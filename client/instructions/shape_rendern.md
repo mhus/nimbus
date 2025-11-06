@@ -78,7 +78,7 @@ dem ShaderService verwendet.
 
 ## Billboard
 
-[ ] Erstelle einen BillboardRenderer. Er rendert ein Billboard aus der ersten Textur in TextureDefinition.
+[?] Erstelle einen BillboardRenderer. Er rendert ein Billboard aus der ersten Textur in TextureDefinition.
 - Das Billboard steht immer auf dem Block und ist by default 1 breit und ratio zur breite hoch.
 - Beachte, das das Billboard erstmal auf dem Block stehen soll, also der Mittelpunkt ueber 0 sein muss, sonst ist es im Block darunter versunken.
 - Orientiere dich an CubeRenderer.
@@ -88,7 +88,7 @@ dem ShaderService verwendet.
 
 ## Sprite
 
-Erstelle einen SpriteRenderer. Er nutzt den SpriteService (service in dieser App) um ein Sprite zu rendern.
+[?] Erstelle einen SpriteRenderer. Er nutzt den SpriteService (service in dieser App) um ein Sprite zu rendern.
 
 Erstelle den SpriteService und haenge ihn in den EngineService ein. Er soll den SpriteManager von BabylonJS nutzen
 und ueber alle chunks hinweg verwalten. Der manager soll pro definierter textur einen SpriteManager erstellen.
@@ -101,3 +101,12 @@ SpriteRenderer:
 - Nutze scalierung und offset wie in der vorlage um die sprites zu positionieren.
 - Der Renderer definiert sein eigenes Mesh.
 - Sprites bewegen sich im Wind - siehe die vorlage client_playground/packages/client/src/rendering/SpriteManagerRegistry.ts
+
+## Flame
+
+[ ] Erstelle einen FlameRenderer. Er rendert einen Flame aus der Textur in TextureDefinition.
+- Das Flame steht immer auf dem Block und ist by default 1 breit und ratio zur breite hoch.
+- Beachte, das das Flame erstmal auf dem Block stehen soll, also der Mittelpunkt ueber 0 sein muss, sonst ist es im Block darunter versunken.
+- Vorlage: client_playground/packages/client/src/rendering/shapes/FlameRenderer.ts
+- Implementiere alle eigenschaften, offset (offset 0 verschiebt den lagepunkt), scaling, rotation wie bei einem Cube.
+- Der Renderer definiert sein eigenes Mesh

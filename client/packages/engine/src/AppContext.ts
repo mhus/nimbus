@@ -10,6 +10,7 @@ import type { NetworkService } from './services/NetworkService';
 import type { ChunkService } from './services/ChunkService';
 import type { BlockTypeService } from './services/BlockTypeService';
 import type { ShaderService } from './services/ShaderService';
+import type { SpriteService } from './services/SpriteService';
 import type { EngineService } from './services/EngineService';
 import type { SelectService } from './services/SelectService';
 import type { ModalService } from './services/ModalService';
@@ -59,6 +60,9 @@ export interface Services {
 
   /** Shader service for shader effect management */
   shader?: ShaderService;
+
+  /** Sprite service for sprite rendering and animation */
+  sprite?: SpriteService;
 
   /** Engine service for 3D rendering */
   engine?: EngineService;

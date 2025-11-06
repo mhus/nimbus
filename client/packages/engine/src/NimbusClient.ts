@@ -17,6 +17,7 @@ import type { AppContext } from './AppContext';
 import { NetworkService } from './services/NetworkService';
 import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
+import { SpriteService } from './services/SpriteService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
 import { ModalService } from './services/ModalService';
