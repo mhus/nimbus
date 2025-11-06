@@ -30,8 +30,8 @@ export enum Shape {
   /** Sphere */
   SPHERE = 8,
 
-  /** Column/pillar */
-  COLUMN = 9,
+  /** Cylinder/pillar */
+  CYLINDER = 9,
 
   /** Rounded cube */
   ROUND_CUBE = 10,
@@ -95,7 +95,7 @@ export const ShapeNames: Record<Shape, string> = {
   [Shape.GLASS_FLAT]: 'glass_flat',
   [Shape.FLAT]: 'flat',
   [Shape.SPHERE]: 'sphere',
-  [Shape.COLUMN]: 'column',
+  [Shape.CYLINDER]: 'cylinder',
   [Shape.ROUND_CUBE]: 'round_cube',
   [Shape.STEPS]: 'steps',
   [Shape.STAIR]: 'stair',

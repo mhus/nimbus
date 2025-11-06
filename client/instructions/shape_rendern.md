@@ -23,7 +23,7 @@
 
 ## Sphere
 
-[ ] Erstelle den SphereRenderer. Er rendert einen Sphere.
+[?] Erstelle den SphereRenderer. Er rendert einen Sphere.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
 - Offsets:
@@ -32,7 +32,7 @@
 
 ## Cylinder
 
-[ ] Nenne shape type 'Column' um in 'Cylinder' in BlockModifier und in den Editor controls
+[?] Nenne shape type 'Column' um in 'Cylinder' in BlockModifier und in den Editor controls
 [ ] Erstelle den CylinderRenderer. Er rendert einen Cylinder.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
@@ -51,6 +51,21 @@ teilen.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
 - Die offset verschieben nur noch aspekte von jedem punkt. andere aspekte bleiben unveraendert.
 - Wenn alle offsets 0 sind, dannw wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
+
+## Stairs
+
+[ ] Erstelle den StairsRenderer. Er Rendert eine Treppe.
+- Orientiere dich an CubeRenderer.
+- Es werden vorerst keine offsets unterstuetzt.
+- Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
+- Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StairsRenderer.ts
+
+## Steps
+
+[ ] Erstelle den StepsRenderer. Er rendert einzelne Steine als Treppe
+- Orientiere dich an CubeRenderer.
+- Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
+- Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StepsRenderer.ts
 
 ## Glass
 

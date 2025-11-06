@@ -34,9 +34,9 @@
       </div>
     </div>
 
-    <!-- COLUMN: 4 points (special meaning) -->
+    <!-- CYLINDER: 4 points (special meaning) -->
     <div v-else-if="shape === 9" class="space-y-3">
-      <p class="text-sm text-base-content/70 mb-2">Column offsets (supports float values)</p>
+      <p class="text-sm text-base-content/70 mb-2">Cylinder offsets (supports float values)</p>
 
       <!-- Point 1: Radius offset top (XZ) -->
       <div class="grid grid-cols-3 gap-2 items-center">
