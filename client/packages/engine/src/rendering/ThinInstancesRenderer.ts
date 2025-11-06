@@ -51,28 +51,11 @@ export class ThinInstancesRenderer extends BlockRenderer {
       return;
     }
 
-    // Get first texture
+    // Get textures
     const textures = modifier.visibility.textures;
     if (!textures || Object.keys(textures).length === 0) {
       logger.warn('ThinInstancesRenderer: No textures defined', { block });
       return;
-    }
-
-    const firstTexture = textures[0] || textures[1];
-    if (!firstTexture) {
-      logger.warn('ThinInstancesRenderer: No texture found', { block });
-      return;
-    }
-
-    const textureDef = TextureHelper.normalizeTexture(firstTexture);
-
-    // Get instance count from shaderParameters (default: 100)
-    let instanceCount = 100;
-    if (textureDef.shaderParameters) {
-      const parsed = parseInt(textureDef.shaderParameters, 10);
-      if (!isNaN(parsed) && parsed > 0) {
-        instanceCount = parsed;
-      }
     }
 
     // Get offset from visibility.offsets (if available)
@@ -105,31 +88,66 @@ export class ThinInstancesRenderer extends BlockRenderer {
       ? `chunk_${chunkTransfer.cx}_${chunkTransfer.cz}`
       : `chunk_${Math.floor(block.position.x / 32)}_${Math.floor(block.position.z / 32)}`;
 
-    // Create thin instances
-    try {
-      const result = await thinInstancesService.createInstances(
-        {
+    // Process first 4 textures (keys 0-3) for mixing
+    let totalInstancesCreated = 0;
+    for (let textureKey = 0; textureKey <= 3; textureKey++) {
+      const texture = textures[textureKey];
+      if (!texture) {
+        continue; // Skip if texture not set
+      }
+
+      const textureDef = TextureHelper.normalizeTexture(texture);
+
+      // Get instance count from shaderParameters (default: 100)
+      let instanceCount = 100;
+      if (textureDef.shaderParameters) {
+        const parsed = parseInt(textureDef.shaderParameters, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          instanceCount = parsed;
+        }
+      }
+
+      // Create thin instances for this texture
+      try {
+        const result = await thinInstancesService.createInstances(
+          {
+            texturePath: textureDef.path,
+            instanceCount,
+            blockPosition: block.position,
+            offset,
+            scaling,
+          },
+          chunkKey
+        );
+
+        // Register mesh and disposable for cleanup
+        renderContext.resourcesToDispose.addMesh(result.mesh);
+        renderContext.resourcesToDispose.add(result.disposable);
+
+        totalInstancesCreated += instanceCount;
+
+        logger.debug('ThinInstances rendered for texture', {
+          textureKey,
           texturePath: textureDef.path,
           instanceCount,
-          blockPosition: block.position,
-          offset,
-          scaling,
-        },
-        chunkKey
-      );
-
-      // Register mesh and disposable for cleanup
-      renderContext.resourcesToDispose.addMesh(result.mesh);
-      renderContext.resourcesToDispose.add(result.disposable);
-
-      logger.debug('ThinInstances rendered', {
-        position: block.position,
-        instanceCount,
-      });
-    } catch (error) {
-      ExceptionHandler.handle(error, 'ThinInstancesRenderer.render', {
-        position: block.position,
-      });
+        });
+      } catch (error) {
+        ExceptionHandler.handle(error, 'ThinInstancesRenderer.render', {
+          position: block.position,
+          textureKey,
+          texturePath: textureDef.path,
+        });
+      }
     }
+
+    if (totalInstancesCreated === 0) {
+      logger.warn('ThinInstancesRenderer: No instances created (no valid textures in slots 0-3)', { block });
+      return;
+    }
+
+    logger.debug('ThinInstances rendered for all textures', {
+      position: block.position,
+      totalInstances: totalInstancesCreated,
+    });
   }
 }
