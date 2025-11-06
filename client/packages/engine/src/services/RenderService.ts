@@ -18,6 +18,7 @@ import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
 import { FlameRenderer } from '../rendering/FlameRenderer';
+import { DisposableResources } from '../rendering/DisposableResources';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 
 const logger = getLogger('RenderService');
@@ -39,6 +40,7 @@ export interface RenderContext {
   renderService: RenderService;
   faceData: FaceData;
   vertexOffset: number;
+  resourcesToDispose: DisposableResources;
 }
 
 /**
@@ -68,10 +70,6 @@ export class RenderService {
   // Chunk meshes: Map<chunkKey, Map<materialKey, Mesh>>
   // Each chunk can have multiple meshes (one per material type)
   private chunkMeshes: Map<string, Map<string, Mesh>> = new Map();
-
-  // Separate meshes: Map<blockKey, Mesh>
-  // Blocks that need individual meshes (FLIPBOX, BILLBOARD, SPRITE, etc.)
-  private separateMeshes: Map<string, Mesh> = new Map();
 
   constructor(
     scene: Scene,
@@ -206,6 +204,10 @@ export class RenderService {
         blockCount,
       });
 
+      // Create DisposableResources for this chunk
+      const resourcesToDispose = new DisposableResources();
+      clientChunk.data.resourcesToDispose = resourcesToDispose;
+
       // Separate blocks into chunk mesh blocks vs separate mesh blocks
       const { chunkMeshBlocks, separateMeshBlocks } = this.separateBlocksByRenderType(clientChunk);
 
@@ -241,6 +243,7 @@ export class RenderService {
           renderService: this,
           faceData,
           vertexOffset: 0,
+          resourcesToDispose,
         };
 
         // Render all blocks in this material group
@@ -316,7 +319,7 @@ export class RenderService {
 
       // 2. Render separate mesh blocks (individual meshes)
       for (const clientBlock of separateMeshBlocks) {
-        await this.renderSeparateMeshBlock(clientBlock, chunkKey);
+        await this.renderSeparateMeshBlock(clientBlock, chunkKey, resourcesToDispose);
       }
 
       logger.debug('Chunk fully rendered', {
@@ -465,7 +468,11 @@ export class RenderService {
    * @param clientBlock Block to render
    * @param chunkKey Parent chunk key for tracking
    */
-  private async renderSeparateMeshBlock(clientBlock: ClientBlock, chunkKey: string): Promise<void> {
+  private async renderSeparateMeshBlock(
+    clientBlock: ClientBlock,
+    chunkKey: string,
+    resourcesToDispose: DisposableResources
+  ): Promise<void> {
     const block = clientBlock.block;
     const modifier = clientBlock.currentModifier;
 
@@ -473,19 +480,11 @@ export class RenderService {
       return;
     }
 
-    const blockKey = `${chunkKey}_block_${block.position.x}_${block.position.y}_${block.position.z}`;
-
-    // Check if already rendered
-    if (this.separateMeshes.has(blockKey)) {
-      logger.debug('Separate mesh already exists', { blockKey });
-      return;
-    }
-
     try {
       // Get appropriate renderer using getRenderer()
       const renderer = this.getRenderer(clientBlock);
       if (!renderer) {
-        logger.warn('No renderer found for separate mesh block', { blockKey });
+        logger.warn('No renderer found for separate mesh block', { position: block.position });
         return;
       }
 
@@ -493,20 +492,21 @@ export class RenderService {
         renderService: this,
         faceData: { positions: [], indices: [], uvs: [], normals: [] }, // Not used by separate renderers
         vertexOffset: 0,
+        resourcesToDispose,
       };
 
       // Render using appropriate renderer
+      // Renderer will add created meshes/sprites to resourcesToDispose
       await renderer.render(renderContext, clientBlock);
 
-      // Track the mesh
-      this.separateMeshes.set(blockKey, null as any); // Placeholder
-
       logger.debug('Separate mesh rendered', {
-        blockKey,
+        position: `${block.position.x},${block.position.y},${block.position.z}`,
         renderer: renderer.constructor.name,
       });
     } catch (error) {
-      ExceptionHandler.handle(error, 'RenderService.renderSeparateMeshBlock', { blockKey });
+      ExceptionHandler.handle(error, 'RenderService.renderSeparateMeshBlock', {
+        position: `${block.position.x},${block.position.y},${block.position.z}`,
+      });
     }
   }
 
@@ -534,12 +534,16 @@ export class RenderService {
   }
 
   /**
-   * Unload a chunk and dispose all its meshes (chunk meshes + separate meshes)
+   * Unload a chunk and dispose all its resources
+   *
+   * Disposes:
+   * - Chunk meshes (batched material groups)
+   * - Separate meshes/sprites via DisposableResources
    */
   private unloadChunk(cx: number, cz: number): void {
     const chunkKey = this.getChunkKey(cx, cz);
 
-    // Dispose chunk meshes
+    // Dispose chunk meshes (batched material groups)
     const meshMap = this.chunkMeshes.get(chunkKey);
     let chunkMeshCount = 0;
 
@@ -551,30 +555,26 @@ export class RenderService {
       this.chunkMeshes.delete(chunkKey);
     }
 
-    // Dispose separate meshes belonging to this chunk
-    let separateMeshCount = 0;
-    const keysToDelete: string[] = [];
+    // Dispose separate meshes/sprites via DisposableResources
+    const chunkService = this.appContext.services.chunk;
+    if (chunkService) {
+      const clientChunk = chunkService.getChunk(cx, cz);
+      if (clientChunk?.data.resourcesToDispose) {
+        const stats = clientChunk.data.resourcesToDispose.getStats();
+        clientChunk.data.resourcesToDispose.dispose();
 
-    for (const [blockKey, mesh] of this.separateMeshes) {
-      if (blockKey.startsWith(chunkKey + '_block_')) {
-        if (mesh) {
-          mesh.dispose();
-        }
-        keysToDelete.push(blockKey);
-        separateMeshCount++;
+        logger.debug('Chunk resources disposed', {
+          cx,
+          cz,
+          chunkMeshes: chunkMeshCount,
+          separateMeshes: stats.meshes,
+          sprites: stats.sprites,
+        });
+        return;
       }
     }
 
-    for (const key of keysToDelete) {
-      this.separateMeshes.delete(key);
-    }
-
-    logger.debug('Chunk unloaded', {
-      cx,
-      cz,
-      chunkMeshes: chunkMeshCount,
-      separateMeshes: separateMeshCount
-    });
+    logger.debug('Chunk unloaded', { cx, cz, chunkMeshes: chunkMeshCount });
   }
 
   /**
@@ -624,6 +624,9 @@ export class RenderService {
 
   /**
    * Dispose all chunks and resources
+   *
+   * Note: Separate meshes/sprites are disposed via ClientChunk.resourcesToDispose
+   * when chunks are unloaded. This method only disposes chunk meshes.
    */
   dispose(): void {
     // Dispose chunk meshes
@@ -633,14 +636,6 @@ export class RenderService {
       }
     }
     this.chunkMeshes.clear();
-
-    // Dispose separate meshes
-    for (const mesh of this.separateMeshes.values()) {
-      if (mesh) {
-        mesh.dispose();
-      }
-    }
-    this.separateMeshes.clear();
 
     logger.info('RenderService disposed');
   }

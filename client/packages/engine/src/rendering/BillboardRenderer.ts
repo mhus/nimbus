@@ -104,7 +104,7 @@ export class BillboardRenderer extends BlockRenderer {
       clientBlock,
       faceData,
       new Vector3(centerX, centerY, centerZ),
-      renderContext.renderService
+      renderContext
     );
   }
 
@@ -212,16 +212,16 @@ export class BillboardRenderer extends BlockRenderer {
    * @param clientBlock Block to create mesh for
    * @param faceData Geometry data
    * @param centerPosition World position for billboard center
-   * @param renderService RenderService instance for material access
+   * @param renderContext Render context with resourcesToDispose
    */
   private async createSeparateMesh(
     clientBlock: ClientBlock,
     faceData: { positions: number[]; indices: number[]; uvs: number[]; normals: number[] },
     centerPosition: Vector3,
-    renderService: any // RenderService type
+    renderContext: RenderContext
   ): Promise<void> {
     const block = clientBlock.block;
-    const scene = renderService.materialService.scene;
+    const scene = renderContext.renderService.materialService.scene;
 
     // Create mesh name
     const meshName = `billboard_${block.position.x}_${block.position.y}_${block.position.z}`;
@@ -254,7 +254,7 @@ export class BillboardRenderer extends BlockRenderer {
 
     // Get material from MaterialService
     // MaterialService will use original texture (not atlas) for billboards
-    const material = await renderService.materialService.getMaterial(
+    const material = await renderContext.renderService.materialService.getMaterial(
       clientBlock.currentModifier,
       0 // TextureKey.ALL
     );
@@ -264,9 +264,8 @@ export class BillboardRenderer extends BlockRenderer {
 
     mesh.material = material;
 
-    // Store mesh in RenderService separate mesh tracking
-    // TODO: RenderService needs to track separate meshes
-    // For now, just create the mesh - it will be in the scene
+    // Register mesh for automatic disposal when chunk is unloaded
+    renderContext.resourcesToDispose.addMesh(mesh);
 
     logger.debug('BILLBOARD separate mesh created', {
       meshName,

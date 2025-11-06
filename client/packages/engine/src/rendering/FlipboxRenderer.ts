@@ -97,7 +97,7 @@ export class FlipboxRenderer extends BlockRenderer {
     await this.createSeparateMesh(
       clientBlock,
       faceData,
-      renderContext.renderService
+      renderContext
     );
   }
 
@@ -204,15 +204,15 @@ export class FlipboxRenderer extends BlockRenderer {
    *
    * @param clientBlock Block to create mesh for
    * @param faceData Geometry data
-   * @param renderService RenderService instance for material access
+   * @param renderContext Render context with resourcesToDispose
    */
   private async createSeparateMesh(
     clientBlock: ClientBlock,
     faceData: { positions: number[]; indices: number[]; uvs: number[]; normals: number[] },
-    renderService: any // RenderService type
+    renderContext: RenderContext
   ): Promise<void> {
     const block = clientBlock.block;
-    const scene = renderService.materialService.scene;
+    const scene = renderContext.renderService.materialService.scene;
 
     // Create mesh name
     const meshName = `flipbox_${block.position.x}_${block.position.y}_${block.position.z}`;
@@ -232,16 +232,15 @@ export class FlipboxRenderer extends BlockRenderer {
 
     // Get FLIPBOX shader material from MaterialService
     // MaterialService will detect shader field and create FLIPBOX material with original texture
-    const material = await renderService.materialService.getMaterial(
+    const material = await renderContext.renderService.materialService.getMaterial(
       clientBlock.currentModifier,
       1 // TextureKey.TOP
     );
 
     mesh.material = material;
 
-    // Store mesh in RenderService separate mesh tracking
-    // TODO: RenderService needs to track separate meshes
-    // For now, just create the mesh - it will be in the scene
+    // Register mesh for automatic disposal when chunk is unloaded
+    renderContext.resourcesToDispose.addMesh(mesh);
 
     logger.debug('FLIPBOX separate mesh created', {
       meshName,

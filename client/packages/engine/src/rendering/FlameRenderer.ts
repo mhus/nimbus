@@ -133,7 +133,7 @@ export class FlameRenderer extends BlockRenderer {
       flameStrength,
       flicker,
       textures,
-      renderContext.renderService
+      renderContext
     );
   }
 
@@ -218,7 +218,7 @@ export class FlameRenderer extends BlockRenderer {
    * @param flameStrength Flame animation strength
    * @param flicker Flicker intensity
    * @param textures Texture definitions
-   * @param renderService RenderService instance
+   * @param renderContext Render context with resourcesToDispose
    */
   private async createFlameMesh(
     clientBlock: ClientBlock,
@@ -231,10 +231,10 @@ export class FlameRenderer extends BlockRenderer {
     flameStrength: number,
     flicker: number,
     textures: Record<number, any>,
-    renderService: any
+    renderContext: RenderContext
   ): Promise<void> {
     const block = clientBlock.block;
-    const scene = renderService.materialService.scene;
+    const scene = renderContext.renderService.materialService.scene;
 
     // Create mesh name
     const meshName = `flame_${block.position.x}_${block.position.y}_${block.position.z}`;
@@ -271,7 +271,7 @@ export class FlameRenderer extends BlockRenderer {
 
       // Load and set diffuse texture (main flame texture)
       if (texturePaths[0]) {
-        const diffuseTexture = (await renderService.materialService.loadTexture(
+        const diffuseTexture = (await renderContext.renderService.materialService.loadTexture(
           texturePaths[0]
         )) as Texture;
         if (diffuseTexture) {
@@ -281,7 +281,7 @@ export class FlameRenderer extends BlockRenderer {
 
       // Load and set distortion texture if provided
       if (texturePaths[1]) {
-        const distortionTexture = (await renderService.materialService.loadTexture(
+        const distortionTexture = (await renderContext.renderService.materialService.loadTexture(
           texturePaths[1]
         )) as Texture;
         if (distortionTexture) {
@@ -291,7 +291,7 @@ export class FlameRenderer extends BlockRenderer {
 
       // Load and set opacity texture if provided
       if (texturePaths[2]) {
-        const opacityTexture = (await renderService.materialService.loadTexture(
+        const opacityTexture = (await renderContext.renderService.materialService.loadTexture(
           texturePaths[2]
         )) as Texture;
         if (opacityTexture) {
@@ -328,6 +328,9 @@ export class FlameRenderer extends BlockRenderer {
     };
 
     plane.material = material;
+
+    // Register mesh for automatic disposal when chunk is unloaded
+    renderContext.resourcesToDispose.addMesh(plane);
 
     logger.debug('FLAME mesh created', {
       meshName,

@@ -51,7 +51,7 @@ export enum MaterialType {
  * Integrates with ShaderService for effect-based materials.
  */
 export class MaterialService {
-  private scene: Scene;
+  public scene: Scene; // Public for renderer access
   private appContext: AppContext;
   private textureAtlas?: TextureAtlas;
   private shaderService?: ShaderService;
@@ -430,8 +430,9 @@ export class MaterialService {
 
   /**
    * Load a Babylon.js Texture from path
+   * Public for renderer access (FLIPBOX, BILLBOARD, FLAME need original textures)
    */
-  private async loadTexture(pathOrDef: string | TextureDefinition): Promise<Texture | null> {
+  async loadTexture(pathOrDef: string | TextureDefinition): Promise<Texture | null> {
     // Handle string path
     if (typeof pathOrDef === 'string') {
       const textureDef: TextureDefinition = { path: pathOrDef };

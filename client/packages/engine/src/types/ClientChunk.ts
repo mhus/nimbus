@@ -7,6 +7,7 @@
 
 import type { ChunkDataTransferObject } from '@nimbus/shared';
 import type { ClientBlock } from './ClientBlock';
+import type { DisposableResources } from '../rendering/DisposableResources';
 
 /**
  * Height data for chunk column
@@ -45,6 +46,9 @@ export interface ClientChunkData {
   hightData: Map<string, ClientHeightData>;
 
   statusData: Map<string, number>;
+
+  /** Disposable rendering resources (meshes, sprites, etc.) created for this chunk */
+  resourcesToDispose?: DisposableResources;
 }
 
 /**

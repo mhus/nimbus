@@ -194,6 +194,9 @@ export class SpriteRenderer extends BlockRenderer {
 
         // Register sprite for wind animation
         spriteService.registerSprite(sprite, windLeafiness, windStability);
+
+        // Note: Sprites are NOT added to resourcesToDispose
+        // They are managed by SpriteManager and disposed via SpriteService
       }
 
       logger.debug('Sprites created', {
