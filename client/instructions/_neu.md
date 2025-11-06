@@ -18,3 +18,21 @@
 
 - Status in BlockModifierMerge.ts richtig analysieren: WorldStatus und Season aus EnvironmentStatus holen
   - Bei season langsam durch eine raster funktion(x,y,z) von 0 - 100% auffuellen bis alle im neuen season sind.
+
+- Brauche einen speudo Wall am chunk der an den raundern zu macht, damit die sonne nicht in den tunnel scheint.
+  - name: backdrop
+  - 4 x Einfaches Array
+  - backdrop: [n : Array<BackdropItem>,e : Array<BackdropItem>, s : Array<BackdropItem>, w : Array<BackdropItem>]
+  - BackdropItem: {
+        start : Vector2,  // -- x wird transformiert je nach seite, y bleibt y
+        end : Vector2,    // -- x wird transformiert je nach seite, y bleibt y
+        texture? : string,
+        color? : string,
+        alpha : number,  -- ???
+        repeat : boolean,  -- ???
+        repeatX : number,  -- ???
+        repeatY : number,  -- ???
+        offsetX : number,  -- ???
+        offsetY : number,  -- ???
+     }
+  - 

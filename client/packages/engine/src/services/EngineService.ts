@@ -370,6 +370,27 @@ export class EngineService {
   }
 
   /**
+   * Set wireframe mode for all materials
+   *
+   * @param enabled true to enable wireframe mode, false to disable
+   */
+  setWireframeMode(enabled: boolean): void {
+    if (!this.scene) {
+      logger.warn('Cannot set wireframe mode: scene not initialized');
+      return;
+    }
+
+    // Set wireframe mode on all materials in the scene
+    this.scene.materials.forEach((material) => {
+      material.wireframe = enabled;
+    });
+
+    logger.info(`Wireframe mode ${enabled ? 'enabled' : 'disabled'}`, {
+      materialCount: this.scene.materials.length,
+    });
+  }
+
+  /**
    * Dispose engine and all resources
    */
   dispose(): void {
