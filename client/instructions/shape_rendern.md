@@ -69,7 +69,7 @@ teilen.
 
 ## Glass
 
-[ ] Erstelle den GlassRenderer. Er rendert einen Cube, wie CubeRenderer, richscheinende bereiche
+[?] Erstelle den GlassRenderer. Er rendert einen Cube, wie CubeRenderer, richscheinende bereiche
 sind aber glassiere mit der color die an der texture hinterlegt ist.
 - Der Glass effekt soll kein shader sein. Benutze ein spezielles Material, das den Glass effekt
   mit den Standard BabylonJS materialien umsetzt. Das Material soll auch im MaterialService verwaltet 

@@ -57,7 +57,7 @@ export class MaterialService {
   private shaderService?: ShaderService;
 
   // Material cache: Map<materialKey, Material>
-  private materials: Map<string, Material> = new Map();
+  public materials: Map<string, Material> = new Map(); // Public for glass material caching
 
   // Texture cache: Map<texturePath, Babylon.js Texture>
   private textures: Map<string, Texture> = new Map();
@@ -629,6 +629,44 @@ export class MaterialService {
     material.diffuseColor = new Color3(1, 0, 1); // Magenta for missing texture
     material.specularColor = new Color3(0, 0, 0);
     this.materials.set(cacheKey, material);
+
+    return material;
+  }
+
+  /**
+   * Create a glass material with transparency and color
+   *
+   * @param name Material name (cache key)
+   * @param color Glass color (hex string, e.g., "#00ff00" or "#00ff0080")
+   * @param opacity Opacity value (0-1)
+   * @returns StandardMaterial configured for glass effect
+   */
+  createGlassMaterial(name: string, color: string = '#ffffff', opacity: number = 0.5): StandardMaterial {
+    const material = new StandardMaterial(name, this.scene);
+
+    // Parse color (supports #RRGGBB or #RRGGBBAA format)
+    let parsedColor = Color3.FromHexString(color.substring(0, 7)); // Take first 6 chars for RGB
+    let parsedAlpha = opacity;
+
+    // Check if alpha is included in hex color (#RRGGBBAA)
+    if (color.length === 9) {
+      const alphaHex = color.substring(7, 9);
+      parsedAlpha = parseInt(alphaHex, 16) / 255;
+    }
+
+    // Set glass properties
+    material.diffuseColor = parsedColor;
+    material.alpha = parsedAlpha;
+    material.backFaceCulling = false; // Glass visible from both sides
+
+    // Glass-like specular (shiny, reflective)
+    material.specularColor = new Color3(0.5, 0.5, 0.5); // Some specular for glass shine
+    material.specularPower = 64; // High specular power for glass-like highlights
+
+    // Enable transparency
+    material.transparencyMode = TransparencyMode.HAS_ALPHA;
+
+    logger.debug('Created glass material', { name, color, opacity: parsedAlpha });
 
     return material;
   }

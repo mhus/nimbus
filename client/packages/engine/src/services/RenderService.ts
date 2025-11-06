@@ -16,6 +16,7 @@ import { BlockRenderer } from '../rendering/BlockRenderer';
 import { CubeRenderer } from '../rendering/CubeRenderer';
 import { CrossRenderer } from '../rendering/CrossRenderer';
 import { HashRenderer } from '../rendering/HashRenderer';
+import { GlassRenderer } from '../rendering/GlassRenderer';
 import { SphereRenderer } from '../rendering/SphereRenderer';
 import { CylinderRenderer } from '../rendering/CylinderRenderer';
 import { StairRenderer } from '../rendering/StairRenderer';
@@ -72,6 +73,7 @@ export class RenderService {
   private cubeRenderer: CubeRenderer;
   private crossRenderer: CrossRenderer;
   private hashRenderer: HashRenderer;
+  private glassRenderer: GlassRenderer;
   private sphereRenderer: SphereRenderer;
   private cylinderRenderer: CylinderRenderer;
   private stairRenderer: StairRenderer;
@@ -108,6 +110,7 @@ export class RenderService {
     this.cubeRenderer = new CubeRenderer(textureAtlas);
     this.crossRenderer = new CrossRenderer(textureAtlas);
     this.hashRenderer = new HashRenderer(textureAtlas);
+    this.glassRenderer = new GlassRenderer();
     this.sphereRenderer = new SphereRenderer(textureAtlas);
     this.cylinderRenderer = new CylinderRenderer(textureAtlas);
     this.stairRenderer = new StairRenderer(textureAtlas);
@@ -407,6 +410,8 @@ export class RenderService {
         return this.crossRenderer;
       case Shape.HASH:
         return this.hashRenderer;
+      case Shape.GLASS:
+        return this.glassRenderer;
       case Shape.SPHERE:
         return this.sphereRenderer;
       case Shape.CYLINDER:
