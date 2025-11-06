@@ -572,8 +572,8 @@ export class RenderService {
           cx,
           cz,
           chunkMeshes: chunkMeshCount,
-          separateMeshes: stats.meshes,
-          sprites: stats.sprites,
+          totalResources: stats.total,
+          namedResources: stats.named,
         });
         return;
       }

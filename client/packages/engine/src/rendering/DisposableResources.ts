@@ -7,7 +7,7 @@
  * This provides clean lifecycle management and prevents memory leaks.
  */
 
-import type { Mesh, Sprite } from '@babylonjs/core';
+import type { Mesh, Sprite, IDisposable } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('DisposableResources');
@@ -21,88 +21,98 @@ const logger = getLogger('DisposableResources');
  * - Extensible for future resource types
  */
 export class DisposableResources {
-  private meshes: Mesh[] = [];
-  private sprites: Sprite[] = [];
-  private namedMeshes: Map<string, Mesh> = new Map();
+  private resources: IDisposable[] = [];
+  private namedResources: Map<string, IDisposable> = new Map();
 
   /**
-   * Get or create a named mesh
+   * Get or create a named resource
    *
-   * If mesh with given name exists, returns it.
-   * Otherwise, creates mesh using factory function and stores it.
-   * Useful for sharing meshes across multiple blocks (e.g., ocean surfaces).
+   * If resource with given name exists, returns it.
+   * Otherwise, creates resource using factory function and stores it.
+   * Useful for sharing resources across multiple blocks (e.g., ocean surfaces).
+   *
+   * @param name Unique name for the resource
+   * @param factory Factory function to create resource if not exists
+   * @returns Existing or newly created resource
+   */
+  getOrCreate<T extends IDisposable>(name: string, factory: () => T): T {
+    if (!this.namedResources.has(name)) {
+      const resource = factory();
+      this.namedResources.set(name, resource);
+      this.resources.push(resource); // Also track for disposal
+      logger.debug('Named resource created', { name });
+    }
+    return this.namedResources.get(name) as T;
+  }
+
+  /**
+   * Get or create a named mesh (convenience method)
    *
    * @param name Unique name for the mesh
    * @param factory Factory function to create mesh if not exists
    * @returns Existing or newly created mesh
    */
   getOrCreateMesh(name: string, factory: () => Mesh): Mesh {
-    if (!this.namedMeshes.has(name)) {
-      const mesh = factory();
-      this.namedMeshes.set(name, mesh);
-      this.meshes.push(mesh); // Also track for disposal
-      logger.debug('Named mesh created', { name });
-    }
-    return this.namedMeshes.get(name)!;
+    return this.getOrCreate(name, factory);
   }
 
   /**
-   * Add a mesh to be disposed later
+   * Add a disposable resource to be disposed later
+   *
+   * @param resource Disposable resource to track
+   */
+  add(resource: IDisposable): void {
+    this.resources.push(resource);
+  }
+
+  /**
+   * Add a mesh to be disposed later (convenience method)
    *
    * @param mesh Mesh to track
    */
   addMesh(mesh: Mesh): void {
-    this.meshes.push(mesh);
+    this.add(mesh);
   }
 
   /**
-   * Add a sprite to be disposed later
+   * Add a sprite to be disposed later (convenience method)
    *
    * @param sprite Sprite to track
    */
   addSprite(sprite: Sprite): void {
-    this.sprites.push(sprite);
+    this.add(sprite);
   }
 
   /**
    * Get statistics about tracked resources
    */
-  getStats(): { meshes: number; sprites: number } {
+  getStats(): { total: number; named: number } {
     return {
-      meshes: this.meshes.length,
-      sprites: this.sprites.length,
+      total: this.resources.length,
+      named: this.namedResources.size,
     };
   }
 
   /**
    * Dispose all tracked resources
    *
-   * Disposes all meshes and sprites, then clears the tracking arrays.
+   * Disposes all resources, then clears the tracking arrays.
    */
   dispose(): void {
-    // Dispose meshes
-    for (const mesh of this.meshes) {
+    // Dispose all resources
+    for (const resource of this.resources) {
       try {
-        mesh.dispose();
+        resource.dispose();
       } catch (error) {
-        logger.warn('Failed to dispose mesh', { name: mesh.name, error });
-      }
-    }
-
-    // Dispose sprites
-    for (const sprite of this.sprites) {
-      try {
-        sprite.dispose();
-      } catch (error) {
-        logger.warn('Failed to dispose sprite', { error });
+        logger.warn('Failed to dispose resource', { error });
       }
     }
 
     const stats = this.getStats();
     logger.debug('Resources disposed', stats);
 
-    // Clear arrays
-    this.meshes = [];
-    this.sprites = [];
+    // Clear arrays and maps
+    this.resources = [];
+    this.namedResources.clear();
   }
 }
