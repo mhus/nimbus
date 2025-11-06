@@ -77,27 +77,6 @@ export class OceanRenderer extends BlockRenderer {
 
     const bumpTextureDef = TextureHelper.normalizeTexture(bumpTexture);
 
-    // Get transformations
-    const scalingX = modifier.visibility.scalingX ?? 1.0;
-    const scalingZ = modifier.visibility.scalingZ ?? 1.0;
-
-    // Get offset (shifts the water plane position)
-    let offsetX = 0;
-    let offsetY = 0;
-    let offsetZ = 0;
-
-    if (modifier.visibility.offsets && modifier.visibility.offsets.length >= 3) {
-      offsetX = modifier.visibility.offsets[0] || 0;
-      offsetY = modifier.visibility.offsets[1] || 0;
-      offsetZ = modifier.visibility.offsets[2] || 0;
-    }
-
-    // Get water properties from wind modifier (reused for water animation)
-    const windForce = modifier.wind?.stability ?? 10.0;
-    const waveHeight = modifier.wind?.leafiness ?? 0.4;
-    const bumpHeight = modifier.wind?.leverUp ?? 0.1;
-    const waveLength = modifier.wind?.leverDown ?? 0.1;
-
     // Get water color from texture color field (default: blue)
     let waterColor = new Color3(0.1, 0.4, 0.8); // Blue
     if (bumpTextureDef.color) {
@@ -107,26 +86,26 @@ export class OceanRenderer extends BlockRenderer {
     // Block position
     const pos = block.position;
 
-    // Calculate water surface center
-    // IMPORTANT: Water surface is at TOP of block (Y + 0.5)
-    const centerX = pos.x + 0.5 + offsetX;
-    const centerY = pos.y + 0.5 + offsetY;
-    const centerZ = pos.z + 0.5 + offsetZ;
+    // Calculate chunk coordinates (chunk size = 32)
+    const chunkSize = 32;
+    const chunkX = Math.floor(pos.x / chunkSize) * chunkSize;
+    const chunkZ = Math.floor(pos.z / chunkSize) * chunkSize;
+
+    // Water surface Y position (TOP of block)
+    const waterY = pos.y + 0.5;
+
+    // Chunk center position for mesh
+    const chunkCenterX = chunkX + 16; // Half chunk size
+    const chunkCenterZ = chunkZ + 16;
 
     // Create ocean mesh
     await this.createOceanMesh(
       clientBlock,
-      centerX,
-      centerY,
-      centerZ,
-      scalingX,
-      scalingZ,
+      chunkCenterX,
+      waterY,
+      chunkCenterZ,
       bumpTextureDef.path,
       waterColor,
-      windForce,
-      waveHeight,
-      bumpHeight,
-      waveLength,
       renderContext
     );
   }
@@ -172,56 +151,94 @@ export class OceanRenderer extends BlockRenderer {
   /**
    * Create ocean mesh with WaterMaterial
    *
-   * Creates a flat horizontal plane with animated water effects.
+   * Uses shared mesh per Y-level within chunk for efficiency.
+   * Multiple ocean blocks at same Y-level share one large water surface.
    *
    * @param clientBlock Block to create ocean for
-   * @param centerX Center X position
-   * @param centerY Center Y position (top of block)
-   * @param centerZ Center Z position
-   * @param scalingX X-axis scaling (width)
-   * @param scalingZ Z-axis scaling (depth)
+   * @param chunkCenterX Chunk center X position
+   * @param waterY Water surface Y position
+   * @param chunkCenterZ Chunk center Z position
    * @param bumpTexturePath Bump texture for water waves
    * @param waterColor Water color tint
-   * @param windForce Wind strength
-   * @param waveHeight Wave amplitude
-   * @param bumpHeight Bump map intensity
-   * @param waveLength Wave frequency
    * @param renderContext Render context with resourcesToDispose
    */
   private async createOceanMesh(
     clientBlock: ClientBlock,
-    centerX: number,
-    centerY: number,
-    centerZ: number,
-    scalingX: number,
-    scalingZ: number,
+    chunkCenterX: number,
+    waterY: number,
+    chunkCenterZ: number,
     bumpTexturePath: string,
     waterColor: Color3,
-    windForce: number,
-    waveHeight: number,
-    bumpHeight: number,
-    waveLength: number,
     renderContext: RenderContext
   ): Promise<void> {
     const block = clientBlock.block;
     const scene = renderContext.renderService.materialService.scene;
 
-    // Create mesh name
-    const meshName = `ocean_${block.position.x}_${block.position.y}_${block.position.z}`;
+    // Create shared mesh name per Y-level (all ocean blocks at same Y share one mesh)
+    const sharedMeshName = `ocean_y${block.position.y}`;
 
-    // Create flat horizontal ground mesh (subdivisions for wave animation)
-    const plane = MeshBuilder.CreateGround(
-      meshName,
-      {
-        width: scalingX,
-        height: scalingZ, // Ground uses 'height' for Z-axis depth
-        subdivisions: 32, // More subdivisions = smoother waves
-      },
-      scene
+    // Get or create shared ocean mesh for this Y-level
+    const plane = renderContext.resourcesToDispose.getOrCreateMesh(
+      sharedMeshName,
+      () => {
+        logger.debug('Creating shared ocean mesh', { name: sharedMeshName });
+
+        // Create large flat ground covering entire chunk
+        // All ocean blocks at this Y-level will share this mesh
+        const mesh = MeshBuilder.CreateGround(
+          sharedMeshName,
+          {
+            width: 32, // Chunk size (covers entire chunk)
+            height: 32,
+            subdivisions: 32, // More subdivisions = smoother waves
+          },
+          scene
+        );
+
+        // Position at Y-level (centered at chunk center)
+        mesh.position.set(chunkCenterX, waterY, chunkCenterZ);
+
+        return mesh;
+      }
     );
 
-    // Position at top of block
-    plane.position.set(centerX, centerY, centerZ);
+    // Setup WaterMaterial only once (when mesh is first created)
+    if (!plane.material) {
+      await this.setupWaterMaterial(
+        plane,
+        sharedMeshName,
+        bumpTexturePath,
+        waterColor,
+        renderContext
+      );
+    }
+
+    logger.debug('Ocean block added to shared mesh', {
+      sharedMeshName,
+      position: `${block.position.x},${block.position.y},${block.position.z}`,
+    });
+  }
+
+  /**
+   * Setup WaterMaterial for ocean mesh
+   *
+   * Called only once when mesh is first created.
+   * Configures WaterMaterial with textures, properties, and render list.
+   *
+   * @param mesh Ocean mesh
+   * @param meshName Mesh name
+   * @param bumpTexturePath Bump texture path
+   * @param waterColor Water color
+   * @param renderContext Render context
+   */
+  private async setupWaterMaterial(
+    mesh: Mesh,
+    meshName: string,
+    bumpTexturePath: string,
+    waterColor: Color3,
+    renderContext: RenderContext
+  ): Promise<void> {
+    const scene = renderContext.renderService.materialService.scene;
 
     // Create WaterMaterial with render target size
     const waterMaterial = new WaterMaterial(meshName + '_mat', scene, new Vector2(512, 512));
@@ -237,11 +254,11 @@ export class OceanRenderer extends BlockRenderer {
       logger.warn('Failed to load bump texture for ocean', { bumpTexturePath });
     }
 
-    // Configure water properties (adjusted to match Babylon.js example)
-    waterMaterial.windForce = -15; // Negative for natural wave movement
-    waterMaterial.waveHeight = 1.3;
-    waterMaterial.bumpHeight = 0.1;
-    waterMaterial.waveLength = 0.1;
+    // Configure water properties (adjusted for voxel scale)
+    waterMaterial.windForce = -5; // Reduced for calmer waves
+    waterMaterial.waveHeight = 0.05; // Much smaller for realistic voxel-scale waves
+    waterMaterial.bumpHeight = 0.02; // Reduced bump intensity
+    waterMaterial.waveLength = 0.15; // Slightly longer waves
     waterMaterial.waterColor = waterColor;
     waterMaterial.colorBlendFactor = 0.3;
     waterMaterial.windDirection = new Vector2(1, 1);
@@ -251,8 +268,8 @@ export class OceanRenderer extends BlockRenderer {
 
     // Add all chunk meshes to render list for reflections/refractions
     const chunkMeshes = renderContext.renderService.getChunkMeshes();
-    for (const mesh of chunkMeshes.values()) {
-      waterMaterial.addToRenderList(mesh);
+    for (const chunkMesh of chunkMeshes.values()) {
+      waterMaterial.addToRenderList(chunkMesh);
     }
 
     // TODO: Add skybox to render list when available
@@ -261,20 +278,15 @@ export class OceanRenderer extends BlockRenderer {
     // }
 
     // Apply material to mesh
-    plane.material = waterMaterial;
+    mesh.material = waterMaterial;
 
     // Make water not pickable (optimization)
-    plane.isPickable = false;
+    mesh.isPickable = false;
 
-    // Register mesh for automatic disposal when chunk is unloaded
-    renderContext.resourcesToDispose.addMesh(plane);
-
-    logger.debug('OCEAN mesh created', {
+    logger.debug('WaterMaterial setup complete', {
       meshName,
-      position: `${centerX},${centerY},${centerZ}`,
-      size: `${scalingX}x${scalingZ}`,
-      windForce,
-      waveHeight,
+      waterColor,
+      chunkMeshesInRenderList: chunkMeshes.size,
     });
   }
 }

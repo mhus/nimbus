@@ -23,6 +23,28 @@ const logger = getLogger('DisposableResources');
 export class DisposableResources {
   private meshes: Mesh[] = [];
   private sprites: Sprite[] = [];
+  private namedMeshes: Map<string, Mesh> = new Map();
+
+  /**
+   * Get or create a named mesh
+   *
+   * If mesh with given name exists, returns it.
+   * Otherwise, creates mesh using factory function and stores it.
+   * Useful for sharing meshes across multiple blocks (e.g., ocean surfaces).
+   *
+   * @param name Unique name for the mesh
+   * @param factory Factory function to create mesh if not exists
+   * @returns Existing or newly created mesh
+   */
+  getOrCreateMesh(name: string, factory: () => Mesh): Mesh {
+    if (!this.namedMeshes.has(name)) {
+      const mesh = factory();
+      this.namedMeshes.set(name, mesh);
+      this.meshes.push(mesh); // Also track for disposal
+      logger.debug('Named mesh created', { name });
+    }
+    return this.namedMeshes.get(name)!;
+  }
 
   /**
    * Add a mesh to be disposed later
