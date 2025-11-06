@@ -210,7 +210,18 @@ export class RenderService {
         blockCount,
       });
 
-      // Create DisposableResources for this chunk
+      // Dispose old resources if they exist (e.g., during chunk update)
+      if (clientChunk.data.resourcesToDispose) {
+        const oldStats = clientChunk.data.resourcesToDispose.getStats();
+        clientChunk.data.resourcesToDispose.dispose();
+        logger.debug('Disposed old chunk resources before re-render', {
+          cx: chunk.cx,
+          cz: chunk.cz,
+          oldResources: oldStats.total,
+        });
+      }
+
+      // Create new DisposableResources for this chunk
       const resourcesToDispose = new DisposableResources();
       clientChunk.data.resourcesToDispose = resourcesToDispose;
 
@@ -548,7 +559,7 @@ export class RenderService {
    *
    * Disposes:
    * - Chunk meshes (batched material groups)
-   * - Separate meshes/sprites via DisposableResources
+   * - Separate meshes/sprites via DisposableResources (including thin instances)
    */
   private unloadChunk(cx: number, cz: number): void {
     const chunkKey = this.getChunkKey(cx, cz);
@@ -566,6 +577,7 @@ export class RenderService {
     }
 
     // Dispose separate meshes/sprites via DisposableResources
+    // (includes thin instances via ThinInstanceDisposable)
     const chunkService = this.appContext.services.chunk;
     if (chunkService) {
       const clientChunk = chunkService.getChunk(cx, cz);

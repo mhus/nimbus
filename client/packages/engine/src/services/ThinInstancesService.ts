@@ -5,12 +5,27 @@
  * Supports GPU-based wind animation and per-block instance configuration.
  */
 
-import { Mesh, MeshBuilder, Scene, Matrix, StandardMaterial, Texture } from '@babylonjs/core';
+import { Mesh, MeshBuilder, Scene, Matrix, StandardMaterial, Texture, type IDisposable } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ShaderService } from './ShaderService';
 
 const logger = getLogger('ThinInstancesService');
+
+/**
+ * Disposable wrapper for thin instance cleanup
+ * Allows DisposableResources to manage thin instance lifecycle
+ */
+class ThinInstanceDisposable implements IDisposable {
+  constructor(
+    private service: ThinInstancesService,
+    private chunkKey: string
+  ) {}
+
+  dispose(): void {
+    this.service.disposeChunkInstances(this.chunkKey);
+  }
+}
 
 /**
  * Configuration for a thin instances group
@@ -19,6 +34,8 @@ interface ThinInstanceConfig {
   texturePath: string;
   instanceCount: number;
   blockPosition: { x: number; y: number; z: number };
+  offset?: { x: number; y: number; z: number }; // Optional offset for positioning
+  scaling?: { x: number; y: number; z: number }; // Optional scaling factors
 }
 
 /**
@@ -64,10 +81,11 @@ export class ThinInstancesService {
 
   /**
    * Create base mesh template (vertical quad)
+   * Note: This is no longer used, kept for backwards compatibility
    */
   private createBaseMesh(): void {
-    // Create a simple vertical quad (2x2 ground rotated 90 degrees)
-    const mesh = MeshBuilder.CreateGround('thinInstanceBase', { width: 2, height: 2 }, this.scene);
+    // Create a simple vertical quad
+    const mesh = MeshBuilder.CreateGround('thinInstanceBase', { width: 1, height: 2 }, this.scene);
     mesh.rotation.x = Math.PI * 0.5; // Rotate to vertical
     mesh.bakeCurrentTransformIntoVertices(); // Bake rotation into vertices
     mesh.isVisible = false; // Template is invisible
@@ -78,23 +96,55 @@ export class ThinInstancesService {
   }
 
   /**
+   * Create a mesh with the correct aspect ratio for a texture
+   */
+  private createMeshForAspectRatio(aspectRatio: number, name: string): Mesh {
+    const height = 2;
+    const width = height * aspectRatio;
+
+    const mesh = MeshBuilder.CreateGround(name, { width, height }, this.scene);
+
+    // Rotate to vertical
+    mesh.rotation.x = Math.PI * 0.5;
+
+    // Shift mesh up so it stands on the ground (pivot at bottom, not center)
+    // After rotation, the mesh needs to be shifted up by height/2
+    mesh.position.y = height / 2;
+
+    // Bake rotation and position into vertices
+    mesh.bakeCurrentTransformIntoVertices();
+
+    // Flip UV coordinates vertically to correct texture orientation
+    const uvs = mesh.getVerticesData('uv');
+    if (uvs) {
+      for (let i = 1; i < uvs.length; i += 2) {
+        uvs[i] = 1.0 - uvs[i]; // Invert V coordinate
+      }
+      mesh.setVerticesData('uv', uvs);
+    }
+
+    return mesh;
+  }
+
+  /**
    * Create thin instances for a block
    *
    * @param config Instance configuration
    * @param chunkKey Parent chunk key
-   * @returns Created mesh with thin instances
+   * @returns Created mesh and disposable for cleanup
    */
-  async createInstances(config: ThinInstanceConfig, chunkKey: string): Promise<Mesh> {
-    if (!this.baseMesh) {
-      throw new Error('Base mesh not created');
-    }
+  async createInstances(config: ThinInstanceConfig, chunkKey: string): Promise<{ mesh: Mesh; disposable: IDisposable }> {
+    // Get or create material first (to load texture and get dimensions)
+    const materialResult = await this.getMaterial(config.texturePath);
+    const material = materialResult.material;
+    const aspectRatio = materialResult.aspectRatio;
 
-    // Clone base mesh for this group
-    const mesh = this.baseMesh.clone(`thinInstances_${config.blockPosition.x}_${config.blockPosition.y}_${config.blockPosition.z}`);
+    // Create mesh with correct aspect ratio for this texture
+    const mesh = this.createMeshForAspectRatio(
+      aspectRatio,
+      `thinInstances_${config.blockPosition.x}_${config.blockPosition.y}_${config.blockPosition.z}`
+    );
     mesh.isVisible = true;
-
-    // Get or create material
-    const material = await this.getMaterial(config.texturePath);
     mesh.material = material;
 
     // Create matrices for instances
@@ -106,16 +156,31 @@ export class ThinInstancesService {
     const blockY = config.blockPosition.y;
     const blockZ = config.blockPosition.z;
 
+    // Use configured offsets or defaults
+    const offsetX = config.offset?.x ?? 0;
+    const offsetY = config.offset?.y ?? 0;
+    const offsetZ = config.offset?.z ?? 0;
+
+    // Use configured scaling or defaults
+    const scaleX = config.scaling?.x ?? 1;
+    const scaleY = config.scaling?.y ?? 1;
+    const scaleZ = config.scaling?.z ?? 1;
+
     // Distribute instances randomly within block bounds
     for (let i = 0; i < config.instanceCount; i++) {
       // Random position within block (0.8 = 80% of block size for margin)
-      const offsetX = (Math.random() - 0.5) * 0.8;
-      const offsetZ = (Math.random() - 0.5) * 0.8;
+      const randomX = (Math.random() - 0.5) * 0.8;
+      const randomZ = (Math.random() - 0.5) * 0.8;
 
-      // Set instance position in matrix
-      m.m[12] = blockX + 0.5 + offsetX;
-      m.m[13] = blockY; // Base at block bottom
-      m.m[14] = blockZ + 0.5 + offsetZ;
+      // Set scaling in matrix (diagonal elements)
+      m.m[0] = scaleX;
+      m.m[5] = scaleY;
+      m.m[10] = scaleZ;
+
+      // Set instance position in matrix (block position + center offset + configured offset + random offset)
+      m.m[12] = blockX + 0.5 + offsetX + randomX;
+      m.m[13] = blockY + offsetY;
+      m.m[14] = blockZ + 0.5 + offsetZ + randomZ;
 
       // Copy matrix to buffer
       m.copyToArray(matricesData, index * 16);
@@ -145,17 +210,25 @@ export class ThinInstancesService {
       chunkKey,
     });
 
-    return mesh;
+    // Create disposable for cleanup via DisposableResources
+    const disposable = new ThinInstanceDisposable(this, chunkKey);
+
+    return { mesh, disposable };
   }
 
   /**
    * Get or create material with optional Y-axis billboard shader
+   * Returns material and aspect ratio of the texture
    */
-  private async getMaterial(texturePath: string): Promise<StandardMaterial> {
+  private async getMaterial(texturePath: string): Promise<{ material: StandardMaterial; aspectRatio: number }> {
     // Check cache
-    if (this.materialCache.has(texturePath)) {
+    const cachedMaterial = this.materialCache.get(texturePath);
+    if (cachedMaterial) {
       logger.debug('Using cached material', { texturePath });
-      return this.materialCache.get(texturePath)!;
+      // Get aspect ratio from cached texture
+      const texture = cachedMaterial.diffuseTexture as Texture;
+      const aspectRatio = texture ? texture.getSize().width / texture.getSize().height : 1;
+      return { material: cachedMaterial, aspectRatio };
     }
 
     logger.info('🎨 Creating material for thin instances', { texturePath });
@@ -167,7 +240,10 @@ export class ThinInstancesService {
         if (material) {
           this.materialCache.set(texturePath, material);
           logger.info('✅ Shader material created', { texturePath });
-          return material;
+          // Get aspect ratio from shader material's texture
+          const texture = material.getEffect()?.getTexture('textureSampler') as Texture;
+          const aspectRatio = texture ? texture.getSize().width / texture.getSize().height : 1;
+          return { material, aspectRatio };
         }
       } catch (error) {
         logger.warn('Failed to create shader material, using fallback', { error });
@@ -184,7 +260,7 @@ export class ThinInstancesService {
       material.backFaceCulling = false;
       material.specularColor.set(0, 0, 0);
       this.materialCache.set(texturePath, material);
-      return material;
+      return { material, aspectRatio: 1 };
     }
 
     // Create material
@@ -194,9 +270,25 @@ export class ThinInstancesService {
     const url = networkService.getAssetUrl(texturePath);
     const texture = new Texture(url, this.scene);
 
+    // Wait for texture to load to get dimensions
+    await new Promise<void>((resolve) => {
+      if (texture.isReady()) {
+        resolve();
+      } else {
+        texture.onLoadObservable.addOnce(() => resolve());
+      }
+    });
+
+    // Get texture dimensions
+    const size = texture.getSize();
+    const aspectRatio = size.width / size.height;
+
+    logger.debug('Texture loaded', { texturePath, width: size.width, height: size.height, aspectRatio });
+
     // Configure texture
     texture.hasAlpha = true;
     texture.getAlphaFromRGB = false;
+    texture.updateSamplingMode(Texture.NEAREST_SAMPLINGMODE); // Pixel-perfect rendering
 
     material.diffuseTexture = texture;
     material.backFaceCulling = false;
@@ -205,9 +297,9 @@ export class ThinInstancesService {
     // Cache material
     this.materialCache.set(texturePath, material);
 
-    logger.debug('Material created with texture', { texturePath });
+    logger.debug('Material created with texture', { texturePath, aspectRatio });
 
-    return material;
+    return { material, aspectRatio };
   }
 
   /**

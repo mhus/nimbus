@@ -75,6 +75,30 @@ export class ThinInstancesRenderer extends BlockRenderer {
       }
     }
 
+    // Get offset from visibility.offsets (if available)
+    // offsets array: [x0,y0,z0, x1,y1,z1, ..., x7,y7,z7] (8 corners × 3 axes = 24 values)
+    // Use first corner's offset (indices 0, 1, 2) for positioning
+    let offset: { x: number; y: number; z: number } | undefined;
+    if (modifier.visibility.offsets && modifier.visibility.offsets.length >= 3) {
+      offset = {
+        x: modifier.visibility.offsets[0],
+        y: modifier.visibility.offsets[1],
+        z: modifier.visibility.offsets[2],
+      };
+      logger.debug('Using offset from visibility.offsets', { offset });
+    }
+
+    // Get scaling from visibility (if available)
+    let scaling: { x: number; y: number; z: number } | undefined;
+    if (modifier.visibility.scalingX || modifier.visibility.scalingY || modifier.visibility.scalingZ) {
+      scaling = {
+        x: modifier.visibility.scalingX ?? 1,
+        y: modifier.visibility.scalingY ?? 1,
+        z: modifier.visibility.scalingZ ?? 1,
+      };
+      logger.debug('Using scaling from visibility', { scaling });
+    }
+
     // Get chunk key for tracking
     const chunkTransfer = clientBlock.chunk?.data?.transfer;
     const chunkKey = chunkTransfer
@@ -83,17 +107,20 @@ export class ThinInstancesRenderer extends BlockRenderer {
 
     // Create thin instances
     try {
-      const mesh = await thinInstancesService.createInstances(
+      const result = await thinInstancesService.createInstances(
         {
           texturePath: textureDef.path,
           instanceCount,
           blockPosition: block.position,
+          offset,
+          scaling,
         },
         chunkKey
       );
 
-      // Register mesh for disposal
-      renderContext.resourcesToDispose.addMesh(mesh);
+      // Register mesh and disposable for cleanup
+      renderContext.resourcesToDispose.addMesh(result.mesh);
+      renderContext.resourcesToDispose.add(result.disposable);
 
       logger.debug('ThinInstances rendered', {
         position: block.position,

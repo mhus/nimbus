@@ -215,6 +215,35 @@
       </div>
     </div>
 
+    <!-- THIN_INSTANCES: Single offset (XYZ) -->
+    <div v-else-if="shape === 25" class="space-y-3">
+      <p class="text-sm text-base-content/70 mb-2">Position offset (supports float values)</p>
+      <div class="grid grid-cols-4 gap-2 items-center">
+        <span class="text-xs text-base-content/70">Offset:</span>
+        <input
+          v-model.number="offsets[0]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="X"
+        />
+        <input
+          v-model.number="offsets[1]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Y"
+        />
+        <input
+          v-model.number="offsets[2]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Z"
+        />
+      </div>
+    </div>
+
     <!-- Other shapes: No offsets -->
     <div v-else class="text-sm text-base-content/60">
       No offset configuration for this shape type
