@@ -154,11 +154,7 @@ export class RenderService {
     const cx = clientChunk.data.transfer.cx;
     const cz = clientChunk.data.transfer.cz;
 
-    logger.info('🔵 RenderService: Chunk updated, re-rendering', {
-      cx,
-      cz,
-      blockCount: clientChunk.data.data.size,
-    });
+    logger.debug('Chunk updated, re-rendering', { cx, cz, blockCount: clientChunk.data.data.size });
 
     // Remove old mesh first
     this.unloadChunk(cx, cz);
@@ -170,8 +166,6 @@ export class RenderService {
         cz,
       });
     });
-
-    logger.info('🔵 Chunk re-render complete', { cx, cz });
   }
 
   /**
@@ -577,7 +571,7 @@ export class RenderService {
     }
 
     // Dispose separate meshes/sprites via DisposableResources
-    // (includes thin instances via ThinInstanceDisposable)
+    // (includes thin instances, billboards, water, etc.)
     const chunkService = this.appContext.services.chunk;
     if (chunkService) {
       const clientChunk = chunkService.getChunk(cx, cz);

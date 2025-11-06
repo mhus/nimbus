@@ -13,17 +13,17 @@ import type { ShaderService } from './ShaderService';
 const logger = getLogger('ThinInstancesService');
 
 /**
- * Disposable wrapper for thin instance cleanup
- * Allows DisposableResources to manage thin instance lifecycle
+ * Disposable wrapper for a single thin instance mesh
+ * Allows DisposableResources to manage individual mesh lifecycle
  */
-class ThinInstanceDisposable implements IDisposable {
+class ThinInstanceMeshDisposable implements IDisposable {
   constructor(
     private service: ThinInstancesService,
-    private chunkKey: string
+    private mesh: Mesh
   ) {}
 
   dispose(): void {
-    this.service.disposeChunkInstances(this.chunkKey);
+    this.service.disposeSingleMesh(this.mesh);
   }
 }
 
@@ -211,7 +211,7 @@ export class ThinInstancesService {
     });
 
     // Create disposable for cleanup via DisposableResources
-    const disposable = new ThinInstanceDisposable(this, chunkKey);
+    const disposable = new ThinInstanceMeshDisposable(this, mesh);
 
     return { mesh, disposable };
   }
@@ -300,6 +300,35 @@ export class ThinInstancesService {
     logger.debug('Material created with texture', { texturePath, aspectRatio });
 
     return { material, aspectRatio };
+  }
+
+  /**
+   * Dispose a single thin instance mesh
+   * Removes it from the instance groups and disposes the mesh
+   */
+  disposeSingleMesh(mesh: Mesh): void {
+    // Find and remove the group containing this mesh
+    for (const [chunkKey, groups] of this.instanceGroups.entries()) {
+      const index = groups.findIndex(group => group.mesh === mesh);
+      if (index !== -1) {
+        const group = groups[index];
+        group.mesh.dispose();
+        groups.splice(index, 1);
+
+        // If no more groups for this chunk, remove the entry
+        if (groups.length === 0) {
+          this.instanceGroups.delete(chunkKey);
+        }
+
+        logger.debug('Single thin instance mesh disposed', {
+          chunkKey,
+          remainingGroupsInChunk: groups.length
+        });
+        return;
+      }
+    }
+
+    logger.warn('Mesh not found in instance groups for disposal', { mesh: mesh.name });
   }
 
   /**

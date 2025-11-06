@@ -167,6 +167,9 @@ export class ChunkService {
    */
   unloadDistantChunks(playerCx: number, playerCz: number): void {
     try {
+      // First, collect all chunks to unload (don't delete during iteration)
+      const chunksToUnload: Array<{ key: string; chunk: ClientChunk; distance: number }> = [];
+
       for (const [key, chunk] of this.chunks) {
         const distance = Math.max(
           Math.abs(chunk.data.transfer.cx - playerCx),
@@ -174,18 +177,32 @@ export class ChunkService {
         );
 
         if (distance > this.unloadDistance) {
-          this.chunks.delete(key);
-          this.registeredChunks.delete(key);
-
-          // Emit event for rendering cleanup
-          this.emit('chunk:unloaded', chunk);
-
-          logger.debug('Unloaded chunk', {
-            cx: chunk.data.transfer.cx,
-            cz: chunk.data.transfer.cz,
-            distance,
-          });
+          chunksToUnload.push({ key, chunk, distance });
         }
+      }
+
+      // Now unload all collected chunks
+      for (const { key, chunk, distance } of chunksToUnload) {
+        const cx = chunk.data.transfer.cx;
+        const cz = chunk.data.transfer.cz;
+
+        // Emit event for rendering cleanup BEFORE deleting chunk
+        // so RenderService can still access DisposableResources
+        this.emit('chunk:unloaded', { cx, cz });
+
+        // Now delete the chunk
+        this.chunks.delete(key);
+        this.registeredChunks.delete(key);
+
+        logger.debug('Unloaded chunk', {
+          cx,
+          cz,
+          distance,
+        });
+      }
+
+      if (chunksToUnload.length > 0) {
+        logger.info('Unloaded distant chunks', { count: chunksToUnload.length });
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.unloadDistantChunks', {
@@ -205,6 +222,16 @@ export class ChunkService {
       // Process chunks sequentially to maintain order
       for (const chunkData of chunks) {
         const key = getChunkKey(chunkData.cx, chunkData.cz);
+
+        // Check if chunk already exists
+        const existingChunk = this.chunks.get(key);
+        if (existingChunk) {
+          logger.debug('Chunk already loaded, skipping duplicate', {
+            cx: chunkData.cx,
+            cz: chunkData.cz,
+          });
+          continue;
+        }
 
         // Process blocks into ClientBlocks with merged modifiers
         const clientChunkData = await this.processChunkData(chunkData);
