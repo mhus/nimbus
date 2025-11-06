@@ -33,7 +33,7 @@
 ## Cylinder
 
 [?] Nenne shape type 'Column' um in 'Cylinder' in BlockModifier und in den Editor controls
-[ ] Erstelle den CylinderRenderer. Er rendert einen Cylinder.
+[?] Erstelle den CylinderRenderer. Er rendert einen Cylinder.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
 - Offsets:
