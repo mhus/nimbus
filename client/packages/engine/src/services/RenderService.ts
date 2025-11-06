@@ -15,6 +15,7 @@ import type { BlockTypeService } from './BlockTypeService';
 import { BlockRenderer } from '../rendering/BlockRenderer';
 import { CubeRenderer } from '../rendering/CubeRenderer';
 import { CrossRenderer } from '../rendering/CrossRenderer';
+import { SphereRenderer } from '../rendering/SphereRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
@@ -66,6 +67,7 @@ export class RenderService {
   // Renderers
   private cubeRenderer: CubeRenderer;
   private crossRenderer: CrossRenderer;
+  private sphereRenderer: SphereRenderer;
   private flipboxRenderer: FlipboxRenderer;
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
@@ -97,6 +99,7 @@ export class RenderService {
     // Initialize renderers
     this.cubeRenderer = new CubeRenderer(textureAtlas);
     this.crossRenderer = new CrossRenderer(textureAtlas);
+    this.sphereRenderer = new SphereRenderer(textureAtlas);
     this.flipboxRenderer = new FlipboxRenderer();
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
@@ -282,11 +285,13 @@ export class RenderService {
             continue;
           }
 
-          // Render cubes and crosses
+          // Render cubes, crosses, and spheres
           if (shape === Shape.CUBE) {
             await this.cubeRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.CROSS) {
             await this.crossRenderer.render(renderContext, clientBlock);
+          } else if (shape === Shape.SPHERE) {
+            await this.sphereRenderer.render(renderContext, clientBlock);
           } else {
             logger.debug('Unsupported shape, skipping', {
               shape,
@@ -380,6 +385,8 @@ export class RenderService {
         return this.cubeRenderer;
       case Shape.CROSS:
         return this.crossRenderer;
+      case Shape.SPHERE:
+        return this.sphereRenderer;
       case Shape.BILLBOARD:
         return this.billboardRenderer;
       case Shape.SPRITE:
