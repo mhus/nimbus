@@ -183,20 +183,28 @@ export class OceanRenderer extends BlockRenderer {
       () => {
         logger.debug('Creating shared ocean mesh', { name: sharedMeshName });
 
-        // Create large flat ground covering entire chunk
-        // All ocean blocks at this Y-level will share this mesh
+        // Create large flat ground with overlap for seamless chunk transitions
+        // 33x33 with random offset = slight overlap that hides seams
+        const randomOffsetX = (Math.random() - 0.5) * 0.3; // Random -0.15 to +0.15
+        const randomOffsetZ = (Math.random() - 0.5) * 0.3;
+        const randomSize = 32.5 + Math.random() * 1.0; // Random 32.5 to 33.5
+
         const mesh = MeshBuilder.CreateGround(
           sharedMeshName,
           {
-            width: 32, // Chunk size (covers entire chunk)
-            height: 32,
+            width: randomSize, // Slightly larger with variation
+            height: randomSize,
             subdivisions: 32, // More subdivisions = smoother waves
           },
           scene
         );
 
-        // Position at Y-level (centered at chunk center)
-        mesh.position.set(chunkCenterX, waterY, chunkCenterZ);
+        // Position at chunk center with random offset (creates frayed/organic edges)
+        mesh.position.set(
+          chunkCenterX + randomOffsetX,
+          waterY,
+          chunkCenterZ + randomOffsetZ
+        );
 
         return mesh;
       }
