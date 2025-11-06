@@ -16,13 +16,27 @@
  * For Y-axis-only billboards (vertical quads), use Shape.BILLBOARD instead.
  */
 
-import { Sprite } from '@babylonjs/core';
+import { Sprite, type IDisposable } from '@babylonjs/core';
 import { getLogger, Shape, TextureHelper } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
 
 const logger = getLogger('SpriteRenderer');
+
+/**
+ * Disposable wrapper for sprite cleanup
+ */
+class SpriteDisposable implements IDisposable {
+  constructor(private sprites: Sprite[]) {}
+
+  dispose(): void {
+    for (const sprite of this.sprites) {
+      sprite.dispose();
+    }
+    logger.debug('Sprites disposed', { count: this.sprites.length });
+  }
+}
 
 /**
  * SpriteRenderer - Renders blocks as sprite collections
@@ -110,7 +124,7 @@ export class SpriteRenderer extends BlockRenderer {
       }
 
       // Create sprites for this texture
-      await this.createSprites(
+      const sprites = await this.createSprites(
         clientBlock,
         textureDef.path,
         spriteCount,
@@ -122,8 +136,15 @@ export class SpriteRenderer extends BlockRenderer {
         offsetZ,
         windLeafiness,
         windStability,
-        spriteService
+        spriteService,
+        renderContext
       );
+
+      // Register sprites for disposal
+      if (sprites.length > 0) {
+        const disposable = new SpriteDisposable(sprites);
+        renderContext.resourcesToDispose.add(disposable);
+      }
     }
   }
 
@@ -145,6 +166,8 @@ export class SpriteRenderer extends BlockRenderer {
    * @param windLeafiness Wind leafiness parameter
    * @param windStability Wind stability parameter
    * @param spriteService SpriteService instance
+   * @param renderContext Render context for disposal registration
+   * @returns Array of created sprites
    */
   private async createSprites(
     clientBlock: ClientBlock,
@@ -158,9 +181,11 @@ export class SpriteRenderer extends BlockRenderer {
     offsetZ: number,
     windLeafiness: number,
     windStability: number,
-    spriteService: any
-  ): Promise<void> {
+    spriteService: any,
+    renderContext: RenderContext
+  ): Promise<Sprite[]> {
     const block = clientBlock.block;
+    const sprites: Sprite[] = [];
 
     try {
       // Get or create SpriteManager for this texture
@@ -200,8 +225,8 @@ export class SpriteRenderer extends BlockRenderer {
         // Register sprite for wind animation
         spriteService.registerSprite(sprite, windLeafiness, windStability);
 
-        // Note: Sprites are NOT added to resourcesToDispose
-        // They are managed by SpriteManager and disposed via SpriteService
+        // Add to array for disposal
+        sprites.push(sprite);
       }
 
       logger.debug('Sprites created', {
@@ -218,5 +243,7 @@ export class SpriteRenderer extends BlockRenderer {
         error,
       });
     }
+
+    return sprites;
   }
 }
