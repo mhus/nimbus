@@ -135,24 +135,31 @@ export class BackdropMaterialManager {
    * Apply backdrop-specific rendering properties
    */
   private applyBackdropProperties(material: StandardMaterial): void {
-    // SIMPLIFIED for debugging - make it as visible as possible
-    material.backFaceCulling = false; // Render both sides
-    material.disableLighting = true; // Unlit
+    // Render both sides
+    material.backFaceCulling = false;
 
-    // Use emissive to make it glow (always visible)
+    // Unlit material
+    material.disableLighting = true;
+
+    // Use emissive to make it glow
     if (!material.diffuseTexture) {
       material.emissiveColor = material.diffuseColor; // Make solid color glow
     } else {
       material.emissiveColor = Color3.White();
     }
 
-    // No transparency issues
+    // CRITICAL: Enable depth testing and writing
+    material.disableDepthWrite = false; // Write to depth buffer
+    material.depthFunction = 0; // Use default depth function (less or equal)
+
+    // Opaque rendering
     material.transparencyMode = StandardMaterial.MATERIAL_OPAQUE;
 
     logger.info('Backdrop material properties applied', {
       backFaceCulling: material.backFaceCulling,
       disableLighting: material.disableLighting,
-      emissiveColor: material.emissiveColor,
+      disableDepthWrite: material.disableDepthWrite,
+      transparencyMode: material.transparencyMode,
       alpha: material.alpha
     });
   }

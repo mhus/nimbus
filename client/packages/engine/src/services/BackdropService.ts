@@ -250,16 +250,16 @@ export class BackdropService {
       // Use first backdrop for now (TODO: support multiple backdrops per side)
       const backdropConfig = backdrops[0];
 
-      // Create mesh (temporarily lines for debugging)
+      // Create mesh
       const mesh = this.createBackdropMesh(cx, cz, direction, backdropConfig);
 
       if (mesh) {
-        // TEMPORARY: Skip material for lines debugging
-        // const material = await this.materialManager.getBackdropMaterial(backdropConfig);
-        // mesh.material = material;
+        // Get material
+        const material = await this.materialManager.getBackdropMaterial(backdropConfig);
+        mesh.material = material;
 
-        // Rendering settings
-        mesh.renderingGroupId = 1; // Render after blocks but before transparent objects
+        // Rendering settings - render in same group as blocks (0) for proper depth testing
+        mesh.renderingGroupId = 0;
         mesh.name = `backdrop_${key}`;
 
         // Store mesh
@@ -269,12 +269,15 @@ export class BackdropService {
         const sceneRootNodes = this.scene.rootNodes.map(n => n.name);
         const meshesInScene = this.scene.meshes.length;
 
-        logger.info('Backdrop LINES created successfully', {
+        logger.info('Backdrop MESH created successfully', {
           key,
           meshName: mesh.name,
           meshType: mesh.getClassName(),
           position: mesh.position,
           absolutePosition: mesh.getAbsolutePosition(),
+          hasMaterial: !!mesh.material,
+          materialName: mesh.material?.name,
+          materialAlpha: mesh.material?.alpha,
           boundingBox: {
             min: mesh.getBoundingInfo().boundingBox.minimumWorld,
             max: mesh.getBoundingInfo().boundingBox.maximumWorld
@@ -489,7 +492,7 @@ export class BackdropService {
   /**
    * Create a vertical plane mesh
    *
-   * TEMPORARY DEBUG: Drawing lines instead of mesh to verify coordinates
+   * Uses absolute world coordinates in vertices (same pattern as working lines)
    */
   private createVerticalPlane(
     x1: number,
@@ -499,61 +502,60 @@ export class BackdropService {
     yStart: number,
     yEnd: number
   ): Mesh {
-    logger.info('Creating vertical plane with LINES', {
+    logger.info('Creating vertical plane MESH', {
       x1, z1, x2, z2, yStart, yEnd,
       width: Math.sqrt((x2-x1)**2 + (z2-z1)**2),
       height: yEnd - yStart
     });
 
-    // Define the 4 corners of the rectangle in ABSOLUTE WORLD COORDINATES
-    const bottomLeft = new Vector3(x1, yStart, z1);
-    const bottomRight = new Vector3(x2, yStart, z2);
-    const topRight = new Vector3(x2, yEnd, z2);
-    const topLeft = new Vector3(x1, yEnd, z1);
+    // Create mesh (minimal pattern from RenderService)
+    const mesh = new Mesh('backdrop_plane', this.scene);
 
-    logger.info('Rectangle corners', {
-      bottomLeft: { x: x1, y: yStart, z: z1 },
-      bottomRight: { x: x2, y: yStart, z: z2 },
-      topRight: { x: x2, y: yEnd, z: z2 },
-      topLeft: { x: x1, y: yEnd, z: z1 }
-    });
-
-    // Create lines for the rectangle outline (4 edges)
-    const points = [
-      // Bottom edge
-      bottomLeft,
-      bottomRight,
-      // Right edge
-      bottomRight,
-      topRight,
-      // Top edge
-      topRight,
-      topLeft,
-      // Left edge
-      topLeft,
-      bottomLeft
+    // Create quad vertices in ABSOLUTE WORLD COORDINATES
+    const positions = [
+      x1, yStart, z1,  // Bottom left
+      x2, yStart, z2,  // Bottom right
+      x2, yEnd, z2,    // Top right
+      x1, yEnd, z1     // Top left
     ];
 
-    // Create lines with MeshBuilder
-    const linesMesh = MeshBuilder.CreateLines(
-      'backdrop_lines',
-      {
-        points: points,
-      },
-      this.scene
-    );
+    const indices = [
+      0, 1, 2,  // First triangle
+      0, 2, 3   // Second triangle
+    ];
 
-    // Make lines red and thick for visibility
-    linesMesh.color = Color3.Red();
-    linesMesh.isPickable = false;
+    const uvs = [
+      0, 1,  // Bottom left
+      1, 1,  // Bottom right
+      1, 0,  // Top right
+      0, 0   // Top left
+    ];
 
-    logger.info('Lines created', {
-      linesMeshPosition: linesMesh.position,
-      parent: linesMesh.parent ? 'HAS PARENT!' : 'no parent',
-      absolutePosition: linesMesh.getAbsolutePosition()
+    // Calculate normals
+    const dx = x2 - x1;
+    const dz = z2 - z1;
+    const len = Math.sqrt(dx * dx + dz * dz);
+    const nx = -dz / len;
+    const nz = dx / len;
+    const normals = [nx, 0, nz, nx, 0, nz, nx, 0, nz, nx, 0, nz];
+
+    // Apply vertex data
+    const vertexData = new VertexData();
+    vertexData.positions = positions;
+    vertexData.indices = indices;
+    vertexData.uvs = uvs;
+    vertexData.normals = normals;
+
+    vertexData.applyToMesh(mesh);
+
+    mesh.isPickable = false;
+
+    logger.info('Mesh created', {
+      meshPosition: mesh.position,
+      parent: mesh.parent ? 'HAS PARENT!' : 'no parent'
     });
 
-    return linesMesh;
+    return mesh;
   }
 
 
