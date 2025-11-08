@@ -48,7 +48,8 @@
       "Bash(node scripts/generate-manifest.js:*)",
       "Bash(npm install:*)",
       "Bash(node /Users/hummel/sources/mhus/nimbus/scripts/generate-blocktype-descriptions.js:*)",
-      "Bash(pnpm --filter nimbus_test_server build:*)"
+      "Bash(pnpm --filter nimbus_test_server build:*)",
+      "Bash(node -c:*)"
     ],
     "deny": [],
     "ask": []

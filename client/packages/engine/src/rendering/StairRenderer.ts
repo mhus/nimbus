@@ -180,6 +180,9 @@ export class StairRenderer extends BlockRenderer {
     // Check face visibility
     const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
     const isBackVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK);
+    const isRightVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.RIGHT);
+    const isLeftVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.LEFT);
+    const isFrontVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
 
     let facesRendered = 0;
 
@@ -187,7 +190,7 @@ export class StairRenderer extends BlockRenderer {
 
     // Top face of lower base (4, 5, 6, 7)
     await this.addFace(
-      corners[4], corners[5], corners[6], corners[7],
+      corners[4], corners[5], corners[9], corners[8],
       [0, 1, 0],
       topTexture,
       renderContext
@@ -205,47 +208,51 @@ export class StairRenderer extends BlockRenderer {
       facesRendered++;
     }
 
-    // Front face of lower base (3, 7, 6, 2)
-    await this.addFace(
-      corners[3], corners[7], corners[6], corners[2],
-      [0, 0, 1],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
-
-    // Back face of lower base (1, 5, 4, 0) - controlled by BACK faceVisibility
+    // BACK lower base (3, 7, 6, 2)
     if (isBackVisible) {
+        await this.addFace(
+          corners[3], corners[7], corners[6], corners[2],
+          [0, 0, 1],
+          sideTexture,
+          renderContext,
+          false  // No reverse winding
+        );
+        facesRendered++;
+    }
+    // FRONT of lower base (1, 5, 4, 0) - controlled by BACK faceVisibility
+    if (isFrontVisible) {
       await this.addFace(
         corners[1], corners[5], corners[4], corners[0],
         [0, 0, -1],
         sideTexture,
         renderContext,
-        true  // Reverse winding order
+        false  // Reverse winding order
       );
       facesRendered++;
     }
 
     // Right face of lower base (2, 6, 5, 1)
-    await this.addFace(
-      corners[2], corners[6], corners[5], corners[1],
-      [1, 0, 0],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
-
-    // Left face of lower base (0, 4, 7, 3)
-    await this.addFace(
-      corners[0], corners[4], corners[7], corners[3],
-      [-1, 0, 0],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
+    if (isRightVisible) {
+        await this.addFace(
+          corners[2], corners[6], corners[5], corners[1],
+          [1, 0, 0],
+          sideTexture,
+          renderContext,
+          false  // No reverse winding
+        );
+        facesRendered++;
+     }
+     // Left face of lower base (0, 4, 7, 3)
+     if (isLeftVisible) {
+        await this.addFace(
+          corners[0], corners[4], corners[7], corners[3],
+          [-1, 0, 0],
+          sideTexture,
+          renderContext,
+          false  // No reverse winding
+        );
+        facesRendered++;
+    }
 
     // ===== UPPER STEP (6 faces) =====
 
@@ -259,54 +266,59 @@ export class StairRenderer extends BlockRenderer {
     facesRendered++;
 
     // Bottom face of upper step (11, 10, 9, 8)
-    await this.addFace(
-      corners[11], corners[10], corners[9], corners[8],
-      [0, -1, 0],
-      topTexture, // Use top texture for step bottom
-      renderContext
-    );
-    facesRendered++;
-
-    // Front face of upper step (11, 15, 14, 10)
-    await this.addFace(
-      corners[11], corners[15], corners[14], corners[10],
-      [0, 0, 1],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
-
-    // Back face of upper step (9, 13, 12, 8)
-    await this.addFace(
-      corners[9], corners[13], corners[12], corners[8],
-      [0, 0, -1],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
-
+    if (isBottomVisible) {
+        await this.addFace(
+          corners[11], corners[10], corners[9], corners[8],
+          [0, -1, 0],
+          topTexture, // Use top texture for step bottom
+          renderContext
+        );
+        facesRendered++;
+    }
+    // BACK face of upper step (11, 15, 14, 10)
+    if (isBackVisible) {
+        await this.addFace(
+          corners[11], corners[15], corners[14], corners[10],
+          [0, 0, 1],
+          sideTexture,
+          renderContext,
+          false
+        );
+        facesRendered++;
+    }
+    // FRONT face of upper step (9, 13, 12, 8)
+    if (isFrontVisible) {
+        await this.addFace(
+          corners[9], corners[13], corners[12], corners[8],
+          [0, 0, -1],
+          sideTexture,
+          renderContext,
+          false
+        );
+        facesRendered++;
+    }
     // Right face of upper step (10, 14, 13, 9)
-    await this.addFace(
-      corners[10], corners[14], corners[13], corners[9],
-      [1, 0, 0],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
-
+    if (isRightVisible) {
+        await this.addFace(
+          corners[10], corners[14], corners[13], corners[9],
+          [1, 0, 0],
+          sideTexture,
+          renderContext,
+          false  // No reverse winding
+        );
+        facesRendered++;
+    }
     // Left face of upper step (8, 12, 15, 11)
-    await this.addFace(
-      corners[8], corners[12], corners[15], corners[11],
-      [-1, 0, 0],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
-
+    if (isLeftVisible) {
+        await this.addFace(
+          corners[8], corners[12], corners[15], corners[11],
+          [-1, 0, 0],
+          sideTexture,
+          renderContext,
+          false  // No reverse winding
+        );
+        facesRendered++;
+    }
     logger.debug('Stair rendered', {
       blockTypeId: block.blockType.id,
       position: { x: worldX, y: worldY, z: worldZ },
