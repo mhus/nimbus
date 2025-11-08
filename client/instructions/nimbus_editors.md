@@ -1339,10 +1339,11 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 
 ## Fixes
 
-[ ] Im BlockTypeEditor soll bei 'new' auch fuer die ID ein Eingabefeld angezeigt werden.
+[?] Im BlockTypeEditor soll bei 'new' auch fuer die ID ein Eingabefeld angezeigt werden.
 - Die id kann ein integer oder leer sein
 - Ist die id nicht leer wird sie beim create request an den server mitgeschickt
 - Im server wird geprueft ob die id schon existiert, wenn ja wird ein fehler zurueckgegeben
 - Wird dem server keine id mitgegeben, wird wie bisher eine neue id generiert
 - Die rueckgabe bleibt wie bisher, wenn ein fehler auftritt wird ein error message im editor angezeigt
 
+===

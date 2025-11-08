@@ -40,7 +40,11 @@
                     type="number"
                     class="input input-bordered"
                     :disabled="!isCreate"
+                    placeholder="0 = auto-generate"
                   />
+                  <label v-if="isCreate" class="label">
+                    <span class="label-text-alt">Leave as 0 to auto-generate, or enter a specific ID</span>
+                  </label>
                 </div>
 
                 <div class="form-control">
@@ -191,9 +195,8 @@ const initializeForm = async () => {
   if (props.blockType) {
     formData.value = JSON.parse(JSON.stringify(props.blockType));
   } else {
-    const nextId = await getNextAvailableId();
     formData.value = {
-      id: nextId,
+      id: 0, // 0 means auto-generate
       description: '',
       initialStatus: 0,
       modifiers: {
@@ -336,8 +339,15 @@ const handleSave = async () => {
     }
 
     emit('saved');
-  } catch (err) {
-    alert('Failed to save block type');
+  } catch (err: any) {
+    // Extract error message from server response
+    let errorMessage = 'Failed to save block type';
+    if (err?.response?.data?.error) {
+      errorMessage = err.response.data.error;
+    } else if (err?.message) {
+      errorMessage = err.message;
+    }
+    alert(errorMessage);
   } finally {
     saving.value = false;
   }

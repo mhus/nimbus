@@ -93,9 +93,15 @@ export function createWorldRoutes(
     const blockTypeData = req.body;
     const registry = worldManager.getBlockTypeRegistry();
 
-    // If no ID provided, get next available
-    if (!blockTypeData.id) {
+    // If no ID provided or ID is 0, get next available
+    if (!blockTypeData.id || blockTypeData.id === 0) {
       blockTypeData.id = registry.getNextAvailableId();
+    } else {
+      // Check if ID already exists
+      const existingBlockType = registry.getBlockType(blockTypeData.id);
+      if (existingBlockType) {
+        return res.status(409).json({ error: `BlockType with ID ${blockTypeData.id} already exists` });
+      }
     }
 
     // Validate required fields
@@ -107,7 +113,7 @@ export function createWorldRoutes(
     const createdBlockType = registry.createBlockType(blockTypeData);
 
     if (!createdBlockType) {
-      return res.status(400).json({ error: 'Failed to create BlockType (may already exist)' });
+      return res.status(400).json({ error: 'Failed to create BlockType' });
     }
 
     return res.status(201).json({ id: createdBlockType.id });
