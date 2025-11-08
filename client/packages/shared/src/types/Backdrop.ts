@@ -39,6 +39,9 @@ export interface Backdrop {
   /** Texture path (e.g., "textures/backdrop/hills.png") */
   texture?: string;
 
+  /** Noise texture path for organic fog appearance (e.g., "textures/noise/perlin.png") */
+  noiseTexture?: string;
+
   /** Color tint (hex string like "#808080") */
   color?: string;
 

@@ -42,8 +42,10 @@ export class BackdropMaterialManager {
    */
   async getBackdropMaterial(config: Backdrop): Promise<Material> {
     try {
-      // Create cache key from texture path for proper invalidation
-      const cacheKey = `backdrop:${config.texture ?? config.typeId ?? config.id ?? 'default'}`;
+      // Create cache key from texture + noise texture for proper invalidation
+      const texPart = config.texture ?? config.typeId ?? config.id ?? 'default';
+      const noisePart = config.noiseTexture ? `:${config.noiseTexture}` : '';
+      const cacheKey = `backdrop:${texPart}${noisePart}`;
 
       // Check cache
       if (this.materials.has(cacheKey)) {
@@ -102,6 +104,28 @@ export class BackdropMaterialManager {
       texture.updateSamplingMode(Texture.NEAREST_SAMPLINGMODE); // Nearest neighbor filtering
       material.diffuseTexture = texture;
       material.useAlphaFromDiffuseTexture = true; // Use alpha from texture
+    }
+
+    // Load noise texture if specified
+    if (config.noiseTexture) {
+      const networkService = this.appContext.services.network;
+      if (networkService) {
+        const noiseUrl = networkService.getAssetUrl(config.noiseTexture);
+
+        logger.info('Loading noise texture', {
+          noisePath: config.noiseTexture,
+          noiseUrl
+        });
+
+        const noiseTexture = new Texture(noiseUrl, this.scene);
+        noiseTexture.hasAlpha = true;
+        noiseTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
+
+        // Apply noise as opacity texture (modulates transparency)
+        material.opacityTexture = noiseTexture;
+
+        logger.info('Noise texture applied as opacity texture');
+      }
     }
 
     // Apply color (tints texture or sets solid color)

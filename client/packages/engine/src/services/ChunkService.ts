@@ -35,7 +35,7 @@ const logger = getLogger('ChunkService');
  * Default backdrop configuration used when chunk data doesn't provide backdrop
  */
 const DEFAULT_BACKDROP: Backdrop = {
-    id: 'volumetric_fog'
+    id: 'organic_fog'
 };
 
 /**
