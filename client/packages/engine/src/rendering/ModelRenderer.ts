@@ -173,12 +173,14 @@ export class ModelRenderer extends BlockRenderer {
           modelMesh = allMeshes[0];
         }
 
-        // Cache the loaded model
+        // Cache the loaded model (make it invisible, it's just a template)
         ModelRenderer.modelCache.set(modelPath, modelMesh);
+        modelMesh.setEnabled(false); // Disable template mesh so it's not rendered
         logger.info('Model cached', { modelPath });
 
         // Clone for this instance
         modelMesh = modelMesh.clone(`model_${worldX}_${worldY}_${worldZ}`, null)!;
+        modelMesh.setEnabled(true); // Enable the clone
       }
 
       // Calculate bounding box for automatic scaling

@@ -133,12 +133,14 @@ export class ModelRenderer extends ShapeRenderer {
           modelMesh = allMeshes[0];
         }
 
-        // Cache the loaded model
+        // Cache the loaded model (make it invisible, it's just a template)
         ModelRenderer.modelCache.set(modelPath, modelMesh);
+        modelMesh.setEnabled(false); // Disable template mesh so it's not rendered
         console.log(`[ModelRenderer] Cached model: ${modelPath}`);
 
         // Clone for this instance
         modelMesh = modelMesh.clone(`model_${x}_${y}_${z}`, null)!;
+        modelMesh.setEnabled(true); // Enable the clone
       }
 
       // Calculate bounding box to determine automatic scaling
