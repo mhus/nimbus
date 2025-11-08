@@ -506,8 +506,14 @@ export class BackdropService {
           return null;
       }
 
-      // Create vertical plane mesh
-      const mesh = this.createVerticalPlane(x1, z1, x2, z2, yBase, yUp);
+      // Get depth (0 = plane, > 0 = box)
+      const depth = config.depth ?? 0;
+
+      // Create mesh (plane or box depending on depth)
+      const mesh = this.createBackdropGeometry(
+        x1, z1, x2, z2, yBase, yUp,
+        direction, depth
+      );
 
       return mesh;
     } catch (error) {
@@ -588,9 +594,29 @@ export class BackdropService {
   }
 
   /**
+   * Create backdrop geometry (plane or box depending on depth)
+   */
+  private createBackdropGeometry(
+    x1: number,
+    z1: number,
+    x2: number,
+    z2: number,
+    yStart: number,
+    yEnd: number,
+    direction: string,
+    depth: number
+  ): Mesh {
+    if (depth === 0) {
+      // Create plane (thin wall)
+      return this.createVerticalPlane(x1, z1, x2, z2, yStart, yEnd);
+    } else {
+      // Create box (volumetric fog)
+      return this.createBackdropBox(x1, z1, x2, z2, yStart, yEnd, direction, depth);
+    }
+  }
+
+  /**
    * Create a vertical plane mesh
-   *
-   * Uses absolute world coordinates in vertices (same pattern as RenderService)
    */
   private createVerticalPlane(
     x1: number,
@@ -610,16 +636,11 @@ export class BackdropService {
       x1, yEnd, z1     // Top left
     ];
 
-    // Reverse winding order (we're outside looking in, not inside like cube)
+    // Reverse winding order
     const indices = [0, 2, 1, 0, 3, 2];
 
-    // UVs: Bottom vertices (yStart) → v=0, Top vertices (yEnd) → v=1
-    const uvs = [
-      0, 0,  // Bottom left (yStart)
-      1, 0,  // Bottom right (yStart)
-      1, 1,  // Top right (yEnd)
-      0, 1   // Top left (yEnd)
-    ];
+    // UVs
+    const uvs = [0, 0, 1, 0, 1, 1, 0, 1];
 
     // Calculate normals
     const dx = x2 - x1;
@@ -641,6 +662,92 @@ export class BackdropService {
     mesh.isPickable = false;
 
     return mesh;
+  }
+
+  /**
+   * Create a backdrop box (for volumetric fog)
+   */
+  private createBackdropBox(
+    x1: number,
+    z1: number,
+    x2: number,
+    z2: number,
+    yStart: number,
+    yEnd: number,
+    direction: string,
+    depth: number
+  ): Mesh {
+    // Calculate box dimensions based on direction
+    let xMin: number, xMax: number, zMin: number, zMax: number;
+
+    switch (direction) {
+      case 'n':
+        // North: extend in negative Z direction
+        xMin = x1;
+        xMax = x2;
+        zMin = z1 - depth;
+        zMax = z1;
+        break;
+
+      case 's':
+        // South: extend in positive Z direction
+        xMin = x1;
+        xMax = x2;
+        zMin = z1;
+        zMax = z1 + depth;
+        break;
+
+      case 'e':
+        // East: extend in negative X direction
+        xMin = x1 - depth;
+        xMax = x1;
+        zMin = z1;
+        zMax = z2;
+        break;
+
+      case 'w':
+        // West: extend in positive X direction
+        xMin = x1;
+        xMax = x1 + depth;
+        zMin = z1;
+        zMax = z2;
+        break;
+
+      default:
+        return this.createVerticalPlane(x1, z1, x2, z2, yStart, yEnd);
+    }
+
+    const width = Math.abs(xMax - xMin);
+    const height = yEnd - yStart;
+    const depthSize = Math.abs(zMax - zMin);
+
+    const centerX = (xMin + xMax) / 2;
+    const centerY = (yStart + yEnd) / 2;
+    const centerZ = (zMin + zMax) / 2;
+
+    logger.info('Creating backdrop box', {
+      direction,
+      dimensions: { width, height, depth: depthSize },
+      center: { x: centerX, y: centerY, z: centerZ },
+      bounds: { xMin, xMax, yStart, yEnd, zMin, zMax }
+    });
+
+    // Create box using MeshBuilder
+    const box = MeshBuilder.CreateBox(
+      'backdrop_box',
+      {
+        width: width,
+        height: height,
+        depth: depthSize
+      },
+      this.scene
+    );
+
+    // Position box at center
+    box.position.set(centerX, centerY, centerZ);
+    box.isPickable = false;
+
+    return box;
   }
 
 

@@ -102,25 +102,25 @@ export class BackdropMaterialManager {
       texture.updateSamplingMode(Texture.NEAREST_SAMPLINGMODE); // Nearest neighbor filtering
       material.diffuseTexture = texture;
       material.useAlphaFromDiffuseTexture = true; // Use alpha from texture
+    }
 
-      // Neutral color
-      material.diffuseColor = Color3.White();
+    // Apply color (tints texture or sets solid color)
+    if (config.color) {
+      material.diffuseColor = this.parseColor(config.color);
     } else {
-      // No texture - use color and alpha from config
-      if (config.color) {
-        material.diffuseColor = this.parseColor(config.color);
-        logger.info('Applied color to material', { color: config.color });
-      } else {
-        material.diffuseColor = Color3.White();
-      }
+      material.diffuseColor = Color3.White();
+    }
 
-      // Apply alpha only when no texture
-      material.alpha = config.alpha ?? 1.0;
-      logger.info('Applied alpha to material', { alpha: material.alpha });
+    // Apply alpha (multiplies with texture alpha if present)
+    material.alpha = config.alpha ?? 1.0;
+
+    // Apply alphaMode if specified
+    if (config.alphaMode !== undefined) {
+      material.transparencyMode = config.alphaMode;
     }
 
     // Backdrop-specific material properties
-    this.applyBackdropProperties(material);
+    this.applyBackdropProperties(material, config.alphaMode === undefined);
 
     logger.info('Backdrop material creation complete', {
       materialName,
@@ -135,19 +135,23 @@ export class BackdropMaterialManager {
   /**
    * Apply backdrop-specific rendering properties
    */
-  private applyBackdropProperties(material: StandardMaterial): void {
+  private applyBackdropProperties(material: StandardMaterial, setTransparencyMode: boolean): void {
     material.backFaceCulling = false;
 
     if (!material.diffuseTexture) {
       // Solid color backdrop: use emissive for glow
       material.disableLighting = true;
       material.emissiveColor = material.diffuseColor;
-      material.transparencyMode = StandardMaterial.MATERIAL_OPAQUE;
+      if (setTransparencyMode) {
+        material.transparencyMode = StandardMaterial.MATERIAL_OPAQUE;
+      }
     } else {
       // Textured backdrop: use emissive texture for unlit + alpha support
       material.disableLighting = true;
       material.emissiveTexture = material.diffuseTexture;
-      material.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
+      if (setTransparencyMode) {
+        material.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
+      }
     }
 
     // Enable depth testing

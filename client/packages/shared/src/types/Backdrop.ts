@@ -33,6 +33,9 @@ export interface Backdrop {
   /** Height of the backdrop - relative to yBase, default 60 */
   height?: number;
 
+  /** Depth of the backdrop in blocks - if 0 or undefined: plane, if > 0: box/cube */
+  depth?: number;
+
   /** Texture path (e.g., "textures/backdrop/hills.png") */
   texture?: string;
 
