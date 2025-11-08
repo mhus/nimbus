@@ -613,12 +613,12 @@ export class BackdropService {
     // Reverse winding order (we're outside looking in, not inside like cube)
     const indices = [0, 2, 1, 0, 3, 2];
 
-    // UVs: Bottom vertices map to texture top (v=0), Top vertices map to texture bottom (v=1)
+    // UVs: Bottom vertices (yStart) → v=0, Top vertices (yEnd) → v=1
     const uvs = [
-      0, 0,  // Bottom left: v=0 (texture top)
-      1, 0,  // Bottom right: v=0 (texture top)
-      1, 1,  // Top right: v=1 (texture bottom)
-      0, 1   // Top left: v=1 (texture bottom)
+      0, 0,  // Bottom left (yStart)
+      1, 0,  // Bottom right (yStart)
+      1, 1,  // Top right (yEnd)
+      0, 1   // Top left (yEnd)
     ];
 
     // Calculate normals

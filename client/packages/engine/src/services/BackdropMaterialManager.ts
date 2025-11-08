@@ -99,13 +99,12 @@ export class BackdropMaterialManager {
 
       const texture = new Texture(textureUrl, this.scene);
       texture.hasAlpha = true; // Enable alpha channel from PNG
+      texture.updateSamplingMode(Texture.NEAREST_SAMPLINGMODE); // Nearest neighbor filtering
       material.diffuseTexture = texture;
       material.useAlphaFromDiffuseTexture = true; // Use alpha from texture
 
-      // Don't override color or alpha when using texture - let PNG control it
-      material.diffuseColor = Color3.White(); // Neutral color to not tint the texture
-      // Don't set material.alpha - let texture alpha control it
-      logger.info('Using texture alpha (not setting material.alpha)');
+      // Neutral color
+      material.diffuseColor = Color3.White();
     } else {
       // No texture - use color and alpha from config
       if (config.color) {
@@ -154,12 +153,6 @@ export class BackdropMaterialManager {
     // Enable depth testing
     material.disableDepthWrite = false;
     material.depthFunction = 0;
-
-    logger.debug('Backdrop material properties applied', {
-      hasDiffuseTexture: !!material.diffuseTexture,
-      hasEmissiveTexture: !!material.emissiveTexture,
-      transparencyMode: material.transparencyMode
-    });
   }
 
   /**
