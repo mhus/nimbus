@@ -42,6 +42,12 @@ export class BackdropService {
   /** Backdrop meshes by key (format: "cx,cz:direction") */
   private backdropMeshes = new Map<BackdropKey, Mesh>();
 
+  /** Prevent concurrent updates */
+  private isUpdating = false;
+
+  /** Flag to trigger another update after current one finishes */
+  private needsAnotherUpdate = false;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.chunkService = appContext.services.chunk as ChunkService;
@@ -62,11 +68,17 @@ export class BackdropService {
    * Setup chunk event listeners
    */
   private setupEventListeners(): void {
-    this.chunkService.on('chunk:loaded', () => {
+    this.chunkService.on('chunk:loaded', (chunk: any) => {
+      logger.info('Chunk loaded event, updating backdrops', {
+        chunk: { cx: chunk.data.transfer.cx, cz: chunk.data.transfer.cz }
+      });
       this.updateBackdrops();
     });
 
-    this.chunkService.on('chunk:unloaded', () => {
+    this.chunkService.on('chunk:unloaded', (coord: { cx: number; cz: number }) => {
+      logger.info('Chunk unloaded event, updating backdrops', {
+        unloadedChunk: coord
+      });
       this.updateBackdrops();
     });
 
@@ -80,6 +92,16 @@ export class BackdropService {
    * For each chunk, check if neighbors exist. If not, draw backdrop on that side.
    */
   private async updateBackdrops(): Promise<void> {
+    // If update is in progress, mark that another update is needed
+    if (this.isUpdating) {
+      logger.info('Backdrop update already in progress, will update again after');
+      this.needsAnotherUpdate = true;
+      return;
+    }
+
+    this.isUpdating = true;
+    this.needsAnotherUpdate = false;
+
     try {
       const allChunks = this.chunkService.getAllChunks();
 
@@ -87,11 +109,18 @@ export class BackdropService {
 
       // Build set of loaded chunk coordinates for fast lookup
       const loadedCoords = new Set<string>();
+      const loadedChunkList: Array<{cx: number, cz: number}> = [];
       for (const chunk of allChunks) {
         const cx = chunk.data.transfer.cx;
         const cz = chunk.data.transfer.cz;
         loadedCoords.add(getChunkKey(cx, cz));
+        loadedChunkList.push({ cx, cz });
       }
+
+      logger.info('Loaded chunks', {
+        count: allChunks.length,
+        chunks: loadedChunkList
+      });
 
       // Collect all needed backdrops by checking each chunk's neighbors
       const neededBackdrops = new Set<BackdropKey>();
@@ -102,22 +131,26 @@ export class BackdropService {
         const cz = chunk.data.transfer.cz;
 
         // Check North neighbor (cz+1)
-        if (!loadedCoords.has(getChunkKey(cx, cz + 1))) {
+        const hasNorth = loadedCoords.has(getChunkKey(cx, cz + 1));
+        if (!hasNorth) {
           neededBackdrops.add(this.getBackdropKey(cx, cz, 'n'));
         }
 
         // Check South neighbor (cz-1)
-        if (!loadedCoords.has(getChunkKey(cx, cz - 1))) {
+        const hasSouth = loadedCoords.has(getChunkKey(cx, cz - 1));
+        if (!hasSouth) {
           neededBackdrops.add(this.getBackdropKey(cx, cz, 's'));
         }
 
         // Check East neighbor (cx+1)
-        if (!loadedCoords.has(getChunkKey(cx + 1, cz))) {
+        const hasEast = loadedCoords.has(getChunkKey(cx + 1, cz));
+        if (!hasEast) {
           neededBackdrops.add(this.getBackdropKey(cx, cz, 'e'));
         }
 
         // Check West neighbor (cx-1)
-        if (!loadedCoords.has(getChunkKey(cx - 1, cz))) {
+        const hasWest = loadedCoords.has(getChunkKey(cx - 1, cz));
+        if (!hasWest) {
           neededBackdrops.add(this.getBackdropKey(cx, cz, 'w'));
         }
       }
@@ -125,6 +158,8 @@ export class BackdropService {
       logger.info('Collected needed backdrops', {
         count: neededBackdrops.size,
         backdrops: Array.from(neededBackdrops),
+        currentlyRendered: this.backdropMeshes.size,
+        currentKeys: Array.from(this.backdropMeshes.keys())
       });
 
       // Dispose backdrops that are no longer needed
@@ -139,6 +174,16 @@ export class BackdropService {
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'BackdropService.updateBackdrops');
+    } finally {
+      this.isUpdating = false;
+
+      // If another update was requested while we were updating, run it now
+      if (this.needsAnotherUpdate) {
+        logger.info('Running pending backdrop update');
+        this.needsAnotherUpdate = false;
+        // Use setTimeout to avoid deep recursion
+        setTimeout(() => this.updateBackdrops(), 0);
+      }
     }
   }
 
@@ -155,12 +200,29 @@ export class BackdropService {
    * Dispose backdrops that are no longer needed
    */
   private disposeUnneededBackdrops(neededBackdrops: Set<BackdropKey>): void {
-    // Find and dispose unneeded backdrops
+    const toDispose: BackdropKey[] = [];
+
+    // Find backdrops to dispose
     for (const [key, mesh] of this.backdropMeshes) {
       if (!neededBackdrops.has(key)) {
-        logger.debug('Disposing unneeded backdrop', { key });
-        mesh.dispose();
-        this.backdropMeshes.delete(key);
+        toDispose.push(key);
+      }
+    }
+
+    if (toDispose.length > 0) {
+      logger.info('Disposing unneeded backdrops', {
+        count: toDispose.length,
+        keys: toDispose
+      });
+
+      // Dispose them
+      for (const key of toDispose) {
+        const mesh = this.backdropMeshes.get(key);
+        if (mesh) {
+          mesh.dispose();
+          this.backdropMeshes.delete(key);
+          logger.debug('Disposed backdrop', { key });
+        }
       }
     }
   }
