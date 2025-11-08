@@ -367,7 +367,42 @@ export class MaterialService {
 
     // Apply properties from key
     material.backFaceCulling = props.backFaceCulling;
-    material.transparencyMode = props.transparencyMode;
+
+    // Map TransparencyMode to Babylon.js Material.transparencyMode + Texture properties
+    switch (props.transparencyMode) {
+      case TransparencyMode.NONE:
+        material.transparencyMode = Material.MATERIAL_OPAQUE;
+        break;
+      case TransparencyMode.ALPHA_TEST:
+        material.transparencyMode = Material.MATERIAL_ALPHATEST;
+        if (atlasTexture) atlasTexture.hasAlpha = true;
+        break;
+      case TransparencyMode.ALPHA_BLEND:
+        material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+        if (atlasTexture) atlasTexture.hasAlpha = true;
+        break;
+      case TransparencyMode.ALPHA_TEST_FROM_RGB:
+        material.transparencyMode = Material.MATERIAL_ALPHATEST;
+        if (atlasTexture) atlasTexture.getAlphaFromRGB = true;
+        break;
+      case TransparencyMode.ALPHA_BLEND_FROM_RGB:
+        material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+        if (atlasTexture) atlasTexture.getAlphaFromRGB = true;
+        break;
+      case TransparencyMode.ALPHA_TESTANDBLEND:
+        material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
+        if (atlasTexture) atlasTexture.hasAlpha = true;
+        break;
+      case TransparencyMode.ALPHA_TESTANDBLEND_FROM_RGB:
+        material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
+        if (atlasTexture) atlasTexture.getAlphaFromRGB = true;
+        break;
+      default:
+        // Fallback to opaque
+        material.transparencyMode = Material.MATERIAL_OPAQUE;
+        break;
+    }
+
     material.alpha = props.opacity;
 
     // Disable specular highlights for blocks
@@ -496,6 +531,7 @@ export class MaterialService {
 
   /**
    * Apply material properties (opacity, transparency, color)
+   * @deprecated This method is not currently used. Material properties are set directly in getMaterial().
    */
   private applyMaterialProperties(material: Material, textureDef: TextureDefinition): void {
     // Apply opacity
@@ -505,9 +541,38 @@ export class MaterialService {
 
     // Apply transparency mode
     if (textureDef.transparencyMode !== undefined) {
-      // Babylon.js will handle alpha automatically based on material.alpha and texture
-      if (textureDef.transparencyMode !== TransparencyMode.NONE) {
-        material.transparencyMode = textureDef.transparencyMode;
+      // Get texture from material (if StandardMaterial)
+      const texture = material instanceof StandardMaterial ? material.diffuseTexture as Texture : null;
+
+      // Map TransparencyMode to Babylon.js Material.transparencyMode + Texture properties
+      switch (textureDef.transparencyMode) {
+        case TransparencyMode.NONE:
+          material.transparencyMode = Material.MATERIAL_OPAQUE;
+          break;
+        case TransparencyMode.ALPHA_TEST:
+          material.transparencyMode = Material.MATERIAL_ALPHATEST;
+          if (texture) texture.hasAlpha = true;
+          break;
+        case TransparencyMode.ALPHA_BLEND:
+          material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+          if (texture) texture.hasAlpha = true;
+          break;
+        case TransparencyMode.ALPHA_TEST_FROM_RGB:
+          material.transparencyMode = Material.MATERIAL_ALPHATEST;
+          if (texture) texture.getAlphaFromRGB = true;
+          break;
+        case TransparencyMode.ALPHA_BLEND_FROM_RGB:
+          material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+          if (texture) texture.getAlphaFromRGB = true;
+          break;
+        case TransparencyMode.ALPHA_TESTANDBLEND:
+          material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
+          if (texture) texture.hasAlpha = true;
+          break;
+        case TransparencyMode.ALPHA_TESTANDBLEND_FROM_RGB:
+          material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
+          if (texture) texture.getAlphaFromRGB = true;
+          break;
       }
     }
 
@@ -635,8 +700,8 @@ export class MaterialService {
     material.specularColor = new Color3(0.5, 0.5, 0.5); // Some specular for glass shine
     material.specularPower = 64; // High specular power for glass-like highlights
 
-    // Enable transparency
-    material.transparencyMode = TransparencyMode.HAS_ALPHA;
+    // Enable transparency (glass uses smooth alpha blending)
+    material.transparencyMode = Material.MATERIAL_ALPHABLEND;
 
     logger.debug('Created glass material', { name, color, opacity: parsedAlpha });
 
@@ -730,46 +795,63 @@ export class MaterialService {
         });
       }
 
-      // Apply material properties from modifier
-      const visibility = modifier.visibility;
-
+      // Apply material properties from textureDef
       // Opacity & Transparency
-      if (visibility?.opacity !== undefined) {
-        material.alpha = visibility.opacity;
+      if (textureDef.opacity !== undefined) {
+        material.alpha = textureDef.opacity;
       }
 
-      if (visibility?.transparencyMode !== undefined) {
-        switch (visibility.transparencyMode) {
-          case TransparencyMode.OPAQUE:
+      // Transparency mode
+      if (textureDef.transparencyMode !== undefined) {
+        switch (textureDef.transparencyMode) {
+          case TransparencyMode.NONE:
             material.transparencyMode = Material.MATERIAL_OPAQUE;
             break;
           case TransparencyMode.ALPHA_TEST:
             material.transparencyMode = Material.MATERIAL_ALPHATEST;
+            if (texture) texture.hasAlpha = true;
             break;
           case TransparencyMode.ALPHA_BLEND:
             material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+            if (texture) texture.hasAlpha = true;
+            break;
+          case TransparencyMode.ALPHA_TEST_FROM_RGB:
+            material.transparencyMode = Material.MATERIAL_ALPHATEST;
+            if (texture) texture.getAlphaFromRGB = true;
+            break;
+          case TransparencyMode.ALPHA_BLEND_FROM_RGB:
+            material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+            if (texture) texture.getAlphaFromRGB = true;
+            break;
+          case TransparencyMode.ALPHA_TESTANDBLEND:
+            material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
+            if (texture) texture.hasAlpha = true;
+            break;
+          case TransparencyMode.ALPHA_TESTANDBLEND_FROM_RGB:
+            material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
+            if (texture) texture.getAlphaFromRGB = true;
             break;
         }
       }
 
       // Backface Culling
-      if (visibility?.backFaceCulling !== undefined) {
-        material.backFaceCulling = visibility.backFaceCulling;
+      if (textureDef.backFaceCulling !== undefined) {
+        material.backFaceCulling = textureDef.backFaceCulling;
       } else {
         // Default: disable backface culling for billboards/sprites (visible from both sides)
         material.backFaceCulling = false;
       }
 
       // Sampling Mode (if texture loaded)
-      if (texture && visibility?.samplingMode !== undefined) {
-        switch (visibility.samplingMode) {
+      if (texture && textureDef.samplingMode !== undefined) {
+        switch (textureDef.samplingMode) {
           case SamplingMode.NEAREST:
             texture.updateSamplingMode(Texture.NEAREST_NEAREST);
             break;
           case SamplingMode.LINEAR:
             texture.updateSamplingMode(Texture.LINEAR_LINEAR);
             break;
-          case SamplingMode.TRILINEAR:
+          case SamplingMode.MIPMAP:
             texture.updateSamplingMode(Texture.TRILINEAR_SAMPLINGMODE);
             break;
         }

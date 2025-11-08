@@ -49,7 +49,9 @@
       "Bash(npm install:*)",
       "Bash(node /Users/hummel/sources/mhus/nimbus/scripts/generate-blocktype-descriptions.js:*)",
       "Bash(pnpm --filter nimbus_test_server build:*)",
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "Bash(pnpm --filter @nimbus/engine build:*)",
+      "Bash(pnpm --filter @nimbus/engine exec tsc:*)"
     ],
     "deny": [],
     "ask": []

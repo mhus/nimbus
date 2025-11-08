@@ -436,8 +436,12 @@
                   class="select select-bordered select-xs w-full"
                 >
                   <option :value="0">NONE</option>
-                  <option :value="1">HAS_ALPHA</option>
-                  <option :value="2">ALPHA_FROM_RGB</option>
+                  <option :value="1">ALPHA_TEST</option>
+                  <option :value="2">ALPHA_BLEND</option>
+                  <option :value="3">ALPHA_TEST_FROM_RGB</option>
+                  <option :value="4">ALPHA_BLEND_FROM_RGB</option>
+                  <option :value="5">ALPHA_TESTANDBLEND</option>
+                  <option :value="6">ALPHA_TESTANDBLEND_FROM_RGB</option>
                 </select>
               </div>
               <div>

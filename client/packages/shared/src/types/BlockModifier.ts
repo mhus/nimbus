@@ -56,11 +56,26 @@ export enum SamplingMode {
 
 /**
  * Texture transparency mode
+ *
+ * Combines Babylon.js Material.transparencyMode (rendering method)
+ * with Texture alpha source (hasAlpha vs getAlphaFromRGB):
+ *
+ * - NONE: Opaque, no transparency
+ * - ALPHA_TEST: Sharp edges, alpha from texture alpha channel (hasAlpha)
+ * - ALPHA_BLEND: Smooth transparency, alpha from texture alpha channel (hasAlpha)
+ * - ALPHA_TEST_FROM_RGB: Sharp edges, alpha derived from RGB brightness (getAlphaFromRGB)
+ * - ALPHA_BLEND_FROM_RGB: Smooth transparency, alpha derived from RGB brightness (getAlphaFromRGB)
+ * - ALPHA_TESTANDBLEND: Combined test+blend, alpha from texture alpha channel (hasAlpha)
+ * - ALPHA_TESTANDBLEND_FROM_RGB: Combined test+blend, alpha derived from RGB brightness (getAlphaFromRGB)
  */
 export enum TransparencyMode {
   NONE = 0,
-  HAS_ALPHA = 1,
-  ALPHA_FROM_RGB = 2,
+  ALPHA_TEST = 1,
+  ALPHA_BLEND = 2,
+  ALPHA_TEST_FROM_RGB = 3,
+  ALPHA_BLEND_FROM_RGB = 4,
+  ALPHA_TESTANDBLEND = 5,
+  ALPHA_TESTANDBLEND_FROM_RGB = 6,
 }
 
 /**
