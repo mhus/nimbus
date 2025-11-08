@@ -177,6 +177,10 @@ export class StairRenderer extends BlockRenderer {
     const bottomTexture = textures[bottomIndex] ? this.normalizeTexture(textures[bottomIndex]) : null;
     const sideTexture = textures[sideIndex] ? this.normalizeTexture(textures[sideIndex]) : null;
 
+    // Check face visibility
+    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
+    const isBackVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK);
+
     let facesRendered = 0;
 
     // ===== LOWER BASE (6 faces) =====
@@ -190,14 +194,16 @@ export class StairRenderer extends BlockRenderer {
     );
     facesRendered++;
 
-    // Bottom face of lower base (3, 2, 1, 0)
-    await this.addFace(
-      corners[3], corners[2], corners[1], corners[0],
-      [0, -1, 0],
-      bottomTexture,
-      renderContext
-    );
-    facesRendered++;
+    // Bottom face of lower base (3, 2, 1, 0) - controlled by BOTTOM faceVisibility
+    if (isBottomVisible) {
+      await this.addFace(
+        corners[3], corners[2], corners[1], corners[0],
+        [0, -1, 0],
+        bottomTexture,
+        renderContext
+      );
+      facesRendered++;
+    }
 
     // Front face of lower base (3, 7, 6, 2)
     await this.addFace(
@@ -209,15 +215,17 @@ export class StairRenderer extends BlockRenderer {
     );
     facesRendered++;
 
-    // Back face of lower base (1, 5, 4, 0)
-    await this.addFace(
-      corners[1], corners[5], corners[4], corners[0],
-      [0, 0, -1],
-      sideTexture,
-      renderContext,
-      true  // Reverse winding order
-    );
-    facesRendered++;
+    // Back face of lower base (1, 5, 4, 0) - controlled by BACK faceVisibility
+    if (isBackVisible) {
+      await this.addFace(
+        corners[1], corners[5], corners[4], corners[0],
+        [0, 0, -1],
+        sideTexture,
+        renderContext,
+        true  // Reverse winding order
+      );
+      facesRendered++;
+    }
 
     // Right face of lower base (2, 6, 5, 1)
     await this.addFace(

@@ -57,7 +57,7 @@ teilen.
 - Die offset verschieben nur noch aspekte von jedem punkt. andere aspekte bleiben unveraendert.
 - Wenn alle offsets 0 sind, dannw wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
 
-[ ] faceVisibility soll auch die Seiten im HashRenderer deaktivieren koennen.
+[x] faceVisibility soll auch die Seiten im HashRenderer seiten deaktivieren koennen.
 
 ## Stair
 
@@ -67,7 +67,7 @@ teilen.
 - Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
 - Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StairRenderer.ts
 
-[ ] Die BOTTOM Seite soll durch faceVisibility deaktiviert werden koennen. Die BACK soll durch 
+[?] In StairRenderer soll die BOTTOM Seite soll durch faceVisibility deaktiviert werden koennen. Die BACK soll durch 
 faceVisibility deaktiviert werden koennen.
 
 ## Steps
@@ -86,6 +86,8 @@ sind aber glassiere mit der color die an der texture hinterlegt ist.
   werden, ggf. brauchst du zur erstellung eine neue Methode.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
+
+[ ] In GlassRenderer sollen mit faceVisibility die Seiten deaktiviert werden koennen.
 
 ## FlipBox
 
