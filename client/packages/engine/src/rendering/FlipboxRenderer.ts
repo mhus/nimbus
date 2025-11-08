@@ -1,10 +1,10 @@
 /**
  * FlipboxRenderer - Renders animated sprite-sheet blocks
  *
- * Renders only the TOP face of a block with FLIPBOX shader for sprite-sheet animation.
+ * Renders only the TOP face of a block with FLIPBOX effect for sprite-sheet animation.
  * Each block gets its own separate mesh with original texture (not atlas).
  *
- * Shader Parameters Format: "frameCount,delayMs[,mode]"
+ * Effect Parameters Format: "frameCount,delayMs[,mode]"
  * - frameCount: Number of frames in horizontal sprite-sheet (e.g., 4)
  * - delayMs: Milliseconds between frame transitions (e.g., 100)
  * - mode: "rotate" (default) or "bumerang" (optional)
@@ -15,7 +15,7 @@
  */
 
 import { Vector3, Matrix, Mesh, VertexData } from '@babylonjs/core';
-import { getLogger, BlockShader } from '@nimbus/shared';
+import { getLogger, BlockEffect } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -27,7 +27,7 @@ const logger = getLogger('FlipboxRenderer');
  *
  * Features:
  * - Renders only TOP face (horizontal surface)
- * - Uses FLIPBOX shader from ShaderService
+ * - Uses FLIPBOX effect from ShaderService
  * - Each block gets separate mesh with original texture
  * - Supports offset, scaling, rotation transformations
  */
@@ -44,7 +44,7 @@ export class FlipboxRenderer extends BlockRenderer {
    * Render a FLIPBOX block
    *
    * Creates geometry for TOP face only with transformations applied.
-   * Material is created by MaterialService with FLIPBOX shader.
+   * Material is created by MaterialService with FLIPBOX effect.
    *
    * @param renderContext Render context (not used - separate mesh)
    * @param clientBlock Block to render
@@ -58,10 +58,10 @@ export class FlipboxRenderer extends BlockRenderer {
       return;
     }
 
-    // Validate shader is FLIPBOX
-    const shader = modifier.visibility.shader;
-    if (shader !== BlockShader.FLIPBOX) {
-      logger.warn('FlipboxRenderer: Not a FLIPBOX shader', { shader, block });
+    // Validate effect is FLIPBOX
+    const effect = modifier.visibility.effect;
+    if (effect !== BlockEffect.FLIPBOX) {
+      logger.warn('FlipboxRenderer: Not a FLIPBOX effect', { effect, block });
       return;
     }
 
@@ -200,7 +200,7 @@ export class FlipboxRenderer extends BlockRenderer {
   /**
    * Create separate mesh for this FLIPBOX block
    *
-   * Creates a new mesh with FLIPBOX shader material from MaterialService.
+   * Creates a new mesh with FLIPBOX effect material from MaterialService.
    *
    * @param clientBlock Block to create mesh for
    * @param faceData Geometry data
@@ -230,8 +230,8 @@ export class FlipboxRenderer extends BlockRenderer {
     // Apply to mesh
     vertexData.applyToMesh(mesh);
 
-    // Get FLIPBOX shader material from MaterialService
-    // MaterialService will detect shader field and create FLIPBOX material with original texture
+    // Get FLIPBOX effect material from MaterialService
+    // MaterialService will detect effect field and create FLIPBOX material with original texture
     const material = await renderContext.renderService.materialService.getMaterial(
       clientBlock.currentModifier,
       1 // TextureKey.TOP

@@ -386,22 +386,19 @@ export interface TextureDefinition {
   /** Opacity (0.0 - 1.0) */
   opacity?: number;
 
-  /** Shader type (FLIPBOX, WIND, etc.)
-   * Shaders are purely visual effects with no gameplay impact
+  /** Effect type (NONE, FLIPBOX, WIND)
+   * Default is the effect from the VisibilityModifier
+   * If set, overrides the VisibilityModifier.effect for this texture
    */
-  shader?: BlockShader;
-
-  /** Shader Parameters
-   * Format depends on shader type:
-   * - FLIPBOX: "frameCount,delayMs" (e.g., "4,100")
-   */
-  shaderParameters?: string;
-
-  /** Effect type (0=none, 1=water, 2=wind, 4=lava, 5=fog)
-  Default is the effect from the block
-  NOTE: FLIPBOX is no longer an effect - use shader field instead
-  */
   effect?: BlockEffect;
+
+  /** Effect Parameters
+   * Format depends on effect type:
+   * - FLIPBOX: "frameCount,delayMs" (e.g., "4,100")
+   * Default is the effectParameters from the VisibilityModifier
+   * If set, overrides the VisibilityModifier.effectParameters for this texture
+   */
+  effectParameters?: string;
 
   /** Tint color */
   color?: string;
@@ -413,49 +410,22 @@ export interface TextureDefinition {
 
 /**
  * Block effect types
- *
- * NOTE: FLIPBOX has been moved to shader system (BlockShader enum)
- * and is no longer a BlockEffect.
  */
 export enum BlockEffect {
   /** No effect */
   NONE = 0,
 
-  /** Water effect */
-  WATER = 1,
-
-  /** Wind effect */
-  WIND = 2,
-
-  /** Lava effect */
-  LAVA = 4,
-
-  /** Fog effect */
-  FOG = 5,
-}
-
-/**
- * Block shader types
- *
- * Shaders are visual effects implemented via custom GLSL code.
- * Unlike BlockEffects, shaders are purely visual and have no gameplay impact.
- */
-export enum BlockShader {
-  /** No shader */
-  NONE = 0,
-
-  /** Flipbox shader - Sprite-sheet animation cycling through frames
-   * shaderParameters format: "frameCount,delayMs" (e.g., "4,100")
+  /** Flipbox effect - Sprite-sheet animation cycling through frames
+   * effectParameters format: "frameCount,delayMs" (e.g., "4,100")
    * - frameCount: Number of frames in horizontal sprite-sheet
    * - delayMs: Milliseconds between frame changes
    */
   FLIPBOX = 1,
 
-  /** Wind shader - Vertex displacement for wind effect
-   * (Reserved for future implementation)
-   */
+  /** Wind effect */
   WIND = 2,
 }
+
 
 /**
  * Visibility properties
@@ -464,24 +434,19 @@ export interface VisibilityModifier {
   /** Shape type */
   shape?: Shape;
 
-  /** Shader type (FLIPBOX, WIND, etc.) for purely visual effects
-   * NOTE: Use this for FLIPBOX instead of effect field
+  /** Effect type (NONE, FLIPBOX, WIND)
+   * Applies to all textures by default
+   * Can be overridden per texture in TextureDefinition.effect
    */
-  shader?: BlockShader;
-
-  /** Shader-specific parameters
-   * Format depends on shader type (see BlockShader enum docs)
-   */
-  shaderParameters?: string;
-
-  /** Effect type (0=none, 1=water, 2=wind, 4=lava, 5=fog)
-  generally for the box
-  NOTE: FLIPBOX is no longer an effect - use shader field instead
-  */
   effect?: BlockEffect;
 
-  /** Effect-specific parameters */
-  effectParameters?: Record<string, any>;
+  /** Effect-specific parameters
+   * Format depends on effect type:
+   * - FLIPBOX: "frameCount,delayMs" (e.g., "4,100")
+   * Applies to all textures by default
+   * Can be overridden per texture in TextureDefinition.effectParameters
+   */
+  effectParameters?: string;
 
   /**
    * Corner offsets (8 corners × 3 axes = 24 values)

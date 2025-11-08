@@ -7,7 +7,7 @@
  *
  * Features:
  * - Multiple sprites per block (one per TextureDefinition)
- * - Sprite count configurable via shaderParameters (default: 100)
+ * - Sprite count configurable via shaderParameters (default: 10)
  * - Random positioning within block bounds using scaling and offset
  * - Wind animation integration
  *
@@ -57,7 +57,7 @@ export class SpriteRenderer extends BlockRenderer {
    * Render a SPRITE block
    *
    * Creates multiple sprite instances for each texture defined in the block.
-   * Number of sprites per texture is configurable via shaderParameters (default: 100).
+   * Number of sprites per texture is configurable via shaderParameters (default: 10).
    *
    * @param renderContext Render context
    * @param clientBlock Block to render
@@ -114,8 +114,8 @@ export class SpriteRenderer extends BlockRenderer {
     for (const [key, textureValue] of Object.entries(textures)) {
       const textureDef = TextureHelper.normalizeTexture(textureValue);
 
-      // Get sprite count from shaderParameters (format: "count" e.g., "100")
-      let spriteCount = 100; // Default
+      // Get sprite count from shaderParameters (format: "count" e.g., "10")
+      let spriteCount = 10; // Default
       if (textureDef.shaderParameters) {
         const parsed = parseInt(textureDef.shaderParameters, 10);
         if (!isNaN(parsed) && parsed > 0) {

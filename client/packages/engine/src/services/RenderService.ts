@@ -6,7 +6,7 @@
  */
 
 import { Mesh, VertexData, Scene } from '@babylonjs/core';
-import { getLogger, ExceptionHandler, Shape, BlockShader } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, Shape, BlockEffect } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ClientChunk } from '../types/ClientChunk';
 import type { ClientBlock } from '../types/ClientBlock';
@@ -395,10 +395,10 @@ export class RenderService {
     }
 
     const shape = modifier.visibility.shape ?? Shape.CUBE;
-    const shader = this.getBlockShader(modifier);
+    const effect = this.getBlockEffect(modifier);
 
-    // Check shader first
-    if (shader === BlockShader.FLIPBOX) {
+    // Check effect first
+    if (effect === BlockEffect.FLIPBOX) {
       return this.flipboxRenderer;
     }
 
@@ -470,21 +470,21 @@ export class RenderService {
   }
 
   /**
-   * Get shader from modifier
-   * Checks texture-level shader first, then visibility-level shader
+   * Get effect from modifier
+   * Checks texture-level effect first, then visibility-level effect
    */
-  private getBlockShader(modifier: any): BlockShader {
-    // Check texture-level shader (highest priority)
+  private getBlockEffect(modifier: any): BlockEffect {
+    // Check texture-level effect (highest priority)
     if (modifier.visibility?.textures) {
       for (const texture of Object.values(modifier.visibility.textures)) {
-        if (typeof texture === 'object' && texture !== null && 'shader' in texture) {
-          return (texture as any).shader ?? BlockShader.NONE;
+        if (typeof texture === 'object' && texture !== null && 'effect' in texture) {
+          return (texture as any).effect ?? BlockEffect.NONE;
         }
       }
     }
 
-    // Check visibility-level shader
-    return modifier.visibility?.shader ?? BlockShader.NONE;
+    // Check visibility-level effect
+    return modifier.visibility?.effect ?? BlockEffect.NONE;
   }
 
   /**

@@ -487,33 +487,17 @@
                   class="select select-bordered select-xs w-full"
                 >
                   <option :value="0">NONE</option>
-                  <option :value="1">WATER</option>
-                  <option :value="2">WIND</option>
-                  <option :value="4">LAVA</option>
-                  <option :value="5">FOG</option>
-                </select>
-              </div>
-              <div>
-                <label class="label py-0">
-                  <span class="label-text text-xs">Shader</span>
-                </label>
-                <select
-                  :value="getTextureDefValue(parseInt(key), 'shader') ?? 0"
-                  @change="setTextureDefValue(parseInt(key), 'shader', parseInt(($event.target as HTMLSelectElement).value))"
-                  class="select select-bordered select-xs w-full"
-                >
-                  <option :value="0">NONE</option>
                   <option :value="1">FLIPBOX</option>
                   <option :value="2">WIND</option>
                 </select>
               </div>
               <div>
                 <label class="label py-0">
-                  <span class="label-text text-xs">Shader Parameters</span>
+                  <span class="label-text text-xs">Effect Parameters</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'shaderParameters')"
-                  @input="setTextureDefValue(parseInt(key), 'shaderParameters', ($event.target as HTMLInputElement).value)"
+                  :value="getTextureDefValue(parseInt(key), 'effectParameters')"
+                  @input="setTextureDefValue(parseInt(key), 'effectParameters', ($event.target as HTMLInputElement).value)"
                   type="text"
                   class="input input-bordered input-xs w-full"
                   placeholder="e.g. 4,100 (frameCount,delayMs)"
@@ -540,7 +524,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { VisibilityModifier, TextureDefinition } from '@nimbus/shared';
-import { Shape, ShapeNames, TextureKey, TextureKeyNames, BlockEffect, BlockShader } from '@nimbus/shared';
+import { Shape, ShapeNames, TextureKey, TextureKeyNames, BlockEffect } from '@nimbus/shared';
 import AssetPickerDialog from '@components/AssetPickerDialog.vue';
 import CollapsibleSection from '@components/CollapsibleSection.vue';
 import OffsetsEditor from './OffsetsEditor.vue';

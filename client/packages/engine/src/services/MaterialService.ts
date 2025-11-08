@@ -23,8 +23,7 @@ import {
   TextureHelper,
   SamplingMode,
   TransparencyMode,
-  BlockEffect,
-  BlockShader
+  BlockEffect
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
@@ -117,23 +116,23 @@ export class MaterialService {
     // Normalize texture (string → TextureDefinition)
     const textureDef = TextureHelper.normalizeTexture(texture);
 
-    // Check for shader (texture.shader or visibility.shader)
-    const finalShader = textureDef.shader ?? modifier.visibility?.shader ?? BlockShader.NONE;
+    // Check for effect (texture.effect or visibility.effect)
+    const finalEffect = textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
 
     // FLIPBOX blocks need original texture (not atlas), so include texture path in key
-    if (finalShader === BlockShader.FLIPBOX) {
+    if (finalEffect === BlockEffect.FLIPBOX) {
       const parts: string[] = ['flipbox']; // Special prefix for FLIPBOX
       parts.push(`tex:${textureDef.path}`); // Include texture path
       parts.push(`bfc:${textureDef.backFaceCulling ?? true}`);
       parts.push(`tm:${textureDef.transparencyMode ?? TransparencyMode.NONE}`);
       parts.push(`op:${textureDef.opacity ?? 1.0}`);
       parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
-      parts.push(`shader:${finalShader}`);
+      parts.push(`eff:${finalEffect}`);
 
-      // Shader parameters (REQUIRED for FLIPBOX: "frameCount,delayMs")
-      const shaderParams = textureDef.shaderParameters ?? modifier.visibility?.shaderParameters;
-      if (shaderParams) {
-        parts.push(`sp:${shaderParams}`);
+      // Effect parameters (REQUIRED for FLIPBOX: "frameCount,delayMs")
+      const effectParams = textureDef.effectParameters ?? modifier.visibility?.effectParameters;
+      if (effectParams) {
+        parts.push(`ep:${effectParams}`);
       }
 
       return parts.join('|');
@@ -155,21 +154,16 @@ export class MaterialService {
     // 4. Sampling mode (default: LINEAR)
     parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
 
-    // 5. Shader (if defined)
-    if (finalShader !== BlockShader.NONE) {
-      parts.push(`shader:${finalShader}`);
+    // 5. Effect (already computed above, only add if not NONE and not FLIPBOX)
+    if (finalEffect !== BlockEffect.NONE && finalEffect !== BlockEffect.FLIPBOX) {
+      parts.push(`eff:${finalEffect}`);
 
-      // Shader parameters (if defined)
-      const shaderParams = textureDef.shaderParameters ?? modifier.visibility?.shaderParameters;
-      if (shaderParams) {
-        parts.push(`sp:${shaderParams}`);
+      // Effect parameters (if defined)
+      const effectParams = textureDef.effectParameters ?? modifier.visibility?.effectParameters;
+      if (effectParams) {
+        parts.push(`ep:${effectParams}`);
       }
     }
-
-    // 6. Effect (Texture.effect overrides BlockModifier.effect)
-    const finalEffect =
-      textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
-    parts.push(`eff:${finalEffect}`);
 
     // Note: Texture path is NOT part of the key (except for FLIPBOX) - UVs handle texture selection via atlas
     // Note: UV mapping is NOT part of the key - handled per-vertex in geometry
@@ -195,7 +189,7 @@ export class MaterialService {
   /**
    * Parse material key into properties
    *
-   * @param materialKey Material key string (e.g., "atlas|bfc:false|tm:0|op:1.0|sm:1|eff:0|shader:1|sp:4,100")
+   * @param materialKey Material key string (e.g., "atlas|bfc:false|tm:0|op:1.0|sm:1|eff:1|ep:4,100")
    * @returns Parsed material properties
    */
   private parseMaterialKey(materialKey: string): {
@@ -204,8 +198,7 @@ export class MaterialService {
     opacity: number;
     samplingMode: number;
     effect: number;
-    shader?: number;
-    shaderParameters?: string;
+    effectParameters?: string;
     texturePath?: string;
   } {
     const parts = materialKey.split('|');
@@ -214,8 +207,7 @@ export class MaterialService {
       transparencyMode: 0,
       opacity: 1.0,
       samplingMode: 1,
-      effect: 0,
-      shader: BlockShader.NONE,
+      effect: BlockEffect.NONE,
     };
 
     for (const part of parts) {
@@ -236,11 +228,8 @@ export class MaterialService {
         case 'eff':
           props.effect = parseInt(value);
           break;
-        case 'shader':
-          props.shader = parseInt(value);
-          break;
-        case 'sp':
-          props.shaderParameters = value;
+        case 'ep':
+          props.effectParameters = value;
           break;
         case 'tex':
           props.texturePath = value;
@@ -294,58 +283,41 @@ export class MaterialService {
       // Parse material properties from key
       const props = this.parseMaterialKey(cacheKey);
 
-      // Create material based on shader or effect
+      // Create material based on effect
       let material: Material | null = null;
 
-      // Check for shader first (e.g., FLIPBOX)
-      if (props.shader !== undefined && props.shader !== BlockShader.NONE && this.shaderService) {
-        const shaderName = BlockShader[props.shader].toLowerCase();
+      // Check for effect (e.g., FLIPBOX, WIND)
+      if (props.effect !== BlockEffect.NONE && this.shaderService) {
+        const effectName = BlockEffect[props.effect].toLowerCase();
 
-        if (props.shader === BlockShader.FLIPBOX && props.texturePath) {
-          // FLIPBOX shader needs original texture (not atlas)
+        if (props.effect === BlockEffect.FLIPBOX && props.texturePath) {
+          // FLIPBOX effect needs original texture (not atlas)
           const originalTexture = await this.loadTexture(props.texturePath);
           material = this.shaderService.createMaterial(
-            shaderName,
+            effectName,
             {
               texture: originalTexture,
-              shaderParameters: props.shaderParameters,
+              effectParameters: props.effectParameters,
               name: cacheKey,
             }
           );
-          logger.debug('Created FLIPBOX shader material with original texture', {
+          logger.debug('Created FLIPBOX effect material with original texture', {
             texturePath: props.texturePath,
-            shaderParameters: props.shaderParameters,
+            effectParameters: props.effectParameters,
             cacheKey
           });
-        } else if (this.shaderService.hasEffect(shaderName)) {
-          // Other shaders use atlas texture
-          const atlasTexture = this.textureAtlas?.getTexture();
-          material = this.shaderService.createMaterial(
-            shaderName,
-            {
-              texture: atlasTexture,
-              shaderParameters: props.shaderParameters,
-              name: cacheKey,
-            }
-          );
-          logger.debug('Created shader material with atlas', { shaderName, cacheKey });
-        }
-      }
-
-      // Check for effect (e.g., WATER, WIND)
-      if (!material && props.effect !== BlockEffect.NONE && this.shaderService) {
-        const effectName = BlockEffect[props.effect].toLowerCase();
-        if (this.shaderService.hasEffect(effectName)) {
+        } else if (this.shaderService.hasEffect(effectName)) {
+          // Other effects use atlas texture
           const atlasTexture = this.textureAtlas?.getTexture();
           material = this.shaderService.createMaterial(
             effectName,
             {
               texture: atlasTexture,
+              effectParameters: props.effectParameters,
               name: cacheKey,
-              ...modifier.visibility?.effectParameters
             }
           );
-          logger.debug('Created shader material with atlas', { effectName, cacheKey });
+          logger.debug('Created effect material with atlas', { effectName, cacheKey });
         }
       }
 

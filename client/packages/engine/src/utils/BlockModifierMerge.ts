@@ -42,6 +42,11 @@ function mergeObjects<T extends Record<string, any>>(target: T | undefined, sour
  * Merge visibility modifiers with special handling for textures
  * Textures are merged by texture key (TextureKey enum values)
  *
+ * Special effect/effectParameters handling:
+ * - VisibilityModifier.effect is the default for all textures
+ * - If a TextureDefinition doesn't have effect set, it inherits from VisibilityModifier
+ * - If a TextureDefinition is a string, it's converted to an object with effect from VisibilityModifier
+ *
  * @param target Base visibility modifier
  * @param source Override visibility modifier
  * @returns Merged visibility modifier
@@ -72,6 +77,32 @@ function mergeVisibility(target: any, source: any): any {
       ...(target.textures || {}),
       ...(source.textures || {}),
     };
+  }
+
+  // Apply VisibilityModifier.effect and effectParameters to textures
+  if (result.textures && (result.effect !== undefined || result.effectParameters !== undefined)) {
+    const defaultEffect = result.effect;
+    const defaultEffectParameters = result.effectParameters;
+
+    for (const key in result.textures) {
+      let texture = result.textures[key];
+
+      // If texture is a string and we have default effect/effectParameters, convert to object
+      if (typeof texture === 'string' && (defaultEffect !== undefined || defaultEffectParameters !== undefined)) {
+        texture = { path: texture };
+        result.textures[key] = texture;
+      }
+
+      // If texture is an object, apply defaults if not set
+      if (typeof texture === 'object' && texture !== null) {
+        if (defaultEffect !== undefined && texture.effect === undefined) {
+          texture.effect = defaultEffect;
+        }
+        if (defaultEffectParameters !== undefined && texture.effectParameters === undefined) {
+          texture.effectParameters = defaultEffectParameters;
+        }
+      }
+    }
   }
 
   return result;
