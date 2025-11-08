@@ -205,7 +205,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[3], corners[7], corners[6], corners[2],
       [0, 0, 1],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -214,7 +215,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[1], corners[5], corners[4], corners[0],
       [0, 0, -1],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -223,7 +225,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[2], corners[6], corners[5], corners[1],
       [1, 0, 0],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -232,7 +235,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[0], corners[4], corners[7], corners[3],
       [-1, 0, 0],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -261,7 +265,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[11], corners[15], corners[14], corners[10],
       [0, 0, 1],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -270,7 +275,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[9], corners[13], corners[12], corners[8],
       [0, 0, -1],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -279,7 +285,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[10], corners[14], corners[13], corners[9],
       [1, 0, 0],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -288,7 +295,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[8], corners[12], corners[15], corners[11],
       [-1, 0, 0],
       sideTexture,
-      renderContext
+      renderContext,
+      true  // Reverse winding order
     );
     facesRendered++;
 
@@ -309,6 +317,7 @@ export class StepsRenderer extends BlockRenderer {
    * @param normal - Face normal vector [x, y, z]
    * @param texture - Texture definition for the face
    * @param renderContext - Render context
+   * @param reverseWinding - Reverse triangle winding order for backface culling
    */
   private async addFace(
     corner0: number[],
@@ -317,7 +326,8 @@ export class StepsRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
-    renderContext: RenderContext
+    renderContext: RenderContext,
+    reverseWinding: boolean = false
   ): Promise<void> {
     const faceData = renderContext.faceData;
 
@@ -338,12 +348,26 @@ export class StepsRenderer extends BlockRenderer {
     if (texture && this.textureAtlas) {
       const atlasUV = await this.textureAtlas.getTextureUV(texture);
       if (atlasUV) {
-        faceData.uvs.push(
-          atlasUV.u0, atlasUV.v0,  // corner0: bottom-left
-          atlasUV.u1, atlasUV.v0,  // corner1: bottom-right
-          atlasUV.u1, atlasUV.v1,  // corner2: top-right
-          atlasUV.u0, atlasUV.v1   // corner3: top-left
-        );
+        // Determine if this is a horizontal face (top/bottom) or vertical face (sides)
+        const isHorizontalFace = normal[1] !== 0;
+
+        if (isHorizontalFace) {
+          // Top/Bottom faces: standard UV mapping
+          faceData.uvs.push(
+            atlasUV.u0, atlasUV.v0,
+            atlasUV.u1, atlasUV.v0,
+            atlasUV.u1, atlasUV.v1,
+            atlasUV.u0, atlasUV.v1
+          );
+        } else {
+          // Side faces: flip V coordinates
+          faceData.uvs.push(
+            atlasUV.u0, atlasUV.v1,
+            atlasUV.u1, atlasUV.v1,
+            atlasUV.u1, atlasUV.v0,
+            atlasUV.u0, atlasUV.v0
+          );
+        }
       } else {
         faceData.uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
       }
@@ -357,8 +381,15 @@ export class StepsRenderer extends BlockRenderer {
     const i2 = renderContext.vertexOffset + 2;
     const i3 = renderContext.vertexOffset + 3;
 
-    faceData.indices.push(i0, i1, i2);
-    faceData.indices.push(i0, i2, i3);
+    if (reverseWinding) {
+      // Reverse winding order: CW → CCW
+      faceData.indices.push(i0, i2, i1);
+      faceData.indices.push(i0, i3, i2);
+    } else {
+      // Standard counter-clockwise winding
+      faceData.indices.push(i0, i1, i2);
+      faceData.indices.push(i0, i2, i3);
+    }
 
     renderContext.vertexOffset += 4;
   }

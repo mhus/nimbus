@@ -175,9 +175,10 @@ export class CylinderRenderer extends BlockRenderer {
       vertices.push(new Vector3(topX, topCenterY, topZ));
 
       // UV coordinates (wrap around cylinder)
+      // Note: V-coordinates inverted - v0=top in texture, v1=bottom in texture
       const u = i / segments;
-      uvs.push(u, 0); // Bottom
-      uvs.push(u, 1); // Top
+      uvs.push(u, 1); // Bottom (v1 = bottom in texture)
+      uvs.push(u, 0); // Top (v0 = top in texture)
 
       // Normal for cylinder sides (pointing outward)
       const normal = new Vector3(cosA, 0, sinA).normalize();

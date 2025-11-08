@@ -288,7 +288,8 @@ export class HashRenderer extends BlockRenderer {
         points[8], points[9], points[10], points[11],
         [-1, 0, 0],  // Normal pointing left
         texture,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
       facesRendered++;
     }
@@ -301,6 +302,7 @@ export class HashRenderer extends BlockRenderer {
         [1, 0, 0],  // Normal pointing right
         texture,
         renderContext
+        // No reverse winding needed (already CCW)
       );
       facesRendered++;
     }
@@ -312,7 +314,8 @@ export class HashRenderer extends BlockRenderer {
         points[16], points[17], points[18], points[19],
         [0, 0, 1],  // Normal pointing forward
         texture,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
       facesRendered++;
     }
@@ -324,7 +327,8 @@ export class HashRenderer extends BlockRenderer {
         points[20], points[21], points[22], points[23],
         [0, 0, -1],  // Normal pointing backward
         texture,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
       facesRendered++;
     }
@@ -346,6 +350,7 @@ export class HashRenderer extends BlockRenderer {
    * @param normal - Face normal vector [x, y, z]
    * @param texture - Texture definition for the face
    * @param renderContext - Render context
+   * @param reverseWinding - Reverse triangle winding order for backface culling
    */
   private async addFace(
     corner0: number[],
@@ -354,7 +359,8 @@ export class HashRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
-    renderContext: RenderContext
+    renderContext: RenderContext,
+    reverseWinding: boolean = false
   ): Promise<void> {
     const faceData = renderContext.faceData;
 
@@ -375,12 +381,26 @@ export class HashRenderer extends BlockRenderer {
     if (texture && this.textureAtlas) {
       const atlasUV = await this.textureAtlas.getTextureUV(texture);
       if (atlasUV) {
-        faceData.uvs.push(
-          atlasUV.u0, atlasUV.v0,  // corner0: bottom-left
-          atlasUV.u1, atlasUV.v0,  // corner1: bottom-right
-          atlasUV.u1, atlasUV.v1,  // corner2: top-right
-          atlasUV.u0, atlasUV.v1   // corner3: top-left
-        );
+        // Determine if this is a horizontal face (top/bottom) or vertical face (sides)
+        const isHorizontalFace = normal[1] !== 0;
+
+        if (isHorizontalFace) {
+          // Top/Bottom faces: standard UV mapping
+          faceData.uvs.push(
+            atlasUV.u0, atlasUV.v0,  // corner0
+            atlasUV.u1, atlasUV.v0,  // corner1
+            atlasUV.u1, atlasUV.v1,  // corner2
+            atlasUV.u0, atlasUV.v1   // corner3
+          );
+        } else {
+          // Side faces: flip V coordinates (v0=top in texture, v1=bottom in texture)
+          faceData.uvs.push(
+            atlasUV.u0, atlasUV.v1,  // corner0 (world bottom) → v1 (texture bottom)
+            atlasUV.u1, atlasUV.v1,  // corner1 (world bottom) → v1 (texture bottom)
+            atlasUV.u1, atlasUV.v0,  // corner2 (world top) → v0 (texture top)
+            atlasUV.u0, atlasUV.v0   // corner3 (world top) → v0 (texture top)
+          );
+        }
       } else {
         faceData.uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
       }
@@ -394,8 +414,15 @@ export class HashRenderer extends BlockRenderer {
     const i2 = renderContext.vertexOffset + 2;
     const i3 = renderContext.vertexOffset + 3;
 
-    faceData.indices.push(i0, i1, i2);
-    faceData.indices.push(i0, i2, i3);
+    if (reverseWinding) {
+      // Reverse winding order: CW → CCW
+      faceData.indices.push(i0, i2, i1);
+      faceData.indices.push(i0, i3, i2);
+    } else {
+      // Standard counter-clockwise winding
+      faceData.indices.push(i0, i1, i2);
+      faceData.indices.push(i0, i2, i3);
+    }
 
     renderContext.vertexOffset += 4;
   }

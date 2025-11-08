@@ -42,6 +42,9 @@
   - 2: Displacement Top (incl Y)
   - 3: Displacement Bottom (incl Y)
 
+[ ] CylinderRenderer soll oben und unten einen Deckel auf den cylinder rendern, TOP und BOTTOM sollen 
+durch faceVisibility TOB und BOTTOM deaktiviert werden koennen. Die Seite durch FRONT.
+
 ## Hash 
 
 [?] Erstelle den HashRenderer. Er rendert einen Hash (#) shape. Das bedeutet die Seiten sind von

@@ -194,15 +194,17 @@ export class CrossRenderer extends BlockRenderer {
         corners[0], corners[2], corners[6], corners[4],  // left-back-bottom, right-front-bottom, right-front-top, left-back-top
         [0.707, 0, -0.707],  // Normal pointing diagonally (normalized vector)
         texture1,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
 
-      // Back side (reverse winding for backface)
+      // Back side
       await this.addFace(
-        corners[4], corners[6], corners[2], corners[0],  // Reversed order
+        corners[4], corners[6], corners[2], corners[0],  // Reversed corner order
         [-0.707, 0, 0.707],  // Opposite normal
         texture1,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
     }
 
@@ -214,15 +216,17 @@ export class CrossRenderer extends BlockRenderer {
         corners[3], corners[1], corners[5], corners[7],  // left-front-bottom, right-back-bottom, right-back-top, left-front-top
         [-0.707, 0, -0.707],  // Normal pointing diagonally
         texture2,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
 
-      // Back side (reverse winding for backface)
+      // Back side
       await this.addFace(
-        corners[7], corners[5], corners[1], corners[3],  // Reversed order
+        corners[7], corners[5], corners[1], corners[3],  // Reversed corner order
         [0.707, 0, 0.707],  // Opposite normal
         texture2,
-        renderContext
+        renderContext,
+        true  // Reverse winding order
       );
     }
 
@@ -243,6 +247,7 @@ export class CrossRenderer extends BlockRenderer {
    * @param normal - Face normal vector [x, y, z]
    * @param texture - Texture definition for the face
    * @param renderContext - Render context
+   * @param reverseWinding - Reverse triangle winding order for backface culling
    */
   private async addFace(
     corner0: number[],
@@ -251,7 +256,8 @@ export class CrossRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
-    renderContext: RenderContext
+    renderContext: RenderContext,
+    reverseWinding: boolean = false
   ): Promise<void> {
     const faceData = renderContext.faceData;
 
@@ -272,12 +278,12 @@ export class CrossRenderer extends BlockRenderer {
     if (texture && this.textureAtlas) {
       const atlasUV = await this.textureAtlas.getTextureUV(texture);
       if (atlasUV) {
-        // Map standard face UVs to atlas coordinates
+        // Cross faces are all vertical, flip V coordinates
         faceData.uvs.push(
-          atlasUV.u0, atlasUV.v0,  // corner0: bottom-left
-          atlasUV.u1, atlasUV.v0,  // corner1: bottom-right
-          atlasUV.u1, atlasUV.v1,  // corner2: top-right
-          atlasUV.u0, atlasUV.v1   // corner3: top-left
+          atlasUV.u0, atlasUV.v1,  // corner0 (world bottom) → v1 (texture bottom)
+          atlasUV.u1, atlasUV.v1,  // corner1 (world bottom) → v1 (texture bottom)
+          atlasUV.u1, atlasUV.v0,  // corner2 (world top) → v0 (texture top)
+          atlasUV.u0, atlasUV.v0   // corner3 (world top) → v0 (texture top)
         );
       } else {
         // Default UVs if texture not found
@@ -294,10 +300,15 @@ export class CrossRenderer extends BlockRenderer {
     const i2 = renderContext.vertexOffset + 2;
     const i3 = renderContext.vertexOffset + 3;
 
-    // Triangle 1: 0-1-2 (counter-clockwise for front face)
-    faceData.indices.push(i0, i1, i2);
-    // Triangle 2: 0-2-3 (counter-clockwise for front face)
-    faceData.indices.push(i0, i2, i3);
+    if (reverseWinding) {
+      // Reverse winding order: CW → CCW
+      faceData.indices.push(i0, i2, i1);
+      faceData.indices.push(i0, i3, i2);
+    } else {
+      // Standard counter-clockwise winding
+      faceData.indices.push(i0, i1, i2);
+      faceData.indices.push(i0, i2, i3);
+    }
 
     renderContext.vertexOffset += 4;  // 4 vertices added
   }
