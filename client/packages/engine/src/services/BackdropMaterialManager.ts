@@ -42,12 +42,16 @@ export class BackdropMaterialManager {
    */
   async getBackdropMaterial(config: Backdrop): Promise<Material> {
     try {
-      const cacheKey = `backdrop:${config.typeId ?? config.texture ?? 'default'}`;
+      // Create cache key from texture path for proper invalidation
+      const cacheKey = `backdrop:${config.texture ?? config.typeId ?? config.id ?? 'default'}`;
 
       // Check cache
       if (this.materials.has(cacheKey)) {
+        logger.debug('Backdrop material from cache', { cacheKey });
         return this.materials.get(cacheKey)!;
       }
+
+      logger.info('Creating new backdrop material (not in cache)', { cacheKey, config });
 
       // Create material
       const material = await this.createMaterial(config, cacheKey);
@@ -74,6 +78,11 @@ export class BackdropMaterialManager {
   ): Promise<StandardMaterial> {
     const material = new StandardMaterial(materialName, this.scene);
 
+    logger.info('Creating backdrop material', {
+      materialName,
+      config
+    });
+
     // Load texture if specified
     if (config.texture) {
       const networkService = this.appContext.services.network;
@@ -82,22 +91,44 @@ export class BackdropMaterialManager {
       }
 
       const textureUrl = networkService.getAssetUrl(config.texture);
+
+      logger.info('Loading backdrop texture', {
+        texturePath: config.texture,
+        textureUrl
+      });
+
       const texture = new Texture(textureUrl, this.scene);
+      texture.hasAlpha = true; // Enable alpha channel from PNG
       material.diffuseTexture = texture;
-    }
+      material.useAlphaFromDiffuseTexture = true; // Use alpha from texture
 
-    // Apply color tint if specified
-    if (config.color) {
-      material.diffuseColor = this.parseColor(config.color);
+      // Don't override color or alpha when using texture - let PNG control it
+      material.diffuseColor = Color3.White(); // Neutral color to not tint the texture
+      // Don't set material.alpha - let texture alpha control it
+      logger.info('Using texture alpha (not setting material.alpha)');
     } else {
-      material.diffuseColor = Color3.White();
-    }
+      // No texture - use color and alpha from config
+      if (config.color) {
+        material.diffuseColor = this.parseColor(config.color);
+        logger.info('Applied color to material', { color: config.color });
+      } else {
+        material.diffuseColor = Color3.White();
+      }
 
-    // Apply alpha
-    material.alpha = config.alpha ?? 1.0;
+      // Apply alpha only when no texture
+      material.alpha = config.alpha ?? 1.0;
+      logger.info('Applied alpha to material', { alpha: material.alpha });
+    }
 
     // Backdrop-specific material properties
     this.applyBackdropProperties(material);
+
+    logger.info('Backdrop material creation complete', {
+      materialName,
+      hasTexture: !!material.diffuseTexture,
+      alpha: material.alpha,
+      diffuseColor: material.diffuseColor
+    });
 
     return material;
   }
@@ -107,21 +138,28 @@ export class BackdropMaterialManager {
    */
   private applyBackdropProperties(material: StandardMaterial): void {
     material.backFaceCulling = false;
-    material.disableLighting = true;
 
-    // Use emissive to make it glow
     if (!material.diffuseTexture) {
+      // Solid color backdrop: use emissive for glow
+      material.disableLighting = true;
       material.emissiveColor = material.diffuseColor;
+      material.transparencyMode = StandardMaterial.MATERIAL_OPAQUE;
     } else {
-      material.emissiveColor = Color3.White();
+      // Textured backdrop: use emissive texture for unlit + alpha support
+      material.disableLighting = true;
+      material.emissiveTexture = material.diffuseTexture;
+      material.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
     }
 
-    // Enable depth testing and writing
+    // Enable depth testing
     material.disableDepthWrite = false;
     material.depthFunction = 0;
 
-    // Opaque rendering
-    material.transparencyMode = StandardMaterial.MATERIAL_OPAQUE;
+    logger.debug('Backdrop material properties applied', {
+      hasDiffuseTexture: !!material.diffuseTexture,
+      hasEmissiveTexture: !!material.emissiveTexture,
+      transparencyMode: material.transparencyMode
+    });
   }
 
   /**

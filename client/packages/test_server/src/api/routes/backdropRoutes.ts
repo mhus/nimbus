@@ -65,7 +65,7 @@ export function createBackdropRoutes(): Router {
 
       // Set headers
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour cache
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // No cache during development
 
       res.json(backdrop);
 

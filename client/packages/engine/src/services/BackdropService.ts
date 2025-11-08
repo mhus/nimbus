@@ -48,6 +48,12 @@ export class BackdropService {
   /** Flag to trigger another update after current one finishes */
   private needsAnotherUpdate = false;
 
+  /** Backdrop type cache (loaded from server) */
+  private backdropTypeCache = new Map<string, Backdrop>();
+
+  /** Loading promises for deduplication */
+  private loadingBackdropTypes = new Map<string, Promise<Backdrop | undefined>>();
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.chunkService = appContext.services.chunk as ChunkService;
@@ -278,8 +284,30 @@ export class BackdropService {
     try {
       const key = this.getBackdropKey(cx, cz, direction);
 
-      // Use first backdrop for now (TODO: support multiple backdrops per side)
-      const backdropConfig = backdrops[0];
+      // Use first backdrop (TODO: support multiple backdrops per side)
+      let backdropConfig = backdrops[0];
+
+      // If backdrop has an ID, load type from server and merge with inline config
+      if (backdropConfig.id) {
+        logger.info('Loading backdrop type from server', {
+          id: backdropConfig.id,
+          key
+        });
+
+        const loadedType = await this.loadBackdropType(backdropConfig.id);
+        if (loadedType) {
+          // Merge: server defaults + inline overrides
+          backdropConfig = { ...loadedType, ...backdropConfig };
+          logger.info('Backdrop type loaded and merged', {
+            id: backdropConfig.id,
+            merged: backdropConfig
+          });
+        } else {
+          logger.warn('Failed to load backdrop type, using inline config', {
+            id: backdropConfig.id
+          });
+        }
+      }
 
       // Create mesh
       const mesh = this.createBackdropMesh(cx, cz, direction, backdropConfig);
@@ -306,6 +334,91 @@ export class BackdropService {
         cz,
         direction,
       });
+    }
+  }
+
+  /**
+   * Load backdrop type from server
+   */
+  private async loadBackdropType(id: string): Promise<Backdrop | undefined> {
+    try {
+      // Check cache
+      if (this.backdropTypeCache.has(id)) {
+        logger.debug('Backdrop type found in cache', { id });
+        return this.backdropTypeCache.get(id);
+      }
+
+      // Check if already loading
+      if (this.loadingBackdropTypes.has(id)) {
+        logger.debug('Backdrop type already loading, waiting', { id });
+        return await this.loadingBackdropTypes.get(id);
+      }
+
+      // Load from server
+      const loadPromise = this.fetchBackdropType(id);
+      this.loadingBackdropTypes.set(id, loadPromise);
+
+      try {
+        const result = await loadPromise;
+        return result;
+      } finally {
+        this.loadingBackdropTypes.delete(id);
+      }
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'BackdropService.loadBackdropType',
+        { id }
+      );
+    }
+  }
+
+  /**
+   * Fetch backdrop type from server REST API
+   */
+  private async fetchBackdropType(id: string): Promise<Backdrop | undefined> {
+    try {
+      const networkService = this.chunkService['appContext'].services.network;
+      if (!networkService) {
+        throw new Error('NetworkService not available');
+      }
+
+      const apiUrl = networkService.getApiUrl();
+      const timestamp = Date.now();
+      const url = `${apiUrl}/api/backdrop/${id}?t=${timestamp}`;
+
+      logger.info('Fetching backdrop type from server', { id, url });
+
+      const response = await fetch(url);
+
+      if (response.status === 404) {
+        logger.warn('Backdrop type not found on server', { id, url });
+        return undefined;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch backdrop type: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const backdropType: Backdrop = await response.json();
+
+      // Cache
+      this.backdropTypeCache.set(id, backdropType);
+
+      logger.info('Backdrop type fetched successfully', {
+        id,
+        backdropType
+      });
+
+      return backdropType;
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'BackdropService.fetchBackdropType',
+        { id }
+      );
     }
   }
 
@@ -497,9 +610,16 @@ export class BackdropService {
       x1, yEnd, z1     // Top left
     ];
 
-    const indices = [0, 1, 2, 0, 2, 3];
+    // Reverse winding order (we're outside looking in, not inside like cube)
+    const indices = [0, 2, 1, 0, 3, 2];
 
-    const uvs = [0, 1, 1, 1, 1, 0, 0, 0];
+    // UVs: Bottom vertices map to texture top (v=0), Top vertices map to texture bottom (v=1)
+    const uvs = [
+      0, 0,  // Bottom left: v=0 (texture top)
+      1, 0,  // Bottom right: v=0 (texture top)
+      1, 1,  // Top right: v=1 (texture bottom)
+      0, 1   // Top left: v=1 (texture bottom)
+    ];
 
     // Calculate normals
     const dx = x2 - x1;

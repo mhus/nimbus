@@ -15,6 +15,9 @@
  * Defines visual properties for a backdrop segment
  */
 export interface Backdrop {
+  /** Backdrop ID - loads backdrop type from server (e.g., "fog1", "stone") */
+  id?: string;
+
   /** Backdrop type ID reference (optional) */
   typeId?: number;
 
