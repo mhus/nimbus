@@ -1329,8 +1329,6 @@ Aktualisiere die Beschreibung in den Block Type Dateien.
 [x] Der Server soll eigentlich nur blocktypen laden, die er auch braucht. Aber er kann das in chunks von 100 machen. 
 also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn 234 gebraucht wird, laed er 200-299 etc.
 
-===
-
 ## Refactoring
 
 [x] Umbenennen von 'nimbus_editors' in components 'controls'.
@@ -1338,3 +1336,13 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 [x] Umbenennen von server in test_server
 
 - Aktualisiere auch alle docu .md dateien
+
+## Fixes
+
+[ ] Im BlockTypeEditor soll bei 'new' auch fuer die ID ein Eingabefeld angezeigt werden.
+- Die id kann ein integer oder leer sein
+- Ist die id nicht leer wird sie beim create request an den server mitgeschickt
+- Im server wird geprueft ob die id schon existiert, wenn ja wird ein fehler zurueckgegeben
+- Wird dem server keine id mitgegeben, wird wie bisher eine neue id generiert
+- Die rueckgabe bleibt wie bisher, wenn ein fehler auftritt wird ein error message im editor angezeigt
+

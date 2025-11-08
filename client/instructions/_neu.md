@@ -19,20 +19,67 @@
 - Status in BlockModifierMerge.ts richtig analysieren: WorldStatus und Season aus EnvironmentStatus holen
   - Bei season langsam durch eine raster funktion(x,y,z) von 0 - 100% auffuellen bis alle im neuen season sind.
 
-- Brauche einen speudo Wall am chunk der an den raundern zu macht, damit die sonne nicht in den tunnel scheint.
+- Brauche einen pseudo Wall am chunk der an den raundern zu macht, damit die sonne nicht in den tunnel scheint.
+    oder fuer weit weit weg. Ideal mit Alpha ausblendung oben.
   - name: backdrop
-  - 4 x Einfaches Array
+  - 4 x Array of BackdropItem(s)
   - backdrop: [n : Array<BackdropItem>,e : Array<BackdropItem>, s : Array<BackdropItem>, w : Array<BackdropItem>]
-  - BackdropItem: {
-        start : Vector2,  // -- x wird transformiert je nach seite, y bleibt y
-        end : Vector2,    // -- x wird transformiert je nach seite, y bleibt y
+- BackdropItem: {
+        typeId?, // a backdrop type id, that will be overwritten with following parameters
+        la?,   // local x/z coordinate a (0-16) - start, default 0
+        ya?,   // world y coordinate a - start, default 0
+        lb?,   // local x/z coordinate b (0-16) - end, default 16
+        yb?,   // world y coordinate b - end, default ya + 60
         texture? : string,
         color? : string,
-        alpha : number,  -- ???
-        repeat : boolean,  -- ???
-        repeatX : number,  -- ???
-        repeatY : number,  -- ???
-        offsetX : number,  -- ???
-        offsetY : number,  -- ???
+        alpha? : number,
+        alphaMode? : int
      }
-  - 
+
+z.b.
+[
+    [
+        {
+            la: 0,
+            ya: 40,
+            lb: 16,
+            yb: 60,
+            texture: "textures/backdrop/hills.png"
+        }
+    ],
+    [
+        {
+        la: 0,
+        ya: 40,
+        lb: 16,
+        yb: 60,
+        texture: "textures/backdrop/hills.png"
+        }
+    ],
+    [
+        {
+        la: 0,
+        ya: 40,
+        lb: 16,
+        yb: 60,
+        texture: "textures/backdrop/fog.png"
+        }
+    ],
+    [
+        {
+        la: 0,
+        ya: 40,
+        lb: 16,
+        yb: 60,
+        texture: "textures/backdrop/fog.png"
+        }
+    ]
+]
+
+- Im Server eine rest api auf der backdropType heruntergeladen werden koennen.
+  GET /api/backdrop/{id}
+  - die backdropTypes werden im filesystem des servers im ordner files/backdrops/ gespeichert mit ihrer id als name, z.b. 1.json
+
+- Die client 'engine' laed die packDrops lazy wenn sie angefordert werden und cache diese im
+  BackdropService
+

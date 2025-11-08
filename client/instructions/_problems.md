@@ -8,3 +8,5 @@
 [ ] Collision detection beim Start ist immernoch bugy, geloest durch hohen einsprung
 Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 
+[ ] Claude hat in die Texture neben effect einen shader parameter eingefuegt, der muss wieder raus.
+
