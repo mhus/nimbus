@@ -1,8 +1,9 @@
 {
+  "type": "fog",
   "color": "#a0a0b0",
   "alpha": 0.4,
   "height": 50,
-  "depth": 0,
-  "noiseTexture": "noise/perlin.png",
+  "depth": 10,
+  "noiseTexture": "textures/noise/perlin.png",
   "alphaMode": 2
 }

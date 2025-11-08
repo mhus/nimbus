@@ -1,8 +1,7 @@
 {
-  "typeId": 5,
+  "type": "texture",
   "height": 120,
-  "texture": "textures/backdrop/sky.png",
-  "color": "#87CEEB",
+  "texture": "backdrops/sky.png",
   "alpha": 0.8,
   "alphaMode": 2
 }

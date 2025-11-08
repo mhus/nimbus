@@ -1,8 +1,7 @@
 {
-  "typeId": 4,
+  "type": "texture",
   "height": 40,
-  "texture": "textures/backdrop/hills.png",
-  "color": "#90a070",
+  "texture": "backdrops/hills.png",
   "alpha": 0.7,
   "alphaMode": 2
 }

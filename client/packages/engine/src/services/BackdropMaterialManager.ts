@@ -43,7 +43,7 @@ export class BackdropMaterialManager {
   async getBackdropMaterial(config: Backdrop): Promise<Material> {
     try {
       // Create cache key from texture + noise texture for proper invalidation
-      const texPart = config.texture ?? config.typeId ?? config.id ?? 'default';
+      const texPart = config.texture ?? config.id ?? 'default';
       const noisePart = config.noiseTexture ? `:${config.noiseTexture}` : '';
       const cacheKey = `backdrop:${texPart}${noisePart}`;
 

@@ -309,6 +309,12 @@ export class BackdropService {
         }
       }
 
+      // Check if type is 'none' - skip rendering
+      if (backdropConfig.type === 'none') {
+        logger.debug('Backdrop type is "none", skipping rendering', { key });
+        return;
+      }
+
       // Create mesh
       const mesh = this.createBackdropMesh(cx, cz, direction, backdropConfig);
 

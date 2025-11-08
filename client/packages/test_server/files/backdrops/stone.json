@@ -1,5 +1,5 @@
 {
-  "typeId": 1,
+  "type": "texture",
   "height": 128,
   "texture": "textures/block/basic/stone.png",
   "color": "#808080",

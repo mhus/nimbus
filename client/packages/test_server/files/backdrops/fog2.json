@@ -1,8 +1,7 @@
 {
-  "typeId": 3,
+  "type": "texture",
   "height": 60,
-  "texture": "textures/backdrop/fog2.png",
-  "color": "#c0c0d0",
+  "texture": "backdrops/fog2.png",
   "alpha": 0.5,
   "alphaMode": 2
 }

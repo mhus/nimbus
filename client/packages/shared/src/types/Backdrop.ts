@@ -15,11 +15,11 @@
  * Defines visual properties for a backdrop segment
  */
 export interface Backdrop {
+  /** Type of backdrop rendering */
+  type?: 'none' | 'texture' | 'solid' | 'fog';
+
   /** Backdrop ID - loads backdrop type from server (e.g., "fog1", "stone") */
   id?: string;
-
-  /** Backdrop type ID reference (optional) */
-  typeId?: number;
 
   /** Left position - local X/Z coordinate (0-16), default 0 */
   left?: number;
