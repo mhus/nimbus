@@ -18,7 +18,7 @@ The rendering system groups blocks by **material properties** instead of texture
 
 **Material Key Format:**
 ```
-atlas|bfc:{bool}|tm:{mode}|op:{float}|sm:{mode}|eff:{effect}|sp:{params}
+atlas|bfc:{bool}|tm:{mode}|op:{float}|sm:{mode}|eff:{effect}|ep:{params}
 ```
 
 **Example Keys:**
@@ -26,7 +26,8 @@ atlas|bfc:{bool}|tm:{mode}|op:{float}|sm:{mode}|eff:{effect}|sp:{params}
 atlas|bfc:true|tm:0|op:1|sm:1|eff:0              // Standard blocks
 atlas|bfc:false|tm:0|op:1|sm:1|eff:0             // Leaves, glass (double-sided)
 atlas|bfc:true|tm:2|op:0.5|sm:1|eff:0            // Transparent blocks
-atlas|bfc:true|tm:0|op:1|sm:1|eff:2              // Wind effect (shader)
+atlas|bfc:true|tm:0|op:1|sm:1|eff:2              // Wind effect
+flipbox|tex:anim.png|eff:1|ep:4,100|...          // FLIPBOX effect (original texture)
 ```
 
 **Performance:**
@@ -127,7 +128,7 @@ interface BlockRenderer {
 - ✅ Most blocks (95%+ of all blocks)
 
 ### When to Use Original Texture
-- ✅ **FLIPBOX Shader** - Needs complete sprite-sheet with all frames
+- ✅ **FLIPBOX Effect** - Needs complete sprite-sheet with all frames
 - ✅ **SPRITE/FLAME** - SpriteManager requires separate textures
 - ✅ **MODEL** - Models have their own texture files
 - ✅ **BILLBOARD** (optional) - May need high-res textures
@@ -154,11 +155,11 @@ else {
 
 ---
 
-## FLIPBOX Shader Implementation Plan
+## FLIPBOX Effect Implementation
 
 ### What is FLIPBOX?
 
-FLIPBOX is a **shader-based sprite-sheet animation** effect for blocks. It cycles through animation frames defined in a single texture.
+FLIPBOX is a **sprite-sheet animation effect** for blocks. It cycles through animation frames defined in a single texture.
 
 **Configuration (in TextureDefinition):**
 ```typescript
@@ -170,12 +171,12 @@ FLIPBOX is a **shader-based sprite-sheet animation** effect for blocks. It cycle
     w: 0.25,   // Width of one frame (1/4 if 4 frames)
     h: 1.0     // Height of frame
   },
-  shaderParameters: '4,100',  // Format: "frameCount,delayMs"
-  effect: BlockEffect.FLIPBOX
+  effectParameters: '4,100',  // Format: "frameCount,delayMs"
+  effect: BlockEffect.FLIPBOX  // BlockEffect.FLIPBOX = 1
 }
 ```
 
-**Shader Parameters Format:**
+**Effect Parameters Format:**
 ```
 "frameCount,delayMs"
 
@@ -188,21 +189,21 @@ Examples:
 ### FLIPBOX Material Key
 
 ```
-atlas|bfc:true|tm:0|op:1|sm:1|eff:3|sp:4,100
-                              ↑      ↑
-                          FLIPBOX   frames,delay
+flipbox|tex:animated_box.png|eff:1|ep:4,100|bfc:true|tm:0|op:1|sm:1
+                              ↑     ↑
+                          FLIPBOX  frames,delay
 ```
 
 **Grouping Behavior:**
-- Blocks with same effect + shaderParameters → Same material/mesh
-- Different textures but same parameters → Different material keys (because different textures)
-  - **NOTE:** For FLIPBOX, we need texture path in key!
+- Blocks with same texture + effectParameters → Same material/mesh
+- Different textures → Different material keys (texture path in key)
+  - **NOTE:** FLIPBOX needs original texture, not atlas!
 
-**Enhanced Material Key for FLIPBOX:**
+**Material Key for FLIPBOX:**
 ```typescript
-// For FLIPBOX only: Include texture path
+// FLIPBOX uses original texture (not atlas)
 if (effect === BlockEffect.FLIPBOX) {
-  return `flipbox|tex:${texturePath}|sp:${shaderParameters}|bfc:${backFaceCulling}|...`;
+  return `flipbox|tex:${texturePath}|eff:1|ep:${effectParameters}|bfc:${backFaceCulling}|...`;
 }
 ```
 
@@ -210,14 +211,14 @@ This ensures:
 - Same texture + same params → Same material (✓)
 - Different texture → Different material (✓)
 
-### Shader Implementation
+### Effect Implementation (ShaderService)
 
 **Vertex Shader:**
 - Standard vertex shader (position, normal, uv, color)
 - Pass through to fragment shader
 
 **Fragment Shader:**
-- Parse `shaderParameters` uniform: "frameCount,delayMs"
+- Parse `effectParameters` uniform: "frameCount,delayMs"
 - Calculate current frame based on time: `currentFrame = floor(time / delay) % frameCount`
 - Offset UV coordinates: `uv.x += frameWidth * currentFrame`
 - Sample texture with animated UV
@@ -227,8 +228,8 @@ This ensures:
 ```glsl
 uniform sampler2D textureSampler;
 uniform float time;                // Updated each frame
-uniform float frameCount;          // From shaderParameters
-uniform float frameDelay;          // From shaderParameters (in seconds)
+uniform float frameCount;          // From effectParameters
+uniform float frameDelay;          // From effectParameters (in seconds)
 uniform float frameWidth;          // Calculated from uvMapping.w
 uniform vec3 lightDirection;
 ```
@@ -258,40 +259,33 @@ vec4 texColor = texture2D(textureSampler, animatedUV);
 - [ ] Add `needsSeparateMesh()` to BlockRenderer interface
 - [ ] Update RenderService.renderChunk() to separate chunk mesh vs separate mesh blocks
 
-### Phase 2: FLIPBOX Shader ✅
-- [x] **REMOVE** FLIPBOX from BlockEffect enum (it's a shader, not an effect!)
-  - Location: `/Users/hummel/sources/mhus/nimbus/client/packages/shared/src/types/BlockModifier.ts:411-426`
-  - Created: `BlockShader` enum with FLIPBOX, WIND
-  - Added: `shader` and `shaderParameters` fields to TextureDefinition and VisibilityModifier
+### Phase 2: FLIPBOX Effect ✅ (Updated 2025-11-08)
+- [x] **Unified effect system:**
+  - Removed `BlockShader` enum entirely
+  - Removed `shader` field from TextureDefinition and VisibilityModifier
+  - Renamed `shaderParameters` → `effectParameters` everywhere
+  - FLIPBOX now as `BlockEffect.FLIPBOX = 1`
 
-- [x] Register FLIPBOX as shader in ShaderService:
-  - Added `registerFlipboxShader()` method
-  - Called in `ShaderService.initialize():70-71`
+- [x] Register FLIPBOX effect in ShaderService:
+  - Registered as 'flipbox' effect via ShaderService
+  - Called in `ShaderService.initialize()`
 
-- [x] Implement FLIPBOX shader code:
-  - `registerFlipboxShaderCode()` - Vertex & fragment shaders implemented
-  - Parses shaderParameters: "frameCount,delayMs"
+- [x] Implement FLIPBOX effect code:
+  - Vertex & fragment shaders for sprite-sheet animation
+  - Parses effectParameters: "frameCount,delayMs"
   - Animates UV coordinates frame-by-frame based on time
   - Supports horizontal sprite-sheets (frames side-by-side)
-  - Location: `ShaderService.ts:467-535`
-
-- [x] Create FLIPBOX material factory:
-  - `createFlipboxMaterial(texture, shaderParameters, name)` in ShaderService
-  - Loads ORIGINAL texture (not atlas!)
-  - Sets up uniforms: frameCount, currentFrame, lightDirection
-  - Time update per frame with frame cycling logic
-  - Location: `ShaderService.ts:537-636`
 
 - [x] Update MaterialService.getMaterial():
-  - Checks for BlockShader (shader field in modifier)
-  - Loads original texture (not atlas) for FLIPBOX shader
-  - Passes shaderParameters to shader
-  - Location: `MaterialService.ts:300-333`
+  - Checks for BlockEffect.FLIPBOX (effect field in modifier)
+  - Loads ORIGINAL texture (not atlas!) for FLIPBOX effect
+  - Passes effectParameters to ShaderService
+  - Location: `MaterialService.ts:289-322`
 
-- [x] Enhance material key for FLIPBOX:
-  - Includes texture path in key: `flipbox|tex:{path}|shader:1|sp:{params}|...`
+- [x] Material key for FLIPBOX:
+  - Includes texture path in key: `flipbox|tex:{path}|eff:1|ep:{params}|...`
   - Ensures same texture+params share material
-  - Location: `MaterialService.ts:120-140`
+  - Location: `MaterialService.ts:119-139`
 
 ### Phase 3: Separate Mesh System (PARTIAL - Infrastructure Ready)
 - [x] Add `needsSeparateMesh(): boolean` to BlockRenderer interface (default false)
@@ -346,11 +340,25 @@ vec4 texColor = texture2D(textureSampler, animatedUV);
 - **Alternative:** Central classification logic (brittle, hard to extend)
 - **Advantage:** Strategy pattern - easy to add new renderers
 
-### Why FLIPBOX as Shader (not BlockEffect)?
-- **Reason:** BlockEffect is for gameplay effects (water, lava), not rendering
-- **FLIPBOX:** Pure visual effect, no gameplay impact
-- **Belongs in:** ShaderService (like other visual shaders)
-- **Architecture:** Cleaner separation (rendering vs gameplay)
+### BlockEffect Values (Updated 2025-11-08)
+
+**Current BlockEffect enum:**
+```typescript
+export enum BlockEffect {
+  NONE = 0,
+  FLIPBOX = 1,  // Sprite-sheet animation
+  WIND = 2,     // Wind/vertex displacement
+}
+```
+
+**Removed effects:**
+- WATER, LAVA, FOG (removed 2025-11-08)
+- Only NONE, FLIPBOX, WIND remain
+
+**Effect vs Shader:**
+- Effects are visual/rendering properties (FLIPBOX, WIND)
+- Implemented via ShaderService for custom materials
+- No gameplay impact (unlike water physics, lava damage)
 
 ---
 
@@ -461,7 +469,7 @@ private materials: Map<string, Material>
 
 ---
 
-## FLIPBOX Shader Specification
+## FLIPBOX Effect Specification
 
 ### Purpose
 Animate sprite-sheet textures by cycling through frames horizontally arranged in a single texture.
@@ -478,24 +486,25 @@ Animate sprite-sheet textures by cycling through frames horizontally arranged in
     w: 0.25,     // Width of ONE frame (e.g., 1/4 for 4 frames)
     h: 1.0       // Full height
   },
-  shaderParameters: '4,100',  // "frameCount,delayMs"
-  effect: BlockEffect.FLIPBOX // ← WILL BE REMOVED! Use shader registration instead
+  effectParameters: '4,100',  // "frameCount,delayMs"
+  effect: BlockEffect.FLIPBOX // BlockEffect.FLIPBOX = 1
 }
 ```
 
-**After refactor, use ShaderService registration:**
+**In VisibilityModifier (applies to all textures):**
 ```typescript
-// Instead of BlockEffect.FLIPBOX, configure via:
 {
-  path: 'textures/animated_box.png',
-  uvMapping: { ... },
-  shaderParameters: '4,100',
-  // Shader is detected automatically by ShaderService
-  // Or via explicit shader name in effectParameters
+  shape: Shape.CUBE,
+  effect: BlockEffect.FLIPBOX,      // Default for all textures
+  effectParameters: '4,100',        // Default parameters
+  textures: {
+    [TextureKey.TOP]: 'textures/animated_box.png',
+    // TOP texture inherits effect & effectParameters from VisibilityModifier
+  }
 }
 ```
 
-### Shader Parameters Format
+### Effect Parameters Format
 
 ```
 "frameCount,delayMs"
@@ -510,7 +519,7 @@ Examples:
 "2,500"   → 2 frames, 500ms per frame (simple flip/flop)
 ```
 
-### Shader Uniforms
+### Effect Uniforms (ShaderService)
 
 ```glsl
 uniform sampler2D textureSampler;  // Original sprite-sheet texture
@@ -521,7 +530,7 @@ uniform float frameWidth;          // UV width of one frame (e.g., 0.25)
 uniform vec3 lightDirection;       // Directional lighting
 ```
 
-### Shader Logic (Fragment)
+### Effect Logic (Fragment Shader)
 
 ```glsl
 void main(void) {
@@ -554,7 +563,7 @@ void main(void) {
 ### Material Creation
 
 ```typescript
-// ShaderService.createFlipboxMaterial()
+// ShaderService.createMaterial() for FLIPBOX
 private createFlipboxMaterial(
   texture: Texture | undefined,
   name: string,
@@ -575,9 +584,9 @@ private createFlipboxMaterial(
     samplers: ['textureSampler']
   });
 
-  // Parse shaderParameters: "4,100"
-  const shaderParams = params?.shaderParameters || '1,1000';
-  const [frameCountStr, delayMsStr] = shaderParams.split(',');
+  // Parse effectParameters: "4,100"
+  const effectParams = params?.effectParameters || '1,1000';
+  const [frameCountStr, delayMsStr] = effectParams.split(',');
   const frameCount = parseInt(frameCountStr) || 1;
   const delayMs = parseInt(delayMsStr) || 1000;
 
@@ -603,76 +612,59 @@ private createFlipboxMaterial(
 
 ---
 
-## Migration Plan from BlockEffect to Shader
+## Effect & EffectParameters System (Updated 2025-11-08)
 
-### Current Problem
-FLIPBOX is currently defined as `BlockEffect.FLIPBOX = 3` in the enum. This is incorrect because:
-- BlockEffect is meant for **gameplay effects** (water behavior, lava damage)
-- FLIPBOX is purely **visual/rendering** (no gameplay impact)
-- Should be registered as a **shader** in ShaderService (like WIND)
+### Architecture Change: Unified Effect System
 
-### Migration Steps
+**Previous System (Removed):**
+- Separate `shader` and `effect` fields in TextureDefinition and VisibilityModifier
+- `BlockShader` enum separate from `BlockEffect` enum
+- Confusing separation between rendering effects
 
-**1. Remove from BlockEffect enum:**
+**New System (Current):**
+- Single `effect` field (BlockEffect enum) for all visual effects
+- Single `effectParameters` field for effect configuration
+- Cleaner, more consistent API
+
+### Effect Inheritance Model
+
+**VisibilityModifier.effect → TextureDefinition.effect**
+
+Effect settings cascade from VisibilityModifier to individual textures:
+
+1. **VisibilityModifier.effect** = Default for all textures
+2. **TextureDefinition.effect** = Override for specific texture (optional)
+
+**Implementation in BlockModifierMerge.ts:**
 ```typescript
-// BlockModifier.ts
+// If TextureDefinition has no effect, inherit from VisibilityModifier
+if (visibilityModifier.effect && !textureDefinition.effect) {
+  textureDefinition.effect = visibilityModifier.effect;
+}
+
+// Same for effectParameters
+if (visibilityModifier.effectParameters && !textureDefinition.effectParameters) {
+  textureDefinition.effectParameters = visibilityModifier.effectParameters;
+}
+
+// String textures converted to objects when needed
+if (typeof texture === 'string' && visibilityModifier.effect) {
+  texture = {
+    path: texture,
+    effect: visibilityModifier.effect,
+    effectParameters: visibilityModifier.effectParameters
+  };
+}
+```
+
+### Current BlockEffect Values
+
+```typescript
 export enum BlockEffect {
   NONE = 0,
-  WATER = 1,
-  WIND = 2,
-  // FLIPBOX = 3,  ← REMOVE THIS!
-  LAVA = 4,
-  FOG = 5,
-}
-```
-
-**2. Register as shader in ShaderService:**
-```typescript
-// ShaderService.initialize()
-this.registerWindShader();
-this.registerFlipboxShader();  // ← Add this
-```
-
-**3. Detection in MaterialService:**
-Instead of checking `effect === BlockEffect.FLIPBOX`, check if shaderService has 'flipbox':
-```typescript
-// OLD (wrong):
-if (effect === BlockEffect.FLIPBOX) { ... }
-
-// NEW (correct):
-const shaderName = this.detectShader(modifier); // Returns 'flipbox', 'wind', etc.
-if (shaderName === 'flipbox' && this.shaderService) { ... }
-```
-
-**4. Block configuration changes:**
-```typescript
-// OLD (using BlockEffect):
-{
-  visibility: {
-    effect: BlockEffect.FLIPBOX,  // ← Wrong!
-    effectParameters: { ... }
-  }
-}
-
-// NEW (using shader detection):
-{
-  visibility: {
-    textures: {
-      [TextureKey.ALL]: {
-        path: 'textures/anim.png',
-        shaderParameters: '4,100',  // ← Detected automatically!
-        // Shader is inferred from shaderParameters presence
-      }
-    }
-  }
-}
-
-// OR explicit shader selection (future):
-{
-  visibility: {
-    shader: 'flipbox',  // ← New field?
-    shaderParameters: { frameCount: 4, delayMs: 100 }
-  }
+  FLIPBOX = 1,  // Sprite-sheet animation (was WATER)
+  WIND = 2,     // Wind/vertex displacement
+  // WATER, LAVA, FOG removed (2025-11-08)
 }
 ```
 
@@ -683,19 +675,19 @@ if (shaderName === 'flipbox' && this.shaderService) { ... }
 ### 1. Vertical Sprite-Sheets
 Support frames stacked vertically:
 ```typescript
-shaderParameters: '4,100,vertical'  // frames,delay,direction
+effectParameters: '4,100,vertical'  // frames,delay,direction
 ```
 
 ### 2. Grid Sprite-Sheets
 Support frames in 2D grid:
 ```typescript
-shaderParameters: '4,2,100'  // columns,rows,delay
+effectParameters: '4,2,100'  // columns,rows,delay
 ```
 
-### 3. Shader Registry
-Instead of hardcoded shader names, allow dynamic registration:
+### 3. Effect Registry
+Instead of hardcoded effect names, allow dynamic registration:
 ```typescript
-shaderService.registerCustomShader('myEffect', {
+shaderService.registerCustomEffect('myEffect', {
   vertexCode: '...',
   fragmentCode: '...',
   uniforms: [...],
@@ -821,7 +813,8 @@ Block {
             x: 0.0, y: 0.0,
             w: 0.25, h: 1.0  // 1/4 width (4 frames)
           },
-          shaderParameters: '4,100'  // 4 frames, 100ms
+          effect: BlockEffect.FLIPBOX,  // FLIPBOX = 1
+          effectParameters: '4,100'     // 4 frames, 100ms
         }
       }
     }
@@ -830,10 +823,10 @@ Block {
 
 Result:
 - needsSeparateMesh(): true (FlipboxRenderer)
-- Material Key: "flipbox|tex:animated_box.png|sp:4,100|bfc:false|..."
+- Material Key: "flipbox|tex:animated_box.png|eff:1|ep:4,100|bfc:true|..."
 - Rendered in: Separate mesh
 - Material: ShaderMaterial with original texture
-- Shader: Custom FLIPBOX shader with animated UVs
+- Effect: Custom FLIPBOX effect with animated UVs
 - Draw calls: +1 per group of identical animated blocks
 ```
 
@@ -886,55 +879,6 @@ Result:
 
 ---
 
-## Open Questions
-
-### 1. Shader Detection
-**How should blocks indicate they want FLIPBOX shader?**
-
-**Option A:** Via BlockEffect enum (current)
-```typescript
-effect: BlockEffect.FLIPBOX
-```
-- Pro: Explicit
-- Con: Mixes rendering with gameplay effects
-
-**Option B:** Auto-detect from shaderParameters
-```typescript
-// If shaderParameters present and matches pattern → use FLIPBOX
-shaderParameters: '4,100'  // Automatically triggers FLIPBOX shader
-```
-- Pro: No enum pollution
-- Con: Implicit, harder to understand
-
-**Option C:** Explicit shader field
-```typescript
-shader: 'flipbox',
-shaderParameters: '4,100'
-```
-- Pro: Very explicit, extensible
-- Con: New field needed
-
-**DECISION NEEDED!**
-
-### 2. Material Key for Separate Meshes
-**Should separate mesh materials be cached?**
-
-**Current:** Yes, keyed by texture path + parameters
-**Alternative:** No cache, create per block (simpler, but wasteful)
-
-**Recommendation:** Keep caching (blocks with same texture+params share material)
-
-### 3. UV Mapping for FLIPBOX
-**Who provides frameWidth to shader?**
-
-**Option A:** Calculate in MaterialService from uvMapping.w
-**Option B:** Pass entire uvMapping to shader
-**Option C:** Require frameWidth in shaderParameters: "4,100,0.25"
-
-**Recommendation:** Option A (cleanest, derived from uvMapping)
-
----
-
 ## Glossary
 
 - **Material Key:** Unique string identifying a material based on properties (used for caching)
@@ -944,12 +888,150 @@ shaderParameters: '4,100'
 - **Atlas Texture:** Large texture containing many block textures (for efficient rendering)
 - **Original Texture:** Individual texture file (needed for sprites, animations, models)
 - **BlockRenderer:** Strategy pattern implementation that knows how to render specific shapes/effects
-- **Shader Effect:** Visual effect implemented via custom vertex/fragment shaders
-- **BlockEffect:** Gameplay effect (water physics, lava damage) - different from shader effects!
+- **BlockEffect:** Visual effect (FLIPBOX, WIND) implemented via custom shaders
+- **Winding Order:** Order of triangle vertices (CCW = front face, CW = back face)
+- **reverseWinding:** Parameter to flip triangle vertex order for correct backface culling
+
+---
+
+## UV Mapping & Winding Order (CubeRenderer)
+
+### UV Coordinate System vs World Coordinate System
+
+**Critical Understanding:**
+- **UV Texture Coordinates:** v0 = TOP of texture, v1 = BOTTOM of texture
+- **World Y-Axis:** Y low = BOTTOM, Y high = TOP
+- **Problem:** UV-Y and World-Y are **inverted** relative to each other!
+
+### UV Assignment in addFace()
+
+The `addFace()` method assigns UVs to corners in this fixed pattern:
+
+```typescript
+faceData.uvs.push(
+  atlasUV.u0, atlasUV.v0,  // corner0: (u0, v0)
+  atlasUV.u1, atlasUV.v0,  // corner1: (u1, v0)
+  atlasUV.u1, atlasUV.v1,  // corner2: (u1, v1)
+  atlasUV.u0, atlasUV.v1   // corner3: (u0, v1)
+);
+```
+
+**Interpretation:**
+- corner0 → (u0, v0) = LEFT-TOP in texture
+- corner1 → (u1, v0) = RIGHT-TOP in texture
+- corner2 → (u1, v1) = RIGHT-BOTTOM in texture
+- corner3 → (u0, v1) = LEFT-BOTTOM in texture
+
+### Horizontal Faces (Top/Bottom)
+
+**For horizontal faces (normal.y ≠ 0):**
+- Standard UV mapping works correctly
+- No V-coordinate flip needed
+- Example: Top face corners match texture orientation naturally
+
+### Vertical Faces (Sides)
+
+**For vertical faces (Left, Right, Front, Back):**
+
+**Problem:** World-Y and UV-v are inverted!
+- Corner with low world-Y (bottom) gets v0 (top of texture) → **Texture is upside-down!**
+
+**Solution:** Flip V-coordinates for vertical faces:
+```typescript
+if (isHorizontalFace) {
+  // Top/Bottom: standard
+  faceData.uvs.push(
+    atlasUV.u0, atlasUV.v0,  // corner0
+    atlasUV.u1, atlasUV.v0,  // corner1
+    atlasUV.u1, atlasUV.v1,  // corner2
+    atlasUV.u0, atlasUV.v1   // corner3
+  );
+} else {
+  // Sides: flip V
+  faceData.uvs.push(
+    atlasUV.u0, atlasUV.v1,  // corner0 (world bottom) → v1 (texture bottom)
+    atlasUV.u1, atlasUV.v1,  // corner1 (world bottom) → v1 (texture bottom)
+    atlasUV.u1, atlasUV.v0,  // corner2 (world top) → v0 (texture top)
+    atlasUV.u0, atlasUV.v0   // corner3 (world top) → v0 (texture top)
+  );
+}
+```
+
+**Result:** Textures on side faces are now upright (texture Y-axis aligned with world Y-axis)
+
+### Winding Order & Backface Culling
+
+**Babylon.js Requirement:**
+- Front faces must have **Counter-Clockwise (CCW)** winding order
+- Backface Culling removes faces with Clockwise (CW) winding
+
+**Triangle Construction in addFace():**
+```typescript
+// Triangle 1: corners[0] → corners[1] → corners[2]
+faceData.indices.push(i0, i1, i2);
+// Triangle 2: corners[0] → corners[2] → corners[3]
+faceData.indices.push(i0, i2, i3);
+```
+
+**Critical Discovery:**
+- All 4 side faces have the **wrong winding order** by default (CW instead of CCW)
+- Causes: Faces not visible due to backface culling
+
+**Solution: reverseWinding Parameter**
+
+Added optional parameter to `addFace()`:
+```typescript
+private async addFace(
+  ...
+  reverseWinding: boolean = false
+): Promise<void>
+```
+
+**Implementation:**
+```typescript
+if (reverseWinding) {
+  // Reverse triangle vertex order: CW → CCW
+  faceData.indices.push(i0, i2, i1);  // Triangle 1: reversed
+  faceData.indices.push(i0, i3, i2);  // Triangle 2: reversed
+} else {
+  // Standard CCW winding
+  faceData.indices.push(i0, i1, i2);
+  faceData.indices.push(i0, i2, i3);
+}
+```
+
+### Final Configuration
+
+**Top/Bottom faces:**
+- Standard UV mapping
+- Standard winding order
+- `reverseWinding: false`
+
+**All 4 Side faces (Left, Right, Front, Back):**
+- V-coordinates flipped (v0 ↔ v1)
+- `reverseWinding: true`
+
+**Code Location:** `/client/packages/engine/src/rendering/CubeRenderer.ts`
+- UV flip logic: Lines 350-366
+- reverseWinding logic: Lines 384-392
+- Side face calls: Lines 254-303
+
+### Why This Works
+
+1. **Corner Order:** Logical/physical order (back→front, bottom→top)
+2. **UV Mapping:** V-flip compensates for UV-vs-World inversion
+3. **Winding Order:** reverseWinding compensates for CW→CCW conversion
+4. **Result:** Textures upright, faces visible, consistent system
 
 ---
 
 ## Revision History
+
+- **2025-11-08:** UV Mapping & Winding Order documentation
+  - Documented UV coordinate system vs world coordinate system
+  - Explained V-coordinate flip for vertical faces
+  - Documented reverseWinding parameter for backface culling
+  - Added corner order analysis for all cube faces
 
 - **2025-11-06:** Initial documentation
   - Documented property-based material grouping
