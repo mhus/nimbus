@@ -17,12 +17,24 @@
       <label class="label">
         <span class="label-text">Model Path</span>
       </label>
-      <input
-        v-model="localValue.path"
-        type="text"
-        class="input input-bordered input-sm"
-        placeholder="models/custom/my_model.obj"
-      />
+      <div class="flex items-center gap-2">
+        <input
+          v-model="localValue.path"
+          type="text"
+          class="input input-bordered input-sm flex-1"
+          placeholder="models/skull.babylon"
+        />
+        <!-- Asset Picker Button -->
+        <button
+          class="btn btn-ghost btn-sm btn-square"
+          @click="openModelAssetPicker"
+          title="Select model from assets"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Scaling & Rotation -->
@@ -511,13 +523,22 @@
     </CollapsibleSection>
   </div>
 
-  <!-- Asset Picker Dialog -->
+  <!-- Texture Asset Picker Dialog -->
   <AssetPickerDialog
     v-if="isAssetPickerOpen"
     :world-id="worldId"
     :current-path="getTexturePathValue(selectedTextureKey)"
     @close="closeAssetPicker"
     @select="handleAssetSelected"
+  />
+
+  <!-- Model Asset Picker Dialog -->
+  <AssetPickerDialog
+    v-if="isModelAssetPickerOpen"
+    :world-id="worldId"
+    :current-path="localValue.path"
+    @close="closeModelAssetPicker"
+    @select="handleModelAssetSelected"
   />
 </template>
 
@@ -942,6 +963,7 @@ watch(
 
 const isAssetPickerOpen = ref(false);
 const selectedTextureKey = ref<number>(0);
+const isModelAssetPickerOpen = ref(false);
 
 const openAssetPicker = (key: number) => {
   selectedTextureKey.value = key;
@@ -955,5 +977,18 @@ const closeAssetPicker = () => {
 const handleAssetSelected = (path: string) => {
   setTexturePath(selectedTextureKey.value, path);
   closeAssetPicker();
+};
+
+const openModelAssetPicker = () => {
+  isModelAssetPickerOpen.value = true;
+};
+
+const closeModelAssetPicker = () => {
+  isModelAssetPickerOpen.value = false;
+};
+
+const handleModelAssetSelected = (path: string) => {
+  localValue.value.path = path;
+  closeModelAssetPicker();
 };
 </script>

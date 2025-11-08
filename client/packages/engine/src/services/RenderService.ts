@@ -22,6 +22,7 @@ import { CylinderRenderer } from '../rendering/CylinderRenderer';
 import { StairRenderer } from '../rendering/StairRenderer';
 import { StepsRenderer } from '../rendering/StepsRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
+import { ModelRenderer } from '../rendering/ModelRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
 import { ThinInstancesRenderer } from '../rendering/ThinInstancesRenderer';
@@ -79,6 +80,7 @@ export class RenderService {
   private stairRenderer: StairRenderer;
   private stepsRenderer: StepsRenderer;
   private flipboxRenderer: FlipboxRenderer;
+  private modelRenderer: ModelRenderer;
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
   private thinInstancesRenderer: ThinInstancesRenderer;
@@ -116,6 +118,7 @@ export class RenderService {
     this.stairRenderer = new StairRenderer(textureAtlas);
     this.stepsRenderer = new StepsRenderer(textureAtlas);
     this.flipboxRenderer = new FlipboxRenderer();
+    this.modelRenderer = new ModelRenderer();
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
     this.thinInstancesRenderer = new ThinInstancesRenderer();
@@ -420,6 +423,8 @@ export class RenderService {
         return this.stepsRenderer;
       case Shape.STAIR:
         return this.stairRenderer;
+      case Shape.MODEL:
+        return this.modelRenderer;
       case Shape.BILLBOARD:
         return this.billboardRenderer;
       case Shape.SPRITE:

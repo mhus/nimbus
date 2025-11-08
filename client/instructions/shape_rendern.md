@@ -87,7 +87,7 @@ sind aber glassiere mit der color die an der texture hinterlegt ist.
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
 
-[ ] In GlassRenderer sollen mit faceVisibility die Seiten deaktiviert werden koennen.
+[?] In GlassRenderer sollen mit faceVisibility die Seiten deaktiviert werden koennen.
 
 ## FlipBox
 
@@ -143,7 +143,6 @@ SpriteRenderer:
 [?] Erstelle einen OceanRenderer. Er soll die von BabylonJS bereitgestellten Wasser effekt rendern.
 - Es soll eine flache ocean oberflaeche on TOP des Blocks gerendert werden.
 - Der Renderer definiert sein eigenes Mesh
-[ ] client/packages/test_server/src/world/TerrainGenerator.ts soll anste
 
 ## Thin Instances
 
@@ -159,4 +158,11 @@ SpriteRenderer:
   3. ⏳ GPU Wind - Im Shader integrieren
 ```
 
-[ ] Texture richtig laden
+## Model
+
+[ ] Erstelle einen ModelRenderer der ein Model rendert.
+- Orientiere dich an client_playground/packages/client/src/rendering/shapes/ModelRenderer.ts
+- Implementiere alle eigenschaften, offset, scaling, rotation
+- Der Renderer definiert sein eigenes Mesh
+- Als modell pfad wird der erste Pfad aus TextureDefinition verwendet.
+

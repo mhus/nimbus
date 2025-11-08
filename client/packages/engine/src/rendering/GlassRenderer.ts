@@ -157,7 +157,8 @@ export class GlassRenderer extends BlockRenderer {
     // Helper to add a face
     const addFace = (
       c0: number[], c1: number[], c2: number[], c3: number[],
-      normal: number[]
+      normal: number[],
+      reverseWinding: boolean = false
     ) => {
       positions.push(
         c0[0], c0[1], c0[2],
@@ -178,8 +179,13 @@ export class GlassRenderer extends BlockRenderer {
       const i2 = vertexOffset + 2;
       const i3 = vertexOffset + 3;
 
-      indices.push(i0, i1, i2);
-      indices.push(i0, i2, i3);
+      if (reverseWinding) {
+        indices.push(i0, i2, i1);
+        indices.push(i0, i3, i2);
+      } else {
+        indices.push(i0, i1, i2);
+        indices.push(i0, i2, i3);
+      }
 
       vertexOffset += 4;
     };
@@ -192,16 +198,16 @@ export class GlassRenderer extends BlockRenderer {
       addFace(corners[0], corners[3], corners[2], corners[1], [0, -1, 0]);
     }
     if (isLeftVisible) {
-      addFace(corners[0], corners[4], corners[7], corners[3], [-1, 0, 0]);
+      addFace(corners[0], corners[4], corners[7], corners[3], [-1, 0, 0], true);
     }
     if (isRightVisible) {
-      addFace(corners[1], corners[2], corners[6], corners[5], [1, 0, 0]);
+      addFace(corners[1], corners[2], corners[6], corners[5], [1, 0, 0], true);
     }
     if (isFrontVisible) {
-      addFace(corners[3], corners[7], corners[6], corners[2], [0, 0, 1]);
+      addFace(corners[3], corners[7], corners[6], corners[2], [0, 0, 1], true);
     }
     if (isBackVisible) {
-      addFace(corners[0], corners[1], corners[5], corners[4], [0, 0, -1]);
+      addFace(corners[0], corners[1], corners[5], corners[4], [0, 0, -1], true);
     }
 
     // Create mesh
