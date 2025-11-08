@@ -10,6 +10,7 @@ import type { Block } from '../../types/Block';
 import type { AreaData } from '../../types/AreaData';
 import type { EntityData } from '../../types/EntityData';
 import type { HeightData } from '../../types/ChunkData';
+import type { Backdrop } from '../../types/Backdrop';
 
 /**
  * Chunk coordinates (XZ only, Y is complete column)
@@ -40,6 +41,18 @@ export interface ChunkDataTransferObject {
 
   /** Entity data */
   e?: EntityData[];
+
+  /** Backdrop data for chunk edges */
+  backdrop?: {
+    /** North side backdrop items */
+    n?: Array<Backdrop>;
+    /** East side backdrop items */
+    e?: Array<Backdrop>;
+    /** South side backdrop items */
+    s?: Array<Backdrop>;
+    /** West side backdrop items */
+    w?: Array<Backdrop>;
+  };
 }
 
 /**

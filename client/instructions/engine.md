@@ -43,3 +43,53 @@ kommen keonnen.
 funktion um die Bleocke zu kruemmen. Diese Funktion muss noch im server in 'client/packages/test_server/src/world/TerrainGenerator.ts' implementiert werden.
 - edgeOffset ist jetzt offset
 - Wichtig: edgeOffset haben einen Range von -127 bis 127, offsset sind float und haben die einheit blocks, -127 sollte -1 und 127 sollte 1 entsprechen 
+
+## Backdrop
+
+- Brauche einen pseudo Wall am chunk der an den raundern zu macht, damit die sonne nicht in den tunnel scheint.
+  oder fuer weit weit weg. Ideal mit Alpha ausblendung oben.
+    - name: backdrop
+    - 4 x Array of Backdrop(s)
+    - backdrop?: {
+       n? : Array<Backdrop>,
+       e? : Array<Backdrop>,
+       s? : Array<Backdrop>, 
+       w? : Array<Backdrop>
+      }
+- Backdrop: {
+  typeId?, // a backdrop type id, that will be overwritten with following parameters
+  la?,   // local x/z coordinate a (0-16) - start, default 0
+  ya?,   // world y coordinate a - start, default 0
+  lb?,   // local x/z coordinate b (0-16) - end, default 16
+  yb?,   // world y coordinate b - end, default ya + 60
+  texture? : string,
+  color? : string,
+  alpha? : number,
+  alphaMode? : int
+  }
+
+- Im Server eine rest api auf der backdropType heruntergeladen werden koennen.
+  GET /api/backdrop/{id}
+    - die backdropTypes werden im filesystem des servers im ordner files/backdrops/ gespeichert mit ihrer id als name, z.b. 1.json
+
+- Die client 'engine' laed die packDrops lazy wenn sie angefordert werden und cache diese im
+  BackdropService
+
+- Default backdrop if not set in ChunkService setzen
+  wenn eine seite nicht gesetzt wird, wird ein default
+  backdrop gesetet, der in ChunkService als const hinterlegt wird.
+  - Der default ist die texture backdrop/fog1.png
+
+- backdrops brauchen jeweils ihr eigenes mesh, das sind aber wenige, da nur die umrandung backdrops hat, bei
+  3 x 3 chunks sind das 12 mesh. 
+- bei einem update
+    - neuer chunk
+    - drop chunk
+  muss jeder chunk geprueft werden, hat er einen nachbarn
+  noth, south, east west. Hat er keinen, muss dort ein backdrop gezeichnet werden
+  z.b pruefe chunk 3,4:
+    - gibt es einen north chunk 3,5 ? nein, zeichne backdrop n3,4 mit den daten aus chunk(3,4).backdrop.n
+    - gibt es einen south chunk 3,2 ? ja, nichts machen
+    - gibt es einen west chunk ...
+    - gibt es einen east chunk ...
+    - alle chunks pruefen, nicht mehr gebrauchte backdrops loeschen

@@ -17,6 +17,7 @@ import { RenderService } from './RenderService';
 import { InputService } from './InputService';
 import { PhysicsService } from './PhysicsService';
 import { SelectService, SelectMode } from './SelectService';
+import { BackdropService } from './BackdropService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -50,6 +51,7 @@ export class EngineService {
   private playerService?: PlayerService;
   private inputService?: InputService;
   private selectService?: SelectService;
+  private backdropService?: BackdropService;
 
   private isInitialized: boolean = false;
   private isRunning: boolean = false;
@@ -182,6 +184,14 @@ export class EngineService {
         this.textureAtlas
       );
       logger.debug('RenderService initialized');
+
+      // Initialize backdrop service (requires scene and appContext with ChunkService)
+      if (this.scene && this.appContext.services.chunk) {
+        this.backdropService = new BackdropService(this.scene, this.appContext);
+        logger.debug('BackdropService initialized');
+      } else {
+        logger.warn('BackdropService not initialized: missing Scene or ChunkService');
+      }
 
       // Initialize input service
       this.inputService = new InputService(this.appContext, this.playerService);
@@ -412,6 +422,7 @@ export class EngineService {
     // Dispose sub-services
     this.inputService?.dispose();
     this.selectService?.dispose();
+    this.backdropService?.dispose();
     this.renderService?.dispose();
     this.playerService?.dispose();
     this.physicsService?.dispose();

@@ -1,0 +1,11 @@
+{
+  "typeId": 1,
+  "la": 0,
+  "ya": 0,
+  "lb": 16,
+  "yb": 128,
+  "texture": "textures/block/basic/stone.png",
+  "color": "#808080",
+  "alpha": 0.9,
+  "alphaMode": 2
+}

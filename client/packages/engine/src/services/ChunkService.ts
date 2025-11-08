@@ -15,6 +15,7 @@ import {
   Shape,
   getLogger,
   ExceptionHandler,
+  Backdrop,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -29,6 +30,15 @@ import {
 import { mergeBlockModifier, getBlockPositionKey } from '../utils/BlockModifierMerge';
 
 const logger = getLogger('ChunkService');
+
+/**
+ * Default backdrop configuration used when chunk data doesn't provide backdrop
+ */
+const DEFAULT_BACKDROP: Backdrop = {
+  texture: 'backdrop/fog1.png',
+  alpha: 0.5,
+  alphaMode: 2,
+};
 
 /**
  * Event listener
@@ -524,11 +534,35 @@ export class ChunkService {
       });
     }
 
+    // STEP 5: Process backdrop data - add default backdrop if not provided
+    const backdrop = this.processBackdropData(chunkData);
+
     return {
       transfer: chunkData,
       data: clientBlocksMap,
       hightData: heightData,
       statusData: statusData,
+      backdrop,
+    };
+  }
+
+  /**
+   * Process backdrop data - set default backdrop for sides that are not provided
+   */
+  private processBackdropData(chunkData: ChunkDataTransferObject): {
+    n?: Array<Backdrop>;
+    e?: Array<Backdrop>;
+    s?: Array<Backdrop>;
+    w?: Array<Backdrop>;
+  } {
+    const backdrop = chunkData.backdrop || {};
+
+    // Set default backdrop for each side if not provided
+    return {
+      n: backdrop.n && backdrop.n.length > 0 ? backdrop.n : [DEFAULT_BACKDROP],
+      e: backdrop.e && backdrop.e.length > 0 ? backdrop.e : [DEFAULT_BACKDROP],
+      s: backdrop.s && backdrop.s.length > 0 ? backdrop.s : [DEFAULT_BACKDROP],
+      w: backdrop.w && backdrop.w.length > 0 ? backdrop.w : [DEFAULT_BACKDROP],
     };
   }
 

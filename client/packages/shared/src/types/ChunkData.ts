@@ -8,6 +8,7 @@
  */
 
 import type { Block } from './Block';
+import type { Backdrop } from './Backdrop';
 
 /**
  * Height data for chunk column
@@ -74,4 +75,19 @@ export interface ChunkData {
   heightData?: HeightData[];
 
   status?: Status[];
+
+  /**
+   * Backdrop data for chunk edges (optional)
+   * Defines backdrop walls at chunk boundaries
+   */
+  backdrop?: {
+    /** North side backdrop items (negative Z direction) */
+    n?: Array<Backdrop>;
+    /** East side backdrop items (positive X direction) */
+    e?: Array<Backdrop>;
+    /** South side backdrop items (positive Z direction) */
+    s?: Array<Backdrop>;
+    /** West side backdrop items (negative X direction) */
+    w?: Array<Backdrop>;
+  };
 }

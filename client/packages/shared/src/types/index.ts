@@ -16,6 +16,9 @@ export * from './BlockModifier';
 // Chunk types
 export * from './ChunkData';
 
+// Backdrop types
+export * from './Backdrop';
+
 // World types
 export * from './World';
 

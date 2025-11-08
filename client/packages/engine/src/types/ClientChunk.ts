@@ -5,7 +5,7 @@
  * client-side state for rendering and management.
  */
 
-import type { ChunkDataTransferObject } from '@nimbus/shared';
+import type { ChunkDataTransferObject, Backdrop } from '@nimbus/shared';
 import type { ClientBlock } from './ClientBlock';
 import type { DisposableResources } from '../rendering/DisposableResources';
 
@@ -46,6 +46,14 @@ export interface ClientChunkData {
   hightData: Map<string, ClientHeightData>;
 
   statusData: Map<string, number>;
+
+  /** Backdrop data for chunk edges (with defaults applied) */
+  backdrop?: {
+    n?: Array<Backdrop>;
+    e?: Array<Backdrop>;
+    s?: Array<Backdrop>;
+    w?: Array<Backdrop>;
+  };
 
   /** Disposable rendering resources (meshes, sprites, etc.) created for this chunk */
   resourcesToDispose?: DisposableResources;

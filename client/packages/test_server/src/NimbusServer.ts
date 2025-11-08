@@ -12,6 +12,7 @@ import { TerrainGenerator } from './world/TerrainGenerator';
 import { createAuthMiddleware } from './api/middleware/auth';
 import { createWorldRoutes } from './api/routes/worldRoutes';
 import { createAssetRoutes } from './api/routes/assetRoutes';
+import { createBackdropRoutes } from './api/routes/backdropRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
@@ -99,6 +100,9 @@ class NimbusServer {
       // Asset file serving (GET /assets/*) routes are public
       this.app.use('/api/worlds', authMiddleware, createAssetRoutes(this.worldManager));
       this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager, this.blockUpdateBuffer, this.sessions));
+
+      // Backdrop configuration routes (public - no auth needed)
+      this.app.use('/api/backdrop', createBackdropRoutes());
 
       // Health check
       this.app.get('/health', (_req, res) => res.json({ status: 'ok', version: SERVER_VERSION }));

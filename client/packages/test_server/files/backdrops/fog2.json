@@ -1,0 +1,11 @@
+{
+  "typeId": 3,
+  "la": 0,
+  "ya": 40,
+  "lb": 16,
+  "yb": 100,
+  "texture": "textures/backdrop/fog2.png",
+  "color": "#c0c0d0",
+  "alpha": 0.5,
+  "alphaMode": 2
+}
