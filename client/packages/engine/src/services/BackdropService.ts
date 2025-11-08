@@ -58,27 +58,18 @@ export class BackdropService {
     logger.info('BackdropService initialized');
 
     // Initial update in case chunks are already loaded
-    setTimeout(() => {
-      logger.info('Running initial backdrop update...');
-      this.updateBackdrops();
-    }, 1000);
+    setTimeout(() => this.updateBackdrops(), 1000);
   }
 
   /**
    * Setup chunk event listeners
    */
   private setupEventListeners(): void {
-    this.chunkService.on('chunk:loaded', (chunk: any) => {
-      logger.info('Chunk loaded event, updating backdrops', {
-        chunk: { cx: chunk.data.transfer.cx, cz: chunk.data.transfer.cz }
-      });
+    this.chunkService.on('chunk:loaded', () => {
       this.updateBackdrops();
     });
 
-    this.chunkService.on('chunk:unloaded', (coord: { cx: number; cz: number }) => {
-      logger.info('Chunk unloaded event, updating backdrops', {
-        unloadedChunk: coord
-      });
+    this.chunkService.on('chunk:unloaded', () => {
       this.updateBackdrops();
     });
 
@@ -94,7 +85,6 @@ export class BackdropService {
   private async updateBackdrops(): Promise<void> {
     // If update is in progress, mark that another update is needed
     if (this.isUpdating) {
-      logger.info('Backdrop update already in progress, will update again after');
       this.needsAnotherUpdate = true;
       return;
     }
@@ -105,22 +95,15 @@ export class BackdropService {
     try {
       const allChunks = this.chunkService.getAllChunks();
 
-      logger.info('Updating backdrops', { loadedChunks: allChunks.length });
+      logger.debug('Updating backdrops', { loadedChunks: allChunks.length });
 
       // Build set of loaded chunk coordinates for fast lookup
       const loadedCoords = new Set<string>();
-      const loadedChunkList: Array<{cx: number, cz: number}> = [];
       for (const chunk of allChunks) {
         const cx = chunk.data.transfer.cx;
         const cz = chunk.data.transfer.cz;
         loadedCoords.add(getChunkKey(cx, cz));
-        loadedChunkList.push({ cx, cz });
       }
-
-      logger.info('Loaded chunks', {
-        count: allChunks.length,
-        chunks: loadedChunkList
-      });
 
       // Collect all needed backdrops by checking each chunk's neighbors
       const neededBackdrops = new Set<BackdropKey>();
@@ -155,11 +138,9 @@ export class BackdropService {
         }
       }
 
-      logger.info('Collected needed backdrops', {
+      logger.debug('Collected needed backdrops', {
         count: neededBackdrops.size,
-        backdrops: Array.from(neededBackdrops),
-        currentlyRendered: this.backdropMeshes.size,
-        currentKeys: Array.from(this.backdropMeshes.keys())
+        currentlyRendered: this.backdropMeshes.size
       });
 
       // Dispose backdrops that are no longer needed
@@ -168,9 +149,8 @@ export class BackdropService {
       // Create new backdrops where needed
       await this.createNeededBackdrops(allChunks, neededBackdrops);
 
-      logger.info('Backdrops updated successfully', {
-        renderedBackdrops: this.backdropMeshes.size,
-        meshKeys: Array.from(this.backdropMeshes.keys()),
+      logger.debug('Backdrops updated successfully', {
+        renderedBackdrops: this.backdropMeshes.size
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'BackdropService.updateBackdrops');
@@ -179,9 +159,7 @@ export class BackdropService {
 
       // If another update was requested while we were updating, run it now
       if (this.needsAnotherUpdate) {
-        logger.info('Running pending backdrop update');
         this.needsAnotherUpdate = false;
-        // Use setTimeout to avoid deep recursion
         setTimeout(() => this.updateBackdrops(), 0);
       }
     }
@@ -210,7 +188,7 @@ export class BackdropService {
     }
 
     if (toDispose.length > 0) {
-      logger.info('Disposing unneeded backdrops', {
+      logger.debug('Disposing unneeded backdrops', {
         count: toDispose.length,
         keys: toDispose
       });
@@ -221,7 +199,6 @@ export class BackdropService {
         if (mesh) {
           mesh.dispose();
           this.backdropMeshes.delete(key);
-          logger.debug('Disposed backdrop', { key });
         }
       }
     }
@@ -257,13 +234,7 @@ export class BackdropService {
 
       // Get the chunk
       const chunk = chunkMap.get(getChunkKey(cx, cz));
-      if (!chunk) {
-        logger.warn('Chunk not found for backdrop', { cx, cz, key });
-        continue;
-      }
-
-      if (!chunk.data.backdrop) {
-        logger.warn('Chunk has no backdrop data', { cx, cz, key });
+      if (!chunk || !chunk.data.backdrop) {
         continue;
       }
 
@@ -307,8 +278,6 @@ export class BackdropService {
     try {
       const key = this.getBackdropKey(cx, cz, direction);
 
-      logger.info('Creating backdrop', { cx, cz, direction, backdropConfig: backdrops[0] });
-
       // Use first backdrop for now (TODO: support multiple backdrops per side)
       const backdropConfig = backdrops[0];
 
@@ -320,35 +289,14 @@ export class BackdropService {
         const material = await this.materialManager.getBackdropMaterial(backdropConfig);
         mesh.material = material;
 
-        // Rendering settings - render in same group as blocks (0) for proper depth testing
+        // Rendering settings - render in same group as blocks for proper depth testing
         mesh.renderingGroupId = 0;
         mesh.name = `backdrop_${key}`;
 
         // Store mesh
         this.backdropMeshes.set(key, mesh);
 
-        // Debug: Check scene hierarchy
-        const sceneRootNodes = this.scene.rootNodes.map(n => n.name);
-        const meshesInScene = this.scene.meshes.length;
-
-        logger.info('Backdrop MESH created successfully', {
-          key,
-          meshName: mesh.name,
-          meshType: mesh.getClassName(),
-          position: mesh.position,
-          absolutePosition: mesh.getAbsolutePosition(),
-          hasMaterial: !!mesh.material,
-          materialName: mesh.material?.name,
-          materialAlpha: mesh.material?.alpha,
-          boundingBox: {
-            min: mesh.getBoundingInfo().boundingBox.minimumWorld,
-            max: mesh.getBoundingInfo().boundingBox.maximumWorld
-          },
-          sceneInfo: {
-            totalMeshesInScene: meshesInScene,
-            rootNodeCount: sceneRootNodes.length
-          }
-        });
+        logger.debug('Backdrop created', { key });
       } else {
         logger.warn('Failed to create backdrop mesh', { key });
       }
@@ -394,14 +342,6 @@ export class BackdropService {
 
       const height = config.height ?? 60;
       const yUp = yBase + height;
-
-      logger.info('Creating backdrop mesh', {
-        chunk: { cx, cz },
-        direction,
-        worldPos: { worldX, worldZ },
-        chunkSize,
-        config: { left, width, right, yBase, height, yUp }
-      });
 
       // Create mesh based on direction
       // left and width are local coordinates (0-16)
@@ -452,22 +392,6 @@ export class BackdropService {
           logger.warn('Unknown backdrop direction', { direction });
           return null;
       }
-
-      logger.info('Backdrop mesh coordinates calculated', {
-        direction,
-        chunk: { cx, cz },
-        localCoords: { left, width, right },
-        worldCoords: {
-          x1, z1, x2, z2,
-          yBase, yUp
-        },
-        corners: {
-          bottomLeft: { x: x1, z: z1, y: yBase },
-          bottomRight: { x: x2, z: z2, y: yBase },
-          topRight: { x: x2, z: z2, y: yUp },
-          topLeft: { x: x1, z: z1, y: yUp }
-        }
-      });
 
       // Create vertical plane mesh
       const mesh = this.createVerticalPlane(x1, z1, x2, z2, yBase, yUp);
@@ -535,10 +459,9 @@ export class BackdropService {
       }
 
       const result = minGroundLevel === Infinity ? 0 : minGroundLevel;
-      logger.info('Calculated ground level at edge', {
+      logger.debug('Calculated ground level at edge', {
         chunk: { cx, cz },
         direction,
-        edge: { left, right },
         groundLevel: result
       });
 
@@ -554,7 +477,7 @@ export class BackdropService {
   /**
    * Create a vertical plane mesh
    *
-   * Uses absolute world coordinates in vertices (same pattern as working lines)
+   * Uses absolute world coordinates in vertices (same pattern as RenderService)
    */
   private createVerticalPlane(
     x1: number,
@@ -564,13 +487,6 @@ export class BackdropService {
     yStart: number,
     yEnd: number
   ): Mesh {
-    logger.info('Creating vertical plane MESH', {
-      x1, z1, x2, z2, yStart, yEnd,
-      width: Math.sqrt((x2-x1)**2 + (z2-z1)**2),
-      height: yEnd - yStart
-    });
-
-    // Create mesh (minimal pattern from RenderService)
     const mesh = new Mesh('backdrop_plane', this.scene);
 
     // Create quad vertices in ABSOLUTE WORLD COORDINATES
@@ -581,17 +497,9 @@ export class BackdropService {
       x1, yEnd, z1     // Top left
     ];
 
-    const indices = [
-      0, 1, 2,  // First triangle
-      0, 2, 3   // Second triangle
-    ];
+    const indices = [0, 1, 2, 0, 2, 3];
 
-    const uvs = [
-      0, 1,  // Bottom left
-      1, 1,  // Bottom right
-      1, 0,  // Top right
-      0, 0   // Top left
-    ];
+    const uvs = [0, 1, 1, 1, 1, 0, 0, 0];
 
     // Calculate normals
     const dx = x2 - x1;
@@ -611,11 +519,6 @@ export class BackdropService {
     vertexData.applyToMesh(mesh);
 
     mesh.isPickable = false;
-
-    logger.info('Mesh created', {
-      meshPosition: mesh.position,
-      parent: mesh.parent ? 'HAS PARENT!' : 'no parent'
-    });
 
     return mesh;
   }
