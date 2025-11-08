@@ -12,7 +12,7 @@
  * - Manages separate material cache via BackdropMaterialManager
  */
 
-import { Mesh, VertexData, type Scene } from '@babylonjs/core';
+import { Mesh, VertexData, MeshBuilder, Color3, Vector3, type Scene } from '@babylonjs/core';
 import {
   getLogger,
   ExceptionHandler,
@@ -50,6 +50,12 @@ export class BackdropService {
     this.setupEventListeners();
 
     logger.info('BackdropService initialized');
+
+    // Initial update in case chunks are already loaded
+    setTimeout(() => {
+      logger.info('Running initial backdrop update...');
+      this.updateBackdrops();
+    }, 1000);
   }
 
   /**
@@ -75,9 +81,9 @@ export class BackdropService {
    */
   private async updateBackdrops(): Promise<void> {
     try {
-      logger.debug('Updating backdrops');
-
       const allChunks = this.chunkService.getAllChunks();
+
+      logger.info('Updating backdrops', { loadedChunks: allChunks.length });
 
       // Build set of loaded chunk coordinates for fast lookup
       const loadedCoords = new Set<string>();
@@ -116,8 +122,9 @@ export class BackdropService {
         }
       }
 
-      logger.debug('Collected needed backdrops', {
+      logger.info('Collected needed backdrops', {
         count: neededBackdrops.size,
+        backdrops: Array.from(neededBackdrops),
       });
 
       // Dispose backdrops that are no longer needed
@@ -126,8 +133,9 @@ export class BackdropService {
       // Create new backdrops where needed
       await this.createNeededBackdrops(allChunks, neededBackdrops);
 
-      logger.debug('Backdrops updated successfully', {
+      logger.info('Backdrops updated successfully', {
         renderedBackdrops: this.backdropMeshes.size,
+        meshKeys: Array.from(this.backdropMeshes.keys()),
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'BackdropService.updateBackdrops');
@@ -187,7 +195,13 @@ export class BackdropService {
 
       // Get the chunk
       const chunk = chunkMap.get(getChunkKey(cx, cz));
-      if (!chunk || !chunk.data.backdrop) {
+      if (!chunk) {
+        logger.warn('Chunk not found for backdrop', { cx, cz, key });
+        continue;
+      }
+
+      if (!chunk.data.backdrop) {
+        logger.warn('Chunk has no backdrop data', { cx, cz, key });
         continue;
       }
 
@@ -231,26 +245,47 @@ export class BackdropService {
     try {
       const key = this.getBackdropKey(cx, cz, direction);
 
-      logger.debug('Creating backdrop', { cx, cz, direction });
+      logger.info('Creating backdrop', { cx, cz, direction, backdropConfig: backdrops[0] });
 
       // Use first backdrop for now (TODO: support multiple backdrops per side)
       const backdropConfig = backdrops[0];
 
-      // Get material
-      const material = await this.materialManager.getBackdropMaterial(backdropConfig);
-
-      // Create mesh
+      // Create mesh (temporarily lines for debugging)
       const mesh = this.createBackdropMesh(cx, cz, direction, backdropConfig);
 
       if (mesh) {
-        mesh.material = material;
-        mesh.renderingGroupId = 0; // Render first (background)
+        // TEMPORARY: Skip material for lines debugging
+        // const material = await this.materialManager.getBackdropMaterial(backdropConfig);
+        // mesh.material = material;
+
+        // Rendering settings
+        mesh.renderingGroupId = 1; // Render after blocks but before transparent objects
         mesh.name = `backdrop_${key}`;
 
         // Store mesh
         this.backdropMeshes.set(key, mesh);
 
-        logger.debug('Backdrop created', { key });
+        // Debug: Check scene hierarchy
+        const sceneRootNodes = this.scene.rootNodes.map(n => n.name);
+        const meshesInScene = this.scene.meshes.length;
+
+        logger.info('Backdrop LINES created successfully', {
+          key,
+          meshName: mesh.name,
+          meshType: mesh.getClassName(),
+          position: mesh.position,
+          absolutePosition: mesh.getAbsolutePosition(),
+          boundingBox: {
+            min: mesh.getBoundingInfo().boundingBox.minimumWorld,
+            max: mesh.getBoundingInfo().boundingBox.maximumWorld
+          },
+          sceneInfo: {
+            totalMeshesInScene: meshesInScene,
+            rootNodeCount: sceneRootNodes.length
+          }
+        });
+      } else {
+        logger.warn('Failed to create backdrop mesh', { key });
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'BackdropService.createBackdrop', {
@@ -274,50 +309,78 @@ export class BackdropService {
       // Get chunk size from world info
       const chunkSize = this.chunkService['appContext'].worldInfo?.chunkSize || 16;
 
-      // Calculate world coordinates
+      // Calculate world coordinates of chunk origin
       const worldX = cx * chunkSize;
       const worldZ = cz * chunkSize;
 
-      // Get position range from config (with defaults)
-      const la = config.la ?? 0;
-      const lb = config.lb ?? chunkSize;
-      const yStart = config.ya ?? 0;
-      const yEnd = config.yb ?? (config.ya ?? 0) + 60;
+      // Get local coordinates (0-16 within chunk)
+      const left = config.left ?? 0;
+      const width = config.width ?? chunkSize;
+      const right = left + width;
+
+      // Calculate Y coordinates
+      let yBase: number;
+      if (config.yBase !== undefined) {
+        yBase = config.yBase;
+      } else {
+        // Calculate groundLevel at this edge
+        yBase = this.calculateGroundLevelAtEdge(cx, cz, direction, left, right);
+      }
+
+      const height = config.height ?? 60;
+      const yUp = yBase + height;
+
+      logger.info('Creating backdrop mesh', {
+        chunk: { cx, cz },
+        direction,
+        worldPos: { worldX, worldZ },
+        chunkSize,
+        config: { left, width, right, yBase, height, yUp }
+      });
 
       // Create mesh based on direction
+      // left and width are local coordinates (0-16)
       let x1: number, z1: number, x2: number, z2: number;
 
       switch (direction) {
         case 'n':
-          // North edge (negative Z)
-          x1 = worldX + la;
+          // North edge (positive Z direction, upper edge of chunk)
+          // z = worldZ + chunkSize (e.g., chunk 1,1 -> z=32)
+          // x goes from left to (left + width)
+          x1 = worldX + left;
+          z1 = worldZ + chunkSize;
+          x2 = worldX + right;
+          z2 = worldZ + chunkSize;
+          break;
+
+        case 's':
+          // South edge (negative Z direction, lower edge of chunk)
+          // z = worldZ (e.g., chunk 1,1 -> z=16)
+          // x goes from left to (left + width)
+          x1 = worldX + left;
           z1 = worldZ;
-          x2 = worldX + lb;
+          x2 = worldX + right;
           z2 = worldZ;
           break;
 
         case 'e':
-          // East edge (positive X)
+          // East edge (positive X direction, right edge of chunk)
+          // x = worldX + chunkSize (e.g., chunk 1,1 -> x=32)
+          // z goes from left to (left + width)
           x1 = worldX + chunkSize;
-          z1 = worldZ + la;
+          z1 = worldZ + left;
           x2 = worldX + chunkSize;
-          z2 = worldZ + lb;
-          break;
-
-        case 's':
-          // South edge (positive Z)
-          x1 = worldX + lb;
-          z1 = worldZ + chunkSize;
-          x2 = worldX + la;
-          z2 = worldZ + chunkSize;
+          z2 = worldZ + right;
           break;
 
         case 'w':
-          // West edge (negative X)
+          // West edge (negative X direction, left edge of chunk)
+          // x = worldX (e.g., chunk 1,1 -> x=16)
+          // z goes from left to (left + width)
           x1 = worldX;
-          z1 = worldZ + lb;
+          z1 = worldZ + left;
           x2 = worldX;
-          z2 = worldZ + la;
+          z2 = worldZ + right;
           break;
 
         default:
@@ -325,8 +388,24 @@ export class BackdropService {
           return null;
       }
 
+      logger.info('Backdrop mesh coordinates calculated', {
+        direction,
+        chunk: { cx, cz },
+        localCoords: { left, width, right },
+        worldCoords: {
+          x1, z1, x2, z2,
+          yBase, yUp
+        },
+        corners: {
+          bottomLeft: { x: x1, z: z1, y: yBase },
+          bottomRight: { x: x2, z: z2, y: yBase },
+          topRight: { x: x2, z: z2, y: yUp },
+          topLeft: { x: x1, z: z1, y: yUp }
+        }
+      });
+
       // Create vertical plane mesh
-      const mesh = this.createVerticalPlane(x1, z1, x2, z2, yStart, yEnd);
+      const mesh = this.createVerticalPlane(x1, z1, x2, z2, yBase, yUp);
 
       return mesh;
     } catch (error) {
@@ -340,7 +419,77 @@ export class BackdropService {
   }
 
   /**
+   * Calculate ground level at the edge of a chunk
+   */
+  private calculateGroundLevelAtEdge(
+    cx: number,
+    cz: number,
+    direction: string,
+    left: number,
+    right: number
+  ): number {
+    try {
+      const chunk = this.chunkService.getChunk(cx, cz);
+      if (!chunk || !chunk.data.hightData) {
+        return 0; // Default if no height data
+      }
+
+      const heightData = chunk.data.hightData;
+      let minGroundLevel = Infinity;
+
+      // Sample ground level along the edge
+      const samples = Math.max(3, Math.ceil(right - left)); // At least 3 samples
+      for (let i = 0; i <= samples; i++) {
+        const t = i / samples;
+        const localCoord = Math.floor(left + (right - left) * t);
+
+        let x: number, z: number;
+        switch (direction) {
+          case 'n':
+          case 's':
+            x = localCoord;
+            z = direction === 'n' ? 0 : 15;
+            break;
+          case 'e':
+          case 'w':
+            x = direction === 'w' ? 0 : 15;
+            z = localCoord;
+            break;
+          default:
+            continue;
+        }
+
+        const key = `${x},${z}`;
+        const height = heightData.get(key);
+        if (height) {
+          const groundLevel = height[4]; // groundLevel is at index 4
+          if (groundLevel < minGroundLevel) {
+            minGroundLevel = groundLevel;
+          }
+        }
+      }
+
+      const result = minGroundLevel === Infinity ? 0 : minGroundLevel;
+      logger.info('Calculated ground level at edge', {
+        chunk: { cx, cz },
+        direction,
+        edge: { left, right },
+        groundLevel: result
+      });
+
+      return result;
+    } catch (error) {
+      logger.warn('Failed to calculate ground level, using 0', {
+        cx, cz, direction, error
+      });
+      return 0;
+    }
+  }
+
+  /**
    * Create a vertical plane mesh
+   *
+   * TEMPORARY DEBUG: Drawing lines instead of mesh to verify coordinates
    */
   private createVerticalPlane(
     x1: number,
@@ -350,65 +499,61 @@ export class BackdropService {
     yStart: number,
     yEnd: number
   ): Mesh {
-    const mesh = new Mesh('backdrop_plane', this.scene);
+    logger.info('Creating vertical plane with LINES', {
+      x1, z1, x2, z2, yStart, yEnd,
+      width: Math.sqrt((x2-x1)**2 + (z2-z1)**2),
+      height: yEnd - yStart
+    });
 
-    // Create quad vertices
-    const positions = [
-      x1,
-      yStart,
-      z1, // Bottom left
-      x2,
-      yStart,
-      z2, // Bottom right
-      x2,
-      yEnd,
-      z2, // Top right
-      x1,
-      yEnd,
-      z1, // Top left
+    // Define the 4 corners of the rectangle in ABSOLUTE WORLD COORDINATES
+    const bottomLeft = new Vector3(x1, yStart, z1);
+    const bottomRight = new Vector3(x2, yStart, z2);
+    const topRight = new Vector3(x2, yEnd, z2);
+    const topLeft = new Vector3(x1, yEnd, z1);
+
+    logger.info('Rectangle corners', {
+      bottomLeft: { x: x1, y: yStart, z: z1 },
+      bottomRight: { x: x2, y: yStart, z: z2 },
+      topRight: { x: x2, y: yEnd, z: z2 },
+      topLeft: { x: x1, y: yEnd, z: z1 }
+    });
+
+    // Create lines for the rectangle outline (4 edges)
+    const points = [
+      // Bottom edge
+      bottomLeft,
+      bottomRight,
+      // Right edge
+      bottomRight,
+      topRight,
+      // Top edge
+      topRight,
+      topLeft,
+      // Left edge
+      topLeft,
+      bottomLeft
     ];
 
-    const indices = [
-      0,
-      1,
-      2, // First triangle
-      0,
-      2,
-      3, // Second triangle
-    ];
+    // Create lines with MeshBuilder
+    const linesMesh = MeshBuilder.CreateLines(
+      'backdrop_lines',
+      {
+        points: points,
+      },
+      this.scene
+    );
 
-    const uvs = [
-      0,
-      1, // Bottom left
-      1,
-      1, // Bottom right
-      1,
-      0, // Top right
-      0,
-      0, // Top left
-    ];
+    // Make lines red and thick for visibility
+    linesMesh.color = Color3.Red();
+    linesMesh.isPickable = false;
 
-    // Calculate normals (perpendicular to plane, facing inward)
-    const dx = x2 - x1;
-    const dz = z2 - z1;
-    const len = Math.sqrt(dx * dx + dz * dz);
+    logger.info('Lines created', {
+      linesMeshPosition: linesMesh.position,
+      parent: linesMesh.parent ? 'HAS PARENT!' : 'no parent',
+      absolutePosition: linesMesh.getAbsolutePosition()
+    });
 
-    // Normal perpendicular to edge, pointing inward to loaded chunks
-    const nx = -dz / len;
-    const nz = dx / len;
-
-    const normals = [nx, 0, nz, nx, 0, nz, nx, 0, nz, nx, 0, nz];
-
-    // Apply vertex data
-    const vertexData = new VertexData();
-    vertexData.positions = positions;
-    vertexData.indices = indices;
-    vertexData.uvs = uvs;
-    vertexData.normals = normals;
-
-    vertexData.applyToMesh(mesh);
-
-    return mesh;
+    return linesMesh;
   }
 
 

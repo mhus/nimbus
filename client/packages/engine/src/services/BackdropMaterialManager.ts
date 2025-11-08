@@ -79,6 +79,13 @@ export class BackdropMaterialManager {
   ): Promise<StandardMaterial> {
     const material = new StandardMaterial(materialName, this.scene);
 
+    logger.info('Creating backdrop material', {
+      materialName,
+      hasTexture: !!config.texture,
+      color: config.color,
+      alpha: config.alpha
+    });
+
     // Load texture if specified
     if (config.texture) {
       const networkService = this.appContext.services.network;
@@ -87,6 +94,7 @@ export class BackdropMaterialManager {
       }
 
       const textureUrl = networkService.getAssetUrl(config.texture);
+      logger.info('Loading backdrop texture', { textureUrl });
       const texture = new Texture(textureUrl, this.scene);
 
       material.diffuseTexture = texture;
@@ -96,15 +104,29 @@ export class BackdropMaterialManager {
     if (config.color) {
       const color = this.parseColor(config.color);
       material.diffuseColor = color;
+      logger.info('Applied color to backdrop', { color: config.color, parsedColor: color });
+    } else {
+      // If no color specified, use white
+      material.diffuseColor = Color3.White();
     }
 
     // Apply alpha
     if (config.alpha !== undefined) {
       material.alpha = config.alpha;
+      logger.info('Applied alpha to backdrop', { alpha: config.alpha });
+    } else {
+      material.alpha = 1.0; // Default to fully opaque
     }
 
     // Backdrop-specific material properties
     this.applyBackdropProperties(material);
+
+    logger.info('Backdrop material created', {
+      materialName,
+      alpha: material.alpha,
+      diffuseColor: material.diffuseColor,
+      hasTexture: !!material.diffuseTexture
+    });
 
     return material;
   }
@@ -113,22 +135,26 @@ export class BackdropMaterialManager {
    * Apply backdrop-specific rendering properties
    */
   private applyBackdropProperties(material: StandardMaterial): void {
-    // Disable lighting (unlit material - always bright regardless of scene lighting)
-    material.disableLighting = true;
-    material.emissiveColor = Color3.White();
+    // SIMPLIFIED for debugging - make it as visible as possible
+    material.backFaceCulling = false; // Render both sides
+    material.disableLighting = true; // Unlit
 
-    // Enable alpha blending
-    material.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
+    // Use emissive to make it glow (always visible)
+    if (!material.diffuseTexture) {
+      material.emissiveColor = material.diffuseColor; // Make solid color glow
+    } else {
+      material.emissiveColor = Color3.White();
+    }
 
-    // Render both sides (no backface culling)
-    material.backFaceCulling = false;
+    // No transparency issues
+    material.transparencyMode = StandardMaterial.MATERIAL_OPAQUE;
 
-    // Render on far plane (behind everything else)
-    // Note: This should be combined with mesh.renderingGroupId = 0 in BackdropService
-    // alphaMode is automatically set by transparencyMode
-
-    // Disable depth write (don't block other objects)
-    material.disableDepthWrite = false; // Can be configured per use case
+    logger.info('Backdrop material properties applied', {
+      backFaceCulling: material.backFaceCulling,
+      disableLighting: material.disableLighting,
+      emissiveColor: material.emissiveColor,
+      alpha: material.alpha
+    });
   }
 
   /**

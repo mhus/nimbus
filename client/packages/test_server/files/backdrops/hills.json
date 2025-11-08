@@ -1,9 +1,6 @@
 {
   "typeId": 4,
-  "la": 0,
-  "ya": 40,
-  "lb": 16,
-  "yb": 80,
+  "height": 40,
   "texture": "textures/backdrop/hills.png",
   "color": "#90a070",
   "alpha": 0.7,

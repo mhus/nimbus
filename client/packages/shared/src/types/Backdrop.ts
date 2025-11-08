@@ -18,17 +18,17 @@ export interface Backdrop {
   /** Backdrop type ID reference (optional) */
   typeId?: number;
 
-  /** Local X/Z coordinate a (0-16) - start, default 0 */
-  la?: number;
+  /** Left position - local X/Z coordinate (0-16), default 0 */
+  left?: number;
 
-  /** World Y coordinate a - start, default 0 */
-  ya?: number;
+  /** Width of the backdrop segment (0-16), default 16 */
+  width?: number;
 
-  /** Local X/Z coordinate b (0-16) - end, default 16 */
-  lb?: number;
+  /** Base Y coordinate (bottom) - if not provided, use groundLevel at this edge */
+  yBase?: number;
 
-  /** World Y coordinate b - end, default ya + 60 */
-  yb?: number;
+  /** Height of the backdrop - relative to yBase, default 60 */
+  height?: number;
 
   /** Texture path (e.g., "textures/backdrop/hills.png") */
   texture?: string;

@@ -1,9 +1,6 @@
 {
   "typeId": 5,
-  "la": 0,
-  "ya": 80,
-  "lb": 16,
-  "yb": 200,
+  "height": 120,
   "texture": "textures/backdrop/sky.png",
   "color": "#87CEEB",
   "alpha": 0.8,

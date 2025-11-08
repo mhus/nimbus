@@ -35,9 +35,10 @@ const logger = getLogger('ChunkService');
  * Default backdrop configuration used when chunk data doesn't provide backdrop
  */
 const DEFAULT_BACKDROP: Backdrop = {
-  texture: 'backdrop/fog1.png',
-  alpha: 0.5,
-  alphaMode: 2,
+//  texture: 'backdrops/fog1.png',
+  color: '#ff0000', // Red color for debugging
+  alpha: 1.0,
+  alphaMode: 0,
 };
 
 /**

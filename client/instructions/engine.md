@@ -93,3 +93,29 @@ funktion um die Bleocke zu kruemmen. Diese Funktion muss noch im server in 'clie
     - gibt es einen west chunk ...
     - gibt es einen east chunk ...
     - alle chunks pruefen, nicht mehr gebrauchte backdrops loeschen
+
+
+jetzt sehe ich was, aber sehr merkwuerdig, denn die positions sind falsch. in einem backdrop kommt
+- eine y (y1) coordinate fuer die hoehe unten, wenn die nicht kommt sollten wir eine sinnvolle hoehe nehmen, z.b. groundLevel an dieser kante berechnen. - sollte meistens fehlen, damit der
+  grouldLevel genuzt wird.
+- eine yUp (y2) coordinate, die oben ist. am besten relational zu y+hoehe des backdrops (die namen sollten angepasst werden, yBase und yUp ?).
+- es werden locale zx coordinaten geliefert, da diese je nachdem in welche richtung das backdrop geht z+, z-, x+ oder x- sein kann. deshalb sind das lokale coordinaten, die an der jeweiligen
+  ecke des chunks anfangen. mit 0 bis 16 (da ein chunk 16x16 blocks hat). Also berechne die x bzw z coordinalte ab chunk ecke bis zur naechsten chunk ecke (+16). 
+- nenne yUp in height um und lb in width, la in left 
+
+> bevor wir weiter machen. ich habe eine flaeche xz ebene bei y = 0, P1(x:0,y:0,z:0) und P2 (x:16,y:0,z:16) bei welchen beiden punkten ist die north kante?
+
+⏺ Bei einer XZ-Ebene mit P1(0,0,0) und P2(16,0,16):
+
+North-Kante ist bei Z = 16 (positive Z-Richtung)
+
+Die beiden Punkte der North-Kante sind:
+- (x:0, y:0, z:16)
+- (x:16, y:0, z:16)
+
+Zur Orientierung:
+- North (n): z = 16 (obere Kante, positive Z)
+- South (s): z = 0 (untere Kante)
+- East (e): x = 16 (rechte Kante, positive X)
+- West (w): x = 0 (linke Kante)
+

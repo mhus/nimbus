@@ -1,9 +1,6 @@
 {
   "typeId": 2,
-  "la": 0,
-  "ya": 40,
-  "lb": 16,
-  "yb": 100,
+  "height": 60,
   "texture": "textures/backdrop/fog1.png",
   "color": "#c0c0d0",
   "alpha": 0.5,
