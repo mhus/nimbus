@@ -21,6 +21,8 @@
 - Implementiere alle eigenschften, offset, scaling, rotation wie bei einem Cube.
 - Orientiere dich an CubeRenderer.
 
+[ ] faceVisibility soll auch die Seiten im CrossRenderer deaktivieren koennen. Die beiden Seiten sollen durch LEFT und RIGHT deaktiviert werden koennen.
+
 ## Sphere
 
 [?] Erstelle den SphereRenderer. Er rendert einen Sphere.
@@ -42,8 +44,8 @@
   - 2: Displacement Top (incl Y)
   - 3: Displacement Bottom (incl Y)
 
-[ ] CylinderRenderer soll oben und unten einen Deckel auf den cylinder rendern, TOP und BOTTOM sollen 
-durch faceVisibility TOB und BOTTOM deaktiviert werden koennen. Die Seite durch FRONT.
+[?] CylinderRenderer soll oben und unten einen Deckel auf den cylinder rendern, TOP und BOTTOM sollen 
+durch faceVisibility TOP und BOTTOM deaktiviert werden koennen. Die Seite durch FRONT.
 
 ## Hash 
 
@@ -55,6 +57,8 @@ teilen.
 - Die offset verschieben nur noch aspekte von jedem punkt. andere aspekte bleiben unveraendert.
 - Wenn alle offsets 0 sind, dannw wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
 
+[ ] faceVisibility soll auch die Seiten im HashRenderer deaktivieren koennen.
+
 ## Stair
 
 [?] Erstelle den StairRenderer. Er Rendert eine Treppe.
@@ -62,6 +66,9 @@ teilen.
 - Es werden vorerst keine offsets unterstuetzt.
 - Implementiere alle weiteren eigenschaften, scaling, rotation wie bei einem Cube.
 - Du kannst das als vorlage nutzen: client_playground/packages/client/src/rendering/shapes/StairRenderer.ts
+
+[ ] Die BOTTOM Seite soll durch faceVisibility deaktiviert werden koennen. Die BACK soll durch 
+faceVisibility deaktiviert werden koennen.
 
 ## Steps
 

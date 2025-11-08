@@ -6,7 +6,7 @@
  */
 
 import { Vector3, Matrix } from '@babylonjs/core';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, FaceFlag, FaceVisibilityHelper } from '@nimbus/shared';
 import type { TextureDefinition } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
@@ -136,6 +136,11 @@ export class CylinderRenderer extends BlockRenderer {
     radiusBottomX *= scalingX;
     radiusBottomZ *= scalingZ;
 
+    // Check face visibility
+    const isTopVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.TOP);
+    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
+    const isSideVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
+
     // Generate cylinder vertices
     const vertices: Vector3[] = [];
     const uvs: number[] = [];
@@ -155,35 +160,39 @@ export class CylinderRenderer extends BlockRenderer {
     const topCenterX = centerX + displacementTopX;
     const topCenterZ = centerZ + displacementTopZ;
 
-    // Generate vertices for cylinder sides
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const cosA = Math.cos(angle);
-      const sinA = Math.sin(angle);
+    // Generate vertices for cylinder sides (only if visible)
+    let sideVertexStart = 0;
+    if (isSideVisible) {
+      sideVertexStart = vertices.length;
+      for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
 
-      // Bottom vertex
-      const bottomX = bottomCenterX + radiusBottomX * cosA;
-      const bottomZ = bottomCenterZ + radiusBottomZ * sinA;
+        // Bottom vertex
+        const bottomX = bottomCenterX + radiusBottomX * cosA;
+        const bottomZ = bottomCenterZ + radiusBottomZ * sinA;
 
-      // Top vertex
-      const topX = topCenterX + radiusTopX * cosA;
-      const topZ = topCenterZ + radiusTopZ * sinA;
+        // Top vertex
+        const topX = topCenterX + radiusTopX * cosA;
+        const topZ = topCenterZ + radiusTopZ * sinA;
 
-      // Add bottom vertex
-      vertices.push(new Vector3(bottomX, bottomCenterY, bottomZ));
-      // Add top vertex
-      vertices.push(new Vector3(topX, topCenterY, topZ));
+        // Add bottom vertex
+        vertices.push(new Vector3(bottomX, bottomCenterY, bottomZ));
+        // Add top vertex
+        vertices.push(new Vector3(topX, topCenterY, topZ));
 
-      // UV coordinates (wrap around cylinder)
-      // Note: V-coordinates inverted - v0=top in texture, v1=bottom in texture
-      const u = i / segments;
-      uvs.push(u, 1); // Bottom (v1 = bottom in texture)
-      uvs.push(u, 0); // Top (v0 = top in texture)
+        // UV coordinates (wrap around cylinder)
+        // Note: V-coordinates inverted - v0=top in texture, v1=bottom in texture
+        const u = i / segments;
+        uvs.push(u, 1); // Bottom (v1 = bottom in texture)
+        uvs.push(u, 0); // Top (v0 = top in texture)
 
-      // Normal for cylinder sides (pointing outward)
-      const normal = new Vector3(cosA, 0, sinA).normalize();
-      normals.push(normal.x, normal.y, normal.z); // Bottom
-      normals.push(normal.x, normal.y, normal.z); // Top
+        // Normal for cylinder sides (pointing outward)
+        const normal = new Vector3(cosA, 0, sinA).normalize();
+        normals.push(normal.x, normal.y, normal.z); // Bottom
+        normals.push(normal.x, normal.y, normal.z); // Top
+      }
     }
 
     // Apply rotation if specified
@@ -229,80 +238,88 @@ export class CylinderRenderer extends BlockRenderer {
       }
     }
 
-    // Generate indices for cylinder sides
-    for (let i = 0; i < segments; i++) {
-      const bottom1 = i * 2;
-      const top1 = i * 2 + 1;
-      const bottom2 = (i + 1) * 2;
-      const top2 = (i + 1) * 2 + 1;
+    // Generate indices for cylinder sides (only if visible)
+    if (isSideVisible) {
+      for (let i = 0; i < segments; i++) {
+        const bottom1 = sideVertexStart + i * 2;
+        const top1 = sideVertexStart + i * 2 + 1;
+        const bottom2 = sideVertexStart + (i + 1) * 2;
+        const top2 = sideVertexStart + (i + 1) * 2 + 1;
 
-      // Two triangles per segment
-      indices.push(bottom1, bottom2, top1);
-      indices.push(top1, bottom2, top2);
+        // Two triangles per segment
+        indices.push(bottom1, bottom2, top1);
+        indices.push(top1, bottom2, top2);
+      }
     }
 
-    // Add bottom cap (if needed)
-    const bottomCapStartVertex = vertices.length;
-    vertices.push(new Vector3(bottomCenterX, bottomCenterY, bottomCenterZ)); // Center vertex
-    normals.push(0, -1, 0); // Normal pointing down
-    uvs.push(0.5, 0.5); // Center UV
+    // Add bottom cap (only if visible)
+    let bottomCapStartVertex = -1;
+    if (isBottomVisible) {
+      bottomCapStartVertex = vertices.length;
+      vertices.push(new Vector3(bottomCenterX, bottomCenterY, bottomCenterZ)); // Center vertex
+      normals.push(0, -1, 0); // Normal pointing down
+      uvs.push(0.5, 0.5); // Center UV
 
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const cosA = Math.cos(angle);
-      const sinA = Math.sin(angle);
+      for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
 
-      const x = bottomCenterX + radiusBottomX * cosA;
-      const z = bottomCenterZ + radiusBottomZ * sinA;
+        const x = bottomCenterX + radiusBottomX * cosA;
+        const z = bottomCenterZ + radiusBottomZ * sinA;
 
-      vertices.push(new Vector3(x, bottomCenterY, z));
-      normals.push(0, -1, 0);
+        vertices.push(new Vector3(x, bottomCenterY, z));
+        normals.push(0, -1, 0);
 
-      // UV for cap (circular mapping)
-      const u = 0.5 + 0.5 * cosA;
-      const v = 0.5 + 0.5 * sinA;
-      uvs.push(u, v);
+        // UV for cap (circular mapping)
+        const u = 0.5 + 0.5 * cosA;
+        const v = 0.5 + 0.5 * sinA;
+        uvs.push(u, v);
+      }
+
+      // Bottom cap indices
+      for (let i = 0; i < segments; i++) {
+        indices.push(
+          bottomCapStartVertex,
+          bottomCapStartVertex + i + 1,
+          bottomCapStartVertex + i + 2
+        );
+      }
     }
 
-    // Bottom cap indices
-    for (let i = 0; i < segments; i++) {
-      indices.push(
-        bottomCapStartVertex,
-        bottomCapStartVertex + i + 1,
-        bottomCapStartVertex + i + 2
-      );
-    }
+    // Add top cap (only if visible)
+    let topCapStartVertex = -1;
+    if (isTopVisible) {
+      topCapStartVertex = vertices.length;
+      vertices.push(new Vector3(topCenterX, topCenterY, topCenterZ)); // Center vertex
+      normals.push(0, 1, 0); // Normal pointing up
+      uvs.push(0.5, 0.5); // Center UV
 
-    // Add top cap
-    const topCapStartVertex = vertices.length;
-    vertices.push(new Vector3(topCenterX, topCenterY, topCenterZ)); // Center vertex
-    normals.push(0, 1, 0); // Normal pointing up
-    uvs.push(0.5, 0.5); // Center UV
+      for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
 
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const cosA = Math.cos(angle);
-      const sinA = Math.sin(angle);
+        const x = topCenterX + radiusTopX * cosA;
+        const z = topCenterZ + radiusTopZ * sinA;
 
-      const x = topCenterX + radiusTopX * cosA;
-      const z = topCenterZ + radiusTopZ * sinA;
+        vertices.push(new Vector3(x, topCenterY, z));
+        normals.push(0, 1, 0);
 
-      vertices.push(new Vector3(x, topCenterY, z));
-      normals.push(0, 1, 0);
+        // UV for cap (circular mapping)
+        const u = 0.5 + 0.5 * cosA;
+        const v = 0.5 + 0.5 * sinA;
+        uvs.push(u, v);
+      }
 
-      // UV for cap (circular mapping)
-      const u = 0.5 + 0.5 * cosA;
-      const v = 0.5 + 0.5 * sinA;
-      uvs.push(u, v);
-    }
-
-    // Top cap indices (reverse winding for upward face)
-    for (let i = 0; i < segments; i++) {
-      indices.push(
-        topCapStartVertex,
-        topCapStartVertex + i + 2,
-        topCapStartVertex + i + 1
-      );
+      // Top cap indices (reverse winding for upward face)
+      for (let i = 0; i < segments; i++) {
+        indices.push(
+          topCapStartVertex,
+          topCapStartVertex + i + 2,
+          topCapStartVertex + i + 1
+        );
+      }
     }
 
     // Get texture (use texture 0, SIDE, or ALL)
@@ -350,6 +367,11 @@ export class CylinderRenderer extends BlockRenderer {
       triangles: indices.length / 3,
       radiusTop: { x: radiusTopX, z: radiusTopZ },
       radiusBottom: { x: radiusBottomX, z: radiusBottomZ },
+      parts: {
+        side: isSideVisible,
+        topCap: isTopVisible,
+        bottomCap: isBottomVisible
+      }
     });
   }
 }
