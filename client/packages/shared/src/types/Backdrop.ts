@@ -16,7 +16,7 @@
  */
 export interface Backdrop {
   /** Type of backdrop rendering */
-  type?: 'none' | 'texture' | 'solid' | 'fog';
+  type?: 'none' | 'texture' | 'solid' | 'fog' | 'fadeout';
 
   /** Backdrop ID - loads backdrop type from server (e.g., "fog1", "stone") */
   id?: string;

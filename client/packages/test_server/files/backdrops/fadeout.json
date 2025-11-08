@@ -1,0 +1,8 @@
+{
+  "type": "fadeout",
+  "color": "#8080ff",
+  "alpha": 1.0,
+  "height": 50,
+  "alphaMode": 2,
+  "yBase": 60
+}

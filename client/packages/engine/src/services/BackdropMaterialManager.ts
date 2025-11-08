@@ -8,7 +8,7 @@
  * - Distance-based fade effects
  */
 
-import { StandardMaterial, Texture, Color3, type Scene, type Material } from '@babylonjs/core';
+import { StandardMaterial, Texture, DynamicTexture, Color3, type Scene, type Material } from '@babylonjs/core';
 import { getLogger, ExceptionHandler, type Backdrop } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
@@ -106,6 +106,15 @@ export class BackdropMaterialManager {
       material.useAlphaFromDiffuseTexture = true; // Use alpha from texture
     }
 
+    // Special handling for fadeout type
+    if (config.type === 'fadeout') {
+      // Create vertical gradient texture (opaque at bottom, transparent at top)
+      const gradientTexture = this.createVerticalGradientTexture();
+      material.opacityTexture = gradientTexture;
+
+      logger.info('Created fadeout gradient texture');
+    }
+
     // Load noise texture if specified
     if (config.noiseTexture) {
       const networkService = this.appContext.services.network;
@@ -135,7 +144,7 @@ export class BackdropMaterialManager {
       material.diffuseColor = Color3.White();
     }
 
-    // Apply alpha (multiplies with texture alpha if present)
+    // Apply alpha (multiplies with texture/gradient alpha if present)
     material.alpha = config.alpha ?? 1.0;
 
     // Apply alphaMode if specified
@@ -181,6 +190,39 @@ export class BackdropMaterialManager {
     // Enable depth testing
     material.disableDepthWrite = false;
     material.depthFunction = 0;
+  }
+
+  /**
+   * Create a vertical gradient texture for fadeout effect
+   *
+   * Creates a gradient that goes from opaque (bottom) to transparent (top)
+   */
+  private createVerticalGradientTexture(): DynamicTexture {
+    const size = 256;
+    const texture = new DynamicTexture('fadeout_gradient', size, this.scene);
+
+    const context = texture.getContext();
+    const imageData = context.createImageData(size, size);
+
+    // Create vertical gradient: transparent at top, opaque at bottom
+    for (let y = 0; y < size; y++) {
+      const alpha = y / size; // 0.0 at top (y=0), 1.0 at bottom (y=255)
+
+      for (let x = 0; x < size; x++) {
+        const index = (y * size + x) * 4;
+        imageData.data[index] = 255;     // R
+        imageData.data[index + 1] = 255; // G
+        imageData.data[index + 2] = 255; // B
+        imageData.data[index + 3] = alpha * 255; // A
+      }
+    }
+
+    context.putImageData(imageData, 0, 0);
+    texture.update();
+
+    logger.debug('Created vertical gradient texture for fadeout');
+
+    return texture;
   }
 
   /**
