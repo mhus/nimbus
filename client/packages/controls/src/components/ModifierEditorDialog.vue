@@ -67,34 +67,23 @@
                   <SoundEditor v-model="modifierData.sound" />
                 </CollapsibleSection>
 
-                <!-- Simple Fields -->
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="form-control">
-                    <label class="label">
-                      <span class="label-text">Sprite Count</span>
-                    </label>
-                    <input
-                      v-model.number="modifierData.spriteCount"
-                      type="number"
-                      class="input input-bordered input-sm"
-                      placeholder="Optional"
-                    />
-                  </div>
-
-                  <div class="form-control">
-                    <label class="label">
-                      <span class="label-text">Alpha</span>
-                    </label>
-                    <input
-                      v-model.number="modifierData.alpha"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="1"
-                      class="input input-bordered input-sm"
-                      placeholder="0.0 - 1.0"
-                    />
-                  </div>
+                <!-- Alpha Field -->
+                <div class="form-control max-w-xs">
+                  <label class="label">
+                    <span class="label-text">Alpha</span>
+                  </label>
+                  <input
+                    v-model.number="modifierData.alpha"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.0 - 1.0"
+                  />
+                  <label class="label">
+                    <span class="label-text-alt">Transparency: 0.0 = fully transparent, 1.0 = opaque</span>
+                  </label>
                 </div>
               </div>
 

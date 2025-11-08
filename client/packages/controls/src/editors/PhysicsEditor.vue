@@ -1,94 +1,92 @@
 <template>
   <div class="space-y-3 pt-2">
-    <div class="form-control">
-      <label class="label cursor-pointer justify-start gap-2">
+    <!-- Checkboxes Row -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            v-model="localValue.solid"
+            type="checkbox"
+            class="checkbox checkbox-sm"
+          />
+          <span class="label-text text-xs">Solid (collision)</span>
+        </label>
+      </div>
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            v-model="localValue.interactive"
+            type="checkbox"
+            class="checkbox checkbox-sm"
+          />
+          <span class="label-text text-xs">Interactive</span>
+        </label>
+      </div>
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            v-model="localValue.autoClimbable"
+            type="checkbox"
+            class="checkbox checkbox-sm"
+          />
+          <span class="label-text text-xs">Auto Climbable</span>
+        </label>
+      </div>
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            v-model="localValue.autoJump"
+            type="checkbox"
+            class="checkbox checkbox-sm"
+          />
+          <span class="label-text text-xs">Auto Jump</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Numeric Fields Row -->
+    <div class="grid grid-cols-3 gap-2">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Resistance</span>
+        </label>
         <input
-          v-model="localValue.solid"
-          type="checkbox"
-          class="checkbox checkbox-sm"
+          v-model.number="localValue.resistance"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="0"
         />
-        <span class="label-text">Solid (has collision)</span>
-      </label>
-    </div>
-
-    <div class="form-control">
-      <label class="label cursor-pointer justify-start gap-2">
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Climbable</span>
+        </label>
         <input
-          v-model="localValue.interactive"
-          type="checkbox"
-          class="checkbox checkbox-sm"
+          v-model.number="localValue.climbable"
+          type="number"
+          step="0.1"
+          min="0"
+          class="input input-bordered input-sm"
+          placeholder="0"
         />
-        <span class="label-text">Interactive</span>
-      </label>
-    </div>
-
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Resistance</span>
-      </label>
-      <input
-        v-model.number="localValue.resistance"
-        type="number"
-        step="0.1"
-        class="input input-bordered input-sm"
-        placeholder="Movement resistance"
-      />
-    </div>
-
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Climbable (climb speed)</span>
-      </label>
-      <input
-        v-model.number="localValue.climbable"
-        type="number"
-        step="0.1"
-        min="0"
-        class="input input-bordered input-sm"
-        placeholder="0 = not climbable"
-      />
-      <label class="label">
-        <span class="label-text-alt">Climb speed when moving forward (e.g., 0.5 = ladder, 1.0 = fast)</span>
-      </label>
-    </div>
-
-    <div class="form-control">
-      <label class="label cursor-pointer justify-start gap-2">
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Auto Orientation Y</span>
+        </label>
         <input
-          v-model="localValue.autoClimbable"
-          type="checkbox"
-          class="checkbox checkbox-sm"
+          v-model.number="localValue.autoOrientationY"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="0"
         />
-        <span class="label-text">Auto Climbable (auto-climb 1 block)</span>
-      </label>
+      </div>
     </div>
-
-    <div class="form-control">
-      <label class="label cursor-pointer justify-start gap-2">
-        <input
-          v-model="localValue.autoJump"
-          type="checkbox"
-          class="checkbox checkbox-sm"
-        />
-        <span class="label-text">Auto Jump (trigger jump automatically)</span>
-      </label>
-    </div>
-
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Auto Orientation Y (rotation angle)</span>
-      </label>
-      <input
-        v-model.number="localValue.autoOrientationY"
-        type="number"
-        step="0.1"
-        class="input input-bordered input-sm"
-        placeholder="Angle in radians (e.g., 0, 1.57, 3.14)"
-      />
-      <label class="label">
-        <span class="label-text-alt">Rotation in radians (0° = 0, 90° = 1.57, 180° = 3.14, 270° = 4.71)</span>
-      </label>
-    </div>
+    <label class="label">
+      <span class="label-text-alt">Resistance: movement reduction | Climbable: climb speed (0.5=ladder) | Auto Orientation Y: radians (1.57=90°)</span>
+    </label>
 
     <div class="form-control">
       <label class="label">

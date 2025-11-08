@@ -227,7 +227,6 @@ const getModifierSummary = (status: number): string => {
   if (modifier.effects) parts.push('effects');
   if (modifier.illumination) parts.push('illumination');
   if (modifier.sound) parts.push('sound');
-  if (modifier.spriteCount) parts.push(`sprites: ${modifier.spriteCount}`);
   if (modifier.alpha !== undefined) parts.push(`alpha: ${modifier.alpha}`);
 
   return parts.length > 0 ? parts.join(', ') : 'Empty';

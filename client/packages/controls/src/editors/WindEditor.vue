@@ -1,60 +1,70 @@
 <template>
   <div class="space-y-3 pt-2">
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Leafiness</span>
-      </label>
-      <input
-        v-model.number="localValue.leafiness"
-        type="number"
-        step="0.1"
-        min="0"
-        max="1"
-        class="input input-bordered input-sm"
-        placeholder="0.0 - 1.0 (leaf-like wind effect)"
-      />
+    <!-- Row 1: Leafiness & Stability -->
+    <div class="grid grid-cols-2 gap-2">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Leafiness</span>
+        </label>
+        <input
+          v-model.number="localValue.leafiness"
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          class="input input-bordered input-sm"
+          placeholder="0.0 - 1.0"
+        />
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Stability</span>
+        </label>
+        <input
+          v-model.number="localValue.stability"
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          class="input input-bordered input-sm"
+          placeholder="0.0 - 1.0"
+        />
+      </div>
     </div>
+    <label class="label">
+      <span class="label-text-alt">Leafiness: leaf-like wind effect | Stability: rigidity/resistance</span>
+    </label>
 
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Stability</span>
-      </label>
-      <input
-        v-model.number="localValue.stability"
-        type="number"
-        step="0.1"
-        min="0"
-        max="1"
-        class="input input-bordered input-sm"
-        placeholder="0.0 - 1.0 (stability/rigidity)"
-      />
+    <!-- Row 2: Lever Up & Lever Down -->
+    <div class="grid grid-cols-2 gap-2">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Lever Up</span>
+        </label>
+        <input
+          v-model.number="localValue.leverUp"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Upper lever"
+        />
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-xs">Lever Down</span>
+        </label>
+        <input
+          v-model.number="localValue.leverDown"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Lower lever"
+        />
+      </div>
     </div>
-
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Lever Up</span>
-      </label>
-      <input
-        v-model.number="localValue.leverUp"
-        type="number"
-        step="0.1"
-        class="input input-bordered input-sm"
-        placeholder="Upper lever arm"
-      />
-    </div>
-
-    <div class="form-control">
-      <label class="label">
-        <span class="label-text">Lever Down</span>
-      </label>
-      <input
-        v-model.number="localValue.leverDown"
-        type="number"
-        step="0.1"
-        class="input input-bordered input-sm"
-        placeholder="Lower lever arm"
-      />
-    </div>
+    <label class="label">
+      <span class="label-text-alt">Lever arms control wind movement amplitude</span>
+    </label>
   </div>
 </template>
 

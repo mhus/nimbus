@@ -25,8 +25,8 @@
       />
     </div>
 
-    <!-- Scaling -->
-    <div class="grid grid-cols-3 gap-2">
+    <!-- Scaling & Rotation -->
+    <div class="grid grid-cols-5 gap-2">
       <div class="form-control">
         <label class="label">
           <span class="label-text text-xs">Scale X</span>
@@ -63,13 +63,9 @@
           placeholder="1.0"
         />
       </div>
-    </div>
-
-    <!-- Rotation -->
-    <div class="grid grid-cols-2 gap-2">
       <div class="form-control">
         <label class="label">
-          <span class="label-text text-xs">Rotation X (degrees)</span>
+          <span class="label-text text-xs">Rotation X</span>
         </label>
         <input
           v-model.number="localValue.rotationX"
@@ -80,7 +76,7 @@
       </div>
       <div class="form-control">
         <label class="label">
-          <span class="label-text text-xs">Rotation Y (degrees)</span>
+          <span class="label-text text-xs">Rotation Y</span>
         </label>
         <input
           v-model.number="localValue.rotationY"
