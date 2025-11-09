@@ -146,13 +146,13 @@ export class GlassRenderer extends BlockRenderer {
     const uvs: number[] = [];
     let vertexOffset = 0;
 
-    // Check face visibility
-    const isTopVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.TOP);
-    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
-    const isLeftVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.LEFT);
-    const isRightVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.RIGHT);
-    const isFrontVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
-    const isBackVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK);
+    // Check face visibility (priority: modifier.faceVisibility > block.faceVisibility > default all visible)
+    const isTopVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.TOP);
+    const isBottomVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BOTTOM);
+    const isLeftVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.LEFT);
+    const isRightVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.RIGHT);
+    const isFrontVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.FRONT);
+    const isBackVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BACK);
 
     // Helper to add a face
     const addFace = (

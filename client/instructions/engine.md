@@ -121,7 +121,7 @@ Zur Orientierung:
 
 ## faceVisibility?: FaceVisibility in VisibilityModifier
 
-[ ] In Block gibt es den parameter 'faceVisibility?: FaceVisibility'. Um die eiggenschaft zusaetzlich
+[?] In Block gibt es den parameter 'faceVisibility?: FaceVisibility'. Um die eiggenschaft zusaetzlich
 generisch anzubeiten, soll er zusaetzlich auch in VisibilityModifier angegeben werden.
 - Erweitere den Typ
 - Erweitere den Editor von VisibilityModifier - Benutze die gleichen checkboxen wie im Editor fuer Block
@@ -130,3 +130,6 @@ generisch anzubeiten, soll er zusaetzlich auch in VisibilityModifier angegeben w
 - Nutzung von FaceVisibilityHelper.isVisible muss ueberall angepasst werden.
 - FaceVisibilityHelper.isVisible prueft zuerst, ob visibility.faceVisibility existiert, nimmt dann den wert von dort, alternativ wie bisher.
 
+## Smooth Block Movement
+
+Ich moechte die Bewegung auf einem Block besser steueren koennen. Dazu soll es einen neuen Modifier geben:

@@ -10,7 +10,7 @@
 
 import type { Vector3 } from './Vector3';
 import type { BlockMetadata } from './BlockMetadata';
-import type { BlockModifier } from './BlockModifier';
+import type { BlockModifier, VisibilityModifier } from './BlockModifier';
 
 /**
  * Offsets for block geometry modification
@@ -77,6 +77,17 @@ export enum FaceFlag {
 }
 
 /**
+ * Interface for blocks that contain cached modifier data
+ * Used to simplify FaceVisibilityHelper.isVisible calls
+ */
+export interface IBlockWithModifier {
+  /** The original Block instance */
+  block: Block;
+  /** The cached current modifier for this block */
+  currentModifier: BlockModifier;
+}
+
+/**
  * Helper utilities for FaceVisibility bitfield operations
  */
 export namespace FaceVisibilityHelper {
@@ -104,12 +115,55 @@ export namespace FaceVisibilityHelper {
 
   /**
    * Check if a specific face is visible
-   * @param fv FaceVisibility to check
-   * @param face Face flag to check
-   * @returns true if face is visible
+   *
+   * Overload 1: isVisible(blockWithModifier, face) - Simplified for ClientBlock
+   * - Uses cached currentModifier from block
+   *
+   * Overload 2: isVisible(block, modifier, face)
+   * - Priority: modifier.faceVisibility > block.faceVisibility > default (all visible)
+   *
+   * Overload 3: isVisible(fv, face)
+   * - Direct FaceVisibility check
    */
-  export function isVisible(fv: FaceVisibility, face: FaceFlag): boolean {
-    return (fv.value & face) !== 0;
+  export function isVisible(blockWithModifier: IBlockWithModifier, face: FaceFlag): boolean;
+  export function isVisible(block: Block, modifier: VisibilityModifier | undefined, face: FaceFlag): boolean;
+  export function isVisible(fv: FaceVisibility, face: FaceFlag): boolean;
+  export function isVisible(
+    blockOrFvOrBlockWithModifier: Block | FaceVisibility | IBlockWithModifier,
+    modifierOrFace: VisibilityModifier | undefined | FaceFlag,
+    face?: FaceFlag
+  ): boolean {
+    // Check if first overload: isVisible(blockWithModifier, face)
+    if (face === undefined && typeof modifierOrFace === 'number' && 'currentModifier' in blockOrFvOrBlockWithModifier) {
+      const blockWithModifier = blockOrFvOrBlockWithModifier as IBlockWithModifier;
+      const faceFlag = modifierOrFace as FaceFlag;
+      // Delegate to second overload
+      return isVisible(blockWithModifier.block, blockWithModifier.currentModifier?.visibility, faceFlag);
+    }
+
+    // Check if second overload: isVisible(block, modifier, face)
+    if (face !== undefined) {
+      const block = blockOrFvOrBlockWithModifier as Block;
+      const modifier = modifierOrFace as VisibilityModifier | undefined;
+
+      // 1. Priority: modifier.faceVisibility
+      if (modifier?.faceVisibility) {
+        return (modifier.faceVisibility.value & face) !== 0;
+      }
+
+      // 2. Fallback: block.faceVisibility
+      if (block.faceVisibility) {
+        return (block.faceVisibility.value & face) !== 0;
+      }
+
+      // 3. Default: all faces visible
+      return true;
+    }
+
+    // Third overload: isVisible(fv, face)
+    const fv = blockOrFvOrBlockWithModifier as FaceVisibility;
+    const faceFlag = modifierOrFace as FaceFlag;
+    return (fv.value & faceFlag) !== 0;
   }
 
   /**

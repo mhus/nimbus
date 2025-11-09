@@ -111,6 +111,103 @@
       />
     </CollapsibleSection>
 
+    <!-- Face Visibility -->
+    <CollapsibleSection
+      title="Face Visibility"
+      :model-value="true"
+      :default-open="false"
+    >
+      <div class="space-y-3 pt-2">
+        <!-- Enable/Disable Checkbox -->
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm"
+            :checked="hasFaceVisibility"
+            @change="toggleFaceVisibility"
+          />
+          <span class="label-text">Enable Face Visibility Control</span>
+        </label>
+
+        <div v-if="hasFaceVisibility" class="space-y-2">
+          <!-- Face Checkboxen (6 Faces) -->
+          <div class="grid grid-cols-2 gap-2">
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                :checked="isFaceVisible(1)"
+                @change="toggleFace(1)"
+              />
+              <span class="label-text">Top</span>
+            </label>
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                :checked="isFaceVisible(2)"
+                @change="toggleFace(2)"
+              />
+              <span class="label-text">Bottom</span>
+            </label>
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                :checked="isFaceVisible(4)"
+                @change="toggleFace(4)"
+              />
+              <span class="label-text">Left</span>
+            </label>
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                :checked="isFaceVisible(8)"
+                @change="toggleFace(8)"
+              />
+              <span class="label-text">Right</span>
+            </label>
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                :checked="isFaceVisible(16)"
+                @change="toggleFace(16)"
+              />
+              <span class="label-text">Front</span>
+            </label>
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                :checked="isFaceVisible(32)"
+                @change="toggleFace(32)"
+              />
+              <span class="label-text">Back</span>
+            </label>
+          </div>
+
+          <!-- Fixed/Auto mode -->
+          <div class="divider divider-start text-xs">Mode</div>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-sm"
+              :checked="isFixedMode"
+              @change="toggleFixedMode"
+            />
+            <span class="label-text">Fixed Mode (disable auto-calculation)</span>
+          </label>
+
+          <!-- Bitfield value display -->
+          <div class="text-xs text-base-content/50">
+            Bitfield value: {{ localValue.faceVisibility?.value || 0 }}
+          </div>
+        </div>
+      </div>
+    </CollapsibleSection>
+
     <!-- Textures -->
     <CollapsibleSection
       title="Textures"
@@ -547,7 +644,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import type { VisibilityModifier, TextureDefinition } from '@nimbus/shared';
 import { Shape, ShapeNames, TextureKey, TextureKeyNames, BlockEffect } from '@nimbus/shared';
 import AssetPickerDialog from '@components/AssetPickerDialog.vue';
@@ -994,5 +1091,44 @@ const closeModelAssetPicker = () => {
 const handleModelAssetSelected = (path: string) => {
   localValue.value.path = path;
   closeModelAssetPicker();
+};
+
+// ===== Face Visibility Functions =====
+
+const hasFaceVisibility = computed(() => {
+  return localValue.value.faceVisibility !== undefined;
+});
+
+const isFixedMode = computed(() => {
+  if (!localValue.value.faceVisibility) return false;
+  return (localValue.value.faceVisibility.value & 64) !== 0; // FIXED flag (bit 6)
+});
+
+const toggleFaceVisibility = (event: Event) => {
+  const enabled = (event.target as HTMLInputElement).checked;
+  if (!enabled) {
+    localValue.value.faceVisibility = undefined;
+  } else if (!localValue.value.faceVisibility) {
+    localValue.value.faceVisibility = { value: 63 }; // 0b00111111 = all 6 faces visible
+  }
+};
+
+const isFaceVisible = (faceFlag: number): boolean => {
+  if (!localValue.value.faceVisibility) return false;
+  return (localValue.value.faceVisibility.value & faceFlag) !== 0;
+};
+
+const toggleFace = (faceFlag: number) => {
+  if (!localValue.value.faceVisibility) {
+    localValue.value.faceVisibility = { value: 0 };
+  }
+  localValue.value.faceVisibility.value ^= faceFlag; // XOR to toggle bit
+};
+
+const toggleFixedMode = () => {
+  if (!localValue.value.faceVisibility) {
+    localValue.value.faceVisibility = { value: 0 };
+  }
+  localValue.value.faceVisibility.value ^= 64; // Toggle FIXED flag (bit 6)
 };
 </script>

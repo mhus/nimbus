@@ -177,12 +177,12 @@ export class StairRenderer extends BlockRenderer {
     const bottomTexture = textures[bottomIndex] ? this.normalizeTexture(textures[bottomIndex]) : null;
     const sideTexture = textures[sideIndex] ? this.normalizeTexture(textures[sideIndex]) : null;
 
-    // Check face visibility
-    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
-    const isBackVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK);
-    const isRightVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.RIGHT);
-    const isLeftVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.LEFT);
-    const isFrontVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
+    // Check face visibility (priority: modifier.faceVisibility > block.faceVisibility > default all visible)
+    const isBottomVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BOTTOM);
+    const isBackVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BACK);
+    const isRightVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.RIGHT);
+    const isLeftVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.LEFT);
+    const isFrontVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.FRONT);
 
     let facesRendered = 0;
 

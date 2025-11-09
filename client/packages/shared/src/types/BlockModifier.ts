@@ -9,6 +9,7 @@
 
 import type { Shape } from './Shape';
 import type { Vector3 } from './Vector3';
+import type { FaceVisibility } from './Block';
 
 /**
  * Texture mapping keys
@@ -489,6 +490,13 @@ export interface VisibilityModifier {
 
   /** Texture definitions (key = TextureKey) */
   textures?: Record<number, TextureDefinition | string>;
+
+  /**
+   * Face visibility flags (1 byte bitfield)
+   * Determines which faces are visible or if it's auto-calculated
+   * Priority: VisibilityModifier.faceVisibility > Block.faceVisibility > default (all visible)
+   */
+  faceVisibility?: FaceVisibility;
 }
 
 /**

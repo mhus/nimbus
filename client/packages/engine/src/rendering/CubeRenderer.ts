@@ -107,13 +107,13 @@ export class CubeRenderer extends BlockRenderer {
     const frontIndex = textures[5] ? 5 : (textures[7] ? 7 : 0);
     const backIndex = textures[6] ? 6 : (textures[7] ? 7 : 0);
 
-    // Check face visibility (default: all faces visible if no faceVisibility)
-    const isTopVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.TOP);
-    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
-    const isLeftVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.LEFT);
-    const isRightVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.RIGHT);
-    const isFrontVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
-    const isBackVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BACK);
+    // Check face visibility (priority: modifier.faceVisibility > block.faceVisibility > default all visible)
+    const isTopVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.TOP);
+    const isBottomVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BOTTOM);
+    const isLeftVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.LEFT);
+    const isRightVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.RIGHT);
+    const isFrontVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.FRONT);
+    const isBackVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BACK);
 
     // Get materials for visible faces
     const topMaterial = isTopVisible && topIndex ? await renderService.materialService.getMaterial(modifier, topIndex) : null;

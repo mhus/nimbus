@@ -136,10 +136,10 @@ export class CylinderRenderer extends BlockRenderer {
     radiusBottomX *= scalingX;
     radiusBottomZ *= scalingZ;
 
-    // Check face visibility
-    const isTopVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.TOP);
-    const isBottomVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.BOTTOM);
-    const isSideVisible = !block.block.faceVisibility || FaceVisibilityHelper.isVisible(block.block.faceVisibility, FaceFlag.FRONT);
+    // Check face visibility (priority: modifier.faceVisibility > block.faceVisibility > default all visible)
+    const isTopVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.TOP);
+    const isBottomVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BOTTOM);
+    const isSideVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.FRONT);
 
     // Generate cylinder vertices
     const vertices: Vector3[] = [];
