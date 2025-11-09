@@ -114,22 +114,12 @@
     <!-- Face Visibility -->
     <CollapsibleSection
       title="Face Visibility"
-      :model-value="true"
+      :model-value="hasFaceVisibility"
       :default-open="false"
+      @update:model-value="toggleFaceVisibility"
     >
       <div class="space-y-3 pt-2">
-        <!-- Enable/Disable Checkbox -->
-        <label class="label cursor-pointer justify-start gap-2">
-          <input
-            type="checkbox"
-            class="checkbox checkbox-sm"
-            :checked="hasFaceVisibility"
-            @change="toggleFaceVisibility"
-          />
-          <span class="label-text">Enable Face Visibility Control</span>
-        </label>
-
-        <div v-if="hasFaceVisibility" class="space-y-2">
+        <div class="space-y-2">
           <!-- Face Checkboxen (6 Faces) -->
           <div class="grid grid-cols-2 gap-2">
             <label class="label cursor-pointer justify-start gap-2">
@@ -1104,8 +1094,7 @@ const isFixedMode = computed(() => {
   return (localValue.value.faceVisibility.value & 64) !== 0; // FIXED flag (bit 6)
 });
 
-const toggleFaceVisibility = (event: Event) => {
-  const enabled = (event.target as HTMLInputElement).checked;
+const toggleFaceVisibility = (enabled: boolean) => {
   if (!enabled) {
     localValue.value.faceVisibility = undefined;
   } else if (!localValue.value.faceVisibility) {
