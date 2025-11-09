@@ -305,22 +305,22 @@ const isCubeType = computed(() => {
 
 // Cube corner labels
 const cubeCorners = [
-  'bottom front left',
-  'bottom front right',
-  'bottom back left',
-  'bottom back right',
-  'top front left',
-  'top front right',
-  'top back left',
-  'top back right',
+  'bottom front left (SW)',
+  'bottom front right (SE)',
+  'bottom back left (NW)',
+  'bottom back right (NE)',
+  'top front left (SW)',
+  'top front right (SE)',
+  'top back left (NW)',
+  'top back right (NE)',
 ];
 
 // Flat corner labels
 const flatCorners = [
-  'front left',
-  'front right',
-  'back left',
-  'back right',
+  'front left (SW)',
+  'front right (SE)',
+  'back left (NW)',
+  'back right (NE)',
 ];
 
 const hasOffsets = computed(() => {

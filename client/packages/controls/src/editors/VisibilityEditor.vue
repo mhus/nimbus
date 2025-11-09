@@ -102,8 +102,9 @@
     <!-- Offsets -->
     <CollapsibleSection
       title="Geometry Offsets"
-      :model-value="true"
+      :model-value="hasOffsets"
       :default-open="false"
+      @update:model-value="toggleOffsets"
     >
       <OffsetsEditor
         v-model="localValue.offsets"
@@ -201,8 +202,9 @@
     <!-- Textures -->
     <CollapsibleSection
       title="Textures"
-      :model-value="true"
+      :model-value="hasTextures"
       :default-open="true"
+      @update:model-value="toggleTextures"
     >
       <div class="space-y-3 pt-2">
       <div v-for="(name, key) in textureKeyOptions" :key="key" class="space-y-2">
@@ -1081,6 +1083,34 @@ const closeModelAssetPicker = () => {
 const handleModelAssetSelected = (path: string) => {
   localValue.value.path = path;
   closeModelAssetPicker();
+};
+
+// ===== Geometry Offsets Functions =====
+
+const hasOffsets = computed(() => {
+  return localValue.value.offsets !== undefined;
+});
+
+const toggleOffsets = (enabled: boolean) => {
+  if (!enabled) {
+    localValue.value.offsets = undefined;
+  } else if (!localValue.value.offsets) {
+    localValue.value.offsets = [];
+  }
+};
+
+// ===== Textures Functions =====
+
+const hasTextures = computed(() => {
+  return localValue.value.textures !== undefined;
+});
+
+const toggleTextures = (enabled: boolean) => {
+  if (!enabled) {
+    localValue.value.textures = undefined;
+  } else if (!localValue.value.textures) {
+    localValue.value.textures = {};
+  }
 };
 
 // ===== Face Visibility Functions =====

@@ -184,6 +184,70 @@
         <span class="label-text-alt">Solid: one-way block. Non-solid: wall at edges.</span>
       </label>
     </div>
+
+    <!-- Corner Heights (Sloped Surfaces) -->
+    <CollapsibleSection
+      title="Corner Heights (Sloped/Ramped Surfaces)"
+      :model-value="hasCornerHeights"
+      :default-open="false"
+      @update:model-value="toggleCornerHeights"
+    >
+      <div class="space-y-2 pt-2">
+        <div class="grid grid-cols-4 gap-2">
+          <div class="form-control">
+            <label class="label py-0">
+              <span class="label-text text-xs">NW</span>
+            </label>
+            <input
+              v-model.number="cornerHeightNW"
+              type="number"
+              step="0.1"
+              class="input input-bordered input-sm"
+              placeholder="0.0"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label py-0">
+              <span class="label-text text-xs">NE</span>
+            </label>
+            <input
+              v-model.number="cornerHeightNE"
+              type="number"
+              step="0.1"
+              class="input input-bordered input-sm"
+              placeholder="0.0"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label py-0">
+              <span class="label-text text-xs">SE</span>
+            </label>
+            <input
+              v-model.number="cornerHeightSE"
+              type="number"
+              step="0.1"
+              class="input input-bordered input-sm"
+              placeholder="0.0"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label py-0">
+              <span class="label-text text-xs">SW</span>
+            </label>
+            <input
+              v-model.number="cornerHeightSW"
+              type="number"
+              step="0.1"
+              class="input input-bordered input-sm"
+              placeholder="0.0"
+            />
+          </div>
+        </div>
+        <label class="label">
+          <span class="label-text-alt">Height adjustments for top corners. 0=standard, negative=lower, positive=higher. Player slides on slopes (influenced by resistance).</span>
+        </label>
+      </div>
+    </CollapsibleSection>
   </div>
 </template>
 
@@ -191,6 +255,7 @@
 import { ref, watch, computed } from 'vue';
 import type { PhysicsModifier } from '@nimbus/shared';
 import { Direction, DirectionHelper } from '@nimbus/shared';
+import CollapsibleSection from '@components/CollapsibleSection.vue';
 
 interface Props {
   modelValue?: PhysicsModifier;
@@ -302,6 +367,63 @@ const passableFromDown = computed({
 const resetPassableFrom = () => {
   localValue.value.passableFrom = undefined;
 };
+
+// ===== Corner Heights Functions =====
+
+const hasCornerHeights = computed(() => {
+  return localValue.value.cornerHeights !== undefined &&
+         Array.isArray(localValue.value.cornerHeights) &&
+         localValue.value.cornerHeights.length === 4;
+});
+
+const toggleCornerHeights = (enabled: boolean) => {
+  if (!enabled) {
+    localValue.value.cornerHeights = undefined;
+  } else if (!localValue.value.cornerHeights) {
+    localValue.value.cornerHeights = [0, 0, 0, 0];
+  }
+};
+
+// Computed properties for cornerHeights components
+const cornerHeightNW = computed({
+  get: () => localValue.value.cornerHeights?.[0] ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.cornerHeights) {
+      localValue.value.cornerHeights = [0, 0, 0, 0];
+    }
+    localValue.value.cornerHeights[0] = value;
+  }
+});
+
+const cornerHeightNE = computed({
+  get: () => localValue.value.cornerHeights?.[1] ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.cornerHeights) {
+      localValue.value.cornerHeights = [0, 0, 0, 0];
+    }
+    localValue.value.cornerHeights[1] = value;
+  }
+});
+
+const cornerHeightSE = computed({
+  get: () => localValue.value.cornerHeights?.[2] ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.cornerHeights) {
+      localValue.value.cornerHeights = [0, 0, 0, 0];
+    }
+    localValue.value.cornerHeights[2] = value;
+  }
+});
+
+const cornerHeightSW = computed({
+  get: () => localValue.value.cornerHeights?.[3] ?? 0,
+  set: (value: number) => {
+    if (!localValue.value.cornerHeights) {
+      localValue.value.cornerHeights = [0, 0, 0, 0];
+    }
+    localValue.value.cornerHeights[3] = value;
+  }
+});
 
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
