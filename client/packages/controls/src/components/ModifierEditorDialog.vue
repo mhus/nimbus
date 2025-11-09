@@ -66,25 +66,6 @@
                 >
                   <SoundEditor v-model="modifierData.sound" />
                 </CollapsibleSection>
-
-                <!-- Alpha Field -->
-                <div class="form-control max-w-xs">
-                  <label class="label">
-                    <span class="label-text">Alpha</span>
-                  </label>
-                  <input
-                    v-model.number="modifierData.alpha"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="1"
-                    class="input input-bordered input-sm"
-                    placeholder="0.0 - 1.0"
-                  />
-                  <label class="label">
-                    <span class="label-text-alt">Transparency: 0.0 = fully transparent, 1.0 = opaque</span>
-                  </label>
-                </div>
               </div>
 
         <!-- Actions -->

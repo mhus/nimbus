@@ -135,7 +135,6 @@ function deepMergeModifiers(target: BlockModifier | undefined, source: BlockModi
     wind: source.wind !== undefined
       ? mergeObjects(target.wind, source.wind)
       : target.wind,
-    alpha: source.alpha !== undefined ? source.alpha : target.alpha,
     illumination: source.illumination !== undefined
       ? mergeObjects(target.illumination, source.illumination)
       : target.illumination,

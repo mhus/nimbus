@@ -612,9 +612,6 @@ export interface BlockModifier {
   /** Wind properties */
   wind?: WindModifier;
 
-  /** Alpha/transparency */
-  alpha?: number;
-
   /** Illumination properties */
   illumination?: IlluminationModifier;
 

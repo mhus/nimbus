@@ -114,10 +114,6 @@ export class SelectedBlockInfoCommand extends CommandHandler {
         }
       }
 
-      if (mod.alpha !== undefined) {
-        lines.push(`  Alpha        : ${mod.alpha}`);
-      }
-
       lines.push('');
     }
 

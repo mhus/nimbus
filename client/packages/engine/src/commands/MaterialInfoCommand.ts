@@ -92,10 +92,6 @@ export class MaterialInfoCommand extends CommandHandler {
         if (stdMat.specularColor) {
           lines.push(`  Specular Color    : (${stdMat.specularColor.r.toFixed(2)}, ${stdMat.specularColor.g.toFixed(2)}, ${stdMat.specularColor.b.toFixed(2)})`);
         }
-
-        if (stdMat.alpha !== undefined) {
-          lines.push(`  Alpha             : ${stdMat.alpha}`);
-        }
       }
 
       // Check if it's a ShaderMaterial

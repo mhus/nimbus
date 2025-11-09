@@ -323,11 +323,6 @@ function analyzeChunkContents(clientChunk: ClientChunk) {
     if (modifier.visibility?.shape === Shape.WATER) {
       hasWater = true;
     }
-
-    // Check for transparency
-    if (modifier.alpha !== undefined && modifier.alpha < 1) {
-      hasTransparency = true;
-    }
   }
 
   // Cache results

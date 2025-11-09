@@ -119,3 +119,14 @@ Zur Orientierung:
 - East (e): x = 16 (rechte Kante, positive X)
 - West (w): x = 0 (linke Kante)
 
+## faceVisibility?: FaceVisibility in VisibilityModifier
+
+[ ] In Block gibt es den parameter 'faceVisibility?: FaceVisibility'. Um die eiggenschaft zusaetzlich
+generisch anzubeiten, soll er zusaetzlich auch in VisibilityModifier angegeben werden.
+- Erweitere den Typ
+- Erweitere den Editor von VisibilityModifier - Benutze die gleichen checkboxen wie im Editor fuer Block
+- Benutze den Parameter in der Engine. FaceVisibilityHelper.isVisible muss erweitert werden. Am besten es wird
+  anstelle von block.block.faceVisibility (number) gleich 'block.block' (Block) uebergeben wird.
+- Nutzung von FaceVisibilityHelper.isVisible muss ueberall angepasst werden.
+- FaceVisibilityHelper.isVisible prueft zuerst, ob visibility.faceVisibility existiert, nimmt dann den wert von dort, alternativ wie bisher.
+
