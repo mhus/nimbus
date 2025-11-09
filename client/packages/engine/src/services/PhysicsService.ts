@@ -13,6 +13,7 @@ import { getLogger, Direction, DirectionHelper } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerEntity } from '../types/PlayerEntity';
+import type { ClientBlock } from '../types/ClientBlock';
 
 const logger = getLogger('PhysicsService');
 
@@ -570,6 +571,9 @@ export class PhysicsService {
 
     // Auto-orientation if standing on/in autoOrientationY block
     this.applyAutoOrientation(entity, deltaTime);
+
+    // Apply sliding from sloped surfaces (cornerHeights)
+    this.applySlidingFromSlope(entity, deltaTime);
   }
 
   /**
@@ -821,6 +825,77 @@ export class PhysicsService {
   }
 
   /**
+   * Calculate interpolated surface height at a position within a block.
+   * Uses bilinear interpolation between the four corner heights.
+   *
+   * @param block ClientBlock with potential cornerHeights modifier
+   * @param worldX World X position (can be fractional)
+   * @param worldZ World Z position (can be fractional)
+   * @returns Interpolated Y position of the block surface at this location
+   */
+  private getBlockSurfaceHeight(block: ClientBlock, worldX: number, worldZ: number): number {
+    const cornerHeights = block.currentModifier.physics?.cornerHeights;
+
+    // No corner heights or invalid format - use standard block top
+    if (!cornerHeights || cornerHeights.length !== 4) {
+      return block.block.position.y + 1.0;
+    }
+
+    // Calculate local coordinates within the block (0.0 to 1.0)
+    const localX = worldX - block.block.position.x;
+    const localZ = worldZ - block.block.position.z;
+
+    // Bilinear interpolation between 4 corners
+    // Corner indices: [0]=NW, [1]=NE, [2]=SE, [3]=SW
+    // NW(-X,-Z)  NE(+X,-Z)
+    //     [0]--------[1]
+    //      |          |
+    //      |    *     |  <- interpolation point
+    //      |          |
+    //     [3]--------[2]
+    // SW(-X,+Z)  SE(+X,+Z)
+
+    const heightNW = cornerHeights[0]; // North-West
+    const heightNE = cornerHeights[1]; // North-East
+    const heightSE = cornerHeights[2]; // South-East
+    const heightSW = cornerHeights[3]; // South-West
+
+    // Interpolate along North edge (Z = 0) between NW and NE
+    const heightNorth = heightNW + (heightNE - heightNW) * localX;
+
+    // Interpolate along South edge (Z = 1) between SW and SE
+    const heightSouth = heightSW + (heightSE - heightSW) * localX;
+
+    // Interpolate between North and South edges
+    const interpolatedHeight = heightNorth + (heightSouth - heightNorth) * localZ;
+
+    return block.block.position.y + 1.0 + interpolatedHeight;
+  }
+
+  /**
+   * Calculate slope vector from corner heights.
+   * Returns normalized slope in X and Z directions.
+   *
+   * @param cornerHeights Array of 4 corner heights [NW, NE, SE, SW]
+   * @returns Vector2 with slope in X and Z directions (range: -1 to 1 per axis)
+   */
+  private calculateSlope(cornerHeights: [number, number, number, number]): { x: number; z: number } {
+    // Calculate average slope in X direction (West to East)
+    // Compare West side (NW, SW) to East side (NE, SE)
+    const westHeight = (cornerHeights[0] + cornerHeights[3]) / 2; // Average of NW and SW
+    const eastHeight = (cornerHeights[1] + cornerHeights[2]) / 2; // Average of NE and SE
+    const slopeX = eastHeight - westHeight; // Positive = rising to East
+
+    // Calculate average slope in Z direction (North to South)
+    // Compare North side (NW, NE) to South side (SW, SE)
+    const northHeight = (cornerHeights[0] + cornerHeights[1]) / 2; // Average of NW and NE
+    const southHeight = (cornerHeights[3] + cornerHeights[2]) / 2; // Average of SW and SE
+    const slopeZ = southHeight - northHeight; // Positive = rising to South
+
+    return { x: slopeX, z: slopeZ };
+  }
+
+  /**
    * Get all relevant blocks around player position and aggregate their physics properties
    *
    * This central function collects:
@@ -961,7 +1036,8 @@ export class PhysicsService {
 
           if (physics?.solid && !belowLevel.hasGround) {
             belowLevel.hasGround = true;
-            belowLevel.groundY = checkY + 1; // Top of the block
+            // Use interpolated surface height if block has cornerHeights
+            belowLevel.groundY = this.getBlockSurfaceHeight(block, x, z);
           }
           // Check for autoJump on ground blocks (the block we're standing on)
           if (physics?.autoJump && checkY === currentBlockY - 1) {
@@ -1069,12 +1145,13 @@ export class PhysicsService {
           }
 
           // Found solid ground at this Y level
-          const blockTopY = checkY + 1;
+          // Use interpolated surface height if block has cornerHeights
+          const blockTopY = this.getBlockSurfaceHeight(clientBlock, point.x, point.z);
 
           // Only snap if we're falling and at or below this level
           if (feetY <= blockTopY + 0.1) {
             foundGround = true;
-            groundY = blockTopY;
+            groundY = Math.max(groundY, blockTopY); // Use highest ground if multiple blocks
             break;
           }
         }
@@ -1298,6 +1375,91 @@ export class PhysicsService {
           delta: deltaRotation,
         });
       }
+    }
+  }
+
+  /**
+   * Apply sliding from sloped surfaces based on cornerHeights.
+   * Sliding velocity is calculated from slope and modified by resistance.
+   *
+   * Sliding is applied when:
+   * - Player is standing on ground (isOnGround)
+   * - Block has cornerHeights defined
+   * - Block has resistance (used to dampen sliding)
+   *
+   * Formula: effectiveSliding = slope × (1 - resistance)
+   * - resistance = 0: Full sliding
+   * - resistance = 1: No sliding (completely blocked)
+   *
+   * Use case: Ramps, slides, sloped terrain
+   */
+  private applySlidingFromSlope(entity: PhysicsEntity, deltaTime: number): void {
+    if (!this.chunkService) {
+      return;
+    }
+
+    // Only apply sliding in walk mode when on ground
+    if (entity.movementMode !== 'walk' || !entity.isOnGround) {
+      return;
+    }
+
+    // Get entity dimensions
+    const entityWidth = this.defaultEntityWidth;
+    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
+
+    // Get block context at current position
+    const context = this.getPlayerBlockContext(
+      entity.position.x,
+      entity.position.z,
+      entity.position.y,
+      entityWidth,
+      entityHeight
+    );
+
+    // Find block with cornerHeights that player is standing on
+    // Check belowLevel blocks (Y - 1)
+    let slidingVelocityX = 0;
+    let slidingVelocityZ = 0;
+
+    for (const blockInfo of context.belowLevel.blocks) {
+      const cornerHeights = blockInfo.block.currentModifier.physics?.cornerHeights;
+
+      if (!cornerHeights || cornerHeights.length !== 4) {
+        continue; // No cornerHeights on this block
+      }
+
+      // Calculate slope from cornerHeights
+      const slope = this.calculateSlope(cornerHeights);
+
+      // Get resistance (defaults to 0 if not set)
+      const resistance = blockInfo.block.currentModifier.physics?.resistance ?? 0;
+
+      // Apply resistance to sliding (linear)
+      // resistance = 0 → full sliding, resistance = 1 → no sliding
+      const slidingFactor = Math.max(0, 1 - resistance);
+
+      // Calculate sliding velocity (slope in blocks per second)
+      // Multiply by a constant to make sliding noticeable (3.0 = decent slide speed)
+      const slidingStrength = 3.0;
+      slidingVelocityX = Math.max(Math.abs(slidingVelocityX), Math.abs(slope.x * slidingFactor * slidingStrength)) *
+                         (Math.abs(slidingVelocityX) > Math.abs(slope.x * slidingFactor * slidingStrength)
+                           ? Math.sign(slidingVelocityX)
+                           : Math.sign(slope.x));
+      slidingVelocityZ = Math.max(Math.abs(slidingVelocityZ), Math.abs(slope.z * slidingFactor * slidingStrength)) *
+                         (Math.abs(slidingVelocityZ) > Math.abs(slope.z * slidingFactor * slidingStrength)
+                           ? Math.sign(slidingVelocityZ)
+                           : Math.sign(slope.z));
+    }
+
+    // Apply sliding velocity if any
+    if (slidingVelocityX !== 0 || slidingVelocityZ !== 0) {
+      entity.position.x += slidingVelocityX * deltaTime;
+      entity.position.z += slidingVelocityZ * deltaTime;
+
+      logger.debug('Sliding applied', {
+        entityId: entity.entityId,
+        velocity: { x: slidingVelocityX, z: slidingVelocityZ },
+      });
     }
   }
 

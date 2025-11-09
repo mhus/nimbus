@@ -132,4 +132,63 @@ generisch anzubeiten, soll er zusaetzlich auch in VisibilityModifier angegeben w
 
 ## Smooth Block Movement
 
-Ich moechte die Bewegung auf einem Block besser steueren koennen. Dazu soll es einen neuen Modifier geben:
+[?] Ich moechte die Bewegung auf einem Block besser steueren koennen. Die Bewegung wird in PhysicService umgesetzt.
+Da die darstellung von Blocks variieren kann, d.h. ein block kann auch abgeschraegt sein, soll sich auch die bewegung so aehnlich verhalten.
+Meine Idee: Ich hinterlege fuer die vier oberen ecken einen modifier, der die hoehe des blocks an deiser stelle justiert. Dann soll der physics service
+erkennen ob er auto jump (uebergang von block auf naechsten zu hoch) oder ob er ueber den block sliden kann. Dann beim ueber den block laufen slided der player ueber die schraege flaeche.
+Ist das eine gute idee, bigt es alternativen? 
+
+```text
+Here is Claude's plan:
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Implementierungsplan: Block-Höhen-Modifier mit Sliding
+
+ 1. PhysicsModifier erweitern (BlockModifier.ts)
+
+ - Neues Property: cornerHeights?: [number, number, number, number]
+ - Reihenfolge: [NordWest, NordOst, SüdOst, SüdWest] (gegen Uhrzeigersinn)
+ - Werte: Relative Höhen-Adjustments (0.0 = Standard-Höhe)
+ - Backward compatible: undefined oder nicht 4 Werte → [0, 0, 0, 0]
+
+ 2. PhysicsService Hilfsfunktionen hinzufügen
+
+ Neue Funktionen:
+ - getBlockSurfaceHeight(block: ClientBlock, localX: number, localZ: number): number
+   - Berechnet interpolierte Höhe an Position innerhalb Block
+   - Verwendet bilineare Interpolation zwischen 4 Eckpunkten
+   - Performant: nur wenn cornerHeights gesetzt
+ - calculateSlope(cornerHeights: [number, number, number, number]): Vector2
+   - Gibt Neigungs-Vektor (X, Z) zurück
+   - Durchschnittliche Neigung in beide Achsen
+
+ 3. Ground Collision erweitern (checkGroundCollision)
+
+ - Bei Blocks mit cornerHeights: präzise Ground-Y berechnen
+ - Player.position.x/z → lokale Block-Koordinaten → getBlockSurfaceHeight()
+ - Fallback auf bisheriges Verhalten wenn keine cornerHeights
+
+ 4. Neue Sliding-Mechanik implementieren
+
+ Neue Funktion: applySlidingFromSlope()
+ - Ähnlich wie applyAutoMove() (Zeile 1165-1215)
+ - Berechnet Sliding-Velocity aus:
+   - Neigung (aus cornerHeights)
+   - resistance (linear: sliding × (1 - resistance))
+   - Gravitations-Komponente (mehr Sliding bei steileren Flächen)
+ - Integriert in updateWalkMode() nach applyAutoMove()
+
+ 5. Integration & Testing
+
+ - In updateWalkMode() nach Line 573 einfügen
+ - Kompatibilität sicherstellen: nur wenn cornerHeights gesetzt
+ - Performance: Berechnungen nur für Blocks unter Player
+
+ Technische Entscheidungen:
+ - Eckpunkt-Reihenfolge: Counter-clockwise (mathematische Konvention)
+ - Resistance-Einfluss: Linear (effektiv = neigung × (1 - resistance))
+ - Performance > Präzision: Einfache bilineare Interpolation
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+```
+
+[ ] Fuege im VisibilityEditor die Option 'cornerHeights' hinzu. Als Ausklappbare Eigenschaft mit vier
+Werten nebeneinander.
