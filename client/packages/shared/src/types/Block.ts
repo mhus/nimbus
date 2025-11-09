@@ -333,6 +333,31 @@ export interface Block {
   offsets?: Offsets;
 
   /**
+   * Corner heights for sloped/ramped blocks (optional)
+   *
+   * Defines Y-offset adjustments for the four top corners of the block.
+   * Array of 4 numbers representing height adjustments (relative to block Y position).
+   *
+   * Corner order (counter-clockwise, top view):
+   * [0] = North-West (-X, -Z)
+   * [1] = North-East (+X, -Z)
+   * [2] = South-East (+X, +Z)
+   * [3] = South-West (-X, +Z)
+   *
+   * Values:
+   * - 0.0 = standard height (top of block)
+   * - negative = lower than standard
+   * - positive = higher than standard
+   *
+   * Priority: Block.cornerHeights overrides PhysicsModifier.cornerHeights
+   *
+   * @example
+   * // Ramp rising from North to South
+   * cornerHeights: [-0.5, -0.5, 0.0, 0.0]
+   */
+  cornerHeights?: [number, number, number, number];
+
+  /**
    * Face visibility flags (1 byte)
    * Determines which faces are visible or if it's auto-calculated
    */

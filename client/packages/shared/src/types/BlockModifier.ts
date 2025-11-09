@@ -583,10 +583,32 @@ export interface PhysicsModifier {
    * - Enables sliding on slopes (influenced by resistance)
    * - Automatic slope detection for movement
    *
+   * Priority: Block.cornerHeights > PhysicsModifier.cornerHeights > auto-derived from offsets (if autoCornerHeights=true)
+   *
    * Example: Ramp rising from North to South
    * cornerHeights: [-0.5, -0.5, 0.0, 0.0]
    */
   cornerHeights?: [number, number, number, number];
+
+  /**
+   * Automatically derive corner heights from geometry offsets, default: false
+   *
+   * When enabled, cornerHeights will be automatically calculated from the Y-offsets
+   * of the top 4 corners in the block's offsets array (indices 13, 16, 19, 22).
+   *
+   * Priority order (highest to lowest):
+   * 1. Block.cornerHeights (if set)
+   * 2. PhysicsModifier.cornerHeights (if set)
+   * 3. Auto-derived from Block.offsets (if autoCornerHeights=true and offsets has 24 values)
+   * 4. Auto-derived from VisibilityModifier.offsets (if autoCornerHeights=true)
+   * 5. Default [0, 0, 0, 0]
+   *
+   * Use case: Automatically enable slope physics for blocks with offset geometry,
+   * without manually setting cornerHeights.
+   *
+   * Example: A block with top corners offset in Y will automatically get slope physics.
+   */
+  autoCornerHeights?: boolean;
 }
 
 /**

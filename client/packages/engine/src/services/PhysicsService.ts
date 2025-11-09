@@ -828,16 +828,57 @@ export class PhysicsService {
    * Calculate interpolated surface height at a position within a block.
    * Uses bilinear interpolation between the four corner heights.
    *
-   * @param block ClientBlock with potential cornerHeights modifier
+   * Priority order for determining cornerHeights:
+   * 1. Block.cornerHeights (highest priority)
+   * 2. PhysicsModifier.cornerHeights
+   * 3. Auto-derived from offsets (if autoCornerHeights=true)
+   *    - Block.offsets (Y values of top 4 corners)
+   *    - VisibilityModifier.offsets
+   * 4. Default [0, 0, 0, 0]
+   *
+   * @param block ClientBlock with potential cornerHeights
    * @param worldX World X position (can be fractional)
    * @param worldZ World Z position (can be fractional)
    * @returns Interpolated Y position of the block surface at this location
    */
   private getBlockSurfaceHeight(block: ClientBlock, worldX: number, worldZ: number): number {
-    const cornerHeights = block.currentModifier.physics?.cornerHeights;
+    let cornerHeights: [number, number, number, number] | undefined;
 
-    // No corner heights or invalid format - use standard block top
-    if (!cornerHeights || cornerHeights.length !== 4) {
+    // Priority 1: Block.cornerHeights (highest)
+    if (block.block.cornerHeights && block.block.cornerHeights.length === 4) {
+      cornerHeights = block.block.cornerHeights;
+    }
+    // Priority 2: PhysicsModifier.cornerHeights
+    else if (block.currentModifier.physics?.cornerHeights && block.currentModifier.physics.cornerHeights.length === 4) {
+      cornerHeights = block.currentModifier.physics.cornerHeights;
+    }
+    // Priority 3: Auto-derive from offsets (if autoCornerHeights=true)
+    else if (block.currentModifier.physics?.autoCornerHeights) {
+      // Try Block.offsets first (24 values = 8 corners × 3 axes)
+      if (block.block.offsets && block.block.offsets.length >= 24) {
+        // Extract Y-offsets from top 4 corners
+        // Offsets order: [bottom 4 corners (0-11), top 4 corners (12-23)]
+        // Top corners: [4]=SW(12-14), [5]=SE(15-17), [6]=NW(18-20), [7]=NE(21-23)
+        // cornerHeights order: [NW, NE, SE, SW]
+        const yNW = block.block.offsets[19] ?? 0; // Corner 6 Y
+        const yNE = block.block.offsets[22] ?? 0; // Corner 7 Y
+        const ySE = block.block.offsets[16] ?? 0; // Corner 5 Y
+        const ySW = block.block.offsets[13] ?? 0; // Corner 4 Y
+        cornerHeights = [yNW, yNE, ySE, ySW];
+      }
+      // Try VisibilityModifier.offsets
+      else if (block.currentModifier.visibility?.offsets && block.currentModifier.visibility.offsets.length >= 24) {
+        const offsets = block.currentModifier.visibility.offsets;
+        const yNW = offsets[19] ?? 0;
+        const yNE = offsets[22] ?? 0;
+        const ySE = offsets[16] ?? 0;
+        const ySW = offsets[13] ?? 0;
+        cornerHeights = [yNW, yNE, ySE, ySW];
+      }
+    }
+
+    // No corner heights found - use standard block top
+    if (!cornerHeights) {
       return block.block.position.y + 1.0;
     }
 

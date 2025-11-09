@@ -192,3 +192,16 @@ Here is Claude's plan:
 
 [?] Fuege im VisibilityEditor die Option 'cornerHeights' hinzu. Als Ausklappbare Eigenschaft mit vier
 Werten nebeneinander.
+
+[ ] Das System muss erweitert werden:
+- Auch am Block soll es den parameter 'cornerHeights' geben
+- Der Block Editor muss entsprechend erweitert werden
+- Im PhysicsModifier soll es einen weiteren boolean 'autoCornerHeights' geben, der bei default false ist.
+- autoCornerHeights auch im PhysicsEditor anzeigen.
+Die Ermittlung der cornerHeights wird erweitert:
+- Pruefen ob am Block cornerHeights existiert, wenn ja diese nutzen
+- Pruefen ob am currentModifier.physics das cornerHeights existiert, wenn ja diese nutzen
+- Pruefen ob am currentModifier.physics das autoCornerHeights existiert und true ist, wenn ja
+  - Pruefen ob am Block offsets gesetzt sind und 24 Werte drin sind, wenn ja diese nutzen (nur die top corners)
+  - Pruefen ob an currentModifier die offsets gesetzt sind, wenn ja diese nutzen (nur die top corners)
+- Wenn kein cornerHeights existiert, dann wird der default (wie bisher) verwendet.

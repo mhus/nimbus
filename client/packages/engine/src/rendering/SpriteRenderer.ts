@@ -114,10 +114,10 @@ export class SpriteRenderer extends BlockRenderer {
     for (const [key, textureValue] of Object.entries(textures)) {
       const textureDef = TextureHelper.normalizeTexture(textureValue);
 
-      // Get sprite count from shaderParameters (format: "count" e.g., "10")
+      // Get sprite count from effectParameters (format: "count" e.g., "10")
       let spriteCount = 10; // Default
-      if (textureDef.shaderParameters) {
-        const parsed = parseInt(textureDef.shaderParameters, 10);
+      if (textureDef.effectParameters) {
+        const parsed = parseInt(textureDef.effectParameters, 10);
         if (!isNaN(parsed) && parsed > 0) {
           spriteCount = parsed;
         }

@@ -52,7 +52,9 @@
       "Bash(node -c:*)",
       "Bash(pnpm --filter @nimbus/engine build:*)",
       "Bash(pnpm --filter @nimbus/engine exec tsc:*)",
-      "Bash(npx vue-tsc:*)"
+      "Bash(npx vue-tsc:*)",
+      "Bash(xargs basename:*)",
+      "Bash(pnpm --filter @nimbus/controls build:*)"
     ],
     "deny": [],
     "ask": []

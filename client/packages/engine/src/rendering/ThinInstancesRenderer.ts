@@ -98,10 +98,10 @@ export class ThinInstancesRenderer extends BlockRenderer {
 
       const textureDef = TextureHelper.normalizeTexture(texture);
 
-      // Get instance count from shaderParameters (default: 100)
+      // Get instance count from effectParameters (default: 100)
       let instanceCount = 10;
-      if (textureDef.shaderParameters) {
-        const parsed = parseInt(textureDef.shaderParameters, 10);
+      if (textureDef.effectParameters) {
+        const parsed = parseInt(textureDef.effectParameters, 10);
         if (!isNaN(parsed) && parsed > 0) {
           instanceCount = parsed;
         }

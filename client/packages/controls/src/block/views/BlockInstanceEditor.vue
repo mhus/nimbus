@@ -146,6 +146,70 @@
             />
           </CollapsibleSection>
 
+          <!-- Corner Heights Section -->
+          <CollapsibleSection
+            title="Corner Heights (Sloped/Ramped Surfaces)"
+            :model-value="hasCornerHeights"
+            :default-open="false"
+            @update:model-value="toggleCornerHeights"
+          >
+            <div class="space-y-2 pt-2">
+              <div class="grid grid-cols-4 gap-2">
+                <div class="form-control">
+                  <label class="label py-0">
+                    <span class="label-text text-xs">NW</span>
+                  </label>
+                  <input
+                    v-model.number="cornerHeightNW"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.0"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-0">
+                    <span class="label-text text-xs">NE</span>
+                  </label>
+                  <input
+                    v-model.number="cornerHeightNE"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.0"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-0">
+                    <span class="label-text text-xs">SE</span>
+                  </label>
+                  <input
+                    v-model.number="cornerHeightSE"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.0"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-0">
+                    <span class="label-text text-xs">SW</span>
+                  </label>
+                  <input
+                    v-model.number="cornerHeightSW"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.0"
+                  />
+                </div>
+              </div>
+              <label class="label">
+                <span class="label-text-alt">Height adjustments for top corners. 0=standard, negative=lower, positive=higher. Player slides on slopes. Block-level overrides PhysicsModifier settings.</span>
+              </label>
+            </div>
+          </CollapsibleSection>
+
           <!-- Face Visibility Section -->
           <CollapsibleSection
             title="Face Visibility"
@@ -475,9 +539,78 @@ const hasOffsets = computed(() => {
   return blockData.value.offsets && blockData.value.offsets.length > 0;
 });
 
+const toggleOffsets = (enabled: boolean) => {
+  if (!enabled) {
+    blockData.value.offsets = undefined;
+  } else if (!blockData.value.offsets) {
+    blockData.value.offsets = [];
+  }
+};
+
+const hasCornerHeights = computed(() => {
+  return blockData.value.cornerHeights !== undefined;
+});
+
+const toggleCornerHeights = (enabled: boolean) => {
+  if (!enabled) {
+    blockData.value.cornerHeights = undefined;
+  } else if (!blockData.value.cornerHeights) {
+    blockData.value.cornerHeights = [0, 0, 0, 0];
+  }
+};
+
+// Computed properties for cornerHeights components
+const cornerHeightNW = computed({
+  get: () => blockData.value.cornerHeights?.[0] ?? 0,
+  set: (value: number) => {
+    if (!blockData.value.cornerHeights) {
+      blockData.value.cornerHeights = [0, 0, 0, 0];
+    }
+    blockData.value.cornerHeights[0] = value;
+  }
+});
+
+const cornerHeightNE = computed({
+  get: () => blockData.value.cornerHeights?.[1] ?? 0,
+  set: (value: number) => {
+    if (!blockData.value.cornerHeights) {
+      blockData.value.cornerHeights = [0, 0, 0, 0];
+    }
+    blockData.value.cornerHeights[1] = value;
+  }
+});
+
+const cornerHeightSE = computed({
+  get: () => blockData.value.cornerHeights?.[2] ?? 0,
+  set: (value: number) => {
+    if (!blockData.value.cornerHeights) {
+      blockData.value.cornerHeights = [0, 0, 0, 0];
+    }
+    blockData.value.cornerHeights[2] = value;
+  }
+});
+
+const cornerHeightSW = computed({
+  get: () => blockData.value.cornerHeights?.[3] ?? 0,
+  set: (value: number) => {
+    if (!blockData.value.cornerHeights) {
+      blockData.value.cornerHeights = [0, 0, 0, 0];
+    }
+    blockData.value.cornerHeights[3] = value;
+  }
+});
+
 const hasFaceVisibility = computed(() => {
   return blockData.value.faceVisibility !== undefined;
 });
+
+const toggleFaceVisibility = (enabled: boolean) => {
+  if (!enabled) {
+    blockData.value.faceVisibility = undefined;
+  } else if (!blockData.value.faceVisibility) {
+    blockData.value.faceVisibility = { value: 63 }; // All faces visible
+  }
+};
 
 const isFixedMode = computed(() => {
   if (!blockData.value.faceVisibility) return false;
@@ -758,25 +891,6 @@ function handleModifierSave(modifier: BlockModifier) {
 
   blockData.value.modifiers[editingStatus.value] = modifier;
   showModifierDialog.value = false;
-}
-
-// Toggle offsets
-function toggleOffsets(enabled: boolean) {
-  if (!enabled) {
-    blockData.value.offsets = undefined;
-  } else if (!blockData.value.offsets) {
-    blockData.value.offsets = [];
-  }
-}
-
-// Toggle face visibility
-function toggleFaceVisibility(enabled: boolean) {
-  if (!enabled) {
-    blockData.value.faceVisibility = undefined;
-  } else if (!blockData.value.faceVisibility) {
-    // Initialize with all faces visible
-    blockData.value.faceVisibility = { value: 63 }; // 0b00111111 = all 6 faces
-  }
 }
 
 // Check if specific face is visible

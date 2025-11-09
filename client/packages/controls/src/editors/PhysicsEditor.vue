@@ -243,8 +243,21 @@
             />
           </div>
         </div>
+
+        <!-- Auto Corner Heights Checkbox -->
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input
+              v-model="localValue.autoCornerHeights"
+              type="checkbox"
+              class="checkbox checkbox-sm"
+            />
+            <span class="label-text text-xs">Auto-derive from offsets</span>
+          </label>
+        </div>
+
         <label class="label">
-          <span class="label-text-alt">Height adjustments for top corners. 0=standard, negative=lower, positive=higher. Player slides on slopes (influenced by resistance).</span>
+          <span class="label-text-alt">Height adjustments for top corners. 0=standard, negative=lower, positive=higher. Player slides on slopes (influenced by resistance). Auto-derive: calculate from geometry offsets.</span>
         </label>
       </div>
     </CollapsibleSection>

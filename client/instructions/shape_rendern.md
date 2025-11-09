@@ -166,3 +166,16 @@ SpriteRenderer:
 - Der Renderer definiert sein eigenes Mesh
 - Als modell pfad wird der erste Pfad aus TextureDefinition verwendet.
 
+## Offsets reparieren:
+
+[ ] Die offsets werden im Blockenderer falsch angewendet.
+
+top front left (SW) - in blockrenderer:
+top front right (SE) - in blockrenderer:
+top back left (NW) - in blockrenderer:
+top back right (NE) - in blockrenderer:
+
+Das gleiche natuerlich auch bei bottom.
+
+Auch in anderen Renderern muessen die offsets repariert werden.
+
