@@ -368,34 +368,39 @@ export class MaterialService {
     // Apply properties from key
     material.backFaceCulling = props.backFaceCulling;
 
-    // Map TransparencyMode to Babylon.js Material.transparencyMode + Texture properties
+    // Map TransparencyMode to Babylon.js Material.transparencyMode
+    // Note: Atlas texture has hasAlpha=true by default (set in TextureAtlas.load())
+    // We control transparency solely via material.transparencyMode and material.alpha
     switch (props.transparencyMode) {
       case TransparencyMode.NONE:
         material.transparencyMode = Material.MATERIAL_OPAQUE;
         break;
       case TransparencyMode.ALPHA_TEST:
         material.transparencyMode = Material.MATERIAL_ALPHATEST;
-        if (atlasTexture) atlasTexture.hasAlpha = true;
+        material.useAlphaFromDiffuseTexture = true;
         break;
       case TransparencyMode.ALPHA_BLEND:
         material.transparencyMode = Material.MATERIAL_ALPHABLEND;
-        if (atlasTexture) atlasTexture.hasAlpha = true;
+        material.useAlphaFromDiffuseTexture = true;
         break;
       case TransparencyMode.ALPHA_TEST_FROM_RGB:
         material.transparencyMode = Material.MATERIAL_ALPHATEST;
-        if (atlasTexture) atlasTexture.getAlphaFromRGB = true;
+        // Note: getAlphaFromRGB would need per-material texture, not supported with atlas
+        logger.warn('ALPHA_TEST_FROM_RGB not fully supported with atlas texture');
         break;
       case TransparencyMode.ALPHA_BLEND_FROM_RGB:
         material.transparencyMode = Material.MATERIAL_ALPHABLEND;
-        if (atlasTexture) atlasTexture.getAlphaFromRGB = true;
+        // Note: getAlphaFromRGB would need per-material texture, not supported with atlas
+        logger.warn('ALPHA_BLEND_FROM_RGB not fully supported with atlas texture');
         break;
       case TransparencyMode.ALPHA_TESTANDBLEND:
         material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
-        if (atlasTexture) atlasTexture.hasAlpha = true;
+        material.useAlphaFromDiffuseTexture = true;
         break;
       case TransparencyMode.ALPHA_TESTANDBLEND_FROM_RGB:
         material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
-        if (atlasTexture) atlasTexture.getAlphaFromRGB = true;
+        // Note: getAlphaFromRGB would need per-material texture, not supported with atlas
+        logger.warn('ALPHA_TESTANDBLEND_FROM_RGB not fully supported with atlas texture');
         break;
       default:
         // Fallback to opaque
@@ -541,37 +546,35 @@ export class MaterialService {
 
     // Apply transparency mode
     if (textureDef.transparencyMode !== undefined) {
-      // Get texture from material (if StandardMaterial)
-      const texture = material instanceof StandardMaterial ? material.diffuseTexture as Texture : null;
-
-      // Map TransparencyMode to Babylon.js Material.transparencyMode + Texture properties
+      // Map TransparencyMode to Babylon.js Material.transparencyMode
+      // Note: Do NOT modify texture properties (hasAlpha, getAlphaFromRGB) if using shared atlas
       switch (textureDef.transparencyMode) {
         case TransparencyMode.NONE:
           material.transparencyMode = Material.MATERIAL_OPAQUE;
           break;
         case TransparencyMode.ALPHA_TEST:
           material.transparencyMode = Material.MATERIAL_ALPHATEST;
-          if (texture) texture.hasAlpha = true;
+          material.useAlphaFromDiffuseTexture = true;
           break;
         case TransparencyMode.ALPHA_BLEND:
           material.transparencyMode = Material.MATERIAL_ALPHABLEND;
-          if (texture) texture.hasAlpha = true;
+          material.useAlphaFromDiffuseTexture = true;
           break;
         case TransparencyMode.ALPHA_TEST_FROM_RGB:
           material.transparencyMode = Material.MATERIAL_ALPHATEST;
-          if (texture) texture.getAlphaFromRGB = true;
+          logger.warn('ALPHA_TEST_FROM_RGB may not work correctly with shared atlas texture');
           break;
         case TransparencyMode.ALPHA_BLEND_FROM_RGB:
           material.transparencyMode = Material.MATERIAL_ALPHABLEND;
-          if (texture) texture.getAlphaFromRGB = true;
+          logger.warn('ALPHA_BLEND_FROM_RGB may not work correctly with shared atlas texture');
           break;
         case TransparencyMode.ALPHA_TESTANDBLEND:
           material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
-          if (texture) texture.hasAlpha = true;
+          material.useAlphaFromDiffuseTexture = true;
           break;
         case TransparencyMode.ALPHA_TESTANDBLEND_FROM_RGB:
           material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
-          if (texture) texture.getAlphaFromRGB = true;
+          logger.warn('ALPHA_TESTANDBLEND_FROM_RGB may not work correctly with shared atlas texture');
           break;
       }
     }
@@ -810,10 +813,12 @@ export class MaterialService {
           case TransparencyMode.ALPHA_TEST:
             material.transparencyMode = Material.MATERIAL_ALPHATEST;
             if (texture) texture.hasAlpha = true;
+            material.useAlphaFromDiffuseTexture = true;
             break;
           case TransparencyMode.ALPHA_BLEND:
             material.transparencyMode = Material.MATERIAL_ALPHABLEND;
             if (texture) texture.hasAlpha = true;
+            material.useAlphaFromDiffuseTexture = true;
             break;
           case TransparencyMode.ALPHA_TEST_FROM_RGB:
             material.transparencyMode = Material.MATERIAL_ALPHATEST;
@@ -826,6 +831,7 @@ export class MaterialService {
           case TransparencyMode.ALPHA_TESTANDBLEND:
             material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;
             if (texture) texture.hasAlpha = true;
+            material.useAlphaFromDiffuseTexture = true;
             break;
           case TransparencyMode.ALPHA_TESTANDBLEND_FROM_RGB:
             material.transparencyMode = Material.MATERIAL_ALPHATESTANDBLEND;

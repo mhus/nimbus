@@ -130,6 +130,9 @@ export class TextureAtlas {
       this.material.specularColor = new Color3(0, 0, 0);
       this.material.backFaceCulling = true;
 
+      // Enable alpha for atlas texture (contains both transparent and opaque textures)
+      this.atlasTexture.hasAlpha = true;
+
       logger.info('Dynamic atlas created', {
         ready: this.atlasTexture.isReady(),
       });
