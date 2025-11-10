@@ -237,110 +237,117 @@ Welche Blocke werden zur analyse benoetigt:
       - groundBlocks (2,C), (3,C)
       - groundFootBlocks (2,B) (3,B) - eins ueber den groundBlocks, bei den Fuessen
 
-Vorgehen mit und ohne bewegung (ohne bewegung koenne die gefundenen bloecke in PhysicsEntity cached werden):
+Vorgehen mit und ohne Bewegung (ohne Bewegung koenne die gefundenen bloecke in PhysicsEntity cached werden):
 
 // aufruf:
-doMovement(player, movementVector, startJump):
--> player - der player entity
--> movementVector - input bewegungsvektor aus input system (keyboard/mouse/controller)
--> startJump - boolean, ob ein sprung gestartet werden soll (space gedrueckt)
+doMovement(player, movementVector, startJump)
 
-// weitere input daten
--> physicsEntity.velocity - fuer eine fluessige bewegung ueber frames hinweg
--> physicsEntity.wishMove - movementVector aus dem letzten step
--> physicsEntity.position - aktuelle position des players
--> physicsEntity.rotation - aktuelle rotation des players
+Parameter:
+•	player – player entity
+•	movementVector – input bewegungsvektor aus input system (keyboard/mouse/controller)
+•	startJump – bool, ob sprung gestartet werden soll (space gedrückt)
 
-// Vorbereitung:
-- harte Bedingnung: Ist system in teleport modus, dann pruefen ob fuer den main 'player' der Chunk bereit steht, wenn ja, teleport mode ausmachen, wenn nein bewegung verhindern.
-- harte Bedingnung: ist im fligthModus, dann bewegung ausfuehren und exit.
-- vorberechnung:
-  - movementVector = movementVector + wishMove + velocity (exakte formel finden)
-  - set wishMove = 0
-  - set velocity = velocity x resistance (verkleinern, exakte formel finden)
-  - wishNextPosition = position + movementVector
-  - overBlockMovement = Math.floor(wishNextPosition) != Math.floor(position)
-- daten einholen: Bloecke ermittlen / aus cache laden - headBlocks Blocke on demand laden
-- harte Bedingnung: Konnten Blocke nicht geladen werden weil chunks nicht da sind, dann bewegung verhindern und exit.
+weitere daten aus physicsEntity:
+•	velocity – momentane geschwindigkeit (aus letztem frame)
+•	wishMove – bewegungsabsicht (input oder autoMove aus letztem frame)
+•	position – aktuelle position
+•	rotation – aktuelle rotation (Yaw)
 
-// pruefen current environment - immer, auch wenn kein blockwechsel
-- Ist einer der currentBlocks solid, dann:
-  - pruefe ob er (jeder gefundene block mit solid) passableFrom
-    - movementVector bei allen nicht erlaubten richtungen zurueck auf 0 setzen
-    - pruefen ob sich wishNextPosition noch aendert, 
-    - wenn ja bewegung verhindern, wishMove fuer naechsten step setzen und exit
-  - wenn alle solid: bewegen den player 1 nach oben (Y+1) und exit (anty catching, keine weitere pruefung, mit dem kopf durch die Wand)
-- Bei bewegung nach vorn (overBlockMovement): Ist einer der footFrontBlocks 'climbable', dann climb:
-    - wenn bewegung nach vorne, dann wishMove nach oben setzen und exit (bewegung verhindern)
-- gibt es footBlocks:
-  - ist ein food autoRotationY, dann einen step ausfuehren richtung autoRotationY (kein exit)
-  - ist ein foot autoMove, dann widhMove in richtung autoMove setzen (kein exit)
-  - ist ein foot autoJump, dann einen jumpStart=true aktivieren (kein exit)
-- sind alle footBlocks non solid und einer mit passableFrom und passableFrom.BOTTOM == false (kann nicht von/nach unten passieren) dann nicht nach unten bewegen (keine gravitation)
-  - sind alle groundBlocks non solid und ohne passableFrom oder wenn, mit passableFrom.TOP == true (kann von oben passieren):
-    - bewege den player nach unten (gravitation) -> move = move + (0, -gravity speed, 0)
+⸻
 
-// jump vermerken
-- wenn physicsEntity.velocity Y == 0 (nicht schon in der luft)
-  - wenn startJump == true
-    - setze velocity Y = jump speed
+Vorbereitung
+•	Teleport Modus:
+•	wenn aktiv → prüfen ob für den main player der Ziel-Chunk bereit steht
+•	wenn ja → teleport mode ausmachen
+•	wenn nein → bewegung verhindern (exit)
+•	Flight Modus:
+•	bewegung direkt ausführen (kein Boden, keine Gravitation)
+•	und exit
+•	Bewegungsvektor vorbereiten:
+•	wishMove = movementVector (Input abspeichern)
+•	vPlanarTarget = normalize(wishMove) * maxSpeed * |wishMove|
+•	velocity.xz = approach(velocity.xz, vPlanarTarget, accel * dt)
+•	velocity.xz *= exp(-k_ground_or_air * dt)  // widerstand / friction
+•	velocity.y += gravity * dt (nur wenn kein flight)
+•	wenn startJump == true und grounded oder coyote → velocity.y = jumpSpeed
+•	wishNextPosition = position + velocity * dt
+•	Chunks / Blocks:
+•	headBlocks und footBlocks aus cache oder on-demand laden
+•	wenn chunks nicht da → bewegung verhindern (exit)
 
-// bewegung nach unten auf semi solid blocks
-- sind die groundFootBlocks mindestens einer semi solid
-- ermittle die maximale hoehe ueber alle semi solid blocks an der nextWishPosition
-- wenn die maximale hoehe < wishNextPosition.y, dann setze wishNextPosition.y auf die maximale hoehe (slide up)
-- checke hier auch auf slide down und setze evtl den velocity oder wishMove nach unten und zur seite - schwierig bei mehreren unterschiedlichen blocke - hier den mittleren wert nehmen?
-  // wo bauen wir gravitation ein???? hier ??? gravitation nicht, wenn obere bedingung slideDown gemacht hat. wenn alle groundFoodBlocks non solid sind, dann gravitation immer machen
+⸻
 
-// jetzt die Bewegung pruefen, wenn ueber block grenzen gewechselt wird, auch nach oben oder unten
+Environment prüfen (immer, auch ohne blockwechsel)
+•	Aktuelle Blöcke (in denen der Player steht):
+•	wenn einer solid → prüfen auf passableFrom
+•	wenn richtung blockiert → movementVector in dieser richtung = 0
+•	wenn wishNextPosition sich nicht ändert → bewegung verhindern, wishMove merken, exit
+•	wenn alle solid → player leicht anheben (Y+1) um „feststecken“ zu vermeiden
+•	Bei Bewegung über Blockgrenze (overBlockMovement):
+•	wenn einer der frontFootBlocks climbable → wishMove.y = +climbSpeed, exit
 
-// nach oben
-- headBlocks laden und pruefen ob die alle non solid sind. wenn nicht, dann wishNextPosition.y auf den rand des oberen endes des blocks setzen (keine bewegung nach oben)
-// nach unten
-- ground blocks laden und pruefen
-  - alle ground blaocks sind non solid -- bewegung ist ok
-  - alle ground blocks sind solid, ahebn kein passableFrom, haben kein cornerHeights bzw. autoCornerHeight -- bewegung ist nicht ok, setze wishNextPosition.y auf den unteren rand des blocks
-  - wenn semi solid blocks dabei sind, dann den maximalen wert der 
-// nach vorn
-- pruefe bloecke vorn aber schon betreten
-  - Alee ersten blocks pruefen ob non solid, aber passableFrom in diese richtung nicht erlaubt (von innen), z.b. richtung Norden und passableFrom.BACK == false
-    - wenn ja, dann setze wishNextPosition.x/z auf den rand des blocks
-- pruefe bloecke vorn 
-  - pruefe ob die blocks vor dem player ob er durchlaufwen werden kann
-    - ist er non solid, hat kein passableFrom
-    - ist er non solid und hat passableFrom, aber in diese richtung erlaubt (von aussen), z.b. richtung Norden und passableFrom.FRONT == true
-    - ist er solid, hat passableFrom in diese richtung erlaubt (von aussen), z.b. richtung Norden und passableFrom.FRONT == true
-    - ist er semi solid, hat eine gap von weniger als 0.1 block (maxClimbHeight)
-    - wenn keiner der obigen punkte zutrifft, dann  vermutung auf collison
-      - wenn collsion vermutet: pruefe ob alle blocks oberhalb des ersten blockes non solid sind (headBlocks), aber in der ersten reihe nicht aber alle haben autoClimb
-        - dann sgarte auto climb jump (setze wishMove.y und velocity)
-// nach hinten
-- pruefe blocke hinten aber schin betreten
-  ...
-- pruefe bloecke hinten noch nicht betreten
-  ...
-// nach links
-- pruefe bloecke links schon betreten
-  ...
-- pruefe bloecke links noch nicht betreten
-  ...
-// nach rechts
-- pruefe bloecke rechts schon betreten
-  ...
-- pruefe bloecke rechts noch nicht betreten
-  ...
+⸻
 
-// pruefe auf render der welt
-- pruefe auf heightDate dieser column aus ClientChunk
-  - wenn wishNextPosition.y < heightDate.minHeight, dann setze wishNextPosition.y = minHeight
-  - wenn wishNextPosition.y > heightDate.maxHeight, dann setze wishNextPosition.y = maxHeight
-- pruefe auf welt grenzen (world border)
-  - wenn wishNextPosition.x < world.minX, dann setze wishNextPosition.x = world.minX
-  - wenn wishNextPosition.x > world.maxX, dann setze wishNextPosition.x = world.maxX
-  - wenn wishNextPosition.z < world.minZ, dann setze wishNextPosition.z = world.minZ
-  - wenn wishNextPosition.z > world.maxZ, dann setze wishNextPosition.z = world.maxZ
-  - wenn wishNextPosition.y < world.minY, dann setze wishNextPosition.y = world.minY
-  - wenn wishNextPosition.y > world.maxY, dann setze wishNextPosition.y = world.maxY
+Bodenprüfung / Auto-Funktionen
+•	FootBlocks prüfen:
+•	wenn autoRotationY → player.rotation.Y schrittweise anpassen (lerp)
+•	wenn autoMove → wishMove += autoMove.direction
+•	wenn autoJump → startJump = true
+•	Gravitation:
+•	wenn alle footBlocks non solid und keiner passableFrom.BOTTOM == false → gravitation aktiv
+•	sonst keine gravitation
 
-// Wende wishNextPosition an
-- setze player.position = wishNextPosition
+⸻
+
+Semi-Solid & Slopes
+•	wenn groundFootBlocks semi solid:
+•	ermittle maximale Höhe aus allen cornerHeights / autoCornerHeights
+•	wenn wishNextPosition.y < maxHöhe → wishNextPosition.y = maxHöhe (slide up)
+•	wenn wishNextPosition.y > maxHöhe → slide down (velocity.y nach unten anpassen)
+•	bei mehreren Blöcken → mittleren Wert nehmen
+
+⸻
+
+Bewegung / Kollision prüfen
+•	nach oben:
+•	headBlocks laden → wenn einer solid → wishNextPosition.y auf Blockoberkante begrenzen
+•	nach unten:
+•	groundBlocks laden →
+•	wenn alle non solid → ok
+•	wenn solid ohne passableFrom → wishNextPosition.y auf Blockoberkante begrenzen
+•	wenn semi solid → wishNextPosition.y auf maximale Höhe setzen
+•	nach vorn/hinten/links/rechts:
+•	prüfe Blöcke in Bewegungsrichtung:
+•	non solid → ok
+•	non solid mit passableFrom erlaubt → ok
+•	solid mit passableFrom in Bewegungsrichtung erlaubt → ok
+•	semi solid mit geringer Stufe (< maxClimbHeight) → ok
+•	sonst → collision
+•	wenn direkt darüber autoClimb möglich → auto climb jump (wishMove.y = climbSpeed)
+
+⸻
+
+Weltgrenzen / Höhenbegrenzung
+•	Column heightData:
+•	wenn wishNextPosition.y < minHeight → wishNextPosition.y = minHeight
+•	wenn wishNextPosition.y > maxHeight → wishNextPosition.y = maxHeight
+•	World Border:
+•	clamp wishNextPosition.x,z,y in world.min/max Grenzen
+
+⸻
+
+Bewegung anwenden
+•	player.position = wishNextPosition
+•	physicsEntity.velocity = velocity (inkl. gravitation, friction, slides)
+•	physicsEntity.grounded / onSlope / autoFlags aktualisieren
+
+⸻
+
+Hinweise
+•	velocity.xz immer über approach() + friction regulieren, nie direkt addieren
+•	gravitation nur anwenden, wenn keine Bodenberührung
+•	alle Kollisionen über Swept-AABB (Y→X→Z) statt einfache „if solid“-Checks
+•	autoJump / autoMove / autoRotationY immer vor physikberechnung
+•	statusänderungen (grounded, sliding, climbing) erst am Ende des Frames übernehmen
+
+
