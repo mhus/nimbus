@@ -172,6 +172,22 @@ Was ist 'semi solid'/slope: - Ein block der zwar solid definiert ist, aber denno
 Was ist 'semi solid moveable':
 - Wenn der block semi solid ist und der hoehen unterschied von der aktuelle position auf den neuen block <= maxClimbHeight ist (default 0.1 block)
 
+Was ist PassableFrom bei solid block:
+- Wenn der block solid == true und passableFrom definiert ist, dann ist der block von den seiten passierbar, die in passableFrom definiert sind.
+  - z.B. passableFrom = NORTH, SOUTH
+    - player kann von NORTH und SOUTH in den block hinein und aus dem block heraus
+    - player kann von EAST und WEST nicht in den block hinein und nicht aus dem block heraus
+    - Ist der player im Block drin, kann er zu jeder seite austreten, wenn es der benachbarte block zulaesst (also nicht solid)
+    - Ist der Player ausserhalb des blocks, kann er nur durch die passableFrom seiten in den block hinein.
+- So laesst sich ein one way gate realsiieren.
+
+Was ist PassableFrom bei non solid block:
+- Wenn der Block solid == false und passableFrom definiert ist, dann ist der block von den seiten nicht passierbar, die in passableFrom nicht definiert sind.
+- In diesem Fall sind die seiten des blocks die grenzen, die von passableFrom definiert werden.
+- Ist der Player ausserhalb des blocks kann er diese grenzen nicht ueberschreiten.
+- Ist der Player innerhalb des blocks, kann er diese grenzen nicht ueberschreiten.
+- So lassen sich dünne Wände realisieren und so auch Häuser die „ande dünner als ein Block sind.
+
 Welche Entscheidung muesen wir treffen:
 - Bewegt sich der player ueber eine Blockgrenze, d.h. Math.floor(player.position.x/y/z) veraendert sich
 - Was machen wir, wenn sich die bewegungsrichtung während der berechnung ändert? z.b. gravitation und autoMove
