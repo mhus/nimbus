@@ -536,7 +536,9 @@ const hasChanges = computed(() => {
 });
 
 const hasOffsets = computed(() => {
-  return blockData.value.offsets && blockData.value.offsets.length > 0;
+  return blockData.value.offsets &&
+         blockData.value.offsets.length > 0 &&
+         blockData.value.offsets.some(v => v !== null && v !== undefined && v !== 0);
 });
 
 const toggleOffsets = (enabled: boolean) => {

@@ -276,21 +276,32 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: number[] | undefined): void;
 }>();
 
-// Local copy of offsets
-const offsets = ref<number[]>(props.modelValue ? [...props.modelValue] : []);
+// Local copy of offsets (normalize on load)
+const offsets = ref<number[]>(
+  props.modelValue
+    ? props.modelValue.map(v => (v === null || v === undefined || isNaN(v)) ? 0 : v)
+    : []
+);
 
 // Watch offsets and emit changes
 watch(offsets, (newValue) => {
+  // Convert null/undefined to 0
+  const normalized = normalizeOffsets(newValue);
   // Clean up trailing zeros
-  const trimmed = trimTrailingZeros(newValue);
+  const trimmed = trimTrailingZeros(normalized);
   emit('update:modelValue', trimmed.length > 0 ? trimmed : undefined);
 }, { deep: true });
+
+// Helper to normalize offsets: convert null/undefined to 0
+const normalizeOffsets = (arr: number[]): number[] => {
+  return arr.map(v => (v === null || v === undefined || isNaN(v)) ? 0 : v);
+};
 
 // Helper to trim trailing zeros
 const trimTrailingZeros = (arr: number[]): number[] => {
   let lastNonZero = -1;
   for (let i = arr.length - 1; i >= 0; i--) {
-    if (arr[i] !== 0 && arr[i] !== undefined) {
+    if (arr[i] !== 0) {
       lastNonZero = i;
       break;
     }

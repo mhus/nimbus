@@ -103,6 +103,65 @@ interface PlayerBlockContext {
 }
 
 /**
+ * Surface state analysis result
+ * Contains all surface properties at current entity position
+ */
+interface SurfaceState {
+  /** Type of surface player is on/in */
+  type: 'flat' | 'slope' | 'none' | 'climbing';
+
+  /** Interpolated surface height at current position */
+  surfaceHeight: number;
+
+  /** Corner heights if surface is a slope */
+  cornerHeights?: [number, number, number, number];
+
+  /** Slope vector (0 if flat) */
+  slope: { x: number; z: number };
+
+  /** Movement resistance (0 = no resistance, 1 = full resistance) */
+  resistance: number;
+
+  /** Can player walk on this surface? */
+  canWalkOn: boolean;
+
+  /** Is surface solid? */
+  isSolid: boolean;
+
+  /** Block context (cached) */
+  context: PlayerBlockContext;
+}
+
+/**
+ * Accumulated forces acting on entity
+ */
+interface ForceState {
+  /** Gravity force (Y-axis) */
+  gravity: { x: 0; y: number; z: 0 };
+
+  /** Player input force (movement) */
+  input: { x: number; y: number; z: number };
+
+  /** Slope sliding force */
+  slope: { x: number; y: number; z: number };
+
+  /** AutoMove force (conveyors, currents) */
+  autoMove: { x: number; y: number; z: number };
+
+  /** Climbable force (ladders) */
+  climb: { x: 0; y: number; z: 0 };
+
+  /** Combined total force */
+  total: { x: number; y: number; z: number };
+
+  /** Should gravity be applied? */
+  applyGravity: boolean;
+
+  /** Is entity climbing? */
+  isClimbing: boolean;
+}
+
+/**
  * Type guard to check if entity is a PlayerEntity
  */
 function isPlayerEntity(entity: PhysicsEntity): entity is PlayerEntity {
@@ -524,35 +583,16 @@ export class PhysicsService {
       return; // Skip normal physics during climb
     }
 
-    // Check if player is trying to climb (flag set by tryMoveHorizontal)
-    const isClimbing = this.climbableVelocitySetThisFrame.get(entity.entityId) || false;
+    // === PHASE 1: ANALYZE SURFACE ===
+    const surface = this.analyzeSurface(entity);
 
-    // Apply gravity (reduced when underwater, disabled when climbing)
-    if (!this.isUnderwater && !isClimbing) {
-      // Normal gravity on land
-      if (!entity.isOnGround) {
-        entity.velocity.y += this.gravity * deltaTime;
-      } else {
-        // On ground, reset vertical velocity
-        entity.velocity.y = 0;
-      }
-    } else if (this.isUnderwater) {
-      // Underwater: Reduced gravity (slow sinking)
-      // Player slowly sinks but can swim up
-      entity.velocity.y += this.underwaterGravity * deltaTime;
+    // === PHASE 2: CALCULATE FORCES ===
+    const forces = this.calculateForces(entity, surface, entity.velocity, deltaTime);
 
-      // Apply water drag to limit sink speed
-      entity.velocity.y *= 0.95; // Damping factor
-    } else if (isClimbing) {
-      // Climbing: No gravity, no damping
-      // Velocity.y was already set by tryMoveHorizontal
-      // Just keep it as is
-    }
+    // === PHASE 3: RESOLVE MOVEMENT ===
+    this.resolveMovement(entity, forces, surface, deltaTime);
 
-    // Apply velocity to position
-    if (entity.velocity.lengthSquared() > 0) {
-      entity.position.addInPlace(entity.velocity.scale(deltaTime));
-    }
+    // === PHASE 4: POST-MOVEMENT ADJUSTMENTS ===
 
     // Clamp to world boundaries
     this.clampToWorldBounds(entity);
@@ -566,14 +606,8 @@ export class PhysicsService {
     // Auto-jump if standing on/in autoJump block
     this.checkAutoJump(entity);
 
-    // Auto-move if standing on/in autoMove block
-    this.applyAutoMove(entity, deltaTime);
-
     // Auto-orientation if standing on/in autoOrientationY block
     this.applyAutoOrientation(entity, deltaTime);
-
-    // Apply sliding from sloped surfaces (cornerHeights)
-    this.applySlidingFromSlope(entity, deltaTime);
   }
 
   /**
@@ -825,23 +859,20 @@ export class PhysicsService {
   }
 
   /**
-   * Calculate interpolated surface height at a position within a block.
-   * Uses bilinear interpolation between the four corner heights.
+   * Get corner heights for a block using priority cascade.
    *
-   * Priority order for determining cornerHeights:
+   * Priority order:
    * 1. Block.cornerHeights (highest priority)
    * 2. PhysicsModifier.cornerHeights
    * 3. Auto-derived from offsets (if autoCornerHeights=true)
    *    - Block.offsets (Y values of top 4 corners)
    *    - VisibilityModifier.offsets
-   * 4. Default [0, 0, 0, 0]
+   * 4. undefined (no corner heights)
    *
-   * @param block ClientBlock with potential cornerHeights
-   * @param worldX World X position (can be fractional)
-   * @param worldZ World Z position (can be fractional)
-   * @returns Interpolated Y position of the block surface at this location
+   * @param block ClientBlock to get corner heights from
+   * @returns Corner heights array [NW, NE, SE, SW] or undefined
    */
-  private getBlockSurfaceHeight(block: ClientBlock, worldX: number, worldZ: number): number {
+  private getCornerHeights(block: ClientBlock): [number, number, number, number] | undefined {
     let cornerHeights: [number, number, number, number] | undefined;
 
     // Priority 1: Block.cornerHeights (highest)
@@ -854,8 +885,9 @@ export class PhysicsService {
     }
     // Priority 3: Auto-derive from offsets (if autoCornerHeights=true)
     else if (block.currentModifier.physics?.autoCornerHeights) {
-      // Try Block.offsets first (24 values = 8 corners × 3 axes)
-      if (block.block.offsets && block.block.offsets.length >= 24) {
+      // Try Block.offsets first
+      // Note: Array may be shorter than 24 due to trailing null optimization
+      if (block.block.offsets && block.block.offsets.length > 0) {
         // Extract Y-offsets from top 4 corners
         // Offsets order: [bottom 4 corners (0-11), top 4 corners (12-23)]
         // Top corners: [4]=SW(12-14), [5]=SE(15-17), [6]=NW(18-20), [7]=NE(21-23)
@@ -867,7 +899,7 @@ export class PhysicsService {
         cornerHeights = [yNW, yNE, ySE, ySW];
       }
       // Try VisibilityModifier.offsets
-      else if (block.currentModifier.visibility?.offsets && block.currentModifier.visibility.offsets.length >= 24) {
+      else if (block.currentModifier.visibility?.offsets && block.currentModifier.visibility.offsets.length > 0) {
         const offsets = block.currentModifier.visibility.offsets;
         const yNW = offsets[19] ?? 0;
         const yNE = offsets[22] ?? 0;
@@ -876,6 +908,21 @@ export class PhysicsService {
         cornerHeights = [yNW, yNE, ySE, ySW];
       }
     }
+
+    return cornerHeights;
+  }
+
+  /**
+   * Calculate interpolated surface height at a position within a block.
+   * Uses bilinear interpolation between the four corner heights.
+   *
+   * @param block ClientBlock with potential cornerHeights
+   * @param worldX World X position (can be fractional)
+   * @param worldZ World Z position (can be fractional)
+   * @returns Interpolated Y position of the block surface at this location
+   */
+  private getBlockSurfaceHeight(block: ClientBlock, worldX: number, worldZ: number): number {
+    const cornerHeights = this.getCornerHeights(block);
 
     // No corner heights found - use standard block top
     if (!cornerHeights) {
@@ -911,6 +958,292 @@ export class PhysicsService {
     const interpolatedHeight = heightNorth + (heightSouth - heightNorth) * localZ;
 
     return block.block.position.y + 1.0 + interpolatedHeight;
+  }
+
+  /**
+   * Analyze surface state at entity position.
+   * Determines surface type, height, slope, and walkability.
+   *
+   * This is the central function for all slope/surface-related physics.
+   * Called once per frame to cache surface properties.
+   *
+   * @param entity Entity to analyze surface for
+   * @returns SurfaceState with all surface properties
+   */
+  private analyzeSurface(entity: PhysicsEntity): SurfaceState {
+    if (!this.chunkService) {
+      // No chunk service - default state
+      return {
+        type: 'none',
+        surfaceHeight: entity.position.y,
+        slope: { x: 0, z: 0 },
+        resistance: 0,
+        canWalkOn: false,
+        isSolid: false,
+        context: {
+          currentLevel: { blocks: [], hasSolid: false, hasAutoClimbable: false, hasAutoJump: false, climbableSpeed: 0, resistance: 0, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined, passableFrom: undefined },
+          aboveLevel: { blocks: [], hasSolid: false, isClear: true },
+          belowLevel: { blocks: [], hasGround: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 }, autoOrientationY: undefined, groundY: -1 },
+          occupiedBlocks: { blocks: [], hasSolid: false, hasLiquid: false, hasAutoJump: false, autoMove: { x: 0, y: 0, z: 0 } },
+        },
+      };
+    }
+
+    // Get entity dimensions
+    const entityWidth = this.defaultEntityWidth;
+    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
+
+    // Get block context at current position (SINGLE CALL!)
+    const context = this.getPlayerBlockContext(
+      entity.position.x,
+      entity.position.z,
+      entity.position.y,
+      entityWidth,
+      entityHeight
+    );
+
+    // Find surface block and analyze it
+    let surfaceBlock: ClientBlock | null = null;
+    let cornerHeights: [number, number, number, number] | undefined;
+    let surfaceHeight = entity.position.y;
+    let surfaceType: 'flat' | 'slope' | 'none' | 'climbing' = 'none';
+    let canWalkOn = false;
+    let isSolid = false;
+
+    // Check if climbing (ladders)
+    if (context.currentLevel.climbableSpeed > 0 && context.currentLevel.passableFrom === undefined) {
+      return {
+        type: 'climbing',
+        surfaceHeight: entity.position.y,
+        slope: { x: 0, z: 0 },
+        resistance: 0,
+        canWalkOn: true,
+        isSolid: false,
+        context,
+      };
+    }
+
+    // Check blocks we're standing ON (belowLevel, Y-1)
+    for (const blockInfo of context.belowLevel.blocks) {
+      if (blockInfo.block.currentModifier.physics?.solid) {
+        surfaceBlock = blockInfo.block;
+        break;
+      }
+    }
+
+    // If no ground below, check blocks we're IN (currentLevel, Y)
+    // Important for slope blocks where player is inside the block
+    if (!surfaceBlock) {
+      for (const blockInfo of context.currentLevel.blocks) {
+        if (blockInfo.block.currentModifier.physics?.solid) {
+          surfaceBlock = blockInfo.block;
+          break;
+        }
+      }
+    }
+
+    // Analyze surface block
+    if (surfaceBlock) {
+      isSolid = true;
+      cornerHeights = this.getCornerHeights(surfaceBlock);
+      surfaceHeight = this.getBlockSurfaceHeight(surfaceBlock, entity.position.x, entity.position.z);
+
+      if (cornerHeights) {
+        surfaceType = 'slope';
+        canWalkOn = true; // Slopes are always walkable
+      } else {
+        surfaceType = 'flat';
+        canWalkOn = !context.currentLevel.hasSolid; // Flat ground is walkable if not colliding
+      }
+    } else {
+      // No surface found
+      surfaceHeight = context.belowLevel.groundY >= 0 ? context.belowLevel.groundY : entity.position.y;
+    }
+
+    // Calculate slope vector
+    const slope = cornerHeights ? this.calculateSlope(cornerHeights) : { x: 0, z: 0 };
+
+    // Get resistance (from context)
+    const resistance = Math.max(context.currentLevel.resistance, context.belowLevel.blocks.length > 0
+      ? Math.max(...context.belowLevel.blocks.map(b => b.block.currentModifier.physics?.resistance ?? 0))
+      : 0);
+
+    return {
+      type: surfaceType,
+      surfaceHeight,
+      cornerHeights,
+      slope,
+      resistance,
+      canWalkOn,
+      isSolid,
+      context,
+    };
+  }
+
+  /**
+   * Calculate all forces acting on entity.
+   * Accumulates gravity, input, slope, autoMove, and climbing forces.
+   *
+   * @param entity Entity to calculate forces for
+   * @param surface Surface state analysis
+   * @param inputVelocity Input velocity from player (before this frame)
+   * @param deltaTime Frame time
+   * @returns ForceState with all accumulated forces
+   */
+  private calculateForces(
+    entity: PhysicsEntity,
+    surface: SurfaceState,
+    inputVelocity: Vector3,
+    deltaTime: number
+  ): ForceState {
+    const forces: ForceState = {
+      gravity: { x: 0, y: 0, z: 0 },
+      input: { x: 0, y: 0, z: 0 },
+      slope: { x: 0, y: 0, z: 0 },
+      autoMove: { x: 0, y: 0, z: 0 },
+      climb: { x: 0, y: 0, z: 0 },
+      total: { x: 0, y: 0, z: 0 },
+      applyGravity: true,
+      isClimbing: false,
+    };
+
+    // 1. GRAVITY FORCE
+    if (surface.type === 'climbing') {
+      // Climbing: No gravity
+      forces.applyGravity = false;
+      forces.isClimbing = true;
+    } else if (this.isUnderwater) {
+      // Underwater: Reduced gravity
+      forces.gravity.y = this.underwaterGravity;
+      forces.applyGravity = true;
+    } else if (entity.isOnGround) {
+      // On ground: No gravity (already supported)
+      forces.applyGravity = false;
+    } else {
+      // Falling: Normal gravity
+      forces.gravity.y = this.gravity;
+      forces.applyGravity = true;
+    }
+
+    // 2. INPUT FORCE (from current velocity - set by moveForward/moveRight/jump)
+    forces.input.x = inputVelocity.x;
+    forces.input.y = inputVelocity.y;
+    forces.input.z = inputVelocity.z;
+
+    // 3. SLOPE FORCE (sliding)
+    if (surface.type === 'slope' && entity.isOnGround) {
+      const slidingFactor = Math.max(0, 1 - surface.resistance);
+      const slidingStrength = 3.0; // blocks per second
+
+      forces.slope.x = surface.slope.x * slidingFactor * slidingStrength;
+      forces.slope.z = surface.slope.z * slidingFactor * slidingStrength;
+    }
+
+    // 4. AUTOMOVE FORCE (conveyors)
+    const autoMoveX = Math.max(
+      Math.abs(surface.context.belowLevel.autoMove.x),
+      Math.abs(surface.context.currentLevel.autoMove.x)
+    ) * (Math.abs(surface.context.belowLevel.autoMove.x) > Math.abs(surface.context.currentLevel.autoMove.x)
+      ? Math.sign(surface.context.belowLevel.autoMove.x)
+      : Math.sign(surface.context.currentLevel.autoMove.x));
+
+    const autoMoveY = Math.max(
+      Math.abs(surface.context.belowLevel.autoMove.y),
+      Math.abs(surface.context.currentLevel.autoMove.y)
+    ) * (Math.abs(surface.context.belowLevel.autoMove.y) > Math.abs(surface.context.currentLevel.autoMove.y)
+      ? Math.sign(surface.context.belowLevel.autoMove.y)
+      : Math.sign(surface.context.currentLevel.autoMove.y));
+
+    const autoMoveZ = Math.max(
+      Math.abs(surface.context.belowLevel.autoMove.z),
+      Math.abs(surface.context.currentLevel.autoMove.z)
+    ) * (Math.abs(surface.context.belowLevel.autoMove.z) > Math.abs(surface.context.currentLevel.autoMove.z)
+      ? Math.sign(surface.context.belowLevel.autoMove.z)
+      : Math.sign(surface.context.currentLevel.autoMove.z));
+
+    forces.autoMove.x = autoMoveX;
+    forces.autoMove.y = autoMoveY;
+    forces.autoMove.z = autoMoveZ;
+
+    // 5. CLIMB FORCE (ladders)
+    if (surface.type === 'climbing') {
+      forces.climb.y = surface.context.currentLevel.climbableSpeed;
+    }
+
+    // 6. COMBINE ALL FORCES
+    // X-axis: input + slope + autoMove
+    forces.total.x = forces.input.x + forces.slope.x + forces.autoMove.x;
+
+    // Y-axis: input + gravity + climb + autoMove
+    forces.total.y = forces.input.y + forces.gravity.y + forces.climb.y + forces.autoMove.y;
+
+    // Z-axis: input + slope + autoMove
+    forces.total.z = forces.input.z + forces.slope.z + forces.autoMove.z;
+
+    return forces;
+  }
+
+  /**
+   * Resolve movement with collision detection and force application.
+   * Central function that applies all forces while respecting collisions.
+   *
+   * @param entity Entity to move
+   * @param forces Accumulated forces
+   * @param surface Current surface state
+   * @param deltaTime Frame time
+   */
+  private resolveMovement(
+    entity: PhysicsEntity,
+    forces: ForceState,
+    surface: SurfaceState,
+    deltaTime: number
+  ): void {
+    // Calculate desired velocity from forces
+    const desiredVelocity = new Vector3(
+      forces.total.x,
+      forces.total.y,
+      forces.total.z
+    );
+
+    // Apply gravity to velocity (accumulates over frames)
+    if (forces.applyGravity) {
+      entity.velocity.y += forces.gravity.y * deltaTime;
+    } else {
+      entity.velocity.y = 0;
+    }
+
+    // For horizontal movement (X, Z):
+    // If on slope, use combined force (input + slope + autoMove)
+    if (surface.type === 'slope') {
+      // Direct application - slope force is already in blocks/second
+      entity.position.x += desiredVelocity.x * deltaTime;
+      entity.position.z += desiredVelocity.z * deltaTime;
+
+      // Adjust Y to follow surface
+      entity.position.y = surface.surfaceHeight;
+
+      logger.debug('Slope movement applied', {
+        entityId: entity.entityId,
+        velocity: { x: desiredVelocity.x, z: desiredVelocity.z },
+        surfaceHeight: surface.surfaceHeight,
+        slope: surface.slope,
+      });
+    } else if (surface.type === 'climbing') {
+      // Climbing: Use climb velocity
+      entity.velocity.y = forces.climb.y;
+      // Horizontal movement from input only (no sliding on ladders)
+      entity.position.x += forces.input.x * deltaTime;
+      entity.position.z += forces.input.z * deltaTime;
+    } else {
+      // Flat or no surface: Normal physics
+      // Input velocity is already in entity.velocity (set by moveForward/etc)
+      // Just apply autoMove
+      entity.position.x += forces.autoMove.x * deltaTime;
+      entity.position.z += forces.autoMove.z * deltaTime;
+    }
+
+    // Apply vertical velocity (gravity, jump)
+    entity.position.y += entity.velocity.y * deltaTime;
   }
 
   /**
@@ -1280,57 +1613,7 @@ export class PhysicsService {
    *
    * Use case: Conveyor belts, water currents, ice sliding
    */
-  private applyAutoMove(entity: PhysicsEntity, deltaTime: number): void {
-    if (!this.chunkService) {
-      return;
-    }
-
-    // Only apply autoMove in walk mode
-    if (entity.movementMode !== 'walk') {
-      return;
-    }
-
-    // Get entity dimensions
-    const entityWidth = this.defaultEntityWidth;
-    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
-
-    // Get block context at current position
-    const context = this.getPlayerBlockContext(
-      entity.position.x,
-      entity.position.z,
-      entity.position.y,
-      entityWidth,
-      entityHeight
-    );
-
-    // Collect autoMove from both belowLevel (standing on) and currentLevel (at feet)
-    const autoMoveX = Math.max(Math.abs(context.belowLevel.autoMove.x), Math.abs(context.currentLevel.autoMove.x)) *
-                      (Math.abs(context.belowLevel.autoMove.x) > Math.abs(context.currentLevel.autoMove.x)
-                        ? Math.sign(context.belowLevel.autoMove.x)
-                        : Math.sign(context.currentLevel.autoMove.x));
-
-    const autoMoveY = Math.max(Math.abs(context.belowLevel.autoMove.y), Math.abs(context.currentLevel.autoMove.y)) *
-                      (Math.abs(context.belowLevel.autoMove.y) > Math.abs(context.currentLevel.autoMove.y)
-                        ? Math.sign(context.belowLevel.autoMove.y)
-                        : Math.sign(context.currentLevel.autoMove.y));
-
-    const autoMoveZ = Math.max(Math.abs(context.belowLevel.autoMove.z), Math.abs(context.currentLevel.autoMove.z)) *
-                      (Math.abs(context.belowLevel.autoMove.z) > Math.abs(context.currentLevel.autoMove.z)
-                        ? Math.sign(context.belowLevel.autoMove.z)
-                        : Math.sign(context.currentLevel.autoMove.z));
-
-    // Apply autoMove velocity if any axis has movement
-    if (autoMoveX !== 0 || autoMoveY !== 0 || autoMoveZ !== 0) {
-      entity.position.x += autoMoveX * deltaTime;
-      entity.position.y += autoMoveY * deltaTime;
-      entity.position.z += autoMoveZ * deltaTime;
-
-      logger.debug('Auto-move applied', {
-        entityId: entity.entityId,
-        velocity: { x: autoMoveX, y: autoMoveY, z: autoMoveZ },
-      });
-    }
-  }
+  // applyAutoMove() is now integrated into calculateForces() and resolveMovement()
 
   /**
    * Apply autoOrientationY rotation to entity based on blocks at feet level or below
@@ -1434,75 +1717,7 @@ export class PhysicsService {
    *
    * Use case: Ramps, slides, sloped terrain
    */
-  private applySlidingFromSlope(entity: PhysicsEntity, deltaTime: number): void {
-    if (!this.chunkService) {
-      return;
-    }
-
-    // Only apply sliding in walk mode when on ground
-    if (entity.movementMode !== 'walk' || !entity.isOnGround) {
-      return;
-    }
-
-    // Get entity dimensions
-    const entityWidth = this.defaultEntityWidth;
-    const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
-
-    // Get block context at current position
-    const context = this.getPlayerBlockContext(
-      entity.position.x,
-      entity.position.z,
-      entity.position.y,
-      entityWidth,
-      entityHeight
-    );
-
-    // Find block with cornerHeights that player is standing on
-    // Check belowLevel blocks (Y - 1)
-    let slidingVelocityX = 0;
-    let slidingVelocityZ = 0;
-
-    for (const blockInfo of context.belowLevel.blocks) {
-      const cornerHeights = blockInfo.block.currentModifier.physics?.cornerHeights;
-
-      if (!cornerHeights || cornerHeights.length !== 4) {
-        continue; // No cornerHeights on this block
-      }
-
-      // Calculate slope from cornerHeights
-      const slope = this.calculateSlope(cornerHeights);
-
-      // Get resistance (defaults to 0 if not set)
-      const resistance = blockInfo.block.currentModifier.physics?.resistance ?? 0;
-
-      // Apply resistance to sliding (linear)
-      // resistance = 0 → full sliding, resistance = 1 → no sliding
-      const slidingFactor = Math.max(0, 1 - resistance);
-
-      // Calculate sliding velocity (slope in blocks per second)
-      // Multiply by a constant to make sliding noticeable (3.0 = decent slide speed)
-      const slidingStrength = 3.0;
-      slidingVelocityX = Math.max(Math.abs(slidingVelocityX), Math.abs(slope.x * slidingFactor * slidingStrength)) *
-                         (Math.abs(slidingVelocityX) > Math.abs(slope.x * slidingFactor * slidingStrength)
-                           ? Math.sign(slidingVelocityX)
-                           : Math.sign(slope.x));
-      slidingVelocityZ = Math.max(Math.abs(slidingVelocityZ), Math.abs(slope.z * slidingFactor * slidingStrength)) *
-                         (Math.abs(slidingVelocityZ) > Math.abs(slope.z * slidingFactor * slidingStrength)
-                           ? Math.sign(slidingVelocityZ)
-                           : Math.sign(slope.z));
-    }
-
-    // Apply sliding velocity if any
-    if (slidingVelocityX !== 0 || slidingVelocityZ !== 0) {
-      entity.position.x += slidingVelocityX * deltaTime;
-      entity.position.z += slidingVelocityZ * deltaTime;
-
-      logger.debug('Sliding applied', {
-        entityId: entity.entityId,
-        velocity: { x: slidingVelocityX, z: slidingVelocityZ },
-      });
-    }
-  }
+  // applySlidingFromSlope() is now integrated into calculateForces() and resolveMovement()
 
   /**
    * Check if player is on or in a block with autoJump and trigger jump
@@ -1732,6 +1947,31 @@ export class PhysicsService {
       entity.position.x = targetX;
       entity.position.z = targetZ;
       return false; // Normal movement occurred
+    }
+
+    // Collision detected - check if target block is a slope (has cornerHeights)
+    // Slopes are walkable even when solid
+    const targetBlockY = Math.floor(feetY); // Current level
+    for (const pos of [
+      { x: Math.floor(targetX), z: Math.floor(targetZ) },
+    ]) {
+      const targetBlock = this.chunkService.getBlockAt(pos.x, targetBlockY, pos.z);
+      if (targetBlock && targetBlock.currentModifier.physics?.solid) {
+        const targetCornerHeights = this.getCornerHeights(targetBlock);
+        if (targetCornerHeights) {
+          // Block has cornerHeights - treat as walkable slope
+          // Movement is allowed, Y-adjustment happens in updateWalkMode via analyzeSurface
+          entity.position.x = targetX;
+          entity.position.z = targetZ;
+
+          logger.debug('Input movement on slope allowed', {
+            entityId: entity.entityId,
+            blockPos: `(${pos.x}, ${targetBlockY}, ${pos.z})`,
+            cornerHeights: targetCornerHeights,
+          });
+          return false; // Movement allowed
+        }
+      }
     }
 
     // Collision detected - check if we can auto-climb

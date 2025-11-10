@@ -168,7 +168,7 @@ SpriteRenderer:
 
 ## Offsets reparieren:
 
-[ ] Die offsets werden im Blockenderer falsch angewendet.
+[-] Die offsets werden im Blockenderer falsch angewendet.
 
 top front left (SW) - in blockrenderer:
 top front right (SE) - in blockrenderer:

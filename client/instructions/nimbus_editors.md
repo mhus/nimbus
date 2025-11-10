@@ -1347,3 +1347,13 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 - Die rueckgabe bleibt wie bisher, wenn ein fehler auftritt wird ein error message im editor angezeigt
 
 ===
+
+## JSON Editor
+
+[ ] Im Block Editor soll es einen Bullton 'Source' geben, der oeffnet einen dialog mit den aktuellen JSON
+Sourcen, die koenne hier editiert werden.
+- Ein Button Cancel schliesst den dialog
+- Ein Button Apply prueft ob das json valide ist, wenn nicht wird der dialog nicht geschlossen, wenn ja
+  werden die daten in den aktuellen editor uebernommen
+- Es gint bereits eine funktion die beim speichern aus den daten json macht
+- Es gibt bereits eine funktion die beim laden ein json text in den editor laed
