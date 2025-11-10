@@ -1977,16 +1977,41 @@ export class PhysicsService {
     // CHECK FOR SLOPE BLOCKS EARLY (before passableFrom checks)
     // Slopes with cornerHeights should be walkable even when solid
     // Check BOTH current block (standing on slope) AND target block (moving to slope)
+    // IMPORTANT: Check both Y (block we're IN) and Y-1 (block we're ON)
+
+    let currentHasSlope = false;
+    let targetHasSlope = false;
+
+    // Check current position: Y (block we're IN)
+    const currentBlockIn = this.chunkService.getBlockAt(currentBlockX, currentBlockY, currentBlockZ);
+    if (currentBlockIn && this.getCornerHeights(currentBlockIn)) {
+      currentHasSlope = true;
+    }
+
+    // Check current position: Y-1 (block we're ON/standing on top of)
+    if (!currentHasSlope) {
+      const currentBlockOn = this.chunkService.getBlockAt(currentBlockX, currentBlockY - 1, currentBlockZ);
+      if (currentBlockOn && this.getCornerHeights(currentBlockOn)) {
+        currentHasSlope = true;
+      }
+    }
+
+    // Check target position: Y (block we'll be IN)
+    const targetBlockIn = this.chunkService.getBlockAt(targetBlockX, currentBlockY, targetBlockZ);
+    if (targetBlockIn && this.getCornerHeights(targetBlockIn)) {
+      targetHasSlope = true;
+    }
+
+    // Check target position: Y-1 (block we'll be ON)
+    if (!targetHasSlope) {
+      const targetBlockOn = this.chunkService.getBlockAt(targetBlockX, currentBlockY - 1, targetBlockZ);
+      if (targetBlockOn && this.getCornerHeights(targetBlockOn)) {
+        targetHasSlope = true;
+      }
+    }
+
     const currentCenterPos = { x: currentBlockX, y: currentBlockY, z: currentBlockZ };
     const targetCenterPos = { x: targetBlockX, y: currentBlockY, z: targetBlockZ };
-
-    // Check if we're currently ON a slope
-    const currentBlock = this.chunkService.getBlockAt(currentCenterPos.x, currentCenterPos.y, currentCenterPos.z);
-    const currentHasSlope = currentBlock ? !!this.getCornerHeights(currentBlock) : false;
-
-    // Check if TARGET is a slope
-    const targetBlock = this.chunkService.getBlockAt(targetCenterPos.x, targetCenterPos.y, targetCenterPos.z);
-    const targetHasSlope = targetBlock ? !!this.getCornerHeights(targetBlock) : false;
 
     // Debug logging for specific test blocks
     const isTestArea = (currentCenterPos.x === 2 && currentCenterPos.y === 64 && currentCenterPos.z >= -9 && currentCenterPos.z <= -5) ||
