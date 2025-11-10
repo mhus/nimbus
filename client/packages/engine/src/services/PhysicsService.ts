@@ -216,6 +216,7 @@ export class PhysicsService {
   // Used when player is teleported to a new location
   private teleportationPending: boolean = false;
   private teleportCheckTimer: NodeJS.Timeout | null = null;
+  private teleportTarget: { x: number; y: number; z: number } | null = null;
 
   // Track if climbable velocity was set this frame (before updateWalkMode runs)
   private climbableVelocitySetThisFrame: Map<string, boolean> = new Map();
@@ -296,6 +297,42 @@ export class PhysicsService {
   }
 
   /**
+   * Teleport entity to specific block coordinates
+   * Waits for chunks to be loaded before positioning
+   *
+   * @param entity Entity to teleport
+   * @param blockX Target block X coordinate (integer)
+   * @param blockY Target block Y coordinate (integer)
+   * @param blockZ Target block Z coordinate (integer)
+   */
+  teleport(entity: PhysicsEntity, blockX: number, blockY: number, blockZ: number): void {
+    // Convert block coordinates to position (center of block)
+    // Block N contains positions from N.0 to (N+1).0
+    // Center is at N + 0.5
+    const posX = Math.floor(blockX) + 0.5;
+    const posY = Math.floor(blockY) + 0.5;
+    const posZ = Math.floor(blockZ) + 0.5;
+
+    // Store target position
+    this.teleportTarget = { x: posX, y: posY, z: posZ };
+
+    // Position player at target XZ, high Y for falling
+    entity.position.x = posX;
+    entity.position.z = posZ;
+    entity.position.y = 200;
+    entity.velocity.set(0, 0, 0);
+
+    // Start teleportation mode
+    this.startTeleportation(entity.entityId);
+
+    logger.info('Teleport initiated', {
+      entityId: entity.entityId,
+      blockCoords: { x: blockX, y: blockY, z: blockZ },
+      position: this.teleportTarget,
+    });
+  }
+
+  /**
    * Start teleportation pending mode
    *
    * Disables physics and starts a timer to check for chunk/heightData availability
@@ -307,9 +344,9 @@ export class PhysicsService {
     this.teleportationPending = true;
     this.physicsEnabled = false;
 
-    // Set player to height 200 so they fall from above
+    // If no teleportTarget set (initial spawn), set player to height 200
     const entity = this.entities.get(entityId);
-    if (entity) {
+    if (entity && !this.teleportTarget) {
       entity.position.y = 200;
       entity.velocity.y = 0; // Reset velocity
       logger.info('Player positioned at Y=200 for spawn');
@@ -410,6 +447,7 @@ export class PhysicsService {
    */
   private cancelTeleportation(): void {
     this.teleportationPending = false;
+    this.teleportTarget = null; // Clear target
 
     if (this.teleportCheckTimer) {
       clearInterval(this.teleportCheckTimer);
@@ -874,17 +912,28 @@ export class PhysicsService {
    */
   private getCornerHeights(block: ClientBlock): [number, number, number, number] | undefined {
     let cornerHeights: [number, number, number, number] | undefined;
+    let source = 'none';
 
     // Priority 1: Block.cornerHeights (highest)
     if (block.block.cornerHeights && block.block.cornerHeights.length === 4) {
       cornerHeights = block.block.cornerHeights;
+      source = 'block.cornerHeights';
     }
     // Priority 2: PhysicsModifier.cornerHeights
     else if (block.currentModifier.physics?.cornerHeights && block.currentModifier.physics.cornerHeights.length === 4) {
       cornerHeights = block.currentModifier.physics.cornerHeights;
+      source = 'physics.cornerHeights';
     }
     // Priority 3: Auto-derive from offsets (if autoCornerHeights=true)
     else if (block.currentModifier.physics?.autoCornerHeights) {
+      console.log('🔎 [getCornerHeights] autoCornerHeights=true, checking offsets',
+        '\n  blockPos:', JSON.stringify(block.block.position),
+        '\n  hasBlockOffsets:', !!block.block.offsets,
+        '\n  blockOffsetsLength:', block.block.offsets?.length,
+        '\n  hasVisibilityOffsets:', !!block.currentModifier.visibility?.offsets,
+        '\n  visibilityOffsetsLength:', block.currentModifier.visibility?.offsets?.length
+      );
+
       // Try Block.offsets first
       // Note: Array may be shorter than 24 due to trailing null optimization
       if (block.block.offsets && block.block.offsets.length > 0) {
@@ -897,6 +946,15 @@ export class PhysicsService {
         const ySE = block.block.offsets[16] ?? 0; // Corner 5 Y
         const ySW = block.block.offsets[13] ?? 0; // Corner 4 Y
         cornerHeights = [yNW, yNE, ySE, ySW];
+        source = 'block.offsets (auto-derived)';
+
+          console.log('🔍 [getCornerHeights] AUTO-DERIVED from block.offsets:',
+          '\n  blockPos:', JSON.stringify(block.block.position),
+          '\n  offsets:', JSON.stringify(block.block.offsets),
+          '\n  indices: 13(SW-Y)=' + block.block.offsets[13] + ', 16(SE-Y)=' + block.block.offsets[16] +
+          ', 19(NW-Y)=' + (block.block.offsets[19] ?? 0) + ', 22(NE-Y)=' + (block.block.offsets[22] ?? 0),
+          '\n  cornerHeights:', JSON.stringify(cornerHeights)
+        );
       }
       // Try VisibilityModifier.offsets
       else if (block.currentModifier.visibility?.offsets && block.currentModifier.visibility.offsets.length > 0) {
@@ -906,7 +964,27 @@ export class PhysicsService {
         const ySE = offsets[16] ?? 0;
         const ySW = offsets[13] ?? 0;
         cornerHeights = [yNW, yNE, ySE, ySW];
+        source = 'visibility.offsets (auto-derived)';
       }
+    }
+
+    if (cornerHeights) {
+      console.log('✅ [getCornerHeights] Corner heights FOUND!',
+        '\n  blockPos:', JSON.stringify(block.block.position),
+        '\n  source:', source,
+        '\n  cornerHeights:', JSON.stringify(cornerHeights)
+      );
+    } else if (block.currentModifier.physics?.autoCornerHeights ||
+               block.block.cornerHeights ||
+               block.currentModifier.physics?.cornerHeights) {
+      // Only log if block was EXPECTED to have cornerHeights
+      console.log('❌ [getCornerHeights] NO corner heights despite config',
+        '\n  blockPos:', JSON.stringify(block.block.position),
+        '\n  autoCornerHeights:', block.currentModifier.physics?.autoCornerHeights,
+        '\n  hasBlockOffsets:', !!block.block.offsets,
+        '\n  blockOffsetsLength:', block.block.offsets?.length,
+        '\n  hasPhysicsCornerHeights:', !!block.currentModifier.physics?.cornerHeights
+      );
     }
 
     return cornerHeights;
@@ -993,6 +1071,11 @@ export class PhysicsService {
     const entityWidth = this.defaultEntityWidth;
     const entityHeight = isPlayerEntity(entity) ? entity.playerInfo.eyeHeight * 1.125 : this.defaultEntityHeight;
 
+    logger.debug('[analyzeSurface] Starting analysis', {
+      entityId: entity.entityId,
+      position: { x: entity.position.x.toFixed(2), y: entity.position.y.toFixed(2), z: entity.position.z.toFixed(2) },
+    });
+
     // Get block context at current position (SINGLE CALL!)
     const context = this.getPlayerBlockContext(
       entity.position.x,
@@ -1001,6 +1084,15 @@ export class PhysicsService {
       entityWidth,
       entityHeight
     );
+
+    logger.debug('[analyzeSurface] Block context retrieved', {
+      belowLevelCount: context.belowLevel.blocks.length,
+      currentLevelCount: context.currentLevel.blocks.length,
+      belowHasGround: context.belowLevel.hasGround,
+      currentHasSolid: context.currentLevel.hasSolid,
+      belowBlocks: context.belowLevel.blocks.map(b => ({ pos: b.block.block.position, solid: b.block.currentModifier.physics?.solid })),
+      currentBlocks: context.currentLevel.blocks.map(b => ({ pos: b.block.block.position, solid: b.block.currentModifier.physics?.solid })),
+    });
 
     // Find surface block and analyze it
     let surfaceBlock: ClientBlock | null = null;
@@ -1012,6 +1104,7 @@ export class PhysicsService {
 
     // Check if climbing (ladders)
     if (context.currentLevel.climbableSpeed > 0 && context.currentLevel.passableFrom === undefined) {
+      logger.debug('[analyzeSurface] Climbing surface detected');
       return {
         type: 'climbing',
         surfaceHeight: entity.position.y,
@@ -1027,6 +1120,9 @@ export class PhysicsService {
     for (const blockInfo of context.belowLevel.blocks) {
       if (blockInfo.block.currentModifier.physics?.solid) {
         surfaceBlock = blockInfo.block;
+        logger.debug('[analyzeSurface] Found surface block in belowLevel', {
+          position: blockInfo.block.block.position,
+        });
         break;
       }
     }
@@ -1037,6 +1133,9 @@ export class PhysicsService {
       for (const blockInfo of context.currentLevel.blocks) {
         if (blockInfo.block.currentModifier.physics?.solid) {
           surfaceBlock = blockInfo.block;
+          logger.debug('[analyzeSurface] Found surface block in currentLevel', {
+            position: blockInfo.block.block.position,
+          });
           break;
         }
       }
@@ -1047,6 +1146,12 @@ export class PhysicsService {
       isSolid = true;
       cornerHeights = this.getCornerHeights(surfaceBlock);
       surfaceHeight = this.getBlockSurfaceHeight(surfaceBlock, entity.position.x, entity.position.z);
+
+      logger.debug('[analyzeSurface] Surface block analyzed', {
+        blockPos: surfaceBlock.block.position,
+        cornerHeights,
+        surfaceHeight: surfaceHeight.toFixed(3),
+      });
 
       if (cornerHeights) {
         surfaceType = 'slope';
@@ -1063,12 +1168,21 @@ export class PhysicsService {
     // Calculate slope vector
     const slope = cornerHeights ? this.calculateSlope(cornerHeights) : { x: 0, z: 0 };
 
+    // Log after slope is calculated
+    if (cornerHeights) {
+      logger.debug('[analyzeSurface] SLOPE DETECTED!', { cornerHeights, slope });
+    } else if (surfaceBlock) {
+      logger.debug('[analyzeSurface] Flat surface', { canWalkOn });
+    } else {
+      logger.debug('[analyzeSurface] No surface block found');
+    }
+
     // Get resistance (from context)
     const resistance = Math.max(context.currentLevel.resistance, context.belowLevel.blocks.length > 0
       ? Math.max(...context.belowLevel.blocks.map(b => b.block.currentModifier.physics?.resistance ?? 0))
       : 0);
 
-    return {
+    const result = {
       type: surfaceType,
       surfaceHeight,
       cornerHeights,
@@ -1078,6 +1192,15 @@ export class PhysicsService {
       isSolid,
       context,
     };
+
+    logger.debug('[analyzeSurface] Final result', {
+      type: result.type,
+      canWalkOn: result.canWalkOn,
+      slope: result.slope,
+      surfaceHeight: result.surfaceHeight.toFixed(3),
+    });
+
+    return result;
   }
 
   /**
@@ -1213,37 +1336,40 @@ export class PhysicsService {
     }
 
     // For horizontal movement (X, Z):
-    // If on slope, use combined force (input + slope + autoMove)
     if (surface.type === 'slope') {
-      // Direct application - slope force is already in blocks/second
-      entity.position.x += desiredVelocity.x * deltaTime;
-      entity.position.z += desiredVelocity.z * deltaTime;
+      // On slope: Input movement is already applied by tryMoveHorizontal
+      // Only apply automatic forces (slope sliding, autoMove)
+      entity.position.x += (forces.slope.x + forces.autoMove.x) * deltaTime;
+      entity.position.z += (forces.slope.z + forces.autoMove.z) * deltaTime;
 
-      // Adjust Y to follow surface
+      // Adjust Y to follow surface (REPLACES gravity/velocity)
       entity.position.y = surface.surfaceHeight;
+      entity.velocity.y = 0; // Reset Y velocity on slope
 
-      logger.debug('Slope movement applied', {
-        entityId: entity.entityId,
-        velocity: { x: desiredVelocity.x, z: desiredVelocity.z },
-        surfaceHeight: surface.surfaceHeight,
-        slope: surface.slope,
-      });
+      console.log('📍 Slope movement - automatic forces only',
+        '\n  position:', JSON.stringify({ x: entity.position.x.toFixed(2), y: entity.position.y.toFixed(2), z: entity.position.z.toFixed(2) }),
+        '\n  slope force:', JSON.stringify({ x: forces.slope.x, z: forces.slope.z }),
+        '\n  autoMove:', JSON.stringify({ x: forces.autoMove.x, z: forces.autoMove.z }),
+        '\n  surfaceHeight:', surface.surfaceHeight.toFixed(3)
+      );
     } else if (surface.type === 'climbing') {
       // Climbing: Use climb velocity
       entity.velocity.y = forces.climb.y;
       // Horizontal movement from input only (no sliding on ladders)
       entity.position.x += forces.input.x * deltaTime;
       entity.position.z += forces.input.z * deltaTime;
+      // Apply vertical velocity for climbing
+      entity.position.y += entity.velocity.y * deltaTime;
     } else {
       // Flat or no surface: Normal physics
       // Input velocity is already in entity.velocity (set by moveForward/etc)
       // Just apply autoMove
       entity.position.x += forces.autoMove.x * deltaTime;
       entity.position.z += forces.autoMove.z * deltaTime;
-    }
 
-    // Apply vertical velocity (gravity, jump)
-    entity.position.y += entity.velocity.y * deltaTime;
+      // Apply vertical velocity (gravity, jump)
+      entity.position.y += entity.velocity.y * deltaTime;
+    }
   }
 
   /**
@@ -1828,15 +1954,76 @@ export class PhysicsService {
       return true; // Movement handled by climbing
     }
 
-    // Determine movement direction
-    const movementDir = this.getMovementDirection(dx, dz);
-
     // Get block coordinates
+    // For Minecraft-style coordinates: block N contains positions from N.0 to N.999...
+    // For negative coords: block -8 contains -8.0 to -8.999, so -8.01 is in block -8
+    // Math.floor works correctly for positive, but for negative we get wrong results:
+    // Math.floor(-8.01) = -9 (wrong! should be -8)
+    // Correct formula: coord < 0 ? Math.ceil(coord) - 1 : Math.floor(coord)
+    // But simpler: just use Math.floor universally, it's correct for block coords
+    // WAIT - actually for negative coords in Minecraft:
+    // Block -8: from -8.0 to -8.999
+    // Block -9: from -9.0 to -9.999
+    // Position -8.01 should be in block -8, but Math.floor(-8.01)=-9
+    // We need: Math.floor for positive, Math.floor for negative (already correct!)
+    // Actually the issue is getBlockAt might use different coord system!
+
     const currentBlockX = Math.floor(entity.position.x);
     const currentBlockZ = Math.floor(entity.position.z);
     const currentBlockY = Math.floor(feetY);
     const targetBlockX = Math.floor(targetX);
     const targetBlockZ = Math.floor(targetZ);
+
+    // CHECK FOR SLOPE BLOCKS EARLY (before passableFrom checks)
+    // Slopes with cornerHeights should be walkable even when solid
+    // Check BOTH current block (standing on slope) AND target block (moving to slope)
+    const currentCenterPos = { x: currentBlockX, y: currentBlockY, z: currentBlockZ };
+    const targetCenterPos = { x: targetBlockX, y: currentBlockY, z: targetBlockZ };
+
+    // Check if we're currently ON a slope
+    const currentBlock = this.chunkService.getBlockAt(currentCenterPos.x, currentCenterPos.y, currentCenterPos.z);
+    const currentHasSlope = currentBlock ? !!this.getCornerHeights(currentBlock) : false;
+
+    // Check if TARGET is a slope
+    const targetBlock = this.chunkService.getBlockAt(targetCenterPos.x, targetCenterPos.y, targetCenterPos.z);
+    const targetHasSlope = targetBlock ? !!this.getCornerHeights(targetBlock) : false;
+
+    // Debug logging for specific test blocks
+    const isTestArea = (currentCenterPos.x === 2 && currentCenterPos.y === 64 && currentCenterPos.z >= -9 && currentCenterPos.z <= -5) ||
+                       (targetCenterPos.x === 2 && targetCenterPos.y === 64 && targetCenterPos.z >= -9 && targetCenterPos.z <= -5);
+
+    if (isTestArea) {
+      console.log('🔍 [tryMoveHorizontal] Slope check in test area',
+        '\n  FROM:', JSON.stringify({ x: entity.position.x.toFixed(2), y: entity.position.y.toFixed(2), z: entity.position.z.toFixed(2) }),
+        '\n  TO:', JSON.stringify({ x: targetX.toFixed(2), z: targetZ.toFixed(2) }),
+        '\n  currentBlock:', JSON.stringify(currentCenterPos), 'hasSlope:', currentHasSlope,
+        '\n  targetBlock:', JSON.stringify(targetCenterPos), 'hasSlope:', targetHasSlope,
+        '\n  hasSolid:', context.currentLevel.hasSolid,
+        '\n  WILL ALLOW:', (currentHasSlope || targetHasSlope)
+      );
+    }
+
+    if (currentHasSlope || targetHasSlope) {
+      // Either current OR target is a slope - allow movement!
+      entity.position.x = targetX;
+      entity.position.z = targetZ;
+
+      console.log('✅ [tryMoveHorizontal] SLOPE MOVEMENT (current or target is slope)',
+        '\n  currentBlock:', JSON.stringify(currentCenterPos), 'hasSlope:', currentHasSlope,
+        '\n  targetBlock:', JSON.stringify(targetCenterPos), 'hasSlope:', targetHasSlope,
+        '\n  moving to:', JSON.stringify({ x: targetX.toFixed(2), z: targetZ.toFixed(2) })
+      );
+      return false; // Movement allowed
+    }
+
+    if (isTestArea) {
+      console.log('❌ [tryMoveHorizontal] NO slope detected, continuing with normal collision',
+        '\n  will check passableFrom and other collision logic'
+      );
+    }
+
+    // Determine movement direction
+    const movementDir = this.getMovementDirection(dx, dz);
 
     // Get current block context for exit checks (SOURCE BLOCK)
     const currentContext = this.getPlayerBlockContext(entity.position.x, entity.position.z, feetY, entityWidth, entityHeight);
@@ -1949,30 +2136,7 @@ export class PhysicsService {
       return false; // Normal movement occurred
     }
 
-    // Collision detected - check if target block is a slope (has cornerHeights)
-    // Slopes are walkable even when solid
-    const targetBlockY = Math.floor(feetY); // Current level
-    for (const pos of [
-      { x: Math.floor(targetX), z: Math.floor(targetZ) },
-    ]) {
-      const targetBlock = this.chunkService.getBlockAt(pos.x, targetBlockY, pos.z);
-      if (targetBlock && targetBlock.currentModifier.physics?.solid) {
-        const targetCornerHeights = this.getCornerHeights(targetBlock);
-        if (targetCornerHeights) {
-          // Block has cornerHeights - treat as walkable slope
-          // Movement is allowed, Y-adjustment happens in updateWalkMode via analyzeSurface
-          entity.position.x = targetX;
-          entity.position.z = targetZ;
-
-          logger.debug('Input movement on slope allowed', {
-            entityId: entity.entityId,
-            blockPos: `(${pos.x}, ${targetBlockY}, ${pos.z})`,
-            cornerHeights: targetCornerHeights,
-          });
-          return false; // Movement allowed
-        }
-      }
-    }
+    // This slope check was moved earlier (line 1916-1940) - remove duplicate
 
     // Collision detected - check if we can auto-climb
     if (context.currentLevel.hasAutoClimbable && entity.isOnGround && context.aboveLevel.isClear) {

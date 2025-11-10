@@ -1,0 +1,78 @@
+/**
+ * TeleportCommand - Teleport player to specific coordinates
+ *
+ * Usage: teleport <x> <y> <z>
+ */
+
+import { CommandHandler } from './CommandHandler';
+import type { AppContext } from '../AppContext';
+
+/**
+ * Teleport command - Teleports player to coordinates
+ */
+export class TeleportCommand extends CommandHandler {
+  private appContext: AppContext;
+
+  constructor(appContext: AppContext) {
+    super();
+    this.appContext = appContext;
+  }
+
+  name(): string {
+    return 'teleport';
+  }
+
+  description(): string {
+    return 'Teleport to coordinates (x, y, z). Usage: teleport <x> <y> <z>';
+  }
+
+  execute(parameters: any[]): any {
+    // Validate parameters
+    if (parameters.length !== 3) {
+      console.error('Usage: teleport <x> <y> <z>');
+      return {
+        error: 'Invalid parameters',
+        usage: 'teleport <x> <y> <z>',
+        example: 'teleport 2 64 -8',
+      };
+    }
+
+    const blockX = parseFloat(parameters[0]);
+    const blockY = parseFloat(parameters[1]);
+    const blockZ = parseFloat(parameters[2]);
+
+    if (isNaN(blockX) || isNaN(blockY) || isNaN(blockZ)) {
+      console.error('Coordinates must be numbers');
+      return {
+        error: 'Invalid coordinates',
+        x: parameters[0],
+        y: parameters[1],
+        z: parameters[2],
+      };
+    }
+
+    const physicsService = this.appContext.services.physics;
+
+    if (!physicsService) {
+      console.error('PhysicsService not available');
+      return { error: 'PhysicsService not available' };
+    }
+
+    const playerEntity = physicsService.getEntity('player');
+
+    if (!playerEntity) {
+      console.error('Player entity not available');
+      return { error: 'Player entity not available' };
+    }
+
+    // Use PhysicsService teleport method (converts to position internally)
+    physicsService.teleport(playerEntity, blockX, blockY, blockZ);
+
+    console.log(`✓ Teleporting to block (${blockX}, ${blockY}, ${blockZ})`);
+
+    return {
+      message: `Teleporting to block (${blockX}, ${blockY}, ${blockZ})`,
+      blockCoords: { x: blockX, y: blockY, z: blockZ },
+    };
+  }
+}

@@ -205,3 +205,35 @@ Die Ermittlung der cornerHeights wird erweitert:
   - Pruefen ob am Block offsets gesetzt sind und 24 Werte drin sind, wenn ja diese nutzen (nur die top corners)
   - Pruefen ob an currentModifier die offsets gesetzt sind, wenn ja diese nutzen (nur die top corners)
 - Wenn kein cornerHeights existiert, dann wird der default (wie bisher) verwendet.
+
+[?] Erstelle ein command in engine mit dem ich das log level des Loggers umstellen kann, z.b. auf debug.
+Das command muss im commandservice registriert werden.
+
+```text
+// Log-Level für PhysicsService auf DEBUG setzen
+doLoglevel('PhysicsService', 'debug')
+// oder
+doLoglevel('PhysicsService', 0)
+
+// Log-Level für PhysicsService auf INFO setzen (weniger Logs)
+doLoglevel('PhysicsService', 'info')
+// oder  
+doLoglevel('PhysicsService', 2)
+
+// Alle Logger auf DEBUG setzen
+doLoglevel('debug')
+
+// Verfügbare Levels anzeigen
+doLoglevel()
+
+Levels:
+- 0 / trace - Alles (sehr verbose)
+- 1 / debug - Debug-Info (für cornerHeights Debugging)
+- 2 / info - Normal (default)
+- 3 / warn - Nur Warnungen
+- 4 / error - Nur Fehler
+- 5 / fatal - Nur kritische Fehler
+
+doLoglevel('PhysicsService', 'debug')
+```
+
