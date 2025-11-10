@@ -26,12 +26,7 @@ export class LogLevelCommand extends CommandHandler {
   execute(parameters: any[]): any {
     // No parameters - show current levels
     if (parameters.length === 0) {
-      const defaultLevel = LoggerFactory.getDefaultLevel();
-      const levelName = this.getLevelName(defaultLevel);
-
       return {
-        message: 'Current log levels',
-        defaultLevel: `${levelName} (${defaultLevel})`,
         hint: 'Usage: loglevel <logger-name> <level> OR loglevel <level>',
         examples: [
           'loglevel debug          - Set default to DEBUG',

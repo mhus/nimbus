@@ -15,11 +15,12 @@ import {
   Shape,
   getLogger,
   ExceptionHandler,
-  Backdrop,
+  Backdrop, Vector3,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
-import type { ClientChunk, ClientChunkData, ClientHeightData } from '../types/ClientChunk';
+import type { ClientChunkData, ClientHeightData } from '../types/ClientChunk';
+import { ClientChunk } from '../types/ClientChunk';
 import type { ClientBlock } from '../types/ClientBlock';
 import {
   worldToChunk,
@@ -244,11 +245,7 @@ export class ChunkService {
         // Process blocks into ClientBlocks with merged modifiers
         const clientChunkData = await this.processChunkData(chunkData);
 
-        const clientChunk: ClientChunk = {
-          data: clientChunkData,
-          isRendered: false,
-          lastAccessTime: Date.now(),
-        };
+        const clientChunk: ClientChunk = new ClientChunk(clientChunkData);
 
         this.chunks.set(key, clientChunk);
 
@@ -302,7 +299,7 @@ export class ChunkService {
     // It will check for chunk, heightData, blocks and position player automatically
     const playerEntity = physicsService.getEntity('player');
     if (playerEntity) {
-      physicsService.startTeleportation('player');
+      physicsService.teleport(playerEntity, playerEntity.position);
       logger.info('Initial spawn - teleportation mode started');
     } else {
       logger.warn('Player entity not found for initial spawn');
@@ -562,6 +559,32 @@ export class ChunkService {
       s: backdrop.s && backdrop.s.length > 0 ? backdrop.s : [DEFAULT_BACKDROP],
       w: backdrop.w && backdrop.w.length > 0 ? backdrop.w : [DEFAULT_BACKDROP],
     };
+  }
+
+  /**
+   * Get chunk at world block coordinates
+   *
+   * @param x - Block X coordinate
+   * @param z - Block Z coordinate
+   * @returns Chunk or undefined if not loaded
+   */
+  getChunkForBlockPosition(pos : Vector3): ClientChunk | undefined {
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+    const { cx, cz } = worldToChunk(pos.x, pos.z, chunkSize);
+    return this.chunks.get(getChunkKey(cx, cz));
+  }
+
+  /**
+   * Get chunk at world block coordinates
+   *
+   * @param x - Block X coordinate
+   * @param z - Block Z coordinate
+   * @returns Chunk or undefined if not loaded
+   */
+  getChunkForBlock(x: number, z: number): ClientChunk | undefined {
+    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+    const { cx, cz } = worldToChunk(x, z, chunkSize);
+    return this.chunks.get(getChunkKey(cx, cz));
   }
 
   /**

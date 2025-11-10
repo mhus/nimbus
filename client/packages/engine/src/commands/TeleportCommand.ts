@@ -4,6 +4,7 @@
  * Usage: teleport <x> <y> <z>
  */
 
+import { Vector3 } from '@babylonjs/core';
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
 
@@ -66,7 +67,7 @@ export class TeleportCommand extends CommandHandler {
     }
 
     // Use PhysicsService teleport method (converts to position internally)
-    physicsService.teleport(playerEntity, blockX, blockY, blockZ);
+    physicsService.teleport(playerEntity, new Vector3(blockX, blockY, blockZ));
 
     console.log(`✓ Teleporting to block (${blockX}, ${blockY}, ${blockZ})`);
 

@@ -5,7 +5,7 @@
  * client-side state for rendering and management.
  */
 
-import type { ChunkDataTransferObject, Backdrop } from '@nimbus/shared';
+import type {ChunkDataTransferObject, Backdrop, Vector3} from '@nimbus/shared';
 import type { ClientBlock } from './ClientBlock';
 import type { DisposableResources } from '../rendering/DisposableResources';
 
@@ -14,8 +14,8 @@ import type { DisposableResources } from '../rendering/DisposableResources';
  *
  * Describes vertical boundaries and special levels for a single column (x, z) in a chunk.
  *
- * @field x - Local X coordinate within chunk (0 to chunkSize-1)
- * @field z - Local Z coordinate within chunk (0 to chunkSize-1)
+ * @field x - World X coordinate within chunk (0 to chunkSize-1)
+ * @field z - World Z coordinate within chunk (0 to chunkSize-1)
  * @field maxHeight - Maximum Y boundary:
  *   - Usually world.stop.y (e.g. 1000)
  *   - Exception: If blocks exceed world.stop.y, set to (highestBlock + 10) for headroom
@@ -62,7 +62,7 @@ export interface ClientChunkData {
 /**
  * Client-side chunk with rendering state
  */
-export interface ClientChunk {
+export class ClientChunk {
   /** Chunk data with processed blocks */
   data: ClientChunkData;
 
@@ -72,6 +72,29 @@ export interface ClientChunk {
   /** Last time chunk was accessed (for LRU) */
   lastAccessTime: number;
 
+    constructor(data: ClientChunkData) {
+        this.data = data;
+        this.isRendered = false;
+        this.lastAccessTime = Date.now();
+    }
+
   /** Optional reference to Babylon.js mesh */
   renderMesh?: any;
+
+  /**
+   * Get height data for column (x, z) within chunk
+   * @param x block world x coordinate within chunk
+   * @param z block world z coordinate within chunk
+   * @returns ClientHeightData or undefined if not found
+   */
+  getHeightData(posX: number, posZ: number): ClientHeightData | undefined {
+    var x = Math.floor(posX);
+    var z = Math.floor(posZ);
+    return this.data?.hightData?.get(`${x},${z}`);
+  }
+
+  getHeightDataForPosition(position: Vector3) {
+    return this.getHeightData(position.x, position.z);
+  }
+
 }
