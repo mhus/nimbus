@@ -1982,31 +1982,50 @@ export class PhysicsService {
     let currentHasSlope = false;
     let targetHasSlope = false;
 
+    console.log('🔍 Checking IN/ON blocks:',
+      '\n  currentBlockY:', currentBlockY,
+      '\n  Checking IN at:', JSON.stringify({x: currentBlockX, y: currentBlockY, z: currentBlockZ}),
+      '\n  Checking ON at:', JSON.stringify({x: currentBlockX, y: currentBlockY-1, z: currentBlockZ})
+    );
+
     // Check current position: Y (block we're IN)
     const currentBlockIn = this.chunkService.getBlockAt(currentBlockX, currentBlockY, currentBlockZ);
-    if (currentBlockIn && this.getCornerHeights(currentBlockIn)) {
+    console.log('  → Block IN exists:', !!currentBlockIn, 'at Y=' + currentBlockY);
+    const currentInSlope = currentBlockIn ? !!this.getCornerHeights(currentBlockIn) : false;
+    if (currentInSlope) {
       currentHasSlope = true;
+      console.log('  → Current IN block (Y=' + currentBlockY + ') has slope:', JSON.stringify({x: currentBlockX, y: currentBlockY, z: currentBlockZ}));
     }
 
     // Check current position: Y-1 (block we're ON/standing on top of)
     if (!currentHasSlope) {
       const currentBlockOn = this.chunkService.getBlockAt(currentBlockX, currentBlockY - 1, currentBlockZ);
-      if (currentBlockOn && this.getCornerHeights(currentBlockOn)) {
+      console.log('  → Block ON exists:', !!currentBlockOn, 'at Y=' + (currentBlockY-1));
+      const currentOnSlope = currentBlockOn ? !!this.getCornerHeights(currentBlockOn) : false;
+      console.log('  → Block ON has slope:', currentOnSlope);
+      if (currentOnSlope) {
         currentHasSlope = true;
+        console.log('  ✅ Current ON block (Y=' + (currentBlockY-1) + ') has slope:', JSON.stringify({x: currentBlockX, y: currentBlockY-1, z: currentBlockZ}));
       }
+    } else {
+      console.log('  ⏭️ Skipping ON check, already found slope IN block');
     }
 
     // Check target position: Y (block we'll be IN)
     const targetBlockIn = this.chunkService.getBlockAt(targetBlockX, currentBlockY, targetBlockZ);
-    if (targetBlockIn && this.getCornerHeights(targetBlockIn)) {
+    const targetInSlope = targetBlockIn ? !!this.getCornerHeights(targetBlockIn) : false;
+    if (targetInSlope) {
       targetHasSlope = true;
+      console.log('  → Target IN block (Y=' + currentBlockY + ') has slope:', JSON.stringify({x: targetBlockX, y: currentBlockY, z: targetBlockZ}));
     }
 
     // Check target position: Y-1 (block we'll be ON)
     if (!targetHasSlope) {
       const targetBlockOn = this.chunkService.getBlockAt(targetBlockX, currentBlockY - 1, targetBlockZ);
-      if (targetBlockOn && this.getCornerHeights(targetBlockOn)) {
+      const targetOnSlope = targetBlockOn ? !!this.getCornerHeights(targetBlockOn) : false;
+      if (targetOnSlope) {
         targetHasSlope = true;
+        console.log('  → Target ON block (Y=' + (currentBlockY-1) + ') has slope:', JSON.stringify({x: targetBlockX, y: currentBlockY-1, z: targetBlockZ}));
       }
     }
 
@@ -2033,10 +2052,15 @@ export class PhysicsService {
       entity.position.x = targetX;
       entity.position.z = targetZ;
 
+      // IMPORTANT: Don't set isOnGround=false here!
+      // Let checkGroundCollision handle it in next frame
+      // This allows player to fall if moving off a slope
+
       console.log('✅ [tryMoveHorizontal] SLOPE MOVEMENT (current or target is slope)',
         '\n  currentBlock:', JSON.stringify(currentCenterPos), 'hasSlope:', currentHasSlope,
         '\n  targetBlock:', JSON.stringify(targetCenterPos), 'hasSlope:', targetHasSlope,
-        '\n  moving to:', JSON.stringify({ x: targetX.toFixed(2), z: targetZ.toFixed(2) })
+        '\n  moving to:', JSON.stringify({ x: targetX.toFixed(2), z: targetZ.toFixed(2) }),
+        '\n  will check ground in next update'
       );
       return false; // Movement allowed
     }
