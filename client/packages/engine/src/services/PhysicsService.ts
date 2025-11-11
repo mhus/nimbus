@@ -80,7 +80,7 @@ export class PhysicsService {
 
   // Physics constants (global, not player-specific)
   private readonly gravity: number = -20.0; // blocks per second²
-  private readonly underwaterGravity: number = -2.0; // blocks per second² (10% of normal, slow sinking)
+  private readonly underwaterGravity: number = -0.5; // blocks per second² (2.5% of normal, extremely slow sinking)
 
   // Movement constants (Source-Engine style)
   private readonly groundAcceleration: number = 100.0; // blocks per second² (fast response)

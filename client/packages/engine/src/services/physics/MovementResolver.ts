@@ -170,6 +170,14 @@ export class MovementResolver {
    * @param deltaTime Frame time
    */
   handleJump(entity: PhysicsEntity, startJump: boolean, deltaTime: number): void {
+    // Underwater: Jump always works (swimming upward)
+    // Jump force scaled by underwater gravity ratio, but multiplied for better control
+    if (entity.inWater && startJump) {
+      const gravityRatio = Math.abs(this.config.underwaterGravity / this.config.gravity);
+      entity.velocity.y = this.getJumpSpeed(entity) * gravityRatio * 4.0; // 4x boost for better underwater swimming
+      return;
+    }
+
     // Update coyote time
     const coyoteKey = entity.entityId;
     let timeSinceGrounded = this.coyoteTimeTracking.get(coyoteKey) || 0;
