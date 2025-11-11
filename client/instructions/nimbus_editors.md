@@ -1348,9 +1348,25 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 
 ===
 
-## JSON Editor
+## Erweiterungen
 
-[ ] Im Block Editor soll es einen Bullton 'Source' geben, der oeffnet einen dialog mit den aktuellen JSON
+[ ] Textures Editor im package 'controls' so umbauen, das nur die bestehenden Texturen angezeigt werden und ein Hinzufuegen Button.
+- Aktuell werden fuer jeden Textur TYPE eine Zeile dargestellt, auch wenn diese nicht gefuellt ist.
+- Beim Hinzufuegen Button muss man auswahlen was fuer eine Art von Textur (ALL, ...) - die TYPE_ID in der MAP
+
+[ ] Es soll neue Texture Typen geben:
+20: INSIDE_ALL
+21: INSIDE_TOP
+22: INSIDE_BOTTOM
+23: INSIDE_LEFT
+24: INSIDE_RIGHT
+25: INSIDE_FRONT
+26: INSIDE_BACK
+27: INSIDE_SIDE
+- Im type erweitern
+- Im Editor erweitern
+
+[ ] (JSON Editor) Im Block Editor soll es einen Bullton 'Source' geben, der oeffnet einen dialog mit den aktuellen JSON
 Sourcen, die koenne hier editiert werden.
 - Ein Button Cancel schliesst den dialog
 - Ein Button Apply prueft ob das json valide ist, wenn nicht wird der dialog nicht geschlossen, wenn ja

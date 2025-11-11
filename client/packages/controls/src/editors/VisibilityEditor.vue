@@ -207,21 +207,21 @@
       @update:model-value="toggleTextures"
     >
       <div class="space-y-3 pt-2">
-      <div v-for="(name, key) in textureKeyOptions" :key="key" class="space-y-2">
+      <div v-for="key in existingTextureKeys" :key="key" class="space-y-2">
         <!-- Texture Row -->
         <div class="flex items-center gap-2">
-          <span class="text-sm w-24 text-base-content/70">{{ name }}:</span>
+          <span class="text-sm w-24 text-base-content/70">{{ textureKeyOptions[key] }}:</span>
           <input
-            :value="getTexturePathValue(parseInt(key))"
-            @input="setTexturePath(parseInt(key), ($event.target as HTMLInputElement).value)"
+            :value="getTexturePathValue(key)"
+            @input="setTexturePath(key, ($event.target as HTMLInputElement).value)"
             type="text"
             class="input input-bordered input-sm flex-1"
-            :placeholder="`textures/block/my_${name}.png`"
+            :placeholder="`textures/block/my_${textureKeyOptions[key]}.png`"
           />
           <!-- Asset Picker Button -->
           <button
             class="btn btn-ghost btn-sm btn-square"
-            @click="openAssetPicker(parseInt(key))"
+            @click="openAssetPicker(key)"
             title="Select from assets"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,14 +230,14 @@
           </button>
           <!-- Expand/Collapse Button -->
           <button
-            v-if="getTexturePathValue(parseInt(key))"
+            v-if="getTexturePathValue(key)"
             class="btn btn-ghost btn-sm btn-square"
-            @click="toggleTextureExpansion(parseInt(key))"
-            :title="isTextureExpanded(parseInt(key)) ? 'Hide advanced settings' : 'Show advanced settings'"
+            @click="toggleTextureExpansion(key)"
+            :title="isTextureExpanded(key) ? 'Hide advanced settings' : 'Show advanced settings'"
           >
             <svg
               class="w-4 h-4 transition-transform"
-              :class="{ 'rotate-180': isTextureExpanded(parseInt(key)) }"
+              :class="{ 'rotate-180': isTextureExpanded(key) }"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -247,9 +247,9 @@
           </button>
           <!-- Remove Button -->
           <button
-            v-if="getTexturePathValue(parseInt(key))"
+            v-if="getTexturePathValue(key)"
             class="btn btn-ghost btn-sm btn-square"
-            @click="removeTexture(parseInt(key))"
+            @click="removeTexture(key)"
             title="Remove texture"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,7 +260,7 @@
 
         <!-- Expanded Settings -->
         <div
-          v-if="isTextureExpanded(parseInt(key))"
+          v-if="isTextureExpanded(key)"
           class="ml-28 pl-4 border-l-2 border-base-300 space-y-3"
         >
           <!-- Texture Preview Canvas -->
@@ -268,14 +268,14 @@
             <div class="text-xs font-semibold text-base-content/70 mb-2">Preview</div>
             <div class="relative bg-base-200 rounded-lg p-2 flex items-center justify-center">
               <canvas
-                :ref="(el) => setCanvasRef(parseInt(key), el as HTMLCanvasElement | null)"
+                :ref="(el) => setCanvasRef(key, el as HTMLCanvasElement | null)"
                 width="256"
                 height="256"
                 class="border border-base-300"
                 style="image-rendering: pixelated;"
               />
               <!-- Loading Indicator -->
-              <div v-if="isTextureLoading(parseInt(key))" class="absolute inset-0 flex items-center justify-center bg-base-200/80 rounded-lg">
+              <div v-if="isTextureLoading(key)" class="absolute inset-0 flex items-center justify-center bg-base-200/80 rounded-lg">
                 <span class="loading loading-spinner loading-md"></span>
               </div>
             </div>
@@ -289,8 +289,8 @@
                   <span class="label-text text-xs">X (px)</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.x')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.x', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.x')"
+                  @input="setTextureDefValue(key, 'uvMapping.x', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   class="input input-bordered input-xs"
                   placeholder="0"
@@ -301,8 +301,8 @@
                   <span class="label-text text-xs">Y (px)</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.y')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.y', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.y')"
+                  @input="setTextureDefValue(key, 'uvMapping.y', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   class="input input-bordered input-xs"
                   placeholder="0"
@@ -313,8 +313,8 @@
                   <span class="label-text text-xs">W (px)</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.w')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.w', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.w')"
+                  @input="setTextureDefValue(key, 'uvMapping.w', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   class="input input-bordered input-xs"
                   placeholder="16"
@@ -325,8 +325,8 @@
                   <span class="label-text text-xs">H (px)</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.h')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.h', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.h')"
+                  @input="setTextureDefValue(key, 'uvMapping.h', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   class="input input-bordered input-xs"
                   placeholder="16"
@@ -343,8 +343,8 @@
                   <span class="label-text text-xs">uScale</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.uScale')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.uScale', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.uScale')"
+                  @input="setTextureDefValue(key, 'uvMapping.uScale', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   class="input input-bordered input-xs"
@@ -356,8 +356,8 @@
                   <span class="label-text text-xs">vScale</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.vScale')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.vScale', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.vScale')"
+                  @input="setTextureDefValue(key, 'uvMapping.vScale', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   class="input input-bordered input-xs"
@@ -369,8 +369,8 @@
                   <span class="label-text text-xs">uOffset</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.uOffset')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.uOffset', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.uOffset')"
+                  @input="setTextureDefValue(key, 'uvMapping.uOffset', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   class="input input-bordered input-xs"
@@ -382,8 +382,8 @@
                   <span class="label-text text-xs">vOffset</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.vOffset')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.vOffset', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.vOffset')"
+                  @input="setTextureDefValue(key, 'uvMapping.vOffset', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   class="input input-bordered input-xs"
@@ -401,8 +401,8 @@
                   <span class="label-text text-xs">wrapU</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.wrapU') ?? 1"
-                  @change="setTextureDefValue(parseInt(key), 'uvMapping.wrapU', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.wrapU') ?? 1"
+                  @change="setTextureDefValue(key, 'uvMapping.wrapU', parseInt(($event.target as HTMLSelectElement).value))"
                   class="select select-bordered select-xs"
                 >
                   <option :value="0">CLAMP</option>
@@ -415,8 +415,8 @@
                   <span class="label-text text-xs">wrapV</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.wrapV') ?? 1"
-                  @change="setTextureDefValue(parseInt(key), 'uvMapping.wrapV', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.wrapV') ?? 1"
+                  @change="setTextureDefValue(key, 'uvMapping.wrapV', parseInt(($event.target as HTMLSelectElement).value))"
                   class="select select-bordered select-xs"
                 >
                   <option :value="0">CLAMP</option>
@@ -429,8 +429,8 @@
                   <span class="label-text text-xs">uRotCenter</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.uRotationCenter')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.uRotationCenter', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.uRotationCenter')"
+                  @input="setTextureDefValue(key, 'uvMapping.uRotationCenter', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   class="input input-bordered input-xs"
@@ -442,8 +442,8 @@
                   <span class="label-text text-xs">vRotCenter</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'uvMapping.vRotationCenter')"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.vRotationCenter', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.vRotationCenter')"
+                  @input="setTextureDefValue(key, 'uvMapping.vRotationCenter', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   class="input input-bordered input-xs"
@@ -461,8 +461,8 @@
                   <span class="label-text text-xs">wAng (W-Axis)</span>
                 </label>
                 <input
-                  :value="radiansToDegreesDisplay(getTextureDefValue(parseInt(key), 'uvMapping.wAng'))"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.wAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
+                  :value="radiansToDegreesDisplay(getTextureDefValue(key, 'uvMapping.wAng'))"
+                  @input="setTextureDefValue(key, 'uvMapping.wAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
                   type="number"
                   step="1"
                   class="input input-bordered input-xs"
@@ -474,8 +474,8 @@
                   <span class="label-text text-xs">uAng (U-Axis)</span>
                 </label>
                 <input
-                  :value="radiansToDegreesDisplay(getTextureDefValue(parseInt(key), 'uvMapping.uAng'))"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.uAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
+                  :value="radiansToDegreesDisplay(getTextureDefValue(key, 'uvMapping.uAng'))"
+                  @input="setTextureDefValue(key, 'uvMapping.uAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
                   type="number"
                   step="1"
                   class="input input-bordered input-xs"
@@ -487,8 +487,8 @@
                   <span class="label-text text-xs">vAng (V-Axis)</span>
                 </label>
                 <input
-                  :value="radiansToDegreesDisplay(getTextureDefValue(parseInt(key), 'uvMapping.vAng'))"
-                  @input="setTextureDefValue(parseInt(key), 'uvMapping.vAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
+                  :value="radiansToDegreesDisplay(getTextureDefValue(key, 'uvMapping.vAng'))"
+                  @input="setTextureDefValue(key, 'uvMapping.vAng', degreesToRadians(parseFloat(($event.target as HTMLInputElement).value)))"
                   type="number"
                   step="1"
                   class="input input-bordered input-xs"
@@ -506,8 +506,8 @@
                   <span class="label-text text-xs">Sampling</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(parseInt(key), 'samplingMode') ?? 0"
-                  @change="setTextureDefValue(parseInt(key), 'samplingMode', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'samplingMode') ?? 0"
+                  @change="setTextureDefValue(key, 'samplingMode', parseInt(($event.target as HTMLSelectElement).value))"
                   class="select select-bordered select-xs w-full"
                 >
                   <option :value="0">NEAREST</option>
@@ -520,8 +520,8 @@
                   <span class="label-text text-xs">Transparency</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(parseInt(key), 'transparencyMode') ?? 0"
-                  @change="setTextureDefValue(parseInt(key), 'transparencyMode', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'transparencyMode') ?? 0"
+                  @change="setTextureDefValue(key, 'transparencyMode', parseInt(($event.target as HTMLSelectElement).value))"
                   class="select select-bordered select-xs w-full"
                 >
                   <option :value="0">NONE</option>
@@ -538,8 +538,8 @@
                   <span class="label-text text-xs">Opacity</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'opacity')"
-                  @input="setTextureDefValue(parseInt(key), 'opacity', parseFloat(($event.target as HTMLInputElement).value))"
+                  :value="getTextureDefValue(key, 'opacity')"
+                  @input="setTextureDefValue(key, 'opacity', parseFloat(($event.target as HTMLInputElement).value))"
                   type="number"
                   step="0.1"
                   min="0"
@@ -553,8 +553,8 @@
                   <span class="label-text text-xs">Tint Color</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'color')"
-                  @input="setTextureDefValue(parseInt(key), 'color', ($event.target as HTMLInputElement).value)"
+                  :value="getTextureDefValue(key, 'color')"
+                  @input="setTextureDefValue(key, 'color', ($event.target as HTMLInputElement).value)"
                   type="text"
                   class="input input-bordered input-xs w-full"
                   placeholder="#ffffff"
@@ -574,8 +574,8 @@
                   <label class="label cursor-pointer justify-start gap-2 py-1">
                     <input
                       type="checkbox"
-                      :checked="getTextureDefValue(parseInt(key), 'backFaceCulling') ?? true"
-                      @change="setTextureDefValue(parseInt(key), 'backFaceCulling', ($event.target as HTMLInputElement).checked)"
+                      :checked="getTextureDefValue(key, 'backFaceCulling') ?? true"
+                      @change="setTextureDefValue(key, 'backFaceCulling', ($event.target as HTMLInputElement).checked)"
                       class="checkbox checkbox-sm"
                     />
                     <span class="label-text text-xs">Enable</span>
@@ -587,8 +587,8 @@
                   <span class="label-text text-xs">Effect</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(parseInt(key), 'effect') ?? 0"
-                  @change="setTextureDefValue(parseInt(key), 'effect', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'effect') ?? 0"
+                  @change="setTextureDefValue(key, 'effect', parseInt(($event.target as HTMLSelectElement).value))"
                   class="select select-bordered select-xs w-full"
                 >
                   <option :value="0">NONE</option>
@@ -601,8 +601,8 @@
                   <span class="label-text text-xs">Effect Parameters</span>
                 </label>
                 <input
-                  :value="getTextureDefValue(parseInt(key), 'effectParameters')"
-                  @input="setTextureDefValue(parseInt(key), 'effectParameters', ($event.target as HTMLInputElement).value)"
+                  :value="getTextureDefValue(key, 'effectParameters')"
+                  @input="setTextureDefValue(key, 'effectParameters', ($event.target as HTMLInputElement).value)"
                   type="text"
                   class="input input-bordered input-xs w-full"
                   placeholder="e.g. 4,100 (frameCount,delayMs)"
@@ -612,8 +612,45 @@
           </div>
         </div>
       </div>
+
+      <!-- Add Texture Button -->
+      <button
+        class="btn btn-outline btn-sm w-full mt-3"
+        @click="showAddTextureDialog = true"
+        :disabled="availableTextureKeys.length === 0"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Texture
+        <span v-if="availableTextureKeys.length === 0" class="text-xs ml-2">(All used)</span>
+      </button>
       </div>
     </CollapsibleSection>
+
+  <!-- Add Texture Dialog -->
+  <div v-if="showAddTextureDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="fixed inset-0 bg-black bg-opacity-25" @click="showAddTextureDialog = false"></div>
+    <div class="relative bg-base-100 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+      <h3 class="text-lg font-bold mb-4">Select Texture Type</h3>
+      <div class="space-y-2 max-h-96 overflow-y-auto">
+        <button
+          v-for="key in availableTextureKeys"
+          :key="key"
+          class="btn btn-outline btn-sm w-full justify-start"
+          @click="addTexture(key)"
+        >
+          <span class="font-mono text-xs text-base-content/50 w-8">{{ key }}</span>
+          <span class="flex-1 text-left">{{ textureKeyOptions[key] }}</span>
+        </button>
+      </div>
+      <div class="mt-4 flex justify-end">
+        <button class="btn btn-ghost btn-sm" @click="showAddTextureDialog = false">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
   </div>
 
   <!-- Texture Asset Picker Dialog -->
@@ -661,6 +698,9 @@ const localValue = ref<VisibilityModifier>(
 
 // Track which textures are expanded
 const expandedTextures = ref<Set<number>>(new Set());
+
+// Show add texture dialog
+const showAddTextureDialog = ref(false);
 
 // Canvas References per Texture Key
 const previewCanvasRefs = ref<Map<number, HTMLCanvasElement>>(new Map());
@@ -715,6 +755,30 @@ const textureKeyOptions: Record<number, string> = {
 // ============================================
 // Texture Management Functions
 // ============================================
+
+// Computed: Get list of existing texture keys
+const existingTextureKeys = computed(() => {
+  if (!localValue.value.textures) return [];
+  return Object.keys(localValue.value.textures).map(Number).sort((a, b) => a - b);
+});
+
+// Computed: Get list of available texture keys (not yet used)
+const availableTextureKeys = computed(() => {
+  const existing = new Set(existingTextureKeys.value);
+  return Object.keys(textureKeyOptions)
+    .map(Number)
+    .filter(key => !existing.has(key))
+    .sort((a, b) => a - b);
+});
+
+// Function to add a new texture
+const addTexture = (key: number) => {
+  if (!localValue.value.textures) {
+    localValue.value.textures = {};
+  }
+  localValue.value.textures[key] = '';
+  showAddTextureDialog.value = false;
+};
 
 const isTextureExpanded = (key: number): boolean => {
   return expandedTextures.value.has(key);
