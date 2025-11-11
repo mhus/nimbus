@@ -154,9 +154,9 @@ export class MaterialService {
     // 4. Sampling mode (default: LINEAR)
     parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
 
-    // 5. Effect (already computed above, only add if not NONE and not WIND)
+    // 5. Effect (already computed above, only add if not NONE)
     // Note: FLIPBOX already handled above (early return), so we don't need to check it here
-    if (finalEffect !== BlockEffect.NONE && finalEffect !== BlockEffect.WIND) {
+    if (finalEffect !== BlockEffect.NONE) {
       parts.push(`eff:${finalEffect}`);
 
       // Effect parameters (if defined)

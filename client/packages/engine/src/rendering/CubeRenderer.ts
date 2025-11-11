@@ -6,7 +6,7 @@
 
 import { VertexData, Vector3, Matrix } from '@babylonjs/core';
 import { getLogger, FaceFlag, FaceVisibilityHelper } from '@nimbus/shared';
-import type { Block, BlockType, TextureDefinition, TextureKey } from '@nimbus/shared';
+import type { Block, BlockType, TextureDefinition, TextureKey, BlockModifier } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer} from './BlockRenderer';
 import { RenderService, RenderContext } from '../services/RenderService';
@@ -22,6 +22,11 @@ interface FaceData {
   indices: number[];
   uvs: number[];
   normals: number[];
+  // Wind attributes (per-vertex)
+  windLeafiness?: number[];
+  windStability?: number[];
+  windLeverUp?: number[];
+  windLeverDown?: number[];
 }
 
 /**
@@ -234,7 +239,9 @@ export class CubeRenderer extends BlockRenderer {
         corners[4], corners[5], corners[6], corners[7],  // left-back, right-back, right-front, left-front
         [0, 1, 0],  // Normal pointing up
         texture,
-        renderContext
+        modifier,
+        renderContext,
+        false  // reverseWinding
       );
       facesRendered++;
     }
@@ -246,7 +253,9 @@ export class CubeRenderer extends BlockRenderer {
         corners[0], corners[3], corners[2], corners[1],  // left-back, left-front, right-front, right-back
         [0, -1, 0],  // Normal pointing down
         texture,
-        renderContext
+        modifier,
+        renderContext,
+        false  // reverseWinding
       );
       facesRendered++;
     }
@@ -258,6 +267,7 @@ export class CubeRenderer extends BlockRenderer {
         corners[0], corners[3], corners[7], corners[4],  // back-bottom, front-bottom, front-top, back-top
         [-1, 0, 0],  // Normal pointing left
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -271,6 +281,7 @@ export class CubeRenderer extends BlockRenderer {
         corners[2], corners[1], corners[5], corners[6],  // front-bottom, back-bottom, back-top, front-top
         [1, 0, 0],  // Normal pointing right
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -284,6 +295,7 @@ export class CubeRenderer extends BlockRenderer {
         corners[3], corners[2], corners[6], corners[7],  // left-bottom, right-bottom, right-top, left-top
         [0, 0, 1],  // Normal pointing forward
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -297,6 +309,7 @@ export class CubeRenderer extends BlockRenderer {
         corners[1], corners[0], corners[4], corners[5],  // right-bottom, left-bottom, left-top, right-top
         [0, 0, -1],  // Normal pointing backward
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -319,6 +332,7 @@ export class CubeRenderer extends BlockRenderer {
    * @param corner3 - Fourth corner position [x, y, z]
    * @param normal - Face normal vector [x, y, z]
    * @param texture - Texture definition for the face
+   * @param modifier - Block modifier (contains wind properties)
    * @param renderContext - Render context
    * @param reverseWinding - Reverse triangle winding order for backface culling
    */
@@ -329,6 +343,7 @@ export class CubeRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
+    modifier: BlockModifier,
     renderContext : RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -393,6 +408,21 @@ export class CubeRenderer extends BlockRenderer {
       // Standard counter-clockwise winding
       faceData.indices.push(i0, i1, i2);  // Triangle 1
       faceData.indices.push(i0, i2, i3);  // Triangle 2
+    }
+
+    // Add wind attributes (per-vertex, 4 vertices for this face)
+    if (faceData.windLeafiness && faceData.windStability && faceData.windLeverUp && faceData.windLeverDown) {
+      const windLeafiness = modifier.wind?.leafiness ?? 0.5;
+      const windStability = modifier.wind?.stability ?? 0.5;
+      const windLeverUp = modifier.wind?.leverUp ?? 0.0;
+      const windLeverDown = modifier.wind?.leverDown ?? 0.0;
+
+      for (let i = 0; i < 4; i++) {
+        faceData.windLeafiness.push(windLeafiness);
+        faceData.windStability.push(windStability);
+        faceData.windLeverUp.push(windLeverUp);
+        faceData.windLeverDown.push(windLeverDown);
+      }
     }
 
     renderContext.vertexOffset += 4;  // 4 vertices added

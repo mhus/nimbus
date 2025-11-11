@@ -5,7 +5,7 @@
  * Listens to ChunkService events to render/unload chunks.
  */
 
-import { Mesh, VertexData, Scene } from '@babylonjs/core';
+import { Mesh, VertexData, Scene, VertexBuffer } from '@babylonjs/core';
 import { getLogger, ExceptionHandler, Shape, BlockEffect } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ClientChunk } from '../types/ClientChunk';
@@ -41,6 +41,11 @@ interface FaceData {
   indices: number[];
   uvs: number[];
   normals: number[];
+  // Wind attributes (per-vertex)
+  windLeafiness?: number[];
+  windStability?: number[];
+  windLeverUp?: number[];
+  windLeverDown?: number[];
 }
 
 /**
@@ -272,6 +277,10 @@ export class RenderService {
           indices: [],
           uvs: [],
           normals: [],
+          windLeafiness: [],
+          windStability: [],
+          windLeverUp: [],
+          windLeverDown: [],
         };
 
         const renderContext: RenderContext = {
@@ -593,6 +602,25 @@ export class RenderService {
 
     // Apply to mesh
     vertexData.applyToMesh(mesh);
+
+    // Set wind attributes if present (for wind shader)
+    // Custom attributes must be created as VertexBuffer instances
+    if (faceData.windLeafiness && faceData.windLeafiness.length > 0) {
+      const buffer = new VertexBuffer(this.scene.getEngine(), faceData.windLeafiness, 'windLeafiness', false, false, 1, false);
+      mesh.setVerticesBuffer(buffer);
+    }
+    if (faceData.windStability && faceData.windStability.length > 0) {
+      const buffer = new VertexBuffer(this.scene.getEngine(), faceData.windStability, 'windStability', false, false, 1, false);
+      mesh.setVerticesBuffer(buffer);
+    }
+    if (faceData.windLeverUp && faceData.windLeverUp.length > 0) {
+      const buffer = new VertexBuffer(this.scene.getEngine(), faceData.windLeverUp, 'windLeverUp', false, false, 1, false);
+      mesh.setVerticesBuffer(buffer);
+    }
+    if (faceData.windLeverDown && faceData.windLeverDown.length > 0) {
+      const buffer = new VertexBuffer(this.scene.getEngine(), faceData.windLeverDown, 'windLeverDown', false, false, 1, false);
+      mesh.setVerticesBuffer(buffer);
+    }
 
     // Material will be set by caller (renderChunk)
     // mesh.material = ... (assigned after creation)
