@@ -64,6 +64,9 @@ export class ShaderService {
   initialize(scene: Scene): void {
     this.scene = scene;
 
+    // Register passthrough shader (for testing)
+    this.registerPassthroughShader();
+
     // Register wind shader
     this.registerWindShader();
 
@@ -171,6 +174,119 @@ export class ShaderService {
     this.effects.clear();
     this.windMaterials = [];
     logger.info('Shader effects cleared');
+  }
+
+  // ============================================
+  // Passthrough Shader Implementation (for testing)
+  // ============================================
+
+  /**
+   * Register passthrough shader - simple shader that just displays texture
+   */
+  private registerPassthroughShader(): void {
+    // Vertex shader - minimal, no transformations
+    Effect.ShadersStore['passthroughVertexShader'] = `
+      precision highp float;
+
+      // Attributes
+      attribute vec3 position;
+      attribute vec3 normal;
+      attribute vec2 uv;
+      attribute vec4 color;
+
+      // Uniforms
+      uniform mat4 worldViewProjection;
+      uniform mat4 world;
+
+      // Varyings to fragment shader
+      varying vec2 vUV;
+      varying vec4 vColor;
+      varying vec3 vNormal;
+
+      void main(void) {
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+        vUV = uv;
+        vColor = color;
+        vNormal = normalize((world * vec4(normal, 0.0)).xyz);
+      }
+    `;
+
+    // Fragment shader - minimal, just texture (NO lighting, NO vertex color)
+    Effect.ShadersStore['passthroughFragmentShader'] = `
+      precision highp float;
+
+      varying vec2 vUV;
+      varying vec4 vColor;
+      varying vec3 vNormal;
+
+      uniform sampler2D textureSampler;
+
+      void main(void) {
+        vec4 texColor = texture2D(textureSampler, vUV);
+
+        if (texColor.a < 0.5) {
+          discard;
+        }
+
+        // Output texture directly without any modifications
+        gl_FragColor = vec4(texColor.rgb, 1.0);
+      }
+    `;
+
+    // Register passthrough effect
+    const passthroughEffect: ShaderEffect = {
+      name: 'passthrough',
+      createMaterial: (params?: Record<string, any>) => {
+        return this.createPassthroughMaterial(params?.texture, params?.name);
+      },
+    };
+
+    this.registerEffect(passthroughEffect);
+    logger.debug('Passthrough shader registered');
+  }
+
+  /**
+   * Create passthrough shader material
+   */
+  private createPassthroughMaterial(texture: Texture | undefined, name: string = 'passthroughMaterial'): ShaderMaterial | null {
+    if (!this.scene) {
+      logger.error('Cannot create passthrough material: Scene not initialized');
+      return null;
+    }
+
+    const material = new ShaderMaterial(
+      name,
+      this.scene,
+      {
+        vertex: 'passthrough',
+        fragment: 'passthrough',
+      },
+      {
+        attributes: ['position', 'normal', 'uv', 'color'],
+        uniforms: ['worldViewProjection', 'world', 'textureSampler', 'lightDirection'],
+        samplers: ['textureSampler'],
+      }
+    );
+
+    material.onError = (effect, errors) => {
+      logger.error('Passthrough shader compilation error', { name, errors });
+    };
+
+    material.onCompiled = () => {
+      logger.debug('Passthrough shader compiled successfully', { name });
+    };
+
+    if (texture) {
+      material.setTexture('textureSampler', texture);
+      logger.debug('Passthrough material texture set', { name });
+    } else {
+      logger.warn('Passthrough material created without texture', { name });
+    }
+
+    material.setVector3('lightDirection', 0.5, 1.0, 0.5);
+    material.backFaceCulling = false;
+
+    return material;
   }
 
   // ============================================
@@ -310,26 +426,18 @@ export class ShaderService {
 
       // Uniforms
       uniform sampler2D textureSampler;
-      uniform vec3 lightDirection;
 
       void main(void) {
-        // Sample texture
+        // Sample texture from atlas
         vec4 texColor = texture2D(textureSampler, vUV);
 
-        // Alpha test: discard transparent pixels
+        // Alpha test: discard transparent pixels (alpha < 0.5)
         if (texColor.a < 0.5) {
           discard;
         }
 
-        // Apply vertex color tint
-        vec4 finalColor = texColor * vColor;
-
-        // Simple directional lighting
-        float lightIntensity = max(dot(vNormal, lightDirection), 0.3);
-        finalColor.rgb *= lightIntensity;
-
-        // Output final color with full opacity
-        gl_FragColor = vec4(finalColor.rgb, 1.0);
+        // Output texture directly without any modifications
+        gl_FragColor = vec4(texColor.rgb, 1.0);
       }
     `;
 
@@ -386,12 +494,15 @@ export class ShaderService {
     };
 
     material.onCompiled = () => {
-      logger.debug('Shader compiled successfully', { name });
+      logger.debug('Wind shader compiled successfully', { name });
     };
 
     // Set texture if provided
     if (texture) {
       material.setTexture('textureSampler', texture);
+      logger.debug('Wind material texture set', { name, hasTexture: !!texture, textureReady: texture.isReady() });
+    } else {
+      logger.warn('Wind material created without texture', { name });
     }
 
     // Set default wind parameters (will be updated from EnvironmentService)
@@ -401,7 +512,7 @@ export class ShaderService {
     material.setFloat('windSwayFactor', 2.0);
 
     // Set light direction (from above-front)
-    material.setVector3('lightDirection', new Vector3(0.5, 1.0, 0.5));
+    material.setVector3('lightDirection', 0.5, 1.0, 0.5);
 
     // Configure material properties
     material.backFaceCulling = false; // Transparent blocks visible from both sides

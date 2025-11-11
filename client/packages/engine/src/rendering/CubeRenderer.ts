@@ -22,6 +22,7 @@ interface FaceData {
   indices: number[];
   uvs: number[];
   normals: number[];
+  colors?: number[];  // RGBA colors (per-vertex, 4 values per vertex)
   // Wind attributes (per-vertex)
   windLeafiness?: number[];
   windStability?: number[];
@@ -408,6 +409,13 @@ export class CubeRenderer extends BlockRenderer {
       // Standard counter-clockwise winding
       faceData.indices.push(i0, i1, i2);  // Triangle 1
       faceData.indices.push(i0, i2, i3);  // Triangle 2
+    }
+
+    // Add vertex colors (white by default, RGBA format: 4 values per vertex)
+    if (faceData.colors) {
+      for (let i = 0; i < 4; i++) {
+        faceData.colors.push(1.0, 1.0, 1.0, 1.0);  // White color (RGBA)
+      }
     }
 
     // Add wind attributes (per-vertex, 4 vertices for this face)

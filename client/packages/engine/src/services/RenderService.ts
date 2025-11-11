@@ -41,6 +41,7 @@ interface FaceData {
   indices: number[];
   uvs: number[];
   normals: number[];
+  colors?: number[];  // RGBA colors (per-vertex, 4 values per vertex)
   // Wind attributes (per-vertex)
   windLeafiness?: number[];
   windStability?: number[];
@@ -272,15 +273,23 @@ export class RenderService {
       const meshMap = new Map<string, Mesh>();
 
       for (const [materialKey, blocks] of materialGroups) {
+        // Check if this material group needs wind attributes (check first block's modifier)
+        const firstBlock = blocks[0];
+        const needsWind = firstBlock?.currentModifier?.visibility?.effect === BlockEffect.WIND;
+
         const faceData: FaceData = {
           positions: [],
           indices: [],
           uvs: [],
           normals: [],
-          windLeafiness: [],
-          windStability: [],
-          windLeverUp: [],
-          windLeverDown: [],
+          // Only initialize wind-specific attributes if needed
+          ...(needsWind && {
+            colors: [],
+            windLeafiness: [],
+            windStability: [],
+            windLeverUp: [],
+            windLeverDown: [],
+          }),
         };
 
         const renderContext: RenderContext = {
@@ -602,6 +611,11 @@ export class RenderService {
 
     // Apply to mesh
     vertexData.applyToMesh(mesh);
+
+    // Set vertex colors if present
+    if (faceData.colors && faceData.colors.length > 0) {
+      mesh.setVerticesData(VertexBuffer.ColorKind, faceData.colors);
+    }
 
     // Set wind attributes if present (for wind shader)
     // Custom attributes must be created as VertexBuffer instances
