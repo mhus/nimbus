@@ -1,5 +1,7 @@
 /**
  * Shape - Defines the visual shape/geometry of a block
+ *
+ * NEVER CHANGE EXISTING VALUES - only add new ones at the end.
  */
 
 export enum Shape {
@@ -51,41 +53,41 @@ export enum Shape {
   /** Flame effect */
   FLAME = 15,
 
-  /** Flipbox (animated sprite sheet, horizontal face only) */
-  FLIPBOX = 16,
-
   /** Ocean water (flat) */
-  OCEAN = 17,
+  OCEAN = 16,
 
   /** Ocean coast variation */
-  OCEAN_COAST = 18,
+  OCEAN_COAST = 17,
 
   /** Ocean maelstrom variation */
-  OCEAN_MAELSTROM = 19,
+  OCEAN_MAELSTROM = 18,
 
   /** River water (flat, directional) */
-  RIVER = 20,
+  RIVER = 19,
 
   /** River waterfall */
-  RIVER_WATERFALL = 21,
+  RIVER_WATERFALL = 20,
 
   /** River waterfall with whirlpool */
-  RIVER_WATERFALL_WHIRLPOOL = 22,
+  RIVER_WATERFALL_WHIRLPOOL = 21,
 
   /** Water cube */
-  WATER = 23,
+  WATER = 22,
 
   /** Lava */
-  LAVA = 24,
+  LAVA = 23,
 
   /** Fog */
-  FOG = 25,
+  FOG = 24,
 
   /** Thin instances (grass, leaves - high performance with Y-axis billboard) */
-  THIN_INSTANCES = 26,
+  THIN_INSTANCES = 25,
 
   /** Wall (hollow cube with inner faces) */
-  WALL = 27,
+  WALL = 26,
+
+  /** Flipbox (animated sprite sheet, horizontal face only) */
+  FLIPBOX = 27,
 }
 
 /**

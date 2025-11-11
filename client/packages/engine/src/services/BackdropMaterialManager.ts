@@ -53,7 +53,7 @@ export class BackdropMaterialManager {
         return this.materials.get(cacheKey)!;
       }
 
-      logger.info('Creating new backdrop material (not in cache)', { cacheKey, config });
+      logger.debug('Creating new backdrop material (not in cache)', { cacheKey, config });
 
       // Create material
       const material = await this.createMaterial(config, cacheKey);
@@ -80,7 +80,7 @@ export class BackdropMaterialManager {
   ): Promise<StandardMaterial> {
     const material = new StandardMaterial(materialName, this.scene);
 
-    logger.info('Creating backdrop material', {
+    logger.debug('Creating backdrop material', {
       materialName,
       config
     });
@@ -112,7 +112,7 @@ export class BackdropMaterialManager {
       const gradientTexture = this.createVerticalGradientTexture();
       material.opacityTexture = gradientTexture;
 
-      logger.info('Created fadeout gradient texture');
+      logger.debug('Created fadeout gradient texture');
     }
 
     // Load noise texture if specified
@@ -121,7 +121,7 @@ export class BackdropMaterialManager {
       if (networkService) {
         const noiseUrl = networkService.getAssetUrl(config.noiseTexture);
 
-        logger.info('Loading noise texture', {
+        logger.debug('Loading noise texture', {
           noisePath: config.noiseTexture,
           noiseUrl
         });
@@ -133,7 +133,7 @@ export class BackdropMaterialManager {
         // Apply noise as opacity texture (modulates transparency)
         material.opacityTexture = noiseTexture;
 
-        logger.info('Noise texture applied as opacity texture');
+        logger.debug('Noise texture applied as opacity texture');
       }
     }
 
@@ -155,7 +155,7 @@ export class BackdropMaterialManager {
     // Backdrop-specific material properties
     this.applyBackdropProperties(material, config.alphaMode === undefined);
 
-    logger.info('Backdrop material creation complete', {
+    logger.debug('Backdrop material creation complete', {
       materialName,
       hasTexture: !!material.diffuseTexture,
       alpha: material.alpha,

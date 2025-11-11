@@ -118,7 +118,7 @@ export class ModelRenderer extends BlockRenderer {
         logger.debug('Cloned cached model', { modelPath });
       } else {
         // Load new model
-        logger.info('Loading new model from asset server', { fullModelUrl });
+        logger.debug('Loading new model from asset server', { fullModelUrl });
 
         // Parse URL to get root path and filename
         const lastSlashIndex = fullModelUrl.lastIndexOf('/');
@@ -139,7 +139,7 @@ export class ModelRenderer extends BlockRenderer {
           throw new Error(`No meshes found in model: ${fullModelUrl}`);
         }
 
-        logger.info('Model loaded successfully', {
+        logger.debug('Model loaded successfully', {
           modelPath,
           meshCount: result.meshes.length
         });
@@ -176,7 +176,7 @@ export class ModelRenderer extends BlockRenderer {
         // Cache the loaded model (make it invisible, it's just a template)
         ModelRenderer.modelCache.set(modelPath, modelMesh);
         modelMesh.setEnabled(false); // Disable template mesh so it's not rendered
-        logger.info('Model cached', { modelPath });
+        logger.debug('Model cached', { modelPath });
 
         // Clone for this instance
         modelMesh = modelMesh.clone(`model_${worldX}_${worldY}_${worldZ}`, null)!;

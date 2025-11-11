@@ -581,8 +581,6 @@ export class ShaderService {
    * Register fog shader code with Babylon.js
    */
   private registerFogShaderCode(): void {
-    const { Effect } = require('@babylonjs/core');
-
     // Vertex shader - standard transformation
     Effect.ShadersStore['fogVertexShader'] = `
       precision highp float;

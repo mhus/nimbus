@@ -289,7 +289,7 @@ export class BackdropService {
 
       // If backdrop has an ID, load type from server and merge with inline config
       if (backdropConfig.id) {
-        logger.info('Loading backdrop type from server', {
+        logger.debug('Loading backdrop type from server', {
           id: backdropConfig.id,
           key
         });
@@ -298,7 +298,7 @@ export class BackdropService {
         if (loadedType) {
           // Merge: server defaults + inline overrides
           backdropConfig = { ...loadedType, ...backdropConfig };
-          logger.info('Backdrop type loaded and merged', {
+          logger.debug('Backdrop type loaded and merged', {
             id: backdropConfig.id,
             merged: backdropConfig
           });
@@ -413,7 +413,7 @@ export class BackdropService {
       // Cache
       this.backdropTypeCache.set(id, backdropType);
 
-      logger.info('Backdrop type fetched successfully', {
+      logger.debug('Backdrop type fetched successfully', {
         id,
         backdropType
       });

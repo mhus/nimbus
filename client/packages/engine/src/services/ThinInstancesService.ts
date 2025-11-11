@@ -233,7 +233,7 @@ export class ThinInstancesService {
       return { material: cachedMaterial, aspectRatio };
     }
 
-    logger.info('🎨 Creating material for thin instances', { texturePath });
+    logger.debug('🎨 Creating material for thin instances', { texturePath });
 
     // Try to use shader service first
     if (this.shaderService && typeof (this.shaderService as any).createThinInstanceMaterial === 'function') {
@@ -241,7 +241,7 @@ export class ThinInstancesService {
         const material = await (this.shaderService as any).createThinInstanceMaterial(texturePath);
         if (material) {
           this.materialCache.set(texturePath, material);
-          logger.info('✅ Shader material created', { texturePath });
+          logger.debug('✅ Shader material created', { texturePath });
           // Get aspect ratio from shader material's texture
           const texture = material.getEffect()?.getTexture('textureSampler') as Texture;
           const aspectRatio = texture ? texture.getSize().width / texture.getSize().height : 1;
