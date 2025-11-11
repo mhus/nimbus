@@ -379,7 +379,7 @@ export class WallRenderer extends BlockRenderer {
         texture,
         modifier,
         renderContext,
-        true
+        false
       );
     }
 
@@ -405,7 +405,7 @@ export class WallRenderer extends BlockRenderer {
         texture,
         modifier,
         renderContext,
-        true
+        false
       );
     }
 
@@ -476,7 +476,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          true
+          false
         );
       }
 
@@ -487,7 +487,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          true
+          false
         );
       }
 
@@ -498,7 +498,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          true
+          false
         );
       }
 
@@ -525,7 +525,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          false
+          true
         );
       }
 
@@ -536,7 +536,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          false
+          true
         );
       }
 
@@ -596,7 +596,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          true
+          false
         );
       }
 
@@ -607,7 +607,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          true
+          false
         );
       }
     }
@@ -623,7 +623,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          false
+          true
         );
       }
 
@@ -634,7 +634,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          false
+          true
         );
       }
 
@@ -672,7 +672,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          false
+          true
         );
       }
 
@@ -683,7 +683,7 @@ export class WallRenderer extends BlockRenderer {
           texture,
           modifier,
           renderContext,
-          false
+          true
         );
       }
 
