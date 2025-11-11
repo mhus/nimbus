@@ -887,18 +887,19 @@ export class PhysicsService {
    * @param cameraPitch Camera pitch rotation in radians
    */
   moveForward(entity: PhysicsEntity, distance: number, cameraYaw: number, cameraPitch: number): void {
-    // NEW SYSTEM: Set wishMove instead of direct position manipulation
+    // NEW SYSTEM: Accumulate wishMove (normalized input)
+    // distance should be normalized (-1 to +1), not actual distance in meters
     const usePitch = entity.movementMode === 'fly' || entity.movementMode === 'teleport';
 
     if (usePitch) {
       // 3D movement with pitch
-      entity.wishMove.x = Math.sin(cameraYaw) * Math.cos(cameraPitch) * distance;
-      entity.wishMove.y = -Math.sin(cameraPitch) * distance;
-      entity.wishMove.z = Math.cos(cameraYaw) * Math.cos(cameraPitch) * distance;
+      entity.wishMove.x += Math.sin(cameraYaw) * Math.cos(cameraPitch) * distance;
+      entity.wishMove.y += -Math.sin(cameraPitch) * distance;
+      entity.wishMove.z += Math.cos(cameraYaw) * Math.cos(cameraPitch) * distance;
     } else {
       // Horizontal movement (walk, sprint, crouch, swim, climb)
-      entity.wishMove.x = Math.sin(cameraYaw) * distance;
-      entity.wishMove.z = Math.cos(cameraYaw) * distance;
+      entity.wishMove.x += Math.sin(cameraYaw) * distance;
+      entity.wishMove.z += Math.cos(cameraYaw) * distance;
     }
   }
 

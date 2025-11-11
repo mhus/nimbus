@@ -20,8 +20,9 @@ export class MoveForwardHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
-    this.playerService.moveForward(distance);
+    // NEW PHYSICS: Pass normalized input value, not pre-calculated distance
+    // MovementResolver will handle speed and deltaTime
+    this.playerService.moveForward(value);
   }
 }
 
@@ -38,8 +39,8 @@ export class MoveBackwardHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
-    this.playerService.moveForward(-distance);
+    // NEW PHYSICS: Pass normalized input value
+    this.playerService.moveForward(-value);
   }
 }
 
@@ -56,8 +57,8 @@ export class MoveLeftHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
-    this.playerService.moveRight(-distance);
+    // NEW PHYSICS: Pass normalized input value
+    this.playerService.moveRight(-value);
   }
 }
 
@@ -74,8 +75,8 @@ export class MoveRightHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
-    this.playerService.moveRight(distance);
+    // NEW PHYSICS: Pass normalized input value
+    this.playerService.moveRight(value);
   }
 }
 
@@ -92,8 +93,8 @@ export class MoveUpHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
-    this.playerService.moveUp(distance);
+    // NEW PHYSICS: Pass normalized input value
+    this.playerService.moveUp(value);
   }
 }
 
@@ -110,7 +111,7 @@ export class MoveDownHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    const distance = this.playerService.getMoveSpeed() * deltaTime * value;
-    this.playerService.moveUp(-distance);
+    // NEW PHYSICS: Pass normalized input value
+    this.playerService.moveUp(-value);
   }
 }
