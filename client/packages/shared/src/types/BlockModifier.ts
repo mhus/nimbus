@@ -26,6 +26,15 @@ export enum TextureKey {
   DIFFUSE = 8,
   DISTORTION = 9,
   OPACITY = 10,
+  // Inside textures (for rendering interior faces of blocks)
+  INSIDE_ALL = 20,
+  INSIDE_TOP = 21,
+  INSIDE_BOTTOM = 22,
+  INSIDE_LEFT = 23,
+  INSIDE_RIGHT = 24,
+  INSIDE_FRONT = 25,
+  INSIDE_BACK = 26,
+  INSIDE_SIDE = 27,
   // 100+ reserved for shape-specific textures
 }
 
@@ -44,6 +53,14 @@ export const TextureKeyNames: Record<TextureKey, string> = {
   [TextureKey.DIFFUSE]: 'diffuse',
   [TextureKey.DISTORTION]: 'distortion',
   [TextureKey.OPACITY]: 'opacity',
+  [TextureKey.INSIDE_ALL]: 'inside_all',
+  [TextureKey.INSIDE_TOP]: 'inside_top',
+  [TextureKey.INSIDE_BOTTOM]: 'inside_bottom',
+  [TextureKey.INSIDE_LEFT]: 'inside_left',
+  [TextureKey.INSIDE_RIGHT]: 'inside_right',
+  [TextureKey.INSIDE_FRONT]: 'inside_front',
+  [TextureKey.INSIDE_BACK]: 'inside_back',
+  [TextureKey.INSIDE_SIDE]: 'inside_side',
 };
 
 /**

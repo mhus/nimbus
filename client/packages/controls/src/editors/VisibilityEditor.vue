@@ -750,6 +750,14 @@ const textureKeyOptions: Record<number, string> = {
   [TextureKey.DIFFUSE]: 'diffuse',
   [TextureKey.DISTORTION]: 'distortion',
   [TextureKey.OPACITY]: 'opacity',
+  [TextureKey.INSIDE_ALL]: 'inside_all',
+  [TextureKey.INSIDE_TOP]: 'inside_top',
+  [TextureKey.INSIDE_BOTTOM]: 'inside_bottom',
+  [TextureKey.INSIDE_LEFT]: 'inside_left',
+  [TextureKey.INSIDE_RIGHT]: 'inside_right',
+  [TextureKey.INSIDE_FRONT]: 'inside_front',
+  [TextureKey.INSIDE_BACK]: 'inside_back',
+  [TextureKey.INSIDE_SIDE]: 'inside_side',
 };
 
 // ============================================
