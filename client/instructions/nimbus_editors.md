@@ -1366,7 +1366,7 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 - Im type erweitern
 - Im Editor erweitern
 
-[ ] (JSON Editor) Im Block Editor soll es einen Bullton 'Source' geben, der oeffnet einen dialog mit den aktuellen JSON
+[x] (JSON Editor) Im Block Editor soll es einen Bullton 'Source' geben, der oeffnet einen dialog mit den aktuellen JSON
 Sourcen, die koenne hier editiert werden.
 - Ein Button Cancel schliesst den dialog
 - Ein Button Apply prueft ob das json valide ist, wenn nicht wird der dialog nicht geschlossen, wenn ja
