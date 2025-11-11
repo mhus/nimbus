@@ -82,6 +82,18 @@ export class ThinInstancesRenderer extends BlockRenderer {
       logger.debug('Using scaling from visibility', { scaling });
     }
 
+    // Get wind parameters from modifier (if available)
+    let wind: { leafiness: number; stability: number; leverUp: number; leverDown: number } | undefined;
+    if (modifier.wind) {
+      wind = {
+        leafiness: modifier.wind.leafiness ?? 0.5,
+        stability: modifier.wind.stability ?? 0.5,
+        leverUp: modifier.wind.leverUp ?? 0.0,
+        leverDown: modifier.wind.leverDown ?? 0.0,
+      };
+      logger.debug('Using wind parameters from modifier', { wind });
+    }
+
     // Get chunk key for tracking - chunk coordinates must always be set
     if (!clientBlock.chunk) {
       logger.error('ClientBlock missing chunk coordinates', {
@@ -120,6 +132,7 @@ export class ThinInstancesRenderer extends BlockRenderer {
             blockPosition: block.position,
             offset,
             scaling,
+            wind,
           },
           chunkKey
         );

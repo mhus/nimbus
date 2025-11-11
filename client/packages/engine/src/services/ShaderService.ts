@@ -1002,6 +1002,7 @@ export class ShaderService {
         attribute vec4 world1;
         attribute vec4 world2;
         attribute vec4 world3;
+        attribute vec4 windParams; // (leafiness, stability, leverUp, leverDown)
       #else
         uniform mat4 world;
       #endif
@@ -1014,6 +1015,19 @@ export class ShaderService {
 
         // Get instance position (from matrix translation)
         vec3 instancePos = vec3(world[3][0], world[3][1], world[3][2]);
+
+        // Get wind parameters (per-instance or defaults)
+        #ifdef INSTANCES
+          float windLeafiness = windParams.x;
+          float windStability = windParams.y;
+          float windLeverUp = windParams.z;
+          float windLeverDown = windParams.w;
+        #else
+          float windLeafiness = 0.5;
+          float windStability = 0.5;
+          float windLeverUp = 0.0;
+          float windLeverDown = 0.0;
+        #endif
 
         // Y-Axis Billboard transformation
         // Calculate direction from instance to camera (XZ plane only)
@@ -1038,28 +1052,45 @@ export class ShaderService {
         // Apply billboard rotation to vertex position
         vec3 rotatedPos = billboardRotation * position;
 
-        // Wind animation (only affects top vertices, Y > 0)
-        float heightFactor = clamp(rotatedPos.y / 2.0, 0.0, 1.0); // 0 at bottom, 1 at top
+        // Wind animation (only if windLeafiness > 0.0, only affects top vertices)
+        if (windLeafiness > 0.0) {
+          float heightFactor = clamp(rotatedPos.y / 2.0, 0.0, 1.0); // 0 at bottom, 1 at top
 
-        if (heightFactor > 0.0) {
-          // Base sway wave
-          float baseWave = sin(time * windSwayFactor + instancePos.x * 0.1 + instancePos.z * 0.1) * windStrength;
+          if (heightFactor > 0.0) {
+            // Base sway wave modulated by leafiness (flutter)
+            float baseWave = sin(time * windSwayFactor + instancePos.x * 0.1 + instancePos.z * 0.1) * windStrength;
 
-          // Gust effect
-          float gustWave = sin(time * windSwayFactor * 2.3 + instancePos.x * 0.1) * windGustStrength;
-          gustWave *= sin(time * windSwayFactor * 0.7);
+            // Leaf flutter (high frequency, affected by leafiness)
+            float flutter = sin(time * windSwayFactor * 5.0 + instancePos.x * 0.3 + instancePos.z * 0.3) * windLeafiness * 0.2;
 
-          // Combine waves
-          float totalWave = (baseWave + gustWave * 0.5) * 0.3;
+            // Gust effect
+            float gustWave = sin(time * windSwayFactor * 2.3 + instancePos.x * 0.1) * windGustStrength;
+            gustWave *= sin(time * windSwayFactor * 0.7);
 
-          // Wind direction
-          vec3 windDir = vec3(windDirection.x, 0.0, windDirection.y);
-          if (length(windDir) > 0.01) {
-            windDir = normalize(windDir);
+            // Combine waves with stability factor (0 = full movement, 1 = no movement)
+            float totalWave = ((baseWave + gustWave * 0.5) * 0.3 + flutter) * (1.0 - windStability * 0.7);
+
+            // Wind direction
+            vec3 windDir = vec3(windDirection.x, 0.0, windDirection.y);
+            if (length(windDir) > 0.01) {
+              windDir = normalize(windDir);
+            }
+
+            // Lever effect: Adjust height-based bending
+            // leverUp extends the top part, leverDown moves pivot point
+            float leverFactor = heightFactor;
+            if (windLeverUp > 0.0) {
+              // Extend bending to higher parts
+              leverFactor = pow(heightFactor, 1.0 / (1.0 + windLeverUp * 0.5));
+            }
+            if (windLeverDown > 0.0) {
+              // Lower the pivot point
+              leverFactor = smoothstep(windLeverDown * 0.1, 1.0, heightFactor);
+            }
+
+            // Apply wind displacement (more at top, scaled by lever factor)
+            rotatedPos += windDir * totalWave * leverFactor;
           }
-
-          // Apply wind displacement (more at top, none at bottom)
-          rotatedPos += windDir * totalWave * heightFactor;
         }
 
         // Transform to world space

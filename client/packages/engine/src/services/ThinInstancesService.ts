@@ -36,6 +36,12 @@ interface ThinInstanceConfig {
   blockPosition: { x: number; y: number; z: number };
   offset?: { x: number; y: number; z: number }; // Optional offset for positioning
   scaling?: { x: number; y: number; z: number }; // Optional scaling factors
+  wind?: {
+    leafiness: number;
+    stability: number;
+    leverUp: number;
+    leverDown: number;
+  }; // Optional wind parameters
 }
 
 /**
@@ -147,8 +153,8 @@ export class ThinInstancesService {
     mesh.isVisible = true;
     mesh.material = material;
 
-    // Create matrices for instances
-    const matricesData = new Float32Array(16 * config.instanceCount);
+    // Create instance data buffer: matrix (16 floats) + wind params (4 floats) = 20 floats per instance
+    const instanceData = new Float32Array(20 * config.instanceCount);
     const m = Matrix.Identity();
 
     let index = 0;
@@ -184,13 +190,51 @@ export class ThinInstancesService {
         )
       );
 
-      // Copy matrix to buffer
-      m.copyToArray(matricesData, index * 16);
+      // Copy matrix to buffer (floats 0-15)
+      m.copyToArray(instanceData, index * 20);
+
+      // Add wind parameters (floats 16-19) with random variation if wind is configured
+      if (config.wind) {
+        // Leafiness with ±20% variation
+        instanceData[index * 20 + 16] = config.wind.leafiness * (0.8 + Math.random() * 0.4);
+        // Stability with ±20% variation
+        instanceData[index * 20 + 17] = config.wind.stability * (0.8 + Math.random() * 0.4);
+        // Lever values without variation (consistent geometry)
+        instanceData[index * 20 + 18] = config.wind.leverUp;
+        instanceData[index * 20 + 19] = config.wind.leverDown;
+      } else {
+        // No wind: set all to 0.0 (wind disabled in shader)
+        instanceData[index * 20 + 16] = 0.0;
+        instanceData[index * 20 + 17] = 0.0;
+        instanceData[index * 20 + 18] = 0.0;
+        instanceData[index * 20 + 19] = 0.0;
+      }
+
       index++;
     }
 
-    // Set thin instance buffer
+    // Extract matrix data (every 20 floats, first 16 values)
+    const matricesData = new Float32Array(16 * config.instanceCount);
+    for (let i = 0; i < config.instanceCount; i++) {
+      for (let j = 0; j < 16; j++) {
+        matricesData[i * 16 + j] = instanceData[i * 20 + j];
+      }
+    }
+
+    // Set matrix buffer
     mesh.thinInstanceSetBuffer('matrix', matricesData, 16);
+
+    // Set wind parameters buffer if wind is configured
+    if (config.wind) {
+      const windData = new Float32Array(4 * config.instanceCount);
+      for (let i = 0; i < config.instanceCount; i++) {
+        windData[i * 4 + 0] = instanceData[i * 20 + 16];
+        windData[i * 4 + 1] = instanceData[i * 20 + 17];
+        windData[i * 4 + 2] = instanceData[i * 20 + 18];
+        windData[i * 4 + 3] = instanceData[i * 20 + 19];
+      }
+      mesh.thinInstanceSetBuffer('windParams', windData, 4);
+    }
 
     // Store group data
     const group: ThinInstanceGroup = {
