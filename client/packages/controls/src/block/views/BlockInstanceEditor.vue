@@ -361,13 +361,21 @@
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
           <div class="flex justify-between gap-2">
-            <button
-              class="btn btn-error"
-              @click="handleDelete"
-              :disabled="!blockExists || saving"
-            >
-              Delete Block
-            </button>
+            <div class="flex gap-2">
+              <button
+                class="btn btn-error"
+                @click="handleDelete"
+                :disabled="!blockExists || saving"
+              >
+                Delete Block
+              </button>
+              <button class="btn btn-outline btn-sm" @click="showJsonEditor = true">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                Source
+              </button>
+            </div>
 
             <div class="flex gap-2">
               <button class="btn btn-ghost" @click="handleCancel" :disabled="saving">
@@ -403,6 +411,13 @@
       @save="handleModifierSave"
     />
 
+    <!-- JSON Editor Dialog -->
+    <JsonEditorDialog
+      v-model:is-open="showJsonEditor"
+      :model-value="blockData"
+      @apply="handleJsonApply"
+    />
+
     <!-- Confirm Dialog -->
     <dialog ref="confirmDialog" class="modal">
       <div class="modal-box">
@@ -432,6 +447,7 @@ import CollapsibleSection from '@/components/CollapsibleSection.vue';
 import OffsetsEditor from '@editors/OffsetsEditor.vue';
 import ModifierEditorDialog from '@/components/ModifierEditorDialog.vue';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
+import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 
 // Parse URL parameters
 function parseBlockCoordinates(): { x: number; y: number; z: number } | null {
@@ -506,6 +522,7 @@ const blockData = ref<Block>({
 
 // Modifier dialog state
 const showModifierDialog = ref(false);
+const showJsonEditor = ref(false);
 const editingModifier = ref<BlockModifier | null>(null);
 const editingStatus = ref<number | null>(null);
 
@@ -1064,4 +1081,10 @@ watch(() => blockCoordinates.value, () => {
     loadBlock();
   }
 });
+
+// Handle JSON apply from JSON editor
+const handleJsonApply = (jsonData: any) => {
+  // Merge JSON data into blockData, preserving reactive properties
+  Object.assign(blockData.value, jsonData);
+};
 </script>

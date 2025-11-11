@@ -1350,11 +1350,11 @@ also wenn der blocktype 15 gebrauht wird, dann laed er 0-99 (erster chunk), wenn
 
 ## Erweiterungen
 
-[ ] Textures Editor im package 'controls' so umbauen, das nur die bestehenden Texturen angezeigt werden und ein Hinzufuegen Button.
+[x] Textures Editor im package 'controls' so umbauen, das nur die bestehenden Texturen angezeigt werden und ein Hinzufuegen Button.
 - Aktuell werden fuer jeden Textur TYPE eine Zeile dargestellt, auch wenn diese nicht gefuellt ist.
 - Beim Hinzufuegen Button muss man auswahlen was fuer eine Art von Textur (ALL, ...) - die TYPE_ID in der MAP
 
-[ ] Es soll neue Texture Typen geben:
+[x] Es soll neue Texture Typen geben:
 20: INSIDE_ALL
 21: INSIDE_TOP
 22: INSIDE_BOTTOM

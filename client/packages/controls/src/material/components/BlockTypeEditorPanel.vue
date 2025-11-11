@@ -128,14 +128,22 @@
               </div>
 
               <!-- Actions -->
-              <div class="mt-6 flex justify-end gap-2">
-                <button class="btn btn-ghost" @click="emit('close')">
-                  Cancel
+              <div class="mt-6 flex justify-between gap-2">
+                <button class="btn btn-outline btn-sm" @click="showJsonEditor = true">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  Source
                 </button>
-                <button class="btn btn-primary" @click="handleSave" :disabled="saving">
-                  <span v-if="saving" class="loading loading-spinner loading-sm mr-2"></span>
-                  {{ saving ? 'Saving...' : 'Save' }}
-                </button>
+                <div class="flex gap-2">
+                  <button class="btn btn-ghost" @click="emit('close')">
+                    Cancel
+                  </button>
+                  <button class="btn btn-primary" @click="handleSave" :disabled="saving">
+                    <span v-if="saving" class="loading loading-spinner loading-sm mr-2"></span>
+                    {{ saving ? 'Saving...' : 'Save' }}
+                  </button>
+                </div>
               </div>
             </DialogPanel>
           </TransitionChild>
@@ -143,6 +151,23 @@
       </div>
     </Dialog>
   </TransitionRoot>
+
+  <!-- JSON Editor Dialog -->
+  <JsonEditorDialog
+    v-model:is-open="showJsonEditor"
+    :model-value="formData"
+    @apply="handleJsonApply"
+  />
+
+  <!-- Input Dialog -->
+  <InputDialog
+    v-model:is-open="showInputDialog"
+    :title="inputDialogTitle"
+    :message="inputDialogMessage"
+    :default-value="inputDialogDefaultValue"
+    @ok="handleInputOk"
+    @cancel="handleInputCancel"
+  />
 </template>
 
 <script setup lang="ts">
@@ -150,6 +175,8 @@ import { ref, computed, onMounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import type { BlockType, BlockModifier } from '@nimbus/shared';
 import { useBlockTypes } from '@/composables/useBlockTypes';
+import JsonEditorDialog from '@components/JsonEditorDialog.vue';
+import InputDialog from '@components/InputDialog.vue';
 
 interface Props {
   blockType: BlockType | null;
@@ -168,6 +195,39 @@ const { createBlockType, updateBlockType, getNextAvailableId } = useBlockTypes(p
 
 const isCreate = computed(() => !props.blockType);
 const saving = ref(false);
+const showJsonEditor = ref(false);
+
+// Input dialog state
+const showInputDialog = ref(false);
+const inputDialogTitle = ref('');
+const inputDialogMessage = ref('');
+const inputDialogDefaultValue = ref('');
+const inputDialogCallback = ref<((value: string | null) => void) | null>(null);
+
+// Helper to show input dialog (replaces prompt)
+const showInput = (title: string, message: string, defaultValue: string): Promise<string | null> => {
+  return new Promise((resolve) => {
+    inputDialogTitle.value = title;
+    inputDialogMessage.value = message;
+    inputDialogDefaultValue.value = defaultValue;
+    inputDialogCallback.value = resolve;
+    showInputDialog.value = true;
+  });
+};
+
+const handleInputOk = (value: string) => {
+  if (inputDialogCallback.value) {
+    inputDialogCallback.value(value);
+    inputDialogCallback.value = null;
+  }
+};
+
+const handleInputCancel = () => {
+  if (inputDialogCallback.value) {
+    inputDialogCallback.value(null);
+    inputDialogCallback.value = null;
+  }
+};
 
 // Form data
 const formData = ref<Partial<BlockType>>({
@@ -232,23 +292,25 @@ const getModifierSummary = (status: number): string => {
 };
 
 // Add status
-const addStatus = () => {
+const addStatus = async () => {
   const existingStatuses = statusList.value;
   const nextStatus = existingStatuses.length > 0 ? Math.max(...existingStatuses) + 1 : 1;
 
-  const statusId = prompt(`Enter status ID (default: ${nextStatus}):`, nextStatus.toString());
+  const statusId = await showInput(
+    'Add Status',
+    `Enter status ID (default: ${nextStatus}):`,
+    nextStatus.toString()
+  );
 
   if (statusId === null) return; // Cancelled
 
   const newStatusId = parseInt(statusId, 10);
 
   if (isNaN(newStatusId)) {
-    alert('Invalid status ID');
     return;
   }
 
   if (formData.value.modifiers && formData.value.modifiers[newStatusId]) {
-    alert(`Status ${newStatusId} already exists`);
     return;
   }
 
@@ -262,27 +324,28 @@ const addStatus = () => {
 };
 
 // Change status ID
-const changeStatusId = (oldStatus: number) => {
+const changeStatusId = async (oldStatus: number) => {
   if (oldStatus === 0) {
-    alert('Cannot change status 0 (default status)');
     return;
   }
 
-  const newStatusIdStr = prompt(`Change status ID from ${oldStatus} to:`, oldStatus.toString());
+  const newStatusIdStr = await showInput(
+    'Change Status ID',
+    `Change status ID from ${oldStatus} to:`,
+    oldStatus.toString()
+  );
 
   if (newStatusIdStr === null) return; // Cancelled
 
   const newStatusId = parseInt(newStatusIdStr, 10);
 
   if (isNaN(newStatusId)) {
-    alert('Invalid status ID');
     return;
   }
 
   if (newStatusId === oldStatus) return; // No change
 
   if (formData.value.modifiers && formData.value.modifiers[newStatusId]) {
-    alert(`Status ${newStatusId} already exists`);
     return;
   }
 
@@ -349,5 +412,10 @@ const handleSave = async () => {
   } finally {
     saving.value = false;
   }
+};
+
+// Handle JSON apply from JSON editor
+const handleJsonApply = (jsonData: any) => {
+  formData.value = jsonData;
 };
 </script>
