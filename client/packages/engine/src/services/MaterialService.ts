@@ -316,6 +316,7 @@ export class MaterialService {
               texture: atlasTexture,
               effectParameters: props.effectParameters,
               name: cacheKey,
+              materialProps: props,  // Pass material properties to shader
             }
           );
           logger.debug('Created effect material with atlas', { effectName, cacheKey });
@@ -325,6 +326,17 @@ export class MaterialService {
       // Fallback to StandardMaterial
       if (!material) {
         material = this.createStandardMaterialWithAtlas(cacheKey, props);
+      }
+
+      // Apply material properties to shader materials
+      if (material && props.effect !== BlockEffect.NONE) {
+        material.backFaceCulling = props.backFaceCulling;
+        material.alpha = props.opacity;
+        // Note: ShaderMaterial doesn't have transparencyMode, alpha test is handled in shader
+        logger.debug('Applied material properties to shader material', {
+          backFaceCulling: props.backFaceCulling,
+          opacity: props.opacity,
+        });
       }
 
       // Cache material
