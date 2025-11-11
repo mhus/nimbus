@@ -53,6 +53,19 @@ export class PlayerService {
       throw new Error('PlayerInfo must be initialized in AppContext before creating PlayerService');
     }
 
+    // Initialize dimensions if not present
+    if (!appContext.playerInfo.dimensions) {
+      appContext.playerInfo.dimensions = {
+        walk: { height: 2.0, width: 0.6, footprint: 0.3 },
+        sprint: { height: 2.0, width: 0.6, footprint: 0.3 },
+        crouch: { height: 1.0, width: 0.6, footprint: 0.3 },
+        swim: { height: 1.8, width: 0.6, footprint: 0.3 },
+        climb: { height: 1.8, width: 0.6, footprint: 0.3 },
+        fly: { height: 1.8, width: 0.6, footprint: 0.3 },
+        teleport: { height: 1.8, width: 0.6, footprint: 0.3 },
+      };
+    }
+
     // Create player entity (starts in Walk mode)
     this.playerEntity = {
       entityId: 'player',
@@ -60,7 +73,12 @@ export class PlayerService {
       velocity: Vector3.Zero(),
       rotation: Vector3.Zero(), // Rotation in radians (x: pitch, y: yaw, z: roll)
       movementMode: 'walk' as MovementMode,
-      isOnGround: false,
+      wishMove: Vector3.Zero(), // Movement intention
+      grounded: false, // Is on ground
+      onSlope: false, // Is on slope
+      inWater: false, // Is in water
+      canAutoJump: false, // Can trigger auto-jump
+      lastBlockPos: new Vector3(0, 64, 0), // Last block position for cache invalidation
       playerInfo: appContext.playerInfo,
       // Initialize cached effective values from PlayerInfo
       effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
@@ -279,7 +297,7 @@ export class PlayerService {
    * Check if player is on ground
    */
   isPlayerOnGround(): boolean {
-    return this.playerEntity.isOnGround;
+    return this.playerEntity.grounded;
   }
 
   /**

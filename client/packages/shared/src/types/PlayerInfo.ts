@@ -76,6 +76,22 @@ export interface PlayerInfo {
   /** Player eye height in blocks (for camera position and raycast origin) */
   eyeHeight: number;
 
+  /**
+   * Entity dimensions per movement mode
+   * - height: Entity height in blocks (collision box)
+   * - width: Entity width in blocks (collision box diameter)
+   * - footprint: Footprint radius in blocks (for corner sampling)
+   */
+  dimensions: {
+    walk: { height: number; width: number; footprint: number };
+    sprint: { height: number; width: number; footprint: number };
+    crouch: { height: number; width: number; footprint: number };
+    swim: { height: number; width: number; footprint: number };
+    climb: { height: number; width: number; footprint: number };
+    fly: { height: number; width: number; footprint: number };
+    teleport: { height: number; width: number; footprint: number };
+  };
+
   // ============================================
   // Stealth & Detection
   // ============================================

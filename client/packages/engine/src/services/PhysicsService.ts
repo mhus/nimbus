@@ -14,158 +14,49 @@ import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerEntity } from '../types/PlayerEntity';
 import type { ClientBlock } from '../types/ClientBlock';
+import type {
+  PhysicsEntity,
+  MovementMode,
+  PlayerBlockContext,
+  SurfaceState,
+  ForceState,
+} from './physics/types';
+import { WalkModeController } from './physics/WalkModeController';
+import { FlyModeController } from './physics/FlyModeController';
+import type { PhysicsConfig } from './physics/MovementResolver';
 
 const logger = getLogger('PhysicsService');
 
-/**
- * Movement mode
- */
-export type MovementMode = 'walk' | 'fly';
-
-/**
- * Entity with physics
- */
-export interface PhysicsEntity {
-  /** Entity position */
-  position: Vector3;
-
-  /** Entity velocity */
-  velocity: Vector3;
-
-  /** Entity rotation (Euler angles in radians) */
-  rotation: Vector3;
-
-  /** Movement mode */
-  movementMode: MovementMode;
-
-  /** Is entity on ground? (Walk mode only) */
-  isOnGround: boolean;
-
-  /** Entity ID for logging */
-  entityId: string;
-
-  /** Auto-climb state (for smooth animation) */
-  climbState?: {
-    active: boolean;
-    startY: number;
-    targetY: number;
-    startX: number;
-    targetX: number;
-    startZ: number;
-    targetZ: number;
-    progress: number; // 0.0 to 1.0
-  };
-}
-
-/**
- * Block context around player
- * Contains all relevant blocks and their aggregated physics properties
- */
-interface PlayerBlockContext {
-  /** Blocks at feet level (current Y) */
-  currentLevel: {
-    blocks: Array<{ x: number; y: number; z: number; block: any }>;
-    hasSolid: boolean;
-    hasAutoClimbable: boolean;
-    hasAutoJump: boolean;
-    climbableSpeed: number; // Climb speed when moving forward into this block (0 = not climbable)
-    resistance: number; // Max resistance from all blocks
-    autoMove: { x: number; y: number; z: number }; // Max velocity per axis
-    autoOrientationY: number | undefined; // Last (most recent) orientation from blocks
-    passableFrom: number | undefined; // Collected passableFrom from blocks (OR combined)
-  };
-
-  /** Blocks one level above (Y + 1) */
-  aboveLevel: {
-    blocks: Array<{ x: number; y: number; z: number; block: any }>;
-    hasSolid: boolean;
-    isClear: boolean; // All positions are free
-  };
-
-  /** Blocks below (Y - 1, Y - 2, Y - 3 for ground detection) */
-  belowLevel: {
-    blocks: Array<{ x: number; y: number; z: number; block: any }>;
-    hasGround: boolean;
-    hasAutoJump: boolean; // AutoJump on block player is standing on
-    autoMove: { x: number; y: number; z: number }; // Max velocity per axis
-    autoOrientationY: number | undefined; // Last (most recent) orientation from blocks
-    groundY: number; // Y coordinate of ground, -1 if no ground
-  };
-
-  /** Block player is standing in (occupies player's body space) */
-  occupiedBlocks: {
-    blocks: Array<{ x: number; y: number; z: number; block: any }>;
-    hasSolid: boolean;
-    hasLiquid: boolean; // For future water/lava detection
-    hasAutoJump: boolean; // Trigger auto-jump when inside this block
-    autoMove: { x: number; y: number; z: number }; // Max velocity per axis
-  };
-}
-
-/**
- * Surface state analysis result
- * Contains all surface properties at current entity position
- */
-interface SurfaceState {
-  /** Type of surface player is on/in */
-  type: 'flat' | 'slope' | 'none' | 'climbing';
-
-  /** Interpolated surface height at current position */
-  surfaceHeight: number;
-
-  /** Corner heights if surface is a slope */
-  cornerHeights?: [number, number, number, number];
-
-  /** Slope vector (0 if flat) */
-  slope: { x: number; z: number };
-
-  /** Movement resistance (0 = no resistance, 1 = full resistance) */
-  resistance: number;
-
-  /** Can player walk on this surface? */
-  canWalkOn: boolean;
-
-  /** Is surface solid? */
-  isSolid: boolean;
-
-  /** Block context (cached) */
-  context: PlayerBlockContext;
-}
-
-/**
- * Accumulated forces acting on entity
- */
-interface ForceState {
-  /** Gravity force (Y-axis) */
-  gravity: { x: 0; y: number; z: 0 };
-
-  /** Player input force (movement) */
-  input: { x: number; y: number; z: number };
-
-  /** Slope sliding force */
-  slope: { x: number; y: number; z: number };
-
-  /** AutoMove force (conveyors, currents) */
-  autoMove: { x: number; y: number; z: number };
-
-  /** Climbable force (ladders) */
-  climb: { x: 0; y: number; z: 0 };
-
-  /** Combined total force */
-  total: { x: number; y: number; z: number };
-
-  /** Should gravity be applied? */
-  applyGravity: boolean;
-
-  /** Is entity climbing? */
-  isClimbing: boolean;
-}
+// Re-export for backwards compatibility
+export type { PhysicsEntity, MovementMode } from './physics/types';
 
 /**
  * Type guard to check if entity is a PlayerEntity
  */
 function isPlayerEntity(entity: PhysicsEntity): entity is PlayerEntity {
   return 'playerInfo' in entity;
+}
+
+/**
+ * Get entity dimensions for current movement mode
+ */
+function getEntityDimensions(entity: PhysicsEntity): { height: number; width: number; footprint: number } {
+  if (isPlayerEntity(entity) && entity.playerInfo.dimensions) {
+    const mode = entity.movementMode;
+    return entity.playerInfo.dimensions[mode] || entity.playerInfo.dimensions.walk;
+  }
+
+  // Default dimensions for non-player entities
+  return { height: 1.8, width: 0.6, footprint: 0.3 };
+}
+
+/**
+ * Get entity eye height for current movement mode
+ */
+function getEntityEyeHeight(entity: PhysicsEntity): number {
+  const dims = getEntityDimensions(entity);
+  // Eye height is typically 90% of total height
+  return dims.height * 0.9;
 }
 
 /**
@@ -186,9 +77,21 @@ export class PhysicsService {
   private appContext: AppContext;
   private chunkService?: ChunkService;
 
+  // Movement controllers (new modular system)
+  private walkController?: WalkModeController;
+  private flyController?: FlyModeController;
+
   // Physics constants (global, not player-specific)
   private readonly gravity: number = -20.0; // blocks per second²
   private readonly underwaterGravity: number = -2.0; // blocks per second² (10% of normal, slow sinking)
+
+  // Movement constants (Source-Engine style)
+  private readonly groundAcceleration: number = 100.0; // blocks per second² (fast response)
+  private readonly airAcceleration: number = 10.0; // blocks per second² (limited air control)
+  private readonly groundFriction: number = 6.0; // friction coefficient (exponential decay)
+  private readonly airFriction: number = 0.1; // air resistance (minimal)
+  private readonly maxClimbHeight: number = 0.1; // maximum auto-climb height in blocks
+  private readonly coyoteTime: number = 0.1; // seconds after leaving ground when jump is still allowed
 
   // Default values for non-player entities
   private readonly defaultWalkSpeed: number = 5.0; // blocks per second
@@ -237,13 +140,54 @@ export class PhysicsService {
    */
   setChunkService(chunkService: ChunkService): void {
     this.chunkService = chunkService;
-    logger.debug('ChunkService set for collision detection');
+
+    // Initialize new modular controllers
+    const physicsConfig: PhysicsConfig = {
+      gravity: this.gravity,
+      underwaterGravity: this.underwaterGravity,
+      groundAcceleration: this.groundAcceleration,
+      airAcceleration: this.airAcceleration,
+      groundFriction: this.groundFriction,
+      airFriction: this.airFriction,
+      jumpSpeed: this.defaultJumpSpeed,
+      maxClimbHeight: this.maxClimbHeight,
+      coyoteTime: this.coyoteTime,
+    };
+
+    this.walkController = new WalkModeController(this.appContext, chunkService, physicsConfig);
+    this.flyController = new FlyModeController(this.appContext, this.defaultFlySpeed);
+
+    logger.debug('ChunkService set for collision detection, controllers initialized');
   }
 
   /**
    * Register an entity for physics simulation
    */
   registerEntity(entity: PhysicsEntity): void {
+    // Initialize new fields if not present
+    if (!entity.wishMove) {
+      entity.wishMove = new Vector3(0, 0, 0);
+    }
+    if (entity.grounded === undefined) {
+      entity.grounded = false;
+    }
+    if (entity.onSlope === undefined) {
+      entity.onSlope = false;
+    }
+    if (entity.inWater === undefined) {
+      entity.inWater = false;
+    }
+    if (entity.canAutoJump === undefined) {
+      entity.canAutoJump = false;
+    }
+    if (!entity.lastBlockPos) {
+      entity.lastBlockPos = new Vector3(
+        Math.floor(entity.position.x),
+        Math.floor(entity.position.y),
+        Math.floor(entity.position.z)
+      );
+    }
+
     this.entities.set(entity.entityId, entity);
 
     // Clamp to world bounds on registration (in case entity spawns outside)
@@ -429,16 +373,45 @@ export class PhysicsService {
   }
 
   /**
-   * Update a single entity
+   * Update a single entity - NEW MODULAR SYSTEM
    */
   private updateEntity(entity: PhysicsEntity, deltaTime: number): void {
-    // Check underwater state only if position changed (optimization)
-    this.checkUnderwaterStateIfMoved(entity);
+    // Get entity dimensions
+    const dimensions = getEntityDimensions(entity);
 
-    if (entity.movementMode === 'walk') {
-      this.updateWalkMode(entity, deltaTime);
-    } else if (entity.movementMode === 'fly') {
-      this.updateFlyMode(entity, deltaTime);
+    // Determine which controller to use based on movement mode
+    const useWalkController =
+      entity.movementMode === 'walk' ||
+      entity.movementMode === 'sprint' ||
+      entity.movementMode === 'crouch' ||
+      entity.movementMode === 'swim' ||
+      entity.movementMode === 'climb';
+
+    const useFlyController =
+      entity.movementMode === 'fly' ||
+      entity.movementMode === 'teleport';
+
+    if (useWalkController && this.walkController) {
+      // Use new modular walk controller
+      this.walkController.doMovement(
+        entity,
+        entity.wishMove,
+        false, // startJump - will be set by PlayerService
+        dimensions,
+        deltaTime
+      );
+    } else if (useFlyController && this.flyController) {
+      // Use new modular fly controller
+      this.flyController.update(entity, entity.wishMove, deltaTime);
+    } else {
+      // Fallback to old system (should not happen)
+      this.checkUnderwaterStateIfMoved(entity);
+
+      if (entity.movementMode === 'walk') {
+        this.updateWalkMode(entity, deltaTime);
+      } else if (entity.movementMode === 'fly') {
+        this.updateFlyMode(entity, deltaTime);
+      }
     }
   }
 
@@ -652,7 +625,7 @@ export class PhysicsService {
       entity.position.y = entity.climbState.targetY;
       entity.position.z = entity.climbState.targetZ;
       entity.climbState = undefined;
-      entity.isOnGround = true;
+      entity.grounded = true;
       entity.velocity.y = 0;
     } else {
       // Smooth, linear interpolation for steady climbing motion
@@ -1194,7 +1167,7 @@ export class PhysicsService {
       // Underwater: Reduced gravity
       forces.gravity.y = this.underwaterGravity;
       forces.applyGravity = true;
-    } else if (entity.isOnGround) {
+    } else if (entity.grounded) {
       // On ground: No gravity (already supported)
       forces.applyGravity = false;
     } else {
@@ -1209,7 +1182,7 @@ export class PhysicsService {
     forces.input.z = inputVelocity.z;
 
     // 3. SLOPE FORCE (sliding)
-    if (surface.type === 'slope' && entity.isOnGround) {
+    if (surface.type === 'slope' && entity.grounded) {
       const slidingFactor = Math.max(0, 1 - surface.resistance);
       const slidingStrength = 3.0; // blocks per second
 
@@ -1558,9 +1531,9 @@ export class PhysicsService {
       if (entity.position.y <= 64 && entity.velocity.y <= 0) {
         entity.position.y = 64;
         entity.velocity.y = 0;
-        entity.isOnGround = true;
+        entity.grounded = true;
       } else if (entity.velocity.y > 0) {
-        entity.isOnGround = false;
+        entity.grounded = false;
       }
       return;
     }
@@ -1618,7 +1591,7 @@ export class PhysicsService {
       // Snap to top of block
       entity.position.y = groundY;
       entity.velocity.y = 0;
-      entity.isOnGround = true;
+      entity.grounded = true;
       logger.debug('Snapped to ground', {
         entityId: entity.entityId,
         groundY,
@@ -1626,10 +1599,10 @@ export class PhysicsService {
       });
     } else if (entity.velocity.y > 0) {
       // Jumping up
-      entity.isOnGround = false;
+      entity.grounded = false;
     } else {
       // Falling but no ground found
-      entity.isOnGround = false;
+      entity.grounded = false;
       if (entity.velocity.y <= 0) {
         logger.debug('No ground found - falling', {
           entityId: entity.entityId,
@@ -1835,7 +1808,7 @@ export class PhysicsService {
     );
 
     // Check 1: Block below feet (Y - 1) - Trampoline case
-    const onAutoJumpBlock = entity.isOnGround && context.belowLevel.hasAutoJump;
+    const onAutoJumpBlock = entity.grounded && context.belowLevel.hasAutoJump;
 
     // Check 2: Block at feet level (Y) - Pressure plate case
     const atAutoJumpBlock = context.currentLevel.hasAutoJump;
@@ -1845,7 +1818,7 @@ export class PhysicsService {
       this.jump(entity);
       logger.debug('Auto-jump triggered', {
         entityId: entity.entityId,
-        onGround: entity.isOnGround,
+        onGround: entity.grounded,
         onBlock: onAutoJumpBlock,
         atFeetLevel: atAutoJumpBlock,
       });
@@ -2143,7 +2116,7 @@ export class PhysicsService {
     // This slope check was moved earlier (line 1916-1940) - remove duplicate
 
     // Collision detected - check if we can auto-climb
-    if (context.currentLevel.hasAutoClimbable && entity.isOnGround && context.aboveLevel.isClear) {
+    if (context.currentLevel.hasAutoClimbable && entity.grounded && context.aboveLevel.isClear) {
       // Auto-climb conditions met:
       // 1. Block has autoClimbable property
       // 2. Entity is on ground
@@ -2161,7 +2134,7 @@ export class PhysicsService {
           targetZ: targetZ,
           progress: 0.0,
         };
-        entity.isOnGround = false;
+        entity.grounded = false;
 
         logger.debug('Auto-climb started (diagonal)', {
           entityId: entity.entityId,
@@ -2273,14 +2246,14 @@ export class PhysicsService {
    * For other entities: Uses default jumpSpeed
    */
   jump(entity: PhysicsEntity): void {
-    if (entity.movementMode === 'walk' && entity.isOnGround) {
+    if (entity.movementMode === 'walk' && entity.grounded) {
       // Get jump speed based on entity type
       const jumpSpeed = isPlayerEntity(entity)
         ? entity.effectiveJumpSpeed // Use cached effective value
         : this.defaultJumpSpeed;
 
       entity.velocity.y = jumpSpeed;
-      entity.isOnGround = false;
+      entity.grounded = false;
 
       logger.debug('Entity jumped', {
         entityId: entity.entityId,
@@ -2307,7 +2280,7 @@ export class PhysicsService {
 
     // In fly mode, no ground state
     if (mode === 'fly') {
-      entity.isOnGround = false;
+      entity.grounded = false;
     }
   }
 
