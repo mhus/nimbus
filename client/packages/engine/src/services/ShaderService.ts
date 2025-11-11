@@ -23,6 +23,7 @@ import {
   Texture,
   Vector2,
   Vector3,
+  Color3,
 } from '@babylonjs/core';
 import type { EnvironmentService, WindParameters } from './EnvironmentService';
 
@@ -69,6 +70,9 @@ export class ShaderService {
 
     // Register wind shader
     this.registerWindShader();
+
+    // Register fog shader
+    this.registerFogShader();
 
     // Register thin instance wind shader
     this.registerThinInstanceWindShader();
@@ -551,6 +555,208 @@ export class ShaderService {
     material.setFloat('windStrength', params.windStrength);
     material.setFloat('windGustStrength', params.windGustStrength);
     material.setFloat('windSwayFactor', params.windSwayFactor);
+  }
+
+  // ============================================
+  // Fog Shader Implementation
+  // ============================================
+
+  /**
+   * Register fog shader effect
+   */
+  private registerFogShader(): void {
+    this.registerFogShaderCode();
+
+    const fogEffect: ShaderEffect = {
+      name: 'fog',
+      createMaterial: (params?: Record<string, any>) => {
+        return this.createFogMaterial(params?.texture, params?.effectParameters, params?.name);
+      },
+    };
+
+    this.registerEffect(fogEffect);
+  }
+
+  /**
+   * Register fog shader code with Babylon.js
+   */
+  private registerFogShaderCode(): void {
+    const { Effect } = require('@babylonjs/core');
+
+    // Vertex shader - standard transformation
+    Effect.ShadersStore['fogVertexShader'] = `
+      precision highp float;
+
+      attribute vec3 position;
+      attribute vec3 normal;
+      attribute vec2 uv;
+      attribute vec4 color;
+
+      uniform mat4 worldViewProjection;
+      uniform mat4 world;
+      uniform vec3 cameraPosition;
+
+      varying vec2 vUV;
+      varying vec3 vWorldPosition;
+      varying vec3 vViewDirection;
+      varying float vDepth;
+
+      void main(void) {
+        vec4 worldPos = world * vec4(position, 1.0);
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+
+        vUV = uv;
+        vWorldPosition = worldPos.xyz;
+        vViewDirection = cameraPosition - worldPos.xyz;
+        vDepth = length(vViewDirection);
+      }
+    `;
+
+    // Fragment shader - volumetric fog effect
+    Effect.ShadersStore['fogFragmentShader'] = `
+      precision highp float;
+
+      varying vec2 vUV;
+      varying vec3 vWorldPosition;
+      varying vec3 vViewDirection;
+      varying float vDepth;
+
+      uniform sampler2D textureSampler;
+      uniform float time;
+      uniform float density;
+      uniform vec3 fogColor;
+
+      // Simple 3D noise function
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + 0.1);
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+      }
+
+      float noise(vec3 x) {
+        vec3 p = floor(x);
+        vec3 f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+
+        return mix(
+          mix(mix(hash(p + vec3(0, 0, 0)), hash(p + vec3(1, 0, 0)), f.x),
+              mix(hash(p + vec3(0, 1, 0)), hash(p + vec3(1, 1, 0)), f.x), f.y),
+          mix(mix(hash(p + vec3(0, 0, 1)), hash(p + vec3(1, 0, 1)), f.x),
+              mix(hash(p + vec3(0, 1, 1)), hash(p + vec3(1, 1, 1)), f.x), f.y),
+          f.z
+        );
+      }
+
+      void main(void) {
+        // Sample texture
+        vec4 texColor = texture2D(textureSampler, vUV);
+
+        // Animated noise for fog movement
+        vec3 noiseCoord = vWorldPosition * 2.0 + vec3(time * 0.1, time * 0.05, 0.0);
+        float noiseValue = noise(noiseCoord);
+        noiseValue += 0.5 * noise(noiseCoord * 2.0);
+        noiseValue /= 1.5;
+
+        // Fog density with noise variation
+        float fogDensity = density * (0.7 + 0.3 * noiseValue);
+
+        // Depth fade (fog becomes more transparent with distance)
+        float depthFade = clamp(vDepth / 10.0, 0.0, 1.0);
+        float alpha = fogDensity * (1.0 - depthFade * 0.3);
+
+        // Mix texture color with fog color
+        vec3 finalColor = mix(texColor.rgb, fogColor, 0.5);
+
+        // Output with fog density as alpha
+        gl_FragColor = vec4(finalColor, alpha);
+      }
+    `;
+
+    logger.debug('Fog shader code registered');
+  }
+
+  /**
+   * Create fog shader material
+   */
+  private createFogMaterial(
+    texture: Texture | undefined,
+    effectParameters: string | undefined,
+    name: string = 'fogMaterial'
+  ): ShaderMaterial | null {
+    if (!this.scene) {
+      logger.error('Cannot create fog material: Scene not initialized');
+      return null;
+    }
+
+    const material = new ShaderMaterial(
+      name,
+      this.scene,
+      {
+        vertex: 'fog',
+        fragment: 'fog',
+      },
+      {
+        attributes: ['position', 'normal', 'uv', 'color'],
+        uniforms: [
+          'worldViewProjection',
+          'world',
+          'cameraPosition',
+          'time',
+          'density',
+          'fogColor',
+        ],
+        samplers: ['textureSampler'],
+      }
+    );
+
+    material.onError = (effect, errors) => {
+      logger.error('Fog shader compilation error', { name, errors });
+    };
+
+    material.onCompiled = () => {
+      logger.debug('Fog shader compiled successfully', { name });
+    };
+
+    // Set texture
+    if (texture) {
+      material.setTexture('textureSampler', texture);
+    }
+
+    // Parse density from effectParameters (format: "density")
+    let density = 0.3; // Default
+    if (effectParameters) {
+      const parsed = parseFloat(effectParameters);
+      if (!isNaN(parsed)) {
+        density = Math.max(0.0, Math.min(1.0, parsed));
+      }
+    }
+
+    material.setFloat('density', density);
+    material.setColor3('fogColor', new Color3(0.8, 0.8, 0.9)); // Light blue-gray fog
+
+    // Update time uniform every frame
+    let totalTime = 0;
+    const scene = this.scene;
+    scene.onBeforeRenderObservable.add(() => {
+      totalTime += scene.getEngine().getDeltaTime() / 1000.0;
+      material.setFloat('time', totalTime);
+    });
+
+    // Set camera position every frame
+    scene.onBeforeRenderObservable.add(() => {
+      if (scene.activeCamera) {
+        material.setVector3('cameraPosition', scene.activeCamera.position);
+      }
+    });
+
+    // Fog needs alpha blending
+    material.alpha = 1.0;
+    material.backFaceCulling = false;
+    material.needDepthPrePass = true;
+
+    logger.debug('Fog material created', { name, density });
+
+    return material;
   }
 
   // ============================================

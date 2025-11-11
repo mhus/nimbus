@@ -22,6 +22,7 @@ import { CylinderRenderer } from '../rendering/CylinderRenderer';
 import { StairRenderer } from '../rendering/StairRenderer';
 import { StepsRenderer } from '../rendering/StepsRenderer';
 import { FlipboxRenderer } from '../rendering/FlipboxRenderer';
+import { FogRenderer } from '../rendering/FogRenderer';
 import { ModelRenderer } from '../rendering/ModelRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
@@ -86,6 +87,7 @@ export class RenderService {
   private stairRenderer: StairRenderer;
   private stepsRenderer: StepsRenderer;
   private flipboxRenderer: FlipboxRenderer;
+  private fogRenderer: FogRenderer;
   private modelRenderer: ModelRenderer;
   private billboardRenderer: BillboardRenderer;
   private spriteRenderer: SpriteRenderer;
@@ -124,6 +126,7 @@ export class RenderService {
     this.stairRenderer = new StairRenderer(textureAtlas);
     this.stepsRenderer = new StepsRenderer(textureAtlas);
     this.flipboxRenderer = new FlipboxRenderer();
+    this.fogRenderer = new FogRenderer(textureAtlas);
     this.modelRenderer = new ModelRenderer();
     this.billboardRenderer = new BillboardRenderer();
     this.spriteRenderer = new SpriteRenderer();
@@ -321,7 +324,7 @@ export class RenderService {
             continue;
           }
 
-          // Render cubes, crosses, hashes, spheres, cylinders, steps, and stairs
+          // Render cubes, crosses, hashes, spheres, cylinders, steps, stairs, and fog
           if (shape === Shape.CUBE) {
             await this.cubeRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.CROSS) {
@@ -336,6 +339,8 @@ export class RenderService {
             await this.stepsRenderer.render(renderContext, clientBlock);
           } else if (shape === Shape.STAIR) {
             await this.stairRenderer.render(renderContext, clientBlock);
+          } else if (shape === Shape.FOG) {
+            await this.fogRenderer.render(renderContext, clientBlock);
           } else {
             logger.debug('Unsupported shape, skipping', {
               shape,
@@ -452,6 +457,8 @@ export class RenderService {
         return this.stairRenderer;
       case Shape.FLIPBOX:
         return this.flipboxRenderer;
+      case Shape.FOG:
+        return this.fogRenderer;
       case Shape.MODEL:
         return this.modelRenderer;
       case Shape.BILLBOARD:

@@ -242,12 +242,24 @@ Welche Einsaetze gemacht werden muessen hängt von der kombinantion der fehlende
 
 ## Fog Renderer
 
-[ ] Erstelle einen FogRenderer der Blocks mit shape FOG rendert.
+[?] Erstelle einen FogRenderer der Blocks mit shape FOG rendert.
 - Der FogRenderer rendert einen Nebelblock der den ganzen Block ausfuellt.
 - Der Nebel soll ein spezielles Material nutzen, das den Nebel Effekt umsetzt (vermutlich)
 - Orientiere dich an CubeRenderer.
 - Implementiere alle eigenschften, offset, scaling, rotation wie bei einem Cube.
 
+```text
+  Verwendung:
+  {
+    "visibility": {
+      "shape": 24,  // FOG
+      "effectParameters": "0.5",  // Density: 0.5 (50% opak)
+      "textures": {
+        "0": "textures/fog.png"  // Optional: Textur für Nebel
+      }
+    }
+  }
+```
 
 ## Illumination
 
