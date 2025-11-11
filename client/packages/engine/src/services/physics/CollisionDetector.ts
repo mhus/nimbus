@@ -163,14 +163,34 @@ export class CollisionDetector {
         }
       } else {
         // Regular solid block - check if can climb
+
+        // Check 1: Slope blocks with low corner heights (always passable)
         const cornerHeights = this.surfaceAnalyzer.getCornerHeights(blockInfo.block);
         if (cornerHeights) {
           const maxHeight = Math.max(...cornerHeights);
           if (maxHeight <= this.maxClimbHeight) {
-            // Can auto-climb - allow movement but adjust Y
-            // This will be handled by WalkModeController
+            // Low slope - can step over without climb
             continue;
           }
+        }
+
+        // Check 2: Full 1-block step - check autoClimbable property
+        const blockHeight = blockInfo.block.block.position.y + 1.0; // Top of block
+        const currentY = entity.position.y;
+        const heightDiff = blockHeight - currentY;
+
+        // If height difference <= 1.0 and block has autoClimbable property
+        if (heightDiff > 0 && heightDiff <= 1.0 && physics.autoClimbable === true) {
+          // Auto-climbable 1-block step - allow movement
+          // WalkModeController will adjust Y position
+          continue;
+        }
+
+        // Check 3: Alternative - if physical dimensions height >= 1.5, allow climbing 1-block
+        // (This makes taller entities able to step over 1-block obstacles naturally)
+        if (heightDiff > 0 && heightDiff <= 1.0 && dimensions.height >= 1.5) {
+          // Tall entity can step over 1-block obstacles
+          continue;
         }
 
         // Cannot pass - stop ALL horizontal movement
