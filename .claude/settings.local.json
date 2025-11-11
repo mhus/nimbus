@@ -56,7 +56,8 @@
       "Bash(xargs basename:*)",
       "Bash(pnpm --filter @nimbus/controls build:*)",
       "Bash(pnpm --filter @nimbus/engine build:viewer:*)",
-      "Bash(pnpm --filter @nimbus/engine build:editor:*)"
+      "Bash(pnpm --filter @nimbus/engine build:editor:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
