@@ -277,12 +277,12 @@ export class CylinderRenderer extends BlockRenderer {
         uvs.push(u, v);
       }
 
-      // Bottom cap indices
+      // Bottom cap indices (clockwise winding for downward face when viewed from below)
       for (let i = 0; i < segments; i++) {
         indices.push(
           bottomCapStartVertex,
-          bottomCapStartVertex + i + 1,
-          bottomCapStartVertex + i + 2
+          bottomCapStartVertex + i + 2,
+          bottomCapStartVertex + i + 1
         );
       }
     }
@@ -312,12 +312,12 @@ export class CylinderRenderer extends BlockRenderer {
         uvs.push(u, v);
       }
 
-      // Top cap indices (reverse winding for upward face)
+      // Top cap indices (counter-clockwise winding for upward face)
       for (let i = 0; i < segments; i++) {
         indices.push(
           topCapStartVertex,
-          topCapStartVertex + i + 2,
-          topCapStartVertex + i + 1
+          topCapStartVertex + i + 1,
+          topCapStartVertex + i + 2
         );
       }
     }
