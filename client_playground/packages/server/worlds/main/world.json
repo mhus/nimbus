@@ -1,9 +1,0 @@
-{
-  "name": "main",
-  "seed": 12345,
-  "generator": "flat",
-  "chunkSize": 32,
-  "worldHeight": 256,
-  "version": 2,
-  "createdAt": 1761524310922
-}
