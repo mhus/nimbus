@@ -5,7 +5,7 @@
  * Supports GPU-based wind animation and per-block instance configuration.
  */
 
-import { Mesh, MeshBuilder, Scene, Matrix, StandardMaterial, Texture, type IDisposable } from '@babylonjs/core';
+import { Mesh, MeshBuilder, Scene, Matrix, Vector3, StandardMaterial, Texture, type IDisposable } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ShaderService } from './ShaderService';
@@ -172,15 +172,17 @@ export class ThinInstancesService {
       const randomX = (Math.random() - 0.5) * 0.8;
       const randomZ = (Math.random() - 0.5) * 0.8;
 
-      // Set scaling in matrix (diagonal elements)
-      m.m[0] = scaleX;
-      m.m[5] = scaleY;
-      m.m[10] = scaleZ;
+      // Set scaling using Matrix API
+      Matrix.ScalingToRef(scaleX, scaleY, scaleZ, m);
 
-      // Set instance position in matrix (block position + center offset + configured offset + random offset)
-      m.m[12] = blockX + 0.5 + offsetX + randomX;
-      m.m[13] = blockY + offsetY;
-      m.m[14] = blockZ + 0.5 + offsetZ + randomZ;
+      // Set instance position using Matrix API (block position + center offset + configured offset + random offset)
+      m.setTranslation(
+        new Vector3(
+          blockX + 0.5 + offsetX + randomX,
+          blockY + offsetY,
+          blockZ + 0.5 + offsetZ + randomZ
+        )
+      );
 
       // Copy matrix to buffer
       m.copyToArray(matricesData, index * 16);

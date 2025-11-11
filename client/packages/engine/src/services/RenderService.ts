@@ -64,7 +64,7 @@ export interface RenderContext {
  * - Manages mesh lifecycle
  */
 export class RenderService {
-  private scene: Scene;
+  public scene: Scene; // Public for renderer access to scene
   public appContext: AppContext; // Public for renderer access to services
   public materialService: MaterialService;
   private blockTypeService: BlockTypeService;

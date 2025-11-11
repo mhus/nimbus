@@ -11,7 +11,7 @@
  * - GPU wind animation via shader
  */
 
-import { getLogger, Shape, TextureHelper } from '@nimbus/shared';
+import { getLogger, Shape, TextureHelper, ExceptionHandler } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -82,11 +82,15 @@ export class ThinInstancesRenderer extends BlockRenderer {
       logger.debug('Using scaling from visibility', { scaling });
     }
 
-    // Get chunk key for tracking
-    const chunkTransfer = clientBlock.chunk?.data?.transfer;
-    const chunkKey = chunkTransfer
-      ? `chunk_${chunkTransfer.cx}_${chunkTransfer.cz}`
-      : `chunk_${Math.floor(block.position.x / 32)}_${Math.floor(block.position.z / 32)}`;
+    // Get chunk key for tracking - chunk coordinates must always be set
+    if (!clientBlock.chunk) {
+      logger.error('ClientBlock missing chunk coordinates', {
+        blockPosition: block.position,
+        blockTypeId: clientBlock.blockType.id
+      });
+      return; // Cannot render without chunk information
+    }
+    const chunkKey = `chunk_${clientBlock.chunk.cx}_${clientBlock.chunk.cz}`;
 
     // Process first 4 textures (keys 0-3) for mixing
     let totalInstancesCreated = 0;

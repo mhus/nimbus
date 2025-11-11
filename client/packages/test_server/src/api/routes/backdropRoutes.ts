@@ -67,12 +67,10 @@ export function createBackdropRoutes(): Router {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // No cache during development
 
-      res.json(backdrop);
-
-      logger.debug('Served backdrop configuration', { backdropId });
+      return res.json(backdrop);
     } catch (error) {
       ExceptionHandler.handle(error, 'BackdropRoutes.get', { backdropId });
-      res.status(500).json({ error: 'Failed to serve backdrop' });
+      return res.status(500).json({ error: 'Failed to serve backdrop' });
     }
   });
 

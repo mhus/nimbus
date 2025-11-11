@@ -66,7 +66,7 @@ export class BackdropMaterialManager {
       throw ExceptionHandler.handleAndRethrow(
         error,
         'BackdropMaterialManager.getBackdropMaterial',
-        { configTypeId: config.typeId }
+        { configType: config.type, configId: config.id }
       );
     }
   }
@@ -202,7 +202,7 @@ export class BackdropMaterialManager {
     const texture = new DynamicTexture('fadeout_gradient', size, this.scene);
 
     const context = texture.getContext();
-    const imageData = context.createImageData(size, size);
+    const imageData = context.getImageData(0, 0, size, size);
 
     // Create vertical gradient: transparent at top, opaque at bottom
     for (let y = 0; y < size; y++) {

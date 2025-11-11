@@ -154,8 +154,9 @@ export class MaterialService {
     // 4. Sampling mode (default: LINEAR)
     parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
 
-    // 5. Effect (already computed above, only add if not NONE and not FLIPBOX)
-    if (finalEffect !== BlockEffect.NONE && finalEffect !== BlockEffect.FLIPBOX) {
+    // 5. Effect (already computed above, only add if not NONE and not WIND)
+    // Note: FLIPBOX already handled above (early return), so we don't need to check it here
+    if (finalEffect !== BlockEffect.NONE && finalEffect !== BlockEffect.WIND) {
       parts.push(`eff:${finalEffect}`);
 
       // Effect parameters (if defined)
@@ -538,7 +539,7 @@ export class MaterialService {
    * Apply material properties (opacity, transparency, color)
    * @deprecated This method is not currently used. Material properties are set directly in getMaterial().
    */
-  private applyMaterialProperties(material: Material, textureDef: TextureDefinition): void {
+  private applyMaterialProperties(material: StandardMaterial, textureDef: TextureDefinition): void {
     // Apply opacity
     if (textureDef.opacity !== undefined && textureDef.opacity !== 1.0) {
       material.alpha = textureDef.opacity;

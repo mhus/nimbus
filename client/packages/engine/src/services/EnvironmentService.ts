@@ -25,6 +25,9 @@ export interface WindParameters {
 
   /** Wind sway factor (0-2) - multiplier for how much blocks sway */
   windSwayFactor: number;
+
+  /** Current time for wind animation */
+  time: number;
 }
 
 /**
@@ -55,6 +58,7 @@ export class EnvironmentService {
       windStrength: 0.3, // 30% base wind strength
       windGustStrength: 0.15, // 15% gust strength
       windSwayFactor: 1.0, // 100% sway factor (neutral)
+      time: 0, // Initialize time
     };
 
     this.initializeEnvironment();
