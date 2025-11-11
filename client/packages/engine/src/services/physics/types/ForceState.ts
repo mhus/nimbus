@@ -1,11 +1,15 @@
 /**
  * ForceState - Accumulated forces
  *
+ * @deprecated Reserved for future force-based physics implementation
+ * Currently not used - system uses velocity-based approach instead.
+ *
  * Contains all forces acting on an entity during physics simulation.
  */
 
 /**
  * Accumulated forces acting on entity
+ * @deprecated Not used in current implementation
  */
 export interface ForceState {
   /** Gravity force (Y-axis) */

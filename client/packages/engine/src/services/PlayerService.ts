@@ -78,6 +78,7 @@ export class PlayerService {
       onSlope: false, // Is on slope
       inWater: false, // Is in water
       canAutoJump: false, // Can trigger auto-jump
+      jumpRequested: false, // Jump requested this frame
       lastBlockPos: new Vector3(0, 64, 0), // Last block position for cache invalidation
       playerInfo: appContext.playerInfo,
       // Initialize cached effective values from PlayerInfo

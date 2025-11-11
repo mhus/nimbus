@@ -57,6 +57,9 @@ export interface PhysicsEntity {
   /** Can auto-jump be triggered? */
   canAutoJump: boolean;
 
+  /** Jump requested this frame (set by jump() method) */
+  jumpRequested: boolean;
+
   /** Entity ID for logging */
   entityId: string;
 

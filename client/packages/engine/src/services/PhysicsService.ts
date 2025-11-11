@@ -17,9 +17,6 @@ import type { ClientBlock } from '../types/ClientBlock';
 import type {
   PhysicsEntity,
   MovementMode,
-  PlayerBlockContext,
-  SurfaceState,
-  ForceState,
 } from './physics/types';
 import { WalkModeController } from './physics/WalkModeController';
 import { FlyModeController } from './physics/FlyModeController';
@@ -104,13 +101,6 @@ export class PhysicsService {
   // Entities managed by physics
   private entities: Map<string, PhysicsEntity> = new Map();
 
-  // Underwater state (TODO: Track per entity instead of global)
-  private isUnderwater: boolean = false;
-
-  // Last checked block coordinates for underwater detection (optimization)
-  // Only check underwater state when block coordinates change
-  private lastCheckedBlockCoords: Map<string, { blockX: number; blockY: number; blockZ: number }> = new Map();
-
   // Physics enabled state - prevents falling through world on initial load
   // Physics is paused until initial chunks around player are loaded
   private physicsEnabled: boolean = false;
@@ -180,6 +170,9 @@ export class PhysicsService {
     if (entity.canAutoJump === undefined) {
       entity.canAutoJump = false;
     }
+    if (entity.jumpRequested === undefined) {
+      entity.jumpRequested = false;
+    }
     if (!entity.lastBlockPos) {
       entity.lastBlockPos = new Vector3(
         Math.floor(entity.position.x),
@@ -201,7 +194,6 @@ export class PhysicsService {
    */
   unregisterEntity(entityId: string): void {
     this.entities.delete(entityId);
-    this.lastCheckedBlockCoords.delete(entityId); // Clean up block coordinate tracking
     logger.debug('Entity unregistered', { entityId });
   }
 
@@ -396,13 +388,17 @@ export class PhysicsService {
       this.walkController.doMovement(
         entity,
         entity.wishMove,
-        false, // startJump - will be set by PlayerService
+        entity.jumpRequested, // Pass jump request flag
         dimensions,
         deltaTime
       );
+      // Reset jump flag after processing
+      entity.jumpRequested = false;
     } else if (useFlyController && this.flyController) {
       // Use new modular fly controller
       this.flyController.update(entity, entity.wishMove, deltaTime);
+      // Reset jump flag (not used in fly mode)
+      entity.jumpRequested = false;
     } else {
       // Fallback to old system (should not happen)
       this.checkUnderwaterStateIfMoved(entity);
@@ -412,7 +408,11 @@ export class PhysicsService {
       } else if (entity.movementMode === 'fly') {
         this.updateFlyMode(entity, deltaTime);
       }
+      entity.jumpRequested = false;
     }
+
+    // Reset wishMove for next frame
+    entity.wishMove.set(0, 0, 0);
   }
 
   /**
@@ -428,112 +428,20 @@ export class PhysicsService {
    *
    * @param entity Entity to check
    */
+  /**
+   * @deprecated OLD METHOD - No longer used
+   */
   private checkUnderwaterStateIfMoved(entity: PhysicsEntity): void {
-    const currentBlockX = Math.floor(entity.position.x);
-    const currentBlockY = Math.floor(entity.position.y);
-    const currentBlockZ = Math.floor(entity.position.z);
-
-    const lastCoords = this.lastCheckedBlockCoords.get(entity.entityId);
-
-    // Check if block coordinates changed
-    const blockChanged = !lastCoords ||
-      currentBlockX !== lastCoords.blockX ||
-      currentBlockY !== lastCoords.blockY ||
-      currentBlockZ !== lastCoords.blockZ;
-
-    if (blockChanged) {
-      // Block changed - run underwater check
-      this.checkUnderwaterState(entity);
-
-      // Update last checked block coordinates
-      this.lastCheckedBlockCoords.set(entity.entityId, {
-        blockX: currentBlockX,
-        blockY: currentBlockY,
-        blockZ: currentBlockZ,
-      });
-    }
+    // Deprecated - underwater state is now tracked per-entity in entity.inWater
+    // Use PhysicsUtils.checkUnderwaterState() instead
   }
 
   /**
-   * Check if entity is underwater based on ClientHeightData
-   *
-   * Gets ClientHeightData for entity's column and:
-   * - Checks if entity.position.y < waterHeight
-   * - Calls CameraService.setUnderwater(true/false) on state change
-   * - Uses minHeight/maxHeight as boundaries for physics
-   *
-   * @param entity Entity to check
+   * @deprecated OLD METHOD - No longer used
+   * Use PhysicsUtils.checkUnderwaterState() instead
    */
   private checkUnderwaterState(entity: PhysicsEntity): void {
-    if (!this.chunkService) {
-      logger.warn('💧 ChunkService not available!', { entityId: entity.entityId });
-      return;
-    }
-
-    const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
-    const chunkX = Math.floor(entity.position.x / chunkSize);
-    const chunkZ = Math.floor(entity.position.z / chunkSize);
-    const chunk = this.chunkService.getChunk(chunkX, chunkZ);
-
-    if (!chunk) {
-      return;
-    }
-
-    // Calculate local coordinates within chunk (handle negative positions correctly)
-    const localX = ((entity.position.x % chunkSize) + chunkSize) % chunkSize;
-    const localZ = ((entity.position.z % chunkSize) + chunkSize) % chunkSize;
-    const heightKey = `${Math.floor(localX)},${Math.floor(localZ)}`;
-    const heightData = chunk.data.hightData.get(heightKey);
-
-    if (heightData && heightData[5] !== undefined) {
-      const [x, z, maxHeight, minHeight, groundLevel, waterHeight] = heightData;
-      const wasUnderwater = this.isUnderwater;
-
-      // Player is underwater when camera/eyes are below water surface
-      // waterHeight = Y of highest water block (bottom face = surface)
-      // Add offset so player is "underwater" when partially submerged
-      const waterSurfaceY = waterHeight + 1.0; // Raise surface by 1.0 blocks
-      const eyeY = entity.position.y + 1.6; // Eye level for first-person camera
-      this.isUnderwater = eyeY <= waterSurfaceY;
-
-      // Notify CameraService on state change
-      if (wasUnderwater !== this.isUnderwater) {
-        const cameraService = this.appContext.services.camera;
-        if (cameraService) {
-          cameraService.setUnderwater(this.isUnderwater);
-          logger.info('💧 UNDERWATER STATE CHANGED', {
-            entityId: entity.entityId,
-            underwater: this.isUnderwater,
-            waterBlockY: waterHeight,
-            waterSurfaceY: waterSurfaceY,
-            entityY: entity.position.y.toFixed(2),
-            eyeY: eyeY.toFixed(2),
-          });
-        }
-      }
-
-      // Clamp to min/max height boundaries
-      if (entity.position.y < minHeight) {
-        entity.position.y = minHeight;
-        entity.velocity.y = 0;
-      } else if (entity.position.y > maxHeight) {
-        entity.position.y = maxHeight;
-        entity.velocity.y = 0;
-      }
-    } else {
-      // No waterHeight data - definitely not underwater!
-      const wasUnderwater = this.isUnderwater;
-      this.isUnderwater = false;
-
-      // Notify CameraService if state changed from underwater to not underwater
-      if (wasUnderwater) {
-        const cameraService = this.appContext.services.camera;
-        if (cameraService) {
-          cameraService.setUnderwater(false);
-          logger.info('💧 Left water area', { entityId: entity.entityId });
-        }
-      }
-    }
+    // Deprecated - underwater state now tracked per-entity in entity.inWater
   }
 
   /**
@@ -1029,20 +937,14 @@ export class PhysicsService {
    * For other entities: Uses default jumpSpeed
    */
   jump(entity: PhysicsEntity): void {
-    if (entity.movementMode === 'walk' && entity.grounded) {
-      // Get jump speed based on entity type
-      const jumpSpeed = isPlayerEntity(entity)
-        ? entity.effectiveJumpSpeed // Use cached effective value
-        : this.defaultJumpSpeed;
+    // NEW SYSTEM: Set jumpRequested flag instead of direct velocity manipulation
+    // MovementResolver.handleJump() will process this with coyote time
+    entity.jumpRequested = true;
 
-      entity.velocity.y = jumpSpeed;
-      entity.grounded = false;
-
-      logger.debug('Entity jumped', {
-        entityId: entity.entityId,
-        jumpSpeed,
-      });
-    }
+    logger.debug('Jump requested', {
+      entityId: entity.entityId,
+      grounded: entity.grounded,
+    });
   }
 
   /**
@@ -1085,23 +987,32 @@ export class PhysicsService {
    * TODO: Add support for sprint/crawl/riding states
    */
   getMoveSpeed(entity: PhysicsEntity): number {
+    // NEW SYSTEM: MovementResolver.getMoveSpeed() handles this
+    // This method is kept for backwards compatibility only
     if (isPlayerEntity(entity)) {
-      // Player: Use cached effective values (performance optimized)
-      if (this.isUnderwater) {
+      // Player: Use effective values based on mode
+      if (entity.inWater) {
         return entity.effectiveUnderwaterSpeed;
       }
 
-      // TODO: Check player state for speed modifiers
-      // if (entity.isSprinting) return entity.effectiveRunSpeed;
-      // if (entity.isCrouching) return entity.effectiveCrawlSpeed;
-      // if (entity.isRiding) return entity.effectiveRidingSpeed;
-
-      return entity.movementMode === 'walk'
-        ? entity.effectiveWalkSpeed
-        : entity.effectiveRunSpeed; // Fly mode uses run speed
+      switch (entity.movementMode) {
+        case 'sprint':
+          return entity.effectiveRunSpeed;
+        case 'crouch':
+          return entity.effectiveCrawlSpeed;
+        case 'climb':
+          return entity.effectiveWalkSpeed * 0.5;
+        case 'fly':
+        case 'teleport':
+          return entity.effectiveWalkSpeed * 2.0;
+        case 'walk':
+        case 'swim':
+        default:
+          return entity.effectiveWalkSpeed;
+      }
     } else {
       // Other entities: Use default constants
-      if (this.isUnderwater) {
+      if (entity.inWater) {
         return this.defaultUnderwaterSpeed;
       }
 
@@ -1114,7 +1025,12 @@ export class PhysicsService {
    */
   dispose(): void {
     this.entities.clear();
-    this.lastCheckedBlockCoords.clear();
+
+    // Dispose controllers
+    if (this.walkController) {
+      this.walkController.dispose();
+    }
+
     logger.info('PhysicsService disposed');
   }
 }

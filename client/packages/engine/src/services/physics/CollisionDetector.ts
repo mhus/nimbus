@@ -154,14 +154,11 @@ export class CollisionDetector {
       if (physics.passableFrom !== undefined) {
         // Solid + passableFrom: One-way gate
         if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, true)) {
-          // Blocked - stop movement in that direction
-          if (Math.abs(dx) > Math.abs(dz)) {
-            x = entity.position.x;
-            entity.velocity.x = 0;
-          } else {
-            z = entity.position.z;
-            entity.velocity.z = 0;
-          }
+          // Blocked - stop ALL horizontal movement (prevent sliding)
+          x = entity.position.x;
+          z = entity.position.z;
+          entity.velocity.x = 0;
+          entity.velocity.z = 0;
           break;
         }
       } else {
@@ -176,14 +173,11 @@ export class CollisionDetector {
           }
         }
 
-        // Cannot pass - stop movement
-        if (Math.abs(dx) > Math.abs(dz)) {
-          x = entity.position.x;
-          entity.velocity.x = 0;
-        } else {
-          z = entity.position.z;
-          entity.velocity.z = 0;
-        }
+        // Cannot pass - stop ALL horizontal movement
+        x = entity.position.x;
+        z = entity.position.z;
+        entity.velocity.x = 0;
+        entity.velocity.z = 0;
         break;
       }
     }
@@ -195,14 +189,11 @@ export class CollisionDetector {
       const isSolid = currentContext.currentBlocks.hasSolid;
 
       if (!PhysicsUtils.canLeaveTo(currentContext.currentBlocks.passableFrom, exitDir, isSolid)) {
-        // Cannot leave in this direction (thin wall)
-        if (Math.abs(dx) > Math.abs(dz)) {
-          x = entity.position.x;
-          entity.velocity.x = 0;
-        } else {
-          z = entity.position.z;
-          entity.velocity.z = 0;
-        }
+        // Cannot leave in this direction (thin wall) - stop ALL movement
+        x = entity.position.x;
+        z = entity.position.z;
+        entity.velocity.x = 0;
+        entity.velocity.z = 0;
       }
     }
 

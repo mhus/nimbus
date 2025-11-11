@@ -60,7 +60,8 @@ export class SurfaceAnalyzer {
     // Priority 3: Auto-derive from offsets (if autoCornerHeights=true)
     else if (block.currentModifier.physics?.autoCornerHeights) {
       // Try Block.offsets first
-      if (block.block.offsets && block.block.offsets.length > 0) {
+      // Minimum length must be 24 for all 8 corners (3 values per corner)
+      if (block.block.offsets && block.block.offsets.length >= 23) {
         // Extract Y-offsets from top 4 corners
         // Offsets order: [bottom 4 corners (0-11), top 4 corners (12-23)]
         // Top corners: [4]=SW(12-14), [5]=SE(15-17), [6]=NW(18-20), [7]=NE(21-23)
@@ -74,7 +75,7 @@ export class SurfaceAnalyzer {
       // Try VisibilityModifier.offsets
       else if (
         block.currentModifier.visibility?.offsets &&
-        block.currentModifier.visibility.offsets.length > 0
+        block.currentModifier.visibility.offsets.length >= 23
       ) {
         const offsets = block.currentModifier.visibility.offsets;
         const yNW = offsets[19] ?? 0;

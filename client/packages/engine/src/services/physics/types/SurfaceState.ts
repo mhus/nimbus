@@ -1,6 +1,9 @@
 /**
  * SurfaceState - Surface analysis result
  *
+ * @deprecated Reserved for future surface-based physics
+ * Currently not used - information is available in PlayerBlockContext instead.
+ *
  * Contains all surface properties at current entity position.
  */
 
@@ -8,7 +11,7 @@ import type { PlayerBlockContext } from './BlockContext';
 
 /**
  * Surface state analysis result
- * Contains all surface properties at current entity position
+ * @deprecated Not used in current implementation
  */
 export interface SurfaceState {
   /** Type of surface player is on/in */

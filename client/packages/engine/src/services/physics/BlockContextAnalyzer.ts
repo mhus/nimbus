@@ -47,8 +47,13 @@ export class BlockContextAnalyzer {
    * Uses caching to avoid redundant calculations
    */
   getContext(entity: PhysicsEntity, dimensions: EntityDimensions): PlayerBlockContext {
+    // Build cache key including block position
+    const blockX = Math.floor(entity.position.x);
+    const blockY = Math.floor(entity.position.y);
+    const blockZ = Math.floor(entity.position.z);
+    const cacheKey = `${entity.entityId}_${blockX}_${blockY}_${blockZ}`;
+
     // Check cache
-    const cacheKey = `${entity.entityId}`;
     const cached = this.contextCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.context;
@@ -78,6 +83,7 @@ export class BlockContextAnalyzer {
    */
   private buildContext(entity: PhysicsEntity, dimensions: EntityDimensions): PlayerBlockContext {
     const pos = entity.position;
+    const lastPos = entity.lastBlockPos;
     const yaw = entity.rotation.y;
 
     // Get footprint positions (4 corners based on footprint radius)
@@ -92,9 +98,24 @@ export class BlockContextAnalyzer {
     const groundY = feetY - 1;
     const headY = feetY + Math.ceil(dimensions.height);
 
+    // Detect block boundary crossing for entering blocks
+    const currentBlockPos = { x: Math.floor(pos.x), y: feetY, z: Math.floor(pos.z) };
+    const lastBlockPos = { x: Math.floor(lastPos.x), y: Math.floor(lastPos.y), z: Math.floor(lastPos.z) };
+    const crossingBoundary =
+      currentBlockPos.x !== lastBlockPos.x ||
+      currentBlockPos.y !== lastBlockPos.y ||
+      currentBlockPos.z !== lastBlockPos.z;
+
     // Build all 8 block categories
     const currentBlocks = this.analyzeCurrentBlocks(footprintPositions, feetY, dimensions.height);
-    const enteringBlocks = this.analyzeEnteringBlocks(footprintPositions, feetY, dimensions.height);
+    const enteringBlocks = this.analyzeEnteringBlocks(
+      footprintPositions,
+      feetY,
+      dimensions.height,
+      currentBlockPos,
+      lastBlockPos,
+      crossingBoundary
+    );
     const frontBlocks = this.analyzeFrontBlocks(
       footprintPositions,
       feetY,
@@ -243,15 +264,78 @@ export class BlockContextAnalyzer {
   private analyzeEnteringBlocks(
     footprint: Array<{ x: number; z: number }>,
     feetY: number,
-    height: number
+    height: number,
+    currentBlockPos: { x: number; y: number; z: number },
+    lastBlockPos: { x: number; y: number; z: number },
+    crossingBoundary: boolean
   ) {
-    // TODO: Implement based on movement vector
-    // For now, return empty
-    return {
-      blocks: [],
-      allPassable: true,
-      hasSolid: false,
-    };
+    // If not crossing boundary, no entering blocks
+    if (!crossingBoundary) {
+      return {
+        blocks: [],
+        allPassable: true,
+        hasSolid: false,
+      };
+    }
+
+    const blocks: BlockInfo[] = [];
+    let hasSolid = false;
+
+    // Determine which direction we crossed
+    const deltaX = currentBlockPos.x - lastBlockPos.x;
+    const deltaY = currentBlockPos.y - lastBlockPos.y;
+    const deltaZ = currentBlockPos.z - lastBlockPos.z;
+
+    // Check new block(s) we entered in all Y levels
+    const numLevels = Math.ceil(height);
+    for (let dy = 0; dy < numLevels; dy++) {
+      // If crossed in X direction
+      if (deltaX !== 0) {
+        for (const pos of footprint) {
+          if (Math.floor(pos.x) === currentBlockPos.x) {
+            const blockInfo = this.getBlock(pos.x, feetY + dy, pos.z);
+            if (blockInfo.block) {
+              blocks.push(blockInfo);
+              if (blockInfo.block.currentModifier.physics?.solid) {
+                hasSolid = true;
+              }
+            }
+          }
+        }
+      }
+
+      // If crossed in Z direction
+      if (deltaZ !== 0) {
+        for (const pos of footprint) {
+          if (Math.floor(pos.z) === currentBlockPos.z) {
+            const blockInfo = this.getBlock(pos.x, feetY + dy, pos.z);
+            if (blockInfo.block) {
+              blocks.push(blockInfo);
+              if (blockInfo.block.currentModifier.physics?.solid) {
+                hasSolid = true;
+              }
+            }
+          }
+        }
+      }
+
+      // If crossed in Y direction
+      if (deltaY !== 0) {
+        for (const pos of footprint) {
+          const blockInfo = this.getBlock(pos.x, feetY + dy, pos.z);
+          if (blockInfo.block) {
+            blocks.push(blockInfo);
+            if (blockInfo.block.currentModifier.physics?.solid) {
+              hasSolid = true;
+            }
+          }
+        }
+      }
+    }
+
+    const allPassable = !hasSolid;
+
+    return { blocks, allPassable, hasSolid };
   }
 
   /**
