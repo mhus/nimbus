@@ -207,7 +207,13 @@ export class FlipboxRenderer extends BlockRenderer {
     renderContext: RenderContext
   ): Promise<void> {
     const block = clientBlock.block;
+    const modifier = clientBlock.currentModifier;
     const scene = renderContext.renderService.materialService.scene;
+
+    if (!modifier || !modifier.visibility) {
+      logger.error('FlipboxRenderer: No modifier in createSeparateMesh');
+      return;
+    }
 
     // Create mesh name
     const meshName = `flipbox_${block.position.x}_${block.position.y}_${block.position.z}`;
@@ -229,6 +235,13 @@ export class FlipboxRenderer extends BlockRenderer {
     const shaderService = renderContext.renderService.appContext.services.shader;
     if (!shaderService) {
       logger.error('FlipboxRenderer: ShaderService not available');
+      return;
+    }
+
+    // Get TOP texture
+    const topTexture = modifier.visibility.textures?.[1];
+    if (!topTexture) {
+      logger.error('FlipboxRenderer: No TOP texture');
       return;
     }
 

@@ -51,38 +51,41 @@ export enum Shape {
   /** Flame effect */
   FLAME = 15,
 
+  /** Flipbox (animated sprite sheet, horizontal face only) */
+  FLIPBOX = 16,
+
   /** Ocean water (flat) */
-  OCEAN = 16,
+  OCEAN = 17,
 
   /** Ocean coast variation */
-  OCEAN_COAST = 17,
+  OCEAN_COAST = 18,
 
   /** Ocean maelstrom variation */
-  OCEAN_MAELSTROM = 18,
+  OCEAN_MAELSTROM = 19,
 
   /** River water (flat, directional) */
-  RIVER = 19,
+  RIVER = 20,
 
   /** River waterfall */
-  RIVER_WATERFALL = 20,
+  RIVER_WATERFALL = 21,
 
   /** River waterfall with whirlpool */
-  RIVER_WATERFALL_WHIRLPOOL = 21,
+  RIVER_WATERFALL_WHIRLPOOL = 22,
 
   /** Water cube */
-  WATER = 22,
+  WATER = 23,
 
   /** Lava */
-  LAVA = 23,
+  LAVA = 24,
 
   /** Fog */
-  FOG = 24,
+  FOG = 25,
 
   /** Thin instances (grass, leaves - high performance with Y-axis billboard) */
-  THIN_INSTANCES = 25,
+  THIN_INSTANCES = 26,
 
   /** Wall (hollow cube with inner faces) */
-  WALL = 26,
+  WALL = 27,
 }
 
 /**
@@ -105,6 +108,7 @@ export const ShapeNames: Record<Shape, string> = {
   [Shape.BILLBOARD]: 'billboard',
   [Shape.SPRITE]: 'sprite',
   [Shape.FLAME]: 'flame',
+  [Shape.FLIPBOX]: 'flipbox',
   [Shape.OCEAN]: 'ocean',
   [Shape.OCEAN_COAST]: 'ocean_coast',
   [Shape.OCEAN_MAELSTROM]: 'ocean_maelstrom',
