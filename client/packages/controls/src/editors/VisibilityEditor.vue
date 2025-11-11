@@ -99,6 +99,40 @@
       </div>
     </div>
 
+    <!-- Global Effect & Effect Parameters -->
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text font-semibold">Global Effect</span>
+        <span class="label-text-alt text-xs text-base-content/50">Applies to all textures by default</span>
+      </label>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="label py-0">
+            <span class="label-text text-xs">Effect Type</span>
+          </label>
+          <select
+            v-model.number="localValue.effect"
+            class="select select-bordered select-sm w-full"
+          >
+            <option :value="0">NONE</option>
+            <option :value="1">FLIPBOX</option>
+            <option :value="2">WIND</option>
+          </select>
+        </div>
+        <div>
+          <label class="label py-0">
+            <span class="label-text text-xs">Effect Parameters</span>
+          </label>
+          <input
+            v-model="localValue.effectParameters"
+            type="text"
+            class="input input-bordered input-sm w-full"
+            placeholder="e.g. 4,100 (frameCount,delayMs)"
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Offsets -->
     <CollapsibleSection
       title="Geometry Offsets"
