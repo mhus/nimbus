@@ -168,9 +168,9 @@ export class EngineService {
       this.appContext.services.player = this.playerService;
       logger.debug('PlayerService initialized');
 
-      // Start teleportation mode to prevent falling through world during initial chunk loading
-      this.physicsService.startTeleportation('player');
-      logger.debug('Teleportation mode started for initial spawn');
+      // Disable physics during initial chunk loading to prevent falling
+      this.physicsService.disablePhysics();
+      logger.debug('Physics disabled for initial spawn');
 
       // Connect CameraService with PlayerService for turnSpeed updates
       this.cameraService.setPlayerService(this.playerService);

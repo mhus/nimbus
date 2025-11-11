@@ -196,7 +196,7 @@ export class BlockContextAnalyzer {
    */
   private getBlock(x: number, y: number, z: number): BlockInfo {
     const block = this.chunkService.getBlockAt(x, y, z);
-    return { x, y, z, block };
+    return { x, y, z, block: block || null };
   }
 
   /**
