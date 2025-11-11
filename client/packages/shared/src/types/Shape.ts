@@ -80,6 +80,9 @@ export enum Shape {
 
   /** Thin instances (grass, leaves - high performance with Y-axis billboard) */
   THIN_INSTANCES = 25,
+
+  /** Wall (hollow cube with inner faces) */
+  WALL = 26,
 }
 
 /**
@@ -112,4 +115,5 @@ export const ShapeNames: Record<Shape, string> = {
   [Shape.LAVA]: 'lava',
   [Shape.FOG]: 'fog',
   [Shape.THIN_INSTANCES]: 'thin_instances',
+  [Shape.WALL]: 'wall',
 };

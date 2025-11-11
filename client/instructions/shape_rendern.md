@@ -181,7 +181,7 @@ Auch in anderen Renderern muessen die offsets repariert werden.
 
 ## Wall Renderer
 
-[ ] Erstelle einen WallRenderer der Blocks mit shape WALL (muss hinzugefuegt werden) rendert.
+[?] Erstelle einen WallRenderer der Blocks mit shape WALL (muss hinzugefuegt werden) rendert.
 Walls werden an der Raendern des Blocks gerendert, 
 - d.h. es werden die Seiten von aussen gerendert, die von aussen sichtbar sind, das ist exakt das geliche wie bei CubeRenderer.
 - zusaetzlich werden nochmal Flaechen etwas weiter innen im Block gerendert, die die Wand darstellen.
@@ -239,6 +239,23 @@ Die fehlenden wände sollen duch Innenwand gefuellt werden (wichtig winding wied
 Welche Einsaetze gemacht werden muessen hängt von der kombinantion der fehlenden aussenwände ab.
 - Alle Ecken sind schon vorhanden, muessen also nicht neu definiert werden
 - Die Klaechen koennen sich ggf ueberlappen, das ist ok.
+
+
+```text
+  Verwendung:
+  {
+    "visibility": {
+      "shape": 26,  // WALL
+      "faceVisibility": {
+        "value": 63  // Steuert Innenwände
+      },
+      "textures": {
+        "0": "textures/wall_outside.png",  // ALL (Außen)
+        "11": "textures/wall_inside.png"   // INSIDE_ALL (Innen + Lücken)
+      }
+    }
+  }
+```
 
 ## Fog Renderer
 
