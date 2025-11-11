@@ -7,7 +7,9 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "textures/block/basic/blue_stained_glass.png"
+          "0": {
+            "path": "textures/block/basic/blue_stained_glass.png"
+          }
         }
       }
     }

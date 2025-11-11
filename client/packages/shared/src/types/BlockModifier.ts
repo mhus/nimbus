@@ -26,6 +26,7 @@ export enum TextureKey {
   DIFFUSE = 8,
   DISTORTION = 9,
   OPACITY = 10,
+  WALL = 11,
   // Inside textures (for rendering interior faces of blocks)
   INSIDE_ALL = 20,
   INSIDE_TOP = 21,
@@ -53,6 +54,7 @@ export const TextureKeyNames: Record<TextureKey, string> = {
   [TextureKey.DIFFUSE]: 'diffuse',
   [TextureKey.DISTORTION]: 'distortion',
   [TextureKey.OPACITY]: 'opacity',
+  [TextureKey.WALL]: 'wall',
   [TextureKey.INSIDE_ALL]: 'inside_all',
   [TextureKey.INSIDE_TOP]: 'inside_top',
   [TextureKey.INSIDE_BOTTOM]: 'inside_bottom',

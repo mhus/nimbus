@@ -5,6 +5,7 @@
  * - Outer faces: Rendered like CubeRenderer (normal textures)
  * - Inner faces: Rendered 0.1 units inward with INSIDE_* textures (reverse winding)
  * - Gap fills: Small faces connecting outer/inner where outer wall is missing
+ *   - Gap textures: WALL texture (priority) → INSIDE_* textures (fallback)
  *
  * Total geometry:
  * - 32 corners (8 outer + 24 inner, 4 per inner face)
@@ -236,6 +237,11 @@ export class WallRenderer extends BlockRenderer {
     const insideFrontIndex = textures[TextureKey.INSIDE_FRONT] ? TextureKey.INSIDE_FRONT : (textures[TextureKey.INSIDE_SIDE] ? TextureKey.INSIDE_SIDE : (textures[TextureKey.INSIDE_ALL] ? TextureKey.INSIDE_ALL : (textures[TextureKey.ALL] ? TextureKey.ALL : 0)));
     const insideBackIndex = textures[TextureKey.INSIDE_BACK] ? TextureKey.INSIDE_BACK : (textures[TextureKey.INSIDE_SIDE] ? TextureKey.INSIDE_SIDE : (textures[TextureKey.INSIDE_ALL] ? TextureKey.INSIDE_ALL : (textures[TextureKey.ALL] ? TextureKey.ALL : 0)));
 
+    // Gap texture (with fallback chain: WALL → INSIDE_* → INSIDE_ALL → ALL)
+    const getGapTextureIndex = (insideIndex: number): number => {
+      return textures[TextureKey.WALL] ? TextureKey.WALL : insideIndex;
+    };
+
     // === STEP 4: Determine face visibility ===
 
     // Outer face visibility: From block (like CubeRenderer)
@@ -414,7 +420,8 @@ export class WallRenderer extends BlockRenderer {
 
     // Top inner wall gaps (4 edges: left, right, front, back)
     if (isInnerTopVisible) {
-      const texture = textures[insideTopIndex] ? this.normalizeTexture(textures[insideTopIndex]) : null;
+      const gapTextureIndex = getGapTextureIndex(insideTopIndex);
+      const texture = textures[gapTextureIndex] ? this.normalizeTexture(textures[gapTextureIndex]) : null;
 
       // Left edge gap (if left outer wall missing)
       if (!isOuterLeftVisible) {
@@ -467,7 +474,8 @@ export class WallRenderer extends BlockRenderer {
 
     // Bottom inner wall gaps (4 edges: left, right, front, back)
     if (isInnerBottomVisible) {
-      const texture = textures[insideBottomIndex] ? this.normalizeTexture(textures[insideBottomIndex]) : null;
+      const gapTextureIndex = getGapTextureIndex(insideBottomIndex);
+      const texture = textures[gapTextureIndex] ? this.normalizeTexture(textures[gapTextureIndex]) : null;
 
       if (!isOuterLeftVisible) {
         await this.addFace(
@@ -516,7 +524,8 @@ export class WallRenderer extends BlockRenderer {
 
     // Left inner wall gaps (4 edges: top, bottom, front, back)
     if (isInnerLeftVisible) {
-      const texture = textures[insideLeftIndex] ? this.normalizeTexture(textures[insideLeftIndex]) : null;
+      const gapTextureIndex = getGapTextureIndex(insideLeftIndex);
+      const texture = textures[gapTextureIndex] ? this.normalizeTexture(textures[gapTextureIndex]) : null;
 
       if (!isOuterTopVisible) {
         await this.addFace(
@@ -565,7 +574,8 @@ export class WallRenderer extends BlockRenderer {
 
     // Right inner wall gaps (4 edges: top, bottom, front, back)
     if (isInnerRightVisible) {
-      const texture = textures[insideRightIndex] ? this.normalizeTexture(textures[insideRightIndex]) : null;
+      const gapTextureIndex = getGapTextureIndex(insideRightIndex);
+      const texture = textures[gapTextureIndex] ? this.normalizeTexture(textures[gapTextureIndex]) : null;
 
       if (!isOuterTopVisible) {
         await this.addFace(
@@ -614,7 +624,8 @@ export class WallRenderer extends BlockRenderer {
 
     // Front inner wall gaps (4 edges: top, bottom, left, right)
     if (isInnerFrontVisible) {
-      const texture = textures[insideFrontIndex] ? this.normalizeTexture(textures[insideFrontIndex]) : null;
+      const gapTextureIndex = getGapTextureIndex(insideFrontIndex);
+      const texture = textures[gapTextureIndex] ? this.normalizeTexture(textures[gapTextureIndex]) : null;
 
       if (!isOuterTopVisible) {
         await this.addFace(
@@ -663,7 +674,8 @@ export class WallRenderer extends BlockRenderer {
 
     // Back inner wall gaps (4 edges: top, bottom, left, right)
     if (isInnerBackVisible) {
-      const texture = textures[insideBackIndex] ? this.normalizeTexture(textures[insideBackIndex]) : null;
+      const gapTextureIndex = getGapTextureIndex(insideBackIndex);
+      const texture = textures[gapTextureIndex] ? this.normalizeTexture(textures[gapTextureIndex]) : null;
 
       if (!isOuterTopVisible) {
         await this.addFace(

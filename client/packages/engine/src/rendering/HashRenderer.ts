@@ -261,11 +261,12 @@ export class HashRenderer extends BlockRenderer {
     if (isTopVisible) {
       const texture = textures[topIndex] ? this.normalizeTexture(textures[topIndex]) : null;
       await this.addFace(
-        points[0], points[1], points[2], points[3],
+        points[0], points[1], points[2], points[3],  // left-back, right-back, right-front, left-front
         [0, 1, 0],  // Normal pointing up
         texture,
         modifier,
-        renderContext
+        renderContext,
+        false  // reverseWinding
       );
       facesRendered++;
     }
@@ -274,11 +275,12 @@ export class HashRenderer extends BlockRenderer {
     if (isBottomVisible) {
       const texture = textures[bottomIndex] ? this.normalizeTexture(textures[bottomIndex]) : null;
       await this.addFace(
-        points[4], points[5], points[6], points[7],
+        points[4], points[5], points[6], points[7],  // left-back, left-front, right-front, right-back
         [0, -1, 0],  // Normal pointing down
         texture,
         modifier,
-        renderContext
+        renderContext,
+        false  // reverseWinding
       );
       facesRendered++;
     }
@@ -287,7 +289,7 @@ export class HashRenderer extends BlockRenderer {
     if (isLeftVisible) {
       const texture = textures[leftIndex] ? this.normalizeTexture(textures[leftIndex]) : null;
       await this.addFace(
-        points[8], points[9], points[10], points[11],
+        points[8], points[11], points[10], points[9],  // back-bottom, front-bottom, front-top, back-top
         [-1, 0, 0],  // Normal pointing left
         texture,
         modifier,
@@ -301,12 +303,12 @@ export class HashRenderer extends BlockRenderer {
     if (isRightVisible) {
       const texture = textures[rightIndex] ? this.normalizeTexture(textures[rightIndex]) : null;
       await this.addFace(
-        points[12], points[13], points[14], points[15],
+        points[13], points[12], points[15], points[14],  // front-bottom, back-bottom, back-top, front-top
         [1, 0, 0],  // Normal pointing right
         texture,
         modifier,
-        renderContext
-        // No reverse winding needed (already CCW)
+        renderContext,
+        true  // Reverse winding order
       );
       facesRendered++;
     }
@@ -315,7 +317,7 @@ export class HashRenderer extends BlockRenderer {
     if (isFrontVisible) {
       const texture = textures[frontIndex] ? this.normalizeTexture(textures[frontIndex]) : null;
       await this.addFace(
-        points[16], points[17], points[18], points[19],
+        points[16], points[19], points[18], points[17],  // left-bottom, right-bottom, right-top, left-top
         [0, 0, 1],  // Normal pointing forward
         texture,
         modifier,
@@ -329,7 +331,7 @@ export class HashRenderer extends BlockRenderer {
     if (isBackVisible) {
       const texture = textures[backIndex] ? this.normalizeTexture(textures[backIndex]) : null;
       await this.addFace(
-        points[20], points[21], points[22], points[23],
+        points[21], points[20], points[23], points[22],  // right-bottom, left-bottom, left-top, right-top
         [0, 0, -1],  // Normal pointing backward
         texture,
         modifier,

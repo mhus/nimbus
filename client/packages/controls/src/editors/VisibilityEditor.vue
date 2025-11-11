@@ -769,28 +769,8 @@ watch(localValue, (newValue) => {
 // Shape options
 const shapeOptions = ShapeNames;
 
-// Texture key options
-const textureKeyOptions: Record<number, string> = {
-  [TextureKey.ALL]: 'all',
-  [TextureKey.TOP]: 'top',
-  [TextureKey.BOTTOM]: 'bottom',
-  [TextureKey.LEFT]: 'left',
-  [TextureKey.RIGHT]: 'right',
-  [TextureKey.FRONT]: 'front',
-  [TextureKey.BACK]: 'back',
-  [TextureKey.SIDE]: 'side',
-  [TextureKey.DIFFUSE]: 'diffuse',
-  [TextureKey.DISTORTION]: 'distortion',
-  [TextureKey.OPACITY]: 'opacity',
-  [TextureKey.INSIDE_ALL]: 'inside_all',
-  [TextureKey.INSIDE_TOP]: 'inside_top',
-  [TextureKey.INSIDE_BOTTOM]: 'inside_bottom',
-  [TextureKey.INSIDE_LEFT]: 'inside_left',
-  [TextureKey.INSIDE_RIGHT]: 'inside_right',
-  [TextureKey.INSIDE_FRONT]: 'inside_front',
-  [TextureKey.INSIDE_BACK]: 'inside_back',
-  [TextureKey.INSIDE_SIDE]: 'inside_side',
-};
+// Texture key options - use directly from shared package
+const textureKeyOptions = TextureKeyNames;
 
 // ============================================
 // Texture Management Functions

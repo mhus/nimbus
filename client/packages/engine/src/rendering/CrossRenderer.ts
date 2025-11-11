@@ -189,20 +189,9 @@ export class CrossRenderer extends BlockRenderer {
     // Render diagonal plane 1: (left-back-bottom, right-front-bottom, right-front-top, left-back-top)
     // This creates a diagonal from corner 0-2 to corner 4-6
     if (texture1) {
-      // Front side
       await this.addFace(
         corners[0], corners[2], corners[6], corners[4],  // left-back-bottom, right-front-bottom, right-front-top, left-back-top
         [0.707, 0, -0.707],  // Normal pointing diagonally (normalized vector)
-        texture1,
-        modifier,
-        renderContext,
-        true  // Reverse winding order
-      );
-
-      // Back side
-      await this.addFace(
-        corners[4], corners[6], corners[2], corners[0],  // Reversed corner order
-        [-0.707, 0, 0.707],  // Opposite normal
         texture1,
         modifier,
         renderContext,
@@ -213,20 +202,9 @@ export class CrossRenderer extends BlockRenderer {
     // Render diagonal plane 2: (left-front-bottom, right-back-bottom, right-back-top, left-front-top)
     // This creates a diagonal from corner 3-1 to corner 7-5
     if (texture2) {
-      // Front side
       await this.addFace(
         corners[3], corners[1], corners[5], corners[7],  // left-front-bottom, right-back-bottom, right-back-top, left-front-top
         [-0.707, 0, -0.707],  // Normal pointing diagonally
-        texture2,
-        modifier,
-        renderContext,
-        true  // Reverse winding order
-      );
-
-      // Back side
-      await this.addFace(
-        corners[7], corners[5], corners[1], corners[3],  // Reversed corner order
-        [0.707, 0, 0.707],  // Opposite normal
         texture2,
         modifier,
         renderContext,
@@ -237,7 +215,7 @@ export class CrossRenderer extends BlockRenderer {
     logger.debug('Cross rendered', {
       blockTypeId: block.blockType.id,
       position: { x: worldX, y: worldY, z: worldZ },
-      planesRendered: (texture1 ? 2 : 0) + (texture2 ? 2 : 0)
+      planesRendered: (texture1 ? 1 : 0) + (texture2 ? 1 : 0)
     });
   }
 
