@@ -264,6 +264,7 @@ export class HashRenderer extends BlockRenderer {
         points[0], points[1], points[2], points[3],
         [0, 1, 0],  // Normal pointing up
         texture,
+        modifier,
         renderContext
       );
       facesRendered++;
@@ -276,6 +277,7 @@ export class HashRenderer extends BlockRenderer {
         points[4], points[5], points[6], points[7],
         [0, -1, 0],  // Normal pointing down
         texture,
+        modifier,
         renderContext
       );
       facesRendered++;
@@ -288,6 +290,7 @@ export class HashRenderer extends BlockRenderer {
         points[8], points[9], points[10], points[11],
         [-1, 0, 0],  // Normal pointing left
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -301,6 +304,7 @@ export class HashRenderer extends BlockRenderer {
         points[12], points[13], points[14], points[15],
         [1, 0, 0],  // Normal pointing right
         texture,
+        modifier,
         renderContext
         // No reverse winding needed (already CCW)
       );
@@ -314,6 +318,7 @@ export class HashRenderer extends BlockRenderer {
         points[16], points[17], points[18], points[19],
         [0, 0, 1],  // Normal pointing forward
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -327,6 +332,7 @@ export class HashRenderer extends BlockRenderer {
         points[20], points[21], points[22], points[23],
         [0, 0, -1],  // Normal pointing backward
         texture,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -359,6 +365,7 @@ export class HashRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
+    modifier: any,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -423,6 +430,9 @@ export class HashRenderer extends BlockRenderer {
       faceData.indices.push(i0, i1, i2);
       faceData.indices.push(i0, i2, i3);
     }
+
+    // Add wind attributes and colors (uses helper from base class)
+    this.addWindAttributesAndColors(faceData, modifier, 4);
 
     renderContext.vertexOffset += 4;
   }

@@ -115,7 +115,6 @@
             class="select select-bordered select-sm w-full"
           >
             <option :value="0">NONE</option>
-            <option :value="1">FLIPBOX</option>
             <option :value="2">WIND</option>
           </select>
         </div>
@@ -626,7 +625,6 @@
                   class="select select-bordered select-xs w-full"
                 >
                   <option :value="0">NONE</option>
-                  <option :value="1">FLIPBOX</option>
                   <option :value="2">WIND</option>
                 </select>
               </div>

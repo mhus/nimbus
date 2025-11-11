@@ -237,3 +237,6 @@ Levels:
 doLoglevel('PhysicsService', 'debug')
 ```
 
+=== 
+
+[x] Den effect "FLIPBOX" gibt es nicht mehr, entferne ihn aus shred type und editor. (Es gibt aber noch den shape type FLIPBOX, der bleibt bestehen)

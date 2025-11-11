@@ -70,9 +70,6 @@ export class ShaderService {
     // Register wind shader
     this.registerWindShader();
 
-    // Register flipbox shader
-    this.registerFlipboxShader();
-
     // Register thin instance wind shader
     this.registerThinInstanceWindShader();
 
@@ -283,7 +280,7 @@ export class ShaderService {
       logger.warn('Passthrough material created without texture', { name });
     }
 
-    material.setVector3('lightDirection', 0.5, 1.0, 0.5);
+    material.setVector3('lightDirection', new Vector3(0.5, 1.0, 0.5));
     material.backFaceCulling = false;
 
     return material;
@@ -512,7 +509,7 @@ export class ShaderService {
     material.setFloat('windSwayFactor', 2.0);
 
     // Set light direction (from above-front)
-    material.setVector3('lightDirection', 0.5, 1.0, 0.5);
+    material.setVector3('lightDirection', new Vector3(0.5, 1.0, 0.5));
 
     // Configure material properties
     material.backFaceCulling = false; // Transparent blocks visible from both sides

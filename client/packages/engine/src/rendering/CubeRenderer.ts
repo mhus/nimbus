@@ -411,27 +411,8 @@ export class CubeRenderer extends BlockRenderer {
       faceData.indices.push(i0, i2, i3);  // Triangle 2
     }
 
-    // Add vertex colors (white by default, RGBA format: 4 values per vertex)
-    if (faceData.colors) {
-      for (let i = 0; i < 4; i++) {
-        faceData.colors.push(1.0, 1.0, 1.0, 1.0);  // White color (RGBA)
-      }
-    }
-
-    // Add wind attributes (per-vertex, 4 vertices for this face)
-    if (faceData.windLeafiness && faceData.windStability && faceData.windLeverUp && faceData.windLeverDown) {
-      const windLeafiness = modifier.wind?.leafiness ?? 0.5;
-      const windStability = modifier.wind?.stability ?? 0.5;
-      const windLeverUp = modifier.wind?.leverUp ?? 0.0;
-      const windLeverDown = modifier.wind?.leverDown ?? 0.0;
-
-      for (let i = 0; i < 4; i++) {
-        faceData.windLeafiness.push(windLeafiness);
-        faceData.windStability.push(windStability);
-        faceData.windLeverUp.push(windLeverUp);
-        faceData.windLeverDown.push(windLeverDown);
-      }
-    }
+    // Add wind attributes and colors (uses helper from base class)
+    this.addWindAttributesAndColors(faceData, modifier, 4);
 
     renderContext.vertexOffset += 4;  // 4 vertices added
   }

@@ -193,6 +193,7 @@ export class StairRenderer extends BlockRenderer {
       corners[4], corners[5], corners[9], corners[8],
       [0, 1, 0],
       topTexture,
+      modifier,
       renderContext
     );
     facesRendered++;
@@ -202,7 +203,7 @@ export class StairRenderer extends BlockRenderer {
       await this.addFace(
         corners[3], corners[2], corners[1], corners[0],
         [0, -1, 0],
-        bottomTexture,
+        bottomTexture, modifier,
         renderContext
       );
       facesRendered++;
@@ -213,7 +214,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[3], corners[7], corners[6], corners[2],
           [0, 0, 1],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false  // No reverse winding
         );
@@ -224,7 +225,7 @@ export class StairRenderer extends BlockRenderer {
       await this.addFace(
         corners[1], corners[5], corners[4], corners[0],
         [0, 0, -1],
-        sideTexture,
+        sideTexture, modifier,
         renderContext,
         false  // Reverse winding order
       );
@@ -236,7 +237,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[2], corners[6], corners[5], corners[1],
           [1, 0, 0],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false  // No reverse winding
         );
@@ -247,7 +248,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[0], corners[4], corners[7], corners[3],
           [-1, 0, 0],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false  // No reverse winding
         );
@@ -261,6 +262,7 @@ export class StairRenderer extends BlockRenderer {
       corners[12], corners[13], corners[14], corners[15],
       [0, 1, 0],
       topTexture,
+      modifier,
       renderContext
     );
     facesRendered++;
@@ -271,6 +273,7 @@ export class StairRenderer extends BlockRenderer {
           corners[11], corners[10], corners[9], corners[8],
           [0, -1, 0],
           topTexture, // Use top texture for step bottom
+          modifier,
           renderContext
         );
         facesRendered++;
@@ -280,7 +283,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[11], corners[15], corners[14], corners[10],
           [0, 0, 1],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false
         );
@@ -291,7 +294,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[9], corners[13], corners[12], corners[8],
           [0, 0, -1],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false
         );
@@ -302,7 +305,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[10], corners[14], corners[13], corners[9],
           [1, 0, 0],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false  // No reverse winding
         );
@@ -313,7 +316,7 @@ export class StairRenderer extends BlockRenderer {
         await this.addFace(
           corners[8], corners[12], corners[15], corners[11],
           [-1, 0, 0],
-          sideTexture,
+          sideTexture, modifier,
           renderContext,
           false  // No reverse winding
         );
@@ -345,6 +348,7 @@ export class StairRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
+    modifier: any,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -409,6 +413,9 @@ export class StairRenderer extends BlockRenderer {
       faceData.indices.push(i0, i1, i2);
       faceData.indices.push(i0, i2, i3);
     }
+
+    // Add wind attributes and colors (uses helper from base class)
+    this.addWindAttributesAndColors(faceData, modifier, 4);
 
     renderContext.vertexOffset += 4;
   }

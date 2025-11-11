@@ -1,10 +1,11 @@
 /**
  * FlipboxRenderer - Renders animated sprite-sheet blocks
  *
- * Renders only the TOP face of a block with FLIPBOX effect for sprite-sheet animation.
+ * Renders only the TOP face of a block with FLIPBOX shape for sprite-sheet animation.
  * Each block gets its own separate mesh with original texture (not atlas).
+ * This renderer is triggered by Shape.FLIPBOX, not by an effect.
  *
- * Effect Parameters Format: "frameCount,delayMs[,mode]"
+ * Animation Parameters (from visibility.effectParameters): "frameCount,delayMs[,mode]"
  * - frameCount: Number of frames in horizontal sprite-sheet (e.g., 4)
  * - delayMs: Milliseconds between frame transitions (e.g., 100)
  * - mode: "rotate" (default) or "bumerang" (optional)
@@ -15,7 +16,7 @@
  */
 
 import { Vector3, Matrix, Mesh, VertexData } from '@babylonjs/core';
-import { getLogger, BlockEffect } from '@nimbus/shared';
+import { getLogger, Shape } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -27,7 +28,8 @@ const logger = getLogger('FlipboxRenderer');
  *
  * Features:
  * - Renders only TOP face (horizontal surface)
- * - Uses FLIPBOX effect from ShaderService
+ * - Triggered by Shape.FLIPBOX
+ * - Uses FLIPBOX shader from ShaderService for animation
  * - Each block gets separate mesh with original texture
  * - Supports offset, scaling, rotation transformations
  */
@@ -55,13 +57,6 @@ export class FlipboxRenderer extends BlockRenderer {
 
     if (!modifier || !modifier.visibility) {
       logger.warn('FlipboxRenderer: No visibility modifier', { block });
-      return;
-    }
-
-    // Validate effect is FLIPBOX
-    const effect = modifier.visibility.effect;
-    if (effect !== BlockEffect.FLIPBOX) {
-      logger.warn('FlipboxRenderer: Not a FLIPBOX effect', { effect, block });
       return;
     }
 
@@ -230,12 +225,32 @@ export class FlipboxRenderer extends BlockRenderer {
     // Apply to mesh
     vertexData.applyToMesh(mesh);
 
-    // Get FLIPBOX effect material from MaterialService
-    // MaterialService will detect effect field and create FLIPBOX material with original texture
-    const material = await renderContext.renderService.materialService.getMaterial(
-      clientBlock.currentModifier,
-      1 // TextureKey.TOP
-    );
+    // Get FLIPBOX shader material directly from ShaderService
+    const shaderService = renderContext.renderService.appContext.services.shader;
+    if (!shaderService) {
+      logger.error('FlipboxRenderer: ShaderService not available');
+      return;
+    }
+
+    // Load original texture (not atlas)
+    const texturePath = typeof topTexture === 'string' ? topTexture : topTexture.path;
+    const materialService = renderContext.renderService.materialService;
+    const texture = await materialService.loadTexture(texturePath);
+
+    // Get effect parameters
+    const effectParameters = modifier.visibility.effectParameters;
+
+    // Create FLIPBOX material
+    const material = shaderService.createMaterial('flipbox', {
+      texture,
+      effectParameters,
+      name: meshName,
+    });
+
+    if (!material) {
+      logger.error('FlipboxRenderer: Failed to create flipbox material');
+      return;
+    }
 
     mesh.material = material;
 

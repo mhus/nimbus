@@ -194,6 +194,7 @@ export class CrossRenderer extends BlockRenderer {
         corners[0], corners[2], corners[6], corners[4],  // left-back-bottom, right-front-bottom, right-front-top, left-back-top
         [0.707, 0, -0.707],  // Normal pointing diagonally (normalized vector)
         texture1,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -203,6 +204,7 @@ export class CrossRenderer extends BlockRenderer {
         corners[4], corners[6], corners[2], corners[0],  // Reversed corner order
         [-0.707, 0, 0.707],  // Opposite normal
         texture1,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -216,6 +218,7 @@ export class CrossRenderer extends BlockRenderer {
         corners[3], corners[1], corners[5], corners[7],  // left-front-bottom, right-back-bottom, right-back-top, left-front-top
         [-0.707, 0, -0.707],  // Normal pointing diagonally
         texture2,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -225,6 +228,7 @@ export class CrossRenderer extends BlockRenderer {
         corners[7], corners[5], corners[1], corners[3],  // Reversed corner order
         [0.707, 0, 0.707],  // Opposite normal
         texture2,
+        modifier,
         renderContext,
         true  // Reverse winding order
       );
@@ -256,6 +260,7 @@ export class CrossRenderer extends BlockRenderer {
     corner3: number[],
     normal: number[],
     texture: TextureDefinition | null,
+    modifier: any,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -309,6 +314,9 @@ export class CrossRenderer extends BlockRenderer {
       faceData.indices.push(i0, i1, i2);
       faceData.indices.push(i0, i2, i3);
     }
+
+    // Add wind attributes and colors (uses helper from base class)
+    this.addWindAttributesAndColors(faceData, modifier, 4);
 
     renderContext.vertexOffset += 4;  // 4 vertices added
   }

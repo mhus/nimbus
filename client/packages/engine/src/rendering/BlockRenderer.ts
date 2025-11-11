@@ -7,6 +7,7 @@
 import { Matrix, Vector3 } from '@babylonjs/core';
 import type { RenderService, RenderContext } from '../services/RenderService';
 import type { ClientBlock } from '../types';
+import type { BlockModifier } from '@nimbus/shared';
 
 /**
  * Abstract base class for shape renderers
@@ -36,6 +37,45 @@ export abstract class BlockRenderer {
    */
   needsSeparateMesh(): boolean {
     return false; // Default: batch into chunk mesh
+  }
+
+  /**
+   * Add wind attributes and vertex colors to faceData for wind shader support
+   *
+   * This helper method should be called by renderers after adding vertices.
+   * It adds the required attributes for wind animation (if faceData has wind arrays initialized).
+   *
+   * @param faceData - Face data to add attributes to
+   * @param modifier - Block modifier containing wind properties
+   * @param vertexCount - Number of vertices to add attributes for
+   */
+  protected addWindAttributesAndColors(
+    faceData: any,
+    modifier: BlockModifier,
+    vertexCount: number
+  ): void {
+    // Add vertex colors (white by default, RGBA format: 4 values per vertex)
+    if (faceData.colors) {
+      for (let i = 0; i < vertexCount; i++) {
+        faceData.colors.push(1.0, 1.0, 1.0, 1.0);
+      }
+    }
+
+    // Add wind attributes (per-vertex, 1 value per vertex)
+    // Only add if arrays exist (indicates wind shader is used for this material group)
+    if (faceData.windLeafiness && faceData.windStability && faceData.windLeverUp && faceData.windLeverDown) {
+      const windLeafiness = modifier.wind?.leafiness ?? 0.5;
+      const windStability = modifier.wind?.stability ?? 0.5;
+      const windLeverUp = modifier.wind?.leverUp ?? 0.0;
+      const windLeverDown = modifier.wind?.leverDown ?? 0.0;
+
+      for (let i = 0; i < vertexCount; i++) {
+        faceData.windLeafiness.push(windLeafiness);
+        faceData.windStability.push(windStability);
+        faceData.windLeverUp.push(windLeverUp);
+        faceData.windLeverDown.push(windLeverDown);
+      }
+    }
   }
 
 }

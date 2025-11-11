@@ -55,7 +55,7 @@ Das bedeutet du brauchst pro seite 4 punkte, also 24 Punkte. da sich drei seiten
 teilen.
 - Implementiere alle eigenschaften, offset, scaling, rotation wie bei einem Cube.
 - Die offset verschieben nur noch aspekte von jedem punkt. andere aspekte bleiben unveraendert.
-- Wenn alle offsets 0 sind, dannw wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
+- Wenn alle offsets 0 sind, dann wird wieder ein Cube gerendert, da immer drei punkte uebereinander liegen.
 
 [x] faceVisibility soll auch die Seiten im HashRenderer seiten deaktivieren koennen.
 
@@ -160,7 +160,7 @@ SpriteRenderer:
 
 ## Model
 
-[ ] Erstelle einen ModelRenderer der ein Model rendert.
+[x] Erstelle einen ModelRenderer der ein Model rendert.
 - Orientiere dich an client_playground/packages/client/src/rendering/shapes/ModelRenderer.ts
 - Implementiere alle eigenschaften, offset, scaling, rotation
 - Der Renderer definiert sein eigenes Mesh
@@ -168,7 +168,7 @@ SpriteRenderer:
 
 ## Offsets reparieren:
 
-[-] Die offsets werden im Blockenderer falsch angewendet.
+[x] Die offsets werden im Blockenderer falsch angewendet.
 
 top front left (SW) - in blockrenderer:
 top front right (SE) - in blockrenderer:
@@ -178,4 +178,81 @@ top back right (NE) - in blockrenderer:
 Das gleiche natuerlich auch bei bottom.
 
 Auch in anderen Renderern muessen die offsets repariert werden.
+
+## Wall Renderer
+
+[ ] Erstelle einen WallRenderer der Blocks mit shape WALL (muss hinzugefuegt werden) rendert.
+Walls werden an der Raendern des Blocks gerendert, 
+- d.h. es werden die Seiten von aussen gerendert, die von aussen sichtbar sind, das ist exakt das geliche wie bei CubeRenderer.
+- zusaetzlich werden nochmal Flaechen etwas weiter innen im Block gerendert, die die Wand darstellen.
+  - Die innere Wand hat eine dicke von 0.1 (constante in WallRenderer) Einheiten.
+  - Die Flaechen sind anders herim Winded als die aussenwaende, damit sie von der Innenseite sichtbar sind.
+  - Es gibt spezielle Texuren IDs fuer INSIDE_ALL, INSIDE_*, wenn INSIDE_ALL nicht definiert wurde wird als fallback noch auf ALL zurueckgegriffen. Ansonsten die gleiche logik wie bei den Aussenseiten.
+  - Fuer die Steuerung ob die faces der inneren Wand sichtbar sind, gilt nur die faceVisibility in der modifierDefinition, nicht die am Block (das ist ein Unterschied zu allen anderen renderern).
+  - Es ist vermutlich sinnvoll die innenwaende immer bis zur ausenwand zu ziehen, damit es keine Luecken wenn die 90 Grad wand nicht gezeichnet werden soll.
+  - Die luecke zwischen aussenwand und innenwand muss gefuellt werden, siehe beispiel
+- Orientiere dich an CubeRenderer.
+- Implementiere alle eigenschften, offset, scaling, rotation wie bei einem Cube.
+
+z.b.
+
+```text
++------------------+
+|  |  OUTSIDE   |  |
+|--+------------+--|
+|  |  INSIDE    |  |
+|  |            |  |
+|  |            |  |
+|--+------------+--|
+|  |            |  |
++------------------+
+```
+
+Wenn jetzt eine wand fehlt, dann  muss eine gleine luecke zwischen der aussenwand und der innenwand gefuellt werden.
+
+```text
++-------------------
+|  |  OUTSIDE        <--- Hier fehlt die wand
+|--+----------------
+|  |  INSIDE    
+|  |            
+|  |            
+|--+----------------
+|  |                 <--- Hier fehlt die wand
++-------------------
+```
+
+Die fehlenden wände sollen duch Innenwand gefuellt werden (wichtig winding wieder von aussen sichtbar machen).
+
+```text
++------------------+
+|  |  OUTSIDE      | <--- Hier jetzt innenwand Einsatz
+|--+---------------+
+|  |  INSIDE    
+|  |            
+|  |            
+|--+---------------+
+|  |               | <--- Hier jetzt innenwand Einsatz
++------------------+
+```
+
+Welche Einsaetze gemacht werden muessen hängt von der kombinantion der fehlenden aussenwände ab.
+- Alle Ecken sind schon vorhanden, muessen also nicht neu definiert werden
+- Die Klaechen koennen sich ggf ueberlappen, das ist ok.
+
+## Fog Renderer
+
+[ ] Erstelle einen FogRenderer der Blocks mit shape FOG rendert.
+- Der FogRenderer rendert einen Nebelblock der den ganzen Block ausfuellt.
+- Der Nebel soll ein spezielles Material nutzen, das den Nebel Effekt umsetzt (vermutlich)
+- Orientiere dich an CubeRenderer.
+- Implementiere alle eigenschften, offset, scaling, rotation wie bei einem Cube.
+
+
+## Illumination
+
+Im BlockModifier gibt es eine Sektion Illumination.
+Blöcke sollen generell Licht emittieren können.
+
+???
 

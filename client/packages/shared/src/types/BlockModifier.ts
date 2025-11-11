@@ -448,13 +448,6 @@ export enum BlockEffect {
   /** No effect */
   NONE = 0,
 
-  /** Flipbox effect - Sprite-sheet animation cycling through frames
-   * effectParameters format: "frameCount,delayMs" (e.g., "4,100")
-   * - frameCount: Number of frames in horizontal sprite-sheet
-   * - delayMs: Milliseconds between frame changes
-   */
-  FLIPBOX = 1,
-
   /** Wind effect */
   WIND = 2,
 }

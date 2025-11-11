@@ -119,25 +119,6 @@ export class MaterialService {
     // Check for effect (texture.effect or visibility.effect)
     const finalEffect = textureDef.effect ?? modifier.visibility?.effect ?? BlockEffect.NONE;
 
-    // FLIPBOX blocks need original texture (not atlas), so include texture path in key
-    if (finalEffect === BlockEffect.FLIPBOX) {
-      const parts: string[] = ['flipbox']; // Special prefix for FLIPBOX
-      parts.push(`tex:${textureDef.path}`); // Include texture path
-      parts.push(`bfc:${textureDef.backFaceCulling ?? true}`);
-      parts.push(`tm:${textureDef.transparencyMode ?? TransparencyMode.NONE}`);
-      parts.push(`op:${textureDef.opacity ?? 1.0}`);
-      parts.push(`sm:${textureDef.samplingMode ?? SamplingMode.LINEAR}`);
-      parts.push(`eff:${finalEffect}`);
-
-      // Effect parameters (REQUIRED for FLIPBOX: "frameCount,delayMs")
-      const effectParams = textureDef.effectParameters ?? modifier.visibility?.effectParameters;
-      if (effectParams) {
-        parts.push(`ep:${effectParams}`);
-      }
-
-      return parts.join('|');
-    }
-
     // Build key based on MATERIAL PROPERTIES, not texture path
     // This allows grouping blocks with different textures but same material properties
     const parts: string[] = ['atlas']; // Always use atlas texture
@@ -287,28 +268,12 @@ export class MaterialService {
       // Create material based on effect
       let material: Material | null = null;
 
-      // Check for effect (e.g., FLIPBOX, WIND)
+      // Check for effect (e.g., WIND)
       if (props.effect !== BlockEffect.NONE && this.shaderService) {
         const effectName = BlockEffect[props.effect].toLowerCase();
 
-        if (props.effect === BlockEffect.FLIPBOX && props.texturePath) {
-          // FLIPBOX effect needs original texture (not atlas)
-          const originalTexture = await this.loadTexture(props.texturePath);
-          material = this.shaderService.createMaterial(
-            effectName,
-            {
-              texture: originalTexture,
-              effectParameters: props.effectParameters,
-              name: cacheKey,
-            }
-          );
-          logger.debug('Created FLIPBOX effect material with original texture', {
-            texturePath: props.texturePath,
-            effectParameters: props.effectParameters,
-            cacheKey
-          });
-        } else if (this.shaderService.hasEffect(effectName)) {
-          // Other effects use atlas texture
+        if (this.shaderService.hasEffect(effectName)) {
+          // Effects use atlas texture
           const atlasTexture = this.textureAtlas?.getTexture();
           material = this.shaderService.createMaterial(
             effectName,

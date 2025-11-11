@@ -346,6 +346,21 @@ export class RenderService {
 
         // Create mesh if we have any geometry
         if (faceData.positions.length > 0) {
+          const vertexCount = faceData.positions.length / 3;
+
+          logger.debug('Creating mesh - array sizes', {
+            materialKey,
+            vertexCount,
+            positions: faceData.positions.length,
+            normals: faceData.normals.length,
+            uvs: faceData.uvs.length,
+            colors: faceData.colors?.length ?? 0,
+            windLeafiness: faceData.windLeafiness?.length ?? 0,
+            windStability: faceData.windStability?.length ?? 0,
+            windLeverUp: faceData.windLeverUp?.length ?? 0,
+            windLeverDown: faceData.windLeverDown?.length ?? 0,
+          });
+
           const meshName = `${chunkKey}_${materialKey}`;
           const mesh = this.createMesh(meshName, faceData);
 
@@ -416,14 +431,8 @@ export class RenderService {
     }
 
     const shape = modifier.visibility.shape ?? Shape.CUBE;
-    const effect = this.getBlockEffect(modifier);
 
-    // Check effect first
-    if (effect === BlockEffect.FLIPBOX) {
-      return this.flipboxRenderer;
-    }
-
-    // Then check shape
+    // Check shape
     switch (shape) {
       case Shape.CUBE:
         return this.cubeRenderer;
@@ -441,6 +450,8 @@ export class RenderService {
         return this.stepsRenderer;
       case Shape.STAIR:
         return this.stairRenderer;
+      case Shape.FLIPBOX:
+        return this.flipboxRenderer;
       case Shape.MODEL:
         return this.modelRenderer;
       case Shape.BILLBOARD:

@@ -250,6 +250,9 @@ export class SphereRenderer extends BlockRenderer {
       faceData.indices.push(indices[i] + vertexOffset);
     }
 
+    // Add wind attributes and colors (uses helper from base class)
+    this.addWindAttributesAndColors(faceData, modifier, vertices.length);
+
     renderContext.vertexOffset += vertices.length;
 
     logger.debug('Sphere rendered', {
