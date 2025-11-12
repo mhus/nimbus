@@ -110,8 +110,6 @@ export class ModelService {
       const baseUrl = this.networkService.getAssetUrl(modelPath);
       const fullModelUrl = `${baseUrl}?t=${timestamp}`;
 
-      logger.debug('LoadAssetContainerAsync parameters', { fullModelUrl });
-
       // Load the GLB model using LoadAssetContainerAsync
       let container: AssetContainer;
       try {
@@ -142,11 +140,6 @@ export class ModelService {
         throw new Error(`No meshes found in GLB model: ${fullModelUrl}`);
       }
 
-      logger.debug('GLB model loaded successfully', {
-        modelPath,
-        meshCount: container.meshes.length,
-      });
-
       // Get all meshes (skip __root__ node if present)
       const allMeshes = container.meshes.filter(m => m instanceof Mesh && m.name !== '__root__') as Mesh[];
 
@@ -157,7 +150,6 @@ export class ModelService {
       let templateMesh: Mesh;
 
       if (allMeshes.length > 1) {
-        logger.debug('Merging GLB meshes', { count: allMeshes.length });
 
         // Add meshes to scene first (required for merging)
         container.addAllToScene();
@@ -197,7 +189,7 @@ export class ModelService {
       this.modelCache.set(modelPath, cachedModel);
       this.evictCache();
 
-      logger.info('GLB model loaded and cached', { modelPath });
+      logger.debug('GLB model loaded and cached', { modelPath });
       return templateMesh;
     } catch (error) {
       ExceptionHandler.handle(error, 'ModelService.loadGlbModel', {
@@ -248,8 +240,6 @@ export class ModelService {
       const rootUrl = fullModelUrl.substring(0, lastSlashIndex + 1);
       const filename = fullModelUrl.substring(lastSlashIndex + 1);
 
-      logger.debug('SceneLoader parameters', { rootUrl, filename, fullModelUrl });
-
       // Load the model
       let result;
       try {
@@ -282,11 +272,6 @@ export class ModelService {
         throw new Error(`No meshes found in model: ${fullModelUrl}. The file might be empty or invalid.`);
       }
 
-      logger.debug('Model loaded successfully', {
-        modelPath,
-        meshCount: result.meshes.length,
-      });
-
       // Merge all meshes into one for better performance
       const allMeshes = result.meshes.filter(m => m instanceof Mesh) as Mesh[];
 
@@ -297,7 +282,6 @@ export class ModelService {
       let templateMesh: Mesh;
 
       if (allMeshes.length > 1) {
-        logger.debug('Merging meshes', { count: allMeshes.length });
         const merged = Mesh.MergeMeshes(
           allMeshes,
           true, // disposeSource
@@ -331,7 +315,7 @@ export class ModelService {
       this.modelCache.set(modelPath, cachedModel);
       this.evictCache();
 
-      logger.info('Model loaded and cached', { modelPath });
+      logger.debug('Model loaded and cached', { modelPath });
       return templateMesh;
     } catch (error) {
       ExceptionHandler.handle(error, 'ModelService.loadModel', {

@@ -197,7 +197,7 @@ export class EntityRenderService {
       // Store mesh reference in ClientEntity for EntityService
       clientEntity.meshes = [mesh];
 
-      logger.info('Entity created', {
+      logger.debug('Entity created', {
         entityId,
         modelPath,
         position: mesh.position,

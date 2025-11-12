@@ -62,7 +62,7 @@ export class EntityPathwayMessageHandler extends MessageHandler<EntityPathway[]>
         }
       }
 
-      logger.info('All entity pathways processed', { count: pathways.length });
+      logger.debug('All entity pathways processed', { count: pathways.length });
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityPathwayMessageHandler.handle', {
         message,

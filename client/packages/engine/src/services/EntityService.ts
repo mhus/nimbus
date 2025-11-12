@@ -233,7 +233,7 @@ export class EntityService {
       this.entityCache.set(entityId, clientEntity);
       this.evictEntityCache();
 
-      logger.info('Entity loaded', { entityId });
+      logger.debug('Entity loaded', { entityId });
       return clientEntity;
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityService.getEntity', { entityId });
