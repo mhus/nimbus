@@ -6,8 +6,7 @@
  * Each model gets a separate mesh (not part of chunk mesh).
  */
 
-import { Mesh, SceneLoader, Vector3, Matrix } from '@babylonjs/core';
-import '@babylonjs/loaders'; // Required for .babylon file format
+import { Vector3 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
@@ -19,17 +18,12 @@ const logger = getLogger('ModelRenderer');
  * ModelRenderer - Renders blocks as 3D models
  *
  * Features:
- * - Loads .babylon model files
- * - Caches loaded models for reuse
+ * - Uses ModelService for loading and caching
  * - Automatic scaling to fit block size
  * - Supports offset, scaling, rotation transformations
  * - Each block gets its own mesh instance
  */
 export class ModelRenderer extends BlockRenderer {
-  // Static cache: shared across all instances
-  // Key: model path, Value: template mesh
-  private static modelCache = new Map<string, Mesh>();
-
   /**
    * MODEL blocks need separate meshes
    */
@@ -108,80 +102,40 @@ export class ModelRenderer extends BlockRenderer {
     const posZ = worldZ + 0.5 + offsetZ;
 
     try {
-      // Load or get cached model
-      let modelMesh: Mesh;
-
-      if (ModelRenderer.modelCache.has(modelPath)) {
-        // Clone cached model
-        const cachedMesh = ModelRenderer.modelCache.get(modelPath)!;
-        modelMesh = cachedMesh.clone(`model_${worldX}_${worldY}_${worldZ}`, null)!;
-        logger.debug('Cloned cached model', { modelPath });
-      } else {
-        // Load new model
-        logger.debug('Loading new model from asset server', { fullModelUrl });
-
-        // Parse URL to get root path and filename
-        const lastSlashIndex = fullModelUrl.lastIndexOf('/');
-        const rootUrl = fullModelUrl.substring(0, lastSlashIndex + 1);
-        const filename = fullModelUrl.substring(lastSlashIndex + 1);
-
-        logger.debug('SceneLoader parameters', { rootUrl, filename });
-
-        // Load the model
-        const result = await SceneLoader.ImportMeshAsync(
-          '', // Load all meshes
-          rootUrl,
-          filename,
-          renderContext.renderService.scene
-        );
-
-        if (!result.meshes || result.meshes.length === 0) {
-          throw new Error(`No meshes found in model: ${fullModelUrl}`);
-        }
-
-        logger.debug('Model loaded successfully', {
-          modelPath,
-          meshCount: result.meshes.length
+      // Get ModelService from EngineService
+      const engineService = renderContext.renderService.appContext.services.engine;
+      if (!engineService) {
+        logger.error('EngineService not available', {
+          blockTypeId: block.blockType.id,
+          position: { x: worldX, y: worldY, z: worldZ }
         });
-
-        // Merge all meshes into one for better performance
-        const allMeshes = result.meshes.filter(m => m instanceof Mesh) as Mesh[];
-
-        if (allMeshes.length === 0) {
-          throw new Error('No Mesh instances found in loaded model');
-        }
-
-        if (allMeshes.length > 1) {
-          logger.debug('Merging meshes', { count: allMeshes.length });
-          const merged = Mesh.MergeMeshes(
-            allMeshes,
-            true,  // disposeSource
-            true,  // allow32BitsIndices
-            undefined,
-            false, // subdivideWithSubMeshes
-            true   // multiMultiMaterials
-          );
-
-          if (!merged) {
-            logger.warn('Failed to merge meshes, using first mesh', { modelPath });
-            modelMesh = allMeshes[0];
-          } else {
-            modelMesh = merged;
-            modelMesh.name = `model_template_${modelPath}`;
-          }
-        } else {
-          modelMesh = allMeshes[0];
-        }
-
-        // Cache the loaded model (make it invisible, it's just a template)
-        ModelRenderer.modelCache.set(modelPath, modelMesh);
-        modelMesh.setEnabled(false); // Disable template mesh so it's not rendered
-        logger.debug('Model cached', { modelPath });
-
-        // Clone for this instance
-        modelMesh = modelMesh.clone(`model_${worldX}_${worldY}_${worldZ}`, null)!;
-        modelMesh.setEnabled(true); // Enable the clone
+        return;
       }
+
+      const modelService = engineService.getModelService();
+      if (!modelService) {
+        logger.error('ModelService not available', {
+          blockTypeId: block.blockType.id,
+          position: { x: worldX, y: worldY, z: worldZ }
+        });
+        return;
+      }
+
+      // Load model via ModelService (cached)
+      const templateMesh = await modelService.loadModel(modelPath);
+      if (!templateMesh) {
+        logger.error('Failed to load model', {
+          modelPath,
+          fullModelUrl,
+          blockTypeId: block.blockType.id,
+          position: { x: worldX, y: worldY, z: worldZ }
+        });
+        return;
+      }
+
+      // Clone template mesh for this instance
+      const modelMesh = templateMesh.clone(`model_${worldX}_${worldY}_${worldZ}`, null)!;
+      modelMesh.setEnabled(true); // Enable the clone
 
       // Calculate bounding box for automatic scaling
       modelMesh.computeWorldMatrix(true);
@@ -255,16 +209,5 @@ export class ModelRenderer extends BlockRenderer {
         }
       );
     }
-  }
-
-  /**
-   * Clear the model cache (useful for hot-reloading during development)
-   */
-  static clearCache(): void {
-    for (const mesh of ModelRenderer.modelCache.values()) {
-      mesh.dispose();
-    }
-    ModelRenderer.modelCache.clear();
-    logger.info('Model cache cleared', { cachedModels: ModelRenderer.modelCache.size });
   }
 }

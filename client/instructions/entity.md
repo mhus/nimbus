@@ -78,12 +78,22 @@ ClientEntity
 
 Der EntityService soll im AppContext verfuegbar sein 
 
-[ ] Im ModelRenderer werden modelle geladen und gerendert. Es soll einen ModelService geben, der im RenderService referenziert wird. 
+[?] Im ModelRenderer werden modelle geladen und gerendert. Es soll einen ModelService geben, der im EngineService referenziert wird. 
 Er laed Modelle, cacht diese und stellt sie zum rendern bereit. Der ModelRenderer soll den ModelService nutzen um die modelle zu laden.
 
 [ ] Es soll einen EntityRenderService geben, der die entitys in der welt rendert. Er wird vom EntityService benachrichtigt 
 wenn eine entity erscheint oder verschwindet. Sich die position, rotation oder die Pose aendert.
+- Modelle koenne vom ModelService geladen werden
+- EntityRenderService soll im EngineService referenziert sein
 
+[ ] Im EntityService soll es einen Loop geben, der alle 100 (constante) ms die positionen und status der entitys aktualisiert
+- Kommt ein unbekannter entity pathway an, wird die entity und ggr entitymodel vom server geladen und ein ClientEntity objekt erstellt.
+- Die position der entity wird anhand der waypoints und des timestamps berechnet
+- Wenn die entity in der naehe des spielers ist, wird sie an den EntityRenderService uebergeben um gerendert zu werden
+- Wenn die entity ausserhalb der sichtweite des spielers ist, wird sie aus dem EntityRenderService entfernt
+- Wenn die entity lange nicht genutzt wurde, wird sie aus dem cache entfernt
+- Updates aus dem Netwerk werden in den ClientEntity objekten verarbeitet und die position, rotation und pose aktualisiert
+- Es wird das timeLag aus dem NetworkService genutzt um die position der entitys korrekt zu berechnen
 
 
 

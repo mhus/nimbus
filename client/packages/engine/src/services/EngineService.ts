@@ -10,6 +10,7 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { TextureAtlas } from '../rendering/TextureAtlas';
 import { MaterialService } from './MaterialService';
+import { ModelService } from './ModelService';
 import { CameraService } from './CameraService';
 import { EnvironmentService } from './EnvironmentService';
 import { PlayerService } from './PlayerService';
@@ -42,6 +43,7 @@ export class EngineService {
   // Rendering services
   private textureAtlas?: TextureAtlas;
   private materialService?: MaterialService;
+  private modelService?: ModelService;
 
   // Sub-services
   private cameraService?: CameraService;
@@ -111,6 +113,10 @@ export class EngineService {
       this.materialService = new MaterialService(this.scene, this.appContext);
       this.materialService.setTextureAtlas(this.textureAtlas);
       logger.debug('MaterialService initialized');
+
+      // Initialize model service
+      this.modelService = new ModelService(this.scene, this.appContext);
+      logger.debug('ModelService initialized');
 
       // Initialize camera
       this.cameraService = new CameraService(this.scene, this.appContext);
@@ -335,6 +341,13 @@ export class EngineService {
   }
 
   /**
+   * Get the model service
+   */
+  getModelService(): ModelService | undefined {
+    return this.modelService;
+  }
+
+  /**
    * Get the camera service
    */
   getCameraService(): CameraService | undefined {
@@ -428,6 +441,7 @@ export class EngineService {
     this.physicsService?.dispose();
     this.environmentService?.dispose();
     this.cameraService?.dispose();
+    this.modelService?.dispose();
     this.materialService?.dispose();
 
     // Dispose Babylon.js resources
