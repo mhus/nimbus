@@ -98,7 +98,7 @@ wenn eine entity erscheint oder verschwindet. Sich die position, rotation oder d
 [?] Wird ein chunk entfernt, werden alle entitys die in diesem chunk gerendert auf visible=false gesetzt und entfernt, damit keine leichen in der welt bleiben
 
 [?] Erstelle mir ein Commando in engine, mit dem ich infos ueber geladenene entitys bekommen kann, z.b. listEntities und entityInfo {entityId}
-[ ] In EntityModel wird ein weiterer parameter scale : Vector3 hinzugefuegt, der die skalierung des modells angibt
+[?] In EntityModel wird ein weiterer parameter scale : Vector3 hinzugefuegt, der die skalierung des modells angibt
 - Scalierung soll dann beim rendern im EntiryRenderService beruecksichtigt werden
 
 [ ] Erstelle mir ein Commando in engine, mit dem ich testweise eine neue Entity in der Welt spawnen kann, z.b. spawnentity {id} {entityModelId} {x} {y} {z}

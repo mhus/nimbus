@@ -58,6 +58,9 @@ export interface EntityModel {
   /** Rotation offset from entity rotation */
   rotationOffset: Vector3;
 
+  /** Scale of the model */
+  scale: Vector3;
+
   /** Mapping of pose IDs to animation names */
   poseMapping: Map<number, string>;
 
@@ -168,6 +171,7 @@ export function createEntityModel(
     modelPath,
     positionOffset: { x: 0, y: 0, z: 0 },
     rotationOffset: { x: 0, y: 0, z: 0 },
+    scale: { x: 1.0, y: 1.0, z: 1.0 },
     poseMapping: new Map(),
     poseType,
     modelModifierMapping: new Map(),

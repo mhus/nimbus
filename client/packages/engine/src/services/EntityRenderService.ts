@@ -182,6 +182,10 @@ export class EntityRenderService {
         mesh.rotation.x += ((rotOffset as any).p * Math.PI) / 180;
       }
 
+      // Apply scale from model
+      const scale = clientEntity.model.scale;
+      mesh.scaling = new Vector3(scale.x, scale.y, scale.z);
+
       // Store rendered entity
       const rendered: RenderedEntity = {
         id: entityId,
