@@ -720,81 +720,26 @@ export class EntityService {
       return; // Can't do physics without chunk service
     }
 
-    const getGroundHeight = (x: number, z: number): number => {
+    // Helper: Get block at position
+    const getBlockAtPosition = (x: number, y: number, z: number) => {
       const floorX = Math.floor(x);
+      const floorY = Math.floor(y);
       const floorZ = Math.floor(z);
 
-      // Start search from entity's current Y position (optimization)
-      const currentY = Math.floor(clientEntity.currentPosition.y);
-      const searchStart = Math.max(currentY + 5, 128); // Look a bit above current position
-      const minHeight = Math.max(currentY - 10, 0); // Don't search too far below
-
-      // First, check if the chunk is loaded at this position
-      const worldInfo = this.appContext.worldInfo;
-      if (worldInfo && worldInfo.chunkSize) {
-        const chunkX = Math.floor(floorX / worldInfo.chunkSize);
-        const chunkZ = Math.floor(floorZ / worldInfo.chunkSize);
-        const chunk = chunkService.getChunk(chunkX, chunkZ);
-
-        if (!chunk) {
-          // Chunk not loaded - use a safe default ground level
-          logger.debug('Chunk not loaded for entity ground detection', {
-            entityId: clientEntity.entity.id,
-            chunkX,
-            chunkZ,
-            position: { x, z }
-          });
-          return 64; // Default ground level
-        }
-      }
-
-      for (let y = searchStart; y >= minHeight; y--) {
-        const block = chunkService.getBlockAt(floorX, y, floorZ);
-        if (block && block.blockType.id !== 'air') {
-          // Stand on top of the block
-          return y + 1;
-        }
-      }
-
-      // No ground found in range, but chunk is loaded - entity is falling
-      // Continue falling (don't snap to currentY)
-      return currentY - 1;
+      return chunkService.getBlockAt(floorX, floorY, floorZ);
     };
 
-    const hasBlockCollision = (
-      position: { x: number; y: number; z: number },
-      dimensions: { height: number; width: number; footprint: number }
-    ): boolean => {
-      // Check blocks in entity's AABB
-      const halfWidth = dimensions.footprint / 2;
-      const minX = Math.floor(position.x - halfWidth);
-      const maxX = Math.ceil(position.x + halfWidth);
-      const minY = Math.floor(position.y);
-      const maxY = Math.ceil(position.y + dimensions.height);
-      const minZ = Math.floor(position.z - halfWidth);
-      const maxZ = Math.ceil(position.z + halfWidth);
-
-      for (let x = minX; x <= maxX; x++) {
-        for (let y = minY; y <= maxY; y++) {
-          for (let z = minZ; z <= maxZ; z++) {
-            const block = chunkService.getBlockAt(x, y, z);
-            if (block && block.blockType.id !== 'air') {
-              // Simple check: non-air blocks are solid
-              return true;
-            }
-          }
-        }
-      }
-
-      return false;
+    // Helper: Check if block is solid (not air)
+    const isBlockSolid = (x: number, y: number, z: number): boolean => {
+      const block = getBlockAtPosition(x, y, z);
+      return block ? block.blockType.id !== 'air' : false;
     };
 
     // Update physics
     const wasUpdated = this.physicsController.updatePhysics(
       clientEntity,
       deltaTime,
-      getGroundHeight,
-      hasBlockCollision
+      isBlockSolid
     );
 
     if (wasUpdated) {

@@ -17,15 +17,15 @@
     "y": 64,
     "z": 10
   },
-  "radius": 15,
+  "radius": 30,
   "speed": 1.5,
   "behaviorModel": "PreyAnimalBehavior",
   "behaviorConfig": {
     "minStepDistance": 2,
     "maxStepDistance": 5,
     "waypointsPerPath": 6,
-    "minIdleDuration": 1000,
-    "maxIdleDuration": 3000,
+    "minIdleDuration": 100,
+    "maxIdleDuration": 300,
     "pathwayInterval": 5000
   },
   "chunks": []

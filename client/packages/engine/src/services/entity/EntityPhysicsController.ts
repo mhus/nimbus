@@ -93,15 +93,13 @@ export class EntityPhysicsController {
    *
    * @param clientEntity Client entity to update
    * @param deltaTime Time step in seconds
-   * @param getGroundHeight Function to get ground height at position
-   * @param hasBlockCollision Function to check block collision
+   * @param isBlockSolid Function to check if block at position is solid
    * @returns True if physics was updated (based on distance)
    */
   updatePhysics(
     clientEntity: ClientEntity,
     deltaTime: number,
-    getGroundHeight: (x: number, z: number) => number,
-    hasBlockCollision: (position: Vector3, dimensions: { height: number; width: number; footprint: number }) => boolean
+    isBlockSolid: (x: number, y: number, z: number) => boolean
   ): boolean {
     // Get or create physics state
     let state = this.physicsStates.get(clientEntity.entity.id);
@@ -128,8 +126,9 @@ export class EntityPhysicsController {
     const position = clientEntity.currentPosition;
     const velocity = state.velocity;
 
-    // 1. Apply gravity
-    velocity.y += PHYSICS_CONSTANTS.GRAVITY * deltaTime;
+    // 1. NO GRAVITY on client - entity stays at current height
+    // Server controls Y position via pathways
+    // velocity.y += PHYSICS_CONSTANTS.GRAVITY * deltaTime; // DISABLED
 
     // 2. Apply friction/drag
     if (state.grounded) {
@@ -143,50 +142,42 @@ export class EntityPhysicsController {
       velocity.z *= PHYSICS_CONSTANTS.AIR_DRAG;
     }
 
-    // 3. Integrate velocity
+    // 3. Integrate velocity (only X and Z, no Y - server controls height)
     const newPosition = {
       x: position.x + velocity.x * deltaTime,
-      y: position.y + velocity.y * deltaTime,
+      y: position.y, // Keep Y from server pathway
       z: position.z + velocity.z * deltaTime,
     };
 
-    // 4. Ground detection
-    const groundHeight = getGroundHeight(newPosition.x, newPosition.z);
-    const grounded = newPosition.y <= groundHeight + PHYSICS_CONSTANTS.GROUND_TOLERANCE;
+    // 4. Y-Correction: Check block at entity position (from server pathway)
+    const floorX = Math.floor(newPosition.x);
+    const floorY = Math.floor(newPosition.y);
+    const floorZ = Math.floor(newPosition.z);
 
-    if (grounded) {
-      newPosition.y = groundHeight;
-      velocity.y = 0;
+    // Check if block at feet position is solid
+    const blockAtFeetSolid = isBlockSolid(floorX, floorY, floorZ);
+
+    if (blockAtFeetSolid) {
+      // Block at feet is solid → lift entity on top of block
+      newPosition.y = floorY + 1;
+    } else {
+      // Block at feet is not solid → check block below
+      const blockBelowSolid = isBlockSolid(floorX, floorY - 1, floorZ);
+
+      if (blockBelowSolid) {
+        // Block below is solid → correct entity down to stand on it
+        newPosition.y = floorY;
+      }
+      // else: no solid block at feet or below → keep Y from server pathway
     }
 
-    // Safety check: Don't let entities fall below Y=0
-    if (newPosition.y < 0) {
-      newPosition.y = 64; // Reset to safe height
-      velocity.y = 0;
-      logger.warn('Entity fell below world, resetting to safe height', {
-        entityId: clientEntity.entity.id,
-        position: newPosition
-      });
-    }
+    // Update grounded state
+    state.grounded = true; // Always grounded in lightweight mode
+    velocity.y = 0; // Always zero
 
-    // 5. Simple block collision (X and Z axes)
-    // Check X-axis collision
-    const testPositionX = { ...position, x: newPosition.x };
-    if (hasBlockCollision(testPositionX, dimensions)) {
-      newPosition.x = position.x;
-      velocity.x = 0;
-    }
-
-    // Check Z-axis collision
-    const testPositionZ = { ...position, z: newPosition.z };
-    if (hasBlockCollision(testPositionZ, dimensions)) {
-      newPosition.z = position.z;
-      velocity.z = 0;
-    }
-
-    // 6. Apply new position
+    // 5. Apply new position
     clientEntity.currentPosition = newPosition;
-    state.grounded = grounded;
+    state.grounded = true;
 
     return true; // Physics was updated
   }

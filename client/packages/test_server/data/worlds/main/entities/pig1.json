@@ -1,8 +1,8 @@
 {
   "entityId": "pig1",
   "entityModelId": "pig1",
-  "clientPhysics": false,
-  "physics": false,
+  "clientPhysics": true,
+  "physics": true,
   "initialPosition": {
     "x": 10,
     "y": 64,
@@ -17,7 +17,7 @@
     "y": 64,
     "z": 10
   },
-  "radius": 15,
+  "radius": 50,
   "speed": 1.5,
   "behaviorModel": "PreyAnimalBehavior",
   "behaviorConfig": {
