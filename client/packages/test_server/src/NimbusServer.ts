@@ -116,6 +116,24 @@ class NimbusServer {
       // Start entity simulator
       this.entitySimulator.start();
 
+      // Load entities from spawn definitions into EntityManager
+      const spawnDefinitions = this.entitySimulator.getAllSpawnDefinitions();
+      for (const spawnDef of spawnDefinitions) {
+        // Create Entity instance from spawn definition
+        const entity = {
+          id: spawnDef.entityId,
+          name: spawnDef.entityId, // Use ID as name for now
+          model: spawnDef.entityModelId,
+          modelModifier: {},
+          movementType: 'passive' as const,
+          solid: false,
+          interactive: false,
+        };
+        this.entityManager.addEntity(entity);
+        logger.debug('Entity loaded from spawn definition', { entityId: entity.id });
+      }
+      logger.info('Entities loaded from spawn definitions', { count: spawnDefinitions.length });
+
       // Start pathway broadcast interval (every 100ms)
       setInterval(() => {
         this.broadcastPathways();

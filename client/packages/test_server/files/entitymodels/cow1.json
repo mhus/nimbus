@@ -1,7 +1,7 @@
 {
   "id": "cow1",
   "type": "animal",
-  "modelPath": "/assets/models/entities/cow.glb",
+  "modelPath": "models/cow.glb",
   "positionOffset": {
     "x": 0,
     "y": 0,

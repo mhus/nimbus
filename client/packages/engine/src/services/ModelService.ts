@@ -105,8 +105,10 @@ export class ModelService {
       // Load from asset server
       logger.debug('Loading model from asset server', { modelPath });
 
-      // Get full model URL via NetworkService
-      const fullModelUrl = this.networkService.getAssetUrl(modelPath);
+      // Get full model URL via NetworkService with cache-busting timestamp
+      const timestamp = Date.now();
+      const baseUrl = this.networkService.getAssetUrl(modelPath);
+      const fullModelUrl = `${baseUrl}?t=${timestamp}`;
 
       // Parse URL to get root path and filename
       const lastSlashIndex = fullModelUrl.lastIndexOf('/');

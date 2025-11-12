@@ -29,6 +29,7 @@ import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
+import { EntityPathwayMessageHandler } from './network/handlers/EntityPathwayMessageHandler';
 import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
 import { CommandResultHandler } from './network/handlers/CommandResultHandler';
 import { ServerCommandHandler } from './network/handlers/ServerCommandHandler';
@@ -244,6 +245,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const blockUpdateHandler = new BlockUpdateHandler(chunkService);
     networkService.registerHandler(blockUpdateHandler);
     logger.info('🔵 BlockUpdateHandler registered for message type: b.u');
+
+    // Register EntityPathwayMessageHandler
+    const entityPathwayHandler = new EntityPathwayMessageHandler(entityService);
+    networkService.registerHandler(entityPathwayHandler);
+    logger.info('🔵 EntityPathwayMessageHandler registered for message type: e.p');
 
     // Register CommandMessageHandler and CommandResultHandler
     const commandService = appContext.services.command;

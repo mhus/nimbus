@@ -154,8 +154,10 @@ export class EntityService {
       }
 
       // Load from REST API
-      logger.debug('Loading entity model from API', { modelId });
-      const url = `${this.networkService.getApiUrl()}/entity-models/${modelId}`;
+      const worldId = this.appContext.worldInfo?.worldId || 'main';
+      const timestamp = Date.now();
+      const url = `${this.networkService.getApiUrl()}/api/worlds/${worldId}/entitymodel/${modelId}?t=${timestamp}`;
+      logger.debug('Loading entity model from API', { modelId, url });
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -200,8 +202,10 @@ export class EntityService {
       }
 
       // Load from REST API
-      logger.debug('Loading entity from API', { entityId });
-      const url = `${this.networkService.getApiUrl()}/entities/${entityId}`;
+      const worldId = this.appContext.worldInfo?.worldId || 'main';
+      const timestamp = Date.now();
+      const url = `${this.networkService.getApiUrl()}/api/worlds/${worldId}/entity/${entityId}?t=${timestamp}`;
+      logger.debug('Loading entity from API', { entityId, url });
       const response = await fetch(url);
 
       if (!response.ok) {

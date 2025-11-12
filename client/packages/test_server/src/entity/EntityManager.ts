@@ -37,8 +37,7 @@ export class EntityManager {
     // Create directories if they don't exist
     this.ensureDirectories();
 
-    // Load entity models
-    this.loadEntityModels();
+    // Note: Entity models are now loaded lazily on request, not at startup
   }
 
   /**
@@ -62,56 +61,54 @@ export class EntityManager {
   }
 
   /**
-   * Load all entity models from files/entitymodels/
+   * Load entity model from file (lazy loading)
    */
-  private loadEntityModels(): void {
+  private loadEntityModelFromFile(modelId: string): EntityModel | null {
     try {
-      if (!fs.existsSync(this.entityModelsPath)) {
-        logger.warn('Entity models directory does not exist', { path: this.entityModelsPath });
-        return;
+      const filePath = path.join(this.entityModelsPath, `${modelId}.json`);
+
+      if (!fs.existsSync(filePath)) {
+        logger.debug('Entity model file not found', { modelId, filePath });
+        return null;
       }
 
-      const files = fs.readdirSync(this.entityModelsPath);
-      let loadedCount = 0;
+      const data = fs.readFileSync(filePath, 'utf-8');
+      const modelData = JSON.parse(data);
 
-      for (const file of files) {
-        if (!file.endsWith('.json')) {
-          continue;
-        }
+      // Deserialize Maps from JSON
+      const model: EntityModel = {
+        ...modelData,
+        poseMapping: new Map(Object.entries(modelData.poseMapping || {})),
+        modelModifierMapping: new Map(Object.entries(modelData.modelModifierMapping || {})),
+      };
 
-        const filePath = path.join(this.entityModelsPath, file);
-        const modelId = path.basename(file, '.json');
-
-        try {
-          const data = fs.readFileSync(filePath, 'utf-8');
-          const modelData = JSON.parse(data);
-
-          // Deserialize Maps from JSON
-          const model: EntityModel = {
-            ...modelData,
-            poseMapping: new Map(Object.entries(modelData.poseMapping || {})),
-            modelModifierMapping: new Map(Object.entries(modelData.modelModifierMapping || {})),
-          };
-
-          this.entityModels.set(modelId, model);
-          loadedCount++;
-          logger.debug('Loaded entity model', { modelId, file });
-        } catch (error) {
-          ExceptionHandler.handle(error, 'EntityManager.loadEntityModels.file', { file });
-        }
-      }
-
-      logger.info('Entity models loaded', { count: loadedCount });
+      logger.info('Entity model loaded from file', { modelId, filePath });
+      return model;
     } catch (error) {
-      ExceptionHandler.handle(error, 'EntityManager.loadEntityModels');
+      ExceptionHandler.handle(error, 'EntityManager.loadEntityModelFromFile', { modelId });
+      return null;
     }
   }
 
   /**
-   * Get entity model by ID
+   * Get entity model by ID (lazy loading)
    */
   getEntityModel(modelId: string): EntityModel | null {
-    return this.entityModels.get(modelId) || null;
+    // Check cache first
+    const cached = this.entityModels.get(modelId);
+    if (cached) {
+      return cached;
+    }
+
+    // Load from file
+    const model = this.loadEntityModelFromFile(modelId);
+    if (model) {
+      // Cache for future requests
+      this.entityModels.set(modelId, model);
+      return model;
+    }
+
+    return null;
   }
 
   /**
