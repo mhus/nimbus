@@ -212,7 +212,12 @@ class NimbusServer {
         break;
       case 'p': // Ping
         session.lastPingAt = Date.now();
-        session.ws.send(JSON.stringify({ r: i, t: 'p' }));
+        // Send pong with client timestamp (echoed) and server timestamp
+        const pongData = {
+          cTs: d?.cTs ?? Date.now(), // Echo client timestamp
+          sTs: Date.now(), // Server timestamp
+        };
+        session.ws.send(JSON.stringify({ r: i, t: 'p', d: pongData }));
         break;
       case 'c.r': // Chunk registration
         await this.handleChunkRegistration(session, d);
