@@ -180,7 +180,7 @@ export class EntityService {
       this.entityModelCache.set(modelId, model);
       this.evictModelCache();
 
-      logger.info('Entity model loaded', { modelId });
+      logger.debug('Entity model loaded', { modelId });
       return model;
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityService.getEntityModel', { modelId });
