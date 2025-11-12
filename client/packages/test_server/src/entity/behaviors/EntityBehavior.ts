@@ -85,11 +85,23 @@ export abstract class EntityBehavior {
     const dy = to.y - from.y;
 
     // Yaw (horizontal angle) in radians
-    const yawRad = Math.atan2(dx, dz);
+    let yawRad = Math.atan2(dx, dz);
 
     // Pitch (vertical angle) in radians
     const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
     const pitchRad = Math.atan2(dy, horizontalDistance);
+
+    // Optimize rotation direction (choose shortest path):
+    // Check if angle is close to PI (±180°) - if so, flip
+    // Range: 2.79-3.49 rad (160°-200°) → flip by adding/subtracting PI
+    if (Math.abs(yawRad) >= 2.79 && Math.abs(yawRad) <= 3.49) {
+      // Close to ±180° - flip instead of rotating
+      yawRad = yawRad > 0 ? yawRad - Math.PI : yawRad + Math.PI;
+    }
+    // Range: -0.35 to 0.35 rad (±20°) → keep as is (small angle)
+    // Range: 0.35 to PI rad (20° to 180°) → rotate left (keep positive)
+    // Range: -PI to -0.35 rad (-180° to -20°) → rotate right (keep negative)
+    // The interpolation will automatically choose the shortest path
 
     // Convert to degrees
     const yawDeg = (yawRad * 180) / Math.PI;
