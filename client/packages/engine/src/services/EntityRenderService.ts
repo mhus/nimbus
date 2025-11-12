@@ -220,17 +220,16 @@ export class EntityRenderService {
       const pos = clientEntity.currentPosition;
       const rot = clientEntity.currentRotation;
 
-      rotationNode.position = new Vector3(pos.x, pos.y, pos.z);
-      rotationNode.rotation.y = (rot.y * Math.PI) / 180;
-      if ('p' in rot) {
-        rotationNode.rotation.x = ((rot as any).p * Math.PI) / 180;
-      }
-
-      // Apply offset from model
+      // Apply position with offset from model
       const offset = clientEntity.model.positionOffset;
-      rotationNode.position.addInPlace(new Vector3(offset.x, offset.y, offset.z));
+      rotationNode.position = new Vector3(
+        pos.x + offset.x,
+        pos.y + offset.y,
+        pos.z + offset.z
+      );
 
-      // Apply rotation offset from model
+      // Apply rotation with offset from model
+      rotationNode.rotation.y = (rot.y * Math.PI) / 180;
       const rotOffset = clientEntity.model.rotationOffset;
       rotationNode.rotation.y += (rotOffset.y * Math.PI) / 180;
       if ('p' in rotOffset) {
@@ -310,14 +309,27 @@ export class EntityRenderService {
       return;
     }
 
-    // Update position
-    rendered.mesh.position.set(position.x, position.y, position.z);
+    // Get entity to check offsets
+    const clientEntity = this.entityService.getAllEntities().find(e => e.id === entityId);
+    if (!clientEntity) {
+      return;
+    }
 
-    // Update rotation
+    // Update position with offset from model
+    const offset = clientEntity.model.positionOffset;
+    rendered.mesh.position.set(
+      position.x + offset.x,
+      position.y + offset.y,
+      position.z + offset.z
+    );
+
+    // Update rotation with offset from model
     if ('rotation' in rendered.mesh) {
-      (rendered.mesh as any).rotation.y = (rotation.y * Math.PI) / 180;
+      const rotOffset = clientEntity.model.rotationOffset;
+      (rendered.mesh as any).rotation.y = (rotation.y * Math.PI) / 180 + (rotOffset.y * Math.PI) / 180;
       if (rotation.p !== undefined) {
-        (rendered.mesh as any).rotation.x = (rotation.p * Math.PI) / 180;
+        const rotOffsetP = ('p' in rotOffset) ? (rotOffset as any).p : 0;
+        (rendered.mesh as any).rotation.x = (rotation.p * Math.PI) / 180 + (rotOffsetP * Math.PI) / 180;
       }
     }
   }

@@ -1,7 +1,7 @@
 {
-  "id": "cow1",
+  "id": "pig1",
   "type": "animal",
-  "modelPath": "models/cow.glb",
+  "modelPath": "models/pig.glb",
   "positionOffset": {
     "x": 0,
     "y": 0.5,
@@ -23,18 +23,8 @@
       "loop": true
     },
     "WALK": {
-      "animationName": "Armature|Walk",
+      "animationName": "Armature|Jump",
       "speedMultiplier": 1.0,
-      "loop": true
-    },
-    "WALK_SLOW": {
-      "animationName": "Armature|Walk_Slow",
-      "speedMultiplier": 0.7,
-      "loop": true
-    },
-    "RUN": {
-      "animationName": "Armature|Run",
-      "speedMultiplier": 1.5,
       "loop": true
     },
     "JUMP": {

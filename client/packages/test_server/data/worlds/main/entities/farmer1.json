@@ -1,6 +1,6 @@
 {
-  "entityId": "cow1",
-  "entityModelId": "cow1",
+  "entityId": "farmer1",
+  "entityModelId": "farmer1",
   "initialPosition": {
     "x": 10,
     "y": 64,

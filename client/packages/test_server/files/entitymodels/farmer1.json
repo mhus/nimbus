@@ -1,7 +1,7 @@
 {
-  "id": "cow1",
+  "id": "farmer1",
   "type": "animal",
-  "modelPath": "models/cow.glb",
+  "modelPath": "models/farmer.glb",
   "positionOffset": {
     "x": 0,
     "y": 0.5,
@@ -12,33 +12,28 @@
     "p": 0
   },
   "scale": {
-    "x": 0.2,
-    "y": 0.2,
-    "z": 0.2
+    "x": 1,
+    "y": 1,
+    "z": 1
   },
   "poseMapping": {
     "IDLE": {
-      "animationName": "Armature|Idle",
+      "animationName": "CharacterArmature|Idle",
       "speedMultiplier": 1.0,
       "loop": true
     },
     "WALK": {
-      "animationName": "Armature|Walk",
+      "animationName": "CharacterArmature|Walk",
       "speedMultiplier": 1.0,
       "loop": true
     },
-    "WALK_SLOW": {
-      "animationName": "Armature|Walk_Slow",
-      "speedMultiplier": 0.7,
-      "loop": true
-    },
     "RUN": {
-      "animationName": "Armature|Run",
+      "animationName": "CharacterArmature|Run",
       "speedMultiplier": 1.5,
       "loop": true
     },
     "JUMP": {
-      "animationName": "Armature|Jump",
+      "animationName": "CharacterArmature|Jump",
       "speedMultiplier": 1.0,
       "loop": false
     }
@@ -50,9 +45,9 @@
   },
   "dimensions": {
     "walk": {
-      "height": 1.5,
-      "width": 1.2,
-      "footprint": 2.0
+      "height": 1.8,
+      "width": 0.8,
+      "footprint": 1.0
     }
   }
 }
