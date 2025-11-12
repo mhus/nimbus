@@ -23,6 +23,16 @@ import type { NetworkService } from './NetworkService';
 const logger = getLogger('EntityService');
 
 /**
+ * Entity event types
+ */
+export type EntityEventType = 'pathway' | 'visibility' | 'transform' | 'pose' | 'removed';
+
+/**
+ * Entity event listener
+ */
+export type EntityEventListener = (data: any) => void;
+
+/**
  * EntityService configuration
  */
 export interface EntityServiceConfig {
@@ -57,6 +67,9 @@ export class EntityService {
   private entityModelCache: Map<string, EntityModel> = new Map();
   private entityCache: Map<string, ClientEntity> = new Map();
   private entityPathwayCache: Map<string, EntityPathway> = new Map(); // entityId -> pathway
+
+  // Event system
+  private eventListeners: Map<EntityEventType, Set<EntityEventListener>> = new Map();
 
   // Cache cleanup
   private cleanupInterval?: NodeJS.Timeout;
@@ -204,6 +217,9 @@ export class EntityService {
       clientEntity.lastAccess = Date.now();
       logger.debug('Entity pathway set', { entityId: pathway.entityId, waypointCount: pathway.waypoints.length });
     }
+
+    // Emit pathway event
+    this.emit('pathway', pathway);
   }
 
   /**
@@ -228,6 +244,9 @@ export class EntityService {
       clientEntity.currentRotation = rotation;
       clientEntity.currentPose = pose;
       clientEntity.lastAccess = Date.now();
+
+      // Emit transform event
+      this.emit('transform', { entityId, position, rotation, pose });
     }
   }
 
@@ -240,6 +259,9 @@ export class EntityService {
       clientEntity.visible = visible;
       clientEntity.lastAccess = Date.now();
       logger.debug('Entity visibility changed', { entityId, visible });
+
+      // Emit visibility event
+      this.emit('visibility', { entityId, visible });
     }
   }
 
@@ -266,6 +288,9 @@ export class EntityService {
 
     if (removed) {
       logger.debug('Entity removed from cache', { entityId });
+
+      // Emit removed event
+      this.emit('removed', entityId);
     }
   }
 
@@ -398,5 +423,41 @@ export class EntityService {
       poseMapping: new Map(Object.entries(data.poseMapping || {})),
       modelModifierMapping: new Map(Object.entries(data.modelModifierMapping || {})),
     } as EntityModel;
+  }
+
+  /**
+   * Register event listener
+   */
+  on(event: EntityEventType, listener: EntityEventListener): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
+    }
+    this.eventListeners.get(event)!.add(listener);
+  }
+
+  /**
+   * Unregister event listener
+   */
+  off(event: EntityEventType, listener: EntityEventListener): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.delete(listener);
+    }
+  }
+
+  /**
+   * Emit event to all listeners
+   */
+  private emit(event: EntityEventType, data: any): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      for (const listener of listeners) {
+        try {
+          listener(data);
+        } catch (error) {
+          ExceptionHandler.handle(error, 'EntityService.emit', { event, data });
+        }
+      }
+    }
   }
 }

@@ -11,6 +11,7 @@ import type { AppContext } from '../AppContext';
 import { TextureAtlas } from '../rendering/TextureAtlas';
 import { MaterialService } from './MaterialService';
 import { ModelService } from './ModelService';
+import { EntityRenderService } from './EntityRenderService';
 import { CameraService } from './CameraService';
 import { EnvironmentService } from './EnvironmentService';
 import { PlayerService } from './PlayerService';
@@ -44,6 +45,7 @@ export class EngineService {
   private textureAtlas?: TextureAtlas;
   private materialService?: MaterialService;
   private modelService?: ModelService;
+  private entityRenderService?: EntityRenderService;
 
   // Sub-services
   private cameraService?: CameraService;
@@ -190,6 +192,20 @@ export class EngineService {
         this.textureAtlas
       );
       logger.debug('RenderService initialized');
+
+      // Initialize entity render service (requires EntityService and ModelService)
+      const entityService = this.appContext.services.entity;
+      if (entityService && this.modelService) {
+        this.entityRenderService = new EntityRenderService(
+          this.scene,
+          this.appContext,
+          entityService,
+          this.modelService
+        );
+        logger.debug('EntityRenderService initialized');
+      } else {
+        logger.warn('EntityRenderService not initialized: missing EntityService or ModelService');
+      }
 
       // Initialize backdrop service (requires scene and appContext with ChunkService)
       if (this.scene && this.appContext.services.chunk) {
@@ -348,6 +364,13 @@ export class EngineService {
   }
 
   /**
+   * Get the entity render service
+   */
+  getEntityRenderService(): EntityRenderService | undefined {
+    return this.entityRenderService;
+  }
+
+  /**
    * Get the camera service
    */
   getCameraService(): CameraService | undefined {
@@ -437,6 +460,7 @@ export class EngineService {
     this.selectService?.dispose();
     this.backdropService?.dispose();
     this.renderService?.dispose();
+    this.entityRenderService?.dispose();
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
