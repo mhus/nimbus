@@ -48,6 +48,8 @@ import { WireframeCommand } from './commands/WireframeCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { TeleportCommand } from './commands/TeleportCommand';
+import { ListEntitiesCommand } from './commands/ListEntitiesCommand';
+import { EntityInfoCommand } from './commands/EntityInfoCommand';
 import {
   WindDirectionCommand,
   WindStrengthCommand,
@@ -130,6 +132,10 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new LogLevelCommand());
     commandService.registerHandler(new BlockInfoCommand(appContext));
     commandService.registerHandler(new TeleportCommand(appContext));
+
+    // Register entity commands
+    commandService.registerHandler(new ListEntitiesCommand(appContext));
+    commandService.registerHandler(new EntityInfoCommand(appContext));
 
     // Register wind commands
     commandService.registerHandler(new WindDirectionCommand(appContext));
