@@ -18,6 +18,29 @@ export interface Vector2 {
 }
 
 /**
+ * Behavior configuration for entity movement
+ */
+export interface BehaviorConfig {
+  /** Minimum step distance per waypoint (blocks) */
+  minStepDistance?: number;
+
+  /** Maximum step distance per waypoint (blocks) */
+  maxStepDistance?: number;
+
+  /** Number of waypoints per pathway */
+  waypointsPerPath?: number;
+
+  /** Minimum idle duration (milliseconds) */
+  minIdleDuration?: number;
+
+  /** Maximum idle duration (milliseconds) */
+  maxIdleDuration?: number;
+
+  /** Interval between pathway generation (milliseconds) */
+  pathwayInterval?: number;
+}
+
+/**
  * ServerEntitySpawnDefinition - Configuration for spawning and simulating entities
  */
 export interface ServerEntitySpawnDefinition {
@@ -44,6 +67,9 @@ export interface ServerEntitySpawnDefinition {
 
   /** Behavior model reference (algorithm for simulation) */
   behaviorModel: string;
+
+  /** Behavior configuration (optional, behavior-specific settings) */
+  behaviorConfig?: BehaviorConfig;
 
   /** Current pathway (calculated and updated by simulator) */
   currentPathway?: EntityPathway;

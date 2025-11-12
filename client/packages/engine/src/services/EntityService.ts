@@ -16,6 +16,7 @@ import {
   createClientEntity,
   getLogger,
   ExceptionHandler,
+  ENTITY_POSES,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -534,9 +535,23 @@ export class EntityService {
       return null;
     }
 
+    // Convert poseMapping: String keys (e.g., "WALK") to ENTITY_POSES enum values
+    const poseMapping = new Map<number, any>();
+    if (data.poseMapping) {
+      for (const [key, value] of Object.entries(data.poseMapping)) {
+        // Convert string key to ENTITY_POSES enum value
+        const poseId = ENTITY_POSES[key as keyof typeof ENTITY_POSES];
+        if (poseId !== undefined) {
+          poseMapping.set(poseId, value);
+        } else {
+          logger.warn('Unknown pose key in poseMapping', { key, entityModelId: data.id });
+        }
+      }
+    }
+
     return {
       ...data,
-      poseMapping: new Map(Object.entries(data.poseMapping || {})),
+      poseMapping,
       modelModifierMapping: new Map(Object.entries(data.modelModifierMapping || {})),
     } as EntityModel;
   }
@@ -599,18 +614,22 @@ export class EntityService {
     // Interpolate position from waypoints
     const result = this.interpolatePosition(pathway, currentTime);
     if (result) {
+      // Calculate velocity (distance / time)
+      const velocity = result.velocity ?? 0;
+
       // Update entity position/rotation/pose
       clientEntity.currentPosition = result.position;
       clientEntity.currentRotation = result.rotation;
       clientEntity.currentPose = result.pose;
       clientEntity.currentWaypointIndex = result.waypointIndex;
 
-      // Emit transform event
+      // Emit transform event with velocity
       this.emit('transform', {
         entityId: clientEntity.id,
         position: result.position,
         rotation: result.rotation,
         pose: result.pose,
+        velocity: velocity,
       });
     }
 
@@ -641,6 +660,7 @@ export class EntityService {
     rotation: { y: number; p: number };
     pose: number;
     waypointIndex: number;
+    velocity: number;
   } | null {
     const waypoints = pathway.waypoints;
     if (waypoints.length === 0) {
@@ -664,6 +684,7 @@ export class EntityService {
         rotation: { y: lastWaypoint.rotation.y, p: lastWaypoint.rotation.p ?? 0 },
         pose: lastWaypoint.pose ?? pathway.idlePose ?? 0,
         waypointIndex: waypoints.length - 1,
+        velocity: 0, // Not moving (past last waypoint)
       };
     }
 
@@ -690,11 +711,20 @@ export class EntityService {
     // Use target pose when close to target
     const pose = clampedT > 0.5 ? (to.pose ?? pathway.idlePose ?? 0) : (from.pose ?? pathway.idlePose ?? 0);
 
+    // Calculate velocity (distance between waypoints / time between waypoints)
+    const dx = to.target.x - from.target.x;
+    const dy = to.target.y - from.target.y;
+    const dz = to.target.z - from.target.z;
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const timeDiff = (to.timestamp - from.timestamp) / 1000; // Convert to seconds
+    const velocity = timeDiff > 0 ? distance / timeDiff : 0;
+
     return {
       position,
       rotation,
       pose,
       waypointIndex: currentIndex,
+      velocity,
     };
   }
 

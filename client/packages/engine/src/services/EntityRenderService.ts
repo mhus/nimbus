@@ -80,7 +80,7 @@ export class EntityRenderService {
     this.entityService.on('transform', (data: any) => {
       this.updateEntityTransform(data.entityId, data.position, data.rotation);
       if (data.pose !== undefined) {
-        this.updateEntityPose(data.entityId, data.pose);
+        this.updateEntityPose(data.entityId, data.pose, data.velocity);
       }
     });
 
@@ -182,6 +182,17 @@ export class EntityRenderService {
       const mesh = templateMesh.clone(`entity_${entityId}`, null)!;
       mesh.setEnabled(true);
 
+      // Get animation groups from the scene (loaded with the model)
+      const animations = this.scene.animationGroups.filter(ag =>
+        ag.name.startsWith('Armature|') || mesh.getChildMeshes().some(m => ag.targetedAnimations.some(ta => ta.target === m))
+      );
+
+      logger.debug('Animation groups found', {
+        entityId,
+        animationCount: animations.length,
+        animationNames: animations.map(ag => ag.name),
+      });
+
       // Apply initial transform
       const pos = clientEntity.currentPosition;
       const rot = clientEntity.currentRotation;
@@ -211,9 +222,15 @@ export class EntityRenderService {
       const rendered: RenderedEntity = {
         id: entityId,
         mesh: mesh,
+        animations: animations.length > 0 ? animations : undefined,
       };
 
       this.renderedEntities.set(entityId, rendered);
+
+      // Start initial animation based on current pose
+      if (animations.length > 0) {
+        this.updateEntityPose(entityId, clientEntity.currentPose);
+      }
 
       // Store mesh reference in ClientEntity for EntityService
       clientEntity.meshes = [mesh];
@@ -308,7 +325,7 @@ export class EntityRenderService {
   /**
    * Update entity pose/animation
    */
-  updateEntityPose(entityId: string, pose: number): void {
+  updateEntityPose(entityId: string, pose: number, velocity?: number): void {
     const rendered = this.renderedEntities.get(entityId);
     if (!rendered || !rendered.animations) {
       return;
@@ -320,30 +337,41 @@ export class EntityRenderService {
       return;
     }
 
-    // Get animation name from pose mapping
-    const animationName = clientEntity.model.poseMapping.get(pose);
-    if (!animationName) {
-      logger.warn('No animation found for pose', { entityId, pose });
+    // Get animation config from pose mapping
+    const poseConfig = clientEntity.model.poseMapping.get(pose);
+    if (!poseConfig) {
+      logger.warn('No animation config found for pose', { entityId, pose });
       return;
     }
 
     // Find animation group by name
-    const animation = rendered.animations.find(a => a.name === animationName);
+    const animation = rendered.animations.find(a => a.name === poseConfig.animationName);
     if (!animation) {
-      logger.warn('Animation not found', { entityId, animationName });
+      logger.warn('Animation not found', { entityId, animationName: poseConfig.animationName });
       return;
     }
 
-    // Stop current animation
-    if (rendered.currentAnimation && rendered.currentAnimation !== animation) {
-      rendered.currentAnimation.stop();
+    // Stop all animations first
+    this.scene.animationGroups.forEach(a => a.stop());
+
+    // Calculate speed ratio from speedMultiplier and velocity
+    let speedRatio = poseConfig.speedMultiplier;
+    if (velocity !== undefined && velocity > 0) {
+      // Adjust speed based on actual movement velocity
+      speedRatio *= velocity;
     }
 
     // Play new animation
-    animation.start(true); // Loop
+    animation.start(poseConfig.loop, speedRatio);
     rendered.currentAnimation = animation;
 
-    logger.debug('Entity pose updated', { entityId, pose, animationName });
+    logger.debug('Entity pose updated', {
+      entityId,
+      pose,
+      animationName: poseConfig.animationName,
+      loop: poseConfig.loop,
+      speedRatio,
+    });
   }
 
   /**

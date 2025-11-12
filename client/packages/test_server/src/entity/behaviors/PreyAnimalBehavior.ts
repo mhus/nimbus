@@ -18,11 +18,23 @@ import { ENTITY_POSES } from '@nimbus/shared';
 export class PreyAnimalBehavior extends EntityBehavior {
   readonly behaviorType = 'PreyAnimalBehavior';
 
-  /** Interval between pathway generation (milliseconds) */
-  private readonly pathwayInterval = 5000; // 5 seconds
+  /** Default interval between pathway generation (milliseconds) */
+  private readonly defaultPathwayInterval = 5000; // 5 seconds
 
-  /** Number of waypoints per pathway */
-  private readonly waypointsPerPathway = 3;
+  /** Default number of waypoints per pathway */
+  private readonly defaultWaypointsPerPathway = 3;
+
+  /** Default min step distance (blocks) */
+  private readonly defaultMinStepDistance = 2;
+
+  /** Default max step distance (blocks) */
+  private readonly defaultMaxStepDistance = 3;
+
+  /** Default min idle duration (milliseconds) */
+  private readonly defaultMinIdleDuration = 1000;
+
+  /** Default max idle duration (milliseconds) */
+  private readonly defaultMaxIdleDuration = 3000;
 
   /**
    * Update behavior and generate new pathway if needed
@@ -47,6 +59,14 @@ export class PreyAnimalBehavior extends EntityBehavior {
   ): Promise<EntityPathway> {
     const waypoints: Waypoint[] = [];
 
+    // Get behavior config with defaults
+    const config = entity.behaviorConfig || {};
+    const minStepDistance = config.minStepDistance ?? this.defaultMinStepDistance;
+    const maxStepDistance = config.maxStepDistance ?? this.defaultMaxStepDistance;
+    const waypointsPerPath = config.waypointsPerPath ?? this.defaultWaypointsPerPathway;
+    const minIdleDuration = config.minIdleDuration ?? this.defaultMinIdleDuration;
+    const maxIdleDuration = config.maxIdleDuration ?? this.defaultMaxIdleDuration;
+
     // Start position: end of previous pathway or initial position
     let currentPosition = entity.initialPosition;
     if (entity.currentPathway && entity.currentPathway.waypoints.length > 0) {
@@ -57,9 +77,10 @@ export class PreyAnimalBehavior extends EntityBehavior {
     let currentTimestamp = currentTime;
 
     // Generate waypoints
-    for (let i = 0; i < this.waypointsPerPathway; i++) {
-      // Generate random target within radius
-      const targetXZ = this.randomPositionInRadius(entity.middlePoint, entity.radius);
+    for (let i = 0; i < waypointsPerPath; i++) {
+      // Generate random target within configured step distance
+      const stepDistance = minStepDistance + Math.random() * (maxStepDistance - minStepDistance);
+      const targetXZ = this.randomPositionInRadius(currentPosition, stepDistance);
 
       // Get ground height at target position
       const groundY = await this.getGroundHeight(worldId, targetXZ.x, targetXZ.z);
@@ -89,7 +110,7 @@ export class PreyAnimalBehavior extends EntityBehavior {
       currentPosition = target;
 
       // Add idle pause between waypoints
-      const pauseDuration = 1000 + Math.random() * 2000; // 1-3 seconds pause
+      const pauseDuration = minIdleDuration + Math.random() * (maxIdleDuration - minIdleDuration);
       currentTimestamp += pauseDuration;
 
       // Add IDLE waypoint at same position during pause
@@ -113,7 +134,7 @@ export class PreyAnimalBehavior extends EntityBehavior {
 
   /**
    * Check if entity needs new pathway
-   * Override to use custom interval
+   * Override to use custom interval from config
    */
   protected needsNewPathway(entity: ServerEntitySpawnDefinition, currentTime: number): boolean {
     if (!entity.currentPathway) {
@@ -125,9 +146,12 @@ export class PreyAnimalBehavior extends EntityBehavior {
       return true;
     }
 
+    // Get pathway interval from config or use default
+    const pathwayInterval = entity.behaviorConfig?.pathwayInterval ?? this.defaultPathwayInterval;
+
     // Check if enough time has passed since pathway start
     const timeSinceStart = currentTime - pathway.startAt;
-    if (timeSinceStart < this.pathwayInterval) {
+    if (timeSinceStart < pathwayInterval) {
       return false;
     }
 
