@@ -16,6 +16,7 @@
     "y": 1,
     "z": 1
   },
+  "maxPitch": 0,
   "poseMapping": {
     "IDLE": {
       "animationName": "CharacterArmature|Idle",

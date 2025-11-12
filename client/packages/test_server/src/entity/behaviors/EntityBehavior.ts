@@ -4,9 +4,10 @@
  * Behaviors define how entities move and act in the world.
  */
 
-import type { EntityPathway, Vector3, Rotation } from '@nimbus/shared';
+import type { EntityPathway, Vector3, Rotation, EntityModel } from '@nimbus/shared';
 import type { ServerEntitySpawnDefinition } from '@nimbus/shared';
 import type { WorldManager } from '../../world/WorldManager';
+import type { EntityManager } from '../EntityManager';
 
 /**
  * EntityBehavior - Abstract base class for entity behaviors
@@ -17,6 +18,9 @@ export abstract class EntityBehavior {
 
   /** WorldManager for ground height calculation */
   protected worldManager: WorldManager | null = null;
+
+  /** EntityManager for model access */
+  protected entityManager: EntityManager | null = null;
 
   /**
    * Update behavior and generate new pathway if needed
@@ -77,9 +81,10 @@ export abstract class EntityBehavior {
    *
    * @param from Start position
    * @param to End position
+   * @param maxPitch Maximum pitch angle in degrees (optional, 0 = no vertical rotation)
    * @returns Rotation in degrees (yaw, pitch)
    */
-  protected calculateRotation(from: Vector3, to: Vector3): Rotation {
+  protected calculateRotation(from: Vector3, to: Vector3, maxPitch?: number): Rotation {
     const dx = to.x - from.x;
     const dz = to.z - from.z;
     const dy = to.y - from.y;
@@ -105,7 +110,18 @@ export abstract class EntityBehavior {
 
     // Convert to degrees
     const yawDeg = (yawRad * 180) / Math.PI;
-    const pitchDeg = (pitchRad * 180) / Math.PI;
+    let pitchDeg = (pitchRad * 180) / Math.PI;
+
+    // Apply maxPitch limit if specified
+    if (maxPitch !== undefined) {
+      if (maxPitch === 0) {
+        // No vertical rotation
+        pitchDeg = 0;
+      } else {
+        // Clamp pitch to maxPitch range
+        pitchDeg = Math.max(-maxPitch, Math.min(maxPitch, pitchDeg));
+      }
+    }
 
     return {
       y: yawDeg,
@@ -132,6 +148,13 @@ export abstract class EntityBehavior {
    */
   setWorldManager(worldManager: WorldManager): void {
     this.worldManager = worldManager;
+  }
+
+  /**
+   * Set EntityManager for model access
+   */
+  setEntityManager(entityManager: EntityManager): void {
+    this.entityManager = entityManager;
   }
 
   /**

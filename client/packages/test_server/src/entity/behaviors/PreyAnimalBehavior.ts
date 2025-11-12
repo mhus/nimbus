@@ -94,8 +94,15 @@ export class PreyAnimalBehavior extends EntityBehavior {
       const distance = this.distance(currentPosition, target);
       const travelTime = (distance / entity.speed) * 1000; // Convert to milliseconds
 
-      // Calculate rotation towards target
-      const rotation = this.calculateRotation(currentPosition, target);
+      // Get maxPitch from entity model
+      let maxPitch: number | undefined;
+      if (this.entityManager) {
+        const entityModel = this.entityManager.getEntityModel(entity.entityModelId);
+        maxPitch = entityModel?.maxPitch;
+      }
+
+      // Calculate rotation towards target with pitch limit
+      const rotation = this.calculateRotation(currentPosition, target, maxPitch);
 
       // Create waypoint with WALK pose
       currentTimestamp += travelTime;

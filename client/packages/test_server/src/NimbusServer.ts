@@ -111,6 +111,9 @@ class NimbusServer {
       // Set WorldManager for ground height calculation
       this.entitySimulator.setWorldManager(this.worldManager);
 
+      // Set EntityManager for model access (maxPitch, etc.)
+      this.entitySimulator.setEntityManager(this.entityManager);
+
       // Register pathway callback
       this.entitySimulator.onPathwayGenerated((pathway) => {
         this.queuePathwayForClients(pathway);

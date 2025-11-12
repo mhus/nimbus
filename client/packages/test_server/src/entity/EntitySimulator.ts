@@ -15,6 +15,7 @@ import { calculateAffectedChunks, getLogger, ExceptionHandler } from '@nimbus/sh
 import { EntityBehavior } from './behaviors/EntityBehavior';
 import { PreyAnimalBehavior } from './behaviors/PreyAnimalBehavior';
 import type { WorldManager } from '../world/WorldManager';
+import type { EntityManager } from './EntityManager';
 
 const logger = getLogger('EntitySimulator');
 
@@ -27,6 +28,7 @@ export class EntitySimulator {
   private updateInterval: NodeJS.Timeout | null = null;
   private pathwayCallbacks: Set<(pathway: EntityPathway) => void> = new Set();
   private worldManager: WorldManager | null = null;
+  private entityManager: EntityManager | null = null;
 
   private entitiesPath: string;
   private updateFrequency: number;
@@ -66,6 +68,20 @@ export class EntitySimulator {
   }
 
   /**
+   * Set EntityManager for model access
+   */
+  setEntityManager(entityManager: EntityManager): void {
+    this.entityManager = entityManager;
+
+    // Update behaviors with EntityManager
+    for (const behavior of this.behaviors.values()) {
+      behavior.setEntityManager(entityManager);
+    }
+
+    logger.debug('EntityManager set in EntitySimulator');
+  }
+
+  /**
    * Register a behavior
    */
   registerBehavior(name: string, behavior: EntityBehavior): void {
@@ -74,6 +90,11 @@ export class EntitySimulator {
     // Set WorldManager if available
     if (this.worldManager) {
       behavior.setWorldManager(this.worldManager);
+    }
+
+    // Set EntityManager if available
+    if (this.entityManager) {
+      behavior.setEntityManager(this.entityManager);
     }
 
     logger.debug('Behavior registered', { name });

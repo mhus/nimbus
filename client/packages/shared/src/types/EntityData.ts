@@ -108,6 +108,9 @@ export interface EntityModel {
   /** Scale of the model */
   scale: Vector3;
 
+  /** Maximum pitch rotation in degrees (0 = no vertical rotation, only Y-axis) */
+  maxPitch?: number;
+
   /** Mapping of pose IDs to animation configuration */
   poseMapping: Map<ENTITY_POSES, PoseAnimation>;
 
