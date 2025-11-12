@@ -27,23 +27,24 @@ export class PreyAnimalBehavior extends EntityBehavior {
   /**
    * Update behavior and generate new pathway if needed
    */
-  update(entity: ServerEntitySpawnDefinition, currentTime: number): EntityPathway | null {
+  async update(entity: ServerEntitySpawnDefinition, currentTime: number, worldId: string): Promise<EntityPathway | null> {
     // Check if we need a new pathway
     if (!this.needsNewPathway(entity, currentTime)) {
       return null;
     }
 
     // Generate new pathway
-    return this.generatePathway(entity, currentTime);
+    return this.generatePathway(entity, currentTime, worldId);
   }
 
   /**
    * Generate new pathway for entity
    */
-  private generatePathway(
+  private async generatePathway(
     entity: ServerEntitySpawnDefinition,
-    currentTime: number
-  ): EntityPathway {
+    currentTime: number,
+    worldId: string
+  ): Promise<EntityPathway> {
     const waypoints: Waypoint[] = [];
 
     // Start position: end of previous pathway or initial position
@@ -58,7 +59,15 @@ export class PreyAnimalBehavior extends EntityBehavior {
     // Generate waypoints
     for (let i = 0; i < this.waypointsPerPathway; i++) {
       // Generate random target within radius
-      const target = this.randomPositionInRadius(entity.middlePoint, entity.radius);
+      const targetXZ = this.randomPositionInRadius(entity.middlePoint, entity.radius);
+
+      // Get ground height at target position
+      const groundY = await this.getGroundHeight(worldId, targetXZ.x, targetXZ.z);
+      const target = {
+        x: targetXZ.x,
+        y: groundY,
+        z: targetXZ.z,
+      };
 
       // Calculate distance and time to reach
       const distance = this.distance(currentPosition, target);

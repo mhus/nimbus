@@ -14,6 +14,7 @@ import type { EntityPathway, ServerEntitySpawnDefinition, Vector2 } from '@nimbu
 import { calculateAffectedChunks, getLogger, ExceptionHandler } from '@nimbus/shared';
 import { EntityBehavior } from './behaviors/EntityBehavior';
 import { PreyAnimalBehavior } from './behaviors/PreyAnimalBehavior';
+import type { WorldManager } from '../world/WorldManager';
 
 const logger = getLogger('EntitySimulator');
 
@@ -25,6 +26,7 @@ export class EntitySimulator {
   private behaviors: Map<string, EntityBehavior> = new Map();
   private updateInterval: NodeJS.Timeout | null = null;
   private pathwayCallbacks: Set<(pathway: EntityPathway) => void> = new Set();
+  private worldManager: WorldManager | null = null;
 
   private entitiesPath: string;
   private updateFrequency: number;
@@ -50,10 +52,30 @@ export class EntitySimulator {
   }
 
   /**
+   * Set WorldManager for ground height calculation
+   */
+  setWorldManager(worldManager: WorldManager): void {
+    this.worldManager = worldManager;
+
+    // Update behaviors with WorldManager
+    for (const behavior of this.behaviors.values()) {
+      behavior.setWorldManager(worldManager);
+    }
+
+    logger.debug('WorldManager set in EntitySimulator');
+  }
+
+  /**
    * Register a behavior
    */
   registerBehavior(name: string, behavior: EntityBehavior): void {
     this.behaviors.set(name, behavior);
+
+    // Set WorldManager if available
+    if (this.worldManager) {
+      behavior.setWorldManager(this.worldManager);
+    }
+
     logger.debug('Behavior registered', { name });
   }
 
@@ -189,9 +211,12 @@ export class EntitySimulator {
   /**
    * Update all entities and generate new pathways
    */
-  private update(): void {
+  private async update(): Promise<void> {
     const currentTime = Date.now();
     let pathwaysGenerated = 0;
+
+    // TODO: Get worldId from configuration
+    const worldId = 'main';
 
     for (const spawnDef of this.spawnDefinitions.values()) {
       // Get behavior
@@ -205,7 +230,7 @@ export class EntitySimulator {
       }
 
       // Update behavior and generate pathway if needed
-      const pathway = behavior.update(spawnDef, currentTime);
+      const pathway = await behavior.update(spawnDef, currentTime, worldId);
       if (pathway) {
         // Update spawn definition with new pathway
         spawnDef.currentPathway = pathway;

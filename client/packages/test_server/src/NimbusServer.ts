@@ -108,6 +108,9 @@ class NimbusServer {
         1000 // Update every second
       );
 
+      // Set WorldManager for ground height calculation
+      this.entitySimulator.setWorldManager(this.worldManager);
+
       // Register pathway callback
       this.entitySimulator.onPathwayGenerated((pathway) => {
         this.queuePathwayForClients(pathway);
