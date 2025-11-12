@@ -1,6 +1,8 @@
 {
   "entityId": "cow1",
   "entityModelId": "cow1",
+  "clientPhysics": false,
+  "physics": false,
   "initialPosition": {
     "x": 10,
     "y": 64,

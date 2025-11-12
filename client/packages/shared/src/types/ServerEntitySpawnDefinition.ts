@@ -76,6 +76,21 @@ export interface ServerEntitySpawnDefinition {
 
   /** List of chunk positions where this entity is active in the pathway */
   chunks: Vector2[];
+
+  /** Physics state (for entities with physics enabled) */
+  physicsState?: {
+    /** Current position (world coordinates) */
+    position: Vector3;
+
+    /** Current velocity (blocks per second) */
+    velocity: Vector3;
+
+    /** Current rotation */
+    rotation: Rotation;
+
+    /** Is entity on ground? */
+    grounded: boolean;
+  };
 }
 
 /**

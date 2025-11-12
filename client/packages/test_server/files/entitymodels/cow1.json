@@ -55,5 +55,11 @@
       "width": 1.2,
       "footprint": 2.0
     }
+  },
+  "physicsProperties": {
+    "mass": 100,
+    "friction": 0.8,
+    "restitution": 0.1,
+    "drag": 0.02
   }
 }

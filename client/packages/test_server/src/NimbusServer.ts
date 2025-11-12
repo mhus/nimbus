@@ -126,6 +126,8 @@ class NimbusServer {
       const spawnDefinitions = this.entitySimulator.getAllSpawnDefinitions();
       for (const spawnDef of spawnDefinitions) {
         // Create Entity instance from spawn definition
+        // Read physics flags from spawn definition if available
+        const spawnDefAny = spawnDef as any;
         const entity = {
           id: spawnDef.entityId,
           name: spawnDef.entityId, // Use ID as name for now
@@ -134,9 +136,15 @@ class NimbusServer {
           movementType: 'passive' as const,
           solid: false,
           interactive: false,
+          physics: spawnDefAny.physics ?? false, // Read from spawn definition
+          clientPhysics: spawnDefAny.clientPhysics ?? false, // Read from spawn definition
         };
         this.entityManager.addEntity(entity);
-        logger.debug('Entity loaded from spawn definition', { entityId: entity.id });
+        logger.info('Entity loaded from spawn definition', {
+          entityId: entity.id,
+          physics: entity.physics,
+          clientPhysics: entity.clientPhysics
+        });
       }
       logger.info('Entities loaded from spawn definitions', { count: spawnDefinitions.length });
 

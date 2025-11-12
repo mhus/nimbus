@@ -16,6 +16,7 @@ import { EntityBehavior } from './behaviors/EntityBehavior';
 import { PreyAnimalBehavior } from './behaviors/PreyAnimalBehavior';
 import type { WorldManager } from '../world/WorldManager';
 import type { EntityManager } from './EntityManager';
+import { EntityPhysicsSimulator } from './EntityPhysicsSimulator';
 
 const logger = getLogger('EntitySimulator');
 
@@ -29,9 +30,11 @@ export class EntitySimulator {
   private pathwayCallbacks: Set<(pathway: EntityPathway) => void> = new Set();
   private worldManager: WorldManager | null = null;
   private entityManager: EntityManager | null = null;
+  private physicsSimulator: EntityPhysicsSimulator;
 
   private entitiesPath: string;
   private updateFrequency: number;
+  private lastUpdateTime: number = Date.now();
 
   /**
    * @param worldDataPath Path to world data directory
@@ -40,6 +43,9 @@ export class EntitySimulator {
   constructor(worldDataPath: string, updateFrequency: number = 1000) {
     this.entitiesPath = path.join(worldDataPath, 'entities');
     this.updateFrequency = updateFrequency;
+
+    // Initialize physics simulator
+    this.physicsSimulator = new EntityPhysicsSimulator();
 
     logger.info('EntitySimulator initialized', {
       entitiesPath: this.entitiesPath,
@@ -58,6 +64,9 @@ export class EntitySimulator {
    */
   setWorldManager(worldManager: WorldManager): void {
     this.worldManager = worldManager;
+
+    // Update physics simulator with WorldManager
+    this.physicsSimulator.setWorldManager(worldManager);
 
     // Update behaviors with WorldManager
     for (const behavior of this.behaviors.values()) {
@@ -234,46 +243,256 @@ export class EntitySimulator {
    */
   private async update(): Promise<void> {
     const currentTime = Date.now();
+    const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convert to seconds
+    this.lastUpdateTime = currentTime;
+
     let pathwaysGenerated = 0;
 
     // TODO: Get worldId from configuration
     const worldId = 'main';
 
     for (const spawnDef of this.spawnDefinitions.values()) {
-      // Get behavior
-      const behavior = this.behaviors.get(spawnDef.behaviorModel);
-      if (!behavior) {
-        logger.warn('Behavior not found', {
+      // Check if entity has physics enabled
+      const entity = this.entityManager?.getEntity(spawnDef.entityId);
+      const hasPhysics = entity?.physics ?? false;
+
+      // Debug: Log physics status (only log once per entity)
+      if (!spawnDef.physicsState && entity) {
+        logger.info('Entity physics status', {
           entityId: spawnDef.entityId,
-          behaviorModel: spawnDef.behaviorModel,
+          hasPhysics: hasPhysics,
+          entityData: entity,
         });
-        continue;
       }
 
-      // Update behavior and generate pathway if needed
-      const pathway = await behavior.update(spawnDef, currentTime, worldId);
-      if (pathway) {
-        // Update spawn definition with new pathway
-        spawnDef.currentPathway = pathway;
-
-        // Calculate affected chunks
-        spawnDef.chunks = calculateAffectedChunks(pathway);
-
-        // Notify callbacks
-        this.notifyPathwayGenerated(pathway);
-
+      if (hasPhysics) {
+        // Physics-based update
+        await this.updatePhysicsEntity(spawnDef, deltaTime, worldId);
         pathwaysGenerated++;
-        logger.debug('Pathway generated', {
-          entityId: spawnDef.entityId,
-          waypoints: pathway.waypoints.length,
-          chunks: spawnDef.chunks.length,
-        });
+      } else {
+        // Behavior-based update (traditional waypoint system)
+        const pathway = await this.updateBehaviorEntity(spawnDef, currentTime, worldId);
+        if (pathway) {
+          pathwaysGenerated++;
+        }
       }
     }
 
     if (pathwaysGenerated > 0) {
       logger.debug('Update cycle completed', { pathwaysGenerated });
     }
+  }
+
+  /**
+   * Update entity using behavior system (traditional waypoint-based)
+   */
+  private async updateBehaviorEntity(
+    spawnDef: ServerEntitySpawnDefinition,
+    currentTime: number,
+    worldId: string
+  ): Promise<EntityPathway | null> {
+    // Get behavior
+    const behavior = this.behaviors.get(spawnDef.behaviorModel);
+    if (!behavior) {
+      logger.warn('Behavior not found', {
+        entityId: spawnDef.entityId,
+        behaviorModel: spawnDef.behaviorModel,
+      });
+      return null;
+    }
+
+    // Update behavior and generate pathway if needed
+    const pathway = await behavior.update(spawnDef, currentTime, worldId);
+    if (pathway) {
+      // Update spawn definition with new pathway
+      spawnDef.currentPathway = pathway;
+
+      // Calculate affected chunks
+      spawnDef.chunks = calculateAffectedChunks(pathway);
+
+      // Notify callbacks
+      this.notifyPathwayGenerated(pathway);
+
+      logger.debug('Pathway generated', {
+        entityId: spawnDef.entityId,
+        waypoints: pathway.waypoints.length,
+        chunks: spawnDef.chunks.length,
+      });
+
+      return pathway;
+    }
+
+    return null;
+  }
+
+  /**
+   * Find ground height at position (helper for initialization)
+   */
+  private async findGroundHeight(
+    worldId: string,
+    x: number,
+    z: number,
+    startY: number
+  ): Promise<number> {
+    if (!this.worldManager) {
+      return 64;
+    }
+
+    const floorX = Math.floor(x);
+    const floorZ = Math.floor(z);
+
+    try {
+      // Search downward from start position
+      for (let y = Math.floor(startY); y >= 0; y--) {
+        const block = await this.worldManager.getBlock(worldId, floorX, y, floorZ);
+        if (block && block.blockTypeId !== 'air') {
+          return y + 1; // Stand on top of block
+        }
+      }
+    } catch (error) {
+      // If chunk loading fails, use default ground height
+      logger.warn('Failed to find ground height, using default', {
+        x: floorX,
+        z: floorZ,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      return 64;
+    }
+
+    return 64; // Default if not found
+  }
+
+  /**
+   * Update entity using physics system
+   */
+  private async updatePhysicsEntity(
+    spawnDef: ServerEntitySpawnDefinition,
+    deltaTime: number,
+    worldId: string
+  ): Promise<void> {
+    // Initialize physics state if not present
+    if (!spawnDef.physicsState) {
+      // Find actual ground position before initializing
+      let initPosition = spawnDef.initialPosition;
+
+      if (this.worldManager) {
+        // Search for ground from initial position
+        const groundY = await this.findGroundHeight(
+          worldId,
+          spawnDef.initialPosition.x,
+          spawnDef.initialPosition.z,
+          spawnDef.initialPosition.y
+        );
+
+        initPosition = {
+          x: spawnDef.initialPosition.x,
+          y: groundY,
+          z: spawnDef.initialPosition.z,
+        };
+
+        logger.debug('Initialized entity on ground', {
+          entityId: spawnDef.entityId,
+          groundY,
+          originalY: spawnDef.initialPosition.y,
+        });
+      }
+
+      this.physicsSimulator.initializePhysicsState(
+        spawnDef,
+        initPosition,
+        spawnDef.initialRotation
+      );
+    }
+
+    // Get entity model for dimensions
+    const entityModel = this.entityManager?.getEntityModel(spawnDef.entityModelId);
+    if (!entityModel) {
+      logger.warn('Entity model not found for physics update', {
+        entityId: spawnDef.entityId,
+        entityModelId: spawnDef.entityModelId,
+      });
+      return;
+    }
+
+    // Update physics
+    await this.physicsSimulator.updatePhysics(spawnDef, entityModel, deltaTime, worldId);
+
+    // Get behavior for movement intention
+    const behavior = this.behaviors.get(spawnDef.behaviorModel);
+    if (behavior) {
+      // Let behavior apply velocity/impulses (e.g., walking direction)
+      await behavior.updatePhysics(spawnDef, this.physicsSimulator, worldId);
+    }
+
+    // Generate pathway from current physics state (for client synchronization)
+    const pathway = this.generatePathwayFromPhysics(spawnDef);
+    if (pathway) {
+      spawnDef.currentPathway = pathway;
+      spawnDef.chunks = calculateAffectedChunks(pathway);
+      this.notifyPathwayGenerated(pathway);
+    }
+  }
+
+  /**
+   * Generate pathway from physics state for client synchronization
+   */
+  private generatePathwayFromPhysics(spawnDef: ServerEntitySpawnDefinition): EntityPathway | null {
+    if (!spawnDef.physicsState) {
+      return null;
+    }
+
+    const state = spawnDef.physicsState;
+    const currentTime = Date.now();
+
+    // Calculate velocity magnitude for pose
+    const speed = Math.sqrt(
+      state.velocity.x * state.velocity.x +
+      state.velocity.z * state.velocity.z
+    );
+
+    // Determine pose based on movement
+    let pose = 0; // IDLE
+    if (!state.grounded) {
+      pose = 5; // JUMP
+    } else if (speed > 0.1) {
+      pose = 1; // WALK
+    }
+
+    // Create pathway with current position and predicted future position
+    // This helps the client interpolate smoothly
+    const waypoints = [
+      {
+        timestamp: currentTime,
+        target: { ...state.position },
+        rotation: { ...state.rotation },
+        pose: pose,
+      }
+    ];
+
+    // Add a future waypoint based on current velocity (for smooth client interpolation)
+    // Predict position 500ms in the future
+    const predictionTime = 500; // milliseconds
+    const futurePosition = {
+      x: state.position.x + state.velocity.x * (predictionTime / 1000),
+      y: state.position.y + state.velocity.y * (predictionTime / 1000),
+      z: state.position.z + state.velocity.z * (predictionTime / 1000),
+    };
+
+    waypoints.push({
+      timestamp: currentTime + predictionTime,
+      target: futurePosition,
+      rotation: { ...state.rotation },
+      pose: pose,
+    });
+
+    return {
+      entityId: spawnDef.entityId,
+      startAt: currentTime,
+      waypoints: waypoints,
+      physicsEnabled: true,
+      velocity: { ...state.velocity },
+      grounded: state.grounded,
+    };
   }
 
   /**

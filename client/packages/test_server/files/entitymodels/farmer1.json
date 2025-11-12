@@ -32,11 +32,6 @@
       "animationName": "CharacterArmature|Run",
       "speedMultiplier": 1.5,
       "loop": true
-    },
-    "JUMP": {
-      "animationName": "CharacterArmature|Jump",
-      "speedMultiplier": 1.0,
-      "loop": false
     }
   },
   "poseType": "animation",
@@ -50,5 +45,11 @@
       "width": 0.8,
       "footprint": 1.0
     }
+  },
+  "physicsProperties": {
+    "mass": 70,
+    "friction": 0.8,
+    "restitution": 0.1,
+    "drag": 0.02
   }
 }

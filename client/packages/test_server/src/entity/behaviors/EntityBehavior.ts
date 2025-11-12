@@ -8,6 +8,7 @@ import type { EntityPathway, Vector3, Rotation, EntityModel } from '@nimbus/shar
 import type { ServerEntitySpawnDefinition } from '@nimbus/shared';
 import type { WorldManager } from '../../world/WorldManager';
 import type { EntityManager } from '../EntityManager';
+import type { EntityPhysicsSimulator } from '../EntityPhysicsSimulator';
 
 /**
  * EntityBehavior - Abstract base class for entity behaviors
@@ -23,7 +24,7 @@ export abstract class EntityBehavior {
   protected entityManager: EntityManager | null = null;
 
   /**
-   * Update behavior and generate new pathway if needed
+   * Update behavior and generate new pathway if needed (waypoint-based movement)
    *
    * @param entity Entity spawn definition
    * @param currentTime Current server timestamp
@@ -35,6 +36,24 @@ export abstract class EntityBehavior {
     currentTime: number,
     worldId: string
   ): Promise<EntityPathway | null>;
+
+  /**
+   * Update physics-based entity (apply forces/velocity)
+   *
+   * Optional method for physics-based behaviors.
+   * Override this to control entity movement via physics.
+   *
+   * @param entity Entity spawn definition
+   * @param physicsSimulator Physics simulator to apply forces
+   * @param worldId World ID for context
+   */
+  async updatePhysics(
+    entity: ServerEntitySpawnDefinition,
+    physicsSimulator: EntityPhysicsSimulator,
+    worldId: string
+  ): Promise<void> {
+    // Default: no physics behavior (entity is static or passive)
+  }
 
   /**
    * Check if entity needs new pathway

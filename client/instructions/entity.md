@@ -137,3 +137,127 @@ ServerEntitySpawnDefinition:
 - Wird irgendwo ein neuer pathway erzeugt wird dieser an alle sessions handler im server gesendet und die session prueft ob die entity bewegung in einem der client chunks stattfindet.
 - Entity Pathways werden gesammelt und alle 100ms an den client gesendet und die queue geloescht.
 
+[?] Ich moechte fuer Entities, managed by EntityService auch eine leichte physik umsetzen, nicht so komplex wie fuer den lokalen player. Wie kann ich das machen? 
+```text
+     Architektur-Überblick
+
+     - Server: Berechnet Physik (Gravitation + Block-Kollision), generiert physik-basierte Pathways
+     - Client: Empfängt Pathways als "Prediction Hints", führt leichte Physik für smooth interpolation aus
+     - Performance: Distance-based update rates (nah: 60 FPS, mittel: 30 FPS, fern: 10 FPS)
+
+     1. Datenstruktur-Erweiterungen
+
+     EntityData.ts (shared):
+     - Entity Interface: physics?: boolean Flag hinzufügen
+     - EntityModel Interface: Physik-Eigenschaften hinzufügen (Masse, Friction-Werte)
+     - EntityPathway: physicsEnabled?: boolean Flag für Physik-Pathways
+     - ServerEntitySpawnDefinition: Physik-State (velocity, grounded)
+
+     2. Server-Side Physik (EntitySimulator)
+
+     Neue Komponenten:
+     - EntityPhysicsSimulator.ts: Leichte Physik-Engine für Entities
+       - Gravitation (vereinfacht, konstante -20.0)
+       - Block-Kollision (X/Y/Z-Achsen separat)
+       - Ground-Detection via WorldManager
+       - Velocity-State pro Entity
+
+     EntitySimulator Erweiterungen:
+     - Physics-Update neben Behavior-Update
+     - Physics-basierte Pathway-Generierung
+     - Update-Rate: 20 TPS (Ticks per Second) für Physik
+
+     3. Client-Side Physik (EntityService)
+
+     Neue Komponenten:
+     - EntityPhysicsController.ts: Client-seitige Physik-Interpolation
+       - Empfängt Server-Pathways als Predictions
+       - Führt lokale Physik aus (Gravitation + Kollision)
+       - Korrigiert bei Abweichungen vom Server
+
+     EntityService Erweiterungen:
+     - Distance-based Update-Raten:
+       - < 20 Blöcke: 60 FPS (jeder Frame)
+       - 20-40 Blöcke: 30 FPS (jeder 2. Frame)
+       40 Blöcke: 10 FPS (jeder 6. Frame)
+     - Physics-State pro Entity (velocity, grounded)
+     - Integration mit bestehendem Waypoint-System
+
+     4. Physik-Implementation Details
+
+     Gravity: -20.0 blocks/s² (wie Player)
+     Collision: Simplified AABB gegen Blocks
+     Friction: Ground friction 0.8 (velocity dampening)
+     Integration: Verlet oder Euler (je nach Stabilität)
+
+     5. Behavior-Integration
+
+     PreyAnimalBehavior anpassen:
+     - Falls entity.physics === true: Nutze Physik statt fixer Waypoints
+     - Behavior gibt nur "Intention" (Zielrichtung), Physik führt aus
+
+     6. Test-Entities
+
+     Bestehende Entities updaten (cow1, pig1, farmer1):
+     - physics: true Flag setzen
+     - Testen mit verschiedenen Terrain-Situationen
+
+     Dateien, die geändert werden:
+
+     1. shared/src/types/EntityData.ts - Datenstrukturen
+     2. test_server/src/entity/EntitySimulator.ts - Server-Physik
+     3. test_server/src/entity/EntityPhysicsSimulator.ts - NEU
+     4. test_server/src/entity/behaviors/PreyAnimalBehavior.ts - Physik-Integration
+     5. engine/src/services/EntityService.ts - Client-Physik
+     6. engine/src/services/entity/EntityPhysicsController.ts - NEU
+     7. Entity JSON files (cow1, pig1, farmer1) - Physics flag
+
+     Geschätzter Aufwand: 3-4 Stunden
+
+⏺ Perfekt! Ich starte mit der Implementierung. Lass mich zuerst die Todo-Liste erstellen:
+
+⏺ Jetzt starte ich mit der ersten Aufgabe. Lass mich zuerst die aktuelle EntityData.ts lesen:
+```
+
+[ ] Es soll auch collisions mit entitys geben. Wenn der Player mit einer entity kollidiert, soll er nicht durch diese hindurch 
+gehen koennen.
+- Betroffen sind nur entities mit dem parameter solid=true
+- Die collision soll im Client umgesetzt werden, dazu muss im EntityService die bounding box der entity
+    berechnet und im PhysicsService fuer die collision detection mit dem player genutzt werden.
+- Die bounding box der entity wird aus der position der entity und den dimensionen des entity models und der rotation der entity berechnet.
+- Die dimensionen des entity models werden anhand des aktuellen movement types des players ausgewählt (walk, sprint, crouch, swim, climb, fly, teleport)
+- Die collision detection soll im PhysicsService umgesetzt werden, dort wird die bounding box der entityn
+    gegen die bounding box des players getestet.
+- Wenn eine collision erkannt wird, wird die position des players so angepasst, dass er nicht mehr in der bounding box der entity ist.
+- Es werden nur entities geprueft, die in der naehe des players sind (radius variable im EntityService - getter, setter)
+
+[ ] Der Client soll die Positionsdaten des Players zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server 
+schicken mit der aktuellen Position, Rotation und Bewegungstyp des Players. Natürlich nur, wenn sich die Position oder 
+Rotation seit dem letzten Update geändert hat. 
+- Beim senden des Updates wird eine Bewegung ueber die kommenden 200ms vorhergesagt (basierend auf der aktuellen Geschwindigkeit und Bewegungstyp)
+- Der Server kann diese Daten nutzen um die Position des Players an andere Player zu senden
+- Der Server sendet alle 100ms alle relevanten, neuen Player Positionen an den Client, wenn der diese benoetigt (registrierte chunks)
+- Der Server muss per REST API 'GET /api/worlds/{worldId}/entity/{entityId}' Daten des players bereit stellen, damit der Client die Player Entity laden kann
+  player entitys beginnen immer mit einem '@' zeichen.
+- Eine vorlage fuer die Player Entity ist in 'files/entity/player_entity.json' zu finden, es muss aber noch die id des players angepasst werden.
+
+[ ] Erstelle einen neuen EntitySimulator im test_Server. Der TestFastEntitySimulator soll entities mit schnellen bewegungen simulieren.
+- Wie ein echter Player, der immer wieder seine Richtung und Geschwindigkeit aendert
+- Es wird immer eine kurze pathway mit 1 pathway punkt erstellt, der die naechste position des entitys angibt
+- Die pathway wird alle 100ms neu erstellt und neu gesendet (konfigurierbar)
+- Die geschwindigkeit des entitys soll zwischen 1 und 2 blocks per sekunde liegen (konfigurierbar)
+
+[ ] Waypoints Zeichnen mit startpunkt aktuelle position der entity
+[2025-11-12T20:56:23.620Z] [DEBUG] [EntityRenderService] Not enough waypoints to draw lines
+Data: {
+"entityId": "farmer1",
+"count": 1
+}
+Das sollte dann nur noch passieren, wenn 0 waypoints vorhanden sind.
+
+[x] Wenn ein neuer pathway vom server kommt, sollen alle aktuellen pathways der entity verworfen werden und nur der neue pathway genutzt werden.
+Siehe EntityService.ts
+
+[ ] Wenn ein neuer Pathway kommt und die velocity zum erste punkt zu hoch wird, soll die entity zum ersten punkt flippen dann sollden
+die waypoints normal abgearbeitet werden.
+

@@ -9,8 +9,9 @@
  */
 
 import { EntityBehavior } from './EntityBehavior';
-import type { EntityPathway, Waypoint, ServerEntitySpawnDefinition } from '@nimbus/shared';
+import type { EntityPathway, Waypoint, ServerEntitySpawnDefinition, Vector3 } from '@nimbus/shared';
 import { ENTITY_POSES } from '@nimbus/shared';
+import type { EntityPhysicsSimulator } from '../EntityPhysicsSimulator';
 
 /**
  * PreyAnimalBehavior - Passive roaming behavior
@@ -36,8 +37,11 @@ export class PreyAnimalBehavior extends EntityBehavior {
   /** Default max idle duration (milliseconds) */
   private readonly defaultMaxIdleDuration = 3000;
 
+  /** Current target position for physics-based movement */
+  private physicsTargets: Map<string, { target: Vector3; reachedAt: number | null }> = new Map();
+
   /**
-   * Update behavior and generate new pathway if needed
+   * Update behavior and generate new pathway if needed (waypoint-based)
    */
   async update(entity: ServerEntitySpawnDefinition, currentTime: number, worldId: string): Promise<EntityPathway | null> {
     // Check if we need a new pathway
@@ -47,6 +51,105 @@ export class PreyAnimalBehavior extends EntityBehavior {
 
     // Generate new pathway
     return this.generatePathway(entity, currentTime, worldId);
+  }
+
+  /**
+   * Update physics-based entity movement
+   * Applies velocity to move entity towards random targets
+   */
+  async updatePhysics(
+    entity: ServerEntitySpawnDefinition,
+    physicsSimulator: EntityPhysicsSimulator,
+    worldId: string
+  ): Promise<void> {
+    if (!entity.physicsState) {
+      return;
+    }
+
+    const position = entity.physicsState.position;
+    const config = entity.behaviorConfig || {};
+    const minStepDistance = config.minStepDistance ?? this.defaultMinStepDistance;
+    const maxStepDistance = config.maxStepDistance ?? this.defaultMaxStepDistance;
+    const minIdleDuration = config.minIdleDuration ?? this.defaultMinIdleDuration;
+    const maxIdleDuration = config.maxIdleDuration ?? this.defaultMaxIdleDuration;
+
+    // Get or create target for this entity
+    let targetInfo = this.physicsTargets.get(entity.entityId);
+
+    // Check if we need a new target
+    const needsNewTarget = !targetInfo || this.hasReachedTarget(position, targetInfo.target);
+
+    if (needsNewTarget) {
+      // Check if we're in idle period
+      if (targetInfo?.reachedAt) {
+        const idleDuration = minIdleDuration + Math.random() * (maxIdleDuration - minIdleDuration);
+        const timeSinceReached = Date.now() - targetInfo.reachedAt;
+
+        if (timeSinceReached < idleDuration) {
+          // Still idle, don't move
+          physicsSimulator.setVelocity(entity, { x: 0, y: entity.physicsState.velocity.y, z: 0 });
+          return;
+        }
+      }
+
+      // Generate new random target
+      const stepDistance = minStepDistance + Math.random() * (maxStepDistance - minStepDistance);
+      const targetXZ = this.randomPositionInRadius(position, stepDistance);
+      const groundY = await this.getGroundHeight(worldId, targetXZ.x, targetXZ.z);
+
+      const newTarget = {
+        x: targetXZ.x,
+        y: groundY,
+        z: targetXZ.z,
+      };
+
+      targetInfo = {
+        target: newTarget,
+        reachedAt: null,
+      };
+      this.physicsTargets.set(entity.entityId, targetInfo);
+    }
+
+    // Calculate direction to target
+    const target = targetInfo.target;
+    const dx = target.x - position.x;
+    const dz = target.z - position.z;
+    const distance = Math.sqrt(dx * dx + dz * dz);
+
+    if (distance < 0.5) {
+      // Reached target
+      targetInfo.reachedAt = Date.now();
+      physicsSimulator.setVelocity(entity, { x: 0, y: entity.physicsState.velocity.y, z: 0 });
+
+      // Update rotation towards target
+      const rotation = this.calculateRotation(position, target);
+      entity.physicsState.rotation = rotation;
+    } else {
+      // Move towards target
+      const speed = entity.speed;
+      const velocityX = (dx / distance) * speed;
+      const velocityZ = (dz / distance) * speed;
+
+      physicsSimulator.setVelocity(entity, {
+        x: velocityX,
+        y: entity.physicsState.velocity.y, // Keep Y velocity (gravity)
+        z: velocityZ,
+      });
+
+      // Update rotation towards target
+      const rotation = this.calculateRotation(position, target);
+      entity.physicsState.rotation = rotation;
+    }
+  }
+
+  /**
+   * Check if entity has reached target position
+   */
+  private hasReachedTarget(position: Vector3, target: Vector3): boolean {
+    const dx = target.x - position.x;
+    const dz = target.z - position.z;
+    const distance = Math.sqrt(dx * dx + dz * dz);
+    return distance < 0.5;
   }
 
   /**

@@ -20,6 +20,7 @@ import {
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
+import { EntityPhysicsController } from './entity/EntityPhysicsController';
 
 const logger = getLogger('EntityService');
 
@@ -81,12 +82,16 @@ export class EntityService {
 
   // Update loop
   private updateInterval?: NodeJS.Timeout;
+  private lastUpdateTime: number = Date.now();
 
   // Cache cleanup
   private cleanupInterval?: NodeJS.Timeout;
 
   // Visibility radius
   private _visibilityRadius: number;
+
+  // Physics controller
+  private physicsController: EntityPhysicsController;
 
   constructor(appContext: AppContext, config?: EntityServiceConfig) {
     if (!appContext.services.network) {
@@ -107,6 +112,9 @@ export class EntityService {
     };
 
     this._visibilityRadius = this.config.visibilityRadius;
+
+    // Initialize physics controller
+    this.physicsController = new EntityPhysicsController();
 
     logger.info('EntityService initialized', { config: this.config });
 
@@ -290,25 +298,74 @@ export class EntityService {
     clientEntity.currentWaypointIndex = 0;
     clientEntity.lastAccess = Date.now();
 
-    // Initialize position from first waypoint if available
-    if (pathway.waypoints.length > 0) {
-      const firstWaypoint = pathway.waypoints[0];
-      clientEntity.currentPosition = {
-        x: firstWaypoint.target.x,
-        y: firstWaypoint.target.y,
-        z: firstWaypoint.target.z,
-      };
-      clientEntity.currentRotation = {
-        y: firstWaypoint.rotation.y,
-        p: firstWaypoint.rotation.p ?? 0,
-      };
-      clientEntity.currentPose = firstWaypoint.pose ?? 0;
-    }
+    // Check if this is a physics-based pathway
+    const isPhysicsPathway = pathway.physicsEnabled ?? false;
+    const hasServerPhysics = clientEntity.entity.physics ?? false;
+    const hasClientPhysics = clientEntity.entity.clientPhysics ?? false;
 
-    logger.debug('Entity pathway set', {
-      entityId: pathway.entityId,
-      waypointCount: pathway.waypoints.length,
-    });
+    if (isPhysicsPathway && hasClientPhysics) {
+      // For physics-based entities: Apply velocity hint but keep current position
+      // The physics controller will handle the movement
+
+      // Initialize position on first spawn (if entity has never had a position)
+      if (!clientEntity.currentPosition ||
+          (clientEntity.currentPosition.x === 0 &&
+           clientEntity.currentPosition.y === 0 &&
+           clientEntity.currentPosition.z === 0)) {
+        if (pathway.waypoints.length > 0) {
+          const firstWaypoint = pathway.waypoints[0];
+          clientEntity.currentPosition = {
+            x: firstWaypoint.target.x,
+            y: firstWaypoint.target.y,
+            z: firstWaypoint.target.z,
+          };
+          logger.debug('Entity physics initial position set', {
+            entityId: pathway.entityId,
+            position: clientEntity.currentPosition,
+          });
+        }
+      }
+
+      if (pathway.velocity) {
+        this.physicsController.applyServerVelocity(clientEntity, pathway.velocity);
+      }
+
+      // Update rotation from pathway
+      if (pathway.waypoints.length > 0) {
+        const firstWaypoint = pathway.waypoints[0];
+        clientEntity.currentRotation = {
+          y: firstWaypoint.rotation.y,
+          p: firstWaypoint.rotation.p ?? 0,
+        };
+      }
+
+      logger.debug('Entity physics pathway set', {
+        entityId: pathway.entityId,
+        waypointCount: pathway.waypoints.length,
+        velocity: pathway.velocity,
+        position: clientEntity.currentPosition,
+      });
+    } else {
+      // For traditional waypoint-based entities: Set position directly
+      if (pathway.waypoints.length > 0) {
+        const firstWaypoint = pathway.waypoints[0];
+        clientEntity.currentPosition = {
+          x: firstWaypoint.target.x,
+          y: firstWaypoint.target.y,
+          z: firstWaypoint.target.z,
+        };
+        clientEntity.currentRotation = {
+          y: firstWaypoint.rotation.y,
+          p: firstWaypoint.rotation.p ?? 0,
+        };
+        clientEntity.currentPose = firstWaypoint.pose ?? 0;
+      }
+
+      logger.debug('Entity waypoint pathway set', {
+        entityId: pathway.entityId,
+        waypointCount: pathway.waypoints.length,
+      });
+    }
 
     // Emit pathway event
     this.emit('pathway', pathway);
@@ -573,6 +630,10 @@ export class EntityService {
       const serverLag = 0; // For now, no lag compensation
       const currentTime = Date.now() + serverLag;
 
+      // Calculate delta time
+      const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convert to seconds
+      this.lastUpdateTime = currentTime;
+
       // Get player position
       const playerService = this.appContext.services.player;
       if (!playerService) {
@@ -581,9 +642,12 @@ export class EntityService {
 
       const playerPos = playerService.getPosition();
 
+      // Update physics controller with player position
+      this.physicsController.setPlayerPosition(playerPos);
+
       // Update all entities
       for (const clientEntity of this.entityCache.values()) {
-        this.updateEntity_internal(clientEntity, currentTime, playerPos);
+        this.updateEntity_internal(clientEntity, currentTime, deltaTime, playerPos);
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityService.update');
@@ -596,6 +660,7 @@ export class EntityService {
   private updateEntity_internal(
     clientEntity: ClientEntity,
     currentTime: number,
+    deltaTime: number,
     playerPos: { x: number; y: number; z: number }
   ): void {
     // Update lastAccess
@@ -607,6 +672,168 @@ export class EntityService {
       return;
     }
 
+    // Check if entity has physics enabled
+    const hasServerPhysics = clientEntity.entity.physics ?? false;
+    const hasClientPhysics = clientEntity.entity.clientPhysics ?? false;
+    const isPhysicsPathway = pathway.physicsEnabled ?? false;
+
+    if (hasClientPhysics && isPhysicsPathway) {
+      // Client-side physics enabled: Run local physics simulation
+      this.updateEntityPhysics(clientEntity, pathway, deltaTime);
+    } else {
+      // Client-side physics disabled: Use traditional waypoint interpolation
+      this.updateEntityWaypoint(clientEntity, pathway, currentTime);
+    }
+
+    // Check visibility based on distance to player
+    const distance = Math.sqrt(
+      Math.pow(clientEntity.currentPosition.x - playerPos.x, 2) +
+      Math.pow(clientEntity.currentPosition.y - playerPos.y, 2) +
+      Math.pow(clientEntity.currentPosition.z - playerPos.z, 2)
+    );
+
+    const shouldBeVisible = distance <= this._visibilityRadius;
+
+    // Update visibility if changed
+    if (clientEntity.visible !== shouldBeVisible) {
+      clientEntity.visible = shouldBeVisible;
+      this.emit('visibility', { entityId: clientEntity.id, visible: shouldBeVisible });
+    }
+  }
+
+  /**
+   * Update entity using physics simulation
+   */
+  private updateEntityPhysics(
+    clientEntity: ClientEntity,
+    pathway: EntityPathway,
+    deltaTime: number
+  ): void {
+    // Apply server-predicted velocity (if provided)
+    if (pathway.velocity) {
+      this.physicsController.applyServerVelocity(clientEntity, pathway.velocity);
+    }
+
+    // Get helper functions for physics simulation
+    const chunkService = this.appContext.services.chunk;
+    if (!chunkService) {
+      return; // Can't do physics without chunk service
+    }
+
+    const getGroundHeight = (x: number, z: number): number => {
+      const floorX = Math.floor(x);
+      const floorZ = Math.floor(z);
+
+      // Start search from entity's current Y position (optimization)
+      const currentY = Math.floor(clientEntity.currentPosition.y);
+      const searchStart = Math.max(currentY + 5, 128); // Look a bit above current position
+      const minHeight = Math.max(currentY - 10, 0); // Don't search too far below
+
+      // First, check if the chunk is loaded at this position
+      const worldInfo = this.appContext.worldInfo;
+      if (worldInfo && worldInfo.chunkSize) {
+        const chunkX = Math.floor(floorX / worldInfo.chunkSize);
+        const chunkZ = Math.floor(floorZ / worldInfo.chunkSize);
+        const chunk = chunkService.getChunk(chunkX, chunkZ);
+
+        if (!chunk) {
+          // Chunk not loaded - use a safe default ground level
+          logger.debug('Chunk not loaded for entity ground detection', {
+            entityId: clientEntity.entity.id,
+            chunkX,
+            chunkZ,
+            position: { x, z }
+          });
+          return 64; // Default ground level
+        }
+      }
+
+      for (let y = searchStart; y >= minHeight; y--) {
+        const block = chunkService.getBlockAt(floorX, y, floorZ);
+        if (block && block.blockType.id !== 'air') {
+          // Stand on top of the block
+          return y + 1;
+        }
+      }
+
+      // No ground found in range, but chunk is loaded - entity is falling
+      // Continue falling (don't snap to currentY)
+      return currentY - 1;
+    };
+
+    const hasBlockCollision = (
+      position: { x: number; y: number; z: number },
+      dimensions: { height: number; width: number; footprint: number }
+    ): boolean => {
+      // Check blocks in entity's AABB
+      const halfWidth = dimensions.footprint / 2;
+      const minX = Math.floor(position.x - halfWidth);
+      const maxX = Math.ceil(position.x + halfWidth);
+      const minY = Math.floor(position.y);
+      const maxY = Math.ceil(position.y + dimensions.height);
+      const minZ = Math.floor(position.z - halfWidth);
+      const maxZ = Math.ceil(position.z + halfWidth);
+
+      for (let x = minX; x <= maxX; x++) {
+        for (let y = minY; y <= maxY; y++) {
+          for (let z = minZ; z <= maxZ; z++) {
+            const block = chunkService.getBlockAt(x, y, z);
+            if (block && block.blockType.id !== 'air') {
+              // Simple check: non-air blocks are solid
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    };
+
+    // Update physics
+    const wasUpdated = this.physicsController.updatePhysics(
+      clientEntity,
+      deltaTime,
+      getGroundHeight,
+      hasBlockCollision
+    );
+
+    if (wasUpdated) {
+      // Get velocity for animation
+      const velocity = this.physicsController.getVelocity(clientEntity.entity.id);
+      const speed = velocity
+        ? Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z)
+        : 0;
+
+      // Determine pose based on velocity and grounded state
+      const isGrounded = this.physicsController.isGrounded(clientEntity.entity.id);
+      let pose = ENTITY_POSES.IDLE;
+      if (!isGrounded) {
+        pose = ENTITY_POSES.JUMP;
+      } else if (speed > 0.1) {
+        pose = ENTITY_POSES.WALK;
+      }
+
+      clientEntity.currentPose = pose;
+
+      // Emit transform event
+      this.emit('transform', {
+        entityId: clientEntity.id,
+        position: clientEntity.currentPosition,
+        rotation: clientEntity.currentRotation,
+        pose: pose,
+        velocity: speed,
+      });
+    }
+  }
+
+  /**
+   * Update entity using traditional waypoint interpolation
+   */
+  private updateEntityWaypoint(
+    clientEntity: ClientEntity,
+    pathway: EntityPathway,
+    currentTime: number
+  ): void {
     // Interpolate position from waypoints
     const result = this.interpolatePosition(pathway, currentTime);
     if (result) {
@@ -627,21 +854,6 @@ export class EntityService {
         pose: result.pose,
         velocity: velocity,
       });
-    }
-
-    // Check visibility based on distance to player
-    const distance = Math.sqrt(
-      Math.pow(clientEntity.currentPosition.x - playerPos.x, 2) +
-      Math.pow(clientEntity.currentPosition.y - playerPos.y, 2) +
-      Math.pow(clientEntity.currentPosition.z - playerPos.z, 2)
-    );
-
-    const shouldBeVisible = distance <= this._visibilityRadius;
-
-    // Update visibility if changed
-    if (clientEntity.visible !== shouldBeVisible) {
-      clientEntity.visible = shouldBeVisible;
-      this.emit('visibility', { entityId: clientEntity.id, visible: shouldBeVisible });
     }
   }
 
