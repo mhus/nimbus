@@ -294,6 +294,15 @@ export class EntityRenderService {
     if (rotation.p !== undefined) {
       rendered.mesh.rotation.x = (rotation.p * Math.PI) / 180;
     }
+
+    // Log every 10th update to avoid spam
+    if (Math.random() < 0.1) {
+      logger.debug('🔄 Entity transform updated', {
+        entityId,
+        position,
+        rotation,
+      });
+    }
   }
 
   /**

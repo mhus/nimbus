@@ -17,10 +17,31 @@
     "z": 1.0
   },
   "poseMapping": {
-    "0": "idle",
-    "1": "walk",
-    "2": "run",
-    "3": "eat"
+    "IDLE": {
+      "animationName": "Armature|Idle",
+      "speedMultiplier": 1.0,
+      "loop": true
+    },
+    "WALK": {
+      "animationName": "Armature|Walk",
+      "speedMultiplier": 1.0,
+      "loop": true
+    },
+    "WALK_SLOW": {
+      "animationName": "Armature|Walk_Slow",
+      "speedMultiplier": 0.7,
+      "loop": true
+    },
+    "RUN": {
+      "animationName": "Armature|Run",
+      "speedMultiplier": 1.5,
+      "loop": true
+    },
+    "JUMP": {
+      "animationName": "Armature|Jump",
+      "speedMultiplier": 1.0,
+      "loop": false
+    }
   },
   "poseType": "animation",
   "modelModifierMapping": {

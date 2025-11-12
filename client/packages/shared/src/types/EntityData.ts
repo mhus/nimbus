@@ -23,6 +23,53 @@ export type PoseType =
   | 'Slime';    // Gleitend/formlos
 
 /**
+ * PoseAnimation - Animation configuration for a pose
+ */
+export interface PoseAnimation {
+  /** Animation name in the 3D model */
+  animationName: string;
+
+  /** Speed multiplier for this animation (1.0 = normal speed) */
+  speedMultiplier: number;
+
+  /** Should the animation loop? */
+  loop: boolean;
+}
+
+/**
+ * ENTITY_POSES - Standard pose IDs for entity animations
+ */
+export enum ENTITY_POSES {
+  IDLE = 0,
+  WALK = 1,
+  RUN = 2,
+  SPRINT = 3,
+  CROUCH = 4,
+  JUMP = 5,
+  SWIM = 6,
+  FLY = 7,
+  DEATH = 8,
+  WALK_SLOW = 9,
+  CLAPPING = 10,
+  ROLL = 11,
+  ATTACK = 12,
+  OUT_OF_WATER = 13,
+  SWIMMING_FAST = 14,
+  SWIMMING_IMPULSIVE = 15,
+  SWIMMING = 16,
+  HIT_RECEIVED = 17,
+  HIT_RECEIVED_STRONG = 18,
+  KICK_LEFT = 19,
+  KICK_RIGHT = 20,
+  PUNCH_LEFT = 21,
+  PUNCH_RIGHT = 22,
+  RUN_BACKWARD = 23,
+  RUN_LEFT = 24,
+  RUN_RIGHT = 25,
+  WAVE = 26,
+}
+
+/**
  * Dimensions for different movement states
  * Collision box dimensions for each pose/movement type
  */
@@ -61,8 +108,8 @@ export interface EntityModel {
   /** Scale of the model */
   scale: Vector3;
 
-  /** Mapping of pose IDs to animation names */
-  poseMapping: Map<number, string>;
+  /** Mapping of pose IDs to animation configuration */
+  poseMapping: Map<ENTITY_POSES, PoseAnimation>;
 
   /** Type of movement/animation system */
   poseType: PoseType;
@@ -126,7 +173,7 @@ export interface Waypoint {
   rotation: Rotation;
 
   /** Pose/animation ID at this waypoint */
-  pose: number;
+  pose: ENTITY_POSES;
 }
 
 /**
@@ -152,7 +199,7 @@ export interface EntityPathway {
   queryAt?: number;
 
   /** Idle pose when not moving */
-  idlePose?: number;
+  idlePose?: ENTITY_POSES;
 }
 
 /**
