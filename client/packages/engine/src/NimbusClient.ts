@@ -50,6 +50,7 @@ import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { TeleportCommand } from './commands/TeleportCommand';
 import { ListEntitiesCommand } from './commands/ListEntitiesCommand';
 import { EntityInfoCommand } from './commands/EntityInfoCommand';
+import { SpawnEntityCommand } from './commands/SpawnEntityCommand';
 import {
   WindDirectionCommand,
   WindStrengthCommand,
@@ -136,6 +137,7 @@ async function initializeApp(): Promise<AppContext> {
     // Register entity commands
     commandService.registerHandler(new ListEntitiesCommand(appContext));
     commandService.registerHandler(new EntityInfoCommand(appContext));
+    commandService.registerHandler(new SpawnEntityCommand(appContext));
 
     // Register wind commands
     commandService.registerHandler(new WindDirectionCommand(appContext));
