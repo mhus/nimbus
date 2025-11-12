@@ -26,6 +26,9 @@ interface RenderedEntity {
   /** Root mesh */
   mesh: Mesh;
 
+  /** Pathway lines (for debugging) */
+  pathwayLines?: any;
+
   /** Animation groups (if any) */
   animations?: AnimationGroup[];
 
@@ -73,6 +76,14 @@ export class EntityRenderService {
       this.onEntityPathway(pathway);
     });
 
+    // Listen for transform updates (position/rotation/pose changes)
+    this.entityService.on('transform', (data: any) => {
+      this.updateEntityTransform(data.entityId, data.position, data.rotation);
+      if (data.pose !== undefined) {
+        this.updateEntityPose(data.entityId, data.pose);
+      }
+    });
+
     // Listen for entity visibility changes
     this.entityService.on('visibility', (data: { entityId: string; visible: boolean }) => {
       this.onEntityVisibility(data.entityId, data.visible);
@@ -93,15 +104,25 @@ export class EntityRenderService {
     try {
       const entityId = pathway.entityId;
 
+      logger.info('🔵 PATHWAY EVENT RECEIVED', {
+        entityId,
+        waypointCount: pathway.waypoints.length,
+        firstWaypoint: pathway.waypoints[0],
+        isAlreadyRendered: this.renderedEntities.has(entityId),
+      });
+
       // Check if entity is already rendered
       if (this.renderedEntities.has(entityId)) {
-        // Entity already exists, just update pathway
-        logger.debug('Entity pathway updated', { entityId });
+        // Entity already exists, update pathway lines
+        logger.debug('Entity pathway updated, redrawing lines', { entityId });
+        await this.drawPathwayLines(entityId, pathway);
         return;
       }
 
       // Entity doesn't exist yet, create it
+      logger.info('🔵 CREATING NEW ENTITY', { entityId });
       await this.createEntity(entityId);
+      await this.drawPathwayLines(entityId, pathway);
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityRenderService.onEntityPathway', {
         entityId: pathway.entityId,
@@ -197,11 +218,25 @@ export class EntityRenderService {
       // Store mesh reference in ClientEntity for EntityService
       clientEntity.meshes = [mesh];
 
-      logger.debug('Entity created', {
+      logger.info('✅ ENTITY MODEL LOADED AND RENDERED', {
         entityId,
         modelPath,
-        position: mesh.position,
-        rotation: mesh.rotation,
+        position: {
+          x: mesh.position.x,
+          y: mesh.position.y,
+          z: mesh.position.z,
+        },
+        rotation: {
+          y: mesh.rotation.y,
+          x: mesh.rotation.x,
+        },
+        scale: {
+          x: mesh.scaling.x,
+          y: mesh.scaling.y,
+          z: mesh.scaling.z,
+        },
+        visible: clientEntity.visible,
+        meshEnabled: mesh.isEnabled(),
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EntityRenderService.createEntity', { entityId });
@@ -227,6 +262,11 @@ export class EntityRenderService {
       for (const anim of rendered.animations) {
         anim.dispose();
       }
+    }
+
+    // Dispose pathway lines
+    if (rendered.pathwayLines) {
+      rendered.pathwayLines.dispose();
     }
 
     // Dispose mesh
@@ -309,6 +349,53 @@ export class EntityRenderService {
    */
   getRenderedEntity(entityId: string): RenderedEntity | undefined {
     return this.renderedEntities.get(entityId);
+  }
+
+  /**
+   * Draw pathway lines for debugging
+   */
+  private async drawPathwayLines(entityId: string, pathway: EntityPathway): Promise<void> {
+    try {
+      const rendered = this.renderedEntities.get(entityId);
+      if (!rendered) {
+        return;
+      }
+
+      // Remove old pathway lines if they exist
+      if (rendered.pathwayLines) {
+        rendered.pathwayLines.dispose();
+        rendered.pathwayLines = undefined;
+      }
+
+      if (pathway.waypoints.length < 2) {
+        logger.debug('Not enough waypoints to draw lines', { entityId, count: pathway.waypoints.length });
+        return;
+      }
+
+      const { MeshBuilder, Color3 } = await import('@babylonjs/core');
+      const points = pathway.waypoints.map(wp => new Vector3(wp.target.x, wp.target.y, wp.target.z));
+
+      const lines = MeshBuilder.CreateLines(
+        `pathway_lines_${entityId}`,
+        { points },
+        this.scene
+      );
+      lines.color = new Color3(0, 1, 0); // Green lines
+
+      rendered.pathwayLines = lines;
+
+      logger.info('🟢 PATHWAY LINES DRAWN', {
+        entityId,
+        waypointCount: pathway.waypoints.length,
+        waypoints: pathway.waypoints.map(wp => ({
+          x: wp.target.x,
+          y: wp.target.y,
+          z: wp.target.z,
+        })),
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'EntityRenderService.drawPathwayLines', { entityId });
+    }
   }
 
   /**

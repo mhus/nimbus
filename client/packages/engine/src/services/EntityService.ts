@@ -288,9 +288,32 @@ export class EntityService {
     clientEntity.currentWaypoints = pathway.waypoints;
     clientEntity.currentWaypointIndex = 0;
     clientEntity.lastAccess = Date.now();
-    logger.debug('Entity pathway set', { entityId: pathway.entityId, waypointCount: pathway.waypoints.length });
+
+    // Initialize position from first waypoint if available
+    if (pathway.waypoints.length > 0) {
+      const firstWaypoint = pathway.waypoints[0];
+      clientEntity.currentPosition = {
+        x: firstWaypoint.target.x,
+        y: firstWaypoint.target.y,
+        z: firstWaypoint.target.z,
+      };
+      clientEntity.currentRotation = {
+        y: firstWaypoint.rotation.y,
+        p: firstWaypoint.rotation.p ?? 0,
+      };
+      clientEntity.currentPose = firstWaypoint.pose ?? 0;
+    }
+
+    logger.info('🟢 ENTITY PATHWAY SET IN ENTITYSERVICE', {
+      entityId: pathway.entityId,
+      waypointCount: pathway.waypoints.length,
+      initialPosition: clientEntity.currentPosition,
+      visible: clientEntity.visible,
+      firstWaypoint: pathway.waypoints[0],
+    });
 
     // Emit pathway event
+    logger.info('🟢 EMITTING PATHWAY EVENT', { entityId: pathway.entityId });
     this.emit('pathway', pathway);
   }
 
