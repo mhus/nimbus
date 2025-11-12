@@ -57,7 +57,8 @@
       "Bash(pnpm --filter @nimbus/controls build:*)",
       "Bash(pnpm --filter @nimbus/engine build:viewer:*)",
       "Bash(pnpm --filter @nimbus/engine build:editor:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(pnpm --filter @nimbus/test_server build:*)"
     ],
     "deny": [],
     "ask": []

@@ -29,6 +29,8 @@ export * from './EffectData';
 
 // Entity types
 export * from './EntityData';
+export * from './ClientEntity';
+export * from './ServerEntitySpawnDefinition';
 
 // Player types
 export * from './PlayerInfo';

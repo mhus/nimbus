@@ -38,6 +38,9 @@ export interface ServerConfig {
 
   /** Enable debug logging */
   debug: boolean;
+
+  /** Data path for world files */
+  dataPath: string;
 }
 
 /**
@@ -58,6 +61,7 @@ export function loadServerConfig(): ServerConfig {
     authPassword: process.env.AUTH_PASSWORD,
     pingInterval: parseInt(process.env.PING_INTERVAL || '30', 10),
     debug: process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production',
+    dataPath: process.env.DATA_PATH || './data',
   };
 
   logger.info('Server configuration loaded', {

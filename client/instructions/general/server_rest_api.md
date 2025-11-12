@@ -538,3 +538,19 @@ Response:
   "displayName": "Custom Block Name"
 }
 ```
+
+# Entity
+
+## Entity Model
+
+Abrufen von EntityModel Objekts.
+
+GET /api/worlds/{worldId}/entitymodel/{entityModelId}
+
+Result ein EntityModel Objekt.
+
+## Entity 
+
+Abrufen von Entity Objekts.
+
+GET /api/worlds/{worldId}/entity/{entityId}

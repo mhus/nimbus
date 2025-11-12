@@ -5,7 +5,7 @@
 import type WebSocket from 'ws';
 import type { ServerChunk } from './ServerChunk';
 import type { WorldGenerator } from '../world/generators/WorldGenerator';
-import type { WorldInfo, EditAction } from '@nimbus/shared';
+import type { WorldInfo, EditAction, EntityPathway } from '@nimbus/shared';
 
 /**
  * Client session data
@@ -49,6 +49,9 @@ export interface ClientSession {
 
   /** Current edit action (determines behavior when setting selectedEditBlock) */
   editAction?: EditAction;
+
+  /** Entity pathway queue (pathways to send to client) */
+  entityPathwayQueue: EntityPathway[];
 }
 
 /**

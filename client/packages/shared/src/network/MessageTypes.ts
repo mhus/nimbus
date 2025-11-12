@@ -27,6 +27,9 @@ export enum MessageType {
 
   // Entities
   ENTITY_UPDATE = 'e.u',
+  ENTITY_CHUNK_PATHWAY = 'e.p',
+  ENTITY_POSITION_UPDATE = 'e.p.u',
+  ENTITY_INTERACTION = 'e.int.r',
 
   // Animation
   ANIMATION_START = 'a.s',

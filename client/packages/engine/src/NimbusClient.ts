@@ -24,6 +24,7 @@ import { ModalService } from './services/ModalService';
 import { NotificationService } from './services/NotificationService';
 import { CommandService } from './services/CommandService';
 import { CompassService } from './services/CompassService';
+import { EntityService } from './services/EntityService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
@@ -221,6 +222,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.info('Initializing ChunkService...');
     const chunkService = new ChunkService(networkService, appContext);
     appContext.services.chunk = chunkService;
+
+    // Initialize EntityService
+    logger.info('Initializing EntityService...');
+    const entityService = new EntityService(appContext);
+    appContext.services.entity = entityService;
 
     // Register ChunkMessageHandler
     const chunkHandler = new ChunkMessageHandler(chunkService);

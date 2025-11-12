@@ -5,7 +5,7 @@
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block, type HeightData } from '@nimbus/shared';
+import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block, type HeightData, MessageType, type EntityPathway, type Vector2 } from '@nimbus/shared';
 import { loadServerConfig } from './config/ServerConfig';
 import { WorldManager } from './world/WorldManager';
 import { TerrainGenerator } from './world/TerrainGenerator';
@@ -13,6 +13,7 @@ import { createAuthMiddleware } from './api/middleware/auth';
 import { createWorldRoutes } from './api/routes/worldRoutes';
 import { createAssetRoutes } from './api/routes/assetRoutes';
 import { createBackdropRoutes } from './api/routes/backdropRoutes';
+import { createEntityRoutes } from './api/routes/entityRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
@@ -21,6 +22,8 @@ import { HelpCommand } from './commands/HelpCommand';
 import { LoopCommand } from './commands/LoopCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 import { NavigateSelectedBlockCommand } from './commands/NavigateSelectedBlockCommand';
+import { EntityManager } from './entity/EntityManager';
+import { EntitySimulator } from './entity/EntitySimulator';
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -38,6 +41,8 @@ class NimbusServer {
   private sessions = new Map<string, ClientSession>();
   private blockUpdateBuffer: BlockUpdateBuffer;
   private commandService: CommandService;
+  private entityManager: EntityManager | null = null;
+  private entitySimulator: EntitySimulator | null = null;
 
   private constructor() {
     this.app = express();
@@ -95,11 +100,37 @@ class NimbusServer {
       // Auth middleware
       const authMiddleware = createAuthMiddleware(config);
 
+      // Initialize EntityManager and EntitySimulator
+      const worldId = 'main'; // TODO: Get from active world
+      this.entityManager = new EntityManager(config.dataPath, worldId);
+      this.entitySimulator = new EntitySimulator(
+        `${config.dataPath}/worlds/${worldId}`,
+        1000 // Update every second
+      );
+
+      // Register pathway callback
+      this.entitySimulator.onPathwayGenerated((pathway) => {
+        this.queuePathwayForClients(pathway);
+      });
+
+      // Start entity simulator
+      this.entitySimulator.start();
+
+      // Start pathway broadcast interval (every 100ms)
+      setInterval(() => {
+        this.broadcastPathways();
+      }, 100);
+
       // REST API routes
       // Note: Management routes (GET/POST/PUT/DELETE for assets metadata) require auth
       // Asset file serving (GET /assets/*) routes are public
       this.app.use('/api/worlds', authMiddleware, createAssetRoutes(this.worldManager));
       this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager, this.blockUpdateBuffer, this.sessions));
+
+      // Entity routes
+      if (this.entityManager) {
+        this.app.use('/api/worlds', authMiddleware, createEntityRoutes(this.entityManager));
+      }
 
       // Backdrop configuration routes (public - no auth needed)
       this.app.use('/api/backdrop', createBackdropRoutes());
@@ -134,6 +165,7 @@ class NimbusServer {
         lastPingAt: Date.now(),
         createdAt: Date.now(),
         isAuthenticated: false,
+        entityPathwayQueue: [],
       };
       this.sessions.set(sessionId, session);
 
@@ -434,6 +466,80 @@ class NimbusServer {
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.broadcastBlockUpdates', { worldId });
+    }
+  }
+
+  /**
+   * Queue pathway for clients based on registered chunks
+   */
+  private queuePathwayForClients(pathway: EntityPathway): void {
+    try {
+      if (!this.entitySimulator) {
+        return;
+      }
+
+      // Get spawn definition to get affected chunks
+      const spawnDef = this.entitySimulator.getSpawnDefinition(pathway.entityId);
+      if (!spawnDef) {
+        logger.warn('Cannot queue pathway: spawn definition not found', { entityId: pathway.entityId });
+        return;
+      }
+
+      // For each session, check if they have any of the affected chunks registered
+      for (const session of this.sessions.values()) {
+        if (!session.isAuthenticated) {
+          continue;
+        }
+
+        // Check if session has any of the affected chunks registered
+        const hasRelevantChunk = spawnDef.chunks.some((chunk: Vector2) => {
+          const chunkKey = getChunkKey(chunk.x, chunk.z);
+          return session.registeredChunks.has(chunkKey);
+        });
+
+        if (hasRelevantChunk) {
+          session.entityPathwayQueue.push(pathway);
+        }
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.queuePathwayForClients', { entityId: pathway.entityId });
+    }
+  }
+
+  /**
+   * Broadcast pathways to clients (called every 100ms)
+   */
+  private broadcastPathways(): void {
+    try {
+      for (const session of this.sessions.values()) {
+        if (!session.isAuthenticated || session.entityPathwayQueue.length === 0) {
+          continue;
+        }
+
+        try {
+          // Send all queued pathways
+          const message = {
+            t: MessageType.ENTITY_CHUNK_PATHWAY,
+            d: session.entityPathwayQueue,
+          };
+
+          session.ws.send(JSON.stringify(message));
+
+          logger.debug('Entity pathways sent to client', {
+            sessionId: session.sessionId,
+            pathwayCount: session.entityPathwayQueue.length,
+          });
+
+          // Clear queue after sending
+          session.entityPathwayQueue = [];
+        } catch (error) {
+          ExceptionHandler.handle(error, 'NimbusServer.broadcastPathways.send', {
+            sessionId: session.sessionId,
+          });
+        }
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.broadcastPathways');
     }
   }
 }
