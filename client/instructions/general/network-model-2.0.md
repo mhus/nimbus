@@ -100,13 +100,18 @@ oder bei Fehler:
 Der Client sendet regelmäßig Ping-Nachrichten, um die Verbindung aufrechtzuerhalten und die Latenz zu messen.
 
 ```json
-{"i": "ping123","t": "p"}
+{"i": "ping123","t": "p", "d": {
+  "cTs": 1697045600000 // client timestamp
+}}
 ```
 
 Der Server antwortet mit einer Pong-Nachricht:
 
 ```json
-{"r": "ping123","t": "p"}
+{"r": "ping123","t": "p", "d": {
+  "cTs": 1697045600000, // client timestamp - wird zurueck geschickt
+  "sTs": 1697045600500 // server timestamp - wird angehaengt
+}}
 ```
 
 Wird langer als `pingInterval` (+ 10 Sekunden Puffer) Sekunden kein Ping empfangen, wird die Verbindung getrennt.
@@ -181,10 +186,6 @@ Der Server sendet angefragte Chunks an den Client.
   ],
   "a": [     // Area data (optional)
     AreaData
-  ],
-  "e" : [    // Entity data (optional)
-    EntityData,
-    ...
   ]
 }
 ```
@@ -247,16 +248,70 @@ Der Server sendet Block-Status-Änderungen an den Client (z.B. für Animationen,
 }
 ```
 
-## Entity Update (Server -> Client)
+## Entity Chunk Pathway (Server -> Client)
 
-Der Server sendet Entity-Änderungen an den Client.
+Der Server sendet Entity-Passway Daten aufgrund der aktuell registrierten Chunks an den Client.
 
 ```json
-{"t": "e.u", "d": 
-        [
-          EntityData,
-          ...
-      ]
+{"t": "e.p", "d": 
+  [
+    EntityPathwayData,
+    ...
+  ]
+}
+```
+
+## Entity Position Update (Client -> Server)
+
+Der Client sendet seine aktuelle Entity-Positions und Rotation an den Server.
+
+```json
+{
+  "t": "e.p.u",
+  "d": [
+    {
+      "pl": "player", // local entity id nicht die unique id, nur lokal fuer den client, kann auch eine weitere simulierte entity sein
+      "p?": {
+        "x": 100.5,
+        "y": 65.0,
+        "z": -200.5
+      }, // position
+      "r?": {
+        "y": 90.0,
+        "p": 0.0
+      }, // rotation: yaw, pitch
+      "v?": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }, // velocity
+      "po?": 5, // pose id
+      "ts": 1697045600000, // server timestamp
+      "ta?": { // Vector4
+        "x": 100.5,
+        "y": 65.0,
+        "z": -200.5,
+        "ts": 1697045800000 // target arrival timestamp
+      } // interpoliertes target position, der client berechnet schon fuer den server, wohin sich der player in den naechsten 200 ms bewegt, nimmt last aus dem server, update ist alle 100 ms
+    }
+  ]
+}
+```
+
+## Entity Interaction (Client -> Server)
+
+Der Client sendet eine Interaktions information mit einer Entity an den Server (z.B. wenn der Spieler mit einer Entity interagiert).
+
+```json
+{"i":"12345", "t": "e.int.r", "d":
+  {
+    "entityId": "entity123",
+    "ts": 1697045600000, // timestamp der interaktion
+    "ac": "use", // action z.b. 'use', 'talk', 'attack', 'touch'
+    "pa": { // params
+      // optionale parameter fuer die interaktion
+    }
+  }
 }
 ```
 

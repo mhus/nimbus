@@ -19,3 +19,8 @@
 - Status in BlockModifierMerge.ts richtig analysieren: WorldStatus und Season aus EnvironmentStatus holen
   - Bei season langsam durch eine raster funktion(x,y,z) von 0 - 100% auffuellen bis alle im neuen season sind.
 
+- Neuer parameter 'wip' am Block soll bloecke im EDIT mode highlghten
+- Parameter authConerHeights soll raus, dafuer immer auf shape == CUBE pruefen // kann evtl erweitert werden
+- Sammeln von Bloecken in der gleichen gruppe, Selektieren von ganer gruppe - jedes mal mesh auf bauen und destroyen, aber nur wen interaktion aktiviert wird, damit wird performance gespart!
+- Aktuelle selektierung schicker machen
+

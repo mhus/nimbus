@@ -1,36 +1,33 @@
 /**
  * Entity serialization utilities
- * Convert between EntityData and JSON representations
+ * Convert between Entity/EntityModel/EntityPathway and JSON representations
  */
 
-import type { EntityData } from '../types/EntityData';
-import { isPlayer, isNPC, isItem, isMob } from '../types/EntityData';
+import type { Entity, EntityModel, EntityPathway } from '../types/EntityData';
+import type { EntityPositionUpdateData, EntityInteractionData } from '../network/messages/EntityMessage';
 
 /**
  * Entity serialization helpers
  */
 export namespace EntitySerializer {
   /**
-   * Serialize entity to JSON
+   * Serialize Entity to JSON
    * @param entity Entity to serialize
-   * @param _includeAllFields Include all fields (default: false, optimized)
    * @returns JSON string
    */
-  export function toJSON(entity: EntityData, _includeAllFields: boolean = false): string {
-    // Always use optimized version
-    const obj = toObject(entity);
-    return JSON.stringify(obj);
+  export function entityToJSON(entity: Entity): string {
+    return JSON.stringify(entity);
   }
 
   /**
-   * Deserialize entity from JSON
+   * Deserialize Entity from JSON
    * @param json JSON string
-   * @returns EntityData or null if invalid
+   * @returns Entity or null if invalid
    */
-  export function fromJSON(json: string): EntityData | null {
+  export function entityFromJSON(json: string): Entity | null {
     try {
       const data = JSON.parse(json);
-      return fromObject(data);
+      return entityFromObject(data);
     } catch (e) {
       console.error('Failed to parse entity JSON:', e);
       return null;
@@ -38,77 +35,20 @@ export namespace EntitySerializer {
   }
 
   /**
-   * Convert EntityData to plain object (optimized for network)
-   * Only includes relevant fields per entity type
-   * @param entity Entity data
-   * @returns Plain object
-   */
-  export function toObject(entity: EntityData): any {
-    // Base fields (all entities)
-    const obj: any = {
-      id: entity.id,
-      type: entity.type,
-      position: entity.position,
-      rotation: entity.rotation,
-    };
-
-    // Optional common fields
-    if (entity.velocity) obj.velocity = entity.velocity;
-    if (entity.walkToPosition) obj.walkToPosition = entity.walkToPosition;
-    if (entity.visibility) obj.visibility = entity.visibility;
-
-    // Type-specific fields
-    if (isPlayer(entity)) {
-      if (entity.username) obj.username = entity.username;
-      if (entity.displayName) obj.displayName = entity.displayName;
-      if (entity.userId) obj.userId = entity.userId;
-      if (entity.health) obj.health = entity.health;
-      if (entity.state) obj.state = entity.state;
-      if (entity.isCrouching) obj.isCrouching = entity.isCrouching;
-      if (entity.isSprinting) obj.isSprinting = entity.isSprinting;
-      if (entity.role) obj.role = entity.role;
-      if (entity.team) obj.team = entity.team;
-      if (entity.heldItem !== undefined) obj.heldItem = entity.heldItem;
-      // Don't send full inventory in every update (too large)
-    } else if (isNPC(entity)) {
-      if (entity.displayName) obj.displayName = entity.displayName;
-      if (entity.dialogId) obj.dialogId = entity.dialogId;
-      if (entity.aiState) obj.aiState = entity.aiState;
-      if (entity.targetId) obj.targetId = entity.targetId;
-      if (entity.team) obj.team = entity.team;
-    } else if (isMob(entity)) {
-      if (entity.displayName) obj.displayName = entity.displayName;
-      if (entity.health) obj.health = entity.health;
-      if (entity.aggression !== undefined) obj.aggression = entity.aggression;
-      if (entity.aiState) obj.aiState = entity.aiState;
-      if (entity.targetId) obj.targetId = entity.targetId;
-    } else if (isItem(entity)) {
-      if (entity.itemTypeId !== undefined) obj.itemTypeId = entity.itemTypeId;
-      if (entity.stackCount !== undefined) obj.stackCount = entity.stackCount;
-      if (entity.canPickup !== undefined) obj.canPickup = entity.canPickup;
-    }
-
-    // Metadata if present
-    if (entity.metadata) obj.metadata = entity.metadata;
-
-    return obj;
-  }
-
-  /**
-   * Convert plain object to EntityData
+   * Convert plain object to Entity
    * @param obj Plain object
-   * @returns EntityData or null if invalid
+   * @returns Entity or null if invalid
    */
-  export function fromObject(obj: any): EntityData | null {
+  export function entityFromObject(obj: any): Entity | null {
     if (!obj || typeof obj !== 'object') {
       return null;
     }
 
-    if (!obj.id || !obj.type || !obj.position || !obj.rotation) {
+    if (!obj.id || !obj.name || !obj.model || !obj.movementType) {
       return null;
     }
 
-    return obj as EntityData;
+    return obj as Entity;
   }
 
   /**
@@ -116,9 +56,8 @@ export namespace EntitySerializer {
    * @param entities Array of entities
    * @returns JSON string
    */
-  export function arrayToJSON(entities: EntityData[]): string {
-    const objects = entities.map((e) => toObject(e));
-    return JSON.stringify(objects);
+  export function entityArrayToJSON(entities: Entity[]): string {
+    return JSON.stringify(entities);
   }
 
   /**
@@ -126,7 +65,7 @@ export namespace EntitySerializer {
    * @param json JSON string
    * @returns Array of entities or null
    */
-  export function arrayFromJSON(json: string): EntityData[] | null {
+  export function entityArrayFromJSON(json: string): Entity[] | null {
     try {
       const data = JSON.parse(json);
 
@@ -135,8 +74,8 @@ export namespace EntitySerializer {
       }
 
       const entities = data
-        .map(fromObject)
-        .filter((e): e is EntityData => e !== null);
+        .map(entityFromObject)
+        .filter((e): e is Entity => e !== null);
 
       return entities;
     } catch (e) {
@@ -146,25 +85,281 @@ export namespace EntitySerializer {
   }
 
   /**
-   * Create minimal update object (only position and rotation)
-   * @param entity Entity
-   * @returns Minimal update object
+   * Serialize EntityModel to JSON
+   * @param model EntityModel to serialize
+   * @returns JSON string
    */
-  export function toMinimalUpdate(entity: EntityData): any {
-    return {
-      id: entity.id,
-      position: entity.position,
-      rotation: entity.rotation,
-      velocity: entity.velocity,
+  export function modelToJSON(model: EntityModel): string {
+    // Convert Maps to objects for JSON serialization
+    const obj = {
+      ...model,
+      poseMapping: Object.fromEntries(model.poseMapping),
+      modelModifierMapping: Object.fromEntries(model.modelModifierMapping),
     };
+    return JSON.stringify(obj);
   }
 
   /**
-   * Create full snapshot (all fields)
-   * @param entity Entity
-   * @returns Full snapshot object
+   * Deserialize EntityModel from JSON
+   * @param json JSON string
+   * @returns EntityModel or null if invalid
    */
-  export function toFullSnapshot(entity: EntityData): any {
-    return JSON.parse(JSON.stringify(entity));
+  export function modelFromJSON(json: string): EntityModel | null {
+    try {
+      const data = JSON.parse(json);
+      return modelFromObject(data);
+    } catch (e) {
+      console.error('Failed to parse entity model JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Convert plain object to EntityModel
+   * @param obj Plain object
+   * @returns EntityModel or null if invalid
+   */
+  export function modelFromObject(obj: any): EntityModel | null {
+    if (!obj || typeof obj !== 'object') {
+      return null;
+    }
+
+    if (!obj.id || !obj.type || !obj.modelPath || !obj.poseType || !obj.dimensions) {
+      return null;
+    }
+
+    // Convert objects back to Maps
+    return {
+      ...obj,
+      poseMapping: new Map(Object.entries(obj.poseMapping || {})),
+      modelModifierMapping: new Map(Object.entries(obj.modelModifierMapping || {})),
+    } as EntityModel;
+  }
+
+  /**
+   * Serialize entity model array to JSON
+   * @param models Array of entity models
+   * @returns JSON string
+   */
+  export function modelArrayToJSON(models: EntityModel[]): string {
+    const objects = models.map((m) => ({
+      ...m,
+      poseMapping: Object.fromEntries(m.poseMapping),
+      modelModifierMapping: Object.fromEntries(m.modelModifierMapping),
+    }));
+    return JSON.stringify(objects);
+  }
+
+  /**
+   * Deserialize entity model array from JSON
+   * @param json JSON string
+   * @returns Array of entity models or null
+   */
+  export function modelArrayFromJSON(json: string): EntityModel[] | null {
+    try {
+      const data = JSON.parse(json);
+
+      if (!Array.isArray(data)) {
+        return null;
+      }
+
+      const models = data
+        .map(modelFromObject)
+        .filter((m): m is EntityModel => m !== null);
+
+      return models;
+    } catch (e) {
+      console.error('Failed to parse entity model array JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Serialize EntityPathway to JSON
+   * @param pathway EntityPathway to serialize
+   * @returns JSON string
+   */
+  export function pathwayToJSON(pathway: EntityPathway): string {
+    return JSON.stringify(pathway);
+  }
+
+  /**
+   * Deserialize EntityPathway from JSON
+   * @param json JSON string
+   * @returns EntityPathway or null if invalid
+   */
+  export function pathwayFromJSON(json: string): EntityPathway | null {
+    try {
+      const data = JSON.parse(json);
+      return pathwayFromObject(data);
+    } catch (e) {
+      console.error('Failed to parse entity pathway JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Convert plain object to EntityPathway
+   * @param obj Plain object
+   * @returns EntityPathway or null if invalid
+   */
+  export function pathwayFromObject(obj: any): EntityPathway | null {
+    if (!obj || typeof obj !== 'object') {
+      return null;
+    }
+
+    if (!obj.entityId || !obj.startAt || !Array.isArray(obj.waypoints)) {
+      return null;
+    }
+
+    return obj as EntityPathway;
+  }
+
+  /**
+   * Serialize entity pathway array to JSON
+   * @param pathways Array of entity pathways
+   * @returns JSON string
+   */
+  export function pathwayArrayToJSON(pathways: EntityPathway[]): string {
+    return JSON.stringify(pathways);
+  }
+
+  /**
+   * Deserialize entity pathway array from JSON
+   * @param json JSON string
+   * @returns Array of entity pathways or null
+   */
+  export function pathwayArrayFromJSON(json: string): EntityPathway[] | null {
+    try {
+      const data = JSON.parse(json);
+
+      if (!Array.isArray(data)) {
+        return null;
+      }
+
+      const pathways = data
+        .map(pathwayFromObject)
+        .filter((p): p is EntityPathway => p !== null);
+
+      return pathways;
+    } catch (e) {
+      console.error('Failed to parse entity pathway array JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Serialize EntityPositionUpdateData to JSON
+   * @param data EntityPositionUpdateData to serialize
+   * @returns JSON string
+   */
+  export function positionUpdateToJSON(data: EntityPositionUpdateData): string {
+    return JSON.stringify(data);
+  }
+
+  /**
+   * Deserialize EntityPositionUpdateData from JSON
+   * @param json JSON string
+   * @returns EntityPositionUpdateData or null if invalid
+   */
+  export function positionUpdateFromJSON(json: string): EntityPositionUpdateData | null {
+    try {
+      const data = JSON.parse(json);
+      return positionUpdateFromObject(data);
+    } catch (e) {
+      console.error('Failed to parse entity position update JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Convert plain object to EntityPositionUpdateData
+   * @param obj Plain object
+   * @returns EntityPositionUpdateData or null if invalid
+   */
+  export function positionUpdateFromObject(obj: any): EntityPositionUpdateData | null {
+    if (!obj || typeof obj !== 'object') {
+      return null;
+    }
+
+    if (!obj.pl || !obj.ts) {
+      return null;
+    }
+
+    return obj as EntityPositionUpdateData;
+  }
+
+  /**
+   * Serialize entity position update array to JSON
+   * @param updates Array of position updates
+   * @returns JSON string
+   */
+  export function positionUpdateArrayToJSON(updates: EntityPositionUpdateData[]): string {
+    return JSON.stringify(updates);
+  }
+
+  /**
+   * Deserialize entity position update array from JSON
+   * @param json JSON string
+   * @returns Array of position updates or null
+   */
+  export function positionUpdateArrayFromJSON(json: string): EntityPositionUpdateData[] | null {
+    try {
+      const data = JSON.parse(json);
+
+      if (!Array.isArray(data)) {
+        return null;
+      }
+
+      const updates = data
+        .map(positionUpdateFromObject)
+        .filter((u): u is EntityPositionUpdateData => u !== null);
+
+      return updates;
+    } catch (e) {
+      console.error('Failed to parse entity position update array JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Serialize EntityInteractionData to JSON
+   * @param data EntityInteractionData to serialize
+   * @returns JSON string
+   */
+  export function interactionToJSON(data: EntityInteractionData): string {
+    return JSON.stringify(data);
+  }
+
+  /**
+   * Deserialize EntityInteractionData from JSON
+   * @param json JSON string
+   * @returns EntityInteractionData or null if invalid
+   */
+  export function interactionFromJSON(json: string): EntityInteractionData | null {
+    try {
+      const data = JSON.parse(json);
+      return interactionFromObject(data);
+    } catch (e) {
+      console.error('Failed to parse entity interaction JSON:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Convert plain object to EntityInteractionData
+   * @param obj Plain object
+   * @returns EntityInteractionData or null if invalid
+   */
+  export function interactionFromObject(obj: any): EntityInteractionData | null {
+    if (!obj || typeof obj !== 'object') {
+      return null;
+    }
+
+    if (!obj.entityId || !obj.ts || !obj.ac) {
+      return null;
+    }
+
+    return obj as EntityInteractionData;
   }
 }

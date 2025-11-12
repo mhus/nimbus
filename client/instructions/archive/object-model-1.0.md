@@ -52,7 +52,7 @@ BlockType:
 - windLeafiness?: number; // Wind-Laubigkeit (0-1)
 - windStability?: number; // Windstabilität (0-1)
 
-## Entity Model
+## Entity Model (!deprecated!)
 
 EntityCategory:
 - PLAYER = 'player' // Spieler-Entität

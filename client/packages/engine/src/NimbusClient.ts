@@ -193,7 +193,8 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
 
         // Start ping interval after successful login
         const pingInterval = appContext.worldInfo?.settings?.pingInterval || 30;
-        pingHandler.startPingInterval(pingInterval);
+        pingHandler.pingIntervalMs = pingInterval * 1000; // Convert seconds to milliseconds
+        pingHandler.startPingInterval();
         logger.info('Ping interval started', { intervalSeconds: pingInterval });
 
         resolve();

@@ -8,7 +8,6 @@
 import type { BaseMessage } from '../BaseMessage';
 import type { Block } from '../../types/Block';
 import type { AreaData } from '../../types/AreaData';
-import type { EntityData } from '../../types/EntityData';
 import type { HeightData } from '../../types/ChunkData';
 import type { Backdrop } from '../../types/Backdrop';
 
@@ -38,9 +37,6 @@ export interface ChunkDataTransferObject {
 
   /** Area data with effects */
   a?: AreaData[];
-
-  /** Entity data */
-  e?: EntityData[];
 
   /** Backdrop data for chunk edges */
   backdrop?: {

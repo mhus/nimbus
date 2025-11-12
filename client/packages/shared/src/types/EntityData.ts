@@ -1,300 +1,277 @@
 /**
- * EntityData - Entity (NPC, Player, Mob, Item, etc.) definition
+ * Entity System - Dynamic objects in the game world
  *
- * Unified entity system where Player is an Entity with type='player'.
- * All player-specific fields are optional and only used when type='player'.
+ * Entities sind dynamische Objekte, die in der Spielwelt existieren.
+ * Sie wechseln oft ihre Position, Ausrichtung oder ihren Zustand.
+ * Beispiele: Spieler, NPCs, Fahrzeuge, bewegliche Gegenstände.
  */
 
 import type { Vector3 } from './Vector3';
 import type { Rotation } from './Rotation';
 
 /**
- * Entity type
+ * PoseType - Art der Bewegungsanimation
  */
-export enum EntityType {
-  PLAYER = 'player',
-  NPC = 'npc',
-  MOB = 'mob',
-  ITEM = 'item',
-  PROJECTILE = 'projectile',
-  VEHICLE = 'vehicle',
+export type PoseType =
+  | '2-Legs'    // Zweibeinig (Menschen, Vögel)
+  | '4-Legs'    // Vierbeinig (Hunde, Pferde)
+  | '6-Legs'    // Sechsbeinig (Insekten)
+  | 'Wings'     // Fliegend (Vögel, Drachen)
+  | 'Fish'      // Schwimmend (Fische)
+  | 'Snake'     // Kriechend (Schlangen)
+  | 'Humanoid'  // Menschenähnlich
+  | 'Slime';    // Gleitend/formlos
+
+/**
+ * Dimensions for different movement states
+ * Collision box dimensions for each pose/movement type
+ */
+export interface EntityDimensions {
+  walk?: { height: number; width: number; footprint: number };
+  sprint?: { height: number; width: number; footprint: number };
+  crouch?: { height: number; width: number; footprint: number };
+  swim?: { height: number; width: number; footprint: number };
+  climb?: { height: number; width: number; footprint: number };
+  fly?: { height: number; width: number; footprint: number };
+  teleport?: { height: number; width: number; footprint: number };
 }
 
 /**
- * Entity visibility properties
+ * EntityModel - Template/Definition für Entity-Typen
+ *
+ * Analog zu BlockType: Definiert die Eigenschaften eines Entity-Typs.
+ * Wird im Registry gespeichert und von Entity-Instanzen referenziert.
  */
-export interface EntityVisibility {
-  /** Path to 3D model */
-  modelPath?: string;
-
-  /** Scale */
-  scale?: Vector3;
-
-  /** Visibility flag */
-  visible?: boolean;
-
-  /** Skin/texture path (for players) */
-  skinPath?: string;
-
-  /** Animation state (e.g., 'idle', 'walk', 'run') */
-  animationState?: string;
-}
-
-/**
- * Entity health/status
- */
-export interface EntityHealth {
-  /** Current health */
-  current: number;
-
-  /** Maximum health */
-  max: number;
-
-  /** Is alive */
-  alive: boolean;
-}
-
-/**
- * Entity definition
- * Unified for all entity types (Player, NPC, Mob, Item, etc.)
- */
-export interface EntityData {
-  /** Unique entity ID */
+export interface EntityModel {
+  /** Unique identifier for this entity model */
   id: string;
 
-  /** Entity type */
-  type: EntityType;
+  /** Type/category of entity */
+  type: string;
 
-  /** Visibility properties */
-  visibility?: EntityVisibility;
+  /** Path to 3D model file */
+  modelPath: string;
 
-  /** Current position (world coordinates) */
-  position: Vector3;
+  /** Position offset from entity position */
+  positionOffset: Vector3;
 
-  /** Current rotation */
+  /** Rotation offset from entity rotation */
+  rotationOffset: Vector3;
+
+  /** Mapping of pose IDs to animation names */
+  poseMapping: Map<number, string>;
+
+  /** Type of movement/animation system */
+  poseType: PoseType;
+
+  /** Mapping of modifier keys to visual modifications (e.g., skin colors, equipment) */
+  modelModifierMapping: Map<string, string>;
+
+  /** Collision dimensions for different movement states */
+  dimensions: EntityDimensions;
+}
+
+/**
+ * MovementType - Defines how dynamic an entity's movement is
+ */
+export type MovementType =
+  | 'static'   // Statisch (bewegt sich nicht)
+  | 'passive'  // Passiv (langsame, vorhersagbare Bewegung)
+  | 'slow'     // Langsam (moderate Bewegung)
+  | 'dynamic'; // Dynamisch (schnelle, unvorhersagbare Bewegung)
+
+/**
+ * Entity - Konkrete Entity-Instanz in der Welt
+ *
+ * Analog zu BlockInstance: Eine konkrete Entity an einer bestimmten Position.
+ * Referenziert ein EntityModel über die ID.
+ */
+export interface Entity {
+  /** Unique identifier for this entity instance */
+  id: string;
+
+  /** Display name of the entity */
+  name: string;
+
+  /** Reference to EntityModel (by ID) */
+  model: string; // EntityModel ID
+
+  /** Custom modifiers for this instance (overrides/extends model defaults) */
+  modelModifier: Record<string, any>;
+
+  /** Movement behavior type */
+  movementType: MovementType;
+
+  /** Is this entity solid (blocking)? */
+  solid?: boolean;
+
+  /** Is this entity interactive (can be clicked/used)? */
+  interactive?: boolean;
+}
+
+/**
+ * Waypoint - Single point in an entity's path
+ */
+export interface Waypoint {
+  /** Target timestamp when entity should reach this waypoint */
+  timestamp: number;
+
+  /** Target position (world coordinates) */
+  target: Vector3;
+
+  /** Target rotation (direction, pitch) */
   rotation: Rotation;
 
-  /** Target position for movement (AI, pathfinding) */
-  walkToPosition?: Vector3;
-
-  /** Movement velocity */
-  velocity?: Vector3;
-
-  // Player-specific fields (optional, only when type='player')
-
-  /**
-   * Username (for players)
-   */
-  username?: string;
-
-  /**
-   * Display name (for players and NPCs)
-   */
-  displayName?: string;
-
-  /**
-   * User ID (for players)
-   */
-  userId?: string;
-
-  /**
-   * Health status (for players, mobs, NPCs)
-   */
-  health?: EntityHealth;
-
-  /**
-   * Inventory (for players)
-   * Array of item IDs or item data
-   */
-  inventory?: any[]; // TODO: Define Inventory type
-
-  /**
-   * Currently held item (for players)
-   */
-  heldItem?: number; // Item ID or slot index
-
-  /**
-   * Player state (for players)
-   * e.g., 'idle', 'walking', 'running', 'jumping', 'swimming', 'flying'
-   */
-  state?: string;
-
-  /**
-   * Is crouching (for players)
-   */
-  isCrouching?: boolean;
-
-  /**
-   * Is sprinting (for players)
-   */
-  isSprinting?: boolean;
-
-  /**
-   * Permissions/role (for players)
-   */
-  role?: string;
-
-  /**
-   * Team/faction (for players and NPCs)
-   */
-  team?: string;
-
-  // NPC-specific fields (optional, only when type='npc')
-
-  /**
-   * NPC dialog ID (for NPCs)
-   */
-  dialogId?: string;
-
-  /**
-   * NPC behavior/AI state (for NPCs and mobs)
-   */
-  aiState?: string;
-
-  // Mob-specific fields (optional, only when type='mob')
-
-  /**
-   * Mob aggression level (for mobs)
-   */
-  aggression?: number;
-
-  /**
-   * Target entity ID (for mobs and NPCs)
-   */
-  targetId?: string;
-
-  // Item-specific fields (optional, only when type='item')
-
-  /**
-   * Item type ID (for items)
-   */
-  itemTypeId?: number;
-
-  /**
-   * Item stack count (for items)
-   */
-  stackCount?: number;
-
-  /**
-   * Can be picked up (for items)
-   */
-  canPickup?: boolean;
-
-  // Additional metadata
-
-  /**
-   * Custom metadata (extensible)
-   */
-  metadata?: Record<string, any>;
-
-  /**
-   * Last update timestamp
-   */
-  lastUpdate?: number;
+  /** Pose/animation ID at this waypoint */
+  pose: number;
 }
 
 /**
- * Helper to create player entity
+ * EntityPathway - Movement path for an entity
+ *
+ * Defines a sequence of waypoints that the entity follows.
+ * Can be used for NPCs, moving platforms, or other scripted movements.
  */
-export function createPlayer(
-  id: string,
-  userId: string,
-  username: string,
-  displayName: string,
-  position: Vector3
-): EntityData {
-  return {
-    id,
-    type: EntityType.PLAYER,
-    userId,
-    username,
-    displayName,
-    position,
-    rotation: { y: 0, p: 0 },
-    health: {
-      current: 20,
-      max: 20,
-      alive: true,
-    },
-    state: 'idle',
-    visibility: {
-      visible: true,
-    },
-  };
+export interface EntityPathway {
+  /** Entity ID this pathway belongs to */
+  entityId: string;
+
+  /** Start timestamp for the pathway */
+  startAt: number;
+
+  /** Sequence of waypoints */
+  waypoints: Waypoint[];
+
+  /** Should the pathway loop? If true, recalculate waypoints with startAt */
+  isLooping?: boolean;
+
+  /** Timestamp for querying current position (interpolation) */
+  queryAt?: number;
+
+  /** Idle pose when not moving */
+  idlePose?: number;
 }
 
 /**
- * Helper to create NPC entity
+ * Helper: Create a basic EntityModel
  */
-export function createNPC(
+export function createEntityModel(
   id: string,
-  displayName: string,
-  position: Vector3,
+  type: string,
   modelPath: string,
-  dialogId?: string
-): EntityData {
+  poseType: PoseType,
+  dimensions: EntityDimensions
+): EntityModel {
   return {
     id,
-    type: EntityType.NPC,
-    displayName,
-    position,
-    rotation: { y: 0, p: 0 },
-    dialogId,
-    visibility: {
-      modelPath,
-      visible: true,
-    },
-    aiState: 'idle',
+    type,
+    modelPath,
+    positionOffset: { x: 0, y: 0, z: 0 },
+    rotationOffset: { x: 0, y: 0, z: 0 },
+    poseMapping: new Map(),
+    poseType,
+    modelModifierMapping: new Map(),
+    dimensions,
   };
 }
 
 /**
- * Helper to create item entity
+ * Helper: Create a basic Entity instance
  */
-export function createItem(
+export function createEntity(
   id: string,
-  itemTypeId: number,
-  position: Vector3,
-  stackCount: number = 1
-): EntityData {
+  name: string,
+  modelId: string,
+  movementType: MovementType = 'static'
+): Entity {
   return {
     id,
-    type: EntityType.ITEM,
-    itemTypeId,
-    stackCount,
-    position,
-    rotation: { y: 0, p: 0 },
-    canPickup: true,
-    visibility: {
-      visible: true,
-    },
+    name,
+    model: modelId,
+    modelModifier: {},
+    movementType,
+    solid: true,
+    interactive: false,
   };
 }
 
 /**
- * Type guard: Check if entity is a player
+ * Helper: Create a pathway for an entity
  */
-export function isPlayer(entity: EntityData): boolean {
-  return entity.type === EntityType.PLAYER;
+export function createEntityPathway(
+  entityId: string,
+  startAt: number,
+  waypoints: Waypoint[],
+  isLooping: boolean = false
+): EntityPathway {
+  return {
+    entityId,
+    startAt,
+    waypoints,
+    isLooping,
+  };
 }
 
 /**
- * Type guard: Check if entity is an NPC
+ * Helper: Interpolate entity position at a given timestamp
+ *
+ * Calculates the current position/rotation/pose based on waypoints and timestamp.
  */
-export function isNPC(entity: EntityData): boolean {
-  return entity.type === EntityType.NPC;
-}
+export function interpolateEntityPosition(
+  pathway: EntityPathway,
+  queryTimestamp: number
+): { position: Vector3; rotation: Rotation; pose: number } | null {
+  if (pathway.waypoints.length === 0) {
+    return null;
+  }
 
-/**
- * Type guard: Check if entity is a mob
- */
-export function isMob(entity: EntityData): boolean {
-  return entity.type === EntityType.MOB;
-}
+  // Find the two waypoints to interpolate between
+  let prevWaypoint: Waypoint | null = null;
+  let nextWaypoint: Waypoint | null = null;
 
-/**
- * Type guard: Check if entity is an item
- */
-export function isItem(entity: EntityData): boolean {
-  return entity.type === EntityType.ITEM;
+  for (let i = 0; i < pathway.waypoints.length; i++) {
+    const wp = pathway.waypoints[i];
+    if (wp.timestamp <= queryTimestamp) {
+      prevWaypoint = wp;
+      nextWaypoint = pathway.waypoints[i + 1] || null;
+    } else {
+      break;
+    }
+  }
+
+  // If before first waypoint
+  if (!prevWaypoint) {
+    const first = pathway.waypoints[0];
+    return {
+      position: first.target,
+      rotation: first.rotation,
+      pose: first.pose,
+    };
+  }
+
+  // If after last waypoint
+  if (!nextWaypoint) {
+    return {
+      position: prevWaypoint.target,
+      rotation: prevWaypoint.rotation,
+      pose: pathway.idlePose ?? prevWaypoint.pose,
+    };
+  }
+
+  // Interpolate between waypoints
+  const t = (queryTimestamp - prevWaypoint.timestamp) / (nextWaypoint.timestamp - prevWaypoint.timestamp);
+  const clampedT = Math.max(0, Math.min(1, t));
+
+  return {
+    position: {
+      x: prevWaypoint.target.x + (nextWaypoint.target.x - prevWaypoint.target.x) * clampedT,
+      y: prevWaypoint.target.y + (nextWaypoint.target.y - prevWaypoint.target.y) * clampedT,
+      z: prevWaypoint.target.z + (nextWaypoint.target.z - prevWaypoint.target.z) * clampedT,
+    },
+    rotation: {
+      y: prevWaypoint.rotation.y + (nextWaypoint.rotation.y - prevWaypoint.rotation.y) * clampedT,
+      p: prevWaypoint.rotation.p + (nextWaypoint.rotation.p - prevWaypoint.rotation.p) * clampedT,
+    },
+    pose: clampedT < 0.5 ? prevWaypoint.pose : nextWaypoint.pose,
+  };
 }
