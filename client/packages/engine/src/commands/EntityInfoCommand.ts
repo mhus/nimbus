@@ -181,10 +181,30 @@ export class EntityInfoCommand extends CommandHandler {
       lines.push('');
     }
 
-    // Meshes
+    // Meshes and Animations
     if (clientEntity.meshes.length > 0) {
       lines.push(`Rendered Meshes: ${clientEntity.meshes.length}`);
       lines.push('');
+
+      // Get all available animations from the scene
+      const engineService = this.appContext.services.engine;
+      if (engineService) {
+        const scene = engineService.getScene();
+        if (scene) {
+          const allAnimations = scene.animationGroups;
+          if (allAnimations.length > 0) {
+            lines.push('Available Animations in Scene:');
+            allAnimations.forEach(ag => {
+              const isPlaying = ag.isPlaying ? ' (PLAYING)' : '';
+              lines.push(`  - ${ag.name}${isPlaying}`);
+            });
+            lines.push('');
+          } else {
+            lines.push('No animations found in scene');
+            lines.push('');
+          }
+        }
+      }
     }
 
     // Cache info
