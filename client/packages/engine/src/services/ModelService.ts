@@ -45,6 +45,20 @@ interface CachedModel {
 }
 
 /**
+ * Cached GLB container entry
+ */
+interface CachedGlbContainer {
+  /** Asset container (not added to scene, used for instantiation) */
+  container: AssetContainer;
+
+  /** Last access timestamp */
+  lastAccess: number;
+
+  /** Model path */
+  path: string;
+}
+
+/**
  * ModelService - Manages 3D model loading and caching
  *
  * Features:
@@ -60,6 +74,9 @@ export class ModelService {
 
   // Model cache: path -> CachedModel
   private modelCache: Map<string, CachedModel> = new Map();
+
+  // GLB container cache: path -> CachedGlbContainer
+  private glbContainerCache: Map<string, CachedGlbContainer> = new Map();
 
   // Cache cleanup interval
   private cleanupInterval?: NodeJS.Timeout;
@@ -86,20 +103,20 @@ export class ModelService {
   }
 
   /**
-   * Load GLB model using LoadAssetContainerAsync (recommended for GLB/glTF)
-   * Returns a template mesh (disabled) that should be cloned for use
+   * Load GLB container (for entities with animations)
+   * Returns AssetContainer that can be instantiated for each entity
    *
    * @param modelPath - Relative model path (e.g., "models/cow.glb")
-   * @returns Template mesh for cloning, or null if loading failed
+   * @returns AssetContainer for instantiation, or null if loading failed
    */
-  async loadGlbModel(modelPath: string): Promise<Mesh | null> {
+  async loadGlbContainer(modelPath: string): Promise<AssetContainer | null> {
     try {
       // Check cache
-      const cached = this.modelCache.get(modelPath);
+      const cached = this.glbContainerCache.get(modelPath);
       if (cached) {
         cached.lastAccess = Date.now();
-        logger.debug('Model cache hit (GLB)', { modelPath });
-        return cached.mesh;
+        logger.debug('GLB container cache hit', { modelPath });
+        return cached.container;
       }
 
       // Load from asset server
@@ -140,57 +157,23 @@ export class ModelService {
         throw new Error(`No meshes found in GLB model: ${fullModelUrl}`);
       }
 
-      // Get all meshes (skip __root__ node if present)
-      const allMeshes = container.meshes.filter(m => m instanceof Mesh && m.name !== '__root__') as Mesh[];
-
-      if (allMeshes.length === 0) {
-        throw new Error('No valid meshes found in GLB model (only __root__ node)');
-      }
-
-      let templateMesh: Mesh;
-
-      if (allMeshes.length > 1) {
-
-        // Add meshes to scene first (required for merging)
-        container.addAllToScene();
-
-        const merged = Mesh.MergeMeshes(
-          allMeshes,
-          true, // disposeSource
-          true, // allow32BitsIndices
-          undefined,
-          false, // subdivideWithSubMeshes
-          true // multiMultiMaterials
-        );
-
-        if (!merged) {
-          logger.warn('Failed to merge GLB meshes, using first mesh', { modelPath });
-          templateMesh = allMeshes[0];
-        } else {
-          templateMesh = merged;
-          templateMesh.name = `model_template_${modelPath}`;
-        }
-      } else {
-        // Single mesh - add to scene
-        container.addAllToScene();
-        templateMesh = allMeshes[0];
-      }
-
-      // Disable template mesh (it's just for cloning)
-      templateMesh.setEnabled(false);
-
+      // Don't add to scene or merge - keep container for instantiation
       // Add to cache
-      const cachedModel: CachedModel = {
-        mesh: templateMesh,
+      const cachedContainer: CachedGlbContainer = {
+        container,
         lastAccess: Date.now(),
         path: modelPath,
       };
 
-      this.modelCache.set(modelPath, cachedModel);
-      this.evictCache();
+      this.glbContainerCache.set(modelPath, cachedContainer);
+      this.evictGlbContainerCache();
 
-      logger.debug('GLB model loaded and cached', { modelPath });
-      return templateMesh;
+      logger.info('GLB container loaded and cached', {
+        modelPath,
+        meshCount: container.meshes.length,
+        animationCount: container.animationGroups.length,
+      });
+      return container;
     } catch (error) {
       ExceptionHandler.handle(error, 'ModelService.loadGlbModel', {
         modelPath,
@@ -349,13 +332,19 @@ export class ModelService {
 
   /**
    * Clear the model cache
-   * Disposes all cached meshes
+   * Disposes all cached meshes and containers
    */
   clearCache(): void {
     for (const cached of this.modelCache.values()) {
       cached.mesh.dispose();
     }
     this.modelCache.clear();
+
+    for (const cached of this.glbContainerCache.values()) {
+      cached.container.dispose();
+    }
+    this.glbContainerCache.clear();
+
     logger.info('Model cache cleared');
   }
 
@@ -442,6 +431,33 @@ export class ModelService {
       cached.mesh.dispose();
       this.modelCache.delete(oldestPath);
       logger.debug('Model evicted from cache', { modelPath: oldestPath });
+    }
+  }
+
+  /**
+   * Evict oldest GLB containers if cache is full
+   */
+  private evictGlbContainerCache(): void {
+    if (this.glbContainerCache.size <= this.config.maxCacheSize) {
+      return;
+    }
+
+    // Find container with oldest lastAccess
+    let oldestPath: string | null = null;
+    let oldestAccess = Date.now();
+
+    for (const [path, cached] of this.glbContainerCache.entries()) {
+      if (cached.lastAccess < oldestAccess) {
+        oldestAccess = cached.lastAccess;
+        oldestPath = path;
+      }
+    }
+
+    if (oldestPath) {
+      const cached = this.glbContainerCache.get(oldestPath)!;
+      cached.container.dispose();
+      this.glbContainerCache.delete(oldestPath);
+      logger.debug('GLB container evicted from cache', { modelPath: oldestPath });
     }
   }
 }

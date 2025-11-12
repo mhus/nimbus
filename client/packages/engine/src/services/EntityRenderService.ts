@@ -34,6 +34,9 @@ interface RenderedEntity {
 
   /** Current animation group playing */
   currentAnimation?: AnimationGroup;
+
+  /** Current pose ID (to detect changes) */
+  currentPose?: number;
 }
 
 /**
@@ -170,25 +173,37 @@ export class EntityRenderService {
         return;
       }
 
-      // Load model via ModelService
+      // Load GLB container via ModelService
       const modelPath = clientEntity.model.modelPath;
-      const templateMesh = await this.modelService.loadModel(modelPath);
-      if (!templateMesh) {
-        logger.error('Failed to load entity model', { entityId, modelPath });
+      const container = await this.modelService.loadGlbContainer(modelPath);
+      if (!container) {
+        logger.error('Failed to load entity model container', { entityId, modelPath });
         return;
       }
 
-      // Clone mesh for this entity
-      const mesh = templateMesh.clone(`entity_${entityId}`, null)!;
-      mesh.setEnabled(true);
-
-      // Get animation groups from the scene (loaded with the model)
-      const animations = this.scene.animationGroups.filter(ag =>
-        ag.name.startsWith('Armature|') || mesh.getChildMeshes().some(m => ag.targetedAnimations.some(ta => ta.target === m))
+      // Instantiate model for this entity (clones mesh + skeleton + animations)
+      const result = container.instantiateModelsToScene(
+        name => `entity_${entityId}_${name}`,
+        false, // Don't clone materials
+        { doNotInstantiate: false }
       );
 
-      logger.debug('Animation groups found', {
+      if (!result.rootNodes || result.rootNodes.length === 0) {
+        logger.error('No root nodes in instantiated model', { entityId, modelPath });
+        return;
+      }
+
+      // Get root mesh
+      const mesh = result.rootNodes[0] as Mesh;
+      mesh.setEnabled(true);
+
+      // Get cloned animation groups (automatically retargeted to this instance)
+      const animations = result.animationGroups || [];
+
+      logger.info('Entity model instantiated', {
         entityId,
+        modelPath,
+        meshCount: result.rootNodes.length,
         animationCount: animations.length,
         animationNames: animations.map(ag => ag.name),
       });
@@ -331,6 +346,11 @@ export class EntityRenderService {
       return;
     }
 
+    // Check if pose actually changed
+    if (rendered.currentPose === pose) {
+      return; // Pose hasn't changed, don't restart animation
+    }
+
     // Get entity to check pose mapping
     const clientEntity = this.entityService.getAllEntities().find(e => e.id === entityId);
     if (!clientEntity) {
@@ -344,10 +364,18 @@ export class EntityRenderService {
       return;
     }
 
-    // Find animation group by name
-    const animation = rendered.animations.find(a => a.name === poseConfig.animationName);
+    // Find animation group by name (instantiated animations have entity prefix)
+    const animation = rendered.animations.find(a =>
+      a.name === poseConfig.animationName ||
+      a.name === `entity_${entityId}_${poseConfig.animationName}`
+    );
     if (!animation) {
-      logger.warn('Animation not found', { entityId, animationName: poseConfig.animationName });
+      logger.warn('Animation not found', {
+        entityId,
+        animationName: poseConfig.animationName,
+        searchedFor: [poseConfig.animationName, `entity_${entityId}_${poseConfig.animationName}`],
+        availableAnimations: rendered.animations.map(a => a.name),
+      });
       return;
     }
 
@@ -358,14 +386,15 @@ export class EntityRenderService {
     let speedRatio = poseConfig.speedMultiplier;
     if (velocity !== undefined && velocity > 0) {
       // Adjust speed based on actual movement velocity
-      speedRatio *= velocity;
+      speedRatio = poseConfig.speedMultiplier * velocity;
     }
 
     // Play new animation
     animation.start(poseConfig.loop, speedRatio);
     rendered.currentAnimation = animation;
+    rendered.currentPose = pose; // Remember current pose
 
-    logger.debug('Entity pose updated', {
+    logger.info('Entity animation changed', {
       entityId,
       pose,
       animationName: poseConfig.animationName,
