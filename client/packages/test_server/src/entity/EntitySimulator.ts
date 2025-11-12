@@ -256,15 +256,6 @@ export class EntitySimulator {
       const entity = this.entityManager?.getEntity(spawnDef.entityId);
       const hasPhysics = entity?.physics ?? false;
 
-      // Debug: Log physics status (only log once per entity)
-      if (!spawnDef.physicsState && entity) {
-        logger.info('Entity physics status', {
-          entityId: spawnDef.entityId,
-          hasPhysics: hasPhysics,
-          entityData: entity,
-        });
-      }
-
       if (hasPhysics) {
         // Physics-based update
         await this.updatePhysicsEntity(spawnDef, deltaTime, worldId);
@@ -276,10 +267,6 @@ export class EntitySimulator {
           pathwaysGenerated++;
         }
       }
-    }
-
-    if (pathwaysGenerated > 0) {
-      logger.debug('Update cycle completed', { pathwaysGenerated });
     }
   }
 
@@ -312,12 +299,6 @@ export class EntitySimulator {
 
       // Notify callbacks
       this.notifyPathwayGenerated(pathway);
-
-      logger.debug('Pathway generated', {
-        entityId: spawnDef.entityId,
-        waypoints: pathway.waypoints.length,
-        chunks: spawnDef.chunks.length,
-      });
 
       return pathway;
     }
@@ -414,15 +395,14 @@ export class EntitySimulator {
       return;
     }
 
-    // Update physics
-    await this.physicsSimulator.updatePhysics(spawnDef, entityModel, deltaTime, worldId);
-
-    // Get behavior for movement intention
+    // FIRST: Let behavior apply velocity/impulses (e.g., walking direction)
     const behavior = this.behaviors.get(spawnDef.behaviorModel);
     if (behavior) {
-      // Let behavior apply velocity/impulses (e.g., walking direction)
       await behavior.updatePhysics(spawnDef, this.physicsSimulator, worldId);
     }
+
+    // THEN: Update physics (integrates velocity into position)
+    await this.physicsSimulator.updatePhysics(spawnDef, entityModel, deltaTime, worldId);
 
     // Generate pathway from current physics state (for client synchronization)
     const pathway = this.generatePathwayFromPhysics(spawnDef);

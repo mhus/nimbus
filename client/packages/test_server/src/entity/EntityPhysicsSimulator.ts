@@ -145,7 +145,8 @@ export class EntityPhysicsSimulator {
       newPosition,
       velocity,
       dimensions,
-      worldId
+      worldId,
+      spawnDef.entityId
     );
 
     // 5. Apply collision resolution
@@ -187,7 +188,8 @@ export class EntityPhysicsSimulator {
     newPosition: Vector3,
     velocity: Vector3,
     dimensions: { height: number; width: number; footprint: number },
-    worldId: string
+    worldId: string,
+    entityId: string
   ): Promise<{
     position: Vector3;
     velocity: Vector3;
@@ -230,6 +232,7 @@ export class EntityPhysicsSimulator {
       { ...newPosition, x: newPosition.x },
       dimensions
     );
+
     if (hasXCollision) {
       newPosition.x = oldPosition.x;
       velocity.x = 0;
@@ -241,6 +244,7 @@ export class EntityPhysicsSimulator {
       { ...newPosition, z: newPosition.z },
       dimensions
     );
+
     if (hasZCollision) {
       newPosition.z = oldPosition.z;
       velocity.z = 0;
@@ -265,11 +269,11 @@ export class EntityPhysicsSimulator {
       return false;
     }
 
-    // Check blocks in entity's AABB
+    // Check blocks in entity's AABB (excluding ground block)
     const halfWidth = dimensions.footprint / 2;
     const minX = Math.floor(position.x - halfWidth);
     const maxX = Math.ceil(position.x + halfWidth);
-    const minY = Math.floor(position.y);
+    const minY = Math.floor(position.y) + 1; // Start ABOVE ground (don't check ground block)
     const maxY = Math.ceil(position.y + dimensions.height);
     const minZ = Math.floor(position.z - halfWidth);
     const maxZ = Math.ceil(position.z + halfWidth);

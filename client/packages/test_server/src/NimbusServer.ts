@@ -599,11 +599,6 @@ class NimbusServer {
 
           session.ws.send(JSON.stringify(message));
 
-          logger.debug('Entity pathways sent to client', {
-            sessionId: session.sessionId,
-            pathwayCount: session.entityPathwayQueue.length,
-          });
-
           // Clear queue after sending
           session.entityPathwayQueue = [];
         } catch (error) {

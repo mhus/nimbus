@@ -10,8 +10,11 @@
 
 import { EntityBehavior } from './EntityBehavior';
 import type { EntityPathway, Waypoint, ServerEntitySpawnDefinition, Vector3 } from '@nimbus/shared';
-import { ENTITY_POSES } from '@nimbus/shared';
+import { ENTITY_POSES, getLogger } from '@nimbus/shared';
 import type { EntityPhysicsSimulator } from '../EntityPhysicsSimulator';
+import { BlockBasedMovement } from '../movement/BlockBasedMovement';
+
+const logger = getLogger('PreyAnimalBehavior');
 
 /**
  * PreyAnimalBehavior - Passive roaming behavior
@@ -23,7 +26,7 @@ export class PreyAnimalBehavior extends EntityBehavior {
   private readonly defaultPathwayInterval = 5000; // 5 seconds
 
   /** Default number of waypoints per pathway */
-  private readonly defaultWaypointsPerPathway = 3;
+  private readonly defaultWaypointsPerPathway = 5;
 
   /** Default min step distance (blocks) */
   private readonly defaultMinStepDistance = 2;
@@ -39,6 +42,17 @@ export class PreyAnimalBehavior extends EntityBehavior {
 
   /** Current target position for physics-based movement */
   private physicsTargets: Map<string, { target: Vector3; reachedAt: number | null }> = new Map();
+
+  /** Block-based movement helper */
+  private blockMovement: BlockBasedMovement = new BlockBasedMovement();
+
+  /**
+   * Override setWorldManager to also set it in blockMovement
+   */
+  setWorldManager(worldManager: any): void {
+    super.setWorldManager(worldManager);
+    this.blockMovement.setWorldManager(worldManager);
+  }
 
   /**
    * Update behavior and generate new pathway if needed (waypoint-based)
@@ -153,81 +167,54 @@ export class PreyAnimalBehavior extends EntityBehavior {
   }
 
   /**
-   * Generate new pathway for entity
+   * Generate new pathway for entity (block-based movement)
    */
   private async generatePathway(
     entity: ServerEntitySpawnDefinition,
     currentTime: number,
     worldId: string
   ): Promise<EntityPathway> {
-    const waypoints: Waypoint[] = [];
-
     // Get behavior config with defaults
     const config = entity.behaviorConfig || {};
-    const minStepDistance = config.minStepDistance ?? this.defaultMinStepDistance;
-    const maxStepDistance = config.maxStepDistance ?? this.defaultMaxStepDistance;
     const waypointsPerPath = config.waypointsPerPath ?? this.defaultWaypointsPerPathway;
     const minIdleDuration = config.minIdleDuration ?? this.defaultMinIdleDuration;
     const maxIdleDuration = config.maxIdleDuration ?? this.defaultMaxIdleDuration;
 
     // Start position: end of previous pathway or initial position
-    let currentPosition = entity.initialPosition;
+    let startPosition = entity.initialPosition;
     if (entity.currentPathway && entity.currentPathway.waypoints.length > 0) {
       const lastWaypoint = entity.currentPathway.waypoints[entity.currentPathway.waypoints.length - 1];
-      currentPosition = lastWaypoint.target;
+      startPosition = lastWaypoint.target;
     }
 
-    let currentTimestamp = currentTime;
+    // Ensure start position is on solid ground
+    const startY = await this.blockMovement.findStartPosition(worldId, startPosition.x, startPosition.z);
+    startPosition = { x: startPosition.x, y: startY, z: startPosition.z };
 
-    // Generate waypoints
-    for (let i = 0; i < waypointsPerPath; i++) {
-      // Generate random target within configured step distance
-      const stepDistance = minStepDistance + Math.random() * (maxStepDistance - minStepDistance);
-      const targetXZ = this.randomPositionInRadius(currentPosition, stepDistance);
+    // Choose random direction
+    const direction = this.blockMovement.getRandomDirection();
 
-      // Get ground height at target position
-      const groundY = await this.getGroundHeight(worldId, targetXZ.x, targetXZ.z);
-      const target = {
-        x: targetXZ.x,
-        y: groundY,
-        z: targetXZ.z,
-      };
+    // Generate waypoints using block-based movement
+    const waypoints = await this.blockMovement.generatePathway(
+      worldId,
+      startPosition,
+      direction,
+      waypointsPerPath,
+      entity.speed,
+      currentTime
+    );
 
-      // Calculate distance and time to reach
-      const distance = this.distance(currentPosition, target);
-      const travelTime = (distance / entity.speed) * 1000; // Convert to milliseconds
+    // Add idle waypoints between movement waypoints
+    const waypointsWithIdle: Waypoint[] = [];
+    for (const waypoint of waypoints) {
+      waypointsWithIdle.push(waypoint);
 
-      // Get maxPitch from entity model
-      let maxPitch: number | undefined;
-      if (this.entityManager) {
-        const entityModel = this.entityManager.getEntityModel(entity.entityModelId);
-        maxPitch = entityModel?.maxPitch;
-      }
-
-      // Calculate rotation towards target with pitch limit
-      const rotation = this.calculateRotation(currentPosition, target, maxPitch);
-
-      // Create waypoint with WALK pose
-      currentTimestamp += travelTime;
-      waypoints.push({
-        timestamp: currentTimestamp,
-        target,
-        rotation,
-        pose: ENTITY_POSES.WALK,
-      });
-
-      // Update current position for next iteration
-      currentPosition = target;
-
-      // Add idle pause between waypoints
+      // Add idle pause after each movement
       const pauseDuration = minIdleDuration + Math.random() * (maxIdleDuration - minIdleDuration);
-      currentTimestamp += pauseDuration;
-
-      // Add IDLE waypoint at same position during pause
-      waypoints.push({
-        timestamp: currentTimestamp,
-        target: { ...target }, // Stay at same position
-        rotation,
+      waypointsWithIdle.push({
+        timestamp: waypoint.timestamp + pauseDuration,
+        target: { ...waypoint.target },
+        rotation: waypoint.rotation,
         pose: ENTITY_POSES.IDLE,
       });
     }
@@ -236,7 +223,7 @@ export class PreyAnimalBehavior extends EntityBehavior {
     return {
       entityId: entity.entityId,
       startAt: currentTime,
-      waypoints,
+      waypoints: waypointsWithIdle,
       isLooping: false,
       idlePose: ENTITY_POSES.IDLE,
     };

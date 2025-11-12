@@ -832,6 +832,7 @@ export class EntityService {
     // If past last waypoint
     if (currentTime >= waypoints[waypoints.length - 1].timestamp) {
       const lastWaypoint = waypoints[waypoints.length - 1];
+
       return {
         position: { x: lastWaypoint.target.x, y: lastWaypoint.target.y, z: lastWaypoint.target.z },
         rotation: { y: lastWaypoint.rotation.y, p: lastWaypoint.rotation.p ?? 0 },

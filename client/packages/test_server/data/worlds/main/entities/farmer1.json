@@ -1,8 +1,8 @@
 {
   "entityId": "farmer1",
   "entityModelId": "farmer1",
-  "clientPhysics": false,
-  "physics": true,
+  "clientPhysics": true,
+  "physics": false,
   "initialPosition": {
     "x": 10,
     "y": 64,
@@ -21,8 +21,8 @@
   "speed": 1.5,
   "behaviorModel": "PreyAnimalBehavior",
   "behaviorConfig": {
-    "minStepDistance": 2,
-    "maxStepDistance": 5,
+    "minStepDistance": 10,
+    "maxStepDistance": 20,
     "waypointsPerPath": 6,
     "minIdleDuration": 100,
     "maxIdleDuration": 300,
