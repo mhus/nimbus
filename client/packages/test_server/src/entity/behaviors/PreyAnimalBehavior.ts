@@ -10,6 +10,7 @@
 
 import { EntityBehavior } from './EntityBehavior';
 import type { EntityPathway, Waypoint, ServerEntitySpawnDefinition } from '@nimbus/shared';
+import { ENTITY_POSES } from '@nimbus/shared';
 
 /**
  * PreyAnimalBehavior - Passive roaming behavior
@@ -66,20 +67,29 @@ export class PreyAnimalBehavior extends EntityBehavior {
       // Calculate rotation towards target
       const rotation = this.calculateRotation(currentPosition, target);
 
-      // Create waypoint
+      // Create waypoint with WALK pose
       currentTimestamp += travelTime;
       waypoints.push({
         timestamp: currentTimestamp,
         target,
         rotation,
-        pose: this.selectPose(entity.speed),
+        pose: ENTITY_POSES.WALK,
       });
 
       // Update current position for next iteration
       currentPosition = target;
 
-      // Add small pause between waypoints (idle time)
-      currentTimestamp += 500 + Math.random() * 1000; // 0.5-1.5 seconds pause
+      // Add idle pause between waypoints
+      const pauseDuration = 1000 + Math.random() * 2000; // 1-3 seconds pause
+      currentTimestamp += pauseDuration;
+
+      // Add IDLE waypoint at same position during pause
+      waypoints.push({
+        timestamp: currentTimestamp,
+        target: { ...target }, // Stay at same position
+        rotation,
+        pose: ENTITY_POSES.IDLE,
+      });
     }
 
     // Create pathway
@@ -88,26 +98,8 @@ export class PreyAnimalBehavior extends EntityBehavior {
       startAt: currentTime,
       waypoints,
       isLooping: false,
-      idlePose: 0, // Idle pose
+      idlePose: ENTITY_POSES.IDLE,
     };
-  }
-
-  /**
-   * Select pose based on speed
-   */
-  private selectPose(speed: number): number {
-    // Pose mapping (example):
-    // 0 = idle
-    // 1 = walk
-    // 2 = run
-
-    if (speed < 1) {
-      return 1; // Slow walk
-    } else if (speed < 3) {
-      return 1; // Walk
-    } else {
-      return 2; // Run
-    }
   }
 
   /**
