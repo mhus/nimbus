@@ -247,7 +247,7 @@ Rotation seit dem letzten Update geändert hat.
 - Die pathway wird alle 100ms neu erstellt und neu gesendet (konfigurierbar)
 - Die geschwindigkeit des entitys soll zwischen 1 und 2 blocks per sekunde liegen (konfigurierbar)
 
-[ ] Waypoints Zeichnen mit startpunkt aktuelle position der entity
+[?] Waypoints Zeichnen mit startpunkt aktuelle position der entity
 [2025-11-12T20:56:23.620Z] [DEBUG] [EntityRenderService] Not enough waypoints to draw lines
 Data: {
 "entityId": "farmer1",

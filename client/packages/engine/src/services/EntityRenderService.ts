@@ -424,13 +424,32 @@ export class EntityRenderService {
         rendered.pathwayLines = undefined;
       }
 
-      if (pathway.waypoints.length < 2) {
-        logger.debug('Not enough waypoints to draw lines', { entityId, count: pathway.waypoints.length });
-        return;
+      if (pathway.waypoints.length === 0) {
+        return; // No waypoints to draw
       }
 
-      const { MeshBuilder, Color3 } = await import('@babylonjs/core');
-      const points = pathway.waypoints.map(wp => new Vector3(wp.target.x, wp.target.y, wp.target.z));
+      const { MeshBuilder, Color3, Vector3 } = await import('@babylonjs/core');
+
+      // Get entity's current position from EntityService
+      const entityService = this.appContext.services.entity;
+      const clientEntity = entityService ? await entityService.getEntity(entityId) : null;
+      const currentPosition = clientEntity?.currentPosition;
+
+      // Build points array: Start from current position, then all waypoints
+      const points: typeof Vector3[] = [];
+
+      if (currentPosition) {
+        points.push(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
+      }
+
+      pathway.waypoints.forEach(wp => {
+        points.push(new Vector3(wp.target.x, wp.target.y, wp.target.z));
+      });
+
+      // Need at least 2 points to draw a line
+      if (points.length < 2) {
+        return;
+      }
 
       const lines = MeshBuilder.CreateLines(
         `pathway_lines_${entityId}`,
@@ -440,8 +459,6 @@ export class EntityRenderService {
       lines.color = new Color3(0, 1, 0); // Green lines
 
       rendered.pathwayLines = lines;
-
-      logger.debug('Pathway lines drawn', { entityId, waypointCount: pathway.waypoints.length });
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityRenderService.drawPathwayLines', { entityId });
     }
