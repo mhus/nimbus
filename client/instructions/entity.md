@@ -95,7 +95,7 @@ wenn eine entity erscheint oder verschwindet. Sich die position, rotation oder d
 - Updates aus dem Netwerk werden in den ClientEntity objekten verarbeitet und die position, rotation und pose aktualisiert
 - Es wird das timeLag aus dem NetworkService genutzt um die position der entitys korrekt zu berechnen
 
-[ ] Wird ein chunk entfernt, werden alle entitys die in diesem chunk gerendert auf visible=false gesetzt und entfernt, damit keine leichen in der welt bleiben
+[?] Wird ein chunk entfernt, werden alle entitys die in diesem chunk gerendert auf visible=false gesetzt und entfernt, damit keine leichen in der welt bleiben
 
 [ ] Erstelle mir ein Commando in engine, mit dem ich testweise eine neue Entity in der Welt spawnen kann, z.b. spawnentity {id} {entityModelId} {x} {y} {z}
 

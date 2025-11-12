@@ -114,6 +114,31 @@ export class EntityService {
 
     // Start update loop
     this.startUpdateLoop();
+
+    // Register chunk events
+    this.registerChunkEvents();
+  }
+
+  /**
+   * Register chunk event listeners
+   */
+  private registerChunkEvents(): void {
+    const chunkService = this.appContext.services.chunk;
+    if (!chunkService) {
+      logger.warn('ChunkService not available, chunk events will not be registered');
+      return;
+    }
+
+    // Listen for chunk unload events
+    chunkService.on('chunk:unloaded', (data: { cx: number; cz: number }) => {
+      // Get chunk size from world info
+      const worldInfo = this.appContext.worldInfo;
+      if (worldInfo && worldInfo.chunkSize) {
+        this.onChunkUnloaded(data.cx, data.cz, worldInfo.chunkSize);
+      }
+    });
+
+    logger.debug('Chunk event listeners registered');
   }
 
   /**
@@ -644,6 +669,44 @@ export class EntityService {
       pose,
       waypointIndex: currentIndex,
     };
+  }
+
+  /**
+   * Handle chunk unload - hide all entities in this chunk
+   * Prevents "dead" entities from staying in the world
+   */
+  onChunkUnloaded(chunkX: number, chunkZ: number, chunkSize: number): void {
+    try {
+      let hiddenCount = 0;
+
+      // Check all entities
+      for (const clientEntity of this.entityCache.values()) {
+        const pos = clientEntity.currentPosition;
+
+        // Calculate chunk coordinates from entity position
+        const entityChunkX = Math.floor(pos.x / chunkSize);
+        const entityChunkZ = Math.floor(pos.z / chunkSize);
+
+        // If entity is in the unloaded chunk, hide it
+        if (entityChunkX === chunkX && entityChunkZ === chunkZ) {
+          if (clientEntity.visible) {
+            clientEntity.visible = false;
+            this.emit('visibility', { entityId: clientEntity.id, visible: false });
+            hiddenCount++;
+          }
+        }
+      }
+
+      if (hiddenCount > 0) {
+        logger.debug('Entities hidden due to chunk unload', {
+          chunkX,
+          chunkZ,
+          hiddenCount,
+        });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'EntityService.onChunkUnloaded', { chunkX, chunkZ });
+    }
   }
 
   /**
