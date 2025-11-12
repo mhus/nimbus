@@ -18,11 +18,23 @@ import {
   ExceptionHandler,
   ENTITY_POSES,
 } from '@nimbus/shared';
+import type { Vector3, Rotation } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
 import { EntityPhysicsController } from './entity/EntityPhysicsController';
 
 const logger = getLogger('EntityService');
+
+/**
+ * Entity collision information for physics checks
+ */
+export interface EntityCollisionInfo {
+  entityId: string;
+  position: Vector3;
+  rotation: Rotation;
+  dimensions: { height: number; width: number; footprint: number };
+  solid: boolean;
+}
 
 /**
  * Entity event types
@@ -89,6 +101,9 @@ export class EntityService {
 
   // Visibility radius
   private _visibilityRadius: number;
+
+  // Collision check radius
+  private _collisionCheckRadius: number = 10; // blocks
 
   // Physics controller
   private physicsController: EntityPhysicsController;
@@ -954,5 +969,106 @@ export class EntityService {
         }
       }
     }
+  }
+
+  /**
+   * Get collision check radius
+   */
+  getCollisionCheckRadius(): number {
+    return this._collisionCheckRadius;
+  }
+
+  /**
+   * Set collision check radius
+   */
+  setCollisionCheckRadius(radius: number): void {
+    this._collisionCheckRadius = radius;
+  }
+
+  /**
+   * Get entities in radius for collision detection
+   *
+   * @param center Center position (usually player position)
+   * @param radius Search radius in blocks
+   * @param movementMode Player's current movement mode (for dimension selection)
+   * @returns Array of entity collision info
+   */
+  getEntitiesInRadius(
+    center: Vector3,
+    radius: number,
+    movementMode: 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport' = 'walk'
+  ): EntityCollisionInfo[] {
+    const entitiesInRadius: EntityCollisionInfo[] = [];
+
+    for (const clientEntity of this.entityCache.values()) {
+      // Skip if not visible
+      if (!clientEntity.visible) {
+        continue;
+      }
+
+      // Calculate distance to center
+      const dx = clientEntity.currentPosition.x - center.x;
+      const dy = clientEntity.currentPosition.y - center.y;
+      const dz = clientEntity.currentPosition.z - center.z;
+      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      // Skip if too far
+      if (distance > radius) {
+        continue;
+      }
+
+      // Get dimensions for current movement mode
+      const dimensions = this.getEntityDimensions(clientEntity.model, movementMode);
+
+      entitiesInRadius.push({
+        entityId: clientEntity.entity.id,
+        position: clientEntity.currentPosition,
+        rotation: clientEntity.currentRotation,
+        dimensions,
+        solid: clientEntity.entity.solid ?? false,
+      });
+    }
+
+    return entitiesInRadius;
+  }
+
+  /**
+   * Get entity dimensions for movement mode
+   */
+  private getEntityDimensions(
+    entityModel: EntityModel,
+    movementMode: 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport'
+  ): { height: number; width: number; footprint: number } {
+    const dimensions = entityModel.dimensions;
+
+    // Try specific movement mode first, then fallback
+    return (
+      dimensions[movementMode] ??
+      dimensions.walk ??
+      dimensions.sprint ??
+      dimensions.crouch ??
+      { height: 1.8, width: 0.6, footprint: 0.6 }
+    );
+  }
+
+  /**
+   * Called when player collides with an entity
+   * Sends collision event to server (can be extended later)
+   *
+   * @param entityId Entity that was collided with
+   * @param playerPosition Player's position at collision
+   */
+  onPlayerCollision(entityId: string, playerPosition: Vector3): void {
+    logger.debug('Player collision with entity', {
+      entityId,
+      playerPosition,
+    });
+
+    // TODO: Send collision event to server via NetworkService
+    // const message = {
+    //   type: MessageType.ENTITY_COLLISION,
+    //   data: { entityId, playerPosition }
+    // };
+    // this.networkService.send(message);
   }
 }

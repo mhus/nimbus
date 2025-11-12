@@ -3,6 +3,7 @@
   "entityModelId": "cow1",
   "clientPhysics": true,
   "physics": false,
+  "solid": true,
   "initialPosition": {
     "x": 10,
     "y": 64,

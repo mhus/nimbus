@@ -176,6 +176,32 @@ export class WalkModeController {
       dimensions
     );
 
+    // === 5.5 ENTITY COLLISIONS ===
+
+    // Check entity collisions
+    const entityService = this.appContext.services.entity;
+    if (entityService) {
+      const entitiesInRadius = entityService.getEntitiesInRadius(
+        resolvedPosition,
+        entityService.getCollisionCheckRadius(),
+        entity.movementMode
+      );
+
+      const entityCollisionResult = this.collisionDetector.checkEntityCollisions(
+        resolvedPosition,
+        dimensions,
+        entitiesInRadius
+      );
+
+      // Apply entity collision correction
+      resolvedPosition.copyFrom(entityCollisionResult.position);
+
+      // Notify EntityService of collisions
+      for (const entityId of entityCollisionResult.collidedEntities) {
+        entityService.onPlayerCollision(entityId, resolvedPosition);
+      }
+    }
+
     // === 6. WELTGRENZEN ===
 
     // Apply position

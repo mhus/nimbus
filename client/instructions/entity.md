@@ -219,7 +219,7 @@ ServerEntitySpawnDefinition:
 ⏺ Jetzt starte ich mit der ersten Aufgabe. Lass mich zuerst die aktuelle EntityData.ts lesen:
 ```
 
-[ ] Es soll auch collisions mit entitys geben. Wenn der Player mit einer entity kollidiert, soll er nicht durch diese hindurch 
+[x] Es soll auch collisions mit entitys geben. Wenn der Player mit einer entity kollidiert, soll er nicht durch diese hindurch 
 gehen koennen.
 - Betroffen sind nur entities mit dem parameter solid=true
 - Die collision soll im Client umgesetzt werden, dazu muss im EntityService die bounding box der entity
@@ -258,6 +258,21 @@ Das sollte dann nur noch passieren, wenn 0 waypoints vorhanden sind.
 [x] Wenn ein neuer pathway vom server kommt, sollen alle aktuellen pathways der entity verworfen werden und nur der neue pathway genutzt werden.
 Siehe EntityService.ts
 
-[ ] Wenn ein neuer Pathway kommt und die velocity zum erste punkt zu hoch wird, soll die entity zum ersten punkt flippen dann sollden
+[-] Wenn ein neuer Pathway kommt und die velocity zum erste punkt zu hoch wird, soll die entity zum ersten punkt flippen dann sollden
 die waypoints normal abgearbeitet werden.
+[ ] An entity ein neuen parameter, ob bei collision ein event an server geschickt werden soll
+[ ] An entity ein parameter, in welchem range ein event an server geschickt werden soll. 
+Aufmerksamkeitsradius - dieses wird noch reduziert durch ein parameter am player. maximaler wert definieren, damit nicht
+immer alle geprueft werden muessen. z.b. 10
 
+[ ] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
+- Umstellen ego mode auf third person via parameter und erstelle ein Command in der engine um den ego mode umzuschalten
+- Nutze ein StackModifier genutzt, der den ego mode steuert. Der Wunsch des Spielers hat geringeren prioritaet als der automatische wechsel unter wasser.
+- Siehe ModifierService
+- Der Player bekommt in der PlayerInfo ein 'entity : Entity' objekt, das die entity daten des players enthaelt
+- Wenn im ego mode wird das modell nicht angezeigt, die camera ist an der player stelle
+- Wenn im third person mode wird das modell angezeigt, die camera ist hinter dem player positioniert
+- Siehe CameraService um die camera position anzupassen
+- Bei bewegungen wird im third person mode die entity bewegt und im ego mode nur die camera (wie bisher)
+- Unter wasser wird automatisch in den ego mode gewechselt. Dazu wird ein StackModifier genutzt, der den ego mode steuert.
+- 

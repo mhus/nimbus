@@ -339,4 +339,67 @@ export class CollisionDetector {
 
     return false;
   }
+
+  /**
+   * Check and resolve collisions with entities
+   *
+   * @param playerPosition Player's current position
+   * @param playerDimensions Player's dimensions
+   * @param entities Entities to check collision against
+   * @returns Object with corrected position and list of collided entity IDs
+   */
+  checkEntityCollisions(
+    playerPosition: Vector3,
+    playerDimensions: EntityDimensions,
+    entities: Array<{
+      entityId: string;
+      position: Vector3;
+      dimensions: { height: number; width: number; footprint: number };
+      solid: boolean;
+    }>
+  ): { position: Vector3; collidedEntities: string[] } {
+    const collidedEntities: string[] = [];
+    let correctedPosition = playerPosition.clone();
+
+    for (const entity of entities) {
+      // Check 2D circle collision (X, Z plane)
+      const dx = entity.position.x - correctedPosition.x;
+      const dz = entity.position.z - correctedPosition.z;
+      const distance2D = Math.sqrt(dx * dx + dz * dz);
+
+      // Calculate minimum distance (sum of radii)
+      const minDistance = (entity.dimensions.footprint / 2) + (playerDimensions.footprint / 2);
+
+      // Check if circles overlap
+      if (distance2D < minDistance) {
+        // Check Y overlap (height check)
+        const playerTop = correctedPosition.y + playerDimensions.height;
+        const entityTop = entity.position.y + entity.dimensions.height;
+
+        const yOverlap = correctedPosition.y < entityTop && playerTop > entity.position.y;
+
+        if (yOverlap) {
+          // Collision detected
+          collidedEntities.push(entity.entityId);
+
+          // If entity is solid, push player away
+          if (entity.solid && distance2D > 0.001) {
+            // Calculate push vector (away from entity center)
+            const pushDistance = minDistance - distance2D;
+            const pushX = (dx / distance2D) * pushDistance;
+            const pushZ = (dz / distance2D) * pushDistance;
+
+            // Apply push (move player away from entity)
+            correctedPosition.x -= pushX;
+            correctedPosition.z -= pushZ;
+          }
+        }
+      }
+    }
+
+    return {
+      position: correctedPosition,
+      collidedEntities,
+    };
+  }
 }
