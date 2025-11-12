@@ -58,6 +58,9 @@ export class EntityRenderService {
   // Rendered entities: entityId -> RenderedEntity
   private renderedEntities: Map<string, RenderedEntity> = new Map();
 
+  // Debug: Show pathway lines
+  private _showPathways: boolean = false;
+
   constructor(scene: Scene, appContext: AppContext, entityService: EntityService, modelService: ModelService) {
     this.scene = scene;
     this.appContext = appContext;
@@ -107,25 +110,26 @@ export class EntityRenderService {
     try {
       const entityId = pathway.entityId;
 
-      logger.info('🔵 PATHWAY EVENT RECEIVED', {
-        entityId,
-        waypointCount: pathway.waypoints.length,
-        firstWaypoint: pathway.waypoints[0],
-        isAlreadyRendered: this.renderedEntities.has(entityId),
-      });
+      logger.debug('Pathway event received', { entityId, waypointCount: pathway.waypoints.length });
 
       // Check if entity is already rendered
       if (this.renderedEntities.has(entityId)) {
-        // Entity already exists, update pathway lines
-        logger.debug('Entity pathway updated, redrawing lines', { entityId });
-        await this.drawPathwayLines(entityId, pathway);
+        // Entity already exists, update pathway lines if enabled
+        if (this._showPathways) {
+          logger.debug('Entity pathway updated, redrawing lines', { entityId });
+          await this.drawPathwayLines(entityId, pathway);
+        }
         return;
       }
 
       // Entity doesn't exist yet, create it
-      logger.info('🔵 CREATING NEW ENTITY', { entityId });
+      logger.debug('Creating new entity', { entityId });
       await this.createEntity(entityId);
-      await this.drawPathwayLines(entityId, pathway);
+
+      // Draw pathway lines if enabled
+      if (this._showPathways) {
+        await this.drawPathwayLines(entityId, pathway);
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityRenderService.onEntityPathway', {
         entityId: pathway.entityId,
@@ -193,9 +197,15 @@ export class EntityRenderService {
         return;
       }
 
-      // Get root mesh
-      const mesh = result.rootNodes[0] as Mesh;
-      mesh.setEnabled(true);
+      // Get root node (might be TransformNode, not Mesh)
+      const modelRootNode = result.rootNodes[0];
+      modelRootNode.setEnabled(true);
+
+      // Create a parent TransformNode for manual rotation control
+      // This prevents animations from overwriting our rotation
+      const { TransformNode } = await import('@babylonjs/core');
+      const rotationNode = new TransformNode(`entity_rotation_${entityId}`, this.scene);
+      modelRootNode.parent = rotationNode;
 
       // Get cloned animation groups (automatically retargeted to this instance)
       const animations = result.animationGroups || [];
@@ -203,40 +213,38 @@ export class EntityRenderService {
       logger.info('Entity model instantiated', {
         entityId,
         modelPath,
-        meshCount: result.rootNodes.length,
         animationCount: animations.length,
-        animationNames: animations.map(ag => ag.name),
       });
 
-      // Apply initial transform
+      // Apply initial transform to rotation node
       const pos = clientEntity.currentPosition;
       const rot = clientEntity.currentRotation;
 
-      mesh.position = new Vector3(pos.x, pos.y, pos.z);
-      mesh.rotation.y = (rot.y * Math.PI) / 180;
+      rotationNode.position = new Vector3(pos.x, pos.y, pos.z);
+      rotationNode.rotation.y = (rot.y * Math.PI) / 180;
       if ('p' in rot) {
-        mesh.rotation.x = ((rot as any).p * Math.PI) / 180;
+        rotationNode.rotation.x = ((rot as any).p * Math.PI) / 180;
       }
 
       // Apply offset from model
       const offset = clientEntity.model.positionOffset;
-      mesh.position.addInPlace(new Vector3(offset.x, offset.y, offset.z));
+      rotationNode.position.addInPlace(new Vector3(offset.x, offset.y, offset.z));
 
       // Apply rotation offset from model
       const rotOffset = clientEntity.model.rotationOffset;
-      mesh.rotation.y += (rotOffset.y * Math.PI) / 180;
+      rotationNode.rotation.y += (rotOffset.y * Math.PI) / 180;
       if ('p' in rotOffset) {
-        mesh.rotation.x += ((rotOffset as any).p * Math.PI) / 180;
+        rotationNode.rotation.x += ((rotOffset as any).p * Math.PI) / 180;
       }
 
       // Apply scale from model
       const scale = clientEntity.model.scale;
-      mesh.scaling = new Vector3(scale.x, scale.y, scale.z);
+      rotationNode.scaling = new Vector3(scale.x, scale.y, scale.z);
 
-      // Store rendered entity
+      // Store rendered entity (use rotationNode as mesh for transform updates)
       const rendered: RenderedEntity = {
         id: entityId,
-        mesh: mesh,
+        mesh: rotationNode as any, // Store rotation node (controls position/rotation)
         animations: animations.length > 0 ? animations : undefined,
       };
 
@@ -248,28 +256,9 @@ export class EntityRenderService {
       }
 
       // Store mesh reference in ClientEntity for EntityService
-      clientEntity.meshes = [mesh];
+      clientEntity.meshes = [modelRootNode as any];
 
-      logger.info('✅ ENTITY MODEL LOADED AND RENDERED', {
-        entityId,
-        modelPath,
-        position: {
-          x: mesh.position.x,
-          y: mesh.position.y,
-          z: mesh.position.z,
-        },
-        rotation: {
-          y: mesh.rotation.y,
-          x: mesh.rotation.x,
-        },
-        scale: {
-          x: mesh.scaling.x,
-          y: mesh.scaling.y,
-          z: mesh.scaling.z,
-        },
-        visible: clientEntity.visible,
-        meshEnabled: mesh.isEnabled(),
-      });
+      logger.debug('Entity created and rendered', { entityId, modelPath });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EntityRenderService.createEntity', { entityId });
     }
@@ -321,19 +310,15 @@ export class EntityRenderService {
       return;
     }
 
+    // Update position
     rendered.mesh.position.set(position.x, position.y, position.z);
-    rendered.mesh.rotation.y = (rotation.y * Math.PI) / 180;
-    if (rotation.p !== undefined) {
-      rendered.mesh.rotation.x = (rotation.p * Math.PI) / 180;
-    }
 
-    // Log every 10th update to avoid spam
-    if (Math.random() < 0.1) {
-      logger.debug('🔄 Entity transform updated', {
-        entityId,
-        position,
-        rotation,
-      });
+    // Update rotation
+    if ('rotation' in rendered.mesh) {
+      (rendered.mesh as any).rotation.y = (rotation.y * Math.PI) / 180;
+      if (rotation.p !== undefined) {
+        (rendered.mesh as any).rotation.x = (rotation.p * Math.PI) / 180;
+      }
     }
   }
 
@@ -394,13 +379,7 @@ export class EntityRenderService {
     rendered.currentAnimation = animation;
     rendered.currentPose = pose; // Remember current pose
 
-    logger.info('Entity animation changed', {
-      entityId,
-      pose,
-      animationName: poseConfig.animationName,
-      loop: poseConfig.loop,
-      speedRatio,
-    });
+    logger.debug('Entity animation changed', { entityId, pose, animationName: poseConfig.animationName });
   }
 
   /**
@@ -450,17 +429,43 @@ export class EntityRenderService {
 
       rendered.pathwayLines = lines;
 
-      logger.info('🟢 PATHWAY LINES DRAWN', {
-        entityId,
-        waypointCount: pathway.waypoints.length,
-        waypoints: pathway.waypoints.map(wp => ({
-          x: wp.target.x,
-          y: wp.target.y,
-          z: wp.target.z,
-        })),
-      });
+      logger.debug('Pathway lines drawn', { entityId, waypointCount: pathway.waypoints.length });
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityRenderService.drawPathwayLines', { entityId });
+    }
+  }
+
+  /**
+   * Get showPathways setting
+   */
+  get showPathways(): boolean {
+    return this._showPathways;
+  }
+
+  /**
+   * Set showPathways setting
+   */
+  set showPathways(value: boolean) {
+    this._showPathways = value;
+    logger.info('Pathway visibility changed', { showPathways: value });
+
+    // Update all existing entities
+    for (const [entityId, rendered] of this.renderedEntities.entries()) {
+      if (value) {
+        // Show pathways - redraw if not present
+        if (!rendered.pathwayLines) {
+          const pathway = this.entityService.getEntityPathway(entityId);
+          if (pathway) {
+            this.drawPathwayLines(entityId, pathway);
+          }
+        }
+      } else {
+        // Hide pathways - remove lines
+        if (rendered.pathwayLines) {
+          rendered.pathwayLines.dispose();
+          rendered.pathwayLines = undefined;
+        }
+      }
     }
   }
 

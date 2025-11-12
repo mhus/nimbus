@@ -305,16 +305,12 @@ export class EntityService {
       clientEntity.currentPose = firstWaypoint.pose ?? 0;
     }
 
-    logger.info('🟢 ENTITY PATHWAY SET IN ENTITYSERVICE', {
+    logger.debug('Entity pathway set', {
       entityId: pathway.entityId,
       waypointCount: pathway.waypoints.length,
-      initialPosition: clientEntity.currentPosition,
-      visible: clientEntity.visible,
-      firstWaypoint: pathway.waypoints[0],
     });
 
     // Emit pathway event
-    logger.info('🟢 EMITTING PATHWAY EVENT', { entityId: pathway.entityId });
     this.emit('pathway', pathway);
   }
 
