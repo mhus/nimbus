@@ -86,7 +86,7 @@ wenn eine entity erscheint oder verschwindet. Sich die position, rotation oder d
 - Modelle koenne vom ModelService geladen werden
 - EntityRenderService soll im EngineService referenziert sein
 
-[ ] Im EntityService soll es einen Loop geben, der alle 100 (constante) ms die positionen und status der entitys aktualisiert
+[?] Im EntityService soll es einen Loop geben, der alle 100 (constante) ms die positionen und status der entitys aktualisiert
 - Kommt ein unbekannter entity pathway an, wird die entity und ggr entitymodel vom server geladen und ein ClientEntity objekt erstellt.
 - Die position der entity wird anhand der waypoints und des timestamps berechnet
 - Wenn die entity in der naehe (radius variable im EntityService - getter, setter) des spielers ist, wird sie 'visible' gestellt und an den EntityRenderService uebergeben um gerendert zu werden

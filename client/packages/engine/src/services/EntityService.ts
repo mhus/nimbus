@@ -47,6 +47,12 @@ export interface EntityServiceConfig {
 
   /** Interval for cache cleanup in milliseconds */
   cacheCleanupInterval?: number;
+
+  /** Update interval in milliseconds (entity position/state updates) */
+  updateInterval?: number;
+
+  /** Visibility radius in blocks (entities beyond this distance from player are hidden) */
+  visibilityRadius?: number;
 }
 
 /**
@@ -60,6 +66,7 @@ export interface EntityServiceConfig {
  * - Waypoint interpolation
  */
 export class EntityService {
+  private appContext: AppContext;
   private networkService: NetworkService;
   private config: Required<EntityServiceConfig>;
 
@@ -71,14 +78,21 @@ export class EntityService {
   // Event system
   private eventListeners: Map<EntityEventType, Set<EntityEventListener>> = new Map();
 
+  // Update loop
+  private updateInterval?: NodeJS.Timeout;
+
   // Cache cleanup
   private cleanupInterval?: NodeJS.Timeout;
+
+  // Visibility radius
+  private _visibilityRadius: number;
 
   constructor(appContext: AppContext, config?: EntityServiceConfig) {
     if (!appContext.services.network) {
       throw new Error('NetworkService is required for EntityService');
     }
 
+    this.appContext = appContext;
     this.networkService = appContext.services.network;
 
     // Default configuration
@@ -87,12 +101,19 @@ export class EntityService {
       maxEntityCacheSize: config?.maxEntityCacheSize ?? 1000,
       cacheEvictionTimeout: config?.cacheEvictionTimeout ?? 300000, // 5 minutes
       cacheCleanupInterval: config?.cacheCleanupInterval ?? 60000, // 1 minute
+      updateInterval: config?.updateInterval ?? 100, // 100ms update loop
+      visibilityRadius: config?.visibilityRadius ?? 50, // 50 blocks
     };
+
+    this._visibilityRadius = this.config.visibilityRadius;
 
     logger.info('EntityService initialized', { config: this.config });
 
     // Start cache cleanup
     this.startCacheCleanup();
+
+    // Start update loop
+    this.startUpdateLoop();
   }
 
   /**
@@ -205,18 +226,40 @@ export class EntityService {
 
   /**
    * Set entity pathway
+   * If entity doesn't exist, it will be loaded automatically
    */
-  setEntityPathway(pathway: EntityPathway): void {
+  async setEntityPathway(pathway: EntityPathway): Promise<void> {
     this.entityPathwayCache.set(pathway.entityId, pathway);
 
-    // Update ClientEntity with waypoints
-    const clientEntity = this.entityCache.get(pathway.entityId);
-    if (clientEntity) {
-      clientEntity.currentWaypoints = pathway.waypoints;
-      clientEntity.currentWaypointIndex = 0;
-      clientEntity.lastAccess = Date.now();
-      logger.debug('Entity pathway set', { entityId: pathway.entityId, waypointCount: pathway.waypoints.length });
+    // Check if entity exists
+    let clientEntity = this.entityCache.get(pathway.entityId);
+
+    // If entity doesn't exist, load it (unknown entity from network)
+    if (!clientEntity) {
+      logger.debug('Unknown entity pathway received, loading entity', { entityId: pathway.entityId });
+
+      try {
+        const loadedEntity = await this.getEntity(pathway.entityId);
+
+        if (!loadedEntity) {
+          logger.warn('Failed to load entity for pathway', { entityId: pathway.entityId });
+          return;
+        }
+
+        clientEntity = loadedEntity;
+      } catch (error) {
+        ExceptionHandler.handle(error, 'EntityService.setEntityPathway.loadEntity', {
+          entityId: pathway.entityId,
+        });
+        return;
+      }
     }
+
+    // Update ClientEntity with waypoints
+    clientEntity.currentWaypoints = pathway.waypoints;
+    clientEntity.currentWaypointIndex = 0;
+    clientEntity.lastAccess = Date.now();
+    logger.debug('Entity pathway set', { entityId: pathway.entityId, waypointCount: pathway.waypoints.length });
 
     // Emit pathway event
     this.emit('pathway', pathway);
@@ -324,9 +367,30 @@ export class EntityService {
   }
 
   /**
-   * Dispose service (stop cleanup interval)
+   * Get visibility radius
+   */
+  get visibilityRadius(): number {
+    return this._visibilityRadius;
+  }
+
+  /**
+   * Set visibility radius
+   */
+  set visibilityRadius(value: number) {
+    this._visibilityRadius = value;
+    logger.debug('Visibility radius changed', { radius: value });
+  }
+
+  /**
+   * Dispose service (stop cleanup interval and update loop)
    */
   dispose(): void {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = undefined;
+      logger.debug('Update loop stopped');
+    }
+
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = undefined;
@@ -423,6 +487,163 @@ export class EntityService {
       poseMapping: new Map(Object.entries(data.poseMapping || {})),
       modelModifierMapping: new Map(Object.entries(data.modelModifierMapping || {})),
     } as EntityModel;
+  }
+
+  /**
+   * Start update loop for entity position/state updates
+   */
+  private startUpdateLoop(): void {
+    this.updateInterval = setInterval(() => {
+      this.update();
+    }, this.config.updateInterval);
+
+    logger.debug('Update loop started', { interval: this.config.updateInterval });
+  }
+
+  /**
+   * Update all entities (position interpolation, visibility management)
+   */
+  private update(): void {
+    try {
+      // Get current time with network lag compensation
+      // TODO: Get server lag from PingMessageHandler via NetworkService
+      const serverLag = 0; // For now, no lag compensation
+      const currentTime = Date.now() + serverLag;
+
+      // Get player position
+      const playerService = this.appContext.services.player;
+      if (!playerService) {
+        return; // Player service not available yet
+      }
+
+      const playerPos = playerService.getPosition();
+
+      // Update all entities
+      for (const clientEntity of this.entityCache.values()) {
+        this.updateEntity_internal(clientEntity, currentTime, playerPos);
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'EntityService.update');
+    }
+  }
+
+  /**
+   * Update single entity (position interpolation and visibility)
+   */
+  private updateEntity_internal(
+    clientEntity: ClientEntity,
+    currentTime: number,
+    playerPos: { x: number; y: number; z: number }
+  ): void {
+    // Update lastAccess
+    clientEntity.lastAccess = currentTime;
+
+    // Get pathway
+    const pathway = this.entityPathwayCache.get(clientEntity.id);
+    if (!pathway || pathway.waypoints.length === 0) {
+      return;
+    }
+
+    // Interpolate position from waypoints
+    const result = this.interpolatePosition(pathway, currentTime);
+    if (result) {
+      // Update entity position/rotation/pose
+      clientEntity.currentPosition = result.position;
+      clientEntity.currentRotation = result.rotation;
+      clientEntity.currentPose = result.pose;
+      clientEntity.currentWaypointIndex = result.waypointIndex;
+
+      // Emit transform event
+      this.emit('transform', {
+        entityId: clientEntity.id,
+        position: result.position,
+        rotation: result.rotation,
+        pose: result.pose,
+      });
+    }
+
+    // Check visibility based on distance to player
+    const distance = Math.sqrt(
+      Math.pow(clientEntity.currentPosition.x - playerPos.x, 2) +
+      Math.pow(clientEntity.currentPosition.y - playerPos.y, 2) +
+      Math.pow(clientEntity.currentPosition.z - playerPos.z, 2)
+    );
+
+    const shouldBeVisible = distance <= this._visibilityRadius;
+
+    // Update visibility if changed
+    if (clientEntity.visible !== shouldBeVisible) {
+      clientEntity.visible = shouldBeVisible;
+      this.emit('visibility', { entityId: clientEntity.id, visible: shouldBeVisible });
+    }
+  }
+
+  /**
+   * Interpolate entity position from pathway waypoints
+   */
+  private interpolatePosition(
+    pathway: EntityPathway,
+    currentTime: number
+  ): {
+    position: { x: number; y: number; z: number };
+    rotation: { y: number; p: number };
+    pose: number;
+    waypointIndex: number;
+  } | null {
+    const waypoints = pathway.waypoints;
+    if (waypoints.length === 0) {
+      return null;
+    }
+
+    // Find current waypoint segment
+    let currentIndex = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      if (currentTime >= waypoints[i].timestamp && currentTime < waypoints[i + 1].timestamp) {
+        currentIndex = i;
+        break;
+      }
+    }
+
+    // If past last waypoint
+    if (currentTime >= waypoints[waypoints.length - 1].timestamp) {
+      const lastWaypoint = waypoints[waypoints.length - 1];
+      return {
+        position: { x: lastWaypoint.target.x, y: lastWaypoint.target.y, z: lastWaypoint.target.z },
+        rotation: { y: lastWaypoint.rotation.y, p: lastWaypoint.rotation.p ?? 0 },
+        pose: lastWaypoint.pose ?? pathway.idlePose ?? 0,
+        waypointIndex: waypoints.length - 1,
+      };
+    }
+
+    // Interpolate between two waypoints
+    const from = waypoints[currentIndex];
+    const to = waypoints[currentIndex + 1];
+
+    const t = (currentTime - from.timestamp) / (to.timestamp - from.timestamp);
+    const clampedT = Math.max(0, Math.min(1, t));
+
+    // Linear interpolation for position
+    const position = {
+      x: from.target.x + (to.target.x - from.target.x) * clampedT,
+      y: from.target.y + (to.target.y - from.target.y) * clampedT,
+      z: from.target.z + (to.target.z - from.target.z) * clampedT,
+    };
+
+    // Linear interpolation for rotation
+    const rotation = {
+      y: from.rotation.y + (to.rotation.y - from.rotation.y) * clampedT,
+      p: (from.rotation.p ?? 0) + ((to.rotation.p ?? 0) - (from.rotation.p ?? 0)) * clampedT,
+    };
+
+    // Use target pose when close to target
+    const pose = clampedT > 0.5 ? (to.pose ?? pathway.idlePose ?? 0) : (from.pose ?? pathway.idlePose ?? 0);
+
+    return {
+      position,
+      rotation,
+      pose,
+      waypointIndex: currentIndex,
+    };
   }
 
   /**
