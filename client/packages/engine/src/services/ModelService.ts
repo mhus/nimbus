@@ -8,7 +8,7 @@
  * - Handles model disposal and cache cleanup
  */
 
-import { Mesh, SceneLoader, Scene } from '@babylonjs/core';
+import { Mesh, SceneLoader, Scene, AssetContainer } from '@babylonjs/core';
 import '@babylonjs/loaders'; // Required for .babylon and .glb file formats
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
@@ -86,6 +86,135 @@ export class ModelService {
   }
 
   /**
+   * Load GLB model using LoadAssetContainerAsync (recommended for GLB/glTF)
+   * Returns a template mesh (disabled) that should be cloned for use
+   *
+   * @param modelPath - Relative model path (e.g., "models/cow.glb")
+   * @returns Template mesh for cloning, or null if loading failed
+   */
+  async loadGlbModel(modelPath: string): Promise<Mesh | null> {
+    try {
+      // Check cache
+      const cached = this.modelCache.get(modelPath);
+      if (cached) {
+        cached.lastAccess = Date.now();
+        logger.debug('Model cache hit (GLB)', { modelPath });
+        return cached.mesh;
+      }
+
+      // Load from asset server
+      logger.debug('Loading GLB model from asset server', { modelPath });
+
+      // Get full model URL via NetworkService with cache-busting timestamp
+      const timestamp = Date.now();
+      const baseUrl = this.networkService.getAssetUrl(modelPath);
+      const fullModelUrl = `${baseUrl}?t=${timestamp}`;
+
+      logger.debug('LoadAssetContainerAsync parameters', { fullModelUrl });
+
+      // Load the GLB model using LoadAssetContainerAsync
+      let container: AssetContainer;
+      try {
+        container = await SceneLoader.LoadAssetContainerAsync(
+          fullModelUrl,
+          '',
+          this.scene,
+          undefined,
+          '.glb'
+        );
+      } catch (loadError) {
+        throw new Error(
+          `Failed to load GLB model from URL: ${fullModelUrl}\n` +
+          `Error: ${loadError instanceof Error ? loadError.message : String(loadError)}\n` +
+          `This usually means:\n` +
+          `- The file does not exist on the server\n` +
+          `- The URL is incorrect\n` +
+          `- The file format is invalid or corrupted\n` +
+          `- CORS is blocking the request`
+        );
+      }
+
+      if (!container) {
+        throw new Error(`LoadAssetContainerAsync returned null for: ${fullModelUrl}`);
+      }
+
+      if (!container.meshes || container.meshes.length === 0) {
+        throw new Error(`No meshes found in GLB model: ${fullModelUrl}`);
+      }
+
+      logger.debug('GLB model loaded successfully', {
+        modelPath,
+        meshCount: container.meshes.length,
+      });
+
+      // Get all meshes (skip __root__ node if present)
+      const allMeshes = container.meshes.filter(m => m instanceof Mesh && m.name !== '__root__') as Mesh[];
+
+      if (allMeshes.length === 0) {
+        throw new Error('No valid meshes found in GLB model (only __root__ node)');
+      }
+
+      let templateMesh: Mesh;
+
+      if (allMeshes.length > 1) {
+        logger.debug('Merging GLB meshes', { count: allMeshes.length });
+
+        // Add meshes to scene first (required for merging)
+        container.addAllToScene();
+
+        const merged = Mesh.MergeMeshes(
+          allMeshes,
+          true, // disposeSource
+          true, // allow32BitsIndices
+          undefined,
+          false, // subdivideWithSubMeshes
+          true // multiMultiMaterials
+        );
+
+        if (!merged) {
+          logger.warn('Failed to merge GLB meshes, using first mesh', { modelPath });
+          templateMesh = allMeshes[0];
+        } else {
+          templateMesh = merged;
+          templateMesh.name = `model_template_${modelPath}`;
+        }
+      } else {
+        // Single mesh - add to scene
+        container.addAllToScene();
+        templateMesh = allMeshes[0];
+      }
+
+      // Disable template mesh (it's just for cloning)
+      templateMesh.setEnabled(false);
+
+      // Add to cache
+      const cachedModel: CachedModel = {
+        mesh: templateMesh,
+        lastAccess: Date.now(),
+        path: modelPath,
+      };
+
+      this.modelCache.set(modelPath, cachedModel);
+      this.evictCache();
+
+      logger.info('GLB model loaded and cached', { modelPath });
+      return templateMesh;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModelService.loadGlbModel', {
+        modelPath,
+        troubleshooting: [
+          'Make sure the GLB file exists in the assets directory on the server',
+          'Check that the file path is correct (e.g., "models/cow.glb")',
+          'Verify the GLB file is valid (try opening in Babylon Sandbox)',
+          'Check CORS headers on the server',
+          'Verify worldInfo.assetPath is configured correctly',
+        ],
+      });
+      return null;
+    }
+  }
+
+  /**
    * Load or get cached model
    * Returns a template mesh (disabled) that should be cloned for use
    *
@@ -93,6 +222,10 @@ export class ModelService {
    * @returns Template mesh for cloning, or null if loading failed
    */
   async loadModel(modelPath: string): Promise<Mesh | null> {
+    // Check if this is a GLB file and use specialized loader
+    if (modelPath.toLowerCase().endsWith('.glb') || modelPath.toLowerCase().endsWith('.gltf')) {
+      return this.loadGlbModel(modelPath);
+    }
     try {
       // Check cache
       const cached = this.modelCache.get(modelPath);
@@ -115,18 +248,38 @@ export class ModelService {
       const rootUrl = fullModelUrl.substring(0, lastSlashIndex + 1);
       const filename = fullModelUrl.substring(lastSlashIndex + 1);
 
-      logger.debug('SceneLoader parameters', { rootUrl, filename });
+      logger.debug('SceneLoader parameters', { rootUrl, filename, fullModelUrl });
 
       // Load the model
-      const result = await SceneLoader.ImportMeshAsync(
-        '', // Load all meshes
-        rootUrl,
-        filename,
-        this.scene
-      );
+      let result;
+      try {
+        result = await SceneLoader.ImportMeshAsync(
+          '', // Load all meshes
+          rootUrl,
+          filename,
+          this.scene
+        );
+      } catch (loadError) {
+        throw new Error(
+          `Failed to load model from URL: ${fullModelUrl}\n` +
+          `Error: ${loadError instanceof Error ? loadError.message : String(loadError)}\n` +
+          `This usually means:\n` +
+          `- The file does not exist on the server\n` +
+          `- The URL is incorrect\n` +
+          `- The file format is invalid or corrupted`
+        );
+      }
 
-      if (!result.meshes || result.meshes.length === 0) {
-        throw new Error(`No meshes found in model: ${fullModelUrl}`);
+      if (!result) {
+        throw new Error(`SceneLoader returned null for: ${fullModelUrl}`);
+      }
+
+      if (!result.meshes) {
+        throw new Error(`SceneLoader result has no meshes property for: ${fullModelUrl}`);
+      }
+
+      if (result.meshes.length === 0) {
+        throw new Error(`No meshes found in model: ${fullModelUrl}. The file might be empty or invalid.`);
       }
 
       logger.debug('Model loaded successfully', {
