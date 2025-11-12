@@ -280,19 +280,56 @@ class NimbusServer {
 
   private async handleChunkRegistration(session: ClientSession, data: any) {
     const chunks = data.c || [];
+
+    // Track old chunks before clearing
+    const oldChunks = new Set(session.registeredChunks);
     session.registeredChunks.clear();
+
+    const newChunks: Array<{ cx: number; cz: number }> = [];
 
     chunks.forEach((coord: any) => {
       const cx = coord.cx ?? coord.x;
       const cz = coord.cz ?? coord.z;
       const key = getChunkKey(cx, cz);
+
+      // Check if this is a NEW chunk (not previously registered)
+      if (!oldChunks.has(key)) {
+        newChunks.push({ cx, cz });
+      }
+
       session.registeredChunks.add(key);
     });
 
-    logger.debug(`Registered ${chunks.length} chunks for ${session.username}`);
+    logger.debug(`Registered ${chunks.length} chunks for ${session.username}`, {
+      newChunks: newChunks.length,
+    });
 
     // Send chunks
     await this.sendChunks(session, chunks);
+
+    // Queue pathways for newly registered chunks
+    if (newChunks.length > 0 && this.entitySimulator) {
+      const pathwaysToSend = new Map<string, EntityPathway>();
+
+      for (const { cx, cz } of newChunks) {
+        const pathways = this.entitySimulator.getPathwaysForChunk(cx, cz);
+        for (const pathway of pathways) {
+          // Use Map to deduplicate (entity might be in multiple chunks)
+          pathwaysToSend.set(pathway.entityId, pathway);
+        }
+      }
+
+      if (pathwaysToSend.size > 0) {
+        // Add to queue (will be sent in next broadcast cycle - max 100ms delay)
+        session.entityPathwayQueue.push(...pathwaysToSend.values());
+
+        logger.info('Queued entity pathways for newly registered chunks', {
+          sessionId: session.sessionId,
+          newChunks: newChunks.length,
+          pathwayCount: pathwaysToSend.size,
+        });
+      }
+    }
   }
 
   private async handleChunkQuery(session: ClientSession, data: any) {

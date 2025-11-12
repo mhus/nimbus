@@ -77,23 +77,27 @@ export abstract class EntityBehavior {
    *
    * @param from Start position
    * @param to End position
-   * @returns Rotation (yaw, pitch)
+   * @returns Rotation in degrees (yaw, pitch)
    */
   protected calculateRotation(from: Vector3, to: Vector3): Rotation {
     const dx = to.x - from.x;
     const dz = to.z - from.z;
     const dy = to.y - from.y;
 
-    // Yaw (horizontal angle)
-    const yaw = Math.atan2(dx, dz);
+    // Yaw (horizontal angle) in radians
+    const yawRad = Math.atan2(dx, dz);
 
-    // Pitch (vertical angle)
+    // Pitch (vertical angle) in radians
     const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-    const pitch = Math.atan2(dy, horizontalDistance);
+    const pitchRad = Math.atan2(dy, horizontalDistance);
+
+    // Convert to degrees
+    const yawDeg = (yawRad * 180) / Math.PI;
+    const pitchDeg = (pitchRad * 180) / Math.PI;
 
     return {
-      y: yaw,
-      p: pitch,
+      y: yawDeg,
+      p: pitchDeg,
     };
   }
 
