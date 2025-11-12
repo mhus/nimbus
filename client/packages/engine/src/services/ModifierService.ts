@@ -22,6 +22,7 @@ export class Modifier<T> {
   private readonly _prio: number;
   private readonly _created: number;
   private readonly _stack: ModifierStack<T>;
+  private _enabled: boolean = true;
 
   /**
    * Create a new modifier
@@ -40,6 +41,13 @@ export class Modifier<T> {
    * Get the current value
    */
   get value(): T {
+    return this._value;
+  }
+
+  /**
+   * Get the current value (alias for value getter)
+   */
+  getValue(): T {
     return this._value;
   }
 
@@ -64,6 +72,24 @@ export class Modifier<T> {
    */
   get created(): number {
     return this._created;
+  }
+
+  /**
+   * Get enabled state
+   */
+  get enabled(): boolean {
+    return this._enabled;
+  }
+
+  /**
+   * Set enabled state
+   * When disabled, the modifier is ignored in stack calculations
+   */
+  setEnabled(enabled: boolean): void {
+    if (this._enabled !== enabled) {
+      this._enabled = enabled;
+      this._stack.update(false);
+    }
   }
 
   /**
@@ -171,14 +197,17 @@ export class ModifierStack<T> {
    * @returns The current value
    */
   private _calculateValue(): T {
-    // If no modifiers, use default
-    if (this._modifiers.length === 0) {
+    // Filter out disabled modifiers
+    const enabledModifiers = this._modifiers.filter(m => m.enabled);
+
+    // If no enabled modifiers, use default
+    if (enabledModifiers.length === 0) {
       return this._defaultModifier.value;
     }
 
     // Sort by priority (descending), then by created (descending for newest first)
     // Lower priority value = higher priority, so we sort ascending by prio
-    const sorted = [...this._modifiers, this._defaultModifier].sort((a, b) => {
+    const sorted = [...enabledModifiers, this._defaultModifier].sort((a, b) => {
       if (a.prio !== b.prio) {
         return a.prio - b.prio; // Lower prio value = higher priority
       }
@@ -193,6 +222,13 @@ export class ModifierStack<T> {
    * Get the current value
    */
   get currentValue(): T {
+    return this._currentValue;
+  }
+
+  /**
+   * Get the current value (alias for currentValue getter)
+   */
+  getValue(): T {
     return this._currentValue;
   }
 
@@ -263,6 +299,26 @@ export class ModifierService {
         { stackName, defaultValue }
       );
     }
+  }
+
+  /**
+   * Get or create a modifier stack
+   * @param stackName The name of the stack
+   * @param defaultValue The default value (only used if stack doesn't exist)
+   * @param action The action to execute when the value changes (only used if stack doesn't exist)
+   * @returns The existing or newly created modifier stack
+   */
+  getOrCreateModifierStack<T>(
+    stackName: string,
+    defaultValue: T,
+    action: (value: T) => void
+  ): ModifierStack<T> {
+    const existing = this._stacks.get(stackName);
+    if (existing) {
+      return existing as ModifierStack<T>;
+    }
+
+    return this.createModifierStack(stackName, defaultValue, action);
   }
 
   /**

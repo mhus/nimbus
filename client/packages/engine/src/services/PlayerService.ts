@@ -11,6 +11,7 @@ import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
 import type { PlayerEntity } from '../types/PlayerEntity';
+import type { ModifierStack, Modifier } from './ModifierService';
 
 const logger = getLogger('PlayerService');
 
@@ -43,6 +44,15 @@ export class PlayerService {
 
   // Event system
   private eventListeners: Map<string, EventListener[]> = new Map();
+
+  // View mode (ego vs third-person)
+  private viewModeStack?: ModifierStack<boolean>; // true = ego, false = third-person
+  private playerViewModifier?: Modifier<boolean>;
+  private underwaterViewModifier?: Modifier<boolean>;
+
+  // Third-person model rendering
+  private thirdPersonMesh?: any; // AbstractMesh from Babylon.js
+  private thirdPersonAnimations?: any[]; // AnimationGroup[]
 
   constructor(appContext: AppContext, cameraService: CameraService) {
     this.appContext = appContext;
@@ -98,6 +108,11 @@ export class PlayerService {
       y: this.playerEntity.position.y,
       z: this.playerEntity.position.z,
     };
+
+    // Initialize view mode stack (ego vs third-person)
+    // Note: ModifierService might not be available yet during construction
+    // Will be initialized lazily on first use
+    this.initializeViewModeStack();
 
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
@@ -220,6 +235,11 @@ export class PlayerService {
     // Just sync camera after physics update
     this.syncCameraToPlayer();
 
+    // Update third-person model position/rotation if active
+    if (!this.isEgoView() && this.thirdPersonMesh) {
+      this.updateThirdPersonModel();
+    }
+
     // Emit position change if moved (for chunk loading, etc.)
     const currentPos = this.playerEntity.position;
     if (
@@ -239,13 +259,43 @@ export class PlayerService {
    * Sync camera position to player position
    */
   private syncCameraToPlayer(): void {
-    // In ego-view, camera is at player eye level (from PlayerInfo)
-    const eyeHeight = this.playerEntity.playerInfo.eyeHeight;
-    this.cameraService.setPosition(
-      this.playerEntity.position.x,
-      this.playerEntity.position.y + eyeHeight,
-      this.playerEntity.position.z
-    );
+    const isEgo = this.isEgoView();
+
+    if (isEgo) {
+      // Ego-view: Camera at player eye level
+      const eyeHeight = this.playerEntity.playerInfo.eyeHeight;
+      this.cameraService.setPosition(
+        this.playerEntity.position.x,
+        this.playerEntity.position.y + eyeHeight,
+        this.playerEntity.position.z
+      );
+    } else {
+      // Third-person: Camera behind player
+      const yaw = this.cameraService.getRotation().y;
+      this.cameraService.setThirdPersonPosition(
+        this.playerEntity.position,
+        yaw,
+        5.0 // Distance behind player
+      );
+    }
+  }
+
+  /**
+   * Update third-person model position and rotation
+   */
+  private updateThirdPersonModel(): void {
+    if (!this.thirdPersonMesh) {
+      return;
+    }
+
+    // Update position
+    this.thirdPersonMesh.position.copyFrom(this.playerEntity.position);
+
+    // Update rotation (yaw only)
+    const yaw = this.cameraService.getRotation().y;
+    this.thirdPersonMesh.rotation.y = yaw * (Math.PI / 180); // Convert to radians
+
+    // TODO: Update animations based on movement mode/velocity
   }
 
   /**
@@ -372,10 +422,212 @@ export class PlayerService {
   }
 
   /**
+   * Initialize view mode stack (lazy initialization)
+   */
+  private initializeViewModeStack(): void {
+    if (this.viewModeStack) {
+      return; // Already initialized
+    }
+
+    const modifierService = this.appContext.services.modifier;
+    if (!modifierService) {
+      return; // Not available yet, will retry later
+    }
+
+    // Get or create stack (safe to call multiple times)
+    this.viewModeStack = modifierService.getOrCreateModifierStack<boolean>(
+      'playerViewMode',
+      true, // Default: ego-view (first-person)
+      (isEgo) => {
+        // Callback when view mode changes
+        this.onViewModeChanged(isEgo);
+      }
+    );
+
+    // Add player's default preference if not already added
+    if (!this.playerViewModifier) {
+      this.playerViewModifier = this.viewModeStack.addModifier(true, 100); // Priority 100 (low)
+    }
+
+    // Create underwater modifier if not already added
+    if (!this.underwaterViewModifier) {
+      this.underwaterViewModifier = this.viewModeStack.addModifier(true, 10); // Priority 10 (high)
+      this.underwaterViewModifier.setEnabled(false); // Disabled initially
+    }
+
+    logger.debug('View mode stack initialized', { defaultEgo: true });
+  }
+
+  /**
+   * Toggle view mode (ego vs third-person)
+   * Called by F5 key handler
+   */
+  toggleViewMode(): void {
+    // Ensure view mode stack is initialized
+    this.initializeViewModeStack();
+
+    if (!this.viewModeStack || !this.playerViewModifier) {
+      logger.warn('View mode stack not initialized');
+      return;
+    }
+
+    // Toggle player's preference (priority 100)
+    const currentEgo = this.playerViewModifier.getValue();
+    this.playerViewModifier.setValue(!currentEgo);
+
+    logger.info('Player toggled view mode', {
+      from: currentEgo ? 'ego' : 'third-person',
+      to: !currentEgo ? 'ego' : 'third-person',
+    });
+  }
+
+  /**
+   * Force ego-view (used for underwater auto-switch)
+   *
+   * @param underwater True if underwater, false if surfaced
+   */
+  setUnderwaterViewMode(underwater: boolean): void {
+    // Ensure view mode stack is initialized
+    this.initializeViewModeStack();
+
+    if (!this.underwaterViewModifier) {
+      return;
+    }
+
+    // Simply enable/disable the underwater modifier instead of creating/destroying it
+    this.underwaterViewModifier.setEnabled(underwater);
+
+    logger.debug('Underwater ego-view modifier', { enabled: underwater });
+  }
+
+  /**
+   * Get current view mode
+   */
+  isEgoView(): boolean {
+    // Ensure view mode stack is initialized
+    this.initializeViewModeStack();
+
+    return this.viewModeStack?.currentValue ?? true;
+  }
+
+  /**
+   * Called when view mode changes (from modifier stack)
+   */
+  private onViewModeChanged(isEgo: boolean): void {
+    logger.info('View mode changed', { isEgo });
+
+    if (isEgo) {
+      // Switch to ego-view (first-person)
+      this.hideThirdPersonModel();
+    } else {
+      // Switch to third-person
+      this.showThirdPersonModel();
+    }
+
+    // Update camera position
+    this.syncCameraToPlayer();
+  }
+
+  /**
+   * Load and show third-person model
+   */
+  private async showThirdPersonModel(): Promise<void> {
+    const modelId = this.playerEntity.playerInfo.thirdPersonModelId;
+    if (!modelId) {
+      logger.warn('No third-person model ID configured in PlayerInfo');
+      return;
+    }
+
+    // If already loaded, just show it
+    if (this.thirdPersonMesh) {
+      this.thirdPersonMesh.setEnabled(true);
+      logger.debug('Third-person model shown');
+      return;
+    }
+
+    // Load model
+    await this.loadThirdPersonModel(modelId);
+  }
+
+  /**
+   * Hide third-person model
+   */
+  private hideThirdPersonModel(): void {
+    if (this.thirdPersonMesh) {
+      this.thirdPersonMesh.setEnabled(false);
+      logger.debug('Third-person model hidden');
+    }
+  }
+
+  /**
+   * Load third-person model from entity model ID
+   */
+  private async loadThirdPersonModel(modelId: string): Promise<void> {
+    try {
+      const entityService = this.appContext.services.entity;
+      if (!entityService) {
+        logger.error('EntityService not available');
+        return;
+      }
+
+      // Get entity model
+      const entityModel = await entityService.getEntityModel(modelId);
+      if (!entityModel) {
+        logger.error('Entity model not found', { modelId });
+        return;
+      }
+
+      // Load model via SceneLoader
+      const { SceneLoader } = await import('@babylonjs/core');
+      const renderService = this.appContext.services.render;
+      if (!renderService) {
+        logger.error('RenderService not available');
+        return;
+      }
+
+      const scene = renderService.getScene();
+      const result = await SceneLoader.ImportMeshAsync(
+        '',
+        '/assets/models/',
+        entityModel.modelPath,
+        scene
+      );
+
+      // Store mesh and animations
+      this.thirdPersonMesh = result.meshes[0];
+      this.thirdPersonAnimations = result.animationGroups;
+
+      // Apply initial transformation
+      if (this.thirdPersonMesh) {
+        this.thirdPersonMesh.position = this.playerEntity.position.clone();
+        this.thirdPersonMesh.scaling.set(
+          entityModel.scale.x,
+          entityModel.scale.y,
+          entityModel.scale.z
+        );
+      }
+
+      logger.info('Third-person model loaded', { modelId });
+    } catch (error) {
+      logger.error('Failed to load third-person model', { modelId }, error as Error);
+    }
+  }
+
+  /**
    * Dispose player service
    */
   dispose(): void {
     this.eventListeners.clear();
+
+    // Dispose third-person model
+    if (this.thirdPersonMesh) {
+      this.thirdPersonMesh.dispose();
+    }
+
+    // Close modifiers
+    this.playerViewModifier?.close();
+    this.underwaterViewModifier?.close();
+
     logger.info('PlayerService disposed');
   }
 }

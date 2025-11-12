@@ -43,3 +43,22 @@ export class ToggleMovementModeHandler extends InputHandler {
     // Toggle doesn't need continuous updates
   }
 }
+
+/**
+ * Toggle View Mode Handler
+ * Toggles between Ego (first-person) and Third-Person view
+ */
+export class ToggleViewModeHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Toggle is a discrete action, execute immediately
+    this.playerService.toggleViewMode();
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}

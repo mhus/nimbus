@@ -231,16 +231,6 @@ gehen koennen.
 - Wenn eine collision erkannt wird, wird die position des players so angepasst, dass er nicht mehr in der bounding box der entity ist.
 - Es werden nur entities geprueft, die in der naehe des players sind (radius variable im EntityService - getter, setter)
 
-[ ] Der Client soll die Positionsdaten des Players zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server 
-schicken mit der aktuellen Position, Rotation und Bewegungstyp des Players. Natürlich nur, wenn sich die Position oder 
-Rotation seit dem letzten Update geändert hat. 
-- Beim senden des Updates wird eine Bewegung ueber die kommenden 200ms vorhergesagt (basierend auf der aktuellen Geschwindigkeit und Bewegungstyp)
-- Der Server kann diese Daten nutzen um die Position des Players an andere Player zu senden
-- Der Server sendet alle 100ms alle relevanten, neuen Player Positionen an den Client, wenn der diese benoetigt (registrierte chunks)
-- Der Server muss per REST API 'GET /api/worlds/{worldId}/entity/{entityId}' Daten des players bereit stellen, damit der Client die Player Entity laden kann
-  player entitys beginnen immer mit einem '@' zeichen.
-- Eine vorlage fuer die Player Entity ist in 'files/entity/player_entity.json' zu finden, es muss aber noch die id des players angepasst werden.
-
 [ ] Erstelle einen neuen EntitySimulator im test_Server. Der TestFastEntitySimulator soll entities mit schnellen bewegungen simulieren.
 - Wie ein echter Player, der immer wieder seine Richtung und Geschwindigkeit aendert
 - Es wird immer eine kurze pathway mit 1 pathway punkt erstellt, der die naechste position des entitys angibt
@@ -265,14 +255,27 @@ die waypoints normal abgearbeitet werden.
 Aufmerksamkeitsradius - dieses wird noch reduziert durch ein parameter am player. maximaler wert definieren, damit nicht
 immer alle geprueft werden muessen. z.b. 10
 
-[ ] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
+[?] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
 - Umstellen ego mode auf third person via parameter und erstelle ein Command in der engine um den ego mode umzuschalten
 - Nutze ein StackModifier genutzt, der den ego mode steuert. Der Wunsch des Spielers hat geringeren prioritaet als der automatische wechsel unter wasser.
 - Siehe ModifierService
-- Der Player bekommt in der PlayerInfo ein 'entity : Entity' objekt, das die entity daten des players enthaelt
+- Der Player bekommt in der PlayerInfo ein 'entity : Entity' objekt, das die entity daten des players enthaelt - setze als id den player namen + uuid + vorangestelltem '@' zeichen
 - Wenn im ego mode wird das modell nicht angezeigt, die camera ist an der player stelle
 - Wenn im third person mode wird das modell angezeigt, die camera ist hinter dem player positioniert
 - Siehe CameraService um die camera position anzupassen
 - Bei bewegungen wird im third person mode die entity bewegt und im ego mode nur die camera (wie bisher)
 - Unter wasser wird automatisch in den ego mode gewechselt. Dazu wird ein StackModifier genutzt, der den ego mode steuert.
-- 
+- Wenn die Taste F5 gedrueckt wird, wird der ego mode / third person mode umgeschaltet werden
+
+[ ] Wenn in StackModifier noch ein enabled parameter hinzugefuegt wird, der angibt ob der modifier aktiv ist oder nicht,
+dann kann der PhysicService dauerhaft einen StackModifier fuer den ego mode anlegen und nur den enabled parameter setzen.
+
+[ ] Der Client soll die Positionsdaten des Players zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server
+schicken mit der aktuellen Position, Rotation und Bewegungstyp des Players. Natürlich nur, wenn sich die Position oder
+Rotation seit dem letzten Update geändert hat.
+- Beim senden des Updates wird eine Bewegung ueber die kommenden 200ms vorhergesagt (basierend auf der aktuellen Geschwindigkeit und Bewegungstyp 100ms time + )
+- Der Server kann diese Daten nutzen um die Position des Players an andere Player zu senden
+- Der Server sendet alle 100ms alle relevanten, neuen Player Positionen an den Client, wenn der diese benoetigt (registrierte chunks)
+- Der Server muss per REST API 'GET /api/worlds/{worldId}/entity/{entityId}' Daten des players bereit stellen, damit der Client die Player Entity laden kann
+  player entitys beginnen immer mit einem '@' zeichen. - Player Id kommt aus der PlayerInfo - hier muss eine uuid generiert werden
+- Eine vorlage fuer die Player Entity ist in 'files/entity/player_entity.json' zu finden, es muss aber noch die id des players angepasst werden.

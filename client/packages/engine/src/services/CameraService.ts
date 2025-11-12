@@ -153,6 +153,40 @@ export class CameraService {
   }
 
   /**
+   * Set camera position for third-person view (behind player)
+   *
+   * @param playerPosition Player's position
+   * @param playerYaw Player's yaw rotation in degrees
+   * @param distance Distance behind player
+   */
+  setThirdPersonPosition(playerPosition: Vector3, playerYaw: number, distance: number): void {
+    if (!this.camera) {
+      logger.warn('Cannot set third-person position: camera not initialized');
+      return;
+    }
+
+    // Convert yaw to radians
+    const yawRad = playerYaw * (Math.PI / 180);
+
+    // Calculate offset behind player
+    // In Babylon.js: Z is forward, X is right
+    const offsetX = -Math.sin(yawRad) * distance;
+    const offsetZ = -Math.cos(yawRad) * distance;
+    const offsetY = 1.5; // Height above player
+
+    // Set camera position
+    this.camera.position.set(
+      playerPosition.x + offsetX,
+      playerPosition.y + offsetY,
+      playerPosition.z + offsetZ
+    );
+
+    // Make camera look at player (slightly above center)
+    const targetY = playerPosition.y + 1.0;
+    this.camera.setTarget(new Vector3(playerPosition.x, targetY, playerPosition.z));
+  }
+
+  /**
    * Set camera rotation
    *
    * @param pitch Pitch (X rotation) in radians
@@ -267,6 +301,12 @@ export class CameraService {
         this.enableUnderwaterEffects();
       } else {
         this.disableUnderwaterEffects();
+      }
+
+      // Notify PlayerService for auto ego-view switch
+      const playerService = this.appContext.services.player;
+      if (playerService) {
+        playerService.setUnderwaterViewMode(underwater);
       }
 
       logger.info('Underwater state changed', { underwater });

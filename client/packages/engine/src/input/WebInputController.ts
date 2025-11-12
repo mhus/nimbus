@@ -18,7 +18,7 @@ import {
   MoveUpHandler,
   MoveDownHandler,
 } from './handlers/MovementHandlers';
-import { JumpHandler, ToggleMovementModeHandler } from './handlers/ActionHandlers';
+import { JumpHandler, ToggleMovementModeHandler, ToggleViewModeHandler } from './handlers/ActionHandlers';
 import { RotateHandler } from './handlers/RotationHandlers';
 import {
   EditSelectionRotatorHandler,
@@ -48,6 +48,7 @@ interface KeyBinding {
  * - Space: Jump (Walk mode) / Move up (Fly mode)
  * - Shift: Move down (Fly mode only)
  * - F: Toggle Walk/Fly mode (Editor only)
+ * - F5: Toggle Ego/Third-Person view
  * - . (Period): Rotate selection mode (Editor only)
  * - / (Slash): Activate selected block editor (Editor only)
  * - F9: Open edit configuration (Editor only)
@@ -71,6 +72,7 @@ export class WebInputController implements InputController {
   private moveDownHandler: MoveDownHandler;
   private jumpHandler: JumpHandler;
   private toggleMovementModeHandler?: ToggleMovementModeHandler;
+  private toggleViewModeHandler: ToggleViewModeHandler;
   private rotateHandler: RotateHandler;
 
   // Editor handlers (Editor only)
@@ -95,6 +97,7 @@ export class WebInputController implements InputController {
     this.moveUpHandler = new MoveUpHandler(playerService);
     this.moveDownHandler = new MoveDownHandler(playerService);
     this.jumpHandler = new JumpHandler(playerService);
+    this.toggleViewModeHandler = new ToggleViewModeHandler(playerService);
     this.rotateHandler = new RotateHandler(playerService);
 
     // Toggle movement mode handler (Editor only)
@@ -166,6 +169,9 @@ export class WebInputController implements InputController {
     if (this.blockEditorActivateHandler) {
       this.keyBindings.set('F10', this.blockEditorActivateHandler);
     }
+
+    // F5: Toggle view mode (ego/third-person)
+    this.keyBindings.set('F5', this.toggleViewModeHandler);
 
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)

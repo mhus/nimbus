@@ -114,4 +114,11 @@ export interface PlayerInfo {
 
   /** Effective underwater mouse sensitivity (base + modifiers) */
   effectiveUnderwaterTurnSpeed: number;
+
+  // ============================================
+  // Third-Person View
+  // ============================================
+
+  /** Entity model ID for third-person view (optional, e.g., "farmer1") */
+  thirdPersonModelId?: string;
 }
