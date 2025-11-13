@@ -18,7 +18,7 @@
 
 ## Entity Interaction
 
-[?] Erweitere im SelectionService im MODUS INTERACTION die Klick-Events auf Entities, die das flag 'interactive' auf true haben.
+[x] Erweitere im SelectionService im MODUS INTERACTION die Klick-Events auf Entities, die das flag 'interactive' auf true haben.
 - Bei einem Klick (right/left/middle) auf eine Entity soll ein event an den server geschickt werden.
 - Im SelectorService auf den Klick reagieren und ein event via Network verschicken "Entity Interaction (Client -> Server)" in client/instructions/general/network-model-2.0.md
 - Action: 'click'

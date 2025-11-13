@@ -440,8 +440,6 @@ export class SelectService {
       // Create ray from eye position
       const ray = new Ray(eyePosition, direction, radius);
 
-      logger.debug('Starting pickWithRay for entities');
-
       // Pick with ray - only check visible meshes
       const pickInfo = this.scene.pickWithRay(ray, (mesh) => {
         // Only pick entity meshes (not blocks, terrain, etc.)
@@ -479,30 +477,12 @@ export class SelectService {
           return false;
         }
 
-        // Log entities within radius (after distance and player filter, skip @player entities)
-        if (!meshEntityId.startsWith('@player')) {
-          logger.debug('Entity within radius found', {
-            meshName: mesh.name,
-            entityId: meshEntityId,
-            distance: distance.toFixed(2),
-            controlledBy: entity.entity.controlledBy,
-            interactive: entity.entity.interactive,
-          });
-        }
-
         // Only pick interactive entities
         if (!entity.entity.interactive) {
           return false;
         }
 
         return true;
-      });
-
-      logger.debug('PickWithRay completed', {
-        hasPickInfo: !!pickInfo,
-        hit: pickInfo?.hit,
-        hasPickedMesh: !!pickInfo?.pickedMesh,
-        distance: pickInfo?.distance,
       });
 
       if (!pickInfo || !pickInfo.hit || !pickInfo.pickedMesh) {
@@ -523,12 +503,10 @@ export class SelectService {
         return null;
       }
 
-      logger.info('Interactive entity selected!', {
+      logger.debug('Interactive entity selected', {
         entityId: entity.id,
-        name: entity.name,
-        controlledBy: entity.entity.controlledBy,
+        name: entity.entity.name,
         distance: pickInfo.distance?.toFixed(2),
-        interactive: entity.entity.interactive,
       });
 
       return entity;
