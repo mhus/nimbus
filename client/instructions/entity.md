@@ -255,7 +255,7 @@ die waypoints normal abgearbeitet werden.
 Aufmerksamkeitsradius - dieses wird noch reduziert durch ein parameter am player. maximaler wert definieren, damit nicht
 immer alle geprueft werden muessen. z.b. 10
 
-[?] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
+[x] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
 - Umstellen ego mode auf third person via parameter und erstelle ein Command in der engine um den ego mode umzuschalten
 - Nutze ein StackModifier genutzt, der den ego mode steuert. Der Wunsch des Spielers hat geringeren prioritaet als der automatische wechsel unter wasser.
 - Siehe ModifierService
@@ -267,10 +267,10 @@ immer alle geprueft werden muessen. z.b. 10
 - Unter wasser wird automatisch in den ego mode gewechselt. Dazu wird ein StackModifier genutzt, der den ego mode steuert.
 - Wenn die Taste F5 gedrueckt wird, wird der ego mode / third person mode umgeschaltet werden
 
-[ ] Wenn in StackModifier noch ein enabled parameter hinzugefuegt wird, der angibt ob der modifier aktiv ist oder nicht,
+[x] Wenn in StackModifier noch ein enabled parameter hinzugefuegt wird, der angibt ob der modifier aktiv ist oder nicht,
 dann kann der PhysicService dauerhaft einen StackModifier fuer den ego mode anlegen und nur den enabled parameter setzen.
 
-[ ] Der Client soll die Positionsdaten des Players zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server
+[ ] Der Client/Engine soll die Positionsdaten des Players (PlayerService) zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server
 schicken mit der aktuellen Position, Rotation und Bewegungstyp des Players. Natürlich nur, wenn sich die Position oder
 Rotation seit dem letzten Update geändert hat.
 - Beim senden des Updates wird eine Bewegung ueber die kommenden 200ms vorhergesagt (basierend auf der aktuellen Geschwindigkeit und Bewegungstyp 100ms time + )
@@ -279,3 +279,5 @@ Rotation seit dem letzten Update geändert hat.
 - Der Server muss per REST API 'GET /api/worlds/{worldId}/entity/{entityId}' Daten des players bereit stellen, damit der Client die Player Entity laden kann
   player entitys beginnen immer mit einem '@' zeichen. - Player Id kommt aus der PlayerInfo - hier muss eine uuid generiert werden
 - Eine vorlage fuer die Player Entity ist in 'files/entity/player_entity.json' zu finden, es muss aber noch die id des players angepasst werden.
+- Als Pose kann jetzt im PlayerService currentPose genutzt werden.
+- Siehe auch 'Entity Position Update (Client -> Server)' client/instructions/general/network-model-2.0.md
