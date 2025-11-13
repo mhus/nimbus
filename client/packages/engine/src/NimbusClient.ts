@@ -49,6 +49,8 @@ import { MaterialInfoCommand } from './commands/MaterialInfoCommand';
 import { WireframeCommand } from './commands/WireframeCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
+import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
+import { ClearBlockTypeCacheCommand } from './commands/ClearBlockTypeCacheCommand';
 import { TeleportCommand } from './commands/TeleportCommand';
 import { ListEntitiesCommand } from './commands/ListEntitiesCommand';
 import { EntityInfoCommand } from './commands/EntityInfoCommand';
@@ -135,6 +137,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new WireframeCommand(appContext));
     commandService.registerHandler(new LogLevelCommand());
     commandService.registerHandler(new BlockInfoCommand(appContext));
+    commandService.registerHandler(new BlockTypeInfoCommand(appContext));
     commandService.registerHandler(new TeleportCommand(appContext));
 
     // Register entity commands
@@ -224,6 +227,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const blockTypeService = new BlockTypeService(appContext);
     appContext.services.blockType = blockTypeService;
     logger.info('BlockTypeService initialized (chunks will be loaded on-demand)');
+
+    // Register BlockType-dependent commands (after BlockTypeService is created)
+    if (appContext.services.command) {
+      appContext.services.command.registerHandler(new ClearBlockTypeCacheCommand(blockTypeService));
+    }
 
     // Initialize ShaderService
     logger.info('Initializing ShaderService...');

@@ -199,6 +199,28 @@ export class BlockTypeService {
   }
 
   /**
+   * Clear the BlockType cache
+   *
+   * Clears all cached BlockTypes and loaded chunk flags.
+   * Next BlockType access will reload from server.
+   */
+  clearCache(): void {
+    const beforeCount = this.blockTypes.size;
+    const beforeChunks = this.loadedChunks.size;
+
+    this.blockTypes.clear();
+    this.loadedChunks.clear();
+
+    // Re-register AIR BlockType (id 0)
+    this.registerAirBlockType();
+
+    logger.info('BlockType cache cleared', {
+      clearedBlockTypes: beforeCount - 1, // -1 for AIR
+      clearedChunks: beforeChunks,
+    });
+  }
+
+  /**
    * Validate a block type
    */
   private validateBlockType(blockType: any): blockType is BlockType {

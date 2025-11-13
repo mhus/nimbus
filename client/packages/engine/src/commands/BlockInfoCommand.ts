@@ -101,6 +101,7 @@ export class BlockInfoCommand extends CommandHandler {
       if (mod.physics) {
         lines.push('  Physics:');
         lines.push(`    Solid             : ${mod.physics.solid ?? false}`);
+        lines.push(`    Interactive       : ${mod.physics.interactive ?? false}`);
         lines.push(`    AutoClimbable     : ${mod.physics.autoClimbable ?? false}`);
         lines.push(`    AutoCornerHeights : ${mod.physics.autoCornerHeights ?? false}`);
         if (mod.physics.cornerHeights) {
@@ -152,6 +153,12 @@ export class BlockInfoCommand extends CommandHandler {
     // Output complete block as JSON for debugging
     lines.push('Complete Block JSON:');
     lines.push(JSON.stringify(block, null, 2).split('\n').map(line => '  ' + line).join('\n'));
+
+    lines.push('');
+
+    // Output complete ClientBlock as JSON for debugging
+    lines.push('Complete ClientBlock JSON:');
+    lines.push(JSON.stringify(clientBlock, null, 2).split('\n').map(line => '  ' + line).join('\n'));
 
     lines.push('');
     lines.push('==================');
