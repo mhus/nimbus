@@ -62,6 +62,8 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
 
   // Stealth
   stealthRange: 8.0,
+  distanceNotifyReductionWalk: 0, // No reduction when walking (default)
+  distanceNotifyReductionCrouch: 0, // No reduction when crouching (default)
 
   // Camera control
   baseTurnSpeed: 0.003,

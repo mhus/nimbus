@@ -186,6 +186,12 @@ export interface Entity {
 
   /** Enable client-side physics simulation (independent of server physics) */
   clientPhysics?: boolean;
+
+  /** Send collision event to server when player collides with this entity */
+  notifyOnCollision?: boolean;
+
+  /** Distance threshold for proximity notifications in blocks (0 = disabled) */
+  notifyOnAttentionRange?: number;
 }
 
 /**

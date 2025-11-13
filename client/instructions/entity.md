@@ -231,7 +231,7 @@ gehen koennen.
 - Wenn eine collision erkannt wird, wird die position des players so angepasst, dass er nicht mehr in der bounding box der entity ist.
 - Es werden nur entities geprueft, die in der naehe des players sind (radius variable im EntityService - getter, setter)
 
-[ ] Erstelle einen neuen EntitySimulator im test_Server. Der TestFastEntitySimulator soll entities mit schnellen bewegungen simulieren.
+[-] Erstelle einen neuen EntitySimulator im test_Server. Der TestFastEntitySimulator soll entities mit schnellen bewegungen simulieren.
 - Wie ein echter Player, der immer wieder seine Richtung und Geschwindigkeit aendert
 - Es wird immer eine kurze pathway mit 1 pathway punkt erstellt, der die naechste position des entitys angibt
 - Die pathway wird alle 100ms neu erstellt und neu gesendet (konfigurierbar)
@@ -250,10 +250,18 @@ Siehe EntityService.ts
 
 [-] Wenn ein neuer Pathway kommt und die velocity zum erste punkt zu hoch wird, soll die entity zum ersten punkt flippen dann sollden
 die waypoints normal abgearbeitet werden.
-[ ] An entity ein neuen parameter, ob bei collision ein event an server geschickt werden soll
-[ ] An entity ein parameter, in welchem range ein event an server geschickt werden soll. 
-Aufmerksamkeitsradius - dieses wird noch reduziert durch ein parameter am player. maximaler wert definieren, damit nicht
-immer alle geprueft werden muessen. z.b. 10
+
+[?] An entity ein neuen parameter, ob bei collision ein event an server geschickt werden soll
+- erstelle dazu an der entity einen parameter, z.b. 'notifyOnCollision': boolean
+- Wenn der player mit der entity kollidiert und notifyOnCollision=true ist, wird ein event an den server geschickt
+- Siehe client/instructions/general/network-model-2.0.md "Entity Interaction (Client -> Server)" als action type 'entityCollision' gesendet werden
+
+[?] An entity ein parameter erstellen, in welchem range ein event an server geschickt werden soll. Name notifyOnProximity : number
+- Wenn der player sich in der naehe der entity befindet (distance < (notifyOnProximity + player.distanceNotifyReductionWalk bzw. distanceNotifyReductionCrouch   ... beide muessen am player noch angelegt werden, default 0) ), wird ein event an den server geschickt
+- Das event wird nur einmal gesendet, wenn der player in den range kommt. Wenn er den range verlaesst und wieder rein kommt, wird das event wieder gesendet.
+- Siehe client/instructions/general/network-model-2.0.md "Entity Interaction (Client -> Server)" als action type 'entityProximity' gesendet werden
+- Das event moeglichst nicht permanent schicken, nur wenn der player in den range kommt
+- Alternative benamung nicht notifyOnProximityRange sondern etwas mit 'Attention', denn die Entity soll ja auf den Player aufmerksam werden !!!!
 
 [x] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
 - Umstellen ego mode auf third person via parameter und erstelle ein Command in der engine um den ego mode umzuschalten
@@ -273,7 +281,7 @@ immer alle geprueft werden muessen. z.b. 10
 [x] Wenn in StackModifier noch ein enabled parameter hinzugefuegt wird, der angibt ob der modifier aktiv ist oder nicht,
 dann kann der PhysicService dauerhaft einen StackModifier fuer den ego mode anlegen und nur den enabled parameter setzen.
 
-[ ] Der Client/Engine soll die Positionsdaten des Players (PlayerService) zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server
+[x] Der Client/Engine soll die Positionsdaten des Players (PlayerService) zum Server senden. Dazu soll er ca. alle 100ms ein Update an den Server
 schicken mit der aktuellen Position, Rotation und Bewegungstyp des Players. Natürlich nur, wenn sich die Position oder
 Rotation seit dem letzten Update geändert hat.
 - Beim senden des Updates wird eine Bewegung ueber die kommenden 200ms vorhergesagt (basierend auf der aktuellen Geschwindigkeit und Bewegungstyp 100ms time + )

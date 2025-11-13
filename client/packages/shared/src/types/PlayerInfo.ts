@@ -99,6 +99,12 @@ export interface PlayerInfo {
   /** Detection range for mobs when sneaking (in blocks) */
   stealthRange: number;
 
+  /** Distance reduction for entity attention range when walking (in blocks, default: 0) */
+  distanceNotifyReductionWalk: number;
+
+  /** Distance reduction for entity attention range when crouching (in blocks, default: 0) */
+  distanceNotifyReductionCrouch: number;
+
   // ============================================
   // Camera Control
   // ============================================

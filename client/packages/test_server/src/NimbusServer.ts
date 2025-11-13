@@ -270,6 +270,9 @@ class NimbusServer {
       case 'e.p.u': // Entity position update (from client)
         this.handleEntityPositionUpdate(session, d);
         break;
+      case 'e.int.r': // Entity interaction (from client)
+        this.handleEntityInteraction(session, i, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -483,6 +486,51 @@ class NimbusServer {
 
     // Note: Broadcasting to other clients will be handled by
     // the entity pathway broadcast system (every 100ms)
+  }
+
+  /**
+   * Handle entity interaction from client
+   * Message type: e.int.r
+   *
+   * Actions:
+   * - 'entityCollision': Player collided with entity
+   * - 'entityProximity': Player entered entity's attention range
+   * - 'use', 'talk', 'attack', etc.: Future interaction types
+   */
+  private handleEntityInteraction(session: ClientSession, messageId: string, data: any) {
+    if (!data || !data.entityId || !data.ac) {
+      logger.warn('Invalid entity interaction data', {
+        sessionId: session.sessionId,
+        data,
+      });
+      return;
+    }
+
+    const { entityId, ts, ac, pa } = data;
+
+    logger.info('Entity interaction received', {
+      sessionId: session.sessionId,
+      username: session.username,
+      entityId,
+      action: ac,
+      timestamp: ts,
+      params: pa,
+    });
+
+    // TODO: Implement game logic based on action type
+    // Examples:
+    // - 'entityCollision': Trigger damage, bounce, etc.
+    // - 'entityProximity': NPC becomes alert, initiates dialog, etc.
+    // - 'use': Open inventory, activate mechanism
+    // - 'talk': Start conversation
+    // - 'attack': Process combat
+
+    // Optional: Send response back to client
+    // session.ws.send(JSON.stringify({
+    //   r: messageId,
+    //   t: 'e.int.rs',
+    //   d: { success: true }
+    // }));
   }
 
   private async sendChunks(session: ClientSession, coords: any[]) {

@@ -17,6 +17,7 @@ import {
   getLogger,
   ExceptionHandler,
   ENTITY_POSES,
+  MessageType,
 } from '@nimbus/shared';
 import type { Vector3, Rotation } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
@@ -107,6 +108,9 @@ export class EntityService {
 
   // Physics controller
   private physicsController: EntityPhysicsController;
+
+  // Proximity tracking: Map<entityId, isInRange>
+  private entityProximityState: Map<string, boolean> = new Map();
 
   constructor(appContext: AppContext, config?: EntityServiceConfig) {
     if (!appContext.services.network) {
@@ -714,6 +718,11 @@ export class EntityService {
       clientEntity.visible = shouldBeVisible;
       this.emit('visibility', { entityId: clientEntity.id, visible: shouldBeVisible });
     }
+
+    // Check proximity notification (only for visible entities)
+    if (shouldBeVisible) {
+      this.checkProximityNotification(clientEntity, distance);
+    }
   }
 
   /**
@@ -1052,23 +1061,122 @@ export class EntityService {
   }
 
   /**
+   * Check proximity notification for entity
+   * Sends notification when player enters/exits attention range
+   *
+   * @param clientEntity Entity to check
+   * @param distance Current distance to player
+   */
+  private checkProximityNotification(clientEntity: ClientEntity, distance: number): void {
+    // Check if entity wants proximity notifications
+    const notifyRange = clientEntity.entity.notifyOnAttentionRange;
+    if (!notifyRange || notifyRange <= 0) {
+      return;
+    }
+
+    // Get player info for stealth modifiers
+    const playerService = this.appContext.services.player;
+    if (!playerService || !this.appContext.playerInfo) {
+      return;
+    }
+
+    const playerInfo = this.appContext.playerInfo;
+
+    // Calculate effective range based on player movement mode
+    const movementMode = playerService.getMovementMode();
+    const isCrouching = movementMode === 'crouch';
+
+    const distanceReduction = isCrouching
+      ? playerInfo.distanceNotifyReductionCrouch
+      : playerInfo.distanceNotifyReductionWalk;
+
+    const effectiveRange = notifyRange + distanceReduction;
+
+    // Get current proximity state
+    const wasInRange = this.entityProximityState.get(clientEntity.id) ?? false;
+    const isInRange = distance < effectiveRange;
+
+    // Check for state change
+    if (isInRange && !wasInRange) {
+      // Entered range - send notification
+      this.entityProximityState.set(clientEntity.id, true);
+
+      const messageId = `proximity_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      this.networkService.send({
+        i: messageId,
+        t: MessageType.ENTITY_INTERACTION,
+        d: {
+          entityId: clientEntity.id,
+          ts: Date.now(),
+          ac: 'entityProximity',
+          pa: {
+            distance: distance,
+            effectiveRange: effectiveRange,
+            entered: true,
+          },
+        },
+      });
+
+      logger.info('Entity proximity notification sent (entered range)', {
+        entityId: clientEntity.id,
+        distance,
+        effectiveRange,
+      });
+    } else if (!isInRange && wasInRange) {
+      // Exited range - update state
+      this.entityProximityState.set(clientEntity.id, false);
+
+      logger.debug('Player exited entity proximity range', {
+        entityId: clientEntity.id,
+        distance,
+        effectiveRange,
+      });
+    }
+  }
+
+  /**
    * Called when player collides with an entity
-   * Sends collision event to server (can be extended later)
+   * Sends collision event to server if entity has notifyOnCollision=true
    *
    * @param entityId Entity that was collided with
    * @param playerPosition Player's position at collision
    */
   onPlayerCollision(entityId: string, playerPosition: Vector3): void {
-    logger.debug('Player collision with entity', {
-      entityId,
-      playerPosition,
-    });
+    const clientEntity = this.entityCache.get(entityId);
+    if (!clientEntity) {
+      return;
+    }
 
-    // TODO: Send collision event to server via NetworkService
-    // const message = {
-    //   type: MessageType.ENTITY_COLLISION,
-    //   data: { entityId, playerPosition }
-    // };
-    // this.networkService.send(message);
+    // Check if entity wants collision notifications
+    if (clientEntity.entity.notifyOnCollision === true) {
+      // Send collision event to server
+      const messageId = `collision_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      this.networkService.send({
+        i: messageId,
+        t: MessageType.ENTITY_INTERACTION,
+        d: {
+          entityId: entityId,
+          ts: Date.now(),
+          ac: 'entityCollision',
+          pa: {
+            playerPosition: {
+              x: playerPosition.x,
+              y: playerPosition.y,
+              z: playerPosition.z,
+            },
+          },
+        },
+      });
+
+      logger.info('Entity collision notification sent', {
+        entityId,
+        playerPosition,
+      });
+    } else {
+      logger.debug('Player collision with entity (no notification)', {
+        entityId,
+        playerPosition,
+      });
+    }
   }
 }
