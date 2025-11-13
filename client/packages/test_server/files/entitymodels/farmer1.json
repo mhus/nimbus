@@ -32,6 +32,11 @@
       "animationName": "CharacterArmature|Run",
       "speedMultiplier": 1.5,
       "loop": true
+    },
+    "JUMP": {
+      "animationName": "CharacterArmature|Jump",
+      "speedMultiplier": 1.0,
+      "loop": false
     }
   },
   "poseType": "animation",

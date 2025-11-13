@@ -6,7 +6,7 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, ENTITY_POSES } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
@@ -59,6 +59,10 @@ export class PlayerService {
   // Character rotation (independent from camera in third-person)
   private characterYaw: number = 0; // Degrees
   private targetCharacterYaw: number = 0; // Target yaw for smooth rotation
+
+  // Pose/Animation state
+  private lastMovementTime: number = 0; // Last time player moved
+  private idleDelay: number = 500; // ms before switching to IDLE pose
 
   constructor(appContext: AppContext, cameraService: CameraService) {
     this.appContext = appContext;
@@ -310,6 +314,9 @@ export class PlayerService {
     // Get camera yaw for character rotation (character faces same direction as camera)
     const cameraYaw = this.cameraService.getCameraYaw();
 
+    // Calculate current pose
+    const currentPose = this.calculateCurrentPose();
+
     // Update entity transform via EntityRenderService
     this.entityRenderService.updateEntityTransform(
       playerAvatarEntityId,
@@ -317,7 +324,59 @@ export class PlayerService {
       { y: cameraYaw, p: 0 }
     );
 
-    // TODO: Update pose/animation based on movement mode/velocity
+    // Update pose/animation
+    this.entityRenderService.updateEntityPose(
+      playerAvatarEntityId,
+      currentPose,
+      this.getPlayerSpeed()
+    );
+  }
+
+  /**
+   * Calculate current player pose based on movement state
+   * @returns ENTITY_POSES enum value
+   */
+  private calculateCurrentPose(): number {
+    // Check if in air (jumping/falling)
+    if (!this.playerEntity.grounded) {
+      return ENTITY_POSES.JUMP;
+    }
+
+    // Check if moving
+    const velocity = this.playerEntity.velocity;
+    const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+
+    if (speed > 0.1) {
+      // Player is moving
+      this.lastMovementTime = Date.now();
+
+      // Determine if walking or running based on movement mode
+      if (this.playerEntity.movementMode === 'sprint') {
+        return ENTITY_POSES.RUN;
+      } else if (this.playerEntity.movementMode === 'crouch') {
+        return ENTITY_POSES.CROUCH;
+      } else {
+        return ENTITY_POSES.WALK;
+      }
+    }
+
+    // Player is not moving - check idle timer
+    const timeSinceMovement = Date.now() - this.lastMovementTime;
+    if (timeSinceMovement < this.idleDelay) {
+      // Still in movement pose for a bit (smooth transition)
+      return ENTITY_POSES.WALK;
+    }
+
+    // Player is idle
+    return ENTITY_POSES.IDLE;
+  }
+
+  /**
+   * Get player movement speed (for animation speed)
+   */
+  private getPlayerSpeed(): number {
+    const velocity = this.playerEntity.velocity;
+    return Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
   }
 
   /**
