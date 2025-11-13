@@ -65,11 +65,16 @@ export class ItemRenderer extends BlockRenderer {
       return;
     }
 
-    // Normalize texture
-    const textureDef = TextureHelper.normalizeTexture(firstTexture);
-
+    // Ensure texture is TextureDefinition with ALPHA_TEST
     // Items ALWAYS use ALPHA_TEST for sharp cutout edges
+    const textureDef = TextureHelper.normalizeTexture(firstTexture);
     textureDef.transparencyMode = TransparencyMode.ALPHA_TEST;
+
+    // Update modifier to use TextureDefinition (MaterialService will use this)
+    if (!modifier.visibility.textures) {
+      modifier.visibility.textures = {};
+    }
+    modifier.visibility.textures[0] = textureDef;
 
     // Get transformations with item-specific defaults
     const scalingX = modifier.visibility.scalingX ?? DEFAULT_ITEM_SCALING;

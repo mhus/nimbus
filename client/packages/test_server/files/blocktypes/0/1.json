@@ -6,6 +6,9 @@
     "0": {
       "visibility": {
         "shape": 28
+      },
+      "physics": {
+        "interactive": true
       }
     }
   },

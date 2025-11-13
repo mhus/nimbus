@@ -137,9 +137,11 @@ export class BlockTypeService {
       const range = this.getChunkRange(chunkIndex);
 
       // Use the range endpoint: /api/worlds/{worldId}/blocktypes/{from}/{to}
-      const url = `${apiUrl}/api/worlds/${worldId}/blocktypes/${range.from}/${range.to}`;
+      // Add timestamp parameter to prevent caching
+      const timestamp = Date.now();
+      const url = `${apiUrl}/api/worlds/${worldId}/blocktypes/${range.from}/${range.to}?t=${timestamp}`;
 
-      logger.debug('Loading BlockType chunk', { chunkIndex, range, url });
+      logger.debug('Loading BlockType chunk', { chunkIndex, range, url, timestamp });
 
       const response = await fetch(url);
 

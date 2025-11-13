@@ -82,7 +82,7 @@ export class EntityManager {
         modelModifierMapping: new Map(Object.entries(modelData.modelModifierMapping || {})),
       };
 
-      logger.info('Entity model loaded from file', { modelId, filePath });
+      logger.debug('Entity model loaded from file', { modelId, filePath });
       return model;
     } catch (error) {
       ExceptionHandler.handle(error, 'EntityManager.loadEntityModelFromFile', { modelId });

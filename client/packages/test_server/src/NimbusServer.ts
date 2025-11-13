@@ -31,7 +31,7 @@ const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
 
 // Configure logging
-LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
+LoggerFactory.setDefaultLevel(LogLevel.INFO);
 
 class NimbusServer {
   private static instance: NimbusServer | null = null;
@@ -572,12 +572,24 @@ class NimbusServer {
       }
 
       // Use Block type directly from @nimbus/shared (no compression)
-      return {
+      const result: any = {
         cx,
         cz,
         b: chunkData.blocks, // Use blocks as-is (already in correct Block format)
         h: chunkData.heightData, // HeightData[] already contains x, z, maxHeight, groundLevel
       };
+
+      // Add items if present
+      if (chunkData.i && chunkData.i.length > 0) {
+        result.i = chunkData.i;
+        logger.info('🟢 SERVER: Including items in chunk network message', {
+          cx,
+          cz,
+          itemCount: chunkData.i.length,
+        });
+      }
+
+      return result;
     });
 
     const chunkData = (await Promise.all(chunkDataPromises)).filter(c => c !== null);
