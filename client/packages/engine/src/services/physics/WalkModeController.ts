@@ -57,13 +57,13 @@ export class WalkModeController {
     this.surfaceAnalyzer = new SurfaceAnalyzer(chunkService);
 
     // Setup collision event callback
-    this.collisionDetector.setCollisionEventCallback((x, y, z, id, gId) => {
-      // Send collision event to server
+    this.collisionDetector.setCollisionEventCallback((x, y, z, action, id, gId) => {
+      // Send collision event to server (action: 'collision' or 'climb')
       this.appContext.services.network.sendBlockInteraction(
         x,
         y,
         z,
-        'collision',
+        action,
         undefined,
         id,
         gId

@@ -30,7 +30,7 @@ interface EntityDimensions {
 /**
  * Collision event callback
  */
-export type CollisionEventCallback = (x: number, y: number, z: number, id?: string, gId?: string) => void;
+export type CollisionEventCallback = (x: number, y: number, z: number, action: string, id?: string, gId?: string) => void;
 
 /**
  * CollisionDetector - Handles all collision detection
@@ -56,8 +56,11 @@ export class CollisionDetector {
 
   /**
    * Trigger collision event if block has collisionEvent flag
+   *
+   * @param blockInfo Block that was collided with
+   * @param action Action type ('collision', 'climb')
    */
-  private triggerCollisionEvent(blockInfo: any): void {
+  private triggerCollisionEvent(blockInfo: any, action: string = 'collision'): void {
     if (!this.collisionEventCallback) {
       return;
     }
@@ -76,12 +79,14 @@ export class CollisionDetector {
       blockInfo.x,
       blockInfo.y,
       blockInfo.z,
+      action,
       blockInfo.block.block.metadata?.id,
       blockInfo.block.block.metadata?.groupId
     );
 
     logger.debug('Collision event triggered', {
       position: { x: blockInfo.x, y: blockInfo.y, z: blockInfo.z },
+      action,
       id: blockInfo.block.block.metadata?.id,
     });
   }
@@ -239,16 +244,28 @@ export class CollisionDetector {
         const currentY = entity.position.y;
         const heightDiff = blockHeight - currentY;
 
-        // If height difference <= 1.0 and block has autoClimbable property
-        if (heightDiff > 0 && heightDiff <= 1.0 && physics.autoClimbable === true) {
-          // Auto-climbable 1-block step - allow movement
-          // WalkModeController will adjust Y position
-          continue;
+        // If height difference <= 1.0 and block has autoClimbable property (or is undefined = default true)
+        if (heightDiff > 0 && heightDiff <= 1.0) {
+          // Check if autoClimbable is explicitly set to false
+          if (physics.autoClimbable === false) {
+            // Explicitly disabled - cannot climb
+            // Continue to blocking logic below
+          } else {
+            // autoClimbable is true or undefined (default: allow climbing)
+            // Trigger climb event if enabled
+            this.triggerCollisionEvent(blockInfo, 'climb');
+
+            // WalkModeController will adjust Y position
+            continue;
+          }
         }
 
         // Check 3: Alternative - if physical dimensions height >= 1.5, allow climbing 1-block
         // (This makes taller entities able to step over 1-block obstacles naturally)
         if (heightDiff > 0 && heightDiff <= 1.0 && dimensions.height >= 1.5) {
+          // Trigger climb event if enabled
+          this.triggerCollisionEvent(blockInfo, 'climb');
+
           // Tall entity can step over 1-block obstacles
           continue;
         }
