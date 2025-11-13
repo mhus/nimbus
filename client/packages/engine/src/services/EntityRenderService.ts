@@ -170,7 +170,6 @@ export class EntityRenderService {
    */
   private async createEntity(entityId: string): Promise<void> {
     try {
-      console.log('createEntity', entityId);
       // Get entity from EntityService
       const clientEntity = await this.entityService.getEntity(entityId);
       if (!clientEntity) {
@@ -344,9 +343,9 @@ export class EntityRenderService {
       return;
     }
 
-    if (entityId === '@player_avatar') {
-      console.log('updateEntityPose', entityId, pose, rendered.currentPose, velocity);
-    }
+    // if (entityId === '@player_avatar') {
+    //   console.log('updateEntityPose', entityId, pose, rendered.currentPose, velocity);
+    // }
     // Check if pose actually changed
     if (rendered.currentPose === pose) {
       return; // Pose hasn't changed, don't restart animation
@@ -380,8 +379,10 @@ export class EntityRenderService {
       return;
     }
 
-    // Stop all animations first
-    this.scene.animationGroups.forEach(a => a.stop());
+    // Stop current animation of THIS entity (not all animations in scene!)
+    if (rendered.currentAnimation) {
+      rendered.currentAnimation.stop();
+    }
 
     // Calculate speed ratio from speedMultiplier and velocity
     let speedRatio = poseConfig.speedMultiplier;
