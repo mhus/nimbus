@@ -582,11 +582,6 @@ class NimbusServer {
       // Add items if present
       if (chunkData.i && chunkData.i.length > 0) {
         result.i = chunkData.i;
-        logger.info('🟢 SERVER: Including items in chunk network message', {
-          cx,
-          cz,
-          itemCount: chunkData.i.length,
-        });
       }
 
       return result;

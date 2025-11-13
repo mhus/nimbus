@@ -31,7 +31,7 @@ export enum SelectMode {
   /** No selection */
   NONE = 'NONE',
 
-  /** Only interactive blocks (block.metadata.interactive === true) */
+  /** Only interactive blocks (block.metadata.interactive OR currentModifier.physics.interactive) */
   INTERACTIVE = 'INTERACTIVE',
 
   /** Any solid block */
@@ -230,7 +230,7 @@ export class SelectService {
         const block = clientBlock.block;
 
         // Check if block matches the selection mode
-        if (this.matchesMode(mode, block, false)) {
+        if (this.matchesMode(mode, clientBlock, false)) {
           return clientBlock;
         }
       } else {
@@ -267,18 +267,19 @@ export class SelectService {
    * Check if a block matches the selection mode
    *
    * @param mode Selection mode
-   * @param block Block to check
+   * @param clientBlock ClientBlock to check (contains merged modifier)
    * @param isAir Whether this is an AIR block
    * @returns True if block matches mode
    */
-  private matchesMode(mode: SelectMode, block: Block, isAir: boolean): boolean {
+  private matchesMode(mode: SelectMode, clientBlock: ClientBlock, isAir: boolean): boolean {
     switch (mode) {
       case SelectMode.NONE:
         return false;
 
       case SelectMode.INTERACTIVE:
-        // Only blocks with interactive metadata
-        return !isAir && block.metadata?.interactive === true;
+        // Check currentModifier.physics.interactive (from BlockType or Block modifier)
+        if (isAir) return false;
+        return clientBlock.currentModifier?.physics?.interactive === true;
 
       case SelectMode.BLOCK:
         // Any solid block

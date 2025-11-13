@@ -327,22 +327,6 @@ export class ChunkService {
    * @returns Processed ClientChunkData with merged modifiers and height data
    */
   private async processChunkData(chunkData: ChunkDataTransferObject): Promise<ClientChunkData> {
-    const itemCount = chunkData.i?.length || 0;
-
-    if (itemCount > 0) {
-      logger.info('🔵 CLIENT: processChunkData called with items', {
-        cx: chunkData.cx,
-        cz: chunkData.cz,
-        blockCount: chunkData.b?.length || 0,
-        itemCount,
-        items: chunkData.i?.map(item => ({
-          position: item.position,
-          blockTypeId: item.blockTypeId,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
-        })),
-      });
-    }
 
     const clientBlocksMap = new Map<string, ClientBlock>();
     const blockTypeService = this.appContext.services.blockType;
@@ -400,8 +384,6 @@ export class ChunkService {
       cx: chunkData.cx,
       cz: chunkData.cz,
       uniqueBlockTypes: blockTypeIds.size,
-      hasItems: !!chunkData.i,
-      itemCount: chunkData.i?.length || 0,
     });
 
     // Preload all required chunks in parallel
@@ -524,16 +506,10 @@ export class ChunkService {
 
     // STEP 3.5: Process items list - add items only at AIR positions
     if (chunkData.i && chunkData.i.length > 0) {
-      logger.info('🟢 CLIENT: Processing items for chunk', {
+      logger.debug('Processing items for chunk', {
         cx: chunkData.cx,
         cz: chunkData.cz,
         itemCount: chunkData.i.length,
-        items: chunkData.i.map(item => ({
-          position: item.position,
-          blockTypeId: item.blockTypeId,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
-        })),
       });
 
       // BlockTypes already preloaded in STEP 1.5
@@ -541,21 +517,11 @@ export class ChunkService {
         // Get position key
         const posKey = getBlockPositionKey(item.position.x, item.position.y, item.position.z);
 
-        logger.info('🟢 CLIENT: Processing item', {
-          position: item.position,
-          posKey,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
-          blockTypeId: item.blockTypeId,
-          hasExistingBlock: clientBlocksMap.has(posKey),
-        });
-
         // Only add item if position is AIR (no block exists at this position)
         if (clientBlocksMap.has(posKey)) {
-          logger.warn('🔴 CLIENT: Item skipped - position occupied by block', {
+          logger.debug('Item skipped - position occupied by block', {
             position: item.position,
             itemId: item.metadata?.id,
-            existingBlock: clientBlocksMap.get(posKey)?.block,
           });
           continue;
         }
@@ -589,14 +555,10 @@ export class ChunkService {
         // Add to map with position key
         clientBlocksMap.set(posKey, clientBlock);
 
-        logger.info('🟢 CLIENT: Item added to chunk', {
+        logger.debug('Item added to chunk', {
           position: item.position,
-          posKey,
           itemId: item.metadata?.id,
           displayName: item.metadata?.displayName,
-          blockType: blockType.id,
-          shape: currentModifier?.visibility?.shape,
-          totalBlocksInMap: clientBlocksMap.size,
         });
       }
     }

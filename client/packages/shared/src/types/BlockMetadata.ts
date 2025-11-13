@@ -23,6 +23,4 @@ export interface BlockMetadata {
    * Group ID for organization/categorization
    */
   groupId?: number;
-
-  interactive?: boolean;
 }

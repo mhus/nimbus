@@ -356,21 +356,9 @@ export class WorldManager {
       const chunkData = serverChunk.toChunkData();
       // Add items from ItemRegistry
       const items = world.itemRegistry.getItemsInChunk(cx, cz, world.chunkSize);
-      logger.info('🟢 SERVER: Checking items for chunk (from memory)', {
-        cx,
-        cz,
-        chunkSize: world.chunkSize,
-        itemCount: items.length,
-        totalItemsInWorld: world.itemRegistry.getItemCount(),
-        items: items.map(item => ({
-          position: item.position,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
-        })),
-      });
       if (items.length > 0) {
         chunkData.i = items;
-        logger.info('🟢 SERVER: Added items to chunk data', { cx, cz, itemCount: items.length });
+        logger.debug('Added items to chunk data', { cx, cz, itemCount: items.length });
       }
       return chunkData;
     }
@@ -384,21 +372,9 @@ export class WorldManager {
       world.chunks.set(key, loadedServerChunk);
       // Add items from ItemRegistry
       const items = world.itemRegistry.getItemsInChunk(cx, cz, world.chunkSize);
-      logger.info('🟢 SERVER: Checking items for chunk (from storage)', {
-        cx,
-        cz,
-        chunkSize: world.chunkSize,
-        itemCount: items.length,
-        totalItemsInWorld: world.itemRegistry.getItemCount(),
-        items: items.map(item => ({
-          position: item.position,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
-        })),
-      });
       if (items.length > 0) {
         storedChunk.i = items;
-        logger.info('🟢 SERVER: Added items to stored chunk data', { cx, cz, itemCount: items.length });
+        logger.debug('Added items to stored chunk data', { cx, cz, itemCount: items.length });
       }
       return storedChunk;
     }
@@ -411,21 +387,9 @@ export class WorldManager {
     const chunkData = newServerChunk.toChunkData();
     // Add items from ItemRegistry
     const items = world.itemRegistry.getItemsInChunk(cx, cz, world.chunkSize);
-    logger.info('🟢 SERVER: Checking items for chunk (generated)', {
-      cx,
-      cz,
-      chunkSize: world.chunkSize,
-      itemCount: items.length,
-      totalItemsInWorld: world.itemRegistry.getItemCount(),
-      items: items.map(item => ({
-        position: item.position,
-        itemId: item.metadata?.id,
-        displayName: item.metadata?.displayName,
-      })),
-    });
     if (items.length > 0) {
       chunkData.i = items;
-      logger.info('🟢 SERVER: Added items to generated chunk data', { cx, cz, itemCount: items.length });
+      logger.debug('Added items to generated chunk data', { cx, cz, itemCount: items.length });
     }
     return chunkData;
   }

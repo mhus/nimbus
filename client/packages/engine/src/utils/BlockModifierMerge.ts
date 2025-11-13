@@ -192,19 +192,6 @@ export function mergeBlockModifier(
     result = deepMergeModifiers(result, block.modifiers[status]);
   }
 
-  // Log if physics.interactive exists in result
-  if (result.physics?.interactive !== undefined) {
-    import('@nimbus/shared').then(({ getLogger }) => {
-      const logger = getLogger('BlockModifierMerge');
-      logger.info('🟢 Merged modifier has interactive', {
-        blockTypeId: blockType.id,
-        status,
-        interactive: result.physics?.interactive,
-        blockPosition: block.position,
-      });
-    });
-  }
-
   return result;
 }
 

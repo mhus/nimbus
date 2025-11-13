@@ -287,15 +287,9 @@ export class ItemRegistry {
     try {
       const itemsPath = path.join(process.cwd(), 'data', 'worlds', this.worldId, 'items.json');
 
-      logger.info('🟢 SERVER: Loading items from disk', {
-        worldId: this.worldId,
-        path: itemsPath,
-        fileExists: fs.existsSync(itemsPath),
-      });
-
       // Check if file exists
       if (!fs.existsSync(itemsPath)) {
-        logger.info('🔴 SERVER: No items file found, starting with empty registry', {
+        logger.info('No items file found, starting with empty registry', {
           worldId: this.worldId,
           path: itemsPath,
         });
@@ -304,12 +298,6 @@ export class ItemRegistry {
 
       // Read and parse items file
       const itemsContent = fs.readFileSync(itemsPath, 'utf-8');
-      logger.info('🟢 SERVER: Items file content read', {
-        worldId: this.worldId,
-        contentLength: itemsContent.length,
-        contentPreview: itemsContent.substring(0, 200),
-      });
-
       const itemsArray: Block[] = JSON.parse(itemsContent);
 
       // Clear existing items
@@ -319,21 +307,14 @@ export class ItemRegistry {
       for (const item of itemsArray) {
         const key = `${item.position.x},${item.position.y},${item.position.z}`;
         this.items.set(key, item);
-        logger.info('🟢 SERVER: Item loaded', {
-          key,
-          position: item.position,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
-        });
       }
 
       this.isDirty = false;
 
-      logger.info('🟢 SERVER: Items loaded from disk complete', {
+      logger.info('Items loaded from disk', {
         worldId: this.worldId,
         path: itemsPath,
         itemCount: itemsArray.length,
-        itemKeys: Array.from(this.items.keys()),
       });
 
       return itemsArray.length;
