@@ -344,6 +344,9 @@ export class EntityRenderService {
       return;
     }
 
+    if (entityId === '@player_avatar') {
+      console.log('updateEntityPose', entityId, pose, rendered.currentPose, velocity);
+    }
     // Check if pose actually changed
     if (rendered.currentPose === pose) {
       return; // Pose hasn't changed, don't restart animation

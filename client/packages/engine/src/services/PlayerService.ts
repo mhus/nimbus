@@ -63,6 +63,10 @@ export class PlayerService {
   // Pose/Animation state
   private lastMovementTime: number = 0; // Last time player moved
   private idleDelay: number = 500; // ms before switching to IDLE pose
+  private isMoving: boolean = false; // Movement state (with hysteresis)
+  private isJumping: boolean = false; // Jump state (set by jump event)
+  private jumpDuration: number = 300; // ms to stay in JUMP pose
+  private jumpStartTime: number = 0; // When jump was triggered
 
   constructor(appContext: AppContext, cameraService: CameraService) {
     this.appContext = appContext;
@@ -126,6 +130,11 @@ export class PlayerService {
 
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
+
+    // Set up jump event callback
+    (this.playerEntity as any).onJump = () => {
+      this.onPlayerJump();
+    };
 
     // Load third-person model if configured (async, doesn't block initialization)
     if (appContext.playerInfo.thirdPersonModelId) {
@@ -324,7 +333,7 @@ export class PlayerService {
       { y: cameraYaw, p: 0 }
     );
 
-    // Update pose/animation
+    // Update pose (EntityRenderService checks if it changed internally)
     this.entityRenderService.updateEntityPose(
       playerAvatarEntityId,
       currentPose,
@@ -333,24 +342,56 @@ export class PlayerService {
   }
 
   /**
+   * Called when player jumps (triggered by PhysicsService)
+   */
+  private onPlayerJump(): void {
+    this.isJumping = true;
+    this.jumpStartTime = Date.now();
+    logger.debug('Player jump triggered');
+  }
+
+  /**
    * Calculate current player pose based on movement state
+   * Uses hysteresis to prevent flickering between poses
    * @returns ENTITY_POSES enum value
    */
   private calculateCurrentPose(): number {
-    // Check if in air (jumping/falling)
-    if (!this.playerEntity.grounded) {
-      return ENTITY_POSES.JUMP;
+    // Check if jumping (recent jump event)
+    if (this.isJumping) {
+      const timeSinceJump = Date.now() - this.jumpStartTime;
+      if (timeSinceJump < this.jumpDuration || !this.playerEntity.grounded) {
+        // Stay in JUMP pose for duration or until grounded
+        return ENTITY_POSES.JUMP;
+      } else {
+        // Jump animation complete and back on ground
+        this.isJumping = false;
+      }
     }
 
-    // Check if moving
+    // Check if moving (with hysteresis to prevent flickering)
     const velocity = this.playerEntity.velocity;
     const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
-    if (speed > 0.1) {
-      // Player is moving
-      this.lastMovementTime = Date.now();
+    // Hysteresis thresholds
+    const startMovingThreshold = 0.2; // Must reach this speed to start "moving"
+    const stopMovingThreshold = 0.05; // Must drop below this to stop "moving"
 
-      // Determine if walking or running based on movement mode
+    // Update movement state with hysteresis
+    if (!this.isMoving && speed > startMovingThreshold) {
+      this.isMoving = true;
+      this.lastMovementTime = Date.now();
+    } else if (this.isMoving && speed < stopMovingThreshold) {
+      this.isMoving = false;
+    }
+
+    // Update last movement time if still moving
+    if (this.isMoving) {
+      this.lastMovementTime = Date.now();
+    }
+
+    // Determine pose based on stable movement state
+    if (this.isMoving) {
+      // Player is moving - determine walk/run/crouch
       if (this.playerEntity.movementMode === 'sprint') {
         return ENTITY_POSES.RUN;
       } else if (this.playerEntity.movementMode === 'crouch') {
@@ -363,7 +404,7 @@ export class PlayerService {
     // Player is not moving - check idle timer
     const timeSinceMovement = Date.now() - this.lastMovementTime;
     if (timeSinceMovement < this.idleDelay) {
-      // Still in movement pose for a bit (smooth transition)
+      // Still in movement pose for a bit (smooth transition to idle)
       return ENTITY_POSES.WALK;
     }
 
@@ -732,6 +773,12 @@ export class PlayerService {
       // Store entity ID and ClientEntity for later updates
       (this as any).playerAvatarEntityId = '@player_avatar';
       (this as any).playerAvatarClientEntity = clientEntity;
+
+      // Initially hide in ego-mode (if we're starting in ego-mode)
+      if (this.isEgoView()) {
+        this.entityRenderService.onEntityVisibility('@player_avatar', false);
+        logger.info('Player avatar initially hidden (ego-mode)');
+      }
 
       logger.info('Player avatar loaded successfully');
     } catch (error) {

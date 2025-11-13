@@ -195,7 +195,18 @@ export class MovementResolver {
       entity.velocity.y = this.getJumpSpeed(entity);
       entity.grounded = false;
       this.coyoteTimeTracking.set(coyoteKey, this.config.coyoteTime + 1); // Prevent double jump
+
+      // Emit jump event (for animations, sound effects, etc.)
+      this.onJump(entity);
     }
+  }
+
+  /**
+   * Called when entity jumps (for animations, sound, etc.)
+   */
+  private onJump(entity: PhysicsEntity): void {
+    // Emit custom event on entity (can be subscribed to by PlayerService)
+    (entity as any).onJump?.();
   }
 
   /**
