@@ -9,6 +9,17 @@
 
 export interface BlockMetadata {
   /**
+   * Unique identifier for this block instance (e.g., for items)
+   */
+  id?: string;
+
+  /**
+   * Display name for this block instance (e.g., "Hacke", "Schwert")
+   * Used for items and special blocks that need custom names
+   */
+  displayName?: string;
+
+  /**
    * Group ID for organization/categorization
    */
   groupId?: number;

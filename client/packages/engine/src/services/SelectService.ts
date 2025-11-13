@@ -7,6 +7,7 @@
  */
 
 import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene } from '@babylonjs/core';
+import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
@@ -68,6 +69,10 @@ export class SelectService {
   // Highlight rendering
   private highlightMesh?: Mesh;
   private highlightMaterial?: StandardMaterial;
+
+  // Label rendering
+  private guiTexture?: AdvancedDynamicTexture;
+  private labelTextBlock?: TextBlock;
 
   // Edit block selection (green highlight)
   private selectedEditBlock: Vector3 | null = null;
@@ -442,7 +447,24 @@ export class SelectService {
       this.editHighlightMesh.renderingGroupId = 1; // Render on top
       this.editHighlightMesh.setEnabled(false); // Hidden by default
 
-      logger.debug('Highlight meshes initialized');
+      // Initialize BabylonJS GUI for label display
+      this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI', true, this.scene);
+
+      // Create text block for item/block name display
+      this.labelTextBlock = new TextBlock('blockLabel');
+      this.labelTextBlock.text = '';
+      this.labelTextBlock.color = 'white';
+      this.labelTextBlock.fontSize = 16;
+      this.labelTextBlock.fontWeight = 'bold';
+      this.labelTextBlock.outlineWidth = 2;
+      this.labelTextBlock.outlineColor = 'black';
+      this.labelTextBlock.isVisible = false;
+      this.labelTextBlock.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+      this.labelTextBlock.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+
+      this.guiTexture.addControl(this.labelTextBlock);
+
+      logger.debug('Highlight meshes and label GUI initialized');
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.initializeHighlight');
     }
@@ -559,6 +581,9 @@ export class SelectService {
 
     // Enable highlight
     this.highlightMesh.setEnabled(true);
+
+    // Show label if block has displayName
+    this.showLabel(clientBlock);
   }
 
   /**
@@ -567,6 +592,58 @@ export class SelectService {
   private hideHighlight(): void {
     if (this.highlightMesh) {
       this.highlightMesh.setEnabled(false);
+    }
+    this.hideLabel();
+  }
+
+  /**
+   * Show label for selected block
+   *
+   * Only shows label if block has displayName metadata.
+   * Label is positioned above the block in screen space.
+   *
+   * @param clientBlock Block to show label for
+   */
+  private showLabel(clientBlock: ClientBlock): void {
+    if (!this.labelTextBlock || !this.scene || !this.highlightMesh) {
+      return;
+    }
+
+    // Get display name from metadata
+    const displayName = clientBlock.block.metadata?.displayName;
+    if (!displayName) {
+      // No displayName - hide label
+      this.hideLabel();
+      return;
+    }
+
+    // Set label text
+    this.labelTextBlock.text = displayName;
+
+    // Link label to block position (above the block)
+    const blockCenter = this.highlightMesh.position.clone();
+    blockCenter.y += 0.7; // Position above block
+
+    // Link label to 3D position (will follow block in screen space)
+    this.labelTextBlock.linkWithMesh(this.highlightMesh);
+    this.labelTextBlock.linkOffsetY = -60; // Offset above block in pixels
+
+    // Show label
+    this.labelTextBlock.isVisible = true;
+
+    logger.debug('Label shown', {
+      displayName,
+      position: clientBlock.block.position,
+    });
+  }
+
+  /**
+   * Hide label
+   */
+  private hideLabel(): void {
+    if (this.labelTextBlock) {
+      this.labelTextBlock.isVisible = false;
+      this.labelTextBlock.linkWithMesh(null); // Unlink from mesh
     }
   }
 

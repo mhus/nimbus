@@ -223,6 +223,52 @@ Der Server sendet Block-Änderungen an den Client.
 }
 ```
 
+## Item Block Update (Server -> Client)
+
+Der Server sendet Item-Block-Änderungen an den Client. Items sind spezielle Billboard-Blöcke, die separat verwaltet werden.
+
+**Regeln:**
+- Items mit `blockTypeId: 0` (AIR) werden entfernt, aber nur wenn ein Item an der Position existiert
+- Items mit `blockTypeId: 1` werden hinzugefügt/aktualisiert, aber nur wenn die Position AIR ist oder bereits ein Item enthält
+- Items können keine regulären Blöcke überschreiben
+- Jedes Item hat `metadata.id` (unique identifier) und optional `metadata.displayName`
+
+```json
+{"t": "b.iu", "d":
+        [
+          BlockData,  // BlockData mit metadata.id und metadata.displayName
+          ...
+      ]
+}
+```
+
+**Beispiel:**
+```json
+{
+  "t": "b.iu",
+  "d": [
+    {
+      "position": {"x": 10, "y": 64, "z": 5},
+      "blockTypeId": 1,
+      "metadata": {
+        "id": "item_sword_123",
+        "displayName": "Schwert"
+      },
+      "modifiers": {
+        "0": {
+          "visibility": {
+            "shape": 28,  // Shape.ITEM
+            "textures": {
+              "0": "items/sword.png"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
 ## Block Status Update (Server -> Client)
 
 Der Server sendet Block-Status-Änderungen an den Client (z.B. für Animationen, Effekte, etc.).
@@ -247,6 +293,27 @@ Der Server sendet Block-Status-Änderungen an den Client (z.B. für Animationen,
       ]
 }
 ```
+
+## Block Interaction (Client -> Server)
+
+Der Client sendet eine Interaktions information mit einem Block an den Server (z.B. wenn der Spieler mit einem Block interagiert).
+
+```json
+{"i":"12345", "t": "b.int", "d":
+  {
+    "x": 10,
+    "y": 64,
+    "z": 10,
+    "id": "123", // aus block.metadata.id, optional
+    "gId": "123", // groupId des Blocks, optional
+    "ac": "use", // action z.b. 'use', 'break', 'place', 'touch'
+    "pa": { // params
+      // optionale parameter fuer die interaktion
+    }
+  }
+}
+```
+
 
 ## Entity Chunk Pathway (Server -> Client)
 

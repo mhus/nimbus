@@ -30,6 +30,7 @@
   "dependencies": {
     "@nimbus/shared": "workspace:*",
     "@babylonjs/core": "^7.0.0",
+    "@babylonjs/gui": "^7.0.0",
     "@babylonjs/loaders": "^7.0.0",
     "@babylonjs/materials": "^7.0.0",
     "dotenv": "^16.4.0"

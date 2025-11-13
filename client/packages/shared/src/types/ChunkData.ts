@@ -69,6 +69,14 @@ export interface ChunkData {
   blocks: Block[];
 
   /**
+   * Item block data - array of Block instances for items
+   * Items are special billboard blocks that are managed separately
+   * Items can only exist at AIR positions or replace existing items
+   * Each item has metadata with unique ID and display name
+   */
+  i?: Block[];
+
+  /**
    * Height data per XZ position (optional)
    * Flat array of height values
    */

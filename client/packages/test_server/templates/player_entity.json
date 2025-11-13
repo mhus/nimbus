@@ -1,0 +1,20 @@
+{
+  "id": "@PLAYER_ID",
+  "name": "PLAYER_NAME",
+  "model": "farmer1",
+  "modelModifier": {},
+  "movementType": "dynamic",
+  "solid": false,
+  "interactive": false,
+  "clientPhysics": false,
+  "position": {
+    "x": 0,
+    "y": 64,
+    "z": 0
+  },
+  "rotation": {
+    "y": 0,
+    "p": 0
+  },
+  "pose": 0
+}

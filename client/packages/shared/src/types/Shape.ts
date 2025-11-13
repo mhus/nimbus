@@ -88,6 +88,9 @@ export enum Shape {
 
   /** Flipbox (animated sprite sheet, horizontal face only) */
   FLIPBOX = 27,
+
+  /** Item billboard (Y-axis locked, optimized for pickable items) */
+  ITEM = 28,
 }
 
 /**
@@ -122,4 +125,5 @@ export const ShapeNames: Record<Shape, string> = {
   [Shape.FOG]: 'fog',
   [Shape.THIN_INSTANCES]: 'thin_instances',
   [Shape.WALL]: 'wall',
+  [Shape.ITEM]: 'item',
 };

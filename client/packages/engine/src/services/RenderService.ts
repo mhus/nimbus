@@ -26,6 +26,7 @@ import { FogRenderer } from '../rendering/FogRenderer';
 import { WallRenderer } from '../rendering/WallRenderer';
 import { ModelRenderer } from '../rendering/ModelRenderer';
 import { BillboardRenderer } from '../rendering/BillboardRenderer';
+import { ItemRenderer } from '../rendering/ItemRenderer';
 import { SpriteRenderer } from '../rendering/SpriteRenderer';
 import { ThinInstancesRenderer } from '../rendering/ThinInstancesRenderer';
 import { FlameRenderer } from '../rendering/FlameRenderer';
@@ -92,6 +93,7 @@ export class RenderService {
   private wallRenderer: WallRenderer;
   private modelRenderer: ModelRenderer;
   private billboardRenderer: BillboardRenderer;
+  private itemRenderer: ItemRenderer;
   private spriteRenderer: SpriteRenderer;
   private thinInstancesRenderer: ThinInstancesRenderer;
   private flameRenderer: FlameRenderer;
@@ -132,6 +134,7 @@ export class RenderService {
     this.wallRenderer = new WallRenderer(textureAtlas);
     this.modelRenderer = new ModelRenderer();
     this.billboardRenderer = new BillboardRenderer();
+    this.itemRenderer = new ItemRenderer();
     this.spriteRenderer = new SpriteRenderer();
     this.thinInstancesRenderer = new ThinInstancesRenderer();
     this.flameRenderer = new FlameRenderer();
@@ -470,6 +473,8 @@ export class RenderService {
         return this.modelRenderer;
       case Shape.BILLBOARD:
         return this.billboardRenderer;
+      case Shape.ITEM:
+        return this.itemRenderer;
       case Shape.SPRITE:
         return this.spriteRenderer;
       case Shape.THIN_INSTANCES:

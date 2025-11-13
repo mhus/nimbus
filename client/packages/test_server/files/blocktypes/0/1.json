@@ -1,0 +1,13 @@
+{
+  "id": 0,
+  "name": "Item",
+  "description": "Item. do not use directly",
+  "modifiers": {
+    "0": {
+      "visibility": {
+        "shape": 28
+      }
+    }
+  },
+  "description_old": "Item. Used for Items dropped on the ground.",
+}

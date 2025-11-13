@@ -32,6 +32,9 @@ export interface ChunkDataTransferObject {
   /** Block data */
   b: Block[];
 
+  /** Item block data - special billboard blocks managed separately */
+  i?: Block[];
+
   /** Height data, maximum height */
   h?: HeightData[];
 
