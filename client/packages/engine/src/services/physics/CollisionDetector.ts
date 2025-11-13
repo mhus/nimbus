@@ -28,10 +28,16 @@ interface EntityDimensions {
 }
 
 /**
+ * Collision event callback
+ */
+export type CollisionEventCallback = (x: number, y: number, z: number, id?: string, gId?: string) => void;
+
+/**
  * CollisionDetector - Handles all collision detection
  */
 export class CollisionDetector {
   private surfaceAnalyzer: SurfaceAnalyzer;
+  private collisionEventCallback?: CollisionEventCallback;
 
   constructor(
     private chunkService: ChunkService,
@@ -39,6 +45,45 @@ export class CollisionDetector {
     private maxClimbHeight: number = 0.1
   ) {
     this.surfaceAnalyzer = new SurfaceAnalyzer(chunkService);
+  }
+
+  /**
+   * Set callback for collision events
+   */
+  setCollisionEventCallback(callback: CollisionEventCallback): void {
+    this.collisionEventCallback = callback;
+  }
+
+  /**
+   * Trigger collision event if block has collisionEvent flag
+   */
+  private triggerCollisionEvent(blockInfo: any): void {
+    if (!this.collisionEventCallback) {
+      return;
+    }
+
+    if (!blockInfo.block) {
+      return;
+    }
+
+    const physics = blockInfo.block.currentModifier.physics;
+    if (!physics?.collisionEvent) {
+      return;
+    }
+
+    // Send collision event
+    this.collisionEventCallback(
+      blockInfo.x,
+      blockInfo.y,
+      blockInfo.z,
+      blockInfo.block.block.metadata?.id,
+      blockInfo.block.block.metadata?.groupId
+    );
+
+    logger.debug('Collision event triggered', {
+      position: { x: blockInfo.x, y: blockInfo.y, z: blockInfo.z },
+      id: blockInfo.block.block.metadata?.id,
+    });
   }
 
   /**
@@ -90,6 +135,12 @@ export class CollisionDetector {
         const ceilingY = context.headBlocks.maxY;
         if (wishY + dimensions.height > ceilingY) {
           entity.velocity.y = 0;
+
+          // Trigger collision events for head blocks
+          for (const blockInfo of context.headBlocks.blocks) {
+            this.triggerCollisionEvent(blockInfo);
+          }
+
           return ceilingY - dimensions.height;
         }
       }
@@ -100,6 +151,12 @@ export class CollisionDetector {
         if (wishY < groundY) {
           entity.velocity.y = 0;
           entity.grounded = true;
+
+          // Trigger collision events for ground blocks
+          for (const blockInfo of context.groundBlocks.blocks) {
+            this.triggerCollisionEvent(blockInfo);
+          }
+
           return groundY;
         }
       }
@@ -159,6 +216,9 @@ export class CollisionDetector {
           z = entity.position.z;
           entity.velocity.x = 0;
           entity.velocity.z = 0;
+
+          // Trigger collision event if enabled
+          this.triggerCollisionEvent(blockInfo);
           break;
         }
       } else {
@@ -198,6 +258,9 @@ export class CollisionDetector {
         z = entity.position.z;
         entity.velocity.x = 0;
         entity.velocity.z = 0;
+
+        // Trigger collision event if enabled
+        this.triggerCollisionEvent(blockInfo);
         break;
       }
     }

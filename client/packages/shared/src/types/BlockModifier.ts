@@ -564,6 +564,9 @@ export interface PhysicsModifier {
   /** Interactive block - player can send a interact command for this block to the server, default: false */
   interactive?: boolean;
 
+  /** Send collision event to server when player collides with this block, default: false */
+  collisionEvent?: boolean;
+
   /** Passable from specific directions - Controls one-way passage through blocks
    * - If block is solid: Acts as one-way block - can enter from specified directions, block normal movement in other directions
    * - If block is not solid: Acts as wall on edges - can walk through but not exit where passableFrom is not set

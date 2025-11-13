@@ -193,7 +193,7 @@ Here is Claude's plan:
 [?] Fuege im VisibilityEditor die Option 'cornerHeights' hinzu. Als Ausklappbare Eigenschaft mit vier
 Werten nebeneinander.
 
-[ ] Das System muss erweitert werden:
+[x] Das System muss erweitert werden:
 - Auch am Block soll es den parameter 'cornerHeights' geben
 - Der Block Editor muss entsprechend erweitert werden
 - Im PhysicsModifier soll es einen weiteren boolean 'autoCornerHeights' geben, der bei default false ist.
@@ -206,7 +206,7 @@ Die Ermittlung der cornerHeights wird erweitert:
   - Pruefen ob an currentModifier die offsets gesetzt sind, wenn ja diese nutzen (nur die top corners)
 - Wenn kein cornerHeights existiert, dann wird der default (wie bisher) verwendet.
 
-[?] Erstelle ein command in engine mit dem ich das log level des Loggers umstellen kann, z.b. auf debug.
+[x] Erstelle ein command in engine mit dem ich das log level des Loggers umstellen kann, z.b. auf debug.
 Das command muss im commandservice registriert werden.
 
 ```text
@@ -240,3 +240,8 @@ doLoglevel('PhysicsService', 'debug')
 === 
 
 [x] Den effect "FLIPBOX" gibt es nicht mehr, entferne ihn aus shred type und editor. (Es gibt aber noch den shape type FLIPBOX, der bleibt bestehen)
+
+[ ] AutoCornerHeights soll wieder entfernt werden dafuer automatisch beim shapeType == CUBE aktiv sein
+- Aus dem PhysicsModifier entfernen
+- Aus dem PhysicsEditor entfernen
+- In der Engine immer auf shape == CUBE pruefen wo jetzt autoCornerHeights genutzt wird

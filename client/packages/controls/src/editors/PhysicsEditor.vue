@@ -25,6 +25,16 @@
       <div class="form-control">
         <label class="label cursor-pointer justify-start gap-2">
           <input
+            v-model="localValue.collisionEvent"
+            type="checkbox"
+            class="checkbox checkbox-sm"
+          />
+          <span class="label-text text-xs">Collision Event</span>
+        </label>
+      </div>
+      <div class="form-control">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
             v-model="localValue.autoClimbable"
             type="checkbox"
             class="checkbox checkbox-sm"

@@ -437,17 +437,19 @@ export class NetworkService {
    * @param x Block X position
    * @param y Block Y position
    * @param z Block Z position
+   * @param action Action type ('click', 'collision')
+   * @param params Action parameters
    * @param id Block ID from metadata (optional)
    * @param gId Block group ID (optional)
-   * @param clickType Type of click (left, right, middle)
    */
   sendBlockInteraction(
     x: number,
     y: number,
     z: number,
+    action: string = 'click',
+    params?: Record<string, any>,
     id?: string,
-    gId?: string,
-    clickType?: 'left' | 'right' | 'middle'
+    gId?: string
   ): void {
     const message: RequestMessage<any> = {
       i: this.generateMessageId(),
@@ -458,10 +460,8 @@ export class NetworkService {
         z,
         id,
         gId,
-        ac: 'click',
-        pa: {
-          clickType: clickType || 'left',
-        },
+        ac: action,
+        pa: params || {},
       },
     };
 
@@ -471,7 +471,8 @@ export class NetworkService {
       position: { x, y, z },
       id,
       gId,
-      clickType,
+      action,
+      params,
     });
   }
 

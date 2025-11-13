@@ -55,6 +55,20 @@ export class WalkModeController {
     );
     this.movementResolver = new MovementResolver(physicsConfig);
     this.surfaceAnalyzer = new SurfaceAnalyzer(chunkService);
+
+    // Setup collision event callback
+    this.collisionDetector.setCollisionEventCallback((x, y, z, id, gId) => {
+      // Send collision event to server
+      this.appContext.services.network.sendBlockInteraction(
+        x,
+        y,
+        z,
+        'collision',
+        undefined,
+        id,
+        gId
+      );
+    });
   }
 
   /**

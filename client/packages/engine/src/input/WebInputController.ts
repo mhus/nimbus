@@ -370,9 +370,10 @@ export class WebInputController implements InputController {
         selectedBlock.block.position.x,
         selectedBlock.block.position.y,
         selectedBlock.block.position.z,
+        'click',
+        { clickType },
         selectedBlock.block.metadata?.id,
-        selectedBlock.block.metadata?.groupId,
-        clickType
+        selectedBlock.block.metadata?.groupId
       );
 
       logger.debug('Block interaction sent', {
