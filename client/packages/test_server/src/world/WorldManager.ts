@@ -5,6 +5,7 @@
 import { getLogger, type ChunkData, type WorldInfo, type Block, ExceptionHandler } from '@nimbus/shared';
 import type { WorldInstance } from '../types/ServerTypes';
 import { BlockTypeRegistry } from './BlockTypeRegistry';
+import { ItemRegistry } from './ItemRegistry';
 import { AssetManager } from '../assets/AssetManager';
 import { ChunkStorage } from '../storage/ChunkStorage';
 import { GeneratorFactory } from './generators/GeneratorFactory';
@@ -187,6 +188,7 @@ export class WorldManager {
       status: info.status ?? 0,
       chunks: new Map(),
       generator,
+      itemRegistry: new ItemRegistry(worldId),
       createdAt: info.createdAt || now,
       updatedAt: now,
       worldInfo, // Shared WorldInfo for client
@@ -200,6 +202,11 @@ export class WorldManager {
       logger.error('Failed to initialize chunk storage', { worldId }, error);
     });
     this.chunkStorages.set(worldId, storage);
+
+    // Load items from disk
+    world.itemRegistry.load().catch((error) => {
+      logger.error('Failed to load items from disk', { worldId }, error);
+    });
   }
 
   private initializeTestWorlds(): void {
@@ -244,7 +251,7 @@ export class WorldManager {
     logger.info(`Initialized ${this.worlds.size} test worlds`);
   }
 
-  private createWorld(params: Omit<WorldInstance, 'chunks' | 'createdAt' | 'updatedAt' | 'worldInfo'>): void {
+  private createWorld(params: Omit<WorldInstance, 'chunks' | 'itemRegistry' | 'createdAt' | 'updatedAt' | 'worldInfo'>): void {
     const now = new Date().toISOString();
 
     // Build WorldInfo for client transmission
@@ -272,6 +279,7 @@ export class WorldManager {
     const world: WorldInstance = {
       ...params,
       chunks: new Map(),
+      itemRegistry: new ItemRegistry(params.worldId),
       createdAt: now,
       updatedAt: now,
       worldInfo,
@@ -284,6 +292,11 @@ export class WorldManager {
       logger.error('Failed to initialize chunk storage', { worldId: world.worldId }, error);
     });
     this.chunkStorages.set(world.worldId, storage);
+
+    // Load items from disk
+    world.itemRegistry.load().catch((error) => {
+      logger.error('Failed to load items from disk', { worldId: world.worldId }, error);
+    });
   }
 
   getWorld(worldId: string): WorldInstance | undefined {
@@ -340,7 +353,14 @@ export class WorldManager {
     const serverChunk = world.chunks.get(key);
     if (serverChunk) {
       logger.debug('Returning ServerChunk from memory', { cx, cz });
-      return serverChunk.toChunkData();
+      const chunkData = serverChunk.toChunkData();
+      // Add items from ItemRegistry
+      const items = world.itemRegistry.getItemsInChunk(cx, cz, world.chunkSize);
+      if (items.length > 0) {
+        chunkData.i = items;
+        logger.debug('Added items to chunk data', { cx, cz, itemCount: items.length });
+      }
+      return chunkData;
     }
 
     // Step 2: Check if ChunkData exists in storage
@@ -350,6 +370,12 @@ export class WorldManager {
       // Convert ChunkData to ServerChunk and store in memory for future modifications
       const loadedServerChunk = ServerChunk.fromChunkData(storedChunk);
       world.chunks.set(key, loadedServerChunk);
+      // Add items from ItemRegistry
+      const items = world.itemRegistry.getItemsInChunk(cx, cz, world.chunkSize);
+      if (items.length > 0) {
+        storedChunk.i = items;
+        logger.debug('Added items to stored chunk data', { cx, cz, itemCount: items.length });
+      }
       return storedChunk;
     }
 
@@ -358,7 +384,14 @@ export class WorldManager {
     const newServerChunk = world.generator.generateChunk(cx, cz, world.chunkSize);
     world.chunks.set(key, newServerChunk);
 
-    return newServerChunk.toChunkData();
+    const chunkData = newServerChunk.toChunkData();
+    // Add items from ItemRegistry
+    const items = world.itemRegistry.getItemsInChunk(cx, cz, world.chunkSize);
+    if (items.length > 0) {
+      chunkData.i = items;
+      logger.debug('Added items to new chunk data', { cx, cz, itemCount: items.length });
+    }
+    return chunkData;
   }
 
   /**
@@ -375,15 +408,17 @@ export class WorldManager {
   }
 
   /**
-   * Save all dirty chunks across all worlds
+   * Save all dirty chunks and items across all worlds
    */
   async saveAllDirtyChunks(): Promise<void> {
-    let savedCount = 0;
+    let savedChunkCount = 0;
+    let savedItemCount = 0;
 
     for (const [worldId, world] of this.worlds) {
       const storage = this.chunkStorages.get(worldId);
       if (!storage) continue;
 
+      // Save dirty chunks
       for (const [key, serverChunk] of world.chunks) {
         if (serverChunk.isDirty) {
           try {
@@ -396,16 +431,29 @@ export class WorldManager {
             });
             await storage.save(chunkData);
             serverChunk.isDirty = false;
-            savedCount++;
+            savedChunkCount++;
           } catch (error) {
             logger.error('Failed to save dirty chunk', { worldId, key }, error as Error);
           }
         }
       }
+
+      // Save dirty items
+      if (world.itemRegistry.isDirtyFlag()) {
+        try {
+          await world.itemRegistry.save();
+          savedItemCount++;
+        } catch (error) {
+          logger.error('Failed to save items', { worldId }, error as Error);
+        }
+      }
     }
 
-    if (savedCount > 0) {
-      logger.debug('Auto-saved dirty chunks', { count: savedCount });
+    if (savedChunkCount > 0 || savedItemCount > 0) {
+      logger.debug('Auto-save complete', {
+        chunks: savedChunkCount,
+        itemRegistries: savedItemCount,
+      });
     }
   }
 
@@ -413,26 +461,40 @@ export class WorldManager {
    * Save all chunks (shutdown/backup)
    */
   async saveAll(): Promise<void> {
-    logger.info('Saving all chunks...');
-    let savedCount = 0;
+    logger.info('Saving all chunks and items...');
+    let savedChunkCount = 0;
+    let savedItemCount = 0;
 
     for (const [worldId, world] of this.worlds) {
       const storage = this.chunkStorages.get(worldId);
       if (!storage) continue;
 
+      // Save all chunks
       for (const serverChunk of world.chunks.values()) {
         try {
           const chunkData = serverChunk.toChunkData();
           await storage.save(chunkData);
           serverChunk.isDirty = false;
-          savedCount++;
+          savedChunkCount++;
         } catch (error) {
           logger.error('Failed to save chunk', { worldId, cx: serverChunk.cx, cz: serverChunk.cz }, error as Error);
         }
       }
+
+      // Save all items
+      try {
+        await world.itemRegistry.save();
+        savedItemCount++;
+        logger.info('Items saved for world', { worldId });
+      } catch (error) {
+        logger.error('Failed to save items', { worldId }, error as Error);
+      }
     }
 
-    logger.info('Saved all chunks', { count: savedCount });
+    logger.info('Save complete', {
+      chunks: savedChunkCount,
+      itemRegistries: savedItemCount,
+    });
   }
 
   /**

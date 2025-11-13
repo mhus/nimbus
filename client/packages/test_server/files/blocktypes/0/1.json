@@ -1,5 +1,5 @@
 {
-  "id": 0,
+  "id": 1,
   "name": "Item",
   "description": "Item. do not use directly",
   "modifiers": {
@@ -9,5 +9,5 @@
       }
     }
   },
-  "description_old": "Item. Used for Items dropped on the ground.",
+  "description_old": "Item. Used for Items dropped on the ground."
 }

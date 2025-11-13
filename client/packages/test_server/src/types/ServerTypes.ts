@@ -5,6 +5,7 @@
 import type WebSocket from 'ws';
 import type { ServerChunk } from './ServerChunk';
 import type { WorldGenerator } from '../world/generators/WorldGenerator';
+import type { ItemRegistry } from '../world/ItemRegistry';
 import type { WorldInfo, EditAction, EntityPathway } from '@nimbus/shared';
 
 /**
@@ -133,6 +134,9 @@ export interface WorldInstance {
 
   /** Terrain generator for this world */
   generator?: WorldGenerator;
+
+  /** Item registry for this world */
+  itemRegistry: ItemRegistry;
 
   /** Created timestamp */
   createdAt: string;

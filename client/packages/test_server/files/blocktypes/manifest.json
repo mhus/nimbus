@@ -5,6 +5,11 @@
     "file": "0/0.json"
   },
   {
+    "id": 1,
+    "name": "Items",
+    "file": "0/1.json"
+  },
+  {
     "id": 110,
     "name": "Acacia Trapdoor",
     "file": "1/110.json"

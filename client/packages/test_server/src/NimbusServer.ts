@@ -17,11 +17,13 @@ import { createEntityRoutes } from './api/routes/entityRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
+import { ItemUpdateBuffer } from './network/ItemUpdateBuffer';
 import { CommandService } from './commands/CommandService';
 import { HelpCommand } from './commands/HelpCommand';
 import { LoopCommand } from './commands/LoopCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 import { NavigateSelectedBlockCommand } from './commands/NavigateSelectedBlockCommand';
+import { ItemCommand } from './commands/ItemCommand';
 import { EntityManager } from './entity/EntityManager';
 import { EntitySimulator } from './entity/EntitySimulator';
 
@@ -40,6 +42,7 @@ class NimbusServer {
   private terrainGenerator: TerrainGenerator;
   private sessions = new Map<string, ClientSession>();
   private blockUpdateBuffer: BlockUpdateBuffer;
+  private itemUpdateBuffer: ItemUpdateBuffer;
   private commandService: CommandService;
   private entityManager: EntityManager | null = null;
   private entitySimulator: EntitySimulator | null = null;
@@ -54,6 +57,11 @@ class NimbusServer {
       this.broadcastBlockUpdates(worldId, blocks);
     });
 
+    // Initialize item update buffer with broadcast callback
+    this.itemUpdateBuffer = new ItemUpdateBuffer((worldId, items) => {
+      this.broadcastItemUpdates(worldId, items);
+    });
+
     // Initialize command service
     this.commandService = new CommandService();
 
@@ -62,6 +70,7 @@ class NimbusServer {
     this.commandService.registerHandler(new LoopCommand());
     this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager, this.blockUpdateBuffer));
     this.commandService.registerHandler(new NavigateSelectedBlockCommand());
+    this.commandService.registerHandler(new ItemCommand(this.worldManager, this.itemUpdateBuffer));
   }
 
   /**
@@ -79,6 +88,13 @@ class NimbusServer {
    */
   getBlockUpdateBuffer(): BlockUpdateBuffer {
     return this.blockUpdateBuffer;
+  }
+
+  /**
+   * Get item update buffer (for commands)
+   */
+  getItemUpdateBuffer(): ItemUpdateBuffer {
+    return this.itemUpdateBuffer;
   }
 
   async initialize() {
@@ -705,6 +721,147 @@ class NimbusServer {
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.broadcastBlockUpdates', { worldId });
+    }
+  }
+
+  /**
+   * Broadcast item updates to clients
+   *
+   * Sends item updates only to clients that have registered the affected chunks.
+   *
+   * @param worldId World ID
+   * @param items Items to broadcast
+   */
+  private broadcastItemUpdates(worldId: string, items: Block[]): void {
+    try {
+      if (items.length === 0) {
+        return;
+      }
+
+      logger.info('🔵 SERVER: Starting broadcastItemUpdates', {
+        worldId,
+        itemCount: items.length,
+        totalSessions: this.sessions.size,
+      });
+
+      // Get world to access chunk size
+      const world = this.worldManager.getWorld(worldId);
+      if (!world) {
+        logger.warn('Cannot broadcast item updates: world not found', { worldId });
+        return;
+      }
+
+      // Group items by chunk for efficient filtering
+      const itemsByChunk = new Map<string, Block[]>();
+      for (const item of items) {
+        const cx = Math.floor(item.position.x / world.chunkSize);
+        const cz = Math.floor(item.position.z / world.chunkSize);
+        const chunkKey = getChunkKey(cx, cz);
+
+        let chunkItems = itemsByChunk.get(chunkKey);
+        if (!chunkItems) {
+          chunkItems = [];
+          itemsByChunk.set(chunkKey, chunkItems);
+        }
+        chunkItems.push(item);
+      }
+
+      logger.info('🔵 SERVER: Items grouped by chunks', {
+        worldId,
+        totalItems: items.length,
+        affectedChunks: itemsByChunk.size,
+        chunkKeys: Array.from(itemsByChunk.keys()),
+      });
+
+      // Send updates to relevant clients
+      let clientCount = 0;
+      let skippedCount = 0;
+
+      for (const [sessionId, session] of this.sessions) {
+        logger.info('🔵 SERVER: Checking session for item updates', {
+          sessionId,
+          username: session.username,
+          sessionWorld: session.worldId,
+          targetWorld: worldId,
+          registeredChunks: Array.from(session.registeredChunks),
+        });
+
+        // Skip if not in this world
+        if (session.worldId !== worldId) {
+          logger.info('🔴 SERVER: Session in different world, skipping', {
+            sessionId,
+            sessionWorld: session.worldId,
+          });
+          skippedCount++;
+          continue;
+        }
+
+        // Collect items for this client (only chunks they have registered)
+        const clientItems: Block[] = [];
+        for (const [chunkKey, chunkItems] of itemsByChunk) {
+          if (session.registeredChunks.has(chunkKey)) {
+            clientItems.push(...chunkItems);
+            logger.info('🔵 SERVER: Client has chunk registered for items', {
+              sessionId,
+              chunkKey,
+              itemCount: chunkItems.length,
+            });
+          } else {
+            logger.info('🔴 SERVER: Client does NOT have chunk registered', {
+              sessionId,
+              chunkKey,
+            });
+          }
+        }
+
+        // Send if client has any relevant items
+        if (clientItems.length > 0) {
+          try {
+            const message = {
+              t: MessageType.ITEM_BLOCK_UPDATE, // 'b.iu'
+              d: clientItems,
+            };
+            const messageStr = JSON.stringify(message);
+
+            logger.info('🔵 SERVER: Sending b.iu message to client', {
+              sessionId,
+              username: session.username,
+              itemCount: clientItems.length,
+              items: clientItems.map(i => ({
+                position: i.position,
+                itemId: i.metadata?.id,
+                displayName: i.metadata?.displayName,
+              })),
+              messageLength: messageStr.length,
+              wsReadyState: session.ws.readyState,
+            });
+
+            session.ws.send(messageStr);
+            clientCount++;
+
+            logger.info('✅ SERVER: Item update message sent successfully', {
+              sessionId,
+              username: session.username,
+            });
+          } catch (error) {
+            logger.error('❌ SERVER: Failed to send item updates to client', { sessionId }, error as Error);
+          }
+        } else {
+          logger.info('🔴 SERVER: No relevant items for this client', {
+            sessionId,
+            username: session.username,
+          });
+        }
+      }
+
+      logger.info('🔵 SERVER: Item updates broadcast complete', {
+        worldId,
+        clientCount,
+        skippedCount,
+        totalItems: items.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.broadcastItemUpdates', { worldId });
     }
   }
 

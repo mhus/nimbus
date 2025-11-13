@@ -1,14 +1,17 @@
 {
   "blockTypeId": 1,
   "modifiers": {
-    "visibility": {
-      "textures": {
-        "0": "#TEXTURE_PATH#"
+    "0": {
+      "visibility": {
+        "shape": 28,
+        "textures": {
+          "0": "#TEXTURE_PATH#"
+        }
       }
     }
   },
   "metadata": {
-    "name": "#NAME#",
+    "displayName": "#NAME#",
     "id": "#ID#"
   }
 }

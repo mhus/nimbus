@@ -1,0 +1,24 @@
+[
+  {
+    "position": {
+      "x": -12,
+      "y": 70,
+      "z": 25
+    },
+    "blockTypeId": 1,
+    "modifiers": {
+      "0": {
+        "visibility": {
+          "shape": 28,
+          "textures": {
+            "0": "textures/items/armor_pants_iron.png"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "id": "item_1763048660002_trkur24",
+      "displayName": "Test"
+    }
+  }
+]

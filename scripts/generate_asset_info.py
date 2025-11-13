@@ -252,7 +252,7 @@ def main():
     parser.add_argument(
         '--assets-dir',
         type=str,
-        default='./client/packages/server/files/assets',
+        default='./client/packages/test_server/files/assets',
         help='Path to assets directory (default: ./client/packages/server/files/assets)'
     )
     parser.add_argument(

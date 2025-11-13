@@ -49,7 +49,7 @@ Erweiterung BlockMetadata:
 - Es wird eine ID benoetigt
 - Es wird ein Name benoetigt (z.b. hacke, schwert, etc)
 
-[ ] Im server ein register von Items anlegen und diese beim ausliefern der chunks in 'i' mitliefern.
+[?] Im server ein register von Items anlegen und diese beim ausliefern der chunks in 'i' mitliefern.
 - Ein Template fuer Items im Blocks ist unter client/packages/test_server/templates/item_block.json
 - Wenn die liste von items geandert wird, hinzufuegen/loeschen/verschieben, dann muss der server ein "Item Block Update (Server -> Client)" command an alle clients schicken, die diese chunks aboniert haben.
 - Erstelle im server ein Command mit dem man die items in der liste manipulieren kann (add, remove)

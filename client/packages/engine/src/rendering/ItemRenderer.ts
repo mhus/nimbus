@@ -7,7 +7,9 @@
  * Default settings:
  * - scalingX: 0.5 (half block width)
  * - scalingY: 0.5 (half block height)
- * - transparencyMode: ALPHA_TEST (sharp cutout edges)
+ *
+ * Enforced settings (always applied):
+ * - transparencyMode: ALPHA_TEST (sharp cutout edges, cannot be overridden)
  */
 
 import { Vector3, Mesh, VertexData, Texture } from '@babylonjs/core';
@@ -66,10 +68,8 @@ export class ItemRenderer extends BlockRenderer {
     // Normalize texture
     const textureDef = TextureHelper.normalizeTexture(firstTexture);
 
-    // Apply item-specific default transparency if not specified
-    if (textureDef.transparencyMode === undefined) {
-      textureDef.transparencyMode = TransparencyMode.ALPHA_TEST;
-    }
+    // Items ALWAYS use ALPHA_TEST for sharp cutout edges
+    textureDef.transparencyMode = TransparencyMode.ALPHA_TEST;
 
     // Get transformations with item-specific defaults
     const scalingX = modifier.visibility.scalingX ?? DEFAULT_ITEM_SCALING;

@@ -107,7 +107,7 @@ export class PhysicsService {
 
   // Teleportation pending state - disables physics while waiting for chunks
   // Used when player is teleported to a new location
-  private teleportationPending: boolean = false;
+  private teleportationPending: boolean = true;
   private teleportCheckTimer: NodeJS.Timeout | null = null;
 
   // Track if climbable velocity was set this frame (before updateWalkMode runs)
