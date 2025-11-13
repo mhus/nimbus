@@ -39,7 +39,7 @@ kommen keonnen.
 - es gibt eine ausname, wenn ein block hoeher als weltMaxY ist, dann lasse noch 10 platz und setze das als maxY. 
 -> worldMaxY kann tiefer als die hoechsten Berge sein um die welt allgemein zu deckelt.
 
-[?] In 'client_playground/packages/server/src/world/generators/NormalWorldGenerator.ts' hat der World generator noch eine
+[x] In 'client_playground/packages/server/src/world/generators/NormalWorldGenerator.ts' hat der World generator noch eine
 funktion um die Bleocke zu kruemmen. Diese Funktion muss noch im server in 'client/packages/test_server/src/world/TerrainGenerator.ts' implementiert werden.
 - edgeOffset ist jetzt offset
 - Wichtig: edgeOffset haben einen Range von -127 bis 127, offsset sind float und haben die einheit blocks, -127 sollte -1 und 127 sollte 1 entsprechen 
@@ -121,7 +121,7 @@ Zur Orientierung:
 
 ## faceVisibility?: FaceVisibility in VisibilityModifier
 
-[?] In Block gibt es den parameter 'faceVisibility?: FaceVisibility'. Um die eiggenschaft zusaetzlich
+[x] In Block gibt es den parameter 'faceVisibility?: FaceVisibility'. Um die eiggenschaft zusaetzlich
 generisch anzubeiten, soll er zusaetzlich auch in VisibilityModifier angegeben werden.
 - Erweitere den Typ
 - Erweitere den Editor von VisibilityModifier - Benutze die gleichen checkboxen wie im Editor fuer Block
@@ -190,7 +190,7 @@ Here is Claude's plan:
 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
 ```
 
-[?] Fuege im VisibilityEditor die Option 'cornerHeights' hinzu. Als Ausklappbare Eigenschaft mit vier
+[-] Fuege im VisibilityEditor die Option 'cornerHeights' hinzu. Als Ausklappbare Eigenschaft mit vier
 Werten nebeneinander.
 
 [x] Das System muss erweitert werden:
@@ -236,8 +236,6 @@ Levels:
 
 doLoglevel('PhysicsService', 'debug')
 ```
-
-=== 
 
 [x] Den effect "FLIPBOX" gibt es nicht mehr, entferne ihn aus shred type und editor. (Es gibt aber noch den shape type FLIPBOX, der bleibt bestehen)
 

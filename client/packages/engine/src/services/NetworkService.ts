@@ -480,15 +480,17 @@ export class NetworkService {
    * Send entity interaction to server
    *
    * @param entityId Entity ID
-   * @param action Action type (e.g., 'click', 'use', 'talk')
+   * @param action Action type (e.g., 'click', 'use', 'talk', 'fireShortcut')
    * @param clickType Type of click (left, right, middle) - only for 'click' action
+   * @param additionalParams Additional parameters to merge into pa
    */
   sendEntityInteraction(
     entityId: string,
     action: string = 'click',
-    clickType?: 'left' | 'right' | 'middle'
+    clickType?: 'left' | 'right' | 'middle',
+    additionalParams?: Record<string, any>
   ): void {
-    const params: any = {};
+    const params: any = { ...additionalParams };
     if (action === 'click' && clickType) {
       params.clickType = clickType;
     }
@@ -510,6 +512,7 @@ export class NetworkService {
       entityId,
       action,
       clickType,
+      params: additionalParams,
     });
   }
 

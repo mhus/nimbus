@@ -244,12 +244,32 @@ export class WebInputController implements InputController {
       return;
     }
 
+    // Handle number keys (1-9, 0) for shortcuts
+    if (event.key >= '0' && event.key <= '9') {
+      const shortcutNr = event.key === '0' ? 10 : parseInt(event.key, 10);
+      this.handleShortcut(shortcutNr);
+      event.preventDefault();
+      return;
+    }
+
     // Handle other keys via bindings
     const handler = this.keyBindings.get(event.key);
     if (handler && !handler.isActive()) {
       handler.activate();
       event.preventDefault();
     }
+  };
+
+  /**
+   * Handle shortcut key press (1-9, 0)
+   */
+  private handleShortcut(shortcutNr: number): void {
+    const selectService = this.appContext.services.select;
+    if (!selectService) {
+      return;
+    }
+
+    selectService.fireShortcut(shortcutNr);
   };
 
   /**

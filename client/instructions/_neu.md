@@ -29,3 +29,5 @@
 - Durchfallen durch welt beim start - safari
 
 - Player daten in echt verwalten !!!
+
+- Darstellung der shortcuts in der UI fehlt

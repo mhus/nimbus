@@ -106,6 +106,13 @@ export interface PlayerInfo {
   distanceNotifyReductionCrouch: number;
 
   // ============================================
+  // Selection & Interaction
+  // ============================================
+
+  /** Maximum selection/targeting range in blocks (for auto-select and shortcuts) */
+  selectionRadius: number;
+
+  // ============================================
   // Camera Control
   // ============================================
 

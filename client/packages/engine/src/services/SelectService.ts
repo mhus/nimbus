@@ -65,7 +65,6 @@ export class SelectService {
 
   // Auto-select mode
   private _autoSelectMode: SelectMode = SelectMode.NONE;
-  private autoSelectRadius: number = 5.0;
   private currentSelectedBlock: ClientBlock | null = null;
   private currentSelectedEntity: ClientEntity | null = null;
 
@@ -82,8 +81,9 @@ export class SelectService {
   private editHighlightMesh?: Mesh;
   private editHighlightMaterial?: StandardMaterial;
 
-  // Cached player eye height for raycast origin (updated via event)
+  // Cached player properties (updated via event)
   private playerEyeHeight: number = 1.6; // Default value
+  private playerSelectionRadius: number = 5.0; // Default value
 
   constructor(
     appContext: AppContext,
@@ -98,17 +98,20 @@ export class SelectService {
     this.entityService = entityService;
     this.scene = scene;
 
-    // Initialize player eye height from PlayerInfo
+    // Initialize player properties from PlayerInfo
     if (appContext.playerInfo) {
       this.playerEyeHeight = appContext.playerInfo.eyeHeight;
+      this.playerSelectionRadius = appContext.playerInfo.selectionRadius;
     }
 
     // Subscribe to PlayerInfo updates
     playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
-      // Update cached eye height for raycast
+      // Update cached properties for raycast
       this.playerEyeHeight = info.eyeHeight;
-      logger.debug('SelectService: eyeHeight updated', {
+      this.playerSelectionRadius = info.selectionRadius;
+      logger.debug('SelectService: PlayerInfo updated', {
         eyeHeight: this.playerEyeHeight,
+        selectionRadius: this.playerSelectionRadius,
       });
     });
 
@@ -119,6 +122,7 @@ export class SelectService {
 
     logger.info('SelectService initialized', {
       eyeHeight: this.playerEyeHeight,
+      selectionRadius: this.playerSelectionRadius,
     });
   }
 
@@ -619,19 +623,28 @@ export class SelectService {
   }
 
   /**
-   * Get auto-select radius
+   * Get auto-select radius (from PlayerInfo)
    */
   getAutoSelectRadius(): number {
-    return this.autoSelectRadius;
+    return this.playerSelectionRadius;
   }
 
   /**
-   * Set auto-select radius
+   * Set auto-select radius (updates PlayerInfo)
    *
    * @param radius Maximum search distance for auto-select
    */
   setAutoSelectRadius(radius: number): void {
-    this.autoSelectRadius = Math.max(1.0, Math.min(radius, 20.0)); // Clamp between 1 and 20
+    // Clamp between 1 and 20
+    const clampedRadius = Math.max(1.0, Math.min(radius, 20.0));
+    this.playerSelectionRadius = clampedRadius;
+
+    // Update PlayerInfo if available
+    if (this.appContext.playerInfo) {
+      this.appContext.playerInfo.selectionRadius = clampedRadius;
+      // Trigger update event via PlayerService
+      this.playerService.updatePlayerInfo({ selectionRadius: clampedRadius });
+    }
   }
 
   /**
@@ -663,7 +676,7 @@ export class SelectService {
       // Priority 1: Try to select entity first (entities are closer to camera typically)
       let selectedEntity: ClientEntity | null = null;
       if (this._autoSelectMode === SelectMode.INTERACTIVE && this.scene && this.entityService) {
-        selectedEntity = this.getSelectedEntityFromPlayer(this.autoSelectRadius);
+        selectedEntity = this.getSelectedEntityFromPlayer(this.playerSelectionRadius);
       }
 
       // Priority 2: If no entity selected, try to select block
@@ -671,7 +684,7 @@ export class SelectService {
       if (!selectedEntity) {
         selectedBlock = this.getSelectedBlockFromPlayer(
           this._autoSelectMode,
-          this.autoSelectRadius
+          this.playerSelectionRadius
         );
       }
 
@@ -967,6 +980,126 @@ export class SelectService {
   /**
    * Dispose service
    */
+  /**
+   * Fire shortcut (triggered by number keys 1-9, 0)
+   *
+   * Sends shortcut event to server with selected block/entity and player context.
+   *
+   * @param shortcutNr Shortcut number (1-10, where 10 = key '0')
+   */
+  fireShortcut(shortcutNr: number): void {
+    try {
+      // Get player position
+      const playerPosition = this.playerService.getPosition();
+
+      // Get camera rotation
+      const cameraService = (this.playerService as any).cameraService;
+      if (!cameraService) {
+        logger.warn('CameraService not available for shortcut');
+        return;
+      }
+
+      const rotation = cameraService.getRotation();
+
+      // Get selected entity (priority) or block
+      const selectedEntity = this.currentSelectedEntity;
+      const selectedBlock = this.currentSelectedBlock;
+
+      // Calculate distance to selected target
+      let distance: number | undefined;
+      let targetPosition: { x: number; y: number; z: number } | undefined;
+      let entityId: string | undefined;
+      let blockId: string | undefined;
+      let blockGroupId: string | undefined;
+      let blockX: number | undefined;
+      let blockY: number | undefined;
+      let blockZ: number | undefined;
+
+      if (selectedEntity) {
+        // Entity selected
+        entityId = selectedEntity.id;
+        targetPosition = selectedEntity.currentPosition;
+        distance = Math.sqrt(
+          Math.pow(targetPosition.x - playerPosition.x, 2) +
+          Math.pow(targetPosition.y - playerPosition.y, 2) +
+          Math.pow(targetPosition.z - playerPosition.z, 2)
+        );
+      } else if (selectedBlock) {
+        // Block selected
+        const pos = selectedBlock.block.position;
+        blockX = pos.x;
+        blockY = pos.y;
+        blockZ = pos.z;
+        targetPosition = { x: pos.x + 0.5, y: pos.y + 0.5, z: pos.z + 0.5 }; // Block center
+        blockId = selectedBlock.block.metadata?.id;
+        blockGroupId = selectedBlock.block.metadata?.groupId;
+        distance = Math.sqrt(
+          Math.pow(targetPosition.x - playerPosition.x, 2) +
+          Math.pow(targetPosition.y - playerPosition.y, 2) +
+          Math.pow(targetPosition.z - playerPosition.z, 2)
+        );
+      }
+
+      // Prepare params with all context
+      const params: any = {
+        shortcutNr,
+        playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+        playerRotation: { yaw: rotation.y, pitch: rotation.x }, // rotation.y = yaw, rotation.x = pitch
+      };
+
+      if (distance !== undefined) {
+        params.distance = parseFloat(distance.toFixed(2));
+      }
+
+      if (targetPosition) {
+        params.targetPosition = targetPosition;
+      }
+
+      if (entityId) {
+        params.entityId = entityId;
+      }
+
+      // Send to server
+      if (selectedEntity) {
+        // Send as entity interaction with full context
+        this.appContext.services.network.sendEntityInteraction(
+          selectedEntity.id,
+          'fireShortcut',
+          undefined, // clickType not applicable
+          params
+        );
+      } else if (selectedBlock) {
+        // Send as block interaction
+        this.appContext.services.network.sendBlockInteraction(
+          blockX!,
+          blockY!,
+          blockZ!,
+          'fireShortcut',
+          params,
+          blockId,
+          blockGroupId
+        );
+      } else {
+        // No selection - send shortcut without target
+        // Use block interaction with position (0,0,0) as placeholder
+        this.appContext.services.network.sendBlockInteraction(
+          0, 0, 0,
+          'fireShortcut',
+          params
+        );
+      }
+
+      logger.debug('Shortcut fired', {
+        shortcutNr,
+        hasEntity: !!selectedEntity,
+        hasBlock: !!selectedBlock,
+        distance,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.fireShortcut', { shortcutNr });
+    }
+  }
+
   dispose(): void {
     // Dispose highlight resources
     this.highlightMesh?.dispose();

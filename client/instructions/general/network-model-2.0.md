@@ -298,7 +298,11 @@ Der Server sendet Block-Status-Änderungen an den Client (z.B. für Animationen,
 
 Der Client sendet eine Interaktions information mit einem Block an den Server (z.B. wenn der Spieler mit einem Block interagiert).
 
-Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf einen interaktiven Block klickt (physics.interactive === true).
+**Aktionen:**
+- `'click'` - Spieler klickt auf Block (INTERACTIVE Modus, physics.interactive === true)
+- `'collision'` - Spieler kollidiert mit Block (physics.collisionEvent === true)
+- `'climb'` - Spieler klettert über Block (physics.collisionEvent === true)
+- `'fireShortcut'` - Spieler drückt Zahlentaste 1-9,0 mit Block selektiert
 
 ```json
 {"i":"12345", "t": "b.int", "d":
@@ -308,15 +312,15 @@ Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf einen interaktiven
     "z": 10,
     "id": "123", // aus block.metadata.id, optional
     "gId": "123", // groupId des Blocks, optional
-    "ac": "click", // action: 'click'
+    "ac": "click", // action: 'click', 'collision', 'climb', 'fireShortcut'
     "pa": { // params
-      "clickType": "left" // 'left', 'right', 'middle'
+      "clickType": "left" // nur bei 'click'
     }
   }
 }
 ```
 
-**Beispiel:**
+**Beispiel Click:**
 ```json
 {
   "i": "98765",
@@ -330,6 +334,29 @@ Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf einen interaktiven
     "ac": "click",
     "pa": {
       "clickType": "left"
+    }
+  }
+}
+```
+
+**Beispiel Shortcut:**
+```json
+{
+  "i": "11111",
+  "t": "b.int",
+  "d": {
+    "x": 10,
+    "y": 64,
+    "z": 10,
+    "id": "door_123",
+    "gId": "buildings",
+    "ac": "fireShortcut",
+    "pa": {
+      "shortcutNr": 1,
+      "playerPosition": {"x": 8.5, "y": 64.0, "z": 9.2},
+      "playerRotation": {"yaw": 1.57, "pitch": 0.0},
+      "targetPosition": {"x": 10.5, "y": 64.5, "z": 10.5},
+      "distance": 2.83
     }
   }
 }
@@ -394,6 +421,7 @@ Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf eine interaktive E
 
 **Aktionen:**
 - `'click'` - Spieler klickt auf Entity (left, right, middle)
+- `'fireShortcut'` - Spieler drückt Zahlentaste 1-9,0 mit Entity selektiert
 - `'use'` - Spieler verwendet Entity (z.B. NPC ansprechen)
 - `'talk'` - Spieler spricht mit Entity
 - `'attack'` - Spieler greift Entity an
@@ -406,7 +434,7 @@ Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf eine interaktive E
   {
     "entityId": "entity123",
     "ts": 1697045600000, // timestamp der interaktion
-    "ac": "click", // action z.b. 'click', 'use', 'talk', 'attack', 'touch'
+    "ac": "click", // action z.b. 'click', 'fireShortcut', 'use', 'talk', 'attack', 'touch'
     "pa": { // params
       "clickType": "left" // 'left', 'right', 'middle' (nur bei ac: 'click')
     }
@@ -425,6 +453,27 @@ Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf eine interaktive E
     "ac": "click",
     "pa": {
       "clickType": "right"
+    }
+  }
+}
+```
+
+**Beispiel Shortcut-Interaktion:**
+```json
+{
+  "i": "22222",
+  "t": "e.int.r",
+  "d": {
+    "entityId": "npc_farmer_001",
+    "ts": 1697045600000,
+    "ac": "fireShortcut",
+    "pa": {
+      "shortcutNr": 2,
+      "playerPosition": {"x": 8.5, "y": 64.0, "z": 9.2},
+      "playerRotation": {"yaw": 1.57, "pitch": 0.0},
+      "targetPosition": {"x": 10.0, "y": 64.5, "z": 12.0},
+      "distance": 4.12,
+      "entityId": "npc_farmer_001"
     }
   }
 }

@@ -65,6 +65,9 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   distanceNotifyReductionWalk: 0, // No reduction when walking (default)
   distanceNotifyReductionCrouch: 0, // No reduction when crouching (default)
 
+  // Selection & Interaction
+  selectionRadius: 5.0, // Maximum range for auto-select and shortcuts (in blocks)
+
   // Camera control
   baseTurnSpeed: 0.003,
   effectiveTurnSpeed: 0.003,
