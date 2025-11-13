@@ -479,6 +479,13 @@ export class SelectService {
   }
 
   /**
+   * Get current auto-select mode (method for compatibility)
+   */
+  getAutoSelectMode(): SelectMode {
+    return this._autoSelectMode;
+  }
+
+  /**
    * Set auto-select mode
    *
    * @param mode Selection mode for auto-select

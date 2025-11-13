@@ -298,6 +298,8 @@ Der Server sendet Block-Status-Änderungen an den Client (z.B. für Animationen,
 
 Der Client sendet eine Interaktions information mit einem Block an den Server (z.B. wenn der Spieler mit einem Block interagiert).
 
+Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf einen interaktiven Block klickt (physics.interactive === true).
+
 ```json
 {"i":"12345", "t": "b.int", "d":
   {
@@ -306,9 +308,28 @@ Der Client sendet eine Interaktions information mit einem Block an den Server (z
     "z": 10,
     "id": "123", // aus block.metadata.id, optional
     "gId": "123", // groupId des Blocks, optional
-    "ac": "use", // action z.b. 'use', 'break', 'place', 'touch'
+    "ac": "click", // action: 'click'
     "pa": { // params
-      // optionale parameter fuer die interaktion
+      "clickType": "left" // 'left', 'right', 'middle'
+    }
+  }
+}
+```
+
+**Beispiel:**
+```json
+{
+  "i": "98765",
+  "t": "b.int",
+  "d": {
+    "x": 10,
+    "y": 64,
+    "z": 10,
+    "id": "item_sword_123",
+    "gId": "weapons",
+    "ac": "click",
+    "pa": {
+      "clickType": "left"
     }
   }
 }

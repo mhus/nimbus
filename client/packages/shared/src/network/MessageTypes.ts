@@ -25,6 +25,7 @@ export enum MessageType {
   BLOCK_UPDATE = 'b.u',
   BLOCK_STATUS_UPDATE = 'b.s.u',
   ITEM_BLOCK_UPDATE = 'b.iu',
+  BLOCK_INTERACTION = 'b.int',
 
   // Entities
   ENTITY_UPDATE = 'e.u',

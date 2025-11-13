@@ -40,3 +40,35 @@ export interface BlockStatusUpdate {
  * Server sends block status changes (e.g., for animations, effects)
  */
 export type BlockStatusUpdateMessage = BaseMessage<BlockStatusUpdate[]>;
+
+/**
+ * Block interaction data (Client -> Server)
+ */
+export interface BlockInteractionData {
+  /** Block X position */
+  x: number;
+
+  /** Block Y position */
+  y: number;
+
+  /** Block Z position */
+  z: number;
+
+  /** Block ID from metadata (optional) */
+  id?: string;
+
+  /** Block group ID (optional) */
+  gId?: string;
+
+  /** Action type */
+  ac: string;
+
+  /** Action parameters */
+  pa?: Record<string, any>;
+}
+
+/**
+ * Block interaction (Client -> Server)
+ * Client sends interaction with a block (e.g., click, use)
+ */
+export type BlockInteractionMessage = BaseMessage<BlockInteractionData>;

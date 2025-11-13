@@ -289,6 +289,9 @@ class NimbusServer {
       case 'e.int.r': // Entity interaction (from client)
         this.handleEntityInteraction(session, i, d);
         break;
+      case 'b.int': // Block interaction (from client)
+        this.handleBlockInteraction(session, i, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -545,6 +548,50 @@ class NimbusServer {
     // session.ws.send(JSON.stringify({
     //   r: messageId,
     //   t: 'e.int.rs',
+    //   d: { success: true }
+    // }));
+  }
+
+  /**
+   * Handle block interaction from client
+   *
+   * Receives when player clicks on an interactive block in INTERACTIVE mode.
+   * Actions currently supported:
+   * - 'click': Player clicked on block (left, right, or middle)
+   */
+  private handleBlockInteraction(session: ClientSession, messageId: string, data: any) {
+    if (!data || data.x === undefined || data.y === undefined || data.z === undefined || !data.ac) {
+      logger.warn('Invalid block interaction data', {
+        sessionId: session.sessionId,
+        data,
+      });
+      return;
+    }
+
+    const { x, y, z, id, gId, ac, pa } = data;
+
+    logger.info('Block interaction received', {
+      sessionId: session.sessionId,
+      username: session.username,
+      position: { x, y, z },
+      id,
+      groupId: gId,
+      action: ac,
+      params: pa,
+    });
+
+    // TODO: Implement game logic based on action type and block type
+    // Examples:
+    // - Door: Toggle open/close state
+    // - Chest: Open inventory UI
+    // - Button: Trigger mechanism
+    // - Item: Pick up item
+    // - NPC spawner: Interact with NPC
+
+    // Optional: Send response back to client if needed
+    // session.ws.send(JSON.stringify({
+    //   r: messageId,
+    //   t: 'b.int.rs',
     //   d: { success: true }
     // }));
   }

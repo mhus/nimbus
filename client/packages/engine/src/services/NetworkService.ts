@@ -432,6 +432,50 @@ export class NetworkService {
   }
 
   /**
+   * Send block interaction to server
+   *
+   * @param x Block X position
+   * @param y Block Y position
+   * @param z Block Z position
+   * @param id Block ID from metadata (optional)
+   * @param gId Block group ID (optional)
+   * @param clickType Type of click (left, right, middle)
+   */
+  sendBlockInteraction(
+    x: number,
+    y: number,
+    z: number,
+    id?: string,
+    gId?: string,
+    clickType?: 'left' | 'right' | 'middle'
+  ): void {
+    const message: RequestMessage<any> = {
+      i: this.generateMessageId(),
+      t: MessageType.BLOCK_INTERACTION,
+      d: {
+        x,
+        y,
+        z,
+        id,
+        gId,
+        ac: 'click',
+        pa: {
+          clickType: clickType || 'left',
+        },
+      },
+    };
+
+    this.send(message);
+
+    logger.debug('Sent block interaction', {
+      position: { x, y, z },
+      id,
+      gId,
+      clickType,
+    });
+  }
+
+  /**
    * Get API URL for REST calls
    */
   getApiUrl(): string {

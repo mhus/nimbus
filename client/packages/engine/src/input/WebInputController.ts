@@ -190,6 +190,7 @@ export class WebInputController implements InputController {
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
     this.canvas.addEventListener('click', this.onCanvasClick);
+    this.canvas.addEventListener('mousedown', this.onMouseDown);
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
     document.addEventListener('mousemove', this.onMouseMove);
 
@@ -310,6 +311,61 @@ export class WebInputController implements InputController {
     if (!this.pointerLocked) {
       this.canvas.requestPointerLock();
     }
+  };
+
+  /**
+   * Handle mouse button down (for block interactions)
+   */
+  private onMouseDown = (event: MouseEvent): void => {
+    if (!this.pointerLocked) {
+      return;
+    }
+
+    // Check if SelectService is in INTERACTIVE mode
+    const selectService = this.appContext.services.select;
+    if (!selectService || selectService.getAutoSelectMode() !== 'INTERACTIVE') {
+      return;
+    }
+
+    // Get currently selected block
+    const selectedBlock = selectService.getCurrentSelectedBlock();
+    if (!selectedBlock) {
+      return;
+    }
+
+    // Determine click type from mouse button
+    let clickType: 'left' | 'right' | 'middle';
+    switch (event.button) {
+      case 0:
+        clickType = 'left';
+        break;
+      case 2:
+        clickType = 'right';
+        break;
+      case 1:
+        clickType = 'middle';
+        break;
+      default:
+        return; // Ignore other buttons
+    }
+
+    // Send block interaction to server
+    this.appContext.services.network.sendBlockInteraction(
+      selectedBlock.block.position.x,
+      selectedBlock.block.position.y,
+      selectedBlock.block.position.z,
+      selectedBlock.block.metadata?.id,
+      selectedBlock.block.metadata?.groupId,
+      clickType
+    );
+
+    logger.debug('Block interaction sent', {
+      position: selectedBlock.block.position,
+      clickType,
+      id: selectedBlock.block.metadata?.id,
+    });
+
+    event.preventDefault();
   };
 
   /**
