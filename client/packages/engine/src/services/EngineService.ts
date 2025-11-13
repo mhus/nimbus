@@ -202,6 +202,13 @@ export class EngineService {
           entityService,
           this.modelService
         );
+
+        // Connect EntityRenderService to PlayerService for player avatar rendering
+        if (this.playerService) {
+          this.playerService.setEntityRenderService(this.entityRenderService);
+          logger.debug('EntityRenderService connected to PlayerService');
+        }
+
         logger.debug('EntityRenderService initialized');
       } else {
         logger.warn('EntityRenderService not initialized: missing EntityService or ModelService');

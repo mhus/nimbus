@@ -35,6 +35,7 @@ export class PlayerService {
   private appContext: AppContext;
   private cameraService: CameraService;
   private physicsService?: PhysicsService;
+  private entityRenderService?: any; // EntityRenderService
 
   // Player as physics entity with player info
   private playerEntity: PlayerEntity;
@@ -142,6 +143,14 @@ export class PlayerService {
     this.physicsService = physicsService;
     this.physicsService.registerEntity(this.playerEntity);
     logger.debug('PhysicsService set and player registered');
+  }
+
+  /**
+   * Set entity render service (called after EntityRenderService is created)
+   */
+  setEntityRenderService(entityRenderService: any): void {
+    this.entityRenderService = entityRenderService;
+    logger.debug('EntityRenderService set');
   }
 
   /**
@@ -290,53 +299,23 @@ export class PlayerService {
   }
 
   /**
-   * Update third-person model position and rotation
+   * Update third-person model position and rotation (via EntityRenderService)
    */
-  private async updateThirdPersonModel(): Promise<void> {
-    if (!this.thirdPersonMesh) {
-      return;
+  private updateThirdPersonModel(): void {
+    const playerAvatarEntityId = (this as any).playerAvatarEntityId;
+    if (!playerAvatarEntityId || !this.entityRenderService) {
+      return; // Not loaded yet
     }
 
-    // Get entity model for offset
-    const modelId = this.playerEntity.playerInfo.thirdPersonModelId;
-    if (!modelId) {
-      return;
-    }
+    // Get camera yaw for character rotation
+    const cameraYaw = this.cameraService.getCameraYaw();
 
-    const entityService = this.appContext.services.entity;
-    const entityModel = await entityService?.getEntityModel(modelId);
-
-    // Update position with offset
-    this.thirdPersonMesh.position.set(
-      this.playerEntity.position.x,
-      this.playerEntity.position.y + (entityModel?.positionOffset.y ?? 0),
-      this.playerEntity.position.z
+    // Update entity transform via EntityRenderService
+    this.entityRenderService.updateEntityTransform(
+      playerAvatarEntityId,
+      this.playerEntity.position,
+      { y: cameraYaw, p: 0 }
     );
-
-    // Calculate character rotation based on movement direction
-    const velocity = this.playerEntity.velocity;
-    const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
-
-    if (speed > 0.1) {
-      // Character is moving - rotate towards movement direction
-      const movementYaw = Math.atan2(velocity.x, velocity.z) * (180 / Math.PI);
-      this.targetCharacterYaw = movementYaw;
-    }
-    // If not moving, keep current rotation
-
-    // Smooth rotation towards target (lerp)
-    const rotationSpeed = 10; // Degrees per frame (adjust for smoothness)
-    const yawDiff = this.targetCharacterYaw - this.characterYaw;
-
-    // Handle angle wrapping (-180 to 180)
-    let normalizedDiff = yawDiff;
-    if (normalizedDiff > 180) normalizedDiff -= 360;
-    if (normalizedDiff < -180) normalizedDiff += 360;
-
-    this.characterYaw += normalizedDiff * Math.min(1, rotationSpeed / 60); // Smooth interpolation
-
-    // Apply rotation to mesh
-    this.thirdPersonMesh.rotation.y = this.characterYaw * (Math.PI / 180);
 
     // TODO: Update animations based on movement mode/velocity
   }
@@ -581,41 +560,41 @@ export class PlayerService {
       return;
     }
 
-    // If already loaded, just show it
-    if (this.thirdPersonMesh) {
-      this.thirdPersonMesh.setEnabled(true);
-      logger.info('Third-person model shown', {
-        position: this.thirdPersonMesh.position,
-        enabled: this.thirdPersonMesh.isEnabled(),
-      });
+    const playerAvatarEntityId = (this as any).playerAvatarEntityId;
+
+    // If already loaded, just show it via EntityRenderService
+    if (playerAvatarEntityId && this.entityRenderService) {
+      // Show entity via visibility event
+      this.entityRenderService.onEntityVisibility(playerAvatarEntityId, true);
+      logger.info('Third-person model shown via EntityRenderService');
       return;
     }
 
     // Not loaded yet - load it (lazy loading)
     await this.loadThirdPersonModel(modelId);
-
-    // After loading, make it visible
-    if (this.thirdPersonMesh) {
-      this.thirdPersonMesh.setEnabled(true);
-    }
   }
 
   /**
    * Hide third-person model
    */
   private hideThirdPersonModel(): void {
-    if (this.thirdPersonMesh) {
-      this.thirdPersonMesh.setEnabled(false);
-      logger.debug('Third-person model hidden');
+    const playerAvatarEntityId = (this as any).playerAvatarEntityId;
+    if (!playerAvatarEntityId || !this.entityRenderService) {
+      return;
     }
+
+    // Hide entity via visibility event
+    this.entityRenderService.onEntityVisibility(playerAvatarEntityId, false);
+    logger.debug('Third-person model hidden via EntityRenderService');
   }
 
   /**
    * Load third-person model from entity model ID
+   * Delegates to EntityRenderService for rendering
    */
   private async loadThirdPersonModel(modelId: string): Promise<void> {
     try {
-      logger.info('Starting to load third-person model', { modelId });
+      logger.info('Loading player avatar via EntityRenderService', { modelId });
 
       // Get entity model
       const entityService = this.appContext.services.entity;
@@ -630,80 +609,65 @@ export class PlayerService {
         return;
       }
 
-      logger.info('Entity model loaded', { modelPath: entityModel.modelPath });
-
-      // Get scene from CameraService
-      const scene = (this.cameraService as any).scene;
-      if (!scene) {
-        logger.error('Scene not available from CameraService');
+      // Check EntityRenderService
+      if (!this.entityRenderService) {
+        logger.error('EntityRenderService not available');
         return;
       }
 
-      // Load 3D model via SceneLoader
-      const { SceneLoader } = await import('@babylonjs/core');
+      // Create Entity for player avatar
+      const { createClientEntity } = await import('@nimbus/shared');
+      const playerAvatarEntity: any = {
+        id: '@player_avatar', // Special ID for player avatar
+        name: this.playerEntity.playerInfo.displayName,
+        model: modelId,
+        modelModifier: {},
+        movementType: 'dynamic' as const,
+        solid: false,
+        interactive: false,
+      };
 
-      // Construct API URL for asset loading
-      const networkService = this.appContext.services.network;
-      if (!networkService) {
-        logger.error('NetworkService not available');
-        return;
-      }
-
-      const worldId = this.appContext.worldInfo?.worldId || 'main';
-      const apiUrl = networkService.getApiUrl();
-      const assetUrl = `${apiUrl}/api/worlds/${worldId}/assets/${entityModel.modelPath}`;
-
-      logger.info('Loading 3D model...', { assetUrl });
-
-      const result = await SceneLoader.ImportMeshAsync(
-        '',
-        '',
-        assetUrl,
-        scene
+      // Create ClientEntity
+      const clientEntity = createClientEntity(
+        playerAvatarEntity,
+        entityModel,
+        this.playerEntity.position,
+        { y: 0, p: 0 },
+        0 // IDLE pose
       );
 
-      logger.info('Model loaded', { meshCount: result.meshes.length });
+      logger.info('Created ClientEntity for player avatar', {
+        entityId: clientEntity.id,
+        position: clientEntity.currentPosition,
+      });
 
-      // Store root mesh and animations
-      this.thirdPersonMesh = result.meshes[0];
-      this.thirdPersonAnimations = result.animationGroups;
+      // Register in EntityService cache
+      (entityService as any).entityCache.set(clientEntity.id, clientEntity);
 
-      // Apply transformations from entity model
-      if (this.thirdPersonMesh) {
-        // Set position
-        this.thirdPersonMesh.position.set(
-          this.playerEntity.position.x,
-          this.playerEntity.position.y + entityModel.positionOffset.y,
-          this.playerEntity.position.z
-        );
+      // Create pathway to trigger EntityRenderService rendering
+      const pathway = {
+        entityId: clientEntity.id,
+        startAt: Date.now(),
+        waypoints: [{
+          timestamp: Date.now() + 100,
+          target: { ...this.playerEntity.position },
+          rotation: { y: 0, p: 0 },
+          pose: 0 // IDLE
+        }],
+      };
 
-        // Set scaling
-        this.thirdPersonMesh.scaling.set(
-          entityModel.scale.x,
-          entityModel.scale.y,
-          entityModel.scale.z
-        );
+      // Trigger EntityRenderService to render the model
+      await this.entityRenderService.onEntityPathway(pathway);
 
-        // Set rotation offset
-        this.thirdPersonMesh.rotation.set(
-          entityModel.rotationOffset.x * (Math.PI / 180),
-          entityModel.rotationOffset.y * (Math.PI / 180),
-          entityModel.rotationOffset.z * (Math.PI / 180)
-        );
+      logger.info('Player avatar rendered via EntityRenderService');
 
-        // Initially hidden (only shown in third-person mode)
-        this.thirdPersonMesh.setEnabled(false);
+      // Store entity ID and ClientEntity for later updates
+      (this as any).playerAvatarEntityId = '@player_avatar';
+      (this as any).playerAvatarClientEntity = clientEntity;
 
-        logger.info('Third-person model fully loaded', {
-          modelId,
-          meshCount: result.meshes.length,
-          animationCount: result.animationGroups.length,
-          position: this.thirdPersonMesh.position,
-          scaling: this.thirdPersonMesh.scaling,
-        });
-      }
+      logger.info('Player avatar loaded successfully');
     } catch (error) {
-      logger.error('Failed to load third-person model', { modelId }, error as Error);
+      logger.error('Failed to load player avatar via EntityRenderService', { modelId }, error as Error);
     }
   }
 
