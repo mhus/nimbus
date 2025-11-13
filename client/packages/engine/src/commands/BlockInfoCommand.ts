@@ -102,8 +102,8 @@ export class BlockInfoCommand extends CommandHandler {
         lines.push('  Physics:');
         lines.push(`    Solid             : ${mod.physics.solid ?? false}`);
         lines.push(`    Interactive       : ${mod.physics.interactive ?? false}`);
+        lines.push(`    CollisionEvent    : ${mod.physics.collisionEvent ?? false}`);
         lines.push(`    AutoClimbable     : ${mod.physics.autoClimbable ?? false}`);
-        lines.push(`    AutoCornerHeights : ${mod.physics.autoCornerHeights ?? false}`);
         if (mod.physics.cornerHeights) {
           lines.push(`    CornerHeights     : [${mod.physics.cornerHeights.join(', ')}]`);
         }

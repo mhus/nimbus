@@ -35,7 +35,7 @@ export class SurfaceAnalyzer {
    * Priority order:
    * 1. Block.cornerHeights (highest priority)
    * 2. PhysicsModifier.cornerHeights
-   * 3. Auto-derived from offsets (if autoCornerHeights=true)
+   * 3. Auto-derived from offsets (if shape == CUBE)
    *    - Block.offsets (Y values of top 4 corners)
    *    - VisibilityModifier.offsets
    * 4. undefined (no corner heights)
@@ -57,8 +57,8 @@ export class SurfaceAnalyzer {
     ) {
       cornerHeights = block.currentModifier.physics.cornerHeights;
     }
-    // Priority 3: Auto-derive from offsets (if autoCornerHeights=true)
-    else if (block.currentModifier.physics?.autoCornerHeights) {
+    // Priority 3: Auto-derive from offsets (if shape == CUBE)
+    else if (block.currentModifier.visibility?.shape === 1) { // Shape.CUBE = 1
       // Try Block.offsets first
       // Minimum length must be 24 for all 8 corners (3 values per corner)
       if (block.block.offsets && block.block.offsets.length >= 23) {

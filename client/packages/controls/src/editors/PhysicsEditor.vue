@@ -259,21 +259,6 @@
         </label>
       </div>
     </CollapsibleSection>
-
-    <!-- Auto Corner Heights Checkbox (outside collapsible section) -->
-    <div class="form-control">
-      <label class="label cursor-pointer justify-start gap-2">
-        <input
-          v-model="localValue.autoCornerHeights"
-          type="checkbox"
-          class="checkbox checkbox-sm"
-        />
-        <span class="label-text text-xs">Auto-derive corner heights from geometry offsets</span>
-      </label>
-      <label class="label">
-        <span class="label-text-alt">When enabled, corner heights are automatically calculated from Y-offsets of top corners in geometry offsets.</span>
-      </label>
-    </div>
   </div>
 </template>
 

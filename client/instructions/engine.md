@@ -241,7 +241,7 @@ doLoglevel('PhysicsService', 'debug')
 
 [x] Den effect "FLIPBOX" gibt es nicht mehr, entferne ihn aus shred type und editor. (Es gibt aber noch den shape type FLIPBOX, der bleibt bestehen)
 
-[ ] AutoCornerHeights soll wieder entfernt werden dafuer automatisch beim shapeType == CUBE aktiv sein
+[x] AutoCornerHeights soll wieder entfernt werden dafuer automatisch beim shapeType == CUBE aktiv sein
 - Aus dem PhysicsModifier entfernen
 - Aus dem PhysicsEditor entfernen
 - In der Engine immer auf shape == CUBE pruefen wo jetzt autoCornerHeights genutzt wird
