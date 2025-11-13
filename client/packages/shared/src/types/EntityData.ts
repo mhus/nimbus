@@ -158,6 +158,9 @@ export type MovementType =
  *
  * Analog zu BlockInstance: Eine konkrete Entity an einer bestimmten Position.
  * Referenziert ein EntityModel über die ID.
+ *
+ * Entities koennen sehr individuell sein, deshalb werden viele Eigenschaften
+ * direkt in der Instanz definiert.
  */
 export interface Entity {
   /** Unique identifier for this entity instance */
@@ -166,7 +169,7 @@ export interface Entity {
   /** Display name of the entity */
   name: string;
 
-  /** Reference to EntityModel (by ID) */
+  /** Reference to EntityModel (by ID) - das Modell definiert nur die Darstellung und auch das visuelle Verhalten, z.b. beim Laufen */
   model: string; // EntityModel ID
 
   /** Custom modifiers for this instance (overrides/extends model defaults) */
@@ -174,6 +177,9 @@ export interface Entity {
 
   /** Movement behavior type */
   movementType: MovementType;
+
+  /** Who controls this entity: 'player', 'server', 'ai', 'client' */
+  controlledBy: string;
 
   /** Is this entity solid (blocking)? */
   solid?: boolean;
@@ -277,7 +283,8 @@ export function createEntity(
   id: string,
   name: string,
   modelId: string,
-  movementType: MovementType = 'static'
+  movementType: MovementType = 'static',
+  controlledBy: string = 'server'
 ): Entity {
   return {
     id,
@@ -285,6 +292,7 @@ export function createEntity(
     model: modelId,
     modelModifier: {},
     movementType,
+    controlledBy,
     solid: true,
     interactive: false,
   };

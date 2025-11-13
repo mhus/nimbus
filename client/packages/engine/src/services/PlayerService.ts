@@ -738,6 +738,7 @@ export class PlayerService {
         model: modelId,
         modelModifier: {},
         movementType: 'dynamic' as const,
+        controlledBy: 'player', // Mark as player-controlled
         solid: false,
         interactive: false,
       };

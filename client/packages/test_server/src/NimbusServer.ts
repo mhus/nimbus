@@ -150,6 +150,7 @@ class NimbusServer {
           model: spawnDef.entityModelId,
           modelModifier: {},
           movementType: 'passive' as const,
+          controlledBy: spawnDefAny.controlledBy ?? 'server', // Default to server-controlled
           solid: spawnDefAny.solid ?? false, // Read from spawn definition
           interactive: spawnDefAny.interactive ?? false, // Read from spawn definition
           physics: spawnDefAny.physics ?? false, // Read from spawn definition
@@ -315,6 +316,7 @@ class NimbusServer {
         model: 'farmer1', // Default player model
         modelModifier: {},
         movementType: 'dynamic' as const,
+        controlledBy: 'player', // Mark as player-controlled
         solid: false,
         interactive: false,
         clientPhysics: false,

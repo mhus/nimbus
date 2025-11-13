@@ -2,6 +2,7 @@
   "entityId": "trap1",
   "entityModelId": "farmer1",
   "clientPhysics": false,
+  "interactive": true,
   "physics": false,
   "solid": false,
   "notifyOnCollision": true,

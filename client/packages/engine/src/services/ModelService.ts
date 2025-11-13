@@ -168,7 +168,7 @@ export class ModelService {
       this.glbContainerCache.set(modelPath, cachedContainer);
       this.evictGlbContainerCache();
 
-      logger.info('GLB container loaded and cached', {
+      logger.debug('GLB container loaded and cached', {
         modelPath,
         meshCount: container.meshes.length,
         animationCount: container.animationGroups.length,

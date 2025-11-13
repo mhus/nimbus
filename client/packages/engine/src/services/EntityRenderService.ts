@@ -224,10 +224,15 @@ export class EntityRenderService {
       const modelRootNode = result.rootNodes[0];
       modelRootNode.setEnabled(true);
 
+      // Store entity ID in metadata for selection/raycasting
+      modelRootNode.metadata = modelRootNode.metadata || {};
+      modelRootNode.metadata.entityId = entityId;
+
       // Create a parent TransformNode for manual rotation control
       // This prevents animations from overwriting our rotation
       const { TransformNode } = await import('@babylonjs/core');
       const rotationNode = new TransformNode(`entity_rotation_${entityId}`, this.scene);
+      rotationNode.metadata = { entityId }; // Also store in rotation node
       modelRootNode.parent = rotationNode;
 
       // Get cloned animation groups (automatically retargeted to this instance)
@@ -279,6 +284,23 @@ export class EntityRenderService {
 
       // Store mesh reference in ClientEntity for EntityService
       clientEntity.meshes = [modelRootNode as any];
+
+      // Make all meshes pickable for entity selection (raycasting)
+      if (result.rootNodes) {
+        for (const node of result.rootNodes) {
+          // Set isPickable on all mesh children recursively
+          node.getChildMeshes().forEach((mesh) => {
+            mesh.isPickable = true;
+            // Also store entityId in child mesh metadata for selection
+            mesh.metadata = mesh.metadata || {};
+            mesh.metadata.entityId = entityId;
+          });
+          // Also set on root if it's a mesh
+          if ('isPickable' in node) {
+            (node as any).isPickable = true;
+          }
+        }
+      }
 
       logger.debug('Entity created and rendered', { entityId, modelPath });
     } catch (error) {

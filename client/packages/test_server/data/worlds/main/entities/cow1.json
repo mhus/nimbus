@@ -2,6 +2,7 @@
   "entityId": "cow1",
   "entityModelId": "cow1",
   "clientPhysics": true,
+  "interactive": true,
   "physics": false,
   "solid": true,
   "initialPosition": {

@@ -6,12 +6,13 @@
  * Includes auto-select mode with visual highlighting.
  */
 
-import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene } from '@babylonjs/core';
+import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Ray } from '@babylonjs/core';
 import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, type ClientEntity } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerService } from './PlayerService';
+import type { EntityService } from './EntityService';
 import type { Block } from '@nimbus/shared';
 import type { ClientBlock } from '../types/ClientBlock';
 import { mergeBlockModifier } from '../utils/BlockModifierMerge';
@@ -59,12 +60,14 @@ export class SelectService {
   private appContext: AppContext;
   private chunkService: ChunkService;
   private playerService: PlayerService;
+  private entityService?: EntityService;
   private scene?: Scene;
 
   // Auto-select mode
   private _autoSelectMode: SelectMode = SelectMode.NONE;
   private autoSelectRadius: number = 5.0;
   private currentSelectedBlock: ClientBlock | null = null;
+  private currentSelectedEntity: ClientEntity | null = null;
 
   // Highlight rendering
   private highlightMesh?: Mesh;
@@ -86,11 +89,13 @@ export class SelectService {
     appContext: AppContext,
     chunkService: ChunkService,
     playerService: PlayerService,
-    scene?: Scene
+    scene?: Scene,
+    entityService?: EntityService
   ) {
     this.appContext = appContext;
     this.chunkService = chunkService;
     this.playerService = playerService;
+    this.entityService = entityService;
     this.scene = scene;
 
     // Initialize player eye height from PlayerInfo
@@ -403,6 +408,139 @@ export class SelectService {
   }
 
   /**
+   * Get selected entity using BabylonJS raycasting
+   *
+   * Uses scene.pickWithRay() to find interactive entities in front of the camera.
+   *
+   * @param radius Maximum search distance
+   * @returns ClientEntity or null
+   */
+  getSelectedEntityFromPlayer(radius: number = 5.0): ClientEntity | null {
+    try {
+      if (!this.scene || !this.entityService) {
+        return null;
+      }
+
+      // Get player eye position
+      const feetPosition = this.playerService.getPosition();
+      const eyePosition = feetPosition.clone();
+      eyePosition.y += this.playerEyeHeight;
+
+      // Get camera rotation
+      const cameraService = (this.playerService as any).cameraService;
+      if (!cameraService) {
+        return null;
+      }
+
+      const rotation = cameraService.getRotation();
+
+      // Calculate ray direction from rotation
+      const direction = this.calculateRayDirection(rotation);
+
+      // Create ray from eye position
+      const ray = new Ray(eyePosition, direction, radius);
+
+      logger.debug('Starting pickWithRay for entities');
+
+      // Pick with ray - only check visible meshes
+      const pickInfo = this.scene.pickWithRay(ray, (mesh) => {
+        // Only pick entity meshes (not blocks, terrain, etc.)
+        if (!mesh.name.startsWith('entity_') || !mesh.isVisible) {
+          return false;
+        }
+
+        // Get entity ID from metadata
+        const meshEntityId = mesh.metadata?.entityId;
+        if (!meshEntityId) {
+          return false;
+        }
+
+        // Get entity from cache to check properties
+        const entities = this.entityService!.getAllEntities();
+        const entity = entities.find(e => e.id === meshEntityId);
+
+        if (!entity) {
+          return false;
+        }
+
+        // Filter by distance (early exit for entities outside radius)
+        const entityPos = entity.currentPosition;
+        const distance = Math.sqrt(
+          Math.pow(entityPos.x - eyePosition.x, 2) +
+          Math.pow(entityPos.y - eyePosition.y, 2) +
+          Math.pow(entityPos.z - eyePosition.z, 2)
+        );
+        if (distance > radius) {
+          return false;
+        }
+
+        // Filter out player entities BEFORE picking
+        if (entity.entity.controlledBy === 'player') {
+          return false;
+        }
+
+        // Log entities within radius (after distance and player filter, skip @player entities)
+        if (!meshEntityId.startsWith('@player')) {
+          logger.debug('Entity within radius found', {
+            meshName: mesh.name,
+            entityId: meshEntityId,
+            distance: distance.toFixed(2),
+            controlledBy: entity.entity.controlledBy,
+            interactive: entity.entity.interactive,
+          });
+        }
+
+        // Only pick interactive entities
+        if (!entity.entity.interactive) {
+          return false;
+        }
+
+        return true;
+      });
+
+      logger.debug('PickWithRay completed', {
+        hasPickInfo: !!pickInfo,
+        hit: pickInfo?.hit,
+        hasPickedMesh: !!pickInfo?.pickedMesh,
+        distance: pickInfo?.distance,
+      });
+
+      if (!pickInfo || !pickInfo.hit || !pickInfo.pickedMesh) {
+        return null;
+      }
+
+      // Extract entity ID from mesh metadata (already validated in predicate)
+      const entityId = pickInfo.pickedMesh.metadata?.entityId;
+      if (!entityId) {
+        return null;
+      }
+
+      // Get entity from EntityService (already validated in predicate)
+      const entities = this.entityService.getAllEntities();
+      const entity = entities.find(e => e.id === entityId);
+
+      if (!entity) {
+        return null;
+      }
+
+      logger.info('Interactive entity selected!', {
+        entityId: entity.id,
+        name: entity.name,
+        controlledBy: entity.entity.controlledBy,
+        distance: pickInfo.distance?.toFixed(2),
+        interactive: entity.entity.interactive,
+      });
+
+      return entity;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.getSelectedEntityFromPlayer', {
+        radius,
+      });
+      return null;
+    }
+  }
+
+  /**
    * Initialize highlight mesh for selected blocks
    */
   private initializeHighlight(): void {
@@ -526,6 +664,13 @@ export class SelectService {
   }
 
   /**
+   * Get currently selected entity (from auto-select)
+   */
+  getCurrentSelectedEntity(): ClientEntity | null {
+    return this.currentSelectedEntity;
+  }
+
+  /**
    * Update auto-select (called each frame)
    *
    * @param deltaTime Time since last frame in seconds
@@ -537,17 +682,29 @@ export class SelectService {
     }
 
     try {
-      // Get selected block using auto-select mode
-      const selectedBlock = this.getSelectedBlockFromPlayer(
-        this._autoSelectMode,
-        this.autoSelectRadius
-      );
+      // Priority 1: Try to select entity first (entities are closer to camera typically)
+      let selectedEntity: ClientEntity | null = null;
+      if (this._autoSelectMode === SelectMode.INTERACTIVE && this.scene && this.entityService) {
+        selectedEntity = this.getSelectedEntityFromPlayer(this.autoSelectRadius);
+      }
 
-      // Update current selection
+      // Priority 2: If no entity selected, try to select block
+      let selectedBlock: ClientBlock | null = null;
+      if (!selectedEntity) {
+        selectedBlock = this.getSelectedBlockFromPlayer(
+          this._autoSelectMode,
+          this.autoSelectRadius
+        );
+      }
+
+      // Update current selections
+      this.currentSelectedEntity = selectedEntity;
       this.currentSelectedBlock = selectedBlock;
 
-      // Update highlight
-      if (selectedBlock) {
+      // Update highlight (entity has priority over block)
+      if (selectedEntity) {
+        this.showEntityHighlight(selectedEntity);
+      } else if (selectedBlock) {
         this.showHighlight(selectedBlock);
       } else {
         this.hideHighlight();
@@ -602,6 +759,86 @@ export class SelectService {
       this.highlightMesh.setEnabled(false);
     }
     this.hideLabel();
+  }
+
+  /**
+   * Show highlight at entity position
+   *
+   * Uses the same highlight mesh as blocks but scales/positions for entity bounding box.
+   *
+   * @param entity Entity to highlight
+   */
+  private showEntityHighlight(entity: ClientEntity): void {
+    if (!this.highlightMesh || !this.scene) {
+      return;
+    }
+
+    // Get entity position (ClientEntity uses currentPosition)
+    const pos = entity.currentPosition;
+
+    // Get entity model dimensions (use model height/width if available)
+    const height = entity.model?.dimensions?.walk?.height || 1.8; // Default player height
+    const width = entity.model?.dimensions?.walk?.width || 0.6; // Default player width
+
+    // Position highlight at entity center (entity.currentPosition is at feet)
+    this.highlightMesh.position.set(
+      pos.x,
+      pos.y + height / 2, // Center vertically
+      pos.z
+    );
+
+    // Scale to entity bounding box
+    const scale = 1.05; // Slightly larger for visibility
+    this.highlightMesh.scaling.set(
+      width * scale,
+      height * scale,
+      width * scale
+    );
+
+    // Enable highlight
+    this.highlightMesh.setEnabled(true);
+
+    // Show label with entity name
+    this.showEntityLabel(entity);
+  }
+
+  /**
+   * Show label for selected entity
+   *
+   * Shows entity name above the entity in screen space.
+   *
+   * @param entity Entity to show label for
+   */
+  private showEntityLabel(entity: ClientEntity): void {
+    if (!this.guiTexture || !this.labelTextBlock || !this.scene) {
+      return;
+    }
+
+    // Use entity name for label (from entity.entity.name)
+    const displayName = entity.entity.name || entity.id;
+
+    // Position label above entity (use currentPosition)
+    const pos = entity.currentPosition;
+    const height = entity.model?.dimensions?.walk?.height || 1.8;
+    const labelWorldPos = new Vector3(pos.x, pos.y + height + 0.5, pos.z);
+
+    // Update label text
+    this.labelTextBlock.text = displayName;
+
+    // Link to world position
+    this.labelTextBlock.linkWithMesh(null); // Unlink first
+
+    // Create temporary mesh for label positioning
+    const tempMesh = MeshBuilder.CreateBox('labelAnchor', { size: 0.1 }, this.scene);
+    tempMesh.position.copyFrom(labelWorldPos);
+    tempMesh.isVisible = false;
+    tempMesh.isPickable = false;
+
+    this.labelTextBlock.linkWithMesh(tempMesh);
+    this.labelTextBlock.linkOffsetY = -30; // Offset above entity
+
+    // Show label
+    this.labelTextBlock.isVisible = true;
   }
 
   /**

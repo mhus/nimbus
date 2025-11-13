@@ -476,6 +476,43 @@ export class NetworkService {
   }
 
   /**
+   * Send entity interaction to server
+   *
+   * @param entityId Entity ID
+   * @param action Action type (e.g., 'click', 'use', 'talk')
+   * @param clickType Type of click (left, right, middle) - only for 'click' action
+   */
+  sendEntityInteraction(
+    entityId: string,
+    action: string = 'click',
+    clickType?: 'left' | 'right' | 'middle'
+  ): void {
+    const params: any = {};
+    if (action === 'click' && clickType) {
+      params.clickType = clickType;
+    }
+
+    const message: RequestMessage<any> = {
+      i: this.generateMessageId(),
+      t: MessageType.ENTITY_INTERACTION,
+      d: {
+        entityId,
+        ts: Date.now(),
+        ac: action,
+        pa: params,
+      },
+    };
+
+    this.send(message);
+
+    logger.debug('Sent entity interaction', {
+      entityId,
+      action,
+      clickType,
+    });
+  }
+
+  /**
    * Get API URL for REST calls
    */
   getApiUrl(): string {

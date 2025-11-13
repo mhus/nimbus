@@ -1,6 +1,7 @@
 {
   "entityId": "guard1",
   "entityModelId": "farmer1",
+  "interactive": true,
   "clientPhysics": true,
   "physics": false,
   "solid": true,

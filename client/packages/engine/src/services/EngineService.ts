@@ -234,7 +234,8 @@ export class EngineService {
           this.appContext,
           this.appContext.services.chunk,
           this.playerService,
-          this.scene
+          this.scene,
+          this.appContext.services.entity // Add EntityService for entity selection
         );
         this.appContext.services.select = this.selectService;
         logger.debug('SelectService initialized');

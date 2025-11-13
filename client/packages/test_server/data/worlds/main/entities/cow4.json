@@ -4,6 +4,7 @@
   "clientPhysics": true,
   "physics": false,
   "solid": true,
+  "interactive": true,
   "initialPosition": {
     "x": 10,
     "y": 64,

@@ -390,14 +390,41 @@ Der Client sendet seine aktuelle Entity-Positions und Rotation an den Server.
 
 Der Client sendet eine Interaktions information mit einer Entity an den Server (z.B. wenn der Spieler mit einer Entity interagiert).
 
+Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf eine interaktive Entity klickt (entity.interactive === true).
+
+**Aktionen:**
+- `'click'` - Spieler klickt auf Entity (left, right, middle)
+- `'use'` - Spieler verwendet Entity (z.B. NPC ansprechen)
+- `'talk'` - Spieler spricht mit Entity
+- `'attack'` - Spieler greift Entity an
+- `'touch'` - Automatische Kollision/Proximity
+- `'entityCollision'` - Spieler kollidiert mit Entity
+- `'entityProximity'` - Spieler betritt Entity Attention-Range
+
 ```json
 {"i":"12345", "t": "e.int.r", "d":
   {
     "entityId": "entity123",
     "ts": 1697045600000, // timestamp der interaktion
-    "ac": "use", // action z.b. 'use', 'talk', 'attack', 'touch'
+    "ac": "click", // action z.b. 'click', 'use', 'talk', 'attack', 'touch'
     "pa": { // params
-      // optionale parameter fuer die interaktion
+      "clickType": "left" // 'left', 'right', 'middle' (nur bei ac: 'click')
+    }
+  }
+}
+```
+
+**Beispiel Click-Interaktion:**
+```json
+{
+  "i": "45678",
+  "t": "e.int.r",
+  "d": {
+    "entityId": "npc_farmer_001",
+    "ts": 1697045600000,
+    "ac": "click",
+    "pa": {
+      "clickType": "right"
     }
   }
 }

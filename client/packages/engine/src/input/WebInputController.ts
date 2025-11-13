@@ -314,7 +314,7 @@ export class WebInputController implements InputController {
   };
 
   /**
-   * Handle mouse button down (for block interactions)
+   * Handle mouse button down (for block and entity interactions)
    */
   private onMouseDown = (event: MouseEvent): void => {
     if (!this.pointerLocked) {
@@ -324,12 +324,6 @@ export class WebInputController implements InputController {
     // Check if SelectService is in INTERACTIVE mode
     const selectService = this.appContext.services.select;
     if (!selectService || selectService.getAutoSelectMode() !== 'INTERACTIVE') {
-      return;
-    }
-
-    // Get currently selected block
-    const selectedBlock = selectService.getCurrentSelectedBlock();
-    if (!selectedBlock) {
       return;
     }
 
@@ -349,23 +343,46 @@ export class WebInputController implements InputController {
         return; // Ignore other buttons
     }
 
-    // Send block interaction to server
-    this.appContext.services.network.sendBlockInteraction(
-      selectedBlock.block.position.x,
-      selectedBlock.block.position.y,
-      selectedBlock.block.position.z,
-      selectedBlock.block.metadata?.id,
-      selectedBlock.block.metadata?.groupId,
-      clickType
-    );
+    // Priority 1: Check if entity is selected
+    const selectedEntity = selectService.getCurrentSelectedEntity();
+    if (selectedEntity) {
+      // Send entity interaction to server
+      this.appContext.services.network.sendEntityInteraction(
+        selectedEntity.id,
+        'click',
+        clickType
+      );
 
-    logger.debug('Block interaction sent', {
-      position: selectedBlock.block.position,
-      clickType,
-      id: selectedBlock.block.metadata?.id,
-    });
+      logger.debug('Entity interaction sent', {
+        entityId: selectedEntity.id,
+        clickType,
+      });
 
-    event.preventDefault();
+      event.preventDefault();
+      return;
+    }
+
+    // Priority 2: Check if block is selected
+    const selectedBlock = selectService.getCurrentSelectedBlock();
+    if (selectedBlock) {
+      // Send block interaction to server
+      this.appContext.services.network.sendBlockInteraction(
+        selectedBlock.block.position.x,
+        selectedBlock.block.position.y,
+        selectedBlock.block.position.z,
+        selectedBlock.block.metadata?.id,
+        selectedBlock.block.metadata?.groupId,
+        clickType
+      );
+
+      logger.debug('Block interaction sent', {
+        position: selectedBlock.block.position,
+        clickType,
+        id: selectedBlock.block.metadata?.id,
+      });
+
+      event.preventDefault();
+    }
   };
 
   /**
