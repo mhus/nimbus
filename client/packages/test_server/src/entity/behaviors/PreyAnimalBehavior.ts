@@ -124,15 +124,15 @@ export class PreyAnimalBehavior extends EntityBehavior {
       this.physicsTargets.set(entity.entityId, targetInfo);
     }
 
-    // Calculate direction to target
-    const target = targetInfo.target;
+    // Calculate direction to target (targetInfo is guaranteed to exist here)
+    const target = targetInfo!.target;
     const dx = target.x - position.x;
     const dz = target.z - position.z;
     const distance = Math.sqrt(dx * dx + dz * dz);
 
     if (distance < 0.5) {
       // Reached target
-      targetInfo.reachedAt = Date.now();
+      targetInfo!.reachedAt = Date.now();
       physicsSimulator.setVelocity(entity, { x: 0, y: entity.physicsState.velocity.y, z: 0 });
 
       // Update rotation towards target

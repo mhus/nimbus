@@ -59,7 +59,9 @@
       "Bash(pnpm --filter @nimbus/engine build:editor:*)",
       "Bash(git restore:*)",
       "Bash(pnpm --filter @nimbus/test_server build:*)",
-      "Bash(pnpm --filter @nimbus/test_server exec tsc:*)"
+      "Bash(pnpm --filter @nimbus/test_server exec tsc:*)",
+      "Bash(pnpm build:test_server:*)",
+      "Bash(pnpm build:engine:*)"
     ],
     "deny": [],
     "ask": []

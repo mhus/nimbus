@@ -19,7 +19,8 @@ import {
   ENTITY_POSES,
   MessageType,
 } from '@nimbus/shared';
-import type { Vector3, Rotation } from '@nimbus/shared';
+import type { Rotation } from '@nimbus/shared';
+import { Vector3 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
 import { EntityPhysicsController } from './entity/EntityPhysicsController';
@@ -756,7 +757,7 @@ export class EntityService {
     // Helper: Check if block is solid (not air)
     const isBlockSolid = (x: number, y: number, z: number): boolean => {
       const block = getBlockAtPosition(x, y, z);
-      return block ? block.blockType.id !== 'air' : false;
+      return block ? block.blockType.id !== 0 : false;
     };
 
     // Update physics
@@ -1031,7 +1032,7 @@ export class EntityService {
 
       entitiesInRadius.push({
         entityId: clientEntity.entity.id,
-        position: clientEntity.currentPosition,
+        position: new Vector3(clientEntity.currentPosition.x, clientEntity.currentPosition.y, clientEntity.currentPosition.z),
         rotation: clientEntity.currentRotation,
         dimensions,
         solid: clientEntity.entity.solid ?? false,

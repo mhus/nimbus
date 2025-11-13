@@ -1,0 +1,35 @@
+{
+  "entityId": "guard1",
+  "entityModelId": "farmer1",
+  "clientPhysics": true,
+  "physics": false,
+  "solid": true,
+  "notifyOnCollision": true,
+  "notifyOnAttentionRange": 15,
+  "initialPosition": {
+    "x": 30,
+    "y": 64,
+    "z": 30
+  },
+  "initialRotation": {
+    "y": 0,
+    "p": 0
+  },
+  "middlePoint": {
+    "x": 30,
+    "y": 64,
+    "z": 30
+  },
+  "radius": 20,
+  "speed": 1.0,
+  "behaviorModel": "PreyAnimalBehavior",
+  "behaviorConfig": {
+    "minStepDistance": 5,
+    "maxStepDistance": 10,
+    "waypointsPerPath": 4,
+    "minIdleDuration": 200,
+    "maxIdleDuration": 500,
+    "pathwayInterval": 6000
+  },
+  "chunks": []
+}

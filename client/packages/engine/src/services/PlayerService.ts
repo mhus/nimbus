@@ -680,7 +680,7 @@ export class PlayerService {
     // If already loaded, just show it via EntityRenderService
     if (playerAvatarEntityId && this.entityRenderService) {
       // Show entity via visibility event
-      this.entityRenderService.onEntityVisibility(playerAvatarEntityId, true);
+      this.entityRenderService.setEntityVisibility(playerAvatarEntityId, true);
       logger.info('Third-person model shown via EntityRenderService');
       return;
     }
@@ -699,7 +699,7 @@ export class PlayerService {
     }
 
     // Hide entity via visibility event
-    this.entityRenderService.onEntityVisibility(playerAvatarEntityId, false);
+    this.entityRenderService.setEntityVisibility(playerAvatarEntityId, false);
     logger.debug('Third-person model hidden via EntityRenderService');
   }
 
@@ -747,8 +747,7 @@ export class PlayerService {
         playerAvatarEntity,
         entityModel,
         this.playerEntity.position,
-        { y: 0, p: 0 },
-        0 // IDLE pose
+        { y: 0, p: 0 }
       );
 
       logger.info('Created ClientEntity for player avatar', {
@@ -766,13 +765,13 @@ export class PlayerService {
         startAt: Date.now(),
         waypoints: [{
           timestamp: Date.now(),
-          target: { ...this.playerEntity.position },
+          target: { x: this.playerEntity.position.x, y: this.playerEntity.position.y, z: this.playerEntity.position.z },
           rotation: { y: 0, p: 0 },
           pose: 0 // IDLE
         }],
       };
 
-      await this.entityRenderService.onEntityPathway(initialPathway);
+      await this.entityRenderService.updateEntityPathway(initialPathway);
 
       logger.info('Player avatar model loaded via EntityRenderService');
 
@@ -791,7 +790,7 @@ export class PlayerService {
 
       // Initially hide in ego-mode (if we're starting in ego-mode)
       if (this.isEgoView()) {
-        this.entityRenderService.onEntityVisibility('@player_avatar', false);
+        this.entityRenderService.setEntityVisibility('@player_avatar', false);
         logger.info('Player avatar initially hidden (ego-mode)');
       }
 

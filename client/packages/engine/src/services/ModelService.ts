@@ -199,7 +199,12 @@ export class ModelService {
   async loadModel(modelPath: string): Promise<Mesh | null> {
     // Check if this is a GLB file and use specialized loader
     if (modelPath.toLowerCase().endsWith('.glb') || modelPath.toLowerCase().endsWith('.gltf')) {
-      return this.loadGlbModel(modelPath);
+      const container = await this.loadGlbContainer(modelPath);
+      if (!container || !container.meshes || container.meshes.length === 0) {
+        return null;
+      }
+      // Return first mesh from container (usually the root mesh)
+      return container.meshes[0] as Mesh;
     }
     try {
       // Check cache

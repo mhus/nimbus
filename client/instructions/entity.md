@@ -251,17 +251,24 @@ Siehe EntityService.ts
 [-] Wenn ein neuer Pathway kommt und die velocity zum erste punkt zu hoch wird, soll die entity zum ersten punkt flippen dann sollden
 die waypoints normal abgearbeitet werden.
 
-[?] An entity ein neuen parameter, ob bei collision ein event an server geschickt werden soll
+[x] An entity ein neuen parameter, ob bei collision ein event an server geschickt werden soll
 - erstelle dazu an der entity einen parameter, z.b. 'notifyOnCollision': boolean
 - Wenn der player mit der entity kollidiert und notifyOnCollision=true ist, wird ein event an den server geschickt
 - Siehe client/instructions/general/network-model-2.0.md "Entity Interaction (Client -> Server)" als action type 'entityCollision' gesendet werden
+- Implementiert in EntityService.onPlayerCollision()
+- Beispiele: guard1.json, sentinel1.json, trap1.json
 
-[?] An entity ein parameter erstellen, in welchem range ein event an server geschickt werden soll. Name notifyOnProximity : number
-- Wenn der player sich in der naehe der entity befindet (distance < (notifyOnProximity + player.distanceNotifyReductionWalk bzw. distanceNotifyReductionCrouch   ... beide muessen am player noch angelegt werden, default 0) ), wird ein event an den server geschickt
+[x] An entity ein parameter erstellen, in welchem range ein event an server geschickt werden soll. Name notifyOnAttentionRange : number
+- Wenn der player sich in der naehe der entity befindet (distance < (notifyOnAttentionRange + player.distanceNotifyReductionWalk bzw. distanceNotifyReductionCrouch)), wird ein event an den server geschickt
 - Das event wird nur einmal gesendet, wenn der player in den range kommt. Wenn er den range verlaesst und wieder rein kommt, wird das event wieder gesendet.
 - Siehe client/instructions/general/network-model-2.0.md "Entity Interaction (Client -> Server)" als action type 'entityProximity' gesendet werden
-- Das event moeglichst nicht permanent schicken, nur wenn der player in den range kommt
-- Alternative benamung nicht notifyOnProximityRange sondern etwas mit 'Attention', denn die Entity soll ja auf den Player aufmerksam werden !!!!
+- Das event wird nicht permanent geschickt, nur beim Enter/Exit des Ranges
+- Benamung: notifyOnAttentionRange - die Entity wird auf den Player aufmerksam!
+- Implementiert in EntityService.checkProximityNotification() im Update-Loop
+- Player Properties: distanceNotifyReductionWalk und distanceNotifyReductionCrouch (default: 0)
+- Effektive Range: notifyOnAttentionRange + (isCrouching ? distanceNotifyReductionCrouch : distanceNotifyReductionWalk)
+- Server Handler: NimbusServer.handleEntityInteraction()
+- Beispiele: guard1.json (15 blocks), sentinel1.json (25 blocks), trap1.json (5 blocks)
 
 [x] Eigene entity: Auch der Player soll ein Model haben, das gerendert wird.
 - Umstellen ego mode auf third person via parameter und erstelle ein Command in der engine um den ego mode umzuschalten

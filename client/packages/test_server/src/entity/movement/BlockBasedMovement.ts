@@ -12,7 +12,7 @@ import type { Vector3 } from '@nimbus/shared';
 import type { Rotation } from '@nimbus/shared';
 import type { Waypoint } from '@nimbus/shared';
 import type { WorldManager } from '../../world/WorldManager';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, Shape } from '@nimbus/shared';
 
 const logger = getLogger('BlockBasedMovement');
 
@@ -42,6 +42,41 @@ export class BlockBasedMovement {
   }
 
   /**
+   * Check if a block is water (OCEAN shapes)
+   * @param worldId World ID
+   * @param x Block X coordinate
+   * @param y Block Y coordinate
+   * @param z Block Z coordinate
+   * @returns true if block is water
+   */
+  private async isWaterBlock(worldId: string, x: number, y: number, z: number): Promise<boolean> {
+    if (!this.worldManager) {
+      return false;
+    }
+
+    const block = await this.worldManager.getBlock(worldId, x, y, z);
+    if (!block) {
+      return false;
+    }
+
+    const blockType = this.worldManager.getBlockTypeRegistry().getBlockType(block.blockTypeId);
+    if (!blockType) {
+      return false;
+    }
+
+    // Get default modifier (status 0)
+    const modifier = blockType.modifiers[0];
+    if (!modifier || !modifier.visibility) {
+      return false;
+    }
+
+    const shape = modifier.visibility.shape;
+    return shape === Shape.OCEAN ||
+           shape === Shape.OCEAN_COAST ||
+           shape === Shape.OCEAN_MAELSTROM;
+  }
+
+  /**
    * Find start position (on top of highest solid block)
    *
    * @param worldId World ID
@@ -67,7 +102,7 @@ export class BlockBasedMovement {
       // Search downward for first solid block
       for (let y = maxHeight; y >= 0; y--) {
         const block = await this.worldManager.getBlock(worldId, floorX, y, floorZ);
-        if (block && block.blockTypeId !== 'air') {
+        if (block && block.blockTypeId !== 0) {
           // Found solid block, stand on top
           return y + 1;
         }
@@ -107,17 +142,17 @@ export class BlockBasedMovement {
     try {
       // Check block at target position (same height)
       const blockAtTarget = await this.worldManager.getBlock(worldId, targetX, y, targetZ);
-      const targetSolid = blockAtTarget ? blockAtTarget.blockTypeId !== 'air' : false;
+      const targetSolid = blockAtTarget ? blockAtTarget.blockTypeId !== 0 : false;
 
       // Check if target block is OCEAN - entities should not enter water
-      if (blockAtTarget && blockAtTarget.shade === 'OCEAN') {
+      if (await this.isWaterBlock(worldId, targetX, y, targetZ)) {
         return null; // Blocked by water
       }
 
       if (targetSolid) {
         // Block at target is solid → try stepping UP
         const blockAbove = await this.worldManager.getBlock(worldId, targetX, y + 1, targetZ);
-        const aboveSolid = blockAbove ? blockAbove.blockTypeId !== 'air' : false;
+        const aboveSolid = blockAbove ? blockAbove.blockTypeId !== 0 : false;
 
         if (!aboveSolid) {
           // Block above is not solid → can step up
@@ -129,10 +164,10 @@ export class BlockBasedMovement {
       } else {
         // Block at target is NOT solid → check block BELOW
         const blockBelow = await this.worldManager.getBlock(worldId, targetX, y - 1, targetZ);
-        const belowSolid = blockBelow ? blockBelow.blockTypeId !== 'air' : false;
+        const belowSolid = blockBelow ? blockBelow.blockTypeId !== 0 : false;
 
         // Check if block below is OCEAN - entities should not walk into water
-        if (blockBelow && blockBelow.shade === 'OCEAN') {
+        if (await this.isWaterBlock(worldId, targetX, y - 1, targetZ)) {
           return null; // Blocked by water below
         }
 
@@ -142,10 +177,10 @@ export class BlockBasedMovement {
         } else {
           // No block below → check 2 blocks down (step down)
           const blockBelow2 = await this.worldManager.getBlock(worldId, targetX, y - 2, targetZ);
-          const below2Solid = blockBelow2 ? blockBelow2.blockTypeId !== 'air' : false;
+          const below2Solid = blockBelow2 ? blockBelow2.blockTypeId !== 0 : false;
 
           // Check if 2 blocks below is OCEAN
-          if (blockBelow2 && blockBelow2.shade === 'OCEAN') {
+          if (await this.isWaterBlock(worldId, targetX, y - 2, targetZ)) {
             return null; // Blocked by water 2 blocks down
           }
 

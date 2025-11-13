@@ -282,7 +282,7 @@ export class EntityPhysicsSimulator {
       for (let y = minY; y <= maxY; y++) {
         for (let z = minZ; z <= maxZ; z++) {
           const block = await this.worldManager.getBlock(worldId, x, y, z);
-          if (block && block.blockTypeId !== 'air') {
+          if (block && block.blockTypeId !== 0) {
             // Simple check: non-air blocks are solid
             return true;
           }
@@ -312,7 +312,7 @@ export class EntityPhysicsSimulator {
 
       for (let y = maxHeight; y >= minHeight; y--) {
         const block = await this.worldManager.getBlock(worldId, floorX, y, floorZ);
-        if (block && block.blockTypeId !== 'air') {
+        if (block && block.blockTypeId !== 0) {
           return y + 1; // Stand on top of block
         }
       }

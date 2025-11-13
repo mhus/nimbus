@@ -326,7 +326,7 @@ export class EntitySimulator {
       // Search downward from start position
       for (let y = Math.floor(startY); y >= 0; y--) {
         const block = await this.worldManager.getBlock(worldId, floorX, y, floorZ);
-        if (block && block.blockTypeId !== 'air') {
+        if (block && block.blockTypeId !== 0) {
           return y + 1; // Stand on top of block
         }
       }

@@ -106,7 +106,11 @@ export class EntityRenderService {
   /**
    * Handle entity pathway update (entity appears or moves)
    */
-  private async onEntityPathway(pathway: EntityPathway): Promise<void> {
+  /**
+   * Update entity pathway (creates entity if it doesn't exist)
+   * @param pathway Entity pathway
+   */
+  async updateEntityPathway(pathway: EntityPathway): Promise<void> {
     try {
       const entityId = pathway.entityId;
 
@@ -131,16 +135,28 @@ export class EntityRenderService {
         await this.drawPathwayLines(entityId, pathway);
       }
     } catch (error) {
-      ExceptionHandler.handle(error, 'EntityRenderService.onEntityPathway', {
+      ExceptionHandler.handle(error, 'EntityRenderService.updateEntityPathway', {
         entityId: pathway.entityId,
       });
     }
   }
 
   /**
+   * Handle entity pathway events (private event handler)
+   */
+  private async onEntityPathway(pathway: EntityPathway): Promise<void> {
+    await this.updateEntityPathway(pathway);
+  }
+
+  /**
    * Handle entity visibility change
    */
-  private onEntityVisibility(entityId: string, visible: boolean): void {
+  /**
+   * Set entity visibility
+   * @param entityId Entity ID
+   * @param visible Whether entity should be visible
+   */
+  setEntityVisibility(entityId: string, visible: boolean): void {
     try {
       const rendered = this.renderedEntities.get(entityId);
       if (!rendered) {
@@ -150,8 +166,15 @@ export class EntityRenderService {
       rendered.mesh.setEnabled(visible);
       logger.debug('Entity visibility changed', { entityId, visible });
     } catch (error) {
-      ExceptionHandler.handle(error, 'EntityRenderService.onEntityVisibility', { entityId, visible });
+      ExceptionHandler.handle(error, 'EntityRenderService.setEntityVisibility', { entityId, visible });
     }
+  }
+
+  /**
+   * Handle entity visibility events (private event handler)
+   */
+  private onEntityVisibility(entityId: string, visible: boolean): void {
+    this.setEntityVisibility(entityId, visible);
   }
 
   /**
@@ -445,7 +468,7 @@ export class EntityRenderService {
       const currentPosition = clientEntity?.currentPosition;
 
       // Build points array: Start from current position, then all waypoints
-      const points: typeof Vector3[] = [];
+      const points: Vector3[] = [];
 
       if (currentPosition) {
         points.push(new Vector3(currentPosition.x, currentPosition.y, currentPosition.z));
