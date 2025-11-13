@@ -876,6 +876,16 @@ export class PlayerService {
       z: currentPosition.z + currentVelocity.z * predictionTimeSec,
     };
 
+    // Normalize velocity for network (divide by base speed to get 0-1 range)
+    // This makes the animation speed correct on other clients
+    // The raw velocity (5.0 blocks/s) makes animations too fast
+    const baseSpeed = 4.5; // Base walk speed for normalization
+    const normalizedVelocity = {
+      x: currentVelocity.x / baseSpeed,
+      y: currentVelocity.y / baseSpeed,
+      z: currentVelocity.z / baseSpeed,
+    };
+
     // Build update data
     const updateData: EntityPositionUpdateData = {
       pl: 'player', // Local entity ID (not the unique @player_uuid, just "player" for local reference)
@@ -888,11 +898,7 @@ export class PlayerService {
         y: cameraYawDegrees,
         p: 0, // Player body doesn't pitch up/down, only camera does
       },
-      v: {
-        x: currentVelocity.x,
-        y: currentVelocity.y,
-        z: currentVelocity.z,
-      },
+      v: normalizedVelocity, // Send normalized velocity (not raw blocks/s)
       po: currentPose,
       ts: Date.now(),
       ta: {
