@@ -387,8 +387,12 @@ export class EntityRenderService {
     // Calculate speed ratio from speedMultiplier and velocity
     let speedRatio = poseConfig.speedMultiplier;
     if (velocity !== undefined && velocity > 0) {
-      // Adjust speed based on actual movement velocity
-      speedRatio = poseConfig.speedMultiplier * velocity;
+      // Normalize velocity to animation speed
+      // Base velocity for walk animation is ~4.5 blocks/s
+      // This makes the animation speed match the actual movement speed
+      const baseWalkSpeed = 4.5; // Average walk speed in blocks/s
+      const velocityRatio = velocity / baseWalkSpeed;
+      speedRatio = poseConfig.speedMultiplier * velocityRatio;
     }
 
     // Play new animation

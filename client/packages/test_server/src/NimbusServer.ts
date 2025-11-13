@@ -214,6 +214,12 @@ class NimbusServer {
       });
 
       ws.on('close', () => {
+        // Remove player entity from EntityManager
+        if (session.playerEntityId && this.entityManager) {
+          this.entityManager.removeEntity(session.playerEntityId);
+          logger.info('Player entity removed', { entityId: session.playerEntityId });
+        }
+
         this.sessions.delete(sessionId);
         logger.info(`Client disconnected: ${sessionId}`);
       });
@@ -261,6 +267,9 @@ class NimbusServer {
       case 'cmd': // Command execution
         this.handleCommand(session, i, d);
         break;
+      case 'e.p.u': // Entity position update (from client)
+        this.handleEntityPositionUpdate(session, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -272,6 +281,29 @@ class NimbusServer {
     session.username = data.username;
     session.displayName = data.username;
     session.worldId = data.worldId;
+
+    // Generate player entity ID (format: @username_sessionId)
+    session.playerEntityId = `@${session.username}_${session.sessionId}`;
+
+    // Register player entity in EntityManager
+    if (this.entityManager) {
+      const playerEntity = {
+        id: session.playerEntityId,
+        name: session.displayName || session.username || 'Player',
+        model: 'farmer1', // Default player model
+        modelModifier: {},
+        movementType: 'dynamic' as const,
+        solid: false,
+        interactive: false,
+        clientPhysics: false,
+      };
+
+      this.entityManager.addEntity(playerEntity);
+      logger.info('Player entity registered', {
+        entityId: session.playerEntityId,
+        username: session.username,
+      });
+    }
 
     const world = this.worldManager.getWorld(data.worldId);
 
@@ -320,14 +352,46 @@ class NimbusServer {
     await this.sendChunks(session, chunks);
 
     // Queue pathways for newly registered chunks
-    if (newChunks.length > 0 && this.entitySimulator) {
+    if (newChunks.length > 0) {
       const pathwaysToSend = new Map<string, EntityPathway>();
 
-      for (const { cx, cz } of newChunks) {
-        const pathways = this.entitySimulator.getPathwaysForChunk(cx, cz);
-        for (const pathway of pathways) {
-          // Use Map to deduplicate (entity might be in multiple chunks)
-          pathwaysToSend.set(pathway.entityId, pathway);
+      // Add NPC/AI entity pathways from EntitySimulator
+      if (this.entitySimulator) {
+        for (const { cx, cz } of newChunks) {
+          const pathways = this.entitySimulator.getPathwaysForChunk(cx, cz);
+          for (const pathway of pathways) {
+            // Use Map to deduplicate (entity might be in multiple chunks)
+            pathwaysToSend.set(pathway.entityId, pathway);
+          }
+        }
+      }
+
+      // Add player pathways from other sessions
+      const world = this.worldManager.getWorld(session.worldId || 'main');
+      if (world) {
+        for (const playerSession of this.sessions.values()) {
+          // Skip own session
+          if (playerSession.sessionId === session.sessionId) {
+            continue;
+          }
+
+          // Skip if player has no pathway
+          if (!playerSession.lastPlayerPathway || !playerSession.playerPosition) {
+            continue;
+          }
+
+          // Calculate which chunk the player is in
+          const playerChunkX = Math.floor(playerSession.playerPosition.x / world.chunkSize);
+          const playerChunkZ = Math.floor(playerSession.playerPosition.z / world.chunkSize);
+
+          // Check if player is in any of the newly registered chunks
+          const isInNewChunk = newChunks.some(chunk =>
+            chunk.cx === playerChunkX && chunk.cz === playerChunkZ
+          );
+
+          if (isInNewChunk) {
+            pathwaysToSend.set(playerSession.playerEntityId!, playerSession.lastPlayerPathway);
+          }
         }
       }
 
@@ -367,6 +431,58 @@ class NimbusServer {
 
     // Execute command via CommandService
     this.commandService.executeCommand(session, messageId, cmd, args || []);
+  }
+
+  /**
+   * Handle entity position update from client (player position)
+   * Message type: e.p.u
+   */
+  private handleEntityPositionUpdate(session: ClientSession, data: any) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      logger.warn('Invalid entity position update data', {
+        sessionId: session.sessionId,
+      });
+      return;
+    }
+
+    // Process first update (player position)
+    const update = data[0];
+    const { pl, p, r, v, po, ts, ta } = update;
+
+    // Update session player state
+    if (p) {
+      session.playerPosition = { x: p.x, y: p.y, z: p.z };
+    }
+    if (r) {
+      session.playerRotation = { y: r.y, p: r.p };
+    }
+    if (v) {
+      session.playerVelocity = { x: v.x, y: v.y, z: v.z };
+    }
+    if (po !== undefined) {
+      session.playerPose = po;
+    }
+    if (ta) {
+      session.playerTargetPosition = { x: ta.x, y: ta.y, z: ta.z, ts: ta.ts };
+    }
+
+    session.playerLastUpdate = Date.now();
+
+    // Set player entity ID if not set yet (use userId as base)
+    if (!session.playerEntityId && session.userId) {
+      session.playerEntityId = `@${session.userId}`;
+    }
+
+    logger.debug('Player position updated', {
+      sessionId: session.sessionId,
+      username: session.username,
+      position: session.playerPosition,
+      rotation: session.playerRotation,
+      pose: session.playerPose,
+    });
+
+    // Note: Broadcasting to other clients will be handled by
+    // the entity pathway broadcast system (every 100ms)
   }
 
   private async sendChunks(session: ClientSession, coords: any[]) {
@@ -586,6 +702,10 @@ class NimbusServer {
    */
   private broadcastPathways(): void {
     try {
+      // First, generate player pathways for all sessions
+      this.generatePlayerPathways();
+
+      // Then send all queued pathways to clients
       for (const session of this.sessions.values()) {
         if (!session.isAuthenticated || session.entityPathwayQueue.length === 0) {
           continue;
@@ -600,6 +720,11 @@ class NimbusServer {
 
           session.ws.send(JSON.stringify(message));
 
+          logger.debug('Sent pathways to client', {
+            sessionId: session.sessionId,
+            pathwayCount: session.entityPathwayQueue.length,
+          });
+
           // Clear queue after sending
           session.entityPathwayQueue = [];
         } catch (error) {
@@ -610,6 +735,105 @@ class NimbusServer {
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.broadcastPathways');
+    }
+  }
+
+  /**
+   * Generate player pathways from session state and queue them for clients
+   * Only generates pathways if player has updated recently (within last 200ms)
+   */
+  private generatePlayerPathways(): void {
+    try {
+      const now = Date.now();
+      const world = this.worldManager.getWorld('main'); // TODO: Get from session
+      if (!world) return;
+
+      const UPDATE_TIMEOUT_MS = 200; // Only send updates if player updated within last 200ms
+
+      // For each player session, generate a pathway
+      for (const playerSession of this.sessions.values()) {
+        if (!playerSession.isAuthenticated || !playerSession.playerEntityId) {
+          continue;
+        }
+
+        // Skip if no position data OR player hasn't updated recently
+        if (!playerSession.playerPosition) {
+          continue; // No position data yet
+        }
+
+        const hasRecentUpdate = playerSession.playerLastUpdate &&
+                                (now - playerSession.playerLastUpdate) <= UPDATE_TIMEOUT_MS;
+        const hasNoPathway = !playerSession.lastPlayerPathway;
+
+        // Generate pathway if:
+        // 1. Player has updated recently (moved), OR
+        // 2. Player has no pathway yet (initial state after login)
+        if (!hasRecentUpdate && !hasNoPathway) {
+          continue; // Player hasn't moved recently and already has a pathway, skip
+        }
+
+        // Calculate which chunk the player is in
+        const playerChunkX = Math.floor(playerSession.playerPosition.x / world.chunkSize);
+        const playerChunkZ = Math.floor(playerSession.playerPosition.z / world.chunkSize);
+        const playerChunkKey = getChunkKey(playerChunkX, playerChunkZ);
+
+        // Create pathway with current position and predicted position
+        const waypoints: any[] = [];
+
+        // Add current position waypoint
+        waypoints.push({
+          timestamp: now,
+          target: {
+            x: playerSession.playerPosition.x,
+            y: playerSession.playerPosition.y,
+            z: playerSession.playerPosition.z,
+          },
+          rotation: playerSession.playerRotation || { y: 0, p: 0 },
+          pose: playerSession.playerPose || 0,
+        });
+
+        // Add predicted position if available
+        if (playerSession.playerTargetPosition) {
+          waypoints.push({
+            timestamp: playerSession.playerTargetPosition.ts,
+            target: {
+              x: playerSession.playerTargetPosition.x,
+              y: playerSession.playerTargetPosition.y,
+              z: playerSession.playerTargetPosition.z,
+            },
+            rotation: playerSession.playerRotation || { y: 0, p: 0 },
+            pose: playerSession.playerPose || 0,
+          });
+        }
+
+        const playerPathway: EntityPathway = {
+          entityId: playerSession.playerEntityId,
+          startAt: now,
+          waypoints: waypoints,
+        };
+
+        // Store last pathway in player session (for new chunk registrations)
+        playerSession.lastPlayerPathway = playerPathway;
+
+        // Queue this pathway for all OTHER clients that have this chunk registered
+        for (const otherSession of this.sessions.values()) {
+          // Don't send player's own position back to them
+          if (otherSession.sessionId === playerSession.sessionId) {
+            continue;
+          }
+
+          if (!otherSession.isAuthenticated) {
+            continue;
+          }
+
+          // Check if other client has the player's chunk registered
+          if (otherSession.registeredChunks.has(playerChunkKey)) {
+            otherSession.entityPathwayQueue.push(playerPathway);
+          }
+        }
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.generatePlayerPathways');
     }
   }
 }

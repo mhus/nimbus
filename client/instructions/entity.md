@@ -267,6 +267,9 @@ immer alle geprueft werden muessen. z.b. 10
 - Unter wasser wird automatisch in den ego mode gewechselt. Dazu wird ein StackModifier genutzt, der den ego mode steuert.
 - Wenn die Taste F5 gedrueckt wird, wird der ego mode / third person mode umgeschaltet werden
 
+- User solle eine ID generieren aus username und sessionId anstelle von uuid, diese wird beim update mitgesendet, nicht 'testuser'.
+
+
 [x] Wenn in StackModifier noch ein enabled parameter hinzugefuegt wird, der angibt ob der modifier aktiv ist oder nicht,
 dann kann der PhysicService dauerhaft einen StackModifier fuer den ego mode anlegen und nur den enabled parameter setzen.
 

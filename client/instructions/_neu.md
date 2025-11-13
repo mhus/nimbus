@@ -24,3 +24,6 @@
 - Sammeln von Bloecken in der gleichen gruppe, Selektieren von ganer gruppe - jedes mal mesh auf bauen und destroyen, aber nur wen interaktion aktiviert wird, damit wird performance gespart!
 - Aktuelle selektierung schicker machen
 
+- Reconnect nach disconnect im client
+
+- Durchfallen durch welt beim start - safari

@@ -6,12 +6,13 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger, ENTITY_POSES } from '@nimbus/shared';
+import { getLogger, ENTITY_POSES, MessageType } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
 import type { PlayerEntity } from '../types/PlayerEntity';
 import type { ModifierStack, Modifier } from './ModifierService';
+import type { EntityPositionUpdateMessage, EntityPositionUpdateData } from '@nimbus/shared';
 import { EntityRenderService }  from "./EntityRenderService";
 
 const logger = getLogger('PlayerService');
@@ -67,6 +68,17 @@ export class PlayerService {
   private isJumping: boolean = false; // Jump state (set by jump event)
   private jumpDuration: number = 300; // ms to stay in JUMP pose
   private jumpStartTime: number = 0; // When jump was triggered
+
+  // Position update sender (client -> server)
+  private positionUpdateInterval?: NodeJS.Timeout;
+  private lastSentPosition?: { x: number; y: number; z: number };
+  private lastSentRotation?: { y: number; p: number };
+  private lastSentVelocity?: { x: number; y: number; z: number };
+  private lastSentPose?: number;
+  private readonly POSITION_UPDATE_INTERVAL_MS = 100; // Send updates every 100ms
+  private readonly POSITION_CHANGE_THRESHOLD = 0.01; // Min position change to send update (blocks)
+  private readonly ROTATION_CHANGE_THRESHOLD = 0.5; // Min rotation change to send update (degrees)
+  private readonly VELOCITY_CHANGE_THRESHOLD = 0.01; // Min velocity change to send update (blocks/s)
 
   constructor(appContext: AppContext, cameraService: CameraService) {
     this.appContext = appContext;
@@ -142,6 +154,9 @@ export class PlayerService {
         logger.error('Failed to load third-person model during init', {}, error as Error);
       });
     }
+
+    // Start position update sender (sends position to server every 100ms)
+    this.startPositionUpdateSender();
 
     logger.info('PlayerService initialized', {
       position: this.playerEntity.position,
@@ -787,9 +802,138 @@ export class PlayerService {
   }
 
   /**
+   * Start position update sender
+   * Sends position updates to server every 100ms (if changed)
+   */
+  private startPositionUpdateSender(): void {
+    // Clear existing interval if any
+    if (this.positionUpdateInterval) {
+      clearInterval(this.positionUpdateInterval);
+    }
+
+    // Start sending position updates every 100ms
+    this.positionUpdateInterval = setInterval(() => {
+      this.sendPositionUpdateIfChanged();
+    }, this.POSITION_UPDATE_INTERVAL_MS);
+
+    logger.debug('Position update sender started', {
+      intervalMs: this.POSITION_UPDATE_INTERVAL_MS,
+    });
+  }
+
+  /**
+   * Stop position update sender
+   */
+  private stopPositionUpdateSender(): void {
+    if (this.positionUpdateInterval) {
+      clearInterval(this.positionUpdateInterval);
+      this.positionUpdateInterval = undefined;
+      logger.debug('Position update sender stopped');
+    }
+  }
+
+  /**
+   * Send position update to server if position/rotation/velocity changed
+   */
+  private sendPositionUpdateIfChanged(): void {
+    const networkService = this.appContext.services.network;
+    if (!networkService || !networkService.isConnected()) {
+      return; // Not connected, skip update
+    }
+
+    const currentPosition = this.playerEntity.position;
+    const currentVelocity = this.playerEntity.velocity;
+    // Get camera rotation in degrees (only yaw, no pitch for player body rotation)
+    const cameraYawDegrees = this.cameraService.getCameraYaw();
+    const currentPose = this.calculateCurrentPose();
+
+    // Check if anything changed significantly
+    const positionChanged = !this.lastSentPosition ||
+      Math.abs(currentPosition.x - this.lastSentPosition.x) > this.POSITION_CHANGE_THRESHOLD ||
+      Math.abs(currentPosition.y - this.lastSentPosition.y) > this.POSITION_CHANGE_THRESHOLD ||
+      Math.abs(currentPosition.z - this.lastSentPosition.z) > this.POSITION_CHANGE_THRESHOLD;
+
+    const rotationChanged = !this.lastSentRotation ||
+      Math.abs(cameraYawDegrees - this.lastSentRotation.y) > this.ROTATION_CHANGE_THRESHOLD;
+
+    const velocityChanged = !this.lastSentVelocity ||
+      Math.abs(currentVelocity.x - this.lastSentVelocity.x) > this.VELOCITY_CHANGE_THRESHOLD ||
+      Math.abs(currentVelocity.y - this.lastSentVelocity.y) > this.VELOCITY_CHANGE_THRESHOLD ||
+      Math.abs(currentVelocity.z - this.lastSentVelocity.z) > this.VELOCITY_CHANGE_THRESHOLD;
+
+    const poseChanged = this.lastSentPose !== currentPose;
+
+    // Only send update if something changed
+    if (!positionChanged && !rotationChanged && !velocityChanged && !poseChanged) {
+      return;
+    }
+
+    // Calculate target position (prediction for next 200ms based on velocity)
+    const predictionTimeMs = 200;
+    const predictionTimeSec = predictionTimeMs / 1000;
+    const targetPosition = {
+      x: currentPosition.x + currentVelocity.x * predictionTimeSec,
+      y: currentPosition.y + currentVelocity.y * predictionTimeSec,
+      z: currentPosition.z + currentVelocity.z * predictionTimeSec,
+    };
+
+    // Build update data
+    const updateData: EntityPositionUpdateData = {
+      pl: 'player', // Local entity ID (not the unique @player_uuid, just "player" for local reference)
+      p: {
+        x: currentPosition.x,
+        y: currentPosition.y,
+        z: currentPosition.z,
+      },
+      r: {
+        y: cameraYawDegrees,
+        p: 0, // Player body doesn't pitch up/down, only camera does
+      },
+      v: {
+        x: currentVelocity.x,
+        y: currentVelocity.y,
+        z: currentVelocity.z,
+      },
+      po: currentPose,
+      ts: Date.now(),
+      ta: {
+        x: targetPosition.x,
+        y: targetPosition.y,
+        z: targetPosition.z,
+        ts: Date.now() + predictionTimeMs,
+      },
+    };
+
+    // Send message
+    const message: EntityPositionUpdateMessage = {
+      t: MessageType.ENTITY_POSITION_UPDATE,
+      d: [updateData],
+    };
+
+    networkService.send(message);
+
+    // Update last sent values
+    this.lastSentPosition = { x: currentPosition.x, y: currentPosition.y, z: currentPosition.z };
+    this.lastSentRotation = { y: cameraYawDegrees, p: 0 };
+    this.lastSentVelocity = { x: currentVelocity.x, y: currentVelocity.y, z: currentVelocity.z };
+    this.lastSentPose = currentPose;
+
+    logger.debug('Position update sent to server', {
+      position: updateData.p,
+      rotation: updateData.r,
+      velocity: updateData.v,
+      pose: updateData.po,
+      targetPosition: updateData.ta,
+    });
+  }
+
+  /**
    * Dispose player service
    */
   dispose(): void {
+    // Stop position update sender
+    this.stopPositionUpdateSender();
+
     this.eventListeners.clear();
 
     // Dispose third-person model

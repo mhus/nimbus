@@ -59,6 +59,20 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
       this.appContext.worldInfo = successData.worldInfo;
       this.appContext.sessionId = successData.sessionId;
 
+      // Generate player entity ID from username and sessionId
+      // Format: @{username}_{sessionId}
+      if (this.appContext.playerInfo) {
+        const username = successData.userId || 'player';
+        const sessionId = successData.sessionId || 'unknown';
+        this.appContext.playerInfo.playerId = `@${username}_${sessionId}`;
+        this.appContext.playerInfo.displayName = successData.displayName || username;
+
+        logger.info('Player ID generated', {
+          playerId: this.appContext.playerInfo.playerId,
+          displayName: this.appContext.playerInfo.displayName,
+        });
+      }
+
       logger.info('Login successful', {
         userId: successData.userId,
         displayName: successData.displayName,

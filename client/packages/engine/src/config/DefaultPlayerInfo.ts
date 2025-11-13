@@ -23,10 +23,13 @@ import type { PlayerInfo } from '@nimbus/shared';
  * - Underwater speed: 3.0 blocks/second (swimming)
  * - Jump speed: 8.0 blocks/second (results in ~1.25 block jump height)
  * - Eye height: 1.6 blocks (eye level for first-person camera)
+ *
+ * Player IDs are generated after login from username and sessionId
+ * Format: @{username}_{sessionId}
  */
 export const DEFAULT_PLAYER_INFO: PlayerInfo = {
-  // Identity
-  playerId: 'local_player',
+  // Identity (will be overwritten after login)
+  playerId: '@player_temp', // Temporary ID, replaced after login
   displayName: 'Player',
 
   // Base movement speeds (blocks per second)
@@ -67,5 +70,5 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   effectiveUnderwaterTurnSpeed: 0.002,
 
   // Third-person view
-  thirdPersonModelId: 'farmer1', // Use farmer model for third-person view
+  thirdPersonModelId: 'wizard1', // Use farmer model for third-person view
 };

@@ -52,6 +52,30 @@ export interface ClientSession {
 
   /** Entity pathway queue (pathways to send to client) */
   entityPathwayQueue: EntityPathway[];
+
+  /** Player entity ID (format: @{uuid}) */
+  playerEntityId?: string;
+
+  /** Player current position */
+  playerPosition?: { x: number; y: number; z: number };
+
+  /** Player current rotation */
+  playerRotation?: { y: number; p: number };
+
+  /** Player current velocity */
+  playerVelocity?: { x: number; y: number; z: number };
+
+  /** Player current pose */
+  playerPose?: number;
+
+  /** Player last update timestamp */
+  playerLastUpdate?: number;
+
+  /** Player target position (prediction) */
+  playerTargetPosition?: { x: number; y: number; z: number; ts: number };
+
+  /** Last broadcasted player pathway (for sending to new clients when they register chunks) */
+  lastPlayerPathway?: EntityPathway;
 }
 
 /**
