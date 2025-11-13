@@ -170,6 +170,7 @@ export class EntityRenderService {
    */
   private async createEntity(entityId: string): Promise<void> {
     try {
+      console.log('createEntity', entityId);
       // Get entity from EntityService
       const clientEntity = await this.entityService.getEntity(entityId);
       if (!clientEntity) {

@@ -12,6 +12,7 @@ import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
 import type { PlayerEntity } from '../types/PlayerEntity';
 import type { ModifierStack, Modifier } from './ModifierService';
+import { EntityRenderService }  from "./EntityRenderService";
 
 const logger = getLogger('PlayerService');
 
@@ -35,7 +36,7 @@ export class PlayerService {
   private appContext: AppContext;
   private cameraService: CameraService;
   private physicsService?: PhysicsService;
-  private entityRenderService?: any; // EntityRenderService
+  private entityRenderService?: EntityRenderService; // EntityRenderService
 
   // Player as physics entity with player info
   private playerEntity: PlayerEntity;
@@ -148,7 +149,7 @@ export class PlayerService {
   /**
    * Set entity render service (called after EntityRenderService is created)
    */
-  setEntityRenderService(entityRenderService: any): void {
+  setEntityRenderService(entityRenderService: EntityRenderService): void {
     this.entityRenderService = entityRenderService;
     logger.debug('EntityRenderService set');
   }
@@ -645,11 +646,12 @@ export class PlayerService {
       (entityService as any).entityCache.set(clientEntity.id, clientEntity);
 
       // Create pathway to trigger EntityRenderService rendering
+      // Use timestamp -1 as special "immediate render" flag
       const pathway = {
         entityId: clientEntity.id,
-        startAt: Date.now(),
+        startAt: -1,
         waypoints: [{
-          timestamp: Date.now() + 100,
+          timestamp: -1, // Special: < 0 means "render immediately, don't interpolate"
           target: { ...this.playerEntity.position },
           rotation: { y: 0, p: 0 },
           pose: 0 // IDLE
