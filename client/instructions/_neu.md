@@ -27,3 +27,5 @@
 - Reconnect nach disconnect im client
 
 - Durchfallen durch welt beim start - safari
+
+- Player daten in echt verwalten !!!

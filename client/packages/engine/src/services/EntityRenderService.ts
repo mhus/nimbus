@@ -210,7 +210,7 @@ export class EntityRenderService {
       // Get cloned animation groups (automatically retargeted to this instance)
       const animations = result.animationGroups || [];
 
-      logger.info('Entity model instantiated', {
+      logger.debug('Entity model instantiated', {
         entityId,
         modelPath,
         animationCount: animations.length,
