@@ -256,10 +256,8 @@ export class PlayerService {
     // Just sync camera after physics update
     this.syncCameraToPlayer();
 
-    // Update third-person model position/rotation if active
-    if (!this.isEgoView() && this.thirdPersonMesh) {
-      this.updateThirdPersonModel();
-    }
+    // Update player avatar (via EntityRenderService)
+    this.updateAvatar();
 
     // Emit position change if moved (for chunk loading, etc.)
     const currentPos = this.playerEntity.position;
@@ -300,15 +298,16 @@ export class PlayerService {
   }
 
   /**
-   * Update third-person model position and rotation (via EntityRenderService)
+   * Update player avatar (position, rotation, visibility)
+   * Called every frame
    */
-  private updateThirdPersonModel(): void {
+  private updateAvatar(): void {
     const playerAvatarEntityId = (this as any).playerAvatarEntityId;
     if (!playerAvatarEntityId || !this.entityRenderService) {
-      return; // Not loaded yet
+      return; // Avatar not loaded yet
     }
 
-    // Get camera yaw for character rotation
+    // Get camera yaw for character rotation (character faces same direction as camera)
     const cameraYaw = this.cameraService.getCameraYaw();
 
     // Update entity transform via EntityRenderService
@@ -318,7 +317,7 @@ export class PlayerService {
       { y: cameraYaw, p: 0 }
     );
 
-    // TODO: Update animations based on movement mode/velocity
+    // TODO: Update pose/animation based on movement mode/velocity
   }
 
   /**
@@ -645,23 +644,31 @@ export class PlayerService {
       // Register in EntityService cache
       (entityService as any).entityCache.set(clientEntity.id, clientEntity);
 
-      // Create pathway to trigger EntityRenderService rendering
-      // Use timestamp -1 as special "immediate render" flag
-      const pathway = {
+      // Render model directly via EntityRenderService
+      // First trigger pathway to load the model
+      const initialPathway = {
         entityId: clientEntity.id,
-        startAt: -1,
+        startAt: Date.now(),
         waypoints: [{
-          timestamp: -1, // Special: < 0 means "render immediately, don't interpolate"
+          timestamp: Date.now(),
           target: { ...this.playerEntity.position },
           rotation: { y: 0, p: 0 },
           pose: 0 // IDLE
         }],
       };
 
-      // Trigger EntityRenderService to render the model
-      await this.entityRenderService.onEntityPathway(pathway);
+      await this.entityRenderService.onEntityPathway(initialPathway);
 
-      logger.info('Player avatar rendered via EntityRenderService');
+      logger.info('Player avatar model loaded via EntityRenderService');
+
+      // Now update transform directly to set initial position
+      this.entityRenderService.updateEntityTransform(
+        clientEntity.id,
+        this.playerEntity.position,
+        { y: 0, p: 0 }
+      );
+
+      logger.info('Player avatar transform set');
 
       // Store entity ID and ClientEntity for later updates
       (this as any).playerAvatarEntityId = '@player_avatar';
