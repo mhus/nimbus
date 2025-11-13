@@ -43,6 +43,10 @@ export class CameraService {
   private effectiveTurnSpeed: number = 0.003; // Mouse sensitivity on land (updated via event)
   private effectiveUnderwaterTurnSpeed: number = 0.002; // Mouse sensitivity underwater (updated via event)
 
+  // Independent camera rotation (for third-person mode)
+  private cameraYaw: number = 0; // Degrees
+  private cameraPitch: number = 0; // Degrees
+
   // Underwater effects
   private waterSphereMesh?: Mesh;
   private waterMaterial?: StandardMaterial;
@@ -153,26 +157,27 @@ export class CameraService {
   }
 
   /**
-   * Set camera position for third-person view (behind player)
+   * Set camera position for third-person view (orbiting around player)
    *
    * @param playerPosition Player's position
-   * @param playerYaw Player's yaw rotation in degrees
-   * @param distance Distance behind player
+   * @param distance Distance from player
    */
-  setThirdPersonPosition(playerPosition: Vector3, playerYaw: number, distance: number): void {
+  setThirdPersonPosition(playerPosition: Vector3, distance: number): void {
     if (!this.camera) {
       logger.warn('Cannot set third-person position: camera not initialized');
       return;
     }
 
-    // Convert yaw to radians
-    const yawRad = playerYaw * (Math.PI / 180);
+    // Use independent camera rotation (not player rotation)
+    const yawRad = this.cameraYaw * (Math.PI / 180);
+    const pitchRad = this.cameraPitch * (Math.PI / 180);
 
-    // Calculate offset behind player
-    // In Babylon.js: Z is forward, X is right
-    const offsetX = -Math.sin(yawRad) * distance;
-    const offsetZ = -Math.cos(yawRad) * distance;
-    const offsetY = 1.5; // Height above player
+    // Calculate offset from player based on camera rotation
+    // Camera orbits around player
+    const horizontalDistance = distance * Math.cos(pitchRad);
+    const offsetX = -Math.sin(yawRad) * horizontalDistance;
+    const offsetZ = -Math.cos(yawRad) * horizontalDistance;
+    const offsetY = distance * Math.sin(pitchRad) + 1.5; // Height based on pitch + base height
 
     // Set camera position
     this.camera.position.set(
@@ -181,9 +186,8 @@ export class CameraService {
       playerPosition.z + offsetZ
     );
 
-    // Make camera look at player (slightly above center)
-    const targetY = playerPosition.y + 1.0;
-    this.camera.setTarget(new Vector3(playerPosition.x, targetY, playerPosition.z));
+    // Camera rotation is already set in rotate() method
+    // No need to call setTarget() - rotation is independent
   }
 
   /**
@@ -214,6 +218,20 @@ export class CameraService {
   }
 
   /**
+   * Get camera yaw (in degrees)
+   */
+  getCameraYaw(): number {
+    return this.cameraYaw;
+  }
+
+  /**
+   * Get camera pitch (in degrees)
+   */
+  getCameraPitch(): number {
+    return this.cameraPitch;
+  }
+
+  /**
    * Rotate camera by delta
    *
    * Applies effectiveTurnSpeed scaling for player-controlled sensitivity.
@@ -237,12 +255,20 @@ export class CameraService {
     // this adds player-specific sensitivity from PlayerInfo
     const scaleFactor = turnSpeed / 0.003; // Normalize against default
 
-    this.camera.rotation.x += deltaPitch * scaleFactor;
-    this.camera.rotation.y += deltaYaw * scaleFactor;
+    const scaledDeltaPitch = deltaPitch * scaleFactor;
+    const scaledDeltaYaw = deltaYaw * scaleFactor;
+
+    // Update independent camera rotation (in degrees for easier handling)
+    this.cameraYaw += scaledDeltaYaw * (180 / Math.PI); // Convert to degrees
+    this.cameraPitch += scaledDeltaPitch * (180 / Math.PI);
 
     // Clamp pitch to prevent camera flip
-    const maxPitch = Math.PI / 2 - 0.01; // Slightly less than 90 degrees
-    this.camera.rotation.x = Math.max(-maxPitch, Math.min(maxPitch, this.camera.rotation.x));
+    const maxPitchDeg = 89; // Slightly less than 90 degrees
+    this.cameraPitch = Math.max(-maxPitchDeg, Math.min(maxPitchDeg, this.cameraPitch));
+
+    // Apply to camera (convert back to radians)
+    this.camera.rotation.x = this.cameraPitch * (Math.PI / 180);
+    this.camera.rotation.y = this.cameraYaw * (Math.PI / 180);
   }
 
   /**

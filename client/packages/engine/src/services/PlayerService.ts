@@ -54,6 +54,10 @@ export class PlayerService {
   private thirdPersonMesh?: any; // AbstractMesh from Babylon.js
   private thirdPersonAnimations?: any[]; // AnimationGroup[]
 
+  // Character rotation (independent from camera in third-person)
+  private characterYaw: number = 0; // Degrees
+  private targetCharacterYaw: number = 0; // Target yaw for smooth rotation
+
   constructor(appContext: AppContext, cameraService: CameraService) {
     this.appContext = appContext;
     this.cameraService = cameraService;
@@ -116,6 +120,13 @@ export class PlayerService {
 
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
+
+    // Load third-person model if configured (async, doesn't block initialization)
+    if (appContext.playerInfo.thirdPersonModelId) {
+      this.loadThirdPersonModel(appContext.playerInfo.thirdPersonModelId).catch(error => {
+        logger.error('Failed to load third-person model during init', {}, error as Error);
+      });
+    }
 
     logger.info('PlayerService initialized', {
       position: this.playerEntity.position,
@@ -270,12 +281,10 @@ export class PlayerService {
         this.playerEntity.position.z
       );
     } else {
-      // Third-person: Camera behind player
-      const yaw = this.cameraService.getRotation().y;
+      // Third-person: Camera orbits around player (independent rotation)
       this.cameraService.setThirdPersonPosition(
         this.playerEntity.position,
-        yaw,
-        5.0 // Distance behind player
+        5.0 // Distance from player
       );
     }
   }
@@ -283,17 +292,51 @@ export class PlayerService {
   /**
    * Update third-person model position and rotation
    */
-  private updateThirdPersonModel(): void {
+  private async updateThirdPersonModel(): Promise<void> {
     if (!this.thirdPersonMesh) {
       return;
     }
 
-    // Update position
-    this.thirdPersonMesh.position.copyFrom(this.playerEntity.position);
+    // Get entity model for offset
+    const modelId = this.playerEntity.playerInfo.thirdPersonModelId;
+    if (!modelId) {
+      return;
+    }
 
-    // Update rotation (yaw only)
-    const yaw = this.cameraService.getRotation().y;
-    this.thirdPersonMesh.rotation.y = yaw * (Math.PI / 180); // Convert to radians
+    const entityService = this.appContext.services.entity;
+    const entityModel = await entityService?.getEntityModel(modelId);
+
+    // Update position with offset
+    this.thirdPersonMesh.position.set(
+      this.playerEntity.position.x,
+      this.playerEntity.position.y + (entityModel?.positionOffset.y ?? 0),
+      this.playerEntity.position.z
+    );
+
+    // Calculate character rotation based on movement direction
+    const velocity = this.playerEntity.velocity;
+    const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+
+    if (speed > 0.1) {
+      // Character is moving - rotate towards movement direction
+      const movementYaw = Math.atan2(velocity.x, velocity.z) * (180 / Math.PI);
+      this.targetCharacterYaw = movementYaw;
+    }
+    // If not moving, keep current rotation
+
+    // Smooth rotation towards target (lerp)
+    const rotationSpeed = 10; // Degrees per frame (adjust for smoothness)
+    const yawDiff = this.targetCharacterYaw - this.characterYaw;
+
+    // Handle angle wrapping (-180 to 180)
+    let normalizedDiff = yawDiff;
+    if (normalizedDiff > 180) normalizedDiff -= 360;
+    if (normalizedDiff < -180) normalizedDiff += 360;
+
+    this.characterYaw += normalizedDiff * Math.min(1, rotationSpeed / 60); // Smooth interpolation
+
+    // Apply rotation to mesh
+    this.thirdPersonMesh.rotation.y = this.characterYaw * (Math.PI / 180);
 
     // TODO: Update animations based on movement mode/velocity
   }
@@ -541,12 +584,20 @@ export class PlayerService {
     // If already loaded, just show it
     if (this.thirdPersonMesh) {
       this.thirdPersonMesh.setEnabled(true);
-      logger.debug('Third-person model shown');
+      logger.info('Third-person model shown', {
+        position: this.thirdPersonMesh.position,
+        enabled: this.thirdPersonMesh.isEnabled(),
+      });
       return;
     }
 
-    // Load model
+    // Not loaded yet - load it (lazy loading)
     await this.loadThirdPersonModel(modelId);
+
+    // After loading, make it visible
+    if (this.thirdPersonMesh) {
+      this.thirdPersonMesh.setEnabled(true);
+    }
   }
 
   /**
@@ -605,9 +656,28 @@ export class PlayerService {
           entityModel.scale.y,
           entityModel.scale.z
         );
-      }
 
-      logger.info('Third-person model loaded', { modelId });
+        // Apply position offset from entity model
+        this.thirdPersonMesh.position.y += entityModel.positionOffset.y;
+
+        // Apply rotation offset
+        this.thirdPersonMesh.rotation.set(
+          entityModel.rotationOffset.x * (Math.PI / 180),
+          entityModel.rotationOffset.y * (Math.PI / 180),
+          entityModel.rotationOffset.z * (Math.PI / 180)
+        );
+
+        // Initially hidden (only shown in third-person mode)
+        this.thirdPersonMesh.setEnabled(false);
+
+        logger.info('Third-person model loaded', {
+          modelId,
+          meshCount: result.meshes.length,
+          position: this.thirdPersonMesh.position,
+          scaling: this.thirdPersonMesh.scaling,
+          initiallyHidden: true
+        });
+      }
     } catch (error) {
       logger.error('Failed to load third-person model', { modelId }, error as Error);
     }
