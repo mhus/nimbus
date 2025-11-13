@@ -615,52 +615,76 @@ export class PlayerService {
    */
   private async loadThirdPersonModel(modelId: string): Promise<void> {
     try {
+      logger.info('Starting to load third-person model', { modelId });
+
+      // Get entity model
       const entityService = this.appContext.services.entity;
       if (!entityService) {
         logger.error('EntityService not available');
         return;
       }
 
-      // Get entity model
       const entityModel = await entityService.getEntityModel(modelId);
       if (!entityModel) {
         logger.error('Entity model not found', { modelId });
         return;
       }
 
-      // Load model via SceneLoader
-      const { SceneLoader } = await import('@babylonjs/core');
-      const renderService = this.appContext.services.render;
-      if (!renderService) {
-        logger.error('RenderService not available');
+      logger.info('Entity model loaded', { modelPath: entityModel.modelPath });
+
+      // Get scene from CameraService
+      const scene = (this.cameraService as any).scene;
+      if (!scene) {
+        logger.error('Scene not available from CameraService');
         return;
       }
 
-      const scene = renderService.getScene();
+      // Load 3D model via SceneLoader
+      const { SceneLoader } = await import('@babylonjs/core');
+
+      // Construct API URL for asset loading
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.error('NetworkService not available');
+        return;
+      }
+
+      const worldId = this.appContext.worldInfo?.worldId || 'main';
+      const apiUrl = networkService.getApiUrl();
+      const assetUrl = `${apiUrl}/api/worlds/${worldId}/assets/${entityModel.modelPath}`;
+
+      logger.info('Loading 3D model...', { assetUrl });
+
       const result = await SceneLoader.ImportMeshAsync(
         '',
-        '/assets/models/',
-        entityModel.modelPath,
+        '',
+        assetUrl,
         scene
       );
 
-      // Store mesh and animations
+      logger.info('Model loaded', { meshCount: result.meshes.length });
+
+      // Store root mesh and animations
       this.thirdPersonMesh = result.meshes[0];
       this.thirdPersonAnimations = result.animationGroups;
 
-      // Apply initial transformation
+      // Apply transformations from entity model
       if (this.thirdPersonMesh) {
-        this.thirdPersonMesh.position = this.playerEntity.position.clone();
+        // Set position
+        this.thirdPersonMesh.position.set(
+          this.playerEntity.position.x,
+          this.playerEntity.position.y + entityModel.positionOffset.y,
+          this.playerEntity.position.z
+        );
+
+        // Set scaling
         this.thirdPersonMesh.scaling.set(
           entityModel.scale.x,
           entityModel.scale.y,
           entityModel.scale.z
         );
 
-        // Apply position offset from entity model
-        this.thirdPersonMesh.position.y += entityModel.positionOffset.y;
-
-        // Apply rotation offset
+        // Set rotation offset
         this.thirdPersonMesh.rotation.set(
           entityModel.rotationOffset.x * (Math.PI / 180),
           entityModel.rotationOffset.y * (Math.PI / 180),
@@ -670,12 +694,12 @@ export class PlayerService {
         // Initially hidden (only shown in third-person mode)
         this.thirdPersonMesh.setEnabled(false);
 
-        logger.info('Third-person model loaded', {
+        logger.info('Third-person model fully loaded', {
           modelId,
           meshCount: result.meshes.length,
+          animationCount: result.animationGroups.length,
           position: this.thirdPersonMesh.position,
           scaling: this.thirdPersonMesh.scaling,
-          initiallyHidden: true
         });
       }
     } catch (error) {

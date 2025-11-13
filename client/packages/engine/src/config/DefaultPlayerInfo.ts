@@ -65,4 +65,7 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   effectiveTurnSpeed: 0.003,
   baseUnderwaterTurnSpeed: 0.002, // 33% slower underwater for realistic feel
   effectiveUnderwaterTurnSpeed: 0.002,
+
+  // Third-person view
+  thirdPersonModelId: 'farmer1', // Use farmer model for third-person view
 };
