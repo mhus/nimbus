@@ -6,14 +6,14 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger, ENTITY_POSES, MessageType } from '@nimbus/shared';
+import { getLogger, ENTITY_POSES, MessageType, PlayerMovementState } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
 import type { PlayerEntity } from '../types/PlayerEntity';
 import type { ModifierStack, Modifier } from './ModifierService';
 import { StackName } from './ModifierService';
-import type { EntityPositionUpdateMessage, EntityPositionUpdateData } from '@nimbus/shared';
+import type { EntityPositionUpdateMessage, EntityPositionUpdateData, PlayerMovementStateChangedEvent } from '@nimbus/shared';
 import { EntityRenderService }  from "./EntityRenderService";
 
 const logger = getLogger('PlayerService');
@@ -61,6 +61,21 @@ export class PlayerService {
   get viewModeStack(): ModifierStack<boolean> | undefined {
     return this.appContext.services.modifier?.getModifierStack<boolean>(
       StackName.PLAYER_VIEW_MODE
+    );
+  }
+
+  // Movement state (WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING)
+  // Stack is created centrally in StackModifierCreator
+  private currentMovementState: PlayerMovementState = PlayerMovementState.WALK;
+  private playerMovementModifier?: Modifier<PlayerMovementState>;
+
+  /**
+   * Get the movement state stack
+   * Stack is created centrally in StackModifierCreator
+   */
+  get movementStateStack(): ModifierStack<PlayerMovementState> | undefined {
+    return this.appContext.services.modifier?.getModifierStack<PlayerMovementState>(
+      StackName.PLAYER_MOVEMENT_STATE
     );
   }
 
@@ -150,6 +165,9 @@ export class PlayerService {
     // Stack is created centrally in StackModifierCreator
     // Modifiers are created here on first access
     this.initializeViewModeModifiers();
+
+    // Initialize movement state modifier
+    this.initializeMovementStateModifier();
 
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
@@ -382,16 +400,14 @@ export class PlayerService {
    * @returns ENTITY_POSES enum value
    */
   private calculateCurrentPose(): number {
-    // Check if jumping (recent jump event)
-    if (this.isJumping) {
-      const timeSinceJump = Date.now() - this.jumpStartTime;
-      if (timeSinceJump < this.jumpDuration || !this.playerEntity.grounded) {
-        // Stay in JUMP pose for duration or until grounded
-        return ENTITY_POSES.JUMP;
-      } else {
-        // Jump animation complete and back on ground
-        this.isJumping = false;
-      }
+    const movementState = this.currentMovementState;
+
+    // High-priority states override everything (JUMP, FALL)
+    if (movementState === PlayerMovementState.JUMP) {
+      return ENTITY_POSES.JUMP;
+    }
+    if (movementState === PlayerMovementState.FALL) {
+      return ENTITY_POSES.JUMP; // TODO: Create FALL pose or keep as JUMP
     }
 
     // Check if moving (with hysteresis to prevent flickering)
@@ -415,15 +431,22 @@ export class PlayerService {
       this.lastMovementTime = Date.now();
     }
 
-    // Determine pose based on stable movement state
+    // Determine pose based on movement state (only when actually moving)
     if (this.isMoving) {
-      // Player is moving - determine walk/run/crouch
-      if (this.playerEntity.movementMode === 'sprint') {
-        return ENTITY_POSES.RUN;
-      } else if (this.playerEntity.movementMode === 'crouch') {
-        return ENTITY_POSES.CROUCH;
-      } else {
-        return ENTITY_POSES.WALK;
+      switch (movementState) {
+        case PlayerMovementState.SPRINT:
+          return ENTITY_POSES.RUN;
+        case PlayerMovementState.CROUCH:
+          return ENTITY_POSES.CROUCH;
+        case PlayerMovementState.FLY:
+          return ENTITY_POSES.FLY;
+        case PlayerMovementState.SWIM:
+          return ENTITY_POSES.SWIM;
+        case PlayerMovementState.RIDING:
+          return ENTITY_POSES.WALK; // TODO: Create RIDING pose
+        case PlayerMovementState.WALK:
+        default:
+          return ENTITY_POSES.WALK;
       }
     }
 
@@ -592,6 +615,90 @@ export class PlayerService {
       this.underwaterViewModifier.setEnabled(false); // Disabled initially
       logger.debug('Underwater view modifier created');
     }
+  }
+
+  /**
+   * Initialize movement state modifier
+   * Stack is created centrally in StackModifierCreator
+   */
+  private initializeMovementStateModifier(): void {
+    const stack = this.movementStateStack;
+    if (!stack) {
+      logger.warn('Movement state stack not available yet');
+      return;
+    }
+
+    // Add player's movement modifier (for FLY, SPRINT, CROUCH, etc.)
+    if (!this.playerMovementModifier) {
+      this.playerMovementModifier = stack.addModifier(PlayerMovementState.WALK, 100); // Priority 100
+      logger.debug('Player movement modifier created');
+    }
+  }
+
+  /**
+   * Set player movement state (FLY, WALK, SPRINT, CROUCH)
+   * Used by input handlers to change movement mode
+   */
+  setMovementState(state: PlayerMovementState): void {
+    this.initializeMovementStateModifier();
+
+    if (!this.playerMovementModifier) {
+      logger.warn('Player movement modifier not available');
+      return;
+    }
+
+    this.playerMovementModifier.setValue(state);
+    logger.debug('Player movement state set', { state });
+  }
+
+  /**
+   * Get current movement state
+   */
+  getMovementState(): PlayerMovementState {
+    return this.currentMovementState;
+  }
+
+  /**
+   * Called when movement state changes (from modifier stack)
+   * Public because it's called from StackModifierCreator callback
+   */
+  onMovementStateChanged(newState: PlayerMovementState): void {
+    const oldState = this.currentMovementState;
+    if (oldState === newState) {
+      return; // No change
+    }
+
+    this.currentMovementState = newState;
+
+    // Emit event for other services (PhysicsService, CameraService, etc.)
+    const event: PlayerMovementStateChangedEvent = {
+      playerId: this.appContext.playerId ?? 'unknown',
+      oldState,
+      newState,
+    };
+    this.emit('movementStateChanged', event);
+
+    // Show notifications for important state changes
+    const notificationService = this.appContext.services.notification;
+    if (notificationService) {
+      let message: string | null = null;
+
+      if (newState === PlayerMovementState.FLY && oldState !== PlayerMovementState.FLY) {
+        message = 'Flight Mode Activated';
+      } else if (oldState === PlayerMovementState.FLY && newState === PlayerMovementState.WALK) {
+        message = 'Flight Mode Deactivated';
+      } else if (newState === PlayerMovementState.SPRINT) {
+        message = 'Sprinting';
+      } else if (newState === PlayerMovementState.SWIM && oldState !== PlayerMovementState.SWIM) {
+        message = 'Swimming';
+      }
+
+      if (message) {
+        notificationService.newNotification('OVERLAY', 'System', message);
+      }
+    }
+
+    logger.info('Movement state changed', { oldState, newState });
   }
 
   /**

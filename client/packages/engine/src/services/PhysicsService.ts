@@ -9,7 +9,7 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger, Direction, DirectionHelper } from '@nimbus/shared';
+import { getLogger, Direction, DirectionHelper, PlayerMovementState } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerEntity } from '../types/PlayerEntity';
@@ -21,6 +21,7 @@ import type {
 import { WalkModeController } from './physics/WalkModeController';
 import { FlyModeController } from './physics/FlyModeController';
 import type { PhysicsConfig } from './physics/MovementResolver';
+import type { Modifier, ModifierStack } from './ModifierService';
 
 const logger = getLogger('PhysicsService');
 
@@ -78,6 +79,11 @@ export class PhysicsService {
   private walkController?: WalkModeController;
   private flyController?: FlyModeController;
 
+  // Movement state modifiers (for StackModifier system)
+  private jumpModifier?: Modifier<PlayerMovementState>;
+  private fallModifier?: Modifier<PlayerMovementState>;
+  private swimModifier?: Modifier<PlayerMovementState>;
+
   // Physics constants (global, not player-specific)
   private readonly gravity: number = -20.0; // blocks per second²
   private readonly underwaterGravity: number = -0.5; // blocks per second² (2.5% of normal, extremely slow sinking)
@@ -113,8 +119,20 @@ export class PhysicsService {
   // Track if climbable velocity was set this frame (before updateWalkMode runs)
   private climbableVelocitySetThisFrame: Map<string, boolean> = new Map();
 
+  /**
+   * Get the movement state stack from PlayerService
+   * Used to set physics-based movement states (JUMP, FALL, SWIM)
+   */
+  private get movementStateStack(): ModifierStack<PlayerMovementState> | undefined {
+    return this.appContext.services.player?.movementStateStack;
+  }
+
   constructor(appContext: AppContext) {
     this.appContext = appContext;
+
+    // Initialize movement state modifiers after a short delay
+    // This allows PlayerService and ModifierService to be fully initialized
+    setTimeout(() => this.initializeMovementStateModifiers(), 100);
 
     logger.info('PhysicsService initialized', {
       gravity: this.gravity,
@@ -148,6 +166,41 @@ export class PhysicsService {
     this.flyController = new FlyModeController(this.appContext, this.defaultFlySpeed);
 
     logger.debug('ChunkService set for collision detection, controllers initialized');
+  }
+
+  /**
+   * Initialize movement state modifiers
+   * Creates modifiers for JUMP, FALL, and SWIM states
+   */
+  private initializeMovementStateModifiers(): void {
+    const stack = this.movementStateStack;
+    if (!stack) {
+      logger.warn('Movement state stack not available yet');
+      return;
+    }
+
+    // JUMP modifier (priority 10 - highest)
+    if (!this.jumpModifier) {
+      this.jumpModifier = stack.addModifier(PlayerMovementState.JUMP, 10);
+      this.jumpModifier.setEnabled(false); // Initially disabled
+      logger.debug('Jump modifier created (priority 10)');
+    }
+
+    // FALL modifier (priority 20)
+    if (!this.fallModifier) {
+      this.fallModifier = stack.addModifier(PlayerMovementState.FALL, 20);
+      this.fallModifier.setEnabled(false); // Initially disabled
+      logger.debug('Fall modifier created (priority 20)');
+    }
+
+    // SWIM modifier (priority 30)
+    if (!this.swimModifier) {
+      this.swimModifier = stack.addModifier(PlayerMovementState.SWIM, 30);
+      this.swimModifier.setEnabled(false); // Initially disabled
+      logger.debug('Swim modifier created (priority 30)');
+    }
+
+    logger.info('Movement state modifiers initialized');
   }
 
   /**
@@ -413,6 +466,44 @@ export class PhysicsService {
 
     // Reset wishMove for next frame
     entity.wishMove.set(0, 0, 0);
+
+    // Update movement state modifiers based on physics state
+    this.updateMovementStateModifiers(entity);
+  }
+
+  /**
+   * Update movement state modifiers based on entity physics state
+   * Sets JUMP, FALL, and SWIM states via StackModifier system
+   */
+  private updateMovementStateModifiers(entity: PhysicsEntity): void {
+    // Only update for player entity
+    if (!isPlayerEntity(entity)) {
+      return;
+    }
+
+    // Ensure modifiers are initialized
+    if (!this.jumpModifier || !this.fallModifier || !this.swimModifier) {
+      return;
+    }
+
+    // SWIM state (priority 30) - enabled when in water
+    this.swimModifier.setEnabled(entity.inWater);
+
+    // JUMP state (priority 10 - highest) - enabled during jump
+    // Jump is active if jumpRequested was set this frame (handled by controller)
+    // We keep it enabled until player is grounded again
+    if (entity.jumpRequested) {
+      this.jumpModifier.setEnabled(true);
+    } else if (entity.grounded) {
+      this.jumpModifier.setEnabled(false);
+    }
+
+    // FALL state (priority 20) - enabled when falling (not grounded, negative y velocity)
+    // TODO: Implement fall detection - needs velocity check and distance tracking
+    // const isFalling = !entity.grounded && entity.velocity.y < -2.0;
+    // this.fallModifier.setEnabled(isFalling);
+    // For now, keep disabled
+    this.fallModifier.setEnabled(false);
   }
 
   /**

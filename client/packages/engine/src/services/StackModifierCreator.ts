@@ -11,7 +11,7 @@
  * - Type-safe stack names via StackName enum
  */
 
-import { getLogger } from '@nimbus/shared';
+import { getLogger, PlayerMovementState } from '@nimbus/shared';
 import type { AppContext } from '../types/AppContext';
 import { StackName } from './ModifierService';
 
@@ -49,6 +49,21 @@ export function createAllStackModifiers(appContext: AppContext): void {
       const playerService = appContext.services.player;
       if (playerService) {
         playerService.onViewModeChanged(isEgo);
+      }
+    }
+  );
+
+  // ========================================
+  // Player Movement State Stack
+  // ========================================
+  modifierService.createModifierStack<PlayerMovementState>(
+    StackName.PLAYER_MOVEMENT_STATE,
+    PlayerMovementState.WALK, // Default: walking
+    (newState) => {
+      // Callback may fail if PlayerService not ready yet - that's ok
+      const playerService = appContext.services.player;
+      if (playerService) {
+        playerService.onMovementStateChanged(newState);
       }
     }
   );

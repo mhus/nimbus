@@ -280,6 +280,11 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
   Diese Werte werden von aussen durch eine funktion getoggelt.
 - PhysicsService und CameraService werden nun nicht mehr direkt mit dem status versorgt, sonder durch das event,
   das im PlayerService ausgelost wird wenn sich der status aendert. Intern werden die gleichen flags gesetzt wie bisher.
+- Stelle den InputController fuer FLY um und setze im PlayerService den status auf FLY wenn der player fliegt. und WALK wenn er wieder zurueck toggelt. 
+  playerService.setMovementMode( playerService.getMovementMode() === FLY ? WALK : FLY )
+- Wenn sich der Movementmode aendert soll wie auch jetzt bei FLY eine Notification via NotificationService ausgelost werden.
+
+[ ] JUMP status im PhysicsService implementieren.
 
 [ ] Fallen status FALL im PhysicsService implementieren.
 - Wenn der player fällt PhysicsService (y velocity < 0) wird die falltiefe addiert in einem parameter en PhysicEntity.
@@ -287,3 +292,8 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - Wird der fall gestoppt (y velocity >= 0) und die falltiefe war groesser als threshold, wird der status wieder auf WALK gesetzt und es wird ein event zum Server 'onPlayerLanded' ausgelost mit der falltiefe.
   - "Block Interaction (Client -> Server)" in client/instructions/general/network-model-2.0.md - Es wird der Block, auf den er gefallen ist als position mit gesendet.
 - Nach dem landen wird die falltiefe wieder auf 0 gesetzt.
+
+[ ] Erstelle InputController fuer die fuer:
+- CROUCH - standard taste: N
+- SPRINT - standard taste: M
+- Implementierung wie bei FLY

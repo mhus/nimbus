@@ -51,6 +51,10 @@ const MAX_PRIORITY = Number.MAX_SAFE_INTEGER;
 export enum StackName {
   /** Player view mode: true = ego-view (first-person), false = third-person */
   PLAYER_VIEW_MODE = 'playerViewMode',
+
+  /** Player movement state: WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING */
+  PLAYER_MOVEMENT_STATE = 'playerMovementState',
+
   // Weitere Stacks hier hinzufügen
 }
 
