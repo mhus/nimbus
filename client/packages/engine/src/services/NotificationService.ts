@@ -455,6 +455,52 @@ export class NotificationService {
   private showVitals: boolean = true; // Default: on
 
   /**
+   * Get current shortcut mode
+   *
+   * @returns Current shortcut display mode
+   */
+  getCurrentShortcutMode(): typeof this.shortcutModes[number] {
+    return this.currentShortcutMode;
+  }
+
+  /**
+   * Map keyboard number (1-9, 0) to shortcut key based on current display mode
+   *
+   * @param keyNumber Keyboard number (1-9, 0 maps to index 0-9)
+   * @returns Shortcut key to execute (e.g., 'click0', 'slot5', 'key1')
+   */
+  mapKeyboardNumberToShortcut(keyNumber: number): string | null {
+    // If shortcuts not visible, return null (use default key mapping)
+    if (this.currentShortcutMode === 'off') {
+      return null;
+    }
+
+    // Map 1-9, 0 to indices 0-9
+    const index = keyNumber === 0 ? 9 : keyNumber - 1;
+
+    switch (this.currentShortcutMode) {
+      case 'keys':
+        // Default behavior: key1-key9, key0
+        return null;
+
+      case 'clicks':
+        // Map to click0-9
+        return `click${index}`;
+
+      case 'slots0':
+        // Map to slot0-9
+        return `slot${index}`;
+
+      case 'slots1':
+        // Map to slot10-19
+        return `slot${10 + index}`;
+
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Toggle shortcuts display
    *
    * Cycles through: keys -> clicks -> slots0 -> slots1 (if available) -> off

@@ -165,6 +165,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 [ ] Wenn die shortcut Keys 1-0 gedrueckt werden (ShortcutInputHandler), soll im NotificationService geprueft werden, ob showShortcuts aktiv (nicht das overlay bei highlight, sondern wirklich showShortcuts) ist.
 - Wenn ja, soll geprueft werden, welche shortcuts angezeigt werden (keys, clicks, slots0, slots10, etc)
   - es wird der angezeigt shotcut fuer 0-9 geholt und ausgefuehrt anstelle des normalen shortcut verhaltens
+- Als event zum Server muss eine andere shortcutNr gesendt werden, z.b. 'slot0', 'slot1', etc anstelle von 0-9
 
 [ ] Die Erkennung von entity im SelectionService ist sehr eng, ist es moeglich entities mit etws kullanz zu erkennen? Auch wenn es nicht genau vor der Kammera ist?
 

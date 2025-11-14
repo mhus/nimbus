@@ -58,6 +58,7 @@ export class ShortcutInputHandler extends InputHandler {
 
       const selectService = this.appContext.services.select;
       const networkService = this.appContext.services.network;
+      const notificationService = this.appContext.services.notification;
 
       if (!selectService) {
         logger.warn('SelectService not available for shortcut');
@@ -87,9 +88,23 @@ export class ShortcutInputHandler extends InputHandler {
       const selectedEntity = selectService.getCurrentSelectedEntity();
       const selectedBlock = selectService.getCurrentSelectedBlock();
 
-      // Map shortcut number to key name
-      // shortcutNr 1-9 → key1-key9, shortcutNr 10 → key0
-      const shortcutKey = shortcutNr === 10 ? 'key0' : `key${shortcutNr}`;
+      // Determine shortcut key to use
+      // If shortcuts are visible, map keyboard number to displayed shortcut
+      let shortcutKey: string;
+      if (notificationService) {
+        const mappedKey = notificationService.mapKeyboardNumberToShortcut(shortcutNr);
+        if (mappedKey) {
+          // Use mapped shortcut (e.g., click0, slot5)
+          shortcutKey = mappedKey;
+          logger.debug('Using mapped shortcut', { keyNumber: shortcutNr, mappedKey });
+        } else {
+          // Use default key mapping (key1-key0)
+          shortcutKey = shortcutNr === 10 ? 'key0' : `key${shortcutNr}`;
+        }
+      } else {
+        // Fallback to default if NotificationService not available
+        shortcutKey = shortcutNr === 10 ? 'key0' : `key${shortcutNr}`;
+      }
 
       // Get shortcut configuration
       const playerEntity = this.playerService.getPlayerEntity();
@@ -97,6 +112,23 @@ export class ShortcutInputHandler extends InputHandler {
       const shortcut = playerInfo.shortcuts?.[shortcutKey];
       const shortcutType = shortcut?.type;
       const shortcutItemId = shortcut?.itemId;
+
+      // Calculate actual shortcut number to send to server
+      // Extract number from shortcut key (e.g., 'key5' -> 5, 'click2' -> 2, 'slot15' -> 15)
+      let actualShortcutNr: number;
+      if (shortcutKey.startsWith('key')) {
+        // key0-key9: 0-9
+        actualShortcutNr = parseInt(shortcutKey.replace('key', ''), 10);
+      } else if (shortcutKey.startsWith('click')) {
+        // click0-9: 0-9
+        actualShortcutNr = parseInt(shortcutKey.replace('click', ''), 10);
+      } else if (shortcutKey.startsWith('slot')) {
+        // slot0-N: 0-N
+        actualShortcutNr = parseInt(shortcutKey.replace('slot', ''), 10);
+      } else {
+        // Fallback to original keyboard number
+        actualShortcutNr = shortcutNr;
+      }
 
       // Calculate distance to selected target
       let distance: number | undefined;
@@ -135,7 +167,7 @@ export class ShortcutInputHandler extends InputHandler {
 
       // Prepare params with all context
       const params: any = {
-        shortcutNr,
+        shortcutNr: actualShortcutNr, // Send actual shortcut number, not keyboard number
         playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
         playerRotation: { yaw: rotation.y, pitch: rotation.x },
         movementStatus,
