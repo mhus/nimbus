@@ -267,6 +267,11 @@ export class ItemCommand extends CommandHandler {
         `  Block Type ID: ${item.blockTypeId}`,
       ];
 
+      // Add description if available
+      if (itemData.description) {
+        itemInfo.push(`  Description: ${itemData.description}`);
+      }
+
       // Add texture info if available
       if (item.modifiers && item.modifiers['0']?.visibility?.textures) {
         const texture = item.modifiers['0'].visibility.textures['0'];

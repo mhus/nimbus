@@ -24,6 +24,7 @@ import type { CompassService } from './services/CompassService';
 import type { ModifierService } from './services/ModifierService';
 import type { EntityService } from './services/EntityService';
 import type { InputService } from './services/InputService';
+import type { ItemService } from './services/ItemService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -105,9 +106,11 @@ export interface Services {
   /** Input service for input handler management */
   input?: InputService;
 
+  /** Item service for loading and caching items from server */
+  item?: ItemService;
+
   // Future services will be added here:
   // render?: RenderService;
-  // input?: InputService;
 }
 
 /**

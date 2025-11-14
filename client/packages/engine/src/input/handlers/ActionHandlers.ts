@@ -101,3 +101,25 @@ export class ToggleViewModeHandler extends InputHandler {
     // Toggle doesn't need continuous updates
   }
 }
+
+/**
+ * Toggle Shortcuts Handler (T key)
+ * Toggles shortcut display: keys -> clicks -> slots0 -> slots1 -> off
+ */
+export class ToggleShortcutsHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Toggle is a discrete action, execute immediately
+    const notificationService = this.appContext?.services.notification;
+    if (notificationService) {
+      notificationService.toggleShowShortcuts();
+    }
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}

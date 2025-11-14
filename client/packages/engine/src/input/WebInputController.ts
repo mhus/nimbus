@@ -18,7 +18,12 @@ import {
   MoveUpHandler,
   MoveDownHandler,
 } from './handlers/MovementHandlers';
-import { JumpHandler, CycleMovementStateHandler, ToggleViewModeHandler } from './handlers/ActionHandlers';
+import {
+  JumpHandler,
+  CycleMovementStateHandler,
+  ToggleViewModeHandler,
+  ToggleShortcutsHandler,
+} from './handlers/ActionHandlers';
 import { RotateHandler } from './handlers/RotationHandlers';
 import {
   EditSelectionRotatorHandler,
@@ -73,6 +78,7 @@ export class WebInputController implements InputController {
   private jumpHandler: JumpHandler;
   private cycleMovementStateHandler: CycleMovementStateHandler;
   private toggleViewModeHandler: ToggleViewModeHandler;
+  private toggleShortcutsHandler: ToggleShortcutsHandler;
   private rotateHandler: RotateHandler;
 
   // Editor handlers (Editor only)
@@ -102,6 +108,7 @@ export class WebInputController implements InputController {
     this.moveDownHandler = new MoveDownHandler(playerService);
     this.jumpHandler = new JumpHandler(playerService);
     this.toggleViewModeHandler = new ToggleViewModeHandler(playerService);
+    this.toggleShortcutsHandler = new ToggleShortcutsHandler(playerService, appContext);
     this.cycleMovementStateHandler = new CycleMovementStateHandler(playerService);
     this.rotateHandler = new RotateHandler(playerService);
 
@@ -179,6 +186,10 @@ export class WebInputController implements InputController {
 
     // F5: Toggle view mode (ego/third-person)
     this.keyBindings.set('F5', this.toggleViewModeHandler);
+
+    // T: Toggle shortcuts display (keys -> clicks -> slots0 -> slots1 -> off)
+    this.keyBindings.set('t', this.toggleShortcutsHandler);
+    this.keyBindings.set('T', this.toggleShortcutsHandler);
 
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)

@@ -107,7 +107,7 @@ Erstelle in shared types eine ItemData definition, die folgende felder hat:
 GET /api/world/{worldid}/item/{itemid}
 Gibt die Item definition zurueck.
 
-[ ] Darstellung der shortcuts im UI umsetzen
+[?] Darstellung der shortcuts im UI umsetzen
 Im NotificationService wird es ein neues UI Element geben, das die aktuellen shortcuts anzeigt.
 - Es wird ein ItemService benoetigt, der items voms erver laed und cached.
 - Im NotificationService wird das UI Element erstellt und die shortcuts aus der PlayerInfo geladen.
@@ -120,6 +120,8 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
   - Das element wird nru angezeigt, wenn ein parameter showShortcuts auf true gesetzt ist im NotificationService, by default ist das off
 - Bei hover werden die details des shortcuts angezeigt (name, beschreibung, etc)
 - Erstelle einen key shortcut auf 'T' um das UI element ein und auszublenden bzw zu rotieren keys, clicks, slots0, slots10, aus - wobei die slots nur angezeigt werden, wenn welche in diesem range definiert sind.
+- Es reicht wenn der Shortcut im NotificationService ein toggleShowShortcuts() oder aehnlich aufruft und der NotificationService macht die darstellung 
+
 
 
 

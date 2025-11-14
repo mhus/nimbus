@@ -27,6 +27,14 @@ export interface ItemData {
   block: Block;
 
   /**
+   * Item description
+   *
+   * Optional text description for the item.
+   * Can be used for tooltips, item info displays, etc.
+   */
+  description?: string;
+
+  /**
    * Optional parameters
    *
    * Map of custom key-value pairs for item-specific data.

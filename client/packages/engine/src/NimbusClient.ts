@@ -25,6 +25,7 @@ import { NotificationService } from './services/NotificationService';
 import { CommandService } from './services/CommandService';
 import { CompassService } from './services/CompassService';
 import { EntityService } from './services/EntityService';
+import { ItemService } from './services/ItemService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
@@ -116,6 +117,12 @@ async function initializeApp(): Promise<AppContext> {
     const notificationService = new NotificationService(appContext);
     appContext.services.notification = notificationService;
     logger.debug('NotificationService initialized');
+
+    // Initialize ItemService (loads items from server REST API)
+    logger.info('Initializing ItemService...');
+    const itemService = new ItemService(appContext);
+    appContext.services.item = itemService;
+    logger.debug('ItemService initialized');
 
     // Initialize CommandService (available in both EDITOR and VIEWER modes)
     logger.info('Initializing CommandService...');

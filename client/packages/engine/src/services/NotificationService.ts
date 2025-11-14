@@ -318,6 +318,306 @@ export class NotificationService {
     }
   }
 
+  // ============================================
+  // Shortcut UI Display
+  // ============================================
+
+  /** Shortcut display modes */
+  private shortcutModes = ['keys', 'clicks', 'slots0', 'slots1', 'off'] as const;
+  private currentShortcutMode: typeof this.shortcutModes[number] = 'off';
+  private shortcutContainer: HTMLElement | null = null;
+
+  /**
+   * Toggle shortcuts display
+   *
+   * Cycles through: keys -> clicks -> slots0 -> slots1 (if available) -> off
+   */
+  toggleShowShortcuts(): void {
+    try {
+      const currentIndex = this.shortcutModes.indexOf(this.currentShortcutMode);
+      let nextIndex = (currentIndex + 1) % this.shortcutModes.length;
+
+      // Skip slots1 if no shortcuts in that range
+      if (this.shortcutModes[nextIndex] === 'slots1') {
+        if (!this.hasShortcutsInRange(10, 19)) {
+          nextIndex = (nextIndex + 1) % this.shortcutModes.length;
+        }
+      }
+
+      this.currentShortcutMode = this.shortcutModes[nextIndex];
+      this.updateShortcutDisplay();
+
+      logger.debug('Shortcut display toggled', { mode: this.currentShortcutMode });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.toggleShowShortcuts');
+    }
+  }
+
+  /**
+   * Check if shortcuts exist in range
+   */
+  private hasShortcutsInRange(start: number, end: number): boolean {
+    const playerInfo = this.appContext.playerInfo;
+    if (!playerInfo?.shortcuts) return false;
+
+    for (let i = start; i <= end; i++) {
+      if (playerInfo.shortcuts[`slot${i}`]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Update shortcut display
+   */
+  private async updateShortcutDisplay(): Promise<void> {
+    try {
+      // Remove existing display
+      if (this.shortcutContainer) {
+        this.shortcutContainer.remove();
+        this.shortcutContainer = null;
+      }
+
+      // If mode is 'off', don't create display
+      if (this.currentShortcutMode === 'off') {
+        return;
+      }
+
+      // Create shortcut container
+      this.shortcutContainer = document.createElement('div');
+      this.shortcutContainer.id = 'shortcuts-container';
+      this.shortcutContainer.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+        z-index: 900;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: white;
+      `;
+
+      // Get shortcuts to display
+      const shortcuts = this.getShortcutsForMode(this.currentShortcutMode);
+
+      // Create slots
+      for (const [key, shortcut] of Object.entries(shortcuts)) {
+        const slot = await this.createShortcutSlot(key, shortcut);
+        this.shortcutContainer.appendChild(slot);
+      }
+
+      document.body.appendChild(this.shortcutContainer);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.updateShortcutDisplay');
+    }
+  }
+
+  /**
+   * Get shortcuts for current mode
+   */
+  private getShortcutsForMode(mode: typeof this.shortcutModes[number]): Record<string, any> {
+    const playerInfo = this.appContext.playerInfo;
+    if (!playerInfo?.shortcuts) return {};
+
+    const shortcuts: Record<string, any> = {};
+
+    switch (mode) {
+      case 'keys':
+        // Keys 1-0
+        for (let i = 1; i <= 9; i++) {
+          shortcuts[`key${i}`] = playerInfo.shortcuts[`key${i}`] || null;
+        }
+        shortcuts['key0'] = playerInfo.shortcuts['key0'] || null;
+        break;
+
+      case 'clicks':
+        // Clicks 1-3
+        shortcuts['click1'] = playerInfo.shortcuts['click1'] || null;
+        shortcuts['click2'] = playerInfo.shortcuts['click2'] || null;
+        shortcuts['click3'] = playerInfo.shortcuts['click3'] || null;
+        break;
+
+      case 'slots0':
+        // Slots 0-9
+        for (let i = 0; i <= 9; i++) {
+          shortcuts[`slot${i}`] = playerInfo.shortcuts[`slot${i}`] || null;
+        }
+        break;
+
+      case 'slots1':
+        // Slots 10-19
+        for (let i = 10; i <= 19; i++) {
+          shortcuts[`slot${i}`] = playerInfo.shortcuts[`slot${i}`] || null;
+        }
+        break;
+    }
+
+    return shortcuts;
+  }
+
+  /**
+   * Create shortcut slot element
+   */
+  private async createShortcutSlot(key: string, shortcut: any): Promise<HTMLElement> {
+    const slot = document.createElement('div');
+    slot.style.cssText = `
+      width: 48px;
+      height: 48px;
+      background: rgba(50, 50, 50, 0.9);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    `;
+
+    // Add key label
+    const label = document.createElement('div');
+    label.style.cssText = `
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.7);
+    `;
+    label.textContent = this.formatKeyLabel(key);
+    slot.appendChild(label);
+
+    if (shortcut) {
+      // Load item and display texture
+      await this.loadShortcutItem(slot, shortcut);
+
+      // Add hover tooltip
+      this.addShortcutTooltip(slot, shortcut);
+    }
+
+    return slot;
+  }
+
+  /**
+   * Format key label for display
+   */
+  private formatKeyLabel(key: string): string {
+    if (key.startsWith('key')) {
+      return key.replace('key', '');
+    }
+    if (key.startsWith('click')) {
+      return 'C' + key.replace('click', '');
+    }
+    if (key.startsWith('slot')) {
+      return 'S' + key.replace('slot', '');
+    }
+    return key;
+  }
+
+  /**
+   * Load item for shortcut and display texture
+   */
+  private async loadShortcutItem(slot: HTMLElement, shortcut: any): Promise<void> {
+    try {
+      const itemService = this.appContext.services.item;
+      if (!itemService) {
+        logger.warn('ItemService not available');
+        return;
+      }
+
+      // Get item ID from shortcut definition
+      const itemId = shortcut.itemId || shortcut.id;
+      if (!itemId) {
+        logger.debug('No itemId in shortcut', { shortcut });
+        return;
+      }
+
+      // Load item from server
+      const item = await itemService.getItem(itemId);
+      if (!item) {
+        logger.debug('Item not found', { itemId });
+        return;
+      }
+
+      // Get texture URL
+      const textureUrl = itemService.getTextureUrl(item);
+      if (!textureUrl) {
+        logger.debug('No texture for item', { itemId });
+        return;
+      }
+
+      // Create image element
+      const img = document.createElement('img');
+      img.src = textureUrl;
+      img.style.cssText = `
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        image-rendering: pixelated;
+      `;
+      img.onerror = () => {
+        logger.warn('Failed to load item texture', { textureUrl });
+      };
+
+      slot.appendChild(img);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.loadShortcutItem', { shortcut });
+    }
+  }
+
+  /**
+   * Add tooltip to shortcut slot
+   */
+  private addShortcutTooltip(slot: HTMLElement, shortcut: any): void {
+    let tooltip: HTMLElement | null = null;
+
+    slot.addEventListener('mouseenter', () => {
+      // Create tooltip
+      tooltip = document.createElement('div');
+      tooltip.style.cssText = `
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1000;
+      `;
+
+      // Add title
+      const title = document.createElement('div');
+      title.style.cssText = 'font-weight: bold; margin-bottom: 4px;';
+      title.textContent = shortcut.name || shortcut.displayName || 'Unnamed';
+      tooltip.appendChild(title);
+
+      // Add description if available
+      if (shortcut.description) {
+        const desc = document.createElement('div');
+        desc.style.cssText = 'font-size: 11px; color: rgba(255, 255, 255, 0.8);';
+        desc.textContent = shortcut.description;
+        tooltip.appendChild(desc);
+      }
+
+      slot.appendChild(tooltip);
+    });
+
+    slot.addEventListener('mouseleave', () => {
+      if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+      }
+    });
+  }
+
   /**
    * Dispose service and clean up
    */
@@ -336,6 +636,12 @@ export class NotificationService {
         });
         notifications.length = 0;
       });
+
+      // Remove shortcut container
+      if (this.shortcutContainer) {
+        this.shortcutContainer.remove();
+        this.shortcutContainer = null;
+      }
 
       logger.info('NotificationService disposed');
     } catch (error) {
