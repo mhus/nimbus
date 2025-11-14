@@ -81,6 +81,21 @@ export function createAllStackModifiers(appContext: AppContext): void {
   );
 
   // ========================================
+  // Fog View Mode Stack
+  // ========================================
+  modifierService.createModifierStack<number>(
+    StackName.FOG_VIEW_MODE,
+    0, // Default: fog disabled (0 = off)
+    (fogIntensity: number) => {
+      // Callback to update CameraService fog mode
+      const cameraService = appContext.services.camera;
+      if (cameraService) {
+        cameraService.setFogMode(fogIntensity);
+      }
+    }
+  );
+
+  // ========================================
   // Weitere Stacks hier hinzufügen
   // ========================================
 

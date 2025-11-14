@@ -58,6 +58,9 @@ export enum StackName {
   /** Player pose: Animation/pose to display (e.g., 'idle', 'walk', 'attack', 'use') */
   PLAYER_POSE = 'playerPose',
 
+  /** Fog view mode: number intensity (0 = disabled, 0.1-1.0 = fog intensity) */
+  FOG_VIEW_MODE = 'fogViewMode',
+
   // Weitere Stacks hier hinzufügen
 }
 

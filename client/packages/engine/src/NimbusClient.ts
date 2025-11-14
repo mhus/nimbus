@@ -51,6 +51,8 @@ import { PlayerPositionInfoCommand } from './commands/PlayerPositionInfoCommand'
 import { SelectedBlockInfoCommand } from './commands/SelectedBlockInfoCommand';
 import { MaterialInfoCommand } from './commands/MaterialInfoCommand';
 import { WireframeCommand } from './commands/WireframeCommand';
+import { UnderwaterCommand } from './commands/UnderwaterCommand';
+import { FogCommand } from './commands/FogCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
@@ -148,6 +150,8 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SelectedBlockInfoCommand(appContext));
     commandService.registerHandler(new MaterialInfoCommand(appContext));
     commandService.registerHandler(new WireframeCommand(appContext));
+    commandService.registerHandler(new UnderwaterCommand(appContext));
+    commandService.registerHandler(new FogCommand(appContext));
     commandService.registerHandler(new LogLevelCommand());
     commandService.registerHandler(new BlockInfoCommand(appContext));
     commandService.registerHandler(new BlockTypeInfoCommand(appContext));

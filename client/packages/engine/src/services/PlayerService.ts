@@ -62,6 +62,7 @@ export class PlayerService {
   // Stack is created centrally in StackModifierCreator
   private playerViewModifier?: Modifier<boolean>;
   private underwaterViewModifier?: Modifier<boolean>;
+  private fogViewModifier?: Modifier<number>;
 
   // Status effects
   private statusEffects: Map<string, StatusEffect> = new Map();
@@ -577,7 +578,7 @@ export class PlayerService {
    *
    * When DEAD mode is active:
    * - Physics is disabled
-   * - Underwater camera effect is enabled
+   * - Fog camera effect is enabled
    * - Input is disabled (handled by InputService)
    * - DEAD pose is set via PLAYER_POSE stack
    *
@@ -602,10 +603,8 @@ export class PlayerService {
         this.physicsService.disablePhysics();
       }
 
-      // Enable underwater camera effect
-      if (this.underwaterViewModifier) {
-        this.underwaterViewModifier.setEnabled(true);
-      }
+      // Enable fog camera effect with heavy intensity
+      this.setFogViewMode(0.8);
 
       // Set DEAD pose via stack (high priority so it overrides everything)
       if (poseStack) {
@@ -620,10 +619,8 @@ export class PlayerService {
         this.physicsService.enablePhysics();
       }
 
-      // Disable underwater camera effect
-      if (this.underwaterViewModifier) {
-        this.underwaterViewModifier.setEnabled(false);
-      }
+      // Disable fog camera effect
+      this.setFogViewMode(0);
 
       // Set IDLE pose via stack (will be overridden by normal pose calculation)
       if (poseStack) {
@@ -741,6 +738,31 @@ export class PlayerService {
       this.underwaterViewModifier = stack.addModifier(true, 10); // Priority 10 (high)
       this.underwaterViewModifier.setEnabled(false); // Disabled initially
       logger.debug('Underwater view modifier created');
+    }
+
+    // Initialize fog view modifier
+    this.initializeFogViewModifier();
+  }
+
+  /**
+   * Initialize fog view modifier
+   * Stack is created centrally in StackModifierCreator
+   */
+  private initializeFogViewModifier(): void {
+    const stack = this.appContext.services.modifier?.getModifierStack<number>(
+      StackName.FOG_VIEW_MODE
+    );
+
+    if (!stack) {
+      logger.warn('Fog view mode stack not available yet');
+      return;
+    }
+
+    // Create fog modifier if not already added
+    if (!this.fogViewModifier) {
+      this.fogViewModifier = stack.addModifier(0.8, 10); // Priority 10 (high), default intensity 0.8
+      this.fogViewModifier.setEnabled(false); // Disabled initially
+      logger.debug('Fog view modifier created');
     }
   }
 
@@ -923,6 +945,31 @@ export class PlayerService {
     this.underwaterViewModifier.setEnabled(underwater);
 
     logger.debug('Underwater ego-view modifier', { enabled: underwater });
+  }
+
+  /**
+   * Set fog view mode with intensity
+   *
+   * Enables/disables fog effects around the camera (used for DEAD mode).
+   *
+   * @param intensity Fog intensity (0 = disabled, 0.1-1.0 = intensity level)
+   */
+  setFogViewMode(intensity: number): void {
+    // Ensure modifiers are initialized
+    this.initializeFogViewModifier();
+
+    if (!this.fogViewModifier) {
+      logger.warn('Fog view modifier not available');
+      return;
+    }
+
+    // Update intensity value
+    this.fogViewModifier.setValue(intensity);
+
+    // Enable/disable based on intensity
+    this.fogViewModifier.setEnabled(intensity > 0);
+
+    logger.debug('Fog view modifier', { intensity, enabled: intensity > 0 });
   }
 
   /**
@@ -1527,14 +1574,16 @@ export class PlayerService {
 
     this.eventListeners.clear();
 
+    // Close modifiers
+    this.playerViewModifier?.close();
+    this.underwaterViewModifier?.close();
+    this.fogViewModifier?.close();
+    this.playerMovementModifier?.close();
+
     // Dispose third-person model
     if (this.thirdPersonMesh) {
       this.thirdPersonMesh.dispose();
     }
-
-    // Close modifiers
-    this.playerViewModifier?.close();
-    this.underwaterViewModifier?.close();
 
     logger.info('PlayerService disposed');
   }

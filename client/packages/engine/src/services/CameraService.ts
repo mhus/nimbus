@@ -54,6 +54,11 @@ export class CameraService {
   private originalFogDensity: number = 0;
   private originalFogColor: Color3 = Color3.White();
 
+  // Fog mode (for DEAD mode and manual activation)
+  private fogSphereMesh?: Mesh;
+  private fogMaterial?: StandardMaterial;
+  private fogIntensity: number = 0; // 0 = disabled, 0.1-1.0 = intensity
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -295,12 +300,17 @@ export class CameraService {
   /**
    * Update camera (called each frame if needed)
    *
-   * Updates water sphere position to follow camera
+   * Updates water sphere and fog sphere positions to follow camera
    */
   update(deltaTime: number): void {
     // Update water sphere position to follow camera
     if (this.waterSphereMesh && this.camera && this.isUnderwater) {
       this.waterSphereMesh.position.copyFrom(this.camera.position);
+    }
+
+    // Update fog sphere position to follow camera
+    if (this.fogSphereMesh && this.camera && this.fogIntensity > 0) {
+      this.fogSphereMesh.position.copyFrom(this.camera.position);
     }
   }
 
@@ -438,6 +448,163 @@ export class CameraService {
   }
 
   /**
+   * Set fog mode intensity
+   *
+   * When intensity > 0:
+   * - Renders a translucent fog sphere around the camera
+   * - Adds gray-tinted fog effect
+   * - Higher intensity = worse visibility
+   *
+   * @param intensity Fog intensity (0 = disabled, 0.1-1.0 = intensity level)
+   */
+  setFogMode(intensity: number): void {
+    try {
+      // Clamp intensity to valid range
+      intensity = Math.max(0, Math.min(1.0, intensity));
+
+      // No state change, skip
+      if (this.fogIntensity === intensity) {
+        return;
+      }
+
+      const wasEnabled = this.fogIntensity > 0;
+      const nowEnabled = intensity > 0;
+
+      this.fogIntensity = intensity;
+
+      if (nowEnabled && !wasEnabled) {
+        // Enabling fog
+        this.enableFogEffects(intensity);
+      } else if (!nowEnabled && wasEnabled) {
+        // Disabling fog
+        this.disableFogEffects();
+      } else if (nowEnabled) {
+        // Intensity changed, update fog
+        this.updateFogIntensity(intensity);
+      }
+
+      logger.info('Fog mode intensity changed', { intensity, enabled: nowEnabled });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CameraService.setFogMode', { intensity });
+    }
+  }
+
+  /**
+   * Enable fog visual effects with given intensity
+   *
+   * @param intensity Fog intensity (0.1-1.0)
+   */
+  private enableFogEffects(intensity: number): void {
+    logger.info('🌫️ ENABLING FOG EFFECTS', { intensity });
+
+    if (!this.camera) {
+      logger.warn('Cannot enable fog effects: camera not initialized');
+      return;
+    }
+
+    // Create fog sphere if not exists
+    if (!this.fogSphereMesh) {
+      this.fogSphereMesh = MeshBuilder.CreateSphere(
+        'fogSphere',
+        {
+          diameter: 50, // Large sphere around camera
+          segments: 16,
+        },
+        this.scene
+      );
+
+      // Flip faces to render inside
+      this.fogSphereMesh.flipFaces(true);
+
+      // Create fog material (gray/white translucent)
+      this.fogMaterial = new StandardMaterial('fogMaterial', this.scene);
+      this.fogMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Light gray
+      this.fogMaterial.backFaceCulling = false;
+
+      this.fogSphereMesh.material = this.fogMaterial;
+
+      // Position at camera
+      this.fogSphereMesh.position.copyFrom(this.camera.position);
+
+      logger.debug('🌫️ Fog sphere created', {
+        position: this.fogSphereMesh.position,
+      });
+    }
+
+    // Show fog sphere
+    this.fogSphereMesh.isVisible = true;
+
+    // Update intensity
+    this.updateFogIntensity(intensity);
+
+    logger.info('🌫️ Fog effects enabled', {
+      intensity,
+      sphereVisible: this.fogSphereMesh.isVisible,
+    });
+  }
+
+  /**
+   * Update fog intensity (density and sphere alpha)
+   *
+   * @param intensity Fog intensity (0.1-1.0)
+   */
+  private updateFogIntensity(intensity: number): void {
+    // Store original fog settings if not already stored
+    if (!this.isUnderwater && this.scene.fogMode === Scene.FOGMODE_NONE) {
+      this.originalFogDensity = this.scene.fogDensity;
+      this.originalFogColor = this.scene.fogColor.clone();
+    }
+
+    // Map intensity to fog density (0.02 - 0.15)
+    const fogDensity = 0.02 + intensity * 0.13;
+
+    // Map intensity to sphere alpha (0.05 - 0.25)
+    const sphereAlpha = 0.05 + intensity * 0.2;
+
+    // Enable fog with gray tint
+    this.scene.fogMode = Scene.FOGMODE_EXP2;
+    this.scene.fogDensity = fogDensity;
+    this.scene.fogColor = new Color3(0.5, 0.5, 0.5); // Gray fog
+
+    // Update sphere alpha
+    if (this.fogMaterial) {
+      this.fogMaterial.alpha = sphereAlpha;
+    }
+
+    logger.debug('🌫️ Fog intensity updated', {
+      intensity,
+      fogDensity,
+      sphereAlpha,
+      fogColor: { r: this.scene.fogColor.r, g: this.scene.fogColor.g, b: this.scene.fogColor.b },
+    });
+  }
+
+  /**
+   * Disable fog visual effects
+   */
+  private disableFogEffects(): void {
+    logger.info('🌫️ DISABLING FOG EFFECTS');
+
+    // Hide fog sphere
+    if (this.fogSphereMesh) {
+      this.fogSphereMesh.isVisible = false;
+      logger.info('🌫️ Fog sphere hidden');
+    }
+
+    // Restore original fog settings (only if not underwater)
+    if (!this.isUnderwater) {
+      this.scene.fogMode = Scene.FOGMODE_NONE;
+      this.scene.fogDensity = this.originalFogDensity;
+      this.scene.fogColor = this.originalFogColor;
+    }
+
+    logger.info('🌫️ Fog effects disabled', {
+      fogMode: this.scene.fogMode,
+      fogRestored: !this.isUnderwater,
+    });
+  }
+
+  /**
    * Dispose camera and underwater effects
    */
   dispose(): void {
@@ -451,6 +618,18 @@ export class CameraService {
     if (this.waterMaterial) {
       this.waterMaterial.dispose();
       this.waterMaterial = undefined;
+    }
+
+    // Dispose fog sphere
+    if (this.fogSphereMesh) {
+      this.fogSphereMesh.dispose();
+      this.fogSphereMesh = undefined;
+    }
+
+    // Dispose fog material
+    if (this.fogMaterial) {
+      this.fogMaterial.dispose();
+      this.fogMaterial = undefined;
     }
 
     // Dispose camera
