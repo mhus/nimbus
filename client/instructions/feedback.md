@@ -65,3 +65,28 @@ Erweiterung BlockMetadata:
 - Ausserdem wird die direction und pitch des players mit gesendet, damit der server weiss in welche richtung der player schaut.
 - Position des players wird auch mit gesendet.
 - der radius fuer den selector soll aus der PlayerInfo kommen. d.h. im player kann configuriert werden welche range er maximal gegner befeuern kann. selectionRadius
+
+[?] Erweitern des Click events im Interaction Mode
+- Wenn im SelectorService der Modus Interaction ist, wird bei einem Klick (right/left/middle) auf einen Block oder Entity ein event an den server geschickt.
+- stelle clickType um auf die nummer der Maustaste, alle maustasten sollen unterstuetzt werden. Start bei 0.
+- Wie bei den shortcut tasten sollen weitere informationen mit gesendet werden:
+    - Optional gefundener Block oder Entity ID mit senden und die entfernung zum player. und die position dees blocks oder entity.
+    - Ausserdem wird die direction und pitch des players mit gesendet, damit der server weiss in welche richtung der player schaut.
+    - Position des players wird auch mit gesendet.
+    - der radius fuer den selector soll aus der PlayerInfo kommen. d.h. im player kann configuriert werden welche range er maximal gegner befeuern kann. selectionRadius
+
+[ ] Shortcut memory
+Fuer die Shortcuts koennen dinge hinterlegt werden. Lege im PlayerInfo eine Map shortcuts an, die folgende Struktur hat:
+- key: shortcut (key0...key9, click1, click2, click3)
+- value: ShortcutDefintiton
+ShortcutDefintiton:
+- type: 'block', 'attack', 'use'
+- itemId: id des Items, das benutzt werden soll - bei block, attacke oder use
+- pose: Pose, die aktiviert werden soll (optional)
+- wait: wie lange vor der aktivierung gewartet werden soll (in ms)
+- duration: wie lange die aktion dauern soll (in ms, optional) - in dieser zeit sind keine anderen aktionen moeglich
+
+Default Aktion ist NONE
+
+[ ] Erweiterung Click und Shortcut Events
+- Sende auch den aktuellen MovementStatus aus dem PlayerService mit

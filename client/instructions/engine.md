@@ -132,7 +132,7 @@ generisch anzubeiten, soll er zusaetzlich auch in VisibilityModifier angegeben w
 
 ## Smooth Block Movement
 
-[?] Ich moechte die Bewegung auf einem Block besser steueren koennen. Die Bewegung wird in PhysicService umgesetzt.
+[x] Ich moechte die Bewegung auf einem Block besser steueren koennen. Die Bewegung wird in PhysicService umgesetzt.
 Da die darstellung von Blocks variieren kann, d.h. ein block kann auch abgeschraegt sein, soll sich auch die bewegung so aehnlich verhalten.
 Meine Idee: Ich hinterlege fuer die vier oberen ecken einen modifier, der die hoehe des blocks an deiser stelle justiert. Dann soll der physics service
 erkennen ob er auto jump (uebergang von block auf naechsten zu hoch) oder ob er ueber den block sliden kann. Dann beim ueber den block laufen slided der player ueber die schraege flaeche.
@@ -246,7 +246,7 @@ doLoglevel('PhysicsService', 'debug')
 
 ## Player State
 
-[?] Alle StackModifier sollen möglichst in ModifierService verwaltet werden. Deshalb wird dort eine Map benoetigt die alle StackModifier hält.
+[x] Alle StackModifier sollen möglichst in ModifierService verwaltet werden. Deshalb wird dort eine Map benoetigt die alle StackModifier hält.
 - Erstelle in ModifierService eine Map<string, StackModifier<any>> namens 'stackModifiers'
 - Beim anlegen von StackModifieren im ModifierService, werden diese in die Map eingetragen mit dem key = parameterName
 - Im PlayerService ist aktuell ein viewModeStack, der kann hier als referenz bestehen bleiben, aber evtl macht es eine Verwaltung ueber den ModifierService sinnvoller und einfacher.
@@ -258,7 +258,7 @@ doLoglevel('PhysicsService', 'debug')
 - Nachteil: Aufgerufene actions sind evtl noch nicht verfuegbar, weil die referenzen noch nicht gesetzt sind. Finde ich akzeptabel, wir brauchen einen try-catch um jede aktion. Am besten gleich im StackModifier update()
 - Im PlayerService wird dann die referenz auf den StackModifier nur geholt aus dem ModifierService.
 
-[?] Es wird ein sauberer Player movement State benoetigt. Deshalb soll im PlayerInfo ein status gehalten werden der folgendes beinhaltet:
+[x] Es wird ein sauberer Player movement State benoetigt. Deshalb soll im PlayerInfo ein status gehalten werden der folgendes beinhaltet:
 
 WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 
@@ -284,7 +284,7 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
   playerService.setMovementMode( playerService.getMovementMode() === FLY ? WALK : FLY )
 - Wenn sich der Movementmode aendert soll wie auch jetzt bei FLY eine Notification via NotificationService ausgelost werden.
 
-[?] Fallen status FALL im PhysicsService implementieren.
+[x] Fallen status FALL im PhysicsService implementieren.
 - Wenn der player fällt PhysicsService (y velocity < 0) wird die falltiefe addiert in einem parameter en PhysicEntity.
 - Ist die Falltiefe groesser als ein threshold (z.b. 2), wird der status auf FALL gesetzt im PlayerService.
 - Wird der fall gestoppt (y velocity >= 0) und die falltiefe war groesser als threshold, wird der status wieder auf WALK gesetzt und es wird ein event zum Server 'onPlayerLanded' ausgelost mit der falltiefe.

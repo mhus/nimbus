@@ -349,35 +349,60 @@ export class WebInputController implements InputController {
       return;
     }
 
-    // Determine click type from mouse button
-    let clickType: 'left' | 'right' | 'middle';
-    switch (event.button) {
-      case 0:
-        clickType = 'left';
-        break;
-      case 2:
-        clickType = 'right';
-        break;
-      case 1:
-        clickType = 'middle';
-        break;
-      default:
-        return; // Ignore other buttons
+    // Use mouse button number directly (0 = left, 1 = middle, 2 = right, etc.)
+    const clickType = event.button;
+
+    // Get player position
+    const playerPosition = this.playerService.getPosition();
+
+    // Get camera rotation
+    const cameraService = (this.playerService as any).cameraService;
+    if (!cameraService) {
+      logger.warn('CameraService not available for click event');
+      return;
+    }
+    const rotation = cameraService.getRotation();
+
+    // Get selection radius from PlayerInfo (state-dependent)
+    const playerEntity = this.playerService.getPlayerEntity();
+    const selectionRadius = playerEntity.cachedSelectionRadius;
+
+    // Check if network service is available
+    if (!this.appContext.services.network) {
+      logger.warn('NetworkService not available for click event');
+      return;
     }
 
     // Priority 1: Check if entity is selected
     const selectedEntity = selectService.getCurrentSelectedEntity();
     if (selectedEntity) {
-      // Send entity interaction to server
+      // Calculate distance to entity
+      const entityPos = selectedEntity.currentPosition;
+      const distance = Math.sqrt(
+        Math.pow(entityPos.x - playerPosition.x, 2) +
+        Math.pow(entityPos.y - playerPosition.y, 2) +
+        Math.pow(entityPos.z - playerPosition.z, 2)
+      );
+
+      // Send entity interaction to server with full context
       this.appContext.services.network.sendEntityInteraction(
         selectedEntity.id,
         'click',
-        clickType
+        clickType,
+        {
+          entityId: selectedEntity.id,
+          distance: parseFloat(distance.toFixed(2)),
+          targetPosition: entityPos,
+          playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+          playerRotation: { yaw: rotation.y, pitch: rotation.x },
+          selectionRadius,
+        }
       );
 
       logger.debug('Entity interaction sent', {
         entityId: selectedEntity.id,
         clickType,
+        distance: distance.toFixed(2),
       });
 
       event.preventDefault();
@@ -387,20 +412,37 @@ export class WebInputController implements InputController {
     // Priority 2: Check if block is selected
     const selectedBlock = selectService.getCurrentSelectedBlock();
     if (selectedBlock) {
-      // Send block interaction to server
+      // Calculate distance to block center
+      const blockPos = selectedBlock.block.position;
+      const blockCenter = { x: blockPos.x + 0.5, y: blockPos.y + 0.5, z: blockPos.z + 0.5 };
+      const distance = Math.sqrt(
+        Math.pow(blockCenter.x - playerPosition.x, 2) +
+        Math.pow(blockCenter.y - playerPosition.y, 2) +
+        Math.pow(blockCenter.z - playerPosition.z, 2)
+      );
+
+      // Send block interaction to server with full context
       this.appContext.services.network.sendBlockInteraction(
-        selectedBlock.block.position.x,
-        selectedBlock.block.position.y,
-        selectedBlock.block.position.z,
+        blockPos.x,
+        blockPos.y,
+        blockPos.z,
         'click',
-        { clickType },
+        {
+          clickType,
+          distance: parseFloat(distance.toFixed(2)),
+          targetPosition: blockCenter,
+          playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+          playerRotation: { yaw: rotation.y, pitch: rotation.x },
+          selectionRadius,
+        },
         selectedBlock.block.metadata?.id,
         selectedBlock.block.metadata?.groupId
       );
 
       logger.debug('Block interaction sent', {
-        position: selectedBlock.block.position,
+        position: blockPos,
         clickType,
+        distance: distance.toFixed(2),
         id: selectedBlock.block.metadata?.id,
       });
 

@@ -1024,7 +1024,7 @@ export class SelectService {
       let targetPosition: { x: number; y: number; z: number } | undefined;
       let entityId: string | undefined;
       let blockId: string | undefined;
-      let blockGroupId: string | undefined;
+      let blockGroupId: number | undefined;
       let blockX: number | undefined;
       let blockY: number | undefined;
       let blockZ: number | undefined;
@@ -1071,6 +1071,12 @@ export class SelectService {
 
       if (entityId) {
         params.entityId = entityId;
+      }
+
+      // Check if network service is available
+      if (!this.appContext.services.network) {
+        logger.warn('NetworkService not available for shortcut');
+        return;
       }
 
       // Send to server

@@ -449,7 +449,7 @@ export class NetworkService {
     action: string = 'click',
     params?: Record<string, any>,
     id?: string,
-    gId?: string
+    gId?: number
   ): void {
     const message: RequestMessage<any> = {
       i: this.generateMessageId(),
@@ -481,17 +481,17 @@ export class NetworkService {
    *
    * @param entityId Entity ID
    * @param action Action type (e.g., 'click', 'use', 'talk', 'fireShortcut')
-   * @param clickType Type of click (left, right, middle) - only for 'click' action
+   * @param clickType Mouse button number (0 = left, 1 = middle, 2 = right, etc.) - only for 'click' action
    * @param additionalParams Additional parameters to merge into pa
    */
   sendEntityInteraction(
     entityId: string,
     action: string = 'click',
-    clickType?: 'left' | 'right' | 'middle',
+    clickType?: number,
     additionalParams?: Record<string, any>
   ): void {
     const params: any = { ...additionalParams };
-    if (action === 'click' && clickType) {
+    if (action === 'click' && clickType !== undefined) {
       params.clickType = clickType;
     }
 
