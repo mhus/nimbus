@@ -29,11 +29,15 @@
 
 ## Integration in die App
 
-[ ] Wenn an einem Block audio dateien an einem Block sind, sollen diese beim erstellen des Chunks im ChunkService vom AudioService geladen und
+[?] Wenn an einem Block audio dateien an einem Block sind, sollen diese beim erstellen des Chunks im ChunkService vom AudioService geladen und
 an den Block vermerkt werden. In ClientBlock wird ein neues feld 'auioSteps' mit allen Audio Objekten vom typ 'steps' hinzugefuegt. Dabei wird in einer 
 Struktur gespeichert referenz auf AudioDefinition und auf den BABYLON.Sound.
 
 [ ] Im PhysicService wird beim bewegen des Spielers ein event 'onStepOver' ausgelöst, AUF welchem block (ClientBlock)) sich 
 der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen, springen, etc) und der id der entity.
+- Das event wird nur ausgeloest wenn sich der spieler bewegt (also nicht steht) und nur alle 300ms (damit nicht zu viele events kommen beim laufen)
 - Im SoundService wird das event gefangen und geprueft ob der ClientBlock Audio dateien in audioSteps hat.
-- Falls ja, wird eine zufaellige audio datei aus der liste der 'audioSteps' audio dateien abgespielt. - Am punkt des Blocks, spacial und mit dem volumen das in der AudioDefinition definiert ist.
+- Falls ja, wird eine zufaellige audio datei aus der liste der 'audioSteps' audio dateien abgespielt. - Am punkt des Blocks, 
+  spacial und mit dem volumen das in der AudioDefinition definiert ist.
+- Im event wird auch die entityId mitgegeben, damit kann verhindert werden, das fuer den gleichen player zwei steps gleichzeitig gespielt werden.
+  Vermerke dir, solange der step sound läuft die entityId, und spiele keinen neuen step sound fuer die gleiche entityId ab.

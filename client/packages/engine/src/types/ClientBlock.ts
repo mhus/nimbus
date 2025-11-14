@@ -10,9 +10,9 @@
  * - ClientBlock wraps Block with resolved references and rendering caches
  */
 
-import type { Block, BlockType, BlockModifier } from '@nimbus/shared';
+import type { Block, BlockType, BlockModifier, AudioDefinition } from '@nimbus/shared';
 import type { ClientBlockType } from './ClientBlockType';
-import type { Mesh } from '@babylonjs/core';
+import type { Mesh, Sound } from '@babylonjs/core';
 
 /**
  * Client-side block instance with caches and resolved references
@@ -83,4 +83,13 @@ export interface ClientBlock {
    * so this reference is only available for individually rendered blocks
    */
   mesh?: Mesh;
+
+  /**
+   * Loaded step audio files
+   * Contains all audio definitions of type 'steps' with their loaded Sound objects
+   */
+  audioSteps?: Array<{
+    definition: AudioDefinition;
+    sound: Sound;
+  }>;
 }

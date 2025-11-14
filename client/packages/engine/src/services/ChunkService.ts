@@ -15,7 +15,9 @@ import {
   Shape,
   getLogger,
   ExceptionHandler,
-  Backdrop, Vector3,
+  Backdrop,
+  Vector3,
+  AudioType,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -423,6 +425,9 @@ export class ChunkService {
         lastUpdate: Date.now(),
       };
 
+      // Load audio files for this block
+      await this.loadBlockAudio(clientBlock);
+
       // Add to map with position key
       clientBlocksMap.set(posKey, clientBlock);
 
@@ -556,6 +561,9 @@ export class ChunkService {
           isDirty: false,
           lastUpdate: Date.now(),
         };
+
+        // Load audio files for this block
+        await this.loadBlockAudio(clientBlock);
 
         // Add to map with position key
         clientBlocksMap.set(posKey, clientBlock);
@@ -787,6 +795,9 @@ export class ChunkService {
           lastUpdate: Date.now(),
         };
 
+        // Load audio files for this block
+        await this.loadBlockAudio(clientBlock);
+
         // Update in chunk
         clientChunk.data.data.set(posKey, clientBlock);
         affectedChunks.add(chunkKey);
@@ -948,6 +959,9 @@ export class ChunkService {
             lastUpdate: Date.now(),
           };
 
+          // Load audio files for this block
+          await this.loadBlockAudio(clientBlock);
+
           // Update in chunk
           clientChunk.data.data.set(posKey, clientBlock);
           affectedChunks.add(chunkKey);
@@ -1047,6 +1061,68 @@ export class ChunkService {
       if (index !== -1) {
         listeners.splice(index, 1);
       }
+    }
+  }
+
+  /**
+   * Load audio files for a ClientBlock
+   * Loads all audio definitions of type 'steps' from the block's modifier
+   *
+   * @param clientBlock - The client block to load audio for
+   */
+  private async loadBlockAudio(clientBlock: ClientBlock): Promise<void> {
+    const audioService = this.appContext.services.audio;
+    if (!audioService) {
+      return; // AudioService not available
+    }
+
+    const audioModifier = clientBlock.currentModifier.audio;
+    if (!audioModifier || audioModifier.length === 0) {
+      return; // No audio defined
+    }
+
+    // Filter for step audio
+    const stepAudioDefs = audioModifier.filter(def => def.type === AudioType.STEPS && def.enabled);
+
+    if (stepAudioDefs.length === 0) {
+      return; // No step audio
+    }
+
+    // Load all step audio files
+    const audioSteps: Array<{ definition: typeof stepAudioDefs[0]; sound: any }> = [];
+
+    for (const audioDef of stepAudioDefs) {
+      try {
+        const sound = await audioService.loadAudio(audioDef.path, {
+          volume: audioDef.volume,
+          loop: audioDef.loop ?? false,
+          autoplay: false,
+          spatialSound: false,
+        });
+
+        if (sound) {
+          audioSteps.push({
+            definition: audioDef,
+            sound,
+          });
+        }
+      } catch (error) {
+        logger.warn('Failed to load block audio', {
+          path: audioDef.path,
+          blockTypeId: clientBlock.blockType.id,
+          position: clientBlock.block.position,
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    // Store in ClientBlock
+    if (audioSteps.length > 0) {
+      clientBlock.audioSteps = audioSteps;
+      logger.debug('Loaded block audio', {
+        blockTypeId: clientBlock.blockType.id,
+        count: audioSteps.length,
+      });
     }
   }
 
