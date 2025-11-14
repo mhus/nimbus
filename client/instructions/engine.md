@@ -300,3 +300,4 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - Der InputController fuer FLY: F rotiert jetzt durch FLY, SPRINT, CROUCH, WALK
 - FLY ist nur im EDITOR modus verfuegbar, wie bisher
 - Schau mal ob der InputController fuer aktuell FLY immer erstellt wird, aktuell wurde der nur im EDITOR moduls erstellt, das muss jetzt immer sein.
+- Wenn der status von FALL auf einen anderen status geht, dann keine Notification

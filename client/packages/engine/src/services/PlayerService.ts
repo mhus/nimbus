@@ -748,8 +748,9 @@ export class PlayerService {
     this.emit('movementStateChanged', event);
 
     // Show notifications for important state changes
+    // Skip notifications when coming from FALL state (landing is already logged)
     const notificationService = this.appContext.services.notification;
-    if (notificationService) {
+    if (notificationService && oldState !== PlayerMovementState.FALL) {
       let message: string | null = null;
 
       if (newState === PlayerMovementState.FLY && oldState !== PlayerMovementState.FLY) {
