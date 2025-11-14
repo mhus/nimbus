@@ -10,6 +10,7 @@
 
 import {
   ServerCommandMessage,
+  SingleServerCommandData,
   MessageType,
   getLogger,
   ExceptionHandler,
@@ -36,8 +37,22 @@ export class ServerCommandHandler implements MessageHandler {
         return;
       }
 
-      const { cmd, args, oneway } = message.d;
+      const { cmd, args, oneway, cmds, parallel } = message.d;
 
+      // Check if this is a multiple commands message
+      if (cmds && Array.isArray(cmds)) {
+        // Multiple commands mode
+        logger.debug('Received multiple server commands', {
+          count: cmds.length,
+          parallel: parallel || false,
+        });
+
+        // Route to CommandService for batch execution
+        this.commandService.handleMultipleServerCommands(cmds, parallel || false);
+        return;
+      }
+
+      // Single command mode (backward compatible)
       if (!cmd) {
         logger.error('Received scmd without cmd field');
         return;

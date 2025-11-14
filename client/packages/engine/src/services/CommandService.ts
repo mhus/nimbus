@@ -16,6 +16,7 @@ import {
   CommandData,
   CommandResultData,
   ServerCommandResultData,
+  SingleServerCommandData,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CommandHandler } from '../commands/CommandHandler';
@@ -404,6 +405,63 @@ export class CommandService {
           message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         });
       }
+    }
+  }
+
+  /**
+   * Handle multiple server commands (batch execution)
+   *
+   * Executes multiple commands either in parallel or serially.
+   * All commands are treated as oneway (no individual responses).
+   *
+   * @param commands Array of commands to execute
+   * @param parallel Execute in parallel (true) or serial (false, default)
+   */
+  async handleMultipleServerCommands(commands: SingleServerCommandData[], parallel: boolean = false): Promise<void> {
+    try {
+      logger.info(`Executing ${commands.length} server commands`, { parallel });
+
+      if (parallel) {
+        // Execute all commands in parallel
+        const promises = commands.map(cmdData =>
+          this.executeCommandIgnoreErrors(cmdData.cmd, cmdData.args || [])
+        );
+        await Promise.all(promises);
+        logger.debug('All commands executed in parallel');
+      } else {
+        // Execute commands serially (one after another)
+        for (const cmdData of commands) {
+          await this.executeCommandIgnoreErrors(cmdData.cmd, cmdData.args || []);
+        }
+        logger.debug('All commands executed serially');
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CommandService.handleMultipleServerCommands', {
+        commandCount: commands.length,
+        parallel,
+      });
+    }
+  }
+
+  /**
+   * Execute a single command and ignore errors (for batch execution)
+   * @param cmd Command name
+   * @param args Command arguments
+   */
+  private async executeCommandIgnoreErrors(cmd: string, args: string[]): Promise<void> {
+    try {
+      const handler = this.handlers.get(cmd);
+
+      if (!handler) {
+        logger.warn(`Command not found in batch: ${cmd}`);
+        return;
+      }
+
+      logger.debug(`Executing command in batch: ${cmd}`, { args });
+      await handler.execute(args);
+      logger.debug(`Command executed in batch: ${cmd}`);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CommandService.executeCommandIgnoreErrors', { cmd, args });
     }
   }
 

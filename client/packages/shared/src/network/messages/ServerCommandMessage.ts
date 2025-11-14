@@ -23,20 +23,46 @@
 import type { RequestMessage, ResponseMessage } from '../BaseMessage';
 
 /**
- * Server command data (Server -> Client)
- * Message type: "scmd"
- *
- * Server sends command to execute on client
+ * Single server command data (for use in cmds array)
  */
-export interface ServerCommandData {
+export interface SingleServerCommandData {
   /** Command string to execute */
   cmd: string;
 
   /** Command arguments */
   args?: string[];
+}
+
+/**
+ * Server command data (Server -> Client)
+ * Message type: "scmd"
+ *
+ * Server sends command(s) to execute on client
+ *
+ * Single command format (backward compatible):
+ * - cmd: Command name
+ * - args: Command arguments
+ * - oneway: No response expected
+ *
+ * Multiple commands format:
+ * - cmds: Array of commands to execute
+ * - parallel: Execute in parallel (true) or serial (false, default)
+ */
+export interface ServerCommandData {
+  /** Command string to execute (single command mode) */
+  cmd?: string;
+
+  /** Command arguments (single command mode) */
+  args?: string[];
 
   /** One-way command (no response expected) */
   oneway?: boolean;
+
+  /** Multiple commands to execute */
+  cmds?: SingleServerCommandData[];
+
+  /** Execute commands in parallel (default: false = serial) */
+  parallel?: boolean;
 }
 
 /**
