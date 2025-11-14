@@ -20,7 +20,21 @@ export interface ClientConfig {
   /** WebSocket server URL */
   websocketUrl: string;
 
-  /** REST API server URL */
+  /**
+   * REST API server URL
+   *
+   * @important This property should ONLY be used by NetworkService.
+   * All other services must access API URLs through NetworkService methods:
+   * - getAssetUrl(assetPath)
+   * - getEntityModelUrl(entityTypeId)
+   * - getBackdropUrl(backdropTypeId)
+   * - getEntityUrl(entityId)
+   * - getBlockTypesRangeUrl(from, to)
+   * - getItemUrl(itemId)
+   * - getItemDataUrl(itemId)
+   *
+   * This ensures centralized URL management for Governor compatibility.
+   */
   apiUrl: string;
 
   /** World ID to connect to */

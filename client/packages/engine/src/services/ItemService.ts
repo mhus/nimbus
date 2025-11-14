@@ -100,8 +100,13 @@ export class ItemService {
         return null;
       }
 
-      const apiUrl = this.appContext.config.apiUrl;
-      const url = `${apiUrl}/worlds/${worldId}/item/${itemId}`;
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.warn('NetworkService not available', { itemId });
+        return null;
+      }
+
+      const url = networkService.getItemUrl(itemId);
 
       logger.debug('Fetching item from server', { itemId, url });
 
@@ -152,9 +157,14 @@ export class ItemService {
         return null;
       }
 
-      // Build asset URL
-      const apiUrl = this.appContext.config.apiUrl;
-      return `${apiUrl}/assets/${texturePath}`;
+      // Build asset URL via NetworkService
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.warn('NetworkService not available for texture URL');
+        return null;
+      }
+
+      return networkService.getAssetUrl(`assets/${texturePath}`);
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.getTextureUrl', {
         itemId: item.metadata?.id,
@@ -213,8 +223,13 @@ export class ItemService {
         return null;
       }
 
-      const apiUrl = this.appContext.config.apiUrl;
-      const url = `${apiUrl}/worlds/${worldId}/itemdata/${itemId}`;
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.warn('NetworkService not available', { itemId });
+        return null;
+      }
+
+      const url = networkService.getItemDataUrl(itemId);
 
       const response = await fetch(url);
       if (!response.ok) {

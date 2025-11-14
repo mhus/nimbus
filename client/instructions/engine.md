@@ -329,3 +329,8 @@ In diese fall sollte die pruefung in mehreren schritten erfolgen. Jeweils ein sc
 - Erstelle im NetworkService eine funktion getRestRequestUrl(endpoint: string): string die den kompletten URL zurueck gibt.
 - Passe alle stellen an wo REST API urls erstellt werden in 'engine'
 
+[ ] Reconnect: Wenn die Verbindung der WebSocket getrennt wird, soll automatisch ein reconnect versucht werden.
+Nach dem reconnect muess die session wiederhergestellt werden.
+ - Logge dich mit der sessionId wieder ein.
+ - Schicke ein event raus, das alle auffordert die session wiederherzustellen.
+ - Fange im ChinkServcie das event ab und registriere dich wieder fuer die chunks die vorher geladen waren.

@@ -595,6 +595,28 @@ export class NetworkService {
   }
 
   /**
+   * Get item URL
+   *
+   * @param itemId - Item ID
+   * @returns Full item URL
+   */
+  getItemUrl(itemId: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    return `${this.apiUrl}/worlds/${worldId}/item/${itemId}`;
+  }
+
+  /**
+   * Get item data URL
+   *
+   * @param itemId - Item ID
+   * @returns Full item data URL
+   */
+  getItemDataUrl(itemId: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    return `${this.apiUrl}/worlds/${worldId}/itemdata/${itemId}`;
+  }
+
+  /**
    * Get base editor URL from world configuration
    *
    * @returns Editor base URL or null if no editor URL configured
