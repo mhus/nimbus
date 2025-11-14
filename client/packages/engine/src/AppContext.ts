@@ -23,6 +23,7 @@ import type { PhysicsService } from './services/PhysicsService';
 import type { CompassService } from './services/CompassService';
 import type { ModifierService } from './services/ModifierService';
 import type { EntityService } from './services/EntityService';
+import type { InputService } from './services/InputService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -100,6 +101,9 @@ export interface Services {
 
   /** Entity service for entity and entity model management */
   entity?: EntityService;
+
+  /** Input service for input handler management */
+  input?: InputService;
 
   // Future services will be added here:
   // render?: RenderService;

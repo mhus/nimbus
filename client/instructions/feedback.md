@@ -90,6 +90,6 @@ Default Aktion ist NONE
 
 Erstelle ein command in engine mit dem ich die shortcuts setzen kann.
 
-[ ] Erweiterung Click und Shortcut Events
+[?] Erweiterung Click und Shortcut Events
 - Sende auch den aktuellen MovementStatus aus dem PlayerService mit
 - Sende daten aus dem shortcut mit an den server: shortcutType, shortcutItemId

@@ -81,6 +81,10 @@ export class WebInputController implements InputController {
   private blockEditorActivateHandler?: BlockEditorActivateHandler;
   private editConfigActivateHandler?: EditConfigActivateHandler;
 
+  // Central handlers from InputService
+  private clickHandler?: InputHandler;
+  private shortcutHandler?: InputHandler;
+
   // Pointer lock state
   private pointerLocked: boolean = false;
 
@@ -188,6 +192,22 @@ export class WebInputController implements InputController {
    * Initialize controller
    */
   initialize(): void {
+    // Get central handlers from InputService
+    const inputService = this.appContext.services.input;
+    if (inputService) {
+      this.clickHandler = inputService.getHandler('click');
+      this.shortcutHandler = inputService.getHandler('shortcut');
+
+      if (!this.clickHandler) {
+        logger.warn('Click handler not available from InputService');
+      }
+      if (!this.shortcutHandler) {
+        logger.warn('Shortcut handler not available from InputService');
+      }
+    } else {
+      logger.warn('InputService not available');
+    }
+
     // Add event listeners
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
@@ -266,12 +286,11 @@ export class WebInputController implements InputController {
    * Handle shortcut key press (1-9, 0)
    */
   private handleShortcut(shortcutNr: number): void {
-    const selectService = this.appContext.services.select;
-    if (!selectService) {
-      return;
+    if (this.shortcutHandler) {
+      this.shortcutHandler.activate(shortcutNr);
+    } else {
+      logger.warn('Shortcut handler not available');
     }
-
-    selectService.fireShortcut(shortcutNr);
   };
 
   /**
@@ -343,110 +362,12 @@ export class WebInputController implements InputController {
       return;
     }
 
-    // Check if SelectService is in INTERACTIVE mode
-    const selectService = this.appContext.services.select;
-    if (!selectService || selectService.getAutoSelectMode() !== 'INTERACTIVE') {
-      return;
-    }
-
-    // Use mouse button number directly (0 = left, 1 = middle, 2 = right, etc.)
-    const clickType = event.button;
-
-    // Get player position
-    const playerPosition = this.playerService.getPosition();
-
-    // Get camera rotation
-    const cameraService = (this.playerService as any).cameraService;
-    if (!cameraService) {
-      logger.warn('CameraService not available for click event');
-      return;
-    }
-    const rotation = cameraService.getRotation();
-
-    // Get selection radius from PlayerInfo (state-dependent)
-    const playerEntity = this.playerService.getPlayerEntity();
-    const selectionRadius = playerEntity.cachedSelectionRadius;
-
-    // Check if network service is available
-    if (!this.appContext.services.network) {
-      logger.warn('NetworkService not available for click event');
-      return;
-    }
-
-    // Priority 1: Check if entity is selected
-    const selectedEntity = selectService.getCurrentSelectedEntity();
-    if (selectedEntity) {
-      // Calculate distance to entity
-      const entityPos = selectedEntity.currentPosition;
-      const distance = Math.sqrt(
-        Math.pow(entityPos.x - playerPosition.x, 2) +
-        Math.pow(entityPos.y - playerPosition.y, 2) +
-        Math.pow(entityPos.z - playerPosition.z, 2)
-      );
-
-      // Send entity interaction to server with full context
-      this.appContext.services.network.sendEntityInteraction(
-        selectedEntity.id,
-        'click',
-        clickType,
-        {
-          entityId: selectedEntity.id,
-          distance: parseFloat(distance.toFixed(2)),
-          targetPosition: entityPos,
-          playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
-          playerRotation: { yaw: rotation.y, pitch: rotation.x },
-          selectionRadius,
-        }
-      );
-
-      logger.debug('Entity interaction sent', {
-        entityId: selectedEntity.id,
-        clickType,
-        distance: distance.toFixed(2),
-      });
-
+    // Use ClickInputHandler from InputService
+    if (this.clickHandler) {
+      this.clickHandler.activate(event.button);
       event.preventDefault();
-      return;
-    }
-
-    // Priority 2: Check if block is selected
-    const selectedBlock = selectService.getCurrentSelectedBlock();
-    if (selectedBlock) {
-      // Calculate distance to block center
-      const blockPos = selectedBlock.block.position;
-      const blockCenter = { x: blockPos.x + 0.5, y: blockPos.y + 0.5, z: blockPos.z + 0.5 };
-      const distance = Math.sqrt(
-        Math.pow(blockCenter.x - playerPosition.x, 2) +
-        Math.pow(blockCenter.y - playerPosition.y, 2) +
-        Math.pow(blockCenter.z - playerPosition.z, 2)
-      );
-
-      // Send block interaction to server with full context
-      this.appContext.services.network.sendBlockInteraction(
-        blockPos.x,
-        blockPos.y,
-        blockPos.z,
-        'click',
-        {
-          clickType,
-          distance: parseFloat(distance.toFixed(2)),
-          targetPosition: blockCenter,
-          playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
-          playerRotation: { yaw: rotation.y, pitch: rotation.x },
-          selectionRadius,
-        },
-        selectedBlock.block.metadata?.id,
-        selectedBlock.block.metadata?.groupId
-      );
-
-      logger.debug('Block interaction sent', {
-        position: blockPos,
-        clickType,
-        distance: distance.toFixed(2),
-        id: selectedBlock.block.metadata?.id,
-      });
-
-      event.preventDefault();
+    } else {
+      logger.warn('Click handler not available');
     }
   };
 
