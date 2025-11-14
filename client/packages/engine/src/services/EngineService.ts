@@ -224,6 +224,7 @@ export class EngineService {
 
       // Initialize input service
       this.inputService = new InputService(this.appContext, this.playerService);
+      this.appContext.services.input = this.inputService; // Register in AppContext
       const webInputController = new WebInputController(this.canvas, this.playerService, this.appContext);
       this.inputService.setController(webInputController);
       logger.debug('InputService initialized');

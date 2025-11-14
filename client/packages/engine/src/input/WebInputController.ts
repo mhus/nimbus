@@ -257,10 +257,10 @@ export class WebInputController implements InputController {
       return;
     }
 
-    // Handle F key for toggling movement mode (Editor only)
-    if ((event.key === 'f' || event.key === 'F') && this.toggleMovementModeHandler) {
-      if (!this.toggleMovementModeHandler.isActive()) {
-        this.toggleMovementModeHandler.activate();
+    // Handle F key for cycling movement state
+    if (event.key === 'f' || event.key === 'F') {
+      if (!this.cycleMovementStateHandler.isActive()) {
+        this.cycleMovementStateHandler.activate();
         event.preventDefault();
       }
       return;
@@ -328,10 +328,10 @@ export class WebInputController implements InputController {
       return;
     }
 
-    // Handle F key for toggling movement mode (Editor only)
-    if ((event.key === 'f' || event.key === 'F') && this.toggleMovementModeHandler) {
-      if (this.toggleMovementModeHandler.isActive()) {
-        this.toggleMovementModeHandler.deactivate();
+    // Handle F key for cycling movement state
+    if (event.key === 'f' || event.key === 'F') {
+      if (this.cycleMovementStateHandler.isActive()) {
+        this.cycleMovementStateHandler.deactivate();
         event.preventDefault();
       }
       return;
