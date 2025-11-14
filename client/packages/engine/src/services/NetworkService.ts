@@ -468,15 +468,19 @@ export class NetworkService {
     this.emit('reconnecting', this.reconnectAttempt);
 
     setTimeout(() => {
-      if (this.shouldReconnect) {
+      if (this.shouldReconnect && this.connectionState !== ConnectionState.CONNECTED) {
         // Reset state before attempting to connect
         this.connectionState = ConnectionState.DISCONNECTED;
 
         this.connect().catch(error => {
           ExceptionHandler.handle(error, 'NetworkService.attemptReconnect');
-          // On error, try again
-          this.attemptReconnect();
+          // On error, try again only if still disconnected
+          if (this.connectionState === ConnectionState.DISCONNECTED && this.shouldReconnect) {
+            this.attemptReconnect();
+          }
         });
+      } else {
+        logger.debug('Reconnect attempt cancelled - already connected or should not reconnect');
       }
     }, this.reconnectIntervalMs);
   }
