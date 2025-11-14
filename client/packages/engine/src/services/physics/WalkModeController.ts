@@ -180,15 +180,50 @@ export class WalkModeController {
     // Handle jump
     this.movementResolver.handleJump(entity, startJump, deltaTime);
 
-    // Calculate next position
-    const wishPosition = entity.position.add(entity.velocity.scale(deltaTime));
+    // Calculate movement distance
+    const movement = entity.velocity.scale(deltaTime);
+    const movementDistance = movement.length();
 
-    // Resolve collisions (Swept-AABB: Y → X → Z)
-    const resolvedPosition = this.collisionDetector.resolveCollision(
-      entity,
-      wishPosition,
-      dimensions
-    );
+    // Max step size to prevent tunneling through blocks (0.8 blocks)
+    const maxStepSize = 0.8;
+
+    let resolvedPosition: Vector3;
+
+    // If movement is larger than max step, split into multiple steps
+    if (movementDistance > maxStepSize) {
+      // Calculate number of steps needed
+      const steps = Math.ceil(movementDistance / maxStepSize);
+      const stepDelta = deltaTime / steps;
+
+      // Start from current position
+      resolvedPosition = entity.position.clone();
+
+      // Execute movement in multiple steps
+      for (let step = 0; step < steps; step++) {
+        const stepMovement = entity.velocity.scale(stepDelta);
+        const stepWishPosition = resolvedPosition.add(stepMovement);
+
+        // Resolve collision for this step
+        resolvedPosition = this.collisionDetector.resolveCollision(
+          entity,
+          stepWishPosition,
+          dimensions
+        );
+
+        // Update entity position for next step collision check
+        entity.position.copyFrom(resolvedPosition);
+      }
+    } else {
+      // Normal single-step movement
+      const wishPosition = entity.position.add(movement);
+
+      // Resolve collisions (Swept-AABB: Y → X → Z)
+      resolvedPosition = this.collisionDetector.resolveCollision(
+        entity,
+        wishPosition,
+        dimensions
+      );
+    }
 
     // === 5.5 ENTITY COLLISIONS ===
 

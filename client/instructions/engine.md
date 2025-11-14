@@ -308,3 +308,9 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - Siehe 'Client Command (Client -> Server)' in client/instructions/general/network-model-2.0.md
 - Siehe 'Server Command (Server -> Client)' in client/instructions/general/network-model-2.0.md
 - Implemetiere die jeweiligen NetworkHandler so, das bei einem asynchronen command oneway: true keine response gesendet wird.
+
+
+[?] im PhysicsService wird die Bewegung des Players geprueft und angepasst.
+Wenn die bewegung mehr als einen Block pro frame ist, koennte es sein das der player durch einen block hindurch geht.
+In diese fall sollte die pruefung in mehreren schritten erfolgen. Jeweils ein schritt von max 0.8 block.
+
