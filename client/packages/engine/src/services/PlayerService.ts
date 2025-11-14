@@ -135,6 +135,9 @@ export class PlayerService {
       };
     }
 
+    // Get initial state values for WALK state
+    const initialStateValues = getStateValues(appContext.playerInfo, 'walk');
+
     // Create player entity (starts in Walk mode)
     this.playerEntity = {
       entityId: 'player',
@@ -150,15 +153,17 @@ export class PlayerService {
       jumpRequested: false, // Jump requested this frame
       lastBlockPos: new Vector3(0, 64, 0), // Last block position for cache invalidation
       playerInfo: appContext.playerInfo,
-      // Initialize cached effective values from PlayerInfo
-      effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
-      effectiveRunSpeed: appContext.playerInfo.effectiveRunSpeed,
-      effectiveUnderwaterSpeed: appContext.playerInfo.effectiveUnderwaterSpeed,
-      effectiveCrawlSpeed: appContext.playerInfo.effectiveCrawlSpeed,
-      effectiveRidingSpeed: appContext.playerInfo.effectiveRidingSpeed,
-      effectiveJumpSpeed: appContext.playerInfo.effectiveJumpSpeed,
-      effectiveTurnSpeed: appContext.playerInfo.effectiveTurnSpeed,
-      effectiveUnderwaterTurnSpeed: appContext.playerInfo.effectiveUnderwaterTurnSpeed,
+
+      // Initialize fall tracking (added for FALL state detection)
+      fallDistance: 0,
+      wasFalling: false,
+
+      // Initialize state-dependent cached values (from stateValues matrix)
+      effectiveSpeed: initialStateValues.effectiveMoveSpeed,
+      effectiveJumpSpeed: initialStateValues.effectiveJumpSpeed,
+      effectiveTurnSpeed: initialStateValues.effectiveTurnSpeed,
+      cachedEyeHeight: initialStateValues.eyeHeight,
+      cachedSelectionRadius: initialStateValues.selectionRadius,
     };
 
     // Initialize last position for change detection
@@ -345,10 +350,8 @@ export class PlayerService {
     const isEgo = this.isEgoView();
 
     if (isEgo) {
-      // Ego-view: Camera at player eye level (state-dependent)
-      const stateKey = movementStateToKey(this.currentMovementState);
-      const stateValues = getStateValues(this.playerEntity.playerInfo, stateKey);
-      const eyeHeight = stateValues.eyeHeight;
+      // Ego-view: Camera at player eye level (cached, state-dependent)
+      const eyeHeight = this.playerEntity.cachedEyeHeight;
 
       this.cameraService.setPosition(
         this.playerEntity.position.x,
@@ -498,17 +501,22 @@ export class PlayerService {
     // Update PlayerInfo
     Object.assign(this.playerEntity.playerInfo, updates);
 
-    // Update cached effective values on entity
-    this.playerEntity.effectiveWalkSpeed = this.playerEntity.playerInfo.effectiveWalkSpeed;
-    this.playerEntity.effectiveRunSpeed = this.playerEntity.playerInfo.effectiveRunSpeed;
-    this.playerEntity.effectiveUnderwaterSpeed = this.playerEntity.playerInfo.effectiveUnderwaterSpeed;
-    this.playerEntity.effectiveCrawlSpeed = this.playerEntity.playerInfo.effectiveCrawlSpeed;
-    this.playerEntity.effectiveRidingSpeed = this.playerEntity.playerInfo.effectiveRidingSpeed;
-    this.playerEntity.effectiveJumpSpeed = this.playerEntity.playerInfo.effectiveJumpSpeed;
-    this.playerEntity.effectiveTurnSpeed = this.playerEntity.playerInfo.effectiveTurnSpeed;
-    this.playerEntity.effectiveUnderwaterTurnSpeed = this.playerEntity.playerInfo.effectiveUnderwaterTurnSpeed;
+    // Update state-dependent caches for current movement state
+    // When PlayerInfo changes (power-ups, equipment), re-cache current state's values
+    const stateKey = movementStateToKey(this.currentMovementState);
+    const stateValues = getStateValues(this.playerEntity.playerInfo, stateKey);
 
-    logger.debug('PlayerInfo updated', { updates });
+    this.playerEntity.effectiveSpeed = stateValues.effectiveMoveSpeed;
+    this.playerEntity.effectiveJumpSpeed = stateValues.effectiveJumpSpeed;
+    this.playerEntity.effectiveTurnSpeed = stateValues.effectiveTurnSpeed;
+    this.playerEntity.cachedEyeHeight = stateValues.eyeHeight;
+    this.playerEntity.cachedSelectionRadius = stateValues.selectionRadius;
+
+    logger.debug('PlayerInfo and caches updated', {
+      updates,
+      currentState: this.currentMovementState,
+      speed: this.playerEntity.effectiveSpeed,
+    });
 
     // Emit event so all services can react
     this.emit('playerInfo:updated', this.playerEntity.playerInfo);
@@ -697,6 +705,16 @@ export class PlayerService {
     if (this.playerEntity.movementMode !== newMode) {
       this.playerEntity.movementMode = newMode;
 
+      // Update cached state-dependent values
+      const stateKey = movementStateToKey(newState);
+      const stateValues = getStateValues(this.playerEntity.playerInfo, stateKey);
+
+      this.playerEntity.effectiveSpeed = stateValues.effectiveMoveSpeed;
+      this.playerEntity.effectiveJumpSpeed = stateValues.effectiveJumpSpeed;
+      this.playerEntity.effectiveTurnSpeed = stateValues.effectiveTurnSpeed;
+      this.playerEntity.cachedEyeHeight = stateValues.eyeHeight;
+      this.playerEntity.cachedSelectionRadius = stateValues.selectionRadius;
+
       // Reset velocity when switching to/from fly mode
       // Prevents "falling while flying" or "flying momentum when landing"
       if (newMode === 'fly' || oldState === PlayerMovementState.FLY) {
@@ -708,9 +726,12 @@ export class PlayerService {
         this.playerEntity.grounded = false;
       }
 
-      logger.debug('Entity movementMode synchronized', {
+      logger.debug('Entity state caches updated', {
         playerMovementState: newState,
         entityMovementMode: newMode,
+        speed: this.playerEntity.effectiveSpeed,
+        jumpSpeed: this.playerEntity.effectiveJumpSpeed,
+        eyeHeight: this.playerEntity.cachedEyeHeight,
       });
     }
 

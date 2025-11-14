@@ -19,38 +19,19 @@ import type { PlayerInfo } from '@nimbus/shared';
  * Combines physics simulation (PhysicsEntity) with player configuration (PlayerInfo).
  * PlayerInfo values can be updated dynamically through power-ups, status effects, equipment, etc.
  *
- * Cached effective values are updated via 'playerInfo:updated' event for performance.
+ * State-dependent cached values are now in PhysicsEntity (effectiveSpeed, effectiveJumpSpeed, etc.)
+ * and are updated when movement state changes via PlayerService.onMovementStateChanged().
  */
 export interface PlayerEntity extends PhysicsEntity {
   /** Player-specific configuration and properties (full info) */
   playerInfo: PlayerInfo;
 
   // ============================================
-  // Cached Effective Values (Performance Optimization)
-  // Updated via 'playerInfo:updated' event
+  // NOTE: State-dependent caches moved to PhysicsEntity
   // ============================================
-
-  /** Cached effective walk speed for physics calculations */
-  effectiveWalkSpeed: number;
-
-  /** Cached effective run speed for physics calculations */
-  effectiveRunSpeed: number;
-
-  /** Cached effective underwater speed for physics calculations */
-  effectiveUnderwaterSpeed: number;
-
-  /** Cached effective crawl speed for physics calculations */
-  effectiveCrawlSpeed: number;
-
-  /** Cached effective riding speed for physics calculations */
-  effectiveRidingSpeed: number;
-
-  /** Cached effective jump speed for physics calculations */
-  effectiveJumpSpeed: number;
-
-  /** Cached effective turn speed for camera control (on land) */
-  effectiveTurnSpeed: number;
-
-  /** Cached effective underwater turn speed for camera control */
-  effectiveUnderwaterTurnSpeed: number;
+  // effectiveSpeed - in PhysicsEntity (varies: WALK=5.0, SPRINT=7.0, CROUCH=2.5)
+  // effectiveJumpSpeed - in PhysicsEntity (varies: WALK=8.0, CROUCH=4.0, RIDING=10.0)
+  // effectiveTurnSpeed - in PhysicsEntity
+  // cachedEyeHeight - in PhysicsEntity (varies: WALK=1.6, CROUCH=0.8)
+  // cachedSelectionRadius - in PhysicsEntity (varies: WALK=5.0, CROUCH=4.0, FLY=8.0)
 }

@@ -9,10 +9,9 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger, movementModeToKey, DEFAULT_STATE_VALUES } from '@nimbus/shared';
+import { getLogger } from '@nimbus/shared';
 import type { PhysicsEntity, PlayerBlockContext } from './types';
 import type { PlayerEntity } from '../../types/PlayerEntity';
-import type { MovementStateValues } from '@nimbus/shared';
 
 const logger = getLogger('MovementResolver');
 
@@ -47,34 +46,19 @@ export class MovementResolver {
   constructor(private config: PhysicsConfig) {}
 
   /**
-   * Get state values for entity
-   * Helper function for accessing state-dependent values
-   */
-  private getStateValues(entity: PhysicsEntity): MovementStateValues {
-    if (isPlayerEntity(entity) && entity.playerInfo.stateValues) {
-      const stateKey = movementModeToKey(entity.movementMode);
-      return entity.playerInfo.stateValues[stateKey] || entity.playerInfo.stateValues.walk;
-    }
-    return DEFAULT_STATE_VALUES.walk;
-  }
-
-  /**
-   * Get move speed for entity based on current state
-   * Uses stateValues matrix - NO MORE HARDCODED MULTIPLIERS!
+   * Get move speed for entity
+   * Uses cached value from PhysicsEntity (updated on state change)
    */
   getMoveSpeed(entity: PhysicsEntity): number {
-    return this.getStateValues(entity).effectiveMoveSpeed;
+    return entity.effectiveSpeed;
   }
 
   /**
-   * Get jump speed for entity based on current state
-   * Uses stateValues matrix for state-dependent jump heights
+   * Get jump speed for entity
+   * Uses cached value from PhysicsEntity (varies by state: WALK=8.0, CROUCH=4.0, RIDING=10.0)
    */
   getJumpSpeed(entity: PhysicsEntity): number {
-    if (isPlayerEntity(entity)) {
-      return this.getStateValues(entity).effectiveJumpSpeed;
-    }
-    return this.config.jumpSpeed;
+    return entity.effectiveJumpSpeed;
   }
 
   /**

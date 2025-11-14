@@ -77,4 +77,24 @@ export interface PhysicsEntity {
 
   /** Was falling in previous frame (for landing detection) */
   wasFalling: boolean;
+
+  // ============================================
+  // Cached state-dependent values
+  // Updated when movement state changes for performance
+  // ============================================
+
+  /** Current horizontal movement speed (varies by state: WALK=5.0, SPRINT=7.0, CROUCH=2.5) */
+  effectiveSpeed: number;
+
+  /** Current jump velocity (varies by state: WALK=8.0, CROUCH=4.0, RIDING=10.0) */
+  effectiveJumpSpeed: number;
+
+  /** Current turn/mouse sensitivity (varies by state) */
+  effectiveTurnSpeed: number;
+
+  /** Current eye height for camera positioning (varies by state: WALK=1.6, CROUCH=0.8) */
+  cachedEyeHeight: number;
+
+  /** Current selection/interaction radius (varies by state: WALK=5.0, CROUCH=4.0, FLY=8.0) */
+  cachedSelectionRadius: number;
 }

@@ -12,8 +12,6 @@ import {
   getLogger,
   ExceptionHandler,
   type ClientEntity,
-  movementStateToKey,
-  getStateValues,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
@@ -94,12 +92,11 @@ export class SelectService {
   /**
    * Get current selection radius based on player movement state
    * Selection radius varies by state (e.g., shorter in crouch, longer in fly)
+   * Uses cached value from PlayerEntity (updated on state change)
    */
   private getSelectionRadius(): number {
-    const movementState = this.playerService.getMovementState();
-    const stateKey = movementStateToKey(movementState);
-    const stateValues = getStateValues(this.appContext.playerInfo, stateKey);
-    return stateValues.selectionRadius;
+    const playerEntity = this.playerService.getPlayerEntity();
+    return playerEntity.cachedSelectionRadius;
   }
 
   constructor(
