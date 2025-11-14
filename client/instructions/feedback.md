@@ -75,9 +75,9 @@ Erweiterung BlockMetadata:
     - Position des players wird auch mit gesendet.
     - der radius fuer den selector soll aus der PlayerInfo kommen. d.h. im player kann configuriert werden welche range er maximal gegner befeuern kann. selectionRadius
 
-[ ] Shortcut memory
+[?] Shortcuts
 Fuer die Shortcuts koennen dinge hinterlegt werden. Lege im PlayerInfo eine Map shortcuts an, die folgende Struktur hat:
-- key: shortcut (key0...key9, click1, click2, click3)
+- key: string (key0...key9, click1, click2, click3, slot0...slotN)
 - value: ShortcutDefintiton
 ShortcutDefintiton:
 - type: 'block', 'attack', 'use'
@@ -88,5 +88,8 @@ ShortcutDefintiton:
 
 Default Aktion ist NONE
 
+Erstelle ein command in engine mit dem ich die shortcuts setzen kann.
+
 [ ] Erweiterung Click und Shortcut Events
 - Sende auch den aktuellen MovementStatus aus dem PlayerService mit
+- Sende daten aus dem shortcut mit an den server: shortcutType, shortcutItemId

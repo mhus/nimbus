@@ -61,6 +61,13 @@ export interface PlayerInfo {
   /** Player display name (shown to other players) */
   displayName: string;
 
+  /**
+   * Shortcuts map
+   * Maps shortcut keys to action definitions
+   * Keys: 'key0'-'key9', 'click0'-'click2', 'slot0'-'slotN'
+   */
+  shortcuts?: Record<string, import('./ShortcutDefinition').ShortcutDefinition>;
+
   // ============================================
   // State-Based Values (NEW UNIFIED STRUCTURE)
   // ============================================
