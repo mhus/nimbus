@@ -499,31 +499,35 @@ export class SelectService {
         return true;
       });
 
-      if (!pickInfo || !pickInfo.hit || !pickInfo.pickedMesh) {
-        return null;
+      // If raycast hit an entity, return it
+      if (pickInfo && pickInfo.hit && pickInfo.pickedMesh) {
+        const entityId = pickInfo.pickedMesh.metadata?.entityId;
+        if (entityId) {
+          const entities = this.entityService.getAllEntities();
+          const entity = entities.find(e => e.id === entityId);
+          if (entity) {
+            logger.debug('Interactive entity selected (raycast)', {
+              entityId: entity.id,
+              name: entity.entity.name,
+              distance: pickInfo.distance?.toFixed(2),
+            });
+            return entity;
+          }
+        }
       }
 
-      // Extract entity ID from mesh metadata (already validated in predicate)
-      const entityId = pickInfo.pickedMesh.metadata?.entityId;
-      if (!entityId) {
-        return null;
+      // Fallback: If raycast missed, find nearest entity in view cone
+      // This provides tolerance for entities not exactly in crosshair
+      const nearestEntity = this.findNearestEntityInViewCone(eyePosition, direction, radius);
+
+      if (nearestEntity) {
+        logger.debug('Interactive entity selected (cone fallback)', {
+          entityId: nearestEntity.id,
+          name: nearestEntity.entity.name,
+        });
       }
 
-      // Get entity from EntityService (already validated in predicate)
-      const entities = this.entityService.getAllEntities();
-      const entity = entities.find(e => e.id === entityId);
-
-      if (!entity) {
-        return null;
-      }
-
-      logger.debug('Interactive entity selected', {
-        entityId: entity.id,
-        name: entity.entity.name,
-        distance: pickInfo.distance?.toFixed(2),
-      });
-
-      return entity;
+      return nearestEntity;
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.getSelectedEntityFromPlayer', {
         radius,
@@ -1118,6 +1122,82 @@ export class SelectService {
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.fireShortcut', { shortcutNr });
     }
+  }
+
+  /**
+   * Find nearest interactive entity in view cone
+   *
+   * Fallback method when raycast misses - provides tolerance for entity selection.
+   * Checks entities within a cone in front of the camera.
+   *
+   * @param eyePosition Player eye position
+   * @param viewDirection Camera view direction (normalized)
+   * @param maxDistance Maximum search distance
+   * @returns Nearest entity in view cone or null
+   */
+  private findNearestEntityInViewCone(
+    eyePosition: Vector3,
+    viewDirection: Vector3,
+    maxDistance: number
+  ): ClientEntity | null {
+    if (!this.entityService) {
+      return null;
+    }
+
+    const entities = this.entityService.getAllEntities();
+    let nearestEntity: ClientEntity | null = null;
+    let nearestDistance = Infinity;
+
+    // Cone angle tolerance (in radians) - ~15 degrees
+    const coneAngleTolerance = Math.PI / 12;
+
+    for (const entity of entities) {
+      // Skip non-interactive entities
+      if (!entity.entity.interactive) {
+        continue;
+      }
+
+      // Skip player-controlled entities
+      if (entity.entity.controlledBy === 'player') {
+        continue;
+      }
+
+      const entityPos = entity.currentPosition;
+
+      // Calculate vector from eye to entity
+      const toEntity = new Vector3(
+        entityPos.x - eyePosition.x,
+        entityPos.y - eyePosition.y,
+        entityPos.z - eyePosition.z
+      );
+
+      const distance = toEntity.length();
+
+      // Skip entities outside max distance
+      if (distance > maxDistance) {
+        continue;
+      }
+
+      // Normalize toEntity vector
+      toEntity.normalize();
+
+      // Calculate angle between view direction and entity direction
+      const dotProduct = Vector3.Dot(viewDirection, toEntity);
+      const angle = Math.acos(Math.max(-1, Math.min(1, dotProduct)));
+
+      // Skip entities outside view cone
+      if (angle > coneAngleTolerance) {
+        continue;
+      }
+
+      // Track nearest entity in cone
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestEntity = entity;
+      }
+    }
+
+    return nearestEntity;
   }
 
   dispose(): void {
