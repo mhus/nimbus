@@ -1107,16 +1107,43 @@ server.initialize().catch((error) => {
   process.exit(1);
 });
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Shutting down server...');
+// Graceful shutdown handler
+async function gracefulShutdown(signal: string) {
+  logger.info(`${signal} received, shutting down server gracefully...`);
   try {
-    // Get WorldManager from server instance
+    // Get components from server instance
     const worldManager = server['worldManager'] as WorldManager;
+    const blockUpdateBuffer = server['blockUpdateBuffer'] as BlockUpdateBuffer;
+    const itemUpdateBuffer = server['itemUpdateBuffer'] as ItemUpdateBuffer;
+
+    // Flush all pending updates first (to ensure they're broadcast to clients)
+    logger.info('Flushing pending block updates...');
+    blockUpdateBuffer.flush();
+
+    logger.info('Flushing pending item updates...');
+    itemUpdateBuffer.forceFlush();
+
+    // Wait a moment for flush operations to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Now save all chunks and items to disk
+    logger.info('Saving all chunks and items to disk...');
     await worldManager.saveAll();
-    logger.info('All chunks saved successfully');
+    logger.info('All chunks and items saved successfully');
+
+    // Dispose buffers
+    blockUpdateBuffer.dispose();
+    itemUpdateBuffer.shutdown();
+
+    logger.info('Server shutdown complete');
   } catch (error) {
-    logger.error('Failed to save chunks during shutdown', {}, error as Error);
+    logger.error('Failed to save data during shutdown', {}, error as Error);
   }
   process.exit(0);
-});
+}
+
+// Handle Ctrl+C (SIGINT)
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle kill command (SIGTERM)
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

@@ -350,5 +350,5 @@ Der Modus heisst DEAD.
 - Erstelle ein Command 'setPlayerDeadState(isDead: boolean)' im PlayerService um den modus zu setzen.
 - Die Posse DEAD wird ausgefuehrt, bei reconnect wird wieder auf IDLE gestellt 
 
-[ ] Beim stoppen des test_servers (Ctrl+C) soll gewartet werden bis alle chunks und items geschrieben wurden. So sollen currupt files vermieden werden.
+[x] Beim stoppen des test_servers (Ctrl+C) soll gewartet werden bis alle chunks und items geschrieben wurden. So sollen currupt files vermieden werden.
 
