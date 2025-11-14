@@ -499,6 +499,24 @@ export function createWorldRoutes(
     return res.json({ success: true, selectedEditBlock: position });
   });
 
+  // GET /api/worlds/:id/item/:itemId - Get item by ID
+  router.get('/:id/item/:itemId', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const itemId = req.params.itemId;
+    const itemBlock = world.itemRegistry.getItemById(itemId);
+
+    if (!itemBlock) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    // Return only the block (not the full ItemData with parameters)
+    return res.json(itemBlock);
+  });
+
   return router;
 }
 

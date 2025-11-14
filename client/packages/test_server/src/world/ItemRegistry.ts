@@ -3,9 +3,12 @@
  *
  * Items are special billboard blocks that are managed separately from regular blocks.
  * Each item has a unique ID and can be placed at AIR positions in chunks.
+ *
+ * Items are stored internally as ItemData (block + parameters), but can be accessed
+ * as Block objects for backward compatibility.
  */
 
-import type { Block } from '@nimbus/shared';
+import type { Block, ItemData } from '@nimbus/shared';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -29,7 +32,7 @@ interface ItemTemplate {
  */
 export class ItemRegistry {
   /** All items in the world, keyed by position "x,y,z" */
-  private items: Map<string, Block>;
+  private items: Map<string, ItemData>;
 
   /** Template for creating new items */
   private itemTemplate: ItemTemplate;
@@ -93,6 +96,7 @@ export class ItemRegistry {
    * @param z World Z coordinate
    * @param displayName Display name for the item
    * @param texturePath Path to the item texture
+   * @param parameters Optional parameters for the item
    * @returns Created item block
    */
   addItem(
@@ -100,7 +104,8 @@ export class ItemRegistry {
     y: number,
     z: number,
     displayName: string,
-    texturePath: string
+    texturePath: string,
+    parameters?: Record<string, any>
   ): Block {
     const key = `${x},${y},${z}`;
 
@@ -108,7 +113,7 @@ export class ItemRegistry {
     const id = `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     // Create item block from template
-    const item: Block = {
+    const block: Block = {
       position: { x, y, z },
       blockTypeId: this.itemTemplate.blockTypeId,
       modifiers: JSON.parse(JSON.stringify(this.itemTemplate.modifiers)), // Deep clone
@@ -119,12 +124,18 @@ export class ItemRegistry {
     };
 
     // Set texture path
-    if (item.modifiers && item.modifiers['0']?.visibility?.textures) {
-      item.modifiers['0'].visibility.textures['0'] = texturePath;
+    if (block.modifiers && block.modifiers['0']?.visibility?.textures) {
+      block.modifiers['0'].visibility.textures['0'] = texturePath;
     }
 
+    // Create ItemData
+    const itemData: ItemData = {
+      block,
+      parameters,
+    };
+
     // Add to registry
-    this.items.set(key, item);
+    this.items.set(key, itemData);
     this.isDirty = true;
 
     logger.info('Item added', {
@@ -132,9 +143,10 @@ export class ItemRegistry {
       id,
       displayName,
       texturePath,
+      hasParameters: !!parameters,
     });
 
-    return item;
+    return block;
   }
 
   /**
@@ -167,7 +179,51 @@ export class ItemRegistry {
    */
   getItem(x: number, y: number, z: number): Block | undefined {
     const key = `${x},${y},${z}`;
+    const itemData = this.items.get(key);
+    return itemData?.block;
+  }
+
+  /**
+   * Get item data at position (including parameters)
+   *
+   * @param x World X coordinate
+   * @param y World Y coordinate
+   * @param z World Z coordinate
+   * @returns ItemData or undefined if no item at position
+   */
+  getItemData(x: number, y: number, z: number): ItemData | undefined {
+    const key = `${x},${y},${z}`;
     return this.items.get(key);
+  }
+
+  /**
+   * Get item by ID
+   *
+   * @param itemId Item ID (from metadata.id)
+   * @returns Item block or undefined if not found
+   */
+  getItemById(itemId: string): Block | undefined {
+    for (const itemData of this.items.values()) {
+      if (itemData.block.metadata?.id === itemId) {
+        return itemData.block;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Get item data by ID (including parameters)
+   *
+   * @param itemId Item ID (from metadata.id)
+   * @returns ItemData or undefined if not found
+   */
+  getItemDataById(itemId: string): ItemData | undefined {
+    for (const itemData of this.items.values()) {
+      if (itemData.block.metadata?.id === itemId) {
+        return itemData;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -199,14 +255,15 @@ export class ItemRegistry {
 
     const items: Block[] = [];
 
-    for (const item of this.items.values()) {
+    for (const itemData of this.items.values()) {
+      const block = itemData.block;
       if (
-        item.position.x >= minX &&
-        item.position.x <= maxX &&
-        item.position.z >= minZ &&
-        item.position.z <= maxZ
+        block.position.x >= minX &&
+        block.position.x <= maxX &&
+        block.position.z >= minZ &&
+        block.position.z <= maxZ
       ) {
-        items.push(item);
+        items.push(block);
       }
     }
 
@@ -219,6 +276,15 @@ export class ItemRegistry {
    * @returns Array of all item blocks
    */
   getAllItems(): Block[] {
+    return Array.from(this.items.values()).map((itemData) => itemData.block);
+  }
+
+  /**
+   * Get all item data in the world (including parameters)
+   *
+   * @returns Array of all ItemData
+   */
+  getAllItemData(): ItemData[] {
     return Array.from(this.items.values());
   }
 
@@ -244,6 +310,7 @@ export class ItemRegistry {
    * Save items to disk
    *
    * Saves all items to data/worlds/{worldId}/items.json
+   * Format: Array of ItemData objects
    */
   async save(): Promise<void> {
     try {
@@ -257,7 +324,7 @@ export class ItemRegistry {
       const itemsPath = path.join(dataDir, 'items.json');
       const itemsArray = Array.from(this.items.values());
 
-      // Write items to file
+      // Write ItemData array to file
       fs.writeFileSync(itemsPath, JSON.stringify(itemsArray, null, 2), 'utf-8');
 
       this.isDirty = false;
@@ -280,6 +347,8 @@ export class ItemRegistry {
    * Load items from disk
    *
    * Loads items from data/worlds/{worldId}/items.json
+   * Supports both old format (Block[]) and new format (ItemData[])
+   * for backward compatibility.
    *
    * @returns Number of items loaded
    */
@@ -298,15 +367,30 @@ export class ItemRegistry {
 
       // Read and parse items file
       const itemsContent = fs.readFileSync(itemsPath, 'utf-8');
-      const itemsArray: Block[] = JSON.parse(itemsContent);
+      const itemsArray: any[] = JSON.parse(itemsContent);
 
       // Clear existing items
       this.items.clear();
 
       // Load items into registry
+      // Support both old format (Block[]) and new format (ItemData[])
       for (const item of itemsArray) {
-        const key = `${item.position.x},${item.position.y},${item.position.z}`;
-        this.items.set(key, item);
+        let itemData: ItemData;
+
+        // Check if this is new format (ItemData with block property)
+        if (item.block && item.block.position) {
+          // New format: ItemData
+          itemData = item as ItemData;
+        } else {
+          // Old format: Block - wrap in ItemData
+          itemData = {
+            block: item as Block,
+            parameters: undefined,
+          };
+        }
+
+        const key = `${itemData.block.position.x},${itemData.block.position.y},${itemData.block.position.z}`;
+        this.items.set(key, itemData);
       }
 
       this.isDirty = false;

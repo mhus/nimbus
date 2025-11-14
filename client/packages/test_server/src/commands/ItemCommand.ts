@@ -248,14 +248,16 @@ export class ItemCommand extends CommandHandler {
     }
 
     try {
-      // Get item at position
-      const item = world.itemRegistry.getItem(x, y, z);
-      if (!item) {
+      // Get item data (includes parameters)
+      const itemData = world.itemRegistry.getItemData(x, y, z);
+      if (!itemData) {
         return {
           rc: 0,
           message: `No item at position (${x}, ${y}, ${z})`,
         };
       }
+
+      const item = itemData.block;
 
       // Format item information
       const itemInfo = [
@@ -275,6 +277,14 @@ export class ItemCommand extends CommandHandler {
 
       // Add position info
       itemInfo.push(`  Position: x=${item.position.x}, y=${item.position.y}, z=${item.position.z}`);
+
+      // Add parameters if they exist
+      if (itemData.parameters && Object.keys(itemData.parameters).length > 0) {
+        itemInfo.push(`  Parameters:`);
+        for (const [key, value] of Object.entries(itemData.parameters)) {
+          itemInfo.push(`    ${key}: ${JSON.stringify(value)}`);
+        }
+      }
 
       return {
         rc: 0,

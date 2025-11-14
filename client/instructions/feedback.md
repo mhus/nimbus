@@ -94,22 +94,33 @@ Erstelle ein command in engine mit dem ich die shortcuts setzen kann.
 - Sende auch den aktuellen MovementStatus aus dem PlayerService mit
 - Sende daten aus dem shortcut mit an den server: shortcutType, shortcutItemId
 
-[ ] Item erweitern
+[?] Item erweitern
 Erstelle in shared types eine ItemData definition, die folgende felder hat:
 - block: block definition (Block) - wird aktuell als item verwaltet und versendet vom server
 - parameters: map<string, any> - optionale parameter fuer das item
+- description - neu
 
 - Benutze im server zum verwalten der items diese definition. Die aktuellen Blocks sind in der neuen struktur in block wieder vorhanden.
 - Passe das commando im server an
 
-
-[ ] Items aus server laden, einen REST Endpoint im server erstellen, der die items zurueckgibt.
+[?] Items aus server laden, einen REST Endpoint im server erstellen, der die items zurueckgibt.
 GET /api/world/{worldid}/item/{itemid}
 Gibt die Item definition zurueck.
 
 [ ] Darstellung der shortcuts im UI umsetzen
-Im NotificaationService wird es ein neues UI Element geben, das die aktuellen shortcuts anzeigt.
--
+Im NotificationService wird es ein neues UI Element geben, das die aktuellen shortcuts anzeigt.
+- Es wird ein ItemService benoetigt, der items voms erver laed und cached.
+- Im NotificationService wird das UI Element erstellt und die shortcuts aus der PlayerInfo geladen.
+- Items werden vom ItemService geladen.
+- Das UI Element wird im unteren bereich angezeigt und zeigt nebeneinander die shortcuts icons/texturen in den items an.
+- Die texturen koennen vom server via assets rute genutzt werden. Der ItemService gibt die url zurueck.
+  - Leere slots werden leer angezeigt
+  - Es gibt die slots 1...0 fuer die shortcut tasten Insgesamt 10 slots. die anzeige kann umgestellt werden, das andere slots angezeigt werden (click1, click2, click3, slot0...slotN)
+  - Die umstellung erfolgt ueber einen parameter in NotificationService: keys, clicks, slots0 (0-9), slots1 (10-19), ....
+  - Das element wird nru angezeigt, wenn ein parameter showShortcuts auf true gesetzt ist im NotificationService, by default ist das off
+- Bei hover werden die details des shortcuts angezeigt (name, beschreibung, etc)
+- Erstelle einen key shortcut auf 'T' um das UI element ein und auszublenden bzw zu rotieren keys, clicks, slots0, slots10, aus - wobei die slots nur angezeigt werden, wenn welche in diesem range definiert sind.
+
 
 
 
