@@ -138,12 +138,12 @@ export class SetShortcutCommand extends CommandHandler {
       }
 
       // Create shortcut definition
+      // Note: pose, wait, duration are now stored in ItemData, not in ShortcutDefinition
       const shortcut: ShortcutDefinition = {
         type,
         itemId: options.itemId,
-        pose: options.pose,
-        wait: options.wait,
-        duration: options.duration,
+        name: options.name,
+        description: options.description,
       };
 
       // Set shortcut
@@ -193,9 +193,8 @@ export class SetShortcutCommand extends CommandHandler {
       const shortcut = shortcuts[key];
       output += `\n${key}: ${shortcut.type}`;
       if (shortcut.itemId) output += ` (item: ${shortcut.itemId})`;
-      if (shortcut.pose) output += ` [pose: ${shortcut.pose}]`;
-      if (shortcut.wait) output += ` [wait: ${shortcut.wait}ms]`;
-      if (shortcut.duration) output += ` [duration: ${shortcut.duration}ms]`;
+      if (shortcut.name) output += ` [${shortcut.name}]`;
+      if (shortcut.description) output += ` - ${shortcut.description}`;
     }
 
     output += '\n' + '─'.repeat(60);

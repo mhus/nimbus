@@ -35,6 +35,30 @@ export interface ItemData {
   description?: string;
 
   /**
+   * Pose to activate when item is used
+   *
+   * Example: 'attack', 'use', 'place', 'drink', etc.
+   * Used for player animation when using this item.
+   */
+  pose?: string;
+
+  /**
+   * Wait time before activation in milliseconds
+   *
+   * Delay before the item action takes effect.
+   * Default: 0 (immediate)
+   */
+  wait?: number;
+
+  /**
+   * Duration of action in milliseconds
+   *
+   * During this time, the action/pose is active.
+   * After duration, player returns to normal state.
+   */
+  duration?: number;
+
+  /**
    * Optional parameters
    *
    * Map of custom key-value pairs for item-specific data.

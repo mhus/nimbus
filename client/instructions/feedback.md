@@ -124,7 +124,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 
 [ ] Im ItemService sollen die events fuer shortcuts abgefangen werden und die hinterlegte pose aktiviert werden.
 - Wenn eine pose hinterlegt ist, wird diese aktiviert
-- im PlayerService die currentPose overrulenmit dieser pose, solange die aktion dauert (dauer ist auch im item hinterlegt)
+- im PlayerService die currentPose overrulen dieser pose, solange die aktion dauert (dauer ist auch im item duration hinterlegt)
 
 
 

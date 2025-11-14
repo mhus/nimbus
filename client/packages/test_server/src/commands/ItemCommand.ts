@@ -272,6 +272,17 @@ export class ItemCommand extends CommandHandler {
         itemInfo.push(`  Description: ${itemData.description}`);
       }
 
+      // Add action properties if available
+      if (itemData.pose) {
+        itemInfo.push(`  Pose: ${itemData.pose}`);
+      }
+      if (itemData.wait !== undefined) {
+        itemInfo.push(`  Wait: ${itemData.wait}ms`);
+      }
+      if (itemData.duration !== undefined) {
+        itemInfo.push(`  Duration: ${itemData.duration}ms`);
+      }
+
       // Add texture info if available
       if (item.modifiers && item.modifiers['0']?.visibility?.textures) {
         const texture = item.modifiers['0'].visibility.textures['0'];

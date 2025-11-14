@@ -22,6 +22,9 @@ export type ShortcutKey = string; // Format: 'key0'-'key9', 'click0'-'click2', '
 
 /**
  * Shortcut definition
+ *
+ * Defines what item should be used when a shortcut is triggered.
+ * The item itself (ItemData) contains the action parameters (pose, wait, duration).
  */
 export interface ShortcutDefinition {
   /**
@@ -36,26 +39,25 @@ export interface ShortcutDefinition {
   /**
    * Item ID to use (for block, attack, or use actions)
    * Optional - if not specified, uses currently selected item
+   *
+   * The referenced item's ItemData contains:
+   * - pose: Animation to play
+   * - wait: Delay before activation
+   * - duration: How long the action lasts
    */
   itemId?: string;
 
   /**
-   * Pose to activate during action (optional)
-   * Example: 'attack', 'use', 'place', etc.
+   * Display name for UI
+   * Optional - if not specified, uses item's display name from metadata
    */
-  pose?: string;
+  name?: string;
 
   /**
-   * Wait time before activation in milliseconds
-   * Default: 0
+   * Description for UI tooltips
+   * Optional - if not specified, uses item's description from ItemData
    */
-  wait?: number;
-
-  /**
-   * Duration of action in milliseconds (optional)
-   * During this time, no other actions can be performed
-   */
-  duration?: number;
+  description?: string;
 }
 
 /**
