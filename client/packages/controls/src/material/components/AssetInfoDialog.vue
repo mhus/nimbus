@@ -33,6 +33,50 @@
                 <p class="text-sm font-mono break-all">{{ assetPath }}</p>
               </div>
 
+              <!-- Asset Preview Section -->
+              <div v-if="isAudioFile || isImageFile" class="mb-4 p-4 bg-base-200 rounded">
+                <div class="text-sm font-semibold mb-2">Vorschau</div>
+
+                <!-- Image Preview -->
+                <img
+                  v-if="isImageFile"
+                  :src="assetUrl"
+                  :alt="assetPath"
+                  class="max-w-full h-auto rounded border border-base-300"
+                  style="image-rendering: pixelated;"
+                  @error="handleImageError"
+                />
+
+                <!-- Audio Preview -->
+                <div v-if="isAudioFile" class="flex items-center gap-3">
+                  <button
+                    class="btn btn-circle btn-primary"
+                    @click="toggleAudioPlayback"
+                    :disabled="audioLoading"
+                  >
+                    <span v-if="audioLoading" class="loading loading-spinner loading-sm"></span>
+                    <svg v-else-if="!isPlaying" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg v-else class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                  </button>
+                  <div class="flex-1">
+                    <div class="text-xs text-base-content/70 mb-1">{{ audioFileName }}</div>
+                    <div class="text-xs text-base-content/50">{{ audioFormatText }}</div>
+                  </div>
+                </div>
+
+                <!-- Audio Error -->
+                <div v-if="audioError" class="alert alert-warning mt-2">
+                  <svg class="stroke-current flex-shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span class="text-xs">{{ audioError }}</span>
+                </div>
+              </div>
+
               <div class="space-y-4">
                 <!-- Description (Required) -->
                 <div class="form-control">
@@ -128,9 +172,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import { assetInfoService, type AssetInfo } from '@/services/AssetInfoService';
+import { assetService } from '@/services/AssetService';
 
 interface Props {
   worldId: string;
@@ -152,6 +197,42 @@ const customFields = reactive<Record<string, string>>({});
 const customFieldKeys = reactive<Record<string, string>>({});
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
+
+// Audio preview state
+const audioElement = ref<HTMLAudioElement | null>(null);
+const isPlaying = ref(false);
+const audioLoading = ref(false);
+const audioError = ref<string | null>(null);
+
+// Computed properties for file type detection
+const assetExtension = computed(() => {
+  const parts = props.assetPath.split('.');
+  return parts.length > 1 ? `.${parts[parts.length - 1].toLowerCase()}` : '';
+});
+
+const isAudioFile = computed(() => {
+  const audioExtensions = ['.mp3', '.wav', '.ogg'];
+  return audioExtensions.includes(assetExtension.value);
+});
+
+const isImageFile = computed(() => {
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+  return imageExtensions.includes(assetExtension.value);
+});
+
+const assetUrl = computed(() => {
+  return assetService.getAssetUrl(props.worldId, props.assetPath);
+});
+
+const audioFileName = computed(() => {
+  const parts = props.assetPath.split('/');
+  return parts[parts.length - 1];
+});
+
+const audioFormatText = computed(() => {
+  const ext = assetExtension.value.replace('.', '').toUpperCase();
+  return `${ext} Audio`;
+});
 
 // Load existing info
 onMounted(async () => {
@@ -209,6 +290,62 @@ const handleKeyChange = (oldKey: string, newKey: string) => {
   customFieldKeys[newKey] = newKey;
   delete customFieldKeys[oldKey];
 };
+
+// Audio preview functions
+const toggleAudioPlayback = async () => {
+  if (!isAudioFile.value) return;
+
+  audioError.value = null;
+
+  try {
+    // Create audio element if not exists
+    if (!audioElement.value) {
+      audioLoading.value = true;
+      audioElement.value = new Audio(assetUrl.value);
+
+      // Setup event listeners
+      audioElement.value.addEventListener('ended', () => {
+        isPlaying.value = false;
+      });
+
+      audioElement.value.addEventListener('error', (e) => {
+        audioError.value = 'Fehler beim Laden der Audio-Datei';
+        isPlaying.value = false;
+        audioLoading.value = false;
+      });
+
+      audioElement.value.addEventListener('canplay', () => {
+        audioLoading.value = false;
+      });
+    }
+
+    // Toggle playback
+    if (isPlaying.value) {
+      audioElement.value.pause();
+      isPlaying.value = false;
+    } else {
+      await audioElement.value.play();
+      isPlaying.value = true;
+    }
+  } catch (error) {
+    audioError.value = 'Fehler beim Abspielen der Audio-Datei';
+    isPlaying.value = false;
+    audioLoading.value = false;
+    console.error('Audio playback error:', error);
+  }
+};
+
+const handleImageError = () => {
+  console.error('Failed to load image preview');
+};
+
+// Cleanup audio on unmount
+onUnmounted(() => {
+  if (audioElement.value) {
+    audioElement.value.pause();
+    audioElement.value = null;
+  }
+});
 
 const handleSave = async () => {
   if (!localInfo.description.trim()) {

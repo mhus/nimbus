@@ -16,8 +16,12 @@
   - Es soll ein 'Add Audio' button geben, der eine neue audio datei hinzufuegt.
   - Siehe dazu auch 'Add Texture' button im TextureEditor als vorlage.
 
-[ ] Asset Editor: Wenn im Asset Editor eine sound datei (ogg, mp3) im Preview angezeigt wird, soll dort ein kleines audio abspiel symbol angezeigt werden.
+[?] Asset Editor: Wenn im Asset Editor eine sound datei (ogg, mp3) im Preview angezeigt wird, soll dort ein kleines audio abspiel symbol angezeigt werden.
 - Beim klicken auf das symbol soll die audio datei abgespielt werden.
+
+[ ] Erweitere die Selektion von Assets so, dass nur audio dateien (ogg, mp3) ausgewaehlt werden koennen, wenn im AudioEditor eine neue audio datei hinzugefuegt wird.
+- Erweitere das auch fuer TextureEditor (bisher nur png, jpg).
+- Erweitere das auch fuer ModelEditor (bisher nur glb, gltf, babylon).
 
 [ ] Erstelle einen AudioService der im AppContext registriert wird. Er ist dafuer zuständig AudioDateien zu laden, cachen und teilweise zum abzuspielen.
 - Er benutzt den NetworkService um audio dateien zu laden (getAssetUrl()).

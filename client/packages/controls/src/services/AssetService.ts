@@ -86,6 +86,14 @@ export class AssetService {
   }
 
   /**
+   * Check if asset is an audio file (for preview)
+   */
+  isAudioAsset(asset: Asset): boolean {
+    const audioExtensions = ['.mp3', '.wav', '.ogg'];
+    return audioExtensions.includes(asset.extension.toLowerCase());
+  }
+
+  /**
    * Get icon for asset type
    */
   getAssetIcon(asset: Asset): string {
@@ -102,7 +110,7 @@ export class AssetService {
     }
 
     // Audio files
-    if (['.mp3', '.wav', '.ogg'].includes(ext)) {
+    if (this.isAudioAsset({ extension: ext } as Asset)) {
       return '🔊';
     }
 
