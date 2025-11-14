@@ -36,9 +36,35 @@ export class AudioService {
   private audioCache: Map<string, AudioCacheEntry> = new Map();
   private scene?: Scene;
   private networkService?: NetworkService;
+  private audioEnabled: boolean = true;
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
+  }
+
+  /**
+   * Enable or disable audio playback
+   * Audio files are still loaded/cached but not played when disabled
+   */
+  setAudioEnabled(enabled: boolean): void {
+    this.audioEnabled = enabled;
+    logger.info('Audio playback ' + (enabled ? 'enabled' : 'disabled'));
+
+    // Stop all playing audio when disabling
+    if (!enabled) {
+      this.audioCache.forEach(entry => {
+        if (entry.sound.isPlaying) {
+          entry.sound.stop();
+        }
+      });
+    }
+  }
+
+  /**
+   * Get current audio enabled state
+   */
+  isAudioEnabled(): boolean {
+    return this.audioEnabled;
   }
 
   /**
@@ -160,10 +186,11 @@ export class AudioService {
   /**
    * Play audio by asset path
    * Loads audio if not already cached
+   * Respects audioEnabled flag
    *
    * @param assetPath Path to audio asset
    * @param options Playback options
-   * @returns Sound object or null if loading failed
+   * @returns Sound object or null if loading failed or audio disabled
    */
   async playAudio(
     assetPath: string,
@@ -172,12 +199,18 @@ export class AudioService {
       loop?: boolean;
     }
   ): Promise<Sound | null> {
+    // Check if audio is enabled
+    if (!this.audioEnabled) {
+      logger.debug('Audio playback disabled, skipping', { assetPath });
+      return null;
+    }
+
     const sound = await this.loadAudio(assetPath, {
       ...options,
-      autoplay: true,
+      autoplay: false, // Don't autoplay, we control it below
     });
 
-    if (sound && !sound.isPlaying) {
+    if (sound && !sound.isPlaying && this.audioEnabled) {
       sound.play();
     }
 

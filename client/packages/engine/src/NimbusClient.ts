@@ -18,6 +18,7 @@ import { NetworkService } from './services/NetworkService';
 import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
 import { AudioService } from './services/AudioService';
+import { SoundService } from './services/SoundService';
 import { SpriteService } from './services/SpriteService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
@@ -40,6 +41,7 @@ import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
 import { SendCommand } from './commands/SendCommand';
+import { AudioCommand } from './commands/AudioCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import { SetShortcutCommand } from './commands/SetShortcutCommand';
@@ -141,6 +143,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new InfoCommand(appContext));
     commandService.registerHandler(new ClearCommand());
     commandService.registerHandler(new SendCommand(commandService));
+    commandService.registerHandler(new AudioCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));
@@ -264,6 +267,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.info('Initializing AudioService...');
     const audioService = new AudioService(appContext);
     appContext.services.audio = audioService;
+
+    // Initialize SoundService
+    logger.info('Initializing SoundService...');
+    const soundService = new SoundService(appContext);
+    appContext.services.sound = soundService;
 
     // Initialize ChunkService
     logger.info('Initializing ChunkService...');

@@ -36,8 +36,16 @@ Struktur gespeichert referenz auf AudioDefinition und auf den BABYLON.Sound.
 [ ] Im PhysicService wird beim bewegen des Spielers ein event 'onStepOver' ausgelöst, AUF welchem block (ClientBlock)) sich 
 der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen, springen, etc) und der id der entity.
 - Das event wird nur ausgeloest wenn sich der spieler bewegt (also nicht steht) und nur alle 300ms (damit nicht zu viele events kommen beim laufen)
+- Falls sich der Player auf mehr als einen block bewegt, wird einer aus der ersten reihe, bei den fuessen ausgewahlt, ggf. der erste. Es wird nur ein block gesendet.
 - Im SoundService wird das event gefangen und geprueft ob der ClientBlock Audio dateien in audioSteps hat.
 - Falls ja, wird eine zufaellige audio datei aus der liste der 'audioSteps' audio dateien abgespielt. - Am punkt des Blocks, 
   spacial und mit dem volumen das in der AudioDefinition definiert ist.
 - Im event wird auch die entityId mitgegeben, damit kann verhindert werden, das fuer den gleichen player zwei steps gleichzeitig gespielt werden.
   Vermerke dir, solange der step sound läuft die entityId, und spiele keinen neuen step sound fuer die gleiche entityId ab.
+
+[ ] Auch andere entitys (z.B. NPCs) koennen das 'onStepOver' event ausloesen, wenn sie sich bewegen.
+- Entities werden vom server bewegt und im EntityService verwaltet. Es gibt entities mit  und ohne Client Physic. Die Physic wird in EntityPhysicsController (?)
+  errechnet. Entities ohne Client Physic (z.b. andere player) benoetigen jetzt auch eine minimale Physik in der nur der Block unter den Fuessen geprueft ermittelt wird.
+- Im EntityPhysicsController soll auch das 'onStepOver' event ausgelöst werden, wenn sich die entity bewegt. Es werden die gleichen daten wie beim Player uebergeben (ClientBlock, movementType = WALK, entityId).
+- Es wird nur ausgeloest wenn die entity einen Block gefunden hat auf dem sie steht (also nicht in der Luft schwebt) 
+  und nur alle 300ms. - Dazu kann an der entity ein parameter mit dem letzten senden des events hinterlegt werden, wenn noetig.

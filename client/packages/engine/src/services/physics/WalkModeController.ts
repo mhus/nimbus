@@ -41,6 +41,7 @@ export class WalkModeController {
   private collisionDetector: CollisionDetector;
   private movementResolver: MovementResolver;
   private surfaceAnalyzer: SurfaceAnalyzer;
+  private physicsService?: any; // Reference to PhysicsService for event emission
 
   constructor(
     private appContext: AppContext,
@@ -278,6 +279,26 @@ export class WalkModeController {
       // Invalidate context cache
       this.contextAnalyzer.invalidateCache(entity.entityId);
     }
+
+    // === 8. EMIT STEP OVER EVENT ===
+
+    // Emit step event if entity is moving on ground
+    if (entity.grounded && movementVector.lengthSquared() > 0.001) {
+      // Get first solid foot block (if any)
+      const footBlock = context.footBlocks.blocks.find(b => b.block);
+
+      if (footBlock && footBlock.block && this.physicsService) {
+        const movementType = startJump ? 'jump' : 'walk';
+        this.physicsService.emitStepOver(entity.entityId, footBlock.block, movementType);
+      }
+    }
+  }
+
+  /**
+   * Set physics service reference for event emission
+   */
+  setPhysicsService(physicsService: any): void {
+    this.physicsService = physicsService;
   }
 
   /**

@@ -177,6 +177,13 @@ export class EngineService {
 
       logger.debug('PhysicsService initialized and registered');
 
+      // Initialize SoundService (after PhysicsService)
+      const soundService = this.appContext.services.sound;
+      if (soundService) {
+        soundService.initialize();
+        logger.debug('SoundService initialized and subscribed to PhysicsService');
+      }
+
       // Initialize player
       this.playerService = new PlayerService(this.appContext, this.cameraService);
       this.playerService.setPhysicsService(this.physicsService);

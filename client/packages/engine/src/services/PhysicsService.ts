@@ -135,6 +135,13 @@ export class PhysicsService {
   // Track if climbable velocity was set this frame (before updateWalkMode runs)
   private climbableVelocitySetThisFrame: Map<string, boolean> = new Map();
 
+  // Step sound tracking (prevent too many step events)
+  private lastStepTime: Map<string, number> = new Map(); // entityId -> timestamp
+  private readonly stepInterval: number = 300; // ms between step events
+
+  // Event listeners
+  private eventListeners: Map<string, Array<(...args: any[]) => void>> = new Map();
+
   /**
    * Get the movement state stack from PlayerService
    * Used to set physics-based movement states (JUMP, FALL, SWIM)
@@ -179,6 +186,7 @@ export class PhysicsService {
     };
 
     this.walkController = new WalkModeController(this.appContext, chunkService, physicsConfig);
+    this.walkController.setPhysicsService(this);
     this.flyController = new FlyModeController(this.appContext, this.defaultFlySpeed);
 
     logger.debug('ChunkService set for collision detection, controllers initialized');
@@ -1169,10 +1177,80 @@ export class PhysicsService {
   }
 
   /**
+   * Register event listener
+   */
+  on(event: string, listener: (...args: any[]) => void): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, []);
+    }
+    this.eventListeners.get(event)!.push(listener);
+  }
+
+  /**
+   * Unregister event listener
+   */
+  off(event: string, listener: (...args: any[]) => void): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      const index = listeners.indexOf(listener);
+      if (index !== -1) {
+        listeners.splice(index, 1);
+      }
+    }
+  }
+
+  /**
+   * Emit event
+   */
+  private emit(event: string, ...args: any[]): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.forEach(listener => listener(...args));
+    }
+  }
+
+  /**
+   * Emit step over event when entity moves over a block
+   * Called from movement controllers
+   *
+   * @param entityId Entity ID
+   * @param block Block entity is stepping on
+   * @param movementType Type of movement (walk, jump, etc.)
+   */
+  emitStepOver(entityId: string, block: ClientBlock, movementType: string): void {
+    // Throttle step events (max once per 300ms per entity)
+    const now = Date.now();
+    const lastStep = this.lastStepTime.get(entityId);
+
+    if (lastStep && now - lastStep < this.stepInterval) {
+      return; // Too soon since last step
+    }
+
+    // Update last step time
+    this.lastStepTime.set(entityId, now);
+
+    // Emit event
+    this.emit('step:over', {
+      entityId,
+      block,
+      movementType,
+    });
+
+    logger.debug('Step over event', {
+      entityId,
+      blockTypeId: block.blockType.id,
+      position: block.block.position,
+      movementType,
+    });
+  }
+
+  /**
    * Dispose physics service
    */
   dispose(): void {
     this.entities.clear();
+    this.lastStepTime.clear();
+    this.eventListeners.clear();
 
     // Dispose controllers
     if (this.walkController) {
