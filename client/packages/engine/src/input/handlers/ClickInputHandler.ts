@@ -127,6 +127,11 @@ export class ClickInputHandler extends InputHandler {
           shortcutType,
         });
 
+        // Trigger highlight animation in UI (only for clicks 0-9)
+        if (buttonNumber >= 0 && buttonNumber <= 9) {
+          this.playerService.highlightShortcut(shortcutKey);
+        }
+
         return;
       }
 
@@ -171,6 +176,11 @@ export class ClickInputHandler extends InputHandler {
           shortcutType,
           id: selectedBlock.block.metadata?.id,
         });
+
+        // Trigger highlight animation in UI (only for clicks 0-9)
+        if (buttonNumber >= 0 && buttonNumber <= 9) {
+          this.playerService.highlightShortcut(shortcutKey);
+        }
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ClickInputHandler.onActivate', { buttonNumber });

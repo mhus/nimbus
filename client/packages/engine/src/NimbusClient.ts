@@ -314,6 +314,12 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
     await engineService.initialize();
     logger.info('Engine initialized');
 
+    // Initialize NotificationService event subscriptions (now that PlayerService exists)
+    const notifService = appContext.services.notification;
+    if (notifService) {
+      notifService.initializeEventSubscriptions();
+    }
+
     // Start render loop
     engineService.startRenderLoop();
     logger.info('Render loop started');

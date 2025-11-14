@@ -53,6 +53,104 @@ export class NotificationService {
   }
 
   /**
+   * Initialize event subscriptions
+   * Called after PlayerService is available
+   */
+  initializeEventSubscriptions(): void {
+    const playerService = this.appContext.services.player;
+    if (!playerService) {
+      logger.warn('PlayerService not available for event subscriptions');
+      return;
+    }
+
+    // Subscribe to PlayerInfo updates to refresh shortcut display
+    playerService.on('playerInfo:updated', () => {
+      // Refresh shortcut display if currently visible
+      if (this.currentShortcutMode !== 'off') {
+        this.updateShortcutDisplay();
+      }
+    });
+
+    // Subscribe to shortcut highlight events
+    playerService.on('shortcut:highlight', (shortcutKey: string) => {
+      this.highlightShortcut(shortcutKey);
+    });
+
+    logger.debug('NotificationService event subscriptions initialized');
+  }
+
+  /**
+   * Highlight a shortcut slot
+   *
+   * Switches to the appropriate mode if needed and briefly highlights the slot.
+   * Example: highlightShortcut('click1') switches to 'clicks' mode and highlights click1
+   *
+   * @param shortcutKey Shortcut key (e.g., 'key1', 'click2', 'slot5')
+   */
+  private highlightShortcut(shortcutKey: string): void {
+    try {
+      // Determine which mode this shortcut belongs to
+      let targetMode: typeof this.shortcutModes[number] = 'off';
+
+      if (shortcutKey.startsWith('key')) {
+        targetMode = 'keys';
+      } else if (shortcutKey.startsWith('click')) {
+        targetMode = 'clicks';
+      } else if (shortcutKey.startsWith('slot')) {
+        const slotNum = parseInt(shortcutKey.replace('slot', ''), 10);
+        if (!isNaN(slotNum)) {
+          targetMode = slotNum >= 10 ? 'slots1' : 'slots0';
+        }
+      }
+
+      // If not currently showing or showing different mode, switch mode
+      if (this.currentShortcutMode !== targetMode) {
+        this.currentShortcutMode = targetMode;
+        this.updateShortcutDisplay().then(() => {
+          this.highlightSlotElement(shortcutKey);
+        });
+      } else {
+        // Already showing correct mode, just highlight
+        this.highlightSlotElement(shortcutKey);
+      }
+
+      logger.debug('Shortcut highlighted', { shortcutKey, mode: targetMode });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.highlightShortcut', { shortcutKey });
+    }
+  }
+
+  /**
+   * Highlight a specific slot element with animation
+   */
+  private highlightSlotElement(shortcutKey: string): void {
+    if (!this.shortcutContainer) return;
+
+    // Find the slot element by data attribute
+    const slots = this.shortcutContainer.querySelectorAll('[data-shortcut-key]');
+    for (const slot of Array.from(slots)) {
+      if ((slot as HTMLElement).dataset.shortcutKey === shortcutKey) {
+        const element = slot as HTMLElement;
+
+        // Store original border
+        const originalBorder = element.style.border;
+
+        // Highlight with yellow border
+        element.style.border = '2px solid rgba(255, 255, 0, 1)';
+        element.style.boxShadow = '0 0 10px rgba(255, 255, 0, 0.8)';
+
+        // Reset after 1 second
+        setTimeout(() => {
+          element.style.border = originalBorder;
+          element.style.boxShadow = '';
+        }, 1000);
+
+        break;
+      }
+    }
+  }
+
+  /**
    * Initialize container references
    */
   private initializeContainers(): void {
@@ -420,40 +518,41 @@ export class NotificationService {
 
   /**
    * Get shortcuts for current mode
+   * Always returns exactly 10 slots (filled or empty)
    */
   private getShortcutsForMode(mode: typeof this.shortcutModes[number]): Record<string, any> {
     const playerInfo = this.appContext.playerInfo;
-    if (!playerInfo?.shortcuts) return {};
+    const playerShortcuts = playerInfo?.shortcuts || {};
 
     const shortcuts: Record<string, any> = {};
 
     switch (mode) {
       case 'keys':
-        // Keys 1-0
+        // Keys 1-0 (always 10 slots)
         for (let i = 1; i <= 9; i++) {
-          shortcuts[`key${i}`] = playerInfo.shortcuts[`key${i}`] || null;
+          shortcuts[`key${i}`] = playerShortcuts[`key${i}`] || null;
         }
-        shortcuts['key0'] = playerInfo.shortcuts['key0'] || null;
+        shortcuts['key0'] = playerShortcuts['key0'] || null;
         break;
 
       case 'clicks':
-        // Clicks 1-3
-        shortcuts['click1'] = playerInfo.shortcuts['click1'] || null;
-        shortcuts['click2'] = playerInfo.shortcuts['click2'] || null;
-        shortcuts['click3'] = playerInfo.shortcuts['click3'] || null;
+        // Clicks 0-9 (always 10 slots, for mice with multiple buttons)
+        for (let i = 0; i <= 9; i++) {
+          shortcuts[`click${i}`] = playerShortcuts[`click${i}`] || null;
+        }
         break;
 
       case 'slots0':
-        // Slots 0-9
+        // Slots 0-9 (always 10 slots)
         for (let i = 0; i <= 9; i++) {
-          shortcuts[`slot${i}`] = playerInfo.shortcuts[`slot${i}`] || null;
+          shortcuts[`slot${i}`] = playerShortcuts[`slot${i}`] || null;
         }
         break;
 
       case 'slots1':
-        // Slots 10-19
+        // Slots 10-19 (always 10 slots)
         for (let i = 10; i <= 19; i++) {
-          shortcuts[`slot${i}`] = playerInfo.shortcuts[`slot${i}`] || null;
+          shortcuts[`slot${i}`] = playerShortcuts[`slot${i}`] || null;
         }
         break;
     }
@@ -466,26 +565,28 @@ export class NotificationService {
    */
   private async createShortcutSlot(key: string, shortcut: any): Promise<HTMLElement> {
     const slot = document.createElement('div');
+    slot.dataset.shortcutKey = key; // Add data attribute for highlighting
     slot.style.cssText = `
-      width: 48px;
-      height: 48px;
-      background: rgba(50, 50, 50, 0.9);
+      width: 32px;
+      height: 32px;
+      background: ${shortcut ? 'rgba(50, 50, 50, 0.9)' : 'rgba(0, 0, 0, 0.9)'};
       border: 2px solid rgba(255, 255, 255, 0.3);
       border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      cursor: pointer;
+      cursor: ${shortcut ? 'pointer' : 'default'};
+      flex-shrink: 0;
     `;
 
     // Add key label
     const label = document.createElement('div');
     label.style.cssText = `
       position: absolute;
-      top: 2px;
-      right: 4px;
-      font-size: 10px;
+      top: 1px;
+      right: 2px;
+      font-size: 9px;
       color: rgba(255, 255, 255, 0.7);
     `;
     label.textContent = this.formatKeyLabel(key);
@@ -514,6 +615,9 @@ export class NotificationService {
     }
     if (key.startsWith('slot')) {
       return 'S' + key.replace('slot', '');
+    }
+    if (key.startsWith('empty')) {
+      return ''; // Empty slots have no label
     }
     return key;
   }
@@ -554,8 +658,8 @@ export class NotificationService {
       const img = document.createElement('img');
       img.src = textureUrl;
       img.style.cssText = `
-        width: 36px;
-        height: 36px;
+        width: 28px;
+        height: 28px;
         object-fit: contain;
         image-rendering: pixelated;
       `;

@@ -194,6 +194,9 @@ export class ShortcutInputHandler extends InputHandler {
         movementStatus,
         shortcutType,
       });
+
+      // Trigger highlight animation in UI
+      this.playerService.highlightShortcut(shortcutKey);
     } catch (error) {
       ExceptionHandler.handle(error, 'ShortcutInputHandler.onActivate', { shortcutNr });
     }

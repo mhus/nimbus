@@ -1112,6 +1112,24 @@ export class PlayerService {
   }
 
   /**
+   * Highlight a shortcut slot
+   *
+   * Emits 'shortcut:highlight' event to trigger visual highlight in UI.
+   * If shortcuts are currently displayed, the NotificationService will:
+   * - Switch to the appropriate mode if needed (keys/clicks/slots0/slots1)
+   * - Highlight the specific slot with animation (yellow border, 1s duration)
+   *
+   * @param shortcutKey Shortcut key to highlight (e.g., 'key1', 'click2', 'slot5')
+   *
+   * @example
+   * playerService.highlightShortcut('click1'); // Switches to clicks mode and highlights click1
+   */
+  highlightShortcut(shortcutKey: string): void {
+    this.emit('shortcut:highlight', shortcutKey);
+    logger.debug('Shortcut highlight requested', { shortcutKey });
+  }
+
+  /**
    * Dispose player service
    */
   dispose(): void {
