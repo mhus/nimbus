@@ -169,7 +169,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 
 [x] Die Erkennung von entity im SelectionService ist sehr eng, ist es moeglich entities mit etws kullanz zu erkennen? Auch wenn es nicht genau vor der Kammera ist?
 
-[?] Erstelle im NotificationService eine Methode um ein Bild zu flashen.
+[x] Erstelle im NotificationService eine Methode um ein Bild zu flashen.
 - flashImage(assetPath: string, duration: number, opacity: number)
 - Das bild wird in der mitte des bildschirms angezeigt, startet klein und skaliert auf volle hoehe des bildschirms in der duration zeit.
 - als asstPath dueren nur values mit der endung .png genutzt werden. Alle anderen werden ignoriert.
@@ -177,7 +177,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Nach der duration animation verschwindet das bild wieder.
 - Baue ein Command in engine um das flashImage aufzurufen.
 
-[ ] Im NotificationService soll es eine Möglichkeit geben dauerhaft in der mitte einen Text anzuzeigen.
+[x] Im NotificationService soll es eine Möglichkeit geben dauerhaft in der mitte einen Text anzuzeigen.
 - setCenterText(text: string)
 - clearCenterText() oder setCenterText('') um den text zu entfernen
 - Der text wird in der mitte des bildschirms angezeigt, in weiss mit schwarzem schatten.

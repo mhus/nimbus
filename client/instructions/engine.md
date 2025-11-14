@@ -356,5 +356,5 @@ Der Modus heisst DEAD.
 - Siehe "Multiple Commands (Server -> Client)" in client/instructions/general/network-model-2.0.md
 - Die bestehende methode wird erweitert, wenn die daten ain Array sind und kein object, dann werden die commandos nacheinander ausgefuehrt. (oder parallel?)
 
-[ ] Wenn disconnected im NetworkService setze zusaetzlich im NotificationService eine setCenterText("Disconnected from server") die in der Mitte des Bildschirms angezeigt wird.
+[?] Wenn disconnected im NetworkService setze zusaetzlich im NotificationService eine setCenterText("Disconnected from server") die in der Mitte des Bildschirms angezeigt wird.
 - Bei reconnect wird der Text entfernt.

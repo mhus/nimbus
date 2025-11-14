@@ -278,9 +278,12 @@ export class NetworkService {
       logger.info('Reconnected to WebSocket server');
       this.emit('reconnected');
 
-      // Show reconnection success notification
+      // Clear center text notification
       const notificationService = this.appContext.services.notification;
       if (notificationService) {
+        notificationService.clearCenterText();
+
+        // Show reconnection success notification
         notificationService.newNotification(
           NotificationType.SYSTEM_INFO,
           null,
@@ -391,10 +394,18 @@ export class NetworkService {
 
     this.emit('disconnected');
 
-    // Set DEAD mode when disconnected
-    const playerService = this.appContext.services.player;
-    if (playerService && wasConnected) {
-      playerService.setPlayerDeadState(true);
+    if (wasConnected) {
+      // Set DEAD mode when disconnected
+      const playerService = this.appContext.services.player;
+      if (playerService) {
+        playerService.setPlayerDeadState(true);
+      }
+
+      // Show center text notification
+      const notificationService = this.appContext.services.notification;
+      if (notificationService) {
+        notificationService.setCenterText('Disconnected from server');
+      }
     }
 
     // Attempt reconnection
