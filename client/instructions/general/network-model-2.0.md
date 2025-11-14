@@ -745,6 +745,29 @@ Wird der Parameter 'oneway' auf true gesetzt, erwartet der Client keine Antwort.
 }
 ```
 
+## Multiple Commands (Server -> Client)
+
+Der Server sendet mehrere Server-Befehle in einer Nachricht an den Client.
+Die Commandos sind alle asynchron, unabhängig und können parallel/seriell ausgeführt werden und  es wird keine Antwort erwartet.
+
+```json
+{"t": "scmd", "d": 
+  [
+    {
+      "i": "cmd1",
+      "cmd": "say",
+      "args": ["Hello!"]
+    },
+    {
+      "i": "cmd2",
+      "cmd": "setWeather",
+      "args": ["rain"]
+    }
+  ]
+}
+```
+
+
 ## Logout (Client -> Server)
 
 Der Client sendet eine Logout-Nachricht an den Server, wenn der Spieler die Welt verlässt.

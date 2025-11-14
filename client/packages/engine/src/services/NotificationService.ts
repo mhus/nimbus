@@ -1261,4 +1261,81 @@ export class NotificationService {
       ExceptionHandler.handle(error, 'NotificationService.dispose');
     }
   }
+
+  /**
+   * Flash an image on screen
+   *
+   * Displays an image in the center of the screen that:
+   * - Starts small and scales to full screen height
+   * - Animates over the specified duration
+   * - Disappears after animation completes
+   *
+   * @param assetPath Path to PNG image (only .png files accepted)
+   * @param duration Animation duration in milliseconds
+   * @param opacity Image opacity (0.0-1.0)
+   */
+  flashImage(assetPath: string, duration: number, opacity: number): void {
+    try {
+      // Validate PNG file
+      if (!assetPath.toLowerCase().endsWith('.png')) {
+        logger.warn('flashImage: Only PNG files are allowed', { assetPath });
+        return;
+      }
+
+      // Get full asset URL via NetworkService
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.warn('NetworkService not available for flashImage');
+        return;
+      }
+
+      const imageUrl = networkService.getAssetUrl(assetPath);
+
+      logger.info('Flashing image', { assetPath, imageUrl, duration, opacity });
+
+      // Create container for flash image
+      const flashContainer = document.createElement('div');
+      flashContainer.style.position = 'fixed';
+      flashContainer.style.top = '0';
+      flashContainer.style.left = '0';
+      flashContainer.style.width = '100vw';
+      flashContainer.style.height = '100vh';
+      flashContainer.style.display = 'flex';
+      flashContainer.style.justifyContent = 'center';
+      flashContainer.style.alignItems = 'center';
+      flashContainer.style.pointerEvents = 'none';
+      flashContainer.style.zIndex = '9999';
+
+      // Create image element
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.maxHeight = '0%'; // Start small
+      img.style.maxWidth = '100%';
+      img.style.objectFit = 'contain';
+      img.style.opacity = opacity.toString();
+      img.style.transition = `max-height ${duration}ms ease-out`;
+
+      flashContainer.appendChild(img);
+      document.body.appendChild(flashContainer);
+
+      // Start animation after a brief delay (to ensure transition triggers)
+      setTimeout(() => {
+        img.style.maxHeight = '100vh'; // Scale to full screen height
+      }, 10);
+
+      // Remove after animation completes
+      setTimeout(() => {
+        flashContainer.remove();
+        logger.debug('Flash image removed', { assetPath });
+      }, duration + 100); // Small buffer after animation
+
+      logger.debug('Flash image displayed', { assetPath, duration, opacity });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.flashImage', {
+        assetPath,
+        duration,
+        opacity,
+      });
+    }
+  }
 }
