@@ -67,3 +67,49 @@ export class ToggleViewModeHandler extends InputHandler {
     // Toggle doesn't need continuous updates
   }
 }
+
+/**
+ * Toggle Sprint Handler
+ * Toggles between SPRINT and WALK states (M key)
+ */
+export class ToggleSprintHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Toggle between SPRINT and WALK using PlayerMovementState
+    const current = this.playerService.getMovementState();
+    const newState = current === PlayerMovementState.SPRINT
+      ? PlayerMovementState.WALK
+      : PlayerMovementState.SPRINT;
+    this.playerService.setMovementState(newState);
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation (toggle persists)
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}
+
+/**
+ * Toggle Crouch Handler
+ * Toggles between CROUCH and WALK states (N key)
+ */
+export class ToggleCrouchHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Toggle between CROUCH and WALK using PlayerMovementState
+    const current = this.playerService.getMovementState();
+    const newState = current === PlayerMovementState.CROUCH
+      ? PlayerMovementState.WALK
+      : PlayerMovementState.CROUCH;
+    this.playerService.setMovementState(newState);
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation (toggle persists)
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}

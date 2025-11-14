@@ -18,7 +18,7 @@ import {
   MoveUpHandler,
   MoveDownHandler,
 } from './handlers/MovementHandlers';
-import { JumpHandler, ToggleMovementModeHandler, ToggleViewModeHandler } from './handlers/ActionHandlers';
+import { JumpHandler, ToggleMovementModeHandler, ToggleViewModeHandler, ToggleSprintHandler, ToggleCrouchHandler } from './handlers/ActionHandlers';
 import { RotateHandler } from './handlers/RotationHandlers';
 import {
   EditSelectionRotatorHandler,
@@ -47,6 +47,8 @@ interface KeyBinding {
  * - D: Move right
  * - Space: Jump (Walk mode) / Move up (Fly mode)
  * - Shift: Move down (Fly mode only)
+ * - M: Toggle Sprint mode
+ * - N: Toggle Crouch mode
  * - F: Toggle Walk/Fly mode (Editor only)
  * - F5: Toggle Ego/Third-Person view
  * - . (Period): Rotate selection mode (Editor only)
@@ -73,6 +75,8 @@ export class WebInputController implements InputController {
   private jumpHandler: JumpHandler;
   private toggleMovementModeHandler?: ToggleMovementModeHandler;
   private toggleViewModeHandler: ToggleViewModeHandler;
+  private toggleSprintHandler: ToggleSprintHandler;
+  private toggleCrouchHandler: ToggleCrouchHandler;
   private rotateHandler: RotateHandler;
 
   // Editor handlers (Editor only)
@@ -98,6 +102,8 @@ export class WebInputController implements InputController {
     this.moveDownHandler = new MoveDownHandler(playerService);
     this.jumpHandler = new JumpHandler(playerService);
     this.toggleViewModeHandler = new ToggleViewModeHandler(playerService);
+    this.toggleSprintHandler = new ToggleSprintHandler(playerService);
+    this.toggleCrouchHandler = new ToggleCrouchHandler(playerService);
     this.rotateHandler = new RotateHandler(playerService);
 
     // Toggle movement mode handler (Editor only)
@@ -117,6 +123,9 @@ export class WebInputController implements InputController {
       this.moveUpHandler,
       this.moveDownHandler,
       this.jumpHandler,
+      this.toggleViewModeHandler,
+      this.toggleSprintHandler,
+      this.toggleCrouchHandler,
       this.rotateHandler,
     ];
 
@@ -172,6 +181,14 @@ export class WebInputController implements InputController {
 
     // F5: Toggle view mode (ego/third-person)
     this.keyBindings.set('F5', this.toggleViewModeHandler);
+
+    // M: Toggle Sprint mode
+    this.keyBindings.set('m', this.toggleSprintHandler);
+    this.keyBindings.set('M', this.toggleSprintHandler);
+
+    // N: Toggle Crouch mode
+    this.keyBindings.set('n', this.toggleCrouchHandler);
+    this.keyBindings.set('N', this.toggleCrouchHandler);
 
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)

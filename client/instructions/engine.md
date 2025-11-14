@@ -293,7 +293,7 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
   - "Block Interaction (Client -> Server)" in client/instructions/general/network-model-2.0.md - Es wird der Block, auf den er gefallen ist als position mit gesendet.
 - Nach dem landen wird die falltiefe wieder auf 0 gesetzt.
 
-[ ] Erstelle InputController fuer die fuer:
+[?] Erstelle InputController fuer die fuer:
 - CROUCH - standard taste: N
 - SPRINT - standard taste: M
 - Implementierung wie bei FLY
