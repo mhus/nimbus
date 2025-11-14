@@ -43,6 +43,7 @@ import { NotificationCommand } from './commands/NotificationCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import { SetShortcutCommand } from './commands/SetShortcutCommand';
 import { StatusEffectCommand } from './commands/StatusEffectCommand';
+import { VitalsCommand } from './commands/VitalsCommand';
 import { OpenComponentCommand } from './commands/OpenComponentCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 import { GetSelectedEditBlockCommand } from './commands/GetSelectedEditBlockCommand';
@@ -139,6 +140,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));
     commandService.registerHandler(new StatusEffectCommand(appContext));
+    commandService.registerHandler(new VitalsCommand(appContext));
     commandService.registerHandler(new OpenComponentCommand(appContext));
     commandService.registerHandler(new SetSelectedEditBlockCommand(appContext));
     commandService.registerHandler(new GetSelectedEditBlockCommand(appContext));

@@ -37,6 +37,7 @@ export * from './ServerEntitySpawnDefinition';
 export * from './PlayerInfo';
 export * from './PlayerMovementState';
 export * from './ShortcutDefinition';
+export * from './VitalsData';
 
 // Modal types (for IFrame communication)
 export * from './Modal';

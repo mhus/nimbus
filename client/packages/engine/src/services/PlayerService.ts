@@ -20,7 +20,7 @@ import type { PhysicsService, MovementMode } from './PhysicsService';
 import type { PlayerEntity } from '../types/PlayerEntity';
 import type { ModifierStack, Modifier } from './ModifierService';
 import { StackName } from './ModifierService';
-import type { EntityPositionUpdateMessage, EntityPositionUpdateData, PlayerMovementStateChangedEvent } from '@nimbus/shared';
+import type { EntityPositionUpdateMessage, EntityPositionUpdateData, PlayerMovementStateChangedEvent, VitalsData } from '@nimbus/shared';
 import { EntityRenderService }  from "./EntityRenderService";
 import { NotificationType } from '../types/Notification';
 import type { StatusEffect } from '../types/StatusEffect';
@@ -66,6 +66,11 @@ export class PlayerService {
   // Status effects
   private statusEffects: Map<string, StatusEffect> = new Map();
   private effectTimers: Map<string, number> = new Map();
+
+  // Vitals (health, hunger, mana, etc.)
+  private vitals: Map<string, VitalsData> = new Map();
+  private vitalsUpdateInterval?: number;
+  private lastVitalsUpdate: number = Date.now();
 
   /**
    * Get the view mode stack (ego vs third-person)
@@ -204,6 +209,9 @@ export class PlayerService {
 
     // Start position update sender (sends position to server every 100ms)
     this.startPositionUpdateSender();
+
+    // Start vitals update loop (regen/degen every 100ms)
+    this.startVitalsUpdate();
 
     logger.info('PlayerService initialized', {
       position: this.playerEntity.position,
@@ -1279,6 +1287,153 @@ export class PlayerService {
     logger.info('All status effects cleared');
   }
 
+  // ============================================
+  // Vitals Management
+  // ============================================
+
+  /**
+   * Start vitals update loop (regen/degen)
+   */
+  startVitalsUpdate(): void {
+    if (this.vitalsUpdateInterval) {
+      return; // Already running
+    }
+
+    // Update vitals every 100ms for smooth regeneration
+    this.vitalsUpdateInterval = window.setInterval(() => {
+      this.updateVitals();
+    }, 100);
+
+    logger.info('Vitals update loop started');
+  }
+
+  /**
+   * Stop vitals update loop
+   */
+  stopVitalsUpdate(): void {
+    if (this.vitalsUpdateInterval) {
+      clearInterval(this.vitalsUpdateInterval);
+      this.vitalsUpdateInterval = undefined;
+      logger.info('Vitals update loop stopped');
+    }
+  }
+
+  /**
+   * Update vitals (regen/degen/extend expiry)
+   */
+  private updateVitals(): void {
+    const now = Date.now();
+    const deltaTime = (now - this.lastVitalsUpdate) / 1000; // Convert to seconds
+    this.lastVitalsUpdate = now;
+
+    let changed = false;
+
+    for (const vital of this.vitals.values()) {
+      // Check extend expiry
+      if (vital.extendExpiry && now >= vital.extendExpiry) {
+        vital.extended = 0;
+        vital.extendExpiry = undefined;
+        changed = true;
+      }
+
+      // Apply regeneration
+      if (vital.regenRate > 0) {
+        const maxValue = vital.max + (vital.extended || 0);
+        const newValue = Math.min(maxValue, vital.current + vital.regenRate * deltaTime);
+        if (newValue !== vital.current) {
+          vital.current = newValue;
+          changed = true;
+        }
+      }
+
+      // Apply degeneration
+      if (vital.degenRate > 0) {
+        const newValue = Math.max(0, vital.current - vital.degenRate * deltaTime);
+        if (newValue !== vital.current) {
+          vital.current = newValue;
+          changed = true;
+        }
+      }
+    }
+
+    // Emit event if vitals changed
+    if (changed) {
+      this.emit('vitals:changed', Array.from(this.vitals.values()));
+    }
+  }
+
+  /**
+   * Add or update a vital
+   *
+   * @param vital Vital data
+   */
+  setVital(vital: VitalsData): void {
+    this.vitals.set(vital.type, vital);
+    this.emit('vitals:changed', Array.from(this.vitals.values()));
+    logger.info('Vital set', { type: vital.type, current: vital.current, max: vital.max });
+  }
+
+  /**
+   * Update vital value
+   *
+   * @param type Vital type
+   * @param current New current value
+   */
+  updateVitalValue(type: string, current: number): void {
+    const vital = this.vitals.get(type);
+    if (!vital) {
+      logger.warn('Vital not found', { type });
+      return;
+    }
+
+    const maxValue = vital.max + (vital.extended || 0);
+    vital.current = Math.max(0, Math.min(maxValue, current));
+    this.emit('vitals:changed', Array.from(this.vitals.values()));
+  }
+
+  /**
+   * Get vital by type
+   *
+   * @param type Vital type
+   * @returns VitalsData or undefined
+   */
+  getVital(type: string): VitalsData | undefined {
+    return this.vitals.get(type);
+  }
+
+  /**
+   * Get all vitals
+   *
+   * @returns Array of all vitals
+   */
+  getVitals(): VitalsData[] {
+    return Array.from(this.vitals.values());
+  }
+
+  /**
+   * Remove a vital
+   *
+   * @param type Vital type to remove
+   * @returns True if removed, false if not found
+   */
+  removeVital(type: string): boolean {
+    const removed = this.vitals.delete(type);
+    if (removed) {
+      this.emit('vitals:changed', Array.from(this.vitals.values()));
+      logger.info('Vital removed', { type });
+    }
+    return removed;
+  }
+
+  /**
+   * Clear all vitals
+   */
+  clearAllVitals(): void {
+    this.vitals.clear();
+    this.emit('vitals:changed', []);
+    logger.info('All vitals cleared');
+  }
+
   /**
    * Dispose player service
    */
@@ -1286,10 +1441,16 @@ export class PlayerService {
     // Stop position update sender
     this.stopPositionUpdateSender();
 
+    // Stop vitals update
+    this.stopVitalsUpdate();
+
     // Clear status effect timers
     this.effectTimers.forEach((timer) => clearTimeout(timer));
     this.effectTimers.clear();
     this.statusEffects.clear();
+
+    // Clear vitals
+    this.vitals.clear();
 
     this.eventListeners.clear();
 

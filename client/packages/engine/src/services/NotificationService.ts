@@ -81,6 +81,11 @@ export class NotificationService {
       this.updateStatusEffectsDisplay(effects);
     });
 
+    // Subscribe to vitals changes
+    playerService.on('vitals:changed', (vitals: any[]) => {
+      this.updateVitalsDisplay(vitals);
+    });
+
     logger.debug('NotificationService event subscriptions initialized');
   }
 
@@ -444,6 +449,10 @@ export class NotificationService {
 
   /** Status effects display */
   private statusEffectsContainer: HTMLElement | null = null;
+
+  /** Vitals display */
+  private vitalsContainer: HTMLElement | null = null;
+  private showVitals: boolean = true; // Default: on
 
   /**
    * Toggle shortcuts display
@@ -937,6 +946,233 @@ export class NotificationService {
     });
   }
 
+  // ============================================
+  // Vitals UI Display
+  // ============================================
+
+  /**
+   * Toggle vitals display
+   */
+  toggleShowVitals(): void {
+    this.showVitals = !this.showVitals;
+    const playerService = this.appContext.services.player;
+    if (playerService) {
+      this.updateVitalsDisplay(playerService.getVitals());
+    }
+    logger.debug('Vitals display toggled', { showVitals: this.showVitals });
+  }
+
+  /**
+   * Update vitals display
+   *
+   * @param vitals Array of vitals data
+   */
+  private async updateVitalsDisplay(vitals: any[]): Promise<void> {
+    try {
+      // Remove existing display
+      if (this.vitalsContainer) {
+        this.vitalsContainer.remove();
+        this.vitalsContainer = null;
+      }
+
+      // If showVitals is off, don't create display
+      if (!this.showVitals) {
+        return;
+      }
+
+      // Filter vitals that should be displayed (not full)
+      const visibleVitals = vitals.filter((vital) => {
+        const maxValue = vital.max + (vital.extended || 0);
+        return vital.current < maxValue;
+      });
+
+      // If no vitals to show, don't create container
+      if (visibleVitals.length === 0) {
+        return;
+      }
+
+      // Sort by order
+      visibleVitals.sort((a, b) => a.order - b.order);
+
+      // Create vitals container
+      this.vitalsContainer = document.createElement('div');
+      this.vitalsContainer.id = 'vitals-container';
+      this.vitalsContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        z-index: 900;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        color: white;
+      `;
+
+      // Create vital bars
+      for (const vital of visibleVitals) {
+        const bar = this.createVitalBar(vital);
+        this.vitalsContainer.appendChild(bar);
+      }
+
+      document.body.appendChild(this.vitalsContainer);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.updateVitalsDisplay');
+    }
+  }
+
+  /**
+   * Create vital bar element
+   */
+  private createVitalBar(vital: any): HTMLElement {
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: relative;
+      cursor: pointer;
+    `;
+
+    // Calculate dimensions
+    const baseHeight = 10;
+    const extendedPercent = vital.extended ? (vital.extended / vital.max) : 0;
+    const totalHeight = Math.min(50, baseHeight + extendedPercent * baseHeight * 5); // Max 50px
+    const width = 200;
+
+    // Background bar (max + extended)
+    const bgBar = document.createElement('div');
+    bgBar.style.cssText = `
+      width: ${width}px;
+      height: ${totalHeight}px;
+      background: rgba(50, 50, 50, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    `;
+
+    // Foreground bar (current value)
+    const maxValue = vital.max + (vital.extended || 0);
+    const fillPercent = maxValue > 0 ? (vital.current / maxValue) * 100 : 0;
+
+    const fgBar = document.createElement('div');
+    fgBar.style.cssText = `
+      width: ${fillPercent}%;
+      height: 100%;
+      background: ${vital.color || '#ffffff'};
+      transition: width 0.3s ease-out;
+    `;
+    bgBar.appendChild(fgBar);
+
+    // Extended indicator (if present)
+    if (vital.extended && vital.extended > 0) {
+      const extendedBar = document.createElement('div');
+      const extendedStartPercent = (vital.max / maxValue) * 100;
+      extendedBar.style.cssText = `
+        position: absolute;
+        left: ${extendedStartPercent}%;
+        top: 0;
+        width: ${100 - extendedStartPercent}%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        border-left: 1px dashed rgba(255, 255, 255, 0.5);
+      `;
+      bgBar.appendChild(extendedBar);
+    }
+
+    // Value text overlay
+    const text = document.createElement('div');
+    text.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      pointer-events: none;
+    `;
+    text.textContent = `${Math.floor(vital.current)}/${vital.max}${vital.extended ? `+${vital.extended}` : ''}`;
+    bgBar.appendChild(text);
+
+    container.appendChild(bgBar);
+
+    // Add tooltip
+    this.addVitalTooltip(container, vital);
+
+    return container;
+  }
+
+  /**
+   * Add tooltip to vital bar
+   */
+  private addVitalTooltip(container: HTMLElement, vital: any): void {
+    let tooltip: HTMLElement | null = null;
+
+    container.addEventListener('mouseenter', () => {
+      // Create tooltip
+      tooltip = document.createElement('div');
+      tooltip.style.cssText = `
+        position: absolute;
+        top: 0;
+        right: 100%;
+        margin-right: 8px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1000;
+      `;
+
+      // Title
+      const title = document.createElement('div');
+      title.style.cssText = 'font-weight: bold; margin-bottom: 4px;';
+      title.textContent = vital.name || vital.type;
+      tooltip.appendChild(title);
+
+      // Current/Max
+      const values = document.createElement('div');
+      values.style.cssText = 'font-size: 11px; margin-bottom: 2px;';
+      values.textContent = `${Math.floor(vital.current)} / ${vital.max}${vital.extended ? ` (+${vital.extended})` : ''}`;
+      tooltip.appendChild(values);
+
+      // Regen/Degen
+      if (vital.regenRate > 0) {
+        const regen = document.createElement('div');
+        regen.style.cssText = 'font-size: 10px; color: rgba(100, 255, 100, 0.8);';
+        regen.textContent = `+${vital.regenRate.toFixed(1)}/s`;
+        tooltip.appendChild(regen);
+      }
+
+      if (vital.degenRate > 0) {
+        const degen = document.createElement('div');
+        degen.style.cssText = 'font-size: 10px; color: rgba(255, 100, 100, 0.8);';
+        degen.textContent = `-${vital.degenRate.toFixed(1)}/s`;
+        tooltip.appendChild(degen);
+      }
+
+      // Extended expiry
+      if (vital.extendExpiry) {
+        const remaining = Math.max(0, vital.extendExpiry - Date.now());
+        const expiry = document.createElement('div');
+        expiry.style.cssText = 'font-size: 9px; color: rgba(255, 255, 100, 0.8); margin-top: 2px;';
+        expiry.textContent = `Extend expires in ${(remaining / 1000).toFixed(0)}s`;
+        tooltip.appendChild(expiry);
+      }
+
+      container.appendChild(tooltip);
+    });
+
+    container.addEventListener('mouseleave', () => {
+      if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+      }
+    });
+  }
+
   /**
    * Dispose service and clean up
    */
@@ -966,6 +1202,12 @@ export class NotificationService {
       if (this.statusEffectsContainer) {
         this.statusEffectsContainer.remove();
         this.statusEffectsContainer = null;
+      }
+
+      // Remove vitals container
+      if (this.vitalsContainer) {
+        this.vitalsContainer.remove();
+        this.vitalsContainer = null;
       }
 
       logger.info('NotificationService disposed');

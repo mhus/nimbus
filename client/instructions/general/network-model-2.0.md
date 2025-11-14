@@ -668,6 +668,20 @@ Response Finished Failed (Server -> Client):
 }
 ```
 
+Wird der Parameter 'oneway' auf true gesetzt, erwartet der Client keine Antwort.
+
+```json
+{"t": "cmd", "d": 
+  {
+    "cmd": "say",
+    "oneway": true,
+    "args": [
+      "Hello, world!"
+    ]
+  }
+}
+```
+
 ### Server Command (Server -> Client)
 
 Der Server sendet einen Server-Befehl an den Client.
@@ -713,6 +727,20 @@ Response Finished Failed (Client -> Server):
   {
     "rc": 1,
     "message": "Command not found."
+  }
+}
+```
+
+Wird der Parameter 'oneway' auf true gesetzt, erwartet der Client keine Antwort.
+
+```json
+{"t": "cmd", "d": 
+  {
+    "cmd": "say",
+    "oneway": true,
+    "args": [
+      "Hello, world!"
+    ]
   }
 }
 ```
