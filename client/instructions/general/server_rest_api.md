@@ -554,3 +554,11 @@ Result ein EntityModel Objekt.
 Abrufen von Entity Objekts.
 
 GET /api/worlds/{worldId}/entity/{entityId}
+
+# Item
+
+## Item Abrufen
+
+GET /api/worlds/{worldId}/item/{itemId}
+
+Gibt die Item definition zurueck.

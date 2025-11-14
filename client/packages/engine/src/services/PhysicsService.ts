@@ -567,7 +567,7 @@ export class PhysicsService {
       Math.floor(entity.position.z)
     );
 
-    logger.info('Player landed after fall', {
+    logger.debug('Player landed after fall', {
       fallDistance: fallDistance.toFixed(2),
       landingBlock: {
         x: landingBlockPos.x,
@@ -1124,7 +1124,7 @@ export class PhysicsService {
     }
 
     entity.movementMode = mode;
-    logger.info('Movement mode changed', { entityId: entity.entityId, mode });
+    logger.debug('Movement mode changed', { entityId: entity.entityId, mode });
 
     // Reset velocity when switching modes
     entity.velocity.set(0, 0, 0);
@@ -1156,26 +1156,8 @@ export class PhysicsService {
     // NEW SYSTEM: MovementResolver.getMoveSpeed() handles this
     // This method is kept for backwards compatibility only
     if (isPlayerEntity(entity)) {
-      // Player: Use effective values based on mode
-      if (entity.inWater) {
-        return entity.effectiveUnderwaterSpeed;
-      }
-
-      switch (entity.movementMode) {
-        case 'sprint':
-          return entity.effectiveRunSpeed;
-        case 'crouch':
-          return entity.effectiveCrawlSpeed;
-        case 'climb':
-          return entity.effectiveWalkSpeed * 0.5;
-        case 'fly':
-        case 'teleport':
-          return entity.effectiveWalkSpeed * 2.0;
-        case 'walk':
-        case 'swim':
-        default:
-          return entity.effectiveWalkSpeed;
-      }
+      // Player: Use cached effective speed (updated when movement state changes)
+      return entity.effectiveSpeed;
     } else {
       // Other entities: Use default constants
       if (entity.inWater) {

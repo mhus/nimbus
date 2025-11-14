@@ -93,3 +93,23 @@ Erstelle ein command in engine mit dem ich die shortcuts setzen kann.
 [x] Erweiterung Click und Shortcut Events
 - Sende auch den aktuellen MovementStatus aus dem PlayerService mit
 - Sende daten aus dem shortcut mit an den server: shortcutType, shortcutItemId
+
+[ ] Item erweitern
+Erstelle in shared types eine ItemData definition, die folgende felder hat:
+- block: block definition (Block) - wird aktuell als item verwaltet und versendet vom server
+- parameters: map<string, any> - optionale parameter fuer das item
+
+- Benutze im server zum verwalten der items diese definition. Die aktuellen Blocks sind in der neuen struktur in block wieder vorhanden.
+- Passe das commando im server an
+
+
+[ ] Items aus server laden, einen REST Endpoint im server erstellen, der die items zurueckgibt.
+GET /api/world/{worldid}/item/{itemid}
+Gibt die Item definition zurueck.
+
+[ ] Darstellung der shortcuts im UI umsetzen
+Im NotificaationService wird es ein neues UI Element geben, das die aktuellen shortcuts anzeigt.
+-
+
+
+

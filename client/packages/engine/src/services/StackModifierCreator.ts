@@ -12,7 +12,7 @@
  */
 
 import { getLogger, PlayerMovementState } from '@nimbus/shared';
-import type { AppContext } from '../types/AppContext';
+import type { AppContext } from '../AppContext';
 import { StackName } from './ModifierService';
 
 const logger = getLogger('StackModifierCreator');
@@ -44,7 +44,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
   modifierService.createModifierStack<boolean>(
     StackName.PLAYER_VIEW_MODE,
     true, // Default: ego-view (first-person)
-    (isEgo) => {
+    (isEgo: boolean) => {
       // Callback may fail if PlayerService not ready yet - that's ok
       const playerService = appContext.services.player;
       if (playerService) {
@@ -59,7 +59,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
   modifierService.createModifierStack<PlayerMovementState>(
     StackName.PLAYER_MOVEMENT_STATE,
     PlayerMovementState.WALK, // Default: walking
-    (newState) => {
+    (newState: PlayerMovementState) => {
       // Callback may fail if PlayerService not ready yet - that's ok
       const playerService = appContext.services.player;
       if (playerService) {

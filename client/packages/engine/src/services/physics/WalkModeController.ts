@@ -59,7 +59,7 @@ export class WalkModeController {
     // Setup collision event callback
     this.collisionDetector.setCollisionEventCallback((x, y, z, action, id, gId) => {
       // Send collision event to server (action: 'collision' or 'climb')
-      this.appContext.services.network.sendBlockInteraction(
+      this.appContext.services.network?.sendBlockInteraction(
         x,
         y,
         z,

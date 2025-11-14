@@ -741,7 +741,7 @@ export class PlayerService {
 
     // Emit event for other services (PhysicsService, CameraService, etc.)
     const event: PlayerMovementStateChangedEvent = {
-      playerId: this.appContext.playerId ?? 'unknown',
+      playerId: this.appContext.playerInfo?.playerId ?? 'unknown',
       oldState,
       newState,
     };
@@ -772,7 +772,7 @@ export class PlayerService {
       }
     }
 
-    logger.info('Movement state changed', { oldState, newState });
+    logger.debug('Movement state changed', { oldState, newState });
   }
 
   /**
