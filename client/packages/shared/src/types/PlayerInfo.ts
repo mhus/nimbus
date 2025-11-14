@@ -13,6 +13,45 @@
  */
 
 /**
+ * Movement state key - maps to both MovementMode and PlayerMovementState
+ */
+export type MovementStateKey = 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport' | 'riding';
+
+/**
+ * Movement state configuration
+ * Contains all values that vary by movement state
+ *
+ * This replaces the flat property structure with a unified matrix
+ * that makes state-dependent values explicit and easier to manage.
+ */
+export interface MovementStateValues {
+  // Physics dimensions
+  dimensions: {
+    height: number;    // Entity height in blocks (collision box)
+    width: number;     // Entity width in blocks (collision box diameter)
+    footprint: number; // Footprint radius in blocks (for corner sampling)
+  };
+
+  // Movement speeds (blocks/second)
+  baseMoveSpeed: number;      // Base horizontal movement speed
+  effectiveMoveSpeed: number; // Base + modifiers
+  baseJumpSpeed: number;      // Jump/vertical speed
+  effectiveJumpSpeed: number; // Base + modifiers
+
+  // Camera & View
+  eyeHeight: number;          // Eye position relative to feet (for camera)
+  baseTurnSpeed: number;      // Degrees/second (mouse sensitivity)
+  effectiveTurnSpeed: number; // Base + modifiers
+
+  // Interaction
+  selectionRadius: number;    // Block selection/interaction reach
+
+  // Stealth & Detection
+  stealthRange: number;              // How far entities can detect player
+  distanceNotifyReduction: number;   // Stealth modifier (0.0 = normal, 1.0 = invisible)
+}
+
+/**
  * Player information and properties
  */
 export interface PlayerInfo {
@@ -23,7 +62,19 @@ export interface PlayerInfo {
   displayName: string;
 
   // ============================================
+  // State-Based Values (NEW UNIFIED STRUCTURE)
+  // ============================================
+
+  /**
+   * State-based values per movement mode
+   * Contains all properties that vary by movement state
+   * (speeds, dimensions, eyeHeight, selectionRadius, etc.)
+   */
+  stateValues: Record<MovementStateKey, MovementStateValues>;
+
+  // ============================================
   // Base Movement Speeds (blocks per second)
+  // DEPRECATED: Use stateValues instead
   // Original unmodified values
   // ============================================
 
@@ -134,4 +185,175 @@ export interface PlayerInfo {
 
   /** Entity model ID for third-person view (optional, e.g., "farmer1") */
   thirdPersonModelId?: string;
+}
+
+/**
+ * Default state values for all movement states
+ * Used as fallback when playerInfo.stateValues is not populated
+ */
+export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues> = {
+  walk: {
+    dimensions: { height: 2.0, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 4.0,
+    effectiveMoveSpeed: 4.0,
+    baseJumpSpeed: 8.0,
+    effectiveJumpSpeed: 8.0,
+    eyeHeight: 1.6,
+    baseTurnSpeed: 180.0,
+    effectiveTurnSpeed: 180.0,
+    selectionRadius: 5.0,
+    stealthRange: 8.0,
+    distanceNotifyReduction: 0.0,
+  },
+
+  sprint: {
+    dimensions: { height: 2.0, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 8.0,  // 2x walk speed
+    effectiveMoveSpeed: 8.0,
+    baseJumpSpeed: 8.0,
+    effectiveJumpSpeed: 8.0,
+    eyeHeight: 1.6,
+    baseTurnSpeed: 180.0,
+    effectiveTurnSpeed: 180.0,
+    selectionRadius: 5.0,
+    stealthRange: 12.0,  // More visible when sprinting
+    distanceNotifyReduction: 0.0,
+  },
+
+  crouch: {
+    dimensions: { height: 1.0, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 2.0,  // 0.5x walk speed
+    effectiveMoveSpeed: 2.0,
+    baseJumpSpeed: 4.0,  // Lower jump when crouched
+    effectiveJumpSpeed: 4.0,
+    eyeHeight: 0.8,      // Lower eye height
+    baseTurnSpeed: 120.0,
+    effectiveTurnSpeed: 120.0,
+    selectionRadius: 4.0, // Shorter reach
+    stealthRange: 4.0,   // Stealthier
+    distanceNotifyReduction: 0.5, // 50% stealth bonus
+  },
+
+  swim: {
+    dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 3.0,
+    effectiveMoveSpeed: 3.0,
+    baseJumpSpeed: 4.0,
+    effectiveJumpSpeed: 4.0,
+    eyeHeight: 1.4,
+    baseTurnSpeed: 90.0,  // Slower turn underwater
+    effectiveTurnSpeed: 90.0,
+    selectionRadius: 4.0,
+    stealthRange: 6.0,
+    distanceNotifyReduction: 0.3, // 30% stealth
+  },
+
+  climb: {
+    dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 2.0,  // 0.5x walk (replaces hardcoded multiplier!)
+    effectiveMoveSpeed: 2.0,
+    baseJumpSpeed: 0.0,  // Can't jump while climbing
+    effectiveJumpSpeed: 0.0,
+    eyeHeight: 1.5,
+    baseTurnSpeed: 120.0,
+    effectiveTurnSpeed: 120.0,
+    selectionRadius: 4.0,
+    stealthRange: 6.0,
+    distanceNotifyReduction: 0.2,
+  },
+
+  fly: {
+    dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 10.0, // 2.5x walk (replaces hardcoded multiplier!)
+    effectiveMoveSpeed: 10.0,
+    baseJumpSpeed: 0.0,  // No jumping in fly mode
+    effectiveJumpSpeed: 0.0,
+    eyeHeight: 1.6,
+    baseTurnSpeed: 200.0,
+    effectiveTurnSpeed: 200.0,
+    selectionRadius: 8.0, // Longer reach from air
+    stealthRange: 15.0,  // Very visible
+    distanceNotifyReduction: 0.0,
+  },
+
+  teleport: {
+    dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 20.0, // Very fast
+    effectiveMoveSpeed: 20.0,
+    baseJumpSpeed: 0.0,
+    effectiveJumpSpeed: 0.0,
+    eyeHeight: 1.6,
+    baseTurnSpeed: 240.0,
+    effectiveTurnSpeed: 240.0,
+    selectionRadius: 10.0,
+    stealthRange: 20.0,
+    distanceNotifyReduction: 0.0,
+  },
+
+  riding: {
+    dimensions: { height: 2.5, width: 1.0, footprint: 0.5 }, // Larger on mount
+    baseMoveSpeed: 12.0,
+    effectiveMoveSpeed: 12.0,
+    baseJumpSpeed: 10.0, // Mount can jump higher
+    effectiveJumpSpeed: 10.0,
+    eyeHeight: 2.0,      // Higher on mount
+    baseTurnSpeed: 150.0,
+    effectiveTurnSpeed: 150.0,
+    selectionRadius: 6.0,
+    stealthRange: 10.0,
+    distanceNotifyReduction: 0.0,
+  },
+};
+
+/**
+ * Get state values for a movement state with fallback
+ * @param playerInfo Player information
+ * @param stateKey Movement state key
+ * @returns State values (falls back to walk if not found)
+ */
+export function getStateValues(
+  playerInfo: PlayerInfo,
+  stateKey: MovementStateKey
+): MovementStateValues {
+  return playerInfo.stateValues?.[stateKey] || playerInfo.stateValues?.walk || DEFAULT_STATE_VALUES.walk;
+}
+
+/**
+ * Map PlayerMovementState to MovementStateKey
+ * @param state Player movement state
+ * @returns Movement state key for stateValues lookup
+ */
+export function movementStateToKey(state: string): MovementStateKey {
+  // PlayerMovementState enum values map directly to MovementStateKey
+  // JUMP and FALL use walk values
+  switch (state) {
+    case 'WALK': return 'walk';
+    case 'SPRINT': return 'sprint';
+    case 'CROUCH': return 'crouch';
+    case 'SWIM': return 'swim';
+    case 'FLY': return 'fly';
+    case 'RIDING': return 'riding';
+    case 'JUMP': return 'walk';  // Jump uses walk values
+    case 'FALL': return 'walk';  // Fall uses walk values
+    default: return 'walk';
+  }
+}
+
+/**
+ * Map MovementMode to MovementStateKey
+ * @param mode Movement mode from PhysicsEntity
+ * @returns Movement state key for stateValues lookup
+ */
+export function movementModeToKey(mode: string): MovementStateKey {
+  // MovementMode maps directly to MovementStateKey
+  switch (mode) {
+    case 'walk': return 'walk';
+    case 'sprint': return 'sprint';
+    case 'crouch': return 'crouch';
+    case 'swim': return 'swim';
+    case 'climb': return 'climb';
+    case 'fly': return 'fly';
+    case 'teleport': return 'teleport';
+    default: return 'walk';
+  }
 }

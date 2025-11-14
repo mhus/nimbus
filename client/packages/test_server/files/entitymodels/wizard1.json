@@ -37,6 +37,21 @@
       "animationName": "CharacterArmature|Idle_Weapon",
       "speedMultiplier": 1.0,
       "loop": false
+    },
+    "CROUCH": {
+      "animationName": "CharacterArmature|Walk",
+      "speedMultiplier": 1.0,
+      "loop": true
+    },
+    "FALL": {
+      "animationName": "CharacterArmature|Idle",
+      "speedMultiplier": 1.0,
+      "loop": false
+    },
+    "FLY": {
+      "animationName": "CharacterArmature|Idle_Weapon",
+      "speedMultiplier": 1.0,
+      "loop": false
     }
   },
   "poseType": "animation",

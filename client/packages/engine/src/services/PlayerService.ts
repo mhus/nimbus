@@ -6,7 +6,14 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger, ENTITY_POSES, MessageType, PlayerMovementState } from '@nimbus/shared';
+import {
+  getLogger,
+  ENTITY_POSES,
+  MessageType,
+  PlayerMovementState,
+  movementStateToKey,
+  getStateValues,
+} from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
@@ -338,8 +345,11 @@ export class PlayerService {
     const isEgo = this.isEgoView();
 
     if (isEgo) {
-      // Ego-view: Camera at player eye level
-      const eyeHeight = this.playerEntity.playerInfo.eyeHeight;
+      // Ego-view: Camera at player eye level (state-dependent)
+      const stateKey = movementStateToKey(this.currentMovementState);
+      const stateValues = getStateValues(this.playerEntity.playerInfo, stateKey);
+      const eyeHeight = stateValues.eyeHeight;
+
       this.cameraService.setPosition(
         this.playerEntity.position.x,
         this.playerEntity.position.y + eyeHeight,

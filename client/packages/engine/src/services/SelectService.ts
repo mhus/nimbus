@@ -8,7 +8,13 @@
 
 import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Ray } from '@babylonjs/core';
 import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
-import { getLogger, ExceptionHandler, type ClientEntity } from '@nimbus/shared';
+import {
+  getLogger,
+  ExceptionHandler,
+  type ClientEntity,
+  movementStateToKey,
+  getStateValues,
+} from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerService } from './PlayerService';
@@ -83,7 +89,18 @@ export class SelectService {
 
   // Cached player properties (updated via event)
   private playerEyeHeight: number = 1.6; // Default value
-  private playerSelectionRadius: number = 5.0; // Default value
+  private playerSelectionRadius: number = 5.0; // Default value (fallback)
+
+  /**
+   * Get current selection radius based on player movement state
+   * Selection radius varies by state (e.g., shorter in crouch, longer in fly)
+   */
+  private getSelectionRadius(): number {
+    const movementState = this.playerService.getMovementState();
+    const stateKey = movementStateToKey(movementState);
+    const stateValues = getStateValues(this.appContext.playerInfo, stateKey);
+    return stateValues.selectionRadius;
+  }
 
   constructor(
     appContext: AppContext,
@@ -99,20 +116,19 @@ export class SelectService {
     this.scene = scene;
 
     // Initialize player properties from PlayerInfo
+    // Note: selectionRadius is now state-dependent (via getSelectionRadius())
+    // eyeHeight is also state-dependent but we keep a fallback cache
     if (appContext.playerInfo) {
       this.playerEyeHeight = appContext.playerInfo.eyeHeight;
-      this.playerSelectionRadius = appContext.playerInfo.selectionRadius;
+      this.playerSelectionRadius = appContext.playerInfo.selectionRadius; // Fallback only
     }
 
     // Subscribe to PlayerInfo updates
     playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
-      // Update cached properties for raycast
+      // Update cached eye height (state-dependent value is fetched dynamically)
       this.playerEyeHeight = info.eyeHeight;
-      this.playerSelectionRadius = info.selectionRadius;
-      logger.debug('SelectService: PlayerInfo updated', {
-        eyeHeight: this.playerEyeHeight,
-        selectionRadius: this.playerSelectionRadius,
-      });
+      this.playerSelectionRadius = info.selectionRadius; // Fallback only
+      logger.debug('SelectService: PlayerInfo updated');
     });
 
     // Initialize highlighting if scene is available
@@ -120,10 +136,7 @@ export class SelectService {
       this.initializeHighlight();
     }
 
-    logger.info('SelectService initialized', {
-      eyeHeight: this.playerEyeHeight,
-      selectionRadius: this.playerSelectionRadius,
-    });
+    logger.info('SelectService initialized');
   }
 
   /**
@@ -623,10 +636,11 @@ export class SelectService {
   }
 
   /**
-   * Get auto-select radius (from PlayerInfo)
+   * Get auto-select radius (state-dependent)
+   * Returns current selection radius based on movement state
    */
   getAutoSelectRadius(): number {
-    return this.playerSelectionRadius;
+    return this.getSelectionRadius();
   }
 
   /**
@@ -674,9 +688,12 @@ export class SelectService {
 
     try {
       // Priority 1: Try to select entity first (entities are closer to camera typically)
+      // Get current selection radius based on movement state
+      const selectionRadius = this.getSelectionRadius();
+
       let selectedEntity: ClientEntity | null = null;
       if (this._autoSelectMode === SelectMode.INTERACTIVE && this.scene && this.entityService) {
-        selectedEntity = this.getSelectedEntityFromPlayer(this.playerSelectionRadius);
+        selectedEntity = this.getSelectedEntityFromPlayer(selectionRadius);
       }
 
       // Priority 2: If no entity selected, try to select block
@@ -684,7 +701,7 @@ export class SelectService {
       if (!selectedEntity) {
         selectedBlock = this.getSelectedBlockFromPlayer(
           this._autoSelectMode,
-          this.playerSelectionRadius
+          selectionRadius
         );
       }
 

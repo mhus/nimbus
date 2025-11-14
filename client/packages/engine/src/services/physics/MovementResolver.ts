@@ -9,9 +9,10 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, movementModeToKey, DEFAULT_STATE_VALUES } from '@nimbus/shared';
 import type { PhysicsEntity, PlayerBlockContext } from './types';
 import type { PlayerEntity } from '../../types/PlayerEntity';
+import type { MovementStateValues } from '@nimbus/shared';
 
 const logger = getLogger('MovementResolver');
 
@@ -46,39 +47,32 @@ export class MovementResolver {
   constructor(private config: PhysicsConfig) {}
 
   /**
-   * Get move speed for entity based on mode and state
+   * Get state values for entity
+   * Helper function for accessing state-dependent values
    */
-  getMoveSpeed(entity: PhysicsEntity): number {
-    if (!isPlayerEntity(entity)) {
-      return 5.0; // Default for non-player entities
+  private getStateValues(entity: PhysicsEntity): MovementStateValues {
+    if (isPlayerEntity(entity) && entity.playerInfo.stateValues) {
+      const stateKey = movementModeToKey(entity.movementMode);
+      return entity.playerInfo.stateValues[stateKey] || entity.playerInfo.stateValues.walk;
     }
-
-    const playerInfo = entity.playerInfo;
-
-    switch (entity.movementMode) {
-      case 'sprint':
-        return playerInfo.effectiveRunSpeed;
-      case 'crouch':
-        return playerInfo.effectiveCrawlSpeed;
-      case 'swim':
-        return playerInfo.effectiveUnderwaterSpeed;
-      case 'climb':
-        return playerInfo.effectiveWalkSpeed * 0.5; // Slower when climbing
-      case 'fly':
-      case 'teleport':
-        return playerInfo.effectiveWalkSpeed * 2.0; // Faster in fly mode
-      case 'walk':
-      default:
-        return playerInfo.effectiveWalkSpeed;
-    }
+    return DEFAULT_STATE_VALUES.walk;
   }
 
   /**
-   * Get jump speed for entity
+   * Get move speed for entity based on current state
+   * Uses stateValues matrix - NO MORE HARDCODED MULTIPLIERS!
+   */
+  getMoveSpeed(entity: PhysicsEntity): number {
+    return this.getStateValues(entity).effectiveMoveSpeed;
+  }
+
+  /**
+   * Get jump speed for entity based on current state
+   * Uses stateValues matrix for state-dependent jump heights
    */
   getJumpSpeed(entity: PhysicsEntity): number {
     if (isPlayerEntity(entity)) {
-      return entity.playerInfo.effectiveJumpSpeed;
+      return this.getStateValues(entity).effectiveJumpSpeed;
     }
     return this.config.jumpSpeed;
   }

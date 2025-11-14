@@ -9,7 +9,14 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { getLogger, Direction, DirectionHelper, PlayerMovementState } from '@nimbus/shared';
+import {
+  getLogger,
+  Direction,
+  DirectionHelper,
+  PlayerMovementState,
+  movementModeToKey,
+  DEFAULT_STATE_VALUES,
+} from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import type { PlayerEntity } from '../types/PlayerEntity';
@@ -22,6 +29,7 @@ import { WalkModeController } from './physics/WalkModeController';
 import { FlyModeController } from './physics/FlyModeController';
 import type { PhysicsConfig } from './physics/MovementResolver';
 import type { Modifier, ModifierStack } from './ModifierService';
+import type { MovementStateValues } from '@nimbus/shared';
 
 const logger = getLogger('PhysicsService');
 
@@ -36,25 +44,33 @@ function isPlayerEntity(entity: PhysicsEntity): entity is PlayerEntity {
 }
 
 /**
- * Get entity dimensions for current movement mode
+ * Get state values for entity based on current movement mode
+ * Returns all state-dependent values (dimensions, speeds, etc.)
  */
-function getEntityDimensions(entity: PhysicsEntity): { height: number; width: number; footprint: number } {
-  if (isPlayerEntity(entity) && entity.playerInfo.dimensions) {
-    const mode = entity.movementMode;
-    return entity.playerInfo.dimensions[mode] || entity.playerInfo.dimensions.walk;
+function getStateValuesForEntity(entity: PhysicsEntity): MovementStateValues {
+  if (isPlayerEntity(entity) && entity.playerInfo.stateValues) {
+    const stateKey = movementModeToKey(entity.movementMode);
+    return entity.playerInfo.stateValues[stateKey] || entity.playerInfo.stateValues.walk;
   }
 
-  // Default dimensions for non-player entities
-  return { height: 1.8, width: 0.6, footprint: 0.3 };
+  // Default values for non-player entities
+  return DEFAULT_STATE_VALUES.walk;
+}
+
+/**
+ * Get entity dimensions for current movement mode
+ * @deprecated Use getStateValuesForEntity().dimensions instead
+ */
+function getEntityDimensions(entity: PhysicsEntity): { height: number; width: number; footprint: number } {
+  return getStateValuesForEntity(entity).dimensions;
 }
 
 /**
  * Get entity eye height for current movement mode
+ * @deprecated Use getStateValuesForEntity().eyeHeight instead
  */
 function getEntityEyeHeight(entity: PhysicsEntity): number {
-  const dims = getEntityDimensions(entity);
-  // Eye height is typically 90% of total height
-  return dims.height * 0.9;
+  return getStateValuesForEntity(entity).eyeHeight;
 }
 
 /**
