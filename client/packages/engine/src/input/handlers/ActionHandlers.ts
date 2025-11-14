@@ -27,17 +27,51 @@ export class JumpHandler extends InputHandler {
 }
 
 /**
- * Toggle Movement Mode Handler (Editor only)
- * Toggles between Walk and Fly modes using StackModifier system
+ * Cycle Movement State Handler (F key)
+ * Cycles through movement states: FLY → SPRINT → CROUCH → WALK
+ * FLY is only available in Editor mode (__EDITOR__ = true)
  */
-export class ToggleMovementModeHandler extends InputHandler {
+export class CycleMovementStateHandler extends InputHandler {
   protected onActivate(value: number): void {
-    // Toggle between FLY and WALK using PlayerMovementState
     const current = this.playerService.getMovementState();
-    const newState = current === PlayerMovementState.FLY
-      ? PlayerMovementState.WALK
-      : PlayerMovementState.FLY;
-    this.playerService.setMovementState(newState);
+
+    // Determine next state in cycle
+    let nextState: PlayerMovementState;
+
+    if (__EDITOR__) {
+      // Editor mode: Include FLY in rotation
+      switch (current) {
+        case PlayerMovementState.WALK:
+          nextState = PlayerMovementState.FLY;
+          break;
+        case PlayerMovementState.FLY:
+          nextState = PlayerMovementState.SPRINT;
+          break;
+        case PlayerMovementState.SPRINT:
+          nextState = PlayerMovementState.CROUCH;
+          break;
+        case PlayerMovementState.CROUCH:
+        default:
+          nextState = PlayerMovementState.WALK;
+          break;
+      }
+    } else {
+      // Viewer mode: Skip FLY in rotation
+      switch (current) {
+        case PlayerMovementState.WALK:
+          nextState = PlayerMovementState.SPRINT;
+          break;
+        case PlayerMovementState.SPRINT:
+          nextState = PlayerMovementState.CROUCH;
+          break;
+        case PlayerMovementState.CROUCH:
+        default:
+          nextState = PlayerMovementState.WALK;
+          break;
+      }
+    }
+
+    this.playerService.setMovementState(nextState);
   }
 
   protected onDeactivate(): void {
@@ -45,7 +79,7 @@ export class ToggleMovementModeHandler extends InputHandler {
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    // Toggle doesn't need continuous updates
+    // Cycle doesn't need continuous updates
   }
 }
 
@@ -61,52 +95,6 @@ export class ToggleViewModeHandler extends InputHandler {
 
   protected onDeactivate(): void {
     // No action needed on deactivation
-  }
-
-  protected onUpdate(deltaTime: number, value: number): void {
-    // Toggle doesn't need continuous updates
-  }
-}
-
-/**
- * Toggle Sprint Handler
- * Toggles between SPRINT and WALK states (M key)
- */
-export class ToggleSprintHandler extends InputHandler {
-  protected onActivate(value: number): void {
-    // Toggle between SPRINT and WALK using PlayerMovementState
-    const current = this.playerService.getMovementState();
-    const newState = current === PlayerMovementState.SPRINT
-      ? PlayerMovementState.WALK
-      : PlayerMovementState.SPRINT;
-    this.playerService.setMovementState(newState);
-  }
-
-  protected onDeactivate(): void {
-    // No action needed on deactivation (toggle persists)
-  }
-
-  protected onUpdate(deltaTime: number, value: number): void {
-    // Toggle doesn't need continuous updates
-  }
-}
-
-/**
- * Toggle Crouch Handler
- * Toggles between CROUCH and WALK states (N key)
- */
-export class ToggleCrouchHandler extends InputHandler {
-  protected onActivate(value: number): void {
-    // Toggle between CROUCH and WALK using PlayerMovementState
-    const current = this.playerService.getMovementState();
-    const newState = current === PlayerMovementState.CROUCH
-      ? PlayerMovementState.WALK
-      : PlayerMovementState.CROUCH;
-    this.playerService.setMovementState(newState);
-  }
-
-  protected onDeactivate(): void {
-    // No action needed on deactivation (toggle persists)
   }
 
   protected onUpdate(deltaTime: number, value: number): void {

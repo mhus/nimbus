@@ -284,8 +284,6 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
   playerService.setMovementMode( playerService.getMovementMode() === FLY ? WALK : FLY )
 - Wenn sich der Movementmode aendert soll wie auch jetzt bei FLY eine Notification via NotificationService ausgelost werden.
 
-[ ] JUMP status im PhysicsService implementieren.
-
 [?] Fallen status FALL im PhysicsService implementieren.
 - Wenn der player fällt PhysicsService (y velocity < 0) wird die falltiefe addiert in einem parameter en PhysicEntity.
 - Ist die Falltiefe groesser als ein threshold (z.b. 2), wird der status auf FALL gesetzt im PlayerService.
