@@ -71,4 +71,10 @@ export interface PhysicsEntity {
 
   /** Auto-climb state (for smooth animation) */
   climbState?: ClimbState;
+
+  /** Accumulated fall distance in blocks (for FALL state detection) */
+  fallDistance: number;
+
+  /** Was falling in previous frame (for landing detection) */
+  wasFalling: boolean;
 }

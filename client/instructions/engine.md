@@ -258,7 +258,7 @@ doLoglevel('PhysicsService', 'debug')
 - Nachteil: Aufgerufene actions sind evtl noch nicht verfuegbar, weil die referenzen noch nicht gesetzt sind. Finde ich akzeptabel, wir brauchen einen try-catch um jede aktion. Am besten gleich im StackModifier update()
 - Im PlayerService wird dann die referenz auf den StackModifier nur geholt aus dem ModifierService.
 
-[ ] Es wird ein sauberer Player movement State benoetigt. Deshalb soll im PlayerInfo ein status gehalten werden der folgendes beinhaltet:
+[?] Es wird ein sauberer Player movement State benoetigt. Deshalb soll im PlayerInfo ein status gehalten werden der folgendes beinhaltet:
 
 WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 
@@ -286,7 +286,7 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 
 [ ] JUMP status im PhysicsService implementieren.
 
-[ ] Fallen status FALL im PhysicsService implementieren.
+[?] Fallen status FALL im PhysicsService implementieren.
 - Wenn der player fällt PhysicsService (y velocity < 0) wird die falltiefe addiert in einem parameter en PhysicEntity.
 - Ist die Falltiefe groesser als ein threshold (z.b. 2), wird der status auf FALL gesetzt im PlayerService.
 - Wird der fall gestoppt (y velocity >= 0) und die falltiefe war groesser als threshold, wird der status wieder auf WALK gesetzt und es wird ein event zum Server 'onPlayerLanded' ausgelost mit der falltiefe.

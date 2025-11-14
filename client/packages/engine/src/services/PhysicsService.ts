@@ -226,6 +226,12 @@ export class PhysicsService {
     if (entity.jumpRequested === undefined) {
       entity.jumpRequested = false;
     }
+    if (entity.fallDistance === undefined) {
+      entity.fallDistance = 0;
+    }
+    if (entity.wasFalling === undefined) {
+      entity.wasFalling = false;
+    }
     if (!entity.lastBlockPos) {
       entity.lastBlockPos = new Vector3(
         Math.floor(entity.position.x),
@@ -468,14 +474,14 @@ export class PhysicsService {
     entity.wishMove.set(0, 0, 0);
 
     // Update movement state modifiers based on physics state
-    this.updateMovementStateModifiers(entity);
+    this.updateMovementStateModifiers(entity, deltaTime);
   }
 
   /**
    * Update movement state modifiers based on entity physics state
    * Sets JUMP, FALL, and SWIM states via StackModifier system
    */
-  private updateMovementStateModifiers(entity: PhysicsEntity): void {
+  private updateMovementStateModifiers(entity: PhysicsEntity, deltaTime: number): void {
     // Only update for player entity
     if (!isPlayerEntity(entity)) {
       return;
@@ -498,12 +504,64 @@ export class PhysicsService {
       this.jumpModifier.setEnabled(false);
     }
 
-    // FALL state (priority 20) - enabled when falling (not grounded, negative y velocity)
-    // TODO: Implement fall detection - needs velocity check and distance tracking
-    // const isFalling = !entity.grounded && entity.velocity.y < -2.0;
-    // this.fallModifier.setEnabled(isFalling);
-    // For now, keep disabled
-    this.fallModifier.setEnabled(false);
+    // FALL state (priority 20) - enabled when falling
+    const FALL_THRESHOLD = 2.0; // blocks - minimum fall distance to trigger FALL state
+
+    // Track fall distance when falling
+    if (entity.velocity.y < 0 && !entity.grounded) {
+      // Falling - accumulate distance
+      entity.fallDistance += Math.abs(entity.velocity.y) * deltaTime;
+      entity.wasFalling = true;
+
+      // Enable FALL state if threshold exceeded
+      if (entity.fallDistance > FALL_THRESHOLD) {
+        this.fallModifier.setEnabled(true);
+      }
+    } else if (entity.grounded && entity.wasFalling) {
+      // Just landed - handle landing event
+      this.handlePlayerLanding(entity);
+
+      // Reset fall tracking
+      entity.wasFalling = false;
+      entity.fallDistance = 0;
+      this.fallModifier.setEnabled(false);
+    }
+  }
+
+  /**
+   * Handle player landing after a fall
+   * Sends landing event to server if fall distance exceeds threshold
+   */
+  private handlePlayerLanding(entity: PhysicsEntity): void {
+    const FALL_THRESHOLD = 2.0; // Same as above
+    const fallDistance = entity.fallDistance;
+
+    // Only handle significant falls
+    if (fallDistance < FALL_THRESHOLD) {
+      return;
+    }
+
+    // Get entity dimensions for accurate landing position
+    const dimensions = getEntityDimensions(entity);
+
+    // Calculate landing block position (under player's feet)
+    const landingBlockPos = new Vector3(
+      Math.floor(entity.position.x),
+      Math.floor(entity.position.y - dimensions.height * 0.5), // Approximate foot position
+      Math.floor(entity.position.z)
+    );
+
+    logger.info('Player landed after fall', {
+      fallDistance: fallDistance.toFixed(2),
+      landingBlock: {
+        x: landingBlockPos.x,
+        y: landingBlockPos.y,
+        z: landingBlockPos.z
+      }
+    });
+
+    // TODO: Send landing event to server
+    // this.sendPlayerLandedEvent(entity, fallDistance, landingBlockPos);
   }
 
   /**
