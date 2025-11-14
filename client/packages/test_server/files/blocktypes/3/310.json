@@ -13,7 +13,23 @@
       "physics": {
         "solid": true,
         "autoClimbable": true
-      }
+      },
+      "audio": [
+        {
+          "type": "steps",
+          "path": "audio/step/grass2.ogg",
+          "volume": 1,
+          "loop": false,
+          "enabled": true
+        },
+        {
+          "type": "steps",
+          "path": "audio/step/grass1.ogg",
+          "volume": 1,
+          "loop": false,
+          "enabled": true
+        }
+      ]
     }
   },
   "description_old": "Grass block"

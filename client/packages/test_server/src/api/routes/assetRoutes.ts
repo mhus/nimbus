@@ -28,6 +28,7 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
     const query = req.query.query as string | undefined;
     const limit = Math.min(Number(req.query.limit) || 200, 200); // Max 200
     const offset = Number(req.query.offset) || 0;
+    const ext = req.query.ext as string | undefined; // Filter by extensions (comma-separated)
 
     const assetManager = worldManager.getAssetManager();
 
@@ -41,6 +42,15 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
         allAssets = await assetManager.getAllAssets();
       }
 
+      // Filter by extensions if provided
+      if (ext) {
+        const extensions = ext.split(',').map(e => '.' + e.trim().toLowerCase());
+        allAssets = allAssets.filter(asset =>
+          extensions.includes(asset.extension.toLowerCase())
+        );
+        logger.debug('Filtered assets by extensions', { ext, count: allAssets.length });
+      }
+
       // Apply pagination
       const totalCount = allAssets.length;
       const assets = allAssets.slice(offset, offset + limit);
@@ -52,7 +62,7 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
         offset
       });
     } catch (error) {
-      logger.error('Failed to get assets', { worldId, query }, error as Error);
+      logger.error('Failed to get assets', { worldId, query, ext }, error as Error);
       return res.status(500).json({ error: 'Failed to get assets' });
     }
   });

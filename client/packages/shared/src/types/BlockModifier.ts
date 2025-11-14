@@ -660,12 +660,9 @@ export interface AudioDefinition {
 }
 
 /**
- * Audio properties
+ * Audio properties - Array of audio definitions
  */
-export interface AudioModifier {
-  /** List of audio definitions */
-  audio: AudioDefinition[];
-}
+export type AudioModifier = AudioDefinition[];
 
 /**
  * BlockModifier - Complete modifier definition

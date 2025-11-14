@@ -690,6 +690,7 @@
     v-if="isAssetPickerOpen"
     :world-id="worldId"
     :current-path="getTexturePathValue(selectedTextureKey)"
+    :extensions="['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']"
     @close="closeAssetPicker"
     @select="handleAssetSelected"
   />
@@ -699,6 +700,7 @@
     v-if="isModelAssetPickerOpen"
     :world-id="worldId"
     :current-path="localValue.path"
+    :extensions="['glb', 'gltf', 'babylon', 'obj', 'fbx']"
     @close="closeModelAssetPicker"
     @select="handleModelAssetSelected"
   />

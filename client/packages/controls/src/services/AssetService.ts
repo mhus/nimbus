@@ -25,6 +25,8 @@ export interface AssetPagingParams {
   query?: string;
   limit?: number;
   offset?: number;
+  /** Filter by file extensions (comma-separated, e.g., "ogg,wav,mp3") */
+  ext?: string;
 }
 
 export class AssetService {

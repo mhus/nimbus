@@ -9,12 +9,15 @@ import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('useAssets');
 
-export function useAssets(worldId: string) {
+export function useAssets(worldId: string, extensions?: string[]) {
   const assets = ref<Asset[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
   const searchQuery = ref('');
   const uploadProgress = ref(0);
+
+  // Filter by extensions (converted to comma-separated string)
+  const extensionsFilter = extensions ? extensions.join(',') : undefined;
 
   // Paging state
   const totalCount = ref(0);
@@ -40,6 +43,7 @@ export function useAssets(worldId: string) {
         query: searchQuery.value || undefined,
         limit: pageSize.value,
         offset,
+        ext: extensionsFilter,
       });
 
       assets.value = response.assets;

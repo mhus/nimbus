@@ -74,6 +74,7 @@ Ruft alle Assets ab oder sucht nach Assets.
 
 Query Parameter:
 - `query` (optional): Suchbegriff für die Suche in Asset-Pfaden und Kategorien
+- `ext` (optional): Filtert nach Dateierweiterung (z.B. `png,jpg`, `glb`)'
 
 Response:
 

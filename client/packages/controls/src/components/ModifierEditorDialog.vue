@@ -152,13 +152,19 @@ const toggleIllumination = (enabled: boolean) => {
 
 const toggleAudio = (enabled: boolean) => {
   if (!enabled) {
+    // Checkbox deaktiviert: audio wird auf undefined gesetzt
     modifierData.value.audio = undefined;
-  } else if (!modifierData.value.audio) {
-    modifierData.value.audio = { audio: [] };
+  } else if (!modifierData.value.audio || modifierData.value.audio.length === 0) {
+    // Checkbox aktiviert: Initialisiere mit leerem Array
+    modifierData.value.audio = [];
   }
 };
 
 const handleSave = () => {
+  // Clean up empty audio arrays before saving
+  if (modifierData.value.audio && modifierData.value.audio.length === 0) {
+    modifierData.value.audio = undefined;
+  }
   emit('save', modifierData.value);
 };
 </script>

@@ -39,15 +39,33 @@
               class="card bg-base-200 shadow hover:shadow-lg transition-shadow cursor-pointer"
               @click="selectAsset(asset)"
             >
-              <figure class="h-24 bg-base-300 flex items-center justify-center overflow-hidden">
+              <figure class="aspect-square bg-base-300 flex items-center justify-center overflow-hidden relative">
                 <img
                   v-if="isImage(asset)"
                   :src="getAssetUrl(asset.path)"
                   :alt="asset.path"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-contain"
+                  style="image-rendering: pixelated;"
                   @error="(e: Event) => ((e.target as HTMLImageElement).style.display = 'none')"
                 />
                 <span v-else class="text-4xl">{{ getIcon(asset) }}</span>
+
+                <!-- Audio Preview Button -->
+                <button
+                  v-if="isAudio(asset)"
+                  class="absolute top-1 right-1 btn btn-circle btn-sm btn-primary"
+                  @click.stop="toggleAudioPreview(asset)"
+                  :disabled="audioLoading === asset.path"
+                  :title="isPlaying === asset.path ? 'Stop' : 'Play'"
+                >
+                  <span v-if="audioLoading === asset.path" class="loading loading-spinner loading-xs"></span>
+                  <svg v-else-if="isPlaying !== asset.path" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                </button>
               </figure>
               <div class="card-body p-2">
                 <h3 class="text-xs font-medium truncate" :title="asset.path">
@@ -70,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { Asset } from '../services/AssetService';
 import { useAssets } from '../composables/useAssets';
 import SearchInput from './SearchInput.vue';
@@ -80,6 +98,8 @@ import ErrorAlert from './ErrorAlert.vue';
 interface Props {
   worldId: string;
   currentPath?: string; // Currently selected path (optional)
+  /** Filter by file extensions (e.g., ['ogg', 'wav', 'mp3']) */
+  extensions?: string[];
 }
 
 const props = defineProps<Props>();
@@ -89,12 +109,25 @@ const emit = defineEmits<{
   (e: 'select', path: string): void;
 }>();
 
-const { assets, loading, error, loadAssets, searchAssets, getAssetUrl, isImage, getIcon } = useAssets(props.worldId);
+const { assets, loading, error, loadAssets, searchAssets, getAssetUrl, isImage, getIcon } = useAssets(props.worldId, props.extensions);
 
 const localSearchQuery = ref('');
 
+// Audio preview state
+const audioElements = ref<Map<string, HTMLAudioElement>>(new Map());
+const isPlaying = ref<string | null>(null);
+const audioLoading = ref<string | null>(null);
+
 onMounted(() => {
   loadAssets();
+});
+
+// Cleanup audio on unmount
+onUnmounted(() => {
+  audioElements.value.forEach((audio) => {
+    audio.pause();
+  });
+  audioElements.value.clear();
 });
 
 const handleSearch = (query: string) => {
@@ -109,5 +142,69 @@ const selectAsset = (asset: Asset) => {
 const getFileName = (path: string): string => {
   const parts = path.split('/');
   return parts[parts.length - 1];
+};
+
+// Check if asset is audio
+const isAudio = (asset: Asset): boolean => {
+  const audioExtensions = ['.mp3', '.wav', '.ogg'];
+  return audioExtensions.includes(asset.extension.toLowerCase());
+};
+
+// Toggle audio preview
+const toggleAudioPreview = async (asset: Asset) => {
+  const assetPath = asset.path;
+
+  // If currently playing this audio, stop it
+  if (isPlaying.value === assetPath) {
+    const audio = audioElements.value.get(assetPath);
+    if (audio) {
+      audio.pause();
+      isPlaying.value = null;
+    }
+    return;
+  }
+
+  // Stop any currently playing audio
+  if (isPlaying.value) {
+    const currentAudio = audioElements.value.get(isPlaying.value);
+    if (currentAudio) {
+      currentAudio.pause();
+    }
+  }
+
+  try {
+    // Get or create audio element
+    let audio = audioElements.value.get(assetPath);
+    if (!audio) {
+      audioLoading.value = assetPath;
+      audio = new Audio(getAssetUrl(assetPath));
+
+      // Setup event listeners
+      audio.addEventListener('ended', () => {
+        if (isPlaying.value === assetPath) {
+          isPlaying.value = null;
+        }
+      });
+
+      audio.addEventListener('error', () => {
+        audioLoading.value = null;
+        console.error('Failed to load audio:', assetPath);
+      });
+
+      audio.addEventListener('canplay', () => {
+        audioLoading.value = null;
+      });
+
+      audioElements.value.set(assetPath, audio);
+    }
+
+    // Play audio
+    await audio.play();
+    isPlaying.value = assetPath;
+    audioLoading.value = null;
+  } catch (error) {
+    audioLoading.value = null;
+    console.error('Audio playback error:', error);
+  }
 };
 </script>

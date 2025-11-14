@@ -231,16 +231,14 @@ const doorBlockType: BlockType = {
       physics: {
         solid: true
       },
-      audio: {
-        audio: [
-          {
-            type: AudioType.STEPS,
-            path: '/sounds/door_close.ogg',
-            volume: 1.0,
-            enabled: true
-          }
-        ]
-      }
+      audio: [
+        {
+          type: AudioType.STEPS,
+          path: '/sounds/door_close.ogg',
+          volume: 1.0,
+          enabled: true
+        }
+      ]
     },
     // Open state
     [BlockStatus.OPEN]: {
@@ -254,16 +252,14 @@ const doorBlockType: BlockType = {
       physics: {
         solid: false
       },
-      audio: {
-        audio: [
-          {
-            type: AudioType.STEPS,
-            path: '/sounds/door_open.ogg',
-            volume: 1.0,
-            enabled: true
-          }
-        ]
-      }
+      audio: [
+        {
+          type: AudioType.STEPS,
+          path: '/sounds/door_open.ogg',
+          volume: 1.0,
+          enabled: true
+        }
+      ]
     }
   }
 };

@@ -1,62 +1,41 @@
 <template>
   <div class="space-y-3">
     <!-- Audio List -->
-    <div v-if="localValue.audio && localValue.audio.length > 0" class="space-y-2">
+    <div v-if="localValue && localValue.length > 0" class="space-y-2">
       <div
-        v-for="(audioDef, index) in localValue.audio"
+        v-for="(audioDef, index) in localValue"
         :key="index"
         class="border border-base-300 rounded-lg p-3 space-y-3"
       >
-        <!-- Audio Header with Remove Button -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-base-content/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-            <span class="text-sm font-semibold">Audio #{{ index + 1 }}</span>
-            <span class="badge badge-sm">{{ getAudioTypeName(audioDef.type) }}</span>
-          </div>
-          <button
-            class="btn btn-ghost btn-sm btn-square"
-            @click="removeAudio(index)"
-            title="Remove audio"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <!-- Compact Audio Controls in One Line -->
+        <div class="flex items-center gap-2">
+          <!-- Audio Icon -->
+          <svg class="w-4 h-4 text-base-content/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
 
-        <!-- Type Selection -->
-        <div class="form-control">
-          <label class="label py-0">
-            <span class="label-text text-xs">Type</span>
-          </label>
+          <!-- Type Selection -->
           <select
             v-model="audioDef.type"
-            class="select select-bordered select-sm"
+            class="select select-bordered select-sm w-24 flex-shrink-0"
+            title="Type"
           >
             <option v-for="type in audioTypeOptions" :key="type.value" :value="type.value">
               {{ type.label }}
             </option>
           </select>
-        </div>
 
-        <!-- Path Input with Asset Picker -->
-        <div class="form-control">
-          <label class="label py-0">
-            <span class="label-text text-xs">Path</span>
-          </label>
-          <div class="flex gap-2">
+          <!-- Path Input with Asset Picker -->
+          <div class="flex gap-1 flex-1 min-w-0">
             <input
               v-model="audioDef.path"
               type="text"
-              class="input input-bordered input-sm flex-1"
+              class="input input-bordered input-sm flex-1 min-w-0"
               placeholder="audio/steps/stone.ogg"
+              title="Path"
             />
-            <!-- Asset Picker Button -->
             <button
-              class="btn btn-ghost btn-sm btn-square"
+              class="btn btn-ghost btn-sm btn-square flex-shrink-0"
               @click="openAssetPicker(index)"
               title="Select from assets"
             >
@@ -65,53 +44,53 @@
               </svg>
             </button>
           </div>
-        </div>
 
-        <!-- Volume, Loop, Enabled Controls -->
-        <div class="grid grid-cols-3 gap-2">
           <!-- Volume -->
-          <div class="form-control">
-            <label class="label py-0">
-              <span class="label-text text-xs">Volume</span>
-            </label>
-            <input
-              v-model.number="audioDef.volume"
-              type="number"
-              step="0.1"
-              min="0"
-              max="1"
-              class="input input-bordered input-sm"
-              placeholder="1.0"
-            />
-          </div>
+          <input
+            v-model.number="audioDef.volume"
+            type="number"
+            step="0.1"
+            min="0"
+            max="1"
+            class="input input-bordered input-sm w-16 flex-shrink-0"
+            placeholder="1.0"
+            title="Volume"
+          />
 
-          <!-- Loop -->
-          <div class="form-control">
-            <label class="label py-0">
+          <!-- Loop Checkbox -->
+          <div class="form-control flex-shrink-0">
+            <label class="label cursor-pointer gap-1 py-0 px-1" title="Loop">
               <span class="label-text text-xs">Loop</span>
-            </label>
-            <div class="flex items-center h-8">
               <input
                 v-model="audioDef.loop"
                 type="checkbox"
                 class="checkbox checkbox-sm"
               />
-            </div>
+            </label>
           </div>
 
-          <!-- Enabled -->
-          <div class="form-control">
-            <label class="label py-0">
-              <span class="label-text text-xs">Enabled</span>
-            </label>
-            <div class="flex items-center h-8">
+          <!-- Enabled Checkbox -->
+          <div class="form-control flex-shrink-0">
+            <label class="label cursor-pointer gap-1 py-0 px-1" title="Enabled">
+              <span class="label-text text-xs">On</span>
               <input
                 v-model="audioDef.enabled"
                 type="checkbox"
                 class="checkbox checkbox-sm"
               />
-            </div>
+            </label>
           </div>
+
+          <!-- Remove Button -->
+          <button
+            class="btn btn-ghost btn-sm btn-square flex-shrink-0"
+            @click="removeAudio(index)"
+            title="Remove audio"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -141,6 +120,7 @@
     v-if="isAssetPickerOpen"
     :world-id="worldId"
     :current-path="getSelectedAudioPath()"
+    :extensions="['ogg', 'mp3', 'wav']"
     @close="closeAssetPicker"
     @select="handleAssetSelected"
   />
@@ -164,7 +144,7 @@ const emit = defineEmits<{
 }>();
 
 const localValue = ref<AudioModifier>(
-  props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : { audio: [] }
+  props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : []
 );
 
 // Audio type options for dropdown
@@ -184,9 +164,6 @@ const getAudioTypeName = (type: AudioType): string => {
 
 // Add new audio definition
 const addAudio = () => {
-  if (!localValue.value.audio) {
-    localValue.value.audio = [];
-  }
   const newAudio: AudioDefinition = {
     type: AudioType.STEPS,
     path: '',
@@ -194,14 +171,12 @@ const addAudio = () => {
     loop: false,
     enabled: true,
   };
-  localValue.value.audio.push(newAudio);
+  localValue.value.push(newAudio);
 };
 
 // Remove audio definition
 const removeAudio = (index: number) => {
-  if (localValue.value.audio) {
-    localValue.value.audio.splice(index, 1);
-  }
+  localValue.value.splice(index, 1);
 };
 
 // Asset picker functions
@@ -216,15 +191,15 @@ const closeAssetPicker = () => {
 };
 
 const getSelectedAudioPath = (): string => {
-  if (selectedAudioIndex.value !== null && localValue.value.audio) {
-    return localValue.value.audio[selectedAudioIndex.value]?.path || '';
+  if (selectedAudioIndex.value !== null) {
+    return localValue.value[selectedAudioIndex.value]?.path || '';
   }
   return '';
 };
 
 const handleAssetSelected = (assetPath: string) => {
-  if (selectedAudioIndex.value !== null && localValue.value.audio) {
-    localValue.value.audio[selectedAudioIndex.value].path = assetPath;
+  if (selectedAudioIndex.value !== null) {
+    localValue.value[selectedAudioIndex.value].path = assetPath;
   }
   closeAssetPicker();
 };
