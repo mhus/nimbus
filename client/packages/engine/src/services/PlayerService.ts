@@ -715,6 +715,9 @@ export class PlayerService {
       this.playerEntity.cachedEyeHeight = stateValues.eyeHeight;
       this.playerEntity.cachedSelectionRadius = stateValues.selectionRadius;
 
+      // Sync camera immediately to apply new eye height
+      this.syncCameraToPlayer();
+
       // Reset velocity when switching to/from fly mode
       // Prevents "falling while flying" or "flying momentum when landing"
       if (newMode === 'fly' || oldState === PlayerMovementState.FLY) {
