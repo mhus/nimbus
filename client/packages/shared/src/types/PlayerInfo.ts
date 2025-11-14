@@ -194,13 +194,13 @@ export interface PlayerInfo {
 export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues> = {
   walk: {
     dimensions: { height: 2.0, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 4.0,
-    effectiveMoveSpeed: 4.0,
+    baseMoveSpeed: 5.0,
+    effectiveMoveSpeed: 5.0,
     baseJumpSpeed: 8.0,
     effectiveJumpSpeed: 8.0,
     eyeHeight: 1.6,
-    baseTurnSpeed: 180.0,
-    effectiveTurnSpeed: 180.0,
+    baseTurnSpeed: 0.003,    // radians per pixel
+    effectiveTurnSpeed: 0.003,
     selectionRadius: 5.0,
     stealthRange: 8.0,
     distanceNotifyReduction: 0.0,
@@ -208,30 +208,30 @@ export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues>
 
   sprint: {
     dimensions: { height: 2.0, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 8.0,  // 2x walk speed
-    effectiveMoveSpeed: 8.0,
+    baseMoveSpeed: 7.0,
+    effectiveMoveSpeed: 7.0,
     baseJumpSpeed: 8.0,
     effectiveJumpSpeed: 8.0,
     eyeHeight: 1.6,
-    baseTurnSpeed: 180.0,
-    effectiveTurnSpeed: 180.0,
+    baseTurnSpeed: 0.003,
+    effectiveTurnSpeed: 0.003,
     selectionRadius: 5.0,
-    stealthRange: 12.0,  // More visible when sprinting
+    stealthRange: 12.0,
     distanceNotifyReduction: 0.0,
   },
 
   crouch: {
     dimensions: { height: 1.0, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 2.0,  // 0.5x walk speed
-    effectiveMoveSpeed: 2.0,
-    baseJumpSpeed: 4.0,  // Lower jump when crouched
+    baseMoveSpeed: 2.5,
+    effectiveMoveSpeed: 2.5,
+    baseJumpSpeed: 4.0,
     effectiveJumpSpeed: 4.0,
-    eyeHeight: 0.8,      // Lower eye height
-    baseTurnSpeed: 120.0,
-    effectiveTurnSpeed: 120.0,
-    selectionRadius: 4.0, // Shorter reach
-    stealthRange: 4.0,   // Stealthier
-    distanceNotifyReduction: 0.5, // 50% stealth bonus
+    eyeHeight: 0.8,
+    baseTurnSpeed: 0.002,
+    effectiveTurnSpeed: 0.002,
+    selectionRadius: 4.0,
+    stealthRange: 4.0,
+    distanceNotifyReduction: 0.5,
   },
 
   swim: {
@@ -241,22 +241,22 @@ export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues>
     baseJumpSpeed: 4.0,
     effectiveJumpSpeed: 4.0,
     eyeHeight: 1.4,
-    baseTurnSpeed: 90.0,  // Slower turn underwater
-    effectiveTurnSpeed: 90.0,
+    baseTurnSpeed: 0.002,
+    effectiveTurnSpeed: 0.002,
     selectionRadius: 4.0,
     stealthRange: 6.0,
-    distanceNotifyReduction: 0.3, // 30% stealth
+    distanceNotifyReduction: 0.3,
   },
 
   climb: {
     dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 2.0,  // 0.5x walk (replaces hardcoded multiplier!)
-    effectiveMoveSpeed: 2.0,
-    baseJumpSpeed: 0.0,  // Can't jump while climbing
+    baseMoveSpeed: 2.5,
+    effectiveMoveSpeed: 2.5,
+    baseJumpSpeed: 0.0,
     effectiveJumpSpeed: 0.0,
     eyeHeight: 1.5,
-    baseTurnSpeed: 120.0,
-    effectiveTurnSpeed: 120.0,
+    baseTurnSpeed: 0.002,
+    effectiveTurnSpeed: 0.002,
     selectionRadius: 4.0,
     stealthRange: 6.0,
     distanceNotifyReduction: 0.2,
@@ -264,41 +264,41 @@ export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues>
 
   fly: {
     dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 10.0, // 2.5x walk (replaces hardcoded multiplier!)
+    baseMoveSpeed: 10.0,
     effectiveMoveSpeed: 10.0,
-    baseJumpSpeed: 0.0,  // No jumping in fly mode
+    baseJumpSpeed: 0.0,
     effectiveJumpSpeed: 0.0,
     eyeHeight: 1.6,
-    baseTurnSpeed: 200.0,
-    effectiveTurnSpeed: 200.0,
-    selectionRadius: 8.0, // Longer reach from air
-    stealthRange: 15.0,  // Very visible
+    baseTurnSpeed: 0.004,
+    effectiveTurnSpeed: 0.004,
+    selectionRadius: 8.0,
+    stealthRange: 15.0,
     distanceNotifyReduction: 0.0,
   },
 
   teleport: {
     dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 20.0, // Very fast
+    baseMoveSpeed: 20.0,
     effectiveMoveSpeed: 20.0,
     baseJumpSpeed: 0.0,
     effectiveJumpSpeed: 0.0,
     eyeHeight: 1.6,
-    baseTurnSpeed: 240.0,
-    effectiveTurnSpeed: 240.0,
+    baseTurnSpeed: 0.005,
+    effectiveTurnSpeed: 0.005,
     selectionRadius: 10.0,
     stealthRange: 20.0,
     distanceNotifyReduction: 0.0,
   },
 
   riding: {
-    dimensions: { height: 2.5, width: 1.0, footprint: 0.5 }, // Larger on mount
-    baseMoveSpeed: 12.0,
-    effectiveMoveSpeed: 12.0,
-    baseJumpSpeed: 10.0, // Mount can jump higher
+    dimensions: { height: 2.5, width: 1.0, footprint: 0.5 },
+    baseMoveSpeed: 8.0,
+    effectiveMoveSpeed: 8.0,
+    baseJumpSpeed: 10.0,
     effectiveJumpSpeed: 10.0,
-    eyeHeight: 2.0,      // Higher on mount
-    baseTurnSpeed: 150.0,
-    effectiveTurnSpeed: 150.0,
+    eyeHeight: 2.0,
+    baseTurnSpeed: 0.003,
+    effectiveTurnSpeed: 0.003,
     selectionRadius: 6.0,
     stealthRange: 10.0,
     distanceNotifyReduction: 0.0,

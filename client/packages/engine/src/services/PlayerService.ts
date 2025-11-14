@@ -680,6 +680,40 @@ export class PlayerService {
 
     this.currentMovementState = newState;
 
+    // Synchronize entity.movementMode with PlayerMovementState
+    // This is critical for PhysicsService to choose the correct controller
+    const movementModeMap: Record<PlayerMovementState, MovementMode> = {
+      [PlayerMovementState.WALK]: 'walk',
+      [PlayerMovementState.SPRINT]: 'sprint',
+      [PlayerMovementState.CROUCH]: 'crouch',
+      [PlayerMovementState.SWIM]: 'swim',
+      [PlayerMovementState.FLY]: 'fly',
+      [PlayerMovementState.RIDING]: 'walk',  // No riding mode yet
+      [PlayerMovementState.JUMP]: 'walk',    // Jump uses walk physics
+      [PlayerMovementState.FALL]: 'walk',    // Fall uses walk physics
+    };
+
+    const newMode = movementModeMap[newState];
+    if (this.playerEntity.movementMode !== newMode) {
+      this.playerEntity.movementMode = newMode;
+
+      // Reset velocity when switching to/from fly mode
+      // Prevents "falling while flying" or "flying momentum when landing"
+      if (newMode === 'fly' || oldState === PlayerMovementState.FLY) {
+        this.playerEntity.velocity.set(0, 0, 0);
+      }
+
+      // Set grounded false in fly mode (flying = not on ground)
+      if (newMode === 'fly') {
+        this.playerEntity.grounded = false;
+      }
+
+      logger.debug('Entity movementMode synchronized', {
+        playerMovementState: newState,
+        entityMovementMode: newMode,
+      });
+    }
+
     // Emit event for other services (PhysicsService, CameraService, etc.)
     const event: PlayerMovementStateChangedEvent = {
       playerId: this.appContext.playerId ?? 'unknown',
