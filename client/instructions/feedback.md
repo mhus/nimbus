@@ -65,4 +65,3 @@ Erweiterung BlockMetadata:
 - Ausserdem wird die direction und pitch des players mit gesendet, damit der server weiss in welche richtung der player schaut.
 - Position des players wird auch mit gesendet.
 - der radius fuer den selector soll aus der PlayerInfo kommen. d.h. im player kann configuriert werden welche range er maximal gegner befeuern kann. selectionRadius
-

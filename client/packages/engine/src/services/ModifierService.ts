@@ -14,6 +14,47 @@ const logger = getLogger('ModifierService');
 const MAX_PRIORITY = Number.MAX_SAFE_INTEGER;
 
 /**
+ * Enum für alle zentral verwalteten Stack-Namen
+ *
+ * WICHTIG: Alle neuen StackModifier müssen hier registriert werden!
+ *
+ * Workflow für neue Stacks:
+ * 1. Stack-Namen hier als Enum-Wert hinzufügen
+ * 2. Stack in StackModifierCreator.createAllStackModifiers() erstellen
+ * 3. In Service nur noch per getModifierStack(StackName.XXX) holen
+ *
+ * Vorteile:
+ * - Typsicherheit (keine Tippfehler)
+ * - Zentrale Initialisierung garantiert Verfügbarkeit
+ * - IDE-Autovervollständigung
+ * - Alle Stacks an einem Ort dokumentiert
+ *
+ * @example
+ * // Im Creator (StackModifierCreator.ts):
+ * modifierService.createModifierStack<boolean>(
+ *   StackName.PLAYER_VIEW_MODE,
+ *   true,
+ *   (value) => {
+ *     const playerService = appContext.services.player;
+ *     if (playerService) playerService.onViewModeChanged(value);
+ *   }
+ * );
+ *
+ * @example
+ * // Im Service (z.B. PlayerService.ts):
+ * get viewModeStack(): ModifierStack<boolean> | undefined {
+ *   return this.appContext.services.modifier?.getModifierStack<boolean>(
+ *     StackName.PLAYER_VIEW_MODE
+ *   );
+ * }
+ */
+export enum StackName {
+  /** Player view mode: true = ego-view (first-person), false = third-person */
+  PLAYER_VIEW_MODE = 'playerViewMode',
+  // Weitere Stacks hier hinzufügen
+}
+
+/**
  * Modifier - A value that can be applied to a ModifierStack
  * @template T The type of the value
  */
@@ -110,16 +151,19 @@ export class ModifierStack<T> {
   private readonly _action: (value: T) => void;
   private readonly _modifiers: Modifier<T>[] = [];
   private _currentValue: T;
+  private readonly _service: ModifierService;
 
   /**
    * Create a new modifier stack
    * @param stackName The name of this stack
    * @param defaultValue The default value (fallback)
    * @param action The action to execute when the value changes
+   * @param service The ModifierService that owns this stack
    */
-  constructor(stackName: string, defaultValue: T, action: (value: T) => void) {
+  constructor(stackName: string, defaultValue: T, action: (value: T) => void, service: ModifierService) {
     this._stackName = stackName;
     this._action = action;
+    this._service = service;
     this._defaultModifier = new Modifier(defaultValue, MAX_PRIORITY, this);
     this._currentValue = defaultValue;
   }
@@ -241,9 +285,11 @@ export class ModifierStack<T> {
 
   /**
    * Dispose the stack
+   * Clears all modifiers and removes itself from the ModifierService
    */
   dispose(): void {
     this._modifiers.length = 0;
+    this._service._removeStackFromMap(this._stackName);
   }
 }
 
@@ -261,7 +307,7 @@ export interface ModifierConfig<T> {
  * ModifierService - Central service for managing modifier stacks
  */
 export class ModifierService {
-  private readonly _stacks = new Map<string, ModifierStack<any>>();
+  private readonly stackModifiers = new Map<string, ModifierStack<any>>();
 
   /**
    * Create a new modifier stack
@@ -276,12 +322,12 @@ export class ModifierService {
     action: (value: T) => void
   ): ModifierStack<T> {
     try {
-      if (this._stacks.has(stackName)) {
+      if (this.stackModifiers.has(stackName)) {
         throw new Error(`ModifierStack '${stackName}' already exists`);
       }
 
-      const stack = new ModifierStack(stackName, defaultValue, action);
-      this._stacks.set(stackName, stack);
+      const stack = new ModifierStack(stackName, defaultValue, action, this);
+      this.stackModifiers.set(stackName, stack);
 
       // Execute action immediately with default value
       action(defaultValue);
@@ -313,7 +359,7 @@ export class ModifierService {
     defaultValue: T,
     action: (value: T) => void
   ): ModifierStack<T> {
-    const existing = this._stacks.get(stackName);
+    const existing = this.stackModifiers.get(stackName);
     if (existing) {
       return existing as ModifierStack<T>;
     }
@@ -329,7 +375,7 @@ export class ModifierService {
    */
   addModifier<T>(stackName: string, config: ModifierConfig<T>): Modifier<T> {
     try {
-      const stack = this._stacks.get(stackName);
+      const stack = this.stackModifiers.get(stackName);
       if (!stack) {
         throw new Error(`ModifierStack '${stackName}' does not exist`);
       }
@@ -359,7 +405,7 @@ export class ModifierService {
    * @returns The modifier stack or undefined
    */
   getModifierStack<T>(stackName: string): ModifierStack<T> | undefined {
-    return this._stacks.get(stackName);
+    return this.stackModifiers.get(stackName);
   }
 
   /**
@@ -368,10 +414,10 @@ export class ModifierService {
    */
   removeStack(stackName: string): void {
     try {
-      const stack = this._stacks.get(stackName);
+      const stack = this.stackModifiers.get(stackName);
       if (stack) {
         stack.dispose();
-        this._stacks.delete(stackName);
+        this.stackModifiers.delete(stackName);
 
         logger.info('ModifierStack removed', { stackName });
       }
@@ -386,24 +432,33 @@ export class ModifierService {
    * @returns True if the stack exists
    */
   hasStack(stackName: string): boolean {
-    return this._stacks.has(stackName);
+    return this.stackModifiers.has(stackName);
   }
 
   /**
    * Get all stack names
    */
   get stackNames(): string[] {
-    return Array.from(this._stacks.keys());
+    return Array.from(this.stackModifiers.keys());
   }
 
   /**
    * Dispose all stacks
    */
   dispose(): void {
-    for (const stack of this._stacks.values()) {
+    for (const stack of this.stackModifiers.values()) {
       stack.dispose();
     }
-    this._stacks.clear();
+    this.stackModifiers.clear();
     logger.info('ModifierService disposed');
+  }
+
+  /**
+   * Internal method to remove a stack from the map
+   * Called by ModifierStack.dispose()
+   * @internal
+   */
+  _removeStackFromMap(stackName: string): void {
+    this.stackModifiers.delete(stackName);
   }
 }

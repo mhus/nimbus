@@ -322,6 +322,12 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
     appContext.services.modifier = modifierService;
     logger.debug('ModifierService initialized');
 
+    // Create all StackModifiers centrally
+    logger.info('Creating all StackModifiers...');
+    const { createAllStackModifiers } = await import('./services/StackModifierCreator');
+    createAllStackModifiers(appContext);
+    logger.debug('All StackModifiers created');
+
     // Register some chunks around player spawn
     const chunkService = appContext.services.chunk;
     if (chunkService) {

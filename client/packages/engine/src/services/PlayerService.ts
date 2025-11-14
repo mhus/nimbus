@@ -12,6 +12,7 @@ import type { CameraService } from './CameraService';
 import type { PhysicsService, MovementMode } from './PhysicsService';
 import type { PlayerEntity } from '../types/PlayerEntity';
 import type { ModifierStack, Modifier } from './ModifierService';
+import { StackName } from './ModifierService';
 import type { EntityPositionUpdateMessage, EntityPositionUpdateData } from '@nimbus/shared';
 import { EntityRenderService }  from "./EntityRenderService";
 
@@ -49,9 +50,19 @@ export class PlayerService {
   private eventListeners: Map<string, EventListener[]> = new Map();
 
   // View mode (ego vs third-person)
-  private viewModeStack?: ModifierStack<boolean>; // true = ego, false = third-person
+  // Stack is created centrally in StackModifierCreator
   private playerViewModifier?: Modifier<boolean>;
   private underwaterViewModifier?: Modifier<boolean>;
+
+  /**
+   * Get the view mode stack (ego vs third-person)
+   * Stack is created centrally in StackModifierCreator
+   */
+  get viewModeStack(): ModifierStack<boolean> | undefined {
+    return this.appContext.services.modifier?.getModifierStack<boolean>(
+      StackName.PLAYER_VIEW_MODE
+    );
+  }
 
   // Third-person model rendering
   private thirdPersonMesh?: any; // AbstractMesh from Babylon.js
@@ -135,10 +146,10 @@ export class PlayerService {
       z: this.playerEntity.position.z,
     };
 
-    // Initialize view mode stack (ego vs third-person)
-    // Note: ModifierService might not be available yet during construction
-    // Will be initialized lazily on first use
-    this.initializeViewModeStack();
+    // Initialize view mode modifiers
+    // Stack is created centrally in StackModifierCreator
+    // Modifiers are created here on first access
+    this.initializeViewModeModifiers();
 
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
@@ -559,40 +570,28 @@ export class PlayerService {
   }
 
   /**
-   * Initialize view mode stack (lazy initialization)
+   * Initialize view mode modifiers
+   * Stack is created centrally in StackModifierCreator
    */
-  private initializeViewModeStack(): void {
-    if (this.viewModeStack) {
-      return; // Already initialized
+  private initializeViewModeModifiers(): void {
+    const stack = this.viewModeStack;
+    if (!stack) {
+      logger.warn('View mode stack not available yet');
+      return;
     }
-
-    const modifierService = this.appContext.services.modifier;
-    if (!modifierService) {
-      return; // Not available yet, will retry later
-    }
-
-    // Get or create stack (safe to call multiple times)
-    this.viewModeStack = modifierService.getOrCreateModifierStack<boolean>(
-      'playerViewMode',
-      true, // Default: ego-view (first-person)
-      (isEgo) => {
-        // Callback when view mode changes
-        this.onViewModeChanged(isEgo);
-      }
-    );
 
     // Add player's default preference if not already added
     if (!this.playerViewModifier) {
-      this.playerViewModifier = this.viewModeStack.addModifier(true, 100); // Priority 100 (low)
+      this.playerViewModifier = stack.addModifier(true, 100); // Priority 100 (low)
+      logger.debug('Player view modifier created');
     }
 
     // Create underwater modifier if not already added
     if (!this.underwaterViewModifier) {
-      this.underwaterViewModifier = this.viewModeStack.addModifier(true, 10); // Priority 10 (high)
+      this.underwaterViewModifier = stack.addModifier(true, 10); // Priority 10 (high)
       this.underwaterViewModifier.setEnabled(false); // Disabled initially
+      logger.debug('Underwater view modifier created');
     }
-
-    logger.debug('View mode stack initialized', { defaultEgo: true });
   }
 
   /**
@@ -600,11 +599,11 @@ export class PlayerService {
    * Called by F5 key handler
    */
   toggleViewMode(): void {
-    // Ensure view mode stack is initialized
-    this.initializeViewModeStack();
+    // Ensure modifiers are initialized
+    this.initializeViewModeModifiers();
 
     if (!this.viewModeStack || !this.playerViewModifier) {
-      logger.warn('View mode stack not initialized');
+      logger.warn('View mode stack not available');
       return;
     }
 
@@ -624,8 +623,8 @@ export class PlayerService {
    * @param underwater True if underwater, false if surfaced
    */
   setUnderwaterViewMode(underwater: boolean): void {
-    // Ensure view mode stack is initialized
-    this.initializeViewModeStack();
+    // Ensure modifiers are initialized
+    this.initializeViewModeModifiers();
 
     if (!this.underwaterViewModifier) {
       return;
@@ -641,16 +640,14 @@ export class PlayerService {
    * Get current view mode
    */
   isEgoView(): boolean {
-    // Ensure view mode stack is initialized
-    this.initializeViewModeStack();
-
     return this.viewModeStack?.currentValue ?? true;
   }
 
   /**
    * Called when view mode changes (from modifier stack)
+   * Public because it's called from StackModifierCreator callback
    */
-  private onViewModeChanged(isEgo: boolean): void {
+  onViewModeChanged(isEgo: boolean): void {
     logger.info('View mode changed', { isEgo });
 
     if (isEgo) {

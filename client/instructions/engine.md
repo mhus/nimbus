@@ -243,3 +243,47 @@ doLoglevel('PhysicsService', 'debug')
 - Aus dem PhysicsModifier entfernen
 - Aus dem PhysicsEditor entfernen
 - In der Engine immer auf shape == CUBE pruefen wo jetzt autoCornerHeights genutzt wird
+
+## Player State
+
+[?] Alle StackModifier sollen möglichst in ModifierService verwaltet werden. Deshalb wird dort eine Map benoetigt die alle StackModifier hält.
+- Erstelle in ModifierService eine Map<string, StackModifier<any>> namens 'stackModifiers'
+- Beim anlegen von StackModifieren im ModifierService, werden diese in die Map eingetragen mit dem key = parameterName
+- Im PlayerService ist aktuell ein viewModeStack, der kann hier als referenz bestehen bleiben, aber evtl macht es eine Verwaltung ueber den ModifierService sinnvoller und einfacher.
+- Wird der stack modifier dispose() dann wird er aus der Map entfernt.
+
+- Wenn wir eine referenz des appContext mitgeben keonne wir zentral im ModifierStack, lieber in eier separaten creator classe alle stack modifier anlegen.
+- Vorteil, es muss nicht immer auf verdacht an vielen stellen versucht werden die anzulegen - wie im PlayerService fuer viewModeStack.
+- Vorteil: stackModifier sind garantiert da
+- Nachteil: Aufgerufene actions sind evtl noch nicht verfuegbar, weil die referenzen noch nicht gesetzt sind. Finde ich akzeptabel, wir brauchen einen try-catch um jede aktion. Am besten gleich im StackModifier update()
+- Im PlayerService wird dann die referenz auf den StackModifier nur geholt aus dem ModifierService.
+
+[ ] Es wird ein sauberer Player movement State benoetigt. Deshalb soll im PlayerInfo ein status gehalten werden der folgendes beinhaltet:
+
+WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
+
+- Es kann immer nur einer dieser zusaende aktiv sein. Aendert sich der status, wird ein event ausgelost 'onPlayerStateChanged' mit dem alten und neuen status und palyerId.
+- Erstelle im PlayerInfo einen neuen parameter 'movementState' vom typ PlayerMovementState (enum). (package shared) der default wert ist WALK
+- Erstelle einen StackModifier fuer den Parameter 'playerMovementState' im ModifierService.
+- Erstelle einen StackModifier Creator 'playerMovementState' der den status im PlayerService setzt. Default ist WALK
+- Erweitere PhysicsService, der soll einen Modifier darauf haben den player status setzen:
+  - JUMP - Prio 100
+  - FALL (muss spaeter noch implemetiert werden im PhysicsService) - Prio 110
+  - SWIM - Prio 120
+  Es werden separate Modifier mit verschiedenen Prioritaeten benoetigt.
+  werden hier gesetzt.
+- Im LayerService selbst wird ein Modfier gesetzt fuer: Hier ist nur ein Modifier noetig, da der status gesetzt wird. besser der default Status im StackModifier kann gesetzt werden.
+  - FLY  
+  - WALK 
+  - SPRINT
+  - CROUCH
+  Diese Werte werden von aussen durch eine funktion getoggelt.
+- PhysicsService und CameraService werden nun nicht mehr direkt mit dem status versorgt, sonder durch das event,
+  das im PlayerService ausgelost wird wenn sich der status aendert. Intern werden die gleichen flags gesetzt wie bisher.
+
+[ ] Fallen status FALL im PhysicsService implementieren.
+- Wenn der player fällt PhysicsService (y velocity < 0) wird die falltiefe addiert in einem parameter en PhysicEntity.
+- Ist die Falltiefe groesser als ein threshold (z.b. 2), wird der status auf FALL gesetzt im PlayerService.
+- Wird der fall gestoppt (y velocity >= 0) und die falltiefe war groesser als threshold, wird der status wieder auf WALK gesetzt und es wird ein event zum Server 'onPlayerLanded' ausgelost mit der falltiefe.
+  - "Block Interaction (Client -> Server)" in client/instructions/general/network-model-2.0.md - Es wird der Block, auf den er gefallen ist als position mit gesendet.
+- Nach dem landen wird die falltiefe wieder auf 0 gesetzt.
