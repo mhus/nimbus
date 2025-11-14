@@ -329,8 +329,22 @@ In diese fall sollte die pruefung in mehreren schritten erfolgen. Jeweils ein sc
 - Erstelle im NetworkService eine funktion getRestRequestUrl(endpoint: string): string die den kompletten URL zurueck gibt.
 - Passe alle stellen an wo REST API urls erstellt werden in 'engine'
 
-[ ] Reconnect: Wenn die Verbindung der WebSocket getrennt wird, soll automatisch ein reconnect versucht werden.
+[x] Reconnect: Wenn die Verbindung der WebSocket getrennt wird, soll automatisch ein reconnect versucht werden.
 Nach dem reconnect muess die session wiederhergestellt werden.
+ - Zeige eine Notification "Verbindung verloren, versuche wieder zu verbinden..."
  - Logge dich mit der sessionId wieder ein.
  - Schicke ein event raus, das alle auffordert die session wiederherzustellen.
  - Fange im ChinkServcie das event ab und registriere dich wieder fuer die chunks die vorher geladen waren.
+Falls der Reconnect nicht funktioniert, dann spring auf die URL 'exitUrl' die im appContext.config hinterlegt ist. (muss noch erstellt werden, default ist '/login')
+ - Reconnect versuchen alle 5 Sekunden bis zu 5 mal.
+ - Nach 5 fehlgeschlagenen versuchen, springe auf exitUrl
+
+[ ] Ich brauche einen neuen Modus der Bei disconnected und auch bei Death greift.
+Der Modus heisst DEAD.
+- Im DEAD modus ist Physics deaktiviert.
+- Im DEAD modus ist die Cam unterwasser aktiviert.
+- Im DEAD modus ist die steuerung inaktiv, jegliche steuerung wird ignoriert.
+- Der DEAD modus wird im PlayerService gesetzt, kann aber wieder deaktiviert werden.
+- Bei disconnect wird der DEAD modus gesetzt.
+- Bei reconnect wird der DEAD modus wieder deaktiviert.
+- Erstelle ein Command 'setPlayerDeadState(isDead: boolean)' im PlayerService um den modus zu setzen.

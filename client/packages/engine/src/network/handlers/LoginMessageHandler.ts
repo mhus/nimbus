@@ -88,6 +88,17 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
 
       // Emit event for other services
       this.networkService.emit('login:success', successData);
+
+      // Check if this is a session restoration (reconnect with sessionId)
+      // If sessionId was already set before login, this is a restoration
+      const isReconnect = this.networkService.getConnectionState() === 'CONNECTED' &&
+                          this.appContext.sessionId === successData.sessionId;
+
+      if (isReconnect) {
+        logger.info('Session restored after reconnect');
+        // Emit session:restore event for services to restore their state
+        this.networkService.emit('session:restore', successData);
+      }
     } else {
       // Error response
       const errorData = data as LoginErrorData;

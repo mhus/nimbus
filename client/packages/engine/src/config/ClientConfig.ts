@@ -42,6 +42,12 @@ export interface ClientConfig {
 
   /** Enable console logging */
   logToConsole: boolean;
+
+  /**
+   * Exit URL to redirect to when connection fails permanently
+   * Default: '/login'
+   */
+  exitUrl: string;
 }
 
 /**
@@ -77,6 +83,7 @@ export function loadClientConfig(): ClientConfig {
 
   // Load optional variables
   const logToConsole = env.LOG_TO_CONSOLE === 'true';
+  const exitUrl = env.EXIT_URL || '/login'; // Default to '/login' if not specified
 
   const config: ClientConfig = {
     username: username!,
@@ -85,6 +92,7 @@ export function loadClientConfig(): ClientConfig {
     apiUrl: apiUrl!,
     worldId,
     logToConsole,
+    exitUrl,
   };
 
   logger.info('Client configuration loaded', {
@@ -93,6 +101,7 @@ export function loadClientConfig(): ClientConfig {
     apiUrl,
     worldId,
     logToConsole,
+    exitUrl,
   });
 
   return config;
@@ -118,6 +127,7 @@ function getEnvironment(): Record<string, string | undefined> {
       SERVER_API_URL: env.VITE_SERVER_API_URL,
       WORLD_ID: env.VITE_WORLD_ID,
       LOG_TO_CONSOLE: env.VITE_LOG_TO_CONSOLE,
+      EXIT_URL: env.VITE_EXIT_URL,
     };
   }
 

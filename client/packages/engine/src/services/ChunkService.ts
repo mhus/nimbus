@@ -79,6 +79,11 @@ export class ChunkService {
       renderDistance: this.renderDistance,
       unloadDistance: this.unloadDistance,
     });
+
+    // Listen for session restoration to re-register chunks
+    this.networkService.on('session:restore', () => {
+      this.onSessionRestore();
+    });
   }
 
   /**
@@ -1058,6 +1063,33 @@ export class ChunkService {
           ExceptionHandler.handle(error, 'ChunkService.emit', { event });
         }
       });
+    }
+  }
+
+  /**
+   * Handle session restoration after reconnect
+   *
+   * Re-registers all chunks that were previously registered before disconnect.
+   * This ensures the client receives updates for chunks it was tracking.
+   */
+  private onSessionRestore(): void {
+    try {
+      logger.info('Session restored, re-registering chunks', {
+        chunksToRegister: this.lastRegistration.length,
+        registeredChunks: this.registeredChunks.size,
+      });
+
+      // Clear registered chunks set to allow re-registration
+      this.registeredChunks.clear();
+
+      // Re-register all chunks from last registration
+      if (this.lastRegistration.length > 0) {
+        this.registerChunks(this.lastRegistration).catch(error => {
+          ExceptionHandler.handle(error, 'ChunkService.onSessionRestore');
+        });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ChunkService.onSessionRestore');
     }
   }
 }

@@ -16,6 +16,7 @@ import {
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { MessageHandler } from '../network/MessageHandler';
+import { NotificationType } from '../types/Notification';
 
 const logger = getLogger('NetworkService');
 
@@ -72,6 +73,7 @@ export class NetworkService {
   private reconnectAttempt: number = 0;
   private maxReconnectAttempts: number = 5;
   private shouldReconnect: boolean = true;
+  private reconnectIntervalMs: number = 5000; // 5 seconds between reconnect attempts
 
   constructor(private appContext: AppContext) {
     this.websocketUrl = appContext.config.websocketUrl;
@@ -276,9 +278,24 @@ export class NetworkService {
       logger.info('Reconnected to WebSocket server');
       this.emit('reconnected');
 
-      // Resend login
-      if (this.lastLoginMessage) {
-        logger.info('Resending login after reconnect');
+      // Show reconnection success notification
+      const notificationService = this.appContext.services.notification;
+      if (notificationService) {
+        notificationService.newNotification(
+          NotificationType.SYSTEM_INFO,
+          null,
+          'Verbindung wiederhergestellt'
+        );
+      }
+
+      // Resend login with sessionId for session restoration
+      if (this.appContext.sessionId) {
+        logger.info('Resending login with sessionId after reconnect', {
+          sessionId: this.appContext.sessionId,
+        });
+        this.sendLoginWithSession(this.appContext.sessionId);
+      } else if (this.lastLoginMessage) {
+        logger.warn('No sessionId available, resending original login');
         this.send(this.lastLoginMessage);
       }
     } else {
@@ -381,33 +398,70 @@ export class NetworkService {
   }
 
   /**
-   * Attempt to reconnect with exponential backoff
+   * Attempt to reconnect every 5 seconds
+   * After 5 failed attempts, redirect to exitUrl
    */
   private attemptReconnect(): void {
     if (this.reconnectAttempt >= this.maxReconnectAttempts) {
-      logger.error('Max reconnection attempts reached');
+      logger.error('Max reconnection attempts reached, redirecting to exit URL');
       this.emit('reconnect_failed');
+
+      // Show error notification
+      const notificationService = this.appContext.services.notification;
+      if (notificationService) {
+        notificationService.newNotification(
+          NotificationType.SYSTEM_ERROR,
+          null,
+          'Verbindung konnte nicht wiederhergestellt werden'
+        );
+      }
+
+      // Redirect to exit URL
+      const exitUrl = this.appContext.config.exitUrl || '/login';
+      logger.info('Redirecting to exit URL', { exitUrl });
+
+      // Use window.location for redirect
+      if (typeof window !== 'undefined' && window.location) {
+        setTimeout(() => {
+          window.location.href = exitUrl;
+        }, 2000); // Wait 2 seconds before redirect to show notification
+      }
+
       return;
     }
 
     this.reconnectAttempt++;
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempt - 1), 16000);
 
     logger.info('Attempting reconnect', {
       attempt: this.reconnectAttempt,
-      delay,
+      maxAttempts: this.maxReconnectAttempts,
+      delay: this.reconnectIntervalMs,
     });
 
-    this.connectionState = ConnectionState.RECONNECTING;
+    // Show notification about reconnecting
+    const notificationService = this.appContext.services.notification;
+    if (notificationService) {
+      notificationService.newNotification(
+        NotificationType.SYSTEM_ERROR,
+        null,
+        `Verbindung verloren, versuche wieder zu verbinden... (Versuch ${this.reconnectAttempt}/${this.maxReconnectAttempts})`
+      );
+    }
+
     this.emit('reconnecting', this.reconnectAttempt);
 
     setTimeout(() => {
       if (this.shouldReconnect) {
+        // Reset state before attempting to connect
+        this.connectionState = ConnectionState.DISCONNECTED;
+
         this.connect().catch(error => {
           ExceptionHandler.handle(error, 'NetworkService.attemptReconnect');
+          // On error, try again
+          this.attemptReconnect();
         });
       }
-    }, delay);
+    }, this.reconnectIntervalMs);
   }
 
   /**
@@ -429,6 +483,26 @@ export class NetworkService {
     this.send(loginMessage);
 
     logger.info('Sent login message', { username: loginMessage.d!.username, worldId: loginMessage.d!.worldId });
+  }
+
+  /**
+   * Send login message with sessionId for session restoration
+   */
+  private sendLoginWithSession(sessionId: string): void {
+    const loginMessage: RequestMessage<LoginRequestData> = {
+      i: this.generateMessageId(),
+      t: MessageType.LOGIN,
+      d: {
+        sessionId,
+        worldId: this.appContext.config.worldId,
+        clientType: ClientType.WEB,
+      },
+    };
+
+    this.lastLoginMessage = loginMessage;
+    this.send(loginMessage);
+
+    logger.info('Sent login message with sessionId', { sessionId, worldId: loginMessage.d!.worldId });
   }
 
   /**
