@@ -23,6 +23,7 @@ import { StackName } from './ModifierService';
 import type { EntityPositionUpdateMessage, EntityPositionUpdateData, PlayerMovementStateChangedEvent } from '@nimbus/shared';
 import { EntityRenderService }  from "./EntityRenderService";
 import { NotificationType } from '../types/Notification';
+import type { StatusEffect } from '../types/StatusEffect';
 
 const logger = getLogger('PlayerService');
 
@@ -61,6 +62,10 @@ export class PlayerService {
   // Stack is created centrally in StackModifierCreator
   private playerViewModifier?: Modifier<boolean>;
   private underwaterViewModifier?: Modifier<boolean>;
+
+  // Status effects
+  private statusEffects: Map<string, StatusEffect> = new Map();
+  private effectTimers: Map<string, number> = new Map();
 
   /**
    * Get the view mode stack (ego vs third-person)
@@ -1164,12 +1169,127 @@ export class PlayerService {
     logger.debug('Shortcut activated event emitted', { shortcutKey, itemId });
   }
 
+  // ============================================
+  // Status Effects Management
+  // ============================================
+
+  /**
+   * Add a status effect to the player
+   *
+   * @param itemId Item ID that defines the effect
+   * @param duration Duration in milliseconds (optional, can also come from ItemData)
+   * @returns Generated effect ID
+   */
+  addStatusEffect(itemId: string, duration?: number): string {
+    // Generate unique ID
+    const effectId = `effect_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    const effect: StatusEffect = {
+      id: effectId,
+      itemId,
+      appliedAt: Date.now(),
+      duration,
+      expiresAt: duration ? Date.now() + duration : undefined,
+    };
+
+    this.statusEffects.set(effectId, effect);
+
+    // Set timer for auto-removal if duration specified
+    if (duration) {
+      const timer = window.setTimeout(() => {
+        this.removeStatusEffect(effectId);
+      }, duration);
+      this.effectTimers.set(effectId, timer);
+    }
+
+    // Emit event for UI update
+    this.emit('statusEffects:changed', Array.from(this.statusEffects.values()));
+
+    logger.info('Status effect added', { effectId, itemId, duration });
+    return effectId;
+  }
+
+  /**
+   * Remove a status effect
+   *
+   * @param effectId Effect ID to remove
+   * @returns True if effect was removed, false if not found
+   */
+  removeStatusEffect(effectId: string): boolean {
+    const effect = this.statusEffects.get(effectId);
+    if (!effect) {
+      return false;
+    }
+
+    // Clear timer if exists
+    const timer = this.effectTimers.get(effectId);
+    if (timer) {
+      clearTimeout(timer);
+      this.effectTimers.delete(effectId);
+    }
+
+    // Remove effect
+    this.statusEffects.delete(effectId);
+
+    // Emit event for UI update
+    this.emit('statusEffects:changed', Array.from(this.statusEffects.values()));
+
+    logger.info('Status effect removed', { effectId, itemId: effect.itemId });
+    return true;
+  }
+
+  /**
+   * Get all active status effects
+   *
+   * @returns Array of active status effects
+   */
+  getStatusEffects(): StatusEffect[] {
+    return Array.from(this.statusEffects.values());
+  }
+
+  /**
+   * Check if player has a specific effect
+   *
+   * @param itemId Item ID of the effect
+   * @returns True if player has this effect
+   */
+  hasStatusEffect(itemId: string): boolean {
+    for (const effect of this.statusEffects.values()) {
+      if (effect.itemId === itemId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Clear all status effects
+   */
+  clearAllStatusEffects(): void {
+    // Clear all timers
+    this.effectTimers.forEach((timer) => clearTimeout(timer));
+    this.effectTimers.clear();
+
+    // Clear effects
+    this.statusEffects.clear();
+
+    // Emit event for UI update
+    this.emit('statusEffects:changed', []);
+
+    logger.info('All status effects cleared');
+  }
+
   /**
    * Dispose player service
    */
   dispose(): void {
     // Stop position update sender
     this.stopPositionUpdateSender();
+
+    // Clear status effect timers
+    this.effectTimers.forEach((timer) => clearTimeout(timer));
+    this.effectTimers.clear();
+    this.statusEffects.clear();
 
     this.eventListeners.clear();
 

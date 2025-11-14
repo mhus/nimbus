@@ -76,6 +76,11 @@ export class NotificationService {
       this.highlightShortcut(shortcutKey);
     });
 
+    // Subscribe to status effects changes
+    playerService.on('statusEffects:changed', (effects: any[]) => {
+      this.updateStatusEffectsDisplay(effects);
+    });
+
     logger.debug('NotificationService event subscriptions initialized');
   }
 
@@ -437,6 +442,9 @@ export class NotificationService {
   private currentShortcutMode: typeof this.shortcutModes[number] = 'off';
   private shortcutContainer: HTMLElement | null = null;
 
+  /** Status effects display */
+  private statusEffectsContainer: HTMLElement | null = null;
+
   /**
    * Toggle shortcuts display
    *
@@ -734,6 +742,201 @@ export class NotificationService {
     });
   }
 
+  // ============================================
+  // Status Effects UI Display
+  // ============================================
+
+  /**
+   * Update status effects display
+   *
+   * @param effects Array of active status effects
+   */
+  private async updateStatusEffectsDisplay(effects: any[]): Promise<void> {
+    try {
+      // Remove existing display
+      if (this.statusEffectsContainer) {
+        this.statusEffectsContainer.remove();
+        this.statusEffectsContainer = null;
+      }
+
+      // If no effects, don't create display
+      if (effects.length === 0) {
+        return;
+      }
+
+      // Create status effects container (above shortcuts)
+      this.statusEffectsContainer = document.createElement('div');
+      this.statusEffectsContainer.id = 'status-effects-container';
+      this.statusEffectsContainer.style.cssText = `
+        position: fixed;
+        bottom: 130px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+        z-index: 900;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: white;
+      `;
+
+      // Create effect slots
+      for (const effect of effects) {
+        const slot = await this.createStatusEffectSlot(effect);
+        this.statusEffectsContainer.appendChild(slot);
+      }
+
+      document.body.appendChild(this.statusEffectsContainer);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.updateStatusEffectsDisplay');
+    }
+  }
+
+  /**
+   * Create status effect slot element
+   */
+  private async createStatusEffectSlot(effect: any): Promise<HTMLElement> {
+    const slot = document.createElement('div');
+    slot.style.cssText = `
+      width: 32px;
+      height: 32px;
+      background: rgba(139, 0, 0, 0.9);
+      border: 2px solid rgba(255, 0, 0, 0.5);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+    `;
+
+    // Load item and display texture
+    await this.loadStatusEffectItem(slot, effect);
+
+    // Add hover tooltip
+    this.addStatusEffectTooltip(slot, effect);
+
+    return slot;
+  }
+
+  /**
+   * Load item for status effect and display texture
+   */
+  private async loadStatusEffectItem(slot: HTMLElement, effect: any): Promise<void> {
+    try {
+      const itemService = this.appContext.services.item;
+      if (!itemService) {
+        logger.warn('ItemService not available');
+        return;
+      }
+
+      const itemId = effect.itemId;
+      if (!itemId) {
+        logger.debug('No itemId in effect', { effect });
+        return;
+      }
+
+      // Load item from server
+      const item = await itemService.getItem(itemId);
+      if (!item) {
+        logger.debug('Item not found', { itemId });
+        return;
+      }
+
+      // Get texture URL
+      const textureUrl = itemService.getTextureUrl(item);
+      if (!textureUrl) {
+        logger.debug('No texture for item', { itemId });
+        return;
+      }
+
+      // Create image element
+      const img = document.createElement('img');
+      img.src = textureUrl;
+      img.style.cssText = `
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+        image-rendering: pixelated;
+      `;
+      img.onerror = () => {
+        logger.warn('Failed to load effect texture', { textureUrl });
+      };
+
+      slot.appendChild(img);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.loadStatusEffectItem', { effect });
+    }
+  }
+
+  /**
+   * Add tooltip to status effect slot
+   */
+  private async addStatusEffectTooltip(slot: HTMLElement, effect: any): Promise<void> {
+    const itemService = this.appContext.services.item;
+    if (!itemService) return;
+
+    // Load ItemData for description
+    const itemData = await itemService.getItemData(effect.itemId);
+
+    let tooltip: HTMLElement | null = null;
+
+    slot.addEventListener('mouseenter', () => {
+      // Create tooltip
+      tooltip = document.createElement('div');
+      tooltip.style.cssText = `
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.95);
+        border: 1px solid rgba(255, 0, 0, 0.5);
+        border-radius: 4px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1000;
+      `;
+
+      // Add title (from ItemData or effect)
+      const title = document.createElement('div');
+      title.style.cssText = 'font-weight: bold; margin-bottom: 4px; color: rgba(255, 100, 100, 1);';
+      title.textContent = itemData?.block.metadata?.displayName || effect.itemId;
+      tooltip.appendChild(title);
+
+      // Add description if available
+      if (itemData?.description) {
+        const desc = document.createElement('div');
+        desc.style.cssText = 'font-size: 11px; color: rgba(255, 255, 255, 0.8); margin-bottom: 4px;';
+        desc.textContent = itemData.description;
+        tooltip.appendChild(desc);
+      }
+
+      // Add duration info if available
+      if (effect.expiresAt) {
+        const remaining = Math.max(0, effect.expiresAt - Date.now());
+        const duration = document.createElement('div');
+        duration.style.cssText = 'font-size: 10px; color: rgba(255, 200, 200, 0.8);';
+        duration.textContent = `${(remaining / 1000).toFixed(1)}s remaining`;
+        tooltip.appendChild(duration);
+      }
+
+      slot.appendChild(tooltip);
+    });
+
+    slot.addEventListener('mouseleave', () => {
+      if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+      }
+    });
+  }
+
   /**
    * Dispose service and clean up
    */
@@ -757,6 +960,12 @@ export class NotificationService {
       if (this.shortcutContainer) {
         this.shortcutContainer.remove();
         this.shortcutContainer = null;
+      }
+
+      // Remove status effects container
+      if (this.statusEffectsContainer) {
+        this.statusEffectsContainer.remove();
+        this.statusEffectsContainer = null;
       }
 
       logger.info('NotificationService disposed');

@@ -126,7 +126,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Wenn eine pose hinterlegt ist, wird diese aktiviert
 - im PlayerService die currentPose overrulen dieser pose, solange die aktion dauert (dauer ist auch im item duration hinterlegt)
 
-[ ] Player haben mehrere status effekte die gleichzeitig aktiv sein koennen.
+[x] Player haben mehrere status effekte die gleichzeitig aktiv sein koennen.
 - Erstelle im PlayerService eine Liste von Status Effekten, Status Effekte sind im hintergrund Items, d.h. sie haben eine Item definition und koennen vom ItemService abgerufen werden.
 - Erstelle in der engine ein command um Status Effekte hinzuzufuegen und zu entfernen.
 - Im NotificationService sllen genauso wie bei den shortcuts die aktiven status effekte angezeigt werden. Die Darstellung ist die gleiche wie bei den shortcuts, nur das die effekte horizontal ueber dem shortcut element angezeigt werden.
@@ -134,4 +134,30 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Sind keine Effekte aktiv, wird die StatusEffekte Leiste nicht angezeigt.
 - Bei hover werden die details des status effektes angezeigt (name, beschreibung, etc)
 - Status Effekte koennen eine dauer haben, nach der sie automatisch entfernt werden. Die Dauer ist im item in duration hinterlegt. Die verwaltung uebernimmt der PlayerService.
-- Kommt ein neuer effekt hinzu/geloescht wird ein event im PlayerService ausgelost, das der NotificationService abonniert und die darstellung aktualisiert.
+- Kommt ein neuer effekt hinzu/geloescht/update wird ein event im PlayerService ausgelost, das der NotificationService abonniert und die darstellung aktualisiert.
+
+[ ] Player haben mehrere vitals (z.b. hunger, durst, stamina, leben, mana, etc)
+- Erstelle in shared ein VitalsData type, er hat folgende felder:
+  - type: string (z.b. hunger, durst, stamina, leben, mana, etc)
+  - current: number
+  - max: number
+  - extended: number (optional, kommt auf max drauf)
+  - extendExpiry: number (timestamp, optional, wann die erweiterung ablaeuft, dann wird die auf 0 gestellt)
+  - regenRate: number (pro sekunde)
+  - degenRate: number (pro sekunde)
+  - color: string (hex color code fuer die anzeige im UI)
+  - name: string (display name des vitals)
+  - order: number (reihenfolge der anzeige im UI)
+- Erstelle im PlayerService eine liste von VitalsData, key=type
+- Erstelle im NotificationService eine UI darstellung der vitals
+  - Die vitals werden vertikal am rechten bildschirmrand angezeigt
+  - Jedes vital hat eine leiste, die den aktuellen wert anzeigt (current/max+extended)
+  - Jedes vital ist eine horizontale leiste mit einer hoehe von 10px und einer breite von 200px bei extend wird die höhe auf den % wert der max in px erhoeht, maximal 50px - somit ist eine leise maximal 250px hoch
+  - Die farbe der leiste wird aus dem color feld genommen
+  - Die vitals werden nach order sortiert angezeigt
+  - Bei hover werden die details des vitals angezeigt (name, current, max, extended, regenRate, degenRate)
+  - Es gibt einen showVitals parameter im NotificationService, der die anzeige ein und ausschaltet, by default ist das on
+  - Vitals werden dennoch angezeigt, wenn der current wert kleiner als max ist. d.h. wenn 'voll', werden die vitals nicht angezeigt
+  - Die psoition der vitals bleibt beim ausblenden gleich, damit sich die anderen vitals nicht verschieben
+- Erstelle ein command im server showVitals()
+- Erstelle ein command im server um vitals zu updaten (add, remove, update)
