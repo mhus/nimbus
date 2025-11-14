@@ -23,18 +23,17 @@
 - Erweitere das auch fuer TextureEditor (bisher nur png, jpg).
 - Erweitere das auch fuer ModelEditor (bisher nur glb, gltf, babylon).
 
-[ ] Erstelle einen AudioService der im AppContext registriert wird. Er ist dafuer zuständig AudioDateien zu laden, cachen und teilweise zum abzuspielen.
+[?] Erstelle einen AudioService der im AppContext registriert wird. Er ist dafuer zuständig AudioDateien zu laden, cachen und teilweise zum abzuspielen.
 - Er benutzt den NetworkService um audio dateien zu laden (getAssetUrl()).
 - Die Dateien werden als BABYLON.Sound Objekte geladen und gecached und zurueckgegeben.abgespielt werden.
 
 ## Integration in die App
 
 [ ] Wenn an einem Block audio dateien an einem Block sind, sollen diese beim erstellen des Chunks im ChunkService vom AudioService geladen und
-an den Block gebunden werden. In ClientBlock wird ein neues feld mit allen Audio Objekten hinzugefuegt. Dabei wird in einer 
-Struktur gespeichert um welchen Typ es sich handelt (steps, etc).
+an den Block vermerkt werden. In ClientBlock wird ein neues feld 'auioSteps' mit allen Audio Objekten vom typ 'steps' hinzugefuegt. Dabei wird in einer 
+Struktur gespeichert referenz auf AudioDefinition und auf den BABYLON.Sound.
 
 [ ] Im PhysicService wird beim bewegen des Spielers ein event 'onStepOver' ausgelöst, AUF welchem block (ClientBlock)) sich 
 der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen, springen, etc) und der id der entity.
-- Im SoundService wird das event gefangen und geprueft ob der ClientBlock Audio dateien des types 'steps' hat.
-- Falls ja, wird eine zufaellige audio datei aus der liste der 'steps' audio dateien abgespielt.
-- Die Lautstaerke wird dabei auf die eingestellte Lautstaerke im AudioModifier skaliert.
+- Im SoundService wird das event gefangen und geprueft ob der ClientBlock Audio dateien in audioSteps hat.
+- Falls ja, wird eine zufaellige audio datei aus der liste der 'audioSteps' audio dateien abgespielt. - Am punkt des Blocks, spacial und mit dem volumen das in der AudioDefinition definiert ist.

@@ -17,6 +17,7 @@ import type { AppContext } from './AppContext';
 import { NetworkService } from './services/NetworkService';
 import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
+import { AudioService } from './services/AudioService';
 import { SpriteService } from './services/SpriteService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
@@ -258,6 +259,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.info('Initializing ShaderService...');
     const shaderService = new ShaderService(appContext);
     appContext.services.shader = shaderService;
+
+    // Initialize AudioService
+    logger.info('Initializing AudioService...');
+    const audioService = new AudioService(appContext);
+    appContext.services.audio = audioService;
 
     // Initialize ChunkService
     logger.info('Initializing ChunkService...');

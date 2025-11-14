@@ -142,6 +142,13 @@ export class EngineService {
         logger.debug('MaterialService connected to ShaderService');
       }
 
+      // Initialize AudioService with scene
+      const audioService = this.appContext.services.audio;
+      if (audioService) {
+        audioService.initialize(this.scene);
+        logger.debug('AudioService initialized with scene');
+      }
+
       // Initialize SpriteService with scene and connect to EnvironmentService
       const spriteService = new (await import('./SpriteService')).SpriteService(this.scene, this.appContext);
       this.appContext.services.sprite = spriteService;
