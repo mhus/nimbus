@@ -499,7 +499,7 @@ export function createWorldRoutes(
     return res.json({ success: true, selectedEditBlock: position });
   });
 
-  // GET /api/worlds/:id/item/:itemId - Get item by ID
+  // GET /api/worlds/:id/item/:itemId - Get item by ID (Block only)
   router.get('/:id/item/:itemId', (req, res) => {
     const world = worldManager.getWorld(req.params.id);
     if (!world) {
@@ -515,6 +515,24 @@ export function createWorldRoutes(
 
     // Return only the block (not the full ItemData with parameters)
     return res.json(itemBlock);
+  });
+
+  // GET /api/worlds/:id/itemdata/:itemId - Get full ItemData by ID
+  router.get('/:id/itemdata/:itemId', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const itemId = req.params.itemId;
+    const itemData = world.itemRegistry.getItemDataById(itemId);
+
+    if (!itemData) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    // Return full ItemData (including pose, wait, duration, description, parameters)
+    return res.json(itemData);
   });
 
   return router;

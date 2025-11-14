@@ -55,6 +55,9 @@ export enum StackName {
   /** Player movement state: WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING */
   PLAYER_MOVEMENT_STATE = 'playerMovementState',
 
+  /** Player pose: Animation/pose to display (e.g., 'idle', 'walk', 'attack', 'use') */
+  PLAYER_POSE = 'playerPose',
+
   // Weitere Stacks hier hinzufügen
 }
 

@@ -130,6 +130,8 @@ export class ClickInputHandler extends InputHandler {
         // Trigger highlight animation in UI (only for clicks 0-9)
         if (buttonNumber >= 0 && buttonNumber <= 9) {
           this.playerService.highlightShortcut(shortcutKey);
+          // Emit activation event for ItemService (pose handling)
+          this.playerService.emitShortcutActivated(shortcutKey, shortcutItemId);
         }
 
         return;
@@ -180,6 +182,8 @@ export class ClickInputHandler extends InputHandler {
         // Trigger highlight animation in UI (only for clicks 0-9)
         if (buttonNumber >= 0 && buttonNumber <= 9) {
           this.playerService.highlightShortcut(shortcutKey);
+          // Emit activation event for ItemService (pose handling)
+          this.playerService.emitShortcutActivated(shortcutKey, shortcutItemId);
         }
       }
     } catch (error) {

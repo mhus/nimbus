@@ -411,68 +411,90 @@ export class PlayerService {
   /**
    * Calculate current player pose based on movement state
    * Uses hysteresis to prevent flickering between poses
-   * @returns ENTITY_POSES enum value
+   * Updates PLAYER_POSE stack with calculated value (priority 100 = default)
+   * @returns ENTITY_POSES enum value from stack (allows higher-priority overrides)
    */
   private calculateCurrentPose(): number {
     const movementState = this.currentMovementState;
 
+    // Calculate base pose
+    let basePose: number;
+
     // High-priority states override everything (JUMP, FALL)
     if (movementState === PlayerMovementState.JUMP) {
-      return ENTITY_POSES.JUMP;
-    }
-    if (movementState === PlayerMovementState.FALL) {
-      return ENTITY_POSES.JUMP; // TODO: Create FALL pose or keep as JUMP
-    }
+      basePose = ENTITY_POSES.JUMP;
+    } else if (movementState === PlayerMovementState.FALL) {
+      basePose = ENTITY_POSES.JUMP; // TODO: Create FALL pose or keep as JUMP
+    } else {
+      // Check if moving (with hysteresis to prevent flickering)
+      const velocity = this.playerEntity.velocity;
+      const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
-    // Check if moving (with hysteresis to prevent flickering)
-    const velocity = this.playerEntity.velocity;
-    const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+      // Hysteresis thresholds
+      const startMovingThreshold = 0.2; // Must reach this speed to start "moving"
+      const stopMovingThreshold = 0.05; // Must drop below this to stop "moving"
 
-    // Hysteresis thresholds
-    const startMovingThreshold = 0.2; // Must reach this speed to start "moving"
-    const stopMovingThreshold = 0.05; // Must drop below this to stop "moving"
+      // Update movement state with hysteresis
+      if (!this.isMoving && speed > startMovingThreshold) {
+        this.isMoving = true;
+        this.lastMovementTime = Date.now();
+      } else if (this.isMoving && speed < stopMovingThreshold) {
+        this.isMoving = false;
+      }
 
-    // Update movement state with hysteresis
-    if (!this.isMoving && speed > startMovingThreshold) {
-      this.isMoving = true;
-      this.lastMovementTime = Date.now();
-    } else if (this.isMoving && speed < stopMovingThreshold) {
-      this.isMoving = false;
-    }
+      // Update last movement time if still moving
+      if (this.isMoving) {
+        this.lastMovementTime = Date.now();
+      }
 
-    // Update last movement time if still moving
-    if (this.isMoving) {
-      this.lastMovementTime = Date.now();
-    }
-
-    // Determine pose based on movement state (only when actually moving)
-    if (this.isMoving) {
-      switch (movementState) {
-        case PlayerMovementState.SPRINT:
-          return ENTITY_POSES.RUN;
-        case PlayerMovementState.CROUCH:
-          return ENTITY_POSES.CROUCH;
-        case PlayerMovementState.FLY:
-          return ENTITY_POSES.FLY;
-        case PlayerMovementState.SWIM:
-          return ENTITY_POSES.SWIM;
-        case PlayerMovementState.RIDING:
-          return ENTITY_POSES.WALK; // TODO: Create RIDING pose
-        case PlayerMovementState.WALK:
-        default:
-          return ENTITY_POSES.WALK;
+      // Determine pose based on movement state (only when actually moving)
+      if (this.isMoving) {
+        switch (movementState) {
+          case PlayerMovementState.SPRINT:
+            basePose = ENTITY_POSES.RUN;
+            break;
+          case PlayerMovementState.CROUCH:
+            basePose = ENTITY_POSES.CROUCH;
+            break;
+          case PlayerMovementState.FLY:
+            basePose = ENTITY_POSES.FLY;
+            break;
+          case PlayerMovementState.SWIM:
+            basePose = ENTITY_POSES.SWIM;
+            break;
+          case PlayerMovementState.RIDING:
+            basePose = ENTITY_POSES.WALK; // TODO: Create RIDING pose
+            break;
+          case PlayerMovementState.WALK:
+          default:
+            basePose = ENTITY_POSES.WALK;
+            break;
+        }
+      } else {
+        // Player is not moving - check idle timer
+        const timeSinceMovement = Date.now() - this.lastMovementTime;
+        if (timeSinceMovement < this.idleDelay) {
+          // Still in movement pose for a bit (smooth transition to idle)
+          basePose = ENTITY_POSES.WALK;
+        } else {
+          // Player is idle
+          basePose = ENTITY_POSES.IDLE;
+        }
       }
     }
 
-    // Player is not moving - check idle timer
-    const timeSinceMovement = Date.now() - this.lastMovementTime;
-    if (timeSinceMovement < this.idleDelay) {
-      // Still in movement pose for a bit (smooth transition to idle)
-      return ENTITY_POSES.WALK;
+    // Update PLAYER_POSE stack with calculated base pose (priority 100 = default/lowest)
+    const poseStack = this.appContext.services.modifier?.getModifierStack<number>(StackName.PLAYER_POSE);
+    if (poseStack) {
+      // Update default modifier value (always exists)
+      poseStack.getDefaultModifier().setValue(basePose);
+
+      // Return effective value from stack (may be overridden by higher priority)
+      return poseStack.getValue();
     }
 
-    // Player is idle
-    return ENTITY_POSES.IDLE;
+    // Fallback if stack not available
+    return basePose;
   }
 
   /**
@@ -1127,6 +1149,19 @@ export class PlayerService {
   highlightShortcut(shortcutKey: string): void {
     this.emit('shortcut:highlight', shortcutKey);
     logger.debug('Shortcut highlight requested', { shortcutKey });
+  }
+
+  /**
+   * Emit shortcut activation event
+   *
+   * Emits 'shortcut:activated' event for ItemService to handle pose activation.
+   *
+   * @param shortcutKey Shortcut key (e.g., 'key1', 'click2')
+   * @param itemId Item ID from shortcut definition
+   */
+  emitShortcutActivated(shortcutKey: string, itemId?: string): void {
+    this.emit('shortcut:activated', { shortcutKey, itemId });
+    logger.debug('Shortcut activated event emitted', { shortcutKey, itemId });
   }
 
   /**

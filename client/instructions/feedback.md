@@ -122,11 +122,16 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Erstelle einen key shortcut auf 'T' um das UI element ein und auszublenden bzw zu rotieren keys, clicks, slots0, slots10, aus - wobei die slots nur angezeigt werden, wenn welche in diesem range definiert sind.
 - Es reicht wenn der Shortcut im NotificationService ein toggleShowShortcuts() oder aehnlich aufruft und der NotificationService macht die darstellung 
 
-[ ] Im ItemService sollen die events fuer shortcuts abgefangen werden und die hinterlegte pose aktiviert werden.
+[?] Im ItemService sollen die events fuer shortcuts abgefangen werden und die hinterlegte pose aktiviert werden.
 - Wenn eine pose hinterlegt ist, wird diese aktiviert
 - im PlayerService die currentPose overrulen dieser pose, solange die aktion dauert (dauer ist auch im item duration hinterlegt)
 
-
-
-
-
+[ ] Player haben mehrere status effekte die gleichzeitig aktiv sein koennen.
+- Erstelle im PlayerService eine Liste von Status Effekten, Status Effekte sind im hintergrund Items, d.h. sie haben eine Item definition und koennen vom ItemService abgerufen werden.
+- Erstelle in der engine ein command um Status Effekte hinzuzufuegen und zu entfernen.
+- Im NotificationService sllen genauso wie bei den shortcuts die aktiven status effekte angezeigt werden. Die Darstellung ist die gleiche wie bei den shortcuts, nur das die effekte horizontal ueber dem shortcut element angezeigt werden.
+- Dier Hintergrund von status effekten ist dunkelrot. Es werden nur die angezeigt, die aktiv sind. (nicht 10 wie bei shortcuts)
+- Sind keine Effekte aktiv, wird die StatusEffekte Leiste nicht angezeigt.
+- Bei hover werden die details des status effektes angezeigt (name, beschreibung, etc)
+- Status Effekte koennen eine dauer haben, nach der sie automatisch entfernt werden. Die Dauer ist im item in duration hinterlegt. Die verwaltung uebernimmt der PlayerService.
+- Kommt ein neuer effekt hinzu/geloescht wird ein event im PlayerService ausgelost, das der NotificationService abonniert und die darstellung aktualisiert.

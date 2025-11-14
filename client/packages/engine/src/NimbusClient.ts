@@ -320,6 +320,12 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
       notifService.initializeEventSubscriptions();
     }
 
+    // Initialize ItemService event subscriptions (now that PlayerService exists)
+    const itmService = appContext.services.item;
+    if (itmService) {
+      itmService.initializeEventSubscriptions();
+    }
+
     // Start render loop
     engineService.startRenderLoop();
     logger.info('Render loop started');

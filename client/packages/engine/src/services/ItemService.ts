@@ -3,11 +3,14 @@
  *
  * Provides access to item data including textures for UI display.
  * Items are loaded from the server REST API and cached locally.
+ *
+ * Also handles item activation (pose, wait, duration) when shortcuts are triggered.
  */
 
-import type { Block } from '@nimbus/shared';
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import type { Block, ItemData } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, ENTITY_POSES } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import { StackName } from './ModifierService';
 
 const logger = getLogger('ItemService');
 
@@ -18,11 +21,36 @@ export class ItemService {
   /** Cache of loaded items: itemId -> Block */
   private itemCache: Map<string, Block> = new Map();
 
+  /** Cache of loaded ItemData: itemId -> ItemData */
+  private itemDataCache: Map<string, ItemData> = new Map();
+
   /** Pending requests to avoid duplicate fetches */
   private pendingRequests: Map<string, Promise<Block | null>> = new Map();
 
+  /** Active pose timers (for duration cleanup) */
+  private poseTimers: Map<string, number> = new Map();
+
   constructor(private appContext: AppContext) {
     logger.info('ItemService initialized');
+  }
+
+  /**
+   * Initialize event subscriptions
+   * Called after PlayerService is available
+   */
+  initializeEventSubscriptions(): void {
+    const playerService = this.appContext.services.player;
+    if (!playerService) {
+      logger.warn('PlayerService not available for event subscriptions');
+      return;
+    }
+
+    // Subscribe to shortcut activation events
+    playerService.on('shortcut:activated', (data: { shortcutKey: string; itemId?: string }) => {
+      this.handleShortcutActivation(data.shortcutKey, data.itemId);
+    });
+
+    logger.debug('ItemService event subscriptions initialized');
   }
 
   /**
@@ -166,10 +194,147 @@ export class ItemService {
   }
 
   /**
+   * Get ItemData by ID (includes pose, wait, duration, description, parameters)
+   *
+   * @param itemId Item ID
+   * @returns ItemData or null if not found
+   */
+  async getItemData(itemId: string): Promise<ItemData | null> {
+    try {
+      // Check cache first
+      if (this.itemDataCache.has(itemId)) {
+        return this.itemDataCache.get(itemId)!;
+      }
+
+      // Fetch ItemData from server (full data endpoint)
+      const worldId = this.appContext.worldInfo?.worldId;
+      if (!worldId) {
+        logger.warn('Cannot fetch ItemData: no worldId', { itemId });
+        return null;
+      }
+
+      const apiUrl = this.appContext.config.apiUrl;
+      const url = `${apiUrl}/worlds/${worldId}/itemdata/${itemId}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) {
+          logger.debug('ItemData not found', { itemId });
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const itemData: ItemData = await response.json();
+      this.itemDataCache.set(itemId, itemData);
+
+      // Also cache the block
+      this.itemCache.set(itemId, itemData.block);
+
+      return itemData;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ItemService.getItemData', { itemId });
+      return null;
+    }
+  }
+
+  /**
+   * Handle shortcut activation
+   *
+   * Loads item data and activates pose with wait/duration timing.
+   *
+   * @param shortcutKey Shortcut key that was activated
+   * @param itemId Item ID from shortcut
+   */
+  private async handleShortcutActivation(shortcutKey: string, itemId?: string): Promise<void> {
+    try {
+      if (!itemId) {
+        logger.debug('No itemId for shortcut activation', { shortcutKey });
+        return;
+      }
+
+      // Load ItemData (includes pose, wait, duration)
+      const itemData = await this.getItemData(itemId);
+      if (!itemData) {
+        logger.warn('ItemData not found for shortcut', { shortcutKey, itemId });
+        return;
+      }
+
+      const { pose, wait, duration } = itemData;
+
+      // If no pose defined, nothing to do
+      if (!pose) {
+        logger.debug('No pose defined for item', { itemId });
+        return;
+      }
+
+      // Get pose ID from ENTITY_POSES
+      const poseId = (ENTITY_POSES as any)[pose.toUpperCase()];
+      if (poseId === undefined) {
+        logger.warn('Unknown pose', { pose, itemId });
+        return;
+      }
+
+      // Apply wait delay if specified
+      const waitMs = wait || 0;
+      if (waitMs > 0) {
+        logger.debug('Waiting before pose activation', { waitMs, pose, itemId });
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      }
+
+      // Activate pose with priority 10 (overrides idle=100, but not calculated movement poses)
+      this.activatePose(poseId, duration || 1000, itemId);
+
+      logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId, duration });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation', { shortcutKey, itemId });
+    }
+  }
+
+  /**
+   * Activate a pose for a specific duration
+   *
+   * @param poseId Pose ID from ENTITY_POSES
+   * @param durationMs Duration in milliseconds
+   * @param modifierId Unique ID for this modifier
+   */
+  private activatePose(poseId: number, durationMs: number, modifierId: string): void {
+    const poseStack = this.appContext.services.modifier?.getModifierStack<number>(StackName.PLAYER_POSE);
+    if (!poseStack) {
+      logger.warn('PLAYER_POSE stack not available');
+      return;
+    }
+
+    // Clear existing timer for this modifier if any
+    const existingTimer = this.poseTimers.get(modifierId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.poseTimers.delete(modifierId);
+    }
+
+    // Add modifier with priority 10 (higher than default, overrides idle)
+    const modifier = poseStack.addModifier(poseId, 10);
+
+    // Set timer to remove modifier after duration
+    const timer = window.setTimeout(() => {
+      modifier.close();
+      this.poseTimers.delete(modifierId);
+      logger.debug('Pose duration expired', { modifierId, durationMs });
+    }, durationMs);
+
+    this.poseTimers.set(modifierId, timer);
+  }
+
+  /**
    * Dispose service
    */
   dispose(): void {
+    // Clear all pose timers
+    this.poseTimers.forEach((timer) => clearTimeout(timer));
+    this.poseTimers.clear();
+
     this.itemCache.clear();
+    this.itemDataCache.clear();
     this.pendingRequests.clear();
     logger.info('ItemService disposed');
   }

@@ -69,6 +69,18 @@ export function createAllStackModifiers(appContext: AppContext): void {
   );
 
   // ========================================
+  // Player Pose Stack
+  // ========================================
+  modifierService.createModifierStack<string>(
+    StackName.PLAYER_POSE,
+    'idle', // Default: idle pose
+    (newPose: string) => {
+      // Callback when pose changes (optional notification/logging)
+      logger.debug('Player pose changed', { pose: newPose });
+    }
+  );
+
+  // ========================================
   // Weitere Stacks hier hinzufügen
   // ========================================
 

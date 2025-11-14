@@ -83,12 +83,16 @@ export class NotificationService {
    * Highlight a shortcut slot
    *
    * Switches to the appropriate mode if needed and briefly highlights the slot.
+   * If shortcuts were not visible before, they are hidden again after highlighting.
    * Example: highlightShortcut('click1') switches to 'clicks' mode and highlights click1
    *
    * @param shortcutKey Shortcut key (e.g., 'key1', 'click2', 'slot5')
    */
   private highlightShortcut(shortcutKey: string): void {
     try {
+      // Remember if shortcuts were visible before
+      const wasVisible = this.currentShortcutMode !== 'off';
+
       // Determine which mode this shortcut belongs to
       let targetMode: typeof this.shortcutModes[number] = 'off';
 
@@ -108,13 +112,21 @@ export class NotificationService {
         this.currentShortcutMode = targetMode;
         this.updateShortcutDisplay().then(() => {
           this.highlightSlotElement(shortcutKey);
+
+          // If was not visible, hide again after highlight duration (1.5s)
+          if (!wasVisible) {
+            setTimeout(() => {
+              this.currentShortcutMode = 'off';
+              this.updateShortcutDisplay();
+            }, 1500);
+          }
         });
       } else {
         // Already showing correct mode, just highlight
         this.highlightSlotElement(shortcutKey);
       }
 
-      logger.debug('Shortcut highlighted', { shortcutKey, mode: targetMode });
+      logger.debug('Shortcut highlighted', { shortcutKey, mode: targetMode, wasVisible });
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.highlightShortcut', { shortcutKey });
     }
