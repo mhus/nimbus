@@ -37,6 +37,11 @@
       "animationName": "CharacterArmature|Idle",
       "speedMultiplier": 1.0,
       "loop": false
+    },
+    "DEAD": {
+      "animationName": "CharacterArmature|Dead",
+      "speedMultiplier": 1.0,
+      "loop": false
     }
   },
   "poseType": "animation",

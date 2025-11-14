@@ -96,6 +96,13 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
 
       if (isReconnect) {
         logger.info('Session restored after reconnect');
+
+        // Clear DEAD mode after successful reconnect
+        const playerService = this.appContext.services.player;
+        if (playerService) {
+          playerService.setPlayerDeadState(false);
+        }
+
         // Emit session:restore event for services to restore their state
         this.networkService.emit('session:restore', successData);
       }

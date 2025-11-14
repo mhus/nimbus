@@ -391,6 +391,12 @@ export class NetworkService {
 
     this.emit('disconnected');
 
+    // Set DEAD mode when disconnected
+    const playerService = this.appContext.services.player;
+    if (playerService && wasConnected) {
+      playerService.setPlayerDeadState(true);
+    }
+
     // Attempt reconnection
     if (this.shouldReconnect && wasConnected) {
       this.attemptReconnect();

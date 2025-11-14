@@ -49,6 +49,7 @@ export class InputService {
   private controller?: InputController;
   private handlers: InputHandler[] = [];
   private handlerRegistry: Map<string, InputHandler> = new Map();
+  private inputEnabled: boolean = true; // Input enabled by default
 
   constructor(appContext: AppContext, playerService: PlayerService) {
     this.appContext = appContext;
@@ -56,6 +57,12 @@ export class InputService {
 
     // Register central handlers that can be used by any controller
     this.registerCentralHandlers();
+
+    // Listen for DEAD mode changes
+    this.playerService.on('player:deadStateChanged', (isDead: boolean) => {
+      this.inputEnabled = !isDead;
+      logger.info('Input enabled state changed', { enabled: this.inputEnabled });
+    });
 
     logger.info('InputService initialized');
   }
@@ -113,6 +120,11 @@ export class InputService {
    * @param deltaTime Time since last frame in seconds
    */
   update(deltaTime: number): void {
+    // Skip input handling if disabled (DEAD mode)
+    if (!this.inputEnabled) {
+      return;
+    }
+
     try {
       for (const handler of this.handlers) {
         handler.update(deltaTime);

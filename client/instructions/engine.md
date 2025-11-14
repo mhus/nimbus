@@ -339,7 +339,7 @@ Falls der Reconnect nicht funktioniert, dann spring auf die URL 'exitUrl' die im
  - Reconnect versuchen alle 5 Sekunden bis zu 5 mal.
  - Nach 5 fehlgeschlagenen versuchen, springe auf exitUrl
 
-[ ] Ich brauche einen neuen Modus der Bei disconnected und auch bei Death greift.
+[?] Ich brauche einen neuen Modus der Bei disconnected und auch bei Death greift.
 Der Modus heisst DEAD.
 - Im DEAD modus ist Physics deaktiviert.
 - Im DEAD modus ist die Cam unterwasser aktiviert.
@@ -348,3 +348,7 @@ Der Modus heisst DEAD.
 - Bei disconnect wird der DEAD modus gesetzt.
 - Bei reconnect wird der DEAD modus wieder deaktiviert.
 - Erstelle ein Command 'setPlayerDeadState(isDead: boolean)' im PlayerService um den modus zu setzen.
+- Die Posse DEAD wird ausgefuehrt, bei reconnect wird wieder auf IDLE gestellt 
+
+[ ] Beim stoppen des test_servers (Ctrl+C) soll gewartet werden bis alle chunks und items geschrieben wurden. So sollen currupt files vermieden werden.
+

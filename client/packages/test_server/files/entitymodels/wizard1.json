@@ -52,6 +52,11 @@
       "animationName": "CharacterArmature|Idle_Weapon",
       "speedMultiplier": 1.0,
       "loop": false
+    },
+    "DEAD": {
+      "animationName": "CharacterArmature|Dead",
+      "speedMultiplier": 1.0,
+      "loop": false
     }
   },
   "poseType": "animation",

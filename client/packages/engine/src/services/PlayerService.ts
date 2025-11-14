@@ -72,6 +72,9 @@ export class PlayerService {
   private vitalsUpdateInterval?: number;
   private lastVitalsUpdate: number = Date.now();
 
+  // DEAD mode state (active on disconnect or death)
+  private isDead: boolean = false;
+
   /**
    * Get the view mode stack (ego vs third-person)
    * Stack is created centrally in StackModifierCreator
@@ -567,6 +570,76 @@ export class PlayerService {
   getMoveSpeed(): number {
     if (!this.physicsService) return 5.0;
     return this.physicsService.getMoveSpeed(this.playerEntity);
+  }
+
+  /**
+   * Set DEAD mode state
+   *
+   * When DEAD mode is active:
+   * - Physics is disabled
+   * - Underwater camera effect is enabled
+   * - Input is disabled (handled by InputService)
+   * - DEAD pose is set via PLAYER_POSE stack
+   *
+   * @param isDead Whether player is in DEAD mode
+   */
+  setPlayerDeadState(isDead: boolean): void {
+    if (this.isDead === isDead) {
+      return; // No change
+    }
+
+    this.isDead = isDead;
+
+    logger.info('Player DEAD mode changed', { isDead });
+
+    const poseStack = this.appContext.services.modifier?.getModifierStack<number>(StackName.PLAYER_POSE);
+
+    if (isDead) {
+      // Enter DEAD mode
+
+      // Disable physics
+      if (this.physicsService) {
+        this.physicsService.disablePhysics();
+      }
+
+      // Enable underwater camera effect
+      if (this.underwaterViewModifier) {
+        this.underwaterViewModifier.setEnabled(true);
+      }
+
+      // Set DEAD pose via stack (high priority so it overrides everything)
+      if (poseStack) {
+        poseStack.getDefaultModifier().setValue(ENTITY_POSES.DEATH);
+      }
+
+    } else {
+      // Exit DEAD mode
+
+      // Re-enable physics
+      if (this.physicsService) {
+        this.physicsService.enablePhysics();
+      }
+
+      // Disable underwater camera effect
+      if (this.underwaterViewModifier) {
+        this.underwaterViewModifier.setEnabled(false);
+      }
+
+      // Set IDLE pose via stack (will be overridden by normal pose calculation)
+      if (poseStack) {
+        poseStack.getDefaultModifier().setValue(ENTITY_POSES.IDLE);
+      }
+    }
+
+    // Emit event for other services (e.g., InputService)
+    this.emit('player:deadStateChanged', isDead);
+  }
+
+  /**
+   * Check if player is in DEAD mode
+   */
+  isPlayerDead(): boolean {
+    return this.isDead;
   }
 
   /**
