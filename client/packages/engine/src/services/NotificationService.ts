@@ -454,6 +454,9 @@ export class NotificationService {
   private vitalsContainer: HTMLElement | null = null;
   private showVitals: boolean = true; // Default: on
 
+  /** Center text display */
+  private centerTextElement: HTMLElement | null = null;
+
   /**
    * Get current shortcut mode
    *
@@ -1256,6 +1259,12 @@ export class NotificationService {
         this.vitalsContainer = null;
       }
 
+      // Remove center text element
+      if (this.centerTextElement) {
+        this.centerTextElement.remove();
+        this.centerTextElement = null;
+      }
+
       logger.info('NotificationService disposed');
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.dispose');
@@ -1309,19 +1318,21 @@ export class NotificationService {
       // Create image element
       const img = document.createElement('img');
       img.src = imageUrl;
-      img.style.maxHeight = '0%'; // Start small
-      img.style.maxWidth = '100%';
+      img.style.height = '0%'; // Start small
+      img.style.width = 'auto';
+      img.style.maxWidth = '100vw';
+      img.style.maxHeight = '100vh';
       img.style.objectFit = 'contain';
       img.style.opacity = opacity.toString();
-      img.style.transition = `max-height ${duration}ms ease-out`;
+      img.style.transition = `height ${duration}ms ease-out`;
 
       flashContainer.appendChild(img);
       document.body.appendChild(flashContainer);
 
       // Start animation after a brief delay (to ensure transition triggers)
       setTimeout(() => {
-        img.style.maxHeight = '100vh'; // Scale to full screen height
-      }, 10);
+        img.style.height = '100vh'; // Scale to full screen height
+      }, 50);
 
       // Remove after animation completes
       setTimeout(() => {
@@ -1336,6 +1347,70 @@ export class NotificationService {
         duration,
         opacity,
       });
+    }
+  }
+
+  /**
+   * Set center text (permanent display until cleared)
+   *
+   * Displays text in the center of the screen with white color and black shadow.
+   * Text remains visible until cleared with clearCenterText() or setCenterText('').
+   *
+   * @param text Text to display (empty string to clear)
+   */
+  setCenterText(text: string): void {
+    try {
+      // If empty text, clear instead
+      if (!text || text.trim() === '') {
+        this.clearCenterText();
+        return;
+      }
+
+      // Create center text element if not exists
+      if (!this.centerTextElement) {
+        this.centerTextElement = document.createElement('div');
+        this.centerTextElement.style.position = 'fixed';
+        this.centerTextElement.style.top = '50%';
+        this.centerTextElement.style.left = '50%';
+        this.centerTextElement.style.transform = 'translate(-50%, -50%)';
+        this.centerTextElement.style.color = 'white';
+        this.centerTextElement.style.fontSize = '32px';
+        this.centerTextElement.style.fontWeight = 'bold';
+        this.centerTextElement.style.textAlign = 'center';
+        this.centerTextElement.style.textShadow = '2px 2px 4px black, -2px -2px 4px black, 2px -2px 4px black, -2px 2px 4px black';
+        this.centerTextElement.style.pointerEvents = 'none';
+        this.centerTextElement.style.zIndex = '10000';
+        this.centerTextElement.style.padding = '20px';
+        this.centerTextElement.style.maxWidth = '80vw';
+        this.centerTextElement.style.wordWrap = 'break-word';
+
+        document.body.appendChild(this.centerTextElement);
+
+        logger.debug('Center text element created');
+      }
+
+      // Update text content
+      this.centerTextElement.textContent = text;
+      this.centerTextElement.style.display = 'block';
+
+      logger.info('Center text set', { text });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.setCenterText', { text });
+    }
+  }
+
+  /**
+   * Clear center text
+   */
+  clearCenterText(): void {
+    try {
+      if (this.centerTextElement) {
+        this.centerTextElement.style.display = 'none';
+        this.centerTextElement.textContent = '';
+        logger.info('Center text cleared');
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.clearCenterText');
     }
   }
 }

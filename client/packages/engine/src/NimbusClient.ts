@@ -54,6 +54,7 @@ import { WireframeCommand } from './commands/WireframeCommand';
 import { UnderwaterCommand } from './commands/UnderwaterCommand';
 import { FogCommand } from './commands/FogCommand';
 import { FlashImageCommand } from './commands/FlashImageCommand';
+import { CenterTextCommand } from './commands/CenterTextCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
@@ -154,6 +155,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new UnderwaterCommand(appContext));
     commandService.registerHandler(new FogCommand(appContext));
     commandService.registerHandler(new FlashImageCommand(appContext));
+    commandService.registerHandler(new CenterTextCommand(appContext));
     commandService.registerHandler(new LogLevelCommand());
     commandService.registerHandler(new BlockInfoCommand(appContext));
     commandService.registerHandler(new BlockTypeInfoCommand(appContext));
