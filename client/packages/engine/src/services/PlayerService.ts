@@ -22,6 +22,7 @@ import type { ModifierStack, Modifier } from './ModifierService';
 import { StackName } from './ModifierService';
 import type { EntityPositionUpdateMessage, EntityPositionUpdateData, PlayerMovementStateChangedEvent } from '@nimbus/shared';
 import { EntityRenderService }  from "./EntityRenderService";
+import { NotificationType } from '../types/Notification';
 
 const logger = getLogger('PlayerService');
 
@@ -762,7 +763,7 @@ export class PlayerService {
       }
 
       if (message) {
-        notificationService.newNotification('OVERLAY', 'System', message);
+        notificationService.newNotification(NotificationType.SYSTEM_INFO, 'System', message);
       }
     }
 
