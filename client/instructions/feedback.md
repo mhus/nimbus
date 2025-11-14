@@ -136,7 +136,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Status Effekte koennen eine dauer haben, nach der sie automatisch entfernt werden. Die Dauer ist im item in duration hinterlegt. Die verwaltung uebernimmt der PlayerService.
 - Kommt ein neuer effekt hinzu/geloescht/update wird ein event im PlayerService ausgelost, das der NotificationService abonniert und die darstellung aktualisiert.
 
-[ ] Player haben mehrere vitals (z.b. hunger, durst, stamina, leben, mana, etc)
+[x] Player haben mehrere vitals (z.b. hunger, durst, stamina, leben, mana, etc)
 - Erstelle in shared ein VitalsData type, er hat folgende felder:
   - type: string (z.b. hunger, durst, stamina, leben, mana, etc)
   - current: number
@@ -161,3 +161,10 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
   - Die psoition der vitals bleibt beim ausblenden gleich, damit sich die anderen vitals nicht verschieben
 - Erstelle ein command im server showVitals()
 - Erstelle ein command im server um vitals zu updaten (add, remove, update)
+
+[ ] Wenn die shortcut Keys 1-0 gedrueckt werden (ShortcutInputHandler), soll im NotificationService geprueft werden, ob showShortcuts aktiv (nicht das overlay bei highlight, sondern wirklich showShortcuts) ist.
+- Wenn ja, soll geprueft werden, welche shortcuts angezeigt werden (keys, clicks, slots0, slots10, etc)
+  - es wird der angezeigt shotcut fuer 0-9 geholt und ausgefuehrt anstelle des normalen shortcut verhaltens
+
+[ ] Die Erkennung von entity im SelectionService ist sehr eng, ist es moeglich entities mit etws kullanz zu erkennen? Auch wenn es nicht genau vor der Kammera ist?
+

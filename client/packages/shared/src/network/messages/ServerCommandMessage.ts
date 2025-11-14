@@ -34,6 +34,9 @@ export interface ServerCommandData {
 
   /** Command arguments */
   args?: string[];
+
+  /** One-way command (no response expected) */
+  oneway?: boolean;
 }
 
 /**

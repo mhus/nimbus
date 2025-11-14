@@ -31,20 +31,21 @@ export class ServerCommandHandler implements MessageHandler {
 
   handle(message: ServerCommandMessage): void {
     try {
-      if (!message.i) {
-        logger.error('Received scmd without request ID (i)');
-        return;
-      }
-
       if (!message.d) {
         logger.error('Received scmd without data');
         return;
       }
 
-      const { cmd, args } = message.d;
+      const { cmd, args, oneway } = message.d;
 
       if (!cmd) {
         logger.error('Received scmd without cmd field');
+        return;
+      }
+
+      // For oneway commands, no request ID is required
+      if (!oneway && !message.i) {
+        logger.error('Received scmd without request ID (i) for non-oneway command');
         return;
       }
 
@@ -52,10 +53,11 @@ export class ServerCommandHandler implements MessageHandler {
         requestId: message.i,
         cmd,
         args,
+        oneway,
       });
 
       // Route to CommandService for execution
-      this.commandService.handleServerCommand(message.i, cmd, args || []);
+      this.commandService.handleServerCommand(message.i || '', cmd, args || [], oneway || false);
     } catch (error) {
       ExceptionHandler.handle(error, 'ServerCommandHandler.handle', { message });
     }

@@ -181,6 +181,46 @@ export class CommandService {
   }
 
   /**
+   * Send a command to the server asynchronously (fire-and-forget)
+   * Does not wait for response (oneway: true)
+   *
+   * @param cmd Command string
+   * @param args Command arguments
+   */
+  executeAsyncCommand(cmd: string, args: any[] = []): void {
+    const networkService = this.appContext.services.network;
+
+    if (!networkService) {
+      logger.warn('NetworkService not available for async command', { cmd });
+      return;
+    }
+
+    if (!networkService.isConnected()) {
+      logger.warn('Not connected to server for async command', { cmd });
+      return;
+    }
+
+    logger.debug(`Sending async command to server: ${cmd}`, { args });
+
+    // Create command message with oneway flag (no message ID needed for oneway)
+    const message = {
+      t: MessageType.CMD,
+      d: {
+        cmd,
+        args,
+        oneway: true,
+      },
+    };
+
+    // Send message (fire-and-forget)
+    try {
+      networkService.send(message);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'CommandService.executeAsyncCommand', { cmd, args });
+    }
+  }
+
+  /**
    * Send a command to the server for execution
    * Waits for response with 30 second timeout
    * Intermediate messages (cmd.msg) are logged to console
@@ -309,11 +349,12 @@ export class CommandService {
    * @param requestId Server's request ID (i field)
    * @param cmd Command name
    * @param args Command arguments
+   * @param oneway If true, no response is sent
    */
-  async handleServerCommand(requestId: string, cmd: string, args: string[] = []): Promise<void> {
+  async handleServerCommand(requestId: string, cmd: string, args: string[] = [], oneway: boolean = false): Promise<void> {
     const networkService = this.appContext.services.network;
 
-    if (!networkService) {
+    if (!networkService && !oneway) {
       logger.error('NetworkService not available for server command response');
       return;
     }
@@ -325,37 +366,44 @@ export class CommandService {
       if (!handler) {
         logger.warn(`Server command not found: ${cmd}`);
 
-        this.sendServerCommandResult(networkService, requestId, {
-          rc: -1, // Command not found
-          message: `Command '${cmd}' not found on client`,
-        });
+        if (!oneway && networkService) {
+          this.sendServerCommandResult(networkService, requestId, {
+            rc: -1, // Command not found
+            message: `Command '${cmd}' not found on client`,
+          });
+        }
         return;
       }
 
-      logger.debug(`Executing server command '${cmd}'`, { requestId, args });
+      logger.debug(`Executing server command '${cmd}'`, { requestId, args, oneway });
 
       // Execute command
       const result = await handler.execute(args);
 
-      logger.debug(`Server command '${cmd}' executed successfully`, { requestId, result });
+      logger.debug(`Server command '${cmd}' executed successfully`, { requestId, result, oneway });
 
-      // Send success result
-      this.sendServerCommandResult(networkService, requestId, {
-        rc: 0,
-        message: typeof result === 'string' ? result : JSON.stringify(result),
-      });
+      // Send success result only if not oneway
+      if (!oneway && networkService) {
+        this.sendServerCommandResult(networkService, requestId, {
+          rc: 0,
+          message: typeof result === 'string' ? result : JSON.stringify(result),
+        });
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'CommandService.handleServerCommand', {
         cmd,
         args,
         requestId,
+        oneway,
       });
 
-      // Send error result
-      this.sendServerCommandResult(networkService, requestId, {
-        rc: -4, // Internal error
-        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
+      // Send error result only if not oneway
+      if (!oneway && networkService) {
+        this.sendServerCommandResult(networkService, requestId, {
+          rc: -4, // Internal error
+          message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        });
+      }
     }
   }
 

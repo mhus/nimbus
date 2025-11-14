@@ -57,12 +57,14 @@ export class CommandService {
    * @param requestId Request ID from client (i field)
    * @param cmd Command name
    * @param args Command arguments
+   * @param oneway If true, no response is sent
    */
   async executeCommand(
     session: ClientSession,
     requestId: string,
     cmd: string,
-    args: string[] = []
+    args: string[] = [],
+    oneway: boolean = false
   ): Promise<void> {
     try {
       const handler = this.handlers.get(cmd);
@@ -74,10 +76,12 @@ export class CommandService {
           username: session.username,
         });
 
-        this.sendResult(session, requestId, {
-          rc: -1, // Command not found
-          message: `Command '${cmd}' not found. Use 'help' to list available commands.`,
-        });
+        if (!oneway) {
+          this.sendResult(session, requestId, {
+            rc: -1, // Command not found
+            message: `Command '${cmd}' not found. Use 'help' to list available commands.`,
+          });
+        }
         return;
       }
 
@@ -85,14 +89,15 @@ export class CommandService {
         sessionId: session.sessionId,
         username: session.username,
         args,
+        oneway,
       });
 
       // Create command context
       const context: CommandContext = {
         session,
-        sendMessage: (message: string) => {
+        sendMessage: !oneway ? (message: string) => {
           this.sendMessage(session, requestId, message);
-        },
+        } : () => {}, // No-op for oneway commands
       };
 
       // Execute command
@@ -101,22 +106,28 @@ export class CommandService {
       logger.debug(`Command '${cmd}' executed`, {
         sessionId: session.sessionId,
         rc: result.rc,
+        oneway,
       });
 
-      // Send result
-      this.sendResult(session, requestId, result);
+      // Send result only if not oneway
+      if (!oneway) {
+        this.sendResult(session, requestId, result);
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'CommandService.executeCommand', {
         cmd,
         args,
         sessionId: session.sessionId,
+        oneway,
       });
 
-      // Send error result
-      this.sendResult(session, requestId, {
-        rc: -4, // Internal error
-        message: `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
+      // Send error result only if not oneway
+      if (!oneway) {
+        this.sendResult(session, requestId, {
+          rc: -4, // Internal error
+          message: `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        });
+      }
     }
   }
 

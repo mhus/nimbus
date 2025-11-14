@@ -438,7 +438,7 @@ class NimbusServer {
   }
 
   private handleCommand(session: ClientSession, messageId: string, data: any) {
-    const { cmd, args } = data;
+    const { cmd, args, oneway } = data;
 
     if (!cmd) {
       logger.warn('Received command message without cmd field', {
@@ -451,10 +451,11 @@ class NimbusServer {
       sessionId: session.sessionId,
       username: session.username,
       args,
+      oneway: oneway || false,
     });
 
     // Execute command via CommandService
-    this.commandService.executeCommand(session, messageId, cmd, args || []);
+    this.commandService.executeCommand(session, messageId, cmd, args || [], oneway || false);
   }
 
   /**

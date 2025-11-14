@@ -302,7 +302,7 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - Schau mal ob der InputController fuer aktuell FLY immer erstellt wird, aktuell wurde der nur im EDITOR moduls erstellt, das muss jetzt immer sein.
 - Wenn der status von FALL auf einen anderen status geht, dann keine Notification
 
-[ ] Erweitere den CommandService in engine und test_server so dass Commands asynchron ausgefuehrt werden koennen.
+[?] Erweitere den CommandService in engine und test_server so dass Commands asynchron ausgefuehrt werden koennen.
 - Erstelle eine neue funktion 'executeAsyncCommand' die ein command asynchron ausfuehrt. return ist void
 - Die function gibt oneway: true beim command ausfuehren mit.
 - Siehe 'Client Command (Client -> Server)' in client/instructions/general/network-model-2.0.md
