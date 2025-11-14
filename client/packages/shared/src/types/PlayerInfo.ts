@@ -222,8 +222,8 @@ export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues>
 
   crouch: {
     dimensions: { height: 1.0, width: 0.6, footprint: 0.3 },
-    baseMoveSpeed: 2.5,
-    effectiveMoveSpeed: 2.5,
+    baseMoveSpeed: 1.5,  // Very slow for stealth
+    effectiveMoveSpeed: 1.5,
     baseJumpSpeed: 4.0,
     effectiveJumpSpeed: 4.0,
     eyeHeight: 0.8,

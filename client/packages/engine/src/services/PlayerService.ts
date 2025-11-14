@@ -758,6 +758,10 @@ export class PlayerService {
         message = 'Flight Mode Deactivated';
       } else if (newState === PlayerMovementState.SPRINT) {
         message = 'Sprinting';
+      } else if (newState === PlayerMovementState.CROUCH) {
+        message = 'Crouching';
+      } else if (newState === PlayerMovementState.WALK) {
+        message = 'Walking';
       } else if (newState === PlayerMovementState.SWIM && oldState !== PlayerMovementState.SWIM) {
         message = 'Swimming';
       }

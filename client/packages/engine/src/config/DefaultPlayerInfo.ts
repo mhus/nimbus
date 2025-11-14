@@ -36,7 +36,7 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   baseWalkSpeed: 5.0,
   baseRunSpeed: 7.0,
   baseUnderwaterSpeed: 3.0,
-  baseCrawlSpeed: 2.5,
+  baseCrawlSpeed: 1.5,  // Very slow for stealth
   baseRidingSpeed: 8.0,
   baseJumpSpeed: 8.0,
 
@@ -44,7 +44,7 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
   effectiveWalkSpeed: 5.0,
   effectiveRunSpeed: 7.0,
   effectiveUnderwaterSpeed: 3.0,
-  effectiveCrawlSpeed: 2.5,
+  effectiveCrawlSpeed: 1.5,  // Very slow for stealth
   effectiveRidingSpeed: 8.0,
   effectiveJumpSpeed: 8.0,
 
@@ -107,8 +107,8 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
     },
     crouch: {
       dimensions: { height: 1.0, width: 0.6, footprint: 0.3 },
-      baseMoveSpeed: 2.5,       // baseCrawlSpeed
-      effectiveMoveSpeed: 2.5,  // effectiveCrawlSpeed
+      baseMoveSpeed: 1.5,       // baseCrawlSpeed - very slow for stealth
+      effectiveMoveSpeed: 1.5,  // effectiveCrawlSpeed
       baseJumpSpeed: 4.0,       // Lower jump
       effectiveJumpSpeed: 4.0,
       eyeHeight: 0.8,           // Lower eye height

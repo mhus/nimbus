@@ -295,7 +295,7 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - CROUCH - standard taste: N
 - SPRINT - standard taste: M
 - Implementierung wie bei FLY
-[ ] Stelle die InputController bitte nochmal um:
+[x] Stelle die InputController bitte nochmal um:
 - N und M kommen wieder weg
 - Der InputController fuer FLY: F rotiert jetzt durch FLY, SPRINT, CROUCH, WALK
 - FLY ist nur im EDITOR modus verfuegbar, wie bisher
