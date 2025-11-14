@@ -144,9 +144,9 @@ function deepMergeModifiers(target: BlockModifier | undefined, source: BlockModi
     effects: source.effects !== undefined
       ? mergeObjects(target.effects, source.effects)
       : target.effects,
-    sound: source.sound !== undefined
-      ? mergeObjects(target.sound, source.sound)
-      : target.sound,
+    audio: source.audio !== undefined
+      ? mergeObjects(target.audio, source.audio)
+      : target.audio,
   };
 }
 

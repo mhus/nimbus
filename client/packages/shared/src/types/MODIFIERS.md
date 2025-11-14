@@ -231,8 +231,15 @@ const doorBlockType: BlockType = {
       physics: {
         solid: true
       },
-      sound: {
-        changeStatus: '/sounds/door_close.ogg'
+      audio: {
+        audio: [
+          {
+            type: AudioType.STEPS,
+            path: '/sounds/door_close.ogg',
+            volume: 1.0,
+            enabled: true
+          }
+        ]
       }
     },
     // Open state
@@ -247,8 +254,15 @@ const doorBlockType: BlockType = {
       physics: {
         solid: false
       },
-      sound: {
-        changeStatus: '/sounds/door_open.ogg'
+      audio: {
+        audio: [
+          {
+            type: AudioType.STEPS,
+            path: '/sounds/door_open.ogg',
+            volume: 1.0,
+            enabled: true
+          }
+        ]
       }
     }
   }
@@ -264,6 +278,6 @@ const door: Block = {
 // Player interacts
 door.status = BlockStatus.OPEN;
 // → Renderer switches to open modifier
-// → Sound plays: door_open.ogg
+// → Audio plays: door_open.ogg
 // → Physics updates: no longer solid
 ```

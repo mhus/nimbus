@@ -58,13 +58,13 @@
                   <IlluminationEditor v-model="modifierData.illumination" />
                 </CollapsibleSection>
 
-                <!-- Sound Section -->
+                <!-- Audio Section -->
                 <CollapsibleSection
-                  title="Sound"
-                  :model-value="!!modifierData.sound"
-                  @update:model-value="toggleSound"
+                  title="Audio"
+                  :model-value="!!modifierData.audio"
+                  @update:model-value="toggleAudio"
                 >
-                  <SoundEditor v-model="modifierData.sound" />
+                  <AudioEditor v-model="modifierData.audio" :world-id="worldId" />
                 </CollapsibleSection>
               </div>
 
@@ -91,7 +91,7 @@ import PhysicsEditor from '@editors/PhysicsEditor.vue';
 import WindEditor from '@editors/WindEditor.vue';
 import EffectsEditor from '@editors/EffectsEditor.vue';
 import IlluminationEditor from '@editors/IlluminationEditor.vue';
-import SoundEditor from '@editors/SoundEditor.vue';
+import AudioEditor from '@editors/AudioEditor.vue';
 
 interface Props {
   modifier: BlockModifier;
@@ -150,11 +150,11 @@ const toggleIllumination = (enabled: boolean) => {
   }
 };
 
-const toggleSound = (enabled: boolean) => {
+const toggleAudio = (enabled: boolean) => {
   if (!enabled) {
-    modifierData.value.sound = undefined;
-  } else if (!modifierData.value.sound) {
-    modifierData.value.sound = {};
+    modifierData.value.audio = undefined;
+  } else if (!modifierData.value.audio) {
+    modifierData.value.audio = { audio: [] };
   }
 };
 

@@ -98,8 +98,8 @@ export class BlockTypeInfoCommand extends CommandHandler {
           info.push(`    Effects: ${JSON.stringify(modifier.effects)}`);
         }
 
-        if (modifier.sound) {
-          info.push(`    Sound: ${JSON.stringify(modifier.sound)}`);
+        if (modifier.audio) {
+          info.push(`    Audio: ${JSON.stringify(modifier.audio)}`);
         }
       }
 

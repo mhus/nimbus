@@ -632,26 +632,39 @@ export interface EffectsModifier {
 }
 
 /**
- * Sound properties
+ * Audio type enumeration
  */
-export interface SoundModifier {
-  /** Walking sound */
-  walk?: string;
+export enum AudioType {
+  /** Step sounds when walking on block */
+  STEPS = 'steps',
+}
 
-  /** Walking sound volume */
-  walkVolume?: number;
+/**
+ * Audio definition
+ */
+export interface AudioDefinition {
+  /** Audio type (e.g., 'steps') */
+  type: AudioType;
 
-  /** Permanent/ambient sound */
-  permanent?: string;
+  /** Path to audio file */
+  path: string;
 
-  /** Permanent sound volume */
-  permanentVolume?: number;
+  /** Volume (0.0 - 1.0) */
+  volume: number;
 
-  /** Status change sound */
-  changeStatus?: string;
+  /** Loop audio playback */
+  loop?: boolean;
 
-  /** Status change sound volume */
-  changeStatusVolume?: number;
+  /** Whether audio is enabled */
+  enabled: boolean;
+}
+
+/**
+ * Audio properties
+ */
+export interface AudioModifier {
+  /** List of audio definitions */
+  audio: AudioDefinition[];
 }
 
 /**
@@ -673,8 +686,8 @@ export interface BlockModifier {
   /** Effects */
   effects?: EffectsModifier;
 
-  /** Sound properties */
-  sound?: SoundModifier;
+  /** Audio properties */
+  audio?: AudioModifier;
 }
 
 /**

@@ -286,7 +286,7 @@ const getModifierSummary = (status: number): string => {
   if (modifier.wind) parts.push('wind');
   if (modifier.effects) parts.push('effects');
   if (modifier.illumination) parts.push('illumination');
-  if (modifier.sound) parts.push('sound');
+  if (modifier.audio) parts.push('audio');
 
   return parts.length > 0 ? parts.join(', ') : 'Empty';
 };
