@@ -132,16 +132,10 @@ export class BlockTypeService {
         throw new Error('NetworkService not available');
       }
 
-      const worldId = this.appContext.worldInfo?.worldId || 'main';
-      const apiUrl = networkService.getApiUrl();
       const range = this.getChunkRange(chunkIndex);
+      const url = networkService.getBlockTypesRangeUrl(range.from, range.to);
 
-      // Use the range endpoint: /api/worlds/{worldId}/blocktypes/{from}/{to}
-      // Add timestamp parameter to prevent caching
-      const timestamp = Date.now();
-      const url = `${apiUrl}/api/worlds/${worldId}/blocktypes/${range.from}/${range.to}?t=${timestamp}`;
-
-      logger.debug('Loading BlockType chunk', { chunkIndex, range, url, timestamp });
+      logger.debug('Loading BlockType chunk', { chunkIndex, range, url });
 
       const response = await fetch(url);
 

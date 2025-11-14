@@ -518,8 +518,9 @@ export class NetworkService {
 
   /**
    * Get API URL for REST calls
+   * @private Use specific URL methods instead (getAssetUrl, getEntityModelUrl, etc.)
    */
-  getApiUrl(): string {
+  private getApiUrl(): string {
     return this.apiUrl;
   }
 
@@ -543,6 +544,54 @@ export class NetworkService {
     const worldAssetPath = this.appContext.worldInfo?.assetPath || `/api/worlds/${worldId}/assets`;
 
     return `${this.apiUrl}${worldAssetPath}/${assetPath}`;
+  }
+
+  /**
+   * Get entity model URL
+   *
+   * @param entityTypeId - Entity type ID
+   * @returns Full entity model URL with cache-busting timestamp
+   */
+  getEntityModelUrl(entityTypeId: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const timestamp = Date.now();
+    return `${this.apiUrl}/api/worlds/${worldId}/entitymodel/${entityTypeId}?t=${timestamp}`;
+  }
+
+  /**
+   * Get backdrop URL
+   *
+   * @param backdropTypeId - Backdrop type ID
+   * @returns Full backdrop URL with cache-busting timestamp
+   */
+  getBackdropUrl(backdropTypeId: string): string {
+    const timestamp = Date.now();
+    return `${this.apiUrl}/api/backdrop/${backdropTypeId}?t=${timestamp}`;
+  }
+
+  /**
+   * Get entity URL
+   *
+   * @param entityId - Entity ID
+   * @returns Full entity URL with cache-busting timestamp
+   */
+  getEntityUrl(entityId: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const timestamp = Date.now();
+    return `${this.apiUrl}/api/worlds/${worldId}/entity/${entityId}?t=${timestamp}`;
+  }
+
+  /**
+   * Get block types range URL
+   *
+   * @param from - Start of range
+   * @param to - End of range
+   * @returns Full block types range URL with cache-busting timestamp
+   */
+  getBlockTypesRangeUrl(from: number, to: number): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const timestamp = Date.now();
+    return `${this.apiUrl}/api/worlds/${worldId}/blocktypes/${from}/${to}?t=${timestamp}`;
   }
 
   /**

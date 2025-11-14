@@ -314,3 +314,18 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 Wenn die bewegung mehr als einen Block pro frame ist, koennte es sein das der player durch einen block hindurch geht.
 In diese fall sollte die pruefung in mehreren schritten erfolgen. Jeweils ein schritt von max 0.8 block.
 
+[?] Prepare für Govenor
+- Bei laden von Assets wird aktuell immer die Base URL vom NetworkService geladen (getApiUrl) und dann manuell der Pfad angehaengt.
+- Erstelle im NetworkService eine funktion getAssetUrl(assetPath: string): string die den kompletten URL zurueck gibt.
+- Passe alle stellen an wo asset urls erstellt werden.
+- getApiUrl soll private werden und entsprechende funktionen bereit gestellt werden
+  - getAssetUrl(assetPath)
+  - getEntityModelUrl(entityTypeId)
+  - getBackdropUrl(backdropTypeId)
+  - getEntityUrl(entityId)
+
+[?] Prepare für Govenor
+- Der Aufruf von REST APIs im client appContext.config.apiUrl / config.apiUrl sollte ueber den NetworkService erfolgen.
+- Erstelle im NetworkService eine funktion getRestRequestUrl(endpoint: string): string die den kompletten URL zurueck gibt.
+- Passe alle stellen an wo REST API urls erstellt werden in 'engine'
+

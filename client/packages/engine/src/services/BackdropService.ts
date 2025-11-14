@@ -389,9 +389,7 @@ export class BackdropService {
         throw new Error('NetworkService not available');
       }
 
-      const apiUrl = networkService.getApiUrl();
-      const timestamp = Date.now();
-      const url = `${apiUrl}/api/backdrop/${id}?t=${timestamp}`;
+      const url = networkService.getBackdropUrl(id);
 
       logger.info('Fetching backdrop type from server', { id, url });
 
