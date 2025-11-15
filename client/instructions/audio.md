@@ -74,29 +74,29 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Es wird nur eine ambiente musik gleichzeitig abgespielt.
 - wenn die gleiche musik nochmal abgespielt werden soll, wird sie nicht neu gestartet, sondern weiter abgespielt.
 
-[?] Es soll einen StackModifier fuer ambienteAudio geben fuer die ambiente musik, damit server seits die ambiente musik gesetzt werden kann.
+[x] Es soll einen StackModifier fuer ambienteAudio geben fuer die ambiente musik, damit server seits die ambiente musik gesetzt werden kann.
   - Er setzt immer streaming true und volume 1
   - Default pfad ist leer (keine musik)
   - Das Commando playAmbienteAudio soll einen Modifier bei prio 100 haben
   - Im EnvironmentService gibt es einen Modifier, der prioa 50 hat
   - Im PlayerService gibt es einen Modifier, der prio 10 hat und bei Death auf eine parameter aus der WorldInfo (z.b. 'deadAmbientAudio') geset wird. Modifier wird enabled/diabled.
 
-[?] Auch der swim sound soll von WorldInfo kommen ('swimStepAudio'). Nicht mehr als Constante in AudioService. 
+[x] Auch der swim sound soll von WorldInfo kommen ('swimStepAudio'). Nicht mehr als Constante in AudioService. 
 
-[ ] Funktion am AudioService fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
+[?] Funktion am AudioService fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Spielt einen sound an der uebergebenen position ab.
 - Erstelle commandos in der engine fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Kein loop!
 
-[ ] Funktion am AudioService fuer PlaySound(soundPath: string, volume: number)
-- Spielt einen sound an der position der entity ab.
-- Erstelle commandos in der engine fuer playSound(soudnPath: string, volume: number)
+[ ] Funktion am AudioService fuer PlaySound(soundPath: string, stream : boolean, volume: number)
+- Spielt einen sound direkt ab.
+- Erstelle commandos in der engine fuer playSound(soudnPath: string, stream: boolean, volume: number)
 - kein loop!
-
 
 [ ] Funktion am AudioService fuer Speach(streamPath: string, volume: number)
 - Fuer speach soll es im NetworkService eine neue methode geben getSpeachUrl(streamPath: string): string
-  - Die Methode git einen Path auf /api/world/{worldId}/speach/{streamPath} zurueck.
+  - Die Methode gibt einen Path auf /api/world/{worldId}/speach/{streamPath} zurueck.
+  - Es ird die sessionId und authToken als query parameter angehaengt. (authToken wird im NetworkService als parameter gehalten, aktueller wert '')
 - Streamt eine audio datei z.b. eine ansage oder aehnliches.
 - Erstelle commandos in der engine fuer speach(soundPath: string, volume: number)
   - Das commando gibt erst eine antwort, wenn der stream beendet oder abgebrochen ist.

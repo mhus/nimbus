@@ -763,6 +763,62 @@ export class AudioService {
   }
 
   // ========================================
+  // General Sound Playback Methods
+  // ========================================
+
+  /**
+   * Play sound at specific world position (spatial, non-looping)
+   * @param soundPath Path to sound file
+   * @param x World X coordinate
+   * @param y World Y coordinate
+   * @param z World Z coordinate
+   * @param volume Volume (0.0 - 1.0)
+   */
+  async playSoundAtPosition(
+    soundPath: string,
+    x: number,
+    y: number,
+    z: number,
+    volume: number = 1.0
+  ): Promise<void> {
+    // Validate volume
+    if (volume < 0 || volume > 1) {
+      logger.warn('Invalid volume, clamping to 0-1 range', { volume });
+      volume = Math.max(0, Math.min(1, volume));
+    }
+
+    // Check if audio is enabled
+    if (!this.audioEnabled) {
+      logger.debug('Audio disabled, skipping playSoundAtPosition', { soundPath });
+      return;
+    }
+
+    // Position
+    const position = new Vector3(x, y, z);
+
+    // Get blocked sound from pool
+    const item = await this.getBlockedSoundFromPool(
+      soundPath,
+      position,
+      DEFAULT_MAX_DISTANCE
+    );
+
+    if (!item) {
+      logger.warn('Failed to get sound from pool for playSoundAtPosition', { soundPath });
+      return;
+    }
+
+    // Play sound (no loop, one-shot)
+    item.play(volume);
+
+    logger.info('Playing sound at position', {
+      soundPath,
+      position: { x, y, z },
+      volume
+    });
+  }
+
+  // ========================================
   // Ambient Music Methods
   // ========================================
 
