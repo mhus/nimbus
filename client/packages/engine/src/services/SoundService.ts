@@ -61,7 +61,7 @@ export class SoundService {
    * Plays random step sound from block's audioSteps
    */
   private onStepOver(event: StepOverEvent): void {
-    const { entityId, block } = event;
+    const { entityId, block, movementType } = event;
 
     // Check if audio is enabled
     const audioService = this.appContext.services.audio;
@@ -95,7 +95,13 @@ export class SoundService {
 
     // Set volume - StaticSound uses .volume property, not setVolume()
     // Apply stepVolume multiplier from AudioService
-    const stepVolume = audioService.getStepVolume();
+    let stepVolume = audioService.getStepVolume();
+
+    // CROUCH mode: reduce volume to 50%
+    if (movementType === 'crouch') {
+      stepVolume *= 0.5;
+    }
+
     const finalVolume = definition.volume * stepVolume;
 
     if (typeof sound.setVolume === 'function') {

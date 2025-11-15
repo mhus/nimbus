@@ -290,7 +290,14 @@ export class WalkModeController {
       const groundBlock = context.groundBlocks.blocks.find(b => b.block);
 
       if (groundBlock && groundBlock.block && this.physicsService) {
-        const movementType = startJump ? 'jump' : 'walk';
+        // Determine movement type based on jump and crouch state
+        let movementType = 'walk';
+        if (startJump) {
+          movementType = 'jump';
+        } else if (entity.movementMode === 'crouch') {
+          movementType = 'crouch';
+        }
+
         this.physicsService.emitStepOver(entity, groundBlock.block, movementType);
       }
     }

@@ -10,3 +10,4 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 
 [ ] Claude hat in die Texture neben effect einen shader parameter eingefuegt, der muss wieder raus.
 
+- MovementMode fuer player audio kommt vom PlayerService, das wird ein problem wenn NPCs simuliert werden.

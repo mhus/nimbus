@@ -11,6 +11,9 @@ import type { AppContext } from '../AppContext';
 const logger = getLogger('StepVolumeCommand');
 
 export class StepVolumeCommand {
+  name = 'stepvolume';
+  description = 'Set step sound volume multiplier (0.0-1.0)';
+
   constructor(private appContext: AppContext) {}
 
   execute(args: string[]): void {
