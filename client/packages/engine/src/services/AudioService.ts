@@ -294,6 +294,7 @@ export class AudioService {
   private audioEngine?: any; // AudioEngineV2
   private stepVolume: number = 1.0; // Default step sound volume multiplier
   private ambientVolume: number = 0.5; // Default ambient music volume multiplier
+  private speechVolume: number = 1.0; // Default speech volume multiplier
 
   // Track last swim sound time per entity to prevent overlapping
   private lastSwimSoundTime: Map<string, number> = new Map();
@@ -302,6 +303,10 @@ export class AudioService {
   private currentAmbientSound?: any; // Current ambient music sound
   private currentAmbientPath?: string; // Current ambient music path
   private ambientFadeInterval?: number; // Fade in/out interval ID
+
+  // Speech/narration
+  private currentSpeech?: any; // Current speech sound
+  private currentSpeechPath?: string; // Current speech stream path
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
@@ -369,6 +374,27 @@ export class AudioService {
    */
   getAmbientVolume(): number {
     return this.ambientVolume;
+  }
+
+  /**
+   * Set speech volume multiplier
+   * @param volume Volume multiplier (0.0 = silent, 1.0 = full volume)
+   */
+  setSpeechVolume(volume: number): void {
+    this.speechVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
+    logger.info('Speech volume set to ' + this.speechVolume);
+
+    // Update current speech volume if playing
+    if (this.currentSpeech) {
+      this.currentSpeech.volume = this.speechVolume;
+    }
+  }
+
+  /**
+   * Get current speech volume multiplier
+   */
+  getSpeechVolume(): number {
+    return this.speechVolume;
   }
 
   /**
@@ -987,6 +1013,107 @@ export class AudioService {
         }
       }, stepDuration);
     });
+  }
+
+  // ========================================
+  // Speech/Narration Methods
+  // ========================================
+
+  /**
+   * Play speech/narration audio (streamed from server)
+   * Only one speech can play at a time - new speech stops current
+   * Returns promise that resolves when speech ends or is stopped
+   *
+   * @param streamPath Speech stream path (e.g., "welcome", "tutorial/intro")
+   * @param volume Volume (0.0 - 1.0), multiplied by speechVolume
+   * @returns Promise that resolves when speech ends
+   */
+  async speak(streamPath: string, volume: number = 1.0): Promise<void> {
+    // Stop current speech if playing
+    if (this.currentSpeech) {
+      await this.stopSpeech();
+    }
+
+    // Check if speechVolume is 0 or below → don't play
+    if (this.speechVolume <= 0) {
+      logger.info('Speech volume is 0 or below, not playing speech', { streamPath });
+      return;
+    }
+
+    if (!this.networkService) {
+      logger.error('NetworkService not available - cannot get speech URL');
+      return;
+    }
+
+    try {
+      // Get speech URL from NetworkService
+      const speechUrl = this.networkService.getSpeechUrl(streamPath);
+      logger.info('Loading speech', { streamPath, speechUrl, volume });
+
+      // Load speech (non-spatial, non-looping, streamed)
+      const sound = await CreateSoundAsync(streamPath, speechUrl);
+
+      if (!sound) {
+        logger.error('Failed to load speech', { streamPath });
+        return;
+      }
+
+      this.currentSpeech = sound;
+      this.currentSpeechPath = streamPath;
+
+      // Set volume
+      const finalVolume = volume * this.speechVolume;
+      sound.volume = finalVolume;
+
+      // Return promise that resolves when speech ends
+      return new Promise<void>((resolve) => {
+        // Register onEnded callback
+        if (sound.onEndedObservable) {
+          sound.onEndedObservable.addOnce(() => {
+            logger.info('Speech ended', { streamPath });
+            this.currentSpeech = undefined;
+            this.currentSpeechPath = undefined;
+            resolve();
+          });
+        } else {
+          // Fallback: assume speech ended after 60 seconds max
+          logger.warn('onEndedObservable not available for speech, using 60s timeout');
+          setTimeout(() => {
+            logger.info('Speech timeout reached', { streamPath });
+            this.currentSpeech = undefined;
+            this.currentSpeechPath = undefined;
+            resolve();
+          }, 60000); // 60 second timeout
+        }
+
+        // Start playing
+        sound.play();
+        logger.info('Speech playing', { streamPath, volume: finalVolume });
+      });
+    } catch (error) {
+      logger.error('Failed to play speech', { streamPath, error: (error as Error).message });
+      this.currentSpeech = undefined;
+      this.currentSpeechPath = undefined;
+      throw error;
+    }
+  }
+
+  /**
+   * Stop current speech playback
+   */
+  async stopSpeech(): Promise<void> {
+    if (!this.currentSpeech) {
+      return; // No speech playing
+    }
+
+    logger.info('Stopping speech', { path: this.currentSpeechPath });
+
+    // Stop immediately (no fade for speech)
+    this.currentSpeech.stop();
+    this.currentSpeech = undefined;
+    this.currentSpeechPath = undefined;
+
+    logger.info('Speech stopped');
   }
 
   // ========================================

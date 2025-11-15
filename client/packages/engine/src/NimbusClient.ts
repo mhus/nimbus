@@ -47,6 +47,8 @@ import { PlayAmbientAudioCommand } from './commands/PlayAmbientAudioCommand';
 import { SetAmbientVolumeCommand } from './commands/SetAmbientVolumeCommand';
 import { PlaySoundCommand } from './commands/PlaySoundCommand';
 import { PlaySoundAtPositionCommand } from './commands/PlaySoundAtPositionCommand';
+import { SpeakCommand } from './commands/SpeakCommand';
+import { SetSpeechVolumeCommand } from './commands/SetSpeechVolumeCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import { SetShortcutCommand } from './commands/SetShortcutCommand';
@@ -155,6 +157,8 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SetAmbientVolumeCommand(appContext));
     commandService.registerHandler(new PlaySoundCommand(appContext));
     commandService.registerHandler(new PlaySoundAtPositionCommand(appContext));
+    commandService.registerHandler(new SpeakCommand(appContext));
+    commandService.registerHandler(new SetSpeechVolumeCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));

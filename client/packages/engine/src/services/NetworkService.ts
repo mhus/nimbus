@@ -75,6 +75,9 @@ export class NetworkService {
   private shouldReconnect: boolean = true;
   private reconnectIntervalMs: number = 5000; // 5 seconds between reconnect attempts
 
+  // Authentication token for API requests (e.g., speech streaming)
+  private authToken: string = '';
+
   constructor(private appContext: AppContext) {
     this.websocketUrl = appContext.config.websocketUrl;
     this.apiUrl = appContext.config.apiUrl;
@@ -639,6 +642,50 @@ export class NetworkService {
     const worldAssetPath = this.appContext.worldInfo?.assetPath || `/api/worlds/${worldId}/assets`;
 
     return `${this.apiUrl}${worldAssetPath}/${assetPath}`;
+  }
+
+  /**
+   * Get speech URL for streaming speech audio
+   *
+   * Constructs full URL with sessionId and authToken as query parameters
+   *
+   * @param streamPath - Speech stream path (e.g., "welcome" or "tutorial/intro")
+   * @returns Full speech URL with authentication
+   */
+  getSpeechUrl(streamPath: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const sessionId = this.appContext.sessionId || '';
+
+    // Build base URL
+    const baseUrl = `${this.apiUrl}/api/world/${worldId}/speech/${streamPath}`;
+
+    // Add query parameters
+    const params = new URLSearchParams();
+    if (sessionId) {
+      params.append('sessionId', sessionId);
+    }
+    if (this.authToken) {
+      params.append('authToken', this.authToken);
+    }
+
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  }
+
+  /**
+   * Set authentication token for API requests
+   * @param token Authentication token
+   */
+  setAuthToken(token: string): void {
+    this.authToken = token;
+    logger.debug('Auth token set', { hasToken: !!token });
+  }
+
+  /**
+   * Get authentication token
+   */
+  getAuthToken(): string {
+    return this.authToken;
   }
 
   /**
