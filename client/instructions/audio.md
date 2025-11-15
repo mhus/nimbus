@@ -50,10 +50,12 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Es wird nur ausgeloest wenn die entity einen Block gefunden hat auf dem sie steht (also nicht in der Luft schwebt) 
   und nur alle 300ms. - Dazu kann an der entity ein parameter mit dem letzten senden des events hinterlegt werden, wenn noetig.
 
-[ ] Ich moechte das Volumen von steps sounds im AudioService anpassen koennen mit einem parameter, der parameter soll als multiplikator fuer das volumen dienen.
+[x] Ich moechte das Volumen von steps sounds im AudioService anpassen koennen mit einem parameter, der parameter soll als multiplikator fuer das volumen dienen.
 - Erstelle einen parameter 'stepVolume' im AudioService, default wert 0.5
 - Erstelle ein Commando zum setzen des stepVolume parameters.
 
 [ ] Entity Player geben die Pose mit, von der Pose koennen die movementTypes abgeleitet werden und correct bei onStepOver mitgegeben werden.
 
-[ ] Beim modus CRUCH soll der sound leiser abgespielt werden (50% der lautstaerke).
+[ ] Beim modus CRUCH (wird im event mitgeliefert) soll der sound leiser abgespielt werden (50% der lautstaerke).
+
+[ ] Beim modus SWIM soll ein spezieller sound 'audio/step/swim1.ogg' abgespielt werden.

@@ -41,6 +41,7 @@ export class AudioService {
   private networkService?: NetworkService;
   private audioEnabled: boolean = true;
   private audioEngine?: any; // AudioEngineV2
+  private stepVolume: number = 0.5; // Default step sound volume multiplier
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
@@ -68,6 +69,22 @@ export class AudioService {
    */
   isAudioEnabled(): boolean {
     return this.audioEnabled;
+  }
+
+  /**
+   * Set step sound volume multiplier
+   * @param volume Volume multiplier (0.0 = silent, 1.0 = full volume)
+   */
+  setStepVolume(volume: number): void {
+    this.stepVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
+    logger.info('Step volume set to ' + this.stepVolume);
+  }
+
+  /**
+   * Get current step sound volume multiplier
+   */
+  getStepVolume(): number {
+    return this.stepVolume;
   }
 
   /**

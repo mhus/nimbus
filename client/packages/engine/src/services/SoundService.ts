@@ -94,10 +94,14 @@ export class SoundService {
     }
 
     // Set volume - StaticSound uses .volume property, not setVolume()
+    // Apply stepVolume multiplier from AudioService
+    const stepVolume = audioService.getStepVolume();
+    const finalVolume = definition.volume * stepVolume;
+
     if (typeof sound.setVolume === 'function') {
-      sound.setVolume(definition.volume);
+      sound.setVolume(finalVolume);
     } else if ('volume' in sound) {
-      sound.volume = definition.volume;
+      sound.volume = finalVolume;
     }
 
     try {
