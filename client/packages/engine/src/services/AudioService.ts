@@ -767,6 +767,53 @@ export class AudioService {
   // ========================================
 
   /**
+   * Play sound directly (non-spatial, non-looping)
+   * Useful for UI sounds, notifications, or sounds that should play at player position
+   * @param soundPath Path to sound file
+   * @param stream Whether to stream the audio (default: false for small sounds)
+   * @param volume Volume (0.0 - 1.0)
+   */
+  async playSound(
+    soundPath: string,
+    stream: boolean = false,
+    volume: number = 1.0
+  ): Promise<void> {
+    // Validate volume
+    if (volume < 0 || volume > 1) {
+      logger.warn('Invalid volume, clamping to 0-1 range', { volume });
+      volume = Math.max(0, Math.min(1, volume));
+    }
+
+    // Check if audio is enabled
+    if (!this.audioEnabled) {
+      logger.debug('Audio disabled, skipping playSound', { soundPath });
+      return;
+    }
+
+    try {
+      // Load sound (non-spatial, non-looping, one-shot)
+      const sound = await this.loadAudio(soundPath, {
+        volume,
+        loop: false,
+        autoplay: true, // Play immediately
+        spatialSound: false, // Non-spatial (plays directly at listener)
+      });
+
+      if (!sound) {
+        logger.warn('Failed to load sound', { soundPath });
+        return;
+      }
+
+      logger.info('Playing non-spatial sound', { soundPath, volume, stream });
+    } catch (error) {
+      logger.error('Failed to play sound', {
+        soundPath,
+        error: (error as Error).message
+      });
+    }
+  }
+
+  /**
    * Play sound at specific world position (spatial, non-looping)
    * @param soundPath Path to sound file
    * @param x World X coordinate

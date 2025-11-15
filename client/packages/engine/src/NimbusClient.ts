@@ -45,6 +45,7 @@ import { TestAudioCommand } from './commands/TestAudioCommand';
 import { StepVolumeCommand } from './commands/StepVolumeCommand';
 import { PlayAmbientAudioCommand } from './commands/PlayAmbientAudioCommand';
 import { SetAmbientVolumeCommand } from './commands/SetAmbientVolumeCommand';
+import { PlaySoundCommand } from './commands/PlaySoundCommand';
 import { PlaySoundAtPositionCommand } from './commands/PlaySoundAtPositionCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
@@ -152,6 +153,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new StepVolumeCommand(appContext));
     commandService.registerHandler(new PlayAmbientAudioCommand(appContext));
     commandService.registerHandler(new SetAmbientVolumeCommand(appContext));
+    commandService.registerHandler(new PlaySoundCommand(appContext));
     commandService.registerHandler(new PlaySoundAtPositionCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));

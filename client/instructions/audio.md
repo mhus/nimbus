@@ -88,17 +88,17 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Erstelle commandos in der engine fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Kein loop!
 
-[ ] Funktion am AudioService fuer PlaySound(soundPath: string, stream : boolean, volume: number)
+[?] Funktion am AudioService fuer playSound(soundPath: string, stream : boolean, volume: number)
 - Spielt einen sound direkt ab.
 - Erstelle commandos in der engine fuer playSound(soudnPath: string, stream: boolean, volume: number)
 - kein loop!
 
-[ ] Funktion am AudioService fuer Speach(streamPath: string, volume: number)
+[ ] Funktion am AudioService fuer speak(streamPath: string, volume: number)
 - Fuer speach soll es im NetworkService eine neue methode geben getSpeachUrl(streamPath: string): string
   - Die Methode gibt einen Path auf /api/world/{worldId}/speach/{streamPath} zurueck.
   - Es ird die sessionId und authToken als query parameter angehaengt. (authToken wird im NetworkService als parameter gehalten, aktueller wert '')
 - Streamt eine audio datei z.b. eine ansage oder aehnliches.
-- Erstelle commandos in der engine fuer speach(soundPath: string, volume: number)
+- Erstelle commandos in der engine fuer speak(soundPath: string, volume: number)
   - Das commando gibt erst eine antwort, wenn der stream beendet oder abgebrochen ist.
 - kein loop!
 - Es kann immer nur eine speach gleichzeitig abgespielt werden. Wenn eine neue gestartet wird, wird die alte abgebrochen.
