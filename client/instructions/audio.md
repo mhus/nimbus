@@ -81,7 +81,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
   - Im EnvironmentService gibt es einen Modifier, der prioa 50 hat
   - Im PlayerService gibt es einen Modifier, der prio 10 hat und bei Death auf eine parameter aus der WorldInfo (z.b. 'deadAmbientAudio') geset wird. Modifier wird enabled/diabled.
 
-[ ] Auch der swim sound soll von WorldInfo kommen ('swimStepAudio'). Nicht mehr als Constante in AudioService. 
+[?] Auch der swim sound soll von WorldInfo kommen ('swimStepAudio'). Nicht mehr als Constante in AudioService. 
 
 [ ] Funktion am AudioService fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Spielt einen sound an der uebergebenen position ab.

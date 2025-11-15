@@ -965,9 +965,17 @@ export class AudioService {
   /**
    * Play swim sound at player position using pool system
    * Prevents overlapping by checking if sound was played recently
+   * Sound path is read from WorldInfo.settings.swimStepAudio
    */
   private async playSwimSound(entityId: string, block: ClientBlock): Promise<void> {
-    const swimSoundPath = 'audio/liquid/swim1.ogg';
+    // Get swim sound path from WorldInfo settings (optional)
+    const settings = this.appContext.worldInfo?.settings as any;
+    const swimSoundPath = settings?.swimStepAudio || 'audio/liquid/swim1.ogg'; // Fallback to default
+
+    // Skip if no swim sound configured
+    if (!swimSoundPath || swimSoundPath.trim() === '') {
+      return;
+    }
 
     // Throttling: Check if swim sound was played recently (prevent overlapping)
     // Swim sounds are typically 500-1000ms long, so wait at least 500ms
@@ -992,7 +1000,7 @@ export class AudioService {
     );
 
     if (!item) {
-      logger.warn('Failed to get swim sound from pool');
+      logger.warn('Failed to get swim sound from pool', { swimSoundPath });
       return;
     }
 
