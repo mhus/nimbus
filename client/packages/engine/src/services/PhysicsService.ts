@@ -1203,12 +1203,6 @@ export class PhysicsService {
    */
   private emit(event: string, ...args: any[]): void {
     const listeners = this.eventListeners.get(event);
-    logger.info('Emitting event', {
-      event,
-      hasListeners: !!listeners,
-      listenerCount: listeners?.length || 0,
-      allEvents: Array.from(this.eventListeners.keys()),
-    });
     if (listeners) {
       listeners.forEach(listener => listener(...args));
     }
@@ -1223,22 +1217,11 @@ export class PhysicsService {
    * @param movementType Type of movement (walk, jump, etc.)
    */
   emitStepOver(entity: any, block: ClientBlock, movementType: string): void {
-    // Throttle step events (max once per 300ms per entity)
+    // Throttle step events (max once per stepInterval ms per entity)
     const now = Date.now();
     const lastStep = entity.lastStepTime;
 
-    logger.info('emitStepOver called', {
-      entityId: entity.entityId,
-      blockTypeId: block.blockType.id,
-      now,
-      lastStep,
-      timeSinceLastStep: lastStep ? now - lastStep : 'never',
-      throttleInterval: this.stepInterval,
-      willThrottle: lastStep ? now - lastStep < this.stepInterval : false,
-    });
-
     if (lastStep && now - lastStep < this.stepInterval) {
-      logger.info('Step event throttled (too soon since last step)');
       return; // Too soon since last step
     }
 
@@ -1250,15 +1233,6 @@ export class PhysicsService {
       entityId: entity.entityId,
       block,
       movementType,
-    });
-
-    logger.info('Step over event emitted', {
-      entityId: entity.entityId,
-      blockTypeId: block.blockType.id,
-      position: block.block.position,
-      movementType,
-      hasAudioSteps: !!block.audioSteps,
-      audioStepsCount: block.audioSteps?.length || 0,
     });
   }
 

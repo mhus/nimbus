@@ -285,39 +285,13 @@ export class WalkModeController {
     // Emit step event if entity is moving on ground
     const isMoving = movementVector.lengthSquared() > 0.001;
 
-    if (isMoving) {
-      logger.info('Step over check', {
-        entityId: entity.entityId,
-        grounded: entity.grounded,
-        isMoving,
-        movementVectorLength: movementVector.length(),
-        hasPhysicsService: !!this.physicsService,
-        footBlocksCount: context.footBlocks.blocks.length,
-      });
-    }
-
     if (entity.grounded && isMoving) {
       // Get first ground block (block under feet, not at feet position)
       const groundBlock = context.groundBlocks.blocks.find(b => b.block);
 
-      logger.info('Ground block found', {
-        hasGroundBlock: !!groundBlock,
-        hasBlock: !!groundBlock?.block,
-        hasPhysicsService: !!this.physicsService,
-        groundBlocksCount: context.groundBlocks.blocks.length,
-      });
-
       if (groundBlock && groundBlock.block && this.physicsService) {
-        logger.info('About to emit step over event');
         const movementType = startJump ? 'jump' : 'walk';
         this.physicsService.emitStepOver(entity, groundBlock.block, movementType);
-        logger.info('Step over event emit called');
-      } else {
-        logger.info('Step over event NOT emitted', {
-          hasGroundBlock: !!groundBlock,
-          hasBlock: !!groundBlock?.block,
-          hasPhysicsService: !!this.physicsService,
-        });
       }
     }
   }
@@ -327,9 +301,6 @@ export class WalkModeController {
    */
   setPhysicsService(physicsService: any): void {
     this.physicsService = physicsService;
-    logger.info('PhysicsService reference set in WalkModeController', {
-      hasPhysicsService: !!this.physicsService,
-    });
   }
 
   /**

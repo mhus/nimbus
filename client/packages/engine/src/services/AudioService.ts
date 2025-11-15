@@ -40,7 +40,7 @@ export class AudioService {
   private scene?: Scene;
   private networkService?: NetworkService;
   private audioEnabled: boolean = true;
-  private audioEngine?: AudioEngine;
+  private audioEngine?: any; // AudioEngineV2
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
@@ -75,7 +75,6 @@ export class AudioService {
    * Must be called after scene is created
    */
   async initialize(scene: Scene): Promise<void> {
-    console.log('🔊 AudioService.initialize() called');
     this.scene = scene;
     this.networkService = this.appContext.services.network;
 
@@ -86,38 +85,26 @@ export class AudioService {
 
     // Create audio engine using async API
     try {
-      console.log('🔊 Creating audio engine...');
       this.audioEngine = await CreateAudioEngineAsync();
-
-      console.log('🔊 Audio engine created:', {
-        hasEngine: !!this.audioEngine,
-        unlocked: this.audioEngine?.unlocked,
-      });
 
       // Unlock audio engine (waits for user interaction if needed)
       if (this.audioEngine && !this.audioEngine.unlocked) {
-        console.log('🔊 Audio engine locked, will unlock on first user interaction...');
-        logger.info('⚠️ Audio engine locked - waiting for user interaction (click, key press, etc.)');
+        logger.info('Audio engine locked - waiting for user interaction');
 
         // Unlock in background - don't block initialization
         this.audioEngine.unlockAsync().then(() => {
-          console.log('✅ Audio engine unlocked after user interaction!');
-          logger.info('✅ Audio engine unlocked and ready');
+          logger.info('Audio engine unlocked and ready');
         }).catch((error: any) => {
-          console.error('Failed to unlock audio engine:', error);
           logger.error('Failed to unlock audio engine', {}, error);
         });
       } else if (this.audioEngine) {
-        console.log('✅ Audio engine already unlocked');
-        logger.info('✅ Audio engine ready');
+        logger.info('Audio engine ready');
       }
     } catch (error) {
-      console.error('🔊 Failed to create audio engine:', error);
       logger.error('Failed to create audio engine', {}, error as Error);
     }
 
     logger.info('AudioService initialized with scene');
-    console.log('🔊 AudioService.initialize() completed');
   }
 
   /**
@@ -167,39 +154,20 @@ export class AudioService {
       logger.debug('Loading audio', { assetPath, audioUrl });
 
       // Create Babylon.js Sound object using async API
-      // Note: CreateSoundAsync uses the global audio engine created in initialize()
-      const sound = await CreateSoundAsync(
-        assetPath, // Name
-        audioUrl   // URL
-      );
+      const sound = await CreateSoundAsync(assetPath, audioUrl);
 
-      console.log('🔊 Sound created (StaticSound):', {
-        assetPath,
-        soundType: sound.constructor.name,
-        hasVolume: 'volume' in sound,
-        hasPlay: 'play' in sound,
-      });
-
-      // Apply options - StaticSound uses direct properties, not methods
+      // Apply options - StaticSound uses direct properties
       if (options?.loop !== undefined) {
         sound.loop = options.loop;
       }
       if (options?.volume !== undefined) {
         sound.volume = options.volume;
       }
-      // Note: StaticSound doesn't support spatialSound
-      // For spatial sounds, need to use regular Sound with scene
       if (options?.autoplay) {
         sound.play();
       }
 
-      logger.info('Sound object created', {
-        assetPath,
-        audioUrl,
-      });
-
-      // Also log to console for easy access
-      console.log('🔊 Loading audio:', audioUrl);
+      logger.debug('Sound loaded', { assetPath });
 
       // Cache the sound immediately (it will load in background)
       this.audioCache.set(assetPath, {
@@ -209,10 +177,10 @@ export class AudioService {
         isReady: true, // Set to true - Babylon.js handles loading, we can call play() anytime
       });
 
-      logger.info('Audio loaded and cached', { assetPath });
+      logger.debug('Audio cached', { assetPath });
       return sound;
     } catch (error) {
-      logger.error('Failed to load audio', { assetPath }, error as Error);
+      logger.warn('Failed to load audio', { assetPath, error: (error as Error).message });
       return null;
     }
   }

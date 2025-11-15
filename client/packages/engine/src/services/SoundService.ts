@@ -64,31 +64,21 @@ export class SoundService {
    * Plays random step sound from block's audioSteps
    */
   private onStepOver(event: StepOverEvent): void {
-    const { entityId, block, movementType } = event;
-
-    logger.info('Step over event received', {
-      entityId,
-      blockTypeId: block.blockType.id,
-      hasAudioSteps: !!block.audioSteps,
-      audioStepsCount: block.audioSteps?.length || 0,
-    });
+    const { entityId, block } = event;
 
     // Check if audio is enabled
     const audioService = this.appContext.services.audio;
     if (!audioService || !audioService.isAudioEnabled()) {
-      logger.info('Audio disabled, skipping step sound');
       return; // Audio disabled
     }
 
     // Check if already playing step sound for this entity
     if (this.playingStepSounds.get(entityId)) {
-      logger.info('Step sound already playing for entity, skipping', { entityId });
       return;
     }
 
     // Check if block has step audio
     if (!block.audioSteps || block.audioSteps.length === 0) {
-      logger.info('No step audio for this block', { blockTypeId: block.blockType.id });
       return; // No step audio for this block
     }
 
@@ -117,19 +107,14 @@ export class SoundService {
     // Set volume - StaticSound uses .volume property, not setVolume()
     if (typeof sound.setVolume === 'function') {
       sound.setVolume(definition.volume);
-    } else {
+    } else if ('volume' in sound) {
       sound.volume = definition.volume;
     }
 
     try {
       sound.play();
-      logger.info('sound.play() called', {
-        audioPath: definition.path,
-        volume: definition.volume,
-        isPlaying: sound.isPlaying !== undefined ? sound.isPlaying : 'unknown',
-      });
     } catch (error) {
-      logger.info('Error calling sound.play()', {
+      logger.warn('Failed to play step sound', {
         audioPath: definition.path,
         error: (error as Error).message,
       });
@@ -137,34 +122,15 @@ export class SoundService {
       return;
     }
 
-    logger.info('Playing step sound', {
-      entityId,
-      blockTypeId: block.blockType.id,
-      audioPath: definition.path,
-      volume: definition.volume,
-      movementType,
-      soundIsPlaying: sound.isPlaying,
-    });
-
     // Remove playing flag when sound ends
-    // Use Babylon.js Observable instead of DOM onended
     if (sound.onEndedObservable) {
-      logger.info('Registering onEndedObservable callback', { audioPath: definition.path });
-      const observer = sound.onEndedObservable.addOnce(() => {
+      sound.onEndedObservable.addOnce(() => {
         this.playingStepSounds.delete(entityId);
-        logger.info('Step sound ended (onEndedObservable fired)', {
-          entityId,
-          audioPath: definition.path,
-          stillInMap: this.playingStepSounds.has(entityId),
-        });
       });
     } else {
-      logger.info('No onEndedObservable, using timeout fallback');
       // Fallback: Remove flag after estimated duration
-      // This shouldn't happen but provides safety
       setTimeout(() => {
         this.playingStepSounds.delete(entityId);
-        logger.info('Step sound ended (timeout fallback)', { entityId });
       }, 1000);
     }
   }
@@ -174,7 +140,6 @@ export class SoundService {
    */
   stopAllSounds(): void {
     this.playingStepSounds.clear();
-    logger.debug('Stopped all sounds');
   }
 
   /**
