@@ -150,6 +150,10 @@ function deepMergeModifiers(target: BlockModifier | undefined, source: BlockModi
   };
 }
 
+// Cache for merged modifiers: key = "blockTypeId:status", value = merged modifier
+// Only used when block has NO instance-specific modifiers
+const modifierCache = new Map<string, BlockModifier>();
+
 /**
  * Merge BlockModifier according to priority rules
  *
@@ -169,6 +173,36 @@ export function mergeBlockModifier(
   // Status is determined from BlockType.initialStatus (default: 0)
   const status = mergeStatus(appContext, block, blockType, overwriteStatus);
 
+  // Check if block has instance-specific modifiers
+  const hasInstanceModifiers = block.modifiers && Object.keys(block.modifiers).length > 0;
+
+  // If no instance modifiers, check cache
+  if (!hasInstanceModifiers) {
+    const cacheKey = `${blockType.id}:${status}`;
+    const cached = modifierCache.get(cacheKey);
+    if (cached) {
+      return cached; // Return cached result
+    }
+
+    // Not in cache - compute and cache
+    const result = performModifierMerge(blockType, status, null);
+    modifierCache.set(cacheKey, result);
+    return result;
+  }
+
+  // Block has custom modifiers - must merge each time (cannot cache)
+  return performModifierMerge(blockType, status, block.modifiers);
+}
+
+/**
+ * Perform the actual modifier merge
+ * Separated from mergeBlockModifier to enable caching
+ */
+function performModifierMerge(
+  blockType: BlockType,
+  status: number,
+  blockModifiers: { [status: number]: BlockModifier } | null
+): BlockModifier {
   // Start with default modifier
   let result: BlockModifier = {
     visibility: {
@@ -188,8 +222,8 @@ export function mergeBlockModifier(
   }
 
   // Priority 1: Merge Block instance modifiers (highest priority)
-  if (block.modifiers && block.modifiers[status]) {
-    result = deepMergeModifiers(result, block.modifiers[status]);
+  if (blockModifiers && blockModifiers[status]) {
+    result = deepMergeModifiers(result, blockModifiers[status]);
   }
 
   return result;

@@ -1237,6 +1237,33 @@ export class EntityService {
     const floorY = Math.floor(clientEntity.currentPosition.y);
     const floorZ = Math.floor(clientEntity.currentPosition.z);
 
+    // Derive movementType from entity pose
+    const movementType = this.getMovementTypeFromPose(clientEntity.currentPose);
+
+    // SWIM mode: emit event even without ground block
+    if (movementType === 'swim') {
+      const physicsService = this.appContext.services.physics;
+      if (physicsService) {
+        clientEntity.lastStepTime = now;
+
+        // Create minimal block object with position for swim mode
+        const swimPosition = {
+          block: {
+            position: { x: floorX, y: floorY, z: floorZ },
+          },
+          blockType: { id: 0 },
+          audioSteps: undefined,
+        };
+
+        (physicsService as any).emit('step:over', {
+          entityId: clientEntity.id,
+          block: swimPosition,
+          movementType,
+        });
+      }
+      return;
+    }
+
     // Check block below entity (grounded check)
     const groundBlock = chunkService.getBlockAt(floorX, floorY - 1, floorZ);
 
@@ -1255,7 +1282,7 @@ export class EntityService {
       (physicsService as any).emit('step:over', {
         entityId: clientEntity.id,
         block: groundBlock,
-        movementType: 'walk',
+        movementType,
       });
     }
   }
@@ -1310,6 +1337,33 @@ export class EntityService {
     const floorY = Math.floor(clientEntity.currentPosition.y);
     const floorZ = Math.floor(clientEntity.currentPosition.z);
 
+    // Derive movementType from entity pose
+    const movementType = this.getMovementTypeFromPose(clientEntity.currentPose);
+
+    // SWIM mode: emit event even without ground block (checked via pose, not isGrounded)
+    if (movementType === 'swim') {
+      const physicsService = this.appContext.services.physics;
+      if (physicsService) {
+        clientEntity.lastStepTime = now;
+
+        // Create minimal block object with position for swim mode
+        const swimPosition = {
+          block: {
+            position: { x: floorX, y: floorY, z: floorZ },
+          },
+          blockType: { id: 0 },
+          audioSteps: undefined,
+        };
+
+        (physicsService as any).emit('step:over', {
+          entityId: clientEntity.id,
+          block: swimPosition,
+          movementType,
+        });
+      }
+      return;
+    }
+
     // Check block below entity
     const groundBlock = chunkService.getBlockAt(floorX, floorY - 1, floorZ);
 
@@ -1328,8 +1382,31 @@ export class EntityService {
       (physicsService as any).emit('step:over', {
         entityId: clientEntity.id,
         block: groundBlock,
-        movementType: 'walk',
+        movementType,
       });
+    }
+  }
+
+  /**
+   * Get movement type from entity pose
+   * Maps ENTITY_POSES to movement type strings for audio
+   */
+  private getMovementTypeFromPose(pose: number): string {
+    switch (pose) {
+      case ENTITY_POSES.CROUCH:
+        return 'crouch';
+      case ENTITY_POSES.SWIM:
+        return 'swim';
+      case ENTITY_POSES.JUMP:
+        return 'jump';
+      case ENTITY_POSES.RUN:
+      case ENTITY_POSES.SPRINT:
+        return 'run';
+      case ENTITY_POSES.WALK:
+      case ENTITY_POSES.WALK_SLOW:
+      case ENTITY_POSES.IDLE:
+      default:
+        return 'walk';
     }
   }
 }

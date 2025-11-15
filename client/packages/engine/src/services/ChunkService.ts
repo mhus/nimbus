@@ -397,7 +397,16 @@ export class ChunkService {
     await blockTypeService.preloadBlockTypes(Array.from(blockTypeIds));
 
     // STEP 2: Process each block - creating ClientBlocks AND collecting height data in ONE pass
-    for (const block of chunkData.b) {
+    // Process in batches to avoid blocking main thread
+    const BATCH_SIZE = 50;
+    const blocks = chunkData.b;
+
+    for (let batchStart = 0; batchStart < blocks.length; batchStart += BATCH_SIZE) {
+      const batchEnd = Math.min(batchStart + BATCH_SIZE, blocks.length);
+
+      // Process batch
+      for (let i = batchStart; i < batchEnd; i++) {
+        const block = blocks[i];
       const blockType = blockTypeService.getBlockType(block.blockTypeId);
       if (!blockType) {
         logger.warn('BlockType not found for block', {
@@ -425,11 +434,16 @@ export class ChunkService {
         lastUpdate: Date.now(),
       };
 
-      // Load audio files for this block
-      await this.loadBlockAudio(clientBlock);
-
       // Add to map with position key
       clientBlocksMap.set(posKey, clientBlock);
+
+      // Load audio files for this block (non-blocking - loads in background)
+      this.loadBlockAudio(clientBlock).catch(error => {
+        logger.warn('Failed to load block audio (non-blocking)', {
+          position: clientBlock.block.position,
+          error: (error as Error).message,
+        });
+      });
 
       // PERFORMANCE: Calculate height data in same pass
       // Calculate local x, z coordinates within chunk
@@ -480,6 +494,12 @@ export class ChunkService {
           columnData.waterLevel = block.position.y;
         }
       }
+      }
+
+      // Yield to main thread after each batch (except last batch)
+      if (batchEnd < blocks.length) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
     }
 
     // STEP 3: Finalize height data for columns with blocks (already calculated during block processing)
@@ -523,7 +543,13 @@ export class ChunkService {
       });
 
       // BlockTypes already preloaded in STEP 1.5
-      for (const item of chunkData.i) {
+      // Process items in batches to avoid blocking main thread
+      const items = chunkData.i;
+      for (let batchStart = 0; batchStart < items.length; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, items.length);
+
+        for (let i = batchStart; i < batchEnd; i++) {
+          const item = items[i];
         // Get position key
         const posKey = getBlockPositionKey(item.position.x, item.position.y, item.position.z);
 
@@ -562,17 +588,28 @@ export class ChunkService {
           lastUpdate: Date.now(),
         };
 
-        // Load audio files for this block
-        await this.loadBlockAudio(clientBlock);
-
         // Add to map with position key
         clientBlocksMap.set(posKey, clientBlock);
+
+        // Load audio files for this block (non-blocking - loads in background)
+        this.loadBlockAudio(clientBlock).catch(error => {
+          logger.warn('Failed to load item block audio (non-blocking)', {
+            position: clientBlock.block.position,
+            error: (error as Error).message,
+          });
+        });
 
         logger.debug('Item added to chunk', {
           position: item.position,
           itemId: item.metadata?.id,
           displayName: item.metadata?.displayName,
         });
+        }
+
+        // Yield to main thread after each batch (except last batch)
+        if (batchEnd < items.length) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
       }
     }
 
@@ -795,11 +832,16 @@ export class ChunkService {
           lastUpdate: Date.now(),
         };
 
-        // Load audio files for this block
-        await this.loadBlockAudio(clientBlock);
-
         // Update in chunk
         clientChunk.data.data.set(posKey, clientBlock);
+
+        // Load audio files for this block (non-blocking - loads in background)
+        this.loadBlockAudio(clientBlock).catch(error => {
+          logger.warn('Failed to load block audio on update (non-blocking)', {
+            position: clientBlock.block.position,
+            error: (error as Error).message,
+          });
+        });
         affectedChunks.add(chunkKey);
 
         logger.debug('Block updated', {
@@ -959,11 +1001,16 @@ export class ChunkService {
             lastUpdate: Date.now(),
           };
 
-          // Load audio files for this block
-          await this.loadBlockAudio(clientBlock);
-
           // Update in chunk
           clientChunk.data.data.set(posKey, clientBlock);
+
+          // Load audio files for this block (non-blocking - loads in background)
+          this.loadBlockAudio(clientBlock).catch(error => {
+            logger.warn('Failed to load item update audio (non-blocking)', {
+              position: clientBlock.block.position,
+              error: (error as Error).message,
+            });
+          });
           affectedChunks.add(chunkKey);
 
           logger.debug('Item added/updated', {

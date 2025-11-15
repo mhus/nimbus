@@ -57,7 +57,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 [?] wenn im Modus swimm, soll das event immer geschickt werden, auch wenn die entity nicht auf einem block steht (also im wasser schwimmt). - ClientBlock ist dann undefined.
 - Korrektur, es muss zumindest die position des Players mit versendet werden. Also nucht undefined
 
-[ ] Entity Player geben die Pose mit, von der Pose koennen die movementTypes abgeleitet werden und correct bei onStepOver mitgegeben werden.
+[?] Entity Player geben die Pose mit, von der Pose koennen die movementTypes abgeleitet werden und correct bei onStepOver mitgegeben werden.
 
 [x] Beim modus CRUCH (wird im event mitgeliefert) soll der sound leiser abgespielt werden (50% der lautstaerke).
 
