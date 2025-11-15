@@ -888,7 +888,7 @@ export class AudioService {
         if (sound.spatial) {
           sound.spatial.position = deferredWrapper._config.position;
           sound.spatial.maxDistance = deferredWrapper._config.maxDistance;
-          sound.spatial.distanceModel = 'exponential';
+          sound.spatial.distanceModel = 'linear'; // Linear: volume reaches 0 at maxDistance
           sound.spatial.rolloffFactor = 1;
           // Omnidirectional
           sound.spatial.coneInnerAngle = 2 * Math.PI;
@@ -896,7 +896,8 @@ export class AudioService {
 
           logger.info('Spatial audio configured', {
             position: deferredWrapper._config.position,
-            maxDistance: deferredWrapper._config.maxDistance
+            maxDistance: deferredWrapper._config.maxDistance,
+            distanceModel: 'linear'
           });
         }
 
