@@ -283,13 +283,41 @@ export class WalkModeController {
     // === 8. EMIT STEP OVER EVENT ===
 
     // Emit step event if entity is moving on ground
-    if (entity.grounded && movementVector.lengthSquared() > 0.001) {
-      // Get first solid foot block (if any)
-      const footBlock = context.footBlocks.blocks.find(b => b.block);
+    const isMoving = movementVector.lengthSquared() > 0.001;
 
-      if (footBlock && footBlock.block && this.physicsService) {
+    if (isMoving) {
+      logger.info('Step over check', {
+        entityId: entity.entityId,
+        grounded: entity.grounded,
+        isMoving,
+        movementVectorLength: movementVector.length(),
+        hasPhysicsService: !!this.physicsService,
+        footBlocksCount: context.footBlocks.blocks.length,
+      });
+    }
+
+    if (entity.grounded && isMoving) {
+      // Get first ground block (block under feet, not at feet position)
+      const groundBlock = context.groundBlocks.blocks.find(b => b.block);
+
+      logger.info('Ground block found', {
+        hasGroundBlock: !!groundBlock,
+        hasBlock: !!groundBlock?.block,
+        hasPhysicsService: !!this.physicsService,
+        groundBlocksCount: context.groundBlocks.blocks.length,
+      });
+
+      if (groundBlock && groundBlock.block && this.physicsService) {
+        logger.info('About to emit step over event');
         const movementType = startJump ? 'jump' : 'walk';
-        this.physicsService.emitStepOver(entity.entityId, footBlock.block, movementType);
+        this.physicsService.emitStepOver(entity, groundBlock.block, movementType);
+        logger.info('Step over event emit called');
+      } else {
+        logger.info('Step over event NOT emitted', {
+          hasGroundBlock: !!groundBlock,
+          hasBlock: !!groundBlock?.block,
+          hasPhysicsService: !!this.physicsService,
+        });
       }
     }
   }
@@ -299,6 +327,9 @@ export class WalkModeController {
    */
   setPhysicsService(physicsService: any): void {
     this.physicsService = physicsService;
+    logger.info('PhysicsService reference set in WalkModeController', {
+      hasPhysicsService: !!this.physicsService,
+    });
   }
 
   /**

@@ -97,4 +97,7 @@ export interface PhysicsEntity {
 
   /** Current selection/interaction radius (varies by state: WALK=5.0, CROUCH=4.0, FLY=8.0) */
   cachedSelectionRadius: number;
+
+  /** Last step sound time for throttling (timestamp in ms) */
+  lastStepTime?: number;
 }

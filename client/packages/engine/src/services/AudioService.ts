@@ -9,7 +9,8 @@
 
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
-import { Sound, Scene } from '@babylonjs/core';
+import { Scene, Sound, Engine, CreateAudioEngineAsync, CreateSoundAsync } from '@babylonjs/core';
+import type { AudioEngine, StaticSound } from '@babylonjs/core';
 import type { NetworkService } from './NetworkService';
 
 const logger = getLogger('AudioService');
@@ -18,12 +19,14 @@ const logger = getLogger('AudioService');
  * Audio cache entry
  */
 interface AudioCacheEntry {
-  /** Babylon.js Sound object */
-  sound: Sound;
+  /** Babylon.js Sound object (Sound or StaticSound) */
+  sound: any; // Can be Sound or StaticSound
   /** Asset path */
   path: string;
   /** Load timestamp */
   loadedAt: number;
+  /** Is sound ready to play (set in ready callback) */
+  isReady: boolean;
 }
 
 /**
@@ -37,6 +40,7 @@ export class AudioService {
   private scene?: Scene;
   private networkService?: NetworkService;
   private audioEnabled: boolean = true;
+  private audioEngine?: AudioEngine;
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
@@ -53,9 +57,8 @@ export class AudioService {
     // Stop all playing audio when disabling
     if (!enabled) {
       this.audioCache.forEach(entry => {
-        if (entry.sound.isPlaying) {
-          entry.sound.stop();
-        }
+        // StaticSound has stop() but not isPlaying, so just call stop()
+        entry.sound.stop();
       });
     }
   }
@@ -71,7 +74,8 @@ export class AudioService {
    * Initialize audio service with scene
    * Must be called after scene is created
    */
-  initialize(scene: Scene): void {
+  async initialize(scene: Scene): Promise<void> {
+    console.log('🔊 AudioService.initialize() called');
     this.scene = scene;
     this.networkService = this.appContext.services.network;
 
@@ -80,7 +84,40 @@ export class AudioService {
       return;
     }
 
+    // Create audio engine using async API
+    try {
+      console.log('🔊 Creating audio engine...');
+      this.audioEngine = await CreateAudioEngineAsync();
+
+      console.log('🔊 Audio engine created:', {
+        hasEngine: !!this.audioEngine,
+        unlocked: this.audioEngine?.unlocked,
+      });
+
+      // Unlock audio engine (waits for user interaction if needed)
+      if (this.audioEngine && !this.audioEngine.unlocked) {
+        console.log('🔊 Audio engine locked, will unlock on first user interaction...');
+        logger.info('⚠️ Audio engine locked - waiting for user interaction (click, key press, etc.)');
+
+        // Unlock in background - don't block initialization
+        this.audioEngine.unlockAsync().then(() => {
+          console.log('✅ Audio engine unlocked after user interaction!');
+          logger.info('✅ Audio engine unlocked and ready');
+        }).catch((error: any) => {
+          console.error('Failed to unlock audio engine:', error);
+          logger.error('Failed to unlock audio engine', {}, error);
+        });
+      } else if (this.audioEngine) {
+        console.log('✅ Audio engine already unlocked');
+        logger.info('✅ Audio engine ready');
+      }
+    } catch (error) {
+      console.error('🔊 Failed to create audio engine:', error);
+      logger.error('Failed to create audio engine', {}, error as Error);
+    }
+
     logger.info('AudioService initialized with scene');
+    console.log('🔊 AudioService.initialize() completed');
   }
 
   /**
@@ -99,7 +136,7 @@ export class AudioService {
       autoplay?: boolean;
       spatialSound?: boolean;
     }
-  ): Promise<Sound | null> {
+  ): Promise<any> {
     if (!this.scene) {
       logger.error('Scene not initialized');
       return null;
@@ -129,27 +166,47 @@ export class AudioService {
 
       logger.debug('Loading audio', { assetPath, audioUrl });
 
-      // Create Babylon.js Sound object
-      const sound = new Sound(
+      // Create Babylon.js Sound object using async API
+      // Note: CreateSoundAsync uses the global audio engine created in initialize()
+      const sound = await CreateSoundAsync(
         assetPath, // Name
-        audioUrl,  // URL
-        this.scene,
-        () => {
-          logger.debug('Audio loaded successfully', { assetPath });
-        },
-        {
-          loop: options?.loop ?? false,
-          autoplay: options?.autoplay ?? false,
-          volume: options?.volume ?? 1.0,
-          spatialSound: options?.spatialSound ?? false,
-        }
+        audioUrl   // URL
       );
 
-      // Cache the sound
+      console.log('🔊 Sound created (StaticSound):', {
+        assetPath,
+        soundType: sound.constructor.name,
+        hasVolume: 'volume' in sound,
+        hasPlay: 'play' in sound,
+      });
+
+      // Apply options - StaticSound uses direct properties, not methods
+      if (options?.loop !== undefined) {
+        sound.loop = options.loop;
+      }
+      if (options?.volume !== undefined) {
+        sound.volume = options.volume;
+      }
+      // Note: StaticSound doesn't support spatialSound
+      // For spatial sounds, need to use regular Sound with scene
+      if (options?.autoplay) {
+        sound.play();
+      }
+
+      logger.info('Sound object created', {
+        assetPath,
+        audioUrl,
+      });
+
+      // Also log to console for easy access
+      console.log('🔊 Loading audio:', audioUrl);
+
+      // Cache the sound immediately (it will load in background)
       this.audioCache.set(assetPath, {
         sound,
         path: assetPath,
         loadedAt: Date.now(),
+        isReady: true, // Set to true - Babylon.js handles loading, we can call play() anytime
       });
 
       logger.info('Audio loaded and cached', { assetPath });
@@ -162,24 +219,34 @@ export class AudioService {
 
   /**
    * Apply options to existing Sound object
+   * Works with both Sound and StaticSound
    */
-  private applySoundOptions(sound: Sound, options: {
+  private applySoundOptions(sound: any, options: {
     volume?: number;
     loop?: boolean;
     autoplay?: boolean;
     spatialSound?: boolean;
   }): void {
     if (options.volume !== undefined) {
-      sound.setVolume(options.volume);
+      // StaticSound uses .volume property, Sound uses setVolume()
+      if (typeof sound.setVolume === 'function') {
+        sound.setVolume(options.volume);
+      } else {
+        sound.volume = options.volume;
+      }
     }
     if (options.loop !== undefined) {
       sound.loop = options.loop;
     }
-    if (options.spatialSound !== undefined) {
+    if (options.spatialSound !== undefined && 'spatialSound' in sound) {
       sound.spatialSound = options.spatialSound;
     }
-    if (options.autoplay && !sound.isPlaying) {
-      sound.play();
+    if (options.autoplay) {
+      // StaticSound doesn't have isPlaying property
+      const shouldPlay = !sound.isPlaying || sound.isPlaying === undefined;
+      if (shouldPlay) {
+        sound.play();
+      }
     }
   }
 
@@ -198,7 +265,7 @@ export class AudioService {
       volume?: number;
       loop?: boolean;
     }
-  ): Promise<Sound | null> {
+  ): Promise<any> {
     // Check if audio is enabled
     if (!this.audioEnabled) {
       logger.debug('Audio playback disabled, skipping', { assetPath });
@@ -245,6 +312,15 @@ export class AudioService {
     if (stoppedCount > 0) {
       logger.debug('Stopped all audio', { count: stoppedCount });
     }
+  }
+
+  /**
+   * Check if audio is ready to play
+   * Uses cache entry flag instead of sound.isReady() for reliability
+   */
+  isAudioReady(assetPath: string): boolean {
+    const cached = this.audioCache.get(assetPath);
+    return cached?.isReady ?? false;
   }
 
   /**

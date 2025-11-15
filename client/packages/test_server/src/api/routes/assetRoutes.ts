@@ -243,6 +243,9 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
         '.json': 'application/json',
         '.obj': 'text/plain',
         '.mtl': 'text/plain',
+        '.ogg': 'audio/ogg',
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
       };
 
       const contentType = contentTypes[ext] || 'application/octet-stream';

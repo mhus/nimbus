@@ -42,6 +42,7 @@ import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
 import { SendCommand } from './commands/SendCommand';
 import { AudioCommand } from './commands/AudioCommand';
+import { TestAudioCommand } from './commands/TestAudioCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import { SetShortcutCommand } from './commands/SetShortcutCommand';
@@ -144,6 +145,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ClearCommand());
     commandService.registerHandler(new SendCommand(commandService));
     commandService.registerHandler(new AudioCommand(appContext));
+    commandService.registerHandler(new TestAudioCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));

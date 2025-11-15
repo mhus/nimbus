@@ -33,7 +33,7 @@
 an den Block vermerkt werden. In ClientBlock wird ein neues feld 'auioSteps' mit allen Audio Objekten vom typ 'steps' hinzugefuegt. Dabei wird in einer 
 Struktur gespeichert referenz auf AudioDefinition und auf den BABYLON.Sound.
 
-[ ] Im PhysicService wird beim bewegen des Spielers ein event 'onStepOver' ausgelöst, AUF welchem block (ClientBlock)) sich 
+[?] Im PhysicService wird beim bewegen des Spielers ein event 'onStepOver' ausgelöst, AUF welchem block (ClientBlock)) sich 
 der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen, springen, etc) und der id der entity.
 - Das event wird nur ausgeloest wenn sich der spieler bewegt (also nicht steht) und nur alle 300ms (damit nicht zu viele events kommen beim laufen)
 - Falls sich der Player auf mehr als einen block bewegt, wird einer aus der ersten reihe, bei den fuessen ausgewahlt, ggf. der erste. Es wird nur ein block gesendet.

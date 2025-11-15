@@ -135,9 +135,8 @@ export class PhysicsService {
   // Track if climbable velocity was set this frame (before updateWalkMode runs)
   private climbableVelocitySetThisFrame: Map<string, boolean> = new Map();
 
-  // Step sound tracking (prevent too many step events)
-  private lastStepTime: Map<string, number> = new Map(); // entityId -> timestamp
-  private readonly stepInterval: number = 300; // ms between step events
+  // Step sound throttle interval (per entity)
+  private readonly stepInterval: number = 50; // ms between step events
 
   // Event listeners
   private eventListeners: Map<string, Array<(...args: any[]) => void>> = new Map();
@@ -1204,6 +1203,12 @@ export class PhysicsService {
    */
   private emit(event: string, ...args: any[]): void {
     const listeners = this.eventListeners.get(event);
+    logger.info('Emitting event', {
+      event,
+      hasListeners: !!listeners,
+      listenerCount: listeners?.length || 0,
+      allEvents: Array.from(this.eventListeners.keys()),
+    });
     if (listeners) {
       listeners.forEach(listener => listener(...args));
     }
@@ -1213,34 +1218,47 @@ export class PhysicsService {
    * Emit step over event when entity moves over a block
    * Called from movement controllers
    *
-   * @param entityId Entity ID
+   * @param entity Physics entity
    * @param block Block entity is stepping on
    * @param movementType Type of movement (walk, jump, etc.)
    */
-  emitStepOver(entityId: string, block: ClientBlock, movementType: string): void {
+  emitStepOver(entity: any, block: ClientBlock, movementType: string): void {
     // Throttle step events (max once per 300ms per entity)
     const now = Date.now();
-    const lastStep = this.lastStepTime.get(entityId);
+    const lastStep = entity.lastStepTime;
+
+    logger.info('emitStepOver called', {
+      entityId: entity.entityId,
+      blockTypeId: block.blockType.id,
+      now,
+      lastStep,
+      timeSinceLastStep: lastStep ? now - lastStep : 'never',
+      throttleInterval: this.stepInterval,
+      willThrottle: lastStep ? now - lastStep < this.stepInterval : false,
+    });
 
     if (lastStep && now - lastStep < this.stepInterval) {
+      logger.info('Step event throttled (too soon since last step)');
       return; // Too soon since last step
     }
 
     // Update last step time
-    this.lastStepTime.set(entityId, now);
+    entity.lastStepTime = now;
 
     // Emit event
     this.emit('step:over', {
-      entityId,
+      entityId: entity.entityId,
       block,
       movementType,
     });
 
-    logger.debug('Step over event', {
-      entityId,
+    logger.info('Step over event emitted', {
+      entityId: entity.entityId,
       blockTypeId: block.blockType.id,
       position: block.block.position,
       movementType,
+      hasAudioSteps: !!block.audioSteps,
+      audioStepsCount: block.audioSteps?.length || 0,
     });
   }
 
@@ -1249,7 +1267,6 @@ export class PhysicsService {
    */
   dispose(): void {
     this.entities.clear();
-    this.lastStepTime.clear();
     this.eventListeners.clear();
 
     // Dispose controllers
