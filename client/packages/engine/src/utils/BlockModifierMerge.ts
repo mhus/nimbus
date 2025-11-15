@@ -191,7 +191,7 @@ export function mergeBlockModifier(
   }
 
   // Block has custom modifiers - must merge each time (cannot cache)
-  return performModifierMerge(blockType, status, block.modifiers);
+  return performModifierMerge(blockType, status, block.modifiers ?? null);
 }
 
 /**
