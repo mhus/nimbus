@@ -54,10 +54,11 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Erstelle einen parameter 'stepVolume' im AudioService, default wert 0.5
 - Erstelle ein Commando zum setzen des stepVolume parameters.
 
-[ ] wenn im Modus swimm, soll das event immer geschickt werden, auch wenn die entity nicht auf einem block steht (also im wasser schwimmt). - ClientBlock ist dann undefined.
+[?] wenn im Modus swimm, soll das event immer geschickt werden, auch wenn die entity nicht auf einem block steht (also im wasser schwimmt). - ClientBlock ist dann undefined.
+- Korrektur, es muss zumindest die position des Players mit versendet werden. Also nucht undefined
 
 [ ] Entity Player geben die Pose mit, von der Pose koennen die movementTypes abgeleitet werden und correct bei onStepOver mitgegeben werden.
 
-[?] Beim modus CRUCH (wird im event mitgeliefert) soll der sound leiser abgespielt werden (50% der lautstaerke).
+[x] Beim modus CRUCH (wird im event mitgeliefert) soll der sound leiser abgespielt werden (50% der lautstaerke).
 
-[ ] Beim modus SWIM (wird im event mitgeliefert) soll ein spezieller sound 'audio/step/swim1.ogg' abgespielt werden.
+[?] Beim modus SWIM (wird im event mitgeliefert) soll ein spezieller sound 'audio/step/swim1.ogg' an der stelle des players abgespielt werden.

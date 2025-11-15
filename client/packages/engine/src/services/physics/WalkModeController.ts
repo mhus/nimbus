@@ -282,23 +282,47 @@ export class WalkModeController {
 
     // === 8. EMIT STEP OVER EVENT ===
 
-    // Emit step event if entity is moving on ground
+    // Emit step event if entity is moving on ground OR swimming
     const isMoving = movementVector.lengthSquared() > 0.001;
+    const isSwimming = entity.movementMode === 'swim';
 
-    if (entity.grounded && isMoving) {
-      // Get first ground block (block under feet, not at feet position)
-      const groundBlock = context.groundBlocks.blocks.find(b => b.block);
+    if (isMoving && (entity.grounded || isSwimming)) {
+      // Determine movement type based on jump, crouch, and swim state
+      let movementType = 'walk';
+      if (isSwimming) {
+        movementType = 'swim';
+      } else if (startJump) {
+        movementType = 'jump';
+      } else if (entity.movementMode === 'crouch') {
+        movementType = 'crouch';
+      }
 
-      if (groundBlock && groundBlock.block && this.physicsService) {
-        // Determine movement type based on jump and crouch state
-        let movementType = 'walk';
-        if (startJump) {
-          movementType = 'jump';
-        } else if (entity.movementMode === 'crouch') {
-          movementType = 'crouch';
+      if (isSwimming) {
+        // SWIM mode: Send event with player position instead of block
+        // Uses PhysicsService.emitStepOver which respects stepInterval (300ms throttle)
+        if (this.physicsService) {
+          // Create a minimal block-like object with player position
+          const swimPosition = {
+            block: {
+              position: {
+                x: Math.floor(entity.position.x),
+                y: Math.floor(entity.position.y),
+                z: Math.floor(entity.position.z),
+              },
+            },
+            blockType: { id: 0 }, // Water/no block
+            audioSteps: undefined, // No step audio when swimming
+          };
+          this.physicsService.emitStepOver(entity, swimPosition as any, movementType);
         }
+      } else if (entity.grounded) {
+        // Normal ground movement: Get ground block
+        // Uses PhysicsService.emitStepOver which respects stepInterval (300ms throttle)
+        const groundBlock = context.groundBlocks.blocks.find(b => b.block);
 
-        this.physicsService.emitStepOver(entity, groundBlock.block, movementType);
+        if (groundBlock && groundBlock.block && this.physicsService) {
+          this.physicsService.emitStepOver(entity, groundBlock.block, movementType);
+        }
       }
     }
   }
