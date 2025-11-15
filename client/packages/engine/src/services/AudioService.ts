@@ -8,7 +8,7 @@
  * - Handling gameplay sound playback (step sounds, swim sounds, etc.)
  */
 
-import { getLogger } from '@nimbus/shared';
+import { getLogger, type AudioDefinition } from '@nimbus/shared';
 import { Vector3 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import { Scene, Sound, Engine, CreateAudioEngineAsync, CreateSoundAsync } from '@babylonjs/core';
@@ -637,6 +637,72 @@ export class AudioService {
       return sound;
     } catch (error) {
       logger.warn('Failed to load audio', { assetPath, error: (error as Error).message });
+      return null;
+    }
+  }
+
+  /**
+   * Creates a permanent (non-cached) spatial sound for a block
+   * Used for ambient sounds that play continuously while the block is visible
+   * Audio is streamed and looped automatically (Babylon.js handles streaming for large files)
+   *
+   * @param block Block to attach sound to
+   * @param audioDef Audio definition with path, volume, loop, etc.
+   * @returns Babylon.js Sound object (implements IDisposable)
+   */
+  async createPermanentSoundForBlock(block: ClientBlock, audioDef: AudioDefinition): Promise<any> {
+    if (!this.scene) {
+      logger.error('Scene not initialized');
+      return null;
+    }
+
+    if (!this.networkService) {
+      logger.error('NetworkService not available');
+      return null;
+    }
+
+    try {
+      const audioUrl = this.networkService.getAssetUrl(audioDef.path);
+      const blockPos = block.block.position;
+      const blockPosition = new Vector3(blockPos.x, blockPos.y, blockPos.z);
+
+      logger.debug('Creating permanent sound for block', {
+        path: audioDef.path,
+        position: blockPosition,
+        volume: audioDef.volume,
+        loop: audioDef.loop
+      });
+
+      // Create spatial Sound directly (not StaticSound via CreateSoundAsync)
+      // Sound class supports spatial audio with setPosition()
+      const sound = new Sound(
+        audioDef.path,
+        audioUrl,
+        this.scene,
+        null, // Ready callback
+        {
+          loop: audioDef.loop !== false, // Default to true for permanent sounds
+          autoplay: false,
+          spatialSound: true,
+          maxDistance: audioDef.maxDistance || DEFAULT_MAX_DISTANCE,
+          distanceModel: 'linear',
+          rolloffFactor: 1,
+        }
+      );
+
+      // Set position and volume
+      sound.setPosition(blockPosition);
+      sound.setVolume(audioDef.volume);
+
+      logger.debug('Permanent sound created', { path: audioDef.path, position: blockPosition });
+
+      return sound;
+    } catch (error) {
+      logger.warn('Failed to create permanent sound for block', {
+        path: audioDef.path,
+        blockPos: block.block.position,
+        error: (error as Error).message
+      });
       return null;
     }
   }

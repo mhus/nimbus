@@ -24,6 +24,7 @@ import type { NetworkService } from './NetworkService';
 import type { ClientChunkData, ClientHeightData } from '../types/ClientChunk';
 import { ClientChunk } from '../types/ClientChunk';
 import type { ClientBlock } from '../types/ClientBlock';
+import { DisposableResources } from '../rendering/DisposableResources';
 import {
   worldToChunk,
   getChunkKey,
@@ -258,6 +259,15 @@ export class ChunkService {
 
         // Emit event for rendering
         this.emit('chunk:loaded', clientChunk);
+
+        // Load permanent audio for this chunk (non-blocking)
+        this.loadPermanentAudioForChunk(clientChunk).catch(error => {
+          logger.warn('Failed to load permanent audio for chunk (non-blocking)', {
+            cx: chunkData.cx,
+            cz: chunkData.cz,
+            error: (error as Error).message,
+          });
+        });
 
         logger.debug('Chunk loaded', {
           cx: chunkData.cx,
@@ -1170,6 +1180,70 @@ export class ChunkService {
         blockTypeId: clientBlock.blockType.id,
         count: audioSteps.length,
       });
+    }
+  }
+
+  /**
+   * Load permanent audio for all blocks in a chunk
+   * Creates spatial ambient sounds that play continuously while chunk is visible
+   *
+   * @param clientChunk - The client chunk to load permanent audio for
+   */
+  private async loadPermanentAudioForChunk(clientChunk: ClientChunk): Promise<void> {
+    const audioService = this.appContext.services.audio;
+    if (!audioService) {
+      return; // AudioService not available
+    }
+
+    // Iterate over all blocks in the chunk
+    for (const clientBlock of clientChunk.data.data.values()) {
+      const audioModifier = clientBlock.currentModifier.audio;
+      if (!audioModifier || audioModifier.length === 0) {
+        continue; // No audio defined for this block
+      }
+
+      // Filter for permanent audio - only use first enabled one
+      const permanentAudioDefs = audioModifier.filter(
+        def => def.type === AudioType.PERMANENT && def.enabled
+      );
+
+      if (permanentAudioDefs.length === 0) {
+        continue; // No permanent audio for this block
+      }
+
+      // Use only the first enabled permanent audio definition
+      const audioDef = permanentAudioDefs[0];
+
+      try {
+        // Create permanent sound for this block
+        const sound = await audioService.createPermanentSoundForBlock(clientBlock, audioDef);
+
+        if (sound) {
+          // Ensure resourcesToDispose exists
+          if (!clientChunk.data.resourcesToDispose) {
+            clientChunk.data.resourcesToDispose = new DisposableResources();
+          }
+
+          // Add sound to disposable resources (will be disposed when chunk unloads)
+          clientChunk.data.resourcesToDispose.add(sound);
+
+          // Start playing immediately
+          sound.play();
+
+          logger.debug('Permanent sound started for block', {
+            path: audioDef.path,
+            blockTypeId: clientBlock.blockType.id,
+            position: clientBlock.block.position,
+          });
+        }
+      } catch (error) {
+        logger.warn('Failed to create permanent sound for block', {
+          path: audioDef.path,
+          blockTypeId: clientBlock.blockType.id,
+          position: clientBlock.block.position,
+          error: (error as Error).message,
+        });
+      }
     }
   }
 

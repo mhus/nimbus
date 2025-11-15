@@ -150,6 +150,7 @@ const localValue = ref<AudioModifier>(
 // Audio type options for dropdown
 const audioTypeOptions = [
   { value: AudioType.STEPS, label: 'Steps' },
+  { value: AudioType.PERMANENT, label: 'Permanent' },
 ];
 
 // Asset picker state

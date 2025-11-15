@@ -637,6 +637,8 @@ export interface EffectsModifier {
 export enum AudioType {
   /** Step sounds when walking on block */
   STEPS = 'steps',
+  /** Permanent ambient sound that plays continuously when block is visible */
+  PERMANENT = 'permanent',
 }
 
 /**
