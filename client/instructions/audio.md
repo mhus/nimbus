@@ -93,7 +93,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Erstelle commandos in der engine fuer playSound(soudnPath: string, stream: boolean, volume: number)
 - kein loop!
 
-[ ] Funktion am AudioService fuer speak(streamPath: string, volume: number)
+[x] Funktion am AudioService fuer speak(streamPath: string, volume: number)
 - Fuer speach soll es im NetworkService eine neue methode geben getSpeachUrl(streamPath: string): string
   - Die Methode gibt einen Path auf /api/world/{worldId}/speach/{streamPath} zurueck.
   - Es ird die sessionId und authToken als query parameter angehaengt. (authToken wird im NetworkService als parameter gehalten, aktueller wert '')
@@ -103,5 +103,9 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - kein loop!
 - Es kann immer nur eine speach gleichzeitig abgespielt werden. Wenn eine neue gestartet wird, wird die alte abgebrochen.
 - Es soll eine speachVolume als multiplikator geben. Erstelle ein Commando zum setzen des speachVolume parameters.
+
+[x] Implementiere im test_Server eine api route fuer /api/world/{worldId}/speach/{streamPath}, die eine audio datei zurueckgibt.
+- Siehe 'Speach Streaming' in client/instructions/general/server_rest_api.md
+- Die route soll die audio datei aus dem lokalen pfad im server laden unter files/speach/{streamPath}.ogg (ordner files wird schon bei assets benuzt)
 
 

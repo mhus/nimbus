@@ -12,6 +12,7 @@ import { TerrainGenerator } from './world/TerrainGenerator';
 import { createAuthMiddleware } from './api/middleware/auth';
 import { createWorldRoutes } from './api/routes/worldRoutes';
 import { createAssetRoutes } from './api/routes/assetRoutes';
+import { createSpeechRoutes } from './api/routes/speechRoutes';
 import { createBackdropRoutes } from './api/routes/backdropRoutes';
 import { createEntityRoutes } from './api/routes/entityRoutes';
 import { getChunkKey } from './types/ServerTypes';
@@ -176,6 +177,9 @@ class NimbusServer {
       // Asset file serving (GET /assets/*) routes are public
       this.app.use('/api/worlds', authMiddleware, createAssetRoutes(this.worldManager));
       this.app.use('/api/worlds', authMiddleware, createWorldRoutes(this.worldManager, this.blockUpdateBuffer, this.sessions));
+
+      // Speech streaming routes (authentication via query params)
+      this.app.use('/api/world', createSpeechRoutes(this.worldManager));
 
       // Entity routes
       if (this.entityManager) {

@@ -563,3 +563,19 @@ GET /api/worlds/{worldId}/entity/{entityId}
 GET /api/worlds/{worldId}/item/{itemId}
 
 Gibt die Item definition zurueck.
+
+# Speach Streaming
+
+Erstelle einen API endpoint fuer speach streaming.
+
+GET /api/worlds/{worldId}/speach/{streamPath}
+
+Parameter:
+
+- sessionId (query parameter)
+- authToken (query parameter)
+
+Response:
+- Streamt die audio datei z.b. eine ansage oder aehnliches.
+
+
