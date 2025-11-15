@@ -730,6 +730,9 @@ export class EntityService {
     pathway: EntityPathway,
     deltaTime: number
   ): void {
+    // Store old position for step sound detection
+    const oldPosition = { ...clientEntity.currentPosition };
+
     // Apply server-predicted velocity (if provided)
     if (pathway.velocity) {
       this.physicsController.applyServerVelocity(clientEntity, pathway.velocity);
@@ -789,6 +792,9 @@ export class EntityService {
         pose: pose,
         velocity: speed,
       });
+
+      // Check for step sound emission (physics entities)
+      this.checkAndEmitStepSoundPhysics(clientEntity, oldPosition, speed, isGrounded);
     }
   }
 
@@ -800,6 +806,9 @@ export class EntityService {
     pathway: EntityPathway,
     currentTime: number
   ): void {
+    // Store old position for movement detection
+    const oldPosition = { ...clientEntity.currentPosition };
+
     // Interpolate position from waypoints
     const result = this.interpolatePosition(pathway, currentTime);
     if (result) {
@@ -820,6 +829,9 @@ export class EntityService {
         pose: result.pose,
         velocity: velocity,
       });
+
+      // Check for step sound emission (300ms throttle for waypoint entities)
+      this.checkAndEmitStepSound(clientEntity, oldPosition, velocity);
     }
   }
 
@@ -1174,6 +1186,148 @@ export class EntityService {
         entityId,
         playerPosition,
       });
+    }
+  }
+
+  /**
+   * Check if entity should emit step sound and emit if conditions are met
+   * Only emits if:
+   * - Entity is moving (velocity > 0.1)
+   * - Entity position changed (not floating in one spot)
+   * - Entity is on ground (has solid block below)
+   * - Enough time passed since last step (300ms throttle)
+   *
+   * @param clientEntity Entity to check
+   * @param oldPosition Previous position
+   * @param velocity Current velocity
+   */
+  private checkAndEmitStepSound(
+    clientEntity: ClientEntity,
+    oldPosition: { x: number; y: number; z: number },
+    velocity: number
+  ): void {
+    // Check if entity is moving (velocity threshold)
+    if (velocity < 0.1) {
+      return; // Not moving
+    }
+
+    // Check if position actually changed
+    const positionChanged =
+      Math.abs(clientEntity.currentPosition.x - oldPosition.x) > 0.001 ||
+      Math.abs(clientEntity.currentPosition.y - oldPosition.y) > 0.001 ||
+      Math.abs(clientEntity.currentPosition.z - oldPosition.z) > 0.001;
+
+    if (!positionChanged) {
+      return; // Position didn't change
+    }
+
+    // Throttle: Check if enough time passed since last step (300ms for entities)
+    const now = Date.now();
+    if (clientEntity.lastStepTime && now - clientEntity.lastStepTime < 300) {
+      return; // Too soon
+    }
+
+    // Find block under entity (ground block)
+    const chunkService = this.appContext.services.chunk;
+    if (!chunkService) {
+      return; // Can't check ground without chunk service
+    }
+
+    const floorX = Math.floor(clientEntity.currentPosition.x);
+    const floorY = Math.floor(clientEntity.currentPosition.y);
+    const floorZ = Math.floor(clientEntity.currentPosition.z);
+
+    // Check block below entity (grounded check)
+    const groundBlock = chunkService.getBlockAt(floorX, floorY - 1, floorZ);
+
+    if (!groundBlock || groundBlock.blockType.id === 0) {
+      return; // No ground block or air - entity is floating/flying
+    }
+
+    // Emit step sound event
+    const physicsService = this.appContext.services.physics;
+    if (physicsService) {
+      // Update throttle timestamp
+      clientEntity.lastStepTime = now;
+
+      // Emit step:over event - create entity object compatible with PhysicsService
+      const entityForEvent = {
+        entityId: clientEntity.id,
+        lastStepTime: clientEntity.lastStepTime,
+      };
+      physicsService.emitStepOver(entityForEvent, groundBlock, 'walk');
+    }
+  }
+
+  /**
+   * Check if physics entity should emit step sound
+   * Similar to checkAndEmitStepSound but uses grounded state from physics controller
+   *
+   * @param clientEntity Entity to check
+   * @param oldPosition Previous position
+   * @param speed Current speed (horizontal velocity magnitude)
+   * @param isGrounded Grounded state from physics controller
+   */
+  private checkAndEmitStepSoundPhysics(
+    clientEntity: ClientEntity,
+    oldPosition: { x: number; y: number; z: number },
+    speed: number,
+    isGrounded: boolean
+  ): void {
+    // Check if entity is moving (speed threshold)
+    if (speed < 0.1) {
+      return; // Not moving
+    }
+
+    // Check if entity is grounded
+    if (!isGrounded) {
+      return; // In air - no step sounds
+    }
+
+    // Check if position actually changed
+    const positionChanged =
+      Math.abs(clientEntity.currentPosition.x - oldPosition.x) > 0.001 ||
+      Math.abs(clientEntity.currentPosition.z - oldPosition.z) > 0.001;
+
+    if (!positionChanged) {
+      return; // Position didn't change
+    }
+
+    // Throttle: Check if enough time passed since last step (300ms for entities)
+    const now = Date.now();
+    if (clientEntity.lastStepTime && now - clientEntity.lastStepTime < 300) {
+      return; // Too soon
+    }
+
+    // Find block under entity (ground block)
+    const chunkService = this.appContext.services.chunk;
+    if (!chunkService) {
+      return; // Can't check ground without chunk service
+    }
+
+    const floorX = Math.floor(clientEntity.currentPosition.x);
+    const floorY = Math.floor(clientEntity.currentPosition.y);
+    const floorZ = Math.floor(clientEntity.currentPosition.z);
+
+    // Check block below entity
+    const groundBlock = chunkService.getBlockAt(floorX, floorY - 1, floorZ);
+
+    if (!groundBlock || groundBlock.blockType.id === 0) {
+      return; // No ground block or air
+    }
+
+    // Emit step sound event
+    const physicsService = this.appContext.services.physics;
+    if (physicsService) {
+      // Update throttle timestamp
+      clientEntity.lastStepTime = now;
+
+      // Emit step:over event - create entity object compatible with PhysicsService
+      const entityForEvent = {
+        entityId: clientEntity.id,
+        lastStepTime: clientEntity.lastStepTime,
+      };
+      physicsService.emitStepOver(entityForEvent, groundBlock, 'walk');
     }
   }
 }

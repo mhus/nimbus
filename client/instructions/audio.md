@@ -49,3 +49,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Im EntityPhysicsController soll auch das 'onStepOver' event ausgelöst werden, wenn sich die entity bewegt. Es werden die gleichen daten wie beim Player uebergeben (ClientBlock, movementType = WALK, entityId).
 - Es wird nur ausgeloest wenn die entity einen Block gefunden hat auf dem sie steht (also nicht in der Luft schwebt) 
   und nur alle 300ms. - Dazu kann an der entity ein parameter mit dem letzten senden des events hinterlegt werden, wenn noetig.
+
+[ ] Entity Player geben die Pose mit, von der Pose koennen die movementTypes abgeleitet werden und correct bei onStepOver mitgegeben werden.
+
+[ ] Beim modus CRUCH soll der sound leiser abgespielt werden (50% der lautstaerke).
