@@ -63,16 +63,27 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 
 [?] Beim modus SWIM (wird im event mitgeliefert) soll ein spezieller sound 'audio/step/swim1.ogg' an der stelle des players abgespielt werden.
 
-[ ] Funktion am AudioServcie fuer ambiente musik(Hintergrund musik).
-- Erstelle eine funktion playAmbientSound(soundPath: string, volume: number)
+[?] Funktion am AudioServcie fuer ambiente musik(Hintergrund musik).
+- Erstelle eine funktion playAmbientSound(soundPath: string, stream: boolean, volume: number )
 - Ambiente wird immer im loop abgespielt.
 - Wird ein leerer soundPath uebergeben, wird die ambiente musik gestoppt.
-- Erstelle einen StackModifier fuer die ambient musik, default ist '' (off)
 - es soll einen parameter mabientVolume geben, als multiplikator fuer die lautstaerke der ambiente musik. Ist er 0 oder kliener als 0, wird die ambiente musik nicht abgespielt.
+- Optional wird die musik auch gestreamt
 - Wenn die musik an / aus geschaten wird, soll sie kurz ein / ausgeblendet werden (fade in / fade out)
-- Erstelle commandos in der engine fuer playAmbienteAuio(soundPath: string, volume: number) und setAmbientVolume(volume: number)
+- Erstelle commandos in der engine fuer playAmbienteAuio(soundPath: string, stream: boolean, volume: number) und setAmbientVolume(volume: number)
+- Es wird nur eine ambiente musik gleichzeitig abgespielt.
+- wenn die gleiche musik nochmal abgespielt werden soll, wird sie nicht neu gestartet, sondern weiter abgespielt.
 
-[ ] Funktion am AudioService fuer PlaySoundAtPosition(soundPath: string, x, y, z, volume: number)
+[?] Es soll einen StackModifier fuer ambienteAudio geben fuer die ambiente musik, damit server seits die ambiente musik gesetzt werden kann.
+  - Er setzt immer streaming true und volume 1
+  - Default pfad ist leer (keine musik)
+  - Das Commando playAmbienteAudio soll einen Modifier bei prio 100 haben
+  - Im EnvironmentService gibt es einen Modifier, der prioa 50 hat
+  - Im PlayerService gibt es einen Modifier, der prio 10 hat und bei Death auf eine parameter aus der WorldInfo (z.b. 'deadAmbientAudio') geset wird. Modifier wird enabled/diabled.
+
+[ ] Auch der swim sound soll von WorldInfo kommen ('swimStepAudio'). Nicht mehr als Constante in AudioService. 
+
+[ ] Funktion am AudioService fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Spielt einen sound an der uebergebenen position ab.
 - Erstelle commandos in der engine fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Kein loop!
@@ -83,7 +94,14 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - kein loop!
 
 
-[ ] Funktion am AudioService fuer StreamSound(soundPath: string, volume: number)
+[ ] Funktion am AudioService fuer Speach(streamPath: string, volume: number)
+- Fuer speach soll es im NetworkService eine neue methode geben getSpeachUrl(streamPath: string): string
+  - Die Methode git einen Path auf /api/world/{worldId}/speach/{streamPath} zurueck.
 - Streamt eine audio datei z.b. eine ansage oder aehnliches.
-- Erstelle commandos in der engine fuer streamSound(soundPath: string, volume: number)
+- Erstelle commandos in der engine fuer speach(soundPath: string, volume: number)
+  - Das commando gibt erst eine antwort, wenn der stream beendet oder abgebrochen ist.
 - kein loop!
+- Es kann immer nur eine speach gleichzeitig abgespielt werden. Wenn eine neue gestartet wird, wird die alte abgebrochen.
+- Es soll eine speachVolume als multiplikator geben. Erstelle ein Commando zum setzen des speachVolume parameters.
+
+

@@ -48,6 +48,9 @@ export class EnvironmentService {
   // Wind parameters
   private windParameters: WindParameters;
 
+  // Ambient audio modifier (priority 50)
+  private ambientAudioModifier?: any; // Modifier<string>
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -62,10 +65,47 @@ export class EnvironmentService {
     };
 
     this.initializeEnvironment();
+    this.initializeAmbientAudioModifier();
 
     logger.info('EnvironmentService initialized', {
       windParameters: this.windParameters,
     });
+  }
+
+  /**
+   * Initialize ambient audio modifier
+   * Environment can set ambient music at priority 50
+   */
+  private initializeAmbientAudioModifier(): void {
+    const modifierService = this.appContext.services.modifier;
+    if (!modifierService) {
+      logger.warn('ModifierService not available, ambient audio modifier not created');
+      return;
+    }
+
+    const stack = modifierService.getModifierStack<string>('ambientAudio');
+    if (stack) {
+      // Create environment modifier (priority 50)
+      this.ambientAudioModifier = stack.addModifier('', 50);
+      this.ambientAudioModifier.setEnabled(false); // Disabled by default
+      logger.info('Environment ambient audio modifier created', { prio: 50 });
+    }
+  }
+
+  /**
+   * Set environment ambient audio
+   * @param soundPath Path to ambient music (empty to clear)
+   */
+  setEnvironmentAmbientAudio(soundPath: string): void {
+    if (!this.ambientAudioModifier) {
+      logger.warn('Ambient audio modifier not initialized');
+      return;
+    }
+
+    this.ambientAudioModifier.setValue(soundPath);
+    this.ambientAudioModifier.setEnabled(soundPath.trim() !== '');
+
+    logger.info('Environment ambient audio set', { soundPath, enabled: soundPath.trim() !== '' });
   }
 
   /**

@@ -221,9 +221,38 @@ class AudioPool {
     if (!item) {
       // Check max pool size
       if (this.items.length >= POOL_MAX_SIZE) {
+        // Before giving up, check for stuck items (blocked >1 second)
+        const now = Date.now();
+        const stuckItems = this.items.filter(
+          item => item.inUse && item.blockedAt > 0 && (now - item.blockedAt) > 1000
+        );
+
+        if (stuckItems.length > 0) {
+          logger.warn('Found stuck items in pool, releasing them', {
+            path: this.path,
+            stuckCount: stuckItems.length,
+            totalItems: this.items.length
+          });
+
+          // Force release stuck items
+          stuckItems.forEach(stuckItem => {
+            stuckItem.release();
+          });
+
+          // Try to find free item again
+          item = this.items.find(item => item.isAvailable());
+
+          if (item) {
+            logger.info('Recovered stuck item from pool', { path: this.path });
+            return item;
+          }
+        }
+
+        // Still no free item after cleanup
         logger.warn('Pool at maximum capacity, sound skipped', {
           path: this.path,
-          maxSize: POOL_MAX_SIZE
+          maxSize: POOL_MAX_SIZE,
+          available: this.getAvailableCount()
         });
         return null; // Pool is full, skip this sound
       }
@@ -270,9 +299,15 @@ export class AudioService {
   private audioEnabled: boolean = true;
   private audioEngine?: any; // AudioEngineV2
   private stepVolume: number = 1.0; // Default step sound volume multiplier
+  private ambientVolume: number = 0.5; // Default ambient music volume multiplier
 
   // Track last swim sound time per entity to prevent overlapping
   private lastSwimSoundTime: Map<string, number> = new Map();
+
+  // Ambient music
+  private currentAmbientSound?: any; // Current ambient music sound
+  private currentAmbientPath?: string; // Current ambient music path
+  private ambientFadeInterval?: number; // Fade in/out interval ID
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
@@ -316,6 +351,30 @@ export class AudioService {
    */
   getStepVolume(): number {
     return this.stepVolume;
+  }
+
+  /**
+   * Set ambient music volume multiplier
+   * @param volume Volume multiplier (0.0 = silent, 1.0 = full volume)
+   */
+  setAmbientVolume(volume: number): void {
+    this.ambientVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
+    logger.info('Ambient volume set to ' + this.ambientVolume);
+
+    // Update current ambient sound volume if playing
+    if (this.currentAmbientSound && this.ambientVolume > 0) {
+      this.currentAmbientSound.volume = this.ambientVolume;
+    } else if (this.currentAmbientSound && this.ambientVolume <= 0) {
+      // Stop ambient if volume is 0 or below
+      this.stopAmbientSound();
+    }
+  }
+
+  /**
+   * Get current ambient music volume multiplier
+   */
+  getAmbientVolume(): number {
+    return this.ambientVolume;
   }
 
   /**
@@ -695,6 +754,9 @@ export class AudioService {
   dispose(): void {
     logger.info('Disposing AudioService');
 
+    // Stop ambient music
+    this.stopAmbientSound();
+
     // Dispose legacy cache
     this.clearCache();
 
@@ -704,6 +766,130 @@ export class AudioService {
 
     // Clear swim sound throttle
     this.lastSwimSoundTime.clear();
+  }
+
+  // ========================================
+  // Ambient Music Methods
+  // ========================================
+
+  /**
+   * Play ambient background music with fade in
+   * @param soundPath Path to ambient music file (empty string stops ambient music)
+   * @param stream Whether to stream the audio (default: true for large music files)
+   * @param volume Volume (0.0 - 1.0), multiplied by ambientVolume
+   */
+  async playAmbientSound(soundPath: string, stream: boolean = true, volume: number = 1.0): Promise<void> {
+    // Empty path → stop ambient music
+    if (!soundPath || soundPath.trim() === '') {
+      await this.stopAmbientSound();
+      return;
+    }
+
+    // Check if ambientVolume is 0 or below → don't play
+    if (this.ambientVolume <= 0) {
+      logger.info('Ambient volume is 0 or below, not playing ambient music', { soundPath });
+      return;
+    }
+
+    // Stop current ambient music if playing different track
+    if (this.currentAmbientSound && this.currentAmbientPath !== soundPath) {
+      await this.stopAmbientSound();
+    }
+
+    // Already playing this track → don't restart
+    if (this.currentAmbientPath === soundPath && this.currentAmbientSound) {
+      logger.info('Ambient music already playing', { soundPath });
+      return;
+    }
+
+    try {
+      logger.info('Loading ambient music', { soundPath, stream, volume });
+
+      // Load ambient music (non-spatial, looping)
+      const sound = await this.loadAudio(soundPath, {
+        volume: 0, // Start at 0 for fade in
+        loop: true, // Always loop ambient music
+        autoplay: false,
+        spatialSound: false, // Ambient music is non-spatial
+      });
+
+      if (!sound) {
+        logger.error('Failed to load ambient music', { soundPath });
+        return;
+      }
+
+      this.currentAmbientSound = sound;
+      this.currentAmbientPath = soundPath;
+
+      // Start playing
+      sound.play();
+
+      // Fade in
+      const targetVolume = volume * this.ambientVolume;
+      await this.fadeSound(sound, 0, targetVolume, 2000); // 2 second fade in
+
+      logger.info('Ambient music playing', { soundPath, volume: targetVolume });
+    } catch (error) {
+      logger.error('Failed to play ambient music', { soundPath, error: (error as Error).message });
+    }
+  }
+
+  /**
+   * Stop ambient background music with fade out
+   */
+  async stopAmbientSound(): Promise<void> {
+    if (!this.currentAmbientSound) {
+      return; // No ambient music playing
+    }
+
+    logger.info('Stopping ambient music', { path: this.currentAmbientPath });
+
+    // Fade out
+    const currentVolume = this.currentAmbientSound.volume;
+    await this.fadeSound(this.currentAmbientSound, currentVolume, 0, 1000); // 1 second fade out
+
+    // Stop and dispose
+    this.currentAmbientSound.stop();
+    this.currentAmbientSound = undefined;
+    this.currentAmbientPath = undefined;
+
+    logger.info('Ambient music stopped');
+  }
+
+  /**
+   * Fade sound volume from start to end over duration
+   * @param sound Sound object
+   * @param startVolume Starting volume (0.0 - 1.0)
+   * @param endVolume Target volume (0.0 - 1.0)
+   * @param duration Duration in milliseconds
+   */
+  private fadeSound(sound: any, startVolume: number, endVolume: number, duration: number): Promise<void> {
+    return new Promise((resolve) => {
+      const steps = 50; // Number of fade steps
+      const stepDuration = duration / steps;
+      const volumeStep = (endVolume - startVolume) / steps;
+
+      let currentStep = 0;
+      sound.volume = startVolume;
+
+      // Clear any existing fade interval
+      if (this.ambientFadeInterval) {
+        clearInterval(this.ambientFadeInterval);
+      }
+
+      this.ambientFadeInterval = window.setInterval(() => {
+        currentStep++;
+
+        if (currentStep >= steps) {
+          sound.volume = endVolume;
+          clearInterval(this.ambientFadeInterval!);
+          this.ambientFadeInterval = undefined;
+          resolve();
+        } else {
+          sound.volume = startVolume + (volumeStep * currentStep);
+        }
+      }, stepDuration);
+    });
   }
 
   // ========================================

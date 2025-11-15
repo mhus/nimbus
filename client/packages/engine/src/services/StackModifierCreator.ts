@@ -96,6 +96,22 @@ export function createAllStackModifiers(appContext: AppContext): void {
   );
 
   // ========================================
+  // Ambient Audio Stack
+  // ========================================
+  modifierService.createModifierStack<string>(
+    StackName.AMBIENT_AUDIO,
+    '', // Default: no ambient music (empty string)
+    (soundPath: string) => {
+      // Callback to update AudioService ambient music
+      const audioService = appContext.services.audio;
+      if (audioService) {
+        // Play or stop ambient music based on path
+        audioService.playAmbientSound(soundPath, true, 1.0);
+      }
+    }
+  );
+
+  // ========================================
   // Weitere Stacks hier hinzufügen
   // ========================================
 

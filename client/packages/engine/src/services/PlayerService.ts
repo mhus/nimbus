@@ -64,6 +64,9 @@ export class PlayerService {
   private underwaterViewModifier?: Modifier<boolean>;
   private fogViewModifier?: Modifier<number>;
 
+  // Ambient audio modifier (priority 10 - death music)
+  private deathAmbientAudioModifier?: Modifier<string>;
+
   // Status effects
   private statusEffects: Map<string, StatusEffect> = new Map();
   private effectTimers: Map<string, number> = new Map();
@@ -606,6 +609,9 @@ export class PlayerService {
       // Enable fog camera effect with heavy intensity
       this.setFogViewMode(0.8);
 
+      // Enable death ambient audio (priority 10, overrides environment)
+      this.setDeathAmbientAudio(true);
+
       // Set DEAD pose via stack (high priority so it overrides everything)
       if (poseStack) {
         poseStack.getDefaultModifier().setValue(ENTITY_POSES.DEATH);
@@ -621,6 +627,9 @@ export class PlayerService {
 
       // Disable fog camera effect
       this.setFogViewMode(0);
+
+      // Disable death ambient audio
+      this.setDeathAmbientAudio(false);
 
       // Set IDLE pose via stack (will be overridden by normal pose calculation)
       if (poseStack) {
@@ -763,6 +772,45 @@ export class PlayerService {
       this.fogViewModifier = stack.addModifier(0.8, 10); // Priority 10 (high), default intensity 0.8
       this.fogViewModifier.setEnabled(false); // Disabled initially
       logger.debug('Fog view modifier created');
+    }
+  }
+
+  /**
+   * Initialize death ambient audio modifier
+   * Stack is created centrally in StackModifierCreator
+   */
+  private initializeDeathAmbientAudioModifier(): void {
+    const stack = this.appContext.services.modifier?.getModifierStack<string>(
+      StackName.AMBIENT_AUDIO
+    );
+
+    if (!stack) {
+      logger.warn('Ambient audio stack not available yet');
+      return;
+    }
+
+    // Create death ambient audio modifier if not already added
+    if (!this.deathAmbientAudioModifier) {
+      // Get death ambient audio path from WorldInfo settings (optional)
+      const settings = this.appContext.worldInfo?.settings as any;
+      const deadAmbientAudio = settings?.deadAmbientAudio || '';
+
+      this.deathAmbientAudioModifier = stack.addModifier(deadAmbientAudio, 10); // Priority 10 (high)
+      this.deathAmbientAudioModifier.setEnabled(false); // Disabled initially (only on death)
+      logger.debug('Death ambient audio modifier created', { deadAmbientAudio });
+    }
+  }
+
+  /**
+   * Enable or disable death ambient audio
+   * @param enabled Whether to play death music
+   */
+  private setDeathAmbientAudio(enabled: boolean): void {
+    this.initializeDeathAmbientAudioModifier();
+
+    if (this.deathAmbientAudioModifier) {
+      this.deathAmbientAudioModifier.setEnabled(enabled);
+      logger.info('Death ambient audio ' + (enabled ? 'enabled' : 'disabled'));
     }
   }
 

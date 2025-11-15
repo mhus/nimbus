@@ -61,6 +61,9 @@ export enum StackName {
   /** Fog view mode: number intensity (0 = disabled, 0.1-1.0 = fog intensity) */
   FOG_VIEW_MODE = 'fogViewMode',
 
+  /** Ambient audio: string path to ambient music file (empty = no music) */
+  AMBIENT_AUDIO = 'ambientAudio',
+
   // Weitere Stacks hier hinzufügen
 }
 
