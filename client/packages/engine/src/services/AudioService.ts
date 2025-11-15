@@ -337,6 +337,20 @@ export class AudioService {
     try {
       this.audioEngine = await CreateAudioEngineAsync();
 
+      // Attach audio listener to active camera for spatial audio
+      if (this.audioEngine && this.audioEngine.listener && scene.activeCamera) {
+        this.audioEngine.listener.spatial.attach(scene.activeCamera);
+        logger.info('Audio listener attached to camera', {
+          cameraName: scene.activeCamera.name
+        });
+      } else {
+        logger.warn('Could not attach audio listener to camera', {
+          hasEngine: !!this.audioEngine,
+          hasListener: !!this.audioEngine?.listener,
+          hasCamera: !!scene.activeCamera
+        });
+      }
+
       // Unlock audio engine (waits for user interaction if needed)
       if (this.audioEngine && !this.audioEngine.unlocked) {
         logger.info('Audio engine locked - waiting for user interaction');
