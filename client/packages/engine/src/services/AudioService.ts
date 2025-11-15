@@ -429,19 +429,44 @@ export class AudioService {
         hasListener: !!this.audioEngine?.listener
       });
 
-      // Attach audio listener to active camera for spatial audio
+      // Attach audio listener to active camera for spatial audio (Babylon.js 8.x)
       if (this.audioEngine && this.audioEngine.listener && scene.activeCamera) {
-        // Check if spatial listener exists (may not be available in all browsers/contexts)
-        if (this.audioEngine.listener.spatial) {
-          this.audioEngine.listener.spatial.attach(scene.activeCamera);
-          logger.info('Audio listener attached to camera', {
-            cameraName: scene.activeCamera.name
-          });
-        } else {
-          logger.warn('Spatial audio listener not available (older browser?)');
+        try {
+          const listener = this.audioEngine.listener as any;
+
+          // Babylon.js 8.x: audioEngine.listener.spatial.attach(camera)
+          // 'spatial' might be a getter, so try accessing it
+          if (listener.spatial) {
+            logger.info('Listener has spatial property', {
+              spatialKeys: Object.keys(listener.spatial)
+            });
+
+            if (typeof listener.spatial.attach === 'function') {
+              listener.spatial.attach(scene.activeCamera);
+              logger.info('Audio listener attached to camera via spatial.attach()', {
+                cameraName: scene.activeCamera.name
+              });
+            } else {
+              logger.warn('spatial.attach is not a function', {
+                spatialType: typeof listener.spatial.attach
+              });
+            }
+          } else {
+            logger.warn('Listener has no spatial property - checking alternatives');
+
+            // Try direct attach
+            if (typeof listener.attach === 'function') {
+              listener.attach(scene.activeCamera);
+              logger.info('Audio listener attached via direct attach()');
+            } else {
+              logger.error('No attach method found on listener');
+            }
+          }
+        } catch (error) {
+          logger.error('Failed to attach audio listener', {}, error as Error);
         }
       } else {
-        logger.warn('Could not attach audio listener to camera', {
+        logger.warn('Cannot attach audio listener', {
           hasEngine: !!this.audioEngine,
           hasListener: !!this.audioEngine?.listener,
           hasCamera: !!scene.activeCamera
