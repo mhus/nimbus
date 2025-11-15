@@ -31,3 +31,5 @@
 - Player daten in echt verwalten !!!
 
 - Darstellung der shortcuts in der UI fehlt
+
+- Teleport Screen und Musik

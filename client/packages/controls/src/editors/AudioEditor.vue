@@ -54,7 +54,19 @@
             max="1"
             class="input input-bordered input-sm w-16 flex-shrink-0"
             placeholder="1.0"
-            title="Volume"
+            title="Volume (0.0-1.0)"
+          />
+
+          <!-- Max Distance -->
+          <input
+            v-model.number="audioDef.maxDistance"
+            type="number"
+            step="5"
+            min="5"
+            max="200"
+            class="input input-bordered input-sm w-16 flex-shrink-0"
+            placeholder="15"
+            title="Max Distance (meters)"
           />
 
           <!-- Loop Checkbox -->

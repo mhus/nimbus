@@ -852,6 +852,15 @@ export class ChunkService {
             error: (error as Error).message,
           });
         });
+
+        // Update permanent audio for this block (non-blocking)
+        this.updatePermanentAudioForBlock(clientChunk, clientBlock, posKey).catch(error => {
+          logger.warn('Failed to update permanent audio on block update (non-blocking)', {
+            position: clientBlock.block.position,
+            error: (error as Error).message,
+          });
+        });
+
         affectedChunks.add(chunkKey);
 
         logger.debug('Block updated', {
@@ -1195,8 +1204,19 @@ export class ChunkService {
       return; // AudioService not available
     }
 
+    // Initialize permanent audio map if needed
+    if (!clientChunk.data.permanentAudioSounds) {
+      clientChunk.data.permanentAudioSounds = new Map();
+    }
+
     // Iterate over all blocks in the chunk
     for (const clientBlock of clientChunk.data.data.values()) {
+      const posKey = getBlockPositionKey(
+        clientBlock.block.position.x,
+        clientBlock.block.position.y,
+        clientBlock.block.position.z
+      );
+
       const audioModifier = clientBlock.currentModifier.audio;
       if (!audioModifier || audioModifier.length === 0) {
         continue; // No audio defined for this block
@@ -1227,10 +1247,13 @@ export class ChunkService {
           // Add sound to disposable resources (will be disposed when chunk unloads)
           clientChunk.data.resourcesToDispose.add(sound);
 
-          // Start playing immediately
+          // Track sound by block position for updates
+          clientChunk.data.permanentAudioSounds.set(posKey, sound);
+
+          // Start playing (deferred sound will wait for audio unlock if needed)
           sound.play();
 
-          logger.debug('Permanent sound started for block', {
+          logger.info('Permanent sound registered for block (will play when audio unlocks)', {
             path: audioDef.path,
             blockTypeId: clientBlock.blockType.id,
             position: clientBlock.block.position,
@@ -1244,6 +1267,100 @@ export class ChunkService {
           error: (error as Error).message,
         });
       }
+    }
+  }
+
+  /**
+   * Update permanent audio for a single block after block update
+   * Stops old sound and starts new sound if audio definition changed
+   *
+   * @param clientChunk - The client chunk containing the block
+   * @param clientBlock - The updated client block
+   * @param posKey - Block position key
+   */
+  private async updatePermanentAudioForBlock(
+    clientChunk: ClientChunk,
+    clientBlock: ClientBlock,
+    posKey: string
+  ): Promise<void> {
+    const audioService = this.appContext.services.audio;
+    if (!audioService) {
+      return;
+    }
+
+    // Initialize permanent audio map if needed
+    if (!clientChunk.data.permanentAudioSounds) {
+      clientChunk.data.permanentAudioSounds = new Map();
+    }
+
+    // Stop and dispose old sound if it exists
+    const oldSound = clientChunk.data.permanentAudioSounds.get(posKey);
+    if (oldSound) {
+      try {
+        oldSound.stop();
+        oldSound.dispose();
+        clientChunk.data.permanentAudioSounds.delete(posKey);
+        logger.info('Stopped old permanent sound for block update', {
+          position: clientBlock.block.position,
+        });
+      } catch (error) {
+        logger.warn('Failed to stop old permanent sound', {
+          position: clientBlock.block.position,
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    // Check if block has permanent audio
+    const audioModifier = clientBlock.currentModifier.audio;
+    if (!audioModifier || audioModifier.length === 0) {
+      return; // No audio defined
+    }
+
+    // Filter for permanent audio - only use first enabled one
+    const permanentAudioDefs = audioModifier.filter(
+      def => def.type === AudioType.PERMANENT && def.enabled
+    );
+
+    if (permanentAudioDefs.length === 0) {
+      return; // No permanent audio
+    }
+
+    // Use only the first enabled permanent audio definition
+    const audioDef = permanentAudioDefs[0];
+
+    try {
+      // Create new permanent sound for this block
+      const sound = await audioService.createPermanentSoundForBlock(clientBlock, audioDef);
+
+      if (sound) {
+        // Ensure resourcesToDispose exists
+        if (!clientChunk.data.resourcesToDispose) {
+          clientChunk.data.resourcesToDispose = new DisposableResources();
+        }
+
+        // Add sound to disposable resources
+        clientChunk.data.resourcesToDispose.add(sound);
+
+        // Track sound by block position
+        clientChunk.data.permanentAudioSounds.set(posKey, sound);
+
+        // Start playing (deferred sound will wait for audio unlock if needed)
+        sound.play();
+
+        logger.info('Permanent sound registered for block update (will play when audio unlocks)', {
+          path: audioDef.path,
+          blockTypeId: clientBlock.blockType.id,
+          position: clientBlock.block.position,
+        });
+      }
+    } catch (error) {
+      logger.warn('Failed to create permanent sound for block update', {
+        path: audioDef.path,
+        blockTypeId: clientBlock.blockType.id,
+        position: clientBlock.block.position,
+        error: (error as Error).message,
+      });
     }
   }
 

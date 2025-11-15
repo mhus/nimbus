@@ -134,6 +134,7 @@ class AudioPoolItem {
         omnidirectional: true
       });
     } else {
+      logger.warn('Spatial audio not configured (StaticSound API not available)');
       // Fallback for regular Sound (if used)
       this.sound.spatialSound = true;
       this.sound.distanceModel = 'exponential';
@@ -308,6 +309,12 @@ export class AudioService {
   private currentSpeech?: any; // Current speech sound
   private currentSpeechPath?: string; // Current speech stream path
 
+  // Pending sounds waiting for audio unlock
+  private pendingSounds: Array<{ sound: any; wrapper: any }> = [];
+
+  // Flag to track if unlock handler is registered
+  private unlockHandlerRegistered: boolean = false;
+
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
   }
@@ -416,12 +423,23 @@ export class AudioService {
     try {
       this.audioEngine = await CreateAudioEngineAsync();
 
+      logger.info('Audio engine created', {
+        hasEngine: !!this.audioEngine,
+        unlocked: this.audioEngine?.unlocked,
+        hasListener: !!this.audioEngine?.listener
+      });
+
       // Attach audio listener to active camera for spatial audio
       if (this.audioEngine && this.audioEngine.listener && scene.activeCamera) {
-        this.audioEngine.listener.spatial.attach(scene.activeCamera);
-        logger.info('Audio listener attached to camera', {
-          cameraName: scene.activeCamera.name
-        });
+        // Check if spatial listener exists (may not be available in all browsers/contexts)
+        if (this.audioEngine.listener.spatial) {
+          this.audioEngine.listener.spatial.attach(scene.activeCamera);
+          logger.info('Audio listener attached to camera', {
+            cameraName: scene.activeCamera.name
+          });
+        } else {
+          logger.warn('Spatial audio listener not available (older browser?)');
+        }
       } else {
         logger.warn('Could not attach audio listener to camera', {
           hasEngine: !!this.audioEngine,
@@ -434,14 +452,39 @@ export class AudioService {
       if (this.audioEngine && !this.audioEngine.unlocked) {
         logger.info('Audio engine locked - waiting for user interaction');
 
-        // Unlock in background - don't block initialization
-        this.audioEngine.unlockAsync().then(() => {
-          logger.info('Audio engine unlocked and ready');
-        }).catch((error: any) => {
-          logger.error('Failed to unlock audio engine', {}, error);
-        });
+        // Register unlock handler only once
+        if (!this.unlockHandlerRegistered) {
+          this.unlockHandlerRegistered = true;
+
+          // Set up click/key event listeners to unlock audio
+          const unlockHandler = async () => {
+            try {
+              if (this.audioEngine && !this.audioEngine.unlocked) {
+                await this.audioEngine.unlockAsync();
+                logger.info('Audio engine unlocked and ready via user interaction');
+                this.playPendingSounds();
+
+                // Remove event listeners after unlock
+                window.removeEventListener('click', unlockHandler);
+                window.removeEventListener('keydown', unlockHandler);
+                window.removeEventListener('touchstart', unlockHandler);
+              }
+            } catch (error) {
+              logger.error('Failed to unlock audio engine', {}, error as Error);
+            }
+          };
+
+          // Listen for user interaction
+          window.addEventListener('click', unlockHandler);
+          window.addEventListener('keydown', unlockHandler);
+          window.addEventListener('touchstart', unlockHandler);
+
+          logger.info('Audio unlock listeners registered (click, keydown, touchstart)');
+        }
       } else if (this.audioEngine) {
         logger.info('Audio engine ready');
+        // Already unlocked - play any pending sounds immediately
+        this.playPendingSounds();
       }
     } catch (error) {
       logger.error('Failed to create audio engine', {}, error as Error);
@@ -642,13 +685,127 @@ export class AudioService {
   }
 
   /**
+   * Check if audio engine is unlocked and ready to play sounds
+   * @returns true if audio engine is unlocked, false otherwise
+   */
+  isAudioUnlocked(): boolean {
+    // Always return true if audio engine exists
+    // Babylon.js handles audio unlock internally via unlockAsync()
+    return !!this.audioEngine;
+  }
+
+  /**
+   * Play all pending sounds after audio unlock
+   */
+  private async playPendingSounds(): Promise<void> {
+    logger.info('Playing pending sounds', { count: this.pendingSounds.length });
+
+    const soundsToPlay = [...this.pendingSounds];
+    this.pendingSounds = []; // Clear immediately to avoid duplicates
+
+    for (const { sound, wrapper } of soundsToPlay) {
+      if (!wrapper._disposed && wrapper._playPending) {
+        try {
+          // Create sound if needed (for deferred wrappers) - now async
+          if (wrapper._createSound && !wrapper._sound) {
+            await wrapper._createSound();
+            // Sound will auto-play after creation
+          } else if (wrapper._sound) {
+            // Sound already exists, play it
+            wrapper._sound.play();
+            logger.info('Deferred sound played after audio unlock');
+            wrapper._playPending = false;
+          } else if (sound) {
+            sound.play();
+            logger.info('Deferred sound played after audio unlock');
+            wrapper._playPending = false;
+          }
+        } catch (error) {
+          logger.warn('Failed to play pending sound', { error: (error as Error).message });
+        }
+      }
+    }
+  }
+
+  /**
+   * Wrapper for Sound that automatically plays when audio engine is unlocked
+   * Stores sound configuration and creates/recreates the sound after unlock
+   */
+  private createDeferredSound(sound: any): any {
+    const wrapper = {
+      _sound: sound,
+      _disposed: false,
+      _playPending: false,
+      _needsRecreate: false,
+
+      play: () => {
+        if (wrapper._disposed) return;
+
+        if (this.isAudioUnlocked()) {
+          // If sound was created before unlock, it needs to be recreated
+          if (wrapper._needsRecreate) {
+            logger.warn('Sound created before unlock - attempting to play anyway');
+          }
+          wrapper._sound.play();
+          logger.info('Deferred sound played immediately (audio already unlocked)');
+        } else {
+          wrapper._playPending = true;
+          wrapper._needsRecreate = true; // Mark for recreation after unlock
+          logger.info('Deferred sound play pending (waiting for audio unlock)', {
+            pendingCount: this.pendingSounds.length + 1
+          });
+
+          // Add to pending sounds list
+          this.pendingSounds.push({ sound: wrapper._sound, wrapper });
+        }
+      },
+
+      stop: () => {
+        wrapper._playPending = false;
+        if (!wrapper._disposed) {
+          try {
+            wrapper._sound.stop();
+          } catch (error) {
+            logger.warn('Failed to stop sound', { error: (error as Error).message });
+          }
+        }
+      },
+
+      dispose: () => {
+        wrapper._disposed = true;
+        wrapper._playPending = false;
+
+        // Remove from pending sounds if present
+        const index = this.pendingSounds.findIndex(p => p.wrapper === wrapper);
+        if (index !== -1) {
+          this.pendingSounds.splice(index, 1);
+        }
+
+        try {
+          wrapper._sound.dispose();
+        } catch (error) {
+          logger.warn('Failed to dispose sound', { error: (error as Error).message });
+        }
+      },
+
+      // Proxy other properties to the underlying sound
+      setPosition: (position: any) => wrapper._sound.setPosition(position),
+      setVolume: (volume: number) => wrapper._sound.setVolume(volume),
+    };
+
+    return wrapper;
+  }
+
+  /**
    * Creates a permanent (non-cached) spatial sound for a block
    * Used for ambient sounds that play continuously while the block is visible
    * Audio is streamed and looped automatically (Babylon.js handles streaming for large files)
    *
+   * If audio engine is locked, returns a placeholder that will create the actual sound after unlock
+   *
    * @param block Block to attach sound to
    * @param audioDef Audio definition with path, volume, loop, etc.
-   * @returns Babylon.js Sound object (implements IDisposable)
+   * @returns Wrapper object that creates sound after audio unlock
    */
   async createPermanentSoundForBlock(block: ClientBlock, audioDef: AudioDefinition): Promise<any> {
     if (!this.scene) {
@@ -661,50 +818,156 @@ export class AudioService {
       return null;
     }
 
-    try {
-      const audioUrl = this.networkService.getAssetUrl(audioDef.path);
-      const blockPos = block.block.position;
-      const blockPosition = new Vector3(blockPos.x, blockPos.y, blockPos.z);
+    const audioUrl = this.networkService.getAssetUrl(audioDef.path);
+    const blockPos = block.block.position;
+    const blockPosition = new Vector3(blockPos.x, blockPos.y, blockPos.z);
 
-      logger.debug('Creating permanent sound for block', {
-        path: audioDef.path,
+    // Create a deferred sound wrapper that will create the actual sound after unlock
+    const deferredWrapper = {
+      _sound: null as any,
+      _disposed: false,
+      _playPending: false,
+      _config: {
+        name: audioDef.path,
+        url: audioUrl,
+        scene: this.scene,
         position: blockPosition,
         volume: audioDef.volume,
-        loop: audioDef.loop
-      });
+        loop: audioDef.loop !== false,
+        maxDistance: audioDef.maxDistance || DEFAULT_MAX_DISTANCE,
+      },
 
-      // Create spatial Sound directly (not StaticSound via CreateSoundAsync)
-      // Sound class supports spatial audio with setPosition()
-      const sound = new Sound(
-        audioDef.path,
-        audioUrl,
-        this.scene,
-        null, // Ready callback
-        {
-          loop: audioDef.loop !== false, // Default to true for permanent sounds
-          autoplay: false,
-          spatialSound: true,
-          maxDistance: audioDef.maxDistance || DEFAULT_MAX_DISTANCE,
-          distanceModel: 'linear',
-          rolloffFactor: 1,
+      _createSound: async () => {
+        if (deferredWrapper._sound || deferredWrapper._disposed) return;
+
+        logger.info('Creating permanent sound for block', {
+          path: audioDef.path,
+          position: blockPosition,
+          volume: audioDef.volume
+        });
+
+        // Create spatial sound using CreateSoundAsync (returns StaticSound)
+        const sound = await CreateSoundAsync(
+          deferredWrapper._config.name,
+          deferredWrapper._config.url
+        );
+
+        if (deferredWrapper._disposed) {
+          sound.dispose();
+          return;
         }
-      );
 
-      // Set position and volume
-      sound.setPosition(blockPosition);
-      sound.setVolume(audioDef.volume);
+        deferredWrapper._sound = sound;
 
-      logger.debug('Permanent sound created', { path: audioDef.path, position: blockPosition });
+        // Configure as spatial sound using StaticSound API
+        if (sound.spatial) {
+          sound.spatial.position = deferredWrapper._config.position;
+          sound.spatial.maxDistance = deferredWrapper._config.maxDistance;
+          sound.spatial.distanceModel = 'exponential';
+          sound.spatial.rolloffFactor = 1;
+          // Omnidirectional
+          sound.spatial.coneInnerAngle = 2 * Math.PI;
+          sound.spatial.coneOuterAngle = 2 * Math.PI;
 
-      return sound;
-    } catch (error) {
-      logger.warn('Failed to create permanent sound for block', {
-        path: audioDef.path,
-        blockPos: block.block.position,
-        error: (error as Error).message
-      });
-      return null;
-    }
+          logger.info('Spatial audio configured', {
+            position: deferredWrapper._config.position,
+            maxDistance: deferredWrapper._config.maxDistance
+          });
+        }
+
+        // Set volume and loop
+        sound.volume = deferredWrapper._config.volume;
+        sound.loop = deferredWrapper._config.loop;
+
+        logger.info('Permanent sound created and ready', {
+          path: audioDef.path,
+          position: deferredWrapper._config.position,
+          volume: deferredWrapper._config.volume,
+          loop: deferredWrapper._config.loop,
+          maxDistance: deferredWrapper._config.maxDistance,
+          hasSpatial: !!sound.spatial
+        });
+
+        // Auto-play permanent sounds (they should always play when loaded)
+        if (!deferredWrapper._disposed) {
+          sound.play();
+          logger.info('Auto-playing permanent sound after load', {
+            path: audioDef.path
+          });
+          deferredWrapper._playPending = false;
+        }
+      },
+
+      play: async () => {
+        if (deferredWrapper._disposed) return;
+
+        if (this.isAudioUnlocked()) {
+          // Create sound if not created yet (async operation)
+          if (!deferredWrapper._sound) {
+            await deferredWrapper._createSound();
+          }
+
+          if (deferredWrapper._sound) {
+            deferredWrapper._sound.play();
+            logger.info('Permanent sound playing (audio already unlocked)', { path: audioDef.path });
+          }
+        } else {
+          deferredWrapper._playPending = true;
+          logger.info('Permanent sound play pending (will create after unlock)', {
+            path: audioDef.path
+          });
+
+          // Add to pending sounds list
+          this.pendingSounds.push({ sound: null, wrapper: deferredWrapper });
+        }
+      },
+
+      stop: () => {
+        deferredWrapper._playPending = false;
+        if (deferredWrapper._sound && !deferredWrapper._disposed) {
+          try {
+            deferredWrapper._sound.stop();
+          } catch (error) {
+            logger.warn('Failed to stop sound', { error: (error as Error).message });
+          }
+        }
+      },
+
+      dispose: () => {
+        deferredWrapper._disposed = true;
+        deferredWrapper._playPending = false;
+
+        // Remove from pending sounds
+        const index = this.pendingSounds.findIndex(p => p.wrapper === deferredWrapper);
+        if (index !== -1) {
+          this.pendingSounds.splice(index, 1);
+        }
+
+        if (deferredWrapper._sound) {
+          try {
+            deferredWrapper._sound.dispose();
+          } catch (error) {
+            logger.warn('Failed to dispose sound', { error: (error as Error).message });
+          }
+        }
+      },
+
+      setPosition: (position: any) => {
+        deferredWrapper._config.position = position;
+        if (deferredWrapper._sound && deferredWrapper._sound.spatial) {
+          deferredWrapper._sound.spatial.position = position;
+        }
+      },
+
+      setVolume: (volume: number) => {
+        deferredWrapper._config.volume = volume;
+        if (deferredWrapper._sound) {
+          deferredWrapper._sound.volume = volume;
+        }
+      },
+    };
+
+    return deferredWrapper;
   }
 
   /**

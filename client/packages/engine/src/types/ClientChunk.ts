@@ -57,6 +57,9 @@ export interface ClientChunkData {
 
   /** Disposable rendering resources (meshes, sprites, etc.) created for this chunk */
   resourcesToDispose?: DisposableResources;
+
+  /** Map of block position key -> permanent audio Sound (for per-block audio management) */
+  permanentAudioSounds?: Map<string, any>;
 }
 
 /**

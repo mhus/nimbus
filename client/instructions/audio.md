@@ -120,7 +120,6 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
   werden, es wird immer die erste benutzt. Die Reihenfolge ist nicht garantiert.
 - Diese audios werden immer gestreamt im loop
 
-
 [ ] Auch Entities sollen sound unterstuetzen. Dazu wird im EntityModifier ein audioModifier hinzugefuegt, 
 der ähnlich wie der Block audioModifier funktioniert.
 - Der type ist kein enum, sondern frei wählbar.
@@ -128,5 +127,5 @@ der ähnlich wie der Block audioModifier funktioniert.
 - Im EntityService werden die audio dateien geladen und an die Entity vermerkt.
 - Entities koennen den sound abspielen mit einer funktion im AudioServce playEntityAudio(entity: ClientEntity, type: string)
   - Die audio datei wird immer neu gerstellt und an der position der entity abgespielt.
-  - Am Ende wird das BABYLON.Sound objekt wieder disposed.
+  - Am Ende wird das BABYLON.Sound objekt gleich wieder disposed.
 - Erstelle ein Commando in der engine playEntityAudio(entityId: string, type: string)
