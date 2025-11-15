@@ -136,7 +136,7 @@ export class PhysicsService {
   private climbableVelocitySetThisFrame: Map<string, boolean> = new Map();
 
   // Step sound throttle interval (per entity)
-  private readonly stepInterval: number = 50; // ms between step events
+  private readonly stepInterval: number = 300; // ms between step events
 
   // Event listeners
   private eventListeners: Map<string, Array<(...args: any[]) => void>> = new Map();

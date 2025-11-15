@@ -1244,18 +1244,19 @@ export class EntityService {
       return; // No ground block or air - entity is floating/flying
     }
 
-    // Emit step sound event
+    // Emit step sound event - bypass PhysicsService and emit directly to avoid double throttling
     const physicsService = this.appContext.services.physics;
     if (physicsService) {
       // Update throttle timestamp
       clientEntity.lastStepTime = now;
 
-      // Emit step:over event - create entity object compatible with PhysicsService
-      const entityForEvent = {
+      // Emit directly (PhysicsService has 'emit' method but also throttles in emitStepOver)
+      // We bypass emitStepOver because we already throttle in EntityService
+      (physicsService as any).emit('step:over', {
         entityId: clientEntity.id,
-        lastStepTime: clientEntity.lastStepTime,
-      };
-      physicsService.emitStepOver(entityForEvent, groundBlock, 'walk');
+        block: groundBlock,
+        movementType: 'walk',
+      });
     }
   }
 
@@ -1316,18 +1317,19 @@ export class EntityService {
       return; // No ground block or air
     }
 
-    // Emit step sound event
+    // Emit step sound event - bypass PhysicsService and emit directly to avoid double throttling
     const physicsService = this.appContext.services.physics;
     if (physicsService) {
       // Update throttle timestamp
       clientEntity.lastStepTime = now;
 
-      // Emit step:over event - create entity object compatible with PhysicsService
-      const entityForEvent = {
+      // Emit directly (PhysicsService has 'emit' method but also throttles in emitStepOver)
+      // We bypass emitStepOver because we already throttle in EntityService
+      (physicsService as any).emit('step:over', {
         entityId: clientEntity.id,
-        lastStepTime: clientEntity.lastStepTime,
-      };
-      physicsService.emitStepOver(entityForEvent, groundBlock, 'walk');
+        block: groundBlock,
+        movementType: 'walk',
+      });
     }
   }
 }

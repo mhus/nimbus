@@ -32,9 +32,6 @@ interface StepOverEvent {
 export class SoundService {
   private physicsService?: PhysicsService;
 
-  // Track currently playing step sounds per entity
-  private playingStepSounds: Map<string, boolean> = new Map();
-
   constructor(private appContext: AppContext) {
     logger.info('SoundService created');
   }
@@ -72,11 +69,6 @@ export class SoundService {
       return; // Audio disabled
     }
 
-    // Check if already playing step sound for this entity
-    if (this.playingStepSounds.get(entityId)) {
-      return;
-    }
-
     // Check if block has step audio
     if (!block.audioSteps || block.audioSteps.length === 0) {
       return; // No step audio for this block
@@ -92,9 +84,6 @@ export class SoundService {
     }
 
     const { sound, definition } = audioEntry;
-
-    // Mark as playing for this entity
-    this.playingStepSounds.set(entityId, true);
 
     // Set spatial sound position to block position
     if (sound.spatialSound) {
@@ -118,20 +107,7 @@ export class SoundService {
         audioPath: definition.path,
         error: (error as Error).message,
       });
-      this.playingStepSounds.delete(entityId);
       return;
-    }
-
-    // Remove playing flag when sound ends
-    if (sound.onEndedObservable) {
-      sound.onEndedObservable.addOnce(() => {
-        this.playingStepSounds.delete(entityId);
-      });
-    } else {
-      // Fallback: Remove flag after estimated duration
-      setTimeout(() => {
-        this.playingStepSounds.delete(entityId);
-      }, 1000);
     }
   }
 
@@ -139,7 +115,7 @@ export class SoundService {
    * Stop all playing sounds
    */
   stopAllSounds(): void {
-    this.playingStepSounds.clear();
+    // No longer tracking playing sounds - nothing to clear
   }
 
   /**

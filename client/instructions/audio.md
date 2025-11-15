@@ -43,12 +43,16 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Im event wird auch die entityId mitgegeben, damit kann verhindert werden, das fuer den gleichen player zwei steps gleichzeitig gespielt werden.
   Vermerke dir, solange der step sound läuft die entityId, und spiele keinen neuen step sound fuer die gleiche entityId ab.
 
-[?] Auch andere entitys (z.B. NPCs) koennen das 'onStepOver' event ausloesen, wenn sie sich bewegen.
+[x] Auch andere entitys (z.B. NPCs) koennen das 'onStepOver' event ausloesen, wenn sie sich bewegen.
 - Entities werden vom server bewegt und im EntityService verwaltet. Es gibt entities mit und ohne Client Physic. Die Physic wird in EntityPhysicsController (?)
   errechnet. Entities ohne Client Physic (z.b. andere player) benoetigen jetzt auch eine minimale Physik in der nur der Block unter den Fuessen ermittelt wird (groundBlocks).
 - Im EntityPhysicsController soll auch das 'onStepOver' event ausgelöst werden, wenn sich die entity bewegt. Es werden die gleichen daten wie beim Player uebergeben (ClientBlock, movementType = WALK, entityId).
 - Es wird nur ausgeloest wenn die entity einen Block gefunden hat auf dem sie steht (also nicht in der Luft schwebt) 
   und nur alle 300ms. - Dazu kann an der entity ein parameter mit dem letzten senden des events hinterlegt werden, wenn noetig.
+
+[ ] Ich moechte das Volumen von steps sounds im AudioService anpassen koennen mit einem parameter, der parameter soll als multiplikator fuer das volumen dienen.
+- Erstelle einen parameter 'stepVolume' im AudioService, default wert 0.5
+- Erstelle ein Commando zum setzen des stepVolume parameters.
 
 [ ] Entity Player geben die Pose mit, von der Pose koennen die movementTypes abgeleitet werden und correct bei onStepOver mitgegeben werden.
 

@@ -12,7 +12,23 @@
       },
       "physics": {
         "solid": true
-      }
+      },
+      "audio": [
+        {
+          "type": "steps",
+          "path": "audio/step/stone1.ogg",
+          "volume": 1,
+          "loop": false,
+          "enabled": true
+        },
+        {
+          "type": "steps",
+          "path": "audio/step/stone2.ogg",
+          "volume": 1,
+          "loop": false,
+          "enabled": true
+        }
+      ]
     }
   },
   "description_old": "Dirt block"
