@@ -50,6 +50,9 @@ export interface ClientEntity {
 
   /** Last access timestamp (for cache eviction) */
   lastAccess: number;
+
+  /** Last step sound time for throttling (timestamp in ms) */
+  lastStepTime?: number;
 }
 
 /**

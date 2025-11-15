@@ -43,7 +43,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Im event wird auch die entityId mitgegeben, damit kann verhindert werden, das fuer den gleichen player zwei steps gleichzeitig gespielt werden.
   Vermerke dir, solange der step sound läuft die entityId, und spiele keinen neuen step sound fuer die gleiche entityId ab.
 
-[ ] Auch andere entitys (z.B. NPCs) koennen das 'onStepOver' event ausloesen, wenn sie sich bewegen.
+[?] Auch andere entitys (z.B. NPCs) koennen das 'onStepOver' event ausloesen, wenn sie sich bewegen.
 - Entities werden vom server bewegt und im EntityService verwaltet. Es gibt entities mit und ohne Client Physic. Die Physic wird in EntityPhysicsController (?)
   errechnet. Entities ohne Client Physic (z.b. andere player) benoetigen jetzt auch eine minimale Physik in der nur der Block unter den Fuessen ermittelt wird (groundBlocks).
 - Im EntityPhysicsController soll auch das 'onStepOver' event ausgelöst werden, wenn sich die entity bewegt. Es werden die gleichen daten wie beim Player uebergeben (ClientBlock, movementType = WALK, entityId).
