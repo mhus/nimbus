@@ -83,13 +83,16 @@ class AudioPoolItem {
     // Auto-release via onEndedObservable (Babylon.js Observable pattern)
     if (this.sound.onEndedObservable) {
       this.sound.onEndedObservable.addOnce(() => {
+        logger.debug('onEndedObservable fired, releasing item');
         this.release();
         onReleaseCallback();
       });
+      logger.debug('onEndedObservable registered');
     } else {
       // Fallback: release after 1 second if Observable not available
       logger.warn('onEndedObservable not available, using timeout fallback');
       setTimeout(() => {
+        logger.debug('Timeout fallback fired, releasing item');
         this.release();
         onReleaseCallback();
       }, 1000);
@@ -124,7 +127,7 @@ class AudioPoolItem {
       this.sound.spatial.coneOuterAngle = 2 * Math.PI; // 360 degrees
       this.sound.spatial.coneOuterGain = 1.0; // Full volume in all directions
 
-      logger.info('Spatial audio configured (StaticSound API)', {
+      logger.debug('Spatial audio configured (StaticSound API)', {
         position: { x: position.x, y: position.y, z: position.z },
         maxDistance,
         distanceModel: 'exponential',
@@ -142,7 +145,7 @@ class AudioPoolItem {
         this.sound.setPosition(position);
       }
 
-      logger.info('Spatial audio configured (legacy Sound API)', {
+      logger.debug('Spatial audio configured (legacy Sound API)', {
         position: { x: position.x, y: position.y, z: position.z },
         maxDistance
       });
@@ -154,15 +157,6 @@ class AudioPoolItem {
    */
   public play(volume: number): void {
     this.sound.volume = volume;
-
-    // Debug logging
-    logger.info('Playing sound with config', {
-      volume,
-      hasSpatial: !!this.sound.spatial,
-      spatialPosition: this.sound.spatial?.position,
-      maxDistance: this.sound.spatial?.maxDistance,
-      distanceModel: this.sound.spatial?.distanceModel
-    });
 
     try {
       this.sound.play();
@@ -479,7 +473,7 @@ export class AudioService {
       const pool = new AudioPool(path, audioUrl, initialSounds);
       this.soundPools.set(path, pool);
 
-      logger.info('Sound loaded into pool', { path, initialPoolSize });
+      logger.debug('Sound loaded into pool', { path, initialPoolSize });
     } catch (error) {
       logger.error('Failed to load sound into pool', {
         path,

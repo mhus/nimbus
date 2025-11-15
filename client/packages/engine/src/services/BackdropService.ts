@@ -391,7 +391,7 @@ export class BackdropService {
 
       const url = networkService.getBackdropUrl(id);
 
-      logger.info('Fetching backdrop type from server', { id, url });
+      logger.debug('Fetching backdrop type from server', { id, url });
 
       const response = await fetch(url);
 

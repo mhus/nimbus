@@ -61,6 +61,13 @@ export interface WorldInfo {
     allowGuests: boolean;
     pvpEnabled: boolean;
     pingInterval: number;
+
+    /** Audio settings */
+    /** Ambient music when player dies (optional) */
+    deadAmbientAudio?: string;
+
+    /** Step sound when swimming (optional, default: 'audio/liquid/swim1.ogg') */
+    swimStepAudio?: string;
   };
 
   /** License information */
