@@ -62,3 +62,28 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 [x] Beim modus CRUCH (wird im event mitgeliefert) soll der sound leiser abgespielt werden (50% der lautstaerke).
 
 [?] Beim modus SWIM (wird im event mitgeliefert) soll ein spezieller sound 'audio/step/swim1.ogg' an der stelle des players abgespielt werden.
+
+[ ] Funktion am AudioServcie fuer ambiente musik(Hintergrund musik).
+- Erstelle eine funktion playAmbientSound(soundPath: string, volume: number)
+- Ambiente wird immer im loop abgespielt.
+- Wird ein leerer soundPath uebergeben, wird die ambiente musik gestoppt.
+- Erstelle einen StackModifier fuer die ambient musik, default ist '' (off)
+- es soll einen parameter mabientVolume geben, als multiplikator fuer die lautstaerke der ambiente musik. Ist er 0 oder kliener als 0, wird die ambiente musik nicht abgespielt.
+- Wenn die musik an / aus geschaten wird, soll sie kurz ein / ausgeblendet werden (fade in / fade out)
+- Erstelle commandos in der engine fuer playAmbienteAuio(soundPath: string, volume: number) und setAmbientVolume(volume: number)
+
+[ ] Funktion am AudioService fuer PlaySoundAtPosition(soundPath: string, x, y, z, volume: number)
+- Spielt einen sound an der uebergebenen position ab.
+- Erstelle commandos in der engine fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
+- Kein loop!
+
+[ ] Funktion am AudioService fuer PlaySound(soundPath: string, volume: number)
+- Spielt einen sound an der position der entity ab.
+- Erstelle commandos in der engine fuer playSound(soudnPath: string, volume: number)
+- kein loop!
+
+
+[ ] Funktion am AudioService fuer StreamSound(soundPath: string, volume: number)
+- Streamt eine audio datei z.b. eine ansage oder aehnliches.
+- Erstelle commandos in der engine fuer streamSound(soundPath: string, volume: number)
+- kein loop!

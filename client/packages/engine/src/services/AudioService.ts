@@ -19,6 +19,12 @@ import type { ClientBlock } from '../types/ClientBlock';
 
 const logger = getLogger('AudioService');
 
+// Constants for spatial audio
+const DEFAULT_MAX_DISTANCE = 15;
+const DEFAULT_INITIAL_POOL_SIZE = 1;
+const STEP_SOUND_INITIAL_POOL_SIZE = 3;
+const POOL_MAX_SIZE = 10; // Maximum pool size per sound
+
 /**
  * Step over event data
  */
@@ -29,7 +35,7 @@ interface StepOverEvent {
 }
 
 /**
- * Audio cache entry
+ * Audio cache entry (legacy, for non-spatial sounds)
  */
 interface AudioCacheEntry {
   /** Babylon.js Sound object (Sound or StaticSound) */
@@ -43,19 +49,227 @@ interface AudioCacheEntry {
 }
 
 /**
+ * AudioPoolItem - Manages a single sound instance in the pool
+ * Handles blocking, spatial configuration, and auto-release
+ */
+class AudioPoolItem {
+  public sound: any; // StaticSound
+  public inUse: boolean = false;
+  public blockedAt: number = 0; // Timestamp when blocked
+  public lastUsed: number = 0; // Timestamp when last used
+
+  constructor(sound: any) {
+    this.sound = sound;
+  }
+
+  /**
+   * Blocks the instance for playback
+   * Sets spatial parameters and registers onEndedObservable for auto-release
+   * @param position 3D position for spatial sound
+   * @param maxDistance Maximum hearing distance
+   * @param onReleaseCallback Callback when released
+   */
+  public block(
+    position: Vector3,
+    maxDistance: number,
+    onReleaseCallback: () => void
+  ): void {
+    this.inUse = true;
+    this.blockedAt = Date.now();
+
+    // Spatial configuration
+    this.configureSpatial(position, maxDistance);
+
+    // Auto-release via onEndedObservable (Babylon.js Observable pattern)
+    if (this.sound.onEndedObservable) {
+      this.sound.onEndedObservable.addOnce(() => {
+        this.release();
+        onReleaseCallback();
+      });
+    } else {
+      // Fallback: release after 1 second if Observable not available
+      logger.warn('onEndedObservable not available, using timeout fallback');
+      setTimeout(() => {
+        this.release();
+        onReleaseCallback();
+      }, 1000);
+    }
+  }
+
+  /**
+   * Releases the instance back to the pool (available)
+   */
+  public release(): void {
+    this.inUse = false;
+    this.lastUsed = Date.now();
+    this.blockedAt = 0;
+  }
+
+  /**
+   * Configures spatial audio parameters
+   * StaticSound uses sound.spatial object for configuration
+   * Omnidirectional sound (equal in all directions from position)
+   */
+  private configureSpatial(position: Vector3, maxDistance: number): void {
+    // StaticSound has a spatial property
+    if (this.sound.spatial) {
+      this.sound.spatial.position = position;
+      this.sound.spatial.maxDistance = maxDistance;
+      this.sound.spatial.distanceModel = 'exponential';
+      this.sound.spatial.refDistance = 1;
+      this.sound.spatial.rolloffFactor = 1;
+
+      // Omnidirectional sound (no cone, equal in all directions)
+      this.sound.spatial.coneInnerAngle = 2 * Math.PI; // 360 degrees
+      this.sound.spatial.coneOuterAngle = 2 * Math.PI; // 360 degrees
+      this.sound.spatial.coneOuterGain = 1.0; // Full volume in all directions
+
+      logger.info('Spatial audio configured (StaticSound API)', {
+        position: { x: position.x, y: position.y, z: position.z },
+        maxDistance,
+        distanceModel: 'exponential',
+        omnidirectional: true
+      });
+    } else {
+      // Fallback for regular Sound (if used)
+      this.sound.spatialSound = true;
+      this.sound.distanceModel = 'exponential';
+      this.sound.maxDistance = maxDistance;
+      this.sound.refDistance = 1;
+      this.sound.rolloffFactor = 1;
+
+      if (typeof this.sound.setPosition === 'function') {
+        this.sound.setPosition(position);
+      }
+
+      logger.info('Spatial audio configured (legacy Sound API)', {
+        position: { x: position.x, y: position.y, z: position.z },
+        maxDistance
+      });
+    }
+  }
+
+  /**
+   * Sets volume and starts playback
+   */
+  public play(volume: number): void {
+    this.sound.volume = volume;
+
+    // Debug logging
+    logger.info('Playing sound with config', {
+      volume,
+      hasSpatial: !!this.sound.spatial,
+      spatialPosition: this.sound.spatial?.position,
+      maxDistance: this.sound.spatial?.maxDistance,
+      distanceModel: this.sound.spatial?.distanceModel
+    });
+
+    try {
+      this.sound.play();
+    } catch (error) {
+      logger.warn('Failed to play sound', { error: (error as Error).message });
+      this.release(); // Release on error
+    }
+  }
+
+  /**
+   * Checks if instance is available
+   */
+  public isAvailable(): boolean {
+    return !this.inUse;
+  }
+
+  /**
+   * Cleanup - dispose sound
+   */
+  public dispose(): void {
+    this.sound?.dispose();
+  }
+}
+
+/**
+ * AudioPool - Manages pool of AudioPoolItems for a sound path
+ */
+class AudioPool {
+  public path: string;
+  public audioUrl: string; // URL for creating new instances
+  public items: AudioPoolItem[] = [];
+  public loadedAt: number;
+
+  constructor(path: string, audioUrl: string, initialSounds: any[]) {
+    this.path = path;
+    this.audioUrl = audioUrl;
+    this.loadedAt = Date.now();
+
+    // Add initial sounds to pool
+    for (const sound of initialSounds) {
+      this.items.push(new AudioPoolItem(sound));
+    }
+
+    logger.debug('AudioPool created', { path, initialSize: initialSounds.length });
+  }
+
+  /**
+   * Gets available item from pool or creates new via CreateSoundAsync
+   * Returns null if pool is at max capacity and no items are available
+   */
+  public async getAvailableItem(): Promise<AudioPoolItem | null> {
+    // Find free item
+    let item = this.items.find(item => item.isAvailable());
+
+    // No free item → check if we can grow pool
+    if (!item) {
+      // Check max pool size
+      if (this.items.length >= POOL_MAX_SIZE) {
+        logger.warn('Pool at maximum capacity, sound skipped', {
+          path: this.path,
+          maxSize: POOL_MAX_SIZE
+        });
+        return null; // Pool is full, skip this sound
+      }
+
+      // Grow pool
+      logger.debug('Pool full, creating new instance', { path: this.path });
+      const newSound = await CreateSoundAsync(this.path, this.audioUrl);
+      item = new AudioPoolItem(newSound);
+      this.items.push(item);
+      logger.debug('Pool grown', { path: this.path, newSize: this.items.length });
+    }
+
+    return item;
+  }
+
+  /**
+   * Returns number of available items
+   */
+  public getAvailableCount(): number {
+    return this.items.filter(item => item.isAvailable()).length;
+  }
+
+  /**
+   * Cleanup - dispose all items
+   */
+  public dispose(): void {
+    this.items.forEach(item => item.dispose());
+    this.items = [];
+  }
+}
+
+/**
  * AudioService - Manages audio resources
  *
  * Loads audio files as Babylon.js Sound objects and caches them for reuse.
  * Integrates with NetworkService to fetch audio assets.
  */
 export class AudioService {
-  private audioCache: Map<string, AudioCacheEntry> = new Map();
+  private audioCache: Map<string, AudioCacheEntry> = new Map(); // Legacy cache for non-spatial sounds
+  private soundPools: Map<string, AudioPool> = new Map(); // Pool system for spatial sounds
   private scene?: Scene;
   private networkService?: NetworkService;
   private physicsService?: PhysicsService;
   private audioEnabled: boolean = true;
   private audioEngine?: any; // AudioEngineV2
-  private stepVolume: number = 0.5; // Default step sound volume multiplier
+  private stepVolume: number = 1.0; // Default step sound volume multiplier
 
   // Track last swim sound time per entity to prevent overlapping
   private lastSwimSoundTime: Map<string, number> = new Map();
@@ -154,8 +368,111 @@ export class AudioService {
   }
 
   /**
+   * Load sound into pool with initial pool size (forecast)
+   * @param path Audio asset path
+   * @param initialPoolSize Initial number of instances (default: 1)
+   */
+  async loadSoundIntoPool(path: string, initialPoolSize = DEFAULT_INITIAL_POOL_SIZE): Promise<void> {
+    // Already loaded?
+    if (this.soundPools.has(path)) {
+      logger.debug('Sound already in pool', { path });
+      return;
+    }
+
+    if (!this.networkService) {
+      logger.error('NetworkService not available - cannot load sound into pool', { path });
+      return;
+    }
+
+    if (!this.scene) {
+      logger.error('Scene not initialized - cannot load sound into pool', { path });
+      return;
+    }
+
+    try {
+      // Get audio URL
+      const audioUrl = this.networkService.getAssetUrl(path);
+      logger.debug('Loading sound into pool', { path, audioUrl, initialPoolSize });
+
+      // Load initial sound instances
+      const initialSounds: any[] = [];
+      for (let i = 0; i < initialPoolSize; i++) {
+        const sound = await CreateSoundAsync(path, audioUrl);
+        initialSounds.push(sound);
+        logger.debug('Sound instance created', { path, instance: i + 1, total: initialPoolSize });
+      }
+
+      // Create AudioPool with pre-loaded sounds
+      const pool = new AudioPool(path, audioUrl, initialSounds);
+      this.soundPools.set(path, pool);
+
+      logger.info('Sound loaded into pool', { path, initialPoolSize });
+    } catch (error) {
+      logger.error('Failed to load sound into pool', {
+        path,
+        error: (error as Error).message,
+        stack: (error as Error).stack
+      });
+    }
+  }
+
+  /**
+   * Get blocked AudioPoolItem from pool
+   * @param path Audio asset path
+   * @param position 3D position for spatial sound
+   * @param maxDistance Maximum hearing distance
+   * @returns AudioPoolItem or null if failed
+   */
+  async getBlockedSoundFromPool(
+    path: string,
+    position: Vector3,
+    maxDistance: number
+  ): Promise<AudioPoolItem | null> {
+    // Pool doesn't exist → lazy load with default size
+    if (!this.soundPools.has(path)) {
+      logger.debug('Pool does not exist, loading sound', { path });
+      await this.loadSoundIntoPool(path, DEFAULT_INITIAL_POOL_SIZE);
+
+      // Check if pool was created successfully
+      if (!this.soundPools.has(path)) {
+        logger.warn('Failed to create pool after loading attempt', { path });
+        return null;
+      }
+    }
+
+    const pool = this.soundPools.get(path);
+    if (!pool) {
+      logger.error('Failed to get pool (should not happen)', { path });
+      return null;
+    }
+
+    // Get available item from pool (async now)
+    const item = await pool.getAvailableItem();
+
+    // Pool at max capacity, no available items
+    if (!item) {
+      logger.debug('No available items in pool', {
+        path,
+        poolSize: pool.items.length,
+        available: pool.getAvailableCount()
+      });
+      return null;
+    }
+
+    // Block item with onRelease callback
+    const onReleaseCallback = () => {
+      logger.debug('AudioPoolItem released', { path });
+    };
+
+    item.block(position, maxDistance, onReleaseCallback);
+
+    return item;
+  }
+
+  /**
    * Load audio file and return Babylon.js Sound object
    * Uses cache if audio was previously loaded
+   * NOTE: Legacy method for non-spatial sounds (UI, music, etc.)
    *
    * @param assetPath Path to audio asset (e.g., "audio/step/grass.ogg")
    * @param options Optional Babylon.js Sound options
@@ -363,7 +680,15 @@ export class AudioService {
    */
   dispose(): void {
     logger.info('Disposing AudioService');
+
+    // Dispose legacy cache
     this.clearCache();
+
+    // Dispose all sound pools
+    this.soundPools.forEach(pool => pool.dispose());
+    this.soundPools.clear();
+
+    // Clear swim sound throttle
     this.lastSwimSoundTime.clear();
   }
 
@@ -373,9 +698,9 @@ export class AudioService {
 
   /**
    * Handle step over event
-   * Plays random step sound from block's audioSteps
+   * Plays random step sound from block's audioSteps using pool system
    */
-  private onStepOver(event: StepOverEvent): void {
+  private async onStepOver(event: StepOverEvent): Promise<void> {
     const { entityId, block, movementType } = event;
 
     // Check if audio is enabled
@@ -385,7 +710,7 @@ export class AudioService {
 
     // SWIM mode: play special swim sound
     if (movementType === 'swim') {
-      this.playSwimSound(entityId, block);
+      await this.playSwimSound(entityId, block);
       return;
     }
 
@@ -398,103 +723,86 @@ export class AudioService {
     const randomIndex = Math.floor(Math.random() * block.audioSteps.length);
     const audioEntry = block.audioSteps[randomIndex];
 
-    if (!audioEntry || !audioEntry.sound) {
+    if (!audioEntry || !audioEntry.definition) {
       logger.warn('Invalid audio entry', { blockTypeId: block.blockType.id });
       return;
     }
 
-    const { sound, definition } = audioEntry;
+    // Get configuration
+    const maxDistance = audioEntry.definition.maxDistance ?? DEFAULT_MAX_DISTANCE;
+    const position = new Vector3(
+      block.block.position.x,
+      block.block.position.y,
+      block.block.position.z
+    );
 
-    // Set spatial sound position to block position
-    if (sound.spatialSound) {
-      const pos = block.block.position;
-      if (typeof sound.setPosition === 'function') {
-        sound.setPosition(new Vector3(pos.x, pos.y, pos.z));
-      }
+    // Get blocked sound from pool (auto-released via onEndedObservable)
+    const item = await this.getBlockedSoundFromPool(
+      audioEntry.definition.path,
+      position,
+      maxDistance
+    );
+
+    if (!item) {
+      logger.warn('Failed to get sound from pool', { path: audioEntry.definition.path });
+      return;
     }
 
-    // Set volume - StaticSound uses .volume property, not setVolume()
-    // Apply stepVolume multiplier from AudioService
-    let stepVolume = this.stepVolume;
+    // Volume calculation
+    let volumeMultiplier = this.stepVolume;
 
     // CROUCH mode: reduce volume to 50%
     if (movementType === 'crouch') {
-      stepVolume *= 0.5;
+      volumeMultiplier *= 0.5;
     }
 
-    const finalVolume = definition.volume * stepVolume;
+    const finalVolume = audioEntry.definition.volume * volumeMultiplier;
 
-    if (typeof sound.setVolume === 'function') {
-      sound.setVolume(finalVolume);
-    } else if ('volume' in sound) {
-      sound.volume = finalVolume;
-    }
-
-    try {
-      sound.play();
-    } catch (error) {
-      logger.warn('Failed to play step sound', {
-        audioPath: definition.path,
-        error: (error as Error).message,
-      });
-      return;
-    }
+    // Play sound (automatically released via onended callback in AudioPoolItem)
+    item.play(finalVolume);
   }
 
   /**
-   * Play swim sound at player position
+   * Play swim sound at player position using pool system
    * Prevents overlapping by checking if sound was played recently
    */
   private async playSwimSound(entityId: string, block: ClientBlock): Promise<void> {
     const swimSoundPath = 'audio/liquid/swim1.ogg';
 
-    // Check if swim sound was played recently (prevent overlapping)
+    // Throttling: Check if swim sound was played recently (prevent overlapping)
     // Swim sounds are typically 500-1000ms long, so wait at least 500ms
     const now = Date.now();
     const lastPlayTime = this.lastSwimSoundTime.get(entityId);
     if (lastPlayTime && now - lastPlayTime < 500) {
-      return; // Still playing from last time
+      return; // Still too soon
     }
 
-    // Load swim sound
-    const sound = await this.loadAudio(swimSoundPath, {
-      spatialSound: true,
-      loop: false,
-      autoplay: false,
-    });
+    // Position
+    const position = new Vector3(
+      block.block.position.x,
+      block.block.position.y,
+      block.block.position.z
+    );
 
-    if (!sound) {
-      return; // Failed to load
+    // Get blocked sound from pool
+    const item = await this.getBlockedSoundFromPool(
+      swimSoundPath,
+      position,
+      DEFAULT_MAX_DISTANCE
+    );
+
+    if (!item) {
+      logger.warn('Failed to get swim sound from pool');
+      return;
     }
 
-    // Set position to player/entity position (from block.block.position)
-    if (sound.spatialSound && block.block?.position) {
-      const pos = block.block.position;
-      if (typeof sound.setPosition === 'function') {
-        sound.setPosition(new Vector3(pos.x, pos.y, pos.z));
-      }
-    }
+    // Volume
+    const finalVolume = 1.0 * this.stepVolume; // Full volume for swim sounds
 
-    // Apply stepVolume multiplier
-    const stepVolume = this.stepVolume;
-    const finalVolume = 1.0 * stepVolume; // Full volume for swim sounds
-
-    if (typeof sound.setVolume === 'function') {
-      sound.setVolume(finalVolume);
-    } else if ('volume' in sound) {
-      sound.volume = finalVolume;
-    }
-
-    // Update last play time
+    // Update throttle timestamp
     this.lastSwimSoundTime.set(entityId, now);
 
-    try {
-      sound.play();
-    } catch (error) {
-      logger.warn('Failed to play swim sound', {
-        audioPath: swimSoundPath,
-        error: (error as Error).message,
-      });
-    }
+    // Play (automatically released via onended callback)
+    item.play(finalVolume);
   }
 }

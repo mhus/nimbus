@@ -657,6 +657,9 @@ export interface AudioDefinition {
 
   /** Whether audio is enabled */
   enabled: boolean;
+
+  /** Maximum hearing distance in blocks (default: 15) */
+  maxDistance?: number;
 }
 
 /**
