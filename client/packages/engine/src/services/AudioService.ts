@@ -5,15 +5,28 @@
  * - Loading audio files from the server
  * - Caching Babylon.js Sound objects
  * - Managing audio playback
+ * - Handling gameplay sound playback (step sounds, swim sounds, etc.)
  */
 
 import { getLogger } from '@nimbus/shared';
+import { Vector3 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import { Scene, Sound, Engine, CreateAudioEngineAsync, CreateSoundAsync } from '@babylonjs/core';
 import type { AudioEngine, StaticSound } from '@babylonjs/core';
 import type { NetworkService } from './NetworkService';
+import type { PhysicsService } from './PhysicsService';
+import type { ClientBlock } from '../types/ClientBlock';
 
 const logger = getLogger('AudioService');
+
+/**
+ * Step over event data
+ */
+interface StepOverEvent {
+  entityId: string;
+  block: ClientBlock; // For swim mode: contains position but no audioSteps
+  movementType: string;
+}
 
 /**
  * Audio cache entry
@@ -39,9 +52,13 @@ export class AudioService {
   private audioCache: Map<string, AudioCacheEntry> = new Map();
   private scene?: Scene;
   private networkService?: NetworkService;
+  private physicsService?: PhysicsService;
   private audioEnabled: boolean = true;
   private audioEngine?: any; // AudioEngineV2
   private stepVolume: number = 0.5; // Default step sound volume multiplier
+
+  // Track last swim sound time per entity to prevent overlapping
+  private lastSwimSoundTime: Map<string, number> = new Map();
 
   constructor(private appContext: AppContext) {
     logger.info('AudioService created');
@@ -90,10 +107,12 @@ export class AudioService {
   /**
    * Initialize audio service with scene
    * Must be called after scene is created
+   * Also subscribes to PhysicsService events for gameplay sounds
    */
   async initialize(scene: Scene): Promise<void> {
     this.scene = scene;
     this.networkService = this.appContext.services.network;
+    this.physicsService = this.appContext.services.physics;
 
     if (!this.networkService) {
       logger.error('NetworkService not available in AppContext');
@@ -119,6 +138,16 @@ export class AudioService {
       }
     } catch (error) {
       logger.error('Failed to create audio engine', {}, error as Error);
+    }
+
+    // Subscribe to PhysicsService events for gameplay sounds
+    if (this.physicsService) {
+      this.physicsService.on('step:over', (event: StepOverEvent) => {
+        this.onStepOver(event);
+      });
+      logger.info('AudioService subscribed to PhysicsService events');
+    } else {
+      logger.warn('PhysicsService not available - gameplay sounds will not work');
     }
 
     logger.info('AudioService initialized with scene');
@@ -335,5 +364,137 @@ export class AudioService {
   dispose(): void {
     logger.info('Disposing AudioService');
     this.clearCache();
+    this.lastSwimSoundTime.clear();
+  }
+
+  // ========================================
+  // Gameplay Sound Methods (from SoundService)
+  // ========================================
+
+  /**
+   * Handle step over event
+   * Plays random step sound from block's audioSteps
+   */
+  private onStepOver(event: StepOverEvent): void {
+    const { entityId, block, movementType } = event;
+
+    // Check if audio is enabled
+    if (!this.audioEnabled) {
+      return; // Audio disabled
+    }
+
+    // SWIM mode: play special swim sound
+    if (movementType === 'swim') {
+      this.playSwimSound(entityId, block);
+      return;
+    }
+
+    // Check if block has step audio
+    if (!block.audioSteps || block.audioSteps.length === 0) {
+      return; // No step audio for this block
+    }
+
+    // Select random step audio
+    const randomIndex = Math.floor(Math.random() * block.audioSteps.length);
+    const audioEntry = block.audioSteps[randomIndex];
+
+    if (!audioEntry || !audioEntry.sound) {
+      logger.warn('Invalid audio entry', { blockTypeId: block.blockType.id });
+      return;
+    }
+
+    const { sound, definition } = audioEntry;
+
+    // Set spatial sound position to block position
+    if (sound.spatialSound) {
+      const pos = block.block.position;
+      if (typeof sound.setPosition === 'function') {
+        sound.setPosition(new Vector3(pos.x, pos.y, pos.z));
+      }
+    }
+
+    // Set volume - StaticSound uses .volume property, not setVolume()
+    // Apply stepVolume multiplier from AudioService
+    let stepVolume = this.stepVolume;
+
+    // CROUCH mode: reduce volume to 50%
+    if (movementType === 'crouch') {
+      stepVolume *= 0.5;
+    }
+
+    const finalVolume = definition.volume * stepVolume;
+
+    if (typeof sound.setVolume === 'function') {
+      sound.setVolume(finalVolume);
+    } else if ('volume' in sound) {
+      sound.volume = finalVolume;
+    }
+
+    try {
+      sound.play();
+    } catch (error) {
+      logger.warn('Failed to play step sound', {
+        audioPath: definition.path,
+        error: (error as Error).message,
+      });
+      return;
+    }
+  }
+
+  /**
+   * Play swim sound at player position
+   * Prevents overlapping by checking if sound was played recently
+   */
+  private async playSwimSound(entityId: string, block: ClientBlock): Promise<void> {
+    const swimSoundPath = 'audio/liquid/swim1.ogg';
+
+    // Check if swim sound was played recently (prevent overlapping)
+    // Swim sounds are typically 500-1000ms long, so wait at least 500ms
+    const now = Date.now();
+    const lastPlayTime = this.lastSwimSoundTime.get(entityId);
+    if (lastPlayTime && now - lastPlayTime < 500) {
+      return; // Still playing from last time
+    }
+
+    // Load swim sound
+    const sound = await this.loadAudio(swimSoundPath, {
+      spatialSound: true,
+      loop: false,
+      autoplay: false,
+    });
+
+    if (!sound) {
+      return; // Failed to load
+    }
+
+    // Set position to player/entity position (from block.block.position)
+    if (sound.spatialSound && block.block?.position) {
+      const pos = block.block.position;
+      if (typeof sound.setPosition === 'function') {
+        sound.setPosition(new Vector3(pos.x, pos.y, pos.z));
+      }
+    }
+
+    // Apply stepVolume multiplier
+    const stepVolume = this.stepVolume;
+    const finalVolume = 1.0 * stepVolume; // Full volume for swim sounds
+
+    if (typeof sound.setVolume === 'function') {
+      sound.setVolume(finalVolume);
+    } else if ('volume' in sound) {
+      sound.volume = finalVolume;
+    }
+
+    // Update last play time
+    this.lastSwimSoundTime.set(entityId, now);
+
+    try {
+      sound.play();
+    } catch (error) {
+      logger.warn('Failed to play swim sound', {
+        audioPath: swimSoundPath,
+        error: (error as Error).message,
+      });
+    }
   }
 }

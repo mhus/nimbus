@@ -142,15 +142,6 @@ export class EngineService {
         logger.debug('MaterialService connected to ShaderService');
       }
 
-      // Initialize AudioService with scene (async)
-      const audioService = this.appContext.services.audio;
-      if (audioService) {
-        await audioService.initialize(this.scene);
-        logger.info('AudioService initialized with scene');
-      } else {
-        logger.warn('AudioService not available in AppContext');
-      }
-
       // Initialize SpriteService with scene and connect to EnvironmentService
       const spriteService = new (await import('./SpriteService')).SpriteService(this.scene, this.appContext);
       this.appContext.services.sprite = spriteService;
@@ -179,11 +170,13 @@ export class EngineService {
 
       logger.debug('PhysicsService initialized and registered');
 
-      // Initialize SoundService (after PhysicsService)
-      const soundService = this.appContext.services.sound;
-      if (soundService) {
-        soundService.initialize();
-        logger.debug('SoundService initialized and subscribed to PhysicsService');
+      // Initialize AudioService with scene (async) - AFTER PhysicsService for event subscriptions
+      const audioService = this.appContext.services.audio;
+      if (audioService) {
+        await audioService.initialize(this.scene);
+        logger.info('AudioService initialized with scene and subscribed to PhysicsService events');
+      } else {
+        logger.warn('AudioService not available in AppContext');
       }
 
       // Initialize player

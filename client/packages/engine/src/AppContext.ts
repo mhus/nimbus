@@ -26,7 +26,6 @@ import type { EntityService } from './services/EntityService';
 import type { InputService } from './services/InputService';
 import type { ItemService } from './services/ItemService';
 import type { AudioService } from './services/AudioService';
-import type { SoundService } from './services/SoundService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -111,11 +110,8 @@ export interface Services {
   /** Item service for loading and caching items from server */
   item?: ItemService;
 
-  /** Audio service for loading and caching audio files */
+  /** Audio service for loading, caching audio files, and gameplay sound playback */
   audio?: AudioService;
-
-  /** Sound service for gameplay sound playback */
-  sound?: SoundService;
 
   // Future services will be added here:
   // render?: RenderService;

@@ -18,7 +18,6 @@ import { NetworkService } from './services/NetworkService';
 import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
 import { AudioService } from './services/AudioService';
-import { SoundService } from './services/SoundService';
 import { SpriteService } from './services/SpriteService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
@@ -267,15 +266,10 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const shaderService = new ShaderService(appContext);
     appContext.services.shader = shaderService;
 
-    // Initialize AudioService
+    // Initialize AudioService (handles both audio loading and gameplay sounds)
     logger.info('Initializing AudioService...');
     const audioService = new AudioService(appContext);
     appContext.services.audio = audioService;
-
-    // Initialize SoundService
-    logger.info('Initializing SoundService...');
-    const soundService = new SoundService(appContext);
-    appContext.services.sound = soundService;
 
     // Initialize ChunkService
     logger.info('Initializing ChunkService...');
