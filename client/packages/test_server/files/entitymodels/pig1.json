@@ -51,5 +51,14 @@
     "friction": 0.8,
     "restitution": 0.1,
     "drag": 0.02
-  }
+  },
+  "audio": [
+    {
+      "type": "hallo",
+      "path": "audio/animals/sheep_baa.ogg",
+      "volume": 0.7,
+      "loop": false,
+      "enabled": true
+    }
+  ]
 }

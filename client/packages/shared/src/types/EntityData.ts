@@ -8,6 +8,7 @@
 
 import type { Vector3 } from './Vector3';
 import type { Rotation } from './Rotation';
+import type { AudioDefinition } from './BlockModifier';
 
 /**
  * PoseType - Art der Bewegungsanimation
@@ -101,6 +102,15 @@ export interface EntityPhysicsProperties {
 }
 
 /**
+ * EntityModifier - Modifiers for entity instances
+ * Similar to BlockModifier but for entities
+ */
+export interface EntityModifier {
+  /** Audio definitions for this entity (type is custom string, e.g., 'attack', 'idle', 'hurt') */
+  audio?: AudioDefinition[];
+}
+
+/**
  * EntityModel - Template/Definition für Entity-Typen
  *
  * Analog zu BlockType: Definiert die Eigenschaften eines Entity-Typs.
@@ -174,6 +184,9 @@ export interface Entity {
 
   /** Custom modifiers for this instance (overrides/extends model defaults) */
   modelModifier: Record<string, any>;
+
+  /** Entity modifiers (audio, etc.) */
+  modifier?: EntityModifier;
 
   /** Movement behavior type */
   movementType: MovementType;

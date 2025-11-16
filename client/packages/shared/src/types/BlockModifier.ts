@@ -645,8 +645,8 @@ export enum AudioType {
  * Audio definition
  */
 export interface AudioDefinition {
-  /** Audio type (e.g., 'steps') */
-  type: AudioType;
+  /** Audio type - AudioType enum for blocks, or custom string for entities */
+  type: AudioType | string;
 
   /** Path to audio file */
   path: string;

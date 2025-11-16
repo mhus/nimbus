@@ -108,7 +108,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 - Siehe 'Speach Streaming' in client/instructions/general/server_rest_api.md
 - Die route soll die audio datei aus dem lokalen pfad im server laden unter files/speach/{streamPath}.ogg (ordner files wird schon bei assets benuzt)
 
-[?] Es soll am Block einen neuen audio type 'permanent' geben, der immer abgespielt wird.
+[x] Es soll am Block einen neuen audio type 'permanent' geben, der immer abgespielt wird.
 - Im ChunkService werden die permanent audio dateien geladen und an den Block vermerkt (wie bei steps sounds)
 - Es wird heir ein separater - nicht cache BABYLON.Sound - pro Block im AudioService ertellt 
   'createPermanentSoundForBlock(block: ClientBlock, audioDef: AudioDefinition): BABYLON.Sound'
@@ -120,7 +120,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
   werden, es wird immer die erste benutzt. Die Reihenfolge ist nicht garantiert.
 - Diese audios werden immer gestreamt im loop
 
-[ ] Auch Entities sollen sound unterstuetzen. Dazu wird im EntityModifier ein audioModifier hinzugefuegt, 
+[?] Auch Entities sollen sound unterstuetzen. Dazu wird im EntityModifier ein audioModifier hinzugefuegt, 
 der ähnlich wie der Block audioModifier funktioniert.
 - Der type ist kein enum, sondern frei wählbar.
 - EntityModifier hat ein feld 'audio' mit einer liste von AudioDefinition.

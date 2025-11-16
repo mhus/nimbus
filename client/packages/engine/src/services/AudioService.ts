@@ -8,7 +8,7 @@
  * - Handling gameplay sound playback (step sounds, swim sounds, etc.)
  */
 
-import { getLogger, type AudioDefinition } from '@nimbus/shared';
+import { getLogger, type AudioDefinition, type ClientEntity } from '@nimbus/shared';
 import { Vector3 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import { Scene, Sound, Engine, CreateAudioEngineAsync, CreateSoundAsync } from '@babylonjs/core';
@@ -118,7 +118,7 @@ class AudioPoolItem {
     if (this.sound.spatial) {
       this.sound.spatial.position = position;
       this.sound.spatial.maxDistance = maxDistance;
-      this.sound.spatial.distanceModel = 'exponential';
+      this.sound.spatial.distanceModel = 'linear';
       this.sound.spatial.refDistance = 1;
       this.sound.spatial.rolloffFactor = 1;
 
@@ -130,14 +130,14 @@ class AudioPoolItem {
       logger.debug('Spatial audio configured (StaticSound API)', {
         position: { x: position.x, y: position.y, z: position.z },
         maxDistance,
-        distanceModel: 'exponential',
+        distanceModel: 'linear',
         omnidirectional: true
       });
     } else {
       logger.warn('Spatial audio not configured (StaticSound API not available)');
       // Fallback for regular Sound (if used)
       this.sound.spatialSound = true;
-      this.sound.distanceModel = 'exponential';
+      this.sound.distanceModel = 'linear';
       this.sound.maxDistance = maxDistance;
       this.sound.refDistance = 1;
       this.sound.rolloffFactor = 1;
@@ -994,6 +994,111 @@ export class AudioService {
     };
 
     return deferredWrapper;
+  }
+
+  /**
+   * Play audio for an entity
+   * Creates a one-shot spatial sound at the entity's position
+   * Sound is automatically disposed after playback
+   *
+   * @param entity - The entity to play audio for
+   * @param type - Audio type (e.g., 'attack', 'hurt', 'idle')
+   */
+  async playEntityAudio(entity: ClientEntity, type: string): Promise<void> {
+    if (!this.scene) {
+      logger.error('Scene not initialized');
+      return;
+    }
+
+    if (!this.networkService) {
+      logger.error('NetworkService not available');
+      return;
+    }
+
+    // Get audio definitions from entity modifier
+    const audioDefinitions = entity.entity.modifier?.audio;
+    if (!audioDefinitions || audioDefinitions.length === 0) {
+      logger.warn('No audio definitions for entity', { entityId: entity.id });
+      return;
+    }
+
+    // Find first enabled audio definition matching the type
+    const audioDef = audioDefinitions.find(
+      def => def.type === type && def.enabled
+    );
+
+    if (!audioDef) {
+      logger.warn('No audio definition found for type', {
+        entityId: entity.id,
+        type,
+        availableTypes: audioDefinitions.map(d => d.type)
+      });
+      return;
+    }
+
+    try {
+      const audioUrl = this.networkService.getAssetUrl(audioDef.path);
+      const entityPosition = new Vector3(
+        entity.currentPosition.x,
+        entity.currentPosition.y,
+        entity.currentPosition.z
+      );
+
+      logger.info('Playing entity audio', {
+        entityId: entity.id,
+        type,
+        path: audioDef.path,
+        position: entityPosition
+      });
+
+      // Create one-shot spatial sound
+      const sound = await CreateSoundAsync(audioDef.path, audioUrl);
+
+      // Configure as spatial sound
+      if (sound.spatial) {
+        sound.spatial.position = entityPosition;
+        sound.spatial.maxDistance = audioDef.maxDistance || DEFAULT_MAX_DISTANCE;
+        sound.spatial.distanceModel = 'exponential';
+        sound.spatial.rolloffFactor = 1;
+        // Omnidirectional
+        sound.spatial.coneInnerAngle = 2 * Math.PI;
+        sound.spatial.coneOuterAngle = 2 * Math.PI;
+      }
+
+      // Set volume and loop (usually no loop for entity sounds)
+      sound.volume = audioDef.volume;
+      sound.loop = audioDef.loop ?? false; // Default: no loop for entity audio
+
+      // Auto-dispose after playback ends
+      if (sound.onEndedObservable) {
+        sound.onEndedObservable.addOnce(() => {
+          sound.dispose();
+          logger.debug('Entity audio finished and disposed', { entityId: entity.id, type });
+        });
+      } else {
+        // Fallback: dispose after estimated duration (if onEndedObservable not available)
+        setTimeout(() => {
+          sound.dispose();
+          logger.debug('Entity audio disposed (timeout fallback)', { entityId: entity.id, type });
+        }, 5000); // 5 seconds fallback
+      }
+
+      // Play the sound
+      sound.play();
+
+      logger.debug('Entity audio playing', {
+        entityId: entity.id,
+        type,
+        path: audioDef.path
+      });
+    } catch (error) {
+      logger.warn('Failed to play entity audio', {
+        entityId: entity.id,
+        type,
+        path: audioDef.path,
+        error: (error as Error).message
+      });
+    }
   }
 
   /**
