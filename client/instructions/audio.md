@@ -129,3 +129,28 @@ der ähnlich wie der Block audioModifier funktioniert.
   - Die audio datei wird immer neu gerstellt und an der position der entity abgespielt.
   - Am Ende wird das BABYLON.Sound objekt gleich wieder disposed.
 - Erstelle ein Commando in der engine playEntityAudio(entityId: string, type: string)
+
+[ ] Erstelle an AudioDefinition neben 'permanent' noch den Type 'collision', der abgespielt wird, wenn der Player mit einem 
+Block kollidiert.
+- erwitere AudioDefinition um den Type 'collision'.
+- Erweitere den AudioEditor um den Type 'collision'.
+- Im PhysicService wird ein event 'onCollideWithBlock' erstellt, das ausgeloest wird, wenn der Player mit einem Block kollidiert und der Block collisionEvent aktiviert hat.
+  - Im PhysicService gibt es bereits eine collision Detection mit Bloecken und auswertung auf collisionEvent, es wird hier eine Nachricht an den Server geschickt.
+    Dort kann die Logik fuer das ausloesen des events implementiert werden.
+- Im AudioService wird das event gefangen und geprueft ob der ClientBlock/Block/currentModifier/audio konfigurationen vom typ 'collision' hat.
+- Falls ja, wird eine zufaellige audio datei aus der liste der 'collision' + enabled audio dateien abgespielt. - Am punkt des Blocks, 
+  spacial und mit dem volumen das in der AudioDefinition definiert ist.
+- Im event wird auch die entityId mitgegeben
+
+[ ] Im ChunkService werden die audio dateien in die klasse ClientBlock in den Parameter 'audioSteps' geladen. Im AudioService werden die
+dann ausgewertete und abgespielt. In zukunft soll der AudioService die Daten direkt aus currentModifier holen koennen.
+- In ChunkService werden die AudioDateien nur einame geladen, damit sie schon bereit stehen. Es werden Dateien vom Typ steps und collision geladen - die enabled sind.
+- Die Sounds werden nicht mehr an 'audioSteps' in ClientBlock vermerkt.
+- In AudioService werden die AudioDateien direkt aus dem currentModifier/audio + enabled geholt und eine zufaellige datei abgespielt.
+- 'audioSteps' wird aus ClientBlock entfernt.
+(Da die daten sowieso im Pool gehalten werden ist es nicht mehr noetig dies nochmal in ClientBlock 'audioSteps' zu halten).
+- Wenn die steps in AudioService abgespielt werden, wird geprueft, ob die Engine schon bereit ist, wenn nicht, wird am anfang der Methode gleich geskippt.
+
+[ ] In AmbientePlay soll geprueft werden ob die Engine bereit ist, wenn nicht, wird am anfang der Methode gleich der path/daten vermerkt (wird jetzt schon?) geskippt.
+- Sobald die Engine bereit ist (onEngineReady event), wird geprueft ob ein path/daten vermerkt sind und nicht leer, wenn ja, wird die ambiente musik gestartet.
+
