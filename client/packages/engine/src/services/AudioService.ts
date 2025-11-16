@@ -1015,8 +1015,8 @@ export class AudioService {
       return;
     }
 
-    // Get audio definitions from entity modifier
-    const audioDefinitions = entity.entity.modifier?.audio;
+    // Get audio definitions from entity modifier (priority) or entity model (default)
+    const audioDefinitions = entity.entity.modifier?.audio || entity.model.audio;
     if (!audioDefinitions || audioDefinitions.length === 0) {
       logger.warn('No audio definitions for entity', { entityId: entity.id });
       return;
@@ -1037,7 +1037,6 @@ export class AudioService {
     }
 
     try {
-      const audioUrl = this.networkService.getAssetUrl(audioDef.path);
       const entityPosition = new Vector3(
         entity.currentPosition.x,
         entity.currentPosition.y,
@@ -1051,42 +1050,26 @@ export class AudioService {
         position: entityPosition
       });
 
-      // Create one-shot spatial sound
-      const sound = await CreateSoundAsync(audioDef.path, audioUrl);
+      // Use sound pool system (like step sounds) - handles lifecycle automatically
+      const poolItem = await this.getBlockedSoundFromPool(
+        audioDef.path,
+        entityPosition,
+        audioDef.maxDistance || DEFAULT_MAX_DISTANCE
+      );
 
-      // Configure as spatial sound
-      if (sound.spatial) {
-        sound.spatial.position = entityPosition;
-        sound.spatial.maxDistance = audioDef.maxDistance || DEFAULT_MAX_DISTANCE;
-        sound.spatial.distanceModel = 'exponential';
-        sound.spatial.rolloffFactor = 1;
-        // Omnidirectional
-        sound.spatial.coneInnerAngle = 2 * Math.PI;
-        sound.spatial.coneOuterAngle = 2 * Math.PI;
-      }
-
-      // Set volume and loop (usually no loop for entity sounds)
-      sound.volume = audioDef.volume;
-      sound.loop = audioDef.loop ?? false; // Default: no loop for entity audio
-
-      // Auto-dispose after playback ends
-      if (sound.onEndedObservable) {
-        sound.onEndedObservable.addOnce(() => {
-          sound.dispose();
-          logger.debug('Entity audio finished and disposed', { entityId: entity.id, type });
+      if (!poolItem) {
+        logger.warn('Failed to get sound from pool for entity audio', {
+          entityId: entity.id,
+          type,
+          path: audioDef.path
         });
-      } else {
-        // Fallback: dispose after estimated duration (if onEndedObservable not available)
-        setTimeout(() => {
-          sound.dispose();
-          logger.debug('Entity audio disposed (timeout fallback)', { entityId: entity.id, type });
-        }, 5000); // 5 seconds fallback
+        return;
       }
 
-      // Play the sound
-      sound.play();
+      // Play the sound (will auto-release after playback via pool system)
+      poolItem.play(audioDef.volume);
 
-      logger.debug('Entity audio playing', {
+      logger.debug('Entity audio playing via pool', {
         entityId: entity.id,
         type,
         path: audioDef.path

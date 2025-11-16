@@ -218,6 +218,16 @@ export class EntityInfoCommand extends CommandHandler {
     const output = lines.join('\n');
     console.log(output);
 
+    // Output complete Entity object
+    console.log('');
+    console.log('=== Complete Entity Object ===');
+    console.log(JSON.stringify(clientEntity.entity, null, 2));
+
+    // Output complete EntityModel object
+    console.log('');
+    console.log('=== Complete EntityModel Object ===');
+    console.log(JSON.stringify(clientEntity.model, null, 2));
+
     // Return structured data
     return {
       entity: clientEntity.entity,

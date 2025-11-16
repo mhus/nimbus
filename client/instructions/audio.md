@@ -120,7 +120,7 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
   werden, es wird immer die erste benutzt. Die Reihenfolge ist nicht garantiert.
 - Diese audios werden immer gestreamt im loop
 
-[?] Auch Entities sollen sound unterstuetzen. Dazu wird im EntityModifier ein audioModifier hinzugefuegt, 
+[x] Auch Entities sollen sound unterstuetzen. Dazu wird im EntityModifier ein audioModifier hinzugefuegt, 
 der ähnlich wie der Block audioModifier funktioniert.
 - Der type ist kein enum, sondern frei wählbar.
 - EntityModifier hat ein feld 'audio' mit einer liste von AudioDefinition.

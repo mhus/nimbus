@@ -152,6 +152,9 @@ export interface EntityModel {
 
   /** Physics properties (optional, for entities with physics enabled) */
   physicsProperties?: EntityPhysicsProperties;
+
+  /** Audio definitions for this entity model (default for all instances) */
+  audio?: AudioDefinition[];
 }
 
 /**
