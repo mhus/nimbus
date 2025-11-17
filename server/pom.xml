@@ -16,4 +16,18 @@
         <module>shared</module>
     </modules>
 
+    <!-- Provide Lombok to all child modules of 'server' -->
+    <properties>
+        <lombok.version>1.18.42</lombok.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
 </project>
