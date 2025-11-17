@@ -1,6 +1,7 @@
 package de.mhus.nimbus.generated;
 
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -74,7 +75,7 @@ public class ServerEntitySpawnDefinition {
     /**
      * physicsState (optional)
      */
-    private { physicsState;
+    private java.util.Map<String, Object> physicsState;
 
     /**
      * position

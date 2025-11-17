@@ -1,6 +1,7 @@
 package de.mhus.nimbus.generated;
 
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,12 +55,12 @@ public class AnimationData {
     /**
      * source (optional)
      */
-    private { source;
+    private java.util.Map<String, Object> source;
 
     /**
      * type
      */
-    private 'server' | 'client' type;
+    private String type;
 
     /**
      * playerId (optional)

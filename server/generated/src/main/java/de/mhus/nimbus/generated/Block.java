@@ -1,5 +1,6 @@
 package de.mhus.nimbus.generated;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,12 +29,12 @@ public class Block {
     /**
      * offsets (optional)
      */
-    private Offsets offsets;
+    private java.util.List<Double> offsets;
 
     /**
      * cornerHeights (optional)
      */
-    private [number, number, number, number] cornerHeights;
+    private java.util.List<Double> cornerHeights;
 
     /**
      * faceVisibility (optional)

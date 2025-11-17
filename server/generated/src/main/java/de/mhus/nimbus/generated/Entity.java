@@ -39,7 +39,7 @@ public class Entity {
     /**
      * movementType
      */
-    private MovementType movementType;
+    private String movementType;
 
     /**
      * controlledBy

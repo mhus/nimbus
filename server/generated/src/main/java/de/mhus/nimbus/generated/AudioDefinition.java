@@ -18,7 +18,7 @@ public class AudioDefinition {
     /**
      * type
      */
-    private AudioType | string type;
+    private Object type;
 
     /**
      * path

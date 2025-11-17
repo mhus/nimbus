@@ -5,16 +5,16 @@ package de.mhus.nimbus.generated;
  * DO NOT EDIT MANUALLY - This file is auto-generated
  */
 public enum AudioType {
-    STEPS('steps'),
-    PERMANENT('permanent');
+    STEPS("steps"),
+    PERMANENT("permanent");
 
-    private final int value;
+    private final String value;
 
-    AudioType(int value) {
+    AudioType(String value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public String getValue() {
         return value;
     }
 }

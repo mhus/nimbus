@@ -29,12 +29,12 @@ public class PlayerInfo {
     /**
      * shortcuts (optional)
      */
-    private java.util.Map<String, import('./ShortcutDefinition').ShortcutDefinition> shortcuts;
+    private java.util.Map<String, ShortcutDefinition> shortcuts;
 
     /**
      * stateValues
      */
-    private java.util.Map<MovementStateKey, MovementStateValues> stateValues;
+    private java.util.Map<String, MovementStateValues> stateValues;
 
     /**
      * baseWalkSpeed
@@ -104,5 +104,5 @@ public class PlayerInfo {
     /**
      * dimensions
      */
-    private { dimensions;
+    private java.util.Map<String, Object> dimensions;
 }

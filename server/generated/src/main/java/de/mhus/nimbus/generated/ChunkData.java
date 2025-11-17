@@ -1,6 +1,7 @@
 package de.mhus.nimbus.generated;
 
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,35 +45,35 @@ public class ChunkData {
     /**
      * heightData (optional)
      */
-    private java.util.List<HeightData> heightData;
+    private java.util.List<java.util.List<Double>> heightData;
 
     /**
      * status (optional)
      */
-    private java.util.List<Status> status;
+    private java.util.List<java.util.List<Double>> status;
 
     /**
      * backdrop (optional)
      */
-    private { backdrop;
+    private java.util.Map<String, Object> backdrop;
 
     /**
      * n (optional)
      */
-    private Array<Backdrop> n;
+    private java.util.List<Backdrop> n;
 
     /**
      * e (optional)
      */
-    private Array<Backdrop> e;
+    private java.util.List<Backdrop> e;
 
     /**
      * s (optional)
      */
-    private Array<Backdrop> s;
+    private java.util.List<Backdrop> s;
 
     /**
      * w (optional)
      */
-    private Array<Backdrop> w;
+    private java.util.List<Backdrop> w;
 }

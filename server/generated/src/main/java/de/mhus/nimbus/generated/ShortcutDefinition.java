@@ -18,7 +18,7 @@ public class ShortcutDefinition {
     /**
      * type
      */
-    private ShortcutActionType type;
+    private String type;
 
     /**
      * itemId (optional)

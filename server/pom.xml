@@ -13,11 +13,11 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>generated</module>
         <module>shared</module>
         <module>universe</module>
         <module>quadrant</module>
         <module>world</module>
-        <module>generated</module>
     </modules>
 
     <!-- Provide Lombok to all child modules of 'server' -->

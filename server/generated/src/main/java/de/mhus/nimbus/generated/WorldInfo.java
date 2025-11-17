@@ -1,5 +1,6 @@
 package de.mhus.nimbus.generated;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -78,7 +79,7 @@ public class WorldInfo {
     /**
      * owner (optional)
      */
-    private { owner;
+    private java.util.Map<String, Object> owner;
 
     /**
      * user

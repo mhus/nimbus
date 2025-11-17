@@ -70,7 +70,7 @@ public class VisibilityModifier {
     /**
      * textures (optional)
      */
-    private java.util.Map<double, TextureDefinition | string> textures;
+    private java.util.Map<Double, Object> textures;
 
     /**
      * faceVisibility (optional)

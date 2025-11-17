@@ -5,22 +5,22 @@ package de.mhus.nimbus.generated;
  * DO NOT EDIT MANUALLY - This file is auto-generated
  */
 public enum PlayerMovementState {
-    WALK('WALK'),
-    SPRINT('SPRINT'),
-    JUMP('JUMP'),
-    FALL('FALL'),
-    FLY('FLY'),
-    SWIM('SWIM'),
-    CROUCH('CROUCH'),
-    RIDING('RIDING');
+    WALK("WALK"),
+    SPRINT("SPRINT"),
+    JUMP("JUMP"),
+    FALL("FALL"),
+    FLY("FLY"),
+    SWIM("SWIM"),
+    CROUCH("CROUCH"),
+    RIDING("RIDING");
 
-    private final int value;
+    private final String value;
 
-    PlayerMovementState(int value) {
+    PlayerMovementState(String value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public String getValue() {
         return value;
     }
 }

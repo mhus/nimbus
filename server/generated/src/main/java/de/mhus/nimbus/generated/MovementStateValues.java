@@ -1,5 +1,6 @@
 package de.mhus.nimbus.generated;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +19,5 @@ public class MovementStateValues {
     /**
      * dimensions
      */
-    private { dimensions;
+    private java.util.Map<String, Object> dimensions;
 }

@@ -18,7 +18,7 @@ public class Backdrop {
     /**
      * type (optional)
      */
-    private 'none' | 'texture' | 'solid' | 'fog' | 'fadeout' type;
+    private String type;
 
     /**
      * id (optional)

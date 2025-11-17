@@ -1,5 +1,6 @@
 package de.mhus.nimbus.generated;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -68,5 +69,5 @@ public class PhysicsModifier {
     /**
      * cornerHeights (optional)
      */
-    private [number, number, number, number] cornerHeights;
+    private java.util.List<Double> cornerHeights;
 }

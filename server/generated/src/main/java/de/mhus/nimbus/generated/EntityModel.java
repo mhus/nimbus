@@ -1,6 +1,7 @@
 package de.mhus.nimbus.generated;
 
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,17 +55,17 @@ public class EntityModel {
     /**
      * poseMapping
      */
-    private Map<ENTITY_POSES, PoseAnimation> poseMapping;
+    private java.util.Map<ENTITY_POSES, PoseAnimation> poseMapping;
 
     /**
      * poseType
      */
-    private PoseType poseType;
+    private String poseType;
 
     /**
      * modelModifierMapping
      */
-    private Map<string, string> modelModifierMapping;
+    private java.util.Map<String, String> modelModifierMapping;
 
     /**
      * dimensions

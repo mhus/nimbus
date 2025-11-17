@@ -1,6 +1,7 @@
 package de.mhus.nimbus.generated;
 
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,12 +30,12 @@ public class AnimationEffect {
     /**
      * positions (optional)
      */
-    private java.util.List<PositionRef> positions;
+    private java.util.List<String> positions;
 
     /**
      * params
      */
-    private { params;
+    private java.util.Map<String, Object> params;
 
     /**
      * from (optional)
@@ -64,7 +65,7 @@ public class AnimationEffect {
     /**
      * trajectory (optional)
      */
-    private 'linear' | 'arc' | 'homing' trajectory;
+    private String trajectory;
 
     /**
      * radius (optional)
