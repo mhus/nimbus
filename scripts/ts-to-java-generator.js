@@ -31,6 +31,9 @@ const TYPE_MAP = {
   'BlockModifier': 'BlockModifier',
   'Shape': 'Shape',
   'Color': 'Color',
+  'PositionRef': 'Object', // Union type alias - use Object as generic representation
+  'MovementStateKey': 'String', // String literal union type
+  'PoseType': 'String', // String literal union type
 };
 
 /**
@@ -46,6 +49,71 @@ function parseTypeScriptFile(filePath) {
     imports: new Set()
   };
   
+  // Parse type aliases first (needed for type resolution)
+  // Use a more flexible regex that can handle multi-line definitions
+  const typeAliasRegex = /export\s+type\s+(\w+)\s*=\s*([^;]+);/gs;
+  let typeAliasMatch;
+  while ((typeAliasMatch = typeAliasRegex.exec(content)) !== null) {
+    const typeName = typeAliasMatch[1];
+    let typeValue = typeAliasMatch[2].trim();
+    
+    // Map TypeScript type alias to Java type
+    let javaType;
+    
+    // Handle array types (e.g., number[], AudioDefinition[])
+    if (typeValue.endsWith('[]')) {
+      const elementType = typeValue.slice(0, -2).trim();
+      const javaElementType = mapTypeScriptTypeToJava(elementType);
+      javaType = `java.util.List<${boxPrimitiveType(javaElementType)}>`;
+    }
+    // Handle tuple types (e.g., [number, number, number] or multi-line named tuples)
+    else if (typeValue.match(/^(readonly\s+)?\[/)) {
+      // Remove 'readonly' if present
+      let tupleContent = typeValue.replace(/^readonly\s+/, '').trim();
+      
+      // Extract content between brackets
+      const bracketMatch = tupleContent.match(/^\[(.+)\]$/s);
+      if (bracketMatch) {
+        tupleContent = bracketMatch[1];
+        
+        // Parse tuple elements - handle both simple and named tuples
+        // For named tuples like "x: number, z: number", extract just the types
+        const elements = tupleContent.split(',').map(e => e.trim()).filter(e => e);
+        
+        // Extract the type from each element (handle "name: type" or just "type")
+        const types = elements.map(element => {
+          // Match "name?: type" or "name: type" or just "type"
+          const match = element.match(/(?:\w+\??\s*:\s*)?(\w+)/);
+          return match ? match[1] : 'Object';
+        });
+        
+        // Use the first type to determine the Java type (assume homogeneous)
+        const elementType = types.length > 0 ? types[0] : 'Object';
+        const javaElementType = mapTypeScriptTypeToJava(elementType);
+        javaType = `java.util.List<${boxPrimitiveType(javaElementType)}>`;
+      } else {
+        javaType = 'java.util.List<Object>';
+      }
+    }
+    // Handle union types (e.g., 'static' | 'kinematic' | 'dynamic')
+    else if (typeValue.includes('|')) {
+      // String literal unions -> String
+      if (typeValue.includes("'") || typeValue.includes('"')) {
+        javaType = 'String';
+      } else {
+        // Type unions -> Object
+        javaType = 'Object';
+      }
+    }
+    // Default mapping
+    else {
+      javaType = mapTypeScriptTypeToJava(typeValue);
+    }
+    
+    // Add to TYPE_MAP for later resolution
+    TYPE_MAP[typeName] = javaType;
+  }
+  
   // Parse enums
   const enumRegex = /export\s+enum\s+(\w+)\s*\{([^}]+)\}/g;
   let enumMatch;
@@ -54,18 +122,48 @@ function parseTypeScriptFile(filePath) {
     const enumBody = enumMatch[2];
     
     const values = [];
-    const valueRegex = /(\w+)\s*=\s*([^,\n]+)/g;
-    let valueMatch;
-    while ((valueMatch = valueRegex.exec(enumBody)) !== null) {
-      values.push({
-        name: valueMatch[1],
-        value: valueMatch[2].trim()
-      });
+    let enumValueType = 'int'; // default to int
+    
+    // Process enum body line by line
+    const lines = enumBody.split('\n');
+    for (const line of lines) {
+      // Remove comments first
+      const cleanLine = line.split('//')[0].trim();
+      if (!cleanLine) continue;
+      
+      // Match enum value: NAME = value
+      const valueMatch = cleanLine.match(/^\s*(\w+)\s*=\s*([^,]+)/);
+      if (valueMatch) {
+        const name = valueMatch[1];
+        let rawValue = valueMatch[2].trim();
+        
+        // Remove trailing comma if present
+        if (rawValue.endsWith(',')) {
+          rawValue = rawValue.slice(0, -1).trim();
+        }
+        
+        // Detect if value is a string (starts with ' or ")
+        if (rawValue.startsWith("'") || rawValue.startsWith('"')) {
+          enumValueType = 'String';
+          // Convert single quotes to double quotes for Java
+          const cleanValue = rawValue.replace(/^'|'$/g, '"');
+          values.push({
+            name: name,
+            value: cleanValue
+          });
+        } else {
+          values.push({
+            name: name,
+            value: rawValue
+          });
+        }
+      }
     }
     
     result.enums.push({
       name: enumName,
-      values: values
+      values: values,
+      valueType: enumValueType
     });
   }
   
@@ -87,25 +185,56 @@ function parseTypeScriptFile(filePath) {
         const isOptional = !!fieldMatch[2];
         let fieldType = fieldMatch[3].trim();
         
-        // Handle array types
-        const isArray = fieldType.endsWith('[]');
-        if (isArray) {
-          fieldType = fieldType.slice(0, -2);
+        // Handle Array<T> generic syntax
+        if (fieldType.startsWith('Array<')) {
+          const arrayMatch = fieldType.match(/Array<([^>]+)>/);
+          if (arrayMatch) {
+            let elementType = mapTypeScriptTypeToJava(arrayMatch[1].trim());
+            elementType = boxPrimitiveType(elementType);
+            fieldType = `java.util.List<${elementType}>`;
+          }
         }
-        
+        // Handle tuple types (e.g., [number, number, number])
+        else if (fieldType.startsWith('[') && fieldType.endsWith(']')) {
+          // Extract tuple element types
+          const tupleContent = fieldType.slice(1, -1);
+          const tupleTypes = tupleContent.split(',').map(t => t.trim());
+          // Get the first type and assume all are the same (common case)
+          const elementType = tupleTypes.length > 0 ? tupleTypes[0] : 'Object';
+          const javaElementType = mapTypeScriptTypeToJava(elementType);
+          fieldType = `java.util.List<${boxPrimitiveType(javaElementType)}>`;
+        }
+        // Handle array types
+        else if (fieldType.endsWith('[]')) {
+          fieldType = fieldType.slice(0, -2);
+          fieldType = mapTypeScriptTypeToJava(fieldType);
+          fieldType = `java.util.List<${boxPrimitiveType(fieldType)}>`;
+        }
+        // Handle TypeScript Map types
+        else if (fieldType.startsWith('Map<')) {
+          const mapMatch = fieldType.match(/Map<([^,]+),\s*([^>]+)>/);
+          if (mapMatch) {
+            let keyType = mapTypeScriptTypeToJava(mapMatch[1].trim());
+            let valueType = mapTypeScriptTypeToJava(mapMatch[2].trim());
+            // Box primitive types for use in generics
+            keyType = boxPrimitiveType(keyType);
+            valueType = boxPrimitiveType(valueType);
+            fieldType = `java.util.Map<${keyType}, ${valueType}>`;
+          }
+        }
         // Handle Record types
-        if (fieldType.startsWith('Record<')) {
+        else if (fieldType.startsWith('Record<')) {
           const recordMatch = fieldType.match(/Record<([^,]+),\s*([^>]+)>/);
           if (recordMatch) {
-            const keyType = mapTypeScriptTypeToJava(recordMatch[1].trim());
-            const valueType = mapTypeScriptTypeToJava(recordMatch[2].trim());
+            let keyType = mapTypeScriptTypeToJava(recordMatch[1].trim());
+            let valueType = mapTypeScriptTypeToJava(recordMatch[2].trim());
+            // Box primitive types for use in generics
+            keyType = boxPrimitiveType(keyType);
+            valueType = boxPrimitiveType(valueType);
             fieldType = `java.util.Map<${keyType}, ${valueType}>`;
           }
         } else {
           fieldType = mapTypeScriptTypeToJava(fieldType);
-          if (isArray) {
-            fieldType = `java.util.List<${boxPrimitiveType(fieldType)}>`;
-          }
         }
         
         fields.push({
@@ -139,6 +268,28 @@ function parseTypeScriptFile(filePath) {
 function mapTypeScriptTypeToJava(tsType) {
   // Remove any whitespace
   tsType = tsType.trim();
+  
+  // Handle import() syntax: import('./Module').Type -> Type
+  const importMatch = tsType.match(/import\(['"]\.\/\w+['"]\)\.(\w+)/);
+  if (importMatch) {
+    tsType = importMatch[1];
+  }
+  
+  // Handle union types (e.g., 'string' | 'number' or Type1 | Type2)
+  if (tsType.includes('|')) {
+    // For string literal unions like 'server' | 'client', use String
+    if (tsType.includes("'") || tsType.includes('"')) {
+      return 'String';
+    }
+    // For type unions, use Object as generic fallback
+    return 'Object';
+  }
+  
+  // Handle object literals (e.g., { prop: type })
+  if (tsType.startsWith('{')) {
+    // Use Map<String, Object> as generic representation
+    return 'java.util.Map<String, Object>';
+  }
   
   // Check if it's in our type map
   if (TYPE_MAP[tsType]) {
@@ -184,11 +335,12 @@ function generateJavaClass(parsedData, fileName) {
     const enumValues = enumData.values.map(v => `    ${v.name}(${v.value})`).join(',\n');
     javaCode += enumValues + ';\n\n';
     
-    javaCode += `    private final int value;\n\n`;
-    javaCode += `    ${enumData.name}(int value) {\n`;
+    const valueType = enumData.valueType || 'int';
+    javaCode += `    private final ${valueType} value;\n\n`;
+    javaCode += `    ${enumData.name}(${valueType} value) {\n`;
     javaCode += `        this.value = value;\n`;
     javaCode += `    }\n\n`;
-    javaCode += `    public int getValue() {\n`;
+    javaCode += `    public ${valueType} getValue() {\n`;
     javaCode += `        return value;\n`;
     javaCode += `    }\n`;
     javaCode += `}\n`;
