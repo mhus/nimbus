@@ -20,4 +20,54 @@ public class MovementStateValues {
      * dimensions
      */
     private java.util.Map<String, Object> dimensions;
+
+    /**
+     * baseMoveSpeed
+     */
+    private double baseMoveSpeed;
+
+    /**
+     * effectiveMoveSpeed
+     */
+    private double effectiveMoveSpeed;
+
+    /**
+     * baseJumpSpeed
+     */
+    private double baseJumpSpeed;
+
+    /**
+     * effectiveJumpSpeed
+     */
+    private double effectiveJumpSpeed;
+
+    /**
+     * eyeHeight
+     */
+    private double eyeHeight;
+
+    /**
+     * baseTurnSpeed
+     */
+    private double baseTurnSpeed;
+
+    /**
+     * effectiveTurnSpeed
+     */
+    private double effectiveTurnSpeed;
+
+    /**
+     * selectionRadius
+     */
+    private double selectionRadius;
+
+    /**
+     * stealthRange
+     */
+    private double stealthRange;
+
+    /**
+     * distanceNotifyReduction
+     */
+    private double distanceNotifyReduction;
 }

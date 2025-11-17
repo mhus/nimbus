@@ -105,4 +105,49 @@ public class PlayerInfo {
      * dimensions
      */
     private java.util.Map<String, Object> dimensions;
+
+    /**
+     * stealthRange
+     */
+    private double stealthRange;
+
+    /**
+     * distanceNotifyReductionWalk
+     */
+    private double distanceNotifyReductionWalk;
+
+    /**
+     * distanceNotifyReductionCrouch
+     */
+    private double distanceNotifyReductionCrouch;
+
+    /**
+     * selectionRadius
+     */
+    private double selectionRadius;
+
+    /**
+     * baseTurnSpeed
+     */
+    private double baseTurnSpeed;
+
+    /**
+     * effectiveTurnSpeed
+     */
+    private double effectiveTurnSpeed;
+
+    /**
+     * baseUnderwaterTurnSpeed
+     */
+    private double baseUnderwaterTurnSpeed;
+
+    /**
+     * effectiveUnderwaterTurnSpeed
+     */
+    private double effectiveUnderwaterTurnSpeed;
+
+    /**
+     * thirdPersonModelId (optional)
+     */
+    private String thirdPersonModelId;
 }

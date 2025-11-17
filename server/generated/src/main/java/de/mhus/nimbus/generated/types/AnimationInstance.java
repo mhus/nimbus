@@ -29,4 +29,9 @@ public class AnimationInstance {
      * createdAt
      */
     private double createdAt;
+
+    /**
+     * triggeredBy (optional)
+     */
+    private String triggeredBy;
 }

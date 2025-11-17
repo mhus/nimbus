@@ -80,4 +80,24 @@ public class WorldInfo {
      * owner (optional)
      */
     private java.util.Map<String, Object> owner;
+
+    /**
+     * settings (optional)
+     */
+    private java.util.Map<String, Object> settings;
+
+    /**
+     * license (optional)
+     */
+    private java.util.Map<String, Object> license;
+
+    /**
+     * startArea (optional)
+     */
+    private java.util.Map<String, Object> startArea;
+
+    /**
+     * editorUrl (optional)
+     */
+    private String editorUrl;
 }

@@ -296,19 +296,36 @@ function parseTypeScriptFile(filePath) {
     }
   }
   
-  // Parse interfaces
-  const interfaceRegex = /export\s+interface\s+(\w+)\s*\{([^}]+)\}/g;
+  // Parse interfaces - use manual brace matching for nested structures
+  const interfaceRegex = /export\s+interface\s+(\w+)\s*\{/g;
   let interfaceMatch;
   while ((interfaceMatch = interfaceRegex.exec(content)) !== null) {
     const interfaceName = interfaceMatch[1];
-    const interfaceBody = interfaceMatch[2];
+    const startPos = interfaceMatch.index + interfaceMatch[0].length;
+    
+    // Find matching closing brace by counting brace depth
+    let braceDepth = 1;
+    let endPos = startPos;
+    while (endPos < content.length && braceDepth > 0) {
+      if (content[endPos] === '{') braceDepth++;
+      if (content[endPos] === '}') braceDepth--;
+      endPos++;
+    }
+    
+    const interfaceBody = content.substring(startPos, endPos - 1);
     
     const fields = [];
     const lines = interfaceBody.split('\n');
     
     let i = 0;
     while (i < lines.length) {
-      const line = lines[i];
+      let line = lines[i];
+      
+      // Remove inline comments (// ...) before processing
+      const commentIndex = line.indexOf('//');
+      if (commentIndex !== -1) {
+        line = line.substring(0, commentIndex).trimEnd();
+      }
       
       // Match field: name: type or name?: type
       const fieldMatch = line.match(/^\s*(\w+)(\?)?:\s*([^;]+);?\s*$/);

@@ -24,4 +24,9 @@ public class SkyEffect {
      * color (optional)
      */
     private String color;
+
+    /**
+     * wind (optional)
+     */
+    private Object wind;
 }

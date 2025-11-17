@@ -1,6 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,4 +46,14 @@ public class Block {
      * status (optional)
      */
     private double status;
+
+    /**
+     * modifiers (optional)
+     */
+    private java.util.Map<Double, BlockModifier> modifiers;
+
+    /**
+     * metadata (optional)
+     */
+    private BlockMetadata metadata;
 }

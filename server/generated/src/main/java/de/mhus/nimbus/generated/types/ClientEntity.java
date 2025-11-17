@@ -37,6 +37,11 @@ public class ClientEntity {
     private boolean visible;
 
     /**
+     * meshes
+     */
+    private java.util.List<Object> meshes;
+
+    /**
      * currentPosition
      */
     private Vector3 currentPosition;

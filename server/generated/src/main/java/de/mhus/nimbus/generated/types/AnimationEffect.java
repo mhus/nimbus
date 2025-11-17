@@ -36,4 +36,24 @@ public class AnimationEffect {
      * params
      */
     private java.util.Map<String, Object> params;
+
+    /**
+     * startTime
+     */
+    private double startTime;
+
+    /**
+     * duration (optional)
+     */
+    private double duration;
+
+    /**
+     * endTime (optional)
+     */
+    private double endTime;
+
+    /**
+     * blocking (optional)
+     */
+    private boolean blocking;
 }

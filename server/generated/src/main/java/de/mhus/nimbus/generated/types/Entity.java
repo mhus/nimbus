@@ -27,6 +27,11 @@ public class Entity {
     private String name;
 
     /**
+     * model
+     */
+    private String model;
+
+    /**
      * modelModifier
      */
     private java.util.Map<String, Object> modelModifier;
