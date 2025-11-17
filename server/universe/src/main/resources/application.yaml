@@ -6,7 +6,12 @@ spring:
       uri: mongodb://root:example@localhost:27017/universe?authSource=admin
       database: universe
 
-# Optional: logging level adjustments
+security:
+  jwt:
+    keyId: system:authkey
+    secretBase64: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0
+    expiresMinutes: 60
+
 logging:
   level:
     org.springframework.data.mongodb.core.MongoTemplate: INFO
