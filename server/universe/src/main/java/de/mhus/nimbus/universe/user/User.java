@@ -22,6 +22,8 @@ public class User {
     @CreatedDate
     private Instant createdAt;
 
+    private String passwordHash; // stored as algorithm[:saltBase64]:hashBase64
+
     public User() {}
 
     public User(final String username, final String email) {
@@ -59,5 +61,13 @@ public class User {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

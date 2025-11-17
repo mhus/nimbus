@@ -6,14 +6,18 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import de.mhus.nimbus.shared.security.HashService;
+
 @Service
 @Validated
 public class UserService {
 
     private final UserRepository userRepository;
+    private final HashService hashService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, HashService hashService) {
         this.userRepository = userRepository;
+        this.hashService = hashService;
     }
 
     public User createUser(String username, String email) {
@@ -41,5 +45,84 @@ public class UserService {
 
     public void deleteById(String id) {
         userRepository.deleteById(id);
+    }
+
+    /**
+     * Hashes and sets a new password for the user using the user's id as salt.
+     * @param userId the user id
+     * @param plainPassword raw password (must not be blank)
+     * @return updated user
+     */
+    public User setPassword(String userId, String plainPassword) {
+        if (plainPassword == null || plainPassword.isBlank()) {
+            throw new IllegalArgumentException("Password must not be blank");
+        }
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        String hash = hashService.hash(plainPassword, user.getId()); // salt = userId
+        user.setPasswordHash(hash);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Validates a raw password against the stored hash.
+     * @param userId user identifier
+     * @param plainPassword raw password
+     * @return true if valid
+     */
+    public boolean validatePassword(String userId, String plainPassword) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        if (user.getPasswordHash() == null) return false;
+        return hashService.validate(plainPassword, user.getId(), user.getPasswordHash());
+    }
+
+    /**
+     * Validates a plain password directly against a provided hash string.
+     * Supports unsalted format algorithm:hashBase64 and salted algorithm:saltBase64:hashBase64.
+     * If salted, the caller should provide the userId as salt for consistency.
+     * @param plainPassword raw password
+     * @param hash stored hash string (may contain salt)
+     * @return true if matches
+     */
+    public boolean validatePasswordHash(String plainPassword, String hash) {
+        if (plainPassword == null || hash == null) return false;
+        // Decide salted vs unsalted by number of ':' parts
+        int parts = hash.split(":").length;
+        if (parts == 2) { // algorithm:hash
+            return hashService.validate(plainPassword, hash);
+        } else if (parts == 3) { // algorithm:salt:hash
+            // Extract salt for validation path by re-parsing via HashService; HashService.validate requires clear salt
+            String[] arr = hash.split(":",3);
+            String saltBase64 = arr[1];
+            String salt = new String(java.util.Base64.getDecoder().decode(saltBase64), java.nio.charset.StandardCharsets.UTF_8);
+            return hashService.validate(plainPassword, salt, hash);
+        } else {
+            throw new IllegalArgumentException("Invalid hash format");
+        }
+    }
+
+    /**
+     * Validates a plain password against a salted hash using provided userId as salt reference.
+     * Falls back to unsalted validate if hash has no salt portion.
+     * @param userId expected salt (user id)
+     * @param plainPassword raw password
+     * @param hash hash string
+     * @return true if valid and salt matches when present
+     */
+    public boolean validatePasswordHash(String userId, String plainPassword, String hash) {
+        if (plainPassword == null || hash == null || userId == null) return false;
+        int parts = hash.split(":").length;
+        if (parts == 2) {
+            return hashService.validate(plainPassword, hash);
+        } else if (parts == 3) {
+            String[] arr = hash.split(":",3);
+            String saltBase64 = arr[1];
+            String salt = new String(java.util.Base64.getDecoder().decode(saltBase64), java.nio.charset.StandardCharsets.UTF_8);
+            if (!userId.equals(salt)) return false;
+            return hashService.validate(plainPassword, salt, hash);
+        } else {
+            throw new IllegalArgumentException("Invalid hash format");
+        }
     }
 }

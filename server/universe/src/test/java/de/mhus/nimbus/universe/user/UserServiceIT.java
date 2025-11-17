@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,5 +85,17 @@ class UserServiceIT {
         assertEquals(1, userService.listAll().size());
         assertFalse(userService.getById(a.getId()).isPresent());
         assertTrue(userService.getById(b.getId()).isPresent());
+    }
+
+    @Test
+    @DisplayName("Set and validate password")
+    void passwordLifecycle() {
+        User u = userService.createUser("alpha","alpha@example.com");
+        assertNull(u.getPasswordHash());
+        User withPwd = userService.setPassword(u.getId(), "secret123");
+        assertNotNull(withPwd.getPasswordHash());
+        assertTrue(withPwd.getPasswordHash().contains(":"));
+        assertTrue(userService.validatePassword(u.getId(), "secret123"));
+        assertFalse(userService.validatePassword(u.getId(), "wrong"));
     }
 }

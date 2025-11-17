@@ -16,11 +16,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.mhus.nimbus.shared.security.HashService;
+
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private HashService hashService;
 
     @InjectMocks
     private UserService userService;
@@ -109,5 +114,45 @@ class UserServiceTest {
         assertEquals(1, userService.listAll().size());
         assertFalse(userService.getById("a").isPresent());
         assertTrue(userService.getById("b").isPresent());
+    }
+
+    @Test
+    void setPassword_ok() {
+        User user = new User("alpha","alpha@example.com");
+        user.setId("u1");
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(hashService.hash("secret", "u1")).thenReturn("SHA-256:c2FsdF91MQ==:HASHED");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User updated = userService.setPassword("u1", "secret");
+        assertNotNull(updated.getPasswordHash());
+        assertTrue(updated.getPasswordHash().startsWith("SHA-256:"));
+        verify(hashService).hash("secret", "u1");
+    }
+
+    @Test
+    void validatePassword_ok() {
+        User user = new User("alpha","alpha@example.com");
+        user.setId("u1");
+        user.setPasswordHash("SHA-256:c2FsdF91MQ==:HASHED");
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(hashService.validate("secret", "u1", "SHA-256:c2FsdF91MQ==:HASHED")).thenReturn(true);
+        assertTrue(userService.validatePassword("u1", "secret"));
+        verify(hashService).validate("secret", "u1", "SHA-256:c2FsdF91MQ==:HASHED");
+    }
+
+    @Test
+    void validatePassword_wrong() {
+        User user = new User("alpha","alpha@example.com");
+        user.setId("u1");
+        user.setPasswordHash("SHA-256:c2FsdF91MQ==:HASHED");
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(hashService.validate("bad", "u1", "SHA-256:c2FsdF91MQ==:HASHED")).thenReturn(false);
+        assertFalse(userService.validatePassword("u1", "bad"));
+    }
+
+    @Test
+    void setPassword_blank() {
+        assertThrows(IllegalArgumentException.class, () -> userService.setPassword("u1", " "));
     }
 }
