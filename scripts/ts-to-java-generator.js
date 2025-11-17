@@ -3,20 +3,40 @@
 /**
  * TypeScript to Java Generator
  * 
- * This script parses TypeScript interface and enum definitions from
- * client/packages/shared/src/types and generates corresponding Java classes
- * in server/generated/src/main/java/de/mhus/nimbus/generated
+ * This script parses TypeScript interface and enum definitions and generates 
+ * corresponding Java classes.
  * 
- * Usage: node ts-to-java-generator.js
+ * Usage: node ts-to-java-generator.js <source-dir> <java-package> [subpackage]
+ * 
+ * Arguments:
+ *   source-dir    - Path to TypeScript source directory (relative to project root)
+ *   java-package  - Base Java package name (e.g., de.mhus.nimbus.generated)
+ *   subpackage    - Optional subpackage name (e.g., types, network)
+ * 
+ * Examples:
+ *   node ts-to-java-generator.js client/packages/shared/src/types de.mhus.nimbus.generated types
+ *   node ts-to-java-generator.js client/packages/shared/src/network/messages de.mhus.nimbus.generated network
  */
 
 const fs = require('fs');
 const path = require('path');
 
-// Configuration
-const TS_SOURCE_DIR = path.join(__dirname, '../client/packages/shared/src/types');
-const JAVA_OUTPUT_DIR = path.join(__dirname, '../server/generated/src/main/java/de/mhus/nimbus/generated');
-const JAVA_PACKAGE = 'de.mhus.nimbus.generated';
+// Parse command-line arguments
+const args = process.argv.slice(2);
+if (args.length < 2) {
+  console.error('Usage: node ts-to-java-generator.js <source-dir> <java-package> [subpackage]');
+  console.error('Example: node ts-to-java-generator.js client/packages/shared/src/types de.mhus.nimbus.generated types');
+  process.exit(1);
+}
+
+const SOURCE_DIR_ARG = args[0];
+const BASE_PACKAGE_ARG = args[1];
+const SUBPACKAGE_ARG = args[2] || '';
+
+// Build full paths and package names
+const TS_SOURCE_DIR = path.join(__dirname, '..', SOURCE_DIR_ARG);
+const JAVA_PACKAGE = SUBPACKAGE_ARG ? `${BASE_PACKAGE_ARG}.${SUBPACKAGE_ARG}` : BASE_PACKAGE_ARG;
+const JAVA_OUTPUT_DIR = path.join(__dirname, '../server/generated/src/main/java', JAVA_PACKAGE.replace(/\./g, '/'));
 
 // Type mapping from TypeScript to Java
 const TYPE_MAP = {
@@ -34,6 +54,11 @@ const TYPE_MAP = {
   'PositionRef': 'Object', // Union type alias - use Object as generic representation
   'MovementStateKey': 'String', // String literal union type
   'PoseType': 'String', // String literal union type
+  // Type aliases from types package that are used in network package
+  'HeightData': 'java.util.List<Double>', // readonly [x: number, z: number, maxHeight: number, groundLevel: number, waterLevel?: number]
+  'Status': 'java.util.List<Double>', // [x: number, y: number, z: number, s: number]
+  'Offsets': 'java.util.List<Double>', // number[]
+  'ChunkSize': 'double', // number
 };
 
 /**
@@ -46,6 +71,7 @@ function parseTypeScriptFile(filePath) {
   const result = {
     interfaces: [],
     enums: [],
+    constantObjects: [],
     imports: new Set()
   };
   
@@ -167,6 +193,109 @@ function parseTypeScriptFile(filePath) {
     });
   }
   
+  // Parse constant objects (export const Name = { ... } as const;)
+  const constantRegex = /export\s+const\s+(\w+)\s*=\s*\{([^}]+)\}\s*as\s+const;/gs;
+  let constantMatch;
+  while ((constantMatch = constantRegex.exec(content)) !== null) {
+    const constantName = constantMatch[1];
+    const constantBody = constantMatch[2];
+    
+    // Skip the combined "Constants" object that references other constants
+    if (constantName === 'Constants') {
+      continue;
+    }
+    
+    const constants = [];
+    const lines = constantBody.split('\n');
+    
+    for (const line of lines) {
+      // Remove comments
+      const cleanLine = line.split('//')[0].trim();
+      if (!cleanLine) continue;
+      
+      // Match constant: NAME: value or NAME: [...]
+      const valueMatch = cleanLine.match(/^\s*(\w+):\s*(.+?),?\s*$/);
+      if (valueMatch) {
+        const name = valueMatch[1];
+        let rawValue = valueMatch[2].trim();
+        
+        // Remove trailing comma if present
+        if (rawValue.endsWith(',')) {
+          rawValue = rawValue.slice(0, -1).trim();
+        }
+        
+        // Remove 'as const' suffix if present (e.g., 'easeInOut' as const)
+        if (rawValue.includes(' as const')) {
+          rawValue = rawValue.replace(/\s+as\s+const$/, '').trim();
+        }
+        
+        // Skip nested objects (e.g., FIRST_PERSON: { ... })
+        if (rawValue.startsWith('{')) {
+          continue;
+        }
+        
+        // Skip array constants like [8, 16, 32, 64] or ['easeInOut']
+        if (rawValue.startsWith('[')) {
+          continue;
+        }
+        
+        // Detect value type
+        let javaType;
+        let javaValue;
+        
+        if (rawValue.startsWith("'") || rawValue.startsWith('"')) {
+          // String value
+          javaType = 'String';
+          javaValue = rawValue.replace(/^'|'$/g, '"');
+        } else if (rawValue === 'true' || rawValue === 'false') {
+          // Boolean value
+          javaType = 'boolean';
+          javaValue = rawValue;
+        } else if (/^-?\d+\.\d+$/.test(rawValue)) {
+          // Double value (has decimal point)
+          javaType = 'double';
+          javaValue = rawValue;
+        } else if (/^-?\d+$/.test(rawValue)) {
+          // Integer value
+          javaType = 'int';
+          javaValue = rawValue;
+        } else if (rawValue.includes('*')) {
+          // Expression like 10 * 1024 * 1024
+          // Evaluate if it's numeric
+          try {
+            const evaluated = eval(rawValue);
+            if (Number.isInteger(evaluated)) {
+              javaType = 'int';
+              javaValue = String(evaluated);
+            } else {
+              javaType = 'double';
+              javaValue = String(evaluated);
+            }
+          } catch (e) {
+            // If evaluation fails, skip this constant
+            continue;
+          }
+        } else {
+          // Unknown type, skip
+          continue;
+        }
+        
+        constants.push({
+          name: name,
+          type: javaType,
+          value: javaValue
+        });
+      }
+    }
+    
+    if (constants.length > 0) {
+      result.constantObjects.push({
+        name: constantName,
+        constants: constants
+      });
+    }
+  }
+  
   // Parse interfaces
   const interfaceRegex = /export\s+interface\s+(\w+)\s*\{([^}]+)\}/g;
   let interfaceMatch;
@@ -177,7 +306,10 @@ function parseTypeScriptFile(filePath) {
     const fields = [];
     const lines = interfaceBody.split('\n');
     
-    for (const line of lines) {
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      
       // Match field: name: type or name?: type
       const fieldMatch = line.match(/^\s*(\w+)(\?)?:\s*([^;]+);?\s*$/);
       if (fieldMatch) {
@@ -185,8 +317,28 @@ function parseTypeScriptFile(filePath) {
         const isOptional = !!fieldMatch[2];
         let fieldType = fieldMatch[3].trim();
         
+        // Check if this is a multi-line nested object type
+        if (fieldType.startsWith('{') && !fieldType.endsWith('}')) {
+          // Multi-line nested object - skip all lines until closing brace
+          let braceDepth = 1;
+          i++;
+          while (i < lines.length && braceDepth > 0) {
+            const nestedLine = lines[i];
+            for (const char of nestedLine) {
+              if (char === '{') braceDepth++;
+              if (char === '}') braceDepth--;
+            }
+            i++;
+          }
+          // Convert to Map<String, Object>
+          fieldType = 'java.util.Map<String, Object>';
+        }
+        // Skip single-line nested object types (e.g., { x: number, y: number })
+        else if (fieldType.startsWith('{')) {
+          fieldType = 'java.util.Map<String, Object>';
+        }
         // Handle Array<T> generic syntax
-        if (fieldType.startsWith('Array<')) {
+        else if (fieldType.startsWith('Array<')) {
           const arrayMatch = fieldType.match(/Array<([^>]+)>/);
           if (arrayMatch) {
             let elementType = mapTypeScriptTypeToJava(arrayMatch[1].trim());
@@ -243,6 +395,7 @@ function parseTypeScriptFile(filePath) {
           optional: isOptional
         });
       }
+      i++;
     }
     
     result.interfaces.push({
@@ -251,8 +404,8 @@ function parseTypeScriptFile(filePath) {
     });
   }
   
-  // Extract imports
-  const importRegex = /import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]\.\/(\w+)['"]/g;
+  // Extract imports - handle both local (./) and parent (../) directory imports
+  const importRegex = /import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"](\.\.[\/\\][\w\/\\]+|\.\/\w+)['"]/g;
   let importMatch;
   while ((importMatch = importRegex.exec(content)) !== null) {
     const importedTypes = importMatch[1].split(',').map(t => t.trim());
@@ -273,6 +426,22 @@ function mapTypeScriptTypeToJava(tsType) {
   const importMatch = tsType.match(/import\(['"]\.\/\w+['"]\)\.(\w+)/);
   if (importMatch) {
     tsType = importMatch[1];
+  }
+  
+  // Handle boolean literals (true/false) - must be before union types check
+  if (tsType === 'true' || tsType === 'false') {
+    return 'boolean';
+  }
+  
+  // Handle string literals (e.g., 'success', "error") - map to String
+  if ((tsType.startsWith("'") && tsType.endsWith("'")) || 
+      (tsType.startsWith('"') && tsType.endsWith('"'))) {
+    return 'String';
+  }
+  
+  // Handle numeric literals (e.g., 0, 1, 42) - map to appropriate numeric type
+  if (/^-?\d+(\.\d+)?$/.test(tsType)) {
+    return tsType.includes('.') ? 'double' : 'int';
   }
   
   // Handle union types (e.g., 'string' | 'number' or Type1 | Type2)
@@ -362,6 +531,18 @@ function generateJavaClass(parsedData, fileName) {
     imports.add('lombok.NoArgsConstructor');
     imports.add('lombok.AllArgsConstructor');
     
+    // List of types that should be imported from types package if we're in a different package
+    // Note: Only include actual generated classes here, not type aliases like HeightData, Status, Offsets
+    const typesPackageTypes = [
+      'Vector3', 'Rotation', 'Block', 'BlockModifier', 'Shape', 'Color',
+      'Entity', 'ChunkData', 'BlockMetadata', 'FaceVisibility', 'BlockType',
+      'AnimationData', 'EntityModel', 'Backdrop', 'PlayerInfo', 'WorldInfo',
+      'VitalsData', 'ItemData', 'AreaData', 'EditAction', 'EffectData',
+      'Modal', 'ShortcutDefinition', 'EntityData', 'ServerEntitySpawnDefinition',
+      'Vector2', 'ClientEntity', 'PlayerMovementState', 'FaceFlag', 'Direction',
+      'BlockStatus', 'AnimationEffect', 'AudioDefinition', 'TextureDefinition'
+    ];
+    
     for (const field of interfaceData.fields) {
       if (field.type.includes('java.util.List')) {
         imports.add('java.util.List');
@@ -371,6 +552,17 @@ function generateJavaClass(parsedData, fileName) {
       }
       if (field.type.includes('java.time.')) {
         imports.add(field.type.split('<')[0]);
+      }
+      
+      // Check if field uses a type from the types package
+      // Extract the base type from generics (e.g., List<Vector3> -> Vector3)
+      const typeMatch = field.type.match(/\b(\w+)\b/g);
+      if (typeMatch) {
+        for (const typeName of typeMatch) {
+          if (typesPackageTypes.includes(typeName) && SUBPACKAGE_ARG !== 'types') {
+            imports.add(`${BASE_PACKAGE_ARG}.types.${typeName}`);
+          }
+        }
       }
     }
     
@@ -399,6 +591,34 @@ function generateJavaClass(parsedData, fileName) {
     
     javaClasses.push({
       name: interfaceData.name,
+      code: javaCode
+    });
+  }
+  
+  // Generate constant objects as Java classes with static final fields
+  for (const constantObject of parsedData.constantObjects) {
+    let javaCode = `package ${JAVA_PACKAGE};\n\n`;
+    javaCode += `/**\n`;
+    javaCode += ` * Generated from ${fileName}.ts\n`;
+    javaCode += ` * DO NOT EDIT MANUALLY - This file is auto-generated\n`;
+    javaCode += ` */\n`;
+    javaCode += `public final class ${constantObject.name} {\n\n`;
+    javaCode += `    // Private constructor to prevent instantiation\n`;
+    javaCode += `    private ${constantObject.name}() {\n`;
+    javaCode += `        throw new UnsupportedOperationException("This is a constants class and cannot be instantiated");\n`;
+    javaCode += `    }\n\n`;
+    
+    for (const constant of constantObject.constants) {
+      javaCode += `    /**\n`;
+      javaCode += `     * ${constant.name}\n`;
+      javaCode += `     */\n`;
+      javaCode += `    public static final ${constant.type} ${constant.name} = ${constant.value};\n\n`;
+    }
+    
+    javaCode += `}\n`;
+    
+    javaClasses.push({
+      name: constantObject.name,
       code: javaCode
     });
   }

@@ -1,10 +1,14 @@
 # Generated Module
 
-This module contains Java classes that are **generated** from TypeScript interface and enum definitions located in `client/packages/shared/src/types`.
+This module contains Java classes that are **generated** from TypeScript interface, enum, and constant definitions located in:
+- `client/packages/shared/src/types` → generates `de.mhus.nimbus.generated.types` package
+- `client/packages/shared/src/network/messages` → generates `de.mhus.nimbus.generated.network` package
+- `client/packages/shared/src/constants` → generates `de.mhus.nimbus.generated.constants` package
+- `client/packages/shared/src/rest` → generates `de.mhus.nimbus.generated.rest` package
 
 ## Purpose
 
-The purpose of this module is to maintain a synchronized set of data classes between the TypeScript frontend and the Java backend. Instead of manually maintaining two copies of the same data structures, we generate the Java classes from the TypeScript definitions.
+The purpose of this module is to maintain a synchronized set of data classes and constants between the TypeScript frontend and the Java backend. Instead of manually maintaining two copies of the same data structures, we generate the Java classes from the TypeScript definitions.
 
 ## Directory Structure
 
@@ -13,10 +17,27 @@ server/generated/
 ├── pom.xml
 ├── README.md
 └── src/main/java/de/mhus/nimbus/generated/
-    ├── Vector3.java          (example generated class)
-    ├── Rotation.java         (example generated class)
-    ├── BlockStatus.java      (example generated enum)
-    └── ... (other generated classes)
+    ├── types/                      (generated from client/packages/shared/src/types)
+    │   ├── Vector3.java
+    │   ├── Rotation.java
+    │   ├── Block.java
+    │   ├── BlockStatus.java
+    │   └── ... (63 generated classes)
+    ├── network/                    (generated from client/packages/shared/src/network/messages)
+    │   ├── LoginRequestData.java
+    │   ├── ChunkDataTransferObject.java
+    │   ├── EntityPositionUpdateData.java
+    │   └── ... (26 generated classes)
+    ├── constants/                  (generated from client/packages/shared/src/constants)
+    │   ├── BlockConstants.java
+    │   ├── ChunkConstants.java
+    │   ├── NetworkConstants.java
+    │   └── ... (9 generated classes)
+    └── rest/                       (generated from client/packages/shared/src/rest)
+        ├── WorldDetailDTO.java
+        ├── BlockTypeDTO.java
+        ├── BlockMetadataDTO.java
+        └── ... (9 generated classes)
 ```
 
 ## Generation Process
@@ -24,7 +45,7 @@ server/generated/
 ### Prerequisites
 
 - **Node.js** must be installed on your system to run the generator script
-- The TypeScript source files must be present in `client/packages/shared/src/types`
+- The TypeScript source files must be present in both source directories
 
 ### How to Generate Java Classes
 
@@ -40,10 +61,23 @@ cd /path/to/nimbus
 ```
 
 This will:
-1. Parse all TypeScript files in `client/packages/shared/src/types`
-2. Extract interfaces and enums
-3. Generate corresponding Java classes in `server/generated/src/main/java/de/mhus/nimbus/generated`
-4. Clean old generated files before creating new ones
+1. **First run**: Parse TypeScript files in `client/packages/shared/src/types`
+   - Extract interfaces and enums
+   - Generate Java classes in `server/generated/src/main/java/de/mhus/nimbus/generated/types`
+   - Clean old generated files before creating new ones
+2. **Second run**: Parse TypeScript files in `client/packages/shared/src/network/messages`
+   - Extract interfaces and enums
+   - Generate Java classes in `server/generated/src/main/java/de/mhus/nimbus/generated/network`
+   - Automatically adds imports for types from the `types` package
+   - Clean old generated files before creating new ones
+3. **Third run**: Parse TypeScript files in `client/packages/shared/src/constants`
+   - Extract constant objects (exported with `as const`)
+   - Generate Java constant classes with static final fields in `server/generated/src/main/java/de/mhus/nimbus/generated/constants`
+   - Clean old generated files before creating new ones
+4. **Fourth run**: Parse TypeScript files in `client/packages/shared/src/rest`
+   - Extract REST API DTO interfaces
+   - Generate Java DTO classes in `server/generated/src/main/java/de/mhus/nimbus/generated/rest`
+   - Clean old generated files before creating new ones
 
 #### Method 2: Using Maven Profile
 
@@ -156,6 +190,131 @@ public class Rotation {
     private double y;
     private double p;
     private Double r;  // Optional field uses wrapper type
+}
+```
+
+### TypeScript Constant Objects → Java Constants Classes
+
+TypeScript constant objects (declared with `export const ... as const`) are converted to Java classes with static final fields:
+
+**TypeScript:**
+```typescript
+export const BlockConstants = {
+  AIR_BLOCK_ID: 0,
+  MAX_BLOCK_TYPE_ID: 65535,
+  MIN_BLOCK_TYPE_ID: 0,
+  DEFAULT_STATUS: 0,
+  MAX_STATUS: 255,
+} as const;
+```
+
+**Generated Java:**
+```java
+public final class BlockConstants {
+
+    // Private constructor to prevent instantiation
+    private BlockConstants() {
+        throw new UnsupportedOperationException("This is a constants class and cannot be instantiated");
+    }
+
+    /**
+     * AIR_BLOCK_ID
+     */
+    public static final int AIR_BLOCK_ID = 0;
+
+    /**
+     * MAX_BLOCK_TYPE_ID
+     */
+    public static final int MAX_BLOCK_TYPE_ID = 65535;
+
+    /**
+     * MIN_BLOCK_TYPE_ID
+     */
+    public static final int MIN_BLOCK_TYPE_ID = 0;
+
+    /**
+     * DEFAULT_STATUS
+     */
+    public static final int DEFAULT_STATUS = 0;
+
+    /**
+     * MAX_STATUS
+     */
+    public static final int MAX_STATUS = 255;
+}
+```
+
+**Features:**
+- Final class to prevent inheritance
+- Private constructor to prevent instantiation
+- Public static final fields for constants
+- Automatic type detection (int, double, String, boolean)
+- Expression evaluation (e.g., `10 * 1024 * 1024` → `10485760`)
+- Nested objects and arrays are skipped (not generated)
+
+## Package Structure
+
+The generated classes are organized into four packages:
+
+### `de.mhus.nimbus.generated.types` Package
+
+Contains core data types and domain models generated from `client/packages/shared/src/types`:
+- Basic types: `Vector3`, `Rotation`, `Vector2`, `Color`
+- Block-related: `Block`, `BlockType`, `BlockModifier`, `BlockMetadata`, `BlockStatus`
+- Entity-related: `Entity`, `EntityModel`, `EntityData`, `ClientEntity`
+- Chunk-related: `ChunkData`, `Backdrop`
+- Player-related: `PlayerInfo`, `PlayerMovementState`
+- Other: `AnimationData`, `AreaData`, `WorldInfo`, `VitalsData`, etc.
+
+### `de.mhus.nimbus.generated.network` Package
+
+Contains network message data classes generated from `client/packages/shared/src/network/messages`:
+- Login/Logout: `LoginRequestData`, `LoginResponseData`, `LoginErrorData`
+- Chunks: `ChunkDataTransferObject`, `ChunkCoordinate`, `ChunkQueryData`
+- Entities: `EntityPositionUpdateData`, `EntityInteractionData`
+- Blocks: `BlockStatusUpdate`, `BlockInteractionData`
+- User: `UserMovementData`, `PlayerTeleportData`
+- Commands: `CommandData`, `ServerCommandData`
+- Other: `PingData`, `PongData`, `InteractionRequestData`, etc.
+
+### `de.mhus.nimbus.generated.constants` Package
+
+Contains constant classes with static final fields generated from `client/packages/shared/src/constants`:
+- `ChunkConstants`: Chunk size limits and defaults
+- `WorldConstants`: World dimensions, sea level, ground level
+- `BlockConstants`: Block IDs, status values, offset limits
+- `NetworkConstants`: Network timeouts, message sizes, reconnect settings
+- `EntityConstants`: Player speeds, jump height, entity limits
+- `RenderConstants`: Render distance, FPS targets, LOD thresholds
+- `AnimationConstants`: Animation durations and limits
+- `PhysicsConstants`: Gravity, drag, friction values
+- `LimitConstants`: Collection size limits for messages and queues
+
+### `de.mhus.nimbus.generated.rest` Package
+
+Contains REST API Data Transfer Objects (DTOs) generated from `client/packages/shared/src/rest`:
+- World DTOs: `WorldDetailDTO`, `WorldListItemDTO`, `WorldSettingsDTO`, `UserDTO`, `Position3D`
+- BlockType DTOs: `BlockTypeDTO`, `BlockTypeOptionsDTO`, `BlockTypeListResponseDTO`
+- Block Metadata DTOs: `BlockMetadataDTO`
+
+These DTOs are used for REST API communication between client and server, providing a clean separation from the internal domain models in the `types` package.
+
+### Cross-Package Dependencies
+
+The `network` package classes often reference types from the `types` package. The generator automatically adds the necessary imports:
+
+```java
+package de.mhus.nimbus.generated.network;
+
+import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Rotation;
+import de.mhus.nimbus.generated.types.Block;
+// ... other imports
+
+public class EntityPositionUpdateData {
+    private Vector3 p;      // Position
+    private Rotation r;     // Rotation
+    // ... other fields
 }
 ```
 

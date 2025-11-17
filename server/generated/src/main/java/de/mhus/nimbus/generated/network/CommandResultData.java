@@ -1,0 +1,27 @@
+package de.mhus.nimbus.generated.network;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * Generated from CommandMessage.ts
+ * DO NOT EDIT MANUALLY - This file is auto-generated
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CommandResultData {
+
+    /**
+     * rc
+     */
+    private double rc;
+
+    /**
+     * message
+     */
+    private String message;
+}
