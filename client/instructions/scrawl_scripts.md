@@ -881,6 +881,14 @@ Dafuer gibt es einen StepLodSwitch der verschiedene Sub-Steps fuer verschiedene 
 
 Was genau die LOD Stufen sind und wie sie bestimmt werden, ist Implementation-abhängig und nicht Teil des Scrawl Scripts.
 
+### Vita Modifier
+
+Zusaetzlich zu den Audio/Visual Effekten koennen Effekte auch die Vita eines Subjekts veraendern (Schaden, Heilung, Buffs).
+Diese Dfinition wird separat von den Scrawl Scripts behandelt, da sie im Server ausgefuehrt werden muss.
+Die Definition ist simpler als die der Scrawl Scripts und wird in einem eigenen VitaEffect System verarbeitet.
+
+TBD - Ist stark vom Vita System abhaengig, ist noch nicht final definiert.
+
 ## Model
 
 ### ScrawlSubject
@@ -1002,3 +1010,9 @@ ScriptActionDefinition:
   - Je nach step gibt es unter slots
   - Die sub sequence ist wahlbar, es wird dann nur die sub sequence angezeigt, es koennen neue erstellt und welche geloescht werden
 - Es soll einen Button Source geben, der das JSON des Scripts anzeigt und editierbar macht.
+
+[ ] Erstelle einen Shader, der eine runde Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
+Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
+- Parameter: radius, color, stayDuration, spreadDuration, alpha 
+- Der Effekt soll in der EffectFactory registriert werden.
+
