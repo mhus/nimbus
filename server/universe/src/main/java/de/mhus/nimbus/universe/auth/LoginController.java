@@ -12,12 +12,19 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth", description = "Authentication operations")
 public class LoginController {
 
     private final UserService userService;
@@ -30,6 +37,12 @@ public class LoginController {
         this.jwtProperties = jwtProperties;
     }
 
+    @Operation(summary = "Login with username/password", description = "Returns JWT bearer token on success")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         if (request == null || request.username() == null || request.password() == null) {
@@ -54,11 +67,18 @@ public class LoginController {
         return ResponseEntity.ok(new LoginResponse(token, user.getId(), user.getUsername()));
     }
 
+    @Operation(summary = "Logout (stateless)", description = "No server action, provided for client flow")
+    @ApiResponse(responseCode = "200", description = "Logout acknowledged")
     @GetMapping("/logout")
     public ResponseEntity<Void> logout() {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Refresh JWT token", description = "Requires valid bearer token", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Token refreshed"),
+            @ApiResponse(responseCode = "401", description = "Invalid or missing token")
+    })
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(@RequestHeader(value = "Authorization", required = false) String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
