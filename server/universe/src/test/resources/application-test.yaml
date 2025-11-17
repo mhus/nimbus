@@ -1,0 +1,7 @@
+spring:
+  data:
+    mongodb:
+      database: universe_test
+
+logging.level.org.springframework.data.mongodb.core.MongoTemplate: WARN
+
