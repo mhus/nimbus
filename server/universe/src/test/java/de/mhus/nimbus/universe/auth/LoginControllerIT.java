@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -104,5 +105,32 @@ class LoginControllerIT {
         ResponseEntity<LoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
         assertEquals(400, response.getStatusCodeValue());
     }
-}
 
+    @Test
+    void me_unauthorized_401() {
+        ResponseEntity<MeResponse> resp = restTemplate.getForEntity("/api/me", MeResponse.class);
+        assertEquals(401, resp.getStatusCode().value());
+    }
+
+    @Test
+    void me_authorized_ok() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = "{\"username\":\"alpha\",\"password\":\"secret123\"}";
+        ResponseEntity<LoginResponse> login = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        assertEquals(200, login.getStatusCode().value());
+        String token = login.getBody().token();
+        HttpHeaders authHeaders = new HttpHeaders();
+        authHeaders.setBearerAuth(token);
+        ResponseEntity<MeResponse> me = restTemplate.exchange("/api/me", HttpMethod.GET, new HttpEntity<>(authHeaders), MeResponse.class);
+        assertEquals(200, me.getStatusCode().value());
+        assertEquals(login.getBody().userId(), me.getBody().userId());
+        assertEquals("alpha", me.getBody().username());
+    }
+
+    @Test
+    void logout_no_token_ok() {
+        ResponseEntity<Void> resp = restTemplate.getForEntity("/api/auth/logout", Void.class);
+        assertEquals(200, resp.getStatusCode().value());
+    }
+}

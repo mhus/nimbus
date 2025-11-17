@@ -5,8 +5,10 @@ import de.mhus.nimbus.universe.user.UserService;
 import de.mhus.nimbus.universe.user.User;
 import de.mhus.nimbus.shared.security.JwtService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,5 +53,33 @@ public class LoginController {
         );
         return ResponseEntity.ok(new LoginResponse(token, user.getId(), user.getUsername()));
     }
-}
 
+    @GetMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).build();
+        }
+        String oldToken = authorization.substring(7).trim();
+        var claimsOpt = jwtService.validateTokenWithSecretKey(oldToken, jwtProperties.getKeyId());
+        if (claimsOpt.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+        var claims = claimsOpt.get().getPayload();
+        String userId = claims.getSubject();
+        String username = claims.get("username", String.class);
+        // Issue new token with same subject & username, new expiration
+        Instant exp = Instant.now().plus(jwtProperties.getExpiresMinutes(), ChronoUnit.MINUTES);
+        String newToken = jwtService.createTokenWithSecretKey(
+                jwtProperties.getKeyId(),
+                userId,
+                Map.of("username", username),
+                exp
+        );
+        return ResponseEntity.ok(new LoginResponse(newToken, userId, username));
+    }
+}

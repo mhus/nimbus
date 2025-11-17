@@ -33,8 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        // Allow login endpoint without token
-        if (path.equals("/api/auth/login")) {
+        // Allow auth endpoints without token
+        if (isPublicPath(path)) {
             chain.doFilter(request, response);
             return;
         }
@@ -52,7 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = claimsOpt.get().getPayload();
         String userId = claims.getSubject();
         String username = claims.get("username", String.class);
-        User user = userService.getById(userId).orElse(null); // may be null if deleted
+        User user = userService.getById(userId).orElse(null);
         CurrentUser cu = new CurrentUser(userId, username, user);
         userHolder.set(cu);
         try {
@@ -62,5 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userHolder.clear();
         }
     }
-}
 
+    private boolean isPublicPath(String path) {
+        return "/api/auth/login".equals(path) || "/api/auth/logout".equals(path);
+    }
+}
