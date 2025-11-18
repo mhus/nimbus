@@ -69,6 +69,21 @@ export class WalkModeController {
         id,
         gId
       );
+
+      // Emit event for collision audio (only for actual collisions, not climb)
+      if (action === 'collision' && this.physicsService) {
+        // Get the block for audio playback
+        const clientBlock = this.chunkService.getBlockAt(x, y, z);
+        if (clientBlock) {
+          this.physicsService.emit('collide:withBlock', {
+            entityId: 'player', // TODO: Get actual entity ID
+            block: clientBlock,
+            x,
+            y,
+            z
+          });
+        }
+      }
     });
   }
 

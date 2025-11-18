@@ -639,6 +639,8 @@ export enum AudioType {
   STEPS = 'steps',
   /** Permanent ambient sound that plays continuously when block is visible */
   PERMANENT = 'permanent',
+  /** Collision sound when player collides with block */
+  COLLISION = 'collision',
 }
 
 /**

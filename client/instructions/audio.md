@@ -130,7 +130,7 @@ der ähnlich wie der Block audioModifier funktioniert.
   - Am Ende wird das BABYLON.Sound objekt gleich wieder disposed.
 - Erstelle ein Commando in der engine playEntityAudio(entityId: string, type: string)
 
-[ ] Erstelle an AudioDefinition neben 'permanent' noch den Type 'collision', der abgespielt wird, wenn der Player mit einem 
+[x] Erstelle an AudioDefinition neben 'permanent' noch den Type 'collision', der abgespielt wird, wenn der Player mit einem 
 Block kollidiert.
 - erwitere AudioDefinition um den Type 'collision'.
 - Erweitere den AudioEditor um den Type 'collision'.
