@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- Script Info -->
-    <div class="mb-4 p-4 bg-base-200 rounded-lg">
+    <div class="mb-4 p-4 bg-base-200 rounded-lg space-y-3">
       <div class="form-control">
         <label class="label">
           <span class="label-text font-semibold">Script ID</span>
@@ -13,7 +13,7 @@
           placeholder="script_id"
         />
       </div>
-      <div class="form-control mt-2">
+      <div class="form-control">
         <label class="label">
           <span class="label-text font-semibold">Description</span>
         </label>
@@ -23,6 +23,22 @@
           class="input input-bordered input-sm"
           placeholder="Script description"
         />
+      </div>
+
+      <!-- Parameters Section -->
+      <div class="collapse collapse-arrow bg-base-100">
+        <input type="checkbox" />
+        <div class="collapse-title text-sm font-semibold px-0">
+          Parameters
+          <span v-if="localScript.parameters?.length" class="badge badge-sm badge-primary ml-2">
+            {{ localScript.parameters.length }}
+          </span>
+        </div>
+        <div class="collapse-content px-0">
+          <ParameterDefinitionEditor
+            v-model="localScript.parameters"
+          />
+        </div>
       </div>
     </div>
 
@@ -91,6 +107,7 @@
 import { ref, computed, watch } from 'vue';
 import type { ScrawlScript } from '@nimbus/shared';
 import StepEditor from './components/StepEditor.vue';
+import ParameterDefinitionEditor from './components/ParameterDefinitionEditor.vue';
 
 const props = defineProps<{
   initialScript: ScrawlScript;
