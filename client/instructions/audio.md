@@ -142,7 +142,7 @@ Block kollidiert.
   spacial und mit dem volumen das in der AudioDefinition definiert ist.
 - Im event wird auch die entityId mitgegeben
 
-[ ] Im ChunkService werden die audio dateien in die klasse ClientBlock in den Parameter 'audioSteps' geladen. Im AudioService werden die
+[x] Im ChunkService werden die audio dateien in die klasse ClientBlock in den Parameter 'audioSteps' geladen. Im AudioService werden die
 dann ausgewertete und abgespielt. In zukunft soll der AudioService die Daten direkt aus currentModifier holen koennen.
 - In ChunkService werden die AudioDateien nur einame geladen, damit sie schon bereit stehen. Es werden Dateien vom Typ steps und collision geladen - die enabled sind.
 - Die Sounds werden nicht mehr an 'audioSteps' in ClientBlock vermerkt.
@@ -151,6 +151,6 @@ dann ausgewertete und abgespielt. In zukunft soll der AudioService die Daten dir
 (Da die daten sowieso im Pool gehalten werden ist es nicht mehr noetig dies nochmal in ClientBlock 'audioSteps' zu halten).
 - Wenn die steps in AudioService abgespielt werden, wird geprueft, ob die Engine schon bereit ist, wenn nicht, wird am anfang der Methode gleich geskippt.
 
-[ ] In AmbientePlay soll geprueft werden ob die Engine bereit ist, wenn nicht, wird am anfang der Methode gleich der path/daten vermerkt (wird jetzt schon?) geskippt.
+[x] In AmbientePlay soll geprueft werden ob die Engine bereit ist, wenn nicht, wird am anfang der Methode gleich der path/daten vermerkt (wird jetzt schon?) geskippt.
 - Sobald die Engine bereit ist (onEngineReady event), wird geprueft ob ein path/daten vermerkt sind und nicht leer, wenn ja, wird die ambiente musik gestartet.
 

@@ -315,6 +315,8 @@ export class AudioService {
   private currentAmbientSound?: any; // Current ambient music sound
   private currentAmbientPath?: string; // Current ambient music path
   private ambientFadeInterval?: number; // Fade in/out interval ID
+  private pendingAmbientPath?: string; // Pending ambient music path (waiting for engine ready)
+  private pendingAmbientVolume?: number; // Pending ambient music volume
 
   // Speech/narration
   private currentSpeech?: any; // Current speech sound
@@ -499,6 +501,7 @@ export class AudioService {
                 await this.audioEngine.unlockAsync();
                 logger.info('Audio engine unlocked and ready via user interaction');
                 this.playPendingSounds();
+                this.playPendingAmbientMusic();
 
                 // Remove event listeners after unlock
                 window.removeEventListener('click', unlockHandler);
@@ -521,6 +524,7 @@ export class AudioService {
         logger.info('Audio engine ready');
         // Already unlocked - play any pending sounds immediately
         this.playPendingSounds();
+        this.playPendingAmbientMusic();
       }
     } catch (error) {
       logger.error('Failed to create audio engine', {}, error as Error);
@@ -731,6 +735,30 @@ export class AudioService {
     // Always return true if audio engine exists
     // Babylon.js handles audio unlock internally via unlockAsync()
     return !!this.audioEngine;
+  }
+
+  /**
+   * Play pending ambient music after audio engine becomes ready
+   */
+  private async playPendingAmbientMusic(): Promise<void> {
+    if (!this.pendingAmbientPath || this.pendingAmbientPath.trim() === '') {
+      return; // No pending ambient music
+    }
+
+    logger.info('Playing pending ambient music', {
+      path: this.pendingAmbientPath,
+      volume: this.pendingAmbientVolume
+    });
+
+    const path = this.pendingAmbientPath;
+    const volume = this.pendingAmbientVolume ?? 1.0;
+
+    // Clear pending before playing (to avoid loops)
+    this.pendingAmbientPath = undefined;
+    this.pendingAmbientVolume = undefined;
+
+    // Play the ambient music
+    await this.playAmbientSound(path, true, volume);
   }
 
   /**
@@ -1361,7 +1389,17 @@ export class AudioService {
   async playAmbientSound(soundPath: string, stream: boolean = true, volume: number = 1.0): Promise<void> {
     // Empty path → stop ambient music
     if (!soundPath || soundPath.trim() === '') {
+      this.pendingAmbientPath = undefined;
+      this.pendingAmbientVolume = undefined;
       await this.stopAmbientSound();
+      return;
+    }
+
+    // Check if audio engine is ready
+    if (!this.audioEngine) {
+      logger.info('Audio engine not ready, deferring ambient music', { soundPath, volume });
+      this.pendingAmbientPath = soundPath;
+      this.pendingAmbientVolume = volume;
       return;
     }
 
@@ -1381,6 +1419,10 @@ export class AudioService {
       logger.info('Ambient music already playing', { soundPath });
       return;
     }
+
+    // Clear pending (we're playing now)
+    this.pendingAmbientPath = undefined;
+    this.pendingAmbientVolume = undefined;
 
     try {
       logger.info('Loading ambient music', { soundPath, stream, volume });
