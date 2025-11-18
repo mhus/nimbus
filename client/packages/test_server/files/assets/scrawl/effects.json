@@ -122,7 +122,8 @@
           "projectileTexture": "effects/arrow.png",
           "speed": 20,
           "rotationSpeed": 5,
-          "color": "#ffffff"
+          "color": "#ffffff",
+          "shape": "projectile"
         }
       },
       "parameters": [
@@ -177,6 +178,13 @@
           "type": "color",
           "default": "#ffffff",
           "description": "Color tint"
+        },
+        {
+          "name": "shape",
+          "type": "string",
+          "default": "projectile",
+          "options": ["projectile", "bullet"],
+          "description": "Shape: projectile (tapered cylinder) or bullet (sphere)"
         }
       ]
     }

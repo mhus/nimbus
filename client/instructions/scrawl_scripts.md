@@ -1208,8 +1208,21 @@ Wenn das projektile das ziel erreicht hat verschwindet es. (dispose)
         projectileTexture: "effects/fireball.png",
         speed: 15,
         rotationSpeed: 8,
+        shape: "bullet",
         color: "#ff6600"
       }
     }
   })
 ```
+
+[ ] Erstelle einen effekt 'beam' der einen beam zwischen zwei positionen anzeigt.
+Es soll eine interaktion mit einem Zauberstab simulieren.
+- Parameter: startPosition - Vector3
+- Parameter: endPosition - Vector3
+- Parameter: color1
+- Parameter: color2
+- Parameter: duration sekunden
+- Parameter: thickness
+- Parameter: setupDuration - In dieser zeit baut sich der Beam vom start zum end auf, default 0.2 sekunden
+- Parameter: fadeDuration - In dieser zeit fadet der Beam am ende aus, default 0.2 sekunden
+Es soll keine texture benutzt werden, sondern partikel oder ein shader.

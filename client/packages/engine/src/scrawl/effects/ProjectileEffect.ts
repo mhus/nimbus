@@ -49,6 +49,9 @@ export interface ProjectileOptions {
 
   /** Color tint (optional, default white) */
   color?: string;
+
+  /** Shape: 'projectile' (tapered cylinder, default) or 'bullet' (sphere) */
+  shape?: 'projectile' | 'bullet';
 }
 
 /**
@@ -110,16 +113,21 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
 
       const directionNorm = directionVec.normalize();
 
-      // Create projectile mesh (tapered cylinder)
-      this.mesh = this.createProjectileMesh(scene);
+      // Create projectile mesh based on shape
+      const shape = this.options.shape || 'projectile';
+      this.mesh = shape === 'bullet'
+        ? this.createBulletMesh(scene)
+        : this.createProjectileMesh(scene);
 
       // Position at start
       this.mesh.position = this.startPos.clone();
 
-      // Orient towards target
-      // Since cylinder is along Y-axis and we rotated it to Z-axis,
-      // we need to align the local Z-axis with the direction vector
-      this.mesh.setDirection(directionNorm, 0, Math.PI / 2);
+      // Orient towards target (only for projectile shape, bullet is sphere so no orientation needed)
+      if (shape === 'projectile') {
+        // Since cylinder is along Y-axis and we rotated it to Z-axis,
+        // we need to align the local Z-axis with the direction vector
+        this.mesh.setDirection(directionNorm, 0, Math.PI / 2);
+      }
 
       // Create material
       this.material = new StandardMaterial('projectileMaterial', scene);
@@ -159,9 +167,6 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
     } = this.options;
 
     // Create tapered cylinder (narrow at front/head)
-    // We'll use a custom mesh or approximate with a cylinder
-    // For simplicity, using a cylinder with custom scaling
-
     const cylinder = MeshBuilder.CreateCylinder(
       'projectile',
       {
@@ -177,6 +182,22 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
     cylinder.rotation.x = Math.PI / 2;
 
     return cylinder;
+  }
+
+  private createBulletMesh(scene: any): Mesh {
+    const { projectileRadius } = this.options;
+
+    // Create sphere for bullet
+    const sphere = MeshBuilder.CreateSphere(
+      'bullet',
+      {
+        diameter: projectileRadius * 2,
+        segments: 16,
+      },
+      scene
+    );
+
+    return sphere;
   }
 
   private animate = () => {
@@ -201,9 +222,16 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
     // Update rotation angle
     this.rotationAngle += this.options.rotationSpeed * 0.016; // Assume ~60fps
 
-    // Reapply orientation and rotation
-    // setDirection aligns the mesh, then we rotate around the direction axis
-    this.mesh.setDirection(direction, this.rotationAngle, Math.PI / 2);
+    // Apply rotation based on shape
+    const shape = this.options.shape || 'projectile';
+    if (shape === 'projectile') {
+      // Reapply orientation and rotation around flight axis
+      this.mesh.setDirection(direction, this.rotationAngle, Math.PI / 2);
+    } else {
+      // For bullet (sphere), just rotate around any axis (visual effect)
+      this.mesh.rotation.y = this.rotationAngle;
+      this.mesh.rotation.x = this.rotationAngle * 0.7;
+    }
 
     // Continue animation
     this.animationHandle = requestAnimationFrame(this.animate);
