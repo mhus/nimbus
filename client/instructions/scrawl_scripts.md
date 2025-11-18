@@ -985,7 +985,7 @@ ScriptActionDefinition:
 
 [?] Erstelle Unit Tests die die funktionen im ScrawlExecutor testen
 
-[ ] Erstelle commandos um mit ScrawlService scripte zu listen, zu starten, stoppen
+[?] Erstelle commandos um mit ScrawlService scripte zu listen, zu starten, stoppen
 
 [ ] Erstelle ein effect LogEffect der einen text im log ausgibt (zum testen), in die EffectFactory registrieren
 

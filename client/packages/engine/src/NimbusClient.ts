@@ -27,6 +27,7 @@ import { CommandService } from './services/CommandService';
 import { CompassService } from './services/CompassService';
 import { EntityService } from './services/EntityService';
 import { ItemService } from './services/ItemService';
+import { ScrawlService } from './scrawl/ScrawlService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
@@ -81,6 +82,14 @@ import {
   WindGustStrengthCommand,
   WindSwayFactorCommand,
 } from './commands/wind';
+import {
+  ScrawlListCommand,
+  ScrawlStartCommand,
+  ScrawlStopCommand,
+  ScrawlStatusCommand,
+  ScrawlPauseCommand,
+  ScrawlResumeCommand,
+} from './commands/scrawl';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -194,6 +203,14 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new WindGustStrengthCommand(appContext));
     commandService.registerHandler(new WindSwayFactorCommand(appContext));
 
+    // Register scrawl commands
+    commandService.registerHandler(new ScrawlListCommand(appContext));
+    commandService.registerHandler(new ScrawlStartCommand(appContext));
+    commandService.registerHandler(new ScrawlStopCommand(appContext));
+    commandService.registerHandler(new ScrawlStatusCommand(appContext));
+    commandService.registerHandler(new ScrawlPauseCommand(appContext));
+    commandService.registerHandler(new ScrawlResumeCommand(appContext));
+
     logger.debug('CommandService initialized with commands');
 
     logger.info('App initialization complete', {
@@ -294,6 +311,12 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.info('Initializing EntityService...');
     const entityService = new EntityService(appContext);
     appContext.services.entity = entityService;
+
+    // Initialize ScrawlService
+    logger.info('Initializing ScrawlService...');
+    const scrawlService = new ScrawlService(appContext);
+    appContext.services.scrawl = scrawlService;
+    await scrawlService.initialize();
 
     // Register ChunkMessageHandler
     const chunkHandler = new ChunkMessageHandler(chunkService);
