@@ -62,7 +62,8 @@
       "Bash(pnpm --filter @nimbus/test_server exec tsc:*)",
       "Bash(pnpm build:test_server:*)",
       "Bash(pnpm build:engine:*)",
-      "Bash(pnpm --filter @nimbus/controls exec vue-tsc:*)"
+      "Bash(pnpm --filter @nimbus/controls exec vue-tsc:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

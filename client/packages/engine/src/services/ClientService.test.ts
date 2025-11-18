@@ -18,6 +18,7 @@ describe('ClientService', () => {
       apiUrl: 'http://localhost:3000',
       worldId: 'test-world',
       logToConsole: true,
+      exitUrl: 'http://localhost:3000/exit',
     };
 
     // Reset TransportManager

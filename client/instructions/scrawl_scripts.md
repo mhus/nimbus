@@ -974,14 +974,14 @@ ScriptActionDefinition:
   - StepIf + Conditions
 - ScriptActionDefinition
 
-[ ] Erstelle die implementierung in engine/src/scrawl/
+[?] Erstelle die implementierung in engine/src/scrawl/
 - ScrawlEffectFactory
 - ScrawlEffectHandler - execute(ctx: ScrawlExecContext, step: ScrawlStep): void
 - ScrawlExecutor
 - ScrawlService - in AppContext referenzieren
 - ScrawlExecContext - Hier eine Referenz auf AppContext, auf ScrawlExecutor
 
-[ ] Implementiere die Logic in ScrawlExecutor um die steps auszufuehren
+[?] Implementiere die Logic in ScrawlExecutor um die steps auszufuehren
 
 [ ] Erstelle Unit Tests die die funktionen im ScrawlExecutor testen
 

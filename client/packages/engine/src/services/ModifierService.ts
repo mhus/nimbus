@@ -72,9 +72,11 @@ export enum StackName {
  * @template T The type of the value
  */
 export class Modifier<T> {
+  private static _sequenceCounter = 0;
   private _value: T;
   private readonly _prio: number;
   private readonly _created: number;
+  private readonly _sequence: number;
   private readonly _stack: ModifierStack<T>;
   private _enabled: boolean = true;
 
@@ -88,6 +90,7 @@ export class Modifier<T> {
     this._value = value;
     this._prio = prio;
     this._created = Date.now();
+    this._sequence = Modifier._sequenceCounter++;
     this._stack = stack;
   }
 
@@ -126,6 +129,13 @@ export class Modifier<T> {
    */
   get created(): number {
     return this._created;
+  }
+
+  /**
+   * Get the sequence number (for ordering within same priority)
+   */
+  get sequence(): number {
+    return this._sequence;
   }
 
   /**
@@ -262,13 +272,14 @@ export class ModifierStack<T> {
       return this._defaultModifier.value;
     }
 
-    // Sort by priority (descending), then by created (descending for newest first)
+    // Sort by priority (descending), then by sequence (descending for newest first)
     // Lower priority value = higher priority, so we sort ascending by prio
     const sorted = [...enabledModifiers, this._defaultModifier].sort((a, b) => {
       if (a.prio !== b.prio) {
         return a.prio - b.prio; // Lower prio value = higher priority
       }
-      return b.created - a.created; // Newer wins
+      // Use sequence number to ensure newest wins (higher sequence = newer)
+      return b.sequence - a.sequence;
     });
 
     // The first one wins
