@@ -960,7 +960,7 @@ ScriptActionDefinition:
 
 ## Umsetzung
 
-[?] Erstelle die Model interfaces und basis klassen in shared/src/scrawl/ 
+[x] Erstelle die Model interfaces und basis klassen in shared/src/scrawl/ 
 - ScrawlScript
 - ScrawlStep Typen: 
   - StepPlay
@@ -974,20 +974,20 @@ ScriptActionDefinition:
   - StepIf + Conditions
 - ScriptActionDefinition
 
-[?] Erstelle die implementierung in engine/src/scrawl/
+[x] Erstelle die implementierung in engine/src/scrawl/
 - ScrawlEffectFactory
 - ScrawlEffectHandler - execute(ctx: ScrawlExecContext, step: ScrawlStep): void
 - ScrawlExecutor
 - ScrawlService - in AppContext referenzieren
 - ScrawlExecContext - Hier eine Referenz auf AppContext, auf ScrawlExecutor
 
-[?] Implementiere die Logic in ScrawlExecutor um die steps auszufuehren
+[x] Implementiere die Logic in ScrawlExecutor um die steps auszufuehren
 
-[?] Erstelle Unit Tests die die funktionen im ScrawlExecutor testen
+[x] Erstelle Unit Tests die die funktionen im ScrawlExecutor testen
 
-[?] Erstelle commandos um mit ScrawlService scripte zu listen, zu starten, stoppen
+[x] Erstelle commandos um mit ScrawlService scripte zu listen, zu starten, stoppen
 
-[?] Erstelle ein effect LogEffect der einen text im log ausgibt (zum testen), in die EffectFactory registrieren
+[x] Erstelle ein effect LogEffect der einen text im log ausgibt (zum testen), in die EffectFactory registrieren
 - Gib mir ein beispiel, wie ich mit dem command einen log effekt starten kann.
 ```text
 doScrawlStart('{
