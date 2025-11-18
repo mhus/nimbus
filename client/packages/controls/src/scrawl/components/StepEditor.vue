@@ -16,6 +16,15 @@ import WaitStepEditor from './editors/WaitStepEditor.vue';
 import CmdStepEditor from './editors/CmdStepEditor.vue';
 import PlayStepEditor from './editors/PlayStepEditor.vue';
 import SequenceStepEditor from './editors/SequenceStepEditor.vue';
+import ParallelStepEditor from './editors/ParallelStepEditor.vue';
+import RepeatStepEditor from './editors/RepeatStepEditor.vue';
+import ForEachStepEditor from './editors/ForEachStepEditor.vue';
+import IfStepEditor from './editors/IfStepEditor.vue';
+import CallStepEditor from './editors/CallStepEditor.vue';
+import SetVarStepEditor from './editors/SetVarStepEditor.vue';
+import EmitEventStepEditor from './editors/EmitEventStepEditor.vue';
+import WaitEventStepEditor from './editors/WaitEventStepEditor.vue';
+import LodSwitchStepEditor from './editors/LodSwitchStepEditor.vue';
 
 const props = defineProps<{
   modelValue: ScrawlStep;
@@ -36,16 +45,24 @@ function getEditorComponent(kind: string) {
       return PlayStepEditor;
     case 'Sequence':
       return SequenceStepEditor;
-    // More editors will be added here
     case 'Parallel':
+      return ParallelStepEditor;
     case 'Repeat':
+      return RepeatStepEditor;
     case 'ForEach':
+      return ForEachStepEditor;
     case 'If':
+      return IfStepEditor;
     case 'Call':
+      return CallStepEditor;
     case 'SetVar':
+      return SetVarStepEditor;
     case 'EmitEvent':
+      return EmitEventStepEditor;
     case 'WaitEvent':
+      return WaitEventStepEditor;
     case 'LodSwitch':
+      return LodSwitchStepEditor;
     default:
       // Fallback: JSON editor for unimplemented types
       return defineAsyncComponent(() => import('./editors/GenericStepEditor.vue'));
