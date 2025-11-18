@@ -18,6 +18,6 @@ public class UniverseWebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(roleAuthorizationInterceptor)
-                .addPathPatterns("/universe/user/**", "/api/user/**");
+                .addPathPatterns("/universe/user/**", "/api/user/**", "/universe/quadrant/**");
     }
 }

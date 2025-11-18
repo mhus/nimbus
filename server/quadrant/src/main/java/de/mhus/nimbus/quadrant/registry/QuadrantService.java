@@ -16,6 +16,17 @@ public class QuadrantService {
         this.repository = repository;
     }
 
+    public Quadrant create(String name, String apiUrl, String publicSignKey, String maintainers) {
+        if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
+        if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
+        if (repository.existsByName(name)) throw new IllegalArgumentException("Quadrant name exists: " + name);
+        if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Quadrant apiUrl exists: " + apiUrl);
+        Quadrant q = new Quadrant(name, apiUrl, publicSignKey);
+        q.setMaintainers(maintainers);
+        return repository.save(q);
+    }
+
+    // Bestehende create-Methode bleibt für Abwärtskompatibilität
     public Quadrant create(String name, String apiUrl, String publicSignKey) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
@@ -37,7 +48,7 @@ public class QuadrantService {
         return repository.findAll();
     }
 
-    public Quadrant update(String id, String name, String apiUrl, String publicSignKey) {
+    public Quadrant update(String id, String name, String apiUrl, String publicSignKey, String maintainers) {
         Quadrant existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Quadrant not found: " + id));
         if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
@@ -49,6 +60,19 @@ public class QuadrantService {
             existing.setApiUrl(apiUrl);
         }
         if (publicSignKey != null) existing.setPublicSignKey(publicSignKey);
+        if (maintainers != null) existing.setMaintainers(maintainers);
+        return repository.save(existing);
+    }
+
+    public Quadrant addMaintainer(String id, String userId) {
+        Quadrant existing = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Quadrant not found: " + id));
+        existing.addMaintainer(userId);
+        return repository.save(existing);
+    }
+
+    public Quadrant removeMaintainer(String id, String userId) {
+        Quadrant existing = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Quadrant not found: " + id));
+        existing.removeMaintainer(userId);
         return repository.save(existing);
     }
 
@@ -56,4 +80,3 @@ public class QuadrantService {
         repository.deleteById(id);
     }
 }
-

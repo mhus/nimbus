@@ -6,6 +6,6 @@ package de.mhus.nimbus.shared.user;
  */
 public enum UniverseRoles {
     USER,
-    ADMIN;
+    ADMIN,
+    MAINTAINER;
 }
-

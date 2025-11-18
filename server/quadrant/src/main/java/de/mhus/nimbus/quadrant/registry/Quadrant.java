@@ -18,6 +18,9 @@ public class Quadrant {
 
     private String publicSignKey;
 
+    // Komma-separierte Liste von User-IDs mit MAINTAINER-Rechten für diesen Quadranten
+    private String maintainers; // z.B. "u1,u2,u3"
+
     public Quadrant() {}
 
     public Quadrant(String name, String apiUrl, String publicSignKey) {
@@ -37,5 +40,22 @@ public class Quadrant {
 
     public String getPublicSignKey() { return publicSignKey; }
     public void setPublicSignKey(String publicSignKey) { this.publicSignKey = publicSignKey; }
-}
 
+    public String getMaintainers() { return maintainers; }
+    public void setMaintainers(String maintainers) { this.maintainers = (maintainers==null||maintainers.isBlank())?null:maintainers.trim(); }
+    public java.util.Set<String> getMaintainerSet() {
+        if (maintainers == null || maintainers.isBlank()) return java.util.Collections.emptySet();
+        return java.util.Arrays.stream(maintainers.split(",")).map(String::trim).filter(s->!s.isEmpty()).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+    }
+    public boolean hasMaintainer(String userId) { return userId != null && getMaintainerSet().contains(userId); }
+    public void addMaintainer(String userId) {
+        if (userId == null || userId.isBlank()) return;
+        java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>(getMaintainerSet());
+        if (set.add(userId.trim())) maintainers = String.join(",", set);
+    }
+    public void removeMaintainer(String userId) {
+        if (userId == null) return;
+        java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>(getMaintainerSet());
+        if (set.remove(userId)) maintainers = set.isEmpty()?null:String.join(",", set);
+    }
+}
