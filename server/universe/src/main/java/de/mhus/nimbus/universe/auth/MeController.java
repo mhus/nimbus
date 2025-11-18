@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping(MeController.BASE_PATH)
 public class MeController {
+
+    public static final String BASE_PATH = "/universe/user";
 
     private final RequestUserHolder userHolder;
 
@@ -24,4 +26,3 @@ public class MeController {
         return ResponseEntity.ok(new MeResponse(cu.userId(), cu.username()));
     }
 }
-

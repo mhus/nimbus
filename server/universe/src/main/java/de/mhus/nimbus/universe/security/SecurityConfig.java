@@ -11,10 +11,9 @@ public class SecurityConfig {
     public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration(JwtAuthenticationFilter filter) {
         FilterRegistrationBean<JwtAuthenticationFilter> reg = new FilterRegistrationBean<>();
         reg.setFilter(filter);
-        reg.addUrlPatterns("/api/*");
+        reg.addUrlPatterns("/universe/user/*");
         reg.setOrder(10); // after basic internal filters, before controllers
         reg.setName("jwtAuthenticationFilter");
         return reg;
     }
 }
-

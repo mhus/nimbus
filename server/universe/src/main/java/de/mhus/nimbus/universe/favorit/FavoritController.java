@@ -20,11 +20,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/favorits")
+@RequestMapping(FavoritController.BASE_PATH)
 @Validated
 @Tag(name = "Favorites", description = "Manage user favorites")
 @SecurityRequirement(name = "bearerAuth")
 public class FavoritController {
+
+    public static final String BASE_PATH = "/universe/user/favorties";
 
     private final FavoritService service;
     private final RequestUserHolder userHolder;
@@ -101,7 +103,7 @@ public class FavoritController {
         String userId = requireUser().userId();
         Favorit f = service.create(userId, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
         FavoritResponse resp = toResponse(f);
-        return ResponseEntity.created(URI.create("/api/favorits/" + f.getId())).body(resp);
+        return ResponseEntity.created(URI.create(BASE_PATH + "/" + f.getId())).body(resp);
     }
 
     @Operation(summary = "Update favorite", description = "Updates fields of existing favorite")

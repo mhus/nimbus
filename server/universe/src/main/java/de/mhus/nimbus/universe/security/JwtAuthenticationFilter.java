@@ -23,6 +23,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserService userService;
     private final RequestUserHolder userHolder;
 
+    private static final String AUTH_BASE = "/universe/user/auth";
+
     public JwtAuthenticationFilter(JwtService jwtService, JwtProperties jwtProperties, UserService userService, RequestUserHolder userHolder) {
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
@@ -64,6 +66,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicPath(String path) {
-        return "/api/auth/login".equals(path) || "/api/auth/logout".equals(path);
+        return (AUTH_BASE + "/login").equals(path) || (AUTH_BASE + "/logout").equals(path);
     }
 }

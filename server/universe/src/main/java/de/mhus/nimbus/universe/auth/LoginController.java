@@ -23,9 +23,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(LoginController.BASE_PATH)
 @Tag(name = "Auth", description = "Authentication operations")
 public class LoginController {
+
+    public static final String BASE_PATH = "/universe/user/auth";
 
     private final UserService userService;
     private final JwtService jwtService;
