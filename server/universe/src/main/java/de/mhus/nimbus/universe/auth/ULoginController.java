@@ -60,10 +60,12 @@ public class ULoginController {
             return ResponseEntity.status(401).build();
         }
         Instant exp = Instant.now().plus(jwtProperties.getExpiresMinutes(), ChronoUnit.MINUTES);
+        String rolesRaw = user.getRolesRaw();
+        Map<String,Object> claims = rolesRaw == null ? Map.of("username", user.getUsername()) : Map.of("username", user.getUsername(), "universe", rolesRaw);
         String token = jwtService.createTokenWithSecretKey(
                 jwtProperties.getKeyId(),
                 user.getId(),
-                Map.of("username", user.getUsername()),
+                claims,
                 exp
         );
         return ResponseEntity.ok(new ULoginResponse(token, user.getId(), user.getUsername()));
@@ -94,12 +96,14 @@ public class ULoginController {
         var claims = claimsOpt.get().getPayload();
         String userId = claims.getSubject();
         String username = claims.get("username", String.class);
-        // Issue new token with same subject & username, new expiration
+        UUser user = userService.getById(userId).orElse(null);
+        String rolesRaw = user != null ? user.getRolesRaw() : null;
         Instant exp = Instant.now().plus(jwtProperties.getExpiresMinutes(), ChronoUnit.MINUTES);
+        Map<String,Object> newClaims = rolesRaw == null ? Map.of("username", username) : Map.of("username", username, "universe", rolesRaw);
         String newToken = jwtService.createTokenWithSecretKey(
                 jwtProperties.getKeyId(),
                 userId,
-                Map.of("username", username),
+                newClaims,
                 exp
         );
         return ResponseEntity.ok(new ULoginResponse(newToken, userId, username));

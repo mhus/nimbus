@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import de.mhus.nimbus.shared.security.HashService;
+import de.mhus.nimbus.shared.user.UniverseRoles; // neu
 
 @Service
 @Validated
@@ -28,6 +29,7 @@ public class UUserService {
             throw new IllegalArgumentException("Email already exists: " + email);
         }
         UUser user = new UUser(username, email);
+        user.setRoles(UniverseRoles.USER); // Default Rolle
         return userRepository.save(user);
     }
 

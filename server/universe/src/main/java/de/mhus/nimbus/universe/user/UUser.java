@@ -12,7 +12,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import de.mhus.nimbus.shared.security.Roles;
+import de.mhus.nimbus.shared.user.UniverseRoles; // geändert
 
 @Document(collection = "users")
 public class UUser {
@@ -81,86 +81,28 @@ public class UUser {
         this.passwordHash = passwordHash;
     }
 
-    // ----------------------------------------------------------------------------
     // Rollen-Hilfsmethoden
-    // ----------------------------------------------------------------------------
-
-    /**
-     * Liefert die Rollen als Set. Leeres Set falls keine Rollen gesetzt.
-     */
-    public Set<Roles> getRoles() {
+    public Set<UniverseRoles> getRoles() {
         if (roles == null || roles.isBlank()) return Collections.emptySet();
         return Arrays.stream(roles.split(","))
             .map(String::trim)
             .filter(s -> !s.isEmpty())
-            .map(Roles::valueOf)
+            .map(UniverseRoles::valueOf)
             .collect(Collectors.toCollection(LinkedHashSet::new));
     }
-
-    /**
-     * Setzt die Rollen basierend auf einem Set. Bei leer/null wird das Feld gelöscht (null).
-     */
-    public void setRoles(Set<Roles> rolesSet) {
-        if (rolesSet == null || rolesSet.isEmpty()) {
-            this.roles = null;
-        } else {
-            this.roles = rolesSet.stream().map(Enum::name).distinct().collect(Collectors.joining(","));
-        }
+    public void setRoles(Set<UniverseRoles> rolesSet) {
+        if (rolesSet == null || rolesSet.isEmpty()) this.roles = null; else this.roles = rolesSet.stream().map(Enum::name).distinct().collect(Collectors.joining(","));
     }
-
-    /**
-     * Komfort-Methode zum Setzen per Varargs.
-     */
-    public void setRoles(Roles... rolesArray) {
-        if (rolesArray == null || rolesArray.length == 0) {
-            this.roles = null;
-        } else {
-            Set<Roles> set = Arrays.stream(rolesArray).collect(Collectors.toCollection(LinkedHashSet::new));
-            setRoles(set);
-        }
+    public void setRoles(UniverseRoles... rolesArray) {
+        if (rolesArray == null || rolesArray.length == 0) { this.roles = null; } else { Set<UniverseRoles> set = Arrays.stream(rolesArray).collect(Collectors.toCollection(LinkedHashSet::new)); setRoles(set); }
     }
-
-    /**
-     * Fügt eine Rolle hinzu. Gibt true zurück falls neu hinzugefügt.
-     */
-    public boolean addRole(Roles role) {
-        if (role == null) return false;
-        Set<Roles> current = new LinkedHashSet<>(getRoles());
-        boolean added = current.add(role);
-        if (added) setRoles(current);
-        return added;
+    public boolean addRole(UniverseRoles role) {
+        if (role == null) return false; Set<UniverseRoles> current = new LinkedHashSet<>(getRoles()); boolean added = current.add(role); if (added) setRoles(current); return added;
     }
-
-    /**
-     * Entfernt eine Rolle. Gibt true zurück falls vorhanden war.
-     */
-    public boolean removeRole(Roles role) {
-        if (role == null) return false;
-        Set<Roles> current = new LinkedHashSet<>(getRoles());
-        boolean removed = current.remove(role);
-        if (removed) setRoles(current);
-        return removed;
+    public boolean removeRole(UniverseRoles role) {
+        if (role == null) return false; Set<UniverseRoles> current = new LinkedHashSet<>(getRoles()); boolean removed = current.remove(role); if (removed) setRoles(current); return removed;
     }
-
-    /**
-     * Prüft ob die Rolle gesetzt ist.
-     */
-    public boolean hasRole(Roles role) {
-        if (role == null) return false;
-        return getRoles().contains(role);
-    }
-
-    /**
-     * Rohformat der Rollen (kommasepariert) für Persistenz oder Logging.
-     */
-    public String getRolesRaw() {
-        return roles;
-    }
-
-    /**
-     * Setzt direkt die kommaseparierte Darstellung. Erwartet korrekte Enum-Namen.
-     */
-    public void setRolesRaw(String rolesRaw) {
-        this.roles = (rolesRaw == null || rolesRaw.isBlank()) ? null : rolesRaw.trim();
-    }
+    public boolean hasRole(UniverseRoles role) { return role != null && getRoles().contains(role); }
+    public String getRolesRaw() { return roles; }
+    public void setRolesRaw(String rolesRaw) { this.roles = (rolesRaw == null || rolesRaw.isBlank()) ? null : rolesRaw.trim(); }
 }

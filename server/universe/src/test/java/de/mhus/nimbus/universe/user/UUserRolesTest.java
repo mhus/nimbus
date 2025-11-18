@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import de.mhus.nimbus.shared.security.Roles;
+import de.mhus.nimbus.shared.user.UniverseRoles; // geändert
 
 class UUserRolesTest {
 
@@ -20,44 +20,43 @@ class UUserRolesTest {
     @Test
     void setRoles_varargs_shouldStoreDistinctCommaSeparated() {
         UUser u = new UUser("name","mail@example.com");
-        u.setRoles(Roles.USER, Roles.ADMIN, Roles.USER);
-        assertThat(u.getRoles()).containsExactly(Roles.USER, Roles.ADMIN); // Einfügereihenfolge / LinkedHashSet
+        u.setRoles(UniverseRoles.USER, UniverseRoles.ADMIN, UniverseRoles.USER);
+        assertThat(u.getRoles()).containsExactly(UniverseRoles.USER, UniverseRoles.ADMIN);
         assertThat(u.getRolesRaw()).isEqualTo("USER,ADMIN");
     }
 
     @Test
     void addRole_shouldAddAndNotDuplicate() {
         UUser u = new UUser("name","mail@example.com");
-        boolean first = u.addRole(Roles.USER);
-        boolean second = u.addRole(Roles.USER);
-        boolean third = u.addRole(Roles.ADMIN);
+        boolean first = u.addRole(UniverseRoles.USER);
+        boolean second = u.addRole(UniverseRoles.USER);
+        boolean third = u.addRole(UniverseRoles.ADMIN);
         assertThat(first).isTrue();
         assertThat(second).isFalse();
         assertThat(third).isTrue();
-        assertThat(u.getRoles()).containsExactly(Roles.USER, Roles.ADMIN);
-        assertThat(u.hasRole(Roles.ADMIN)).isTrue();
+        assertThat(u.getRoles()).containsExactly(UniverseRoles.USER, UniverseRoles.ADMIN);
+        assertThat(u.hasRole(UniverseRoles.ADMIN)).isTrue();
     }
 
     @Test
     void removeRole_shouldRemoveIfPresent() {
         UUser u = new UUser("name","mail@example.com");
-        u.setRoles(Roles.USER, Roles.ADMIN);
-        boolean removedUser = u.removeRole(Roles.USER);
-        boolean removedUserAgain = u.removeRole(Roles.USER);
-        boolean removedAdmin = u.removeRole(Roles.ADMIN);
+        u.setRoles(UniverseRoles.USER, UniverseRoles.ADMIN);
+        boolean removedUser = u.removeRole(UniverseRoles.USER);
+        boolean removedUserAgain = u.removeRole(UniverseRoles.USER);
+        boolean removedAdmin = u.removeRole(UniverseRoles.ADMIN);
         assertThat(removedUser).isTrue();
         assertThat(removedUserAgain).isFalse();
         assertThat(removedAdmin).isTrue();
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesRaw()).isNull(); // nach Entfernen aller Rollen wird null gesetzt
+        assertThat(u.getRolesRaw()).isNull();
     }
 
     @Test
     void setRoles_setShouldPersistOrderDistinct() {
         UUser u = new UUser("name","mail@example.com");
-        u.setRoles(Set.of(Roles.ADMIN, Roles.USER));
-        // Reihenfolge in Set.of ist nicht garantiert -> wir testen nur Inhalt (LinkedHashSet Einsatz in getRoles liefert Insert-Reihenfolge aus Raw String)
-        assertThat(u.getRoles()).containsExactlyInAnyOrder(Roles.USER, Roles.ADMIN);
+        u.setRoles(Set.of(UniverseRoles.ADMIN, UniverseRoles.USER));
+        assertThat(u.getRoles()).containsExactlyInAnyOrder(UniverseRoles.USER, UniverseRoles.ADMIN);
         assertThat(u.getRolesRaw()).contains("USER").contains("ADMIN");
     }
 
@@ -65,18 +64,17 @@ class UUserRolesTest {
     void setRolesRaw_shouldTrimAndAllowDirectParsing() {
         UUser u = new UUser("name","mail@example.com");
         u.setRolesRaw(" USER , ADMIN ");
-        assertThat(u.getRoles()).containsExactly(Roles.USER, Roles.ADMIN);
-        assertThat(u.hasRole(Roles.USER)).isTrue();
-        assertThat(u.hasRole(Roles.ADMIN)).isTrue();
+        assertThat(u.getRoles()).containsExactly(UniverseRoles.USER, UniverseRoles.ADMIN);
+        assertThat(u.hasRole(UniverseRoles.USER)).isTrue();
+        assertThat(u.hasRole(UniverseRoles.ADMIN)).isTrue();
     }
 
     @Test
     void clearRoles_viaEmptyVarargs_shouldNullRaw() {
         UUser u = new UUser("name","mail@example.com");
-        u.setRoles(Roles.USER);
-        u.setRoles(); // leer
+        u.setRoles(UniverseRoles.USER);
+        u.setRoles();
         assertThat(u.getRoles()).isEmpty();
         assertThat(u.getRolesRaw()).isNull();
     }
 }
-

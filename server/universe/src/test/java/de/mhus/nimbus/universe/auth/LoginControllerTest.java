@@ -2,6 +2,7 @@ package de.mhus.nimbus.universe.auth;
 
 import de.mhus.nimbus.universe.security.JwtProperties;
 import de.mhus.nimbus.universe.user.UUser;
+import de.mhus.nimbus.shared.user.UniverseRoles;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.shared.security.JwtService;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ class LoginControllerTest {
 
         UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
+        user.setRoles(UniverseRoles.USER);
         when(userService.getByUsername("alpha")).thenReturn(Optional.of(user));
         when(userService.validatePassword("u1","pw"))
                 .thenReturn(true);
@@ -53,6 +55,8 @@ class LoginControllerTest {
 
         UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
+        user.setRoles(UniverseRoles.USER);
+
         when(userService.getByUsername("alpha")).thenReturn(Optional.of(user));
         when(userService.validatePassword("u1","bad"))
                 .thenReturn(false);

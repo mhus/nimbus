@@ -76,6 +76,7 @@ class LoginControllerIT {
         Claims claims = claimsOpt.get().getPayload();
         assertEquals(response.getBody().userId(), claims.getSubject());
         assertEquals("alpha", claims.get("username"));
+        assertEquals("USER", claims.get("universe")); // neue Prüfung
         assertTrue(claims.getExpiration().toInstant().isAfter(Instant.now().plus(30, ChronoUnit.MINUTES)));
     }
 
