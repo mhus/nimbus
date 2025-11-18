@@ -66,6 +66,14 @@
       </label>
     </div>
 
+    <!-- Effect Presets -->
+    <PresetSelector
+      title="Effect Presets"
+      :presets="effectPresets"
+      :loading="presetsLoading"
+      @select="applyEffectPreset"
+    />
+
     <!-- Preview -->
     <div class="text-xs opacity-50">
       <code>{{ modelValue.effectId }}({{ ctxJson }})</code>
@@ -74,8 +82,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { ScrawlStep } from '@nimbus/shared';
+import PresetSelector from '../PresetSelector.vue';
+import { presetService, type EffectPreset } from '../../services/presetService';
 
 const props = defineProps<{
   modelValue: ScrawlStep & { kind: 'Play' };
@@ -86,6 +96,8 @@ const emit = defineEmits<{
 }>();
 
 const ctxError = ref<string | null>(null);
+const effectPresets = ref<EffectPreset[]>([]);
+const presetsLoading = ref(false);
 
 const ctxJson = computed(() => {
   return JSON.stringify(props.modelValue.ctx || {}, null, 0);
@@ -140,4 +152,30 @@ function updateCtx(event: Event) {
     ctxError.value = e.message;
   }
 }
+
+function applyEffectPreset(preset: EffectPreset) {
+  const template = preset.template;
+  emit('update:modelValue', {
+    ...props.modelValue,
+    effectId: template.effectId,
+    source: template.source,
+    target: template.target,
+    ctx: template.ctx || {},
+  });
+}
+
+async function loadPresets() {
+  presetsLoading.value = true;
+  try {
+    effectPresets.value = await presetService.getEffectPresets();
+  } catch (error) {
+    console.error('Failed to load effect presets:', error);
+  } finally {
+    presetsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadPresets();
+});
 </script>

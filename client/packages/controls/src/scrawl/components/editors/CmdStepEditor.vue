@@ -33,41 +33,13 @@
       </label>
     </div>
 
-    <!-- Common Commands Presets -->
-    <div class="collapse collapse-arrow bg-base-200">
-      <input type="checkbox" />
-      <div class="collapse-title text-xs font-medium">
-        Quick Commands
-      </div>
-      <div class="collapse-content">
-        <div class="space-y-1">
-          <button
-            class="btn btn-xs btn-outline w-full justify-start"
-            @click="applyPreset('notification', [0, 'null', 'Message'])"
-          >
-            notification
-          </button>
-          <button
-            class="btn btn-xs btn-outline w-full justify-start"
-            @click="applyPreset('teleport', [0, 64, 0])"
-          >
-            teleport
-          </button>
-          <button
-            class="btn btn-xs btn-outline w-full justify-start"
-            @click="applyPreset('centerText', ['Text', 2000])"
-          >
-            centerText
-          </button>
-          <button
-            class="btn btn-xs btn-outline w-full justify-start"
-            @click="applyPreset('playSound', ['audio/sound.ogg', 1.0])"
-          >
-            playSound
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Command Presets -->
+    <PresetSelector
+      title="Command Presets"
+      :presets="commandPresets"
+      :loading="presetsLoading"
+      @select="applyCommandPreset"
+    />
 
     <!-- Preview -->
     <div class="text-xs opacity-50">
@@ -77,8 +49,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { ScrawlStep } from '@nimbus/shared';
+import PresetSelector from '../PresetSelector.vue';
+import { presetService, type CommandPreset } from '../../services/presetService';
 
 const props = defineProps<{
   modelValue: ScrawlStep & { kind: 'Cmd' };
@@ -89,6 +63,8 @@ const emit = defineEmits<{
 }>();
 
 const paramError = ref<string | null>(null);
+const commandPresets = ref<CommandPreset[]>([]);
+const presetsLoading = ref(false);
 
 const parametersJson = computed(() => {
   return JSON.stringify(props.modelValue.parameters || [], null, 0);
@@ -120,11 +96,27 @@ function updateParameters(event: Event) {
   }
 }
 
-function applyPreset(cmd: string, parameters: any[]) {
+function applyCommandPreset(preset: CommandPreset) {
+  const template = preset.template;
   emit('update:modelValue', {
     ...props.modelValue,
-    cmd,
-    parameters,
+    cmd: template.cmd,
+    parameters: template.parameters || [],
   });
 }
+
+async function loadPresets() {
+  presetsLoading.value = true;
+  try {
+    commandPresets.value = await presetService.getCommandPresets();
+  } catch (error) {
+    console.error('Failed to load command presets:', error);
+  } finally {
+    presetsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadPresets();
+});
 </script>
