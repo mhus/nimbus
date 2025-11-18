@@ -13,3 +13,6 @@ export type { CircleMarkerOptions } from './CircleMarkerEffect';
 
 export { ProjectileEffect } from './ProjectileEffect';
 export type { ProjectileOptions } from './ProjectileEffect';
+
+export { BeamEffect } from './BeamEffect';
+export type { BeamOptions } from './BeamEffect';

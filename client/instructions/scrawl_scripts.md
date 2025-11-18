@@ -1180,7 +1180,7 @@ doScrawlStart({
 ```
 
 
-[?] Erstelle einen Effect 'projectile' der einen projectile fliegen lässt.
+[x] Erstelle einen Effect 'projectile' der einen projectile fliegen lässt.
 Das projektile soll von einer start position zu einer ziel position fliegen.
 - Parameter: startPosition - Vector3
 - Parameter: targetPosition - Vector3
@@ -1215,14 +1215,37 @@ Wenn das projektile das ziel erreicht hat verschwindet es. (dispose)
   })
 ```
 
-[ ] Erstelle einen effekt 'beam' der einen beam zwischen zwei positionen anzeigt.
+[?] Erstelle einen effekt 'beam' der einen beam zwischen zwei positionen anzeigt.
 Es soll eine interaktion mit einem Zauberstab simulieren.
 - Parameter: startPosition - Vector3
 - Parameter: endPosition - Vector3
 - Parameter: color1
 - Parameter: color2
+- Parameter: color3
 - Parameter: duration sekunden
 - Parameter: thickness
 - Parameter: setupDuration - In dieser zeit baut sich der Beam vom start zum end auf, default 0.2 sekunden
 - Parameter: fadeDuration - In dieser zeit fadet der Beam am ende aus, default 0.2 sekunden
 Es soll keine texture benutzt werden, sondern partikel oder ein shader.
+Es werden drei Farben uebergeben, die den beam farblich gestalten. ggf gibt es drei strahlen, die sich umeinander winden.
+Zur bewegung der particle sollen random zahlen benutzt werden.
+
+```text
+doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "beam",
+      "ctx": {
+        "startPosition": {"x": 0, "y": 65, "z": 0},
+        "endPosition": {"x": 10, "y": 70, "z": 10},
+        "color1": "#ff0000",
+        "color2": "#00ff00",
+        "color3": "#0000ff",
+        "duration": 2.0,
+        "thickness": 0.15,
+        "speed": 1.5,
+        "alpha": 0.5  // 50% transparent
+      }
+    }
+  })
+```

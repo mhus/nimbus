@@ -9,6 +9,7 @@ import { LogEffect } from './effects/LogEffect';
 import { CommandEffect } from './effects/CommandEffect';
 import { CircleMarkerEffect } from './effects/CircleMarkerEffect';
 import { ProjectileEffect } from './effects/ProjectileEffect';
+import { BeamEffect } from './effects/BeamEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -66,8 +67,11 @@ export class ScrawlService {
     // Register ProjectileEffect for flying projectiles
     this.effectRegistry.register('projectile', ProjectileEffect);
 
+    // Register BeamEffect for magical beam effects
+    this.effectRegistry.register('beam', BeamEffect);
+
     logger.debug('Built-in effects registered', {
-      effects: ['log', 'command', 'circleMarker', 'projectile'],
+      effects: ['log', 'command', 'circleMarker', 'projectile', 'beam'],
     });
   }
 
