@@ -9,15 +9,17 @@
         <relativePath/>
     </parent>
 
+    <groupId>de.mhus.nimbus</groupId>
     <artifactId>nimbus-server</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <name>server</name>
     <packaging>pom</packaging>
 
     <modules>
         <module>generated</module>
         <module>shared</module>
-        <module>universe</module>
         <module>quadrant</module>
+        <module>universe</module>
         <module>world</module>
     </modules>
 
@@ -70,6 +72,19 @@
                         --add-opens java.base/sun.nio.ch=ALL-UNNAMED
                         --add-opens java.base/sun.security.action=ALL-UNNAMED
                     </argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

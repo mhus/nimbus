@@ -39,6 +39,7 @@ public class UQuadrantController {
     public record UQuadrantResponse(String id, String name, String apiUrl, String publicSignKey, List<String> maintainers) {}
 
     private UQuadrantResponse toResponse(UQuadrant q) {
+        // Maintainer Set -> List
         return new UQuadrantResponse(q.getId(), q.getName(), q.getApiUrl(), q.getPublicSignKey(), q.getMaintainerSet().stream().toList());
     }
 
@@ -140,4 +141,3 @@ public class UQuadrantController {
         return ResponseEntity.ok(toResponse(updated));
     }
 }
-

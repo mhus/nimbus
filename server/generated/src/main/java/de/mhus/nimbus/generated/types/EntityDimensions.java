@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
+// @NoArgsConstructor
 @AllArgsConstructor
 public class EntityDimensions {
 }
