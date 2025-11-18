@@ -268,39 +268,62 @@ export class ItemService {
         return;
       }
 
-      // Load ItemData (includes pose, wait, duration)
+      // Load ItemData (includes pose, wait, duration, onUseEffect)
       const itemData = await this.getItemData(itemId);
       if (!itemData) {
         logger.warn('ItemData not found for shortcut', { shortcutKey, itemId });
         return;
       }
 
-      const { pose, wait, duration } = itemData;
+      const { pose, wait, duration, onUseEffect } = itemData;
 
-      // If no pose defined, nothing to do
-      if (!pose) {
-        logger.debug('No pose defined for item', { itemId });
-        return;
+      // Execute scrawl script if defined
+      if (onUseEffect) {
+        const scrawlService = this.appContext.services.scrawl;
+        if (scrawlService) {
+          try {
+            logger.debug('Executing onUseEffect script', { itemId, shortcutKey });
+            await scrawlService.executeAction(onUseEffect, {
+              // Provide context for the script
+              itemId,
+              shortcutKey,
+            });
+          } catch (error) {
+            ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation.onUseEffect', {
+              shortcutKey,
+              itemId,
+            });
+            logger.warn('Failed to execute onUseEffect script', {
+              itemId,
+              error: (error as Error).message,
+            });
+          }
+        } else {
+          logger.debug('ScrawlService not available, skipping onUseEffect', { itemId });
+        }
       }
 
-      // Get pose ID from ENTITY_POSES
-      const poseId = (ENTITY_POSES as any)[pose.toUpperCase()];
-      if (poseId === undefined) {
-        logger.warn('Unknown pose', { pose, itemId });
-        return;
+      // Handle pose animation if defined
+      if (pose) {
+        // Get pose ID from ENTITY_POSES
+        const poseId = (ENTITY_POSES as any)[pose.toUpperCase()];
+        if (poseId === undefined) {
+          logger.warn('Unknown pose', { pose, itemId });
+          return;
+        }
+
+        // Apply wait delay if specified
+        const waitMs = wait || 0;
+        if (waitMs > 0) {
+          logger.debug('Waiting before pose activation', { waitMs, pose, itemId });
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+        }
+
+        // Activate pose with priority 10 (overrides idle=100, but not calculated movement poses)
+        this.activatePose(poseId, duration || 1000, itemId);
+
+        logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId, duration });
       }
-
-      // Apply wait delay if specified
-      const waitMs = wait || 0;
-      if (waitMs > 0) {
-        logger.debug('Waiting before pose activation', { waitMs, pose, itemId });
-        await new Promise(resolve => setTimeout(resolve, waitMs));
-      }
-
-      // Activate pose with priority 10 (overrides idle=100, but not calculated movement poses)
-      this.activatePose(poseId, duration || 1000, itemId);
-
-      logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId, duration });
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation', { shortcutKey, itemId });
     }

@@ -10,6 +10,7 @@
  */
 
 import type { Block } from './Block';
+import type { ScriptActionDefinition } from '../scrawl/ScriptActionDefinition';
 
 /**
  * Item data structure
@@ -57,6 +58,22 @@ export interface ItemData {
    * After duration, player returns to normal state.
    */
   duration?: number;
+
+  /**
+   * Scrawl script to execute when item is used
+   *
+   * This allows items to trigger complex effect sequences, animations,
+   * and commands through the Scrawl framework.
+   *
+   * Example:
+   * ```typescript
+   * {
+   *   scriptId: "explosion_effect",
+   *   parameters: { radius: 5, damage: 50 }
+   * }
+   * ```
+   */
+  onUseEffect?: ScriptActionDefinition;
 
   /**
    * Optional parameters

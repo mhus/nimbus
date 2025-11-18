@@ -558,6 +558,27 @@ GET /api/worlds/{worldId}/entity/{entityId}
 
 # Item
 
+## Item Suchen
+
+GET /api/worlds/{worldId}/items?query={searchTerm}
+
+Sucht nach items, es werden maximal 100 items zurueckgegeben.
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "itemId": "item123",
+      "name": "Health Potion",
+      "texture": "items/health_potion.png"
+    },
+    ...
+  ]
+}
+```
+
 ## Item Abrufen
 
 GET /api/worlds/{worldId}/item/{itemId}

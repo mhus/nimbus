@@ -1095,7 +1095,7 @@ doScrawlStart({
   })
 ```
 
-[ ] Erweitere Items (ItemData.ts) so, das ScriptActionDefinition als onUseEffekt Effekt definiert werden kann.
+[?] Erweitere Items (ItemData.ts) so, das ScriptActionDefinition als onUseEffekt Effekt definiert werden kann.
 - Wenn ein Item per shortcut ausgefuehrt wird, wird der ScrawlService genutzt um das Script zu starten - wenn vorhanden.
 
 [ ] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.
@@ -1112,6 +1112,17 @@ doScrawlStart({
   - Die sub sequence ist wahlbar, es wird dann nur die sub sequence angezeigt, es koennen neue erstellt und welche geloescht werden
 - Es soll einen Button Source geben, der das JSON des Scripts anzeigt und editierbar macht.
 - Eine Liste von moeglichen Effekten/Commands (Kind:Cmd) soll aus einer asset-Datei unter 'scrawl/effects.json' geladen werden und im Editor als presets angezeigt werden.
+
+[ ] Erstelle exemplarisch eine Scrawl Script Bibliothek in den assets in client/packages/test_server/files/assets/scrawl/effects.json
+
+[ ] Erweitere die Server REST API um eine liste von items zu suchen
+- Siehe "Item Suchen" in client/instructions/general/server_rest_api.md
+
+[ ] Erstelle einen Item Editor in 'controls' der es erlaubt Items (ItemData) zu bearbeiten
+- Liste von Items mit Suche
+- Item anlegen, loeschen
+- Item bearbeiten
+- onUseEffect soll mit dem Scrawl Script Editor bearbeitet werden koennen
 
 [ ] Erstelle einen Shader, der eine runde Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
 Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
