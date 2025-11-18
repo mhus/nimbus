@@ -26,6 +26,7 @@ import type { EntityService } from './services/EntityService';
 import type { InputService } from './services/InputService';
 import type { ItemService } from './services/ItemService';
 import type { AudioService } from './services/AudioService';
+import type { ScrawlService } from './scrawl/ScrawlService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -112,6 +113,9 @@ export interface Services {
 
   /** Audio service for loading, caching audio files, and gameplay sound playback */
   audio?: AudioService;
+
+  /** Scrawl service for effect script execution and animation */
+  scrawl?: ScrawlService;
 
   // Future services will be added here:
   // render?: RenderService;

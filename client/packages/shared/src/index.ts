@@ -28,4 +28,7 @@ export * from './errors';
 // Logger
 export * from './logger';
 
+// Scrawl
+export * from './scrawl';
+
 export const SHARED_VERSION = '2.0.0';
