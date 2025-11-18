@@ -1098,7 +1098,7 @@ doScrawlStart({
 [?] Erweitere Items (ItemData.ts) so, das ScriptActionDefinition als onUseEffekt Effekt definiert werden kann.
 - Wenn ein Item per shortcut ausgefuehrt wird, wird der ScrawlService genutzt um das Script zu starten - wenn vorhanden.
 
-[ ] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.
+[?] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.
 - Liste von .scrawl.json Scripten und suche. Nur anzeige von Dateinamen. (AssetPrview control benutzen)
 - Mit Add new Script wird der Editor mit einem leeren Script geoeffnet.
 - Auf den gefunden elementen kann ein Icon 'Duplicate' geklickt werden, um das Script zu kopieren und im Editor zu oeffnen.
