@@ -1115,7 +1115,7 @@ doScrawlStart({
 
 [?] Erstelle exemplarisch eine Scrawl Script Bibliothek in den assets in client/packages/test_server/files/assets/scrawl/effects.json
 
-[ ] Erweitere die Server REST API um eine liste von items zu suchen
+[?] Erweitere die Server REST API um eine liste von items zu suchen
 - Siehe "Item Suchen" in client/instructions/general/server_rest_api.md
 
 [ ] Erstelle einen Item Editor in 'controls' der es erlaubt Items (ItemData) zu bearbeiten
