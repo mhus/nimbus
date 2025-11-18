@@ -960,7 +960,7 @@ ScriptActionDefinition:
 
 ## Umsetzung
 
-[ ] Erstelle die Model interfaces und basis klassen in shared/src/scrawl/ 
+[?] Erstelle die Model interfaces und basis klassen in shared/src/scrawl/ 
 - ScrawlScript
 - ScrawlStep Typen: 
   - StepPlay
