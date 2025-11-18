@@ -699,8 +699,7 @@
                   }
                 }
               },
-              "else": {
-                {
+                "else": {
                   "kind": "Play",
                   "effectId": "log",
                   "ctx": {
@@ -708,7 +707,6 @@
                     "level": "warn"
                   }
                 }
-              }
             }
           ]
         }

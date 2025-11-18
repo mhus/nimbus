@@ -28,12 +28,12 @@
           <button
             v-for="preset in filteredPresets"
             :key="preset.id"
-            class="btn btn-xs btn-outline w-full justify-start text-left"
+            class="btn btn-xs btn-outline w-full justify-start text-left h-auto min-h-[3rem] py-2"
             @click="selectPreset(preset)"
           >
-            <div class="flex flex-col items-start">
+            <div class="flex flex-col items-start gap-0.5">
               <div class="font-semibold">{{ preset.name }}</div>
-              <div class="text-xs opacity-60">{{ preset.description }}</div>
+              <div class="text-xs opacity-60 leading-tight">{{ preset.description }}</div>
               <div v-if="preset.category" class="text-xs opacity-40">{{ preset.category }}</div>
             </div>
           </button>
