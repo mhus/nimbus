@@ -2,6 +2,8 @@ package de.mhus.nimbus.universe.favorit;
 
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import de.mhus.nimbus.universe.security.CurrentUser;
+import de.mhus.nimbus.universe.security.Role;
+import de.mhus.nimbus.shared.user.UniverseRoles;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 @Validated
 @Tag(name = "Favorites", description = "Manage user favorites")
 @SecurityRequirement(name = "bearerAuth")
+@Role({UniverseRoles.USER, UniverseRoles.ADMIN})
 public class UFavoritController {
 
     public static final String BASE_PATH = "/universe/user/favorties";

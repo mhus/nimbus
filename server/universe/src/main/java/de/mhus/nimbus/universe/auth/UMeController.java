@@ -2,6 +2,8 @@ package de.mhus.nimbus.universe.auth;
 
 import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
+import de.mhus.nimbus.universe.security.Role;
+import de.mhus.nimbus.shared.user.UniverseRoles;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(UMeController.BASE_PATH)
+@Role({UniverseRoles.USER, UniverseRoles.ADMIN})
 public class UMeController {
 
     public static final String BASE_PATH = "/universe/user";
