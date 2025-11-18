@@ -12,24 +12,23 @@ uniform sampler2D textureSampler;
 uniform bool useTexture;
 
 void main(void) {
-    // Calculate distance from center
-    vec2 centered = vUV - 0.5;
-    float dist = length(centered) * 2.0; // 0 at center, 1 at edge
-
     // Sample texture if provided
-    vec4 texColor = vec4(1.0);
+    vec4 texColor = vec4(1.0, 1.0, 1.0, 1.0);
     if (useTexture) {
         texColor = texture2D(textureSampler, vUV);
+    } else {
+        // If no texture, create circular shape with soft edge
+        vec2 centered = vUV - 0.5;
+        float dist = length(centered) * 2.0; // 0 at center, 1 at edge
+        float circle = 1.0 - smoothstep(0.9, 1.0, dist);
+        texColor.a = circle;
     }
 
-    // Create circular shape with soft edge
-    float circle = 1.0 - smoothstep(0.9, 1.0, dist);
-
-    // Combine color with texture
+    // Combine color with texture (multiply tint)
     vec3 finalColor = color * texColor.rgb;
 
     // Apply fade and alpha
-    float finalAlpha = circle * alpha * fadeProgress * texColor.a;
+    float finalAlpha = alpha * fadeProgress * texColor.a;
 
     gl_FragColor = vec4(finalColor, finalAlpha);
 }
