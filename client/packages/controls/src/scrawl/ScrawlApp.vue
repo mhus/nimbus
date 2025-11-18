@@ -25,14 +25,12 @@
         />
       </div>
 
-      <!-- Script Editor (Right Panel) -->
-      <div v-else class="flex-1 flex flex-col">
-        <ScriptEditorView
-          :script="selectedScript"
-          :is-new="isNewScript"
+      <!-- Script Editor (Full Screen) -->
+      <div v-else class="flex-1 flex flex-col p-6">
+        <ScrawlAppEmbedded
+          :initial-script="selectedScript"
           @save="saveScript"
-          @close="closeEditor"
-          @delete="deleteScript"
+          @cancel="closeEditor"
         />
       </div>
     </main>
@@ -43,10 +41,14 @@
 import { ref } from 'vue';
 import type { ScrawlScript } from '@nimbus/shared';
 import ScriptListView from './views/ScriptListView.vue';
-import ScriptEditorView from './views/ScriptEditorView.vue';
+import ScrawlAppEmbedded from './ScrawlAppEmbedded.vue';
+import { ApiService } from '../services/ApiService';
 
+const apiService = new ApiService();
 const selectedScript = ref<ScrawlScript | null>(null);
 const isNewScript = ref(false);
+const saving = ref(false);
+const error = ref<string | null>(null);
 
 function createNewScript() {
   selectedScript.value = {
@@ -72,10 +74,41 @@ function duplicateScript(script: ScrawlScript) {
   isNewScript.value = true;
 }
 
-function saveScript(script: ScrawlScript) {
-  // TODO: Save via API
-  console.log('Save script:', script);
-  selectedScript.value = null;
+async function saveScript(script: ScrawlScript) {
+  if (!script.id) {
+    alert('Script ID is required');
+    return;
+  }
+
+  saving.value = true;
+  error.value = null;
+
+  try {
+    const worldId = apiService.getCurrentWorldId();
+
+    // Remove .scrawl.json if already present, then add it
+    let scriptId = script.id.replace(/\.scrawl\.json$/i, '');
+    const filename = `${scriptId}.scrawl.json`;
+    const assetPath = `scrawl/${filename}`;
+    const scriptJson = JSON.stringify(script, null, 2);
+    const blob = new Blob([scriptJson], { type: 'application/json' });
+
+    // Save as asset using PUT (creates if not exists, updates if exists)
+    await apiService.updateBinary(`/api/worlds/${worldId}/assets/${assetPath}`, blob, 'application/json');
+
+    console.log('Script saved:', scriptId);
+    selectedScript.value = null;
+    isNewScript.value = false;
+
+    // Reload script list (trigger refresh in ScriptListView)
+    window.location.reload();
+  } catch (e: any) {
+    error.value = e.message || 'Failed to save script';
+    console.error('Failed to save script:', e);
+    alert('Failed to save script: ' + error.value);
+  } finally {
+    saving.value = false;
+  }
 }
 
 function closeEditor() {
@@ -83,9 +116,26 @@ function closeEditor() {
   isNewScript.value = false;
 }
 
-function deleteScript(scriptId: string) {
-  // TODO: Delete via API
-  console.log('Delete script:', scriptId);
-  selectedScript.value = null;
+async function deleteScript(scriptId: string) {
+  if (!confirm(`Delete script "${scriptId}"?`)) {
+    return;
+  }
+
+  try {
+    const worldId = apiService.getCurrentWorldId();
+    const assetPath = `scrawl/${scriptId}.scrawl.json`;
+
+    await apiService.delete(`/api/worlds/${worldId}/assets/${assetPath}`);
+
+    console.log('Script deleted:', scriptId);
+    selectedScript.value = null;
+
+    // Reload script list
+    window.location.reload();
+  } catch (e: any) {
+    error.value = e.message || 'Failed to delete script';
+    console.error('Failed to delete script:', e);
+    alert('Failed to delete script: ' + error.value);
+  }
 }
 </script>

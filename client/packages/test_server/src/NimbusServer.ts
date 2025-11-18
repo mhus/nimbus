@@ -188,7 +188,7 @@ class NimbusServer {
       }
 
       // Item routes
-      this.app.use('/api/worlds', authMiddleware, createItemRoutes());
+      this.app.use('/api/worlds', authMiddleware, createItemRoutes(this.worldManager));
 
       // Backdrop configuration routes (public - no auth needed)
       this.app.use('/api/backdrop', createBackdropRoutes());

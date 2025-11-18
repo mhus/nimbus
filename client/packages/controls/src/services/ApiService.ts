@@ -74,6 +74,14 @@ export class ApiService {
   }
 
   /**
+   * Get current world ID from URL query parameter
+   */
+  getCurrentWorldId(): string {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('world') || import.meta.env.VITE_WORLD_ID || 'main';
+  }
+
+  /**
    * Generic GET request
    */
   async get<T>(url: string, params?: any): Promise<T> {

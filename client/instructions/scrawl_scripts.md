@@ -1118,14 +1118,23 @@ doScrawlStart({
 [?] Erweitere die Server REST API um eine liste von items zu suchen
 - Siehe "Item Suchen" in client/instructions/general/server_rest_api.md
 
-[ ] Erstelle einen Item Editor in 'controls' der es erlaubt Items (ItemData) zu bearbeiten
+[?] Erstelle einen Item Editor in 'controls' der es erlaubt Items (ItemData) zu bearbeiten
 - Liste von Items mit Suche
 - Item anlegen, loeschen
 - Item bearbeiten
 - onUseEffect soll mit dem Scrawl Script Editor bearbeitet werden koennen
 
-[ ] Erstelle einen Shader, der eine runde Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
+
+
+[ ] Erstelle einen Shader, der eine Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
 Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
 - Parameter: radius, color, stayDuration, spreadDuration, alpha 
 - Der Effekt soll in der EffectFactory registriert werden.
+- Ausserdem soll sich die flaeche um das zentrum rotieren. Es soll eine roatationsgeschwindigkeit mitgegeben werden
+Erstelle einen Effekt der den Shader aus dem ShaderService laed und eine Texure mit dem MaterialService (?) und den Effekt ausfuehrt
+- Zusaetzlich zu den Shader parametern wird die Texture mitgegeben
+- Die textur soll kurz oberhalb des Blocks angezeigt werden (y + 0.05)
+- ggf parameter zu transparnz
+Es soll erreicht werden, das sich eine flaeche aufbaut um eine stelle herum (z.b. aoe effekt) und dann wieder verschwindet.
+Die Darstellung soll moeglichst konfigurierbar sein.
 
