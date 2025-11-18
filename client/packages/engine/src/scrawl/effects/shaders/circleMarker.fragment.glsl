@@ -1,0 +1,35 @@
+// Circle Marker Fragment Shader
+precision highp float;
+
+// Varyings
+varying vec2 vUV;
+
+// Uniforms
+uniform vec3 color;
+uniform float alpha;
+uniform float fadeProgress; // 0-1: 0=invisible, 1=fully visible
+uniform sampler2D textureSampler;
+uniform bool useTexture;
+
+void main(void) {
+    // Calculate distance from center
+    vec2 centered = vUV - 0.5;
+    float dist = length(centered) * 2.0; // 0 at center, 1 at edge
+
+    // Sample texture if provided
+    vec4 texColor = vec4(1.0);
+    if (useTexture) {
+        texColor = texture2D(textureSampler, vUV);
+    }
+
+    // Create circular shape with soft edge
+    float circle = 1.0 - smoothstep(0.9, 1.0, dist);
+
+    // Combine color with texture
+    vec3 finalColor = color * texColor.rgb;
+
+    // Apply fade and alpha
+    float finalAlpha = circle * alpha * fadeProgress * texColor.a;
+
+    gl_FragColor = vec4(finalColor, finalAlpha);
+}

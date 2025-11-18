@@ -7,6 +7,7 @@ import type { EffectDeps } from './ScrawlEffectHandler';
 import type { ScrawlExecContext } from './ScrawlExecContext';
 import { LogEffect } from './effects/LogEffect';
 import { CommandEffect } from './effects/CommandEffect';
+import { CircleMarkerEffect } from './effects/CircleMarkerEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -58,8 +59,11 @@ export class ScrawlService {
     // Register CommandEffect for executing commands
     this.effectRegistry.register('command', CommandEffect);
 
+    // Register CircleMarkerEffect for visual AOE markers
+    this.effectRegistry.register('circleMarker', CircleMarkerEffect);
+
     logger.debug('Built-in effects registered', {
-      effects: ['log', 'command'],
+      effects: ['log', 'command', 'circleMarker'],
     });
   }
 

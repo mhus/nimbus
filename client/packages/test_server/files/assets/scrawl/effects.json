@@ -32,6 +32,70 @@
           "description": "Log level"
         }
       ]
+    },
+    {
+      "id": "circleMarker",
+      "category": "Visual",
+      "name": "Circle Marker (AOE)",
+      "description": "Animated circular ground marker that expands and fades",
+      "template": {
+        "kind": "Play",
+        "effectId": "circleMarker",
+        "target": "$patient",
+        "ctx": {
+          "radius": 5,
+          "color": "#ff6600",
+          "spreadDuration": 0.5,
+          "stayDuration": 2.0,
+          "rotationSpeed": 1.0,
+          "alpha": 0.7,
+          "texture": "effects/aoe_marker.png"
+        }
+      },
+      "parameters": [
+        {
+          "name": "radius",
+          "type": "number",
+          "default": 5,
+          "description": "Circle radius in world units"
+        },
+        {
+          "name": "color",
+          "type": "color",
+          "default": "#ff6600",
+          "description": "Circle color (hex)"
+        },
+        {
+          "name": "spreadDuration",
+          "type": "number",
+          "default": 0.5,
+          "description": "Time to expand from 0 to full radius (seconds)"
+        },
+        {
+          "name": "stayDuration",
+          "type": "number",
+          "default": 2.0,
+          "description": "Time to stay at full radius (seconds)"
+        },
+        {
+          "name": "rotationSpeed",
+          "type": "number",
+          "default": 1.0,
+          "description": "Rotation speed (radians/second, 0=no rotation)"
+        },
+        {
+          "name": "alpha",
+          "type": "number",
+          "default": 0.7,
+          "description": "Transparency (0-1)"
+        },
+        {
+          "name": "texture",
+          "type": "string",
+          "default": "effects/aoe_marker.png",
+          "description": "Texture path (optional)"
+        }
+      ]
     }
   ],
   "commands": [

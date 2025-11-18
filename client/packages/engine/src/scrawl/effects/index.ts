@@ -7,3 +7,6 @@ export type { LogEffectOptions } from './LogEffect';
 
 export { CommandEffect } from './CommandEffect';
 export type { CommandEffectOptions } from './CommandEffect';
+
+export { CircleMarkerEffect } from './CircleMarkerEffect';
+export type { CircleMarkerOptions } from './CircleMarkerEffect';

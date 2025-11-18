@@ -64,7 +64,8 @@
       "Bash(pnpm build:engine:*)",
       "Bash(pnpm --filter @nimbus/controls exec vue-tsc:*)",
       "Bash(tee:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

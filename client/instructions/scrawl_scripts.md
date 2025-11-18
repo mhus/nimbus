@@ -1144,3 +1144,36 @@ Die Darstellung soll moeglichst konfigurierbar sein.
 - Dem effekt soll eine texture uebergeben werden (asset pfad)
 Erstelle in client/packages/test_server/files/assets/scrawl/effects.json ein preset um diese effekt zu benutzen.
 
+```text
+doScrawlStart({
+    id: "aoe_at_position",
+    root: {
+      kind: "Sequence",
+      steps: [
+        {
+          kind: "Play",
+          effectId: "circleMarker",
+          ctx: {
+            position: { x: -1, y: 70, z: 18 },
+            radius: 5,
+            color: "#ff6600",
+            spreadDuration: 0.5,
+            stayDuration: 2.0,
+            rotationSpeed: 2.0,
+            alpha: 0.7,
+            texture: "textures/block/basic/redstone_ore.png"
+          }
+        },
+        {
+          kind: "Wait",
+          seconds: 2.5
+        },
+        {
+          kind: "Cmd",
+          cmd: "notification",
+          parameters: [20, "null", "BOOM!"]
+        }
+      ]
+    }
+  })
+```
