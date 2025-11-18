@@ -1124,8 +1124,6 @@ doScrawlStart({
 - Item bearbeiten
 - onUseEffect soll mit dem Scrawl Script Editor bearbeitet werden koennen
 
-
-
 [ ] Erstelle einen Shader, der eine Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
 Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
 - Parameter: radius, color, stayDuration, spreadDuration, alpha 
@@ -1137,4 +1135,12 @@ Erstelle einen Effekt der den Shader aus dem ShaderService laed und eine Texure 
 - ggf parameter zu transparnz
 Es soll erreicht werden, das sich eine flaeche aufbaut um eine stelle herum (z.b. aoe effekt) und dann wieder verschwindet.
 Die Darstellung soll moeglichst konfigurierbar sein.
+- Dem effekt soll einee coordinate (x,y,z) uebergeben werden - source oder target position
+- Dem effekt soll eine radius uebergeben werden
+- Dem effekt soll eine farbe uebergeben werden
+- Dem effekt soll eine dauer fuer den aufbau (spreadDuration) und eine dauer fuer das verbleiben (stayDuration) uebergeben werden
+- Dem effekt soll eine rotationSpeed uebergeben werden
+- Dem effekt soll eine alpha (transparenz) uebergeben werden
+- Dem effekt soll eine texture uebergeben werden (asset pfad)
+Erstelle in client/packages/test_server/files/assets/scrawl/effects.json ein preset um diese effekt zu benutzen.
 
