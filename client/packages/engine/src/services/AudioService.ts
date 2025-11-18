@@ -1643,6 +1643,11 @@ export class AudioService {
   private async onStepOver(event: StepOverEvent): Promise<void> {
     const { entityId, block, movementType } = event;
 
+    // Check if audio engine is ready
+    if (!this.audioEngine) {
+      return; // Audio engine not initialized
+    }
+
     // Check if audio is enabled
     if (!this.audioEnabled) {
       return; // Audio disabled
@@ -1654,22 +1659,27 @@ export class AudioService {
       return;
     }
 
-    // Check if block has step audio
-    if (!block.audioSteps || block.audioSteps.length === 0) {
-      return; // No step audio for this block
+    // Get step audio definitions from currentModifier
+    const audioModifier = block.currentModifier.audio;
+    if (!audioModifier || audioModifier.length === 0) {
+      return; // No audio defined
+    }
+
+    // Filter for step audio
+    const stepAudioDefs = audioModifier.filter(
+      def => def.type === AudioType.STEPS && def.enabled
+    );
+
+    if (stepAudioDefs.length === 0) {
+      return; // No step audio
     }
 
     // Select random step audio
-    const randomIndex = Math.floor(Math.random() * block.audioSteps.length);
-    const audioEntry = block.audioSteps[randomIndex];
-
-    if (!audioEntry || !audioEntry.definition) {
-      logger.warn('Invalid audio entry', { blockTypeId: block.blockType.id });
-      return;
-    }
+    const randomIndex = Math.floor(Math.random() * stepAudioDefs.length);
+    const audioDef = stepAudioDefs[randomIndex];
 
     // Get configuration
-    const maxDistance = audioEntry.definition.maxDistance ?? DEFAULT_MAX_DISTANCE;
+    const maxDistance = audioDef.maxDistance ?? DEFAULT_MAX_DISTANCE;
     const position = new Vector3(
       block.block.position.x,
       block.block.position.y,
@@ -1678,13 +1688,13 @@ export class AudioService {
 
     // Get blocked sound from pool (auto-released via onEndedObservable)
     const item = await this.getBlockedSoundFromPool(
-      audioEntry.definition.path,
+      audioDef.path,
       position,
       maxDistance
     );
 
     if (!item) {
-      logger.warn('Failed to get sound from pool', { path: audioEntry.definition.path });
+      logger.warn('Failed to get sound from pool', { path: audioDef.path });
       return;
     }
 
@@ -1696,7 +1706,7 @@ export class AudioService {
       volumeMultiplier *= 0.5;
     }
 
-    const finalVolume = audioEntry.definition.volume * volumeMultiplier;
+    const finalVolume = audioDef.volume * volumeMultiplier;
 
     // Play sound (automatically released via onended callback in AudioPoolItem)
     item.play(finalVolume);

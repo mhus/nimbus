@@ -1131,10 +1131,11 @@ export class ChunkService {
   }
 
   /**
-   * Load audio files for a ClientBlock
-   * Loads all audio definitions of type 'steps' from the block's modifier
+   * Preload audio files for a ClientBlock into the sound pool
+   * Preloads step and collision audio so they're ready when needed
+   * Audio is retrieved from currentModifier at playback time (not stored in ClientBlock)
    *
-   * @param clientBlock - The client block to load audio for
+   * @param clientBlock - The client block to preload audio for
    */
   private async loadBlockAudio(clientBlock: ClientBlock): Promise<void> {
     const audioService = this.appContext.services.audio;
@@ -1147,48 +1148,35 @@ export class ChunkService {
       return; // No audio defined
     }
 
-    // Filter for step audio
-    const stepAudioDefs = audioModifier.filter(def => def.type === AudioType.STEPS && def.enabled);
+    // Filter for step and collision audio (enabled)
+    const audioToPreload = audioModifier.filter(
+      def => (def.type === AudioType.STEPS || def.type === AudioType.COLLISION) && def.enabled
+    );
 
-    if (stepAudioDefs.length === 0) {
-      return; // No step audio
+    if (audioToPreload.length === 0) {
+      return; // No audio to preload
     }
 
-    // Load all step audio files
-    const audioSteps: Array<{ definition: typeof stepAudioDefs[0]; sound: any }> = [];
-
-    for (const audioDef of stepAudioDefs) {
+    // Preload all audio files into the sound pool
+    for (const audioDef of audioToPreload) {
       try {
-        const sound = await audioService.loadAudio(audioDef.path, {
-          volume: audioDef.volume,
-          loop: audioDef.loop ?? false,
-          autoplay: false,
-          spatialSound: false,
-        });
+        // Load into pool with initial pool size based on type
+        const initialPoolSize = audioDef.type === AudioType.STEPS ? 3 : 1;
+        await audioService.loadSoundIntoPool(audioDef.path, initialPoolSize);
 
-        if (sound) {
-          audioSteps.push({
-            definition: audioDef,
-            sound,
-          });
-        }
-      } catch (error) {
-        logger.warn('Failed to load block audio', {
+        logger.debug('Audio preloaded into pool', {
           path: audioDef.path,
+          type: audioDef.type,
           blockTypeId: clientBlock.blockType.id,
-          position: clientBlock.block.position,
+        });
+      } catch (error) {
+        logger.warn('Failed to preload block audio', {
+          path: audioDef.path,
+          type: audioDef.type,
+          blockTypeId: clientBlock.blockType.id,
           error: (error as Error).message,
         });
       }
-    }
-
-    // Store in ClientBlock
-    if (audioSteps.length > 0) {
-      clientBlock.audioSteps = audioSteps;
-      logger.debug('Loaded block audio', {
-        blockTypeId: clientBlock.blockType.id,
-        count: audioSteps.length,
-      });
     }
   }
 
