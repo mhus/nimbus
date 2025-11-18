@@ -234,7 +234,7 @@ class AudioPool {
         );
 
         if (stuckItems.length > 0) {
-          logger.warn('Found stuck items in pool, releasing them', {
+          logger.debug('Found stuck items in pool, releasing them', { // TODO should be warn and not happen
             path: this.path,
             stuckCount: stuckItems.length,
             totalItems: this.items.length
@@ -249,7 +249,7 @@ class AudioPool {
           item = this.items.find(item => item.isAvailable());
 
           if (item) {
-            logger.info('Recovered stuck item from pool', { path: this.path });
+            logger.debug('Recovered stuck item from pool', { path: this.path }); // TODO should not happen
             return item;
           }
         }

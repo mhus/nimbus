@@ -14,7 +14,7 @@ export class ScrawlListCommand extends CommandHandler {
   }
 
   name(): string {
-    return 'scrawl.list';
+    return 'scrawlList';
   }
 
   description(): string {

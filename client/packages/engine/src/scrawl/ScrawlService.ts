@@ -5,6 +5,7 @@ import { ScrawlEffectRegistry, ScrawlEffectFactory } from './ScrawlEffectFactory
 import { ScrawlExecutor } from './ScrawlExecutor';
 import type { EffectDeps } from './ScrawlEffectHandler';
 import type { ScrawlExecContext } from './ScrawlExecContext';
+import { LogEffect } from './effects/LogEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -36,12 +37,25 @@ export class ScrawlService {
   async initialize(): Promise<void> {
     try {
       logger.info('ScrawlService initializing...');
-      // Load built-in effects, scripts, etc. here
-      // TODO: Register default effect handlers
+
+      // Register built-in effects
+      this.registerBuiltInEffects();
+
       logger.info('ScrawlService initialized successfully');
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ScrawlService.initialize');
     }
+  }
+
+  /**
+   * Register built-in effect handlers
+   */
+  private registerBuiltInEffects(): void {
+    // Register LogEffect for testing and debugging
+    this.effectRegistry.register('log', LogEffect);
+    logger.debug('Built-in effects registered', {
+      effects: ['log'],
+    });
   }
 
   /**

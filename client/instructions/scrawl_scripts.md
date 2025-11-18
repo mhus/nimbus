@@ -987,7 +987,38 @@ ScriptActionDefinition:
 
 [?] Erstelle commandos um mit ScrawlService scripte zu listen, zu starten, stoppen
 
-[ ] Erstelle ein effect LogEffect der einen text im log ausgibt (zum testen), in die EffectFactory registrieren
+[?] Erstelle ein effect LogEffect der einen text im log ausgibt (zum testen), in die EffectFactory registrieren
+- Gib mir ein beispiel, wie ich mit dem command einen log effekt starten kann.
+```text
+doScrawlStart('{
+    "id": "test-log",
+    "root": {
+      "kind": "Sequence",
+      "steps": [
+        {
+          "kind": "Play",
+          "effectId": "log",
+          "ctx": {
+            "message": "Starting in 10 seconds...",
+            "level": "info"
+          }
+        },
+        {
+          "kind": "Wait",
+          "seconds": 10
+        },
+        {
+          "kind": "Play",
+          "effectId": "log",
+          "ctx": {
+            "message": "Hello from Scrawl!",
+            "level": "info"
+          }
+        }
+      ]
+    }
+  }')
+```
 
 [ ] Erstelle einen Effekt, der ein Commando im CommandService ausfuehrt:
 - cmd: string

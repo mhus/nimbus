@@ -14,11 +14,11 @@ export class ScrawlStatusCommand extends CommandHandler {
   }
 
   name(): string {
-    return 'scrawl.status';
+    return 'scrawlStatus';
   }
 
   description(): string {
-    return 'Show status of running scrawl executors (scrawl.status [executorId])';
+    return 'Show status of running scrawl executors (scrawlStatus [executorId])';
   }
 
   async execute(args: string[]): Promise<void> {

@@ -150,6 +150,13 @@ async function initializeApp(): Promise<AppContext> {
     appContext.services.item = itemService;
     logger.debug('ItemService initialized');
 
+    // Initialize ScrawlService (before CommandService so commands can use it)
+    logger.info('Initializing ScrawlService...');
+    const scrawlService = new ScrawlService(appContext);
+    appContext.services.scrawl = scrawlService;
+    await scrawlService.initialize();
+    logger.debug('ScrawlService initialized');
+
     // Initialize CommandService (available in both EDITOR and VIEWER modes)
     logger.info('Initializing CommandService...');
     const commandService = new CommandService(appContext);
@@ -311,12 +318,6 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.info('Initializing EntityService...');
     const entityService = new EntityService(appContext);
     appContext.services.entity = entityService;
-
-    // Initialize ScrawlService
-    logger.info('Initializing ScrawlService...');
-    const scrawlService = new ScrawlService(appContext);
-    appContext.services.scrawl = scrawlService;
-    await scrawlService.initialize();
 
     // Register ChunkMessageHandler
     const chunkHandler = new ChunkMessageHandler(chunkService);

@@ -14,11 +14,11 @@ export class ScrawlResumeCommand extends CommandHandler {
   }
 
   name(): string {
-    return 'scrawl.resume';
+    return 'scrawlResume';
   }
 
   description(): string {
-    return 'Resume a paused scrawl script by executor ID (scrawl.resume <executorId>)';
+    return 'Resume a paused scrawl script by executor ID (scrawlResume <executorId>)';
   }
 
   async execute(args: string[]): Promise<void> {
@@ -30,8 +30,8 @@ export class ScrawlResumeCommand extends CommandHandler {
     }
 
     if (args.length === 0) {
-      logger.error('Usage: scrawl.resume <executorId>');
-      logger.info('Example: scrawl.resume executor_0');
+      logger.error('Usage: scrawlResume <executorId>');
+      logger.info('Example: scrawlResume executor_0');
       return;
     }
 

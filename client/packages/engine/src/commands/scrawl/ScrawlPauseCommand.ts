@@ -14,11 +14,11 @@ export class ScrawlPauseCommand extends CommandHandler {
   }
 
   name(): string {
-    return 'scrawl.pause';
+    return 'scrawlPause';
   }
 
   description(): string {
-    return 'Pause a running scrawl script by executor ID (scrawl.pause <executorId>)';
+    return 'Pause a running scrawl script by executor ID (scrawlPause <executorId>)';
   }
 
   async execute(args: string[]): Promise<void> {
@@ -30,8 +30,8 @@ export class ScrawlPauseCommand extends CommandHandler {
     }
 
     if (args.length === 0) {
-      logger.error('Usage: scrawl.pause <executorId>');
-      logger.info('Example: scrawl.pause executor_0');
+      logger.error('Usage: scrawlPause <executorId>');
+      logger.info('Example: scrawlPause executor_0');
       return;
     }
 
