@@ -9,26 +9,26 @@ import org.springframework.validation.annotation.Validated;
 
 @Service
 @Validated
-public class FavoritService {
+public class UFavoritService {
 
-    private final FavoritRepository repository;
+    private final UFavoritRepository repository;
 
-    public FavoritService(FavoritRepository repository) {
+    public UFavoritService(UFavoritRepository repository) {
         this.repository = repository;
     }
 
-    public Favorit create(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
+    public UFavorit create(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
         validateIds(userId, quadrantId);
-        Favorit f = new Favorit(userId, quadrantId, solarSystemId, worldId, entryPointId, title, favorit);
+        UFavorit f = new UFavorit(userId, quadrantId, solarSystemId, worldId, entryPointId, title, favorit);
         f.setLastAccessAt(Instant.now());
         return repository.save(f);
     }
 
-    public Favorit createOrUpdateAccess(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
+    public UFavorit createOrUpdateAccess(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
         validateIds(userId, quadrantId);
-        Optional<Favorit> existing = repository.findByUserIdAndQuadrantIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, quadrantId, solarSystemId, worldId, entryPointId);
+        Optional<UFavorit> existing = repository.findByUserIdAndQuadrantIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, quadrantId, solarSystemId, worldId, entryPointId);
         if (existing.isPresent()) {
-            Favorit f = existing.get();
+            UFavorit f = existing.get();
             if (title != null && !title.isBlank()) f.setTitle(title);
             f.setFavorit(favoritFlag || f.isFavorit()); // once true stays true unless explicitly toggled off elsewhere
             f.setLastAccessAt(Instant.now());
@@ -37,25 +37,25 @@ public class FavoritService {
         return create(userId, quadrantId, solarSystemId, worldId, entryPointId, title, favoritFlag);
     }
 
-    public Optional<Favorit> getById(String id) {
+    public Optional<UFavorit> getById(String id) {
         return repository.findById(id).map(this::touchAccess);
     }
 
-    public Optional<Favorit> getByComposite(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId) {
+    public Optional<UFavorit> getByComposite(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId) {
         return repository.findByUserIdAndQuadrantIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, quadrantId, solarSystemId, worldId, entryPointId)
                 .map(this::touchAccess);
     }
 
-    public List<Favorit> listAllByUser(String userId) {
+    public List<UFavorit> listAllByUser(String userId) {
         return repository.findByUserId(userId);
     }
 
-    public List<Favorit> listFavorites(String userId) {
-        return repository.findByUserId(userId).stream().filter(Favorit::isFavorit).toList();
+    public List<UFavorit> listFavorites(String userId) {
+        return repository.findByUserId(userId).stream().filter(UFavorit::isFavorit).toList();
     }
 
-    public Favorit toggleFavorite(String id, boolean newState) {
-        Favorit f = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Favorit not found: " + id));
+    public UFavorit toggleFavorite(String id, boolean newState) {
+        UFavorit f = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Favorit not found: " + id));
         f.setFavorit(newState);
         f.setLastAccessAt(Instant.now());
         return repository.save(f);
@@ -65,8 +65,8 @@ public class FavoritService {
         repository.deleteById(id);
     }
 
-    public Favorit update(String id, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
-        Favorit f = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Favorit not found: " + id));
+    public UFavorit update(String id, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
+        UFavorit f = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Favorit not found: " + id));
         if (quadrantId != null && !quadrantId.isBlank()) f.setQuadrantId(quadrantId);
         if (solarSystemId != null) f.setSolarSystemId(solarSystemId);
         if (worldId != null) f.setWorldId(worldId);
@@ -77,7 +77,7 @@ public class FavoritService {
         return repository.save(f);
     }
 
-    private Favorit touchAccess(Favorit f) {
+    private UFavorit touchAccess(UFavorit f) {
         f.setLastAccessAt(Instant.now());
         return repository.save(f);
     }

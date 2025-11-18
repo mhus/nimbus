@@ -20,18 +20,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(FavoritController.BASE_PATH)
+@RequestMapping(UFavoritController.BASE_PATH)
 @Validated
 @Tag(name = "Favorites", description = "Manage user favorites")
 @SecurityRequirement(name = "bearerAuth")
-public class FavoritController {
+public class UFavoritController {
 
     public static final String BASE_PATH = "/universe/user/favorties";
 
-    private final FavoritService service;
+    private final UFavoritService service;
     private final RequestUserHolder userHolder;
 
-    public FavoritController(FavoritService service, RequestUserHolder userHolder) {
+    public UFavoritController(UFavoritService service, RequestUserHolder userHolder) {
         this.service = service;
         this.userHolder = userHolder;
     }
@@ -101,7 +101,7 @@ public class FavoritController {
     @PostMapping
     public ResponseEntity<FavoritResponse> create(@Valid @RequestBody FavoritRequest req) {
         String userId = requireUser().userId();
-        Favorit f = service.create(userId, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
+        UFavorit f = service.create(userId, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
         FavoritResponse resp = toResponse(f);
         return ResponseEntity.created(URI.create(BASE_PATH + "/" + f.getId())).body(resp);
     }
@@ -114,7 +114,7 @@ public class FavoritController {
         return service.getById(id)
                 .filter(f -> f.getUserId().equals(userId))
                 .map(existing -> {
-                    Favorit updated = service.update(id, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
+                    UFavorit updated = service.update(id, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
                     return ResponseEntity.ok(toResponse(updated));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -145,7 +145,7 @@ public class FavoritController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    private FavoritResponse toResponse(Favorit f) {
+    private FavoritResponse toResponse(UFavorit f) {
         return new FavoritResponse(
                 f.getId(),
                 f.getQuadrantId(),

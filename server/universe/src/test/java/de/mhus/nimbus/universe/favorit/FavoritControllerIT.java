@@ -1,10 +1,9 @@
 package de.mhus.nimbus.universe.favorit;
 
-import de.mhus.nimbus.universe.auth.LoginResponse;
-import de.mhus.nimbus.universe.auth.MeResponse;
+import de.mhus.nimbus.universe.auth.ULoginResponse;
 import de.mhus.nimbus.universe.security.JwtProperties;
-import de.mhus.nimbus.universe.user.UserService;
-import de.mhus.nimbus.universe.user.User;
+import de.mhus.nimbus.universe.user.UUserService;
+import de.mhus.nimbus.universe.user.UUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,7 @@ class FavoritControllerIT {
     }
 
     @Autowired
-    private UserService userService;
+    private UUserService userService;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -48,7 +47,7 @@ class FavoritControllerIT {
 
     @BeforeEach
     void setup() {
-        User u = userService.createUser("alpha","alpha@example.com");
+        UUser u = userService.createUser("alpha","alpha@example.com");
         userService.setPassword(u.getId(), "secret123");
         token = login("alpha", "secret123");
     }
@@ -57,7 +56,7 @@ class FavoritControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String body = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
-        ResponseEntity<LoginResponse> resp = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        ResponseEntity<ULoginResponse> resp = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), ULoginResponse.class);
         assertEquals(200, resp.getStatusCode().value());
         assertNotNull(resp.getBody());
         return resp.getBody().token();
@@ -142,7 +141,7 @@ class FavoritControllerIT {
     @Test
     void update_nonOwner_404() {
         // Create favorite with second user
-        User b = userService.createUser("beta","beta@example.com");
+        UUser b = userService.createUser("beta","beta@example.com");
         userService.setPassword(b.getId(), "secret123");
         String betaToken = login("beta","secret123");
         HttpHeaders betaHeaders = new HttpHeaders();

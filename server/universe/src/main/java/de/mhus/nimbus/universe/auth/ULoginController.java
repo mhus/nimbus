@@ -1,8 +1,8 @@
 package de.mhus.nimbus.universe.auth;
 
 import de.mhus.nimbus.universe.security.JwtProperties;
-import de.mhus.nimbus.universe.user.UserService;
-import de.mhus.nimbus.universe.user.User;
+import de.mhus.nimbus.universe.user.UUserService;
+import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.security.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,17 +23,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @RestController
-@RequestMapping(LoginController.BASE_PATH)
+@RequestMapping(ULoginController.BASE_PATH)
 @Tag(name = "Auth", description = "Authentication operations")
-public class LoginController {
+public class ULoginController {
 
     public static final String BASE_PATH = "/universe/user/auth";
 
-    private final UserService userService;
+    private final UUserService userService;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
 
-    public LoginController(UserService userService, JwtService jwtService, JwtProperties jwtProperties) {
+    public ULoginController(UUserService userService, JwtService jwtService, JwtProperties jwtProperties) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
@@ -46,7 +46,7 @@ public class LoginController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ULoginResponse> login(@RequestBody ULoginRequest request) {
         if (request == null || request.username() == null || request.password() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -54,7 +54,7 @@ public class LoginController {
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(401).build();
         }
-        User user = userOpt.get();
+        UUser user = userOpt.get();
         boolean valid = userService.validatePassword(user.getId(), request.password());
         if (!valid) {
             return ResponseEntity.status(401).build();
@@ -66,7 +66,7 @@ public class LoginController {
                 Map.of("username", user.getUsername()),
                 exp
         );
-        return ResponseEntity.ok(new LoginResponse(token, user.getId(), user.getUsername()));
+        return ResponseEntity.ok(new ULoginResponse(token, user.getId(), user.getUsername()));
     }
 
     @Operation(summary = "Logout (stateless)", description = "No server action, provided for client flow")
@@ -82,7 +82,7 @@ public class LoginController {
             @ApiResponse(responseCode = "401", description = "Invalid or missing token")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refresh(@RequestHeader(value = "Authorization", required = false) String authorization) {
+    public ResponseEntity<ULoginResponse> refresh(@RequestHeader(value = "Authorization", required = false) String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).build();
         }
@@ -102,6 +102,6 @@ public class LoginController {
                 Map.of("username", username),
                 exp
         );
-        return ResponseEntity.ok(new LoginResponse(newToken, userId, username));
+        return ResponseEntity.ok(new ULoginResponse(newToken, userId, username));
     }
 }

@@ -8,21 +8,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(MeController.BASE_PATH)
-public class MeController {
+@RequestMapping(UMeController.BASE_PATH)
+public class UMeController {
 
     public static final String BASE_PATH = "/universe/user";
 
     private final RequestUserHolder userHolder;
 
-    public MeController(RequestUserHolder userHolder) {
+    public UMeController(RequestUserHolder userHolder) {
         this.userHolder = userHolder;
     }
 
     @GetMapping("/me")
-    public ResponseEntity<MeResponse> me() {
+    public ResponseEntity<UMeResponse> me() {
         CurrentUser cu = userHolder.get();
         if (cu == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(new MeResponse(cu.userId(), cu.username()));
+        return ResponseEntity.ok(new UMeResponse(cu.userId(), cu.username()));
     }
 }

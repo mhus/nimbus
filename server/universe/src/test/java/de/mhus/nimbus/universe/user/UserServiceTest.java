@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +20,13 @@ import de.mhus.nimbus.shared.security.HashService;
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UUserRepository userRepository;
 
     @Mock
     private HashService hashService;
 
     @InjectMocks
-    private UserService userService;
+    private UUserService userService;
 
     @BeforeEach
     void setup() {
@@ -42,16 +40,16 @@ class UserServiceTest {
         when(userRepository.existsByEmail("alpha@example.com")).thenReturn(false);
 
         // Simulate save assigning an ID
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User u = invocation.getArgument(0);
+        when(userRepository.save(any(UUser.class))).thenAnswer(invocation -> {
+            UUser u = invocation.getArgument(0);
             // reflectively set id if needed (or mimic persistence)
             // For simplicity we just return as-is; id stays null in pure unit test
             return u;
         });
 
-        User u = userService.createUser("alpha","alpha@example.com");
+        UUser u = userService.createUser("alpha","alpha@example.com");
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<UUser> captor = ArgumentCaptor.forClass(UUser.class);
         verify(userRepository).save(captor.capture());
         assertEquals("alpha", captor.getValue().getUsername());
         assertEquals("alpha@example.com", captor.getValue().getEmail());
@@ -77,7 +75,7 @@ class UserServiceTest {
 
     @Test
     void getByUsername_found() {
-        User stored = new User("alpha","alpha@example.com");
+        UUser stored = new UUser("alpha","alpha@example.com");
         when(userRepository.findByUsername("alpha")).thenReturn(Optional.of(stored));
         assertTrue(userService.getByUsername("alpha").isPresent());
     }
@@ -90,8 +88,8 @@ class UserServiceTest {
 
     @Test
     void listAll_and_delete() {
-        User a = new User("alpha","alpha@example.com");
-        User b = new User("beta","beta@example.com");
+        UUser a = new UUser("alpha","alpha@example.com");
+        UUser b = new UUser("beta","beta@example.com");
         a.setId("a");
         b.setId("b");
 
@@ -118,13 +116,13 @@ class UserServiceTest {
 
     @Test
     void setPassword_ok() {
-        User user = new User("alpha","alpha@example.com");
+        UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));
         when(hashService.hash("secret", "u1")).thenReturn("SHA-256:c2FsdF91MQ==:HASHED");
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.save(any(UUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        User updated = userService.setPassword("u1", "secret");
+        UUser updated = userService.setPassword("u1", "secret");
         assertNotNull(updated.getPasswordHash());
         assertTrue(updated.getPasswordHash().startsWith("SHA-256:"));
         verify(hashService).hash("secret", "u1");
@@ -132,7 +130,7 @@ class UserServiceTest {
 
     @Test
     void validatePassword_ok() {
-        User user = new User("alpha","alpha@example.com");
+        UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
         user.setPasswordHash("SHA-256:c2FsdF91MQ==:HASHED");
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));
@@ -143,7 +141,7 @@ class UserServiceTest {
 
     @Test
     void validatePassword_wrong() {
-        User user = new User("alpha","alpha@example.com");
+        UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
         user.setPasswordHash("SHA-256:c2FsdF91MQ==:HASHED");
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));

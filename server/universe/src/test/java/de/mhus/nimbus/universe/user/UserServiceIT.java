@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,10 +30,10 @@ class UserServiceIT {
     }
 
     @Autowired
-    private UserService userService;
+    private UUserService userService;
 
     @Autowired
-    private UserRepository userRepository;
+    private UUserRepository userRepository;
 
     @BeforeEach
     void clean() {
@@ -43,7 +42,7 @@ class UserServiceIT {
 
     @Test
     void createUser_ok() {
-        User u = userService.createUser("alpha","alpha@example.com");
+        UUser u = userService.createUser("alpha","alpha@example.com");
         assertNotNull(u.getId());
         assertEquals("alpha", u.getUsername());
         assertEquals("alpha@example.com", u.getEmail());
@@ -77,9 +76,9 @@ class UserServiceIT {
 
     @Test
     void listAll_and_delete() {
-        User a = userService.createUser("alpha","alpha@example.com");
-        User b = userService.createUser("beta","beta@example.com");
-        List<User> list = userService.listAll();
+        UUser a = userService.createUser("alpha","alpha@example.com");
+        UUser b = userService.createUser("beta","beta@example.com");
+        List<UUser> list = userService.listAll();
         assertEquals(2, list.size());
         userService.deleteById(a.getId());
         assertEquals(1, userService.listAll().size());
@@ -90,9 +89,9 @@ class UserServiceIT {
     @Test
     @DisplayName("Set and validate password")
     void passwordLifecycle() {
-        User u = userService.createUser("alpha","alpha@example.com");
+        UUser u = userService.createUser("alpha","alpha@example.com");
         assertNull(u.getPasswordHash());
-        User withPwd = userService.setPassword(u.getId(), "secret123");
+        UUser withPwd = userService.setPassword(u.getId(), "secret123");
         assertNotNull(withPwd.getPasswordHash());
         assertTrue(withPwd.getPasswordHash().contains(":"));
         assertTrue(userService.validatePassword(u.getId(), "secret123"));

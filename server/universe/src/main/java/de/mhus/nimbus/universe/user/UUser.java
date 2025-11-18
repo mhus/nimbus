@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
-public class User {
+public class UUser {
 
     @Id
     private String id;
@@ -24,9 +24,9 @@ public class User {
 
     private String passwordHash; // stored as algorithm[:saltBase64]:hashBase64
 
-    public User() {}
+    public UUser() {}
 
-    public User(final String username, final String email) {
+    public UUser(final String username, final String email) {
         this.username = username;
         this.email = email;
     }

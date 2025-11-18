@@ -1,7 +1,7 @@
 package de.mhus.nimbus.universe.security;
 
-import de.mhus.nimbus.universe.user.UserService;
-import de.mhus.nimbus.universe.user.User;
+import de.mhus.nimbus.universe.user.UUserService;
+import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.security.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -16,16 +16,16 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
-    private final UserService userService;
+    private final UUserService userService;
     private final RequestUserHolder userHolder;
 
     private static final String AUTH_BASE = "/universe/user/auth";
 
-    public JwtAuthenticationFilter(JwtService jwtService, JwtProperties jwtProperties, UserService userService, RequestUserHolder userHolder) {
+    public UUserJwtAuthenticationFilter(JwtService jwtService, JwtProperties jwtProperties, UUserService userService, RequestUserHolder userHolder) {
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
         this.userService = userService;
@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = claimsOpt.get().getPayload();
         String userId = claims.getSubject();
         String username = claims.get("username", String.class);
-        User user = userService.getById(userId).orElse(null);
+        UUser user = userService.getById(userId).orElse(null);
         CurrentUser cu = new CurrentUser(userId, username, user);
         userHolder.set(cu);
         try {

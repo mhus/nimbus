@@ -1,7 +1,7 @@
 package de.mhus.nimbus.universe.auth;
 
-import de.mhus.nimbus.universe.user.UserService;
-import de.mhus.nimbus.universe.user.User;
+import de.mhus.nimbus.universe.user.UUserService;
+import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.universe.security.JwtProperties;
 import de.mhus.nimbus.shared.security.JwtService;
 import io.jsonwebtoken.Claims;
@@ -43,7 +43,7 @@ class LoginControllerIT {
     }
 
     @Autowired
-    private UserService userService;
+    private UUserService userService;
 
     @Autowired
     private JwtService jwtService;
@@ -57,7 +57,7 @@ class LoginControllerIT {
     @BeforeEach
     void cleanAndSetup() {
         // create user and set password each test
-        User u = userService.createUser("alpha","alpha@example.com");
+        UUser u = userService.createUser("alpha","alpha@example.com");
         userService.setPassword(u.getId(), "secret123");
     }
 
@@ -66,7 +66,7 @@ class LoginControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String body = "{\"username\":\"alpha\",\"password\":\"secret123\"}";
-        ResponseEntity<LoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        ResponseEntity<ULoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), ULoginResponse.class);
         assertEquals(200, response.getStatusCodeValue());
         assertNotNull(response.getBody());
         String token = response.getBody().token();
@@ -84,7 +84,7 @@ class LoginControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String body = "{\"username\":\"alpha\",\"password\":\"bad\"}";
-        ResponseEntity<LoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        ResponseEntity<ULoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), ULoginResponse.class);
         assertEquals(401, response.getStatusCodeValue());
     }
 
@@ -93,7 +93,7 @@ class LoginControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String body = "{\"username\":\"ghost\",\"password\":\"secret123\"}";
-        ResponseEntity<LoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        ResponseEntity<ULoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), ULoginResponse.class);
         assertEquals(401, response.getStatusCodeValue());
     }
 
@@ -102,13 +102,13 @@ class LoginControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String body = "{\"username\":null,\"password\":\"secret123\"}"; // invalid JSON value for username
-        ResponseEntity<LoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        ResponseEntity<ULoginResponse> response = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), ULoginResponse.class);
         assertEquals(400, response.getStatusCodeValue());
     }
 
     @Test
     void me_unauthorized_401() {
-        ResponseEntity<MeResponse> resp = restTemplate.getForEntity("/api/me", MeResponse.class);
+        ResponseEntity<UMeResponse> resp = restTemplate.getForEntity("/api/me", UMeResponse.class);
         assertEquals(401, resp.getStatusCode().value());
     }
 
@@ -117,12 +117,12 @@ class LoginControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         String body = "{\"username\":\"alpha\",\"password\":\"secret123\"}";
-        ResponseEntity<LoginResponse> login = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), LoginResponse.class);
+        ResponseEntity<ULoginResponse> login = restTemplate.postForEntity("/api/auth/login", new HttpEntity<>(body, headers), ULoginResponse.class);
         assertEquals(200, login.getStatusCode().value());
         String token = login.getBody().token();
         HttpHeaders authHeaders = new HttpHeaders();
         authHeaders.setBearerAuth(token);
-        ResponseEntity<MeResponse> me = restTemplate.exchange("/api/me", HttpMethod.GET, new HttpEntity<>(authHeaders), MeResponse.class);
+        ResponseEntity<UMeResponse> me = restTemplate.exchange("/api/me", HttpMethod.GET, new HttpEntity<>(authHeaders), UMeResponse.class);
         assertEquals(200, me.getStatusCode().value());
         assertEquals(login.getBody().userId(), me.getBody().userId());
         assertEquals("alpha", me.getBody().username());

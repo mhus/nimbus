@@ -10,36 +10,36 @@ import de.mhus.nimbus.shared.security.HashService;
 
 @Service
 @Validated
-public class UserService {
+public class UUserService {
 
-    private final UserRepository userRepository;
+    private final UUserRepository userRepository;
     private final HashService hashService;
 
-    public UserService(UserRepository userRepository, HashService hashService) {
+    public UUserService(UUserRepository userRepository, HashService hashService) {
         this.userRepository = userRepository;
         this.hashService = hashService;
     }
 
-    public User createUser(String username, String email) {
+    public UUser createUser(String username, String email) {
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists: " + username);
         }
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists: " + email);
         }
-        User user = new User(username, email);
+        UUser user = new UUser(username, email);
         return userRepository.save(user);
     }
 
-    public Optional<User> getById(String id) {
+    public Optional<UUser> getById(String id) {
         return userRepository.findById(id);
     }
 
-    public Optional<User> getByUsername(String username) {
+    public Optional<UUser> getByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
-    public List<User> listAll() {
+    public List<UUser> listAll() {
         return userRepository.findAll();
     }
 
@@ -53,11 +53,11 @@ public class UserService {
      * @param plainPassword raw password (must not be blank)
      * @return updated user
      */
-    public User setPassword(String userId, String plainPassword) {
+    public UUser setPassword(String userId, String plainPassword) {
         if (plainPassword == null || plainPassword.isBlank()) {
             throw new IllegalArgumentException("Password must not be blank");
         }
-        User user = userRepository.findById(userId)
+        UUser user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         String hash = hashService.hash(plainPassword, user.getId()); // salt = userId
         user.setPasswordHash(hash);
@@ -71,7 +71,7 @@ public class UserService {
      * @return true if valid
      */
     public boolean validatePassword(String userId, String plainPassword) {
-        User user = userRepository.findById(userId)
+        UUser user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         if (user.getPasswordHash() == null) return false;
         return hashService.validate(plainPassword, user.getId(), user.getPasswordHash());

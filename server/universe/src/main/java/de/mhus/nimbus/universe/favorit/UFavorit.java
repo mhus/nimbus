@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "favorits")
-public class Favorit {
+public class UFavorit {
 
     @Id
     private String id;
@@ -29,9 +29,9 @@ public class Favorit {
 
     private boolean favorit; // true if marked as favorite
 
-    public Favorit() {}
+    public UFavorit() {}
 
-    public Favorit(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
+    public UFavorit(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
         this.userId = userId;
         this.quadrantId = quadrantId;
         this.solarSystemId = solarSystemId;

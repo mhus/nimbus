@@ -5,15 +5,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class SecurityConfig {
+public class USecurityConfig {
 
     @Bean
-    public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration(JwtAuthenticationFilter filter) {
-        FilterRegistrationBean<JwtAuthenticationFilter> reg = new FilterRegistrationBean<>();
+    public FilterRegistrationBean<UUserJwtAuthenticationFilter> jwtFilterRegistration(UUserJwtAuthenticationFilter filter) {
+        FilterRegistrationBean<UUserJwtAuthenticationFilter> reg = new FilterRegistrationBean<>();
         reg.setFilter(filter);
         reg.addUrlPatterns("/universe/user/*");
         reg.setOrder(10); // after basic internal filters, before controllers
-        reg.setName("jwtAuthenticationFilter");
+        reg.setName("userJwtAuthenticationFilter");
         return reg;
     }
 }
