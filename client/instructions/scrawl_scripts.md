@@ -1113,7 +1113,7 @@ doScrawlStart({
 - Es soll einen Button Source geben, der das JSON des Scripts anzeigt und editierbar macht.
 - Eine Liste von moeglichen Effekten/Commands (Kind:Cmd) soll aus einer asset-Datei unter 'scrawl/effects.json' geladen werden und im Editor als presets angezeigt werden.
 
-[ ] Erstelle exemplarisch eine Scrawl Script Bibliothek in den assets in client/packages/test_server/files/assets/scrawl/effects.json
+[?] Erstelle exemplarisch eine Scrawl Script Bibliothek in den assets in client/packages/test_server/files/assets/scrawl/effects.json
 
 [ ] Erweitere die Server REST API um eine liste von items zu suchen
 - Siehe "Item Suchen" in client/instructions/general/server_rest_api.md
