@@ -13,6 +13,9 @@
 import { defineAsyncComponent } from 'vue';
 import type { ScrawlStep } from '@nimbus/shared';
 import WaitStepEditor from './editors/WaitStepEditor.vue';
+import CmdStepEditor from './editors/CmdStepEditor.vue';
+import PlayStepEditor from './editors/PlayStepEditor.vue';
+import SequenceStepEditor from './editors/SequenceStepEditor.vue';
 
 const props = defineProps<{
   modelValue: ScrawlStep;
@@ -27,10 +30,13 @@ function getEditorComponent(kind: string) {
   switch (kind) {
     case 'Wait':
       return WaitStepEditor;
-    // More editors will be added here
-    case 'Play':
     case 'Cmd':
+      return CmdStepEditor;
+    case 'Play':
+      return PlayStepEditor;
     case 'Sequence':
+      return SequenceStepEditor;
+    // More editors will be added here
     case 'Parallel':
     case 'Repeat':
     case 'ForEach':
