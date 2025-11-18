@@ -119,6 +119,9 @@ export class ScrawlExecutor {
         case 'SetVar':
           this.setVar(step.name, step.value);
           break;
+        case 'Cmd':
+          await this.execStepCmd(ctx, step);
+          break;
         default:
           logger.warn(`Unknown step kind: ${(step as any).kind}`);
       }
@@ -253,6 +256,41 @@ export class ScrawlExecutor {
       await this.execStep(ctx, step.then);
     } else if (step.else) {
       await this.execStep(ctx, step.else);
+    }
+  }
+
+  private async execStepCmd(ctx: ScrawlExecContext, step: any): Promise<void> {
+    const commandService = ctx.appContext.services.command;
+    if (!commandService) {
+      logger.warn('CommandService not available, skipping Cmd step');
+      return;
+    }
+
+    const { cmd, parameters = [] } = step;
+
+    if (!cmd) {
+      logger.warn('Cmd step: cmd is required');
+      return;
+    }
+
+    try {
+      logger.debug('Executing command from Cmd step', {
+        cmd,
+        parameters,
+        scriptId: this.script.id,
+      });
+
+      await commandService.executeCommand(cmd, parameters);
+    } catch (error) {
+      // Log error but continue script execution
+      ExceptionHandler.handle(error, 'ScrawlExecutor.execStepCmd', {
+        cmd,
+        scriptId: this.script.id,
+      });
+      logger.warn('Command execution failed in Cmd step', {
+        cmd,
+        error: (error as Error).message,
+      });
     }
   }
 

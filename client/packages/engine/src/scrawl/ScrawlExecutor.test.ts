@@ -794,4 +794,107 @@ describe('ScrawlExecutor', () => {
       expect(TestEffectHandler.calls[0].value).toBe('main');
     });
   });
+
+  describe('Command Step (StepCmd)', () => {
+    it('should execute a command via StepCmd', async () => {
+      const mockCommandService = {
+        executeCommand: jest.fn().mockResolvedValue('ok'),
+      };
+
+      mockAppContext.services.command = mockCommandService as any;
+
+      const script: ScrawlScript = {
+        id: 'test-script',
+        root: {
+          kind: 'Cmd',
+          cmd: 'notification',
+          parameters: [20, 'null', 'Test message'],
+        },
+      };
+
+      const executor = new ScrawlExecutor(
+        effectFactory,
+        mockScriptLibrary,
+        mockAppContext,
+        script,
+        {}
+      );
+
+      await executor.start();
+
+      expect(mockCommandService.executeCommand).toHaveBeenCalledWith('notification', [
+        20,
+        'null',
+        'Test message',
+      ]);
+    });
+
+    it('should handle command execution in sequence', async () => {
+      const mockCommandService = {
+        executeCommand: jest.fn().mockResolvedValue('ok'),
+      };
+
+      mockAppContext.services.command = mockCommandService as any;
+
+      const script: ScrawlScript = {
+        id: 'test-script',
+        root: {
+          kind: 'Sequence',
+          steps: [
+            { kind: 'Play', effectId: 'test', ctx: { value: 'before' } },
+            { kind: 'Cmd', cmd: 'help', parameters: [] },
+            { kind: 'Play', effectId: 'test', ctx: { value: 'after' } },
+          ],
+        },
+      };
+
+      const executor = new ScrawlExecutor(
+        effectFactory,
+        mockScriptLibrary,
+        mockAppContext,
+        script,
+        {}
+      );
+
+      await executor.start();
+
+      expect(mockCommandService.executeCommand).toHaveBeenCalledWith('help', []);
+      expect(TestEffectHandler.calls).toHaveLength(2);
+      expect(TestEffectHandler.calls[0].value).toBe('before');
+      expect(TestEffectHandler.calls[1].value).toBe('after');
+    });
+
+    it('should handle command errors gracefully', async () => {
+      const mockCommandService = {
+        executeCommand: jest.fn().mockRejectedValue(new Error('Command failed')),
+      };
+
+      mockAppContext.services.command = mockCommandService as any;
+
+      const script: ScrawlScript = {
+        id: 'test-script',
+        root: {
+          kind: 'Sequence',
+          steps: [
+            { kind: 'Cmd', cmd: 'invalid', parameters: [] },
+            { kind: 'Play', effectId: 'test', ctx: { value: 'continued' } },
+          ],
+        },
+      };
+
+      const executor = new ScrawlExecutor(
+        effectFactory,
+        mockScriptLibrary,
+        mockAppContext,
+        script,
+        {}
+      );
+
+      await executor.start();
+
+      // Should continue despite command error
+      expect(TestEffectHandler.calls).toHaveLength(1);
+      expect(TestEffectHandler.calls[0].value).toBe('continued');
+    });
+  });
 });

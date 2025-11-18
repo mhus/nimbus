@@ -6,6 +6,7 @@ import { ScrawlExecutor } from './ScrawlExecutor';
 import type { EffectDeps } from './ScrawlEffectHandler';
 import type { ScrawlExecContext } from './ScrawlExecContext';
 import { LogEffect } from './effects/LogEffect';
+import { CommandEffect } from './effects/CommandEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -53,8 +54,12 @@ export class ScrawlService {
   private registerBuiltInEffects(): void {
     // Register LogEffect for testing and debugging
     this.effectRegistry.register('log', LogEffect);
+
+    // Register CommandEffect for executing commands
+    this.effectRegistry.register('command', CommandEffect);
+
     logger.debug('Built-in effects registered', {
-      effects: ['log'],
+      effects: ['log', 'command'],
     });
   }
 

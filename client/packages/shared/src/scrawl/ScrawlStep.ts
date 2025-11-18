@@ -136,6 +136,17 @@ export interface StepSetVar {
 }
 
 /**
+ * Step: Execute a command via CommandService
+ */
+export interface StepCmd {
+  kind: 'Cmd';
+  /** Command name to execute */
+  cmd: string;
+  /** Parameters to pass to the command */
+  parameters?: any[];
+}
+
+/**
  * Union type of all possible steps
  */
 export type ScrawlStep =
@@ -150,4 +161,5 @@ export type ScrawlStep =
   | StepIf
   | StepEmitEvent
   | StepWaitEvent
-  | StepSetVar;
+  | StepSetVar
+  | StepCmd;

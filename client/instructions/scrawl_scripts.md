@@ -1020,18 +1020,86 @@ doScrawlStart('{
   }')
 ```
 
-[ ] Erstelle einen Effekt, der ein Commando im CommandService ausfuehrt:
+[?] Erstelle einen Effekt, der ein Commando im CommandService ausfuehrt:
 - cmd: string
 - parameter0: any
 - parameter1: any
 - ... 
 - parameter10: any
 
-[ ] Erweitere Items so, das ScriptActionDefinition als onUse Effekt definiert werden kann.
-- Wenn ein Item ausgefuehrt wird, wird der ScrawlService genutzt um das Script zu starten.
+```text
+doScrawlStart({
+    id: "chat-notification",
+    root: {
+      kind: "Play",
+      effectId: "command",
+      ctx: {
+        cmd: "notification",
+        parameter0: 11,
+        parameter1: "ScrawlBot",
+        parameter2: "Script executed successfully!"
+      }
+    }
+  })
+
+  // Overlay-Nachricht (type 20)
+  doScrawlStart({
+    id: "overlay-notification",
+    root: {
+      kind: "Play",
+      effectId: "command",
+      ctx: {
+        cmd: "notification",
+        parameter0: 20,
+        parameter1: "null",
+        parameter2: "LEVEL UP!"
+      }
+    }
+  })
+```
+
+[x] Ich moechte command staerker in Scrawl Scripts nutzen koennen, erstelle einen StepCommand:
+{
+  kind: "Cmd",
+  cmd: "notification",
+  parameters: [ 20, "null", "LEVEL UP!"]
+  }
+}
+```text
+ doScrawlStart({
+    id: "multi-command",
+    root: {
+      kind: "Sequence",
+      steps: [
+        {
+          kind: "Cmd",
+          cmd: "notification",
+          parameters: [11, "Game", "Quest started!"]
+        },
+        {
+          kind: "Wait",
+          seconds: 2
+        },
+        {
+          kind: "Cmd",
+          cmd: "teleport",
+          parameters: [100, 64, 200]
+        },
+        {
+          kind: "Cmd",
+          cmd: "notification",
+          parameters: [0, "System", "Teleported to quest location"]
+        }
+      ]
+    }
+  })
+```
+
+[ ] Erweitere Items (ItemData.ts) so, das ScriptActionDefinition als onUseEffekt Effekt definiert werden kann.
+- Wenn ein Item per shortcut ausgefuehrt wird, wird der ScrawlService genutzt um das Script zu starten - wenn vorhanden.
 
 [ ] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.
-- Liste von .scrawl.json Scripten und suche. Nur anzeige von Dateinamen.
+- Liste von .scrawl.json Scripten und suche. Nur anzeige von Dateinamen. (AssetPrview control benutzen)
 - Mit Add new Script wird der Editor mit einem leeren Script geoeffnet.
 - Auf den gefunden elementen kann ein Icon 'Duplicate' geklickt werden, um das Script zu kopieren und im Editor zu oeffnen.
 - Bei Click auf einen Script wird der Editor geoeffnet.
@@ -1043,6 +1111,7 @@ doScrawlStart('{
   - Je nach step gibt es unter slots
   - Die sub sequence ist wahlbar, es wird dann nur die sub sequence angezeigt, es koennen neue erstellt und welche geloescht werden
 - Es soll einen Button Source geben, der das JSON des Scripts anzeigt und editierbar macht.
+- Eine Liste von moeglichen Effekten/Commands (Kind:Cmd) soll aus einer asset-Datei unter 'scrawl/effects.json' geladen werden und im Editor als presets angezeigt werden.
 
 [ ] Erstelle einen Shader, der eine runde Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
 Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
