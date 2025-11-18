@@ -49,7 +49,8 @@
           "stayDuration": 2.0,
           "rotationSpeed": 1.0,
           "alpha": 0.7,
-          "texture": "effects/aoe_marker.png"
+          "texture": "effects/aoe_marker.png",
+          "shape": "square"
         }
       },
       "parameters": [
@@ -94,6 +95,88 @@
           "type": "string",
           "default": "effects/aoe_marker.png",
           "description": "Texture path (optional)"
+        },
+        {
+          "name": "shape",
+          "type": "string",
+          "default": "square",
+          "options": ["square", "circle"],
+          "description": "Shape: square (uses texture as-is) or circle (applies circular mask)"
+        }
+      ]
+    },
+    {
+      "id": "projectile",
+      "category": "Visual",
+      "name": "Projectile",
+      "description": "Flying projectile from source to target",
+      "template": {
+        "kind": "Play",
+        "effectId": "projectile",
+        "source": "$actor",
+        "target": "$patient",
+        "ctx": {
+          "projectileWidth": 2,
+          "projectileHeadWidth": 0.5,
+          "projectileRadius": 0.2,
+          "projectileTexture": "effects/arrow.png",
+          "speed": 20,
+          "rotationSpeed": 5,
+          "color": "#ffffff"
+        }
+      },
+      "parameters": [
+        {
+          "name": "startPosition",
+          "type": "vector3",
+          "description": "Start position (uses source if not provided)"
+        },
+        {
+          "name": "targetPosition",
+          "type": "vector3",
+          "description": "Target position (uses target if not provided)"
+        },
+        {
+          "name": "projectileWidth",
+          "type": "number",
+          "default": 2,
+          "description": "Total length of projectile"
+        },
+        {
+          "name": "projectileHeadWidth",
+          "type": "number",
+          "default": 0.5,
+          "description": "Length of tapered head section"
+        },
+        {
+          "name": "projectileRadius",
+          "type": "number",
+          "default": 0.2,
+          "description": "Radius/thickness of projectile"
+        },
+        {
+          "name": "projectileTexture",
+          "type": "string",
+          "default": "effects/arrow.png",
+          "description": "Texture path"
+        },
+        {
+          "name": "speed",
+          "type": "number",
+          "default": 20,
+          "description": "Flight speed (units/second)"
+        },
+        {
+          "name": "rotationSpeed",
+          "type": "number",
+          "default": 5,
+          "description": "Rotation speed (radians/second)"
+        },
+        {
+          "name": "color",
+          "type": "color",
+          "default": "#ffffff",
+          "description": "Color tint"
         }
       ]
     }

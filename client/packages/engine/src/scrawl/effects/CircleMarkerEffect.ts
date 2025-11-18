@@ -48,6 +48,9 @@ export interface CircleMarkerOptions {
 
   /** Texture path (optional, if not provided uses flat color) */
   texture?: string;
+
+  /** Shape: 'square' (default, uses texture as-is) or 'circle' (applies circular mask) */
+  shape?: 'square' | 'circle';
 }
 
 /**
@@ -123,6 +126,7 @@ export class CircleMarkerEffect extends ScrawlEffectHandler<CircleMarkerOptions>
             'fadeProgress',
             'textureSampler',
             'useTexture',
+            'useCircleMask',
           ],
         }
       );
@@ -131,6 +135,7 @@ export class CircleMarkerEffect extends ScrawlEffectHandler<CircleMarkerOptions>
       const colorRgb = this.parseColor(this.options.color);
       const alpha = this.options.alpha ?? 0.8;
       const rotationSpeed = this.options.rotationSpeed ?? 0.0;
+      const shape = this.options.shape ?? 'square';
 
       // Set initial uniforms
       this.material.setFloat('radius', 0);
@@ -140,6 +145,7 @@ export class CircleMarkerEffect extends ScrawlEffectHandler<CircleMarkerOptions>
       this.material.setFloat('alpha', alpha);
       this.material.setFloat('fadeProgress', 0);
       this.material.setInt('useTexture', 0);
+      this.material.setInt('useCircleMask', shape === 'circle' ? 1 : 0);
 
       // Load texture if provided
       if (this.options.texture) {
@@ -147,7 +153,8 @@ export class CircleMarkerEffect extends ScrawlEffectHandler<CircleMarkerOptions>
           const networkService = ctx.appContext.services.network;
           if (networkService) {
             const textureUrl = networkService.getAssetUrl(this.options.texture);
-            const texture = new Texture(textureUrl, scene);
+            const texture = new Texture(textureUrl, scene, false, false);
+            texture.hasAlpha = true;
             this.material.setTexture('textureSampler', texture);
             this.material.setInt('useTexture', 1);
           }
@@ -156,10 +163,11 @@ export class CircleMarkerEffect extends ScrawlEffectHandler<CircleMarkerOptions>
         }
       }
 
-      // Enable alpha blending
-      this.material.alpha = 1.0;
-      this.material.alphaMode = 2; // ALPHA_COMBINE
+      // Configure material for transparency
       this.material.backFaceCulling = false;
+      this.material.transparencyMode = 1; // ALPHATEST
+      this.material.needAlphaBlending = () => false;
+      this.material.needAlphaTesting = () => true;
 
       this.mesh.material = this.material;
 

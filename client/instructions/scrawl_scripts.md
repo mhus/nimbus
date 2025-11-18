@@ -1124,7 +1124,7 @@ doScrawlStart({
 - Item bearbeiten
 - onUseEffect soll mit dem Scrawl Script Editor bearbeitet werden koennen
 
-[ ] Erstelle einen Shader, der eine Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
+[x] Erstelle einen Shader, der eine Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
 Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
 - Parameter: radius, color, stayDuration, spreadDuration, alpha 
 - Der Effekt soll in der EffectFactory registriert werden.
@@ -1161,6 +1161,7 @@ doScrawlStart({
             stayDuration: 2.0,
             rotationSpeed: 2.0,
             alpha: 0.7,
+            shape: "circle",
             texture: "textures/block/basic/redstone_ore.png"
           }
         },
@@ -1174,6 +1175,41 @@ doScrawlStart({
           parameters: [20, "null", "BOOM!"]
         }
       ]
+    }
+  })
+```
+
+
+[?] Erstelle einen Effect 'projectile' der einen projectile fliegen lässt.
+Das projektile soll von einer start position zu einer ziel position fliegen.
+- Parameter: startPosition - Vector3
+- Parameter: targetPosition - Vector3
+- Parameter: projektileWidh // full size of the projektile
+- Parameter: projectileHeadWidth // site of the first part - head - of the projektile where it becomes a smaller size
+- Parameter: projektileRadius
+- Parameter: projectileTexture
+- Parameter: speed
+- Parameter: rotationSpeed
+Das Projektile soll sich auf dem weg zum ziel drehen (rotationSpeed)
+Wenn das projektile das ziel erreicht hat verschwindet es. (dispose)
+
+```text
+ doScrawlStart({
+    id: "fireball",
+    root: {
+      kind: "Play",
+      effectId: "projectile",
+      ctx: {
+        startPosition: { x: 0, y: 65, z: 0 },
+        targetPosition: { x: 10, y: 65, z: 10 },
+        projectileWidth: 0.8,
+        projectileHeadWidth: 0.2,
+        projectileRadius: 0.3,
+        projectileTexture: "effects/fireball.png",
+        speed: 15,
+        rotationSpeed: 8,
+        color: "#ff6600"
+      }
     }
   })
 ```
