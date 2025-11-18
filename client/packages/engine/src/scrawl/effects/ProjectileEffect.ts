@@ -80,6 +80,7 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
   private targetPos: Vector3 | null = null;
   private distance: number = 0;
   private animationHandle: number | null = null;
+  private rotationAngle: number = 0;
 
   async execute(ctx: ScrawlExecContext): Promise<void> {
     const scene = ctx.appContext.services.engine?.getScene();
@@ -99,13 +100,15 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
       }
 
       // Calculate distance and direction
-      const direction = this.targetPos.subtract(this.startPos);
-      this.distance = direction.length();
+      const directionVec = this.targetPos.subtract(this.startPos);
+      this.distance = directionVec.length();
 
       if (this.distance === 0) {
         logger.warn('Start and target positions are identical');
         return;
       }
+
+      const directionNorm = directionVec.normalize();
 
       // Create projectile mesh (tapered cylinder)
       this.mesh = this.createProjectileMesh(scene);
@@ -114,7 +117,9 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
       this.mesh.position = this.startPos.clone();
 
       // Orient towards target
-      this.mesh.lookAt(this.targetPos, Math.PI / 2, 0, 0);
+      // Since cylinder is along Y-axis and we rotated it to Z-axis,
+      // we need to align the local Z-axis with the direction vector
+      this.mesh.setDirection(directionNorm, 0, Math.PI / 2);
 
       // Create material
       this.material = new StandardMaterial('projectileMaterial', scene);
@@ -193,8 +198,12 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
     const currentPos = this.startPos.add(direction.scale(travelDistance));
     this.mesh.position = currentPos;
 
-    // Apply rotation
-    this.mesh.rotation.z += this.options.rotationSpeed * 0.016; // Assume ~60fps
+    // Update rotation angle
+    this.rotationAngle += this.options.rotationSpeed * 0.016; // Assume ~60fps
+
+    // Reapply orientation and rotation
+    // setDirection aligns the mesh, then we rotate around the direction axis
+    this.mesh.setDirection(direction, this.rotationAngle, Math.PI / 2);
 
     // Continue animation
     this.animationHandle = requestAnimationFrame(this.animate);
