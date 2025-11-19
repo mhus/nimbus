@@ -43,18 +43,21 @@ export class BeamFollowEffect extends ScrawlEffectHandler<BeamFollowOptions> {
     this.scene = scene;
 
     // Get initial positions from context
-    if (ctx.actor) {
+    const source = (ctx as any).source || ctx.actor;
+    if (source) {
       this.sourcePos = new Vector3(
-        ctx.actor.position.x,
-        ctx.actor.position.y,
-        ctx.actor.position.z
+        source.position.x,
+        source.position.y,
+        source.position.z
       );
     }
-    if (ctx.patients?.[0]) {
+
+    const target = (ctx as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
+    if (target) {
       this.targetPos = new Vector3(
-        ctx.patients[0].position.x,
-        ctx.patients[0].position.y,
-        ctx.patients[0].position.z
+        target.position.x,
+        target.position.y,
+        target.position.z
       );
     }
 
@@ -77,11 +80,12 @@ export class BeamFollowEffect extends ScrawlEffectHandler<BeamFollowOptions> {
 
   onParameterChanged(paramName: string, value: any, ctx: ScrawlExecContext): void {
     // Update target position from context
-    if (ctx.patients?.[0]) {
+    const target = (ctx as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
+    if (target) {
       const newTarget = new Vector3(
-        ctx.patients[0].position.x,
-        ctx.patients[0].position.y,
-        ctx.patients[0].position.z
+        target.position.x,
+        target.position.y,
+        target.position.z
       );
 
       this.targetPos = newTarget;

@@ -305,6 +305,9 @@ class NimbusServer {
       case 'b.int': // Block interaction (from client)
         this.handleBlockInteraction(session, i, d);
         break;
+      case 'e.t': // Effect trigger (from client)
+        this.handleEffectTrigger(session, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -574,6 +577,104 @@ class NimbusServer {
    * Actions currently supported:
    * - 'click': Player clicked on block (left, right, or middle)
    */
+  /**
+   * Handle effect trigger from client
+   *
+   * Broadcasts the effect to all other clients that have registered the affected chunks.
+   *
+   * @param session Client session that sent the effect
+   * @param data Effect trigger data
+   */
+  private handleEffectTrigger(session: ClientSession, data: any): void {
+    try {
+      logger.info('Effect trigger received from client', {
+        sessionId: session.sessionId,
+        username: session.username,
+        effectId: data.effectId,
+        entityId: data.entityId,
+        chunkCount: data.chunks?.length || 0,
+      });
+
+      if (!data.effect || !data.effectId) {
+        logger.warn('Invalid effect trigger data', { sessionId: session.sessionId });
+        return;
+      }
+
+      const worldId = session.worldId;
+      if (!worldId) {
+        logger.warn('Cannot broadcast effect: session not in a world');
+        return;
+      }
+
+      // Get affected chunk keys
+      const affectedChunks = new Set<string>();
+      if (data.chunks && data.chunks.length > 0) {
+        for (const chunk of data.chunks) {
+          affectedChunks.add(getChunkKey(chunk.cx, chunk.cz));
+        }
+      }
+
+      logger.info('Broadcasting effect to other clients', {
+        worldId,
+        effectId: data.effectId,
+        affectedChunks: affectedChunks.size,
+      });
+
+      // Broadcast to all other clients in the same world that have registered affected chunks
+      let broadcastCount = 0;
+      for (const [otherSessionId, otherSession] of this.sessions) {
+        // Skip the sender
+        if (otherSessionId === session.sessionId) {
+          continue;
+        }
+
+        // Skip if different world
+        if (otherSession.worldId !== worldId) {
+          continue;
+        }
+
+        // Check if client has registered any affected chunks
+        let hasAffectedChunk = false;
+        if (affectedChunks.size > 0) {
+          for (const chunkKey of affectedChunks) {
+            if (otherSession.registeredChunks.has(chunkKey)) {
+              hasAffectedChunk = true;
+              break;
+            }
+          }
+        } else {
+          // No chunks specified, send to all clients in world
+          hasAffectedChunk = true;
+        }
+
+        if (hasAffectedChunk) {
+          // Send effect trigger to client
+          const message = {
+            t: 'e.t',
+            d: data,
+          };
+          otherSession.ws.send(JSON.stringify(message));
+          broadcastCount++;
+
+          logger.debug('Effect sent to client', {
+            sessionId: otherSessionId,
+            username: otherSession.username,
+            effectId: data.effectId,
+          });
+        }
+      }
+
+      logger.info('Effect broadcast complete', {
+        effectId: data.effectId,
+        recipientCount: broadcastCount,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.handleEffectTrigger', {
+        sessionId: session.sessionId,
+      });
+    }
+  }
+
   private handleBlockInteraction(session: ClientSession, messageId: string, data: any) {
     if (!data || data.x === undefined || data.y === undefined || data.z === undefined || !data.ac) {
       logger.warn('Invalid block interaction data', {

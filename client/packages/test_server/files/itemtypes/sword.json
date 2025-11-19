@@ -17,6 +17,7 @@
           "effectId": "circleMarker",
           "target": "$target",
           "ctx": {
+            "texture": "textures/effects/yellow_spell_aoe.png",
             "radius": 2.0,
             "color": "#ff0000",
             "spreadDuration": 0.2,

@@ -364,7 +364,7 @@ Der Modus heisst DEAD.
 - Pruefe in der physik nicht nur darauf, das der chunk vorhanden ist, sondern auch auf ready == true damit der chunk betreten werden kann.
 - Das gleiche kann bei teleport gemacht werden, dort muss ready == true sein damit der teleport finished ist.
 
-[?] Ich muss noch das item system erweitern. Items in ItemData.ts sollen einen itemType haben, das ist eine referenz zu einer ItemModifier definition.
+[x] Ich muss noch das item system erweitern. Items in ItemData.ts sollen einen itemType haben, das ist eine referenz zu einer ItemModifier definition.
 - Erweiterung von der server rest api um GET /api/world/{worldid}/itemtype/{type} die daten werden von dep platte unter client/packages/test_server/files/itemtypes geladen (wie auch blocktypes unter
   client/packages/test_server/files/blocktypes).
 - Erweiterung ItemData.ts
@@ -374,3 +374,25 @@ Der Modus heisst DEAD.
 - Ich sehe in Item das problem: Es wird nur ein BlockModifier benoetigt, hier ist aktuell eine Map in modifier enthalten. ggf. ersetze das komplett durch ItemModifier mit einem TexturePath (immer string)
 - Wo wird Item genutzt? in ChunkService, kann das hier adaptiert werden mit einer einfacheren Item/ItemModifier Struktur. onUseEffect kann dann auch in ItemModifier rein. 
 
+[?] Wenn Effekte ausgeloest werden, muessen die zum server gesendet werden, damit diese auch auf anderen clients ausgefuehrt
+werden koennen.
+Es werden also zwei neue network messages benoetigt:
+- Client to Server: 'effect.trigger' mit EffectTriggerData, name 'e.t'
+  - siehe "Effeckt Trigger (Client -> Server)" in client/instructions/general/network-model-2.0.md
+- Server to Client: 'effect.trigger' mit EffectTriggerData, name 'e.t'
+  - Siehe "Effeckt Trigger (Server -> Client)" in client/instructions/general/network-model-2.0.md
+- Der Server muss die events empfangen und an alle anderen clients, die diese chunks regsitriert haben, senden (broadcast)
+- Der Client muss die events empfangen und den EffectService aufrufen um die Effekte auszufuehren.
+- Der Client muss Effekte die local ausgefuehrt werden (z.b. durch Item use) auch an den server senden. Die chunk daten muessen ausgefuellt werden.
+- Ggf benennen wir im ScrawlService die scriote in 'local_...' und 'remote_...'
+- Achtung, wenn effecte via Server kommen, diese nicht nochmal an den server senden.
+- Sinn macht ein flag in ScriptActionDefinition 'sendToServer?: boolean' default true, wenn false, dann nicht senden.
+  - damit kann auch ein local effect gestartet werden, der nicht an den server gesendet wird.
+
+[ ] Wenn ein effect parameters geupdated wird, muss das update an alle clients gesendet werden die den chunk geladen haben.
+- Client to Server, siehe "Effect Parameter Update (Client -> Server)" in client/instructions/general/network-model-2.0.md
+- Server to Client, siehe "Effect Parameter Update (Server -> Client)" in client/instructions/general/network-model-2.0.md
+- Es macht Sinn die affected chunks mit am ScriptActionDefinition zu speichern, dann muss das nru einmal berechnet werden
+- Wie bei EffectTrigger muessen die Events verteilt werden.
+- Im Client event empfangen, mit 'remote_' + effectId den EffectService aufrufen um die parameter zu updaten.
+- Im Client bei 'local_" effecten bei parameter update und wenn sendToServer==true , an den server senden.

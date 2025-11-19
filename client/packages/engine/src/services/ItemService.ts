@@ -250,17 +250,16 @@ export class ItemService {
             const actor = playerService?.getPlayerEntity();
             const target = selectService?.getCurrentSelectedEntity();
 
+            // Prepare context with unified naming (source/target instead of actor/patients)
             const scriptContext: any = {
               itemId: item.id,
               shortcutKey,
               item,
               itemName: item.name,
               itemTexture: mergedModifier.texture,
-              actor, // For ctx.actor (legacy)
-              patients: target ? [target] : [], // For ctx.patients (legacy)
-              source: actor, // For initialContext.source (new)
-              target: target, // For initialContext.target (new)
-              targets: target ? [target] : [], // For initialContext.targets (new)
+              source: actor,    // $source
+              target: target,   // $target
+              targets: target ? [target] : [], // $targets
             };
 
             executorId = await scrawlService.executeAction(onUseEffect, scriptContext);

@@ -50,17 +50,19 @@ export class LogEffect extends ScrawlEffectHandler<LogEffectOptions> {
       scriptId: ctx.scriptId,
     };
 
-    // Add actor info if present
-    if (ctx.actor) {
-      logContext.actor = {
-        entityId: ctx.actor.entityId,
-        position: ctx.actor.position,
+    // Add source info if present (or fallback to actor)
+    const source = (ctx as any).source || ctx.actor;
+    if (source) {
+      logContext.source = {
+        entityId: source.entityId,
+        position: source.position,
       };
     }
 
-    // Add patients info if present
-    if (ctx.patients && ctx.patients.length > 0) {
-      logContext.patients = ctx.patients.map((p) => ({
+    // Add targets info if present (or fallback to patients)
+    const targets = (ctx as any).targets || ctx.patients;
+    if (targets && targets.length > 0) {
+      logContext.targets = targets.map((p: any) => ({
         entityId: p.entityId,
         position: p.position,
       }));

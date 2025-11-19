@@ -32,6 +32,7 @@ import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { ItemBlockUpdateHandler } from './network/handlers/ItemBlockUpdateHandler';
+import { EffectTriggerHandler } from './network/handlers/EffectTriggerHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
 import { EntityPathwayMessageHandler } from './network/handlers/EntityPathwayMessageHandler';
 import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
@@ -156,6 +157,11 @@ async function initializeApp(): Promise<AppContext> {
     appContext.services.scrawl = scrawlService;
     await scrawlService.initialize();
     logger.debug('ScrawlService initialized');
+
+    // Register EffectTriggerHandler (after ScrawlService init)
+    const effectTriggerHandler = new EffectTriggerHandler(scrawlService);
+    appContext.services.network?.registerHandler(effectTriggerHandler);
+    logger.info('🔵 EffectTriggerHandler registered for message type: e.t');
 
     // Initialize ShortcutService (after ScrawlService, for executor integration)
     logger.info('Initializing ShortcutService...');

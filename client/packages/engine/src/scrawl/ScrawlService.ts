@@ -1,4 +1,4 @@
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, MessageType } from '@nimbus/shared';
 import type { ScrawlScript, ScrawlScriptLibrary, ScriptActionDefinition } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { ScrawlEffectRegistry, ScrawlEffectFactory } from './ScrawlEffectFactory';
@@ -25,6 +25,9 @@ export class ScrawlService {
   private scriptLibrary: ScrawlScriptLibrary;
   private runningExecutors = new Map<string, ScrawlExecutor>();
   private executorIdCounter = 0;
+
+  // Track sent effect IDs to prevent executing our own effects when they come back from server
+  private sentEffectIds: Set<string> = new Set();
 
   constructor(private readonly appContext: AppContext) {
     // Initialize effect registry and factory
@@ -123,6 +126,12 @@ export class ScrawlService {
     context?: Partial<ScrawlExecContext>
   ): Promise<string> {
     try {
+      // Send to server if enabled (default: true)
+      const shouldSendToServer = action.sendToServer !== false;
+      if (shouldSendToServer) {
+        this.sendEffectTriggerToServer(action, context);
+      }
+
       // Determine which script to execute
       let script: ScrawlScript | undefined;
 
@@ -144,7 +153,7 @@ export class ScrawlService {
         ...(action.parameters || {}),
       };
 
-      // Execute script
+      // Execute script locally
       return await this.executeScript(script, executionContext);
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
@@ -351,11 +360,111 @@ export class ScrawlService {
   }
 
   /**
+   * Send effect trigger to server for synchronization
+   *
+   * Calculates affected chunks from source/target positions and sends
+   * the effect to server for broadcasting to other clients.
+   *
+   * @param action Script action definition
+   * @param context Execution context with source/target
+   */
+  private sendEffectTriggerToServer(
+    action: ScriptActionDefinition,
+    context?: Partial<ScrawlExecContext>
+  ): void {
+    try {
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.debug('NetworkService not available, effect not sent to server');
+        return;
+      }
+
+      // Calculate affected chunks from source and target positions
+      const chunks: Array<{ cx: number; cz: number }> = [];
+      const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+
+      // Add chunk for source position
+      if ((context as any)?.source?.position) {
+        const pos = (context as any).source.position;
+        const cx = Math.floor(pos.x / chunkSize);
+        const cz = Math.floor(pos.z / chunkSize);
+        chunks.push({ cx, cz });
+      }
+
+      // Add chunks for target(s)
+      if ((context as any)?.targets) {
+        for (const target of (context as any).targets) {
+          if (target?.position) {
+            const pos = target.position;
+            const cx = Math.floor(pos.x / chunkSize);
+            const cz = Math.floor(pos.z / chunkSize);
+            // Avoid duplicates
+            if (!chunks.some(c => c.cx === cx && c.cz === cz)) {
+              chunks.push({ cx, cz });
+            }
+          }
+        }
+      }
+
+      // Get entity ID (if available)
+      const entityId = (context as any)?.source?.entityId;
+
+      // Generate unique effect ID
+      const effectId = `effect_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
+      // Track this effect ID so we don't execute it again when it comes back from server
+      this.sentEffectIds.add(effectId);
+      // Cleanup after 10 seconds
+      setTimeout(() => this.sentEffectIds.delete(effectId), 10000);
+
+      // Build effect trigger message
+      const effectTriggerData = {
+        effectId,
+        entityId,
+        chunks: chunks.length > 0 ? chunks : undefined,
+        effect: action,
+      };
+
+      // Send to server
+      networkService.send({
+        t: MessageType.EFFECT_TRIGGER,
+        d: effectTriggerData,
+      });
+
+      logger.debug('Effect trigger sent to server', {
+        effectId,
+        entityId,
+        chunkCount: chunks.length,
+        scriptId: action.scriptId,
+      });
+    } catch (error) {
+      // Log but don't fail - local effect should still execute
+      logger.warn('Failed to send effect to server (effect still executed locally)', {
+        error: (error as Error).message,
+      });
+    }
+  }
+
+  /**
+   * Check if an effect was sent by this client
+   *
+   * Used by EffectTriggerHandler to prevent executing effects that
+   * this client already executed locally.
+   *
+   * @param effectId Effect ID to check
+   * @returns True if this client sent the effect
+   */
+  wasEffectSentByUs(effectId: string): boolean {
+    return this.sentEffectIds.has(effectId);
+  }
+
+  /**
    * Dispose the service
    */
   dispose(): void {
     logger.info('Disposing ScrawlService...');
     this.cancelAllExecutors();
+    this.sentEffectIds.clear();
     logger.info('ScrawlService disposed');
   }
 }
