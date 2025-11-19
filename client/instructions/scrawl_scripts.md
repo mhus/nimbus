@@ -1482,7 +1482,7 @@ Zusammenfassung der Implementierung
   - ✅ Flexible Fade-Zeiten
 ```
 
-[?] Erstelle einen Effekt 'particleFire' der an einer position ein Feuer mit Partikeln simuliert.
+[x] Erstelle einen Effekt 'particleFire' der an einer position ein Feuer mit Partikeln simuliert.
 - Parameter: position - Vector3
 Weitere sinnvolle parameter fuer ein feuer partikel system
 ```text
@@ -1562,10 +1562,88 @@ Weitere sinnvolle parameter fuer ein feuer partikel system
   })
 ```
 
-[ ] Erstelle einen Effekt 'particlePositionFlash' der an einer position einen hellen Partikel Blitz simuliert.
+[x] Erstelle einen Effekt 'particlePositionFlash' der an einer position einen hellen Partikel Blitz simuliert.
 Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
 - Parameter: position - Vector3
 Weitere sinnvolle parameter fuer ein feuer partikel system
+```text
+5 Partikelsystem-Komponenten:
+
+  1. Main Lightning Bolt - Haupt-Blitzstrahl mit Zickzack-Pfad
+  2. Branch Systems (3-5x) - Seitliche elektrische Verzweigungen
+  3. Glow Effect - Blaues/weißes Leuchten entlang des Blitzes
+  4. Impact Flash - Radiale Explosion am Auftreffpunkt
+  5. Afterglow - Nachleuchtender Effekt
+
+  5 Lightning-Style-Presets:
+
+  - natural: Realistischer weiß/blauer Blitz
+  - magical: Magischer lila/pink Blitz
+  - blue: Blaue Elektrizität
+  - red: Roter Energie-Blitz
+  - purple: Lila Magie-Blitz
+
+  Haupt-Features:
+
+  - ✅ Von oben nach unten: Blitz schlägt von einstellbarer Höhe ein
+  - ✅ Zickzack-Pfad: Realistischer zackiger Verlauf (konfigurierbar)
+  - ✅ Verzweigungen: Seitliche elektrische Bögen
+  - ✅ Glow & Afterglow: Leuchteffekte mit Nachglühen
+  - ✅ Impact Flash: Explosion am Auftreffpunkt
+  - ✅ Phasen-System: Strike → Impact → Glow
+  - ✅ Sehr schnell: Blitz erscheint fast instant (konfigurierbare Speed)
+
+  Parameter (20+):
+
+  - Basis: position, startHeight, intensity, duration
+  - Lightning: thickness, branches, branchIntensity, zigzag
+  - Farben: coreColor, glowColor, impactColor
+  - Timing: strikeSpeed, flashDuration, glowDuration, impactDuration
+  - Effekte: glow, impact, afterglow (alle aktivierbar)
+  - Stil: lightningStyle (5 Presets)
+  - Partikel: particleCount
+
+  3 Usage-Beispiele in JSDoc:
+
+  1. Standard Lightning Strike
+  2. Intense Lightning mit vielen Branches
+  3. Magical Purple Lightning
+
+  ⚡ Spezielle Implementierungen:
+
+  1. Zickzack-Algorithmus: Berechnet realistischen Blitzpfad mit 20 Segmenten
+  2. Branch-Point-System: Zufällige Verzweigungen entlang des Hauptpfads
+  3. Pfad-basierte Partikel: Custom Update positioniert Partikel entlang des Blitzpfads
+  4. Phasen-Timing: Koordiniert Main Bolt, Impact und Glow
+  5. Impact-System: Radiale Explosion am Auftreffpunkt
+
+  🎯 Der Blitz ist jetzt einsatzbereit!
+
+  Teste es mit:
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particlePositionFlash",
+      "ctx": {
+        "position": {"x": -1, "y": 70, "z": 18}
+      }
+    }
+  })
+
+  Oder für einen intensiven Blitz:
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particlePositionFlash",
+      "ctx": {
+        "position": {"x": -1, "y": 70, "z": 18},
+        "intensity": 2.0,
+        "branches": 5,
+        "thickness": 0.4,
+        "zigzag": 0.9
+      }
+  }})
+```
 
 [ ] Erstelle einen Effekt 'particleWandFlash' der wie aus enem Zauberstab ein Partikel Blitz von der Quelle zur Ziel Position simuliert.
 - Parameter: source - Vector3

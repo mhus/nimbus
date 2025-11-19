@@ -28,3 +28,6 @@ export type { ParticleExplosionOptions } from './ParticleExplosionEffect';
 
 export { ParticleFireEffect } from './ParticleFireEffect';
 export type { ParticleFireOptions, FireStyle } from './ParticleFireEffect';
+
+export { ParticlePositionFlashEffect } from './ParticlePositionFlashEffect';
+export type { ParticlePositionFlashOptions, LightningStyle } from './ParticlePositionFlashEffect';
