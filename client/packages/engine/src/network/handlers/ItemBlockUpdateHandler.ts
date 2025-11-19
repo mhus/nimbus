@@ -1,12 +1,12 @@
 /**
- * ItemBlockUpdateHandler - Handles item block update messages (b.iu)
+ * ItemBlockUpdateHandler - Handles item update messages (b.iu)
  *
- * Receives item block updates from server and forwards to ChunkService
- * for updating individual items in loaded chunks.
+ * Receives item updates from server (as Item objects), converts them to Blocks,
+ * and forwards to ChunkService for updating individual items in loaded chunks.
  *
  * Item updates can be:
- * - New items (blockTypeId: 1)
- * - Modified items (blockTypeId: 1, replaces existing item)
+ * - New items (converted to blockTypeId: 1)
+ * - Modified items (converted to blockTypeId: 1, replaces existing item)
  * - Deleted items (blockTypeId: 0, only if item exists)
  *
  * Items can only exist at AIR positions or replace existing items.
@@ -15,7 +15,9 @@
 import {
   BaseMessage,
   MessageType,
+  type Item,
   type Block,
+  itemToBlock,
   getLogger,
 } from '@nimbus/shared';
 import { MessageHandler } from '../MessageHandler';
@@ -26,24 +28,24 @@ const logger = getLogger('ItemBlockUpdateHandler');
 /**
  * Handles ITEM_BLOCK_UPDATE messages from server (b.iu)
  */
-export class ItemBlockUpdateHandler extends MessageHandler<Block[]> {
+export class ItemBlockUpdateHandler extends MessageHandler<Item[]> {
   readonly messageType = MessageType.ITEM_BLOCK_UPDATE;
 
   constructor(private chunkService: ChunkService) {
     super();
   }
 
-  async handle(message: BaseMessage<Block[]>): Promise<void> {
+  async handle(message: BaseMessage<Item[]>): Promise<void> {
     const items = message.d;
 
-    logger.info('🔵 ITEM BLOCK UPDATE MESSAGE RECEIVED (b.iu)', {
+    logger.info('🔵 ITEM UPDATE MESSAGE RECEIVED (b.iu)', {
       messageType: message.t,
       itemCount: items?.length || 0,
       rawMessage: message,
     });
 
     if (!items || items.length === 0) {
-      logger.warn('Received empty item block update');
+      logger.warn('Received empty item update');
       return;
     }
 
@@ -51,16 +53,29 @@ export class ItemBlockUpdateHandler extends MessageHandler<Block[]> {
       count: items.length,
       items: items.map(item => ({
         position: item.position,
-        blockTypeId: item.blockTypeId,
-        itemId: item.metadata?.id,
-        displayName: item.metadata?.displayName,
-        isDelete: item.blockTypeId === 0,
+        itemType: item.itemType,
+        itemId: item.id,
+        displayName: item.name,
+        isDelete: item.itemType === '__deleted__',
       })),
     });
 
-    // Forward to ChunkService (await to ensure BlockTypes are loaded)
-    await this.chunkService.onItemBlockUpdate(items);
+    // Convert Items to Blocks for ChunkService
+    const blocks: Block[] = items.map(item => {
+      // Check if this is a delete marker (itemType: '__deleted__')
+      if (item.itemType === '__deleted__') {
+        return {
+          position: item.position,
+          blockTypeId: 0, // AIR = deletion
+        };
+      }
+      // Regular item
+      return itemToBlock(item);
+    });
 
-    logger.info('Item updates forwarded to ChunkService');
+    // Forward to ChunkService (await to ensure BlockTypes are loaded)
+    await this.chunkService.onItemBlockUpdate(blocks);
+
+    logger.info('Item updates converted and forwarded to ChunkService');
   }
 }

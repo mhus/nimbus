@@ -2,13 +2,13 @@
   "type": "axe",
   "name": "Axe",
   "description": "A tool for chopping wood and combat",
-  "blockTypeId": 1,
   "modifier": {
     "texture": "textures/items/axe_crusty.png",
     "scaleX": 0.7,
     "scaleY": 0.9,
     "offset": [0, -0.25, 0],
     "pose": "attack",
+    "exclusive": false,
     "onUseEffect": {
       "script": {
         "id": "axe_chop",
@@ -36,9 +36,5 @@
         }
       }
     }
-  },
-  "metadata": {
-    "category": "tool",
-    "rarity": "common"
   }
 }

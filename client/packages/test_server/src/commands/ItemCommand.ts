@@ -107,6 +107,7 @@ export class ItemCommand extends CommandHandler {
       const item = world.itemRegistry.addItem(x, y, z, displayName, itemType, texturePath);
 
       // Queue item update for broadcast
+      // Items are sent as Items over the network, not Blocks
       this.itemUpdateBuffer.addUpdate(worldId, item);
 
       logger.info('Item added via command', {
@@ -115,12 +116,12 @@ export class ItemCommand extends CommandHandler {
         displayName,
         itemType,
         texturePath,
-        itemId: item.metadata?.id,
+        itemId: item.id,
       });
 
       return {
         rc: 0,
-        message: `Item "${displayName}" (${itemType}) added at (${x}, ${y}, ${z})\nItem ID: ${item.metadata?.id}`,
+        message: `Item "${displayName}" (${itemType}) added at (${x}, ${y}, ${z})\nItem ID: ${item.id}`,
       };
     } catch (error) {
       logger.error('Failed to add item', { worldId, position: { x, y, z } }, error as Error);
@@ -183,23 +184,25 @@ export class ItemCommand extends CommandHandler {
       // Remove item from registry
       world.itemRegistry.removeItem(x, y, z);
 
-      // Queue item deletion update for broadcast (blockTypeId: 0)
-      const deleteUpdate = {
+      // Queue item deletion update for broadcast
+      // Create a delete marker item with special itemType
+      const deleteItem: any = {
+        id: item.id,
+        itemType: '__deleted__', // Special marker for deletion
         position: { x, y, z },
-        blockTypeId: 0, // AIR = deletion
       };
-      this.itemUpdateBuffer.addUpdate(worldId, deleteUpdate);
+      this.itemUpdateBuffer.addUpdate(worldId, deleteItem);
 
       logger.info('Item removed via command', {
         worldId,
         position: { x, y, z },
-        itemId: item.metadata?.id,
-        displayName: item.metadata?.displayName,
+        itemId: item.id,
+        displayName: item.name,
       });
 
       return {
         rc: 0,
-        message: `Item "${item.metadata?.displayName || 'unknown'}" removed from (${x}, ${y}, ${z})`,
+        message: `Item "${item.name || 'unknown'}" removed from (${x}, ${y}, ${z})`,
       };
     } catch (error) {
       logger.error('Failed to remove item', { worldId, position: { x, y, z } }, error as Error);
@@ -250,46 +253,38 @@ export class ItemCommand extends CommandHandler {
     }
 
     try {
-      // Get item data (includes parameters)
-      const itemData = world.itemRegistry.getItemData(x, y, z);
-      if (!itemData) {
+      // Get item (includes all data)
+      const item = world.itemRegistry.getItem(x, y, z);
+      if (!item) {
         return {
           rc: 0,
           message: `No item at position (${x}, ${y}, ${z})`,
         };
       }
 
-      const item = itemData.block;
-
       // Format item information
       const itemInfo = [
         `Item at (${x}, ${y}, ${z}):`,
-        `  Display Name: ${item.metadata?.displayName || 'unknown'}`,
-        `  Item ID: ${item.metadata?.id || 'unknown'}`,
-        `  Block Type ID: ${item.blockTypeId}`,
+        `  Display Name: ${item.name || 'unknown'}`,
+        `  Item ID: ${item.id || 'unknown'}`,
+        `  Type: ${item.itemType}`,
       ];
 
-      // Add itemType
-      if (itemData.itemType) {
-        itemInfo.push(`  Type: ${itemData.itemType}`);
-      }
-
       // Add description if available
-      if (itemData.description) {
-        itemInfo.push(`  Description: ${itemData.description}`);
+      if (item.description) {
+        itemInfo.push(`  Description: ${item.description}`);
       }
 
-      // Add itemModifier properties if available
-      const itemModifier = item.itemModifier;
-      if (itemModifier) {
-        if (itemModifier.pose) {
-          itemInfo.push(`  Pose: ${itemModifier.pose}`);
+      // Add modifier properties if available
+      if (item.modifier) {
+        if (item.modifier.pose) {
+          itemInfo.push(`  Pose: ${item.modifier.pose}`);
         }
-        if (itemModifier.texture) {
-          itemInfo.push(`  Texture: ${itemModifier.texture}`);
+        if (item.modifier.texture) {
+          itemInfo.push(`  Texture: ${item.modifier.texture}`);
         }
-        if (itemModifier.scaleX !== undefined || itemModifier.scaleY !== undefined) {
-          itemInfo.push(`  Scale: ${itemModifier.scaleX ?? 0.5} x ${itemModifier.scaleY ?? 0.5}`);
+        if (item.modifier.scaleX !== undefined || item.modifier.scaleY !== undefined) {
+          itemInfo.push(`  Scale: ${item.modifier.scaleX ?? 0.5} x ${item.modifier.scaleY ?? 0.5}`);
         }
       }
 
@@ -297,9 +292,9 @@ export class ItemCommand extends CommandHandler {
       itemInfo.push(`  Position: x=${item.position.x}, y=${item.position.y}, z=${item.position.z}`);
 
       // Add parameters if they exist
-      if (itemData.parameters && Object.keys(itemData.parameters).length > 0) {
+      if (item.parameters && Object.keys(item.parameters).length > 0) {
         itemInfo.push(`  Parameters:`);
-        for (const [key, value] of Object.entries(itemData.parameters)) {
+        for (const [key, value] of Object.entries(item.parameters)) {
           itemInfo.push(`    ${key}: ${JSON.stringify(value)}`);
         }
       }
@@ -350,9 +345,10 @@ export class ItemCommand extends CommandHandler {
       const itemList = items
         .map((item, index) => {
           const pos = item.position;
-          const name = item.metadata?.displayName || 'unknown';
-          const id = item.metadata?.id || 'unknown';
-          return `${index + 1}. "${name}" at (${pos.x}, ${pos.y}, ${pos.z}) [ID: ${id}]`;
+          const name = item.name || 'unknown';
+          const id = item.id || 'unknown';
+          const type = item.itemType || 'unknown';
+          return `${index + 1}. "${name}" (${type}) at (${pos.x}, ${pos.y}, ${pos.z}) [ID: ${id}]`;
         })
         .join('\n');
 

@@ -517,7 +517,7 @@ export function createWorldRoutes(
     return res.json(itemBlock);
   });
 
-  // GET /api/worlds/:id/itemdata/:itemId - Get full ItemData by ID
+  // GET /api/worlds/:id/itemdata/:itemId - Get full Item by ID
   router.get('/:id/itemdata/:itemId', (req, res) => {
     const world = worldManager.getWorld(req.params.id);
     if (!world) {
@@ -525,14 +525,14 @@ export function createWorldRoutes(
     }
 
     const itemId = req.params.itemId;
-    const itemData = world.itemRegistry.getItemDataById(itemId);
+    const item = world.itemRegistry.getItemById(itemId);
 
-    if (!itemData) {
+    if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    // Return full ItemData (including pose, wait, duration, description, parameters)
-    return res.json(itemData);
+    // Return full Item (including position, name, modifier, description, parameters)
+    return res.json(item);
   });
 
   return router;

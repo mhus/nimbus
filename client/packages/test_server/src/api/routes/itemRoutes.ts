@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { ItemData } from '@nimbus/shared';
+import type { Item } from '@nimbus/shared';
 import type { WorldManager } from '../../world/WorldManager';
 
 /**
@@ -27,27 +27,25 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    const allItems = world.itemRegistry.getAllItemData();
+    const allItems = world.itemRegistry.getAllItems();
     let results: Array<{ itemId: string; name: string; texture?: string }> = [];
 
     // Search through all items
-    for (const itemData of allItems) {
-      const itemId = itemData.block.metadata?.id || 'unknown';
-
-      // Match query against itemId, description, or block display name
+    for (const item of allItems) {
+      // Match query against itemId, name, or description
       const matchesQuery =
         !query ||
-        itemId.toLowerCase().includes(query) ||
-        (itemData.description?.toLowerCase().includes(query)) ||
-        (itemData.block.metadata?.displayName?.toLowerCase().includes(query));
+        item.id.toLowerCase().includes(query) ||
+        (item.name?.toLowerCase().includes(query)) ||
+        (item.description?.toLowerCase().includes(query));
 
       if (matchesQuery) {
         // Extract texture path if available
-        const texture = extractTexturePath(itemData);
+        const texture = item.modifier?.texture;
 
         results.push({
-          itemId,
-          name: itemData.block.metadata?.displayName || itemId,
+          itemId: item.id,
+          name: item.name || item.id,
           texture,
         });
 
@@ -73,17 +71,16 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    // Find item by metadata.id
-    const allItems = world.itemRegistry.getAllItemData();
-    const itemData = allItems.find(item => item.block.metadata?.id === itemId);
+    // Find item by id
+    const item = world.itemRegistry.getItemById(itemId);
 
-    if (!itemData) {
+    if (!item) {
       console.log(`[ItemRoutes] Item not found: ${itemId}`);
       return res.status(404).json({ error: 'Item not found' });
     }
 
     console.log(`[ItemRoutes] Returning item: ${itemId}`);
-    return res.json(itemData);
+    return res.json(item);
   });
 
   /**
@@ -92,10 +89,10 @@ export function createItemRoutes(worldManager: WorldManager): Router {
    */
   router.post('/:worldId/items', (req, res) => {
     const worldId = req.params.worldId;
-    const { itemData }: { itemData: ItemData } = req.body;
+    const { item }: { item: Item } = req.body;
 
-    if (!itemData?.block) {
-      return res.status(400).json({ error: 'Invalid item data: block required' });
+    if (!item?.position) {
+      return res.status(400).json({ error: 'Invalid item data: position required' });
     }
 
     const world = worldManager.getWorld(worldId);
@@ -103,30 +100,25 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    const { position } = itemData.block;
-    const displayName = itemData.block.metadata?.displayName || 'New Item';
-    const texturePath = extractTexturePath(itemData) || 'items/default.png';
-
-    // Get itemType from request
-    const itemType = itemData.itemType || 'sword'; // Default if not provided
+    const { position } = item;
+    const displayName = item.name || 'New Item';
+    const itemType = item.itemType || 'sword'; // Default if not provided
 
     // Texture is optional - will use ItemType default if not provided
-    const textureOverride = texturePath !== 'items/default.png' ? texturePath : undefined;
+    const textureOverride = item.modifier?.texture;
 
-    // Use ItemRegistry.addItem with proper signature
-    const createdBlock = world.itemRegistry.addItem(
+    // Use ItemRegistry.addItem
+    const createdItem = world.itemRegistry.addItem(
       position.x,
       position.y,
       position.z,
       displayName,
       itemType,
       textureOverride,
-      itemData.parameters
+      item.parameters
     );
 
-    const createdItemId = createdBlock.metadata?.id || 'unknown';
-
-    return res.status(201).json({ itemId: createdItemId });
+    return res.status(201).json({ itemId: createdItem.id });
   });
 
   /**
@@ -136,7 +128,7 @@ export function createItemRoutes(worldManager: WorldManager): Router {
   router.put('/:worldId/item/:itemId', (req, res) => {
     const worldId = req.params.worldId;
     const itemId = req.params.itemId;
-    const itemData: ItemData = req.body;
+    const item: Item = req.body;
 
     const world = worldManager.getWorld(worldId);
     if (!world) {
@@ -144,42 +136,40 @@ export function createItemRoutes(worldManager: WorldManager): Router {
     }
 
     // Find existing item
-    const allItems = world.itemRegistry.getAllItemData();
-    const existingItem = allItems.find(item => item.block.metadata?.id === itemId);
+    const existingItem = world.itemRegistry.getItemById(itemId);
 
     if (!existingItem) {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    const { position } = itemData.block;
-    const displayName = itemData.block.metadata?.displayName || 'Updated Item';
-    const texturePath = extractTexturePath(itemData) || 'items/default.png';
+    const { position } = item;
+    const displayName = item.name || 'Updated Item';
 
     // Remove old item
     world.itemRegistry.removeItem(
-      existingItem.block.position.x,
-      existingItem.block.position.y,
-      existingItem.block.position.z
+      existingItem.position.x,
+      existingItem.position.y,
+      existingItem.position.z
     );
 
     // Get itemType from request
-    const itemType = itemData.itemType || existingItem.itemType || 'sword';
+    const itemType = item.itemType || existingItem.itemType || 'sword';
 
     // Texture is optional - will use ItemType default if not provided
-    const textureOverride = texturePath !== 'items/default.png' ? texturePath : undefined;
+    const textureOverride = item.modifier?.texture;
 
     // Add updated item (will generate new ID if position changed)
-    world.itemRegistry.addItem(
+    const updatedItem = world.itemRegistry.addItem(
       position.x,
       position.y,
       position.z,
       displayName,
       itemType,
       textureOverride,
-      itemData.parameters
+      item.parameters
     );
 
-    return res.json(itemData);
+    return res.json(updatedItem);
   });
 
   /**
@@ -196,35 +186,16 @@ export function createItemRoutes(worldManager: WorldManager): Router {
     }
 
     // Find and remove item
-    const allItems = world.itemRegistry.getAllItemData();
-    const itemData = allItems.find(item => item.block.metadata?.id === itemId);
+    const item = world.itemRegistry.getItemById(itemId);
 
-    if (!itemData) {
+    if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    world.itemRegistry.removeItem(itemData.block.position.x, itemData.block.position.y, itemData.block.position.z);
+    world.itemRegistry.removeItem(item.position.x, item.position.y, item.position.z);
 
     return res.status(204).send();
   });
 
   return router;
-}
-
-/**
- * Extract texture path from item data
- */
-function extractTexturePath(itemData: ItemData): string | undefined {
-  const modifier = itemData.block.modifiers?.[itemData.block.status || 0];
-  if (!modifier) return undefined;
-
-  const textures = modifier.visibility?.textures;
-  if (!textures || typeof textures !== 'object') return undefined;
-
-  // Get first available texture from the textures record
-  const textureValues = Object.values(textures);
-  if (textureValues.length === 0) return undefined;
-
-  const firstTexture = textureValues[0];
-  return typeof firstTexture === 'string' ? firstTexture : (firstTexture as any)?.path;
 }

@@ -725,8 +725,8 @@ export class NotificationService {
         return;
       }
 
-      // Get texture URL
-      const textureUrl = itemService.getTextureUrl(item);
+      // Get texture URL (now async)
+      const textureUrl = await itemService.getTextureUrl(item);
       if (!textureUrl) {
         logger.debug('No texture for item', { itemId });
         return;
@@ -905,8 +905,8 @@ export class NotificationService {
         return;
       }
 
-      // Get texture URL
-      const textureUrl = itemService.getTextureUrl(item);
+      // Get texture URL (now async)
+      const textureUrl = await itemService.getTextureUrl(item);
       if (!textureUrl) {
         logger.debug('No texture for item', { itemId });
         return;
@@ -938,8 +938,8 @@ export class NotificationService {
     const itemService = this.appContext.services.item;
     if (!itemService) return;
 
-    // Load ItemData for description
-    const itemData = await itemService.getItemData(effect.itemId);
+    // Load Item for description
+    const item = await itemService.getItem(effect.itemId);
 
     let tooltip: HTMLElement | null = null;
 
@@ -961,17 +961,17 @@ export class NotificationService {
         z-index: 1000;
       `;
 
-      // Add title (from ItemData or effect)
+      // Add title (from Item or effect)
       const title = document.createElement('div');
       title.style.cssText = 'font-weight: bold; margin-bottom: 4px; color: rgba(255, 100, 100, 1);';
-      title.textContent = itemData?.block.metadata?.displayName || effect.itemId;
+      title.textContent = item?.name || effect.itemId;
       tooltip.appendChild(title);
 
       // Add description if available
-      if (itemData?.description) {
+      if (item?.description) {
         const desc = document.createElement('div');
         desc.style.cssText = 'font-size: 11px; color: rgba(255, 255, 255, 0.8); margin-bottom: 4px;';
-        desc.textContent = itemData.description;
+        desc.textContent = item.description;
         tooltip.appendChild(desc);
       }
 

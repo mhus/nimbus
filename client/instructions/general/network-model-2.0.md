@@ -186,6 +186,9 @@ Der Server sendet angefragte Chunks an den Client.
   ],
   "a": [     // Area data (optional)
     AreaData
+  ],
+  "i": [
+    Item
   ]
 }
 ```
@@ -236,7 +239,7 @@ Der Server sendet Item-Block-Änderungen an den Client. Items sind spezielle Bil
 ```json
 {"t": "b.iu", "d":
         [
-          BlockData,  // BlockData mit metadata.id und metadata.displayName
+          Item,  // BlockData mit metadata.id und metadata.displayName
           ...
       ]
 }
@@ -249,21 +252,7 @@ Der Server sendet Item-Block-Änderungen an den Client. Items sind spezielle Bil
   "d": [
     {
       "position": {"x": 10, "y": 64, "z": 5},
-      "blockTypeId": 1,
-      "metadata": {
-        "id": "item_sword_123",
-        "displayName": "Schwert"
-      },
-      "modifiers": {
-        "0": {
-          "visibility": {
-            "shape": 28,  // Shape.ITEM
-            "textures": {
-              "0": "items/sword.png"
-            }
-          }
-        }
-      }
+      ...
     }
   ]
 }

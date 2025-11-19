@@ -7,7 +7,7 @@
  * 2. Size-based: Flush immediately when MAX_BATCH_SIZE is reached
  */
 
-import { getLogger, type Block, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, type Item, ExceptionHandler } from '@nimbus/shared';
 
 const logger = getLogger('ItemUpdateBuffer');
 
@@ -34,13 +34,13 @@ const DEFAULT_CONFIG: ItemUpdateBufferConfig = {
  * ItemUpdateBuffer - Batches item updates for efficient broadcasting
  */
 export class ItemUpdateBuffer {
-  private pendingUpdates: Map<string, Block[]>; // worldId -> items[]
+  private pendingUpdates: Map<string, Item[]>; // worldId -> items[]
   private flushTimer: NodeJS.Timeout | null = null;
   private config: ItemUpdateBufferConfig;
-  private flushCallback: (worldId: string, items: Block[]) => void;
+  private flushCallback: (worldId: string, items: Item[]) => void;
 
   constructor(
-    flushCallback: (worldId: string, items: Block[]) => void,
+    flushCallback: (worldId: string, items: Item[]) => void,
     config?: Partial<ItemUpdateBufferConfig>
   ) {
     this.pendingUpdates = new Map();
@@ -57,9 +57,9 @@ export class ItemUpdateBuffer {
    * Add an item update to the buffer
    *
    * @param worldId World ID
-   * @param item Item block to update
+   * @param item Item to update
    */
-  addUpdate(worldId: string, item: Block): void {
+  addUpdate(worldId: string, item: Item): void {
     try {
       // Get or create items array for this world
       let items = this.pendingUpdates.get(worldId);
@@ -74,8 +74,8 @@ export class ItemUpdateBuffer {
       logger.info('🔵 SERVER: Item update added to buffer', {
         worldId,
         position: item.position,
-        itemId: item.metadata?.id,
-        displayName: item.metadata?.displayName,
+        itemId: item.id,
+        displayName: item.name,
         bufferedCount: items.length,
         maxBatchSize: this.config.maxBatchSize,
       });
@@ -137,8 +137,8 @@ export class ItemUpdateBuffer {
       count: items.length,
       items: items.map((i) => ({
         position: i.position,
-        itemId: i.metadata?.id,
-        displayName: i.metadata?.displayName,
+        itemId: i.id,
+        displayName: i.name,
       })),
     });
 

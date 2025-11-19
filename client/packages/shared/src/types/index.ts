@@ -14,7 +14,7 @@ export * from './BlockType';
 export * from './BlockModifier';
 
 // Item types
-export * from './ItemData';
+export * from './Item';
 export * from './ItemType';
 export * from './ItemModifier';
 

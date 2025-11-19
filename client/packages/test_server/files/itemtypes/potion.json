@@ -2,12 +2,12 @@
   "type": "potion",
   "name": "Health Potion",
   "description": "Restores health when consumed",
-  "blockTypeId": 1,
   "modifier": {
     "texture": "textures/items/potion_darkblue.png",
     "scaleX": 0.4,
     "scaleY": 0.5,
     "pose": "drink",
+    "exclusive": false,
     "onUseEffect": {
       "script": {
         "id": "heal_player",
@@ -41,9 +41,5 @@
         }
       }
     }
-  },
-  "metadata": {
-    "category": "consumable",
-    "rarity": "common"
   }
 }

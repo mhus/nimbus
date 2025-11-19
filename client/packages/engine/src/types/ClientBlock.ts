@@ -10,7 +10,7 @@
  * - ClientBlock wraps Block with resolved references and rendering caches
  */
 
-import type { Block, BlockType, BlockModifier } from '@nimbus/shared';
+import type { Block, BlockType, BlockModifier, Item } from '@nimbus/shared';
 import type { ClientBlockType } from './ClientBlockType';
 import type { Mesh } from '@babylonjs/core';
 
@@ -86,4 +86,13 @@ export interface ClientBlock {
    * so this reference is only available for individually rendered blocks
    */
   mesh?: Mesh;
+
+  /**
+   * Complete Item data for items
+   * Contains id, itemType, position, name, modifier (with actionScript), parameters
+   * Only present for items (ChunkService converts Item to Block+ClientBlock for rendering)
+   *
+   * The actionScript is in item.modifier.actionScript (ScriptActionDefinition)
+   */
+  item?: Item;
 }

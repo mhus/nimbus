@@ -74,4 +74,18 @@ export interface ItemModifier {
    * ```
    */
   onUseEffect?: ScriptActionDefinition;
+
+  /**
+   * Whether this item blocks other shortcuts while active
+   * If true, no other shortcuts can be activated while this item is being used
+   * Default: false
+   */
+  exclusive?: boolean;
+
+  /**
+   * Action script executed on specific triggers
+   * This is separate from onUseEffect and can be triggered by other events
+   * For example: automatic effects, passive abilities, environmental triggers
+   */
+  actionScript?: ScriptActionDefinition;
 }

@@ -5,7 +5,7 @@
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block, type HeightData, MessageType, type EntityPathway, type Vector2 } from '@nimbus/shared';
+import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block, type Item, type HeightData, MessageType, type EntityPathway, type Vector2 } from '@nimbus/shared';
 import { loadServerConfig } from './config/ServerConfig';
 import { WorldManager } from './world/WorldManager';
 import { TerrainGenerator } from './world/TerrainGenerator';
@@ -801,7 +801,7 @@ class NimbusServer {
    * @param worldId World ID
    * @param items Items to broadcast
    */
-  private broadcastItemUpdates(worldId: string, items: Block[]): void {
+  private broadcastItemUpdates(worldId: string, items: Item[]): void {
     try {
       if (items.length === 0) {
         return;
@@ -821,7 +821,7 @@ class NimbusServer {
       }
 
       // Group items by chunk for efficient filtering
-      const itemsByChunk = new Map<string, Block[]>();
+      const itemsByChunk = new Map<string, Item[]>();
       for (const item of items) {
         const cx = Math.floor(item.position.x / world.chunkSize);
         const cz = Math.floor(item.position.z / world.chunkSize);
@@ -866,7 +866,7 @@ class NimbusServer {
         }
 
         // Collect items for this client (only chunks they have registered)
-        const clientItems: Block[] = [];
+        const clientItems: Item[] = [];
         for (const [chunkKey, chunkItems] of itemsByChunk) {
           if (session.registeredChunks.has(chunkKey)) {
             clientItems.push(...chunkItems);
@@ -898,8 +898,8 @@ class NimbusServer {
               itemCount: clientItems.length,
               items: clientItems.map(i => ({
                 position: i.position,
-                itemId: i.metadata?.id,
-                displayName: i.metadata?.displayName,
+                itemId: i.id,
+                displayName: i.name,
               })),
               messageLength: messageStr.length,
               wsReadyState: session.ws.readyState,

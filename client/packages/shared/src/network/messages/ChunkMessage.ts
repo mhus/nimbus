@@ -7,6 +7,7 @@
 
 import type { BaseMessage } from '../BaseMessage';
 import type { Block } from '../../types/Block';
+import type { Item } from '../../types/Item';
 import type { AreaData } from '../../types/AreaData';
 import type { HeightData } from '../../types/ChunkData';
 import type { Backdrop } from '../../types/Backdrop';
@@ -32,8 +33,8 @@ export interface ChunkDataTransferObject {
   /** Block data */
   b: Block[];
 
-  /** Item block data - special billboard blocks managed separately */
-  i?: Block[];
+  /** Item data - Item instances with position, itemType reference, and modifiers */
+  i?: Item[];
 
   /** Height data, maximum height */
   h?: HeightData[];

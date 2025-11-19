@@ -2,13 +2,13 @@
   "type": "sword",
   "name": "Sword",
   "description": "A basic melee weapon for close combat",
-  "blockTypeId": 1,
   "modifier": {
     "texture": "textures/items/sword_crusty.png",
-    "scaleX": 0.6,
-    "scaleY": 0.8,
-    "offset": [0, -0.2, 0],
+    "scaleX": 0.5,
+    "scaleY": 0.5,
+    "offset": [0, 0.2, 0],
     "pose": "attack",
+    "exclusive": false,
     "onUseEffect": {
       "script": {
         "id": "melee_attack",
@@ -26,9 +26,5 @@
         }
       }
     }
-  },
-  "metadata": {
-    "category": "weapon",
-    "rarity": "common"
   }
 }

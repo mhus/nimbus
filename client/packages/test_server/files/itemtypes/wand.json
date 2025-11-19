@@ -2,12 +2,12 @@
   "type": "wand",
   "name": "Magic Wand",
   "description": "A wand for casting magical beams",
-  "blockTypeId": 1,
   "modifier": {
     "texture": "textures/items/item_stick_wizardly.png",
     "scaleX": 0.3,
     "scaleY": 0.7,
     "pose": "cast",
+    "exclusive": true,
     "onUseEffect": {
       "script": {
         "id": "wand_beam",
@@ -28,10 +28,5 @@
         }
       }
     }
-  },
-  "metadata": {
-    "category": "magic",
-    "rarity": "common",
-    "exclusive": true
   }
 }

@@ -1,17 +1,22 @@
 [
   {
+    "id": "item_1763555455723_a8lg8b2",
     "itemType": "sword",
-    "block": {
-      "position": {
-        "x": -6,
-        "y": 68,
-        "z": 19
-      },
-      "blockTypeId": 1,
-      "metadata": {
-        "id": "item_1763548353218_9ofxn28",
-        "displayName": "Iron Sword"
-      }
-    }
+    "position": {
+      "x": -6,
+      "y": 68,
+      "z": 19
+    },
+    "name": "Iron Sword"
+  },
+  {
+    "id": "item_1763556733083_61p7avm",
+    "itemType": "sword",
+    "position": {
+      "x": -7,
+      "y": 68,
+      "z": 19
+    },
+    "name": "Iron Sword"
   }
 ]

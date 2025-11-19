@@ -11,7 +11,6 @@
 import type { Vector3 } from './Vector3';
 import type { BlockMetadata } from './BlockMetadata';
 import type { BlockModifier, VisibilityModifier } from './BlockModifier';
-import type { ItemModifier } from './ItemModifier';
 
 /**
  * Offsets for block geometry modification
@@ -385,8 +384,6 @@ export interface Block {
    * Optional block instance overrides for specific status values.
    * These override the BlockType modifiers for this specific block instance.
    *
-   * **For BLOCKS only** - Items use itemModifier instead
-   *
    * Use case: A specific door that looks different than the standard door type.
    *
    * @example
@@ -395,18 +392,6 @@ export interface Block {
    * }
    */
   modifiers?: Record<number, BlockModifier>;
-
-  /**
-   * Item-specific modifier
-   *
-   * **For ITEMS only** - Simplified item definition
-   *
-   * Items use this simplified structure instead of the complex status-based
-   * modifiers map. ChunkService converts this to BlockModifier for rendering.
-   *
-   * Note: Either modifiers OR itemModifier should be present, not both.
-   */
-  itemModifier?: ItemModifier;
 
   /**
    * Block-specific metadata (optional)

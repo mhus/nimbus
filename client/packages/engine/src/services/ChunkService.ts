@@ -18,6 +18,7 @@ import {
   Backdrop,
   Vector3,
   AudioType,
+  itemToBlock,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -392,10 +393,9 @@ export class ChunkService {
     // STEP 1.5: Preload all BlockTypes needed for this chunk
     // Collect unique BlockType IDs from blocks AND items
     const blockTypeIds = new Set(chunkData.b.map(block => block.blockTypeId));
-    if (chunkData.i) {
-      for (const item of chunkData.i) {
-        blockTypeIds.add(item.blockTypeId);
-      }
+    if (chunkData.i && chunkData.i.length > 0) {
+      // All items use BlockType 1 (ITEM type)
+      blockTypeIds.add(1);
     }
     logger.debug('Preloading BlockTypes for chunk', {
       cx: chunkData.cx,
@@ -546,64 +546,98 @@ export class ChunkService {
 
     // STEP 3.5: Process items list - add items only at AIR positions
     if (chunkData.i && chunkData.i.length > 0) {
-      logger.debug('Processing items for chunk', {
+      logger.info('Processing items for chunk', {
         cx: chunkData.cx,
         cz: chunkData.cz,
         itemCount: chunkData.i.length,
+        firstItem: chunkData.i[0],
+        firstItemKeys: chunkData.i[0] ? Object.keys(chunkData.i[0]) : [],
       });
 
-      // BlockTypes already preloaded in STEP 1.5
-      // Process items in batches to avoid blocking main thread
-      const items = chunkData.i;
-      for (let batchStart = 0; batchStart < items.length; batchStart += BATCH_SIZE) {
-        const batchEnd = Math.min(batchStart + BATCH_SIZE, items.length);
+      // Process items (now Item[], no Block wrapper)
+      const itemList = chunkData.i;
+      for (let batchStart = 0; batchStart < itemList.length; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, itemList.length);
 
         for (let i = batchStart; i < batchEnd; i++) {
-          const item = items[i];
-        // Get position key
-        const posKey = getBlockPositionKey(item.position.x, item.position.y, item.position.z);
+          const item = itemList[i];
 
-        // Only add item if position is AIR (no block exists at this position)
+          logger.info('Processing item', {
+            index: i,
+            itemId: item.id,
+            itemType: item.itemType,
+            position: item.position,
+            keys: item ? Object.keys(item) : [],
+          });
+
+          // Validate item
+          if (!item || !item.position || !item.itemType) {
+            logger.warn('Invalid item in chunk', { index: i, item });
+            continue;
+          }
+
+        // STEP 1: Check if position is AIR
+        const posKey = getBlockPositionKey(
+          item.position.x,
+          item.position.y,
+          item.position.z
+        );
+
         if (clientBlocksMap.has(posKey)) {
           logger.debug('Item skipped - position occupied by block', {
             position: item.position,
-            itemId: item.metadata?.id,
+            itemId: item.id,
           });
           continue;
         }
 
-        // Check if item has itemModifier
-        if (!item.itemModifier) {
-          logger.warn('Item missing itemModifier', {
+        // STEP 2: Fill Item via ItemService (merges ItemType)
+        const itemService = this.appContext.services.item;
+        if (!itemService) {
+          logger.warn('ItemService not available for item processing', {
             position: item.position,
-            itemId: item.metadata?.id,
+            itemId: item.id,
           });
           continue;
         }
 
-        // Get BlockType 1 (ITEM type) for items
+        const filledItem = await itemService.fillItem(item);
+        if (!filledItem) {
+          logger.warn('Failed to fill Item', {
+            position: item.position,
+            itemId: item.id,
+            itemType: item.itemType,
+          });
+          continue;
+        }
+
+        // STEP 3: Get BlockType 1 (ITEM type)
         const blockType = blockTypeService.getBlockType(1);
         if (!blockType) {
-          logger.warn('BlockType 1 (ITEM) not found', {
-            position: item.position,
-            itemId: item.metadata?.id,
-          });
+          logger.warn('BlockType 1 (ITEM) not found');
           continue;
         }
 
-        // Convert ItemModifier to BlockModifier for rendering
-        const currentModifier = this.convertItemModifierToBlockModifier(item.itemModifier);
+        // STEP 4: Convert Item to Block for rendering
+        // Items are converted to blocks only in ChunkService for rendering
+        const block = itemToBlock(filledItem);
 
-        // Create ClientBlock for item
+        // Convert ItemModifier to BlockModifier for rendering
+        const currentModifier = this.convertItemModifierToBlockModifier(
+          filledItem.modifier!
+        );
+
+        // STEP 5: Create ClientBlock with Item reference
         const clientBlock: ClientBlock = {
-          block: item,
+          block,
           chunk: { cx: chunkData.cx, cz: chunkData.cz },
-          blockType, // BlockType 1 (ITEM)
+          blockType,
           currentModifier,
-          clientBlockType: blockType as any, // Cast to ClientBlockType
+          clientBlockType: blockType as any,
           isVisible: true,
           isDirty: false,
           lastUpdate: Date.now(),
+          item: filledItem, // Store complete Item
         };
 
         // Add to map with position key
@@ -618,14 +652,15 @@ export class ChunkService {
         });
 
         logger.debug('Item added to chunk', {
-          position: item.position,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
+          position: filledItem.position,
+          itemId: filledItem.id,
+          displayName: filledItem.name,
+          itemType: filledItem.itemType,
         });
         }
 
         // Yield to main thread after each batch (except last batch)
-        if (batchEnd < items.length) {
+        if (batchEnd < itemList.length) {
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
