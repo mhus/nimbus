@@ -13,6 +13,7 @@ import { ParticleBeamEffect } from './effects/ParticleBeamEffect';
 import { LoopingSoundEffect } from './effects/LoopingSoundEffect';
 import { BeamFollowEffect } from './effects/BeamFollowEffect';
 import { ParticleExplosionEffect } from './effects/ParticleExplosionEffect';
+import { ParticleFireEffect } from './effects/ParticleFireEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -88,6 +89,9 @@ export class ScrawlService {
     // Register ParticleExplosionEffect for radial particle explosions
     this.effectRegistry.register('particleExplosion', ParticleExplosionEffect);
 
+    // Register ParticleFireEffect for fire simulation
+    this.effectRegistry.register('particleFire', ParticleFireEffect);
+
     logger.debug('Built-in effects registered', {
       effects: [
         'log',
@@ -98,6 +102,7 @@ export class ScrawlService {
         'sound:loop',
         'beam:follow',
         'particleExplosion',
+        'particleFire',
       ],
     });
   }

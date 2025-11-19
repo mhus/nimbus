@@ -1285,7 +1285,7 @@ Wenn das projektile das ziel erreicht hat verschwindet es. (dispose)
   })
 ```
 
-[?] Erstelle einen effekt 'beam' der einen beam zwischen zwei positionen anzeigt.
+[?] Erstelle einen effekt 'particleBeam' der einen beam zwischen zwei positionen anzeigt.
 Es soll eine interaktion mit einem Zauberstab simulieren.
 - Parameter: startPosition - Vector3
 - Parameter: endPosition - Vector3
@@ -1318,7 +1318,72 @@ doScrawlStart({
       }
     }
   })
+  
+  1. Ausfransung (Fraying) - HIGHLIGHT 🌟
+
+  - fraying (0-1) - Stärke des Ausfransens am Beam-Ende
+  - frayingDistance (0-1) - Ab wo das Ausfransen beginnt (default: 0.5 = Mitte)
+  - frayingNoise - Zufälligkeit des Ausfransens (default: 1.0)
+
+  2. Spiral-Kontrolle:
+
+  - spiralSpeed - Rotationsgeschwindigkeit (default: 4.0)
+  - spiralRadius - Radius-Multiplikator (default: 2.0)
+  - spiralPattern - 'helix' | 'twist' | 'wave' | 'none'
+    - helix: Gleichmäßige Spirale
+    - twist: Sich beschleunigende Spirale
+    - wave: Sinusförmige Wellenbewegung
+
+  3. Beam-Verhalten:
+
+  - beamStyle - 'continuous' | 'pulsing' | 'flickering' | 'lightning'
+    - continuous: Durchgehender Beam
+    - pulsing: Pulsierender Beam
+    - flickering: Flackernder Beam
+    - lightning: Blitz-Effekt (Flicker + Turbulenz)
+  - pulseFrequency - Pulsfrequenz in Hz (default: 2.0)
+  - turbulence (0-1) - Zufällige Abweichungen für Lightning-Effekte
+
+  4. Partikel-Eigenschaften:
+
+  - particleCount - Anzahl Partikel pro Strang (default: 2000)
+  - emitRate - Emission-Rate Override
+  - particleLifetime - Lebensdauer in Sekunden (default: 0.2)
+
+  5. Beam-Geometrie:
+
+  - beamTaper - 'none' | 'start' | 'end' | 'both'
+    - Beam verjüngt sich an den Enden
+  - strandSeparation - Abstand zwischen Strängen (default: 1.0)
+
+  6. Fortgeschrittene Effekte:
+
+  - glow - Glow-Effekt aktivieren (boolean)
+  - glowIntensity - Glow-Stärke (default: 1.0)
+  - coreColor - Separate Kernfarbe für Mittenstrang (hex)
+
+  7. Visuals:
+
+  - blend - 'add' | 'alpha' | 'multiply' (default: 'add')
+
+  📝 Drei detaillierte Usage-Beispiele:
+
+  1. Basic magical beam - Einfacher magischer Beam
+  2. Frayed lightning beam - Ausgefranster Blitz mit Turbulenz
+  3. Pulsing beam with glow - Pulsierender Beam mit Glow-Effekt
+
+  🎨 Features Highlights:
+
+  - ✅ Fraying-Effekt: Beam franst am Ende natürlich aus
+  - ✅ Verschiedene Spiral-Muster: Helix, Twist, Wave
+  - ✅ Beam-Styles: Continuous, Pulsing, Flickering, Lightning
+  - ✅ Turbulenz: Für realistische Lightning-Effekte
+  - ✅ Beam-Taper: Verjüngung an Start/Ende/Beiden
+  - ✅ Glow-System: Separates Partikelsystem für Glow
+  - ✅ Flexible Blending-Modi: Add, Alpha, Multiply
+  - ✅ Core-Color Support: Separate Farbe für den Mittenstrang  
 ```
+
 [x] Gewichtung fuer die drei Farben mit Veränderung der Intensität auf Zeit je Farbe
 [ ] Fluktuation Richtung Target: Partikel können den Beam verlassen und wieder zurueckkehren
 [x] Umbennennen von Effekt 'beam' zu 'particleBeam'
@@ -1417,11 +1482,103 @@ Zusammenfassung der Implementierung
   - ✅ Flexible Fade-Zeiten
 ```
 
+[?] Erstelle einen Effekt 'particleFire' der an einer position ein Feuer mit Partikeln simuliert.
+- Parameter: position - Vector3
+Weitere sinnvolle parameter fuer ein feuer partikel system
+```text
+ 5 Partikelsystem-Layer:
+
+  1. Core Layer - Heiße weiße/gelbe Basis
+  2. Inner Flame Layer - Innere gelbe Flammen
+  3. Mid Flame Layer - Mittlere orange Flammen
+  4. Outer Flame Layer - Äußere orange/rote Flammen
+  5. Smoke Layer - Aufsteigender grauer Rauch
+  6. Spark Layer - Leuchtende Funken (optional)
+
+  6 Feuer-Stil-Presets:
+
+  - campfire: Kleines gemütliches Lagerfeuer mit Rauch
+  - torch: Fackel - schmal und hoch
+  - bonfire: Großes intensives Feuer mit vielen Funken
+  - magical: Magisches lila/pink Feuer
+  - blue: Blaues heißes Feuer
+  - green: Grünes magisches Feuer
+  - custom: Vollständig anpassbar
+
+  Haupt-Features:
+
+  - ✅ Endlos oder zeitlich begrenzt: duration: Infinity für endloses Feuer
+  - ✅ Steady Effect Support: Kann manuell gestoppt werden
+  - ✅ Rauch-System: Aktivierbar mit Menge und Höhe
+  - ✅ Funken-System: Leuchtende aufsteigende Funken
+  - ✅ Turbulenz & Flackern: Realistisches Flackern
+  - ✅ Wind-Unterstützung: Feuer reagiert auf Wind
+  - ✅ Fade In/Out: Smooth Ein- und Ausblenden
+  - ✅ Color & Size Gradients: Partikel ändern Farbe und Größe über Lifetime
+  - ✅ Vollständig anpassbar: Alle Farben, Größen und Verhaltensweisen konfigurierbar
+
+  Parameter-Übersicht (30+):
+
+  - Position, Größe, Intensität, Höhe, Dauer
+  - 6 Farbparameter (Core, Flames, Smoke, Sparks)
+  - Turbulenz, Flicker-Speed, Spread, Wind
+  - Rauch-Einstellungen (aktivieren, Menge, Höhe)
+  - Funken-Einstellungen (aktivieren, Anzahl, Intensität)
+  - Timing (Fade-in, Fade-out)
+  - Partikel-Eigenschaften
+
+  4 Usage-Beispiele in JSDoc:
+
+  1. Endloses Campfire
+  2. Fackel für 30 Sekunden
+  3. Magisches Feuer mit Turbulenz
+  4. Custom blaues Feuer ohne Rauch
+
+  🔥 Das Feuer ist jetzt einsatzbereit!
+
+  Du kannst es testen mit:
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleFire",
+      "ctx": {
+        "position": {"x": -1, "y": 70, "z": 18},
+        "fireStyle": "campfire"
+      }
+    }
+  })
+
+  Oder für ein zeitlich begrenztes Feuer:
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleFire",
+      "ctx": {
+        "position": {"x": -1, "y": 70, "z": 18},
+        "fireStyle": "bonfire",
+        "duration": 10
+      }
+    }
+  })
+```
+
+[ ] Erstelle einen Effekt 'particlePositionFlash' der an einer position einen hellen Partikel Blitz simuliert.
+Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
+- Parameter: position - Vector3
+Weitere sinnvolle parameter fuer ein feuer partikel system
+
+[ ] Erstelle einen Effekt 'particleWandFlash' der wie aus enem Zauberstab ein Partikel Blitz von der Quelle zur Ziel Position simuliert.
+- Parameter: source - Vector3
+- Parameter: target - Vector3
+Weitere sinnvolle parameter fuer ein feuer partikel system
+
+
 [ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
 - Parameter: soundClip - string (asset pfad)
 - Parameter: volume - number (0-1)
 - Parameter: position - Vector3 (optional, wenn 3D sound)
 - Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
+- Benutze den AudioService um den sound abzuspielen.
 
 [ ] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
 Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
@@ -1431,6 +1588,12 @@ Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
 - Parameter: time - number (sekunden)
 - Parameter: position - Vector3
 - Parameter: height - number (hoehe ueber boden)
+
+
+
+
+
+
 ===
 # Examples tum testen
 

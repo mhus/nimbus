@@ -25,3 +25,6 @@ export type { BeamFollowOptions } from './BeamFollowEffect';
 
 export { ParticleExplosionEffect } from './ParticleExplosionEffect';
 export type { ParticleExplosionOptions } from './ParticleExplosionEffect';
+
+export { ParticleFireEffect } from './ParticleFireEffect';
+export type { ParticleFireOptions, FireStyle } from './ParticleFireEffect';
