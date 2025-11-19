@@ -1771,11 +1771,11 @@ Weitere sinnvolle parameter fuer ein feuer partikel system
     }
   })  
 ```
-[ ] Die Effekte 'particleWandFlash' und 'particleWandFlashSteady' sollen Anpassungen
+
+[?] Die Effekte 'particleWandFlash' und 'particleWandFlashSteady' sollen Anpassungen
 die mit onParameterChanged() gemacht werden unterstuetzen.
 - Es muessen nur die beiden parameter 'source' und 'target' unterstuetzt werden damit die beiden enden des flash angepasst 
   werden koennen.
-
 
 [ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
 - Parameter: soundClip - string (asset pfad)

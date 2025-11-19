@@ -844,6 +844,50 @@ export class ParticleWandFlashSteadyEffect extends ScrawlEffectHandler<ParticleW
     logger.debug('Wand flash steady effect cleaned up');
   }
 
+  onParameterChanged(paramName: string, value: any, ctx: ScrawlExecContext): void {
+    let needsPathRecalculation = false;
+
+    // Update source position
+    if (paramName === 'source' || ctx.actor) {
+      const source = paramName === 'source' ? value : ctx.actor;
+      if (source?.position || source?.x !== undefined) {
+        const newSource = new Vector3(
+          source.position?.x ?? source.x,
+          source.position?.y ?? source.y,
+          source.position?.z ?? source.z
+        );
+        this.sourcePos = newSource;
+        needsPathRecalculation = true;
+
+        logger.debug('Wand flash steady source position updated', { paramName, newSource });
+      }
+    }
+
+    // Update target position
+    if (paramName === 'target' || ctx.patients?.[0]) {
+      const target = paramName === 'target' ? value : ctx.patients?.[0];
+      if (target?.position || target?.x !== undefined) {
+        const newTarget = new Vector3(
+          target.position?.x ?? target.x,
+          target.position?.y ?? target.y,
+          target.position?.z ?? target.z
+        );
+        this.targetPos = newTarget;
+        needsPathRecalculation = true;
+
+        logger.debug('Wand flash steady target position updated', { paramName, newTarget });
+      }
+    }
+
+    // Recalculate beam path if positions changed
+    if (needsPathRecalculation && this.sourcePos && this.targetPos) {
+      const pathStyle = this.options.pathStyle ?? 'straight';
+      const zigzag = this.options.zigzag ?? 0.3;
+      const curvature = this.options.curvature ?? 0.0;
+      this.calculateBeamPath(pathStyle, zigzag, curvature);
+    }
+  }
+
   stop(): void {
     this.cleanup();
   }
