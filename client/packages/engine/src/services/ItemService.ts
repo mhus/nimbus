@@ -243,13 +243,24 @@ export class ItemService {
             logger.debug('Executing onUseEffect script', { itemId, shortcutKey });
 
             // Prepare context with item data for default variables
-            // These will be available as $item, $itemId, $itemName, $itemTexture in scripts
+            // Get source (player) and target (selected entity/block)
+            const playerService = this.appContext.services.player;
+            const selectService = this.appContext.services.select;
+
+            const actor = playerService?.getPlayerEntity();
+            const target = selectService?.getCurrentSelectedEntity();
+
             const scriptContext: any = {
               itemId: item.id,
               shortcutKey,
               item,
               itemName: item.name,
               itemTexture: mergedModifier.texture,
+              actor, // For ctx.actor (legacy)
+              patients: target ? [target] : [], // For ctx.patients (legacy)
+              source: actor, // For initialContext.source (new)
+              target: target, // For initialContext.target (new)
+              targets: target ? [target] : [], // For initialContext.targets (new)
             };
 
             executorId = await scrawlService.executeAction(onUseEffect, scriptContext);

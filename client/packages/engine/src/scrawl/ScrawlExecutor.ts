@@ -458,19 +458,22 @@ export class ScrawlExecutor {
    * These are automatically available in all scripts.
    */
   private setDefaultVariables(ctx: ScrawlExecContext): void {
-    // $source - The source subject (actor)
-    if (ctx.actor) {
-      this.vars.set('source', ctx.actor);
+    // $source - The source subject (actor or source from initialContext)
+    const source = (this.initialContext as any).source || ctx.actor;
+    if (source) {
+      this.vars.set('source', source);
     }
 
-    // $target - The target subject (first patient)
-    if (ctx.patients && ctx.patients.length > 0) {
-      this.vars.set('target', ctx.patients[0]);
+    // $target - The target subject (first patient or target from initialContext)
+    const target = (this.initialContext as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
+    if (target) {
+      this.vars.set('target', target);
     }
 
-    // $targets - Array of all targets (all patients)
-    if (ctx.patients) {
-      this.vars.set('targets', ctx.patients);
+    // $targets - Array of all targets (all patients or targets from initialContext)
+    const targets = (this.initialContext as any).targets || ctx.patients;
+    if (targets) {
+      this.vars.set('targets', targets);
     }
 
     // $item - The item Block that triggered this effect (if available)

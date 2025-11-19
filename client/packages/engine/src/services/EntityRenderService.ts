@@ -61,6 +61,9 @@ export class EntityRenderService {
   // Debug: Show pathway lines
   private _showPathways: boolean = false;
 
+  // Track warned missing poses to avoid spam (entityId:pose -> true)
+  private warnedMissingPoses: Set<string> = new Set();
+
   constructor(scene: Scene, appContext: AppContext, entityService: EntityService, modelService: ModelService) {
     this.scene = scene;
     this.appContext = appContext;
@@ -405,7 +408,12 @@ export class EntityRenderService {
     // Get animation config from pose mapping
     const poseConfig = clientEntity.model.poseMapping.get(pose);
     if (!poseConfig) {
-      logger.warn('No animation config found for pose', { entityId, pose });
+      // Only warn once per entityId:pose combination to avoid spam
+      const warnKey = `${entityId}:${pose}`;
+      if (!this.warnedMissingPoses.has(warnKey)) {
+        logger.warn('No animation config found for pose', { entityId, pose });
+        this.warnedMissingPoses.add(warnKey);
+      }
       return;
     }
 
