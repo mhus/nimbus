@@ -1826,13 +1826,50 @@ doScrawlStart({
 })  
 ```
 
-[ ] Erstelle einen Effekt 'playSound' der einen Sound einmal abspielt.
+[x] Erstelle einen Effekt 'playSound' der einen Sound einmal abspielt.
 - Parameter: soundClip - string (asset pfad)
 - Parameter: volume - number (0-1)
 - Parameter: position - Vector3 (optional, wenn 3D sound)
 - Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
 - Benutze den AudioService um den sound abzuspielen.
 - Dispose den sound bei stop() wieder
+
+Implementierung: `PlaySoundEffect` in `/client/packages/engine/src/scrawl/effects/PlaySoundEffect.ts`
+- Registriert als 'playSound'
+- Kein Steady Effect (`isSteadyEffect()` = false) - endet automatisch nach Playback
+- Unterstützt 2D (non-spatial) und 3D (spatial) Sound
+- 2D: Verwendet CreateSoundAsync() direkt (nicht gecacht), disposed automatisch nach Playback via onEndedObservable
+- 3D: Verwendet AudioService.playSoundAtPosition() mit Pool-System (auto-released)
+- Sound wird automatisch disposed wenn Playback endet oder stop() aufgerufen wird
+
+Beispiel 2D:
+```text
+doScrawlStart({
+  "root":  {
+  "kind": "Play",
+  "effectId": "playSound",
+  "ctx": {
+    "soundClip": "audio/effects/explosion.wav",
+    "volume": 1.0
+  }
+}
+})  
+```
+
+Beispiel 3D:
+```text
+doScrawlStart({
+  "root":  {
+  "kind": "Play",
+  "effectId": "playSound",
+  "ctx": {
+    "soundClip": "audio/effects/door_open.ogg",
+    "volume": 0.8,
+    "position": {"x": 100, "y": 65, "z": 200}
+  }
+}
+})  
+```
 
 [ ] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
 Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.

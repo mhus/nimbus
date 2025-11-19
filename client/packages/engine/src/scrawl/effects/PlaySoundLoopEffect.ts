@@ -171,15 +171,18 @@ export class PlaySoundLoopEffect extends ScrawlEffectHandler<PlaySoundLoopOption
 
   stop(): void {
     if (this.sound) {
+      const sound = this.sound;
+      this.sound = null; // Clear reference first to prevent double-cleanup
+
       try {
         // Stop playback
-        if (typeof this.sound.stop === 'function') {
-          this.sound.stop();
+        if (typeof sound.stop === 'function') {
+          sound.stop();
         }
 
         // Dispose sound
-        if (typeof this.sound.dispose === 'function') {
-          this.sound.dispose();
+        if (typeof sound.dispose === 'function') {
+          sound.dispose();
         }
 
         logger.debug('Looping sound stopped and disposed', {
@@ -191,8 +194,6 @@ export class PlaySoundLoopEffect extends ScrawlEffectHandler<PlaySoundLoopOption
           error: (error as Error).message
         });
       }
-
-      this.sound = null;
     }
   }
 

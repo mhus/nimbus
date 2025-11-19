@@ -43,3 +43,6 @@ export type { ParticleWandFlashSteadyOptions } from './ParticleWandFlashSteadyEf
 
 export { PlaySoundLoopEffect } from './PlaySoundLoopEffect';
 export type { PlaySoundLoopOptions } from './PlaySoundLoopEffect';
+
+export { PlaySoundEffect } from './PlaySoundEffect';
+export type { PlaySoundOptions } from './PlaySoundEffect';
