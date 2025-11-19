@@ -1,4 +1,4 @@
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, MessageType } from '@nimbus/shared';
 import type {
   ScrawlScript,
   ScrawlStep,
@@ -24,6 +24,11 @@ export class ScrawlExecutor {
   private runningEffects = new Map<string, any>();
   private executorId: string = `exec_${Date.now()}_${Math.random()}`;
   private taskCompletionPromises = new Map<string, Promise<void>>();
+
+  // For multiplayer synchronization
+  private effectId?: string; // Unique effect ID for this execution
+  private affectedChunks?: Array<{ cx: number; cz: number }>; // Chunks affected by this effect
+  private sendToServer: boolean = true; // Whether to send updates to server
 
   constructor(
     private readonly effectFactory: ScrawlEffectFactory,
@@ -643,6 +648,44 @@ export class ScrawlExecutor {
         }
       }
     }
+
+    // Send parameter update to server if this is a local effect
+    if (this.sendToServer && this.effectId && this.affectedChunks) {
+      this.sendParameterUpdateToServer(paramName, value);
+    }
+  }
+
+  /**
+   * Send parameter update to server for synchronization
+   */
+  private sendParameterUpdateToServer(paramName: string, value: any): void {
+    try {
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        return;
+      }
+
+      const updateData = {
+        effectId: this.effectId!,
+        paramName,
+        value,
+        chunks: this.affectedChunks,
+      };
+
+      networkService.send({
+        t: MessageType.EFFECT_PARAMETER_UPDATE,
+        d: updateData,
+      });
+
+      logger.debug('Parameter update sent to server', {
+        effectId: this.effectId,
+        paramName,
+      });
+    } catch (error) {
+      logger.warn('Failed to send parameter update to server', {
+        error: (error as Error).message,
+      });
+    }
   }
 
   /**
@@ -867,5 +910,31 @@ export class ScrawlExecutor {
         }
       }
     }
+  }
+
+  /**
+   * Set multiplayer synchronization data
+   *
+   * Called by ScrawlService when creating the executor.
+   *
+   * @param effectId Unique effect ID for synchronization
+   * @param affectedChunks Chunks affected by this effect
+   * @param sendToServer Whether to send parameter updates to server
+   */
+  setMultiplayerData(
+    effectId: string,
+    affectedChunks: Array<{ cx: number; cz: number }>,
+    sendToServer: boolean
+  ): void {
+    this.effectId = effectId;
+    this.affectedChunks = affectedChunks;
+    this.sendToServer = sendToServer;
+  }
+
+  /**
+   * Get the effect ID for this executor
+   */
+  getEffectId(): string | undefined {
+    return this.effectId;
   }
 }

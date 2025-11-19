@@ -308,6 +308,9 @@ class NimbusServer {
       case 'e.t': // Effect trigger (from client)
         this.handleEffectTrigger(session, d);
         break;
+      case 'ef.p.u': // Effect parameter update (from client)
+        this.handleEffectParameterUpdate(session, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -670,6 +673,92 @@ class NimbusServer {
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.handleEffectTrigger', {
+        sessionId: session.sessionId,
+      });
+    }
+  }
+
+  /**
+   * Handle effect parameter update from client
+   *
+   * Broadcasts the parameter update to all other clients that have registered the affected chunks.
+   *
+   * @param session Client session that sent the update
+   * @param data Effect parameter update data
+   */
+  private handleEffectParameterUpdate(session: ClientSession, data: any): void {
+    try {
+      logger.debug('Effect parameter update received from client', {
+        sessionId: session.sessionId,
+        username: session.username,
+        effectId: data?.effectId,
+        paramName: data?.paramName,
+      });
+
+      if (!data?.effectId || !data?.paramName) {
+        logger.warn('Invalid effect parameter update data', { sessionId: session.sessionId });
+        return;
+      }
+
+      const worldId = session.worldId;
+      if (!worldId) {
+        logger.warn('Cannot broadcast parameter update: session not in a world');
+        return;
+      }
+
+      // Get affected chunk keys
+      const affectedChunks = new Set<string>();
+      if (data.chunks && data.chunks.length > 0) {
+        for (const chunk of data.chunks) {
+          affectedChunks.add(getChunkKey(chunk.cx, chunk.cz));
+        }
+      }
+
+      // Broadcast to all other clients in the same world that have registered affected chunks
+      let broadcastCount = 0;
+      for (const [otherSessionId, otherSession] of this.sessions) {
+        // Skip the sender
+        if (otherSessionId === session.sessionId) {
+          continue;
+        }
+
+        // Skip if different world
+        if (otherSession.worldId !== worldId) {
+          continue;
+        }
+
+        // Check if client has registered any affected chunks
+        let hasAffectedChunk = false;
+        if (affectedChunks.size > 0) {
+          for (const chunkKey of affectedChunks) {
+            if (otherSession.registeredChunks.has(chunkKey)) {
+              hasAffectedChunk = true;
+              break;
+            }
+          }
+        } else {
+          // No chunks specified, send to all clients in world
+          hasAffectedChunk = true;
+        }
+
+        if (hasAffectedChunk) {
+          // Send parameter update to client
+          const message = {
+            t: 'ef.p.u',
+            d: data,
+          };
+          otherSession.ws.send(JSON.stringify(message));
+          broadcastCount++;
+        }
+      }
+
+      logger.debug('Parameter update broadcast complete', {
+        effectId: data.effectId,
+        paramName: data.paramName,
+        recipientCount: broadcastCount,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.handleEffectParameterUpdate', {
         sessionId: session.sessionId,
       });
     }

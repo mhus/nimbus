@@ -38,6 +38,7 @@ export enum MessageType {
 
   // Effects
   EFFECT_TRIGGER = 'e.t',
+  EFFECT_PARAMETER_UPDATE = 'ef.p.u',
 
   // User/Player
   USER_MOVEMENT = 'u.m',

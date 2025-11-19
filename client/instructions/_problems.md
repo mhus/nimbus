@@ -12,3 +12,5 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 
 - MovementMode fuer player audio kommt vom PlayerService, das wird ein problem wenn NPCs simuliert werden.
 - sound 'audio/step/swim1.ogg' muss aus der World Config kommen
+
+- Nenne parameters in scrawl um in variables

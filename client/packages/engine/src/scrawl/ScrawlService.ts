@@ -29,6 +29,9 @@ export class ScrawlService {
   // Track sent effect IDs to prevent executing our own effects when they come back from server
   private sentEffectIds: Set<string> = new Set();
 
+  // Map effectId → executorId for parameter updates
+  private effectIdToExecutorId = new Map<string, string>();
+
   constructor(private readonly appContext: AppContext) {
     // Initialize effect registry and factory
     this.effectRegistry = new ScrawlEffectRegistry();
@@ -126,10 +129,15 @@ export class ScrawlService {
     context?: Partial<ScrawlExecContext>
   ): Promise<string> {
     try {
-      // Send to server if enabled (default: true)
+      // Calculate multiplayer data (effectId, chunks, sendToServer)
       const shouldSendToServer = action.sendToServer !== false;
+      let effectId: string | undefined;
+      let affectedChunks: Array<{ cx: number; cz: number }> | undefined;
+
       if (shouldSendToServer) {
-        this.sendEffectTriggerToServer(action, context);
+        const mpData = this.sendEffectTriggerToServer(action, context);
+        effectId = mpData.effectId;
+        affectedChunks = mpData.chunks;
       }
 
       // Determine which script to execute
@@ -153,8 +161,20 @@ export class ScrawlService {
         ...(action.parameters || {}),
       };
 
-      // Execute script locally
-      return await this.executeScript(script, executionContext);
+      // Execute script locally and get executor ID
+      const executorId = await this.executeScript(script, executionContext);
+
+      // Set multiplayer data on the executor if available
+      if (effectId && affectedChunks && shouldSendToServer) {
+        const executor = this.runningExecutors.get(executorId);
+        if (executor) {
+          executor.setMultiplayerData(effectId, affectedChunks, shouldSendToServer);
+          // Map effectId to executorId for parameter updates
+          this.effectIdToExecutorId.set(effectId, executorId);
+        }
+      }
+
+      return executorId;
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
         error,
@@ -340,20 +360,30 @@ export class ScrawlService {
    * Updates a parameter in a running executor.
    * Can be called from any source (e.g., InputService, NetworkService, etc.)
    *
-   * @param executorId ID of the executor (returned by executeScript())
+   * @param executorIdOrEffectId ID of the executor or effectId (for remote updates)
    * @param paramName Name of the parameter (e.g. 'targetPos', 'mousePos', 'volume')
    * @param value New value (any type)
    */
-  updateExecutorParameter(executorId: string, paramName: string, value: any): void {
-    const executor = this.runningExecutors.get(executorId);
+  updateExecutorParameter(executorIdOrEffectId: string, paramName: string, value: any): void {
+    // Try direct executor ID first
+    let executor = this.runningExecutors.get(executorIdOrEffectId);
+
+    // If not found, try mapping from effectId
+    if (!executor) {
+      const executorId = this.effectIdToExecutorId.get(executorIdOrEffectId);
+      if (executorId) {
+        executor = this.runningExecutors.get(executorId);
+      }
+    }
+
     if (executor) {
       executor.updateParameter(paramName, value);
       logger.debug('Executor parameter updated via ScrawlService', {
-        executorId,
+        id: executorIdOrEffectId,
         paramName,
       });
     } else {
-      logger.debug(`Executor not found for parameter update: ${executorId}`, {
+      logger.debug(`Executor not found for parameter update: ${executorIdOrEffectId}`, {
         paramName,
       });
     }
@@ -367,17 +397,14 @@ export class ScrawlService {
    *
    * @param action Script action definition
    * @param context Execution context with source/target
+   * @returns Effect ID and affected chunks
    */
   private sendEffectTriggerToServer(
     action: ScriptActionDefinition,
     context?: Partial<ScrawlExecContext>
-  ): void {
+  ): { effectId: string; chunks: Array<{ cx: number; cz: number }> } {
     try {
       const networkService = this.appContext.services.network;
-      if (!networkService) {
-        logger.debug('NetworkService not available, effect not sent to server');
-        return;
-      }
 
       // Calculate affected chunks from source and target positions
       const chunks: Array<{ cx: number; cz: number }> = [];
@@ -425,23 +452,31 @@ export class ScrawlService {
         effect: action,
       };
 
-      // Send to server
-      networkService.send({
-        t: MessageType.EFFECT_TRIGGER,
-        d: effectTriggerData,
-      });
+      // Send to server if NetworkService is available
+      if (networkService) {
+        networkService.send({
+          t: MessageType.EFFECT_TRIGGER,
+          d: effectTriggerData,
+        });
 
-      logger.debug('Effect trigger sent to server', {
-        effectId,
-        entityId,
-        chunkCount: chunks.length,
-        scriptId: action.scriptId,
-      });
+        logger.debug('Effect trigger sent to server', {
+          effectId,
+          entityId,
+          chunkCount: chunks.length,
+          scriptId: action.scriptId,
+        });
+      }
+
+      // Return effectId and chunks for executor
+      return { effectId, chunks };
     } catch (error) {
       // Log but don't fail - local effect should still execute
       logger.warn('Failed to send effect to server (effect still executed locally)', {
         error: (error as Error).message,
       });
+      // Return empty data on error
+      const fallbackId = `effect_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      return { effectId: fallbackId, chunks: [] };
     }
   }
 

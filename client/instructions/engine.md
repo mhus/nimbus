@@ -389,7 +389,7 @@ Es werden also zwei neue network messages benoetigt:
 - Sinn macht ein flag in ScriptActionDefinition 'sendToServer?: boolean' default true, wenn false, dann nicht senden.
   - damit kann auch ein local effect gestartet werden, der nicht an den server gesendet wird.
 
-[ ] Wenn ein effect parameters geupdated wird, muss das update an alle clients gesendet werden die den chunk geladen haben.
+[?] Wenn ein effect parameters geupdated wird, muss das update an alle clients gesendet werden die den chunk geladen haben.
 - Client to Server, siehe "Effect Parameter Update (Client -> Server)" in client/instructions/general/network-model-2.0.md
 - Server to Client, siehe "Effect Parameter Update (Server -> Client)" in client/instructions/general/network-model-2.0.md
 - Es macht Sinn die affected chunks mit am ScriptActionDefinition zu speichern, dann muss das nru einmal berechnet werden
