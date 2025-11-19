@@ -1645,11 +1645,70 @@ Weitere sinnvolle parameter fuer ein feuer partikel system
   }})
 ```
 
-[ ] Erstelle einen Effekt 'particleWandFlash' der wie aus enem Zauberstab ein Partikel Blitz von der Quelle zur Ziel Position simuliert.
+[?] Erstelle einen Effekt 'particleWandFlash' der wie aus enem Zauberstab ein Partikel Blitz von der Quelle zur Ziel Position simuliert.
 - Parameter: source - Vector3
 - Parameter: target - Vector3
 Weitere sinnvolle parameter fuer ein feuer partikel system
+```text
+ 1. particleWandFlash (One-Shot)
 
+  - isSteadyEffect(): false
+  - duration: Default 1.0 Sekunde
+  - Endet automatisch nach duration
+  - Mit Fade-In und Fade-Out
+  - Kein isRunning() nötig
+
+  Usage:
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleWandFlash",
+      "ctx": {
+        "source": {"x": -1, "y": 70, "z": 18},
+        "target": {"x": -1, "y": 75, "z": 23},
+        "wandStyle": "powerful",
+        "duration": 2.0
+      }
+    }
+  })
+
+  2. particleWandFlashSteady (Steady)
+
+  - isSteadyEffect(): true
+  - Kein duration parameter (endlos)
+  - Läuft bis stop() aufgerufen wird
+  - Nur Fade-In, kein Fade-Out
+  - isRunning() implementiert
+
+  Usage:
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleWandFlashSteady",
+      "ctx": {
+        "source": {"x": -1, "y": 70, "z": 18},
+        "target": {"x": -1, "y": 75, "z": 23},
+        "wandStyle": "healing",
+        "animationMode": "pulsing"
+      }
+    }
+  })
+
+  🎯 Vollständige Effekt-Liste (5 neue Partikel-Effekte):
+
+  1. ✅ particleExplosion - Radiale Explosionen (One-Shot)
+  2. ✅ particleFire - Feuer-Simulation (Steady/One-Shot hybrid)
+  3. ✅ particlePositionFlash - Blitzschlag von oben (One-Shot)
+  4. ✅ particleWandFlash - Zauberstab-Strahl zeitlich begrenzt (One-Shot)
+  5. ✅ particleWandFlashSteady - Zauberstab-Strahl endlos (Steady)
+
+  📊 Vorteile der Trennung:
+
+  - ✅ Klare Semantik: Nutzer wissen sofort welchen Effekt sie brauchen
+  - ✅ Einfacherer Code: Keine komplexen Modus-Checks
+  - ✅ Bessere Wartbarkeit: Jede Klasse hat eine klare Verantwortung
+  - ✅ Folgt Best Practices: Ähnlich wie sound:loop vs normale Sound-Effekte
+```
 
 [ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
 - Parameter: soundClip - string (asset pfad)

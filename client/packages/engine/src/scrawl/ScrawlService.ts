@@ -15,6 +15,8 @@ import { BeamFollowEffect } from './effects/BeamFollowEffect';
 import { ParticleExplosionEffect } from './effects/ParticleExplosionEffect';
 import { ParticleFireEffect } from './effects/ParticleFireEffect';
 import { ParticlePositionFlashEffect } from './effects/ParticlePositionFlashEffect';
+import { ParticleWandFlashEffect } from './effects/ParticleWandFlashEffect';
+import { ParticleWandFlashSteadyEffect } from './effects/ParticleWandFlashSteadyEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -96,6 +98,12 @@ export class ScrawlService {
     // Register ParticlePositionFlashEffect for lightning strikes
     this.effectRegistry.register('particlePositionFlash', ParticlePositionFlashEffect);
 
+    // Register ParticleWandFlashEffect for wand beams (one-shot)
+    this.effectRegistry.register('particleWandFlash', ParticleWandFlashEffect);
+
+    // Register ParticleWandFlashSteadyEffect for continuous wand beams
+    this.effectRegistry.register('particleWandFlashSteady', ParticleWandFlashSteadyEffect);
+
     logger.debug('Built-in effects registered', {
       effects: [
         'log',
@@ -108,6 +116,8 @@ export class ScrawlService {
         'particleExplosion',
         'particleFire',
         'particlePositionFlash',
+        'particleWandFlash',
+        'particleWandFlashSteady',
       ],
     });
   }

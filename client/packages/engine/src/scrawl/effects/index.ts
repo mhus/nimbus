@@ -31,3 +31,9 @@ export type { ParticleFireOptions, FireStyle } from './ParticleFireEffect';
 
 export { ParticlePositionFlashEffect } from './ParticlePositionFlashEffect';
 export type { ParticlePositionFlashOptions, LightningStyle } from './ParticlePositionFlashEffect';
+
+export { ParticleWandFlashEffect } from './ParticleWandFlashEffect';
+export type { ParticleWandFlashOptions, WandStyle, PathStyle, AnimationMode } from './ParticleWandFlashEffect';
+
+export { ParticleWandFlashSteadyEffect } from './ParticleWandFlashSteadyEffect';
+export type { ParticleWandFlashSteadyOptions } from './ParticleWandFlashSteadyEffect';
