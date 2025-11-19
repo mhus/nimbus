@@ -147,6 +147,34 @@ export interface StepCmd {
 }
 
 /**
+ * Step: Loop while a parallel task is running
+ * Terminates automatically when the referenced task completes
+ */
+export interface StepWhile {
+  kind: 'While';
+  /** Task ID from a parallel step */
+  taskId: string;
+  /** Step to execute repeatedly while task runs */
+  step: ScrawlStep;
+  /** Safety timeout in seconds (default: 60) */
+  timeout?: number;
+}
+
+/**
+ * Step: Loop until an event is emitted
+ * Supports dynamic parameter updates via updateParameter()
+ */
+export interface StepUntil {
+  kind: 'Until';
+  /** Event name that terminates the loop */
+  event: string;
+  /** Step to execute repeatedly until event */
+  step: ScrawlStep;
+  /** Safety timeout in seconds (default: 60) */
+  timeout?: number;
+}
+
+/**
  * Union type of all possible steps
  */
 export type ScrawlStep =
@@ -155,6 +183,8 @@ export type ScrawlStep =
   | StepSequence
   | StepParallel
   | StepRepeat
+  | StepWhile
+  | StepUntil
   | StepForEach
   | StepLodSwitch
   | StepCall

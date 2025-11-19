@@ -39,6 +39,9 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 const logger = getLogger('ShortcutInputHandler');
 
 export class ShortcutInputHandler extends InputHandler {
+  private activeShortcutNr?: number;
+  private activeShortcutKey?: string;
+
   constructor(playerService: PlayerService, appContext: AppContext) {
     super(playerService, appContext);
   }
@@ -53,6 +56,13 @@ export class ShortcutInputHandler extends InputHandler {
       // Ensure AppContext is available
       if (!this.appContext) {
         logger.warn('AppContext not available for shortcut');
+        return;
+      }
+
+      // Check if this shortcut is blocked by another exclusive shortcut
+      const shortcutService = this.appContext.services.shortcut;
+      if (shortcutService?.isShortcutBlocked(shortcutNr)) {
+        logger.debug('Shortcut blocked by exclusive shortcut', { shortcutNr });
         return;
       }
 
@@ -232,22 +242,108 @@ export class ShortcutInputHandler extends InputHandler {
 
       // Emit activation event for ItemService (pose handling)
       this.playerService.emitShortcutActivated(shortcutKey, shortcutItemId);
+
+      // Track active shortcut for continuous updates
+      this.activeShortcutNr = shortcutNr;
+      this.activeShortcutKey = shortcutKey;
     } catch (error) {
       ExceptionHandler.handle(error, 'ShortcutInputHandler.onActivate', { shortcutNr });
     }
   }
 
   /**
-   * Handle shortcut deactivation (no-op for shortcuts)
+   * Handle shortcut deactivation.
+   * Called when key is released.
    */
   protected onDeactivate(): void {
-    // Shortcuts are instantaneous, no deactivation needed
+    if (!this.activeShortcutNr || !this.activeShortcutKey) {
+      return;
+    }
+
+    try {
+      const shortcutService = this.appContext?.services.shortcut;
+      if (!shortcutService) {
+        return;
+      }
+
+      // Get shortcut data before ending
+      const shortcut = shortcutService.endShortcut(this.activeShortcutNr);
+
+      // Emit ended event
+      if (shortcut) {
+        const duration = (Date.now() - shortcut.startTime) / 1000;
+
+        this.playerService.emitShortcutEnded({
+          shortcutNr: this.activeShortcutNr,
+          shortcutKey: this.activeShortcutKey,
+          executorId: shortcut.executorId,
+          duration,
+        });
+
+        logger.debug('Shortcut ended', {
+          shortcutNr: this.activeShortcutNr,
+          shortcutKey: this.activeShortcutKey,
+          duration,
+        });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ShortcutInputHandler.onDeactivate', {
+        shortcutNr: this.activeShortcutNr,
+      });
+    } finally {
+      this.activeShortcutNr = undefined;
+      this.activeShortcutKey = undefined;
+    }
   }
 
   /**
-   * Update handler state (no-op for shortcuts)
+   * Update handler state.
+   * Called each frame while shortcut is active.
+   * Collects current position/target data and updates ShortcutService.
    */
   protected onUpdate(deltaTime: number, value: number): void {
-    // Shortcuts are instantaneous, no continuous update needed
+    if (!this.activeShortcutNr || !this.appContext) {
+      return;
+    }
+
+    try {
+      const selectService = this.appContext.services.select;
+      const shortcutService = this.appContext.services.shortcut;
+
+      if (!selectService || !shortcutService) {
+        return;
+      }
+
+      // Collect current context
+      const playerPos = this.playerService.getPosition();
+      const selectedEntity = selectService.getCurrentSelectedEntity();
+      const selectedBlock = selectService.getCurrentSelectedBlock();
+
+      // Determine target position
+      let targetPos: any | undefined;
+      if (selectedEntity) {
+        targetPos = selectedEntity.currentPosition;
+      } else if (selectedBlock) {
+        const pos = selectedBlock.block.position;
+        targetPos = { x: pos.x + 0.5, y: pos.y + 0.5, z: pos.z + 0.5 };
+      }
+
+      // Update in ShortcutService
+      shortcutService.updateShortcut(this.activeShortcutNr, playerPos, targetPos);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ShortcutInputHandler.onUpdate', {
+        shortcutNr: this.activeShortcutNr,
+      });
+    }
+  }
+
+  /**
+   * Gets the currently active shortcut number.
+   * Used for debugging and status queries.
+   *
+   * @returns Active shortcut number or undefined
+   */
+  getActiveShortcutNr(): number | undefined {
+    return this.activeShortcutNr;
   }
 }

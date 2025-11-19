@@ -958,7 +958,7 @@ ScriptActionDefinition:
 - parameters: Record<string, any> (optional)
 - script: ScrawlScript (optional, inline definition)
 
-## Umsetzung
+## Umsetzung Scrawl Engine
 
 [x] Erstelle die Model interfaces und basis klassen in shared/src/scrawl/ 
 - ScrawlScript
@@ -1020,7 +1020,7 @@ doScrawlStart('{
   }')
 ```
 
-[?] Erstelle einen Effekt, der ein Commando im CommandService ausfuehrt:
+[x] Erstelle einen Effekt, der ein Commando im CommandService ausfuehrt:
 - cmd: string
 - parameter0: any
 - parameter1: any
@@ -1095,10 +1095,54 @@ doScrawlStart({
   })
 ```
 
+[-] Es wird ein weiterer Kind 'while' in Scrawl Scripts benoetigt.
+While hat zwei use cases:
+1. Solange laufen bis ein anderer paralleter task beendet wird (z.b. warten auf das ende einer animation und in der zeit einen sound im loop abspielen) - Hier wird vermutlich auch der Effekt diese Eigenschaft unterstuetzen muessen.
+2. Solange laufen bis ein Event kommt, z.b. mouse wieder losgelassen wird. 
+   - Dabei muss auch ein target Vektor anpassbar sein, z.b. solange die maus gedrueckt wird, bewege das ziel auf die maus position. Diese Anforderung ist beschränkt auf die source und target positionen. 
+
+- Beide sollen durch den Kind 'While' abgedeckt werden koennen.
+- Nicht jeder Effekt muss das unterstuetzen. ggf geben wir diesen effekten spezielle namen, z.b. 'sound:loop_while' oder 'move:towards_while'
+- Effekte sollen immer sauber aufgereaumt werden, es soll immer ein dispose() geben, das zuverlaessig aufgerufen wird, wenn der effekt beendet wird.
+- Effekte sollen nie ewig laufen koennen, es muss immer einen timeout geben, der kann by default hoch sein, aber es muss ihn geben.
+- Welche erweiertung ist im Effekt system notwendig, um den use case 1 zu unterstuetzen?
+  - z.b. ein stop() oder disposal() methode im EffectHandler?
+
+> Reden wir ueber zwei Kinds: Ich wuerde die 'While' und 'Until' nennen. While fuer LoopWhileTask, und until fuer LoopWhileEvent (Until Finished Event)
+
+[?] While Kind implementieren
+
+StepWhile - Loop während Parallel-Task läuft
+
+- Zweck: Effekt wiederholen während ein anderer Task aktiv ist
+- Terminierung: Automatisch wenn referenzierter Task endet
+- Use Case: Sound loopen während Animation läuft
+- Besonderheit: Keine Parameter-Updates nötig, einfache Task-Synchronisation
+
+[?] Until Kind implementieren
+
+StepUntil - Loop bis Event eintritt
+
+- Zweck: Effekt wiederholen bis ein Event eintritt
+- Terminierung: Event-basiert (z.B. mouse:up, custom events)
+- Use Case: Beam folgt Maus, Charging-Effekt während Taste gedrückt
+- Besonderheit: Unterstützt dynamische Parameter-Updates
+
+
+## Embedding Scripts
+
 [?] Erweitere Items (ItemData.ts) so, das ScriptActionDefinition als onUseEffekt Effekt definiert werden kann.
 - Wenn ein Item per shortcut ausgefuehrt wird, wird der ScrawlService genutzt um das Script zu starten - wenn vorhanden.
 
-[?] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.
+[ ] Erweiterung von Shotcuts:
+- Es muss auch das ende eines shortcut events geben, z.b. wenn die maus/key losgelassen wird.
+- Es muss moeglich sein, während des gedrückt haltens eines shortcuts, die position des source / targets neu zu setzen.
+Brauchen wir einen ShortcutService der Shortcuts managed? Aktuell wird das alles im PlayerServie und ??? verarbeitet.
+- Beim Start eines effekts muss das gestartete Script an den Shortcut gebunden werden, damit 
+
+## Editor
+
+[x] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.
 - Liste von .scrawl.json Scripten und suche. Nur anzeige von Dateinamen. (AssetPrview control benutzen)
 - Mit Add new Script wird der Editor mit einem leeren Script geoeffnet.
 - Auf den gefunden elementen kann ein Icon 'Duplicate' geklickt werden, um das Script zu kopieren und im Editor zu oeffnen.
@@ -1113,16 +1157,20 @@ doScrawlStart({
 - Es soll einen Button Source geben, der das JSON des Scripts anzeigt und editierbar macht.
 - Eine Liste von moeglichen Effekten/Commands (Kind:Cmd) soll aus einer asset-Datei unter 'scrawl/effects.json' geladen werden und im Editor als presets angezeigt werden.
 
-[?] Erstelle exemplarisch eine Scrawl Script Bibliothek in den assets in client/packages/test_server/files/assets/scrawl/effects.json
+[x] Erstelle exemplarisch eine Scrawl Script Bibliothek in den assets in client/packages/test_server/files/assets/scrawl/effects.json
 
-[?] Erweitere die Server REST API um eine liste von items zu suchen
+[x] Erweitere die Server REST API um eine liste von items zu suchen
 - Siehe "Item Suchen" in client/instructions/general/server_rest_api.md
 
-[?] Erstelle einen Item Editor in 'controls' der es erlaubt Items (ItemData) zu bearbeiten
+[x] Erstelle einen Item Editor in 'controls' der es erlaubt Items (ItemData) zu bearbeiten
 - Liste von Items mit Suche
 - Item anlegen, loeschen
 - Item bearbeiten
 - onUseEffect soll mit dem Scrawl Script Editor bearbeitet werden koennen
+
+
+
+## Effects
 
 [x] Erstelle einen Shader, der eine Fläche anzeigt (VFX Circle Marker) Die Fläche wird innerhalb der gegebenen spredDuration von 0 auf radius skaliert. Dann
 Bleibt die Fläche fuer stayDuration sekunden sichtbar und fadet dann aus.
@@ -1234,7 +1282,7 @@ Zur bewegung der particle sollen random zahlen benutzt werden.
 doScrawlStart({
     "root": {
       "kind": "Play",
-      "effectId": "beam",
+      "effectId": "particleBeam",
       "ctx": {
         "startPosition": {"x": 0, "y": 65, "z": 0},
         "endPosition": {"x": 10, "y": 70, "z": 10},
@@ -1245,6 +1293,106 @@ doScrawlStart({
         "thickness": 0.15,
         "speed": 1.5,
         "alpha": 0.5  // 50% transparent
+      }
+    }
+  })
+```
+[ ] Gewichtung fuer die drei Farben mit Veränderung der Intensität auf Zeit je Farbe
+[ ] Fluktuation Richtung Target: Partikel können den Beam verlassen und wieder zurueckkehren
+[x] Umbennennen von Effekt 'beam' zu 'particleBeam'
+
+[ ] Erstelle einen Effekt 'particleExplosion' der an einer stelle eine Partikel Explosion ausloest.
+- Parameter: position - Vector3
+- Parameter: color1 - string
+- Parameter: color2 - string
+- Parameter: color3 - string
+- Parameter: color1Weight - number (0-1) - default: 1
+- Parameter: color2Weight - number (0-1) - default: 1
+- Parameter: color3Weight - number (0-1) - default: 1
+- Parameter: initialRadius - number
+- Parameter: spreadRadius - number
+- Parameter: particleCount - number
+- Parameter: particleSize - number
+- Parameter: duration - number (sekunden)
+- Parameter: speed - number
+- Parameter: alpha - number
+
+
+
+
+===
+# Examples tum testen
+
+```text
+doScrawlStart({
+    id: "aoe_at_position",
+    root: {
+      kind: "Sequence",
+      steps: [
+        {
+          kind: "Play",
+          effectId: "circleMarker",
+          ctx: {
+            position: { x: -1, y: 70, z: 18 },
+            radius: 5,
+            color: "#ff6600",
+            spreadDuration: 0.5,
+            stayDuration: 2.0,
+            rotationSpeed: 2.0,
+            alpha: 0.9,
+             shape: "circle",
+            texture: "textures/block/basic/red_mushroom.png"
+          }
+        },
+        {
+          kind: "Wait",
+          seconds: 2.5
+        },
+        {
+          kind: "Cmd",
+          cmd: "notification",
+          parameters: [20, "null", "BOOM!"]
+        }
+      ]
+    }
+  })
+
+
+ doScrawlStart({
+    id: "fireball",
+    root: {
+      kind: "Play",
+      effectId: "projectile",
+      ctx: {
+        startPosition: { x: -1, y: 70, z: 18 },
+        targetPosition: { x: -1, y: 75, z: 23 },
+        projectileWidth: 0.8,
+        projectileHeadWidth: 0.2,
+        projectileRadius: 0.3,
+        projectileTexture: "textures/block/basic/redstone_ore.png",
+        speed: 15,
+        shape: "bullet",
+        rotationSpeed: 3,
+        color: "#ff6600"
+      }
+    }
+  })
+
+
+
+doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleBeam",
+      "ctx": {
+        "startPosition": {"x": -1, "y": 70, "z": 18},
+        "endPosition": {"x": -1, "y": 75, "z": 23},
+        "color1": "#ff0000",
+        "color2": "#00ff00",
+        "color3": "#0000ff",
+        "duration": 2.0,
+        "alpha": 1,
+        "thickness": 0.3
       }
     }
   })

@@ -9,7 +9,9 @@ import { LogEffect } from './effects/LogEffect';
 import { CommandEffect } from './effects/CommandEffect';
 import { CircleMarkerEffect } from './effects/CircleMarkerEffect';
 import { ProjectileEffect } from './effects/ProjectileEffect';
-import { BeamEffect } from './effects/BeamEffect';
+import { ParticleBeamEffect } from './effects/ParticleBeamEffect';
+import { LoopingSoundEffect } from './effects/LoopingSoundEffect';
+import { BeamFollowEffect } from './effects/BeamFollowEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -67,11 +69,25 @@ export class ScrawlService {
     // Register ProjectileEffect for flying projectiles
     this.effectRegistry.register('projectile', ProjectileEffect);
 
-    // Register BeamEffect for magical beam effects
-    this.effectRegistry.register('beam', BeamEffect);
+    // Register ParticleBeamEffect for magical beam effects
+    this.effectRegistry.register('particleBeam', ParticleBeamEffect);
+
+    // Register LoopingSoundEffect for looping sounds in While/Until loops
+    this.effectRegistry.register('sound:loop', LoopingSoundEffect);
+
+    // Register BeamFollowEffect for dynamic beam tracking
+    this.effectRegistry.register('beam:follow', BeamFollowEffect);
 
     logger.debug('Built-in effects registered', {
-      effects: ['log', 'command', 'circleMarker', 'projectile', 'beam'],
+      effects: [
+        'log',
+        'command',
+        'circleMarker',
+        'projectile',
+        'particleBeam',
+        'sound:loop',
+        'beam:follow',
+      ],
     });
   }
 
@@ -309,6 +325,29 @@ export class ScrawlService {
       library.scripts.set(script.id, script);
     }
     logger.debug(`Script registered: ${script.id}`);
+  }
+
+  /**
+   * Updates a parameter in a running executor.
+   * Can be called from any source (e.g., InputService, NetworkService, etc.)
+   *
+   * @param executorId ID of the executor (returned by executeScript())
+   * @param paramName Name of the parameter (e.g. 'targetPos', 'mousePos', 'volume')
+   * @param value New value (any type)
+   */
+  updateExecutorParameter(executorId: string, paramName: string, value: any): void {
+    const executor = this.runningExecutors.get(executorId);
+    if (executor) {
+      executor.updateParameter(paramName, value);
+      logger.debug('Executor parameter updated via ScrawlService', {
+        executorId,
+        paramName,
+      });
+    } else {
+      logger.debug(`Executor not found for parameter update: ${executorId}`, {
+        paramName,
+      });
+    }
   }
 
   /**

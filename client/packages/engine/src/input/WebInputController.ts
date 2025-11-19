@@ -308,6 +308,15 @@ export class WebInputController implements InputController {
    * Handle keyup event
    */
   private onKeyUp = (event: KeyboardEvent): void => {
+    // Handle shortcut key release (number keys 0-9)
+    if (event.key >= '0' && event.key <= '9') {
+      if (this.shortcutHandler && this.shortcutHandler.isActive()) {
+        this.shortcutHandler.deactivate();
+        event.preventDefault();
+      }
+      return;
+    }
+
     // Handle Space key dynamically based on movement mode
     if (event.key === ' ') {
       const mode = this.playerService.getMovementMode();

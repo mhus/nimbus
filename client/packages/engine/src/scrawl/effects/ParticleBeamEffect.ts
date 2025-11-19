@@ -1,5 +1,5 @@
 /**
- * BeamEffect - Magical beam effect between two positions
+ * ParticleBeamEffect - Magical beam effect between two positions
  *
  * Creates three intertwining particle strands that form a magical beam.
  * The beam builds up from start to end, stays active, then fades out.
@@ -17,12 +17,12 @@ import {
   Constants,
 } from '@babylonjs/core';
 
-const logger = getLogger('BeamEffect');
+const logger = getLogger('ParticleBeamEffect');
 
 /**
- * Options for BeamEffect
+ * Options for ParticleBeamEffect
  */
-export interface BeamOptions {
+export interface ParticleBeamOptions {
   /** Start position */
   startPosition: { x: number; y: number; z: number };
 
@@ -50,6 +50,15 @@ export interface BeamOptions {
   /** Speed multiplier for particle movement (default: 1.0) */
   speed?: number;
 
+  /** Weight of color1 strand (0.0 = invisible, 1.0 = full opacity, default: 1.0) */
+  color1Weight?: number;
+
+  /** Weight of color2 strand (0.0 = invisible, 1.0 = full opacity, default: 1.0) */
+  color2Weight?: number;
+
+  /** Weight of color3 strand (0.0 = invisible, 1.0 = full opacity, default: 1.0) */
+  color3Weight?: number;
+
   /** Setup duration - time to build beam from start to end (default: 0.2s) */
   setupDuration?: number;
 
@@ -58,13 +67,13 @@ export interface BeamOptions {
 }
 
 /**
- * BeamEffect - Creates a magical beam with three intertwining particle strands
+ * ParticleBeamEffect - Creates a magical beam with three intertwining particle strands
  *
  * Usage:
  * ```json
  * {
  *   "kind": "Play",
- *   "effectId": "beam",
+ *   "effectId": "particleBeam",
  *   "ctx": {
  *     "startPosition": {"x": 0, "y": 65, "z": 0},
  *     "endPosition": {"x": 10, "y": 65, "z": 10},
@@ -75,13 +84,16 @@ export interface BeamOptions {
  *     "thickness": 0.1,
  *     "alpha": 0.8,
  *     "speed": 1.5,
+ *     "color1Weight": 1.0,
+ *     "color2Weight": 0.5,
+ *     "color3Weight": 1.0,
  *     "setupDuration": 0.2,
  *     "fadeDuration": 0.2
  *   }
  * }
  * ```
  */
-export class BeamEffect extends ScrawlEffectHandler<BeamOptions> {
+export class ParticleBeamEffect extends ScrawlEffectHandler<ParticleBeamOptions> {
   private particleSystems: ParticleSystem[] = [];
   private startTime: number = 0;
   private startPos: Vector3 | null = null;
@@ -115,6 +127,13 @@ export class BeamEffect extends ScrawlEffectHandler<BeamOptions> {
       const alpha = this.options.alpha ?? 1.0;
       const speed = this.options.speed ?? 1.0;
       const setupDuration = this.options.setupDuration ?? 0.2;
+
+      // Color weights for individual strands
+      const colorWeights = [
+        this.options.color1Weight ?? 1.0,
+        this.options.color2Weight ?? 1.0,
+        this.options.color3Weight ?? 1.0,
+      ];
 
       // Create three particle systems for three intertwining strands
       const colors = [
@@ -157,6 +176,11 @@ export class BeamEffect extends ScrawlEffectHandler<BeamOptions> {
       );
 
       for (let i = 0; i < 3; i++) {
+        // Skip this strand if weight is 0
+        if (colorWeights[i] === 0) {
+          continue;
+        }
+
         const particleSystem = new ParticleSystem(
           `beamStrand${i}`,
           2000,
@@ -245,7 +269,7 @@ export class BeamEffect extends ScrawlEffectHandler<BeamOptions> {
               ? 1.0 - Math.min((currentTime - fadeOutStart) / (this.options.fadeDuration ?? 0.2), 1.0)
               : 1.0;
 
-            particle.color.a = colors[i].a * alpha * fadeInProgress * fadeOutProgress;
+            particle.color.a = colors[i].a * alpha * colorWeights[i] * fadeInProgress * fadeOutProgress;
           }
         };
 
@@ -271,7 +295,7 @@ export class BeamEffect extends ScrawlEffectHandler<BeamOptions> {
       this.startTime = this.now();
       this.animate();
     } catch (error) {
-      logger.error('Failed to create beam effect', { error });
+      logger.error('Failed to create particle beam effect', { error });
       this.cleanup();
     }
   }

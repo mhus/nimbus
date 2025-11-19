@@ -275,15 +275,16 @@ export class ItemService {
         return;
       }
 
-      const { pose, wait, duration, onUseEffect } = itemData;
+      const { pose, wait, duration, onUseEffect, exclusive } = itemData;
 
       // Execute scrawl script if defined
+      let executorId: string | undefined;
       if (onUseEffect) {
         const scrawlService = this.appContext.services.scrawl;
         if (scrawlService) {
           try {
             logger.debug('Executing onUseEffect script', { itemId, shortcutKey });
-            await scrawlService.executeAction(onUseEffect, {
+            executorId = await scrawlService.executeAction(onUseEffect, {
               // Provide context for the script
               itemId,
               shortcutKey,
@@ -300,6 +301,34 @@ export class ItemService {
           }
         } else {
           logger.debug('ScrawlService not available, skipping onUseEffect', { itemId });
+        }
+      }
+
+      // Register in ShortcutService if executorId exists
+      if (executorId) {
+        const shortcutService = this.appContext.services.shortcut;
+        const playerService = this.appContext.services.player;
+
+        if (shortcutService && playerService) {
+          const shortcutNr = this.extractShortcutNumber(shortcutKey);
+          const isExclusive = exclusive ?? false;
+
+          shortcutService.startShortcut(shortcutNr, shortcutKey, executorId, isExclusive, itemId);
+
+          // Emit started event
+          playerService.emitShortcutStarted({
+            shortcutNr,
+            shortcutKey,
+            executorId,
+            itemId,
+            exclusive: isExclusive,
+          });
+
+          logger.debug('Shortcut registered in ShortcutService', {
+            shortcutNr,
+            executorId,
+            exclusive: isExclusive,
+          });
         }
       }
 
@@ -361,6 +390,29 @@ export class ItemService {
     }, durationMs);
 
     this.poseTimers.set(modifierId, timer);
+  }
+
+  /**
+   * Extracts the shortcut number from a shortcut key.
+   *
+   * @param shortcutKey Shortcut key (e.g., 'key1', 'key10', 'click2', 'slot5')
+   * @returns Shortcut number
+   */
+  private extractShortcutNumber(shortcutKey: string): number {
+    if (shortcutKey.startsWith('key')) {
+      // key0-key9 -> 0-9, key10 -> 10
+      return parseInt(shortcutKey.replace('key', ''), 10);
+    } else if (shortcutKey.startsWith('click')) {
+      // click0-9 -> 0-9
+      return parseInt(shortcutKey.replace('click', ''), 10);
+    } else if (shortcutKey.startsWith('slot')) {
+      // slot0-N -> 0-N
+      return parseInt(shortcutKey.replace('slot', ''), 10);
+    }
+
+    // Fallback: try to extract any number from the key
+    const match = shortcutKey.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
   }
 
   /**

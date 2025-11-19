@@ -21,6 +21,9 @@ export class ScrawlExecutor {
   private paused = false;
   private vars = new Map<string, any>();
   private eventEmitter: EventTarget;
+  private runningEffects = new Map<string, any>();
+  private executorId: string = `exec_${Date.now()}_${Math.random()}`;
+  private taskCompletionPromises = new Map<string, Promise<void>>();
 
   constructor(
     private readonly effectFactory: ScrawlEffectFactory,
@@ -122,6 +125,12 @@ export class ScrawlExecutor {
         case 'Cmd':
           await this.execStepCmd(ctx, step);
           break;
+        case 'While':
+          await this.execStepWhile(ctx, step);
+          break;
+        case 'Until':
+          await this.execStepUntil(ctx, step);
+          break;
         default:
           logger.warn(`Unknown step kind: ${(step as any).kind}`);
       }
@@ -172,9 +181,31 @@ export class ScrawlExecutor {
   }
 
   private async execStepParallel(ctx: ScrawlExecContext, step: any): Promise<void> {
-    await Promise.all(
-      step.steps.map((childStep: ScrawlStep) => this.execStep(this.fork(ctx), childStep))
-    );
+    const steps = step.steps || [];
+    const taskPromises: Promise<void>[] = [];
+
+    for (let i = 0; i < steps.length; i++) {
+      const parallelStep = steps[i];
+
+      // Use explicit ID or generate one
+      const taskId = (parallelStep as any).id || `${this.executorId}_parallel_${i}`;
+
+      // Fork context and execute
+      const forkedCtx = this.fork(ctx);
+      const taskPromise = this.execStep(forkedCtx, parallelStep);
+      taskPromises.push(taskPromise);
+
+      // Register task completion promise (for While-loops)
+      this.taskCompletionPromises.set(taskId, taskPromise);
+
+      // Cleanup after completion
+      taskPromise.finally(() => {
+        this.taskCompletionPromises.delete(taskId);
+      });
+    }
+
+    // Wait for all parallel tasks to complete
+    await Promise.all(taskPromises);
   }
 
   private async execStepRepeat(ctx: ScrawlExecContext, step: any): Promise<void> {
@@ -534,5 +565,258 @@ export class ScrawlExecutor {
 
   getScriptId(): string {
     return this.script.id;
+  }
+
+  /**
+   * Updates a parameter in the context and notifies running effects.
+   * Called externally via ScrawlService.
+   *
+   * Only relevant for StepUntil - StepWhile does not trigger parameter updates.
+   *
+   * @param paramName Name of the parameter
+   * @param value New value
+   */
+  updateParameter(paramName: string, value: any): void {
+    // Update context variable
+    const ctx = this.createContext();
+    ctx.vars = ctx.vars || {};
+    ctx.vars[paramName] = value;
+
+    logger.debug('Parameter updated', { paramName, value, executorId: this.executorId });
+
+    // Notify all running effects that implement onParameterChanged
+    for (const [effectId, effect] of this.runningEffects) {
+      if (effect.onParameterChanged) {
+        try {
+          effect.onParameterChanged(paramName, value, ctx);
+        } catch (error) {
+          logger.error('onParameterChanged failed', { effectId, paramName, error });
+        }
+      }
+    }
+  }
+
+  /**
+   * Executes StepWhile: Loop while a parallel task is running
+   */
+  private async execStepWhile(ctx: ScrawlExecContext, step: any): Promise<void> {
+    const timeout = step.timeout ?? 60;
+    const startTime = performance.now() / 1000;
+
+    // Get task completion promise
+    const taskPromise = this.taskCompletionPromises.get(step.taskId);
+    if (!taskPromise) {
+      logger.warn(`Task not found: ${step.taskId}`, { scriptId: this.script.id });
+      return;
+    }
+
+    let taskCompleted = false;
+    taskPromise.then(() => {
+      taskCompleted = true;
+    });
+
+    let effectHandler: any | null = null;
+
+    try {
+      const isSteadyEffect = await this.checkIfSteadyEffect(step.step);
+
+      if (isSteadyEffect) {
+        // Steady: Execute once, runs until task ends
+        effectHandler = await this.executeAndTrackEffect(ctx, step.step);
+
+        // Wait for task completion or timeout
+        while (!this.cancelled && !taskCompleted) {
+          const elapsed = performance.now() / 1000 - startTime;
+          if (elapsed >= timeout) {
+            logger.warn(`While loop timed out after ${timeout}s`, {
+              taskId: step.taskId,
+              scriptId: this.script.id,
+            });
+            break;
+          }
+
+          // Check if effect finished early
+          if (effectHandler && !effectHandler.isRunning()) {
+            logger.debug('Steady effect finished early in While loop');
+            break;
+          }
+
+          await this.sleep(0.1); // 100ms polling
+        }
+      } else {
+        // One-Shot: Execute repeatedly until task ends
+        while (!this.cancelled && !taskCompleted) {
+          const elapsed = performance.now() / 1000 - startTime;
+          if (elapsed >= timeout) {
+            logger.warn(`While loop timed out after ${timeout}s`, {
+              taskId: step.taskId,
+              scriptId: this.script.id,
+            });
+            break;
+          }
+
+          await this.execStep(ctx, step.step);
+          await this.sleep(0.016); // ~60fps
+        }
+      }
+    } finally {
+      // Cleanup steady effect
+      if (effectHandler) {
+        this.stopAndUntrackEffect(effectHandler);
+      }
+    }
+  }
+
+  /**
+   * Executes StepUntil: Loop until an event is emitted
+   * Supports parameter updates via updateParameter()
+   */
+  private async execStepUntil(ctx: ScrawlExecContext, step: any): Promise<void> {
+    const timeout = step.timeout ?? 60;
+    const startTime = performance.now() / 1000;
+
+    // Set up event listener
+    let eventReceived = false;
+    const eventPromise = this.waitEvent(step.event, 0);
+    eventPromise.then(() => {
+      eventReceived = true;
+    });
+
+    let effectHandler: any | null = null;
+
+    try {
+      const isSteadyEffect = await this.checkIfSteadyEffect(step.step);
+
+      if (isSteadyEffect) {
+        // Steady: Execute once, runs until event
+        effectHandler = await this.executeAndTrackEffect(ctx, step.step);
+
+        // Wait for event or timeout
+        while (!this.cancelled && !eventReceived) {
+          const elapsed = performance.now() / 1000 - startTime;
+          if (elapsed >= timeout) {
+            logger.warn(`Until loop timed out after ${timeout}s`, {
+              event: step.event,
+              scriptId: this.script.id,
+            });
+            break;
+          }
+
+          // Check if effect finished early
+          if (effectHandler && !effectHandler.isRunning()) {
+            logger.debug('Steady effect finished early in Until loop');
+            break;
+          }
+
+          await this.sleep(0.1); // 100ms polling
+        }
+      } else {
+        // One-Shot: Execute repeatedly until event
+        while (!this.cancelled && !eventReceived) {
+          const elapsed = performance.now() / 1000 - startTime;
+          if (elapsed >= timeout) {
+            logger.warn(`Until loop timed out after ${timeout}s`, {
+              event: step.event,
+              scriptId: this.script.id,
+            });
+            break;
+          }
+
+          await this.execStep(ctx, step.step);
+          await this.sleep(0.016); // ~60fps
+        }
+      }
+    } finally {
+      // Cleanup steady effect
+      if (effectHandler) {
+        this.stopAndUntrackEffect(effectHandler);
+      }
+    }
+  }
+
+  /**
+   * Checks if a step contains a steady effect
+   */
+  private async checkIfSteadyEffect(step: ScrawlStep): Promise<boolean> {
+    if (step.kind !== 'Play') return false;
+
+    try {
+      const handler = this.effectFactory.create((step as any).effectId, (step as any).ctx || {});
+      return handler.isSteadyEffect();
+    } catch (error) {
+      logger.error('Failed to check if steady effect', { error });
+      return false;
+    }
+  }
+
+  /**
+   * Executes a Play step and tracks the handler
+   */
+  private async executeAndTrackEffect(ctx: ScrawlExecContext, step: any): Promise<any> {
+    // Resolve source and target (like in execStepPlay)
+    const source = this.resolveSubject(ctx, step.source);
+    const target = this.resolveSubject(ctx, step.target);
+
+    const effectCtx: ScrawlExecContext = {
+      ...ctx,
+      ...(step.ctx || {}),
+    };
+
+    if (source) {
+      if (Array.isArray(source)) {
+        effectCtx.patients = source;
+      } else {
+        effectCtx.actor = source;
+      }
+    }
+    if (target) {
+      if (Array.isArray(target)) {
+        effectCtx.patients = target;
+      } else {
+        effectCtx.patients = [target];
+      }
+    }
+
+    // Create and execute effect
+    const handler = this.effectFactory.create(step.effectId, step.ctx || {});
+    const effectId = `effect_${this.executorId}_${Date.now()}_${Math.random()}`;
+
+    // Register in running effects
+    this.runningEffects.set(effectId, handler);
+
+    try {
+      const result = handler.execute(effectCtx);
+      if (result instanceof Promise) {
+        await result;
+      }
+    } catch (error) {
+      // Remove on error
+      this.runningEffects.delete(effectId);
+      throw error;
+    }
+
+    return handler;
+  }
+
+  /**
+   * Stops an effect and removes it from tracking
+   */
+  private stopAndUntrackEffect(handler: any): void {
+    try {
+      if (handler.stop) {
+        const result = handler.stop();
+        if (result instanceof Promise) {
+          result.catch((err: any) => logger.error('Effect stop failed', { err }));
+        }
+      }
+    } finally {
+      // Remove from running effects
+      for (const [key, h] of this.runningEffects) {
+        if (h === handler) {
+          this.runningEffects.delete(key);
+          break;
+        }
+      }
+    }
   }
 }

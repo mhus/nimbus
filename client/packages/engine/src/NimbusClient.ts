@@ -157,6 +157,13 @@ async function initializeApp(): Promise<AppContext> {
     await scrawlService.initialize();
     logger.debug('ScrawlService initialized');
 
+    // Initialize ShortcutService (after ScrawlService, for executor integration)
+    logger.info('Initializing ShortcutService...');
+    const { ShortcutService } = await import('./services/ShortcutService');
+    const shortcutService = new ShortcutService(appContext);
+    appContext.services.shortcut = shortcutService;
+    logger.debug('ShortcutService initialized');
+
     // Initialize CommandService (available in both EDITOR and VIEWER modes)
     logger.info('Initializing CommandService...');
     const commandService = new CommandService(appContext);

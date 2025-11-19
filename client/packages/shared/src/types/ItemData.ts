@@ -76,6 +76,17 @@ export interface ItemData {
   onUseEffect?: ScriptActionDefinition;
 
   /**
+   * Exclusive shortcut mode
+   *
+   * When true, this shortcut blocks all other shortcuts from activating
+   * while it is active. Useful for channeled abilities that require
+   * full player attention.
+   *
+   * Default: false (non-exclusive)
+   */
+  exclusive?: boolean;
+
+  /**
    * Optional parameters
    *
    * Map of custom key-value pairs for item-specific data.

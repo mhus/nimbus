@@ -14,5 +14,11 @@ export type { CircleMarkerOptions } from './CircleMarkerEffect';
 export { ProjectileEffect } from './ProjectileEffect';
 export type { ProjectileOptions } from './ProjectileEffect';
 
-export { BeamEffect } from './BeamEffect';
-export type { BeamOptions } from './BeamEffect';
+export { ParticleBeamEffect } from './ParticleBeamEffect';
+export type { ParticleBeamOptions } from './ParticleBeamEffect';
+
+export { LoopingSoundEffect } from './LoopingSoundEffect';
+export type { LoopingSoundOptions } from './LoopingSoundEffect';
+
+export { BeamFollowEffect } from './BeamFollowEffect';
+export type { BeamFollowOptions } from './BeamFollowEffect';

@@ -27,6 +27,7 @@ import type { InputService } from './services/InputService';
 import type { ItemService } from './services/ItemService';
 import type { AudioService } from './services/AudioService';
 import type { ScrawlService } from './scrawl/ScrawlService';
+import type { ShortcutService } from './services/ShortcutService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -116,6 +117,9 @@ export interface Services {
 
   /** Scrawl service for effect script execution and animation */
   scrawl?: ScrawlService;
+
+  /** Shortcut service for managing active shortcuts and blocking */
+  shortcut?: ShortcutService;
 
   // Future services will be added here:
   // render?: RenderService;

@@ -52,6 +52,49 @@ export abstract class ScrawlEffectHandler<O = unknown> {
   stop?(): void | Promise<void>;
 
   /**
+   * Gives whether this effect runs continuously (steady) or completes immediately (one-shot).
+   *
+   * Steady Effects:
+   * - execute() starts the effect which runs until stop() is called
+   * - Examples: sound:loop, beam:follow, continuous particle emitters
+   *
+   * One-Shot Effects:
+   * - execute() performs an action and returns immediately
+   * - Examples: log, command, spawn single particle burst
+   *
+   * @returns true if steady effect, false if one-shot (default: false)
+   */
+  isSteadyEffect(): boolean {
+    return false;
+  }
+
+  /**
+   * Indicates whether the effect is currently running.
+   * Only relevant for steady effects.
+   *
+   * @returns true if effect is still active, false otherwise (default: false)
+   */
+  isRunning(): boolean {
+    return false;
+  }
+
+  /**
+   * Called when a parameter changes during effect execution.
+   * Effects can optionally implement this to react to dynamic parameter updates.
+   *
+   * Only active during StepUntil loops - StepWhile does not trigger this.
+   *
+   * @param paramName Name of the parameter (e.g. 'targetPos', 'volume')
+   * @param value New value of the parameter
+   * @param ctx Current execution context with updated values
+   */
+  onParameterChanged?(
+    paramName: string,
+    value: any,
+    ctx: ScrawlExecContext
+  ): void;
+
+  /**
    * Helper to log messages
    */
   protected logInfo(message: string, ...args: any[]): void {
