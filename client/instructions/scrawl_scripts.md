@@ -1139,7 +1139,10 @@ StepUntil - Loop bis Event eintritt
 
 Wenn ein Script con einem Item ausgefuehrt wird (Shortcuts), werden diese variablen automatisch gesetzt.
 
-[ ] Erstelle in client/packages/engine/src/scrawl/effects eien Dokumentation, wie Effekte gebaut werden, damit spaeter neue Effekte problemlos hinzugefuegt werden koennen.
+[x] Erstelle in client/packages/engine/src/scrawl/effects eien Dokumentation, wie Effekte gebaut werden, damit spaeter neue Effekte problemlos hinzugefuegt werden koennen.
+```text
+  Speicherort: client/packages/engine/src/scrawl/effects/EFFECT_DEVELOPMENT.md
+```
 
 ## Embedding Scripts
 
