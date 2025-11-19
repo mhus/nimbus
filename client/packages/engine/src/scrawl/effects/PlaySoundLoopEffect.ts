@@ -8,7 +8,7 @@
 import { getLogger } from '@nimbus/shared';
 import { ScrawlEffectHandler } from '../ScrawlEffectHandler';
 import type { ScrawlExecContext } from '../ScrawlExecContext';
-import { Vector3 } from '@babylonjs/core';
+import { Vector3, CreateSoundAsync } from '@babylonjs/core';
 
 const logger = getLogger('PlaySoundLoopEffect');
 
@@ -136,15 +136,22 @@ export class PlaySoundLoopEffect extends ScrawlEffectHandler<PlaySoundLoopOption
           stream
         });
 
-        // Load sound with loop enabled
-        this.sound = await audioService.loadAudio(soundClip, {
-          volume: Math.max(0, Math.min(1, volume)),
-          loop: true,
-          autoplay: false,
-          spatialSound: false
-        });
+        // Create a new sound instance (not cached) so we can safely dispose it later
+        // Using CreateSoundAsync directly instead of AudioService.loadAudio() to avoid cache
+        const networkService = ctx.appContext.services.network;
+        if (!networkService) {
+          logger.warn('NetworkService not available');
+          return;
+        }
+
+        const audioUrl = networkService.getAssetUrl(soundClip);
+        this.sound = await CreateSoundAsync(soundClip, audioUrl);
 
         if (this.sound) {
+          // Configure sound
+          this.sound.volume = Math.max(0, Math.min(1, volume));
+          this.sound.loop = true;
+
           // Start playback
           this.sound.play();
           logger.debug('2D looping sound started', { soundClip });
