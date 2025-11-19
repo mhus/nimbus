@@ -117,7 +117,6 @@ export class ShortcutService {
           Math.pow(targetPosition.z - playerPosition.z, 2)
         );
       } else if (selectedBlock) {
-        targetBlock = selectedBlock;
         const pos = selectedBlock.block.position;
         blockX = pos.x;
         blockY = pos.y;
@@ -130,6 +129,14 @@ export class ShortcutService {
           Math.pow(targetPosition.y - playerPosition.y, 2) +
           Math.pow(targetPosition.z - playerPosition.z, 2)
         );
+
+        // Create simplified target object with position for script vars
+        // ClientBlock doesn't have .position, so we create a wrapper
+        targetBlock = {
+          position: targetPosition,
+          block: selectedBlock.block,
+          blockType: selectedBlock.blockType,
+        };
       }
 
       // Build interaction params
