@@ -230,14 +230,14 @@ export class CircleMarkerEffect extends ScrawlEffectHandler<CircleMarkerOptions>
       return this.options.position;
     }
 
-    // Try to get position from target
-    const target = (ctx as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
+    // Try to get position from target (vars)
+    const target = ctx.vars?.target;
     if (target?.position) {
       return target.position;
     }
 
-    // Try to get position from source (actor)
-    const source = (ctx as any).source || ctx.actor;
+    // Try to get position from source (vars)
+    const source = ctx.vars?.source;
     if (source?.position) {
       return source.position;
     }

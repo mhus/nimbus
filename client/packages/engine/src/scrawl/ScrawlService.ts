@@ -155,11 +155,24 @@ export class ScrawlService {
         throw new Error('No script provided in action definition');
       }
 
-      // Merge context and parameters
+      // Merge parameters into vars (everything goes into vars now)
       const executionContext: Partial<ScrawlExecContext> = {
-        ...context,
-        ...(action.parameters || {}),
+        vars: {
+          ...(context as any)?.vars,
+          ...(action.parameters || {}),
+        },
       };
+
+      // Log all parameters for debugging
+      logger.info('Executing script with parameters', {
+        scriptId: script.id,
+        hasSource: !!executionContext.vars?.source,
+        hasTarget: !!executionContext.vars?.target,
+        hasTargets: !!executionContext.vars?.targets,
+        sourcePos: executionContext.vars?.source?.position,
+        targetPos: executionContext.vars?.target?.position,
+        allVars: executionContext.vars ? Object.keys(executionContext.vars) : [],
+      });
 
       // Execute script locally and get executor ID
       const executorId = await this.executeScript(script, executionContext);
@@ -410,17 +423,22 @@ export class ScrawlService {
       const chunks: Array<{ cx: number; cz: number }> = [];
       const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
 
+      // Get source and targets from vars
+      const vars = (context as any)?.vars || {};
+      const source = vars.source;
+      const targets = vars.targets;
+
       // Add chunk for source position
-      if ((context as any)?.source?.position) {
-        const pos = (context as any).source.position;
+      if (source?.position) {
+        const pos = source.position;
         const cx = Math.floor(pos.x / chunkSize);
         const cz = Math.floor(pos.z / chunkSize);
         chunks.push({ cx, cz });
       }
 
       // Add chunks for target(s)
-      if ((context as any)?.targets) {
-        for (const target of (context as any).targets) {
+      if (targets) {
+        for (const target of targets) {
           if (target?.position) {
             const pos = target.position;
             const cx = Math.floor(pos.x / chunkSize);
@@ -434,7 +452,7 @@ export class ScrawlService {
       }
 
       // Get entity ID (if available)
-      const entityId = (context as any)?.source?.entityId;
+      const entityId = source?.entityId;
 
       // Generate unique effect ID
       const effectId = `effect_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
@@ -445,13 +463,14 @@ export class ScrawlService {
       setTimeout(() => this.sentEffectIds.delete(effectId), 10000);
 
       // Build effect with source/target/targets in parameters
+      // They're already in vars from the context
       const effectWithContext = {
         ...action,
         parameters: {
           ...(action.parameters || {}),
-          source: (context as any)?.source,
-          target: (context as any)?.target,
-          targets: (context as any)?.targets,
+          source: vars.source,
+          target: vars.target,
+          targets: vars.targets,
         },
       };
 

@@ -247,15 +247,15 @@ export class ProjectileEffect extends ScrawlEffectHandler<ProjectileOptions> {
       return new Vector3(explicitPos.x, explicitPos.y, explicitPos.z);
     }
 
-    // For start: use source (or fallback to actor for compatibility)
-    const source = (ctx as any).source || ctx.actor;
-    if (isStart && source) {
+    // For start: use source from vars
+    const source = ctx.vars?.source;
+    if (isStart && source?.position) {
       return new Vector3(source.position.x, source.position.y, source.position.z);
     }
 
-    // For target: use target (or fallback to first patient for compatibility)
-    const target = (ctx as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
-    if (!isStart && target) {
+    // For target: use target from vars
+    const target = ctx.vars?.target;
+    if (!isStart && target?.position) {
       const p = target.position;
       return new Vector3(p.x, p.y, p.z);
     }

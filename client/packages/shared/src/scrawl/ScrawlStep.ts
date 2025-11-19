@@ -8,11 +8,7 @@ export interface StepPlay {
   kind: 'Play';
   /** Effect ID to play */
   effectId: string;
-  /** Subject reference for source (e.g., "$actor") */
-  source?: string;
-  /** Subject reference for target (e.g., "$patient", "$patient[0]") */
-  target?: string;
-  /** Context data passed to the effect */
+  /** Context data passed to the effect (including source, target, etc.) */
   ctx?: Record<string, any>;
 }
 

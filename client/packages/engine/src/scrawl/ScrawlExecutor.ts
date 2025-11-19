@@ -149,31 +149,15 @@ export class ScrawlExecutor {
   }
 
   private async execStepPlay(ctx: ScrawlExecContext, step: any): Promise<void> {
-    // Resolve source and target from context
-    const source = this.resolveSubject(ctx, step.source);
-    const target = this.resolveSubject(ctx, step.target);
-
     // Merge context with step context
+    // All parameters (including source, target, targets) come through ctx.vars
     const effectCtx: ScrawlExecContext = {
       ...ctx,
-      ...(step.ctx || {}),
+      vars: {
+        ...ctx.vars,
+        ...(step.ctx || {}),
+      },
     };
-
-    // Override actor/patients if source/target specified
-    if (source) {
-      if (Array.isArray(source)) {
-        effectCtx.patients = source;
-      } else {
-        effectCtx.actor = source;
-      }
-    }
-    if (target) {
-      if (Array.isArray(target)) {
-        effectCtx.patients = target;
-      } else {
-        effectCtx.patients = [target];
-      }
-    }
 
     await this.effectFactory.play(step.effectId, step.ctx || {}, effectCtx);
   }
@@ -463,42 +447,34 @@ export class ScrawlExecutor {
    * These are automatically available in all scripts.
    */
   private setDefaultVariables(ctx: ScrawlExecContext): void {
-    // $source - The source subject (from vars/parameters, or fallback to ctx.actor)
-    const source = ctx.vars?.source || (this.initialContext as any).source || ctx.actor;
-    if (source) {
-      this.vars.set('source', source);
+    // $source, $target, $targets - These come from vars (parameters)
+    if (ctx.vars?.source) {
+      this.vars.set('source', ctx.vars.source);
     }
 
-    // $target - The target subject (from vars/parameters, or fallback to ctx.patients)
-    const target = ctx.vars?.target || (this.initialContext as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
-    if (target) {
-      this.vars.set('target', target);
+    if (ctx.vars?.target) {
+      this.vars.set('target', ctx.vars.target);
     }
 
-    // $targets - Array of all targets (from vars/parameters, or fallback to ctx.patients)
-    const targets = ctx.vars?.targets || (this.initialContext as any).targets || ctx.patients;
-    if (targets) {
-      this.vars.set('targets', targets);
+    if (ctx.vars?.targets) {
+      this.vars.set('targets', ctx.vars.targets);
     }
 
-    // $item - The item Block that triggered this effect (if available)
-    if (this.initialContext.item) {
-      this.vars.set('item', this.initialContext.item);
+    // $item, $itemId, $itemName, $itemTexture - These come from vars
+    if (ctx.vars?.item) {
+      this.vars.set('item', ctx.vars.item);
     }
 
-    // $itemId - The item ID (if available)
-    if (this.initialContext.itemId) {
-      this.vars.set('itemId', this.initialContext.itemId);
+    if (ctx.vars?.itemId) {
+      this.vars.set('itemId', ctx.vars.itemId);
     }
 
-    // $itemName - The item name (if available)
-    if (this.initialContext.itemName) {
-      this.vars.set('itemName', this.initialContext.itemName);
+    if (ctx.vars?.itemName) {
+      this.vars.set('itemName', ctx.vars.itemName);
     }
 
-    // $itemTexture - The item texture (if available)
-    if (this.initialContext.itemTexture) {
-      this.vars.set('itemTexture', this.initialContext.itemTexture);
+    if (ctx.vars?.itemTexture) {
+      this.vars.set('itemTexture', ctx.vars.itemTexture);
     }
   }
 
