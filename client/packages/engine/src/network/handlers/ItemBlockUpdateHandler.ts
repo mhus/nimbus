@@ -16,8 +16,6 @@ import {
   BaseMessage,
   MessageType,
   type Item,
-  type Block,
-  itemToBlock,
   getLogger,
 } from '@nimbus/shared';
 import { MessageHandler } from '../MessageHandler';
@@ -60,22 +58,10 @@ export class ItemBlockUpdateHandler extends MessageHandler<Item[]> {
       })),
     });
 
-    // Convert Items to Blocks for ChunkService
-    const blocks: Block[] = items.map(item => {
-      // Check if this is a delete marker (itemType: '__deleted__')
-      if (item.itemType === '__deleted__') {
-        return {
-          position: item.position,
-          blockTypeId: 0, // AIR = deletion
-        };
-      }
-      // Regular item
-      return itemToBlock(item);
-    });
+    // Forward Items directly to ChunkService
+    // ChunkService will handle filling and conversion
+    await this.chunkService.onItemUpdate(items);
 
-    // Forward to ChunkService (await to ensure BlockTypes are loaded)
-    await this.chunkService.onItemBlockUpdate(blocks);
-
-    logger.info('Item updates converted and forwarded to ChunkService');
+    logger.info('Item updates forwarded to ChunkService');
   }
 }

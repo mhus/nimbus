@@ -12,6 +12,7 @@ import {
   ChunkRegisterData,
   ChunkDataTransferObject,
   Block,
+  Item,
   Shape,
   getLogger,
   ExceptionHandler,
@@ -1107,6 +1108,192 @@ export class ChunkService {
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.onItemBlockUpdate', {
         count: blocks.length,
+      });
+    }
+  }
+
+  /**
+   * Handle item updates from server (new method that receives Items, not Blocks)
+   *
+   * Receives Item[] from server, fills them with ItemType data, converts to Blocks,
+   * and updates the chunks.
+   *
+   * @param items - Array of item updates from server
+   */
+  async onItemUpdate(items: Item[]): Promise<void> {
+    try {
+      logger.info('🔵 ChunkService.onItemUpdate called', {
+        itemCount: items.length,
+      });
+
+      const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+      const blockTypeService = this.appContext.services.blockType;
+      const itemService = this.appContext.services.item;
+
+      if (!blockTypeService) {
+        logger.warn('BlockTypeService not available - cannot process item updates');
+        return;
+      }
+
+      if (!itemService) {
+        logger.warn('ItemService not available - cannot process item updates');
+        return;
+      }
+
+      // Preload BlockType 1 (ITEM)
+      await blockTypeService.preloadBlockTypes([1]);
+
+      // Track affected chunks for re-rendering
+      const affectedChunks = new Set<string>();
+
+      for (const item of items) {
+        // Check if this is a delete marker
+        if (item.itemType === '__deleted__') {
+          // Handle deletion
+          const chunkCoord = worldToChunk(item.position.x, item.position.z, chunkSize);
+          const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
+          const clientChunk = this.chunks.get(chunkKey);
+
+          if (!clientChunk) {
+            logger.debug('Item delete for unloaded chunk, ignoring', {
+              position: item.position,
+              cx: chunkCoord.cx,
+              cz: chunkCoord.cz,
+            });
+            continue;
+          }
+
+          const posKey = getBlockPositionKey(item.position.x, item.position.y, item.position.z);
+          const existingBlock = clientChunk.data.data.get(posKey);
+
+          // Only delete if an item exists at this position
+          if (existingBlock && existingBlock.block.blockTypeId === 1) {
+            const wasDeleted = clientChunk.data.data.delete(posKey);
+            if (wasDeleted) {
+              logger.debug('Item deleted', {
+                position: item.position,
+                itemId: item.id,
+              });
+              affectedChunks.add(chunkKey);
+            }
+          }
+          continue;
+        }
+
+        // Fill item with ItemType data
+        const filledItem = await itemService.fillItem(item);
+        if (!filledItem) {
+          logger.warn('Failed to fill item', {
+            itemId: item.id,
+            itemType: item.itemType,
+          });
+          continue;
+        }
+
+        // Calculate chunk coordinates
+        const chunkCoord = worldToChunk(filledItem.position.x, filledItem.position.z, chunkSize);
+        const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
+
+        // Get chunk
+        const clientChunk = this.chunks.get(chunkKey);
+        if (!clientChunk) {
+          logger.debug('Item update for unloaded chunk, ignoring', {
+            position: filledItem.position,
+            cx: chunkCoord.cx,
+            cz: chunkCoord.cz,
+          });
+          continue;
+        }
+
+        // Get position key
+        const posKey = getBlockPositionKey(
+          filledItem.position.x,
+          filledItem.position.y,
+          filledItem.position.z
+        );
+
+        // Get existing block at this position
+        const existingBlock = clientChunk.data.data.get(posKey);
+
+        // Check if position is AIR or already has an item
+        const isAir = !existingBlock;
+        const isItem = existingBlock && existingBlock.block.blockTypeId === 1;
+
+        if (!isAir && !isItem) {
+          logger.debug('Item add/update ignored - position occupied by non-item block', {
+            position: filledItem.position,
+            existingBlockTypeId: existingBlock.block.blockTypeId,
+            itemId: filledItem.id,
+          });
+          continue;
+        }
+
+        // Get BlockType 1 (ITEM)
+        const blockType = blockTypeService.getBlockType(1);
+        if (!blockType) {
+          logger.warn('BlockType 1 (ITEM) not found');
+          continue;
+        }
+
+        // Convert Item to Block
+        const block = itemToBlock(filledItem);
+
+        // Convert ItemModifier to BlockModifier for rendering
+        const currentModifier = this.convertItemModifierToBlockModifier(filledItem.modifier!);
+
+        // Create/update ClientBlock with Item reference
+        const clientBlock: ClientBlock = {
+          block,
+          chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
+          blockType,
+          currentModifier,
+          clientBlockType: blockType as any,
+          isVisible: true,
+          isDirty: true,
+          lastUpdate: Date.now(),
+          item: filledItem, // Store complete Item
+        };
+
+        // Update in chunk
+        clientChunk.data.data.set(posKey, clientBlock);
+
+        // Load audio files for this block (non-blocking)
+        this.loadBlockAudio(clientBlock).catch(error => {
+          logger.warn('Failed to load item update audio (non-blocking)', {
+            position: clientBlock.block.position,
+            error: (error as Error).message,
+          });
+        });
+
+        affectedChunks.add(chunkKey);
+
+        logger.debug('Item added/updated', {
+          position: filledItem.position,
+          itemId: filledItem.id,
+          displayName: filledItem.name,
+          itemType: filledItem.itemType,
+          wasUpdate: isItem,
+        });
+      }
+
+      // Emit events for affected chunks (triggers re-rendering)
+      for (const chunkKey of affectedChunks) {
+        const chunk = this.chunks.get(chunkKey);
+        if (chunk) {
+          // Mark for re-rendering
+          chunk.isRendered = false;
+          this.emit('chunk:updated', chunk);
+          logger.info('🔵 Emitting chunk:updated event for items', { chunkKey });
+        }
+      }
+
+      logger.info('🔵 Item updates applied', {
+        totalItems: items.length,
+        affectedChunks: affectedChunks.size,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ChunkService.onItemUpdate', {
+        count: items.length,
       });
     }
   }

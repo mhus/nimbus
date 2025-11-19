@@ -59,8 +59,10 @@ export class ItemService {
   /**
    * Get item by ID from cache or server
    *
+   * Returns a filled item with merged ItemType data.
+   *
    * @param itemId Item ID
-   * @returns Item or null if not found
+   * @returns Filled Item or null if not found
    */
   async getItem(itemId: string): Promise<Item | null> {
     // Check cache first
@@ -81,7 +83,13 @@ export class ItemService {
     try {
       const item = await promise;
       if (item) {
-        this.itemCache.set(itemId, item);
+        // Fill item with ItemType data before caching
+        const filledItem = await this.fillItem(item);
+        if (filledItem) {
+          this.itemCache.set(itemId, filledItem);
+          return filledItem;
+        }
+        return null;
       }
       return item;
     } finally {
@@ -156,7 +164,7 @@ export class ItemService {
         return null;
       }
 
-      return networkService.getAssetUrl(`assets/${mergedModifier.texture}`);
+      return networkService.getAssetUrl(mergedModifier.texture);
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.getTextureUrl', {
         itemId: item.id,

@@ -757,7 +757,7 @@ export class NetworkService {
    */
   getItemUrl(itemId: string): string {
     const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/worlds/${worldId}/item/${itemId}`;
+    return `${this.apiUrl}/api/worlds/${worldId}/item/${itemId}`;
   }
 
   /**
@@ -768,7 +768,7 @@ export class NetworkService {
    */
   getItemDataUrl(itemId: string): string {
     const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/worlds/${worldId}/itemdata/${itemId}`;
+    return `${this.apiUrl}/api/worlds/${worldId}/itemdata/${itemId}`;
   }
 
   /**
