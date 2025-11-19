@@ -40,3 +40,6 @@ export type { ParticleWandFlashOptions, WandStyle, PathStyle, AnimationMode } fr
 
 export { ParticleWandFlashSteadyEffect } from './ParticleWandFlashSteadyEffect';
 export type { ParticleWandFlashSteadyOptions } from './ParticleWandFlashSteadyEffect';
+
+export { PlaySoundLoopEffect } from './PlaySoundLoopEffect';
+export type { PlaySoundLoopOptions } from './PlaySoundLoopEffect';

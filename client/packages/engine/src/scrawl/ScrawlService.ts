@@ -18,6 +18,7 @@ import { ParticleFireSteadyEffect } from './effects/ParticleFireSteadyEffect';
 import { ParticlePositionFlashEffect } from './effects/ParticlePositionFlashEffect';
 import { ParticleWandFlashEffect } from './effects/ParticleWandFlashEffect';
 import { ParticleWandFlashSteadyEffect } from './effects/ParticleWandFlashSteadyEffect';
+import { PlaySoundLoopEffect } from './effects/PlaySoundLoopEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -108,6 +109,9 @@ export class ScrawlService {
     // Register ParticleWandFlashSteadyEffect for continuous wand beams
     this.effectRegistry.register('particleWandFlashSteady', ParticleWandFlashSteadyEffect);
 
+    // Register PlaySoundLoopEffect for looping sounds
+    this.effectRegistry.register('playSoundLoop', PlaySoundLoopEffect);
+
     logger.debug('Built-in effects registered', {
       effects: [
         'log',
@@ -123,6 +127,7 @@ export class ScrawlService {
         'particlePositionFlash',
         'particleWandFlash',
         'particleWandFlashSteady',
+        'playSoundLoop',
       ],
     });
   }

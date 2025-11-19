@@ -1788,20 +1788,51 @@ die mit onParameterChanged() gemacht werden unterstuetzen.
 - Es muessen nur die beiden parameter 'source' und 'target' unterstuetzt werden damit die beiden enden des flash angepasst 
   werden koennen.
 
-[ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
+[x] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
 - Parameter: soundClip - string (asset pfad)
 - Parameter: volume - number (0-1)
 - Parameter: position - Vector3 (optional, wenn 3D sound)
 - Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
 - Benutze den AudioService um den sound abzuspielen.
 - Der Effekt ist isSteadyEffect() == true und beendet bei stop() die wiedergabe des sounds.
+- Dispose den sound bei stop() wieder
+```text
+ 2D Beispiel (Ambiente):
+doScrawlStart({
+  "root": {
+    "kind": "Play",
+    "effectId": "playSoundLoop",
+    "ctx": {
+      "soundClip": "audio/ambiente/TremLoadingloopl.ogg",
+      "volume": 0.8,
+      "stream": true
+    }
+  }
+})  
 
-[ ] Erstelle einen Effekt 'playSound' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
+  3D Beispiel (räumlicher Sound):
+  
+doScrawlStart({
+  "root":   {
+    "kind": "Play",
+    "effectId": "playSoundLoop",
+    "ctx": {
+      "soundClip": "audio/ambiente/TremLoadingloopl.ogg",
+      "volume": 1.0,
+      "position": {"x": 100, "y": 65, "z": 200},
+      "stream": true
+    }
+  }
+})  
+```
+
+[ ] Erstelle einen Effekt 'playSound' der einen Sound einmal abspielt.
 - Parameter: soundClip - string (asset pfad)
 - Parameter: volume - number (0-1)
 - Parameter: position - Vector3 (optional, wenn 3D sound)
 - Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
 - Benutze den AudioService um den sound abzuspielen.
+- Dispose den sound bei stop() wieder
 
 [ ] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
 Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
