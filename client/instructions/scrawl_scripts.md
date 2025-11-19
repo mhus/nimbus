@@ -1319,7 +1319,7 @@ doScrawlStart({
     }
   })
 ```
-[ ] Gewichtung fuer die drei Farben mit Veränderung der Intensität auf Zeit je Farbe
+[x] Gewichtung fuer die drei Farben mit Veränderung der Intensität auf Zeit je Farbe
 [ ] Fluktuation Richtung Target: Partikel können den Beam verlassen und wieder zurueckkehren
 [x] Umbennennen von Effekt 'beam' zu 'particleBeam'
 
@@ -1338,6 +1338,32 @@ doScrawlStart({
 - Parameter: duration - number (sekunden)
 - Parameter: speed - number
 - Parameter: alpha - number
+
+```text
+ doScrawlStart({
+    id: "fireball",
+    root:  {
+    "kind": "Play",
+    "effectId": "particleExplosion",
+    "ctx": {
+      "position": {"x": -1, "y": 70, "z": 18},
+      "color1": "#ff0000",
+      "color2": "#ff9900",
+      "color3": "#ffff00",
+      "color1Weight": 1.0,
+      "color2Weight": 0.7,
+      "color3Weight": 0.3,
+      "initialRadius": 0.1,
+      "spreadRadius": 5.0,
+      "particleCount": 200,
+      "particleSize": 0.2,
+      "duration": 1.5,
+      "speed": 1.0,
+      "alpha": 0.8
+    }
+  }
+})
+```
 
 [ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
 - Parameter: soundClip - string (asset pfad)

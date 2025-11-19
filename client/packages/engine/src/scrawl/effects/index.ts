@@ -22,3 +22,6 @@ export type { LoopingSoundOptions } from './LoopingSoundEffect';
 
 export { BeamFollowEffect } from './BeamFollowEffect';
 export type { BeamFollowOptions } from './BeamFollowEffect';
+
+export { ParticleExplosionEffect } from './ParticleExplosionEffect';
+export type { ParticleExplosionOptions } from './ParticleExplosionEffect';
