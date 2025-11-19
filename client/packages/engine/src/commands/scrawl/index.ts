@@ -5,6 +5,8 @@
 
 export { ScrawlListCommand } from './ScrawlListCommand';
 export { ScrawlStartCommand } from './ScrawlStartCommand';
+export { ScrawlActionCommand } from './ScrawlActionCommand';
+export { ScrawlSelectedActionCommand } from './ScrawlSelectedActionCommand';
 export { ScrawlStopCommand } from './ScrawlStopCommand';
 export { ScrawlStatusCommand } from './ScrawlStatusCommand';
 export { ScrawlPauseCommand } from './ScrawlPauseCommand';

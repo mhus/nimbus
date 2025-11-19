@@ -1339,9 +1339,20 @@ doScrawlStart({
 - Parameter: speed - number
 - Parameter: alpha - number
 
+[ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
+- Parameter: soundClip - string (asset pfad)
+- Parameter: volume - number (0-1)
+- Parameter: position - Vector3 (optional, wenn 3D sound)
+- Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
 
-
-
+[ ] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
+Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
+- Parameter: kind - string ("point" | "spot")
+- Parameter: intensity - number
+- Parameter: color - string
+- Parameter: time - number (sekunden)
+- Parameter: position - Vector3
+- Parameter: height - number (hoehe ueber boden)
 ===
 # Examples tum testen
 
@@ -1418,4 +1429,23 @@ doScrawlStart({
       }
     }
   })
+  
+doScrawlSelectedAction({
+    script: {
+      id: "mark_target",
+      root: {
+        kind: "Play",
+        effectId: "circleMarker",
+        ctx: {
+          radius: 2.0,
+          color: "#ff0000",
+          spreadDuration: 0.3,
+          stayDuration: 1.0,
+          fadeDuration: 0.5
+        }
+      }
+    }
+  })
+
+  
 ```

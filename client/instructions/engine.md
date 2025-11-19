@@ -374,7 +374,7 @@ Der Modus heisst DEAD.
 - Ich sehe in Item das problem: Es wird nur ein BlockModifier benoetigt, hier ist aktuell eine Map in modifier enthalten. ggf. ersetze das komplett durch ItemModifier mit einem TexturePath (immer string)
 - Wo wird Item genutzt? in ChunkService, kann das hier adaptiert werden mit einer einfacheren Item/ItemModifier Struktur. onUseEffect kann dann auch in ItemModifier rein. 
 
-[?] Wenn Effekte ausgeloest werden, muessen die zum server gesendet werden, damit diese auch auf anderen clients ausgefuehrt
+[x] Wenn Effekte ausgeloest werden, muessen die zum server gesendet werden, damit diese auch auf anderen clients ausgefuehrt
 werden koennen.
 Es werden also zwei neue network messages benoetigt:
 - Client to Server: 'effect.trigger' mit EffectTriggerData, name 'e.t'
