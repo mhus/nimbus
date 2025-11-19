@@ -29,6 +29,9 @@ export type { ParticleExplosionOptions } from './ParticleExplosionEffect';
 export { ParticleFireEffect } from './ParticleFireEffect';
 export type { ParticleFireOptions, FireStyle } from './ParticleFireEffect';
 
+export { ParticleFireSteadyEffect } from './ParticleFireSteadyEffect';
+export type { ParticleFireSteadyOptions } from './ParticleFireSteadyEffect';
+
 export { ParticlePositionFlashEffect } from './ParticlePositionFlashEffect';
 export type { ParticlePositionFlashOptions, LightningStyle } from './ParticlePositionFlashEffect';
 

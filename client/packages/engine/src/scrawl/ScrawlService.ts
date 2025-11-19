@@ -14,6 +14,7 @@ import { LoopingSoundEffect } from './effects/LoopingSoundEffect';
 import { BeamFollowEffect } from './effects/BeamFollowEffect';
 import { ParticleExplosionEffect } from './effects/ParticleExplosionEffect';
 import { ParticleFireEffect } from './effects/ParticleFireEffect';
+import { ParticleFireSteadyEffect } from './effects/ParticleFireSteadyEffect';
 import { ParticlePositionFlashEffect } from './effects/ParticlePositionFlashEffect';
 import { ParticleWandFlashEffect } from './effects/ParticleWandFlashEffect';
 import { ParticleWandFlashSteadyEffect } from './effects/ParticleWandFlashSteadyEffect';
@@ -92,8 +93,11 @@ export class ScrawlService {
     // Register ParticleExplosionEffect for radial particle explosions
     this.effectRegistry.register('particleExplosion', ParticleExplosionEffect);
 
-    // Register ParticleFireEffect for fire simulation
+    // Register ParticleFireEffect for fire simulation (one-shot)
     this.effectRegistry.register('particleFire', ParticleFireEffect);
+
+    // Register ParticleFireSteadyEffect for endless fire
+    this.effectRegistry.register('particleFireSteady', ParticleFireSteadyEffect);
 
     // Register ParticlePositionFlashEffect for lightning strikes
     this.effectRegistry.register('particlePositionFlash', ParticlePositionFlashEffect);
@@ -115,6 +119,7 @@ export class ScrawlService {
         'beam:follow',
         'particleExplosion',
         'particleFire',
+        'particleFireSteady',
         'particlePositionFlash',
         'particleWandFlash',
         'particleWandFlashSteady',

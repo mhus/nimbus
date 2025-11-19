@@ -1,8 +1,8 @@
 /**
- * ParticleFireEffect - Realistic fire simulation with particles (One-Shot)
+ * ParticleFireSteadyEffect - Realistic fire simulation with particles (Steady/Endless)
  *
  * Creates a multi-layered fire effect with core flames, outer flames, smoke, and sparks
- * for a limited duration. For endless fire, use ParticleFireSteadyEffect instead.
+ * that runs indefinitely. For limited duration fire, use ParticleFireEffect instead.
  */
 
 import { getLogger } from '@nimbus/shared';
@@ -16,18 +16,14 @@ import {
   RawTexture,
   Constants,
 } from '@babylonjs/core';
+import type { FireStyle } from './ParticleFireEffect';
 
-const logger = getLogger('ParticleFireEffect');
-
-/**
- * Fire style presets
- */
-export type FireStyle = 'campfire' | 'torch' | 'bonfire' | 'magical' | 'blue' | 'green' | 'custom';
+const logger = getLogger('ParticleFireSteadyEffect');
 
 /**
- * Options for ParticleFireEffect
+ * Options for ParticleFireSteadyEffect
  */
-export interface ParticleFireOptions {
+export interface ParticleFireSteadyOptions {
   /** Position of the fire */
   position: { x: number; y: number; z: number };
 
@@ -40,9 +36,6 @@ export interface ParticleFireOptions {
 
   /** Height of flames (default: 2.0) */
   height?: number;
-
-  /** Duration in seconds (default: 5.0) */
-  duration?: number;
 
   // Colors
   /** Core color (hottest part, default: "#ffffff") */
@@ -100,12 +93,9 @@ export interface ParticleFireOptions {
   /** Fire style preset (default: 'campfire') */
   fireStyle?: FireStyle;
 
-  // Timing (for limited duration fires)
+  // Timing (fade-in for steady effect)
   /** Fade-in duration in seconds (default: 0.5) */
   fadeInDuration?: number;
-
-  /** Fade-out duration in seconds (default: 1.0) */
-  fadeOutDuration?: number;
 
   // Particle Properties
   /** Particles per layer (default: 500) */
@@ -116,28 +106,27 @@ export interface ParticleFireOptions {
 }
 
 /**
- * ParticleFireEffect - Creates realistic fire with multiple particle layers
+ * ParticleFireSteadyEffect - Creates realistic fire with multiple particle layers (Endless)
  *
  * Usage examples:
  *
- * Campfire (5 seconds default):
+ * Steady campfire:
  * ```json
  * {
  *   "kind": "Play",
- *   "effectId": "particleFire",
+ *   "effectId": "particleFireSteady",
  *   "ctx": {
  *     "position": {"x": 0, "y": 65, "z": 0},
- *     "fireStyle": "torch",
- *     "duration": 30
+ *     "fireStyle": "torch"
  *   }
  * }
  * ```
  *
- * Magical fire:
+ * Steady magical fire:
  * ```json
  * {
  *   "kind": "Play",
- *   "effectId": "particleFire",
+ *   "effectId": "particleFireSteady",
  *   "ctx": {
  *     "position": {"x": 0, "y": 65, "z": 0},
  *     "fireStyle": "magical",
@@ -147,11 +136,11 @@ export interface ParticleFireOptions {
  * }
  * ```
  *
- * Custom blue fire:
+ * Steady custom blue fire:
  * ```json
  * {
  *   "kind": "Play",
- *   "effectId": "particleFire",
+ *   "effectId": "particleFireSteady",
  *   "ctx": {
  *     "position": {"x": 0, "y": 65, "z": 0},
  *     "fireStyle": "blue",
@@ -162,7 +151,7 @@ export interface ParticleFireOptions {
  * }
  * ```
  */
-export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions> {
+export class ParticleFireSteadyEffect extends ScrawlEffectHandler<ParticleFireSteadyOptions> {
   private particleSystems: ParticleSystem[] = [];
   private startTime: number = 0;
   private animationHandle: number | null = null;
@@ -171,7 +160,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
   private firePosition: Vector3 | null = null;
 
   isSteadyEffect(): boolean {
-    return false; // One-shot effect
+    return true; // Endless effect
   }
 
   async execute(ctx: ScrawlExecContext): Promise<void> {
@@ -197,7 +186,6 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
       const size = this.options.size ?? 1.0;
       const intensity = this.options.intensity ?? 1.0;
       const height = this.options.height ?? 2.0;
-      const duration = this.options.duration ?? 5.0;
 
       const turbulence = this.options.turbulence ?? 0.5;
       const flickerSpeed = this.options.flickerSpeed ?? 5.0;
@@ -214,7 +202,6 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
       const particleCount = this.options.particleCount ?? 500;
 
       const fadeInDuration = this.options.fadeInDuration ?? 0.5;
-      const fadeOutDuration = this.options.fadeOutDuration ?? 1.0;
 
       // Wind
       const wind = this.options.wind
@@ -244,8 +231,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
         wind,
         coreColor,
         particleCount,
-        fadeInDuration,
-        fadeOutDuration
+        fadeInDuration
       );
 
       this.createFlameLayer(
@@ -260,8 +246,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
         innerFlameColor,
         'inner',
         particleCount,
-        fadeInDuration,
-        fadeOutDuration
+        fadeInDuration
       );
 
       this.createFlameLayer(
@@ -276,8 +261,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
         midFlameColor,
         'mid',
         particleCount,
-        fadeInDuration,
-        fadeOutDuration
+        fadeInDuration
       );
 
       this.createFlameLayer(
@@ -292,8 +276,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
         outerFlameColor,
         'outer',
         particleCount,
-        fadeInDuration,
-        fadeOutDuration
+        fadeInDuration
       );
 
       // Create smoke layer
@@ -308,8 +291,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
           wind,
           smokeColor,
           particleCount,
-          fadeInDuration,
-          fadeOutDuration
+          fadeInDuration
         );
       }
 
@@ -325,8 +307,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
           wind,
           sparkColor,
           sparkCount,
-          fadeInDuration,
-          fadeOutDuration
+          fadeInDuration
         );
       }
 
@@ -334,12 +315,11 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
       this.startTime = this.now();
       this.animate();
 
-      logger.debug('Particle fire effect started', {
+      logger.debug('Particle fire steady effect started', {
         position: this.firePosition,
-        duration,
       });
     } catch (error) {
-      logger.error('Failed to create particle fire effect', { error });
+      logger.error('Failed to create particle fire steady effect', { error });
       this.cleanup();
     }
   }
@@ -473,8 +453,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     wind: Vector3,
     color: Color4,
     particleCount: number,
-    fadeInDuration: number,
-    fadeOutDuration: number
+    fadeInDuration: number
   ): void {
     if (!this.scene) return;
 
@@ -510,7 +489,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     ps.blendMode = ParticleSystem.BLENDMODE_ADD;
     ps.updateSpeed = 0.02;
 
-    this.applyTurbulenceToSystem(ps, turbulence, flickerSpeed, spread, fadeInDuration, fadeOutDuration);
+    this.applyTurbulenceToSystem(ps, turbulence, flickerSpeed, spread, fadeInDuration);
 
     ps.start();
     this.particleSystems.push(ps);
@@ -528,8 +507,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     color: Color4,
     layer: 'inner' | 'mid' | 'outer',
     particleCount: number,
-    fadeInDuration: number,
-    fadeOutDuration: number
+    fadeInDuration: number
   ): void {
     if (!this.scene) return;
 
@@ -570,7 +548,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     ps.blendMode = ParticleSystem.BLENDMODE_ADD;
     ps.updateSpeed = 0.015;
 
-    this.applyTurbulenceToSystem(ps, turbulence, flickerSpeed, spread * layerMultiplier, fadeInDuration, fadeOutDuration);
+    this.applyTurbulenceToSystem(ps, turbulence, flickerSpeed, spread * layerMultiplier, fadeInDuration);
 
     ps.start();
     this.particleSystems.push(ps);
@@ -586,8 +564,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     wind: Vector3,
     color: Color4,
     particleCount: number,
-    fadeInDuration: number,
-    fadeOutDuration: number
+    fadeInDuration: number
   ): void {
     if (!this.scene) return;
 
@@ -624,7 +601,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     ps.blendMode = ParticleSystem.BLENDMODE_STANDARD;
     ps.updateSpeed = 0.01;
 
-    this.applyTurbulenceToSystem(ps, turbulence * 0.5, 2.0, spread * 2, fadeInDuration, fadeOutDuration);
+    this.applyTurbulenceToSystem(ps, turbulence * 0.5, 2.0, spread * 2, fadeInDuration);
 
     ps.start();
     this.particleSystems.push(ps);
@@ -640,8 +617,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     wind: Vector3,
     color: Color4,
     sparkCount: number,
-    fadeInDuration: number,
-    fadeOutDuration: number
+    fadeInDuration: number
   ): void {
     if (!this.scene) return;
 
@@ -677,7 +653,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     ps.blendMode = ParticleSystem.BLENDMODE_ADD;
     ps.updateSpeed = 0.02;
 
-    this.applyTurbulenceToSystem(ps, turbulence * 2, 10.0, spread, fadeInDuration, fadeOutDuration);
+    this.applyTurbulenceToSystem(ps, turbulence * 2, 10.0, spread, fadeInDuration);
 
     ps.start();
     this.particleSystems.push(ps);
@@ -688,22 +664,16 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
     turbulence: number,
     flickerSpeed: number,
     spread: number,
-    fadeInDuration: number,
-    fadeOutDuration: number
+    fadeInDuration: number
   ): void {
     ps.updateFunction = (particles: any) => {
       const currentTime = this.now() - this.startTime;
-      const duration = this.options.duration ?? Infinity;
 
-      // Calculate fade multiplier
+      // Calculate fade multiplier (only fade in, no fade out for steady effect)
       let fadeMultiplier = 1.0;
       // Fade in
       if (currentTime < fadeInDuration) {
         fadeMultiplier = currentTime / fadeInDuration;
-      }
-      // Fade out
-      else if (currentTime > duration - fadeOutDuration) {
-        fadeMultiplier = (duration - currentTime) / fadeOutDuration;
       }
 
       // Flicker effect
@@ -734,17 +704,7 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
   }
 
   private animate = () => {
-    const elapsed = this.now() - this.startTime;
-    const duration = this.options.duration ?? 5.0;
-    const fadeOutDuration = this.options.fadeOutDuration ?? 1.0;
-
-    // Stop after duration + fade out
-    if (elapsed >= duration + fadeOutDuration) {
-      this.cleanup();
-      return;
-    }
-
-    // Continue animation
+    // Endless animation loop for steady effect
     this.animationHandle = requestAnimationFrame(this.animate);
   };
 
@@ -776,7 +736,11 @@ export class ParticleFireEffect extends ScrawlEffectHandler<ParticleFireOptions>
       this.particleTexture = null;
     }
 
-    logger.debug('Particle fire effect cleaned up');
+    logger.debug('Particle fire steady effect cleaned up');
+  }
+
+  isRunning(): boolean {
+    return this.particleSystems.length > 0 && this.animationHandle !== null;
   }
 
   stop(): void {

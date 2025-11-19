@@ -1560,6 +1560,17 @@ Weitere sinnvolle parameter fuer ein feuer partikel system
       }
     }
   })
+  
+doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleFireSteady",
+      "ctx": {
+        "position": {"x": 0, "y": 65, "z": 0},
+        "fireStyle": "bonfire"
+      }
+    }
+  })  
 ```
 
 [x] Erstelle einen Effekt 'particlePositionFlash' der an einer position einen hellen Partikel Blitz simuliert.
@@ -1783,6 +1794,14 @@ die mit onParameterChanged() gemacht werden unterstuetzen.
 - Parameter: position - Vector3 (optional, wenn 3D sound)
 - Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
 - Benutze den AudioService um den sound abzuspielen.
+- Der Effekt ist isSteadyEffect() == true und beendet bei stop() die wiedergabe des sounds.
+
+[ ] Erstelle einen Effekt 'playSound' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
+- Parameter: soundClip - string (asset pfad)
+- Parameter: volume - number (0-1)
+- Parameter: position - Vector3 (optional, wenn 3D sound)
+- Parameter: stream - boolean (ob der sound gestreamt werden soll, default false)
+- Benutze den AudioService um den sound abzuspielen.
 
 [ ] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
 Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
@@ -1792,6 +1811,9 @@ Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
 - Parameter: time - number (sekunden)
 - Parameter: position - Vector3
 - Parameter: height - number (hoehe ueber boden)
+Der effekt benutzt texturen um den flash darzustellen. Vermutlich werden mehr als eine benoetigt
+die schnell gewechselt werden um den blitz effekt zu erzeugen. Die texturen werden
+gestretcht von oben nach unten ueber die gegebene hoehe.
 
 
 

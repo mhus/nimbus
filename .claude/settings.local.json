@@ -65,7 +65,8 @@
       "Bash(pnpm --filter @nimbus/controls exec vue-tsc:*)",
       "Bash(tee:*)",
       "Bash(python3:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(/Users/hummel/sources/mhus/nimbus/client/packages/engine/src/scrawl/effects/ParticleFireSteadyEffect.ts)"
     ],
     "deny": [],
     "ask": []
