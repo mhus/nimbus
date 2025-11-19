@@ -363,3 +363,14 @@ Der Modus heisst DEAD.
 - Sobald der chunk komplett geladen und verarbeitet ist, wird der parameter auf true gesetzt.
 - Pruefe in der physik nicht nur darauf, das der chunk vorhanden ist, sondern auch auf ready == true damit der chunk betreten werden kann.
 - Das gleiche kann bei teleport gemacht werden, dort muss ready == true sein damit der teleport finished ist.
+
+[?] Ich muss noch das item system erweitern. Items in ItemData.ts sollen einen itemType haben, das ist eine referenz zu einer ItemModifier definition.
+- Erweiterung von der server rest api um GET /api/world/{worldid}/itemtype/{type} die daten werden von dep platte unter client/packages/test_server/files/itemtypes geladen (wie auch blocktypes unter
+  client/packages/test_server/files/blocktypes).
+- Erweiterung ItemData.ts
+- Im ItemService das downloaded und cache der ItemTypes implementieren, im NetworkSerice eine getItemTypeUrl(...) anlegen und nutzen.
+- Mergen beim laden von Items von ItemType und custom modifiers.
+- Ich sehe noch ein problem, es muss einen separaten ItemModifier geben, der dann den BlockModifier in einem prarameter hat, denn onUseEffect soll auch im ItemType enthalten sein.
+- Ich sehe in Item das problem: Es wird nur ein BlockModifier benoetigt, hier ist aktuell eine Map in modifier enthalten. ggf. ersetze das komplett durch ItemModifier mit einem TexturePath (immer string)
+- Wo wird Item genutzt? in ChunkService, kann das hier adaptiert werden mit einer einfacheren Item/ItemModifier Struktur. onUseEffect kann dann auch in ItemModifier rein. 
+

@@ -107,13 +107,20 @@ export function createItemRoutes(worldManager: WorldManager): Router {
     const displayName = itemData.block.metadata?.displayName || 'New Item';
     const texturePath = extractTexturePath(itemData) || 'items/default.png';
 
+    // Get itemType from request
+    const itemType = itemData.itemType || 'sword'; // Default if not provided
+
+    // Texture is optional - will use ItemType default if not provided
+    const textureOverride = texturePath !== 'items/default.png' ? texturePath : undefined;
+
     // Use ItemRegistry.addItem with proper signature
     const createdBlock = world.itemRegistry.addItem(
       position.x,
       position.y,
       position.z,
       displayName,
-      texturePath,
+      itemType,
+      textureOverride,
       itemData.parameters
     );
 
@@ -155,14 +162,21 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       existingItem.block.position.z
     );
 
+    // Get itemType from request
+    const itemType = itemData.itemType || existingItem.itemType || 'sword';
+
+    // Texture is optional - will use ItemType default if not provided
+    const textureOverride = texturePath !== 'items/default.png' ? texturePath : undefined;
+
     // Add updated item (will generate new ID if position changed)
     world.itemRegistry.addItem(
       position.x,
       position.y,
       position.z,
       displayName,
-      texturePath,
-      { ...itemData.parameters, ...itemData }
+      itemType,
+      textureOverride,
+      itemData.parameters
     );
 
     return res.json(itemData);

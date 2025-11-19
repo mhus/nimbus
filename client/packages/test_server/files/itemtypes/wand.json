@@ -1,0 +1,37 @@
+{
+  "type": "wand",
+  "name": "Magic Wand",
+  "description": "A wand for casting magical beams",
+  "blockTypeId": 1,
+  "modifier": {
+    "texture": "textures/items/item_stick_wizardly.png",
+    "scaleX": 0.3,
+    "scaleY": 0.7,
+    "pose": "cast",
+    "onUseEffect": {
+      "script": {
+        "id": "wand_beam",
+        "root": {
+          "kind": "Until",
+          "event": "shortcut:ended",
+          "step": {
+            "kind": "Play",
+            "effectId": "beam:follow",
+            "source": "$source",
+            "target": "$target",
+            "ctx": {
+              "color": "#00ffff",
+              "thickness": 0.05,
+              "alpha": 0.8
+            }
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "category": "magic",
+    "rarity": "common",
+    "exclusive": true
+  }
+}

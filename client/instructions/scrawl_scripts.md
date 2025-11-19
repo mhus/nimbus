@@ -1155,6 +1155,13 @@ Wenn ein Script con einem Item ausgefuehrt wird (Shortcuts), werden diese variab
 Brauchen wir einen ShortcutService der Shortcuts managed? Aktuell wird das alles im PlayerServie und ??? verarbeitet.
 - Beim Start eines effekts muss das gestartete Script an den Shortcut gebunden werden, damit 
 
+
+[ ] Jetzt alles zusammen: 
+- Ich brauche ein script in client/packages/test_server/files/assets/scrawl das einen  particleBeam fuer 3 sekunden von 
+  source zu target zeigt. nenne es 'beam1.scrawl.json'.
+- Ich brauche einen ItemType der dieses script als onUseEffect nutzt.
+
+
 ## Editor
 
 [x] Erstelle einen Scrawl Script Editor in 'controls' mit dem Scripte in den assets erstellt und bearbeitet werden koennen.

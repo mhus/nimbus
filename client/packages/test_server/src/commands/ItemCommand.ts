@@ -2,7 +2,7 @@
  * ItemCommand - Manipulate items in the world
  *
  * Commands:
- * - /item add <x> <y> <z> <displayName> <texturePath> - Add item
+ * - /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item
  * - /item remove <x> <y> <z> - Remove item
  * - /item list - List all items
  */
@@ -36,7 +36,7 @@ export class ItemCommand extends CommandHandler {
     if (args.length === 0) {
       return {
         rc: 1,
-        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <x> <y> <z> <displayName> <texturePath> - Add item\n  remove <x> <y> <z> - Remove item\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
+        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item (texture optional, uses ItemType default)\n  remove <x> <y> <z> - Remove item\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
       };
     }
 
@@ -60,13 +60,13 @@ export class ItemCommand extends CommandHandler {
   }
 
   /**
-   * Handle /item add <x> <y> <z> <displayName> <texturePath>
+   * Handle /item add <x> <y> <z> <displayName> <itemType> [texturePath]
    */
   private async handleAdd(args: any[], context: CommandContext): Promise<CommandResult> {
     if (args.length < 5) {
       return {
         rc: 1,
-        message: 'Usage: /item add <x> <y> <z> <displayName> <texturePath>',
+        message: 'Usage: /item add <x> <y> <z> <displayName> <itemType> [texturePath]',
       };
     }
 
@@ -99,11 +99,12 @@ export class ItemCommand extends CommandHandler {
     }
 
     const displayName = String(args[3]);
-    const texturePath = String(args[4]);
+    const itemType = String(args[4]); // ItemType (e.g., 'sword', 'wand')
+    const texturePath = args[5] ? String(args[5]) : undefined; // Optional texture override
 
     try {
       // Add item to registry
-      const item = world.itemRegistry.addItem(x, y, z, displayName, texturePath);
+      const item = world.itemRegistry.addItem(x, y, z, displayName, itemType, texturePath);
 
       // Queue item update for broadcast
       this.itemUpdateBuffer.addUpdate(worldId, item);
@@ -112,13 +113,14 @@ export class ItemCommand extends CommandHandler {
         worldId,
         position: { x, y, z },
         displayName,
+        itemType,
         texturePath,
         itemId: item.metadata?.id,
       });
 
       return {
         rc: 0,
-        message: `Item "${displayName}" added at (${x}, ${y}, ${z})\nItem ID: ${item.metadata?.id}`,
+        message: `Item "${displayName}" (${itemType}) added at (${x}, ${y}, ${z})\nItem ID: ${item.metadata?.id}`,
       };
     } catch (error) {
       logger.error('Failed to add item', { worldId, position: { x, y, z } }, error as Error);
@@ -267,27 +269,27 @@ export class ItemCommand extends CommandHandler {
         `  Block Type ID: ${item.blockTypeId}`,
       ];
 
+      // Add itemType
+      if (itemData.itemType) {
+        itemInfo.push(`  Type: ${itemData.itemType}`);
+      }
+
       // Add description if available
       if (itemData.description) {
         itemInfo.push(`  Description: ${itemData.description}`);
       }
 
-      // Add action properties if available
-      if (itemData.pose) {
-        itemInfo.push(`  Pose: ${itemData.pose}`);
-      }
-      if (itemData.wait !== undefined) {
-        itemInfo.push(`  Wait: ${itemData.wait}ms`);
-      }
-      if (itemData.duration !== undefined) {
-        itemInfo.push(`  Duration: ${itemData.duration}ms`);
-      }
-
-      // Add texture info if available
-      if (item.modifiers && item.modifiers['0']?.visibility?.textures) {
-        const texture = item.modifiers['0'].visibility.textures['0'];
-        if (texture) {
-          itemInfo.push(`  Texture: ${typeof texture === 'string' ? texture : texture.path || 'unknown'}`);
+      // Add itemModifier properties if available
+      const itemModifier = item.itemModifier;
+      if (itemModifier) {
+        if (itemModifier.pose) {
+          itemInfo.push(`  Pose: ${itemModifier.pose}`);
+        }
+        if (itemModifier.texture) {
+          itemInfo.push(`  Texture: ${itemModifier.texture}`);
+        }
+        if (itemModifier.scaleX !== undefined || itemModifier.scaleY !== undefined) {
+          itemInfo.push(`  Scale: ${itemModifier.scaleX ?? 0.5} x ${itemModifier.scaleY ?? 0.5}`);
         }
       }
 

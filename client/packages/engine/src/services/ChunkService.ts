@@ -572,27 +572,35 @@ export class ChunkService {
           continue;
         }
 
-        // Get BlockType for item
-        const blockType = blockTypeService.getBlockType(item.blockTypeId);
-        if (!blockType) {
-          logger.warn('BlockType not found for item', {
-            blockTypeId: item.blockTypeId,
+        // Check if item has itemModifier
+        if (!item.itemModifier) {
+          logger.warn('Item missing itemModifier', {
             position: item.position,
             itemId: item.metadata?.id,
           });
           continue;
         }
 
-        // Merge block modifiers
-        const currentModifier = mergeBlockModifier(this.appContext, item, blockType, statusData.get(posKey));
+        // Get BlockType 1 (ITEM type) for items
+        const blockType = blockTypeService.getBlockType(1);
+        if (!blockType) {
+          logger.warn('BlockType 1 (ITEM) not found', {
+            position: item.position,
+            itemId: item.metadata?.id,
+          });
+          continue;
+        }
+
+        // Convert ItemModifier to BlockModifier for rendering
+        const currentModifier = this.convertItemModifierToBlockModifier(item.itemModifier);
 
         // Create ClientBlock for item
         const clientBlock: ClientBlock = {
           block: item,
           chunk: { cx: chunkData.cx, cz: chunkData.cz },
-          blockType,
+          blockType, // BlockType 1 (ITEM)
           currentModifier,
-          clientBlockType: blockType as any,
+          clientBlockType: blockType as any, // Cast to ClientBlockType
           isVisible: true,
           isDirty: false,
           lastUpdate: Date.now(),
@@ -1393,5 +1401,38 @@ export class ChunkService {
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.onSessionRestore');
     }
+  }
+
+  /**
+   * Converts ItemModifier to BlockModifier for rendering.
+   *
+   * ItemRenderer expects BlockModifier structure with visibility properties.
+   * This method creates a minimal BlockModifier from the simplified ItemModifier.
+   *
+   * @param itemModifier Simplified item modifier (storage format)
+   * @returns BlockModifier with visibility properties (rendering format)
+   */
+  private convertItemModifierToBlockModifier(itemModifier: any): any {
+    return {
+      visibility: {
+        shape: 28, // Shape.ITEM (Y-axis billboard)
+
+        // Convert simple texture string to textures map
+        textures: {
+          0: itemModifier.texture, // TextureKey.ALL
+        },
+
+        // Copy scaling properties
+        scalingX: itemModifier.scaleX ?? 0.5,
+        scalingY: itemModifier.scaleY ?? 0.5,
+
+        // Copy offset (pivot point adjustment)
+        offsets: itemModifier.offset || [0, 0, 0],
+
+        // Copy optional color tint
+        color: itemModifier.color,
+      },
+      // Items don't need: wind, physics, illumination, effects, audio
+    };
   }
 }

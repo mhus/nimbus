@@ -7,7 +7,7 @@
  * Also handles item activation (pose, wait, duration) when shortcuts are triggered.
  */
 
-import type { Block, ItemData } from '@nimbus/shared';
+import type { Block, ItemData, ItemType } from '@nimbus/shared';
 import { getLogger, ExceptionHandler, ENTITY_POSES } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { StackName } from './ModifierService';
@@ -24,8 +24,14 @@ export class ItemService {
   /** Cache of loaded ItemData: itemId -> ItemData */
   private itemDataCache: Map<string, ItemData> = new Map();
 
+  /** Cache of loaded ItemTypes: type -> ItemType */
+  private itemTypeCache: Map<string, ItemType> = new Map();
+
   /** Pending requests to avoid duplicate fetches */
   private pendingRequests: Map<string, Promise<Block | null>> = new Map();
+
+  /** Pending ItemType requests to avoid duplicate fetches */
+  private pendingItemTypeRequests: Map<string, Promise<ItemType | null>> = new Map();
 
   /** Active pose timers (for duration cleanup) */
   private poseTimers: Map<string, number> = new Map();
@@ -241,6 +247,42 @@ export class ItemService {
       }
 
       const itemData: ItemData = await response.json();
+
+      // Load ItemType and merge modifiers
+      if (itemData.itemType) {
+        const itemType = await this.getItemType(itemData.itemType);
+
+        if (itemType) {
+          // Merge: ItemType.modifier + itemData.modifierOverrides
+          const finalModifier = {
+            ...itemType.modifier,
+            ...itemData.modifierOverrides,
+          };
+
+          // Set merged itemModifier on block
+          itemData.block.itemModifier = finalModifier;
+
+          // Store ItemType metadata on ItemData for access (e.g., exclusive flag)
+          if (itemType.metadata) {
+            itemData.parameters = {
+              ...itemData.parameters,
+              _itemTypeMeta: itemType.metadata,
+            };
+          }
+
+          logger.debug('ItemType merged', {
+            itemId,
+            itemType: itemData.itemType,
+            hasOverrides: !!itemData.modifierOverrides,
+          });
+        } else {
+          logger.warn('ItemType not found, using block itemModifier as-is', {
+            itemId,
+            itemType: itemData.itemType,
+          });
+        }
+      }
+
       this.itemDataCache.set(itemId, itemData);
 
       // Also cache the block
@@ -268,14 +310,21 @@ export class ItemService {
         return;
       }
 
-      // Load ItemData (includes pose, wait, duration, onUseEffect)
+      // Load ItemData (includes merged itemModifier with pose, onUseEffect)
       const itemData = await this.getItemData(itemId);
       if (!itemData) {
         logger.warn('ItemData not found for shortcut', { shortcutKey, itemId });
         return;
       }
 
-      const { pose, wait, duration, onUseEffect, exclusive } = itemData;
+      // Get item modifier (merged from ItemType)
+      const itemModifier = itemData.block.itemModifier;
+      if (!itemModifier) {
+        logger.warn('Item has no itemModifier', { shortcutKey, itemId });
+        return;
+      }
+
+      const { pose, onUseEffect } = itemModifier;
 
       // Execute scrawl script if defined
       let executorId: string | undefined;
@@ -285,23 +334,6 @@ export class ItemService {
           try {
             logger.debug('Executing onUseEffect script', { itemId, shortcutKey });
 
-            // Get BlockType for additional item info
-            const blockTypeService = this.appContext.services.blockType;
-            let itemTexture: string | undefined;
-            if (blockTypeService) {
-              const blockType = blockTypeService.getBlockType(itemData.block.blockTypeId);
-              // Get texture from default modifier (status 0)
-              if (blockType) {
-                const defaultModifier = blockType.modifiers[0];
-                // Get texture from textures record (face 0 = all faces)
-                const textures = defaultModifier?.visibility?.textures;
-                if (textures) {
-                  const texture = textures[0]; // Face 0 (all faces)
-                  itemTexture = typeof texture === 'string' ? texture : undefined;
-                }
-              }
-            }
-
             // Prepare context with item data for default variables
             // These will be available as $item, $itemId, $itemName, $itemTexture in scripts
             const scriptContext: any = {
@@ -309,7 +341,7 @@ export class ItemService {
               shortcutKey,
               item: itemData.block,
               itemName: itemData.block.metadata?.displayName || itemData.description,
-              itemTexture,
+              itemTexture: itemModifier.texture,
             };
 
             executorId = await scrawlService.executeAction(onUseEffect, scriptContext);
@@ -335,7 +367,8 @@ export class ItemService {
 
         if (shortcutService && playerService) {
           const shortcutNr = this.extractShortcutNumber(shortcutKey);
-          const isExclusive = exclusive ?? false;
+          // Get exclusive flag from ItemType metadata
+          const isExclusive = itemData.parameters?._itemTypeMeta?.exclusive ?? false;
 
           shortcutService.startShortcut(shortcutNr, shortcutKey, executorId, isExclusive, itemId);
 
@@ -365,17 +398,11 @@ export class ItemService {
           return;
         }
 
-        // Apply wait delay if specified
-        const waitMs = wait || 0;
-        if (waitMs > 0) {
-          logger.debug('Waiting before pose activation', { waitMs, pose, itemId });
-          await new Promise(resolve => setTimeout(resolve, waitMs));
-        }
-
         // Activate pose with priority 10 (overrides idle=100, but not calculated movement poses)
-        this.activatePose(poseId, duration || 1000, itemId);
+        // Default duration: 1000ms
+        this.activatePose(poseId, 1000, itemId);
 
-        logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId, duration });
+        logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId });
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation', { shortcutKey, itemId });
@@ -417,6 +444,79 @@ export class ItemService {
   }
 
   /**
+   * Get ItemType by type identifier
+   *
+   * Loads ItemType from server and caches it.
+   *
+   * @param type Item type identifier (e.g., 'sword', 'wand', 'potion')
+   * @returns ItemType or null if not found
+   */
+  async getItemType(type: string): Promise<ItemType | null> {
+    // Check cache first
+    if (this.itemTypeCache.has(type)) {
+      return this.itemTypeCache.get(type)!;
+    }
+
+    // Check if already fetching
+    const pending = this.pendingItemTypeRequests.get(type);
+    if (pending) {
+      return pending;
+    }
+
+    // Fetch from server
+    const promise = this.fetchItemTypeFromServer(type);
+    this.pendingItemTypeRequests.set(type, promise);
+
+    try {
+      const itemType = await promise;
+      if (itemType) {
+        this.itemTypeCache.set(type, itemType);
+      }
+      return itemType;
+    } finally {
+      this.pendingItemTypeRequests.delete(type);
+    }
+  }
+
+  /**
+   * Fetch ItemType from server
+   *
+   * @param type Item type identifier
+   * @returns ItemType or null if not found
+   */
+  private async fetchItemTypeFromServer(type: string): Promise<ItemType | null> {
+    const networkService = this.appContext.services.network;
+    if (!networkService) {
+      logger.warn('NetworkService not available');
+      return null;
+    }
+
+    try {
+      const url = networkService.getItemTypeUrl(type);
+
+      logger.debug('Fetching ItemType from server', { type, url });
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) {
+          logger.debug('ItemType not found', { type });
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const itemType: ItemType = await response.json();
+
+      logger.debug('ItemType loaded', { type, name: itemType.name });
+
+      return itemType;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ItemService.fetchItemTypeFromServer', { type });
+      return null;
+    }
+  }
+
+  /**
    * Extracts the shortcut number from a shortcut key.
    *
    * @param shortcutKey Shortcut key (e.g., 'key1', 'key10', 'click2', 'slot5')
@@ -449,7 +549,9 @@ export class ItemService {
 
     this.itemCache.clear();
     this.itemDataCache.clear();
+    this.itemTypeCache.clear();
     this.pendingRequests.clear();
+    this.pendingItemTypeRequests.clear();
     logger.info('ItemService disposed');
   }
 }

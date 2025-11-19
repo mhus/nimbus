@@ -1,102 +1,69 @@
 /**
- * ItemData - Item definition with block and parameters
+ * ItemData - Item instance with ItemType reference
  *
- * Items are managed server-side with this structure.
- * The Block contains the visual/physical representation,
- * while parameters store additional item-specific data.
+ * Items reference an ItemType for default properties and can override them.
+ * The ItemType provides texture, scaling, pose, and onUseEffect defaults.
+ * Individual items can customize these via modifierOverrides.
  *
- * **Server-side only**: This structure is used internally by the server.
- * **Client receives**: Only the `block` field via REST API.
+ * **Server-side**: Full structure with parameters
+ * **Client receives**: Block with merged itemModifier
  */
 
 import type { Block } from './Block';
-import type { ScriptActionDefinition } from '../scrawl/ScriptActionDefinition';
+import type { ItemModifier } from './ItemModifier';
 
 /**
  * Item data structure
  *
- * Combines a Block definition (visual/physical properties)
- * with optional parameters (custom item data).
+ * References an ItemType and optionally overrides its properties.
  */
 export interface ItemData {
   /**
+   * Item type identifier (e.g., 'sword', 'wand', 'potion')
+   * References an ItemType definition loaded from files/itemtypes/{type}.json
+   */
+  itemType: string;
+
+  /**
    * Block definition
    *
-   * Contains the visual and physical properties of the item.
-   * This is what clients receive when requesting item data.
+   * Contains position and metadata.
+   * The itemModifier will be populated by merging ItemType.modifier
+   * with modifierOverrides.
    */
   block: Block;
 
   /**
-   * Item description
+   * Optional description override
    *
-   * Optional text description for the item.
-   * Can be used for tooltips, item info displays, etc.
+   * Overrides the ItemType description for this specific item instance.
    */
   description?: string;
 
   /**
-   * Pose to activate when item is used
+   * Optional modifier overrides
    *
-   * Example: 'attack', 'use', 'place', 'drink', etc.
-   * Used for player animation when using this item.
-   */
-  pose?: string;
-
-  /**
-   * Wait time before activation in milliseconds
-   *
-   * Delay before the item action takes effect.
-   * Default: 0 (immediate)
-   */
-  wait?: number;
-
-  /**
-   * Duration of action in milliseconds
-   *
-   * During this time, the action/pose is active.
-   * After duration, player returns to normal state.
-   */
-  duration?: number;
-
-  /**
-   * Scrawl script to execute when item is used
-   *
-   * This allows items to trigger complex effect sequences, animations,
-   * and commands through the Scrawl framework.
+   * Allows individual items to override ItemType.modifier properties.
+   * Merged with ItemType.modifier to create final block.itemModifier.
    *
    * Example:
-   * ```typescript
+   * ```json
    * {
-   *   scriptId: "explosion_effect",
-   *   parameters: { radius: 5, damage: 50 }
+   *   "modifierOverrides": {
+   *     "texture": "items/enchanted_sword.png",
+   *     "color": "#ff00ff",
+   *     "scaleX": 0.7
+   *   }
    * }
    * ```
    */
-  onUseEffect?: ScriptActionDefinition;
-
-  /**
-   * Exclusive shortcut mode
-   *
-   * When true, this shortcut blocks all other shortcuts from activating
-   * while it is active. Useful for channeled abilities that require
-   * full player attention.
-   *
-   * Default: false (non-exclusive)
-   */
-  exclusive?: boolean;
+  modifierOverrides?: Partial<ItemModifier>;
 
   /**
    * Optional parameters
    *
-   * Map of custom key-value pairs for item-specific data.
-   * Examples:
-   * - durability: number
-   * - enchantments: string[]
-   * - customData: any
-   *
-   * These parameters are server-side only and not transmitted to clients
-   * unless explicitly requested.
+   * Custom key-value pairs for item-specific data (server-side only).
+   * Examples: durability, enchantments, customData
    */
   parameters?: Record<string, any>;
 }

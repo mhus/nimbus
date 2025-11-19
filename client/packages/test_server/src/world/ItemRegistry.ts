@@ -104,7 +104,8 @@ export class ItemRegistry {
     y: number,
     z: number,
     displayName: string,
-    texturePath: string,
+    itemType: string,
+    texturePath?: string,
     parameters?: Record<string, any>
   ): Block {
     const key = `${x},${y},${z}`;
@@ -112,24 +113,26 @@ export class ItemRegistry {
     // Generate unique ID
     const id = `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-    // Create item block from template
+    // Create item block
     const block: Block = {
       position: { x, y, z },
-      blockTypeId: this.itemTemplate.blockTypeId,
-      modifiers: JSON.parse(JSON.stringify(this.itemTemplate.modifiers)), // Deep clone
+      blockTypeId: 1, // ITEM blockTypeId
       metadata: {
         id,
         displayName,
       },
     };
 
-    // Set texture path
-    if (block.modifiers && block.modifiers['0']?.visibility?.textures) {
-      block.modifiers['0'].visibility.textures['0'] = texturePath;
+    // Only set itemModifier.texture if provided (override ItemType default)
+    if (texturePath) {
+      block.itemModifier = {
+        texture: texturePath,
+      };
     }
 
     // Create ItemData
     const itemData: ItemData = {
+      itemType,
       block,
       parameters,
     };
@@ -142,6 +145,7 @@ export class ItemRegistry {
       position: { x, y, z },
       id,
       displayName,
+      itemType,
       texturePath,
       hasParameters: !!parameters,
     });
@@ -377,17 +381,8 @@ export class ItemRegistry {
       for (const item of itemsArray) {
         let itemData: ItemData;
 
-        // Check if this is new format (ItemData with block property)
-        if (item.block && item.block.position) {
-          // New format: ItemData
-          itemData = item as ItemData;
-        } else {
-          // Old format: Block - wrap in ItemData
-          itemData = {
-            block: item as Block,
-            parameters: undefined,
-          };
-        }
+        // All items should be in ItemData format
+        itemData = item as ItemData;
 
         const key = `${itemData.block.position.x},${itemData.block.position.y},${itemData.block.position.z}`;
         this.items.set(key, itemData);

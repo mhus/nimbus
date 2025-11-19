@@ -16,6 +16,7 @@ import { createSpeechRoutes } from './api/routes/speechRoutes';
 import { createBackdropRoutes } from './api/routes/backdropRoutes';
 import { createEntityRoutes } from './api/routes/entityRoutes';
 import { createItemRoutes } from './api/routes/itemRoutes';
+import { createItemTypeRoutes } from './api/routes/itemTypeRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
@@ -189,6 +190,9 @@ class NimbusServer {
 
       // Item routes
       this.app.use('/api/worlds', authMiddleware, createItemRoutes(this.worldManager));
+
+      // ItemType routes (public - no auth needed)
+      this.app.use('/api/worlds', createItemTypeRoutes());
 
       // Backdrop configuration routes (public - no auth needed)
       this.app.use('/api/backdrop', createBackdropRoutes());

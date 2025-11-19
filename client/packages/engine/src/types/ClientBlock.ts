@@ -37,6 +37,8 @@ export interface ClientBlock {
   /**
    * Cached BlockType reference
    * Resolved from block.blockTypeId via registry
+   *
+   * Note: Items use BlockType ID 5 (fixed ITEM type)
    */
   blockType: BlockType;
 
@@ -44,6 +46,7 @@ export interface ClientBlock {
   /**
    * Cached current BlockModifier
    * Resolved from block.modifiers[block.status] or blockType.modifiers[block.status]
+   * For items: Generated from block.itemModifier by ChunkService
    */
   currentModifier: BlockModifier;
 

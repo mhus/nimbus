@@ -1,0 +1,34 @@
+{
+  "type": "pickaxe",
+  "name": "Pickaxe",
+  "description": "A tool for mining stone and ore",
+  "blockTypeId": 1,
+  "modifier": {
+    "texture": "textures/items/pickaxe_crusty.png",
+    "scaleX": 0.5,
+    "scaleY": 0.8,
+    "offset": [0, -0.2, 0],
+    "pose": "use",
+    "onUseEffect": {
+      "script": {
+        "id": "pickaxe_mine",
+        "root": {
+          "kind": "Play",
+          "effectId": "circleMarker",
+          "target": "$target",
+          "ctx": {
+            "radius": 1.5,
+            "color": "#808080",
+            "spreadDuration": 0.15,
+            "stayDuration": 0.2,
+            "fadeDuration": 0.15
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "category": "tool",
+    "rarity": "common"
+  }
+}
