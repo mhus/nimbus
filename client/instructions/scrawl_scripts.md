@@ -1323,7 +1323,7 @@ doScrawlStart({
 [ ] Fluktuation Richtung Target: Partikel können den Beam verlassen und wieder zurueckkehren
 [x] Umbennennen von Effekt 'beam' zu 'particleBeam'
 
-[ ] Erstelle einen Effekt 'particleExplosion' der an einer stelle eine Partikel Explosion ausloest.
+[x] Erstelle einen Effekt 'particleExplosion' der an einer stelle eine Partikel Explosion ausloest.
 - Parameter: position - Vector3
 - Parameter: color1 - string
 - Parameter: color2 - string
@@ -1363,6 +1363,58 @@ doScrawlStart({
     }
   }
 })
+
+Zusammenfassung der Implementierung
+
+  ✅ Alle erweiterten Parameter implementiert:
+
+  Richtung & Kegel:
+
+  - direction - Hauptrichtung der Explosion (Vector3)
+  - directionStrength - Wie stark die Richtung beeinflusst (0-1)
+  - coneAngle - Kegelwinkel in Grad (0-180°)
+
+  Physik:
+
+  - gravity - Schwerkraftvektor (z.B. {x: 0, y: -9.81, z: 0})
+  - drag - Luftwiderstand (0-1)
+  - rotation - Partikelrotation aktivieren (boolean)
+  - angularVelocity - Rotationsgeschwindigkeit (Radiant/Sekunde)
+
+  Größenanimation:
+
+  - minParticleSize / maxParticleSize - Präzise Größenkontrolle
+  - sizeOverLifetime - 'constant' | 'grow' | 'shrink' | 'pulse'
+
+  Emissionsmuster:
+
+  - emissionPattern - 'sphere' | 'hemisphere' | 'cone' | 'ring' | 'disc'
+  - burstCount - Anzahl separater Bursts
+  - burstDelay - Verzögerung zwischen Bursts
+
+  Visuelle Effekte:
+
+  - fadeInDuration - Fade-in Zeit in Sekunden
+  - fadeOutDuration - Fade-out Zeit in Sekunden
+  - blend - 'add' | 'alpha' | 'multiply'
+
+  📝 Drei Usage-Beispiele in der Dokumentation:
+
+  1. Basic radial explosion - Einfache Explosion in alle Richtungen
+  2. Directional explosion with gravity - Gerichtete Explosion mit Schwerkraft und Kegel
+  3. Ring explosion with multiple bursts - Ring-Pattern mit mehreren Bursts und Rotation
+
+  🚀 Features:
+
+  - ✅ Alle Parameter sind optional mit sinnvollen Defaults
+  - ✅ Multiple Bursts mit Verzögerung möglich
+  - ✅ Verschiedene Emissionsmuster (Kugel, Halbkugel, Kegel, Ring, Disc)
+  - ✅ Physik-Simulation mit Schwerkraft und Drag
+  - ✅ Flexible Größenanimationen über Lifetime
+  - ✅ Gerichtete Explosionen mit einstellbarer Stärke
+  - ✅ Partikelrotation mit konfigurierbarer Geschwindigkeit
+  - ✅ Verschiedene Blending-Modi
+  - ✅ Flexible Fade-Zeiten
 ```
 
 [ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
