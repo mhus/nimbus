@@ -1708,7 +1708,74 @@ Weitere sinnvolle parameter fuer ein feuer partikel system
   - ✅ Einfacherer Code: Keine komplexen Modus-Checks
   - ✅ Bessere Wartbarkeit: Jede Klasse hat eine klare Verantwortung
   - ✅ Folgt Best Practices: Ähnlich wie sound:loop vs normale Sound-Effekte
+
+
+ 1. Alpha-Transparenz:
+
+  - alpha?: number (0-1, default: 1.0) - Gesamt-Transparenz für alle Layer
+
+  2. Blending-Modus:
+
+  - blend?: 'add' | 'alpha' | 'multiply' (default: 'add')
+    - add: Additive Blending (hell, leuchtend)
+    - alpha: Standard Alpha-Blending
+    - multiply: Multiplikatives Blending (dunkel)
+
+  3. Spark-Farbe:
+
+  - sparkColor?: string (default: same as coreColor) - Separate Farbe für Funken
+
+  4. Source Glow:
+
+  - sourceGlow?: boolean (default: false) - Leuchten an der Zauberstab-Spitze
+  - sourceGlowRadius?: number (default: 0.3) - Größe des Quell-Leuchtens
+
+  5. Beam-Struktur:
+
+  - strandCount?: number (1-5, default: 2) - Anzahl der Beam-Stränge
+    - 1 Strand: Nur Core
+    - 2 Stränge: Core + Outer (default)
+    - 3+ Stränge: Zusätzliche Layer für dickere Beams
+
+  6. Partikel-Rotation:
+
+  - particleRotation?: boolean (default: false) - Partikel rotieren aktivieren
+  - angularVelocity?: number (default: 0) - Rotationsgeschwindigkeit in rad/s
+
+  📊 Gesamt-Parameter beider Effekte:
+
+  particleWandFlash (One-Shot): 30+ Parameter
+  particleWandFlashSteadyEffect (Steady): 29+ Parameter (kein duration/fadeOut)
+
+  🎨 Beispiel mit neuen Parametern:
+
+  doScrawlStart({
+    "root": {
+      "kind": "Play",
+      "effectId": "particleWandFlash",
+      "ctx": {
+        "source": {"x": -1, "y": 70, "z": 18},
+        "target": {"x": -1, "y": 75, "z": 23},
+        "wandStyle": "custom",
+        "thickness": 0.3,
+        "alpha": 0.8,
+        "blend": "add",
+        "strandCount": 3,
+        "sourceGlow": true,
+        "sourceGlowRadius": 0.5,
+        "sparkColor": "#ffff00",
+        "particleRotation": true,
+        "angularVelocity": 3.14,
+        "duration": 2.0
+      }
+    }
+  })  
 ```
+[ ] Die Effekte 'particleWandFlash' und 'particleWandFlashSteady' sollen Anpassungen
+die mit onParameterChanged() gemacht werden unterstuetzen.
+- Es muessen nur die beiden parameter 'source' und 'target' unterstuetzt werden damit die beiden enden des flash angepasst 
+  werden koennen.
+
 
 [ ] Erstelle einen Effekt 'playSoundLoop' der einen Sound in einer Schleife abspielt, bis der Effekt beendet wird.
 - Parameter: soundClip - string (asset pfad)

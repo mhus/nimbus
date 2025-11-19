@@ -69,6 +69,12 @@ export interface ParticleWandFlashSteadyOptions {
   /** Impact color at target (default: same as coreColor) */
   impactColor?: string;
 
+  /** Spark color (default: same as coreColor) */
+  sparkColor?: string;
+
+  /** Overall alpha transparency 0-1 (default: 1.0) */
+  alpha?: number;
+
   // Effects
   /** Enable glow effect (default: true) */
   glow?: boolean;
@@ -82,6 +88,16 @@ export interface ParticleWandFlashSteadyOptions {
   /** Impact radius (default: 0.5) */
   impactRadius?: number;
 
+  /** Enable source glow at wand tip (default: false) */
+  sourceGlow?: boolean;
+
+  /** Source glow radius (default: 0.3) */
+  sourceGlowRadius?: number;
+
+  // Beam Structure
+  /** Number of beam strands (default: 2, range: 1-5) */
+  strandCount?: number;
+
   // Style Preset
   /** Wand style preset (default: 'basic') */
   wandStyle?: WandStyle;
@@ -93,6 +109,15 @@ export interface ParticleWandFlashSteadyOptions {
   // Particle Properties
   /** Particles per system (default: 1000) */
   particleCount?: number;
+
+  /** Particle rotation enabled (default: false) */
+  particleRotation?: boolean;
+
+  /** Angular velocity for rotation in radians/second (default: 0) */
+  angularVelocity?: number;
+
+  /** Blending mode (default: 'add') */
+  blend?: 'add' | 'alpha' | 'multiply';
 }
 
 /**

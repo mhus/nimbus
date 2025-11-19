@@ -87,6 +87,12 @@ export interface ParticleWandFlashOptions {
   /** Impact color at target (default: same as coreColor) */
   impactColor?: string;
 
+  /** Spark color (default: same as coreColor) */
+  sparkColor?: string;
+
+  /** Overall alpha transparency 0-1 (default: 1.0) */
+  alpha?: number;
+
   // Effects
   /** Enable glow effect (default: true) */
   glow?: boolean;
@@ -99,6 +105,16 @@ export interface ParticleWandFlashOptions {
 
   /** Impact radius (default: 0.5) */
   impactRadius?: number;
+
+  /** Enable source glow at wand tip (default: false) */
+  sourceGlow?: boolean;
+
+  /** Source glow radius (default: 0.3) */
+  sourceGlowRadius?: number;
+
+  // Beam Structure
+  /** Number of beam strands (default: 2, range: 1-5) */
+  strandCount?: number;
 
   // Style Preset
   /** Wand style preset (default: 'basic') */
@@ -114,6 +130,15 @@ export interface ParticleWandFlashOptions {
   // Particle Properties
   /** Particles per system (default: 1000) */
   particleCount?: number;
+
+  /** Particle rotation enabled (default: false) */
+  particleRotation?: boolean;
+
+  /** Angular velocity for rotation in radians/second (default: 0) */
+  angularVelocity?: number;
+
+  /** Blending mode (default: 'add') */
+  blend?: 'add' | 'alpha' | 'multiply';
 }
 
 /**
@@ -227,11 +252,21 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
       const fadeInDuration = this.options.fadeInDuration ?? 0.1;
       const fadeOutDuration = this.options.fadeOutDuration ?? 0.2;
 
+      // New parameters
+      const alpha = this.options.alpha ?? 1.0;
+      const strandCount = Math.max(1, Math.min(5, this.options.strandCount ?? 2));
+      const enableSourceGlow = this.options.sourceGlow ?? false;
+      const sourceGlowRadius = this.options.sourceGlowRadius ?? 0.3;
+      const blend = this.options.blend ?? 'add';
+      const particleRotation = this.options.particleRotation ?? false;
+      const angularVelocity = this.options.angularVelocity ?? 0;
+
       // Colors
       const coreColor = this.parseColor(this.options.coreColor ?? '#ffffff');
       const outerColor = this.parseColor(this.options.outerColor ?? '#aaccff');
       const glowColor = this.parseColor(this.options.glowColor ?? '#88aaff');
       const impactColor = this.parseColor(this.options.impactColor ?? this.options.coreColor ?? '#ffffff');
+      const sparkColor = this.parseColor(this.options.sparkColor ?? this.options.coreColor ?? '#ffffff');
 
       // Calculate beam path
       this.calculateBeamPath(pathStyle, zigzag, curvature);
@@ -241,31 +276,61 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
       // Create texture
       this.createParticleTexture();
 
-      // Create main beam (core)
-      this.createBeamCore(
-        thickness,
-        intensity,
-        coreColor,
-        particleCount,
-        animationMode,
-        travelSpeed,
-        pulseFrequency,
-        fadeInDuration,
-        fadeOutDuration
-      );
+      // Create beam strands based on strandCount
+      if (strandCount >= 1) {
+        this.createBeamCore(
+          thickness,
+          intensity,
+          coreColor,
+          particleCount,
+          animationMode,
+          travelSpeed,
+          pulseFrequency,
+          fadeInDuration,
+          fadeOutDuration,
+          alpha,
+          blend,
+          particleRotation,
+          angularVelocity
+        );
+      }
 
-      // Create outer beam
-      this.createBeamOuter(
-        thickness * 2,
-        intensity * 0.7,
-        outerColor,
-        Math.floor(particleCount * 0.7),
-        animationMode,
-        travelSpeed,
-        pulseFrequency,
-        fadeInDuration,
-        fadeOutDuration
-      );
+      if (strandCount >= 2) {
+        this.createBeamOuter(
+          thickness * 2,
+          intensity * 0.7,
+          outerColor,
+          Math.floor(particleCount * 0.7),
+          animationMode,
+          travelSpeed,
+          pulseFrequency,
+          fadeInDuration,
+          fadeOutDuration,
+          alpha,
+          blend,
+          particleRotation,
+          angularVelocity
+        );
+      }
+
+      // Additional strands for thicker beams
+      if (strandCount >= 3) {
+        this.createBeamOuter(
+          thickness * 1.5,
+          intensity * 0.5,
+          outerColor,
+          Math.floor(particleCount * 0.5),
+          animationMode,
+          travelSpeed,
+          pulseFrequency,
+          fadeInDuration,
+          fadeOutDuration,
+          alpha * 0.7,
+          blend,
+          particleRotation,
+          angularVelocity
+        );
+      }
 
       // Create glow
       if (enableGlow) {
@@ -276,7 +341,23 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
           Math.floor(particleCount * 0.5),
           animationMode,
           travelSpeed,
-          pulseFrequency
+          pulseFrequency,
+          alpha,
+          blend
+        );
+      }
+
+      // Create source glow
+      if (enableSourceGlow) {
+        this.createSourceGlow(
+          this.sourcePos,
+          sourceGlowRadius,
+          intensity,
+          glowColor,
+          Math.floor(particleCount * 0.2),
+          fadeInDuration,
+          fadeOutDuration,
+          alpha
         );
       }
 
@@ -285,10 +366,11 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
         this.createSparkEffect(
           thickness,
           intensity,
-          coreColor,
+          sparkColor,
           Math.floor(particleCount * 0.3),
           fadeInDuration,
-          fadeOutDuration
+          fadeOutDuration,
+          alpha
         );
       }
 
@@ -476,7 +558,11 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     travelSpeed: number,
     pulseFrequency: number,
     fadeInDuration: number,
-    fadeOutDuration: number
+    fadeOutDuration: number,
+    alpha: number,
+    blend: 'add' | 'alpha' | 'multiply',
+    particleRotation: boolean,
+    angularVelocity: number
   ): void {
     if (!this.scene || this.beamPath.length === 0) return;
 
@@ -495,8 +581,15 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     ps.maxEmitPower = 0.01;
     ps.gravity = Vector3.Zero();
 
-    ps.blendMode = ParticleSystem.BLENDMODE_ADD;
+    // Apply blending mode
+    this.setBlendMode(ps, blend);
     ps.updateSpeed = 0.02;
+
+    // Apply rotation if enabled
+    if (particleRotation) {
+      ps.minAngularSpeed = angularVelocity;
+      ps.maxAngularSpeed = angularVelocity;
+    }
 
     this.applyAnimationMode(
       ps,
@@ -506,7 +599,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
       color,
       intensity,
       fadeInDuration,
-      fadeOutDuration
+      fadeOutDuration,
+      alpha
     );
 
     ps.start();
@@ -522,7 +616,11 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     travelSpeed: number,
     pulseFrequency: number,
     fadeInDuration: number,
-    fadeOutDuration: number
+    fadeOutDuration: number,
+    alpha: number,
+    blend: 'add' | 'alpha' | 'multiply',
+    particleRotation: boolean,
+    angularVelocity: number
   ): void {
     if (!this.scene || this.beamPath.length === 0) return;
 
@@ -541,8 +639,15 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     ps.maxEmitPower = 0.01;
     ps.gravity = Vector3.Zero();
 
-    ps.blendMode = ParticleSystem.BLENDMODE_ADD;
+    // Apply blending mode
+    this.setBlendMode(ps, blend);
     ps.updateSpeed = 0.02;
+
+    // Apply rotation if enabled
+    if (particleRotation) {
+      ps.minAngularSpeed = angularVelocity;
+      ps.maxAngularSpeed = angularVelocity;
+    }
 
     this.applyAnimationMode(
       ps,
@@ -552,7 +657,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
       color,
       intensity,
       fadeInDuration,
-      fadeOutDuration
+      fadeOutDuration,
+      alpha
     );
 
     ps.start();
@@ -566,7 +672,9 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     particleCount: number,
     animationMode: AnimationMode,
     travelSpeed: number,
-    pulseFrequency: number
+    pulseFrequency: number,
+    alpha: number,
+    blend: 'add' | 'alpha' | 'multiply'
   ): void {
     if (!this.scene || this.beamPath.length === 0) return;
 
@@ -585,7 +693,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     ps.maxEmitPower = 0.01;
     ps.gravity = Vector3.Zero();
 
-    ps.blendMode = ParticleSystem.BLENDMODE_ADD;
+    // Apply blending mode
+    this.setBlendMode(ps, blend);
     ps.updateSpeed = 0.01;
 
     this.applyAnimationMode(
@@ -596,7 +705,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
       color,
       intensity,
       0,
-      0
+      0,
+      alpha
     );
 
     ps.start();
@@ -609,7 +719,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     color: Color4,
     particleCount: number,
     fadeInDuration: number,
-    fadeOutDuration: number
+    fadeOutDuration: number,
+    alpha: number
   ): void {
     if (!this.scene || this.beamPath.length === 0) return;
 
@@ -630,9 +741,9 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     ps.maxEmitPower = 3;
     ps.gravity = new Vector3(0, -5, 0);
 
-    // Color gradient
+    // Color gradient (with alpha applied)
     ps.addColorGradient(0.0, color);
-    ps.addColorGradient(0.5, new Color4(color.r, color.g, color.b, color.a * intensity));
+    ps.addColorGradient(0.5, new Color4(color.r, color.g, color.b, color.a * intensity * alpha));
     ps.addColorGradient(1.0, new Color4(color.r, color.g, color.b, 0));
 
     ps.blendMode = ParticleSystem.BLENDMODE_ADD;
@@ -699,7 +810,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
     color: Color4,
     intensity: number,
     fadeInDuration: number,
-    fadeOutDuration: number
+    fadeOutDuration: number,
+    alpha: number
   ): void {
     const path = this.beamPath;
     const startTime = this.now();
@@ -773,8 +885,8 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
           particle.position.z += offset;
         }
 
-        // Apply fade and animation
-        particle.color.a = color.a * intensity * fadeMultiplier * animMultiplier;
+        // Apply fade, animation, and alpha
+        particle.color.a = color.a * intensity * alpha * fadeMultiplier * animMultiplier;
 
         if (!particle._pathProgress && animationMode === 'continuous') {
           particle._pathProgress = pathProgress;
@@ -792,6 +904,66 @@ export class ParticleWandFlashEffect extends ScrawlEffectHandler<ParticleWandFla
         particle._pathProgress = Math.random();
       }
     };
+  }
+
+  private createSourceGlow(
+    position: Vector3,
+    radius: number,
+    intensity: number,
+    color: Color4,
+    particleCount: number,
+    fadeInDuration: number,
+    fadeOutDuration: number,
+    alpha: number
+  ): void {
+    if (!this.scene) return;
+
+    const ps = new ParticleSystem('wandSourceGlow', particleCount, this.scene);
+    ps.particleTexture = this.particleTexture;
+    ps.emitter = position.clone();
+
+    ps.minSize = radius * 2;
+    ps.maxSize = radius * 4;
+    ps.minLifeTime = 0.3;
+    ps.maxLifeTime = 0.5;
+
+    ps.emitRate = particleCount * 3;
+
+    // Minimal movement (stays at source)
+    ps.createSphereEmitter(0.05, 0.1);
+    ps.minEmitPower = 0.1;
+    ps.maxEmitPower = 0.3;
+    ps.gravity = Vector3.Zero();
+
+    // Color gradient
+    ps.addColorGradient(0.0, new Color4(color.r, color.g, color.b, color.a * intensity * alpha * 0.5));
+    ps.addColorGradient(0.5, new Color4(color.r, color.g, color.b, color.a * intensity * alpha * 0.7));
+    ps.addColorGradient(1.0, new Color4(color.r, color.g, color.b, 0));
+
+    ps.blendMode = ParticleSystem.BLENDMODE_ADD;
+    ps.updateSpeed = 0.01;
+
+    this.applyFadeToSystem(ps, fadeInDuration, fadeOutDuration);
+
+    ps.start();
+    this.particleSystems.push(ps);
+  }
+
+  private setBlendMode(
+    ps: ParticleSystem,
+    blend: 'add' | 'alpha' | 'multiply'
+  ): void {
+    switch (blend) {
+      case 'add':
+        ps.blendMode = ParticleSystem.BLENDMODE_ADD;
+        break;
+      case 'alpha':
+        ps.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+        break;
+      case 'multiply':
+        ps.blendMode = ParticleSystem.BLENDMODE_MULTIPLY;
+        break;
+    }
   }
 
   private applyFadeToSystem(
