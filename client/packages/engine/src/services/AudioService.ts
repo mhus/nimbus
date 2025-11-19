@@ -299,6 +299,7 @@ class AudioPool {
 export class AudioService {
   private audioCache: Map<string, AudioCacheEntry> = new Map(); // Legacy cache for non-spatial sounds
   private soundPools: Map<string, AudioPool> = new Map(); // Pool system for spatial sounds
+  private loadingPromises: Map<string, Promise<void>> = new Map(); // Cache for in-progress loading operations
   private scene?: Scene;
   private networkService?: NetworkService;
   private physicsService?: PhysicsService;
@@ -558,6 +559,14 @@ export class AudioService {
       return;
     }
 
+    // Already loading? Wait for existing promise to prevent race condition
+    const existingPromise = this.loadingPromises.get(path);
+    if (existingPromise) {
+      logger.debug('Sound already loading, waiting for completion', { path });
+      await existingPromise;
+      return;
+    }
+
     if (!this.networkService) {
       logger.error('NetworkService not available - cannot load sound into pool', { path });
       return;
@@ -568,31 +577,48 @@ export class AudioService {
       return;
     }
 
-    try {
-      // Get audio URL
-      const audioUrl = this.networkService.getAssetUrl(path);
-      logger.debug('Loading sound into pool', { path, audioUrl, initialPoolSize });
+    // Store reference for use in async IIFE (TypeScript null-check)
+    const networkService = this.networkService;
 
-      // Load initial sound instances
-      const initialSounds: any[] = [];
-      for (let i = 0; i < initialPoolSize; i++) {
-        const sound = await CreateSoundAsync(path, audioUrl);
-        initialSounds.push(sound);
-        logger.debug('Sound instance created', { path, instance: i + 1, total: initialPoolSize });
+    // Create loading promise and cache it
+    const loadingPromise = (async () => {
+      try {
+        // Get audio URL
+        const audioUrl = networkService.getAssetUrl(path);
+        logger.debug('Loading sound into pool', { path, audioUrl, initialPoolSize });
+
+        // Load initial sound instances
+        const initialSounds: any[] = [];
+        for (let i = 0; i < initialPoolSize; i++) {
+          const sound = await CreateSoundAsync(path, audioUrl);
+          initialSounds.push(sound);
+          logger.debug('Sound instance created', { path, instance: i + 1, total: initialPoolSize });
+        }
+
+        // Create AudioPool with pre-loaded sounds
+        const pool = new AudioPool(path, audioUrl, initialSounds);
+        this.soundPools.set(path, pool);
+
+        logger.debug('Sound loaded into pool', { path, initialPoolSize });
+      } catch (error) {
+        logger.error('Failed to load sound into pool', {
+          path,
+          error: (error as Error).message,
+          stack: (error as Error).stack
+        });
+        // Re-throw to let callers handle the error
+        throw error;
+      } finally {
+        // Remove from loading cache when done (success or error)
+        this.loadingPromises.delete(path);
       }
+    })();
 
-      // Create AudioPool with pre-loaded sounds
-      const pool = new AudioPool(path, audioUrl, initialSounds);
-      this.soundPools.set(path, pool);
+    // Store promise in cache
+    this.loadingPromises.set(path, loadingPromise);
 
-      logger.debug('Sound loaded into pool', { path, initialPoolSize });
-    } catch (error) {
-      logger.error('Failed to load sound into pool', {
-        path,
-        error: (error as Error).message,
-        stack: (error as Error).stack
-      });
-    }
+    // Wait for completion
+    await loadingPromise;
   }
 
   /**

@@ -20,6 +20,7 @@ import {
   Vector3,
   AudioType,
   itemToBlock,
+  type AudioDefinition,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -407,6 +408,63 @@ export class ChunkService {
     // Preload all required chunks in parallel
     await blockTypeService.preloadBlockTypes(Array.from(blockTypeIds));
 
+    // STEP 1.6: Preload unique audio files for all blocks in this chunk
+    // This prevents race conditions and reduces redundant function calls
+    const audioService = this.appContext.services.audio;
+    if (audioService) {
+      const uniqueAudioPaths = new Map<string, AudioType | string>();
+
+      // Collect all unique audio paths from blocks (with merged modifiers)
+      for (const block of chunkData.b) {
+        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        if (!blockType) {
+          continue;
+        }
+
+        // Get position key for this block
+        const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+
+        // Merge block modifiers to get final audio definitions (same as in block processing)
+        const currentModifier = mergeBlockModifier(this.appContext, block, blockType, statusData.get(posKey));
+        const audioModifier = currentModifier.audio;
+
+        if (audioModifier && audioModifier.length > 0) {
+          // Filter for STEPS and COLLISION audio (same as loadBlockAudio logic)
+          const audioToPreload = audioModifier.filter(
+            (def: AudioDefinition) => (def.type === AudioType.STEPS || def.type === AudioType.COLLISION) && def.enabled
+          );
+
+          audioToPreload.forEach((audioDef: AudioDefinition) => {
+            // Store path with type for proper pool sizing
+            uniqueAudioPaths.set(audioDef.path, audioDef.type);
+          });
+        }
+      }
+
+      // Preload all unique audio files in parallel
+      if (uniqueAudioPaths.size > 0) {
+        logger.debug('Preloading audio files for chunk', {
+          cx: chunkData.cx,
+          cz: chunkData.cz,
+          uniqueAudioFiles: uniqueAudioPaths.size,
+        });
+
+        const audioLoadPromises = Array.from(uniqueAudioPaths.entries()).map(([path, type]) => {
+          // Use initial pool size based on audio type (matches loadBlockAudio logic)
+          const initialPoolSize = type === AudioType.STEPS ? 3 : 1;
+          return audioService.loadSoundIntoPool(path, initialPoolSize).catch((error: Error) => {
+            logger.warn('Failed to preload audio file (non-blocking)', {
+              path,
+              type,
+              error: error.message,
+            });
+          });
+        });
+
+        await Promise.all(audioLoadPromises);
+      }
+    }
+
     // STEP 2: Process each block - creating ClientBlocks AND collecting height data in ONE pass
     // Process in batches to avoid blocking main thread
     const BATCH_SIZE = 50;
@@ -448,13 +506,8 @@ export class ChunkService {
       // Add to map with position key
       clientBlocksMap.set(posKey, clientBlock);
 
-      // Load audio files for this block (non-blocking - loads in background)
-      this.loadBlockAudio(clientBlock).catch(error => {
-        logger.warn('Failed to load block audio (non-blocking)', {
-          position: clientBlock.block.position,
-          error: (error as Error).message,
-        });
-      });
+      // Note: Audio files are now preloaded in batch before this loop (STEP 1.6)
+      // This prevents race conditions and reduces redundant function calls
 
       // PERFORMANCE: Calculate height data in same pass
       // Calculate local x, z coordinates within chunk
