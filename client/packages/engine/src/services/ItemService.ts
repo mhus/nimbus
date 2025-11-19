@@ -49,8 +49,13 @@ export class ItemService {
     }
 
     // Subscribe to shortcut activation events
-    playerService.on('shortcut:activated', (data: { shortcutKey: string; itemId?: string }) => {
-      this.handleShortcutActivation(data.shortcutKey, data.itemId);
+    playerService.on('shortcut:activated', (data: {
+      shortcutKey: string;
+      itemId?: string;
+      target?: any;
+      targetPosition?: { x: number; y: number; z: number };
+    }) => {
+      this.handleShortcutActivation(data.shortcutKey, data.itemId, data.target, data.targetPosition);
     });
 
     logger.debug('ItemService event subscriptions initialized');
@@ -210,8 +215,15 @@ export class ItemService {
    *
    * @param shortcutKey Shortcut key that was activated
    * @param itemId Item ID from shortcut
+   * @param target Target object (Block or Entity) from ShortcutService
+   * @param targetPosition Target position from ShortcutService
    */
-  private async handleShortcutActivation(shortcutKey: string, itemId?: string): Promise<void> {
+  private async handleShortcutActivation(
+    shortcutKey: string,
+    itemId?: string,
+    target?: any,
+    targetPosition?: { x: number; y: number; z: number }
+  ): Promise<void> {
     try {
       if (!itemId) {
         logger.debug('No itemId for shortcut activation', { shortcutKey });
@@ -240,17 +252,19 @@ export class ItemService {
         const scrawlService = this.appContext.services.scrawl;
         if (scrawlService) {
           try {
-            logger.debug('Executing onUseEffect script', { itemId, shortcutKey });
+            logger.debug('Executing onUseEffect script', {
+              itemId,
+              shortcutKey,
+              hasTarget: !!target,
+              targetPosition,
+            });
 
-            // Prepare context with item data for default variables
-            // Get source (player) and target (selected entity/block)
+            // Get source (player)
             const playerService = this.appContext.services.player;
-            const selectService = this.appContext.services.select;
-
-            const actor = playerService?.getPlayerEntity();
-            const target = selectService?.getCurrentSelectedEntity();
+            const source = playerService?.getPlayerEntity();
 
             // Prepare context - all values go into vars for consistency
+            // Target comes from ShortcutService (already resolved)
             const scriptContext: any = {
               vars: {
                 itemId: item.id,
@@ -258,8 +272,8 @@ export class ItemService {
                 item,
                 itemName: item.name,
                 itemTexture: mergedModifier.texture,
-                source: actor,    // $source
-                target: target,   // $target
+                source,              // $source (Player)
+                target,              // $target (from ShortcutService)
                 targets: target ? [target] : [], // $targets
               },
             };

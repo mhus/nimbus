@@ -1339,10 +1339,17 @@ export class PlayerService {
    *
    * @param shortcutKey Shortcut key (e.g., 'key1', 'click2')
    * @param itemId Item ID from shortcut definition
+   * @param target Target object (Block or Entity) from ShortcutService
+   * @param targetPosition Target position from ShortcutService
    */
-  emitShortcutActivated(shortcutKey: string, itemId?: string): void {
-    this.emit('shortcut:activated', { shortcutKey, itemId });
-    logger.debug('Shortcut activated event emitted', { shortcutKey, itemId });
+  emitShortcutActivated(
+    shortcutKey: string,
+    itemId?: string,
+    target?: any,
+    targetPosition?: { x: number; y: number; z: number }
+  ): void {
+    this.emit('shortcut:activated', { shortcutKey, itemId, target, targetPosition });
+    logger.debug('Shortcut activated event emitted', { shortcutKey, itemId, hasTarget: !!target });
   }
 
   /**

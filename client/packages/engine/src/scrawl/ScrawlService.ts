@@ -169,8 +169,10 @@ export class ScrawlService {
         hasSource: !!executionContext.vars?.source,
         hasTarget: !!executionContext.vars?.target,
         hasTargets: !!executionContext.vars?.targets,
+        targetsLength: executionContext.vars?.targets?.length,
         sourcePos: executionContext.vars?.source?.position,
         targetPos: executionContext.vars?.target?.position,
+        targetsPos: executionContext.vars?.targets?.map((t: any) => t?.position),
         allVars: executionContext.vars ? Object.keys(executionContext.vars) : [],
       });
 

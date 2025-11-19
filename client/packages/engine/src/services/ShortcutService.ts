@@ -50,7 +50,146 @@ export class ShortcutService {
   }
 
   /**
+   * Fire a shortcut (main entry point)
+   *
+   * Centralized shortcut handling:
+   * 1. Resolves target (Block or Entity) once
+   * 2. Sends BlockInteraction to server
+   * 3. Emits PlayerService event with target data
+   * 4. Executes item script with target data
+   *
+   * @param shortcutNr Shortcut number
+   * @param shortcutKey Shortcut key identifier
+   */
+  async fireShortcut(shortcutNr: number, shortcutKey: string): Promise<void> {
+    try {
+      // Check if blocked
+      if (this.isShortcutBlocked(shortcutNr)) {
+        logger.debug('Shortcut blocked', { shortcutNr });
+        return;
+      }
+
+      const playerService = this.appContext.services.player;
+      const selectService = this.appContext.services.select;
+      const networkService = this.appContext.services.network;
+      const itemService = this.appContext.services.item;
+
+      if (!playerService || !selectService || !networkService) {
+        logger.warn('Required services not available');
+        return;
+      }
+
+      // Get player info and shortcut definition
+      const playerInfo = playerService.getPlayerEntity().playerInfo;
+      const shortcutDef = playerInfo.shortcuts?.[shortcutKey];
+
+      if (!shortcutDef) {
+        logger.debug('No shortcut definition', { shortcutKey });
+        return;
+      }
+
+      // Get player state
+      const playerPosition = playerService.getPosition();
+      const cameraService = this.appContext.services.camera;
+      const rotation = cameraService?.getRotation() || { x: 0, y: 0, z: 0 };
+      const movementStatus = playerService.getMovementState();
+
+      // Resolve target ONCE (Block or Entity)
+      const selectedEntity = selectService.getCurrentSelectedEntity();
+      const selectedBlock = selectService.getCurrentSelectedBlock();
+
+      let distance: number | undefined;
+      let targetPosition: { x: number; y: number; z: number } | undefined;
+      let targetEntity: any = undefined;
+      let targetBlock: any = undefined;
+      let blockX: number | undefined;
+      let blockY: number | undefined;
+      let blockZ: number | undefined;
+      let blockId: string | undefined;
+      let blockGroupId: number | undefined;
+
+      if (selectedEntity) {
+        targetEntity = selectedEntity;
+        targetPosition = selectedEntity.currentPosition;
+        distance = Math.sqrt(
+          Math.pow(targetPosition.x - playerPosition.x, 2) +
+          Math.pow(targetPosition.y - playerPosition.y, 2) +
+          Math.pow(targetPosition.z - playerPosition.z, 2)
+        );
+      } else if (selectedBlock) {
+        targetBlock = selectedBlock;
+        const pos = selectedBlock.block.position;
+        blockX = pos.x;
+        blockY = pos.y;
+        blockZ = pos.z;
+        targetPosition = { x: pos.x + 0.5, y: pos.y + 0.5, z: pos.z + 0.5 };
+        blockId = selectedBlock.block.metadata?.id;
+        blockGroupId = selectedBlock.block.metadata?.groupId;
+        distance = Math.sqrt(
+          Math.pow(targetPosition.x - playerPosition.x, 2) +
+          Math.pow(targetPosition.y - playerPosition.y, 2) +
+          Math.pow(targetPosition.z - playerPosition.z, 2)
+        );
+      }
+
+      // Build interaction params
+      const params: any = {
+        shortcutNr,
+        playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+        playerRotation: { yaw: rotation.y, pitch: rotation.x },
+        selectionRadius: 5,
+        movementStatus,
+        shortcutType: shortcutDef.type,
+        shortcutItemId: shortcutDef.itemId,
+      };
+
+      if (distance !== undefined) {
+        params.distance = parseFloat(distance.toFixed(2));
+      }
+      if (targetPosition) {
+        params.targetPosition = targetPosition;
+      }
+
+      // Send BlockInteraction to server
+      if (selectedEntity) {
+        networkService.sendEntityInteraction(
+          selectedEntity.id,
+          'fireShortcut',
+          undefined,
+          params
+        );
+      } else if (selectedBlock) {
+        networkService.sendBlockInteraction(
+          blockX!,
+          blockY!,
+          blockZ!,
+          'fireShortcut',
+          params,
+          blockId,
+          blockGroupId
+        );
+      } else {
+        networkService.sendBlockInteraction(0, 0, 0, 'fireShortcut', params);
+      }
+
+      // Emit PlayerService event with target data
+      playerService.emitShortcutActivated(shortcutKey, shortcutDef.itemId, targetEntity || targetBlock, targetPosition);
+
+      logger.debug('Shortcut fired', {
+        shortcutNr,
+        shortcutKey,
+        hasTarget: !!(targetEntity || targetBlock),
+        targetPosition,
+      });
+    } catch (error) {
+      logger.error('Failed to fire shortcut', { shortcutNr, shortcutKey }, error as Error);
+    }
+  }
+
+  /**
    * Starts tracking a shortcut.
+   *
+   * Called by ItemService after script execution starts.
    *
    * @param shortcutNr Shortcut number (1-10)
    * @param shortcutKey Shortcut key identifier (e.g., 'key1')
