@@ -20,6 +20,7 @@ import { ParticleWandFlashEffect } from './effects/ParticleWandFlashEffect';
 import { ParticleWandFlashSteadyEffect } from './effects/ParticleWandFlashSteadyEffect';
 import { PlaySoundLoopEffect } from './effects/PlaySoundLoopEffect';
 import { PlaySoundEffect } from './effects/PlaySoundEffect';
+import { PositionFlashEffect } from './effects/PositionFlashEffect';
 
 const logger = getLogger('ScrawlService');
 
@@ -116,6 +117,9 @@ export class ScrawlService {
     // Register PlaySoundEffect for one-shot sounds
     this.effectRegistry.register('playSound', PlaySoundEffect);
 
+    // Register PositionFlashEffect for texture-based lightning strikes
+    this.effectRegistry.register('positionFlash', PositionFlashEffect);
+
     logger.debug('Built-in effects registered', {
       effects: [
         'log',
@@ -133,6 +137,7 @@ export class ScrawlService {
         'particleWandFlashSteady',
         'playSoundLoop',
         'playSound',
+        'positionFlash',
       ],
     });
   }

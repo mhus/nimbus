@@ -46,3 +46,6 @@ export type { PlaySoundLoopOptions } from './PlaySoundLoopEffect';
 
 export { PlaySoundEffect } from './PlaySoundEffect';
 export type { PlaySoundOptions } from './PlaySoundEffect';
+
+export { PositionFlashEffect } from './PositionFlashEffect';
+export type { PositionFlashOptions } from './PositionFlashEffect';

@@ -1871,17 +1871,77 @@ doScrawlStart({
 })  
 ```
 
-[ ] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
+[x] Erstelle einen 'positionFlash' Effekt der einen Lichtblitz erzeugt.
 Der Blitz kommt von oben auf das Ziel zu und verschwindet wieder.
-- Parameter: kind - string ("point" | "spot")
-- Parameter: intensity - number
-- Parameter: color - string
-- Parameter: time - number (sekunden)
-- Parameter: position - Vector3
-- Parameter: height - number (hoehe ueber boden)
-Der effekt benutzt texturen um den flash darzustellen. Vermutlich werden mehr als eine benoetigt
-die schnell gewechselt werden um den blitz effekt zu erzeugen. Die texturen werden
-gestretcht von oben nach unten ueber die gegebene hoehe.
+
+Implementierung: `PositionFlashEffect` in `/client/packages/engine/src/scrawl/effects/PositionFlashEffect.ts`
+- Registriert als 'positionFlash'
+- Kein Steady Effect - endet automatisch nach duration
+- Verwendet Billboard-Mesh mit Texturen (vertikal gestretcht von Himmel zu Boden)
+- Unterstützt optionale Textur-Frames für animierte Blitz-Effekte
+- Optionales dynamisches Licht (Point oder Spot Light)
+- Fade-in/Hold/Fade-out Animation
+
+**Optimierte Parameter:**
+- `position`: Vector3 - Zielposition am Boden ✅
+- `duration`: number - Gesamtdauer in Sekunden (default: 0.5) ✅
+- `color`: string - Farbe des Blitzes (default: "#ffffff") ✅
+- `intensity`: number - Helligkeit 0-1+ (default: 1.0) ✅
+- `height`: number - Höhe über Boden wo Blitz startet (default: 20) ✅
+- `width`: number - Breite/Dicke des Blitzes (default: 0.5) ✅
+- `light`: boolean - Dynamisches Licht aktivieren (default: true) ✅
+- `lightType`: "point" | "spot" - Lichttyp (default: "point") ✅
+- `lightIntensity`: number - Licht-Stärke Multiplikator (default: 10) ✅
+- `lightRange`: number - Licht-Reichweite (default: 10) ✅
+- `textureFrames`: string[] - Optional: Textur-Pfade für Animation ✅
+- `frameRate`: number - Bildrate für Textur-Animation in FPS (default: 30) ✅
+
+**Entfernt/Angepasst:**
+- ❌ `time` - Redundant mit `duration`, wurde entfernt
+- ❌ `kind` - Wurde zu `lightType` und ist nun optional (nur relevant wenn `light: true`)
+
+Beispiel (ohne Texturen, procedural):
+```text
+doScrawlStart({
+  "root": {
+    "kind": "Play",
+    "effectId": "positionFlash",
+    "ctx": {
+      "position": {"x": 100, "y": 65, "z": 200},
+      "duration": 0.5,
+      "color": "#aaccff",
+      "intensity": 1.5,
+      "height": 25,
+      "width": 0.8,
+      "light": true,
+      "lightType": "point"
+    }
+  }
+})
+```
+
+Beispiel (mit animierten Texturen):
+```text
+doScrawlStart({
+  "root": {
+    "kind": "Play",
+    "effectId": "positionFlash",
+    "ctx": {
+      "position": {"x": 100, "y": 65, "z": 200},
+      "duration": 0.6,
+      "color": "#ffffff",
+      "height": 30,
+      "textureFrames": [
+        "textures/lightning/frame1.png",
+        "textures/lightning/frame2.png",
+        "textures/lightning/frame3.png"
+      ],
+      "frameRate": 20,
+      "light": true
+    }
+  }
+})
+```
 
 
 
