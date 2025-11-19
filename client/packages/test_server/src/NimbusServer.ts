@@ -590,12 +590,13 @@ class NimbusServer {
    */
   private handleEffectTrigger(session: ClientSession, data: any): void {
     try {
-      logger.info('Effect trigger received from client', {
+      logger.info('🟢 SERVER: Effect trigger (e.t) received from client', {
         sessionId: session.sessionId,
         username: session.username,
-        effectId: data.effectId,
-        entityId: data.entityId,
-        chunkCount: data.chunks?.length || 0,
+        effectId: data?.effectId,
+        entityId: data?.entityId,
+        chunkCount: data?.chunks?.length || 0,
+        rawData: data,
       });
 
       if (!data.effect || !data.effectId) {

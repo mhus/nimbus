@@ -159,16 +159,6 @@ async function initializeApp(): Promise<AppContext> {
     await scrawlService.initialize();
     logger.debug('ScrawlService initialized');
 
-    // Register EffectTriggerHandler (after ScrawlService init)
-    const effectTriggerHandler = new EffectTriggerHandler(scrawlService);
-    appContext.services.network?.registerHandler(effectTriggerHandler);
-    logger.info('🔵 EffectTriggerHandler registered for message type: e.t');
-
-    // Register EffectParameterUpdateHandler
-    const effectParameterUpdateHandler = new EffectParameterUpdateHandler(scrawlService);
-    appContext.services.network?.registerHandler(effectParameterUpdateHandler);
-    logger.info('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
-
     // Initialize ShortcutService (after ScrawlService, for executor integration)
     logger.info('Initializing ShortcutService...');
     const { ShortcutService } = await import('./services/ShortcutService');
@@ -356,6 +346,19 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const entityPathwayHandler = new EntityPathwayMessageHandler(entityService);
     networkService.registerHandler(entityPathwayHandler);
     logger.info('🔵 EntityPathwayMessageHandler registered for message type: e.p');
+
+    // Register EffectTriggerHandler (ScrawlService was initialized earlier)
+    if (appContext.services.scrawl) {
+      const effectTriggerHandler = new EffectTriggerHandler(appContext.services.scrawl);
+      networkService.registerHandler(effectTriggerHandler);
+      logger.info('🔵 EffectTriggerHandler registered for message type: e.t');
+
+      const effectParameterUpdateHandler = new EffectParameterUpdateHandler(appContext.services.scrawl);
+      networkService.registerHandler(effectParameterUpdateHandler);
+      logger.info('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
+    } else {
+      logger.warn('ScrawlService not available - effect handlers not registered');
+    }
 
     // Register CommandMessageHandler and CommandResultHandler
     const commandService = appContext.services.command;

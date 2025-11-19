@@ -463,20 +463,20 @@ export class ScrawlExecutor {
    * These are automatically available in all scripts.
    */
   private setDefaultVariables(ctx: ScrawlExecContext): void {
-    // $source - The source subject (actor or source from initialContext)
-    const source = (this.initialContext as any).source || ctx.actor;
+    // $source - The source subject (from vars/parameters, or fallback to ctx.actor)
+    const source = ctx.vars?.source || (this.initialContext as any).source || ctx.actor;
     if (source) {
       this.vars.set('source', source);
     }
 
-    // $target - The target subject (first patient or target from initialContext)
-    const target = (this.initialContext as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
+    // $target - The target subject (from vars/parameters, or fallback to ctx.patients)
+    const target = ctx.vars?.target || (this.initialContext as any).target || (ctx.patients && ctx.patients.length > 0 ? ctx.patients[0] : undefined);
     if (target) {
       this.vars.set('target', target);
     }
 
-    // $targets - Array of all targets (all patients or targets from initialContext)
-    const targets = (this.initialContext as any).targets || ctx.patients;
+    // $targets - Array of all targets (from vars/parameters, or fallback to ctx.patients)
+    const targets = ctx.vars?.targets || (this.initialContext as any).targets || ctx.patients;
     if (targets) {
       this.vars.set('targets', targets);
     }

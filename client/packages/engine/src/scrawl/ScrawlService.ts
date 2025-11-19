@@ -155,7 +155,7 @@ export class ScrawlService {
         throw new Error('No script provided in action definition');
       }
 
-      // Merge parameters into context
+      // Merge context and parameters
       const executionContext: Partial<ScrawlExecContext> = {
         ...context,
         ...(action.parameters || {}),
@@ -444,27 +444,45 @@ export class ScrawlService {
       // Cleanup after 10 seconds
       setTimeout(() => this.sentEffectIds.delete(effectId), 10000);
 
+      // Build effect with source/target/targets in parameters
+      const effectWithContext = {
+        ...action,
+        parameters: {
+          ...(action.parameters || {}),
+          source: (context as any)?.source,
+          target: (context as any)?.target,
+          targets: (context as any)?.targets,
+        },
+      };
+
       // Build effect trigger message
       const effectTriggerData = {
         effectId,
         entityId,
         chunks: chunks.length > 0 ? chunks : undefined,
-        effect: action,
+        effect: effectWithContext,
       };
 
       // Send to server if NetworkService is available
       if (networkService) {
+        logger.info('🟢 CLIENT: Sending effect trigger to server', {
+          effectId,
+          entityId,
+          chunkCount: chunks.length,
+          scriptId: action.scriptId,
+          messageType: 'e.t',
+        });
+
         networkService.send({
           t: MessageType.EFFECT_TRIGGER,
           d: effectTriggerData,
         });
 
-        logger.debug('Effect trigger sent to server', {
+        logger.info('🟢 CLIENT: Effect trigger sent to server', {
           effectId,
-          entityId,
-          chunkCount: chunks.length,
-          scriptId: action.scriptId,
         });
+      } else {
+        logger.warn('NetworkService not available, effect not sent to server');
       }
 
       // Return effectId and chunks for executor
