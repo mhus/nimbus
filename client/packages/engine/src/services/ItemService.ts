@@ -284,11 +284,35 @@ export class ItemService {
         if (scrawlService) {
           try {
             logger.debug('Executing onUseEffect script', { itemId, shortcutKey });
-            executorId = await scrawlService.executeAction(onUseEffect, {
-              // Provide context for the script
+
+            // Get BlockType for additional item info
+            const blockTypeService = this.appContext.services.blockType;
+            let itemTexture: string | undefined;
+            if (blockTypeService) {
+              const blockType = blockTypeService.getBlockType(itemData.block.blockTypeId);
+              // Get texture from default modifier (status 0)
+              if (blockType) {
+                const defaultModifier = blockType.modifiers[0];
+                // Get texture from textures record (face 0 = all faces)
+                const textures = defaultModifier?.visibility?.textures;
+                if (textures) {
+                  const texture = textures[0]; // Face 0 (all faces)
+                  itemTexture = typeof texture === 'string' ? texture : undefined;
+                }
+              }
+            }
+
+            // Prepare context with item data for default variables
+            // These will be available as $item, $itemId, $itemName, $itemTexture in scripts
+            const scriptContext: any = {
               itemId,
               shortcutKey,
-            });
+              item: itemData.block,
+              itemName: itemData.block.metadata?.displayName || itemData.description,
+              itemTexture,
+            };
+
+            executorId = await scrawlService.executeAction(onUseEffect, scriptContext);
           } catch (error) {
             ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation.onUseEffect', {
               shortcutKey,

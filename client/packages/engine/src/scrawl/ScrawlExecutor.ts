@@ -439,13 +439,59 @@ export class ScrawlExecutor {
    * Create execution context
    */
   private createContext(): ScrawlExecContext {
-    return {
+    const ctx: ScrawlExecContext = {
       ...this.initialContext,
       appContext: this.appContext,
       executor: this,
       scriptId: this.script.id,
       vars: this.initialContext.vars || {},
     } as ScrawlExecContext;
+
+    // Set default variables from initial context
+    this.setDefaultVariables(ctx);
+
+    return ctx;
+  }
+
+  /**
+   * Sets default variables in the context.
+   * These are automatically available in all scripts.
+   */
+  private setDefaultVariables(ctx: ScrawlExecContext): void {
+    // $source - The source subject (actor)
+    if (ctx.actor) {
+      this.vars.set('source', ctx.actor);
+    }
+
+    // $target - The target subject (first patient)
+    if (ctx.patients && ctx.patients.length > 0) {
+      this.vars.set('target', ctx.patients[0]);
+    }
+
+    // $targets - Array of all targets (all patients)
+    if (ctx.patients) {
+      this.vars.set('targets', ctx.patients);
+    }
+
+    // $item - The item Block that triggered this effect (if available)
+    if (this.initialContext.item) {
+      this.vars.set('item', this.initialContext.item);
+    }
+
+    // $itemId - The item ID (if available)
+    if (this.initialContext.itemId) {
+      this.vars.set('itemId', this.initialContext.itemId);
+    }
+
+    // $itemName - The item name (if available)
+    if (this.initialContext.itemName) {
+      this.vars.set('itemName', this.initialContext.itemName);
+    }
+
+    // $itemTexture - The item texture (if available)
+    if (this.initialContext.itemTexture) {
+      this.vars.set('itemTexture', this.initialContext.itemTexture);
+    }
   }
 
   /**

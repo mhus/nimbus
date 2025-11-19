@@ -1128,13 +1128,25 @@ StepUntil - Loop bis Event eintritt
 - Use Case: Beam folgt Maus, Charging-Effekt während Taste gedrückt
 - Besonderheit: Unterstützt dynamische Parameter-Updates
 
+[?] Default variablen im ScrawlExecutor implementieren
+- $source - das source subject (actor)
+- $target - das target subject (patient[0])
+- $targets - array aller targets (patients)
+- $item - das item, das den effekt ausgeloest hat (wenn vorhanden)
+- $itemId - die id des items (wenn vorhanden)
+- $itemTexture - die texture des items (wenn vorhanden)
+- $itemName - der name des items (wenn vorhanden)
+
+Wenn ein Script con einem Item ausgefuehrt wird (Shortcuts), werden diese variablen automatisch gesetzt.
+
+[ ] Erstelle in client/packages/engine/src/scrawl/effects eien Dokumentation, wie Effekte gebaut werden, damit spaeter neue Effekte problemlos hinzugefuegt werden koennen.
 
 ## Embedding Scripts
 
 [?] Erweitere Items (ItemData.ts) so, das ScriptActionDefinition als onUseEffekt Effekt definiert werden kann.
 - Wenn ein Item per shortcut ausgefuehrt wird, wird der ScrawlService genutzt um das Script zu starten - wenn vorhanden.
 
-[ ] Erweiterung von Shotcuts:
+[?] Erweiterung von Shotcuts:
 - Es muss auch das ende eines shortcut events geben, z.b. wenn die maus/key losgelassen wird.
 - Es muss moeglich sein, während des gedrückt haltens eines shortcuts, die position des source / targets neu zu setzen.
 Brauchen wir einen ShortcutService der Shortcuts managed? Aktuell wird das alles im PlayerServie und ??? verarbeitet.
