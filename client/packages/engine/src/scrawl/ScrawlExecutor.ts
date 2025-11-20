@@ -781,6 +781,15 @@ export class ScrawlExecutor {
     const ctx = this.createContext();
     ctx.vars = ctx.vars || {};
 
+    // Handle special stop parameter (from remote shortcut end)
+    if (paramName === '__stop__') {
+      logger.info('Stop event received via parameter update, emitting stop_event', {
+        executorId: this.executorId,
+      });
+      this.emit('stop_event');
+      return; // Don't update vars or notify effects
+    }
+
     // Map InputService parameter names to script variable names
     if (paramName === 'targetPos') {
       // InputService sends 'targetPos' as Vector3

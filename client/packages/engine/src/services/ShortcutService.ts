@@ -277,11 +277,14 @@ export class ShortcutService {
       return undefined;
     }
 
+    // Send stop event to server before removing
+    this.sendShortcutStopToServer(shortcut);
+
     this.activeShortcuts.delete(shortcutNr);
 
     const duration = (Date.now() - shortcut.startTime) / 1000;
 
-    logger.debug('Shortcut ended', {
+    logger.info('Shortcut ended', {
       shortcutNr,
       shortcutKey: shortcut.shortcutKey,
       duration,
@@ -289,6 +292,45 @@ export class ShortcutService {
     });
 
     return shortcut;
+  }
+
+  /**
+   * Send shortcut stop event to server
+   *
+   * Sends a special "stop" parameter update to terminate Until/While loops
+   * on remote clients.
+   */
+  private sendShortcutStopToServer(shortcut: ActiveShortcut): void {
+    const networkService = this.appContext.services.network;
+    const scrawlService = this.appContext.services.scrawl;
+
+    if (!networkService || !scrawlService) {
+      return;
+    }
+
+    // Get effectId for this executor
+    const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+    if (!effectId) {
+      return; // No server sync needed
+    }
+
+    try {
+      // Send stop event as parameter update
+      networkService.sendEffectParameterUpdate(
+        effectId,
+        '__stop__', // Special parameter to signal stop
+        true
+      );
+
+      logger.info('Shortcut stop event sent to server', {
+        shortcutNr: shortcut.shortcutNr,
+        effectId,
+      });
+    } catch (error) {
+      logger.warn('Failed to send shortcut stop to server', {
+        error: (error as Error).message,
+      });
+    }
   }
 
   /**
