@@ -10,7 +10,7 @@ packageRules:
   - dirEndsWith: scrawl
     pkg: de.mhus.nimbus.generated.scrawl
   - dirEndsWith: network/messages
-    pkg: de.mhus.nimbus.generated.network
+    pkg: de.mhus.nimbus.generated.network.messages
   - dirEndsWith: types
     pkg: de.mhus.nimbus.generated.types
   - dirEndsWith: configs

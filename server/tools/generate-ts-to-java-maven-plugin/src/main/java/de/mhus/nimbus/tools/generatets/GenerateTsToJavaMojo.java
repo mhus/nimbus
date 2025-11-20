@@ -75,6 +75,38 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                         t.setPackageName(resolved);
                     }
                 }
+                // Apply type name mappings from configuration to all model elements
+                if (configuration != null && configuration.typeMappings != null && !configuration.typeMappings.isEmpty()) {
+                    for (JavaType t : javaModel.getTypes()) {
+                        if (t == null) continue;
+                        // extends
+                        if (t.getExtendsName() != null) {
+                            String mapped = mapTypeString(t.getExtendsName(), configuration);
+                            if (mapped != null) t.setExtendsName(mapped);
+                        }
+                        // implements
+                        if (t.getImplementsNames() != null) {
+                            for (int i = 0; i < t.getImplementsNames().size(); i++) {
+                                String n = t.getImplementsNames().get(i);
+                                String mapped = mapTypeString(n, configuration);
+                                if (mapped != null) t.getImplementsNames().set(i, mapped);
+                            }
+                        }
+                        // alias target
+                        if (t.getAliasTargetName() != null) {
+                            String mapped = mapTypeString(t.getAliasTargetName(), configuration);
+                            if (mapped != null) t.setAliasTargetName(mapped);
+                        }
+                        // properties
+                        if (t.getProperties() != null) {
+                            for (de.mhus.nimbus.tools.generatets.java.JavaProperty p : t.getProperties()) {
+                                if (p == null) continue;
+                                String mapped = mapTypeString(p.getType(), configuration);
+                                if (mapped != null) p.setType(mapped);
+                            }
+                        }
+                    }
+                }
             }
 
             new JavaModelWriter(javaModel).write(outputDir);
@@ -82,6 +114,67 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse TypeScript sources", e);
         }
+    }
+
+    private String mapTypeString(String input, Configuration cfg) {
+        if (input == null || input.isBlank() || cfg == null || cfg.typeMappings == null || cfg.typeMappings.isEmpty()) {
+            return null;
+        }
+        String s = input.trim();
+        // Handle generics like A<B,C<D>>
+        int lt = s.indexOf('<');
+        if (lt >= 0 && s.endsWith(">")) {
+            String raw = s.substring(0, lt).trim();
+            String args = s.substring(lt + 1, s.length() - 1);
+            String mappedRaw = mapSimpleType(raw, cfg);
+            String[] parts = splitTopLevel(args, ',');
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) sb.append(", ");
+                String part = parts[i].trim();
+                String mapped = mapTypeString(part, cfg);
+                sb.append(mapped != null ? mapped : part);
+            }
+            String result = (mappedRaw != null ? mappedRaw : raw) + "<" + sb + ">";
+            if (!result.equals(input)) return result; else return null;
+        }
+        // Arrays like T[] -> map T and convert back
+        if (s.endsWith("[]")) {
+            String elem = s.substring(0, s.length() - 2).trim();
+            String mappedElem = mapTypeString(elem, cfg);
+            String result = (mappedElem != null ? mappedElem : elem) + "[]";
+            if (!result.equals(input)) return result; else return null;
+        }
+        // Simple
+        String mapped = mapSimpleType(s, cfg);
+        if (mapped != null && !mapped.equals(input)) return mapped;
+        return null;
+    }
+
+    private String mapSimpleType(String name, Configuration cfg) {
+        if (name == null || name.isBlank()) return null;
+        String n = name.trim();
+        // If already qualified, leave as is
+        if (n.contains(".")) return null;
+        String mapped = cfg.typeMappings.get(n);
+        return (mapped == null || mapped.isBlank()) ? null : mapped.trim();
+    }
+
+    private String[] splitTopLevel(String s, char delimiter) {
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '<') depth++;
+            else if (c == '>') depth--;
+            else if (c == delimiter && depth == 0) {
+                parts.add(s.substring(start, i));
+                start = i + 1;
+            }
+        }
+        parts.add(s.substring(start));
+        return parts.toArray(new String[0]);
     }
 
     private void writeModelToFile(TsModel model) throws IOException {
@@ -171,20 +264,47 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             }
         }
 
-        if (cfg != null && cfg.packageRules != null) {
-            String rootName = matchedRoot != null ? matchedRoot.getAbsolutePath().replace('\\', '/') : null;
+        if (cfg == null) return null;
+
+        String base = cfg.basePackage;
+        String relDir = null;
+        if (matchedRoot != null) {
+            try {
+                java.nio.file.Path root = matchedRoot.getCanonicalFile().toPath();
+                java.nio.file.Path srcPath = srcFile.getCanonicalFile().toPath();
+                java.nio.file.Path rel = root.relativize(srcPath).getParent();
+                if (rel != null) relDir = rel.toString().replace('\\', '/');
+            } catch (IOException ignored) {
+                String rAbs = matchedRoot.getAbsolutePath().replace('\\', '/');
+                String sAbs = srcFile.getAbsolutePath().replace('\\', '/');
+                if (sAbs.startsWith(rAbs)) {
+                    String tmp = sAbs.substring(rAbs.length());
+                    int lastSlash = tmp.lastIndexOf('/');
+                    relDir = lastSlash > 0 ? tmp.substring(1, lastSlash) : null;
+                }
+            }
+        }
+
+        // Apply explicit package rules based on relative directory path from the TS root
+        if (cfg.packageRules != null && relDir != null && !relDir.isEmpty()) {
             for (Configuration.PackageRule rule : cfg.packageRules) {
                 if (rule == null) continue;
                 String suf = rule.dirEndsWith;
                 if (suf == null || suf.isBlank()) continue;
                 String sufNorm = suf.replace('\\', '/');
-                boolean match = false;
-                if (rootName != null && rootName.endsWith(sufNorm)) {
+                if (relDir.endsWith(sufNorm)) {
                     if (rule.pkg != null && !rule.pkg.isBlank()) return rule.pkg.trim();
                 }
             }
         }
-        return cfg.basePackage;
+
+        // Derive package from basePackage + relative path if available
+        if (base != null && relDir != null && !relDir.isEmpty()) {
+            String relPkg = relDir.replace('/', '.');
+            if (base.endsWith(".")) return base + relPkg;
+            else return base + "." + relPkg;
+        }
+        return base;
     }
 
     private TsModel parseTs() throws IOException {
