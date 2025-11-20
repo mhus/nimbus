@@ -42,10 +42,4 @@ export interface ItemBlockRef {
      */
     offset?: [number, number, number];
 
-    /**
-     * Optional tint color (hex format, e.g., '#ff0000')
-     * Applied as a color overlay on the texture
-     */
-    color?: string;
-
 }

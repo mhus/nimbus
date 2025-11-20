@@ -111,7 +111,7 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       item.parameters
     );
 
-    return res.status(201).json({ itemId: createdItem.id });
+    return res.status(201).json({ itemId: createdItem.item.id });
   });
 
   /**

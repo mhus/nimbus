@@ -12,6 +12,33 @@ import * as path from 'path';
 
 const logger = getLogger('ItemRegistry');
 
+/**
+ * Load ItemType from disk
+ *
+ * @param itemTypeId Item type identifier (e.g., 'sword', 'wand')
+ * @returns ItemType or undefined if not found
+ */
+function loadItemType(itemTypeId: string): ItemType | undefined {
+  try {
+    // Load from files/itemtypes/{itemTypeId}.json
+    const filePath = path.join(process.cwd(), 'files', 'itemtypes', `${itemTypeId}.json`);
+
+    if (!fs.existsSync(filePath)) {
+      logger.warn('ItemType file not found', { itemTypeId, filePath });
+      return undefined;
+    }
+
+    const data = fs.readFileSync(filePath, 'utf-8');
+    const itemType: ItemType = JSON.parse(data);
+
+    logger.debug('ItemType loaded', { itemTypeId, filePath });
+    return itemType;
+  } catch (error) {
+    ExceptionHandler.handle(error, 'loadItemType', { itemTypeId });
+    return undefined;
+  }
+}
+
 export interface ServerItem {
   /**
    * If the item has an position in the world, this is the reference to it
@@ -58,12 +85,17 @@ export class ItemRegistry {
     position?: Vector3,
     texturePath?: string,
     parameters?: Record<string, any>
-  ): Item {
+  ): ServerItem {
 
     // Generate unique ID
     const id = `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-    const itemType = <ItemType>getItemType(itemTypeId); // TODO fix load from item types
+    const itemType = loadItemType(itemTypeId);
+
+    if (!itemType) {
+      logger.error('ItemType not found, cannot create item', { itemTypeId });
+      throw new Error(`ItemType not found: ${itemTypeId}`);
+    }
 
     // Create Item
     const item: Item = {
@@ -79,7 +111,6 @@ export class ItemRegistry {
       scaleX: itemType.modifier?.scaleX || 0,
       scaleY: itemType.modifier?.scaleY || 0,
       offset: itemType.modifier?.offset || [0, 0, 0],
-      color: itemType.modifier?.color || '',
       texture: texturePath || itemType.modifier?.texture || '',
     } : undefined;
 
@@ -101,7 +132,7 @@ export class ItemRegistry {
       hasParameters: !!parameters,
     });
 
-    return item;
+    return serverItem;
   }
 
   /**

@@ -5,8 +5,8 @@
  * This module provides conversion utilities used by both client and server.
  */
 
-import type { Item } from '../types/Item';
 import type { Block } from '../types/Block';
+import {ItemBlockRef} from "../types";
 
 /**
  * Converts an Item to a Block for network transmission or rendering
@@ -18,13 +18,24 @@ import type { Block } from '../types/Block';
  * @param item Item to convert
  * @returns Block representation of the item
  */
-export function itemToBlock(item: Item): Block {
+export function itemToBlock(item: ItemBlockRef): Block {
   return {
     position: item.position,
     blockTypeId: 1, // ITEM blockType (fixed)
+    offsets: item.offset ?? [0, 0, 0],
+    modifiers: {
+        0: {
+            visibility: {
+                textures: {
+                    0: item.texture
+                },
+                scalingX: item.scaleX ?? 0.5,
+                scalingY: item.scaleY ?? 0.5,
+            },
+        }
+    },
     metadata: {
-      id: item.id,
-      displayName: item.name,
+      id: item.id
     },
   };
 }

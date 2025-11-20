@@ -7,10 +7,10 @@
 
 import type { BaseMessage } from '../BaseMessage';
 import type { Block } from '../../types/Block';
-import type { Item } from '../../types/Item';
 import type { AreaData } from '../../types/AreaData';
 import type { HeightData } from '../../types/ChunkData';
 import type { Backdrop } from '../../types/Backdrop';
+import {ItemBlockRef} from "../../types";
 
 /**
  * Chunk coordinates (XZ only, Y is complete column)
@@ -34,7 +34,7 @@ export interface ChunkDataTransferObject {
   b: Block[];
 
   /** Item data - Item instances with position, itemType reference, and modifiers */
-  i?: Item[];
+  i?: ItemBlockRef[];
 
   /** Height data, maximum height */
   h?: HeightData[];

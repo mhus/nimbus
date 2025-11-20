@@ -108,7 +108,9 @@ export class ItemCommand extends CommandHandler {
 
       // Queue item update for broadcast
       // Items are sent as Items over the network, not Blocks
-      this.itemUpdateBuffer.addUpdate(worldId, item);
+      if (item.itemBlockRef) {
+        this.itemUpdateBuffer.addUpdate(worldId, item.itemBlockRef);
+      }
 
       logger.info('Item added via command', {
         worldId,
@@ -116,12 +118,12 @@ export class ItemCommand extends CommandHandler {
         displayName,
         itemType,
         texturePath,
-        itemId: item.id,
+        itemId: item.item.id,
       });
 
       return {
         rc: 0,
-        message: `Item "${displayName}" (${itemType}) added at (${x}, ${y}, ${z})\nItem ID: ${item.id}`,
+        message: `Item "${displayName}" (${itemType}) added at (${x}, ${y}, ${z})\nItem ID: ${item.item.id}`,
       };
     } catch (error) {
       logger.error('Failed to add item', { worldId, position: { x, y, z } }, error as Error);
@@ -182,7 +184,7 @@ export class ItemCommand extends CommandHandler {
       }
 
       // Remove item from registry
-      world.itemRegistry.removeItem(x, y, z);
+      world.itemRegistry.removeItem(item.item.id);
 
       // Queue item deletion update for broadcast
       // Create a delete marker item with special itemType
