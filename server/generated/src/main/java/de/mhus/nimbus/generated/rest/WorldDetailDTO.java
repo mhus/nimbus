@@ -14,6 +14,7 @@ public class WorldDetailDTO extends Object {
     private Position3D stop;
     private double chunkSize;
     private String assetPath;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double assetPort;
     private String worldGroupId;
     private String createdAt;

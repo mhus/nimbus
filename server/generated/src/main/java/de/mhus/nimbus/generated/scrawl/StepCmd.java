@@ -9,5 +9,6 @@ package de.mhus.nimbus.generated.scrawl;
 public class StepCmd extends Object {
     private String kind;
     private String cmd;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<Object> parameters;
 }

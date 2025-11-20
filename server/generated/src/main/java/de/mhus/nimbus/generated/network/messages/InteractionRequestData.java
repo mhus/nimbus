@@ -10,5 +10,6 @@ public class InteractionRequestData extends Object {
     private double x;
     private double y;
     private double z;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String g;
 }

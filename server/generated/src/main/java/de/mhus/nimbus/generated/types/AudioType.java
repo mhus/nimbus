@@ -5,4 +5,11 @@
 package de.mhus.nimbus.generated.types;
 
 public enum AudioType {
+    STEPS(1),
+    PERMANENT(2),
+    COLLISION(3);
+
+    @lombok.Getter
+    private final int tsIndex;
+    AudioType(int tsIndex) { this.tsIndex = tsIndex; }
 }

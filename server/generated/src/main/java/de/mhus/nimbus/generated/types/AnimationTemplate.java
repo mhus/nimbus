@@ -9,5 +9,6 @@ package de.mhus.nimbus.generated.types;
 public class AnimationTemplate extends Object {
     private String id;
     private java.util.List<String> placeholders;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String description;
 }

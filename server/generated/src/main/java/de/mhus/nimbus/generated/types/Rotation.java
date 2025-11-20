@@ -9,5 +9,6 @@ package de.mhus.nimbus.generated.types;
 public class Rotation extends Object {
     private double y;
     private double p;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double r;
 }

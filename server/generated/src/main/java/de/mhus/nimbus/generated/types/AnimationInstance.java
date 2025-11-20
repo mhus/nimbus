@@ -10,5 +10,6 @@ public class AnimationInstance extends Object {
     private String templateId;
     private AnimationData animation;
     private double createdAt;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String triggeredBy;
 }

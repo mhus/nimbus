@@ -15,7 +15,9 @@ public class ServerEntitySpawnDefinition extends Object {
     private double radius;
     private double speed;
     private String behaviorModel;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private BehaviorConfig behaviorConfig;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private EntityPathway currentPathway;
     private java.util.List<Vector2> chunks;
     private Vector3 position;

@@ -21,6 +21,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Jackson annotations for @JsonInclude used in generated sources -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.18.2</version>
+        </dependency>
+
         <!-- Lombok (provided) -->
         <dependency>
             <groupId>org.projectlombok</groupId>

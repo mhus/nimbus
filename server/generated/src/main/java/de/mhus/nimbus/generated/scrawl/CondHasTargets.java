@@ -8,5 +8,6 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.Builder
 public class CondHasTargets extends Object {
     private String kind;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double min;
 }

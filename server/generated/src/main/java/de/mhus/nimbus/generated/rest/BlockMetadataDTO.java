@@ -15,5 +15,6 @@ public class BlockMetadataDTO extends Object {
     private java.util.List<String> groupNames;
     private java.util.List<String> inheritedGroups;
     private java.util.List<String> inheritedGroupNames;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String displayName;
 }

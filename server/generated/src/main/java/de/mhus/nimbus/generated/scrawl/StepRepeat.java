@@ -8,7 +8,9 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.Builder
 public class StepRepeat extends Object {
     private String kind;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Object times;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Object untilEvent;
     private ScrawlStep step;
 }

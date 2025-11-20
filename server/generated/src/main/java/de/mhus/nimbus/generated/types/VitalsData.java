@@ -10,7 +10,9 @@ public class VitalsData extends Object {
     private String type;
     private double current;
     private double max;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double extended;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double extendExpiry;
     private double regenRate;
     private double degenRate;

@@ -9,5 +9,6 @@ package de.mhus.nimbus.generated.scrawl;
 public class ScrawlParameterDefinition extends Object {
     private String name;
     private ScrawlParameterType type;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String description;
 }

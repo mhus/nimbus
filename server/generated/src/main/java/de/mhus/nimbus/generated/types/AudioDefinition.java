@@ -10,7 +10,9 @@ public class AudioDefinition extends Object {
     private Object type;
     private String path;
     private double volume;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean loop;
     private boolean enabled;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double maxDistance;
 }

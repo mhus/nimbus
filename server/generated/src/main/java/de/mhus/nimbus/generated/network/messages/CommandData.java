@@ -8,6 +8,8 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.Builder
 public class CommandData extends Object {
     private String cmd;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<String> args;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean oneway;
 }

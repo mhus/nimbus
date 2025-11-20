@@ -113,7 +113,8 @@ public class TsParser {
         for (NameOccur n : findNamed(src, DECL_ENUM, '{')) {
             TsDeclarations.TsEnum d = new TsDeclarations.TsEnum();
             d.name = n.name;
-            // In a later step, we could parse values.
+            String body = safeSub(src, n.startIndex, n.endIndex);
+            extractEnumValuesFromBody(body, d.values);
             file.getEnums().add(d);
         }
         // Classes
@@ -170,6 +171,25 @@ public class TsParser {
             pr.optional = m.group(3) != null && !m.group(3).isEmpty();
             pr.type = typeTxt;
             out.add(pr);
+        }
+    }
+
+    private void extractEnumValuesFromBody(String body, java.util.List<String> out) {
+        if (body == null || out == null) return;
+        // Match enum member names: NAME [= ...] , or NAME at end
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?m)^[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(?:=[^,\\r\\n]+)?[\\t ]*(?:,[\\t ]*)?(?://.*)?$");
+        java.util.regex.Matcher m = p.matcher(body);
+        while (m.find()) {
+            String name = m.group(1);
+            if (name == null || name.isEmpty()) continue;
+            // Filter out potential keywords
+            if (!java.lang.Character.isJavaIdentifierStart(name.charAt(0))) continue;
+            boolean ok = true;
+            for (int i = 1; i < name.length(); i++) {
+                if (!java.lang.Character.isJavaIdentifierPart(name.charAt(i))) { ok = false; break; }
+            }
+            if (!ok) continue;
+            out.add(name);
         }
     }
 

@@ -53,6 +53,9 @@ public class JavaGenerator {
                     if (e == null || e.name == null) continue;
                     JavaType t = new JavaType(e.name, JavaKind.ENUM, srcPath);
                     t.setOriginalTsKind("enum");
+                    if (e.values != null && !e.values.isEmpty()) {
+                        t.getEnumValues().addAll(e.values);
+                    }
                     jm.addType(t);
                 }
             }

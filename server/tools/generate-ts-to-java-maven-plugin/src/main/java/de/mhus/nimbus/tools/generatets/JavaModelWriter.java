@@ -93,7 +93,21 @@ public class JavaModelWriter {
         String name = t.getName();
         String currentPkg = pkg == null ? "" : pkg;
         if (t.getKind() == JavaKind.ENUM) {
-            sb.append("public enum ").append(name).append(" {\n}\n");
+            sb.append("public enum ").append(name).append(" {\n");
+            java.util.List<String> vals = t.getEnumValues();
+            if (vals != null && !vals.isEmpty()) {
+                for (int i = 0; i < vals.size(); i++) {
+                    String v = vals.get(i);
+                    if (!isValidJavaIdentifier(v)) continue;
+                    if (i > 0) sb.append(",\n");
+                    sb.append("    ").append(v).append("(").append(String.valueOf(i + 1)).append(")");
+                }
+                sb.append(";\n\n");
+                sb.append("    @lombok.Getter\n");
+                sb.append("    private final int tsIndex;\n");
+                sb.append("    ").append(name).append("(int tsIndex) { this.tsIndex = tsIndex; }\n");
+            }
+            sb.append("}\n");
         } else if (t.getKind() == JavaKind.INTERFACE) {
             sb.append("public interface ").append(name);
             String extCsv = renderInterfaceExtendsCsv(t.getExtendsName(), t.getImplementsNames(), currentPkg);
@@ -133,6 +147,10 @@ public class JavaModelWriter {
                     if (!isValidJavaIdentifier(p.getName())) continue;
                     if (!seen.add(p.getName())) continue;
                     String type = p.getType() == null || p.getType().isBlank() ? "Object" : qualifyType(p.getType(), currentPkg);
+                    // If the original TS property was optional, add Jackson include NON_NULL to omit nulls during serialization
+                    if (p.isOptional()) {
+                        sb.append("    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)\n");
+                    }
                     sb.append("    private ").append(type).append(' ').append(p.getName()).append(";\n");
                 }
             }

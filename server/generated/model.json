@@ -280,7 +280,7 @@
     } ],
     "enums" : [ {
       "name" : "ENTITY_POSES",
-      "values" : [ ]
+      "values" : [ "IDLE", "WALK", "RUN", "SPRINT", "CROUCH", "JUMP", "SWIM", "FLY", "DEATH", "WALK_SLOW", "CLAPPING", "ROLL", "ATTACK", "OUT_OF_WATER", "SWIMMING_FAST", "SWIMMING_IMPULSIVE", "SWIMMING", "HIT_RECEIVED", "HIT_RECEIVED_STRONG", "KICK_LEFT", "KICK_RIGHT", "PUNCH_LEFT", "PUNCH_RIGHT", "RUN_BACKWARD", "RUN_LEFT", "RUN_RIGHT", "WAVE" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ {
@@ -439,7 +439,7 @@
     } ],
     "enums" : [ {
       "name" : "PlayerMovementState",
-      "values" : [ ]
+      "values" : [ "WALK", "SPRINT", "JUMP", "FALL", "FLY", "SWIM", "CROUCH", "RIDING" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -698,10 +698,10 @@
     } ],
     "enums" : [ {
       "name" : "AnimationEffectType",
-      "values" : [ ]
+      "values" : [ "SCALE", "ROTATE", "TRANSLATE", "COLOR_CHANGE", "FADE", "FLASH", "PROJECTILE", "EXPLOSION", "PARTICLES", "SPAWN_ENTITY", "SKY_CHANGE", "LIGHT_CHANGE", "CAMERA_SHAKE", "PLAY_SOUND", "BLOCK_BREAK", "BLOCK_PLACE", "BLOCK_CHANGE" ]
     }, {
       "name" : "EasingType",
-      "values" : [ ]
+      "values" : [ "LINEAR", "EASE_IN", "EASE_OUT", "EASE_IN_OUT", "ELASTIC", "BOUNCE", "STEP" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ {
@@ -826,7 +826,7 @@
     } ],
     "enums" : [ {
       "name" : "FaceFlag",
-      "values" : [ ]
+      "values" : [ "TOP", "BOTTOM", "LEFT", "RIGHT", "FRONT", "BACK", "FIXED" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ {
@@ -839,7 +839,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "Shape",
-      "values" : [ ]
+      "values" : [ "INVISIBLE", "CUBE", "CROSS", "HASH", "MODEL", "GLASS", "GLASS_FLAT", "FLAT", "SPHERE", "CYLINDER", "ROUND_CUBE", "STEPS", "STAIR", "BILLBOARD", "SPRITE", "FLAME", "OCEAN", "OCEAN_COAST", "OCEAN_MAELSTROM", "RIVER", "RIVER_WATERFALL", "RIVER_WATERFALL_WHIRLPOOL", "WATER", "LAVA", "FOG", "THIN_INSTANCES", "WALL", "FLIPBOX", "ITEM" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -849,13 +849,13 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "ModalSizePreset",
-      "values" : [ ]
+      "values" : [ "LEFT", "RIGHT", "TOP", "BOTTOM", "CENTER_SMALL", "CENTER_MEDIUM", "CENTER_LARGE", "LEFT_TOP", "LEFT_BOTTOM", "RIGHT_TOP", "RIGHT_BOTTOM" ]
     }, {
       "name" : "ModalFlags",
-      "values" : [ ]
+      "values" : [ "NONE", "CLOSEABLE", "NO_BORDERS", "BREAK_OUT", "NO_BACKGROUND_LOCK", "MOVEABLE", "RESIZEABLE" ]
     }, {
       "name" : "IFrameMessageType",
-      "values" : [ ]
+      "values" : [ "IFRAME_READY", "REQUEST_CLOSE", "REQUEST_POSITION_CHANGE", "NOTIFICATION" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ {
@@ -1198,25 +1198,25 @@
     } ],
     "enums" : [ {
       "name" : "TextureKey",
-      "values" : [ ]
+      "values" : [ "ALL", "TOP", "BOTTOM", "LEFT", "RIGHT", "FRONT", "BACK", "SIDE", "DIFFUSE", "DISTORTION", "OPACITY", "WALL", "INSIDE_ALL", "INSIDE_TOP", "INSIDE_BOTTOM", "INSIDE_LEFT", "INSIDE_RIGHT", "INSIDE_FRONT", "INSIDE_BACK", "INSIDE_SIDE" ]
     }, {
       "name" : "SamplingMode",
-      "values" : [ ]
+      "values" : [ "NEAREST", "LINEAR", "MIPMAP" ]
     }, {
       "name" : "TransparencyMode",
-      "values" : [ ]
+      "values" : [ "NONE", "ALPHA_TEST", "ALPHA_BLEND", "ALPHA_TEST_FROM_RGB", "ALPHA_BLEND_FROM_RGB", "ALPHA_TESTANDBLEND", "ALPHA_TESTANDBLEND_FROM_RGB" ]
     }, {
       "name" : "WrapMode",
-      "values" : [ ]
+      "values" : [ "CLAMP", "REPEAT", "MIRROR" ]
     }, {
       "name" : "Direction",
-      "values" : [ ]
+      "values" : [ "NORTH", "SOUTH", "EAST", "WEST", "UP", "DOWN" ]
     }, {
       "name" : "BlockEffect",
-      "values" : [ ]
+      "values" : [ "NONE", "WIND" ]
     }, {
       "name" : "AudioType",
-      "values" : [ ]
+      "values" : [ "STEPS", "PERMANENT", "COLLISION" ]
     }, {
       "name" : "to",
       "values" : [ ]
@@ -1453,7 +1453,7 @@
     } ],
     "enums" : [ {
       "name" : "BackdropDirection",
-      "values" : [ ]
+      "values" : [ "NORTH", "EAST", "SOUTH", "WEST" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -1697,7 +1697,7 @@
     } ],
     "enums" : [ {
       "name" : "BlockStatus",
-      "values" : [ ]
+      "values" : [ "DEFAULT", "OPEN", "CLOSED", "LOCKED", "DESTROYED", "WINTER", "WINTER_SPRING", "SPRING", "SPRING_SUMMER", "SUMMER", "SUMMER_AUTUMN", "AUTUMN", "AUTUMN_WINTER", "CUSTOM_START" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -1707,7 +1707,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "EditAction",
-      "values" : [ ]
+      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "COPY_BLOCK", "DELETE_BLOCK", "MOVE_BLOCK" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -2331,7 +2331,7 @@
     } ],
     "enums" : [ {
       "name" : "WEARABLE_SLOT",
-      "values" : [ ]
+      "values" : [ "HEAD", "BODY", "LEGS", "FEET", "HANDS", "NECK", "LEFT_RING", "RIGHT_RING", "LEFT_WEAPON_1", "RIGHT_WEAPON_1", "LEFT_WEAPON_2", "RIGHT_WEAPON_2" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -3116,10 +3116,10 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "MessageType",
-      "values" : [ ]
+      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "ANIMATION_START", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT" ]
     }, {
       "name" : "ClientType",
-      "values" : [ ]
+      "values" : [ "WEB", "XBOX", "MOBILE", "DESKTOP" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]

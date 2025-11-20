@@ -17,6 +17,8 @@ public class JavaType {
 
     // Members
     private List<JavaProperty> properties = new ArrayList<>();
+    // For enums: list of constant names in declaration order
+    private List<String> enumValues = new ArrayList<>();
 
     // Reference names captured during initial pass
     private String extendsName;
@@ -55,6 +57,9 @@ public class JavaType {
     public void setOriginalTsKind(String originalTsKind) { this.originalTsKind = originalTsKind; }
 
     public List<JavaProperty> getProperties() { return properties; }
+
+    public List<String> getEnumValues() { return enumValues; }
+    public void setEnumValues(List<String> enumValues) { this.enumValues = enumValues; }
 
     public String getExtendsName() { return extendsName; }
     public void setExtendsName(String extendsName) { this.extendsName = extendsName; }

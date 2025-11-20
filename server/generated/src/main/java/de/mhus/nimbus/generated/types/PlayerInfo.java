@@ -31,5 +31,6 @@ public class PlayerInfo extends Object {
     private double effectiveTurnSpeed;
     private double baseUnderwaterTurnSpeed;
     private double effectiveUnderwaterTurnSpeed;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String thirdPersonModelId;
 }

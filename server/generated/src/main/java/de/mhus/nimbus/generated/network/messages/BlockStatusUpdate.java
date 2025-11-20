@@ -11,6 +11,8 @@ public class BlockStatusUpdate extends Object {
     private double y;
     private double z;
     private double s;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<de.mhus.nimbus.generated.types.AnimationData> aa;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<de.mhus.nimbus.generated.types.AnimationData> ab;
 }

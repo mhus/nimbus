@@ -8,9 +8,13 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.Builder
 public class EntityPositionUpdateData extends Object {
     private String pl;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private de.mhus.nimbus.generated.types.Vector3 p;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private de.mhus.nimbus.generated.types.Rotation r;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private de.mhus.nimbus.generated.types.Vector3 v;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double po;
     private double ts;
     private double x;
