@@ -44,25 +44,75 @@ export class BeamFollowEffect extends ScrawlEffectHandler<BeamFollowOptions> {
 
     // Get initial positions from vars
     const source = ctx.vars?.source;
-    if (source?.position) {
-      this.sourcePos = new Vector3(
-        source.position.x,
-        source.position.y,
-        source.position.z
-      );
+    if (source) {
+      // Try different position properties
+      let pos = source.currentPosition || source.position || source.block?.position || source.entity?.position;
+      if (pos) {
+        this.sourcePos = new Vector3(pos.x, pos.y, pos.z);
+      } else {
+        logger.warn('Source has no position', { source });
+      }
     }
 
     const target = ctx.vars?.target;
-    if (target?.position) {
-      this.targetPos = new Vector3(
-        target.position.x,
-        target.position.y,
-        target.position.z
-      );
+    if (target) {
+      // Try different position properties
+      // Entity wrapper: .entity.position
+      // Block wrapper: .block.position
+      // Direct: .position
+      // Mesh: .mesh.position
+      let pos = null;
+
+      // Try currentPosition (ClientEntity from SelectService)
+      if (target.currentPosition) {
+        pos = target.currentPosition;
+      }
+      // Try entity.position (Entity wrapper)
+      else if (target.entity?.position) {
+        pos = target.entity.position;
+      }
+      // Try direct position
+      else if (target.position) {
+        pos = target.position;
+      }
+      // Try block.position (Block wrapper)
+      else if (target.block?.position) {
+        pos = target.block.position;
+      }
+      // Try mesh position (Babylon.js Entity)
+      else if (target.mesh?.position) {
+        pos = target.mesh.position;
+      }
+
+      if (pos) {
+        // Add 0.5 offset for blocks to center, 1.0 Y offset for entities
+        const isBlock = !!target.block;
+        const isEntity = !!target.currentPosition || !!target.entity;
+        this.targetPos = new Vector3(
+          pos.x + (isBlock ? 0.5 : 0),
+          pos.y + (isBlock ? 0.5 : isEntity ? 1.0 : 0),
+          pos.z + (isBlock ? 0.5 : 0)
+        );
+      } else {
+        // Log available properties to debug
+        const keys = Object.keys(target).filter(k => !k.startsWith('_')).slice(0, 10);
+        logger.warn('Target has no position', {
+          targetKeys: keys,
+          hasPosition: !!target.position,
+          hasEntity: !!target.entity,
+          hasBlock: !!target.block,
+          hasMesh: !!target.mesh,
+        });
+      }
     }
 
     if (!this.sourcePos || !this.targetPos) {
-      logger.warn('Source or target position missing');
+      logger.warn('Source or target position missing after parsing', {
+        hasSource: !!source,
+        hasTarget: !!target,
+        sourcePos: this.sourcePos,
+        targetPos: this.targetPos,
+      });
       return;
     }
 
@@ -81,19 +131,42 @@ export class BeamFollowEffect extends ScrawlEffectHandler<BeamFollowOptions> {
   onParameterChanged(paramName: string, value: any, ctx: ScrawlExecContext): void {
     // Update target position from vars
     const target = ctx.vars?.target;
-    if (target?.position) {
-      const newTarget = new Vector3(
-        target.position.x,
-        target.position.y,
-        target.position.z
-      );
+    if (target) {
+      // Try different position properties
+      let pos = null;
 
-      this.targetPos = newTarget;
+      // Try currentPosition (ClientEntity from SelectService)
+      if (target.currentPosition) {
+        pos = target.currentPosition;
+      }
+      // Try entity.position (Entity wrapper)
+      else if (target.entity?.position) {
+        pos = target.entity.position;
+      }
+      // Try direct position
+      else if (target.position) {
+        pos = target.position;
+      }
+      // Try block.position (Block wrapper)
+      else if (target.block?.position) {
+        pos = target.block.position;
+      }
+      // Try mesh position (Babylon.js Entity)
+      else if (target.mesh?.position) {
+        pos = target.mesh.position;
+      }
 
-      logger.debug('Beam target position updated', {
-        paramName,
-        newTarget,
-      });
+      if (pos) {
+        // Position comes from PhysicsService.checkAndEmitPlayerDirection()
+        // which already includes offsets (+0.5 for blocks, +1.0 for entities)
+        // So we use position directly without additional offset
+        this.targetPos = new Vector3(pos.x, pos.y, pos.z);
+
+        logger.debug('Beam target position updated', {
+          paramName,
+          newTarget: this.targetPos,
+        });
+      }
     }
   }
 

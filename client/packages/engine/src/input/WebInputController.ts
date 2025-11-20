@@ -147,6 +147,9 @@ export class WebInputController implements InputController {
       this.handlers.push(this.editConfigActivateHandler);
     }
 
+    // Note: Click and Shortcut handlers will be added in initialize()
+    // after they're retrieved from InputService
+
     // Setup key bindings
     this.setupKeyBindings();
 
@@ -211,9 +214,18 @@ export class WebInputController implements InputController {
 
       if (!this.clickHandler) {
         logger.warn('Click handler not available from InputService');
+      } else {
+        // Add click handler to handlers list for update loop
+        this.handlers.push(this.clickHandler);
+        logger.info('Click handler added to update loop');
       }
+
       if (!this.shortcutHandler) {
         logger.warn('Shortcut handler not available from InputService');
+      } else {
+        // Add shortcut handler to handlers list for update loop
+        this.handlers.push(this.shortcutHandler);
+        logger.info('Shortcut handler added to update loop');
       }
     } else {
       logger.warn('InputService not available');

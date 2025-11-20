@@ -510,15 +510,36 @@ export class ScrawlService {
       // Cleanup after 10 seconds
       setTimeout(() => this.sentEffectIds.delete(effectId), 10000);
 
+      // Serialize source/target/targets for network transmission
+      // Extract only position data, remove Mesh references
+      const serializeObject = (obj: any): any => {
+        if (!obj) return obj;
+
+        // Extract position from various possible properties
+        const pos = obj.currentPosition || obj.position || obj.block?.position;
+        if (pos) {
+          return {
+            position: {
+              x: pos.x,
+              y: pos.y,
+              z: pos.z,
+            },
+            entityId: obj.entityId || obj.entity?.entityId || obj.id,
+            blockTypeId: obj.blockTypeId || obj.block?.blockTypeId,
+          };
+        }
+        return obj;
+      };
+
       // Build effect with source/target/targets in parameters
-      // They're already in vars from the context
+      // Serialize to remove Mesh references
       const effectWithContext = {
         ...action,
         parameters: {
           ...(action.parameters || {}),
-          source: vars.source,
-          target: vars.target,
-          targets: vars.targets,
+          source: serializeObject(vars.source),
+          target: serializeObject(vars.target),
+          targets: vars.targets?.map(serializeObject),
         },
       };
 
@@ -576,6 +597,25 @@ export class ScrawlService {
    */
   wasEffectSentByUs(effectId: string): boolean {
     return this.sentEffectIds.has(effectId);
+  }
+
+  /**
+   * Get effectId for a specific executor
+   *
+   * Used by ShortcutService to send position updates to server.
+   *
+   * @param executorId Executor ID
+   * @returns Effect ID or undefined if not found or not synchronized
+   */
+  getEffectIdForExecutor(executorId: string): string | undefined {
+    // Check if executor exists
+    const executor = this.runningExecutors.get(executorId);
+    if (!executor) {
+      return undefined;
+    }
+
+    // Return effectId (only set if executor is synchronized to server)
+    return executor.getEffectId();
   }
 
   /**

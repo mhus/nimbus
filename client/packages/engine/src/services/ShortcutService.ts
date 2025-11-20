@@ -40,13 +40,20 @@ export interface ActiveShortcut {
  * - Track active shortcuts and their state
  * - Implement blocking logic for exclusive shortcuts
  * - Store position/target data for continuous updates
+ * - Send position updates to server (throttled to 100ms)
  * - Provide shortcut state queries
  */
 export class ShortcutService {
   private activeShortcuts = new Map<number, ActiveShortcut>();
+  private lastServerUpdateTime: number = 0;
+  private serverUpdateInterval: number = 100; // Send updates every 100ms
+  private serverUpdateTimerId: number | null = null;
 
   constructor(private readonly appContext: AppContext) {
     logger.info('ShortcutService initialized');
+
+    // Start server update loop
+    this.startServerUpdateLoop();
   }
 
   /**
@@ -248,6 +255,12 @@ export class ShortcutService {
 
     shortcut.lastPlayerPos = playerPos;
     shortcut.lastTargetPos = targetPos;
+
+    logger.info('Shortcut position updated', {
+      shortcutNr,
+      hasTarget: !!targetPos,
+      executorId: shortcut.executorId,
+    });
   }
 
   /**
@@ -334,6 +347,94 @@ export class ShortcutService {
   }
 
   /**
+   * Start server update loop
+   *
+   * Sends position updates for active shortcuts to server every 100ms
+   * for multiplayer synchronization.
+   */
+  private startServerUpdateLoop(): void {
+    this.serverUpdateTimerId = window.setInterval(() => {
+      this.sendActiveShortcutUpdatesToServer();
+    }, this.serverUpdateInterval);
+
+    logger.debug('Server update loop started', { intervalMs: this.serverUpdateInterval });
+  }
+
+  /**
+   * Send position updates for all active shortcuts to server
+   *
+   * Only sends if:
+   * - Shortcut has position data (lastPlayerPos, lastTargetPos)
+   * - NetworkService is available
+   * - ScrawlService has effectId for the executor
+   */
+  private sendActiveShortcutUpdatesToServer(): void {
+    if (this.activeShortcuts.size === 0) {
+      return;
+    }
+
+    const networkService = this.appContext.services.network;
+    const scrawlService = this.appContext.services.scrawl;
+
+    if (!networkService || !scrawlService) {
+      logger.warn('NetworkService or ScrawlService not available for server updates');
+      return;
+    }
+
+    let sentCount = 0;
+    let skippedCount = 0;
+
+    for (const shortcut of this.activeShortcuts.values()) {
+      // Only send if we have target position data
+      if (!shortcut.lastTargetPos) {
+        logger.info('Skipping shortcut update - no target position', {
+          shortcutNr: shortcut.shortcutNr,
+          hasPlayerPos: !!shortcut.lastPlayerPos,
+        });
+        skippedCount++;
+        continue;
+      }
+
+      // Get effectId for this executor
+      const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+      if (!effectId) {
+        // No effectId means no server synchronization needed
+        logger.info('Skipping shortcut update - no effectId', {
+          shortcutNr: shortcut.shortcutNr,
+          executorId: shortcut.executorId,
+        });
+        skippedCount++;
+        continue;
+      }
+
+      // Send position update to server
+      try {
+        networkService.sendEffectParameterUpdate(
+          effectId,
+          'targetPos',
+          shortcut.lastTargetPos
+        );
+
+        logger.info('Shortcut position update sent to server', {
+          shortcutNr: shortcut.shortcutNr,
+          effectId,
+          targetPos: shortcut.lastTargetPos,
+        });
+        sentCount++;
+      } catch (error) {
+        logger.warn('Failed to send shortcut update to server', {
+          error: (error as Error).message,
+          shortcutNr: shortcut.shortcutNr,
+        });
+      }
+    }
+
+    if (sentCount > 0 || skippedCount > 0) {
+      logger.info('Server update batch complete', { sentCount, skippedCount });
+    }
+  }
+
+  /**
    * Cleans up all active shortcuts.
    * Called on service disposal.
    */
@@ -341,6 +442,13 @@ export class ShortcutService {
     logger.info('Disposing ShortcutService...', {
       activeShortcuts: this.activeShortcuts.size,
     });
+
+    // Stop server update loop
+    if (this.serverUpdateTimerId !== null) {
+      clearInterval(this.serverUpdateTimerId);
+      this.serverUpdateTimerId = null;
+    }
+
     this.activeShortcuts.clear();
   }
 }

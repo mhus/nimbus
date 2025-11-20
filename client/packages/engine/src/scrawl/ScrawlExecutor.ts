@@ -760,15 +760,17 @@ export class ScrawlExecutor {
     // Map InputService parameter names to script variable names
     if (paramName === 'targetPos') {
       // InputService sends 'targetPos' as Vector3
-      // Convert to 'target' with position property
+      // Convert to 'target' with both currentPosition (for entities) and position (for compatibility)
       ctx.vars.target = {
+        currentPosition: value,
         position: value,
       };
       logger.debug('Target position updated', { position: value, executorId: this.executorId });
     } else if (paramName === 'playerPos') {
       // InputService sends 'playerPos' as Vector3
-      // Convert to 'source' with position property
+      // Convert to 'source' with both currentPosition and position
       ctx.vars.source = {
+        currentPosition: value,
         position: value,
       };
       logger.debug('Source position updated', { position: value, executorId: this.executorId });
@@ -789,43 +791,8 @@ export class ScrawlExecutor {
       }
     }
 
-    // Send parameter update to server if this is a local effect
-    if (this.sendToServer && this.effectId && this.affectedChunks) {
-      this.sendParameterUpdateToServer(paramName, value);
-    }
-  }
-
-  /**
-   * Send parameter update to server for synchronization
-   */
-  private sendParameterUpdateToServer(paramName: string, value: any): void {
-    try {
-      const networkService = this.appContext.services.network;
-      if (!networkService) {
-        return;
-      }
-
-      const updateData = {
-        effectId: this.effectId!,
-        paramName,
-        value,
-        chunks: this.affectedChunks,
-      };
-
-      networkService.send({
-        t: MessageType.EFFECT_PARAMETER_UPDATE,
-        d: updateData,
-      });
-
-      logger.debug('Parameter update sent to server', {
-        effectId: this.effectId,
-        paramName,
-      });
-    } catch (error) {
-      logger.warn('Failed to send parameter update to server', {
-        error: (error as Error).message,
-      });
-    }
+    // Note: Server updates are now handled by ShortcutService
+    // which sends throttled updates (100ms) for all active shortcuts
   }
 
   /**

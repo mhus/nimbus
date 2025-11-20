@@ -787,4 +787,48 @@ export class NetworkService {
     return url;
   }
 
+  /**
+   * Send effect parameter update to server
+   *
+   * Used by ShortcutService to send position updates for running effects.
+   *
+   * @param effectId Effect ID
+   * @param paramName Parameter name (e.g., 'targetPos')
+   * @param value Parameter value (will be serialized)
+   */
+  sendEffectParameterUpdate(effectId: string, paramName: string, value: any): void {
+    try {
+      // Serialize value - extract only JSON-serializable data
+      let serializedValue = value;
+      if (value && typeof value === 'object') {
+        // For Vector3 or position objects
+        if (value.x !== undefined && value.y !== undefined && value.z !== undefined) {
+          serializedValue = { x: value.x, y: value.y, z: value.z };
+        }
+      }
+
+      const updateData = {
+        effectId,
+        paramName,
+        value: serializedValue,
+      };
+
+      this.send({
+        t: MessageType.EFFECT_PARAMETER_UPDATE,
+        d: updateData,
+      });
+
+      logger.debug('Effect parameter update sent to server', {
+        effectId,
+        paramName,
+      });
+    } catch (error) {
+      logger.warn('Failed to send effect parameter update', {
+        error: (error as Error).message,
+        effectId,
+        paramName,
+      });
+    }
+  }
+
 }

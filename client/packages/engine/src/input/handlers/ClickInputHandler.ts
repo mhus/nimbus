@@ -94,9 +94,18 @@ export class ClickInputHandler extends InputHandler {
       if (shortcutService) {
         shortcutService.fireShortcut(buttonNumber, shortcutKey);
 
-        // Track active shortcut for deactivation
+        // Mark handler as active for continuous updates
+        this.state.active = true;
+
+        // Track active shortcut for deactivation and continuous updates
         this.activeButtonNumber = buttonNumber;
         this.activeShortcutKey = shortcutKey;
+
+        logger.info('Click shortcut activated for continuous updates', {
+          buttonNumber,
+          shortcutKey,
+          handlerActive: this.state.active,
+        });
       } else {
         logger.warn('ShortcutService not available for click shortcut');
       }
@@ -115,8 +124,11 @@ export class ClickInputHandler extends InputHandler {
       activeShortcutKey: this.activeShortcutKey
     });
 
+    // Mark handler as inactive
+    this.state.active = false;
+
     if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
-      logger.debug('No active button to deactivate');
+      logger.info('No active button to deactivate');
       return;
     }
 
@@ -175,12 +187,19 @@ export class ClickInputHandler extends InputHandler {
    */
   protected onUpdate(deltaTime: number, value: number): void {
     if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
+      logger.info('onUpdate skipped - no active button', {
+        activeButtonNumber: this.activeButtonNumber,
+      });
       return;
     }
 
     const shortcutService = this.appContext?.services.shortcut;
     const selectService = this.appContext?.services.select;
     if (!shortcutService || !selectService) {
+      logger.info('onUpdate skipped - missing services', {
+        hasShortcutService: !!shortcutService,
+        hasSelectService: !!selectService,
+      });
       return;
     }
 
@@ -193,7 +212,8 @@ export class ClickInputHandler extends InputHandler {
 
     let targetPos: any = undefined;
     if (targetEntity) {
-      targetPos = targetEntity.position;
+      // ClientEntity has currentPosition, not position
+      targetPos = targetEntity.currentPosition || targetEntity.position;
     } else if (targetBlock) {
       targetPos = {
         x: targetBlock.block.position.x + 0.5,
@@ -205,6 +225,11 @@ export class ClickInputHandler extends InputHandler {
     // Update shortcut position data
     if (targetPos) {
       shortcutService.updateShortcut(this.activeButtonNumber, playerPos, targetPos);
+
+      logger.info('Click handler updated shortcut position', {
+        buttonNumber: this.activeButtonNumber,
+        targetPos,
+      });
     }
   }
 }

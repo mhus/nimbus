@@ -1941,7 +1941,24 @@ doScrawlStart({
 })
 ```
 
+## Dynamic Fire ohne Ziel
 
+Aktuell wird Ein input event an den ShortcutService geschickt, dort wird der SelectionService gefragt, ob etwas 
+selektiert ist, und wenn ja wird die action ausgefuehrt.
+
+Dieses Verhalten soll so auch bleiben, nur die Darstellung, d.h. ausfuehren von Pose und Effekten sollen unabhaengig von
+selektierten Zielen werden.
+
+- Logik mit Select und Events Richtung Server bleibt wie bisher
+- Am ItemModifier brauchen wir einen parameter 'actionTargeting', 
+- BOTH: bleibt alles wie bisher.
+- BLOCK: Nur bloecke werden als Ziel akzeptiert.
+- ENTITY: Nur entitys werden als Ziel akzeptiert.
+- GROUND: der SelectionService mit dem Select TYPE BLOCK wird aufgerufen, wenn ein Block gefunden wurde wird dieser als Ziel benutzt.
+- ALL: der SelectionService mit dem Select TYPE ALL wird aufgerufen, wenn ein Ziel gefunden wurde wird dieses benutzt.
+  - Das Ziel kann auch ein AIR Block sein. Aber es geht um die position.
+- Default ist ALL
+- itemModifier.actionTargeting: ENTITY, BLOCK, BOTH, GROUND, ALL
 
 
 

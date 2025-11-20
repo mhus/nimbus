@@ -1301,18 +1301,25 @@ export class PhysicsService {
     const targetBlock = selectService.getCurrentSelectedBlock();
 
     let targetPos: Vector3 | null = null;
-    if (targetEntity?.position) {
-      targetPos = new Vector3(
-        targetEntity.position.x,
-        targetEntity.position.y,
-        targetEntity.position.z
-      );
+    let isEntity = false;
+    let isBlock = false;
+
+    if (targetEntity) {
+      // ClientEntity has currentPosition, not position
+      const pos = targetEntity.currentPosition || targetEntity.position;
+      if (pos) {
+        // Add +1.0 Y offset for entities (to aim at center/head height)
+        targetPos = new Vector3(pos.x, pos.y + 1.0, pos.z);
+        isEntity = true;
+      }
     } else if (targetBlock) {
+      // Add 0.5 offset for blocks to center
       targetPos = new Vector3(
         targetBlock.block.position.x + 0.5,
         targetBlock.block.position.y + 0.5,
         targetBlock.block.position.z + 0.5
       );
+      isBlock = true;
     }
 
     // Check if rotation or target changed
