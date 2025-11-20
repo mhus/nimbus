@@ -67,42 +67,6 @@
                     <useModulePath>false</useModulePath>
                 </configuration>
             </plugin>
-            <!-- Generate TS -> Java during Maven build -->
-            <plugin>
-                <groupId>de.mhus.nimbus</groupId>
-                <artifactId>generate-ts-to-java-maven-plugin</artifactId>
-                <version>${project.version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-ts-to-java</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <!-- Defaults in the plugin already point to ${project.basedir}/ts and target dir -->
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Add generated sources to compilation -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.6.0</version>
-                <executions>
-                    <execution>
-                        <id>add-generated-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/generate-ts-to-java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 

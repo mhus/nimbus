@@ -1,0 +1,5 @@
+# Configuration for generate-ts-to-java-maven-plugin in evaluate module
+# Sets the base Java package for generated classes
+basePackage: de.mhus.nimbus.evaluate.generated
+# Optional: list of TS item names to ignore during generation
+ignoreTsItems: []
