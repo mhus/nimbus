@@ -1,0 +1,598 @@
+{
+  "files" : [ {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/sample-types.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "Person",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "Employee",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "Role",
+      "values" : [ ]
+    } ],
+    "classes" : [ {
+      "name" : "User",
+      "extendsClass" : null,
+      "implementsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "typeAliases" : [ {
+      "name" : "Identifier",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/EntityData.ts",
+    "imports" : [ "./Vector3", "./Rotation", "./BlockModifier" ],
+    "interfaces" : [ {
+      "name" : "PoseAnimation",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensions",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityPhysicsProperties",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityModel",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "Entity",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "Waypoint",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityPathway",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "ENTITY_POSES",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "PoseType",
+      "target" : null
+    }, {
+      "name" : "MovementType",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Item.ts",
+    "imports" : [ "./ItemModifier" ],
+    "interfaces" : [ {
+      "name" : "FullItem",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "Item",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ChunkData.ts",
+    "imports" : [ "./Block", "./ItemBlockRef", "./Backdrop" ],
+    "interfaces" : [ {
+      "name" : "ChunkData",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "HeightData",
+      "target" : null
+    }, {
+      "name" : "Status",
+      "target" : null
+    }, {
+      "name" : "ChunkSize",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/PlayerMovementState.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "PlayerMovementStateChangedEvent",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "PlayerMovementState",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/BlockMetadata.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "BlockMetadata",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Rotation.ts",
+    "imports" : [ "./Vector3" ],
+    "interfaces" : [ {
+      "name" : "Rotation",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/AnimationData.ts",
+    "imports" : [ "./Vector3" ],
+    "interfaces" : [ {
+      "name" : "AnimationEffect",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "AnimationData",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "AnimationTemplate",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "AnimationInstance",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "AnimationEffectType",
+      "values" : [ ]
+    }, {
+      "name" : "EasingType",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "PositionRef",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ItemBlockRef.ts",
+    "imports" : [ "./Vector3" ],
+    "interfaces" : [ {
+      "name" : "ItemBlockRef",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Block.ts",
+    "imports" : [ "./Vector3", "./BlockMetadata", "./BlockModifier" ],
+    "interfaces" : [ {
+      "name" : "FaceVisibility",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "IBlockWithModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "Block",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "FaceFlag",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "Offsets",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Shape.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ {
+      "name" : "Shape",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Modal.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ {
+      "name" : "ModalSizePreset",
+      "values" : [ ]
+    }, {
+      "name" : "ModalFlags",
+      "values" : [ ]
+    }, {
+      "name" : "IFrameMessageType",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "IFrameMessageFromChild",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/BlockModifier.ts",
+    "imports" : [ "./Shape", "./Vector3", "./Block" ],
+    "interfaces" : [ {
+      "name" : "serves",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "UVMapping",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "TextureDefinition",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "VisibilityModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "WindModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "IlluminationModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "PhysicsModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "SkyEffect",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "EffectsModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "AudioDefinition",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "BlockModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "TextureKey",
+      "values" : [ ]
+    }, {
+      "name" : "SamplingMode",
+      "values" : [ ]
+    }, {
+      "name" : "TransparencyMode",
+      "values" : [ ]
+    }, {
+      "name" : "WrapMode",
+      "values" : [ ]
+    }, {
+      "name" : "Direction",
+      "values" : [ ]
+    }, {
+      "name" : "BlockEffect",
+      "values" : [ ]
+    }, {
+      "name" : "AudioType",
+      "values" : [ ]
+    }, {
+      "name" : "to",
+      "values" : [ ]
+    }, {
+      "name" : "value",
+      "values" : [ ]
+    }, {
+      "name" : "value",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "AudioModifier",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ShortcutDefinition.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "ShortcutDefinition",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "ShortcutActionType",
+      "target" : null
+    }, {
+      "name" : "ShortcutKey",
+      "target" : null
+    }, {
+      "name" : "ShortcutsMap",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/VitalsData.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "VitalsData",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Vector3.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "Vector3",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Backdrop.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "Backdrop",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "BackdropPosition",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "BackdropDirection",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ClientEntity.ts",
+    "imports" : [ "./EntityData", "./Vector3", "./Rotation" ],
+    "interfaces" : [ {
+      "name" : "ClientEntity",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ServerEntitySpawnDefinition.ts",
+    "imports" : [ "./Vector3", "./Rotation", "./EntityData" ],
+    "interfaces" : [ {
+      "name" : "Vector2",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "BehaviorConfig",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "ServerEntitySpawnDefinition",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/BlockType.ts",
+    "imports" : [ "./BlockModifier" ],
+    "interfaces" : [ {
+      "name" : "BlockType",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "BlockStatus",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/EditAction.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ {
+      "name" : "EditAction",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ItemType.ts",
+    "imports" : [ "./ItemModifier" ],
+    "interfaces" : [ {
+      "name" : "ItemType",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/EffectData.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "EffectData",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/index.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/AreaData.ts",
+    "imports" : [ "./Vector3", "./EffectData" ],
+    "interfaces" : [ {
+      "name" : "AreaData",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Color.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ ],
+    "classes" : [ {
+      "name" : "provides",
+      "extendsClass" : null,
+      "implementsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "ColorRGBA",
+      "extendsClass" : null,
+      "implementsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "typeAliases" : [ {
+      "name" : "ColorHex",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/ItemModifier.ts",
+    "imports" : [ "../scrawl/ScriptActionDefinition" ],
+    "interfaces" : [ {
+      "name" : "ItemModifier",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/World.ts",
+    "imports" : [ "./Vector3" ],
+    "interfaces" : [ {
+      "name" : "WorldInfo",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/PlayerInfo.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "MovementStateValues",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "PlayerInfo",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "MovementStateKey",
+      "target" : null
+    } ]
+  } ]
+}
