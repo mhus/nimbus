@@ -16,12 +16,12 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>tools</module>
         <module>generated</module>
         <module>shared</module>
         <module>quadrant</module>
         <module>universe</module>
         <module>world</module>
-        <module>tools</module>
     </modules>
 
     <properties>
