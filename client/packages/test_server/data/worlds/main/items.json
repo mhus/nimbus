@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "itemBlockRef": {
+      "id": "item_1763628653114_loipzn1",
+      "position": {
+        "x": -6,
+        "y": 68,
+        "z": 19
+      },
+      "scaleX": 0.5,
+      "scaleY": 0.5,
+      "offset": [
+        0,
+        0.2,
+        0
+      ],
+      "texture": "textures/items/sword_crusty.png"
+    },
+    "item": {
+      "id": "item_1763628653114_loipzn1",
+      "itemType": "sword",
+      "name": "Iron Sword"
+    }
+  }
+]

@@ -2,8 +2,10 @@
  * ItemCommand - Manipulate items in the world
  *
  * Commands:
- * - /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item
- * - /item remove <x> <y> <z> - Remove item
+ * - /item add <displayName> <itemType> [texturePath] - Add item without position
+ * - /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item with position
+ * - /item place <itemId> <x> <y> <z> - Place item at position
+ * - /item remove <x> <y> <z> - Remove item from position
  * - /item list - List all items
  */
 
@@ -15,7 +17,7 @@ import { getLogger } from '@nimbus/shared';
 const logger = getLogger('ItemCommand');
 
 export class ItemCommand extends CommandHandler {
-  private readonly usage = '/item <add|remove|get|list> [args...]';
+  private readonly usage = '/item <add|place|remove|get|list> [args...]';
 
   constructor(
     private worldManager: WorldManager,
@@ -36,7 +38,7 @@ export class ItemCommand extends CommandHandler {
     if (args.length === 0) {
       return {
         rc: 1,
-        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item (texture optional, uses ItemType default)\n  remove <x> <y> <z> - Remove item\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
+        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <displayName> <itemType> [texturePath] - Add item without position\n  add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item with position\n  place <itemId> <x> <y> <z> - Place item at position\n  remove <x> <y> <z> - Remove item from position\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
       };
     }
 
@@ -45,6 +47,8 @@ export class ItemCommand extends CommandHandler {
     switch (subcommand) {
       case 'add':
         return this.handleAdd(args.slice(1), context);
+      case 'place':
+        return this.handlePlace(args.slice(1), context);
       case 'remove':
         return this.handleRemove(args.slice(1), context);
       case 'get':
@@ -60,13 +64,14 @@ export class ItemCommand extends CommandHandler {
   }
 
   /**
-   * Handle /item add <x> <y> <z> <displayName> <itemType> [texturePath]
+   * Handle /item add <displayName> <itemType> [texturePath]
+   * or /item add <x> <y> <z> <displayName> <itemType> [texturePath]
    */
   private async handleAdd(args: any[], context: CommandContext): Promise<CommandResult> {
-    if (args.length < 5) {
+    if (args.length < 2) {
       return {
         rc: 1,
-        message: 'Usage: /item add <x> <y> <z> <displayName> <itemType> [texturePath]',
+        message: 'Usage:\n  /item add <displayName> <itemType> [texturePath] - Add without position\n  /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add with position',
       };
     }
 
@@ -86,10 +91,105 @@ export class ItemCommand extends CommandHandler {
       };
     }
 
-    // Parse coordinates
-    const x = parseInt(String(args[0]), 10);
-    const y = parseInt(String(args[1]), 10);
-    const z = parseInt(String(args[2]), 10);
+    // Check if first three args are coordinates
+    const firstArgIsNumber = !isNaN(parseInt(String(args[0]), 10));
+    const secondArgIsNumber = args.length >= 2 && !isNaN(parseInt(String(args[1]), 10));
+    const thirdArgIsNumber = args.length >= 3 && !isNaN(parseInt(String(args[2]), 10));
+    const hasCoordinates = firstArgIsNumber && secondArgIsNumber && thirdArgIsNumber;
+
+    let position: { x: number; y: number; z: number } | undefined;
+    let displayName: string;
+    let itemType: string;
+    let texturePath: string | undefined;
+
+    if (hasCoordinates) {
+      // Format: /item add <x> <y> <z> <displayName> <itemType> [texturePath]
+      if (args.length < 5) {
+        return {
+          rc: 1,
+          message: 'Usage: /item add <x> <y> <z> <displayName> <itemType> [texturePath]',
+        };
+      }
+
+      position = {
+        x: parseInt(String(args[0]), 10),
+        y: parseInt(String(args[1]), 10),
+        z: parseInt(String(args[2]), 10),
+      };
+      displayName = String(args[3]);
+      itemType = String(args[4]);
+      texturePath = args[5] ? String(args[5]) : undefined;
+    } else {
+      // Format: /item add <displayName> <itemType> [texturePath]
+      displayName = String(args[0]);
+      itemType = String(args[1]);
+      texturePath = args[2] ? String(args[2]) : undefined;
+    }
+
+    try {
+      // Add item to registry
+      const item = world.itemRegistry.addItem(displayName, itemType, position, texturePath);
+
+      // Queue item update for broadcast (only if item has position)
+      if (item.itemBlockRef) {
+        this.itemUpdateBuffer.addUpdate(worldId, item.itemBlockRef);
+      }
+
+      logger.info('Item added via command', {
+        worldId,
+        position,
+        displayName,
+        itemType,
+        texturePath,
+        itemId: item.item.id,
+      });
+
+      const posMsg = position ? ` at (${position.x}, ${position.y}, ${position.z})` : ' (no position)';
+      return {
+        rc: 0,
+        message: `Item "${displayName}" (${itemType}) added${posMsg}\nItem ID: ${item.item.id}`,
+      };
+    } catch (error) {
+      logger.error('Failed to add item', { worldId, position }, error as Error);
+      return {
+        rc: -1,
+        message: `Failed to add item: ${(error as Error).message}`,
+      };
+    }
+  }
+
+  /**
+   * Handle /item place <itemId> <x> <y> <z>
+   * Places an item (that has no position) at a specific position
+   */
+  private async handlePlace(args: any[], context: CommandContext): Promise<CommandResult> {
+    if (args.length < 4) {
+      return {
+        rc: 1,
+        message: 'Usage: /item place <itemId> <x> <y> <z>',
+      };
+    }
+
+    const worldId = context.session.worldId;
+    if (!worldId) {
+      return {
+        rc: 1,
+        message: 'Not in a world',
+      };
+    }
+
+    const world = this.worldManager.getWorld(worldId);
+    if (!world) {
+      return {
+        rc: 1,
+        message: `World not found: ${worldId}`,
+      };
+    }
+
+    const itemId = String(args[0]);
+    const x = parseInt(String(args[1]), 10);
+    const y = parseInt(String(args[2]), 10);
+    const z = parseInt(String(args[3]), 10);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
       return {
@@ -98,38 +198,66 @@ export class ItemCommand extends CommandHandler {
       };
     }
 
-    const displayName = String(args[3]);
-    const itemType = String(args[4]); // ItemType (e.g., 'sword', 'wand')
-    const texturePath = args[5] ? String(args[5]) : undefined; // Optional texture override
-
     try {
-      // Add item to registry
-      const item = world.itemRegistry.addItem(displayName, itemType, {x,y,z} ,texturePath);
-
-      // Queue item update for broadcast
-      // Items are sent as Items over the network, not Blocks
-      if (item.itemBlockRef) {
-        this.itemUpdateBuffer.addUpdate(worldId, item.itemBlockRef);
+      // Get item by ID
+      const serverItem = world.itemRegistry.getItemById(itemId);
+      if (!serverItem) {
+        return {
+          rc: 1,
+          message: `Item not found: ${itemId}`,
+        };
       }
 
-      logger.info('Item added via command', {
-        worldId,
-        position: { x, y, z },
-        displayName,
+      // Check if item already has a position
+      if (serverItem.itemBlockRef) {
+        return {
+          rc: 1,
+          message: `Item already has a position at (${serverItem.itemBlockRef.position.x}, ${serverItem.itemBlockRef.position.y}, ${serverItem.itemBlockRef.position.z}). Remove it first.`,
+        };
+      }
+
+      // Check if target position is occupied
+      const existingItem = world.itemRegistry.getItem(x, y, z);
+      if (existingItem) {
+        return {
+          rc: 1,
+          message: `Position (${x}, ${y}, ${z}) already has an item: ${existingItem.item.name}`,
+        };
+      }
+
+      // Load ItemType to get modifier data
+      const itemType = String(serverItem.item.itemType);
+
+      // Remove item and re-add it with position
+      world.itemRegistry.removeItem(itemId);
+      const newItem = world.itemRegistry.addItem(
+        serverItem.item.name,
         itemType,
-        texturePath,
-        itemId: item.item.id,
+        { x, y, z },
+        serverItem.item.parameters?.texturePath as string | undefined,
+        serverItem.item.parameters
+      );
+
+      // Queue item update for broadcast
+      if (newItem.itemBlockRef) {
+        this.itemUpdateBuffer.addUpdate(worldId, newItem.itemBlockRef);
+      }
+
+      logger.info('Item placed via command', {
+        worldId,
+        itemId,
+        position: { x, y, z },
       });
 
       return {
         rc: 0,
-        message: `Item "${displayName}" (${itemType}) added at (${x}, ${y}, ${z})\nItem ID: ${item.item.id}`,
+        message: `Item "${serverItem.item.name}" placed at (${x}, ${y}, ${z})`,
       };
     } catch (error) {
-      logger.error('Failed to add item', { worldId, position: { x, y, z } }, error as Error);
+      logger.error('Failed to place item', { worldId, itemId, position: { x, y, z } }, error as Error);
       return {
         rc: -1,
-        message: `Failed to add item: ${(error as Error).message}`,
+        message: `Failed to place item: ${(error as Error).message}`,
       };
     }
   }
