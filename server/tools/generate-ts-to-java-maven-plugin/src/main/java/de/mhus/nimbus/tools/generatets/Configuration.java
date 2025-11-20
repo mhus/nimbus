@@ -9,6 +9,13 @@ public class Configuration {
     public String basePackage;
 
     /**
+     * Optional: exclude entire TS subdirectories by suffix. Any source file whose
+     * relative directory (to its configured sourceDir) ends with one of these suffixes
+     * will be ignored completely. Example entries: "errors", "logger", "network/messages".
+     */
+    public List<String> excludeDirSuffixes;
+
+    /**
      * Optional package mapping rules. If a TS source directory (relative to a configured sourceDir)
      * ends with {@code dirEndsWith}, all types from that directory will be generated into {@code pkg}.
      */

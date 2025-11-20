@@ -61,6 +61,9 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             TsModel tsModel = parseTs();
             if (tsModel == null) return;
 
+            // Exclude whole TS directories if configured
+            filterExcludedDirs(tsModel, configuration);
+
             removeIgnoredItemsFromModel(tsModel, configuration.ignoreTsItems);
 
             writeModelToFile(tsModel);
@@ -220,6 +223,59 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
         getLog().info("Wrote TS model to: " + modelFile.getAbsolutePath() + " (files=" + model.getFiles().size() + ")");
     }
 
+    private void filterExcludedDirs(TsModel model, Configuration cfg) {
+        if (model == null || cfg == null) return;
+        List<String> ex = cfg.excludeDirSuffixes;
+        if (ex == null || ex.isEmpty()) return;
+        List<File> roots = normalizeSourceDirs();
+        File common = commonParent(roots);
+        java.util.Set<String> suffixes = ex.stream().filter(s -> s != null && !s.isBlank()).map(s -> s.replace('\\', '/')).collect(java.util.stream.Collectors.toSet());
+        int removed = 0;
+        java.util.Iterator<de.mhus.nimbus.tools.generatets.ts.TsSourceFile> it = model.getFiles().iterator();
+        while (it.hasNext()) {
+            de.mhus.nimbus.tools.generatets.ts.TsSourceFile f = it.next();
+            if (f == null || f.getPath() == null) continue;
+            File srcFile = new File(f.getPath());
+            String relDir = null;
+            // compute per-root relDir
+            File matchedRoot = null;
+            try {
+                String sAbs = srcFile.getCanonicalPath();
+                for (File r : roots) {
+                    if (r == null) continue;
+                    String rAbs = r.getCanonicalPath();
+                    if (sAbs.startsWith(rAbs + File.separator) || sAbs.equals(rAbs)) { matchedRoot = r; break; }
+                }
+            } catch (IOException ignored) {}
+            if (matchedRoot != null) {
+                try {
+                    java.nio.file.Path root = matchedRoot.getCanonicalFile().toPath();
+                    java.nio.file.Path srcPath = srcFile.getCanonicalFile().toPath();
+                    java.nio.file.Path rel = root.relativize(srcPath).getParent();
+                    if (rel != null) relDir = rel.toString().replace('\\', '/');
+                } catch (IOException ignored) {}
+            }
+            String relCommon = null;
+            if (common != null) {
+                try {
+                    java.nio.file.Path root = common.getCanonicalFile().toPath();
+                    java.nio.file.Path srcPath = srcFile.getCanonicalFile().toPath();
+                    java.nio.file.Path rel = root.relativize(srcPath).getParent();
+                    if (rel != null) relCommon = rel.toString().replace('\\', '/');
+                } catch (IOException ignored) {}
+            }
+            boolean exclude = false;
+            if (relDir != null && !relDir.isEmpty()) {
+                for (String suf : suffixes) { if (relDir.endsWith(suf)) { exclude = true; break; } }
+            }
+            if (!exclude && relCommon != null && !relCommon.isEmpty()) {
+                for (String suf : suffixes) { if (relCommon.endsWith(suf)) { exclude = true; break; } }
+            }
+            if (exclude) { it.remove(); removed++; }
+        }
+        if (removed > 0) getLog().info("Excluded TS files by excludeDirSuffixes: " + removed);
+    }
+
     private void removeIgnoredItemsFromModel(TsModel model, List<String> ignoreTsItems) {
         if (model == null) return;
         if (ignoreTsItems == null || ignoreTsItems.isEmpty()) return;
@@ -313,26 +369,104 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             }
         }
 
+        // Also compute relative directory from the common parent of all configured sourceDirs
+        String relDirCommon = null;
+        File common = commonParent(roots);
+        if (common != null) {
+            try {
+                java.nio.file.Path root = common.getCanonicalFile().toPath();
+                java.nio.file.Path srcPath = srcFile.getCanonicalFile().toPath();
+                java.nio.file.Path rel = root.relativize(srcPath).getParent();
+                if (rel != null) relDirCommon = rel.toString().replace('\\', '/');
+            } catch (IOException ignored) {
+                String rAbs = common.getAbsolutePath().replace('\\', '/');
+                String sAbs = srcFile.getAbsolutePath().replace('\\', '/');
+                if (sAbs.startsWith(rAbs)) {
+                    String tmp = sAbs.substring(rAbs.length());
+                    int lastSlash = tmp.lastIndexOf('/');
+                    relDirCommon = lastSlash > 0 ? tmp.substring(1, lastSlash) : null;
+                }
+            }
+        }
+
         // Apply explicit package rules based on relative directory path from the TS root
-        if (cfg.packageRules != null && relDir != null && !relDir.isEmpty()) {
-            for (Configuration.PackageRule rule : cfg.packageRules) {
-                if (rule == null) continue;
-                String suf = rule.dirEndsWith;
-                if (suf == null || suf.isBlank()) continue;
-                String sufNorm = suf.replace('\\', '/');
-                if (relDir.endsWith(sufNorm)) {
-                    if (rule.pkg != null && !rule.pkg.isBlank()) return rule.pkg.trim();
+        if (cfg.packageRules != null) {
+            // First try per-root relative dir
+            if (relDir != null && !relDir.isEmpty()) {
+                for (Configuration.PackageRule rule : cfg.packageRules) {
+                    if (rule == null) continue;
+                    String suf = rule.dirEndsWith;
+                    if (suf == null || suf.isBlank()) continue;
+                    String sufNorm = suf.replace('\\', '/');
+                    if (relDir.endsWith(sufNorm)) {
+                        if (rule.pkg != null && !rule.pkg.isBlank()) return rule.pkg.trim();
+                    }
+                }
+            }
+            // Then try relative dir from the common parent (handles granular sourceDirs)
+            if (relDirCommon != null && !relDirCommon.isEmpty()) {
+                for (Configuration.PackageRule rule : cfg.packageRules) {
+                    if (rule == null) continue;
+                    String suf = rule.dirEndsWith;
+                    if (suf == null || suf.isBlank()) continue;
+                    String sufNorm = suf.replace('\\', '/');
+                    if (relDirCommon.endsWith(sufNorm)) {
+                        if (rule.pkg != null && !rule.pkg.isBlank()) return rule.pkg.trim();
+                    }
                 }
             }
         }
 
         // Derive package from basePackage + relative path if available
-        if (base != null && relDir != null && !relDir.isEmpty()) {
-            String relPkg = relDir.replace('/', '.');
-            if (base.endsWith(".")) return base + relPkg;
-            else return base + "." + relPkg;
+        if (base != null) {
+            String relForBase = (relDir != null && !relDir.isEmpty()) ? relDir : relDirCommon;
+            if (relForBase != null && !relForBase.isEmpty()) {
+                String relPkg = relForBase.replace('/', '.');
+                if (base.endsWith(".")) return base + relPkg;
+                else return base + "." + relPkg;
+            }
+            return base;
         }
-        return base;
+        return null;
+    }
+
+    /** Compute common parent directory for a list of roots. */
+    private File commonParent(List<File> roots) {
+        if (roots == null || roots.isEmpty()) return null;
+        try {
+            java.nio.file.Path common = roots.get(0).getCanonicalFile().toPath();
+            for (int i = 1; i < roots.size(); i++) {
+                File r = roots.get(i);
+                if (r == null) continue;
+                java.nio.file.Path p = r.getCanonicalFile().toPath();
+                common = commonPrefix(common, p);
+                if (common == null) return null;
+            }
+            return common.toFile();
+        } catch (IOException e) {
+            // Fallback without canonicalization
+            java.nio.file.Path common = roots.get(0).getAbsoluteFile().toPath();
+            for (int i = 1; i < roots.size(); i++) {
+                File r = roots.get(i);
+                if (r == null) continue;
+                java.nio.file.Path p = r.getAbsoluteFile().toPath();
+                common = commonPrefix(common, p);
+                if (common == null) return null;
+            }
+            return common != null ? common.toFile() : null;
+        }
+    }
+
+    private java.nio.file.Path commonPrefix(java.nio.file.Path a, java.nio.file.Path b) {
+        if (a == null || b == null) return null;
+        int min = Math.min(a.getNameCount(), b.getNameCount());
+        int i = 0;
+        // Align roots if different
+        if (!a.getRoot().equals(b.getRoot())) return a.getRoot();
+        while (i < min && a.getName(i).equals(b.getName(i))) {
+            i++;
+        }
+        return a.getRoot().resolve(a.subpath(0, i));
     }
 
     private TsModel parseTs() throws IOException {
@@ -349,6 +483,7 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
     private Configuration loadConfiguration() {
         Configuration c = new Configuration();
         c.ignoreTsItems = Collections.emptyList();
+        c.excludeDirSuffixes = Collections.emptyList();
         if (configFile == null) {
             getLog().warn("configFile is not configured; using defaults.");
             return c;
@@ -362,6 +497,7 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             Configuration loaded = yaml.loadAs(in, Configuration.class);
             if (loaded != null) {
                 if (loaded.ignoreTsItems == null) loaded.ignoreTsItems = Collections.emptyList();
+                if (loaded.excludeDirSuffixes == null) loaded.excludeDirSuffixes = Collections.emptyList();
                 return loaded;
             }
         } catch (Exception e) {

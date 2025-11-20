@@ -3,6 +3,10 @@
 basePackage: de.mhus.nimbus.evaluate.generated
 # Optional: list of TS item names to ignore during generation
 ignoreTsItems: []
+# Exclude entire TS subdirectories (suffix match relative to sourceDirs)
+excludeDirSuffixes:
+  - errors
+  - logger
 # Map TS source folders to explicit packages (match by folder suffix)
 packageRules:
   - dirEndsWith: types
