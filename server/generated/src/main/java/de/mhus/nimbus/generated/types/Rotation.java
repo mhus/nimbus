@@ -1,3 +1,7 @@
+/*
+ * Source TS: Rotation.ts
+ * Original TS: 'interface Rotation'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

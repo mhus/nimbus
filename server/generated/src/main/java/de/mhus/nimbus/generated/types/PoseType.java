@@ -1,3 +1,7 @@
+/*
+ * Source TS: EntityData.ts
+ * Original TS: 'type PoseType'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

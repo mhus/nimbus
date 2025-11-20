@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockMetadata.ts
+ * Original TS: 'interface BlockMetadata'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

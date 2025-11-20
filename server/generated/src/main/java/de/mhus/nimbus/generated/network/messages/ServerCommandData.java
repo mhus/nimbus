@@ -1,3 +1,7 @@
+/*
+ * Source TS: ServerCommandMessage.ts
+ * Original TS: 'interface ServerCommandData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

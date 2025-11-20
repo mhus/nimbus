@@ -1,3 +1,7 @@
+/*
+ * Source TS: ScrawlTypes.ts
+ * Original TS: 'type ScrawlLodLevel'
+ */
 package de.mhus.nimbus.generated.scrawl;
 
 @lombok.Data

@@ -1,3 +1,7 @@
+/*
+ * Source TS: ScrawlCondition.ts
+ * Original TS: 'interface CondChance'
+ */
 package de.mhus.nimbus.generated.scrawl;
 
 @lombok.Data

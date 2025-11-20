@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockModifier.ts
+ * Original TS: 'interface IlluminationModifier'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

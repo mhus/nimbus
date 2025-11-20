@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockModifier.ts
+ * Original TS: 'interface AudioDefinition'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

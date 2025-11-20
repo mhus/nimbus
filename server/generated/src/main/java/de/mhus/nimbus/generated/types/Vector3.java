@@ -1,3 +1,7 @@
+/*
+ * Source TS: Vector3.ts
+ * Original TS: 'interface Vector3'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

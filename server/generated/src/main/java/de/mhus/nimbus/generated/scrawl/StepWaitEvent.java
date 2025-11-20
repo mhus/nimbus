@@ -1,3 +1,7 @@
+/*
+ * Source TS: ScrawlStep.ts
+ * Original TS: 'interface StepWaitEvent'
+ */
 package de.mhus.nimbus.generated.scrawl;
 
 @lombok.Data

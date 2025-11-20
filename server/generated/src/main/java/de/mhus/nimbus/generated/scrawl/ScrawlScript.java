@@ -1,3 +1,7 @@
+/*
+ * Source TS: ScrawlScript.ts
+ * Original TS: 'interface ScrawlScript'
+ */
 package de.mhus.nimbus.generated.scrawl;
 
 @lombok.Data

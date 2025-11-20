@@ -1,3 +1,7 @@
+/*
+ * Source TS: InteractionMessage.ts
+ * Original TS: 'interface InteractionErrorData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

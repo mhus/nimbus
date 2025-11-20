@@ -1,3 +1,7 @@
+/*
+ * Source TS: ItemBlockRef.ts
+ * Original TS: 'interface ItemBlockRef'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

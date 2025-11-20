@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockMessage.ts
+ * Original TS: 'interface BlockInteractionData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

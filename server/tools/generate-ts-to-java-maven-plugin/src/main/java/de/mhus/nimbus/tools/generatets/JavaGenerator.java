@@ -34,6 +34,7 @@ public class JavaGenerator {
                     if (i == null || i.name == null) continue;
                     // Convert TS interface to Java class with fields
                     JavaType t = new JavaType(i.name, JavaKind.CLASS, srcPath);
+                    t.setOriginalTsKind("interface");
                     // Do not map extends/implements to avoid referencing non-generated interfaces
                     // Properties -> public fields
                     if (i.properties != null) {
@@ -51,6 +52,7 @@ public class JavaGenerator {
                 for (TsDeclarations.TsEnum e : f.getEnums()) {
                     if (e == null || e.name == null) continue;
                     JavaType t = new JavaType(e.name, JavaKind.ENUM, srcPath);
+                    t.setOriginalTsKind("enum");
                     jm.addType(t);
                 }
             }
@@ -59,6 +61,7 @@ public class JavaGenerator {
                 for (TsDeclarations.TsClass c : f.getClasses()) {
                     if (c == null || c.name == null) continue;
                     JavaType t = new JavaType(c.name, JavaKind.CLASS, srcPath);
+                    t.setOriginalTsKind("class");
                     if (c.extendsClass != null && !c.extendsClass.isEmpty()) {
                         t.setExtendsName(c.extendsClass);
                     }
@@ -84,6 +87,7 @@ public class JavaGenerator {
                     if (a == null || a.name == null) continue;
                     // Convert TS type alias to Java class with a single field 'value'
                     JavaType t = new JavaType(a.name, JavaKind.CLASS, srcPath);
+                    t.setOriginalTsKind("type");
                     if (a.target != null && !a.target.isEmpty()) {
                         t.setAliasTargetName(a.target);
                         String jt = mapTsTypeToJava(a.target, true);

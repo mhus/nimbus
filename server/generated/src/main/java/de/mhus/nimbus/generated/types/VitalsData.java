@@ -1,3 +1,7 @@
+/*
+ * Source TS: VitalsData.ts
+ * Original TS: 'interface VitalsData'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

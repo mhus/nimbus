@@ -1,3 +1,7 @@
+/*
+ * Source TS: EntityMessage.ts
+ * Original TS: 'interface EntityInteractionData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

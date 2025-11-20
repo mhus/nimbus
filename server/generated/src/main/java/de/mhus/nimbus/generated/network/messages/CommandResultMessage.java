@@ -1,3 +1,7 @@
+/*
+ * Source TS: CommandMessage.ts
+ * Original TS: 'type CommandResultMessage'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

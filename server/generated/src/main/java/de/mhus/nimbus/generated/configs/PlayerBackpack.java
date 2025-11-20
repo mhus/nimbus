@@ -1,3 +1,7 @@
+/*
+ * Source TS: EngineConfiguration.ts
+ * Original TS: 'interface PlayerBackpack'
+ */
 package de.mhus.nimbus.generated.configs;
 
 @lombok.Data

@@ -1,3 +1,7 @@
+/*
+ * Source TS: PlayerMovementState.ts
+ * Original TS: 'interface PlayerMovementStateChangedEvent'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

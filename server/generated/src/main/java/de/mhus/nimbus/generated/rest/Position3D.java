@@ -1,3 +1,7 @@
+/*
+ * Source TS: WorldDTO.ts
+ * Original TS: 'interface Position3D'
+ */
 package de.mhus.nimbus.generated.rest;
 
 @lombok.Data

@@ -1,3 +1,7 @@
+/*
+ * Source TS: ItemType.ts
+ * Original TS: 'interface ItemType'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

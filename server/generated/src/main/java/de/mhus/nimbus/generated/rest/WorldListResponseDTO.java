@@ -1,3 +1,7 @@
+/*
+ * Source TS: WorldDTO.ts
+ * Original TS: 'type WorldListResponseDTO'
+ */
 package de.mhus.nimbus.generated.rest;
 
 @lombok.Data

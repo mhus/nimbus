@@ -1,3 +1,7 @@
+/*
+ * Source TS: PlayerInfo.ts
+ * Original TS: 'interface MovementStateValues'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

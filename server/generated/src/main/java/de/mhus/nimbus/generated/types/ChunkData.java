@@ -1,3 +1,7 @@
+/*
+ * Source TS: ChunkData.ts
+ * Original TS: 'interface ChunkData'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

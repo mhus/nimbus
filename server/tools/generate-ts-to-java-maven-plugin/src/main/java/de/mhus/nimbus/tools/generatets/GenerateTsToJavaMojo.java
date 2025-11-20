@@ -266,14 +266,29 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             }
             boolean exclude = false;
             if (relDir != null && !relDir.isEmpty()) {
-                for (String suf : suffixes) { if (relDir.endsWith(suf)) { exclude = true; break; } }
+                for (String suf : suffixes) {
+                    if (matchesDir(relDir, suf)) { exclude = true; break; }
+                }
             }
             if (!exclude && relCommon != null && !relCommon.isEmpty()) {
-                for (String suf : suffixes) { if (relCommon.endsWith(suf)) { exclude = true; break; } }
+                for (String suf : suffixes) {
+                    if (matchesDir(relCommon, suf)) { exclude = true; break; }
+                }
             }
             if (exclude) { it.remove(); removed++; }
         }
         if (removed > 0) getLog().info("Excluded TS files by excludeDirSuffixes: " + removed);
+    }
+
+    /** Matches a relative directory path against an exclusion suffix, treating suffix as a folder and any of its subfolders. */
+    private boolean matchesDir(String relDir, String suffix) {
+        if (relDir == null || relDir.isEmpty() || suffix == null || suffix.isEmpty()) return false;
+        String rel = relDir.replace('\\', '/');
+        String suf = suffix.replace('\\', '/');
+        if (rel.equals(suf)) return true;
+        if (rel.endsWith("/" + suf)) return true;
+        if (rel.startsWith(suf + "/")) return true;
+        return rel.contains("/" + suf + "/");
     }
 
     private void removeIgnoredItemsFromModel(TsModel model, List<String> ignoreTsItems) {

@@ -1,3 +1,7 @@
+/*
+ * Source TS: AnimationData.ts
+ * Original TS: 'interface AnimationInstance'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

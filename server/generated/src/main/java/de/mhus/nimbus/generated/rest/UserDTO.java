@@ -1,3 +1,7 @@
+/*
+ * Source TS: WorldDTO.ts
+ * Original TS: 'interface UserDTO'
+ */
 package de.mhus.nimbus.generated.rest;
 
 @lombok.Data

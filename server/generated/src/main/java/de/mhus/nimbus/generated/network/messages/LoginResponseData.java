@@ -1,3 +1,7 @@
+/*
+ * Source TS: LoginMessage.ts
+ * Original TS: 'interface LoginResponseData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

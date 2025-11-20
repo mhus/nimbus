@@ -1,3 +1,7 @@
+/*
+ * Source TS: ScrawlCondition.ts
+ * Original TS: 'interface CondIsVarTrue'
+ */
 package de.mhus.nimbus.generated.scrawl;
 
 @lombok.Data

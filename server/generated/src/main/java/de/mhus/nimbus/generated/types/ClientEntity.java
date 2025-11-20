@@ -1,3 +1,7 @@
+/*
+ * Source TS: ClientEntity.ts
+ * Original TS: 'interface ClientEntity'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

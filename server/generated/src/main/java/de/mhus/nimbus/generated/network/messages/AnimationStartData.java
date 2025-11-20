@@ -1,3 +1,7 @@
+/*
+ * Source TS: AnimationMessage.ts
+ * Original TS: 'interface AnimationStartData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

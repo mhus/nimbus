@@ -1,3 +1,7 @@
+/*
+ * Source TS: UserMessage.ts
+ * Original TS: 'interface PlayerTeleportData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

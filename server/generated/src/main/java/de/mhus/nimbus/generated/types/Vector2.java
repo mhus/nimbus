@@ -1,3 +1,7 @@
+/*
+ * Source TS: ServerEntitySpawnDefinition.ts
+ * Original TS: 'interface Vector2'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

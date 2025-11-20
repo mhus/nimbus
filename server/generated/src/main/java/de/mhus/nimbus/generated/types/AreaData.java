@@ -1,3 +1,7 @@
+/*
+ * Source TS: AreaData.ts
+ * Original TS: 'interface AreaData'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

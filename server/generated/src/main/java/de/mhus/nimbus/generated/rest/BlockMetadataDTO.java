@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockMetadataDTO.ts
+ * Original TS: 'interface BlockMetadataDTO'
+ */
 package de.mhus.nimbus.generated.rest;
 
 @lombok.Data

@@ -1,3 +1,7 @@
+/*
+ * Source TS: ServerEntitySpawnDefinition.ts
+ * Original TS: 'interface BehaviorConfig'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

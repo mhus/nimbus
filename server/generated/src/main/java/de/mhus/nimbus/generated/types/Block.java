@@ -1,3 +1,7 @@
+/*
+ * Source TS: Block.ts
+ * Original TS: 'interface Block'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

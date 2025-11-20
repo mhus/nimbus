@@ -1,3 +1,7 @@
+/*
+ * Source TS: EffectData.ts
+ * Original TS: 'interface EffectData'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

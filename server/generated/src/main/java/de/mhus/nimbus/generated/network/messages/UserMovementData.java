@@ -1,3 +1,7 @@
+/*
+ * Source TS: UserMessage.ts
+ * Original TS: 'interface UserMovementData'
+ */
 package de.mhus.nimbus.generated.network.messages;
 
 @lombok.Data

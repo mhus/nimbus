@@ -1,3 +1,7 @@
+/*
+ * Source TS: World.ts
+ * Original TS: 'interface WorldInfo'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

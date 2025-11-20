@@ -64,6 +64,28 @@ public class JavaModelWriter {
 
     private String renderType(JavaType t) {
         StringBuilder sb = new StringBuilder();
+        // Header comment with TS source filename and original TS declaration kind/name
+        String tsFileName = null;
+        if (t.getSourcePath() != null && !t.getSourcePath().isBlank()) {
+            tsFileName = new java.io.File(t.getSourcePath()).getName();
+        }
+        String tsKind = t.getOriginalTsKind();
+        if (tsKind == null || tsKind.isBlank()) {
+            // Fallback to JavaKind mapping
+            switch (t.getKind()) {
+                case ENUM: tsKind = "enum"; break;
+                case INTERFACE: tsKind = "interface"; break;
+                case CLASS: tsKind = "class"; break;
+                case TYPE_ALIAS: tsKind = "type"; break;
+                default: tsKind = "type"; break;
+            }
+        }
+        String tsDecl = tsKind + " " + nullToEmpty(t.getName());
+        sb.append("/*\n");
+        if (tsFileName != null) sb.append(" * Source TS: ").append(tsFileName).append("\n");
+        sb.append(" * Original TS: '").append(tsDecl).append("'\n");
+        sb.append(" */\n");
+
         String pkg = t.getPackageName();
         if (pkg != null && !pkg.isBlank()) {
             sb.append("package ").append(pkg).append(";\n\n");
@@ -71,7 +93,7 @@ public class JavaModelWriter {
         String name = t.getName();
         String currentPkg = pkg == null ? "" : pkg;
         if (t.getKind() == JavaKind.ENUM) {
-            sb.append("public enum ").append(name).append(" {\n}");
+            sb.append("public enum ").append(name).append(" {\n}\n");
         } else if (t.getKind() == JavaKind.INTERFACE) {
             sb.append("public interface ").append(name);
             String extCsv = renderInterfaceExtendsCsv(t.getExtendsName(), t.getImplementsNames(), currentPkg);

@@ -1,3 +1,7 @@
+/*
+ * Source TS: ScriptActionDefinition.ts
+ * Original TS: 'interface ScriptActionDefinition'
+ */
 package de.mhus.nimbus.generated.scrawl;
 
 @lombok.Data

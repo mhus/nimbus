@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockMetadataDTO.ts
+ * Original TS: 'type BlockMetadataResponseDTO'
+ */
 package de.mhus.nimbus.generated.rest;
 
 @lombok.Data

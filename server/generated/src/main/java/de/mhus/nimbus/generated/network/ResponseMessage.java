@@ -1,3 +1,7 @@
+/*
+ * Source TS: BaseMessage.ts
+ * Original TS: 'interface ResponseMessage'
+ */
 package de.mhus.nimbus.generated.network;
 
 @lombok.Data

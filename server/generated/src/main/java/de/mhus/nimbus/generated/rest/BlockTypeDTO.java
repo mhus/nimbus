@@ -1,3 +1,7 @@
+/*
+ * Source TS: BlockTypeDTO.ts
+ * Original TS: 'interface BlockTypeDTO'
+ */
 package de.mhus.nimbus.generated.rest;
 
 @lombok.Data

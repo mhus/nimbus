@@ -1,3 +1,7 @@
+/*
+ * Source TS: ShortcutDefinition.ts
+ * Original TS: 'interface ShortcutDefinition'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data

@@ -13,6 +13,7 @@ public class JavaType {
     private JavaKind kind;
     private String sourcePath; // originating TS source file path
     private String packageName; // optional, from configuration
+    private String originalTsKind; // e.g. interface, class, enum, type
 
     // Members
     private List<JavaProperty> properties = new ArrayList<>();
@@ -49,6 +50,9 @@ public class JavaType {
 
     public String getPackageName() { return packageName; }
     public void setPackageName(String packageName) { this.packageName = packageName; }
+
+    public String getOriginalTsKind() { return originalTsKind; }
+    public void setOriginalTsKind(String originalTsKind) { this.originalTsKind = originalTsKind; }
 
     public List<JavaProperty> getProperties() { return properties; }
 

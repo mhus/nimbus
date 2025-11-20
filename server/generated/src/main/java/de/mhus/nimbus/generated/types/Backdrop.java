@@ -1,3 +1,7 @@
+/*
+ * Source TS: Backdrop.ts
+ * Original TS: 'interface Backdrop'
+ */
 package de.mhus.nimbus.generated.types;
 
 @lombok.Data
