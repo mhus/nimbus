@@ -313,8 +313,30 @@ export function switchSeason(
     progress: number,
     position: Vector3
 ): boolean {
+  // Clamp progress to [0,1]
+  if (progress <= 0) return false;
+  if (progress >= 1) return true;
+  const p = progress; // already clamped
 
-  return true;
+  // Deterministic pseudo-random in [0,1) based on integer-ish position.
+  // Use a simple hash + sine fract approach for uniform distribution.
+  const x = position.x;
+  const y = position.y;
+  const z = position.z;
+
+  // Mix coordinates (avoid floating point noise skew by rounding lightly)
+  const xi = Math.floor(x * 1000);
+  const yi = Math.floor(y * 1000);
+  const zi = Math.floor(z * 1000);
+
+  let n = xi * 374761393 + yi * 668265263 + zi * 2147483647; // large primes
+  n = (n ^ (n >> 13)) >>> 0; // mix bits
+  // Final hash transform
+  n = (n * 1274126177) >>> 0;
+  const rand = (n & 0xffffffff) / 0xffffffff; // [0,1]
+
+  // A position becomes true when progress surpasses its threshold.
+  return p >= rand;
 }
 
 /**
