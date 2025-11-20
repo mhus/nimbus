@@ -82,18 +82,7 @@ public class EvaluatePluginIT {
         assertGeneratedIfTsExists(tsDir.resolve("rest"), javaFiles, "de.mhus.nimbus.evaluate.generated.rest");
         assertGeneratedIfTsExists(tsDir.resolve("scrawl"), javaFiles, "de.mhus.nimbus.evaluate.generated.scrawl");
 
-        // Compile generated sources using the JDK compiler API
-        Files.createDirectories(classesDir.toPath());
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        assertNotNull(compiler, "No system JavaCompiler available. Ensure tests run on a JDK, not a JRE.");
-        try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, StandardCharsets.UTF_8)) {
-            var compilationUnits = fileManager.getJavaFileObjectsFromFiles(javaFiles);
-            List<String> options = new ArrayList<>();
-            options.addAll(List.of("-d", classesDir.getAbsolutePath()));
-            JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, null, options, null, compilationUnits);
-            Boolean ok = task.call();
-            assertTrue(Boolean.TRUE.equals(ok), "Compilation of generated sources failed");
-        }
+        // Compile step is validated via Maven below, which includes Lombok annotation processing.
 
         // Finally, run a Maven build in the evaluate module to ensure the project compiles with generated sources
         int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");

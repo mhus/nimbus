@@ -94,6 +94,9 @@ public class JavaModelWriter {
             }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.CLASS) {
+            // Add Lombok annotations and emit class with private fields
+            sb.append("@lombok.Data\n");
+            sb.append("@lombok.Builder\n");
             sb.append("public class ").append(name);
             String ext = renderExtends(t.getExtendsName(), currentPkg);
             if (!ext.isEmpty()) sb.append(" ").append(ext);
@@ -107,15 +110,15 @@ public class JavaModelWriter {
                     if (p == null || p.getName() == null) continue;
                     if (!isValidJavaIdentifier(p.getName())) continue;
                     if (!seen.add(p.getName())) continue;
-                    String vis = p.getVisibility();
-                    if (vis == null || vis.isBlank()) vis = "public";
                     String type = p.getType() == null || p.getType().isBlank() ? "Object" : qualifyType(p.getType(), currentPkg);
-                    sb.append("    ").append(vis).append(' ').append(type).append(' ').append(p.getName()).append(";\n");
+                    sb.append("    private ").append(type).append(' ').append(p.getName()).append(";\n");
                 }
             }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.TYPE_ALIAS) {
             sb.append("/** Type alias for: ").append(nullToEmpty(t.getAliasTargetName())).append(" */\n");
+            sb.append("@lombok.Data\n");
+            sb.append("@lombok.Builder\n");
             sb.append("public class ").append(name).append(" {\n}\n");
         } else {
             sb.append("public class ").append(name).append(" {\n}\n");
