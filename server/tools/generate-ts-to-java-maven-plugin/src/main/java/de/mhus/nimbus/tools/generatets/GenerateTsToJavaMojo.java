@@ -36,6 +36,12 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
     private File outputDir;
 
     /**
+     * If true, the outputDir will be cleaned (deleted recursively) before writing new sources.
+     */
+    @Parameter(defaultValue = "true", property = "cleanOutputDir")
+    private boolean cleanOutputDir;
+
+    /**
      * Path to the TypeScript model file.
      */
     @Parameter(defaultValue = "${project.basedir}/model.json", property = "modelFile")
@@ -109,6 +115,12 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                 }
             }
 
+            // Optionally clean output directory before writing
+            if (cleanOutputDir && outputDir != null && outputDir.exists()) {
+                getLog().info("Cleaning outputDir: " + outputDir.getAbsolutePath());
+                deleteRecursively(outputDir);
+            }
+
             new JavaModelWriter(javaModel).write(outputDir);
 
         } catch (IOException e) {
@@ -175,6 +187,22 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
         }
         parts.add(s.substring(start));
         return parts.toArray(new String[0]);
+    }
+
+    private void deleteRecursively(File f) throws IOException {
+        if (f == null || !f.exists()) return;
+        if (f.isFile()) {
+            if (!f.delete()) throw new IOException("Failed to delete file: " + f);
+            return;
+        }
+        java.nio.file.Path root = f.toPath();
+        try (java.util.stream.Stream<java.nio.file.Path> walk = java.nio.file.Files.walk(root)) {
+            java.util.List<java.nio.file.Path> list = walk.sorted(java.util.Comparator.reverseOrder()).collect(java.util.stream.Collectors.toList());
+            for (java.nio.file.Path p : list) {
+                java.io.File x = p.toFile();
+                if (!x.delete() && x.exists()) throw new IOException("Failed to delete: " + x);
+            }
+        }
     }
 
     private void writeModelToFile(TsModel model) throws IOException {

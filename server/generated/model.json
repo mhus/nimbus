@@ -1,5 +1,683 @@
 {
   "files" : [ {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScriptActionDefinition.ts",
+    "imports" : [ "./ScrawlScript" ],
+    "interfaces" : [ {
+      "name" : "ScriptActionDefinition",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "scriptId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "parameters",
+        "type" : "Record<string, any>",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "script",
+        "type" : "ScrawlScript",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "sendToServer",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlStep.ts",
+    "imports" : [ "./ScrawlCondition", "./ScrawlTypes" ],
+    "interfaces" : [ {
+      "name" : "StepPlay",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Play'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "effectId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "ctx",
+        "type" : "Record<string, any>",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepWait",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Wait'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "seconds",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepSequence",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Sequence'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "steps",
+        "type" : "ScrawlStep[]",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepParallel",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Parallel'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "steps",
+        "type" : "ScrawlStep[]",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepRepeat",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Repeat'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "times",
+        "type" : "number | null",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "untilEvent",
+        "type" : "string | null",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "step",
+        "type" : "ScrawlStep",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepForEach",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'ForEach'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "collection",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "itemVar",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "step",
+        "type" : "ScrawlStep",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepLodSwitch",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'LodSwitch'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "levels",
+        "type" : "Partial<Record<ScrawlLodLevel, ScrawlStep>>",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepCall",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Call'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "scriptId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "args",
+        "type" : "Record<string, any>",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepIf",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'If'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "cond",
+        "type" : "ScrawlCondition",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "then",
+        "type" : "ScrawlStep",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "else",
+        "type" : "ScrawlStep",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepEmitEvent",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'EmitEvent'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "payload",
+        "type" : "any",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepWaitEvent",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'WaitEvent'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "timeout",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepSetVar",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'SetVar'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "value",
+        "type" : "any",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepCmd",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Cmd'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "cmd",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "parameters",
+        "type" : "any[]",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepWhile",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'While'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "taskId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "step",
+        "type" : "ScrawlStep",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "timeout",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "StepUntil",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Until'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "event",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "step",
+        "type" : "ScrawlStep",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "timeout",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "ScrawlStep",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlTypes.ts",
+    "imports" : [ "../types/Vector3" ],
+    "interfaces" : [ {
+      "name" : "ScrawlSubject",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "position",
+        "type" : "Vector3",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "entityId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "blockId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ScrawlExecContext",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "actor",
+        "type" : "ScrawlSubject",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "patients",
+        "type" : "ScrawlSubject[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "vars",
+        "type" : "Record<string, any>",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "ScrawlParameterType",
+      "target" : null
+    }, {
+      "name" : "ScrawlLodLevel",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlScript.ts",
+    "imports" : [ "./ScrawlStep", "./ScrawlTypes" ],
+    "interfaces" : [ {
+      "name" : "ScrawlParameterDefinition",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "type",
+        "type" : "ScrawlParameterType",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "default",
+        "type" : "any",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "description",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ScrawlSequence",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "step",
+        "type" : "ScrawlStep",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "description",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ScrawlScript",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "schemaVersion",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "description",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "imports",
+        "type" : "string[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "parameters",
+        "type" : "ScrawlParameterDefinition[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "sequences",
+        "type" : "Record<string, ScrawlSequence>",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "root",
+        "type" : "ScrawlStep",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "for",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
+      "name" : "ScrawlScriptLibrary",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlCondition.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "CondVarEquals",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'VarEquals'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "value",
+        "type" : "any",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CondVarExists",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'VarExists'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CondChance",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'Chance'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "p",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CondHasTargets",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'HasTargets'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "min",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CondHasSource",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'HasSource'",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CondIsVarTrue",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'IsVarTrue'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "defaultValue",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CondIsVarFalse",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "kind",
+        "type" : "'IsVarFalse'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "defaultValue",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "ScrawlCondition",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/index.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/sample-types.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "Person",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "Employee",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "employeeId",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "Role",
+      "values" : [ ]
+    } ],
+    "classes" : [ {
+      "name" : "User",
+      "extendsClass" : null,
+      "implementsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    } ],
+    "typeAliases" : [ {
+      "name" : "Identifier",
+      "target" : null
+    } ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/EntityData.ts",
     "imports" : [ "./Vector3", "./Rotation", "./BlockModifier" ],
     "interfaces" : [ {
@@ -2266,6 +2944,853 @@
       "target" : null
     } ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/LogoutMessage.ts",
+    "imports" : [ "../BaseMessage" ],
+    "interfaces" : [ ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "LogoutMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/AnimationMessage.ts",
+    "imports" : [ "../BaseMessage", "../../types/AnimationData" ],
+    "interfaces" : [ {
+      "name" : "AnimationStartData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "animation",
+        "type" : "AnimationData",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "AnimationStartMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/CommandMessage.ts",
+    "imports" : [ "../BaseMessage" ],
+    "interfaces" : [ {
+      "name" : "CommandData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cmd",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "args",
+        "type" : "string[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "oneway",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CommandMessageData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "message",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CommandResultData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "rc",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "message",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "CommandMessage",
+      "target" : null
+    }, {
+      "name" : "CommandMessageMessage",
+      "target" : null
+    }, {
+      "name" : "CommandResultMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/ServerCommandMessage.ts",
+    "imports" : [ "../BaseMessage" ],
+    "interfaces" : [ {
+      "name" : "SingleServerCommandData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cmd",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "args",
+        "type" : "string[]",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ServerCommandData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cmd",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "args",
+        "type" : "string[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "oneway",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "cmds",
+        "type" : "SingleServerCommandData[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "parallel",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ServerCommandResultData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "rc",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "message",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "ServerCommandMessage",
+      "target" : null
+    }, {
+      "name" : "ServerCommandResultMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/BlockMessage.ts",
+    "imports" : [ "../BaseMessage", "../../types/Block", "../../types/AnimationData" ],
+    "interfaces" : [ {
+      "name" : "BlockStatusUpdate",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "s",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "aa",
+        "type" : "AnimationData[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "ab",
+        "type" : "AnimationData[]",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "BlockInteractionData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "gId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "ac",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "pa",
+        "type" : "Record<string, any>",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "BlockUpdateMessage",
+      "target" : null
+    }, {
+      "name" : "BlockStatusUpdateMessage",
+      "target" : null
+    }, {
+      "name" : "BlockInteractionMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/InteractionMessage.ts",
+    "imports" : [ "../BaseMessage" ],
+    "interfaces" : [ {
+      "name" : "InteractionRequestData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "g",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "InteractionSuccessData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "success",
+        "type" : "true",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "InteractionErrorData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "success",
+        "type" : "false",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "errorCode",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "errorMessage",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "InteractionRequestMessage",
+      "target" : null
+    }, {
+      "name" : "InteractionResponseMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/ChunkMessage.ts",
+    "imports" : [ "../BaseMessage", "../../types/Block", "../../types/AreaData", "../../types/ChunkData", "../../types/Backdrop", "../../types" ],
+    "interfaces" : [ {
+      "name" : "ChunkCoordinate",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cx",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "cz",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ChunkDataTransferObject",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cx",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "cz",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "b",
+        "type" : "Block[]",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "i",
+        "type" : "ItemBlockRef[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "h",
+        "type" : "HeightData[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "a",
+        "type" : "AreaData[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "n",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "e",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "s",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "w",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ChunkRegisterData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "c",
+        "type" : "ChunkCoordinate[]",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ChunkQueryData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "c",
+        "type" : "ChunkCoordinate[]",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "ChunkRegisterMessage",
+      "target" : null
+    }, {
+      "name" : "ChunkQueryMessage",
+      "target" : null
+    }, {
+      "name" : "ChunkUpdateMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/EntityMessage.ts",
+    "imports" : [ "../BaseMessage", "../../types/EntityData", "../../types/Vector3", "../../types/Rotation" ],
+    "interfaces" : [ {
+      "name" : "EntityPositionUpdateData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "pl",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "p",
+        "type" : "Vector3",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "r",
+        "type" : "Rotation",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "v",
+        "type" : "Vector3",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "po",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "ts",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "ts",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityInteractionData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "entityId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "ts",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "ac",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "pa",
+        "type" : "Record<string, any>",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "EntityChunkPathwayMessage",
+      "target" : null
+    }, {
+      "name" : "EntityPositionUpdateMessage",
+      "target" : null
+    }, {
+      "name" : "EntityInteractionMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/WorldMessage.ts",
+    "imports" : [ "../BaseMessage" ],
+    "interfaces" : [ {
+      "name" : "WorldStatusUpdateData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "s",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "WorldStatusUpdateMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/PingMessage.ts",
+    "imports" : [ "../BaseMessage" ],
+    "interfaces" : [ {
+      "name" : "PingData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cTs",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "PongData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "cTs",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "sTs",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "PingMessage",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "i",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "PongMessage",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/index.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/UserMessage.ts",
+    "imports" : [ "../BaseMessage", "../../types/Rotation" ],
+    "interfaces" : [ {
+      "name" : "UserMovementData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "r",
+        "type" : "Rotation",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "PlayerTeleportData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "r",
+        "type" : "Rotation",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "UserMovementMessage",
+      "target" : null
+    }, {
+      "name" : "PlayerTeleportMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages/LoginMessage.ts",
+    "imports" : [ "../BaseMessage", "../MessageTypes" ],
+    "interfaces" : [ {
+      "name" : "LoginRequestData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "username",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "password",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "token",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "worldId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "clientType",
+        "type" : "ClientType",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "sessionId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "LoginResponseData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "success",
+        "type" : "true",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "userId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "displayName",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "sessionId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "LoginErrorData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "success",
+        "type" : "false",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "errorCode",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "errorMessage",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "LoginMessage",
+      "target" : null
+    }, {
+      "name" : "LoginResponseMessage",
+      "target" : null
+    } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/MessageTypes.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ {
+      "name" : "MessageType",
+      "values" : [ ]
+    }, {
+      "name" : "ClientType",
+      "values" : [ ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/BaseMessage.ts",
+    "imports" : [ "./MessageTypes" ],
+    "interfaces" : [ {
+      "name" : "BaseMessage",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "i",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "r",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "t",
+        "type" : "MessageType",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "d",
+        "type" : "T",
+        "optional" : true,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "RequestMessage",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "i",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ResponseMessage",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/index.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/configs/EngineConfiguration.ts",
     "imports" : [ "../types" ],
     "interfaces" : [ {
@@ -2720,639 +4245,5 @@
       "name" : "BlockTypeRangeResponseDTO",
       "target" : null
     } ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScriptActionDefinition.ts",
-    "imports" : [ "./ScrawlScript" ],
-    "interfaces" : [ {
-      "name" : "ScriptActionDefinition",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "scriptId",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "parameters",
-        "type" : "Record<string, any>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "script",
-        "type" : "ScrawlScript",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "sendToServer",
-        "type" : "boolean",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlStep.ts",
-    "imports" : [ "./ScrawlCondition", "./ScrawlTypes" ],
-    "interfaces" : [ {
-      "name" : "StepPlay",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Play'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "effectId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "ctx",
-        "type" : "Record<string, any>",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepWait",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Wait'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "seconds",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepSequence",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Sequence'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "steps",
-        "type" : "ScrawlStep[]",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepParallel",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Parallel'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "steps",
-        "type" : "ScrawlStep[]",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepRepeat",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Repeat'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "times",
-        "type" : "number | null",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "untilEvent",
-        "type" : "string | null",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "step",
-        "type" : "ScrawlStep",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepForEach",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'ForEach'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "collection",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "itemVar",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "step",
-        "type" : "ScrawlStep",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepLodSwitch",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'LodSwitch'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "levels",
-        "type" : "Partial<Record<ScrawlLodLevel, ScrawlStep>>",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepCall",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Call'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "scriptId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "args",
-        "type" : "Record<string, any>",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepIf",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'If'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "cond",
-        "type" : "ScrawlCondition",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "then",
-        "type" : "ScrawlStep",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "else",
-        "type" : "ScrawlStep",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepEmitEvent",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'EmitEvent'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "payload",
-        "type" : "any",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepWaitEvent",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'WaitEvent'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "timeout",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepSetVar",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'SetVar'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "value",
-        "type" : "any",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepCmd",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Cmd'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "cmd",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "parameters",
-        "type" : "any[]",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepWhile",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'While'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "taskId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "step",
-        "type" : "ScrawlStep",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "timeout",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "StepUntil",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Until'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "event",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "step",
-        "type" : "ScrawlStep",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "timeout",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ {
-      "name" : "ScrawlStep",
-      "target" : null
-    } ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlTypes.ts",
-    "imports" : [ "../types/Vector3" ],
-    "interfaces" : [ {
-      "name" : "ScrawlSubject",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "position",
-        "type" : "Vector3",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "entityId",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "blockId",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "ScrawlExecContext",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "actor",
-        "type" : "ScrawlSubject",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "patients",
-        "type" : "ScrawlSubject[]",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "vars",
-        "type" : "Record<string, any>",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ {
-      "name" : "ScrawlParameterType",
-      "target" : null
-    }, {
-      "name" : "ScrawlLodLevel",
-      "target" : null
-    } ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlScript.ts",
-    "imports" : [ "./ScrawlStep", "./ScrawlTypes" ],
-    "interfaces" : [ {
-      "name" : "ScrawlParameterDefinition",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "type",
-        "type" : "ScrawlParameterType",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "default",
-        "type" : "any",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "description",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "ScrawlSequence",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "step",
-        "type" : "ScrawlStep",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "description",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "ScrawlScript",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "schemaVersion",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "id",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "description",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "imports",
-        "type" : "string[]",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "parameters",
-        "type" : "ScrawlParameterDefinition[]",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "sequences",
-        "type" : "Record<string, ScrawlSequence>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "root",
-        "type" : "ScrawlStep",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "for",
-      "extendsList" : [ ],
-      "properties" : [ ],
-      "methods" : [ ]
-    }, {
-      "name" : "ScrawlScriptLibrary",
-      "extendsList" : [ ],
-      "properties" : [ ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/ScrawlCondition.ts",
-    "imports" : [ ],
-    "interfaces" : [ {
-      "name" : "CondVarEquals",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'VarEquals'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "value",
-        "type" : "any",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "CondVarExists",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'VarExists'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "CondChance",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'Chance'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "p",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "CondHasTargets",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'HasTargets'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "min",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "CondHasSource",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'HasSource'",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "CondIsVarTrue",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'IsVarTrue'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "defaultValue",
-        "type" : "boolean",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "CondIsVarFalse",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "kind",
-        "type" : "'IsVarFalse'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "defaultValue",
-        "type" : "boolean",
-        "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ {
-      "name" : "ScrawlCondition",
-      "target" : null
-    } ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl/index.ts",
-    "imports" : [ ],
-    "interfaces" : [ ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
   } ]
 }
