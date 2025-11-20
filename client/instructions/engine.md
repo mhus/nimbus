@@ -397,4 +397,10 @@ Es werden also zwei neue network messages benoetigt:
 - Im Client event empfangen, mit 'remote_' + effectId den EffectService aufrufen um die parameter zu updaten.
 - Im Client bei 'local_" effecten bei parameter update und wenn sendToServer==true , an den server senden.
 
-[ ] Erstelle ein command im
+[ ] In engine wird die worldInfo aktuell aus dem websocket geladen. Das soll anders werden. 
+- Schicke im server nicht mehr die worldInfo via websocket
+- Rufe in engine vor dem verbinden die REST API GET /api/world/{worldId}/config auf um alle configs zu laden.
+- Erstelle einen ConfigService der sich um das laden und cachen der configs kuemmert. Nutze den NetworkService wenn noetig. Der service wird in AppContext referenziert
+- Erstelle ein command mti dem die einzelnen configs im laufenden betrieb neu geladen werden.
+- Siehe client/packages/shared/src/configs/EngineConfiguration.ts
+- Siehe client/instructions/general/server_rest_api.md Abschnitt "Configs"
