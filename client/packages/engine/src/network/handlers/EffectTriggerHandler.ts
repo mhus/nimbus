@@ -58,22 +58,38 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
 
     try {
       // Mark this effect as remote (came from server, don't send back)
+      // IMPORTANT: Remove any isLocal from the effect itself (came from sender)
+      const { isLocal: _removeIsLocal, ...cleanEffect } = data.effect as any;
+
       const effectWithFlag = {
-        ...data.effect,
+        ...cleanEffect,
         sendToServer: false, // Prevent re-broadcasting
       };
 
-      // Execute the effect locally
+      // Execute the effect locally with isLocal: false
       // The effect already contains source, target, and all parameters
+      // IMPORTANT: Force isLocal to false regardless of what server sends
       const executorId = await this.scrawlService.executeAction(
         effectWithFlag,
-        {} // Empty context, everything is in the effect definition
+        {
+          isLocal: false, // Force remote execution - don't activate player direction
+          // Override any vars that might come from server
+          vars: {
+            ...(data.effect.parameters || {}),
+          },
+        }
       );
 
-      logger.debug('Remote effect executed', {
+      logger.info('Remote executor should have isLocal: false', {
+        executorId,
+        contextIsLocal: false,
+      });
+
+      logger.info('Remote effect executed', {
         executorId,
         effectId: data.effectId,
         entityId: data.entityId,
+        isLocal: false,
       });
     } catch (error) {
       logger.error('Failed to execute remote effect', {

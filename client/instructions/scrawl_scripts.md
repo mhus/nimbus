@@ -1959,9 +1959,17 @@ selektierten Zielen werden.
   - Das Ziel kann auch ein AIR Block sein. Aber es geht um die position.
 - Default ist ALL
 - itemModifier.actionTargeting: ENTITY, BLOCK, BOTH, GROUND, ALL
+- Wie schicken wir die events zum server
+  - 'e.u' events um die angepassten targets zu anderen clients zu senden
+  - Block interaction / Entity interaction
 
 
 
+[ ] Ein aktueller Fall:
+⏺ Der ClickHandler ist NICHT in der this.handlers Liste! Das ist das Problem - er wird nicht bei InputService.update() 
+durchlaufen. Lass mich prüfen, ob er manuell aufgerufen werden muss oder zur Liste hinzugefügt werden sollte:
+Kann man nicht click und key handler events zusammen fuehren im InputService, der dann das handled, ggf. wenn wir 
+spaeter auch andere handler nutzt, z.b. ein virtueller joystick auf dem bildschirm.
 
 ===
 # Examples tum testen

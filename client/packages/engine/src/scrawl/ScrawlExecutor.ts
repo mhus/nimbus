@@ -273,8 +273,11 @@ export class ScrawlExecutor {
       },
     };
 
-    // Check if effect needs player direction updates
-    const needsPlayerDirection = step.receivePlayerDirection === true;
+    // Check if effect needs player direction updates (ONLY for local scripts)
+    // Remote effects (isLocal === false) NEVER activate player direction
+    const needsPlayerDirection =
+      step.receivePlayerDirection === true &&
+      effectCtx.isLocal === true; // Explicit check for true
 
     if (needsPlayerDirection) {
       // Setup player direction listener
@@ -287,10 +290,16 @@ export class ScrawlExecutor {
       if (physicsService) {
         physicsService.setPlayerDirectionBroadcast(true);
         this.playerDirectionBroadcastActive = true;
-        logger.debug('Player direction broadcast enabled for effect', {
+        logger.info('Player direction broadcast enabled for Play effect', {
           effectId: step.effectId,
+          isLocal: effectCtx.isLocal,
         });
       }
+    } else if (step.receivePlayerDirection && !effectCtx.isLocal) {
+      logger.info('Skipping player direction for remote Play effect', {
+        effectId: step.effectId,
+        isLocal: effectCtx.isLocal,
+      });
     }
 
     try {
@@ -572,13 +581,28 @@ export class ScrawlExecutor {
    * Create execution context
    */
   private createContext(): ScrawlExecContext {
+    // IMPORTANT: isLocal must be preserved from initialContext, not from vars!
+    // It indicates whether THIS execution was triggered locally or remotely
+    const isLocalValue = this.initialContext.isLocal ?? true;
+
+    // Extract vars without isLocal (prevent override via spread)
+    const { isLocal: _unused, vars: initialVars, ...restContext } = this.initialContext;
+
     const ctx: ScrawlExecContext = {
-      ...this.initialContext,
+      ...restContext,
       appContext: this.appContext,
       executor: this,
       scriptId: this.script.id,
-      vars: this.initialContext.vars || {},
+      vars: initialVars || {},
+      // isLocal MUST be last to override any spread values
+      isLocal: isLocalValue,
     } as ScrawlExecContext;
+
+    logger.info('Context created', {
+      scriptId: this.script.id,
+      isLocal: ctx.isLocal,
+      fromInitialContext: this.initialContext.isLocal,
+    });
 
     // Set default variables from initial context
     this.setDefaultVariables(ctx);
@@ -802,8 +826,12 @@ export class ScrawlExecutor {
     const timeout = step.timeout ?? 60;
     const startTime = performance.now() / 1000;
 
-    // Check if inner step needs player direction (only for Play steps)
-    const needsPlayerDirection = step.step.kind === 'Play' && step.step.receivePlayerDirection === true;
+    // Check if inner step needs player direction (ONLY for local Play steps)
+    // Remote effects (isLocal === false) NEVER activate player direction
+    const needsPlayerDirection =
+      step.step.kind === 'Play' &&
+      step.step.receivePlayerDirection === true &&
+      ctx.isLocal === true; // Explicit check for true
 
     if (needsPlayerDirection) {
       // Setup player direction listener
@@ -819,8 +847,14 @@ export class ScrawlExecutor {
         logger.info('Player direction broadcast ENABLED for While effect', {
           effectId: step.step.effectId,
           executorId: this.executorId,
+          isLocal: ctx.isLocal,
         });
       }
+    } else if (step.step.kind === 'Play' && step.step.receivePlayerDirection && !ctx.isLocal) {
+      logger.info('Skipping player direction for remote While effect', {
+        effectId: step.step.effectId,
+        isLocal: ctx.isLocal,
+      });
     }
 
     // Get task completion promise
@@ -901,8 +935,12 @@ export class ScrawlExecutor {
     const timeout = step.timeout ?? 60;
     const startTime = performance.now() / 1000;
 
-    // Check if inner step needs player direction (only for Play steps)
-    const needsPlayerDirection = step.step.kind === 'Play' && step.step.receivePlayerDirection === true;
+    // Check if inner step needs player direction (ONLY for local Play steps)
+    // Remote effects (isLocal === false) NEVER activate player direction
+    const needsPlayerDirection =
+      step.step.kind === 'Play' &&
+      step.step.receivePlayerDirection === true &&
+      ctx.isLocal === true; // Explicit check for true
 
     if (needsPlayerDirection) {
       // Setup player direction listener
@@ -918,8 +956,14 @@ export class ScrawlExecutor {
         logger.info('Player direction broadcast ENABLED for Until effect', {
           effectId: step.step.effectId,
           executorId: this.executorId,
+          isLocal: ctx.isLocal,
         });
       }
+    } else if (step.step.kind === 'Play' && step.step.receivePlayerDirection && !ctx.isLocal) {
+      logger.info('Skipping player direction for remote effect', {
+        effectId: step.step.effectId,
+        isLocal: ctx.isLocal,
+      });
     }
 
     // Set up event listener

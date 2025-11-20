@@ -28,6 +28,20 @@ export interface ScrawlExecContext extends BaseScrawlExecContext {
    * Script ID being executed (for debugging/logging)
    */
   scriptId?: string;
+
+  /**
+   * Whether this script execution is local (originated on this client)
+   * or remote (received from server via multiplayer sync).
+   *
+   * - Local (true): Script was triggered by this client (player action, item use, etc.)
+   * - Remote (false): Script was received from server (other player's action)
+   *
+   * Remote scripts should NOT activate client-specific features like:
+   * - Player direction broadcast (receivePlayerDirection)
+   * - Local input handling
+   * - Client-only UI effects
+   */
+  isLocal?: boolean;
 }
 
 // Forward declaration to avoid circular dependency

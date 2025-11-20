@@ -201,12 +201,22 @@ export class ScrawlService {
       }
 
       // Merge parameters into vars (everything goes into vars now)
+      // Check if context specifies isLocal (from EffectTriggerHandler for remote effects)
+      const isLocal = (context as any)?.isLocal ?? true; // Default to true for local
+
       const executionContext: Partial<ScrawlExecContext> = {
+        isLocal, // Use from context if provided (remote: false), otherwise default to true (local)
         vars: {
           ...(context as any)?.vars,
           ...(action.parameters || {}),
         },
       };
+
+      logger.info('ExecutionContext prepared', {
+        isLocal,
+        fromContext: (context as any)?.isLocal,
+        scriptId: script.id,
+      });
 
       // Log all parameters for debugging
       logger.info('Executing script with parameters', {
@@ -533,8 +543,11 @@ export class ScrawlService {
 
       // Build effect with source/target/targets in parameters
       // Serialize to remove Mesh references
+      // IMPORTANT: Don't send isLocal to server (it's client-side only)
+      const { isLocal: _removeIsLocal, ...cleanAction } = action as any;
+
       const effectWithContext = {
-        ...action,
+        ...cleanAction,
         parameters: {
           ...(action.parameters || {}),
           source: serializeObject(vars.source),

@@ -709,7 +709,7 @@ class NimbusServer {
    */
   private handleEffectParameterUpdate(session: ClientSession, data: any): void {
     try {
-      logger.debug('Effect parameter update received from client', {
+      logger.info('Effect parameter update received from client', {
         sessionId: session.sessionId,
         username: session.username,
         effectId: data?.effectId,
@@ -773,7 +773,7 @@ class NimbusServer {
         }
       }
 
-      logger.debug('Parameter update broadcast complete', {
+      logger.info('Parameter update broadcast complete', {
         effectId: data.effectId,
         paramName: data.paramName,
         recipientCount: broadcastCount,
