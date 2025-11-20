@@ -396,3 +396,5 @@ Es werden also zwei neue network messages benoetigt:
 - Wie bei EffectTrigger muessen die Events verteilt werden.
 - Im Client event empfangen, mit 'remote_' + effectId den EffectService aufrufen um die parameter zu updaten.
 - Im Client bei 'local_" effecten bei parameter update und wenn sendToServer==true , an den server senden.
+
+[ ] Erstelle ein command im

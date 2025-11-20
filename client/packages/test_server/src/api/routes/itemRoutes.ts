@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import type { Item } from '@nimbus/shared';
+import type { Item, Vector3 } from '@nimbus/shared';
 import type { WorldManager } from '../../world/WorldManager';
+import type { ItemUpdateBuffer } from '../../network/ItemUpdateBuffer';
 
 /**
  * Item routes for REST API
@@ -10,7 +11,7 @@ import type { WorldManager } from '../../world/WorldManager';
  * - Getting item data
  * - Creating/updating/deleting items
  */
-export function createItemRoutes(worldManager: WorldManager): Router {
+export function createItemRoutes(worldManager: WorldManager, itemUpdateBuffer: ItemUpdateBuffer): Router {
   const router = Router();
 
   /**
@@ -85,43 +86,69 @@ export function createItemRoutes(worldManager: WorldManager): Router {
 
   /**
    * POST /api/worlds/:worldId/items
-   * Create a new item
+   * Create a new item (with or without position)
+   *
+   * Body: {
+   *   name: string,
+   *   itemType: string,
+   *   position?: { x: number, y: number, z: number },
+   *   texture?: string,
+   *   parameters?: Record<string, any>
+   * }
    */
   router.post('/:worldId/items', (req, res) => {
     const worldId = req.params.worldId;
-    const { item }: { item: Item } = req.body;
+    const { name, itemType, position, texture, parameters } = req.body;
 
     const world = worldManager.getWorld(worldId);
     if (!world) {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    const displayName = item.name || 'New Item';
-    const itemType = item.itemType || 'sword'; // Default if not provided
+    // Validate required fields
+    if (!name || !itemType) {
+      return res.status(400).json({ error: 'name and itemType are required' });
+    }
 
-    // Texture is optional - will use ItemType default if not provided
-    const textureOverride = item.modifier?.texture;
+    try {
+      // Create item with or without position
+      const createdItem = world.itemRegistry.addItem(
+        name,
+        itemType,
+        position,
+        texture,
+        parameters
+      );
 
-    // Use ItemRegistry.addItem
-    const createdItem = world.itemRegistry.addItem(
-      displayName,
-      itemType,
-      undefined,
-      textureOverride,
-      item.parameters
-    );
+      // Queue item update for broadcast (only if item has position)
+      if (createdItem.itemBlockRef) {
+        itemUpdateBuffer.addUpdate(worldId, createdItem.itemBlockRef);
+      }
 
-    return res.status(201).json({ itemId: createdItem.item.id });
+      console.log(`[ItemRoutes] Item created: ${createdItem.item.id}`, { hasPosition: !!position });
+      return res.status(201).json(createdItem);
+    } catch (error) {
+      console.error('[ItemRoutes] Failed to create item:', error);
+      return res.status(500).json({ error: (error as Error).message });
+    }
   });
 
   /**
    * PUT /api/worlds/:worldId/item/:itemId
    * Update an existing item
+   *
+   * Body: {
+   *   name?: string,
+   *   itemType?: string,
+   *   position?: { x: number, y: number, z: number } | null,
+   *   texture?: string,
+   *   parameters?: Record<string, any>
+   * }
    */
   router.put('/:worldId/item/:itemId', (req, res) => {
     const worldId = req.params.worldId;
     const itemId = req.params.itemId;
-    const item: Item = req.body;
+    const { name, itemType, position, texture, parameters } = req.body;
 
     const world = worldManager.getWorld(worldId);
     if (!world) {
@@ -135,29 +162,50 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    const displayName = item.name || 'Updated Item';
+    try {
+      const hadPosition = !!existingItem.itemBlockRef;
+      const oldPosition = existingItem.itemBlockRef?.position;
 
-    // Remove old item
-    world.itemRegistry.removeItem(
-      existingItem.item.id
-    );
+      // Remove old item
+      world.itemRegistry.removeItem(itemId);
 
-    // Get itemType from request
-    const itemType = item.itemType || existingItem.item.itemType || 'sword';
+      // If item had a position and now doesn't (position = null), send delete marker
+      if (hadPosition && position === null) {
+        const deleteMarker: any = {
+          id: itemId,
+          texture: '__deleted__',
+          position: oldPosition,
+        };
+        itemUpdateBuffer.addUpdate(worldId, deleteMarker);
+      }
 
-    // Texture is optional - will use ItemType default if not provided
-    const textureOverride = item.modifier?.texture;
+      // Merge updates with existing data
+      const updatedName = name ?? existingItem.item.name;
+      const updatedItemType = itemType ?? existingItem.item.itemType;
+      const updatedTexture = texture ?? existingItem.item.parameters?.texture;
+      const updatedParameters = parameters ?? existingItem.item.parameters;
+      const updatedPosition = position === null ? undefined : (position ?? oldPosition);
 
-    // Add updated item (will generate new ID if position changed)
-    const updatedItem = world.itemRegistry.addItem(
-      displayName,
-      itemType,
-      undefined,
-      textureOverride,
-      item.parameters
-    );
+      // Add updated item
+      const updatedItem = world.itemRegistry.addItem(
+        updatedName,
+        updatedItemType,
+        updatedPosition,
+        updatedTexture,
+        updatedParameters
+      );
 
-    return res.json(updatedItem);
+      // Queue item update for broadcast (only if item has position)
+      if (updatedItem.itemBlockRef) {
+        itemUpdateBuffer.addUpdate(worldId, updatedItem.itemBlockRef);
+      }
+
+      console.log(`[ItemRoutes] Item updated: ${itemId}`, { hasPosition: !!updatedPosition });
+      return res.json(updatedItem);
+    } catch (error) {
+      console.error('[ItemRoutes] Failed to update item:', error);
+      return res.status(500).json({ error: (error as Error).message });
+    }
   });
 
   /**
@@ -173,15 +221,27 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    // Find and remove item
+    // Find item
     const item = world.itemRegistry.getItemById(itemId);
 
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
 
+    // If item has position, send delete marker to clients
+    if (item.itemBlockRef) {
+      const deleteMarker: any = {
+        id: item.item.id,
+        texture: '__deleted__',
+        position: item.itemBlockRef.position,
+      };
+      itemUpdateBuffer.addUpdate(worldId, deleteMarker);
+    }
+
+    // Remove from registry
     world.itemRegistry.removeItem(item.item.id);
 
+    console.log(`[ItemRoutes] Item deleted: ${itemId}`, { hadPosition: !!item.itemBlockRef });
     return res.status(204).send();
   });
 

@@ -658,3 +658,35 @@ PUT /api/worlds/{worldId}/itemtypes/{itemTypeId}
 
 DELETE /api/worlds/{worldId}/itemtypes/{itemTypeId}
 
+# Config
+
+## Config Loading
+
+GET /api/worlds/{worldId}/config?client={clientType}
+
+Gibt eine EngineConfiguration Objekt zurueck mit allen konfigurierten werten fuer die welt, user und character.
+
+## Config PlayerInfo
+
+GET /api/worlds/{worldId}/config/playerinfo
+
+Gibt nur die aktuellen PlayerInfo werte zurueck.
+
+## Config World Info
+
+GET /api/worlds/{worldId}/config/worldinfo
+
+Gibt nur die aktuellen WorldInfo werte zurueck.
+
+## Config PlayerBackpack
+
+GET /api/worlds/{worldId}/config/playerbackpack
+
+Gibt nur die aktuellen PlayerBackpack werte zurueck.
+
+## Config Settings
+
+GET /api/worlds/{worldId}/config/settings?client={clientType}
+
+Gibt nur die aktuellen Settings werte zurueck.
+

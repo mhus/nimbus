@@ -1,0 +1,22 @@
+{
+  "name": "Editor",
+  "inputController": "keyboard",
+  "inputMappings": {
+    "move_forward": "w",
+    "move_backward": "s",
+    "move_left": "a",
+    "move_right": "d",
+    "jump": "space",
+    "sprint": "shift",
+    "crouch": "ctrl",
+    "interact": "e",
+    "inventory": "i",
+    "select": "mouse_left",
+    "place_block": "mouse_right",
+    "delete_block": "delete",
+    "copy": "c",
+    "paste": "v",
+    "undo": "ctrl+z",
+    "redo": "ctrl+y"
+  }
+}

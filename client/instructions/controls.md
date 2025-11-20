@@ -3,7 +3,7 @@
 
 ## Editors
 
-[ ] Erstelle in controls einen editor fuer ItemTypes
+[?] Erstelle in controls einen editor fuer ItemTypes
 - Soll erreichbar sein via itemtype-editor.html
 - Zeige erst eine Liste von ItemTypes an die suchbar ist.
   - Siehe client/instructions/general/server_rest_api.md und 'ItemType' Aktionen
@@ -14,3 +14,14 @@
 - Es gibt einen 'Delete' Button um den ItemType zu loeschen
 - Es gibt einen 'Cancel' Button um den Editor zu schliessen ohne zu speichern
 
+[-] Erstelle in controls einen editor fuer Items
+- Soll erreichbar sein via item-editor.html
+- Zeige erst eine Liste von Items an die suchbar ist.
+  - Siehe client/instructions/general/server_rest_api.md und 'Item' Aktionen
+- Es kann mt 'Add' ein neuer Item erstellt werden
+- Clickt man auf einen Item in der Liste, oeffnet sich der Editor fuer diesen Item
+- Im Editor koennen die Attribute des Items geaendert werden
+- Es gibt einen 'Save' Button um die Aenderungen zu speichern
+- Es gibt einen 'Delete' Button um den Item zu loeschen
+- Es gibt einen 'Cancel' Button um den Editor zu schliessen ohne zu speichern
+> Already done!
