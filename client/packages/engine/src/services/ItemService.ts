@@ -7,7 +7,7 @@
  * Also handles item activation (pose, wait, duration) when shortcuts are triggered.
  */
 
-import type { Item, ItemType, ItemModifier } from '@nimbus/shared';
+import {Item, ItemType, ItemModifier, FullItem} from '@nimbus/shared';
 import { getLogger, ExceptionHandler, ENTITY_POSES } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { StackName } from './ModifierService';
@@ -69,7 +69,7 @@ export class ItemService {
    * @param itemId Item ID
    * @returns Filled Item or null if not found
    */
-  async getItem(itemId: string): Promise<Item | null> {
+  async getItem(itemId: string): Promise<FullItem | null> {
     // Check cache first
     if (this.itemCache.has(itemId)) {
       return this.itemCache.get(itemId)!;
@@ -484,7 +484,7 @@ export class ItemService {
    * @param item Item from chunk (without merged modifier)
    * @returns Item with merged modifier, or null if failed
    */
-  async fillItem(item: Item): Promise<Item | null> {
+  async fillItem(item: Item): Promise<FullItem | null> {
     logger.info('fillItem called', {
       itemId: item.id,
       itemType: item.itemType,
@@ -510,7 +510,7 @@ export class ItemService {
     };
 
     // Create filled item with merged modifier
-    const filledItem: Item = {
+    const filledItem: FullItem = {
       ...item,
       modifier: mergedModifier,
     };
