@@ -72,11 +72,12 @@ export class ItemRegistry {
   /**
    * Add item to registry
    *
-   * @param position World Position (X,Y,Z) coordinate
    * @param displayName Display name for the item
-   * @param itemType Item type identifier (e.g., 'sword', 'wand')
+   * @param itemTypeId Item type identifier (e.g., 'sword', 'wand')
+   * @param position World Position (X,Y,Z) coordinate (optional)
    * @param texturePath Optional texture path override
    * @param parameters Optional parameters for the item
+   * @param itemId Optional item ID (if not provided, generates new one)
    * @returns Created item
    */
   addItem(
@@ -84,11 +85,12 @@ export class ItemRegistry {
     itemTypeId: string,
     position?: Vector3,
     texturePath?: string,
-    parameters?: Record<string, any>
+    parameters?: Record<string, any>,
+    itemId?: string
   ): ServerItem {
 
-    // Generate unique ID
-    const id = `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // Use provided ID or generate new one
+    const id = itemId || `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const itemType = loadItemType(itemTypeId);
 

@@ -46,6 +46,9 @@ export class ReloadConfigCommand extends CommandHandler {
         worldId: config.worldInfo?.worldId,
         worldName: config.worldInfo?.worldName,
         chunkSize: config.worldInfo?.chunkSize,
+        status: config.worldInfo?.status,
+        seasonStatus: config.worldInfo?.seasonStatus,
+        seasonProgress: config.worldInfo?.seasonProgress,
       });
       logger.info('PlayerInfo:', {
         displayName: config.playerInfo?.displayName,
@@ -59,6 +62,7 @@ export class ReloadConfigCommand extends CommandHandler {
         itemCount: Object.keys(config.playerBackpack?.itemIds || {}).length,
         wearingCount: Object.keys(config.playerBackpack?.wearingItemIds || {}).length,
       });
+      logger.info('Note: If status/season changed, all block modifiers were automatically recalculated and chunks redrawn.');
     } catch (error) {
       logger.error('Failed to reload configuration', undefined, error as Error);
     }

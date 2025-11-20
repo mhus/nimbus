@@ -98,7 +98,7 @@ const emit = defineEmits<{
 const showAddMenu = ref(false);
 
 // Available step types (will be loaded from step-definitions.json later)
-const availableStepTypes = ['Wait', 'Play', 'Cmd', 'Sequence', 'Parallel', 'Repeat', 'ForEach', 'If', 'Call', 'SetVar', 'EmitEvent', 'WaitEvent', 'LodSwitch'];
+const availableStepTypes = ['Wait', 'Play', 'Cmd', 'Sequence', 'Parallel', 'Repeat', 'While', 'Until', 'ForEach', 'If', 'Call', 'SetVar', 'EmitEvent', 'WaitEvent', 'LodSwitch'];
 
 function getStepBadgeClass(step: ScrawlStep): string {
   switch (step.kind) {
@@ -111,6 +111,11 @@ function getStepBadgeClass(step: ScrawlStep): string {
     case 'Sequence':
     case 'Parallel':
       return 'badge-info';
+    case 'Repeat':
+    case 'While':
+    case 'Until':
+    case 'ForEach':
+      return 'badge-success';
     case 'If':
       return 'badge-warning';
     default:
@@ -141,6 +146,12 @@ function addStep(stepType: string) {
       break;
     case 'Repeat':
       newStep = { kind: 'Repeat', times: 3, step: { kind: 'Wait', seconds: 1 } };
+      break;
+    case 'While':
+      newStep = { kind: 'While', taskId: 'task_1', step: { kind: 'Wait', seconds: 0.5 } };
+      break;
+    case 'Until':
+      newStep = { kind: 'Until', event: 'stop_event', step: { kind: 'Wait', seconds: 0.5 } };
       break;
     case 'ForEach':
       newStep = { kind: 'ForEach', collection: '$patients', itemVar: '$patient', step: { kind: 'Wait', seconds: 0.1 } };

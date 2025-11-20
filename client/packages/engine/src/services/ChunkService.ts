@@ -1415,6 +1415,69 @@ export class ChunkService {
   }
 
   /**
+   * Recalculate all currentModifiers for all blocks in all loaded chunks
+   *
+   * This should be called when WorldInfo changes (status, seasonStatus, seasonProgress)
+   * as these values affect modifier merging.
+   *
+   * @returns Number of blocks whose modifiers were recalculated
+   */
+  recalculateAllModifiers(): number {
+    const chunks = Array.from(this.chunks.values());
+    let blockCount = 0;
+
+    logger.info('Recalculating all block modifiers', { chunkCount: chunks.length });
+
+    for (const chunk of chunks) {
+      // Iterate over all blocks in chunk
+      for (const clientBlock of chunk.data.data.values()) {
+        const posKey = getBlockPositionKey(
+          clientBlock.block.position.x,
+          clientBlock.block.position.y,
+          clientBlock.block.position.z
+        );
+
+        // Recalculate currentModifier using current WorldInfo
+        const newModifier = mergeBlockModifier(
+          this.appContext,
+          clientBlock.block,
+          clientBlock.blockType,
+          chunk.data.statusData.get(posKey)
+        );
+
+        // Update currentModifier
+        clientBlock.currentModifier = newModifier;
+        blockCount++;
+      }
+
+      // Mark chunk for re-rendering
+      chunk.isRendered = false;
+    }
+
+    logger.info('All block modifiers recalculated', { blockCount, chunkCount: chunks.length });
+    return blockCount;
+  }
+
+  /**
+   * Recalculate modifiers and redraw all chunks
+   *
+   * Convenience method that recalculates all modifiers and then triggers re-rendering.
+   * Should be called when WorldInfo status or season changes.
+   *
+   * @returns Object with blockCount and chunkCount
+   */
+  recalculateAndRedrawAll(): { blockCount: number; chunkCount: number } {
+    logger.info('Recalculating modifiers and redrawing all chunks');
+
+    const blockCount = this.recalculateAllModifiers();
+    const chunkCount = this.redrawAllChunks();
+
+    logger.info('Recalculation and redraw complete', { blockCount, chunkCount });
+
+    return { blockCount, chunkCount };
+  }
+
+  /**
    * Add event listener
    */
   on(event: string, listener: EventListener): void {

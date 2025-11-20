@@ -225,6 +225,13 @@
           Delete
         </button>
 
+        <button class="btn btn-outline btn-sm" @click="showJsonEditor = true" :disabled="saving">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Source
+        </button>
+
         <button
           class="btn btn-ghost"
           @click="handleCancel"
@@ -246,6 +253,13 @@
         </button>
       </div>
     </div>
+
+    <!-- JSON Editor Dialog -->
+    <JsonEditorDialog
+      v-model:is-open="showJsonEditor"
+      :model-value="itemType"
+      @apply="handleJsonApply"
+    />
   </div>
 </template>
 
@@ -258,6 +272,7 @@ import {
   updateItemType,
   deleteItemType,
 } from '../services/itemTypeApiService';
+import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 
 const props = defineProps<{
   itemTypeId: string;
@@ -291,6 +306,7 @@ const parametersError = ref<string | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
+const showJsonEditor = ref(false);
 
 const isValid = computed(() => {
   return (
@@ -400,6 +416,12 @@ async function handleDelete() {
 
 function handleCancel() {
   emit('close');
+}
+
+function handleJsonApply(updatedItemType: ItemType) {
+  itemType.value = updatedItemType;
+  parametersJson.value = JSON.stringify(updatedItemType.parameters || {}, null, 2);
+  showJsonEditor.value = false;
 }
 
 // Watch for itemTypeId changes

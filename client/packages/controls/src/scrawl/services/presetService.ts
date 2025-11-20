@@ -61,11 +61,11 @@ class PresetService {
 
       this.library = await response.json();
       console.log('Loaded effects library:', this.library);
-      return this.library;
+      return this.library!;
     } catch (error) {
       console.error('Failed to load effects.json:', error);
       this.library = { effects: [], commands: [] };
-      return this.library;
+      return this.library!;
     } finally {
       this.loading = false;
     }

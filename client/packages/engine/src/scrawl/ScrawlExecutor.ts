@@ -22,8 +22,9 @@ export class ScrawlExecutor {
   private vars = new Map<string, any>();
   private eventEmitter: EventTarget;
   private runningEffects = new Map<string, any>();
-  private executorId: string = `exec_${Date.now()}_${Math.random()}`;
+  private executorId: string = `exec_${Date.now()}_${Math.random()}`; // Default, will be set by setExecutorId()
   private taskCompletionPromises = new Map<string, Promise<void>>();
+  private shortcutEndListener: ((data: any) => void) | null = null;
 
   // For multiplayer synchronization
   private effectId?: string; // Unique effect ID for this execution
@@ -38,6 +39,60 @@ export class ScrawlExecutor {
     private readonly initialContext: Partial<ScrawlExecContext>
   ) {
     this.eventEmitter = new EventTarget();
+
+    // Listen for shortcut ended events to stop Until/While loops
+    this.setupShortcutEndListener();
+  }
+
+  /**
+   * Setup listener for shortcut ended events
+   * When shortcut ends, emit 'stop_event' to terminate Until/While loops
+   */
+  private setupShortcutEndListener(): void {
+    const playerService = this.appContext.services.player;
+    if (!playerService) return;
+
+    this.shortcutEndListener = (data: any) => {
+      // Check if this is our executor
+      if (data.executorId === this.executorId) {
+        logger.debug('Shortcut ended for this executor, emitting stop_event', {
+          executorId: this.executorId,
+          scriptId: this.script.id,
+        });
+
+        // Emit 'stop_event' to terminate Until/While loops
+        this.emit('stop_event');
+      }
+    };
+
+    playerService.on('shortcut:ended', this.shortcutEndListener);
+  }
+
+  /**
+   * Cleanup shortcut end listener
+   */
+  private cleanupShortcutEndListener(): void {
+    if (this.shortcutEndListener) {
+      const playerService = this.appContext.services.player;
+      if (playerService) {
+        playerService.off('shortcut:ended', this.shortcutEndListener);
+      }
+      this.shortcutEndListener = null;
+    }
+  }
+
+  /**
+   * Set executor ID (called by ScrawlService)
+   */
+  setExecutorId(id: string): void {
+    this.executorId = id;
+  }
+
+  /**
+   * Get executor ID
+   */
+  getExecutorId(): string {
+    return this.executorId;
   }
 
   /**
@@ -73,6 +128,9 @@ export class ScrawlExecutor {
         'ScrawlExecutor.start',
         { scriptId: this.script.id }
       );
+    } finally {
+      // Cleanup listener when script ends
+      this.cleanupShortcutEndListener();
     }
   }
 
@@ -530,6 +588,7 @@ export class ScrawlExecutor {
 
   cancel(): void {
     this.cancelled = true;
+    this.cleanupShortcutEndListener();
     logger.debug(`Script cancelled: ${this.script.id}`);
   }
 

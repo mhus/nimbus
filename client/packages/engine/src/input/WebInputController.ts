@@ -224,6 +224,7 @@ export class WebInputController implements InputController {
     window.addEventListener('keyup', this.onKeyUp);
     this.canvas.addEventListener('click', this.onCanvasClick);
     this.canvas.addEventListener('mousedown', this.onMouseDown);
+    window.addEventListener('mouseup', this.onMouseUp); // On window to catch all mouse up events
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
     document.addEventListener('mousemove', this.onMouseMove);
 
@@ -392,6 +393,31 @@ export class WebInputController implements InputController {
   };
 
   /**
+   * Handle mouse button up (for ending click shortcuts)
+   */
+  private onMouseUp = (event: MouseEvent): void => {
+    logger.debug('Mouse up event received', {
+      button: event.button,
+      pointerLocked: this.pointerLocked,
+      hasClickHandler: !!this.clickHandler
+    });
+
+    if (!this.pointerLocked) {
+      logger.debug('Mouse up ignored - pointer not locked');
+      return;
+    }
+
+    // Use ClickInputHandler from InputService
+    if (this.clickHandler) {
+      logger.debug('Calling clickHandler.deactivate()');
+      this.clickHandler.deactivate();
+      event.preventDefault();
+    } else {
+      logger.warn('Click handler not available for mouse up');
+    }
+  };
+
+  /**
    * Handle pointer lock change
    */
   private onPointerLockChange = (): void => {
@@ -435,6 +461,8 @@ export class WebInputController implements InputController {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     this.canvas.removeEventListener('click', this.onCanvasClick);
+    this.canvas.removeEventListener('mousedown', this.onMouseDown);
+    window.removeEventListener('mouseup', this.onMouseUp);
     document.removeEventListener('pointerlockchange', this.onPointerLockChange);
     document.removeEventListener('mousemove', this.onMouseMove);
 

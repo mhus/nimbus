@@ -86,6 +86,22 @@
         LOD levels: {{ Object.keys(step.levels).join(', ') }}
       </div>
 
+      <div v-else-if="step.kind === 'While'">
+        Task ID: <code>{{ step.taskId }}</code>
+        <span v-if="step.timeout">(timeout: {{ step.timeout }}s)</span>
+        <div class="ml-4 mt-2">
+          <StepViewer :step="step.step" />
+        </div>
+      </div>
+
+      <div v-else-if="step.kind === 'Until'">
+        Event: <code>{{ step.event }}</code>
+        <span v-if="step.timeout">(timeout: {{ step.timeout }}s)</span>
+        <div class="ml-4 mt-2">
+          <StepViewer :step="step.step" />
+        </div>
+      </div>
+
       <div v-else>
         <pre class="text-xs">{{ JSON.stringify(step, null, 2) }}</pre>
       </div>
@@ -114,6 +130,10 @@ function getStepTitle(step: ScrawlStep): string {
       return 'Parallel';
     case 'Repeat':
       return 'Repeat';
+    case 'While':
+      return `While Task: ${step.taskId}`;
+    case 'Until':
+      return `Until Event: ${step.event}`;
     case 'ForEach':
       return 'For Each';
     case 'If':

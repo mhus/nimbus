@@ -42,6 +42,12 @@ export interface WorldInfo {
   /** World status (0=active, 1=inactive, etc.) */
   status?: number;
 
+  /** Season status identifier (e.g., 'spring', 'summer', 'autumn', 'winter') */
+  seasonStatus?: string;
+
+  /** Season progress (0.0 to 1.0, representing progress through current season) */
+  seasonProgress?: number;
+
   /** Creation timestamp */
   createdAt?: string;
 

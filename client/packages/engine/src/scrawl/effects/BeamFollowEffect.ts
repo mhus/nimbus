@@ -13,9 +13,9 @@ import {
 const logger = getLogger('BeamFollowEffect');
 
 export interface BeamFollowOptions {
-  color: string;
-  thickness?: number;
-  alpha?: number;
+  color?: string; // Hex color (default: '#ffffff')
+  thickness?: number; // Beam diameter (default: 0.1)
+  alpha?: number; // Transparency (default: 1.0)
 }
 
 /**
@@ -113,7 +113,8 @@ export class BeamFollowEffect extends ScrawlEffectHandler<BeamFollowOptions> {
 
     // Glowing material
     this.material = new StandardMaterial('beamMat', this.scene);
-    this.material.emissiveColor = Color3.FromHexString(this.options.color);
+    const color = this.options.color || '#ffffff'; // Default to white if not specified
+    this.material.emissiveColor = Color3.FromHexString(color);
     this.material.alpha = this.options.alpha ?? 1.0;
     this.mesh.material = this.material;
 

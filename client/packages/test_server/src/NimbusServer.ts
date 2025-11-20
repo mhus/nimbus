@@ -41,6 +41,7 @@ import { LoopCommand } from './commands/LoopCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 import { NavigateSelectedBlockCommand } from './commands/NavigateSelectedBlockCommand';
 import { ItemCommand } from './commands/ItemCommand';
+import { WorldCommand } from './commands/WorldCommand';
 import { EntityManager } from './entity/EntityManager';
 import { EntitySimulator } from './entity/EntitySimulator';
 import {ServerItem} from "./world/ItemRegistry";
@@ -89,6 +90,10 @@ class NimbusServer {
     this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager, this.blockUpdateBuffer));
     this.commandService.registerHandler(new NavigateSelectedBlockCommand());
     this.commandService.registerHandler(new ItemCommand(this.worldManager, this.itemUpdateBuffer));
+    this.commandService.registerHandler(new WorldCommand(
+      this.worldManager,
+      (worldId, cmd, args) => this.broadcastCommandToClients(worldId, cmd, args)
+    ));
   }
 
   /**
@@ -1314,6 +1319,52 @@ class NimbusServer {
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.generatePlayerPathways');
     }
+  }
+
+  /**
+   * Broadcast a command to all clients in a specific world
+   *
+   * @param worldId World identifier (if null, broadcast to all clients)
+   * @param cmd Command name to execute on clients
+   * @param args Command arguments
+   */
+  broadcastCommandToClients(worldId: string | null, cmd: string, args: any[] = []): void {
+    let sentCount = 0;
+
+    for (const [sessionId, session] of this.sessions) {
+      // Filter by world if worldId specified
+      if (worldId && session.worldId !== worldId) {
+        continue;
+      }
+
+      try {
+        const message = {
+          t: MessageType.SCMD,
+          d: {
+            cmd,
+            args,
+          },
+        };
+
+        session.ws.send(JSON.stringify(message));
+        sentCount++;
+
+        logger.debug('Command sent to client', {
+          sessionId,
+          username: session.username,
+          cmd,
+          args,
+        });
+      } catch (error) {
+        logger.error('Failed to send command to client', { sessionId }, error as Error);
+      }
+    }
+
+    logger.info('Command broadcast complete', {
+      cmd,
+      worldId: worldId || 'all',
+      recipientCount: sentCount,
+    });
   }
 }
 

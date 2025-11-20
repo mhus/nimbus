@@ -307,6 +307,62 @@ export class WorldManager {
     return Array.from(this.worlds.values());
   }
 
+  /**
+   * Update WorldInfo and save to disk
+   *
+   * @param worldId World identifier
+   * @param updates Partial WorldInfo updates
+   * @returns Updated WorldInfo
+   */
+  async updateWorldInfo(worldId: string, updates: Partial<WorldInfo>): Promise<WorldInfo> {
+    const world = this.getWorld(worldId);
+    if (!world) {
+      throw new Error(`World not found: ${worldId}`);
+    }
+
+    // Merge updates
+    world.worldInfo = {
+      ...world.worldInfo,
+      ...updates,
+      worldId, // Ensure worldId stays the same
+    };
+
+    // Save to disk
+    await this.saveWorldInfo(worldId, world.worldInfo);
+
+    logger.info('WorldInfo updated', { worldId, updates });
+    return world.worldInfo;
+  }
+
+  /**
+   * Save WorldInfo to disk
+   *
+   * @param worldId World identifier
+   * @param worldInfo WorldInfo to save
+   */
+  private async saveWorldInfo(worldId: string, worldInfo: WorldInfo): Promise<void> {
+    try {
+      const worldPath = path.join(process.cwd(), 'data', 'worlds', worldId);
+      const infoPath = path.join(worldPath, 'info.json');
+
+      // Ensure directory exists
+      if (!fs.existsSync(worldPath)) {
+        fs.mkdirSync(worldPath, { recursive: true });
+      }
+
+      // Write info.json
+      fs.writeFileSync(infoPath, JSON.stringify(worldInfo, null, 2), 'utf-8');
+
+      logger.info('WorldInfo saved to disk', { worldId, path: infoPath });
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'WorldManager.saveWorldInfo',
+        { worldId }
+      );
+    }
+  }
+
   getBlockTypeRegistry(): BlockTypeRegistry {
     return this.blockTypeRegistry;
   }

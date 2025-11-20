@@ -21,5 +21,36 @@
       "itemType": "sword",
       "name": "Iron Sword"
     }
+  },
+  {
+    "item": {
+      "id": "item_1763653693310_uv2m2pu",
+      "itemType": "sword",
+      "name": "Iron Sword",
+      "modifier": {
+        "onUseEffect": {
+          "script": {
+            "id": "item_effect",
+            "description": "Item use effect",
+            "root": {
+              "kind": "Sequence",
+              "steps": [
+                {
+                  "kind": "Until",
+                  "event": "stop_event",
+                  "step": {
+                    "kind": "Play",
+                    "effectId": "beam:follow",
+                    "source": "$source",
+                    "target": "$target",
+                    "ctx": {}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
   }
 ]

@@ -276,6 +276,7 @@ export class ScrawlService {
 
       // Generate executor ID
       const executorId = `executor_${this.executorIdCounter++}`;
+      executor.setExecutorId(executorId); // Set executor ID for shortcut tracking
       this.runningExecutors.set(executorId, executor);
 
       logger.info(`Starting script execution: ${script.id}`, { executorId });

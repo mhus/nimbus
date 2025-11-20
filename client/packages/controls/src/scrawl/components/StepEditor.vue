@@ -18,6 +18,8 @@ import PlayStepEditor from './editors/PlayStepEditor.vue';
 import SequenceStepEditor from './editors/SequenceStepEditor.vue';
 import ParallelStepEditor from './editors/ParallelStepEditor.vue';
 import RepeatStepEditor from './editors/RepeatStepEditor.vue';
+import WhileStepEditor from './editors/WhileStepEditor.vue';
+import UntilStepEditor from './editors/UntilStepEditor.vue';
 import ForEachStepEditor from './editors/ForEachStepEditor.vue';
 import IfStepEditor from './editors/IfStepEditor.vue';
 import CallStepEditor from './editors/CallStepEditor.vue';
@@ -49,6 +51,10 @@ function getEditorComponent(kind: string) {
       return ParallelStepEditor;
     case 'Repeat':
       return RepeatStepEditor;
+    case 'While':
+      return WhileStepEditor;
+    case 'Until':
+      return UntilStepEditor;
     case 'ForEach':
       return ForEachStepEditor;
     case 'If':

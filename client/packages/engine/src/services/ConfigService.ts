@@ -72,6 +72,7 @@ export class ConfigService {
         throw new Error(`Failed to load config: ${response.statusText}`);
       }
 
+      const oldWorldInfo = this.appContext.worldInfo;
       this.config = await response.json();
 
       // Update AppContext with loaded config
@@ -88,6 +89,27 @@ export class ConfigService {
         hasBackpack: !!this.config.playerBackpack,
         hasSettings: !!this.config.settings,
       });
+
+      // If reloading and status/season changed, recalculate modifiers
+      if (forceReload && oldWorldInfo && this.config.worldInfo) {
+        const statusChanged = oldWorldInfo.status !== this.config.worldInfo.status;
+        const seasonStatusChanged = oldWorldInfo.seasonStatus !== this.config.worldInfo.seasonStatus;
+        const seasonProgressChanged = oldWorldInfo.seasonProgress !== this.config.worldInfo.seasonProgress;
+
+        if (statusChanged || seasonStatusChanged || seasonProgressChanged) {
+          logger.info('WorldInfo status/season changed during reload, recalculating modifiers', {
+            statusChanged,
+            seasonStatusChanged,
+            seasonProgressChanged,
+          });
+
+          const chunkService = this.appContext.services.chunk;
+          if (chunkService) {
+            const result = chunkService.recalculateAndRedrawAll();
+            logger.info('Modifiers recalculated and chunks redrawn', result);
+          }
+        }
+      }
 
       return this.config;
     } catch (error) {
@@ -160,13 +182,41 @@ export class ConfigService {
       throw new Error(`Failed to load WorldInfo: ${response.statusText}`);
     }
 
-    const worldInfo = await response.json();
-    if (this.config) {
-      this.config.worldInfo = worldInfo;
-    }
-    this.appContext.worldInfo = worldInfo;
+    const oldWorldInfo = this.appContext.worldInfo;
+    const newWorldInfo = await response.json();
 
-    return worldInfo;
+    // Check if status or season changed
+    const statusChanged = oldWorldInfo?.status !== newWorldInfo.status;
+    const seasonStatusChanged = oldWorldInfo?.seasonStatus !== newWorldInfo.seasonStatus;
+    const seasonProgressChanged = oldWorldInfo?.seasonProgress !== newWorldInfo.seasonProgress;
+
+    if (this.config) {
+      this.config.worldInfo = newWorldInfo;
+    }
+    this.appContext.worldInfo = newWorldInfo;
+
+    // If status or season changed, recalculate all modifiers
+    if (statusChanged || seasonStatusChanged || seasonProgressChanged) {
+      logger.info('WorldInfo status/season changed, recalculating modifiers', {
+        statusChanged,
+        seasonStatusChanged,
+        seasonProgressChanged,
+        oldStatus: oldWorldInfo?.status,
+        newStatus: newWorldInfo.status,
+        oldSeasonStatus: oldWorldInfo?.seasonStatus,
+        newSeasonStatus: newWorldInfo.seasonStatus,
+        oldSeasonProgress: oldWorldInfo?.seasonProgress,
+        newSeasonProgress: newWorldInfo.seasonProgress,
+      });
+
+      const chunkService = this.appContext.services.chunk;
+      if (chunkService) {
+        const result = chunkService.recalculateAndRedrawAll();
+        logger.info('Modifiers recalculated and chunks redrawn', result);
+      }
+    }
+
+    return newWorldInfo;
   }
 
   /**

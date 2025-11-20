@@ -228,15 +228,20 @@ export class ItemCommand extends CommandHandler {
       // Load ItemType to get modifier data
       const itemType = String(serverItem.item.itemType);
 
-      // Remove item and re-add it with position
+      // Remove item and re-add it with position using original ID
       world.itemRegistry.removeItem(itemId);
       const newItem = world.itemRegistry.addItem(
         serverItem.item.name,
         itemType,
         { x, y, z },
         serverItem.item.parameters?.texturePath as string | undefined,
-        serverItem.item.parameters
+        serverItem.item.parameters,
+        itemId // Preserve original ID
       );
+
+      // Restore full item data (modifier, description)
+      newItem.item.modifier = serverItem.item.modifier;
+      newItem.item.description = serverItem.item.description;
 
       // Queue item update for broadcast
       if (newItem.itemBlockRef) {

@@ -34,6 +34,9 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 const logger = getLogger('ClickInputHandler');
 
 export class ClickInputHandler extends InputHandler {
+  private activeButtonNumber: number | null = null;
+  private activeShortcutKey: string | null = null;
+
   constructor(playerService: PlayerService, appContext: AppContext) {
     super(playerService, appContext);
   }
@@ -90,6 +93,10 @@ export class ClickInputHandler extends InputHandler {
       // Fire shortcut through ShortcutService (centralized)
       if (shortcutService) {
         shortcutService.fireShortcut(buttonNumber, shortcutKey);
+
+        // Track active shortcut for deactivation
+        this.activeButtonNumber = buttonNumber;
+        this.activeShortcutKey = shortcutKey;
       } else {
         logger.warn('ShortcutService not available for click shortcut');
       }
@@ -99,10 +106,67 @@ export class ClickInputHandler extends InputHandler {
   }
 
   /**
-   * Handle click deactivation (no-op for clicks)
+   * Handle click deactivation
+   * Called when mouse button is released
    */
   protected onDeactivate(): void {
-    // Clicks are instantaneous, no deactivation needed
+    logger.info('ClickInputHandler.onDeactivate() called', {
+      activeButtonNumber: this.activeButtonNumber,
+      activeShortcutKey: this.activeShortcutKey
+    });
+
+    if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
+      logger.debug('No active button to deactivate');
+      return;
+    }
+
+    try {
+      const shortcutService = this.appContext?.services.shortcut;
+      if (!shortcutService) {
+        logger.warn('ShortcutService not available for deactivation');
+        return;
+      }
+
+      // Get shortcut data before ending
+      const shortcut = shortcutService.endShortcut(this.activeButtonNumber);
+
+      logger.info('Shortcut ended', {
+        buttonNumber: this.activeButtonNumber,
+        shortcutKey: this.activeShortcutKey,
+        found: !!shortcut
+      });
+
+      // Emit ended event
+      if (shortcut) {
+        const duration = (Date.now() - shortcut.startTime) / 1000;
+
+        this.playerService.emitShortcutEnded({
+          shortcutNr: this.activeButtonNumber,
+          shortcutKey: this.activeShortcutKey!,
+          executorId: shortcut.executorId,
+          duration,
+        });
+
+        logger.info('Click shortcut ended event emitted', {
+          buttonNumber: this.activeButtonNumber,
+          shortcutKey: this.activeShortcutKey,
+          executorId: shortcut.executorId,
+          duration,
+        });
+      } else {
+        logger.warn('No active shortcut found to end', {
+          buttonNumber: this.activeButtonNumber
+        });
+      }
+
+      // Reset tracking
+      this.activeButtonNumber = null;
+      this.activeShortcutKey = null;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ClickInputHandler.onDeactivate', {
+        buttonNumber: this.activeButtonNumber,
+      });
+    }
   }
 
   /**

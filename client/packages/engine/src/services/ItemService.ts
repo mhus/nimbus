@@ -136,8 +136,13 @@ export class ItemService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const item: Item = await response.json();
-      logger.debug('Item loaded from server', { itemId });
+      const serverItem = await response.json();
+
+      // Extract Item from ServerItem
+      // ServerItem has structure: { item: Item, itemBlockRef?: ItemBlockRef }
+      const item: Item = (serverItem as any).item || serverItem;
+
+      logger.debug('Item loaded from server', { itemId, hasItemType: !!item.itemType });
 
       return item;
     } catch (error) {

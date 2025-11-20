@@ -19,11 +19,41 @@
           <span v-if="!isNew" class="label-text-alt text-xs opacity-50">Read-only</span>
         </label>
         <input
-          v-model="editableItemId"
+          v-model="localItem.id"
           type="text"
           class="input input-bordered"
           :disabled="!isNew"
           placeholder="item_id"
+        />
+      </div>
+
+      <!-- Item Type ID -->
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold">Item Type</span>
+        </label>
+        <input
+          v-model="localItem.itemType"
+          type="text"
+          class="input input-bordered"
+          placeholder="e.g., sword, wand, potion"
+          :disabled="!isNew"
+        />
+        <label class="label">
+          <span class="label-text-alt text-xs">{{ isNew ? 'References ItemType definition' : 'Cannot be changed' }}</span>
+        </label>
+      </div>
+
+      <!-- Display Name -->
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold">Display Name</span>
+        </label>
+        <input
+          v-model="localItem.name"
+          type="text"
+          class="input input-bordered"
+          placeholder="Item name (optional, uses ItemType.name if empty)"
         />
       </div>
 
@@ -36,90 +66,71 @@
           v-model="localItem.description"
           class="textarea textarea-bordered"
           rows="2"
-          placeholder="Item description"
+          placeholder="Item description (optional)"
         ></textarea>
       </div>
 
-      <!-- Pose -->
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text font-semibold">Pose</span>
-          <span class="label-text-alt text-xs">Animation when using item</span>
-        </label>
-        <select v-model="localItem.pose" class="select select-bordered">
-          <option value="">None</option>
-          <option value="use">Use</option>
-          <option value="attack">Attack</option>
-          <option value="place">Place</option>
-          <option value="drink">Drink</option>
-          <option value="eat">Eat</option>
-        </select>
-      </div>
-
-      <!-- Wait / Duration -->
-      <div class="grid grid-cols-2 gap-4">
+      <!-- Modifier Overrides -->
+      <div class="divider">Visual Modifier (Overrides)</div>
+      <div class="space-y-4">
         <div class="form-control">
           <label class="label">
-            <span class="label-text font-semibold">Wait (ms)</span>
-            <span class="label-text-alt text-xs">Delay before activation</span>
+            <span class="label-text font-semibold">Texture Override</span>
           </label>
           <input
-            v-model.number="localItem.wait"
-            type="number"
+            v-model="modifierTexture"
+            type="text"
             class="input input-bordered"
-            placeholder="0"
-            min="0"
+            placeholder="Optional texture override (uses ItemType default if empty)"
           />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Scale X</span>
+            </label>
+            <input
+              v-model.number="modifierScaleX"
+              type="number"
+              step="0.1"
+              class="input input-bordered"
+              placeholder="ItemType default"
+            />
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Scale Y</span>
+            </label>
+            <input
+              v-model.number="modifierScaleY"
+              type="number"
+              step="0.1"
+              class="input input-bordered"
+              placeholder="ItemType default"
+            />
+          </div>
         </div>
 
         <div class="form-control">
           <label class="label">
-            <span class="label-text font-semibold">Duration (ms)</span>
-            <span class="label-text-alt text-xs">Pose duration</span>
+            <span class="label-text">Pose Override</span>
           </label>
           <input
-            v-model.number="localItem.duration"
-            type="number"
+            v-model="modifierPose"
+            type="text"
             class="input input-bordered"
-            placeholder="1000"
-            min="0"
+            placeholder="e.g., attack, use, drink"
           />
         </div>
       </div>
 
       <!-- OnUseEffect -->
-      <div class="divider">Scrawl Effect</div>
+      <div class="divider">Scrawl Effect (onUseEffect)</div>
       <ScriptActionEditor
-        v-model="localItem.onUseEffect"
+        v-model="modifierOnUseEffect"
       />
-
-      <!-- Block Data -->
-      <div class="divider">Block Data</div>
-      <div v-if="localItem.block" class="space-y-4">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Block Type ID</span>
-          </label>
-          <input
-            v-model.number="localItem.block.blockTypeId"
-            type="number"
-            class="input input-bordered"
-            placeholder="1000"
-          />
-        </div>
-
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Display Name</span>
-          </label>
-          <input
-            v-model="displayName"
-            type="text"
-            class="input input-bordered"
-            placeholder="Item display name"
-          />
-        </div>
-      </div>
 
       <!-- Actions -->
       <div class="flex gap-2 pt-4">
@@ -128,6 +139,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           Save
+        </button>
+        <button class="btn btn-outline btn-sm" @click="showJsonEditor = true">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Source
         </button>
         <button class="btn btn-ghost" @click="$emit('close')">
           Cancel
@@ -141,14 +158,25 @@
         </button>
       </div>
     </div>
+
+    <!-- JSON Editor Dialog -->
+    <JsonEditorDialog
+      v-model:is-open="showJsonEditor"
+      :model-value="localItem"
+      @apply="handleJsonApply"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import type { ItemData } from '@nimbus/shared';
+import type { Item } from '@nimbus/shared';
 import { ItemApiService } from '../services/itemApiService';
 import ScriptActionEditor from '../components/ScriptActionEditor.vue';
+import JsonEditorDialog from '@components/JsonEditorDialog.vue';
+
+// Alias for backward compatibility
+type ItemData = Item;
 
 const props = defineProps<{
   itemId: string;
@@ -165,15 +193,55 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const localItem = ref<ItemData | null>(null);
 const editableItemId = ref(props.itemId);
+const showJsonEditor = ref(false);
 
-const displayName = computed({
-  get: () => localItem.value?.block.metadata?.displayName || '',
+// Computed properties for modifier fields
+const modifierTexture = computed({
+  get: () => localItem.value?.modifier?.texture || '',
   set: (value: string) => {
     if (localItem.value) {
-      if (!localItem.value.block.metadata) {
-        localItem.value.block.metadata = {};
-      }
-      localItem.value.block.metadata.displayName = value;
+      if (!localItem.value.modifier) localItem.value.modifier = {};
+      localItem.value.modifier.texture = value || undefined;
+    }
+  },
+});
+
+const modifierScaleX = computed({
+  get: () => localItem.value?.modifier?.scaleX,
+  set: (value: number | undefined) => {
+    if (localItem.value) {
+      if (!localItem.value.modifier) localItem.value.modifier = {};
+      localItem.value.modifier.scaleX = value;
+    }
+  },
+});
+
+const modifierScaleY = computed({
+  get: () => localItem.value?.modifier?.scaleY,
+  set: (value: number | undefined) => {
+    if (localItem.value) {
+      if (!localItem.value.modifier) localItem.value.modifier = {};
+      localItem.value.modifier.scaleY = value;
+    }
+  },
+});
+
+const modifierPose = computed({
+  get: () => localItem.value?.modifier?.pose || '',
+  set: (value: string) => {
+    if (localItem.value) {
+      if (!localItem.value.modifier) localItem.value.modifier = {};
+      localItem.value.modifier.pose = value || undefined;
+    }
+  },
+});
+
+const modifierOnUseEffect = computed({
+  get: () => localItem.value?.modifier?.onUseEffect,
+  set: (value: any) => {
+    if (localItem.value) {
+      if (!localItem.value.modifier) localItem.value.modifier = {};
+      localItem.value.modifier.onUseEffect = value;
     }
   },
 });
@@ -182,18 +250,17 @@ async function loadItem() {
   if (props.isNew) {
     // Create new item template
     localItem.value = {
-      block: {
-        position: { x: 0, y: 0, z: 0 },
-        blockTypeId: 1000,
-        status: 0,
-        metadata: {
-          displayName: 'New Item',
-        },
-      },
+      id: 'new_item_' + Date.now(),
+      itemType: '',
+      name: 'New Item',
       description: '',
-      pose: 'use',
-      wait: 0,
-      duration: 1000,
+      modifier: {
+        texture: '',
+        scaleX: 0.5,
+        scaleY: 0.5,
+        pose: 'use',
+      },
+      parameters: {},
     };
     return;
   }
@@ -202,12 +269,18 @@ async function loadItem() {
   error.value = null;
 
   try {
-    const itemData = await ItemApiService.getItem(props.itemId);
-    if (!itemData) {
+    const serverItem = await ItemApiService.getItem(props.itemId);
+    if (!serverItem) {
       error.value = 'Item not found';
       return;
     }
+
+    // Extract Item from ServerItem
+    // ServerItem has structure: { item: Item, itemBlockRef?: ItemBlockRef }
+    const itemData = (serverItem as any).item || serverItem;
     localItem.value = itemData;
+
+    console.log('Item loaded:', itemData);
   } catch (e: any) {
     error.value = e.message || 'Failed to load item';
     console.error('Failed to load item:', e);
@@ -224,9 +297,9 @@ async function save() {
 
   try {
     if (props.isNew) {
-      await ItemApiService.createItem(editableItemId.value, localItem.value);
+      await ItemApiService.createItem(localItem.value);
     } else {
-      await ItemApiService.updateItem(props.itemId, localItem.value);
+      await ItemApiService.updateItem(localItem.value.id, localItem.value);
     }
     emit('save');
   } catch (e: any) {
@@ -254,6 +327,11 @@ async function confirmDelete() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleJsonApply(updatedItem: ItemData) {
+  localItem.value = updatedItem;
+  showJsonEditor.value = false;
 }
 
 watch(() => props.itemId, () => {

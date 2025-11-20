@@ -88,17 +88,11 @@ export function createItemRoutes(worldManager: WorldManager, itemUpdateBuffer: I
    * POST /api/worlds/:worldId/items
    * Create a new item (with or without position)
    *
-   * Body: {
-   *   name: string,
-   *   itemType: string,
-   *   position?: { x: number, y: number, z: number },
-   *   texture?: string,
-   *   parameters?: Record<string, any>
-   * }
+   * Body: Complete Item object
    */
   router.post('/:worldId/items', (req, res) => {
     const worldId = req.params.worldId;
-    const { name, itemType, position, texture, parameters } = req.body;
+    const item: Item = req.body;
 
     const world = worldManager.getWorld(worldId);
     if (!world) {
@@ -106,27 +100,44 @@ export function createItemRoutes(worldManager: WorldManager, itemUpdateBuffer: I
     }
 
     // Validate required fields
-    if (!name || !itemType) {
+    if (!item.name || !item.itemType) {
       return res.status(400).json({ error: 'name and itemType are required' });
     }
 
     try {
-      // Create item with or without position
-      const createdItem = world.itemRegistry.addItem(
-        name,
-        itemType,
-        position,
-        texture,
-        parameters
+      // Create Item directly and save to registry
+      const newItem: Item = {
+        id: item.id || `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        itemType: item.itemType,
+        name: item.name,
+        description: item.description,
+        modifier: item.modifier,
+        parameters: item.parameters,
+      };
+
+      // Add to registry with specified ID
+      const serverItem = world.itemRegistry.addItem(
+        newItem.name,
+        newItem.itemType,
+        undefined, // No position from this API call
+        newItem.modifier?.texture,
+        newItem.parameters,
+        newItem.id // Pass ID to use existing ID
       );
 
-      // Queue item update for broadcast (only if item has position)
-      if (createdItem.itemBlockRef) {
-        itemUpdateBuffer.addUpdate(worldId, createdItem.itemBlockRef);
-      }
+      // Set the full modifier including onUseEffect
+      serverItem.item.modifier = newItem.modifier;
+      serverItem.item.description = newItem.description;
 
-      console.log(`[ItemRoutes] Item created: ${createdItem.item.id}`, { hasPosition: !!position });
-      return res.status(201).json(createdItem);
+      // Save to disk
+      world.itemRegistry.save();
+
+      console.log(`[ItemRoutes] Item created: ${serverItem.item.id}`, {
+        hasModifier: !!newItem.modifier,
+        hasOnUseEffect: !!newItem.modifier?.onUseEffect,
+      });
+
+      return res.status(201).json(serverItem);
     } catch (error) {
       console.error('[ItemRoutes] Failed to create item:', error);
       return res.status(500).json({ error: (error as Error).message });
@@ -137,18 +148,12 @@ export function createItemRoutes(worldManager: WorldManager, itemUpdateBuffer: I
    * PUT /api/worlds/:worldId/item/:itemId
    * Update an existing item
    *
-   * Body: {
-   *   name?: string,
-   *   itemType?: string,
-   *   position?: { x: number, y: number, z: number } | null,
-   *   texture?: string,
-   *   parameters?: Record<string, any>
-   * }
+   * Body: Complete or partial Item object
    */
   router.put('/:worldId/item/:itemId', (req, res) => {
     const worldId = req.params.worldId;
     const itemId = req.params.itemId;
-    const { name, itemType, position, texture, parameters } = req.body;
+    const updates: Partial<Item> = req.body;
 
     const world = worldManager.getWorld(worldId);
     if (!world) {
@@ -163,45 +168,47 @@ export function createItemRoutes(worldManager: WorldManager, itemUpdateBuffer: I
     }
 
     try {
-      const hadPosition = !!existingItem.itemBlockRef;
-      const oldPosition = existingItem.itemBlockRef?.position;
+      // Merge updates with existing item
+      const updatedItem: Item = {
+        ...existingItem.item,
+        ...updates,
+        id: itemId, // Ensure ID stays the same
+      };
 
-      // Remove old item
+      // Merge modifiers carefully (shallow merge)
+      if (updates.modifier) {
+        updatedItem.modifier = {
+          ...existingItem.item.modifier,
+          ...updates.modifier,
+        };
+      }
+
+      // Update the item in registry (replace)
       world.itemRegistry.removeItem(itemId);
 
-      // If item had a position and now doesn't (position = null), send delete marker
-      if (hadPosition && position === null) {
-        const deleteMarker: any = {
-          id: itemId,
-          texture: '__deleted__',
-          position: oldPosition,
-        };
-        itemUpdateBuffer.addUpdate(worldId, deleteMarker);
-      }
-
-      // Merge updates with existing data
-      const updatedName = name ?? existingItem.item.name;
-      const updatedItemType = itemType ?? existingItem.item.itemType;
-      const updatedTexture = texture ?? existingItem.item.parameters?.texture;
-      const updatedParameters = parameters ?? existingItem.item.parameters;
-      const updatedPosition = position === null ? undefined : (position ?? oldPosition);
-
-      // Add updated item
-      const updatedItem = world.itemRegistry.addItem(
-        updatedName,
-        updatedItemType,
-        updatedPosition,
-        updatedTexture,
-        updatedParameters
+      // Re-add with merged data using original ID
+      const serverItem = world.itemRegistry.addItem(
+        updatedItem.name || 'Item',
+        updatedItem.itemType,
+        undefined, // Position handled separately
+        updatedItem.modifier?.texture,
+        updatedItem.parameters,
+        itemId // Use original ID
       );
 
-      // Queue item update for broadcast (only if item has position)
-      if (updatedItem.itemBlockRef) {
-        itemUpdateBuffer.addUpdate(worldId, updatedItem.itemBlockRef);
-      }
+      // Set the full modifier including onUseEffect
+      serverItem.item.modifier = updatedItem.modifier;
+      serverItem.item.description = updatedItem.description;
 
-      console.log(`[ItemRoutes] Item updated: ${itemId}`, { hasPosition: !!updatedPosition });
-      return res.json(updatedItem);
+      // Save to disk
+      world.itemRegistry.save();
+
+      console.log(`[ItemRoutes] Item updated: ${itemId}`, {
+        hasModifier: !!updatedItem.modifier,
+        hasOnUseEffect: !!updatedItem.modifier?.onUseEffect,
+      });
+
+      return res.json(serverItem);
     } catch (error) {
       console.error('[ItemRoutes] Failed to update item:', error);
       return res.status(500).json({ error: (error as Error).message });

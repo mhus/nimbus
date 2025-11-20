@@ -3,8 +3,11 @@
  * Handles all HTTP requests to the item REST API
  */
 
-import type { ItemData } from '@nimbus/shared';
+import type { Item } from '@nimbus/shared';
 import { ApiService } from '../../services/ApiService';
+
+// Alias for backward compatibility
+type ItemData = Item;
 
 export interface ItemSearchResult {
   itemId: string;
@@ -51,21 +54,21 @@ export class ItemApiService {
   /**
    * Create a new item
    */
-  static async createItem(itemId: string, itemData: ItemData): Promise<void> {
+  static async createItem(item: ItemData): Promise<void> {
     const worldId = this.getWorldId();
     const url = `/api/worlds/${worldId}/items`;
 
-    await this.apiService.post(url, { itemId, itemData });
+    await this.apiService.post(url, item);
   }
 
   /**
    * Update an existing item
    */
-  static async updateItem(itemId: string, itemData: ItemData): Promise<void> {
+  static async updateItem(itemId: string, item: ItemData): Promise<void> {
     const worldId = this.getWorldId();
     const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
-    await this.apiService.put(url, itemData);
+    await this.apiService.put(url, item);
   }
 
   /**
