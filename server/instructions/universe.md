@@ -6,12 +6,12 @@
 Universe <- Region <- Solar System <- Planet <- World
 
 Universe -> Universe / Governor Server
-Region -> Ueber meherere Quadranten verteilt (Quadranten sind einheiten mit fester Größe, Regionen können wachsen)
+Region -> Ueber meherere Regionen verteilt (Regionen sind einheiten mit fester Größe, Regionen können wachsen)
 
 Universe -> Universe Server - Only one Universe!
 Galaxy -> Universe Server (Meta Struktur)
 Region -> Region Server
-Quadrant -> Universe Server (Meta Struktur)
+Region -> Universe Server (Meta Struktur)
 Solar System -> Universe Server (Meta Struktur)
 Planet -> Universe Server (Meta Struktur)
 World -> World Server
@@ -19,7 +19,7 @@ World -> World Server
 ggf. Universe Region zum durchqueren des Universums
 
 - Universe managed: User, Echtwährung (Governor), Regionen Registry, Short Links zu Welten
-  - Management von geografischer Lage der Regionen, Quadranten, Systems, Planeten/Ebenen und Welten, EntryPoints
+  - Management von geografischer Lage der Regionen, Regionen, Systems, Planeten/Ebenen und Welten, EntryPoints
   - Welten und EntryPoints werden auf Planeten auf einer Map dargestellt - diese wird von Region an Universe gemeldet
   - Universe verwaltet bekannt Entry Points zu Welten, werden von Region an Universe gemeldet
   - Können auch als Invite gemeldet werden von Owner einer Welt

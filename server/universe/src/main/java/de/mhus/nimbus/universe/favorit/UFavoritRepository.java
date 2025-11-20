@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UFavoritRepository extends MongoRepository<UFavorit, String> {
     List<UFavorit> findByUserId(String userId);
-    Optional<UFavorit> findByUserIdAndQuadrantIdAndSolarSystemIdAndWorldIdAndEntryPointId(
-        String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId);
+    Optional<UFavorit> findByUserIdAndRegionIdAndSolarSystemIdAndWorldIdAndEntryPointId(
+        String userId, String regionId, String solarSystemId, String worldId, String entryPointId);
 }
 

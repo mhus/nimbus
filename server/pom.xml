@@ -19,7 +19,7 @@
         <module>tools</module>
         <module>generated</module>
         <module>shared</module>
-        <module>quadrant</module>
+        <module>region</module>
         <module>universe</module>
         <module>world</module>
     </modules>

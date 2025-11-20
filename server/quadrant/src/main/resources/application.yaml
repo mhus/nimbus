@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: quadrant
-  data:
-    mongodb:
-      uri: mongodb://root:example@localhost:27017/quadrant?authSource=admin
-      database: quadrant

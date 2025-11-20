@@ -16,7 +16,7 @@ public class UFavorit {
     private String userId;
 
     @Indexed
-    private String quadrantId;
+    private String regionId;
 
     private String solarSystemId;
     private String worldId;
@@ -31,9 +31,9 @@ public class UFavorit {
 
     public UFavorit() {}
 
-    public UFavorit(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
+    public UFavorit(String userId, String regionId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
         this.userId = userId;
-        this.quadrantId = quadrantId;
+        this.regionId = regionId;
         this.solarSystemId = solarSystemId;
         this.worldId = worldId;
         this.entryPointId = entryPointId;
@@ -47,8 +47,8 @@ public class UFavorit {
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
 
-    public String getQuadrantId() { return quadrantId; }
-    public void setQuadrantId(String quadrantId) { this.quadrantId = quadrantId; }
+    public String getRegionId() { return regionId; }
+    public void setRegionId(String regionId) { this.regionId = regionId; }
 
     public String getSolarSystemId() { return solarSystemId; }
     public void setSolarSystemId(String solarSystemId) { this.solarSystemId = solarSystemId; }

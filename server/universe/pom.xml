@@ -82,7 +82,7 @@
         </dependency>
         <dependency>
             <groupId>de.mhus.nimbus</groupId>
-            <artifactId>quadrant</artifactId>
+            <artifactId>region</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -17,16 +17,16 @@ public class UFavoritService {
         this.repository = repository;
     }
 
-    public UFavorit create(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
-        validateIds(userId, quadrantId);
-        UFavorit f = new UFavorit(userId, quadrantId, solarSystemId, worldId, entryPointId, title, favorit);
+    public UFavorit create(String userId, String regionId, String solarSystemId, String worldId, String entryPointId, String title, boolean favorit) {
+        validateIds(userId, regionId);
+        UFavorit f = new UFavorit(userId, regionId, solarSystemId, worldId, entryPointId, title, favorit);
         f.setLastAccessAt(Instant.now());
         return repository.save(f);
     }
 
-    public UFavorit createOrUpdateAccess(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
-        validateIds(userId, quadrantId);
-        Optional<UFavorit> existing = repository.findByUserIdAndQuadrantIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, quadrantId, solarSystemId, worldId, entryPointId);
+    public UFavorit createOrUpdateAccess(String userId, String regionId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
+        validateIds(userId, regionId);
+        Optional<UFavorit> existing = repository.findByUserIdAndRegionIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, regionId, solarSystemId, worldId, entryPointId);
         if (existing.isPresent()) {
             UFavorit f = existing.get();
             if (title != null && !title.isBlank()) f.setTitle(title);
@@ -34,15 +34,15 @@ public class UFavoritService {
             f.setLastAccessAt(Instant.now());
             return repository.save(f);
         }
-        return create(userId, quadrantId, solarSystemId, worldId, entryPointId, title, favoritFlag);
+        return create(userId, regionId, solarSystemId, worldId, entryPointId, title, favoritFlag);
     }
 
     public Optional<UFavorit> getById(String id) {
         return repository.findById(id).map(this::touchAccess);
     }
 
-    public Optional<UFavorit> getByComposite(String userId, String quadrantId, String solarSystemId, String worldId, String entryPointId) {
-        return repository.findByUserIdAndQuadrantIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, quadrantId, solarSystemId, worldId, entryPointId)
+    public Optional<UFavorit> getByComposite(String userId, String regionId, String solarSystemId, String worldId, String entryPointId) {
+        return repository.findByUserIdAndRegionIdAndSolarSystemIdAndWorldIdAndEntryPointId(userId, regionId, solarSystemId, worldId, entryPointId)
                 .map(this::touchAccess);
     }
 
@@ -65,9 +65,9 @@ public class UFavoritService {
         repository.deleteById(id);
     }
 
-    public UFavorit update(String id, String quadrantId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
+    public UFavorit update(String id, String regionId, String solarSystemId, String worldId, String entryPointId, String title, boolean favoritFlag) {
         UFavorit f = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Favorit not found: " + id));
-        if (quadrantId != null && !quadrantId.isBlank()) f.setQuadrantId(quadrantId);
+        if (regionId != null && !regionId.isBlank()) f.setRegionId(regionId);
         if (solarSystemId != null) f.setSolarSystemId(solarSystemId);
         if (worldId != null) f.setWorldId(worldId);
         if (entryPointId != null) f.setEntryPointId(entryPointId);
@@ -82,8 +82,8 @@ public class UFavoritService {
         return repository.save(f);
     }
 
-    private void validateIds(String userId, String quadrantId) {
+    private void validateIds(String userId, String regionId) {
         if (userId == null || userId.isBlank()) throw new IllegalArgumentException("userId blank");
-        if (quadrantId == null || quadrantId.isBlank()) throw new IllegalArgumentException("quadrantId blank");
+        if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId blank");
     }
 }

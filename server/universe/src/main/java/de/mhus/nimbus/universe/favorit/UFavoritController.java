@@ -41,7 +41,7 @@ public class UFavoritController {
 
     // DTOs
     public record FavoritRequest(
-            @NotBlank String quadrantId,
+            @NotBlank String regionId,
             String solarSystemId,
             String worldId,
             String entryPointId,
@@ -51,7 +51,7 @@ public class UFavoritController {
 
     public record FavoritResponse(
             String id,
-            String quadrantId,
+            String regionId,
             String solarSystemId,
             String worldId,
             String entryPointId,
@@ -104,7 +104,7 @@ public class UFavoritController {
     @PostMapping
     public ResponseEntity<FavoritResponse> create(@Valid @RequestBody FavoritRequest req) {
         String userId = requireUser().userId();
-        UFavorit f = service.create(userId, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
+        UFavorit f = service.create(userId, req.regionId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
         FavoritResponse resp = toResponse(f);
         return ResponseEntity.created(URI.create(BASE_PATH + "/" + f.getId())).body(resp);
     }
@@ -117,7 +117,7 @@ public class UFavoritController {
         return service.getById(id)
                 .filter(f -> f.getUserId().equals(userId))
                 .map(existing -> {
-                    UFavorit updated = service.update(id, req.quadrantId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
+                    UFavorit updated = service.update(id, req.RegionId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
                     return ResponseEntity.ok(toResponse(updated));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -151,7 +151,7 @@ public class UFavoritController {
     private FavoritResponse toResponse(UFavorit f) {
         return new FavoritResponse(
                 f.getId(),
-                f.getQuadrantId(),
+                f.getRegionId(),
                 f.getSolarSystemId(),
                 f.getWorldId(),
                 f.getEntryPointId(),

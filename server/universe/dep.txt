@@ -100,5 +100,5 @@ de.mhus.nimbus:universe:jar:1.0.0-SNAPSHOT
 |  |        +- io.swagger.core.v3:swagger-models-jakarta:jar:2.2.22:compile
 |  |        \- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.19.2:compile
 |  \- org.webjars:swagger-ui:jar:5.17.14:compile
-+- de.mhus.nimbus:quadrant:jar:1.0.0-SNAPSHOT:compile
++- de.mhus.nimbus:Region:jar:1.0.0-SNAPSHOT:compile
 \- org.projectlombok:lombok:jar:1.18.42:provided

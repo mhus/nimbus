@@ -78,12 +78,12 @@ class FavoritControllerIT {
     @Test
     void full_crud_flow() {
         // Create
-        String createJson = "{\"quadrantId\":\"q1\",\"solarSystemId\":\"s1\",\"worldId\":\"w1\",\"entryPointId\":\"e1\",\"title\":\"Title One\",\"favorit\":true}";
+        String createJson = "{\"regionId\":\"q1\",\"solarSystemId\":\"s1\",\"worldId\":\"w1\",\"entryPointId\":\"e1\",\"title\":\"Title One\",\"favorit\":true}";
         ResponseEntity<Map> createResp = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(createJson, authHeaders()), Map.class);
         assertEquals(201, createResp.getStatusCode().value());
         String id = (String) createResp.getBody().get("id");
         assertNotNull(id);
-        assertEquals("q1", createResp.getBody().get("quadrantId"));
+        assertEquals("q1", createResp.getBody().get("regionId"));
         assertTrue((Boolean) createResp.getBody().get("favorit"));
 
         // List favorites
@@ -97,7 +97,7 @@ class FavoritControllerIT {
         assertEquals(id, getResp.getBody().get("id"));
 
         // Update (change title and favorit flag false)
-        String updateJson = "{\"quadrantId\":\"q1\",\"solarSystemId\":\"s1\",\"worldId\":\"w1\",\"entryPointId\":\"e1\",\"title\":\"Title Updated\",\"favorit\":false}";
+        String updateJson = "{\"regionId\":\"q1\",\"solarSystemId\":\"s1\",\"worldId\":\"w1\",\"entryPointId\":\"e1\",\"title\":\"Title Updated\",\"favorit\":false}";
         ResponseEntity<Map> updateResp = restTemplate.exchange("/api/favorits/" + id, HttpMethod.PUT, new HttpEntity<>(updateJson, authHeaders()), Map.class);
         assertEquals(200, updateResp.getStatusCode().value());
         assertEquals("Title Updated", updateResp.getBody().get("title"));
@@ -123,15 +123,15 @@ class FavoritControllerIT {
     }
 
     @Test
-    void create_invalid_missing_quadrantId_400() {
-        String createJson = "{\"solarSystemId\":\"s1\",\"worldId\":\"w1\",\"entryPointId\":\"e1\",\"title\":\"Title\",\"favorit\":true}"; // missing quadrantId
+    void create_invalid_missing_regionId_400() {
+        String createJson = "{\"solarSystemId\":\"s1\",\"worldId\":\"w1\",\"entryPointId\":\"e1\",\"title\":\"Title\",\"favorit\":true}"; // missing regionId
         ResponseEntity<String> resp = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(createJson, authHeaders()), String.class);
         assertEquals(400, resp.getStatusCode().value());
     }
 
     @Test
     void unauthorized_create_401() {
-        String createJson = "{\"quadrantId\":\"qX\",\"title\":\"NoAuth\",\"favorit\":true}";
+        String createJson = "{\"regionId\":\"qX\",\"title\":\"NoAuth\",\"favorit\":true}";
         HttpHeaders h = new HttpHeaders();
         h.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<String> resp = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(createJson, h), String.class);
@@ -147,12 +147,12 @@ class FavoritControllerIT {
         HttpHeaders betaHeaders = new HttpHeaders();
         betaHeaders.setBearerAuth(betaToken);
         betaHeaders.setContentType(MediaType.APPLICATION_JSON);
-        String createJson = "{\"quadrantId\":\"qBeta\",\"title\":\"Beta Fav\",\"favorit\":true}";
+        String createJson = "{\"regionId\":\"qBeta\",\"title\":\"Beta Fav\",\"favorit\":true}";
         ResponseEntity<Map> betaCreate = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(createJson, betaHeaders), Map.class);
         assertEquals(201, betaCreate.getStatusCode().value());
         String favId = (String) betaCreate.getBody().get("id");
         // Attempt update with alpha's token (should 404)
-        String updateJson = "{\"quadrantId\":\"qBeta\",\"title\":\"Changed\",\"favorit\":false}";
+        String updateJson = "{\"regionId\":\"qBeta\",\"title\":\"Changed\",\"favorit\":false}";
         ResponseEntity<Map> updateResp = restTemplate.exchange("/api/favorits/"+favId, HttpMethod.PUT, new HttpEntity<>(updateJson, authHeaders()), Map.class);
         assertEquals(404, updateResp.getStatusCode().value());
     }
@@ -160,7 +160,7 @@ class FavoritControllerIT {
     @Test
     void toggle_to_false_removes_from_favorites_list() {
         // Create favorite
-        String createJson = "{\"quadrantId\":\"qToggle\",\"title\":\"Toggle Favorite\",\"favorit\":true}";
+        String createJson = "{\"regionId\":\"qToggle\",\"title\":\"Toggle Favorite\",\"favorit\":true}";
         ResponseEntity<Map> createResp = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(createJson, authHeaders()), Map.class);
         assertEquals(201, createResp.getStatusCode().value());
         String id = (String) createResp.getBody().get("id");
@@ -181,14 +181,14 @@ class FavoritControllerIT {
 
     @Test
     void create_blank_title_400() {
-        String json = "{\"quadrantId\":\"qBlank\",\"title\":\"\",\"favorit\":true}";
+        String json = "{\"regionId\":\"qBlank\",\"title\":\"\",\"favorit\":true}";
         ResponseEntity<String> resp = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(json, authHeaders()), String.class);
         assertEquals(400, resp.getStatusCode().value());
     }
 
     @Test
-    void create_blank_quadrantId_400() {
-        String json = "{\"quadrantId\":\"\",\"title\":\"TT\",\"favorit\":true}";
+    void create_blank_regionId_400() {
+        String json = "{\"regionId\":\"\",\"title\":\"TT\",\"favorit\":true}";
         ResponseEntity<String> resp = restTemplate.postForEntity("/api/favorits", new HttpEntity<>(json, authHeaders()), String.class);
         assertEquals(400, resp.getStatusCode().value());
     }
@@ -208,10 +208,10 @@ class FavoritControllerIT {
     @Test
     void listAll_multiple_entries_mixed_favorit() {
         // Create favorite true
-        String json1 = "{\"quadrantId\":\"qA\",\"title\":\"A\",\"favorit\":true}";
+        String json1 = "{\"regionId\":\"qA\",\"title\":\"A\",\"favorit\":true}";
         restTemplate.postForEntity("/api/favorits", new HttpEntity<>(json1, authHeaders()), Map.class);
         // Create favorite false
-        String json2 = "{\"quadrantId\":\"qB\",\"title\":\"B\",\"favorit\":false}";
+        String json2 = "{\"regionId\":\"qB\",\"title\":\"B\",\"favorit\":false}";
         restTemplate.postForEntity("/api/favorits", new HttpEntity<>(json2, authHeaders()), Map.class);
         // Favorites list should have only 1
         ResponseEntity<Map[]> favList = restTemplate.exchange("/api/favorits", HttpMethod.GET, new HttpEntity<>(authHeaders()), Map[].class);

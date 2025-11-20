@@ -69,7 +69,7 @@ class FavoritControllerTest {
         var req = new UFavoritController.FavoritRequest("q2","s2","w2","e2","New", true);
         var resp = controller.update("fav1", req);
         assertEquals(200, resp.getStatusCode().value());
-        assertEquals("q2", resp.getBody().quadrantId());
+        assertEquals("q2", resp.getBody().regionId());
         assertTrue(resp.getBody().favorit());
     }
 

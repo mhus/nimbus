@@ -29,16 +29,16 @@ export enum ModalSizePreset {
   /** Center large (90vw x 90vh) */
   CENTER_LARGE = 'center_large',
 
-  /** Top-left quadrant (50% x 50%) */
+  /** Top-left Region (50% x 50%) */
   LEFT_TOP = 'left_top',
 
-  /** Bottom-left quadrant (50% x 50%) */
+  /** Bottom-left Region (50% x 50%) */
   LEFT_BOTTOM = 'left_bottom',
 
-  /** Top-right quadrant (50% x 50%) */
+  /** Top-right Region (50% x 50%) */
   RIGHT_TOP = 'right_top',
 
-  /** Bottom-right quadrant (50% x 50%) */
+  /** Bottom-right Region (50% x 50%) */
   RIGHT_BOTTOM = 'right_bottom',
 }
 

@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: Region
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/region?authSource=admin
+      database: Region
