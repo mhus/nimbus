@@ -10,7 +10,7 @@
  * Each field (visibility, physics, wind, etc.) is merged independently.
  * If a field is undefined in a higher priority modifier, it falls back to lower priority.
  */
-import { BlockModifier, BlockType, Block } from '@nimbus/shared';
+import {BlockModifier, BlockType, Block, BlockStatus, Vector3} from '@nimbus/shared';
 import type { AppContext } from '../AppContext.js';
 
 /**
@@ -160,8 +160,10 @@ const modifierCache = new Map<string, BlockModifier>();
  * Each field (visibility, physics, etc.) is merged independently.
  * Higher priority modifiers override lower priority only for defined fields.
  *
+ * @param appContext Application context (used for world status override)
  * @param block Block instance
  * @param blockType BlockType definition
+ * @param overwriteStatus Optional explicit status override
  * @returns Merged BlockModifier
  */
 export function mergeBlockModifier(
@@ -171,7 +173,7 @@ export function mergeBlockModifier(
   overwriteStatus?: number
 ): BlockModifier {
   // Status is determined from BlockType.initialStatus (default: 0)
-  const status = mergeStatus(appContext, block, blockType, overwriteStatus);
+  const status = calculateStatus(appContext, block, blockType, overwriteStatus);
 
   // Check if block has instance-specific modifiers
   const hasInstanceModifiers = block.modifiers && Object.keys(block.modifiers).length > 0;
@@ -229,28 +231,90 @@ function performModifierMerge(
   return result;
 }
 
-export function mergeStatus(
+/**
+ * Calculate the effective status for a block.
+ *
+ * Resolution order:
+ * 1. overwriteStatus (if provided)
+ * 2. block.status (if defined)
+ * 3. blockType.initialStatus (fallback to 0)
+ * 4. World status override: applies only if resolved status is 0 and a modifier
+ *    for worldStatus exists on block instance or block type.
+ *
+ * @param appContext Application context containing worldInfo
+ * @param block Block instance
+ * @param blockType BlockType definition
+ * @param overwriteStatus Optional explicit status override
+ * @returns Final resolved status number
+ */
+export function calculateStatus(
   appContext: AppContext,
   block: Block,
   blockType: BlockType,
   overwriteStatus?: number
 ): number {
+  // TODO: seasonalStatus if seasonal status is defined in block modifier
 
-    // TODO worldStatus
-    // seasonalStatus if seasonal status is defined in block modifier
-
+  let newStatus: number;
   // Use overwriteStatus if provided
   if (overwriteStatus !== undefined) {
-    return overwriteStatus;
+    newStatus = overwriteStatus;
+  } else if (block.status !== undefined) {
+    // Use block's own status if defined
+    newStatus = block.status;
+  } else {
+    // Fallback to BlockType's initialStatus or default to 0
+    newStatus = blockType.initialStatus ?? 0;
   }
 
-  // Use block's own status if defined
-  if (block.status !== undefined) {
-    return block.status;
+  // World status override: if current status is 0 (default) and world status is non-zero
+  // and a modifier exists for that world status either on block instance or block type.
+  const worldStatus = appContext.worldInfo?.status;
+  if (
+    newStatus === 0 &&
+    worldStatus !== undefined &&
+    worldStatus !== 0 &&
+    (block.modifiers?.[worldStatus] !== undefined || blockType.modifiers[worldStatus] !== undefined)
+  ) {
+    return worldStatus; // world status takes precedence
   }
 
-  // Fallback to BlockType's initialStatus or default to 0
-  return blockType.initialStatus ?? 0;
+  if (newStatus >= BlockStatus.WINTER && newStatus <= BlockStatus.AUTUMN_WINTER) {
+    const seasonalStatus = appContext.worldInfo?.seasonStatus;
+    const seasonalProgress = appContext.worldInfo?.seasonProgress;
+
+    if (seasonalStatus !== undefined && seasonalProgress !== undefined) {
+      // Map seasonalStatus and seasonalProgress to specific seasonal BlockStatus
+      switch (seasonalStatus) {
+        case 'winter':
+          newStatus = BlockStatus.WINTER;
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.WINTER_SPRING : BlockStatus.WINTER;
+          break;
+        case 'spring':
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.WINTER_SPRING : BlockStatus.SPRING;
+          break;
+        case 'summer':
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SPRING_SUMMER : BlockStatus.SUMMER;
+          break;
+        case 'autumn':
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SUMMER_AUTUMN : BlockStatus.AUTUMN;
+          break;
+        default:
+          newStatus = BlockStatus.WINTER; // Fallback to winter
+      }
+    }
+
+  }
+
+  return newStatus;
+}
+
+export function switchSeason(
+    progress: number,
+    position: Vector3
+): boolean {
+
+  return true;
 }
 
 /**

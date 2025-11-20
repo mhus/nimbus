@@ -1,20 +1,23 @@
 {
+  "worldId": "main",
   "name": "Main World",
   "description": "Default main world for testing and development",
   "chunkSize": 32,
-  "dimensions": {
-    "minX": -1028,
-    "maxX": 1028,
-    "minY": -64,
-    "maxY": 192,
-    "minZ": -1028,
-    "maxZ": 1028
-  },
-  "seaLevel": 0,
-  "groundLevel": 64,
   "status": 0,
+  "assetPath": "/api/worlds/main/assets",
   "editorUrl": "http://localhost:3002/",
+  "start": {
+    "x": -1028,
+    "y": -64,
+    "z": -1028
+  },
+  "stop": {
+    "x": 1028,
+    "y": 192,
+    "z": 1028
+  },
   "createdAt": "2025-10-30T00:00:00.000Z",
+  "updatedAt": "2025-11-20T22:13:42.502Z",
   "owner": {
     "user": "admin",
     "displayName": "Administrator",

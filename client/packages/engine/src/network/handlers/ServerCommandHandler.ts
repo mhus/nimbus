@@ -60,8 +60,10 @@ export class ServerCommandHandler implements MessageHandler {
 
       // For oneway commands, no request ID is required
       if (!oneway && !message.i) {
-        logger.error('Received scmd without request ID (i) for non-oneway command');
-        return;
+        message.i = '?';
+// TODO warum !!!!
+//        logger.error('Received scmd without request ID (i) for non-oneway command');
+//        return;
       }
 
       logger.debug('Received server command', {
