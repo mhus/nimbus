@@ -170,9 +170,41 @@ export class ClickInputHandler extends InputHandler {
   }
 
   /**
-   * Update handler state (no-op for clicks)
+   * Update handler state
+   * Updates target position for continuous effects (like beam:follow)
    */
   protected onUpdate(deltaTime: number, value: number): void {
-    // Clicks are instantaneous, no continuous update needed
+    if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
+      return;
+    }
+
+    const shortcutService = this.appContext?.services.shortcut;
+    const selectService = this.appContext?.services.select;
+    if (!shortcutService || !selectService) {
+      return;
+    }
+
+    // Get current player position
+    const playerPos = this.playerService.getPosition();
+
+    // Get current target (block or entity)
+    const targetEntity = selectService.getCurrentSelectedEntity();
+    const targetBlock = selectService.getCurrentSelectedBlock();
+
+    let targetPos: any = undefined;
+    if (targetEntity) {
+      targetPos = targetEntity.position;
+    } else if (targetBlock) {
+      targetPos = {
+        x: targetBlock.block.position.x + 0.5,
+        y: targetBlock.block.position.y + 0.5,
+        z: targetBlock.block.position.z + 0.5,
+      };
+    }
+
+    // Update shortcut position data
+    if (targetPos) {
+      shortcutService.updateShortcut(this.activeButtonNumber, playerPos, targetPos);
+    }
   }
 }

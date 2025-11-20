@@ -49,6 +49,24 @@
       />
     </div>
 
+    <!-- Receive Player Direction -->
+    <div class="form-control">
+      <label class="label cursor-pointer py-1">
+        <span class="label-text text-xs">Receive Player Direction</span>
+        <input
+          :checked="modelValue.receivePlayerDirection || false"
+          type="checkbox"
+          class="checkbox checkbox-sm"
+          @change="updateReceivePlayerDirection($event)"
+        />
+      </label>
+      <label class="label py-0">
+        <span class="label-text-alt text-xs opacity-60">
+          Effect receives continuous target updates (for beam:follow, etc.)
+        </span>
+      </label>
+    </div>
+
     <!-- Context -->
     <div class="form-control">
       <label class="label py-1">
@@ -131,6 +149,18 @@ function updateTarget(event: Event) {
     updated.target = value;
   } else {
     delete updated.target;
+  }
+  emit('update:modelValue', updated);
+}
+
+function updateReceivePlayerDirection(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const checked = target.checked;
+  const updated: any = { ...props.modelValue };
+  if (checked) {
+    updated.receivePlayerDirection = true;
+  } else {
+    delete updated.receivePlayerDirection;
   }
   emit('update:modelValue', updated);
 }

@@ -25,6 +25,8 @@ export class ScrawlExecutor {
   private executorId: string = `exec_${Date.now()}_${Math.random()}`; // Default, will be set by setExecutorId()
   private taskCompletionPromises = new Map<string, Promise<void>>();
   private shortcutEndListener: ((data: any) => void) | null = null;
+  private playerDirectionListener: ((data: any) => void) | null = null;
+  private playerDirectionBroadcastActive: boolean = false;
 
   // For multiplayer synchronization
   private effectId?: string; // Unique effect ID for this execution
@@ -47,6 +49,9 @@ export class ScrawlExecutor {
   /**
    * Setup listener for shortcut ended events
    * When shortcut ends, emit 'stop_event' to terminate Until/While loops
+   *
+   * Note: Position updates are handled by InputService.updateActiveExecutors()
+   * which calls updateParameter() automatically each frame.
    */
   private setupShortcutEndListener(): void {
     const playerService = this.appContext.services.player;
@@ -78,6 +83,56 @@ export class ScrawlExecutor {
         playerService.off('shortcut:ended', this.shortcutEndListener);
       }
       this.shortcutEndListener = null;
+    }
+  }
+
+  /**
+   * Setup player direction listener for effects that need continuous target updates
+   */
+  private setupPlayerDirectionListener(): void {
+    const playerService = this.appContext.services.player;
+    if (!playerService) return;
+
+    this.playerDirectionListener = (data: any) => {
+      // Update target position in context
+      const ctx = this.createContext();
+      if (ctx.vars && data.targetPos) {
+        ctx.vars.target = {
+          position: data.targetPos,
+        };
+
+        // Update all running effects
+        for (const [effectKey, effectHandler] of this.runningEffects) {
+          if (effectHandler.onParameterChanged) {
+            effectHandler.onParameterChanged('target', ctx.vars.target, ctx);
+          }
+        }
+      }
+    };
+
+    playerService.on('player:direction', this.playerDirectionListener);
+    logger.debug('Player direction listener setup');
+  }
+
+  /**
+   * Cleanup player direction listener
+   */
+  private cleanupPlayerDirectionListener(): void {
+    if (this.playerDirectionListener) {
+      const playerService = this.appContext.services.player;
+      if (playerService) {
+        playerService.off('player:direction', this.playerDirectionListener);
+      }
+      this.playerDirectionListener = null;
+    }
+
+    // Disable broadcast if we enabled it
+    if (this.playerDirectionBroadcastActive) {
+      const physicsService = this.appContext.services.physics;
+      if (physicsService) {
+        physicsService.setPlayerDirectionBroadcast(false);
+      }
+      this.playerDirectionBroadcastActive = false;
     }
   }
 
@@ -129,8 +184,9 @@ export class ScrawlExecutor {
         { scriptId: this.script.id }
       );
     } finally {
-      // Cleanup listener when script ends
+      // Cleanup listeners when script ends
       this.cleanupShortcutEndListener();
+      this.cleanupPlayerDirectionListener();
     }
   }
 
@@ -217,7 +273,37 @@ export class ScrawlExecutor {
       },
     };
 
-    await this.effectFactory.play(step.effectId, step.ctx || {}, effectCtx);
+    // Check if effect needs player direction updates
+    const needsPlayerDirection = step.receivePlayerDirection === true;
+
+    if (needsPlayerDirection) {
+      // Setup player direction listener
+      if (!this.playerDirectionListener) {
+        this.setupPlayerDirectionListener();
+      }
+
+      // Enable broadcast in PhysicsService
+      const physicsService = this.appContext.services.physics;
+      if (physicsService) {
+        physicsService.setPlayerDirectionBroadcast(true);
+        this.playerDirectionBroadcastActive = true;
+        logger.debug('Player direction broadcast enabled for effect', {
+          effectId: step.effectId,
+        });
+      }
+    }
+
+    try {
+      await this.effectFactory.play(step.effectId, step.ctx || {}, effectCtx);
+    } finally {
+      // Disable broadcast after effect ends (if we enabled it)
+      if (needsPlayerDirection && this.playerDirectionBroadcastActive) {
+        this.cleanupPlayerDirectionListener();
+        logger.debug('Player direction broadcast disabled after effect', {
+          effectId: step.effectId,
+        });
+      }
+    }
   }
 
   private async execStepSequence(ctx: ScrawlExecContext, step: any): Promise<void> {
@@ -589,6 +675,7 @@ export class ScrawlExecutor {
   cancel(): void {
     this.cancelled = true;
     this.cleanupShortcutEndListener();
+    this.cleanupPlayerDirectionListener();
     logger.debug(`Script cancelled: ${this.script.id}`);
   }
 
@@ -669,9 +756,27 @@ export class ScrawlExecutor {
     // Update context variable
     const ctx = this.createContext();
     ctx.vars = ctx.vars || {};
-    ctx.vars[paramName] = value;
 
-    logger.debug('Parameter updated', { paramName, value, executorId: this.executorId });
+    // Map InputService parameter names to script variable names
+    if (paramName === 'targetPos') {
+      // InputService sends 'targetPos' as Vector3
+      // Convert to 'target' with position property
+      ctx.vars.target = {
+        position: value,
+      };
+      logger.debug('Target position updated', { position: value, executorId: this.executorId });
+    } else if (paramName === 'playerPos') {
+      // InputService sends 'playerPos' as Vector3
+      // Convert to 'source' with position property
+      ctx.vars.source = {
+        position: value,
+      };
+      logger.debug('Source position updated', { position: value, executorId: this.executorId });
+    } else {
+      // Other parameters stored as-is
+      ctx.vars[paramName] = value;
+      logger.debug('Parameter updated', { paramName, value, executorId: this.executorId });
+    }
 
     // Notify all running effects that implement onParameterChanged
     for (const [effectId, effect] of this.runningEffects) {
@@ -729,6 +834,27 @@ export class ScrawlExecutor {
   private async execStepWhile(ctx: ScrawlExecContext, step: any): Promise<void> {
     const timeout = step.timeout ?? 60;
     const startTime = performance.now() / 1000;
+
+    // Check if inner step needs player direction (only for Play steps)
+    const needsPlayerDirection = step.step.kind === 'Play' && step.step.receivePlayerDirection === true;
+
+    if (needsPlayerDirection) {
+      // Setup player direction listener
+      if (!this.playerDirectionListener) {
+        this.setupPlayerDirectionListener();
+      }
+
+      // Enable broadcast in PhysicsService
+      const physicsService = this.appContext.services.physics;
+      if (physicsService) {
+        physicsService.setPlayerDirectionBroadcast(true);
+        this.playerDirectionBroadcastActive = true;
+        logger.info('Player direction broadcast ENABLED for While effect', {
+          effectId: step.step.effectId,
+          executorId: this.executorId,
+        });
+      }
+    }
 
     // Get task completion promise
     const taskPromise = this.taskCompletionPromises.get(step.taskId);
@@ -791,6 +917,12 @@ export class ScrawlExecutor {
       if (effectHandler) {
         this.stopAndUntrackEffect(effectHandler);
       }
+
+      // Disable player direction broadcast if we enabled it
+      if (needsPlayerDirection && this.playerDirectionBroadcastActive) {
+        this.cleanupPlayerDirectionListener();
+        logger.info('Player direction broadcast DISABLED after While loop');
+      }
     }
   }
 
@@ -801,6 +933,27 @@ export class ScrawlExecutor {
   private async execStepUntil(ctx: ScrawlExecContext, step: any): Promise<void> {
     const timeout = step.timeout ?? 60;
     const startTime = performance.now() / 1000;
+
+    // Check if inner step needs player direction (only for Play steps)
+    const needsPlayerDirection = step.step.kind === 'Play' && step.step.receivePlayerDirection === true;
+
+    if (needsPlayerDirection) {
+      // Setup player direction listener
+      if (!this.playerDirectionListener) {
+        this.setupPlayerDirectionListener();
+      }
+
+      // Enable broadcast in PhysicsService
+      const physicsService = this.appContext.services.physics;
+      if (physicsService) {
+        physicsService.setPlayerDirectionBroadcast(true);
+        this.playerDirectionBroadcastActive = true;
+        logger.info('Player direction broadcast ENABLED for Until effect', {
+          effectId: step.step.effectId,
+          executorId: this.executorId,
+        });
+      }
+    }
 
     // Set up event listener
     let eventReceived = false;
@@ -857,6 +1010,12 @@ export class ScrawlExecutor {
       // Cleanup steady effect
       if (effectHandler) {
         this.stopAndUntrackEffect(effectHandler);
+      }
+
+      // Disable player direction broadcast if we enabled it
+      if (needsPlayerDirection && this.playerDirectionBroadcastActive) {
+        this.cleanupPlayerDirectionListener();
+        logger.info('Player direction broadcast DISABLED after Until loop');
       }
     }
   }

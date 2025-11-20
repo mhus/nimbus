@@ -43,6 +43,7 @@
                     "effectId": "beam:follow",
                     "source": "$source",
                     "target": "$target",
+                    "receivePlayerDirection": true,
                     "ctx": {}
                   }
                 }

@@ -10,6 +10,8 @@ export interface StepPlay {
   effectId: string;
   /** Context data passed to the effect (including source, target, etc.) */
   ctx?: Record<string, any>;
+  /** Whether this effect should receive player direction updates (for effects like beam:follow) */
+  receivePlayerDirection?: boolean;
 }
 
 /**
