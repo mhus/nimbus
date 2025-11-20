@@ -585,6 +585,19 @@ GET /api/worlds/{worldId}/item/{itemId}
 
 Gibt die Item definition zurueck.
 
+## Item Erstellen
+
+POST /api/worlds/{worldId}/item
+
+## Item Aktualisieren
+
+PUT /api/worlds/{worldId}/item/{itemId}
+
+## Item Loeschen
+
+DELETE /api/worlds/{worldId}/item/{itemId}
+
+
 # Speach Streaming
 
 Erstelle einen API endpoint fuer speach streaming.
@@ -599,4 +612,49 @@ Parameter:
 Response:
 - Streamt die audio datei z.b. eine ansage oder aehnliches.
 
+# Item Type
+
+## Item Types Suchen
+
+Gibt bis 100 ItemTypes zurueck die dem Suchbegriff entsprechen:
+
+GET /api/worlds/{worldId}/itemtypes
+
+Response:
+
+```json
+{
+  "itemTypes": [
+    {
+      "id": "itemtype123",
+      "name": "Health Potion",
+    },
+    ...
+  ]
+}
+```
+
+Sucht in itemTypes nach dem Suchbegriff:
+
+GET /api/worlds/{worldId}/itemtypes?query={searchTerm}
+
+## Item Type Abrufen
+
+Gibt die ItemType definition zurueck:
+
+GET /api/worlds/{worldId}/itemtypes/{itemTypeId}
+
+Response: ItemType Objekt
+
+## ItemType Erstellen
+
+POST /api/worlds/{worldId}/itemtypes
+
+## ItemType Aktualisieren
+
+PUT /api/worlds/{worldId}/itemtypes/{itemTypeId}
+
+## ItemType Loeschen
+
+DELETE /api/worlds/{worldId}/itemtypes/{itemTypeId}
 
