@@ -1,59 +1,15 @@
 package de.mhus.nimbus.generated.types;
 
-import java.util.List;
-import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * Generated from ChunkData.ts
- * DO NOT EDIT MANUALLY - This file is auto-generated
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ChunkData {
-
-    /**
-     * cx
-     */
-    private double cx;
-
-    /**
-     * cz
-     */
-    private double cz;
-
-    /**
-     * size
-     */
-    private double size;
-
-    /**
-     * blocks
-     */
-    private java.util.List<Block> blocks;
-
-    /**
-     * i (optional)
-     */
-    private java.util.List<Block> i;
-
-    /**
-     * heightData (optional)
-     */
-    private java.util.List<java.util.List<Double>> heightData;
-
-    /**
-     * status (optional)
-     */
-    private java.util.List<java.util.List<Double>> status;
-
-    /**
-     * backdrop (optional)
-     */
-    private java.util.Map<String, Object> backdrop;
+public interface ChunkData {
+    double getCx();
+    double getCz();
+    double getSize();
+    java.util.List<Block> getBlocks();
+    java.util.List<Block> getI();
+    java.util.List<HeightData> getHeightData();
+    java.util.List<Status> getStatus();
+    java.util.List<Backdrop> getN();
+    java.util.List<Backdrop> getE();
+    java.util.List<Backdrop> getS();
+    java.util.List<Backdrop> getW();
 }

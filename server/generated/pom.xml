@@ -51,27 +51,35 @@
                 </executions>
             </plugin>
 
-            <!-- Generate Java classes from TypeScript definitions -->
-            <!--
+            <!-- Generate Java sources from TypeScript using in-repo plugin -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
+                <groupId>de.mhus.nimbus</groupId>
+                <artifactId>generate-ts-to-java-maven-plugin</artifactId>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
-                        <id>generate-java-from-typescript</id>
+                        <id>generate-ts-to-java</id>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>exec</goal>
+                            <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <executable>${project.basedir}/../../scripts/generate-java-from-typescript.sh</executable>
-                            <workingDirectory>${project.basedir}/../..</workingDirectory>
+                            <!-- Configure where to read TS and where to write generated Java -->
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src/types</sourceDir>
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src/configs</sourceDir>
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src/network/messages</sourceDir>
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src/rest</sourceDir>
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src/scrawl</sourceDir>
+                            </sourceDirs>
+                            <outputDir>${project.basedir}/src/main/java</outputDir>
+                            <modelFile>${project.basedir}/model.json</modelFile>
+                            <configFile>${project.basedir}/ts-to-java.yaml</configFile>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
+
         </plugins>
     </build>
 

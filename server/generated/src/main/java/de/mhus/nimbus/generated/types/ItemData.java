@@ -1,48 +1,10 @@
 package de.mhus.nimbus.generated.types;
 
-import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * Generated from ItemData.ts
- * DO NOT EDIT MANUALLY - This file is auto-generated
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ItemData {
-
-    /**
-     * block
-     */
-    private Block block;
-
-    /**
-     * description (optional)
-     */
-    private String description;
-
-    /**
-     * pose (optional)
-     */
-    private String pose;
-
-    /**
-     * wait (optional)
-     */
-    private double wait;
-
-    /**
-     * duration (optional)
-     */
-    private double duration;
-
-    /**
-     * parameters (optional)
-     */
-    private java.util.Map<String, Object> parameters;
+public interface ItemData {
+    Block getBlock();
+    String getDescription();
+    String getPose();
+    java.lang.Double getWait();
+    java.lang.Double getDuration();
+    java.util.Map<String, Object> getParameters();
 }

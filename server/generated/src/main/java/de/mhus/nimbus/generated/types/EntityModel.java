@@ -1,84 +1,17 @@
 package de.mhus.nimbus.generated.types;
 
-import java.util.List;
-import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * Generated from EntityData.ts
- * DO NOT EDIT MANUALLY - This file is auto-generated
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class EntityModel {
-
-    /**
-     * id
-     */
-    private String id;
-
-    /**
-     * type
-     */
-    private String type;
-
-    /**
-     * modelPath
-     */
-    private String modelPath;
-
-    /**
-     * positionOffset
-     */
-    private Vector3 positionOffset;
-
-    /**
-     * rotationOffset
-     */
-    private Vector3 rotationOffset;
-
-    /**
-     * scale
-     */
-    private Vector3 scale;
-
-    /**
-     * maxPitch (optional)
-     */
-    private double maxPitch;
-
-    /**
-     * poseMapping
-     */
-    private java.util.Map<ENTITY_POSES, PoseAnimation> poseMapping;
-
-    /**
-     * poseType
-     */
-    private String poseType;
-
-    /**
-     * modelModifierMapping
-     */
-    private java.util.Map<String, String> modelModifierMapping;
-
-    /**
-     * dimensions
-     */
-    private EntityDimensions dimensions;
-
-    /**
-     * physicsProperties (optional)
-     */
-    private EntityPhysicsProperties physicsProperties;
-
-    /**
-     * audio (optional)
-     */
-    private java.util.List<AudioDefinition> audio;
+public interface EntityModel {
+    String getId();
+    String getType();
+    String getModelPath();
+    Vector3 getPositionOffset();
+    Vector3 getRotationOffset();
+    Vector3 getScale();
+    java.lang.Double getMaxPitch();
+    java.util.Map<ENTITY_POSES, PoseAnimation> getPoseMapping();
+    PoseType getPoseType();
+    java.util.Map<String, String> getModelModifierMapping();
+    EntityDimensions getDimensions();
+    EntityPhysicsProperties getPhysicsProperties();
+    java.util.List<AudioDefinition> getAudio();
 }

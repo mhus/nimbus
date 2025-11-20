@@ -1,59 +1,23 @@
 package de.mhus.nimbus.generated.types;
 
-import java.util.List;
-import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * Generated from AnimationData.ts
- * DO NOT EDIT MANUALLY - This file is auto-generated
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class AnimationEffect {
-
-    /**
-     * id (optional)
-     */
-    private String id;
-
-    /**
-     * type
-     */
-    private AnimationEffectType type;
-
-    /**
-     * positions (optional)
-     */
-    private java.util.List<String> positions;
-
-    /**
-     * params
-     */
-    private java.util.Map<String, Object> params;
-
-    /**
-     * startTime
-     */
-    private double startTime;
-
-    /**
-     * duration (optional)
-     */
-    private double duration;
-
-    /**
-     * endTime (optional)
-     */
-    private double endTime;
-
-    /**
-     * blocking (optional)
-     */
-    private boolean blocking;
+public interface AnimationEffect {
+    String getId();
+    AnimationEffectType getType();
+    java.util.List<PositionRef> getPositions();
+    Object getFrom();
+    Object getTo();
+    EasingType getEasing();
+    java.lang.Double getSpeed();
+    String getProjectileModel();
+    String getTrajectory();
+    java.lang.Double getRadius();
+    java.lang.Double getExplosionIntensity();
+    String getColor();
+    java.lang.Double getLightIntensity();
+    String getSoundPath();
+    java.lang.Double getVolume();
+    double getStartTime();
+    java.lang.Double getDuration();
+    java.lang.Double getEndTime();
+    java.lang.Boolean getBlocking();
 }

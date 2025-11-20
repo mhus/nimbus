@@ -1,37 +1,8 @@
 package de.mhus.nimbus.generated.rest;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * Generated from WorldDTO.ts
- * DO NOT EDIT MANUALLY - This file is auto-generated
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class WorldSettingsDTO {
-
-    /**
-     * maxPlayers
-     */
-    private double maxPlayers;
-
-    /**
-     * allowGuests
-     */
-    private boolean allowGuests;
-
-    /**
-     * pvpEnabled
-     */
-    private boolean pvpEnabled;
-
-    /**
-     * pingInterval
-     */
-    private double pingInterval;
+public interface WorldSettingsDTO {
+    double getMaxPlayers();
+    boolean getAllowGuests();
+    boolean getPvpEnabled();
+    double getPingInterval();
 }
