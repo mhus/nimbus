@@ -190,7 +190,7 @@ export class ItemCommand extends CommandHandler {
       // Create a delete marker item with special itemType
       const deleteItem: any = {
         id: item.item.id,
-        itemType: '__deleted__', // Special marker for deletion
+        texture: '__deleted__', // Special marker for deletion
         position: { x, y, z },
       };
       this.itemUpdateBuffer.addUpdate(worldId, deleteItem);

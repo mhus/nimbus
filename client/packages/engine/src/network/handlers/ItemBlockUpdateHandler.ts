@@ -16,7 +16,7 @@ import {
   BaseMessage,
   MessageType,
   type Item,
-  getLogger,
+  getLogger, ItemBlockRef,
 } from '@nimbus/shared';
 import { MessageHandler } from '../MessageHandler';
 import type { ChunkService } from '../../services/ChunkService';
@@ -26,17 +26,17 @@ const logger = getLogger('ItemBlockUpdateHandler');
 /**
  * Handles ITEM_BLOCK_UPDATE messages from server (b.iu)
  */
-export class ItemBlockUpdateHandler extends MessageHandler<Item[]> {
+export class ItemBlockUpdateHandler extends MessageHandler<ItemBlockRef[]> {
   readonly messageType = MessageType.ITEM_BLOCK_UPDATE;
 
   constructor(private chunkService: ChunkService) {
     super();
   }
 
-  async handle(message: BaseMessage<Item[]>): Promise<void> {
+  async handle(message: BaseMessage<ItemBlockRef[]>): Promise<void> {
     const items = message.d;
 
-    logger.info('🔵 ITEM UPDATE MESSAGE RECEIVED (b.iu)', {
+    logger.debug('🔵 ITEM UPDATE MESSAGE RECEIVED (b.iu)', {
       messageType: message.t,
       itemCount: items?.length || 0,
       rawMessage: message,
@@ -51,10 +51,8 @@ export class ItemBlockUpdateHandler extends MessageHandler<Item[]> {
       count: items.length,
       items: items.map(item => ({
         position: item.position,
-        itemType: item.itemType,
         itemId: item.id,
-        displayName: item.name,
-        isDelete: item.itemType === '__deleted__',
+        isDelete: item.texture === '__deleted__',
       })),
     });
 

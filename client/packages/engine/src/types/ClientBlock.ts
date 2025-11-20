@@ -10,7 +10,7 @@
  * - ClientBlock wraps Block with resolved references and rendering caches
  */
 
-import type { Block, BlockType, BlockModifier, Item } from '@nimbus/shared';
+import type {Block, BlockType, BlockModifier, Item, ItemBlockRef} from '@nimbus/shared';
 import type { ClientBlockType } from './ClientBlockType';
 import type { Mesh } from '@babylonjs/core';
 
@@ -94,5 +94,5 @@ export interface ClientBlock {
    *
    * The actionScript is in item.modifier.actionScript (ScriptActionDefinition)
    */
-  item?: Item;
+  itemBlockRef?: ItemBlockRef;
 }

@@ -26,6 +26,7 @@ export function itemToBlock(item: ItemBlockRef): Block {
     modifiers: {
         0: {
             visibility: {
+                shape: 28, // Shape.ITEM (Y-axis billboard)
                 textures: {
                     0: item.texture
                 },
@@ -39,3 +40,37 @@ export function itemToBlock(item: ItemBlockRef): Block {
     },
   };
 }
+
+// Deprecated implementation:
+// /**
+//  * Converts ItemModifier to BlockModifier for rendering.
+//  *
+//  * ItemRenderer expects BlockModifier structure with visibility properties.
+//  * This method creates a minimal BlockModifier from the simplified ItemModifier.
+//  *
+//  * @param itemModifier Simplified item modifier (storage format)
+//  * @returns BlockModifier with visibility properties (rendering format)
+//  */
+// private convertItemModifierToBlockModifier(itemModifier: any): any {
+//     return {
+//         visibility: {
+//             shape: 28, // Shape.ITEM (Y-axis billboard)
+//
+//             // Convert simple texture string to textures map
+//             textures: {
+//                 0: itemModifier.texture, // TextureKey.ALL
+//             },
+//
+//             // Copy scaling properties
+//             scalingX: itemModifier.scaleX ?? 0.5,
+//             scalingY: itemModifier.scaleY ?? 0.5,
+//
+//             // Copy offset (pivot point adjustment)
+//             offsets: itemModifier.offset || [0, 0, 0],
+//
+//             // Copy optional color tint
+//             color: itemModifier.color,
+//         },
+//         // Items don't need: wind, physics, illumination, effects, audio
+//     };
+// }

@@ -20,7 +20,7 @@ import {
   Vector3,
   AudioType,
   itemToBlock,
-  type AudioDefinition,
+  type AudioDefinition, ItemBlockRef,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -619,13 +619,12 @@ export class ChunkService {
           logger.info('Processing item', {
             index: i,
             itemId: item.id,
-            itemType: item.itemType,
             position: item.position,
             keys: item ? Object.keys(item) : [],
           });
 
           // Validate item
-          if (!item || !item.position || !item.itemType) {
+          if (!item || !item.position) {
             logger.warn('Invalid item in chunk', { index: i, item });
             continue;
           }
@@ -655,15 +654,14 @@ export class ChunkService {
           continue;
         }
 
-        const filledItem = await itemService.fillItem(item);
-        if (!filledItem) {
-          logger.warn('Failed to fill Item', {
-            position: item.position,
-            itemId: item.id,
-            itemType: item.itemType,
-          });
-          continue;
-        }
+        // const filledItem = await itemService.fillItem(item);
+        // if (!filledItem) {
+        //   logger.warn('Failed to fill Item', {
+        //     position: item.position,
+        //     itemId: item.id,
+        //   });
+        //   continue;
+        // }
 
         // STEP 3: Get BlockType 1 (ITEM type)
         const blockType = blockTypeService.getBlockType(1);
@@ -674,24 +672,19 @@ export class ChunkService {
 
         // STEP 4: Convert Item to Block for rendering
         // Items are converted to blocks only in ChunkService for rendering
-        const block = itemToBlock(filledItem);
-
-        // Convert ItemModifier to BlockModifier for rendering
-        const currentModifier = this.convertItemModifierToBlockModifier(
-          filledItem.modifier!
-        );
+        const block = itemToBlock(item);
 
         // STEP 5: Create ClientBlock with Item reference
         const clientBlock: ClientBlock = {
           block,
           chunk: { cx: chunkData.cx, cz: chunkData.cz },
           blockType,
-          currentModifier,
+          currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
           clientBlockType: blockType as any,
           isVisible: true,
           isDirty: false,
           lastUpdate: Date.now(),
-          item: filledItem, // Store complete Item
+          itemBlockRef: item, // Store Item Block Ref
         };
 
         // Add to map with position key
@@ -706,10 +699,8 @@ export class ChunkService {
         });
 
         logger.debug('Item added to chunk', {
-          position: filledItem.position,
-          itemId: filledItem.id,
-          displayName: filledItem.name,
-          itemType: filledItem.itemType,
+          position: item.position,
+          itemId: item.id,
         });
         }
 
@@ -1173,7 +1164,7 @@ export class ChunkService {
    *
    * @param items - Array of item updates from server
    */
-  async onItemUpdate(items: Item[]): Promise<void> {
+  async onItemUpdate(items: ItemBlockRef[]): Promise<void> {
     try {
       logger.info('🔵 ChunkService.onItemUpdate called', {
         itemCount: items.length,
@@ -1201,7 +1192,7 @@ export class ChunkService {
 
       for (const item of items) {
         // Check if this is a delete marker
-        if (item.itemType === '__deleted__') {
+        if (item.texture === '__deleted__') {
           // Handle deletion
           const chunkCoord = worldToChunk(item.position.x, item.position.z, chunkSize);
           const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
@@ -1233,25 +1224,15 @@ export class ChunkService {
           continue;
         }
 
-        // Fill item with ItemType data
-        const filledItem = await itemService.fillItem(item);
-        if (!filledItem) {
-          logger.warn('Failed to fill item', {
-            itemId: item.id,
-            itemType: item.itemType,
-          });
-          continue;
-        }
-
         // Calculate chunk coordinates
-        const chunkCoord = worldToChunk(filledItem.position.x, filledItem.position.z, chunkSize);
+        const chunkCoord = worldToChunk(item.position.x, item.position.z, chunkSize);
         const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
 
         // Get chunk
         const clientChunk = this.chunks.get(chunkKey);
         if (!clientChunk) {
           logger.debug('Item update for unloaded chunk, ignoring', {
-            position: filledItem.position,
+            position: item.position,
             cx: chunkCoord.cx,
             cz: chunkCoord.cz,
           });
@@ -1260,9 +1241,9 @@ export class ChunkService {
 
         // Get position key
         const posKey = getBlockPositionKey(
-          filledItem.position.x,
-          filledItem.position.y,
-          filledItem.position.z
+          item.position.x,
+          item.position.y,
+          item.position.z
         );
 
         // Get existing block at this position
@@ -1274,9 +1255,9 @@ export class ChunkService {
 
         if (!isAir && !isItem) {
           logger.debug('Item add/update ignored - position occupied by non-item block', {
-            position: filledItem.position,
+            position: item.position,
             existingBlockTypeId: existingBlock.block.blockTypeId,
-            itemId: filledItem.id,
+            itemId: item.id,
           });
           continue;
         }
@@ -1289,22 +1270,19 @@ export class ChunkService {
         }
 
         // Convert Item to Block
-        const block = itemToBlock(filledItem);
-
-        // Convert ItemModifier to BlockModifier for rendering
-        const currentModifier = this.convertItemModifierToBlockModifier(filledItem.modifier!);
+        const block = itemToBlock(item);
 
         // Create/update ClientBlock with Item reference
         const clientBlock: ClientBlock = {
           block,
           chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
           blockType,
-          currentModifier,
+          currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
           clientBlockType: blockType as any,
           isVisible: true,
           isDirty: true,
           lastUpdate: Date.now(),
-          item: filledItem, // Store complete Item
+          itemBlockRef: item, // Store complete Item
         };
 
         // Update in chunk
@@ -1321,10 +1299,8 @@ export class ChunkService {
         affectedChunks.add(chunkKey);
 
         logger.debug('Item added/updated', {
-          position: filledItem.position,
-          itemId: filledItem.id,
-          displayName: filledItem.name,
-          itemType: filledItem.itemType,
+          position: item.position,
+          itemId: item.id,
           wasUpdate: isItem,
         });
       }
@@ -1676,38 +1652,5 @@ export class ChunkService {
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.onSessionRestore');
     }
-  }
-
-  /**
-   * Converts ItemModifier to BlockModifier for rendering.
-   *
-   * ItemRenderer expects BlockModifier structure with visibility properties.
-   * This method creates a minimal BlockModifier from the simplified ItemModifier.
-   *
-   * @param itemModifier Simplified item modifier (storage format)
-   * @returns BlockModifier with visibility properties (rendering format)
-   */
-  private convertItemModifierToBlockModifier(itemModifier: any): any {
-    return {
-      visibility: {
-        shape: 28, // Shape.ITEM (Y-axis billboard)
-
-        // Convert simple texture string to textures map
-        textures: {
-          0: itemModifier.texture, // TextureKey.ALL
-        },
-
-        // Copy scaling properties
-        scalingX: itemModifier.scaleX ?? 0.5,
-        scalingY: itemModifier.scaleY ?? 0.5,
-
-        // Copy offset (pivot point adjustment)
-        offsets: itemModifier.offset || [0, 0, 0],
-
-        // Copy optional color tint
-        color: itemModifier.color,
-      },
-      // Items don't need: wind, physics, illumination, effects, audio
-    };
   }
 }

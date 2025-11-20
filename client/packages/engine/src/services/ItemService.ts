@@ -476,6 +476,7 @@ export class ItemService {
     return mergedModifier;
   }
 
+
   /**
    * Fills item with merged ItemType data.
    * Called by ChunkService for items from chunks.
