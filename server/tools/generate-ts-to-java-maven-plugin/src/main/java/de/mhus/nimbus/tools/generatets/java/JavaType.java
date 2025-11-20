@@ -12,6 +12,10 @@ public class JavaType {
     private String name;
     private JavaKind kind;
     private String sourcePath; // originating TS source file path
+    private String packageName; // optional, from configuration
+
+    // Members
+    private List<JavaProperty> properties = new ArrayList<>();
 
     // Reference names captured during initial pass
     private String extendsName;
@@ -42,6 +46,11 @@ public class JavaType {
 
     public String getSourcePath() { return sourcePath; }
     public void setSourcePath(String sourcePath) { this.sourcePath = sourcePath; }
+
+    public String getPackageName() { return packageName; }
+    public void setPackageName(String packageName) { this.packageName = packageName; }
+
+    public List<JavaProperty> getProperties() { return properties; }
 
     public String getExtendsName() { return extendsName; }
     public void setExtendsName(String extendsName) { this.extendsName = extendsName; }

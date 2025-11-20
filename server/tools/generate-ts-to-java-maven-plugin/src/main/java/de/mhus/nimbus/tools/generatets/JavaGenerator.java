@@ -2,6 +2,7 @@ package de.mhus.nimbus.tools.generatets;
 
 import de.mhus.nimbus.tools.generatets.java.JavaKind;
 import de.mhus.nimbus.tools.generatets.java.JavaModel;
+import de.mhus.nimbus.tools.generatets.java.JavaProperty;
 import de.mhus.nimbus.tools.generatets.java.JavaType;
 import de.mhus.nimbus.tools.generatets.ts.TsDeclarations;
 import de.mhus.nimbus.tools.generatets.ts.TsModel;
@@ -32,14 +33,20 @@ public class JavaGenerator {
                 for (TsDeclarations.TsInterface i : f.getInterfaces()) {
                     if (i == null || i.name == null) continue;
                     JavaType t = new JavaType(i.name, JavaKind.INTERFACE, srcPath);
-                    // Interfaces in TS can extend multiple other interfaces.
-                    // Our JavaType supports one extendsName; map the first to extendsName
-                    // and keep the remaining in implementsNames to not lose information.
+                    // Extends mapping
                     if (i.extendsList != null && !i.extendsList.isEmpty()) {
                         t.setExtendsName(i.extendsList.get(0));
                         for (int k = 1; k < i.extendsList.size(); k++) {
                             String n = i.extendsList.get(k);
                             if (n != null) t.getImplementsNames().add(n);
+                        }
+                    }
+                    // Properties
+                    if (i.properties != null) {
+                        for (TsDeclarations.TsProperty p : i.properties) {
+                            if (p == null || p.name == null) continue;
+                            String jt = mapTsTypeToJava(p.type, p.optional);
+                            t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
                         }
                     }
                     jm.addType(t);
@@ -64,6 +71,14 @@ public class JavaGenerator {
                     if (c.implementsList != null) {
                         for (String n : c.implementsList) {
                             if (n != null && !n.isEmpty()) t.getImplementsNames().add(n);
+                        }
+                    }
+                    // Properties
+                    if (c.properties != null) {
+                        for (TsDeclarations.TsProperty p : c.properties) {
+                            if (p == null || p.name == null) continue;
+                            String jt = mapTsTypeToJava(p.type, p.optional);
+                            t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
                         }
                     }
                     jm.addType(t);
@@ -109,5 +124,121 @@ public class JavaGenerator {
         }
 
         return jm;
+    }
+
+    private String boxIfPrimitive(String type) {
+        if (type == null) return null;
+        switch (type) {
+            case "int": return "java.lang.Integer";
+            case "long": return "java.lang.Long";
+            case "double": return "java.lang.Double";
+            case "float": return "java.lang.Float";
+            case "short": return "java.lang.Short";
+            case "byte": return "java.lang.Byte";
+            case "char": return "java.lang.Character";
+            case "boolean": return "java.lang.Boolean";
+            default: return type;
+        }
+    }
+
+    private String mapTsTypeToJava(String ts, boolean optional) {
+        if (ts == null || ts.isBlank()) return "Object";
+        String s = ts.trim();
+        // Strip readonly or modifiers
+        s = s.replaceAll("^readonly\\s+", "").trim();
+        // Unwrap utility types that don't change representation in Java
+        if (s.startsWith("Readonly<") && s.endsWith(">")) {
+            String inner = s.substring("Readonly<".length(), s.length() - 1).trim();
+            return mapTsTypeToJava(inner, optional);
+        }
+        if (s.startsWith("Partial<") && s.endsWith(">")) {
+            String inner = s.substring("Partial<".length(), s.length() - 1).trim();
+            return mapTsTypeToJava(inner, true);
+        }
+        // Template literal/backtick types -> String
+        if ((s.startsWith("`") && s.endsWith("`"))) {
+            return "String";
+        }
+        // Function types -> java.util.function.Function or Object (simplify to Object)
+        if (s.contains("=>") || s.matches(".*\\([^)]*\\)\\s*:\\s*.*")) {
+            return "Object";
+        }
+        // Tuple types -> List<Object>
+        if (s.startsWith("[") && s.endsWith("]")) {
+            return "java.util.List<Object>";
+        }
+        // Array types
+        if (s.endsWith("[]")) {
+            String elem = mapTsTypeToJava(s.substring(0, s.length() - 2), false);
+            elem = boxIfPrimitive(elem);
+            return "java.util.List<" + elem + ">";
+        }
+        if (s.startsWith("Array<") && s.endsWith(">")) {
+            String inner = s.substring("Array<".length(), s.length() - 1).trim();
+            String elem = mapTsTypeToJava(inner, false);
+            elem = boxIfPrimitive(elem);
+            return "java.util.List<" + elem + ">";
+        }
+        if (s.startsWith("ReadonlyArray<") && s.endsWith(">")) {
+            String inner = s.substring("ReadonlyArray<".length(), s.length() - 1).trim();
+            String elem = mapTsTypeToJava(inner, false);
+            elem = boxIfPrimitive(elem);
+            return "java.util.List<" + elem + ">";
+        }
+        // Generic Map or Record
+        if ((s.startsWith("Map<") || s.startsWith("Record<")) && s.endsWith(">")) {
+            String inner = s.substring(s.indexOf('<') + 1, s.length() - 1);
+            String[] kv = splitTopLevel(inner, ',');
+            String k = kv.length > 0 ? mapTsTypeToJava(kv[0].trim(), true) : "String";
+            String v = kv.length > 1 ? mapTsTypeToJava(kv[1].trim(), true) : "Object";
+            k = boxIfPrimitive(k);
+            v = boxIfPrimitive(v);
+            return "java.util.Map<" + k + ", " + v + ">";
+        }
+        // String literal types like 'Parallel' or "User" -> String
+        if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith("\"") && s.endsWith("\""))) {
+            return "String";
+        }
+        // Union/intersection -> Object for now
+        if (s.contains("|") || s.contains("&")) return "Object";
+        switch (s) {
+            case "string": return "String";
+            case "number": return optional ? "java.lang.Double" : "double";
+            case "boolean": return optional ? "java.lang.Boolean" : "boolean";
+            case "true": return optional ? "java.lang.Boolean" : "boolean";
+            case "false": return optional ? "java.lang.Boolean" : "boolean";
+            case "any": return "Object";
+            case "unknown": return "Object";
+            case "null": return "Object";
+            case "undefined": return "Object";
+            default:
+                // Record<...> handled above
+                // Generic parameter heuristics: map common single-letter generics to Object
+                if (s.matches("[A-Z]")) return "Object";
+                // Strip generic import(...) wrapper in types like import('...').Type
+                if (s.startsWith("import(")) return "Object";
+                // Object type
+                if ("object".equals(s)) return "java.util.Map<String, Object>";
+                // Fallback: keep as-is
+                return s;
+        }
+    }
+
+    // Split a generic argument list by a delimiter at top-level (not inside nested <>)
+    private String[] splitTopLevel(String s, char delimiter) {
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '<') depth++;
+            else if (c == '>') depth--;
+            else if (c == delimiter && depth == 0) {
+                parts.add(s.substring(start, i));
+                start = i + 1;
+            }
+        }
+        parts.add(s.substring(start));
+        return parts.toArray(new String[0]);
     }
 }

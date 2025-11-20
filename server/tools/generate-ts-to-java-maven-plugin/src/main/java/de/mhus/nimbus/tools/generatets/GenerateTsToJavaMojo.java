@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import de.mhus.nimbus.tools.generatets.ts.TsModel;
 import de.mhus.nimbus.tools.generatets.ts.TsParser;
 import de.mhus.nimbus.tools.generatets.java.JavaModel;
+import de.mhus.nimbus.tools.generatets.java.JavaType;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -13,6 +14,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +62,18 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             JavaGenerator generator = new JavaGenerator();
             JavaModel javaModel = generator.generate(tsModel);
             getLog().info("Java model created: types=" + (javaModel == null ? 0 : javaModel.getTypes().size()));
+
+            // Resolve package for each type based on TS source relative directory and config rules
+            if (javaModel != null) {
+                List<File> roots = normalizeSourceDirs();
+                for (JavaType t : javaModel.getTypes()) {
+                    if (t == null) continue;
+                    String resolved = resolvePackageFor(t, roots, configuration);
+                    if (resolved != null && !resolved.isBlank()) {
+                        t.setPackageName(resolved);
+                    }
+                }
+            }
 
             new JavaModelWriter(javaModel).write(outputDir);
 
@@ -124,6 +138,71 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
         } else {
             getLog().info("No TS items matched ignore list (" + ignore.size() + ")");
         }
+    }
+
+    private String resolvePackageFor(JavaType t, List<File> roots, Configuration cfg) {
+        if (t == null) return null;
+        String src = t.getSourcePath();
+        if (src == null || src.isBlank()) return cfg != null ? cfg.basePackage : null;
+        File srcFile = new File(src);
+        File matchedRoot = null;
+        try {
+            String srcAbs = srcFile.getCanonicalPath();
+            for (File r : roots) {
+                if (r == null) continue;
+                String rAbs = r.getCanonicalPath();
+                if (srcAbs.startsWith(rAbs + File.separator) || srcAbs.equals(rAbs)) {
+                    matchedRoot = r;
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            // fallback: try string startsWith using absolute paths
+            for (File r : roots) {
+                if (r == null) continue;
+                String rAbs = r.getAbsolutePath();
+                String sAbs = srcFile.getAbsolutePath();
+                if (sAbs.startsWith(rAbs + File.separator) || sAbs.equals(rAbs)) {
+                    matchedRoot = r;
+                    break;
+                }
+            }
+        }
+        String relDir = null;
+        if (matchedRoot != null) {
+            File parent = srcFile.getParentFile();
+            if (parent != null) {
+                Path rel = matchedRoot.toPath().relativize(parent.toPath());
+                relDir = rel.toString().replace('\\', '/');
+                if (".".equals(relDir)) relDir = "";
+            }
+        }
+        if (cfg != null && cfg.packageRules != null) {
+            String relNorm = relDir == null ? null : (relDir.endsWith("/") ? relDir.substring(0, relDir.length() - 1) : relDir);
+            String rootName = matchedRoot != null ? matchedRoot.getName().replace('\\', '/') : null;
+            for (Configuration.PackageRule rule : cfg.packageRules) {
+                if (rule == null) continue;
+                String suf = rule.dirEndsWith;
+                if (suf == null || suf.isBlank()) continue;
+                String sufNorm = suf.replace('\\', '/');
+                boolean match = false;
+                if (relNorm != null && (relNorm.endsWith("/" + sufNorm) || relNorm.equals(sufNorm))) match = true;
+                if (!match && rootName != null && (rootName.equals(sufNorm) || rootName.endsWith("/" + sufNorm))) match = true;
+                if (match) {
+                    if (rule.pkg != null && !rule.pkg.isBlank()) return rule.pkg.trim();
+                }
+            }
+        }
+        String base = cfg != null ? cfg.basePackage : null;
+        String relPkg = null;
+        if (relDir != null && !relDir.isBlank()) {
+            relPkg = relDir.replace('/', '.');
+        }
+        if (base != null && !base.isBlank()) {
+            if (relPkg == null || relPkg.isBlank()) return base.trim();
+            return base.trim() + "." + relPkg;
+        }
+        return relPkg; // may be null
     }
 
     private TsModel parseTs() throws IOException {

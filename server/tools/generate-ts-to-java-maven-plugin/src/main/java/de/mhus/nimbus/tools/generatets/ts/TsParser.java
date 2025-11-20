@@ -105,6 +105,8 @@ public class TsParser {
         for (NameOccur n : findNamed(src, DECL_INTERFACE, '{')) {
             TsDeclarations.TsInterface d = new TsDeclarations.TsInterface();
             d.name = n.name;
+            String body = safeSub(src, n.startIndex, n.endIndex);
+            extractPropertiesFromBody(body, d.properties);
             file.getInterfaces().add(d);
         }
         // Enums
@@ -118,6 +120,8 @@ public class TsParser {
         for (NameOccur n : findNamed(src, DECL_CLASS, '{')) {
             TsDeclarations.TsClass d = new TsDeclarations.TsClass();
             d.name = n.name;
+            String body = safeSub(src, n.startIndex, n.endIndex);
+            extractPropertiesFromBody(body, d.properties);
             file.getClasses().add(d);
         }
         // Type aliases (end by semicolon)
@@ -125,6 +129,47 @@ public class TsParser {
             TsDeclarations.TsTypeAlias d = new TsDeclarations.TsTypeAlias();
             d.name = n.name;
             file.getTypeAliases().add(d);
+        }
+    }
+
+    private String safeSub(String s, int start, int end) {
+        int a = Math.max(0, Math.min(s.length(), start));
+        int b = Math.max(a, Math.min(s.length(), end));
+        return s.substring(a, b);
+    }
+
+    private void extractPropertiesFromBody(String body, List<TsDeclarations.TsProperty> out) {
+        if (body == null || out == null) return;
+        // Very simple matcher for properties: [visibility]? name[?]: type; and exclude lines with '(' before ':' to avoid methods
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?m)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*([^;\\r\\n]+)[\\t ]*;[\\t ]*");
+        java.util.regex.Matcher m = p.matcher(body);
+        while (m.find()) {
+            // Skip index signatures like [key: string]: any;
+            try {
+                int nameStart = m.start(2);
+                if (nameStart > 0 && body.charAt(nameStart - 1) == '[') {
+                    continue;
+                }
+                // Skip if there's a '(' before the ':' in the matched segment (likely a method signature)
+                int colon = body.indexOf(':', m.start());
+                if (colon > m.start()) {
+                    String beforeColon = body.substring(m.start(), colon);
+                    if (beforeColon.contains("(")) {
+                        continue;
+                    }
+                }
+            } catch (Exception ignored) {}
+            String typeTxt = m.group(4) == null ? null : m.group(4).trim();
+            // Skip complex inline object types or import() types that tend to break naive generation
+            if (typeTxt != null && (typeTxt.contains("{") || typeTxt.contains("}") || typeTxt.contains("import("))) {
+                continue;
+            }
+            TsDeclarations.TsProperty pr = new TsDeclarations.TsProperty();
+            pr.visibility = m.group(1);
+            pr.name = m.group(2);
+            pr.optional = m.group(3) != null && !m.group(3).isEmpty();
+            pr.type = typeTxt;
+            out.add(pr);
         }
     }
 
