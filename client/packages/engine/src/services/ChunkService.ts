@@ -1368,6 +1368,53 @@ export class ChunkService {
   }
 
   /**
+   * Redraw a specific chunk
+   *
+   * Marks the chunk as not rendered and emits update event to trigger re-rendering
+   *
+   * @param chunkX - Chunk X coordinate
+   * @param chunkZ - Chunk Z coordinate
+   * @returns True if chunk was found and marked for redraw, false otherwise
+   */
+  redrawChunk(chunkX: number, chunkZ: number): boolean {
+    const chunkKey = getChunkKey(chunkX, chunkZ);
+    const chunk = this.chunks.get(chunkKey);
+
+    if (!chunk) {
+      logger.warn('Cannot redraw chunk - chunk not loaded', { chunkX, chunkZ });
+      return false;
+    }
+
+    // Mark for re-rendering
+    chunk.isRendered = false;
+    this.emit('chunk:updated', chunk);
+
+    logger.info('Chunk marked for redraw', { chunkX, chunkZ, chunkKey });
+    return true;
+  }
+
+  /**
+   * Redraw all loaded chunks
+   *
+   * Marks all loaded chunks as not rendered and emits update events to trigger re-rendering
+   *
+   * @returns Number of chunks marked for redraw
+   */
+  redrawAllChunks(): number {
+    const chunks = Array.from(this.chunks.values());
+
+    logger.info('Redrawing all chunks', { count: chunks.length });
+
+    for (const chunk of chunks) {
+      chunk.isRendered = false;
+      this.emit('chunk:updated', chunk);
+    }
+
+    logger.info('All chunks marked for redraw', { count: chunks.length });
+    return chunks.length;
+  }
+
+  /**
    * Add event listener
    */
   on(event: string, listener: EventListener): void {

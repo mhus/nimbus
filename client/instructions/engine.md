@@ -411,3 +411,6 @@ Es werden also zwei neue network messages benoetigt:
 - Erstelle im CommandService ein command 'redrawChunk' mit den parametern chunkX?: number, chunkZ?: number
   - Wenn chunkX und chunkZ gesetzt sind, rufe 'redrawChunk' auf
   - Wenn keine parameter gesetzt sind, rufe 'redrawAllChunks' auf
+
+[ ] Wenn beim WorldInfo update sich der status aendert, muessen alle currentModifier in ChunkService neu errechnet werden und die chunks neu gerendert werden.
+- Es soll ausserdem eine 'seasonStatus' und 'seasonProgress : number' in der WeltInfo geben. Auch hier muss bei aenderung die currentModifier neu berechnet werden.

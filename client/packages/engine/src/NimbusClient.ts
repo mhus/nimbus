@@ -44,6 +44,7 @@ import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
 import { ReloadConfigCommand } from './commands/ReloadConfigCommand';
+import { RedrawChunkCommand } from './commands/RedrawChunkCommand';
 import { SendCommand } from './commands/SendCommand';
 import { AudioCommand } from './commands/AudioCommand';
 import { TestAudioCommand } from './commands/TestAudioCommand';
@@ -180,6 +181,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new InfoCommand(appContext));
     commandService.registerHandler(new ClearCommand());
     commandService.registerHandler(new ReloadConfigCommand(appContext));
+    commandService.registerHandler(new RedrawChunkCommand(appContext));
     commandService.registerHandler(new SendCommand(commandService));
     commandService.registerHandler(new AudioCommand(appContext));
     commandService.registerHandler(new TestAudioCommand(appContext));
