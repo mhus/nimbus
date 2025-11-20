@@ -32,16 +32,10 @@ public class JavaGenerator {
             if (f.getInterfaces() != null) {
                 for (TsDeclarations.TsInterface i : f.getInterfaces()) {
                     if (i == null || i.name == null) continue;
-                    JavaType t = new JavaType(i.name, JavaKind.INTERFACE, srcPath);
-                    // Extends mapping
-                    if (i.extendsList != null && !i.extendsList.isEmpty()) {
-                        t.setExtendsName(i.extendsList.get(0));
-                        for (int k = 1; k < i.extendsList.size(); k++) {
-                            String n = i.extendsList.get(k);
-                            if (n != null) t.getImplementsNames().add(n);
-                        }
-                    }
-                    // Properties
+                    // Convert TS interface to Java class with fields
+                    JavaType t = new JavaType(i.name, JavaKind.CLASS, srcPath);
+                    // Do not map extends/implements to avoid referencing non-generated interfaces
+                    // Properties -> public fields
                     if (i.properties != null) {
                         for (TsDeclarations.TsProperty p : i.properties) {
                             if (p == null || p.name == null) continue;
@@ -88,9 +82,12 @@ public class JavaGenerator {
             if (f.getTypeAliases() != null) {
                 for (TsDeclarations.TsTypeAlias a : f.getTypeAliases()) {
                     if (a == null || a.name == null) continue;
-                    JavaType t = new JavaType(a.name, JavaKind.TYPE_ALIAS, srcPath);
+                    // Convert TS type alias to Java class with a single field 'value'
+                    JavaType t = new JavaType(a.name, JavaKind.CLASS, srcPath);
                     if (a.target != null && !a.target.isEmpty()) {
                         t.setAliasTargetName(a.target);
+                        String jt = mapTsTypeToJava(a.target, true);
+                        t.getProperties().add(new JavaProperty("value", jt, true, "public"));
                     }
                     jm.addType(t);
                 }

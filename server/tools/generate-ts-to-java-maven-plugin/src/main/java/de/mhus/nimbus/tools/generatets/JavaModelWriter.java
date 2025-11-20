@@ -100,16 +100,17 @@ public class JavaModelWriter {
             String impls = renderImplements(t.getImplementsNames(), currentPkg);
             if (!impls.isEmpty()) sb.append(" ").append(impls);
             sb.append(" {\n");
-            // class members: fields
+            // class members: fields (deduplicate by property name)
             if (t.getProperties() != null) {
+                java.util.Set<String> seen = new java.util.HashSet<>();
                 for (JavaProperty p : t.getProperties()) {
                     if (p == null || p.getName() == null) continue;
+                    if (!isValidJavaIdentifier(p.getName())) continue;
+                    if (!seen.add(p.getName())) continue;
                     String vis = p.getVisibility();
                     if (vis == null || vis.isBlank()) vis = "public";
                     String type = p.getType() == null || p.getType().isBlank() ? "Object" : qualifyType(p.getType(), currentPkg);
-                    if (isValidJavaIdentifier(p.getName())) {
-                        sb.append("    ").append(vis).append(' ').append(type).append(' ').append(p.getName()).append(";\n");
-                    }
+                    sb.append("    ").append(vis).append(' ').append(type).append(' ').append(p.getName()).append(";\n");
                 }
             }
             sb.append("}\n");
