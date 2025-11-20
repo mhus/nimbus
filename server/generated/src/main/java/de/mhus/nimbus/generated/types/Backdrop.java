@@ -1,16 +1,16 @@
 package de.mhus.nimbus.generated.types;
 
-public interface Backdrop {
-    String getType();
-    String getId();
-    java.lang.Double getLeft();
-    java.lang.Double getWidth();
-    java.lang.Double getYBase();
-    java.lang.Double getHeight();
-    java.lang.Double getDepth();
-    String getTexture();
-    String getNoiseTexture();
-    String getColor();
-    java.lang.Double getAlpha();
-    java.lang.Double getAlphaMode();
+public class Backdrop extends Object {
+    public String type;
+    public String id;
+    public java.lang.Double left;
+    public java.lang.Double width;
+    public java.lang.Double yBase;
+    public java.lang.Double height;
+    public java.lang.Double depth;
+    public String texture;
+    public String noiseTexture;
+    public String color;
+    public java.lang.Double alpha;
+    public java.lang.Double alphaMode;
 }

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated;
 
-public interface SingleServerCommandData {
-    String getCmd();
-    java.util.List<String> getArgs();
+public class SingleServerCommandData extends Object {
+    public String cmd;
+    public java.util.List<String> args;
 }

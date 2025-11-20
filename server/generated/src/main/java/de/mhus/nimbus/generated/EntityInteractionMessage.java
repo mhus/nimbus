@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated;
 
-/** Type alias for:  */
-public class EntityInteractionMessage {
+public class EntityInteractionMessage extends Object {
 }

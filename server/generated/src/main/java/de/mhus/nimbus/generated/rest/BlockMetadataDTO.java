@@ -1,13 +1,13 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface BlockMetadataDTO {
-    double getX();
-    double getY();
-    double getZ();
-    String getId();
-    java.util.List<String> getGroups();
-    java.util.List<String> getGroupNames();
-    java.util.List<String> getInheritedGroups();
-    java.util.List<String> getInheritedGroupNames();
-    String getDisplayName();
+public class BlockMetadataDTO extends Object {
+    public double x;
+    public double y;
+    public double z;
+    public String id;
+    public java.util.List<String> groups;
+    public java.util.List<String> groupNames;
+    public java.util.List<String> inheritedGroups;
+    public java.util.List<String> inheritedGroupNames;
+    public String displayName;
 }

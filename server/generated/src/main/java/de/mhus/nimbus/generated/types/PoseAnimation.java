@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface PoseAnimation {
-    String getAnimationName();
-    double getSpeedMultiplier();
-    boolean getLoop();
+public class PoseAnimation extends Object {
+    public String animationName;
+    public double speedMultiplier;
+    public boolean loop;
 }

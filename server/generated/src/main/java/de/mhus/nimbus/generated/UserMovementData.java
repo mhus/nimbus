@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated;
 
-public interface UserMovementData {
-    double getX();
-    double getY();
-    double getZ();
-    de.mhus.nimbus.generated.types.Rotation getR();
+public class UserMovementData extends Object {
+    public double x;
+    public double y;
+    public double z;
+    public de.mhus.nimbus.generated.types.Rotation r;
 }

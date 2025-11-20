@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated;
 
-/** Type alias for:  */
-public class AnimationStartMessage {
+public class AnimationStartMessage extends Object {
 }

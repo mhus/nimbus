@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated;
 
-/** Type alias for:  */
-public class BlockInteractionMessage {
+public class BlockInteractionMessage extends Object {
 }

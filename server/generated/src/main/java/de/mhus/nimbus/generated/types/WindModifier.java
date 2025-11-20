@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.types;
 
-public interface WindModifier {
-    java.lang.Double getLeafiness();
-    java.lang.Double getStability();
-    java.lang.Double getLeverUp();
-    java.lang.Double getLeverDown();
+public class WindModifier extends Object {
+    public java.lang.Double leafiness;
+    public java.lang.Double stability;
+    public java.lang.Double leverUp;
+    public java.lang.Double leverDown;
 }

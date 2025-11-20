@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated.types;
 
-/** Type alias for:  */
-public class Offsets {
+public class Offsets extends Object {
 }

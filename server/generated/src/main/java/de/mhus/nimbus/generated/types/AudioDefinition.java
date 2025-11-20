@@ -1,10 +1,10 @@
 package de.mhus.nimbus.generated.types;
 
-public interface AudioDefinition {
-    Object getType();
-    String getPath();
-    double getVolume();
-    java.lang.Boolean getLoop();
-    boolean getEnabled();
-    java.lang.Double getMaxDistance();
+public class AudioDefinition extends Object {
+    public Object type;
+    public String path;
+    public double volume;
+    public java.lang.Boolean loop;
+    public boolean enabled;
+    public java.lang.Double maxDistance;
 }

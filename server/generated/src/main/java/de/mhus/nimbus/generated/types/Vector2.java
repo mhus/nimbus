@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated.types;
 
-public interface Vector2 {
-    double getX();
-    double getZ();
+public class Vector2 extends Object {
+    public double x;
+    public double z;
 }

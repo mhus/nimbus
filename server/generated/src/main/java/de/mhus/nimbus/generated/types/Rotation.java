@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface Rotation {
-    double getY();
-    double getP();
-    java.lang.Double getR();
+public class Rotation extends Object {
+    public double y;
+    public double p;
+    public java.lang.Double r;
 }

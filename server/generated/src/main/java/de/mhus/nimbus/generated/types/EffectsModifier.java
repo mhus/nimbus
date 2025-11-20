@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated.types;
 
-public interface EffectsModifier {
-    java.lang.Boolean getForceEgoView();
-    SkyEffect getSky();
+public class EffectsModifier extends Object {
+    public java.lang.Boolean forceEgoView;
+    public SkyEffect sky;
 }

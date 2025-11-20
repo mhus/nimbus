@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated;
 
-public interface LoginErrorData {
-    boolean getSuccess();
-    double getErrorCode();
-    String getErrorMessage();
+public class LoginErrorData extends Object {
+    public boolean success;
+    public double errorCode;
+    public String errorMessage;
 }

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated.types;
 
-public interface IlluminationModifier {
-    String getColor();
-    java.lang.Double getStrength();
+public class IlluminationModifier extends Object {
+    public String color;
+    public java.lang.Double strength;
 }

@@ -1,4 +1,4 @@
 package de.mhus.nimbus.generated.types;
 
-public interface EntityDimensions {
+public class EntityDimensions extends Object {
 }

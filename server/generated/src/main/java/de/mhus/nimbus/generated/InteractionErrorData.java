@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated;
 
-public interface InteractionErrorData {
-    boolean getSuccess();
-    double getErrorCode();
-    String getErrorMessage();
+public class InteractionErrorData extends Object {
+    public boolean success;
+    public double errorCode;
+    public String errorMessage;
 }

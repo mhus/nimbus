@@ -1,10 +1,10 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface WorldListItemDTO {
-    String getWorldId();
-    String getName();
-    String getDescription();
-    UserDTO getOwner();
-    String getCreatedAt();
-    String getUpdatedAt();
+public class WorldListItemDTO extends Object {
+    public String worldId;
+    public String name;
+    public String description;
+    public UserDTO owner;
+    public String createdAt;
+    public String updatedAt;
 }

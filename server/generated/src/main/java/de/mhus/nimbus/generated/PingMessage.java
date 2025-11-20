@@ -1,5 +1,5 @@
 package de.mhus.nimbus.generated;
 
-public interface PingMessage {
-    String getI();
+public class PingMessage extends Object {
+    public String i;
 }

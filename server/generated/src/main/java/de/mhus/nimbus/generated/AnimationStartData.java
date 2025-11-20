@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated;
 
-public interface AnimationStartData {
-    double getX();
-    double getY();
-    double getZ();
-    de.mhus.nimbus.generated.types.AnimationData getAnimation();
+public class AnimationStartData extends Object {
+    public double x;
+    public double y;
+    public double z;
+    public de.mhus.nimbus.generated.types.AnimationData animation;
 }

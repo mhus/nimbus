@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface AnimationTemplate {
-    String getId();
-    java.util.List<String> getPlaceholders();
-    String getDescription();
+public class AnimationTemplate extends Object {
+    public String id;
+    public java.util.List<String> placeholders;
+    public String description;
 }

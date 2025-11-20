@@ -1,17 +1,17 @@
 package de.mhus.nimbus.generated.types;
 
-public interface MovementStateValues {
-    double getHeight();
-    double getWidth();
-    double getFootprint();
-    double getBaseMoveSpeed();
-    double getEffectiveMoveSpeed();
-    double getBaseJumpSpeed();
-    double getEffectiveJumpSpeed();
-    double getEyeHeight();
-    double getBaseTurnSpeed();
-    double getEffectiveTurnSpeed();
-    double getSelectionRadius();
-    double getStealthRange();
-    double getDistanceNotifyReduction();
+public class MovementStateValues extends Object {
+    public double height;
+    public double width;
+    public double footprint;
+    public double baseMoveSpeed;
+    public double effectiveMoveSpeed;
+    public double baseJumpSpeed;
+    public double effectiveJumpSpeed;
+    public double eyeHeight;
+    public double baseTurnSpeed;
+    public double effectiveTurnSpeed;
+    public double selectionRadius;
+    public double stealthRange;
+    public double distanceNotifyReduction;
 }

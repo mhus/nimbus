@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated.rest;
 
-/** Type alias for:  */
-public class BlockMetadataResponseDTO {
+public class BlockMetadataResponseDTO extends Object {
 }

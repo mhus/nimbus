@@ -1,5 +1,5 @@
 package de.mhus.nimbus.generated;
 
-public interface PongMessage {
-    String getR();
+public class PongMessage extends Object {
+    public String r;
 }

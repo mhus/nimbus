@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated.types;
 
-/** Type alias for:  */
-public class AudioModifier {
+public class AudioModifier extends Object {
 }

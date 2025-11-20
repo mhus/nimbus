@@ -1,13 +1,13 @@
 package de.mhus.nimbus.generated.types;
 
-public interface TextureDefinition {
-    String getPath();
-    UVMapping getUvMapping();
-    SamplingMode getSamplingMode();
-    TransparencyMode getTransparencyMode();
-    java.lang.Double getOpacity();
-    BlockEffect getEffect();
-    String getEffectParameters();
-    String getColor();
-    java.lang.Boolean getBackFaceCulling();
+public class TextureDefinition extends Object {
+    public String path;
+    public UVMapping uvMapping;
+    public SamplingMode samplingMode;
+    public TransparencyMode transparencyMode;
+    public java.lang.Double opacity;
+    public BlockEffect effect;
+    public String effectParameters;
+    public String color;
+    public java.lang.Boolean backFaceCulling;
 }

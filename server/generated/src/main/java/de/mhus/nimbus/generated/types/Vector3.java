@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface Vector3 {
-    double getX();
-    double getY();
-    double getZ();
+public class Vector3 extends Object {
+    public double x;
+    public double y;
+    public double z;
 }

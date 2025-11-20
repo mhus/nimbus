@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.types;
 
-public interface EntityPhysicsProperties {
-    double getMass();
-    double getFriction();
-    java.lang.Double getRestitution();
-    java.lang.Double getDrag();
+public class EntityPhysicsProperties extends Object {
+    public double mass;
+    public double friction;
+    public java.lang.Double restitution;
+    public java.lang.Double drag;
 }

@@ -1,16 +1,16 @@
 package de.mhus.nimbus.generated.types;
 
-public interface ClientEntity {
-    String getId();
-    EntityModel getModel();
-    Entity getEntity();
-    boolean getVisible();
-    java.util.List<Object> getMeshes();
-    Vector3 getCurrentPosition();
-    Rotation getCurrentRotation();
-    double getCurrentWaypointIndex();
-    double getCurrentPose();
-    java.util.List<Waypoint> getCurrentWaypoints();
-    double getLastAccess();
-    java.lang.Double getLastStepTime();
+public class ClientEntity extends Object {
+    public String id;
+    public EntityModel model;
+    public Entity entity;
+    public boolean visible;
+    public java.util.List<Object> meshes;
+    public Vector3 currentPosition;
+    public Rotation currentRotation;
+    public double currentWaypointIndex;
+    public double currentPose;
+    public java.util.List<Waypoint> currentWaypoints;
+    public double lastAccess;
+    public java.lang.Double lastStepTime;
 }

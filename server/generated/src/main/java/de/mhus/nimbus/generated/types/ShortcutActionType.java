@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated.types;
 
-/** Type alias for:  */
-public class ShortcutActionType {
+public class ShortcutActionType extends Object {
 }

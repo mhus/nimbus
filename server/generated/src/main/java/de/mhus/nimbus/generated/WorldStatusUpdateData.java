@@ -1,5 +1,5 @@
 package de.mhus.nimbus.generated;
 
-public interface WorldStatusUpdateData {
-    double getS();
+public class WorldStatusUpdateData extends Object {
+    public double s;
 }

@@ -1,16 +1,16 @@
 package de.mhus.nimbus.generated.types;
 
-public interface VisibilityModifier {
-    Shape getShape();
-    BlockEffect getEffect();
-    String getEffectParameters();
-    java.util.List<java.lang.Double> getOffsets();
-    java.lang.Double getScalingX();
-    java.lang.Double getScalingY();
-    java.lang.Double getScalingZ();
-    java.lang.Double getRotationX();
-    java.lang.Double getRotationY();
-    String getPath();
-    java.util.Map<java.lang.Double, Object> getTextures();
-    FaceVisibility getFaceVisibility();
+public class VisibilityModifier extends Object {
+    public Shape shape;
+    public BlockEffect effect;
+    public String effectParameters;
+    public java.util.List<java.lang.Double> offsets;
+    public java.lang.Double scalingX;
+    public java.lang.Double scalingY;
+    public java.lang.Double scalingZ;
+    public java.lang.Double rotationX;
+    public java.lang.Double rotationY;
+    public String path;
+    public java.util.Map<java.lang.Double, Object> textures;
+    public FaceVisibility faceVisibility;
 }

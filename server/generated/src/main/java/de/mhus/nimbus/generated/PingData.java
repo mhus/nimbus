@@ -1,5 +1,5 @@
 package de.mhus.nimbus.generated;
 
-public interface PingData {
-    double getCTs();
+public class PingData extends Object {
+    public double cTs;
 }

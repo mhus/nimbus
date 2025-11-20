@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface AreaData {
-    Vector3 getA();
-    Vector3 getB();
-    java.util.List<EffectData> getE();
+public class AreaData extends Object {
+    public Vector3 a;
+    public Vector3 b;
+    public java.util.List<EffectData> e;
 }

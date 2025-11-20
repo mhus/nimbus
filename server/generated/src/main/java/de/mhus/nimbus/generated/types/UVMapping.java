@@ -1,4 +1,4 @@
 package de.mhus.nimbus.generated.types;
 
-public interface UVMapping {
+public class UVMapping extends Object {
 }

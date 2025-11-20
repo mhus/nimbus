@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface PlayerMovementStateChangedEvent {
-    String getPlayerId();
-    PlayerMovementState getOldState();
-    PlayerMovementState getNewState();
+public class PlayerMovementStateChangedEvent extends Object {
+    public String playerId;
+    public PlayerMovementState oldState;
+    public PlayerMovementState newState;
 }

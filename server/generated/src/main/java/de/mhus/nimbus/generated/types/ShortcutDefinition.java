@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.types;
 
-public interface ShortcutDefinition {
-    ShortcutActionType getType();
-    String getItemId();
-    String getName();
-    String getDescription();
+public class ShortcutDefinition extends Object {
+    public ShortcutActionType type;
+    public String itemId;
+    public String name;
+    public String description;
 }

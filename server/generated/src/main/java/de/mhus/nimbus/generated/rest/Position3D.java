@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface Position3D {
-    double getX();
-    double getY();
-    double getZ();
+public class Position3D extends Object {
+    public double x;
+    public double y;
+    public double z;
 }

@@ -1,23 +1,23 @@
 package de.mhus.nimbus.generated.types;
 
-public interface AnimationEffect {
-    String getId();
-    AnimationEffectType getType();
-    java.util.List<PositionRef> getPositions();
-    Object getFrom();
-    Object getTo();
-    EasingType getEasing();
-    java.lang.Double getSpeed();
-    String getProjectileModel();
-    String getTrajectory();
-    java.lang.Double getRadius();
-    java.lang.Double getExplosionIntensity();
-    String getColor();
-    java.lang.Double getLightIntensity();
-    String getSoundPath();
-    java.lang.Double getVolume();
-    double getStartTime();
-    java.lang.Double getDuration();
-    java.lang.Double getEndTime();
-    java.lang.Boolean getBlocking();
+public class AnimationEffect extends Object {
+    public String id;
+    public AnimationEffectType type;
+    public java.util.List<PositionRef> positions;
+    public Object from;
+    public Object to;
+    public EasingType easing;
+    public java.lang.Double speed;
+    public String projectileModel;
+    public String trajectory;
+    public java.lang.Double radius;
+    public java.lang.Double explosionIntensity;
+    public String color;
+    public java.lang.Double lightIntensity;
+    public String soundPath;
+    public java.lang.Double volume;
+    public double startTime;
+    public java.lang.Double duration;
+    public java.lang.Double endTime;
+    public java.lang.Boolean blocking;
 }

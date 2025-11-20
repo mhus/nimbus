@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated;
 
-public interface ChunkCoordinate {
-    double getCx();
-    double getCz();
+public class ChunkCoordinate extends Object {
+    public double cx;
+    public double cz;
 }

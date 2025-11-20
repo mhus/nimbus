@@ -1,5 +1,5 @@
 package de.mhus.nimbus.generated;
 
-public interface ChunkQueryData {
-    java.util.List<ChunkCoordinate> getC();
+public class ChunkQueryData extends Object {
+    public java.util.List<ChunkCoordinate> c;
 }

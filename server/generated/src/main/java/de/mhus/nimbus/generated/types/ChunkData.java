@@ -1,15 +1,15 @@
 package de.mhus.nimbus.generated.types;
 
-public interface ChunkData {
-    double getCx();
-    double getCz();
-    double getSize();
-    java.util.List<Block> getBlocks();
-    java.util.List<Block> getI();
-    java.util.List<HeightData> getHeightData();
-    java.util.List<Status> getStatus();
-    java.util.List<Backdrop> getN();
-    java.util.List<Backdrop> getE();
-    java.util.List<Backdrop> getS();
-    java.util.List<Backdrop> getW();
+public class ChunkData extends Object {
+    public double cx;
+    public double cz;
+    public double size;
+    public java.util.List<Block> blocks;
+    public java.util.List<Block> i;
+    public java.util.List<HeightData> heightData;
+    public java.util.List<Status> status;
+    public java.util.List<Backdrop> n;
+    public java.util.List<Backdrop> e;
+    public java.util.List<Backdrop> s;
+    public java.util.List<Backdrop> w;
 }

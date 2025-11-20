@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated;
 
-public interface ServerCommandResultData {
-    double getRc();
-    String getMessage();
+public class ServerCommandResultData extends Object {
+    public double rc;
+    public String message;
 }

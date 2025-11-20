@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated;
 
-public interface CommandData {
-    String getCmd();
-    java.util.List<String> getArgs();
-    java.lang.Boolean getOneway();
+public class CommandData extends Object {
+    public String cmd;
+    public java.util.List<String> args;
+    public java.lang.Boolean oneway;
 }

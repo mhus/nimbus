@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated;
 
-public interface EntityInteractionData {
-    String getEntityId();
-    double getTs();
-    String getAc();
-    java.util.Map<String, Object> getPa();
+public class EntityInteractionData extends Object {
+    public String entityId;
+    public double ts;
+    public String ac;
+    public java.util.Map<String, Object> pa;
 }

@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface UserDTO {
-    String getUser();
-    String getDisplayName();
-    String getEmail();
+public class UserDTO extends Object {
+    public String user;
+    public String displayName;
+    public String email;
 }

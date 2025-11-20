@@ -1,7 +1,7 @@
 package de.mhus.nimbus.generated.types;
 
-public interface BlockMetadata {
-    String getId();
-    String getDisplayName();
-    java.lang.Double getGroupId();
+public class BlockMetadata extends Object {
+    public String id;
+    public String displayName;
+    public java.lang.Double groupId;
 }

@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface BlockTypeOptionsDTO {
-    boolean getSolid();
-    boolean getOpaque();
-    boolean getTransparent();
-    String getMaterial();
+public class BlockTypeOptionsDTO extends Object {
+    public boolean solid;
+    public boolean opaque;
+    public boolean transparent;
+    public String material;
 }

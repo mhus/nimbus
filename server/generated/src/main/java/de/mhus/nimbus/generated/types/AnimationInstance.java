@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.types;
 
-public interface AnimationInstance {
-    String getTemplateId();
-    AnimationData getAnimation();
-    double getCreatedAt();
-    String getTriggeredBy();
+public class AnimationInstance extends Object {
+    public String templateId;
+    public AnimationData animation;
+    public double createdAt;
+    public String triggeredBy;
 }

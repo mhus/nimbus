@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated;
 
-/** Type alias for:  */
-public class UserMovementMessage {
+public class UserMovementMessage extends Object {
 }

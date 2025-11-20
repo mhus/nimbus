@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface WorldSettingsDTO {
-    double getMaxPlayers();
-    boolean getAllowGuests();
-    boolean getPvpEnabled();
-    double getPingInterval();
+public class WorldSettingsDTO extends Object {
+    public double maxPlayers;
+    public boolean allowGuests;
+    public boolean pvpEnabled;
+    public double pingInterval;
 }

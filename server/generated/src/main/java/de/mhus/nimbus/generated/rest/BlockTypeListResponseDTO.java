@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface BlockTypeListResponseDTO {
-    java.util.List<BlockTypeDTO> getBlockTypes();
-    double getCount();
-    double getLimit();
-    double getOffset();
+public class BlockTypeListResponseDTO extends Object {
+    public java.util.List<BlockTypeDTO> blockTypes;
+    public double count;
+    public double limit;
+    public double offset;
 }

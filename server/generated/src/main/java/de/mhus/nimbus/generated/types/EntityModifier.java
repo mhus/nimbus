@@ -1,5 +1,5 @@
 package de.mhus.nimbus.generated.types;
 
-public interface EntityModifier {
-    java.util.List<AudioDefinition> getAudio();
+public class EntityModifier extends Object {
+    public java.util.List<AudioDefinition> audio;
 }

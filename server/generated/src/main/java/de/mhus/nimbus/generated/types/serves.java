@@ -1,4 +1,4 @@
 package de.mhus.nimbus.generated.types;
 
-public interface serves {
+public class serves extends Object {
 }

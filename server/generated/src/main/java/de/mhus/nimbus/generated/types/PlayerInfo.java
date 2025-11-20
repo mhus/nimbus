@@ -1,29 +1,29 @@
 package de.mhus.nimbus.generated.types;
 
-public interface PlayerInfo {
-    String getPlayerId();
-    String getDisplayName();
-    java.util.Map<MovementStateKey, MovementStateValues> getStateValues();
-    double getBaseWalkSpeed();
-    double getBaseRunSpeed();
-    double getBaseUnderwaterSpeed();
-    double getBaseCrawlSpeed();
-    double getBaseRidingSpeed();
-    double getBaseJumpSpeed();
-    double getEffectiveWalkSpeed();
-    double getEffectiveRunSpeed();
-    double getEffectiveUnderwaterSpeed();
-    double getEffectiveCrawlSpeed();
-    double getEffectiveRidingSpeed();
-    double getEffectiveJumpSpeed();
-    double getEyeHeight();
-    double getStealthRange();
-    double getDistanceNotifyReductionWalk();
-    double getDistanceNotifyReductionCrouch();
-    double getSelectionRadius();
-    double getBaseTurnSpeed();
-    double getEffectiveTurnSpeed();
-    double getBaseUnderwaterTurnSpeed();
-    double getEffectiveUnderwaterTurnSpeed();
-    String getThirdPersonModelId();
+public class PlayerInfo extends Object {
+    public String playerId;
+    public String displayName;
+    public java.util.Map<MovementStateKey, MovementStateValues> stateValues;
+    public double baseWalkSpeed;
+    public double baseRunSpeed;
+    public double baseUnderwaterSpeed;
+    public double baseCrawlSpeed;
+    public double baseRidingSpeed;
+    public double baseJumpSpeed;
+    public double effectiveWalkSpeed;
+    public double effectiveRunSpeed;
+    public double effectiveUnderwaterSpeed;
+    public double effectiveCrawlSpeed;
+    public double effectiveRidingSpeed;
+    public double effectiveJumpSpeed;
+    public double eyeHeight;
+    public double stealthRange;
+    public double distanceNotifyReductionWalk;
+    public double distanceNotifyReductionCrouch;
+    public double selectionRadius;
+    public double baseTurnSpeed;
+    public double effectiveTurnSpeed;
+    public double baseUnderwaterTurnSpeed;
+    public double effectiveUnderwaterTurnSpeed;
+    public String thirdPersonModelId;
 }

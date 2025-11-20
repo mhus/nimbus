@@ -1,18 +1,18 @@
 package de.mhus.nimbus.generated.rest;
 
-public interface BlockTypeDTO {
-    double getId();
-    String getName();
-    String getDisplayName();
-    String getShape();
-    String getTexture();
-    BlockTypeOptionsDTO getOptions();
-    double getHardness();
-    double getMiningtime();
-    String getTool();
-    boolean getUnbreakable();
-    boolean getSolid();
-    boolean getTransparent();
-    double getWindLeafiness();
-    double getWindStability();
+public class BlockTypeDTO extends Object {
+    public double id;
+    public String name;
+    public String displayName;
+    public String shape;
+    public String texture;
+    public BlockTypeOptionsDTO options;
+    public double hardness;
+    public double miningtime;
+    public String tool;
+    public boolean unbreakable;
+    public boolean solid;
+    public boolean transparent;
+    public double windLeafiness;
+    public double windStability;
 }

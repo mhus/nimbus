@@ -1,6 +1,6 @@
 package de.mhus.nimbus.generated;
 
-public interface PongData {
-    double getCTs();
-    double getSTs();
+public class PongData extends Object {
+    public double cTs;
+    public double sTs;
 }

@@ -1,13 +1,13 @@
 package de.mhus.nimbus.generated.types;
 
-public interface EntityPathway {
-    String getEntityId();
-    double getStartAt();
-    java.util.List<Waypoint> getWaypoints();
-    java.lang.Boolean getIsLooping();
-    java.lang.Double getQueryAt();
-    ENTITY_POSES getIdlePose();
-    java.lang.Boolean getPhysicsEnabled();
-    Vector3 getVelocity();
-    java.lang.Boolean getGrounded();
+public class EntityPathway extends Object {
+    public String entityId;
+    public double startAt;
+    public java.util.List<Waypoint> waypoints;
+    public java.lang.Boolean isLooping;
+    public java.lang.Double queryAt;
+    public ENTITY_POSES idlePose;
+    public java.lang.Boolean physicsEnabled;
+    public Vector3 velocity;
+    public java.lang.Boolean grounded;
 }

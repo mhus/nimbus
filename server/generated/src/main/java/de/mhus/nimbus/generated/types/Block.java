@@ -1,12 +1,12 @@
 package de.mhus.nimbus.generated.types;
 
-public interface Block {
-    Vector3 getPosition();
-    double getBlockTypeId();
-    Offsets getOffsets();
-    java.util.List<Object> getCornerHeights();
-    FaceVisibility getFaceVisibility();
-    java.lang.Double getStatus();
-    java.util.Map<java.lang.Double, BlockModifier> getModifiers();
-    BlockMetadata getMetadata();
+public class Block extends Object {
+    public Vector3 position;
+    public double blockTypeId;
+    public Offsets offsets;
+    public java.util.List<Object> cornerHeights;
+    public FaceVisibility faceVisibility;
+    public java.lang.Double status;
+    public java.util.Map<java.lang.Double, BlockModifier> modifiers;
+    public BlockMetadata metadata;
 }

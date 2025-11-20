@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated.types;
 
-public interface Waypoint {
-    double getTimestamp();
-    Vector3 getTarget();
-    Rotation getRotation();
-    ENTITY_POSES getPose();
+public class Waypoint extends Object {
+    public double timestamp;
+    public Vector3 target;
+    public Rotation rotation;
+    public ENTITY_POSES pose;
 }

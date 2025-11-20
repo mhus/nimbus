@@ -1,5 +1,4 @@
 package de.mhus.nimbus.generated;
 
-/** Type alias for:  */
-public class ChunkRegisterMessage {
+public class ChunkRegisterMessage extends Object {
 }

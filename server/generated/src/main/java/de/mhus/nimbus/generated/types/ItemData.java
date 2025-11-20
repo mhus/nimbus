@@ -1,10 +1,10 @@
 package de.mhus.nimbus.generated.types;
 
-public interface ItemData {
-    Block getBlock();
-    String getDescription();
-    String getPose();
-    java.lang.Double getWait();
-    java.lang.Double getDuration();
-    java.util.Map<String, Object> getParameters();
+public class ItemData extends Object {
+    public Block block;
+    public String description;
+    public String pose;
+    public java.lang.Double wait;
+    public java.lang.Double duration;
+    public java.util.Map<String, Object> parameters;
 }

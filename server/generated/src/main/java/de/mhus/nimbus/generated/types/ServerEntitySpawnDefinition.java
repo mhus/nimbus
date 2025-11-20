@@ -1,19 +1,19 @@
 package de.mhus.nimbus.generated.types;
 
-public interface ServerEntitySpawnDefinition {
-    String getEntityId();
-    String getEntityModelId();
-    Vector3 getInitialPosition();
-    Rotation getInitialRotation();
-    Vector3 getMiddlePoint();
-    double getRadius();
-    double getSpeed();
-    String getBehaviorModel();
-    BehaviorConfig getBehaviorConfig();
-    EntityPathway getCurrentPathway();
-    java.util.List<Vector2> getChunks();
-    Vector3 getPosition();
-    Vector3 getVelocity();
-    Rotation getRotation();
-    boolean getGrounded();
+public class ServerEntitySpawnDefinition extends Object {
+    public String entityId;
+    public String entityModelId;
+    public Vector3 initialPosition;
+    public Rotation initialRotation;
+    public Vector3 middlePoint;
+    public double radius;
+    public double speed;
+    public String behaviorModel;
+    public BehaviorConfig behaviorConfig;
+    public EntityPathway currentPathway;
+    public java.util.List<Vector2> chunks;
+    public Vector3 position;
+    public Vector3 velocity;
+    public Rotation rotation;
+    public boolean grounded;
 }

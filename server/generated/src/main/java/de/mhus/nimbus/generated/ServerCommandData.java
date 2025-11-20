@@ -1,9 +1,9 @@
 package de.mhus.nimbus.generated;
 
-public interface ServerCommandData {
-    String getCmd();
-    java.util.List<String> getArgs();
-    java.lang.Boolean getOneway();
-    java.util.List<SingleServerCommandData> getCmds();
-    java.lang.Boolean getParallel();
+public class ServerCommandData extends Object {
+    public String cmd;
+    public java.util.List<String> args;
+    public java.lang.Boolean oneway;
+    public java.util.List<SingleServerCommandData> cmds;
+    public java.lang.Boolean parallel;
 }

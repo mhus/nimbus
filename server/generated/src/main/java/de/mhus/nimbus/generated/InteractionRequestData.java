@@ -1,8 +1,8 @@
 package de.mhus.nimbus.generated;
 
-public interface InteractionRequestData {
-    double getX();
-    double getY();
-    double getZ();
-    String getG();
+public class InteractionRequestData extends Object {
+    public double x;
+    public double y;
+    public double z;
+    public String g;
 }
