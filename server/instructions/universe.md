@@ -3,24 +3,31 @@
 
 ## Overview
 
-Universe <- Quadrant <- Solar System <- Planet <- World
+Universe <- Region <- Solar System <- Planet <- World
 
 Universe -> Universe / Governor Server
+Region -> Ueber meherere Quadranten verteilt (Quadranten sind einheiten mit fester Größe, Regionen können wachsen)
 
-Quadrant -> Quadrant Server
-Solar System -> Quadrant Server (Meta Struktur)
-Planet -> Quadrant Server (Meta Struktur)
-
+Universe -> Universe Server - Only one Universe!
+Galaxy -> Universe Server (Meta Struktur)
+Region -> Region Server
+Quadrant -> Universe Server (Meta Struktur)
+Solar System -> Universe Server (Meta Struktur)
+Planet -> Universe Server (Meta Struktur)
 World -> World Server
 
-ggf. Universe Quadrant zum durchqueren des Universums
+ggf. Universe Region zum durchqueren des Universums
 
-- Universe managed: User, Echtwährung (Governor), Quadranten Registry, Short Links zu Welten
-- Quadrant managed: Metastruktur (Solar Systeme, Planeten), Welten Registry, Character Daten
+- Universe managed: User, Echtwährung (Governor), Regionen Registry, Short Links zu Welten
+  - Management von geografischer Lage der Regionen, Quadranten, Systems, Planeten/Ebenen und Welten, EntryPoints
+  - Welten und EntryPoints werden auf Planeten auf einer Map dargestellt - diese wird von Region an Universe gemeldet
+  - Universe verwaltet bekannt Entry Points zu Welten, werden von Region an Universe gemeldet
+  - Können auch als Invite gemeldet werden von Owner einer Welt
+- Region managed: Metastruktur (Solar Systeme, Planeten), Welten Registry, Character Daten
   - Character Daten: Inventar, Rucksack, Alt-Waehrung, Vortschritt, Skills, Einstellungen
   - Eigene Asset (Texture, Model) und item Verwaltung uebergreifend
   - (Shop)
-  - Character Access Points zu Welten (Bekannte Reisepunkte) - Werden von Welt an Quadrant gemeldet, Startpunkte fuer besucher uder Einladungen
+  - Character Access Points zu Welten (Bekannte Reisepunkte) - Werden von Welt an Region gemeldet, Startpunkte fuer besucher uder Einladungen
 - World managed: Welt Daten, Block Daten, In-Game Aktionen
 
 - Transfer zwischen den Platformen wird spaeter moeglich sein
@@ -28,28 +35,32 @@ ggf. Universe Quadrant zum durchqueren des Universums
 
 - Universe hat einen Signatur Key fuer:
   - Access Tokens 
-- Quadrant hat einen Signatur Key fuer:
+- Region hat einen Signatur Key fuer:
   - Character Data Tokens
+
+- Auf einem Planeten gibt es eine Map und weitere Ebenen
+  - Auf der Map koenne Welten in 6Eck Raster definiert werden, Pro Raster ein EntryPoint möglich (optional)
+  - Ausserdem können weitere Ebenen defineirt werden (jeweils eine Welt)
 
 Access:
 - Unverse Access Token
-- Quadrant Access Token ? -> Unverse Access Token + Quadrant Info Claim
-- World Access Token ? -> Unverse Access Token + Quadrant Info Claim + World Info Claim
+- Region Access Token ? -> Unverse Access Token + Region Info Claim
+- World Access Token ? -> Unverse Access Token + Region Info Claim + World Info Claim
 - Visum - World Access Token ? - One Time Access to a single point in the World
 
 Word Access:
 - Login beim Universe -> universe access token
-- Auswahl des Quadranten -> Quadrant abfrage von Access Points (Worlds) (mit such funktion nach Solar System, Panet, Name - Liste der SolarSystems und Planeten) -> Quadrant Access Point + Quadrant Access Token
-  - Oder Short Link zu World -> Quadrant Access Point + Quadrant Access Token
+- Auswahl des Regionen -> Region abfrage von Access Points (Worlds) (mit such funktion nach Solar System, Panet, Name - Liste der SolarSystems und Planeten) -> Region Access Point + Region Access Token
+  - Oder Short Link zu World -> Region Access Point + Region Access Token
   - Hier auch Rolle des Characters abfragen (owner, editor, moderator, player) und angeben mit welcher rolle eingelogt werden soll
-- Access Points auf der Welt anzeigen (Name, Beschreibung, Bild, Rolle) -> Auswahl der Welt -> Visum wird vom Quadrant Server ausgestellt -> World Access Token + Visum
+- Access Points auf der Welt anzeigen (Name, Beschreibung, Bild, Rolle) -> Auswahl der Welt -> Visum wird vom Region Server ausgestellt -> World Access Token + Visum
 
 Visum:
 - Der User/Character darf nicht einfach so in einer Welt irgendwohin reisen, er braucht ein visum, das einen Teleport an eine bestimmte stelle erlaubt
 - Wann visum: 
-  - Beim Betreten, wird vom Quadrant Server ausgestellt
+  - Beim Betreten, wird vom Region Server ausgestellt
   - Beim Teleport innerhalb der Welt, wird vom World Server ausgestellt ????
-  - Beim Teleport mit einem Teleporter, auch in eine andere Welt, wird vom Quadrant Server ausgestellt ????
+  - Beim Teleport mit einem Teleporter, auch in eine andere Welt, wird vom Region Server ausgestellt ????
 - Visum beinhaltet:
   - World Access Token
   - Ziel Position
@@ -63,21 +74,21 @@ UniverseInfo:
 UniverseCoins:
   - amount
 
-QuadrantInfo:
-  - QuadrantId: string
+RegionInfo:
+  - RegionId: string
   - ApiUrl: string
   - characters
 
-QuadrantCharacterInfo:
+RegionCharacterInfo:
 - userId: string
   - characterId: string
   - characterName: string
 
-QuadrantCharacterInventory:
-  > Wird im Quadrant verwaltet und hier mit Backpack ausgetauscht, wird nicht vom client abgerufen
+RegionCharacterInventory:
+  > Wird im Region verwaltet und hier mit Backpack ausgetauscht, wird nicht vom client abgerufen
   - (items: Item[])
 
-QuadrantChest:
+RegionChest:
   - chestId: string
   - worldId: string
   - chestSecretHash: string
@@ -146,3 +157,18 @@ Assets:
 - @G:/assets/{assetId} - geht nach Governor
 - @S:/assets/{assetId} - geht nach Shop
 - assets/{assetId} - geht nach World
+
+
+
+Was alles gespeichert werden muss:
+
+- Shortcuts des Characters
+- Ausstattung des Characters (was hat er wo (slot) an) -> Item Eigenschaft: wo (welcher slot) kann man das anziehen
+  - Ausstattung mappt teilweise mit Shortcuts
+- Welche Arten von Vortbewegung sind erlaubt in der Welt
+- Wo sind die EntryPoints der Welt: key:area, default ist 'main' EntryPoint
+- Default backboard in der WeltInfo
+- SplashScreen Image links(s) in der WeltInfo
+- DeathAmbiente Sound in der WeltInfo
+- SplashScreenSound in der WeltInfo (?)
+- 

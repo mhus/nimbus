@@ -21,6 +21,7 @@
         <module>quadrant</module>
         <module>universe</module>
         <module>world</module>
+        <module>tools</module>
     </modules>
 
     <properties>
