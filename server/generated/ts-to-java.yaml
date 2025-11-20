@@ -5,13 +5,13 @@ basePackage: de.mhus.nimbus.generated
 ignoreTsItems: []
 # Map TS source folders to explicit packages (match by folder suffix)
 packageRules:
-  - dirEndsWith: types
-    pkg: de.mhus.nimbus.generated.types
-  - dirEndsWith: configs
-    pkg: de.mhus.nimbus.generated.configs
   - dirEndsWith: rest
     pkg: de.mhus.nimbus.generated.rest
   - dirEndsWith: scrawl
     pkg: de.mhus.nimbus.generated.scrawl
   - dirEndsWith: network/messages
     pkg: de.mhus.nimbus.generated.network
+  - dirEndsWith: types
+    pkg: de.mhus.nimbus.generated.types
+  - dirEndsWith: configs
+    pkg: de.mhus.nimbus.generated.configs
