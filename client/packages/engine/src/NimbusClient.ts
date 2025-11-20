@@ -28,6 +28,7 @@ import { CompassService } from './services/CompassService';
 import { EntityService } from './services/EntityService';
 import { ItemService } from './services/ItemService';
 import { ScrawlService } from './scrawl/ScrawlService';
+import { ConfigService } from './services/ConfigService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
@@ -42,6 +43,7 @@ import { ServerCommandHandler } from './network/handlers/ServerCommandHandler';
 import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
+import { ReloadConfigCommand } from './commands/ReloadConfigCommand';
 import { SendCommand } from './commands/SendCommand';
 import { AudioCommand } from './commands/AudioCommand';
 import { TestAudioCommand } from './commands/TestAudioCommand';
@@ -177,6 +179,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new HelpCommand(commandService));
     commandService.registerHandler(new InfoCommand(appContext));
     commandService.registerHandler(new ClearCommand());
+    commandService.registerHandler(new ReloadConfigCommand(appContext));
     commandService.registerHandler(new SendCommand(commandService));
     commandService.registerHandler(new AudioCommand(appContext));
     commandService.registerHandler(new TestAudioCommand(appContext));
@@ -251,6 +254,23 @@ async function initializeApp(): Promise<AppContext> {
 async function initializeCoreServices(appContext: AppContext): Promise<void> {
   try {
     logger.info('Initializing core services...');
+
+    // Initialize ConfigService BEFORE NetworkService
+    logger.info('Initializing ConfigService...');
+    const configService = new ConfigService(appContext);
+    appContext.services.config = configService;
+
+    // Load configuration from REST API before connecting to WebSocket
+    logger.info('Loading configuration from REST API...');
+    const clientType = __EDITOR__ ? 'editor' : 'viewer';
+    const worldId = appContext.config?.worldId || 'main';
+    try {
+      await configService.loadConfig(clientType, false, worldId);
+      logger.info('Configuration loaded successfully');
+    } catch (error) {
+      logger.error('Failed to load configuration from REST API', undefined, error as Error);
+      throw new Error('Failed to load configuration. Please check server connection.');
+    }
 
     // Initialize NetworkService
     logger.info('Initializing NetworkService...');

@@ -4,7 +4,6 @@
 
 import type { RequestMessage, ResponseMessage } from '../BaseMessage';
 import type { ClientType } from '../MessageTypes';
-import type { WorldInfo } from '../../types/World';
 
 /**
  * Login request with username/password
@@ -20,12 +19,14 @@ export interface LoginRequestData {
 
 /**
  * Login response data (success)
+ *
+ * Note: WorldInfo is now loaded separately via REST API /api/worlds/{worldId}/config
+ * before connecting to WebSocket
  */
 export interface LoginResponseData {
   success: true;
   userId: string;
   displayName: string;
-  worldInfo: WorldInfo;
   sessionId: string;
 }
 

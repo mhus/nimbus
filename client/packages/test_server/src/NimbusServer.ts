@@ -365,8 +365,6 @@ class NimbusServer {
       });
     }
 
-    const world = this.worldManager.getWorld(data.worldId);
-
     session.ws.send(JSON.stringify({
       r: messageId,
       t: 'loginResponse',
@@ -374,7 +372,6 @@ class NimbusServer {
         success: true,
         userId: session.userId,
         displayName: session.displayName,
-        worldInfo: world ? world.worldInfo : null,
         sessionId: session.sessionId,
       },
     }));
