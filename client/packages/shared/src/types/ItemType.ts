@@ -34,4 +34,13 @@ export interface ItemType {
    * Individual items can override these via Item.modifier
    */
   modifier: ItemModifier;
+
+  /**
+   * Optional parameters
+   *
+   * Custom key-value pairs for item-specific data (server-side only).
+   * Examples: durability, enchantments, customData
+   */
+  parameters?: Record<string, any>;
+
 }

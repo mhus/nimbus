@@ -9,8 +9,12 @@
  * ChunkService converts Items to Blocks for rendering only.
  */
 
-import type { Vector3 } from './Vector3';
 import type { ItemModifier } from './ItemModifier';
+
+/** This is a marker interface for full Item with all properties loaded from ItemType */
+export interface FullItem extends Item {
+
+}
 
 /**
  * Item instance in the world
@@ -34,8 +38,9 @@ export interface Item {
   /**
    * Position in world coordinates
    * Direct position, not wrapped in a Block
+   * Use ItemBlockRef position instead.
    */
-  position: Vector3;
+  // position: Vector3;
 
   /**
    * Optional display name

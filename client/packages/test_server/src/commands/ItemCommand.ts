@@ -104,7 +104,7 @@ export class ItemCommand extends CommandHandler {
 
     try {
       // Add item to registry
-      const item = world.itemRegistry.addItem(x, y, z, displayName, itemType, texturePath);
+      const item = world.itemRegistry.addItem(displayName, itemType, {x,y,z} ,texturePath);
 
       // Queue item update for broadcast
       // Items are sent as Items over the network, not Blocks
@@ -187,7 +187,7 @@ export class ItemCommand extends CommandHandler {
       // Queue item deletion update for broadcast
       // Create a delete marker item with special itemType
       const deleteItem: any = {
-        id: item.id,
+        id: item.item.id,
         itemType: '__deleted__', // Special marker for deletion
         position: { x, y, z },
       };
@@ -196,13 +196,13 @@ export class ItemCommand extends CommandHandler {
       logger.info('Item removed via command', {
         worldId,
         position: { x, y, z },
-        itemId: item.id,
-        displayName: item.name,
+        itemId: item.item.id,
+        displayName: item.item.name,
       });
 
       return {
         rc: 0,
-        message: `Item "${item.name || 'unknown'}" removed from (${x}, ${y}, ${z})`,
+        message: `Item "${item.item.name || 'unknown'}" removed from (${x}, ${y}, ${z})`,
       };
     } catch (error) {
       logger.error('Failed to remove item', { worldId, position: { x, y, z } }, error as Error);
@@ -265,36 +265,37 @@ export class ItemCommand extends CommandHandler {
       // Format item information
       const itemInfo = [
         `Item at (${x}, ${y}, ${z}):`,
-        `  Display Name: ${item.name || 'unknown'}`,
-        `  Item ID: ${item.id || 'unknown'}`,
-        `  Type: ${item.itemType}`,
+        `  Display Name: ${item.item.name || 'unknown'}`,
+        `  Item ID: ${item.item.id || 'unknown'}`,
+        `  Type: ${item.item.itemType}`,
       ];
 
       // Add description if available
-      if (item.description) {
-        itemInfo.push(`  Description: ${item.description}`);
+      if (item.item.description) {
+        itemInfo.push(`  Description: ${item.item.description}`);
       }
 
       // Add modifier properties if available
-      if (item.modifier) {
-        if (item.modifier.pose) {
-          itemInfo.push(`  Pose: ${item.modifier.pose}`);
+      if (item.item.modifier) {
+        if (item.item.modifier.pose) {
+          itemInfo.push(`  Pose: ${item.item.modifier.pose}`);
         }
-        if (item.modifier.texture) {
-          itemInfo.push(`  Texture: ${item.modifier.texture}`);
+        if (item.item.modifier.texture) {
+          itemInfo.push(`  Texture: ${item.item.modifier.texture}`);
         }
-        if (item.modifier.scaleX !== undefined || item.modifier.scaleY !== undefined) {
-          itemInfo.push(`  Scale: ${item.modifier.scaleX ?? 0.5} x ${item.modifier.scaleY ?? 0.5}`);
+        if (item.item.modifier.scaleX !== undefined || item.item.modifier.scaleY !== undefined) {
+          itemInfo.push(`  Scale: ${item.item.modifier.scaleX ?? 0.5} x ${item.item.modifier.scaleY ?? 0.5}`);
         }
       }
 
       // Add position info
-      itemInfo.push(`  Position: x=${item.position.x}, y=${item.position.y}, z=${item.position.z}`);
-
+      if (item.itemBlockRef) {
+        itemInfo.push(`  Position: x=${item.itemBlockRef?.position.x}, y=${item.itemBlockRef?.position.y}, z=${item.itemBlockRef?.position.z}`);
+      }
       // Add parameters if they exist
-      if (item.parameters && Object.keys(item.parameters).length > 0) {
+      if (item.item.parameters && Object.keys(item.item.parameters).length > 0) {
         itemInfo.push(`  Parameters:`);
-        for (const [key, value] of Object.entries(item.parameters)) {
+        for (const [key, value] of Object.entries(item.item.parameters)) {
           itemInfo.push(`    ${key}: ${JSON.stringify(value)}`);
         }
       }
@@ -344,11 +345,11 @@ export class ItemCommand extends CommandHandler {
 
       const itemList = items
         .map((item, index) => {
-          const pos = item.position;
-          const name = item.name || 'unknown';
-          const id = item.id || 'unknown';
-          const type = item.itemType || 'unknown';
-          return `${index + 1}. "${name}" (${type}) at (${pos.x}, ${pos.y}, ${pos.z}) [ID: ${id}]`;
+          const pos = item.itemBlockRef?.position || 'none';
+          const name = item.item.name || 'unknown';
+          const id = item.item.id || 'unknown';
+          const type = item.item.itemType || 'unknown';
+          return `${index + 1}. "${name}" (${type}) at (${pos}) [ID: ${id}]`;
         })
         .join('\n');
 

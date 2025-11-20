@@ -8,7 +8,7 @@
  */
 
 import type { Block } from './Block';
-import type { Item } from './Item';
+import type { ItemBlockRef } from './ItemBlockRef';
 import type { Backdrop } from './Backdrop';
 
 /**
@@ -75,7 +75,7 @@ export interface ChunkData {
    * Items can only exist at AIR positions or replace existing items
    * Each item has a unique ID, position, itemType, and modifiers
    */
-  i?: Item[];
+  i?: ItemBlockRef[];
 
   /**
    * Height data per XZ position (optional)

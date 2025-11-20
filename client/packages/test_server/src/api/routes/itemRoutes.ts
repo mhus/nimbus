@@ -35,17 +35,17 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       // Match query against itemId, name, or description
       const matchesQuery =
         !query ||
-        item.id.toLowerCase().includes(query) ||
-        (item.name?.toLowerCase().includes(query)) ||
-        (item.description?.toLowerCase().includes(query));
+        item.item.id.toLowerCase().includes(query) ||
+        (item.item.name?.toLowerCase().includes(query)) ||
+        (item.item.description?.toLowerCase().includes(query));
 
       if (matchesQuery) {
         // Extract texture path if available
-        const texture = item.modifier?.texture;
+        const texture = item.item.modifier?.texture;
 
         results.push({
-          itemId: item.id,
-          name: item.name || item.id,
+          itemId: item.item.id,
+          name: item.item.name || item.item.id,
           texture,
         });
 
@@ -91,16 +91,11 @@ export function createItemRoutes(worldManager: WorldManager): Router {
     const worldId = req.params.worldId;
     const { item }: { item: Item } = req.body;
 
-    if (!item?.position) {
-      return res.status(400).json({ error: 'Invalid item data: position required' });
-    }
-
     const world = worldManager.getWorld(worldId);
     if (!world) {
       return res.status(404).json({ error: 'World not found' });
     }
 
-    const { position } = item;
     const displayName = item.name || 'New Item';
     const itemType = item.itemType || 'sword'; // Default if not provided
 
@@ -109,11 +104,9 @@ export function createItemRoutes(worldManager: WorldManager): Router {
 
     // Use ItemRegistry.addItem
     const createdItem = world.itemRegistry.addItem(
-      position.x,
-      position.y,
-      position.z,
       displayName,
       itemType,
+      undefined,
       textureOverride,
       item.parameters
     );
@@ -142,29 +135,24 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    const { position } = item;
     const displayName = item.name || 'Updated Item';
 
     // Remove old item
     world.itemRegistry.removeItem(
-      existingItem.position.x,
-      existingItem.position.y,
-      existingItem.position.z
+      existingItem.item.id
     );
 
     // Get itemType from request
-    const itemType = item.itemType || existingItem.itemType || 'sword';
+    const itemType = item.itemType || existingItem.item.itemType || 'sword';
 
     // Texture is optional - will use ItemType default if not provided
     const textureOverride = item.modifier?.texture;
 
     // Add updated item (will generate new ID if position changed)
     const updatedItem = world.itemRegistry.addItem(
-      position.x,
-      position.y,
-      position.z,
       displayName,
       itemType,
+      undefined,
       textureOverride,
       item.parameters
     );
@@ -192,7 +180,7 @@ export function createItemRoutes(worldManager: WorldManager): Router {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    world.itemRegistry.removeItem(item.position.x, item.position.y, item.position.z);
+    world.itemRegistry.removeItem(item.item.id);
 
     return res.status(204).send();
   });

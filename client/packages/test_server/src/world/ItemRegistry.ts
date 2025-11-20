@@ -5,19 +5,31 @@
  * Items reference ItemType templates for default properties and can override them.
  */
 
-import type { Item } from '@nimbus/shared';
+import type {Item, ItemBlockRef, ItemType, Vector3} from '@nimbus/shared';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import * as fs from 'fs';
 import * as path from 'path';
 
 const logger = getLogger('ItemRegistry');
 
+export interface ServerItem {
+  /**
+   * If the item has an position in the world, this is the reference to it
+   * and other important data loaded from item and itemType in time of storage.
+   */
+  itemBlockRef?: ItemBlockRef;
+  /**
+   * The item data itself
+   */
+  item: Item;
+}
+
 /**
  * ItemRegistry manages all items in the world
  */
 export class ItemRegistry {
   /** All items in the world, keyed by position "x,y,z" */
-  private items: Map<string, Item>;
+  private items: Map<string, ServerItem>;
 
   /** World ID for this registry */
   private worldId: string;
@@ -33,9 +45,7 @@ export class ItemRegistry {
   /**
    * Add item to registry
    *
-   * @param x World X coordinate
-   * @param y World Y coordinate
-   * @param z World Z coordinate
+   * @param position World Position (X,Y,Z) coordinate
    * @param displayName Display name for the item
    * @param itemType Item type identifier (e.g., 'sword', 'wand')
    * @param texturePath Optional texture path override
@@ -43,41 +53,47 @@ export class ItemRegistry {
    * @returns Created item
    */
   addItem(
-    x: number,
-    y: number,
-    z: number,
     displayName: string,
-    itemType: string,
+    itemTypeId: string,
+    position?: Vector3,
     texturePath?: string,
     parameters?: Record<string, any>
   ): Item {
-    const key = `${x},${y},${z}`;
 
     // Generate unique ID
     const id = `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
+    const itemType = <ItemType>getItemType(itemTypeId); // TODO fix load from item types
+
     // Create Item
     const item: Item = {
       id,
-      itemType,
-      position: { x, y, z },
+      itemType: itemTypeId,
       name: displayName,
       parameters,
     };
 
-    // Only set modifier.texture if provided (override ItemType default)
-    if (texturePath) {
-      item.modifier = {
-        texture: texturePath,
-      };
+    const itemBlockRef: ItemBlockRef | undefined = position ? {
+      id,
+      position,
+      scaleX: itemType.modifier?.scaleX || 0,
+      scaleY: itemType.modifier?.scaleY || 0,
+      offset: itemType.modifier?.offset || [0, 0, 0],
+      color: itemType.modifier?.color || '',
+      texture: texturePath || itemType.modifier?.texture || '',
+    } : undefined;
+
+    const serverItem = {
+        itemBlockRef,
+        item,
     }
 
     // Add to registry
-    this.items.set(key, item);
+    this.items.set(id, serverItem);
     this.isDirty = true;
 
     logger.info('Item added', {
-      position: { x, y, z },
+      position,
       id,
       name: displayName,
       itemType,
@@ -96,13 +112,12 @@ export class ItemRegistry {
    * @param z World Z coordinate
    * @returns True if item was removed, false if no item at position
    */
-  removeItem(x: number, y: number, z: number): boolean {
-    const key = `${x},${y},${z}`;
-    const deleted = this.items.delete(key);
+  removeItem(id : string): boolean {
+    const deleted = this.items.delete(id);
 
     if (deleted) {
       this.isDirty = true;
-      logger.info('Item removed', { position: { x, y, z } });
+      logger.info('Item removed', id);
     }
 
     return deleted;
@@ -116,9 +131,18 @@ export class ItemRegistry {
    * @param z World Z coordinate
    * @returns Item or undefined if no item at position
    */
-  getItem(x: number, y: number, z: number): Item | undefined {
-    const key = `${x},${y},${z}`;
-    return this.items.get(key);
+  getItem(x: number, y: number, z: number): ServerItem | undefined {
+    for (const item of this.items.values()) {
+      if (
+        item.itemBlockRef &&
+        item.itemBlockRef.position.x === x &&
+        item.itemBlockRef.position.y === y &&
+        item.itemBlockRef.position.z === z
+      ) {
+        return item;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -127,13 +151,8 @@ export class ItemRegistry {
    * @param itemId Item ID
    * @returns Item or undefined if not found
    */
-  getItemById(itemId: string): Item | undefined {
-    for (const item of this.items.values()) {
-      if (item.id === itemId) {
-        return item;
-      }
-    }
-    return undefined;
+  getItemById(itemId: string): ServerItem | undefined {
+    return this.items.get(itemId);
   }
 
   /**
@@ -157,22 +176,23 @@ export class ItemRegistry {
    * @param chunkSize Chunk size (blocks per side)
    * @returns Array of items in the chunk
    */
-  getItemsInChunk(cx: number, cz: number, chunkSize: number): Item[] {
+  getItemsInChunk(cx: number, cz: number, chunkSize: number): ItemBlockRef[] {
     const minX = cx * chunkSize;
     const maxX = minX + chunkSize - 1;
     const minZ = cz * chunkSize;
     const maxZ = minZ + chunkSize - 1;
 
-    const items: Item[] = [];
+    const items: ItemBlockRef[] = [];
 
     for (const item of this.items.values()) {
       if (
-        item.position.x >= minX &&
-        item.position.x <= maxX &&
-        item.position.z >= minZ &&
-        item.position.z <= maxZ
+          item.itemBlockRef &&
+        item.itemBlockRef.position.x >= minX &&
+        item.itemBlockRef.position.x <= maxX &&
+        item.itemBlockRef.position.z >= minZ &&
+        item.itemBlockRef.position.z <= maxZ
       ) {
-        items.push(item);
+        items.push(item.itemBlockRef);
       }
     }
 
@@ -184,7 +204,7 @@ export class ItemRegistry {
    *
    * @returns Array of all items
    */
-  getAllItems(): Item[] {
+  getAllItems(): ServerItem[] {
     return Array.from(this.items.values());
   }
 
@@ -266,15 +286,15 @@ export class ItemRegistry {
 
       // Read and parse items file
       const itemsContent = fs.readFileSync(itemsPath, 'utf-8');
-      const itemsArray: Item[] = JSON.parse(itemsContent);
+      const serverItemsArray: ServerItem[] = JSON.parse(itemsContent);
 
       // Clear existing items
       this.items.clear();
 
       // Load items into registry
-      for (const item of itemsArray) {
-        const key = `${item.position.x},${item.position.y},${item.position.z}`;
-        this.items.set(key, item);
+      for (const serverItem of serverItemsArray) {
+//        const key = `${item.position.x},${item.position.y},${item.position.z}`;
+        this.items.set(serverItem.item.id, serverItem);
       }
 
       this.isDirty = false;
@@ -282,10 +302,10 @@ export class ItemRegistry {
       logger.info('Items loaded from disk', {
         worldId: this.worldId,
         path: itemsPath,
-        itemCount: itemsArray.length,
+        itemCount: serverItemsArray.length,
       });
 
-      return itemsArray.length;
+      return serverItemsArray.length;
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
         error,

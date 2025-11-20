@@ -1932,9 +1932,7 @@ doScrawlStart({
       "color": "#ffffff",
       "height": 30,
       "textureFrames": [
-        "textures/lightning/frame1.png",
-        "textures/lightning/frame2.png",
-        "textures/lightning/frame3.png"
+        "textures/effects/blitz1.png"
       ],
       "frameRate": 20,
       "light": true
