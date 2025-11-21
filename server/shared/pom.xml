@@ -19,6 +19,18 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
+        <!-- Spring Data Commons for Repository interfaces (no JPA runtime needed here) -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+
+        <!-- JPA Annotations API (compile-time only) -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+
         <!-- JWT library for token creation and validation -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
