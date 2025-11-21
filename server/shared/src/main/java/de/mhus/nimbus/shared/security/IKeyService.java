@@ -14,17 +14,17 @@ import java.util.Optional;
  */
 public interface IKeyService {
 
-    Optional<PublicKey> findPublicKey(String keyId);
+    Optional<PublicKey> findPublicKey(KeyType type, String keyId);
 
-    Optional<PublicKey> findPublicKey(@NonNull KeyId id);
+    Optional<PublicKey> findPublicKey(KeyType type, @NonNull KeyId id);
 
-    Optional<SecretKey> findSecretKey(String keyId);
+    Optional<SecretKey> findSecretKey(KeyType type, String keyId);
 
-    Optional<SecretKey> findSecretKey(@NonNull KeyId id);
+    Optional<SecretKey> findSecretKey(KeyType type, @NonNull KeyId id);
 
-    Optional<SecretKey> findSyncKey(String keyId);
+    Optional<SecretKey> findSyncKey(KeyType type, String keyId);
 
-    Optional<SecretKey> findSyncKey(@NonNull KeyId id);
+    Optional<SecretKey> findSyncKey(KeyType type, @NonNull KeyId id);
 
     Optional<KeyId> parseKeyId(String keyId);
 }

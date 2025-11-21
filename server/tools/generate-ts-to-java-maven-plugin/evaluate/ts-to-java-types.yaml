@@ -1,0 +1,17 @@
+# Narrow config for types-only test in evaluate module
+basePackage: de.mhus.nimbus.evaluate.generated
+ignoreTsItems: []
+excludeDirSuffixes:
+  - errors
+  - logger
+additionalClassAnnotations:
+  - Deprecated
+additionalFieldAnnotations:
+  - Deprecated
+additionalOptionalFieldAnnotations:
+  - SuppressWarnings("optional")
+additionalNonOptionalFieldAnnotations:
+  - SuppressWarnings("required")
+packageRules:
+  - dirEndsWith: types
+    pkg: de.mhus.nimbus.evaluate.generated.types

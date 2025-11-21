@@ -64,6 +64,41 @@ Dazu kannst du auch unter evaluate/ts/features neue ts dateien hinzufuegen
 die dann zu java generiert werden. In den generierten dateien kann das
 Ergebnis validiert werden.
 Du kannst auch evaluate/ts-to-java.yaml aendern um die neuen Features zu konfigurieren.
+---
+Du kannst auch mehrere tests mit verscheidenen source directories und config files erstellen falls man die tests trennen sollte 
+---
+Definiere an jede generierte klasse die annotation 'org.springframework.aot.hint.annotation.Reflective' - 
+Besser: in der config soll es einen abschitt geben in dem man fuer klassen additional annotations definieren kann, die dann an jede klasse (nicht enum) angehaengt werden. dann kann ich dort org.springframework.aot.hint.annotation.Reflective eintragen.
 
+```text
+Die Lösung implementiert konfigurierbare Zusatz-Annotationen für alle generierten Klassen außer Enums. Die Annotation 'org.springframework.aot.hint.annotation.Reflective' kann nun über die Konfiguration additionalClassAnnotations hinzugefügt werden. Tests bestätigen die erfolgreiche Anwendung der Annotation in generierten Klassen.
+```
 
+Du kannst jetzt das anhaengen von '@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)' wieder entfernen, das kann ich in zukunft via config machen.
+---
+In der config soll es auch
+- additionalFieldAnnotations - an alle felder
+- additionalOptionalFieldAnnotations - nur optional felder
+- additionalNonOptionalFieldAnnotations - nur nicht optional felder
+geben. Die dann entsprechend angehaengt werden.
 
+```text
+Neue Konfigurationsoptionen für Feld-Annotationen wurden hinzugefügt und korrekt angewendet. Der JavaModelWriter gibt die Annotationen entsprechend aus. Alle Tests laufen erfolgreich und der Build kompiliert ohne Fehler.
+```
+
+Du kannst jetzt das Anhängen von '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)' wieder entfernen, das kann ich in zukunft via config machen.
+
+---
+Dieser ts type 'export type ColorHex = string;' wird als
+
+public class ColorHex {
+}
+
+Java generiert. Sollte aber:
+
+public class ColorHex {
+    private String value;
+}
+
+werden. Das sonst kein Wert zuweisen kann.
+---

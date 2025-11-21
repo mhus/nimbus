@@ -9,6 +9,33 @@ public class Configuration {
     public String basePackage;
 
     /**
+     * Optional list of additional annotations to add to every generated Java class
+     * (non-enum). Entries can be fully qualified or simple annotation names.
+     * They will be emitted as-is; a leading '@' is optional.
+     */
+    public List<String> additionalClassAnnotations;
+
+    /**
+     * Optional list of additional annotations to add to every generated field
+     * (in classes). Entries can be fully qualified or simple names; a leading
+     * '@' is optional and will be added during emission.
+     */
+    public List<String> additionalFieldAnnotations;
+
+    /**
+     * Optional list of additional annotations to add only to fields that were
+     * optional in TypeScript (e.g., name?: string). Useful for things like
+     * JsonInclude or custom validation hints.
+     */
+    public List<String> additionalOptionalFieldAnnotations;
+
+    /**
+     * Optional list of additional annotations to add only to fields that were
+     * non-optional (required) in TypeScript.
+     */
+    public List<String> additionalNonOptionalFieldAnnotations;
+
+    /**
      * Optional: exclude entire TS subdirectories by suffix. Any source file whose
      * relative directory (to its configured sourceDir) ends with one of these suffixes
      * will be ignored completely. Example entries: "errors", "logger", "network/messages".

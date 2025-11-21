@@ -35,13 +35,13 @@ public class KeyService implements IKeyService {
     // ------------------------------------------------------------
     // Public keys
 
-    public Optional<PublicKey> findPublicKey(String keyId) {
-        return parseKeyId(keyId).flatMap(this::findPublicKey);
+    public Optional<PublicKey> findPublicKey(KeyType type, String keyId) {
+        return parseKeyId(keyId).flatMap(id -> findPublicKey(type, id));
     }
 
-    public Optional<PublicKey> findPublicKey(@NonNull KeyId id) {
+    public Optional<PublicKey> findPublicKey(KeyType type, @NonNull KeyId id) {
         for (PublicKeyProvider provider : publicKeyProviders.getIfAvailable(Collections::emptyList)) {
-            Optional<PublicKey> key = provider.loadPublicKey(id);
+            Optional<PublicKey> key = provider.loadPublicKey(type, id);
             if (key.isPresent()) return key;
         }
         return Optional.empty();
@@ -50,13 +50,13 @@ public class KeyService implements IKeyService {
     // ------------------------------------------------------------
     // Secret keys
 
-    public Optional<SecretKey> findSecretKey(String keyId) {
-        return parseKeyId(keyId).flatMap(this::findSecretKey);
+    public Optional<SecretKey> findSecretKey(KeyType type, String keyId) {
+        return parseKeyId(keyId).flatMap(id -> findSecretKey(type, id));
     }
 
-    public Optional<SecretKey> findSecretKey(@NonNull KeyId id) {
+    public Optional<SecretKey> findSecretKey(KeyType type, @NonNull KeyId id) {
         for (SecretKeyProvider provider : secretKeyProviders.getIfAvailable(Collections::emptyList)) {
-            Optional<SecretKey> key = provider.loadSecretKey(id);
+            Optional<SecretKey> key = provider.loadSecretKey(type, id);
             if (key.isPresent()) return key;
         }
         return Optional.empty();
@@ -65,13 +65,13 @@ public class KeyService implements IKeyService {
     // ------------------------------------------------------------
     // Sync keys (synchronous/symmetric)
 
-    public Optional<SecretKey> findSyncKey(String keyId) {
-        return parseKeyId(keyId).flatMap(this::findSyncKey);
+    public Optional<SecretKey> findSyncKey(KeyType type, String keyId) {
+        return parseKeyId(keyId).flatMap(id -> findSyncKey(type, id));
     }
 
-    public Optional<SecretKey> findSyncKey(@NonNull KeyId id) {
+    public Optional<SecretKey> findSyncKey(KeyType type, @NonNull KeyId id) {
         for (SyncKeyProvider provider : syncKeyProviders.getIfAvailable(Collections::emptyList)) {
-            Optional<SecretKey> key = provider.loadSyncKey(id);
+            Optional<SecretKey> key = provider.loadSyncKey(type, id);
             if (key.isPresent()) return key;
         }
         return Optional.empty();

@@ -20,13 +20,13 @@ public interface PublicKeyProvider {
      * @param id the key id (owner + uuid), never null
      * @return optional containing the key if this provider can resolve it; empty if not found
      */
-    Optional<PublicKey> loadPublicKey(KeyId id);
+    Optional<PublicKey> loadPublicKey(KeyType type, KeyId id);
 
     /**
      * Convenience overload to avoid manual KeyId construction.
      */
-    default Optional<PublicKey> loadPublicKey(String owner, String uuid) {
-        return loadPublicKey(KeyId.of(owner, uuid));
+    default Optional<PublicKey> loadPublicKey(KeyType type, String owner, String uuid) {
+        return loadPublicKey(type, KeyId.of(owner, uuid));
         
     }
 }

@@ -20,12 +20,12 @@ public interface SecretKeyProvider {
      * @param id the key id (owner + uuid), never null
      * @return optional containing the key if this provider can resolve it; empty if not found
      */
-    Optional<SecretKey> loadSecretKey(KeyId id);
+    Optional<SecretKey> loadSecretKey(KeyType type, KeyId id);
 
     /**
      * Convenience overload to avoid manual KeyId construction.
      */
-    default Optional<SecretKey> loadSecretKey(String owner, String uuid) {
-        return loadSecretKey(KeyId.of(owner, uuid));
+    default Optional<SecretKey> loadSecretKey(KeyType type, String owner, String uuid) {
+        return loadSecretKey(type, KeyId.of(owner, uuid));
     }
 }

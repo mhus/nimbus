@@ -168,7 +168,7 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                 deleteRecursively(outputDir);
             }
 
-            new JavaModelWriter(javaModel).write(outputDir);
+            new JavaModelWriter(javaModel, configuration).write(outputDir);
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse TypeScript sources", e);

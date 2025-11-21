@@ -20,11 +20,17 @@ import java.util.List;
 public class JavaModelWriter {
 
     private final JavaModel model;
+    private final Configuration configuration;
     private final java.util.Map<String, JavaType> indexByName;
     private final java.util.Set<String> typesExtendedByOthers;
 
     public JavaModelWriter(JavaModel model) {
+        this(model, null);
+    }
+
+    public JavaModelWriter(JavaModel model, Configuration configuration) {
         this.model = model;
+        this.configuration = configuration;
         java.util.Map<String, JavaType> idx = new java.util.HashMap<>();
         java.util.Set<String> extendedByOthers = new java.util.HashSet<>();
         if (model != null && model.getTypes() != null) {
@@ -153,7 +159,8 @@ public class JavaModelWriter {
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.CLASS) {
             // Add Lombok and Jackson annotations and emit class with private fields
-            sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
+            // Additional configured annotations for classes (non-enum)
+            emitAdditionalAnnotations(sb);
             sb.append("@lombok.Data\n");
             // Always use SuperBuilder to support inheritance builder chains
             sb.append("@lombok.experimental.SuperBuilder\n");
@@ -178,27 +185,59 @@ public class JavaModelWriter {
                     if (!isValidJavaIdentifier(p.getName())) continue;
                     if (!seen.add(p.getName())) continue;
                     String type = p.getType() == null || p.getType().isBlank() ? "Object" : qualifyType(p.getType(), currentPkg);
-                    // If the original TS property was optional, add Jackson include NON_NULL to omit nulls during serialization
-                    if (p.isOptional()) {
-                        sb.append("    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)\n");
-                    }
+                    // Emit configured annotations for fields
+                    emitFieldAnnotations(sb, p.isOptional());
                     sb.append("    private ").append(type).append(' ').append(p.getName()).append(";\n");
                 }
             }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.TYPE_ALIAS) {
             sb.append("/** Type alias for: ").append(nullToEmpty(t.getAliasTargetName())).append(" */\n");
-            sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
+            // Additional configured annotations for classes (non-enum)
+            emitAdditionalAnnotations(sb);
             sb.append("@lombok.Data\n");
             sb.append("@lombok.experimental.SuperBuilder\n");
             sb.append("@lombok.NoArgsConstructor\n");
             sb.append("@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)\n");
             sb.append("public class ").append(name).append(" {\n}\n");
         } else {
-            sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("public class ").append(name).append(" {\n}\n");
         }
         return sb.toString();
+    }
+
+    private void emitAdditionalAnnotations(StringBuilder sb) {
+        if (configuration == null || configuration.additionalClassAnnotations == null) return;
+        for (String raw : configuration.additionalClassAnnotations) {
+            if (raw == null) continue;
+            String ann = raw.trim();
+            if (ann.isEmpty()) continue;
+            if (ann.charAt(0) != '@') ann = "@" + ann;
+            sb.append(ann).append('\n');
+        }
+    }
+
+    private void emitFieldAnnotations(StringBuilder sb, boolean optional) {
+        if (configuration == null) return;
+        // Common field annotations (apply to all fields)
+        appendAnnotations(sb, configuration.additionalFieldAnnotations);
+        // Optional / Non-optional specific
+        if (optional) {
+            appendAnnotations(sb, configuration.additionalOptionalFieldAnnotations);
+        } else {
+            appendAnnotations(sb, configuration.additionalNonOptionalFieldAnnotations);
+        }
+    }
+
+    private void appendAnnotations(StringBuilder sb, java.util.List<String> list) {
+        if (list == null || list.isEmpty()) return;
+        for (String raw : list) {
+            if (raw == null) continue;
+            String ann = raw.trim();
+            if (ann.isEmpty()) continue;
+            if (ann.charAt(0) != '@') ann = "@" + ann;
+            sb.append("    ").append(ann).append('\n');
+        }
     }
 
     private String renderExtends(String name, String currentPkg) {
