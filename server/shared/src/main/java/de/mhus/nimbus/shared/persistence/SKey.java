@@ -37,6 +37,9 @@ public class SKey {
     // Der Schluesselinhalt als Base64-kodierte Bytes
     private String key;
 
+    // Besitzer (KeyId.owner())
+    private String owner;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -53,15 +56,18 @@ public class SKey {
     public void setName(String name) { this.name = name; }
     public String getKey() { return key; }
     public void setKey(String key) { this.key = key; }
+    public String getOwner() { return owner; }
+    public void setOwner(String owner) { this.owner = owner; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     public SKey() {}
 
-    // Convenience-Konstruktor für generischen Eintrag
-    public SKey(String type, String kind, String name, String algorithm, String base64Key) {
+    // Convenience-Konstruktor fuer generischen Eintrag inkl. Owner
+    public SKey(String type, String kind, String owner, String name, String algorithm, String base64Key) {
         this.type = type;
         this.kind = kind;
+        this.owner = owner;
         this.name = name;
         this.algorithm = algorithm;
         this.key = base64Key;
@@ -70,16 +76,16 @@ public class SKey {
     // Factory-Methoden
     public static SKey ofPublicKey(String type, String owner, String name, PublicKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, "public", name, key.getAlgorithm(), base64);
+        return new SKey(type, "public", owner, name, key.getAlgorithm(), base64);
     }
 
     public static SKey ofPrivateKey(String type, String owner, String name, PrivateKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, "private", name, key.getAlgorithm(), base64);
+        return new SKey(type, "private", owner, name, key.getAlgorithm(), base64);
     }
 
     public static SKey ofSecretKey(String type, String owner, String name, SecretKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, "symmetric", name, key.getAlgorithm(), base64);
+        return new SKey(type, "symmetric", owner, name, key.getAlgorithm(), base64);
     }
 }

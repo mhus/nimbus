@@ -32,14 +32,14 @@ public class SKeyService implements PublicKeyProvider, PrivateKeyProvider, Symme
     @Override
     public Optional<PublicKey> loadPublicKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndName(type.name(), "public", id.id())
+                .findByTypeAndKindAndOwnerAndName(type.name(), "public", id.owner(), id.id())
                 .flatMap(this::toPublicKey);
     }
 
     @Override
     public Optional<PrivateKey> loadPrivateKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndName(type.name(), "private", id.id())
+                .findByTypeAndKindAndOwnerAndName(type.name(), "private", id.owner(), id.id())
                 .flatMap(this::toPrivateKey);
     }
 
@@ -57,7 +57,7 @@ public class SKeyService implements PublicKeyProvider, PrivateKeyProvider, Symme
     @Override
     public Optional<SecretKey> loadSymmetricKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndName(type.name(), "symmetric", id.id())
+                .findByTypeAndKindAndOwnerAndName(type.name(), "symmetric", id.owner(), id.id())
                 .flatMap(this::toSecretKey);
     }
 

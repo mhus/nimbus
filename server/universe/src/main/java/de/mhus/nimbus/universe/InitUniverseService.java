@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InitUniverseBean {
+public class InitUniverseService {
 
     private final SKeyRepository keyRepository;
     private final JwtProperties jwtProperties;
@@ -35,6 +35,9 @@ public class InitUniverseBean {
     private void createSystemAuthKey(KeyId keyId) {
         try {
             var keyPair = keyService.createECCKeys();
+            keyRepository.deleteByTypeAndKindAndName(KeyType.UNIVERSE.name(), "public", keyId.id());
+            keyRepository.deleteByTypeAndKindAndName(KeyType.UNIVERSE.name(), "private", keyId.id());
+
             keyRepository.save(SKey.ofPrivateKey(KeyType.UNIVERSE.name(), keyId.owner(), keyId.id(), keyPair.getPrivate()));
             keyRepository.save(SKey.ofPublicKey(KeyType.UNIVERSE.name(), keyId.owner(), keyId.id(), keyPair.getPublic()));
         } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {

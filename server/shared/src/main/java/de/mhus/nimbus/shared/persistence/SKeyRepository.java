@@ -9,4 +9,8 @@ import java.util.Optional;
 public interface SKeyRepository extends MongoRepository<SKey, String> {
 
     Optional<SKey> findByTypeAndKindAndName(String type, String kind, String name);
+    void deleteByTypeAndKindAndName(String type, String kind, String name);
+
+    Optional<SKey> findByTypeAndKindAndOwnerAndName(String type, String kind, String owner, String name);
+    void deleteByTypeAndKindAndOwnerAndName(String type, String kind, String owner, String name);
 }
