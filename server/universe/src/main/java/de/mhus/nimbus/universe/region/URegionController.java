@@ -40,7 +40,7 @@ public class URegionController {
 
     private URegionResponse toResponse(URegion q) {
         // Maintainer Set -> List
-        return new URegionResponse(q.getId(), q.getName(), q.getApiUrl(), q.getPublicSignKey(), q.getMaintainerSet().stream().toList());
+        return new URegionResponse(q.getId(), q.getName(), q.getApiUrl(), q.getPublicSignKeyId(), q.getMaintainerSet().stream().toList());
     }
 
     private CurrentUser current() { return userHolder.get(); }

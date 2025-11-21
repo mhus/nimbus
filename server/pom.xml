@@ -19,8 +19,8 @@
         <module>tools</module>
         <module>generated</module>
         <module>shared</module>
-        <module>region</module>
         <module>universe</module>
+        <module>region</module>
         <module>world</module>
     </modules>
 

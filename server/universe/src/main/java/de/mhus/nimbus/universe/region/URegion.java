@@ -6,9 +6,11 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,22 +28,22 @@ public class URegion {
     private String id; // ggf. von MongoDB gesetzt
     private String name;
     private String apiUrl;
-    private String publicSignKey;
+    private String publicSignKeyId;
 
-    // Komma-separierte Liste von User-IDs mit MAINTAINER-Rechten
-    private String maintainers; // z.B. "u1,u2,u3" oder null
+    // Liste von User-IDs mit MAINTAINER-Rechten (MongoDB-native Speicherung)
+    private List<String> maintainers; // z.B. ["u1","u2","u3"] oder null/leer
 
-    public URegion(String name, String apiUrl, String publicSignKey) {
+    public URegion(String name, String apiUrl, String publicSignKeyId) {
         this.name = name;
         this.apiUrl = apiUrl;
-        this.publicSignKey = publicSignKey;
+        this.publicSignKeyId = publicSignKeyId;
     }
 
-    public URegion(String id, String name, String apiUrl, String publicSignKey, Set<String> maintainerSet) {
+    public URegion(String id, String name, String apiUrl, String publicSignKeyId, Set<String> maintainerSet) {
         this.id = id;
         this.name = name;
         this.apiUrl = apiUrl;
-        this.publicSignKey = publicSignKey;
+        this.publicSignKeyId = publicSignKeyId;
         setMaintainersFromSet(maintainerSet);
     }
 
@@ -54,7 +56,7 @@ public class URegion {
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .collect(Collectors.toCollection(LinkedHashSet::new));
-            this.maintainers = set.isEmpty() ? null : String.join(",", set);
+            this.maintainers = set.isEmpty() ? null : new ArrayList<>(set);
         }
     }
 
@@ -62,17 +64,19 @@ public class URegion {
         if (set == null || set.isEmpty()) {
             this.maintainers = null;
         } else {
-            var norm = set.stream().filter(s -> s != null && !s.isBlank()).map(String::trim)
+            var norm = set.stream()
+                    .filter(s -> s != null && !s.isBlank())
+                    .map(String::trim)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
-            this.maintainers = norm.isEmpty() ? null : String.join(",", norm);
+            this.maintainers = norm.isEmpty() ? null : new ArrayList<>(norm);
         }
     }
 
     public Set<String> getMaintainerSet() {
-        if (maintainers == null || maintainers.isBlank()) return Collections.emptySet();
-        return Arrays.stream(maintainers.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
+        if (maintainers == null || maintainers.isEmpty()) return Collections.emptySet();
+        return maintainers.stream()
+                .map(s -> s == null ? null : s.trim())
+                .filter(s -> s != null && !s.isEmpty())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
@@ -82,17 +86,21 @@ public class URegion {
 
     public void addMaintainer(String userId) {
         if (userId == null || userId.isBlank()) return;
-        var set = new LinkedHashSet<>(getMaintainerSet());
-        if (set.add(userId.trim())) {
-            this.maintainers = String.join(",", set);
+        String trimmed = userId.trim();
+        if (this.maintainers == null) this.maintainers = new ArrayList<>();
+        if (!this.maintainers.contains(trimmed)) {
+            this.maintainers.add(trimmed);
         }
     }
 
     public void removeMaintainer(String userId) {
         if (userId == null) return;
-        var set = new LinkedHashSet<>(getMaintainerSet());
-        if (set.remove(userId)) {
-            this.maintainers = set.isEmpty() ? null : String.join(",", set);
+        if (this.maintainers == null || this.maintainers.isEmpty()) return;
+        boolean removed = this.maintainers.remove(userId);
+        if (!removed) {
+            // try trimmed match
+            removed = this.maintainers.remove(userId.trim());
         }
+        if (this.maintainers.isEmpty()) this.maintainers = null;
     }
 }

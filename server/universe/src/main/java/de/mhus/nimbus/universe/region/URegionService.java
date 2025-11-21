@@ -44,7 +44,7 @@ public class URegionService {
             if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
             existing.setApiUrl(apiUrl);
         }
-        if (publicSignKey != null) existing.setPublicSignKey(publicSignKey);
+        if (publicSignKey != null) existing.setPublicSignKeyId(publicSignKey);
         if (maintainersCsv != null) existing.setMaintainers(maintainersCsv);
         return repository.save(existing);
     }

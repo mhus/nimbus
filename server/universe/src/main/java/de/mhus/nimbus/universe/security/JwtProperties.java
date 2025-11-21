@@ -8,6 +8,8 @@ public class JwtProperties {
     private String keyId;
     private String secretBase64;
     private int expiresMinutes = 60;
+    // UUID-Teil des Region-Schlüssel-KeyIds. Der Owner wird dynamisch aus der regionId im Pfad ermittelt.
+    private String regionKeyUuid;
 
     public String getKeyId() { return keyId; }
     public void setKeyId(String keyId) { this.keyId = keyId; }
@@ -17,5 +19,8 @@ public class JwtProperties {
 
     public int getExpiresMinutes() { return expiresMinutes; }
     public void setExpiresMinutes(int expiresMinutes) { this.expiresMinutes = expiresMinutes; }
+
+    public String getRegionKeyUuid() { return regionKeyUuid; }
+    public void setRegionKeyUuid(String regionKeyUuid) { this.regionKeyUuid = regionKeyUuid; }
 }
 
