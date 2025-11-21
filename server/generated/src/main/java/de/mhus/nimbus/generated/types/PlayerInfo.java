@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.types;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class PlayerInfo extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class PlayerInfo {
     private String playerId;
     private String displayName;
     private java.util.Map<MovementStateKey, MovementStateValues> stateValues;

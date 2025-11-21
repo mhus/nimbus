@@ -6,7 +6,10 @@ package de.mhus.nimbus.generated.types;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-public class AnimationData extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class AnimationData {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String id;
     private String name;

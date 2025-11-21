@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class LoginResponseData extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class LoginResponseData {
     private boolean success;
     private String userId;
     private String displayName;

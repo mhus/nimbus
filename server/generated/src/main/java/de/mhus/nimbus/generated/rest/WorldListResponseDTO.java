@@ -6,6 +6,7 @@ package de.mhus.nimbus.generated.rest;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class WorldListResponseDTO extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+public class WorldListResponseDTO {
 }

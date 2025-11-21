@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.scrawl;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class StepSetVar extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class StepSetVar {
     private String kind;
     private String name;
     private Object value;

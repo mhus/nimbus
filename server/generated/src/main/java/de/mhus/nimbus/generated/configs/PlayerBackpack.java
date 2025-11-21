@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.configs;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class PlayerBackpack extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class PlayerBackpack {
     private java.util.Map<String, String> itemIds;
     private java.util.Map<WEARABLE_SLOT, String> wearingItemIds;
 }

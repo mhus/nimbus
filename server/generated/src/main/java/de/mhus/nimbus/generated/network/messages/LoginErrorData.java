@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class LoginErrorData extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class LoginErrorData {
     private boolean success;
     private double errorCode;
     private String errorMessage;

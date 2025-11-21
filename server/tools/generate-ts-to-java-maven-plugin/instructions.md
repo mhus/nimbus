@@ -53,7 +53,11 @@ Wenn in ts ein interface ein anderes ableitet, dann muss das auch in den java kl
 Added parsing of TS interface extends, propagated into Java model, and Mojo logic to either keep known inheritance, map unknown bases via new interfaceExtendsMappings, or drop and record unresolved to header. Test failed because extending generated classes lacked no-args superclass constructors, causing compile errors. Next: add Lombok @NoArgsConstructor to all generated classes to provide default super() and rerun tests.
 ```
 
-===
+Evtl sollte man @SuperBuilder anstelle von @Builder nutzen, dann kan nauch bei ableitungen wieder das builder pattern genutzt werden.
+
+```text
+The solution replaces Lombok's @Builder with @SuperBuilder to support inheritance in builder patterns. It updates JavaModelWriter to emit @SuperBuilder, add necessary constructors, and suppresses explicit "extends Object" to avoid compilation errors. The changes were validated by successful test execution and Maven build without errors.
+```
 
 Du kannst in EvaluatePluginIT den test erweitern um die neue Features zu testen.
 Dazu kannst du auch unter evaluate/ts/features neue ts dateien hinzufuegen

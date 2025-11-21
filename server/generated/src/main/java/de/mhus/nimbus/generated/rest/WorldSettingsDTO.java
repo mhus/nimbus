@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.rest;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class WorldSettingsDTO extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class WorldSettingsDTO {
     private double maxPlayers;
     private boolean allowGuests;
     private boolean pvpEnabled;

@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.rest;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class BlockTypeListResponseDTO extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class BlockTypeListResponseDTO {
     private java.util.List<BlockTypeDTO> blockTypes;
     private double count;
     private double limit;

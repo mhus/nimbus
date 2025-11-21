@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.rest;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class UserDTO extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class UserDTO {
     private String user;
     private String displayName;
     private String email;

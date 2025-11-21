@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class BlockStatusUpdate extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class BlockStatusUpdate {
     private double x;
     private double y;
     private double z;

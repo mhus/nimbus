@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.types;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class EntityPathway extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class EntityPathway {
     private String entityId;
     private double startAt;
     private java.util.List<Waypoint> waypoints;

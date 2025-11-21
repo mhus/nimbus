@@ -155,11 +155,14 @@ public class JavaModelWriter {
             // Add Lombok and Jackson annotations and emit class with private fields
             sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("@lombok.Data\n");
-            String rawExtends = t.getExtendsName();
-            boolean hasRealSuper = rawExtends != null && !rawExtends.isBlank() && !"Object".equals(rawExtends) && !"java.lang.Object".equals(rawExtends);
-            boolean useSuperBuilder = hasRealSuper || typesExtendedByOthers.contains(name);
-            if (!useSuperBuilder) {
-                sb.append("@lombok.Builder\n");
+            // Always use SuperBuilder to support inheritance builder chains
+            sb.append("@lombok.experimental.SuperBuilder\n");
+            // Always provide a no-args constructor
+            sb.append("@lombok.NoArgsConstructor\n");
+            // Add protected all-args constructor only if the class declares at least one field to avoid duplicate no-arg constructors
+            boolean hasAnyField = t.getProperties() != null && !t.getProperties().isEmpty();
+            if (hasAnyField) {
+                sb.append("@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)\n");
             }
             sb.append("public class ").append(name);
             String ext = renderExtends(t.getExtendsName(), currentPkg);
@@ -187,7 +190,9 @@ public class JavaModelWriter {
             sb.append("/** Type alias for: ").append(nullToEmpty(t.getAliasTargetName())).append(" */\n");
             sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("@lombok.Data\n");
-            sb.append("@lombok.Builder\n");
+            sb.append("@lombok.experimental.SuperBuilder\n");
+            sb.append("@lombok.NoArgsConstructor\n");
+            sb.append("@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)\n");
             sb.append("public class ").append(name).append(" {\n}\n");
         } else {
             sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
@@ -198,7 +203,11 @@ public class JavaModelWriter {
 
     private String renderExtends(String name, String currentPkg) {
         String q = qualifyType(name, currentPkg);
-        if (!isValidJavaIdentifier(baseType(q))) return "";
+        if (q == null || q.isBlank()) return "";
+        // Do not emit explicit extends for Object to avoid Lombok @SuperBuilder looking for ObjectBuilder
+        String base = baseType(q);
+        if ("Object".equals(base) || "java.lang.Object".equals(base)) return "";
+        if (!isValidJavaIdentifier(base)) return "";
         return "extends " + q;
     }
 

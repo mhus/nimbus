@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.scrawl;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class StepWait extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class StepWait {
     private String kind;
     private double seconds;
 }

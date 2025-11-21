@@ -6,8 +6,10 @@ package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class ChunkDataTransferObject extends Object {
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class ChunkDataTransferObject {
     private double cx;
     private double cz;
     private java.util.List<de.mhus.nimbus.generated.types.Block> b;
