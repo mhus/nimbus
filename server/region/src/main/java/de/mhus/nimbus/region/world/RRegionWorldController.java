@@ -1,5 +1,7 @@
 package de.mhus.nimbus.region.world;
 
+import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
+import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -34,11 +35,6 @@ public class RRegionWorldController {
         this.worldService = worldService;
         this.worldRepository = worldRepository;
     }
-
-    // DTOs
-    public record RegionWorldRequest(String name, String description, String worldApiUrl) {}
-    public record RegionWorldResponse(String id, String worldId, String name, String description, String worldApiUrl,
-                                      String regionId, Date createdAt) {}
 
     private RegionWorldResponse toResponse(RWorld w) {
         return new RegionWorldResponse(w.getId(), w.getWorldId(), w.getName(), w.getDescription(), w.getApiUrl(), w.getRegionId(), w.getCreatedAt());

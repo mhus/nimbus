@@ -1,7 +1,7 @@
-package de.mhus.nimbus.region.universe;
+package de.mhus.nimbus.shared.dto.universe;
 
 /**
- * Request-DTO für die Universe-Route /universe/region/{regionId}/world/{worldId}.
+ * Request-DTO für Universe-Route /universe/region/{regionId}/world/{worldId}.
  */
 public record RegionWorldRequest(
         String name,

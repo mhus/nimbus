@@ -1,10 +1,9 @@
-package de.mhus.nimbus.region.universe;
+package de.mhus.nimbus.shared.dto.universe;
 
 import java.util.Date;
 
 /**
- * Response-DTO spiegelbildlich zur Universe-Antwort auf
- * /universe/region/{regionId}/world/{worldId}.
+ * Response-DTO für Universe-Route /universe/region/{regionId}/world/{worldId}.
  */
 public record RegionWorldResponse(
         String id,

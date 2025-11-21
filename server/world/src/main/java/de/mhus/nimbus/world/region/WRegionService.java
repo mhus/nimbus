@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.region;
 
+import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
+import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;

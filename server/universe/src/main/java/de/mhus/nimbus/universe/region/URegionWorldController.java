@@ -1,5 +1,7 @@
 package de.mhus.nimbus.universe.region;
 
+import de.mhus.nimbus.shared.dto.universe.RegionWorldRequest;
+import de.mhus.nimbus.shared.dto.universe.RegionWorldResponse;
 import de.mhus.nimbus.universe.world.UWorld;
 import de.mhus.nimbus.universe.world.UWorldRepository;
 import de.mhus.nimbus.universe.world.UWorldService;
@@ -36,15 +38,6 @@ public class URegionWorldController {
         this.worldService = worldService;
         this.worldRepository = worldRepository;
     }
-
-    // Request/Response DTOs
-    public record RegionWorldRequest(String name, String description,
-                                     String planetId, String solarSystemId, String galaxyId,
-                                     String coordinates) { }
-
-    public record RegionWorldResponse(String id, String name, String description, Date createdAt,
-                                      String regionId, String planetId, String solarSystemId, String galaxyId,
-                                      String worldId, String coordinates) { }
 
     private RegionWorldResponse toResponse(UWorld w) {
         return new RegionWorldResponse(w.getId(), w.getName(), w.getDescription(), w.getCreatedAt(),
