@@ -29,6 +29,22 @@ public class Configuration {
      */
     public Map<String, String> typeMappings;
 
+    /**
+     * Optional mapping to replace unknown TS interface base types (extends) with concrete Java classes.
+     * Key: TS interface name used in "extends" clause; Value: fully-qualified Java class to use instead.
+     * If a TS interface extends an unknown type and a mapping exists here, the generated Java class will
+     * extend the mapped Java class; otherwise it will fall back to defaultBaseClass/Object.
+     */
+    public Map<String, String> interfaceExtendsMappings;
+
+    /**
+     * Optional fully qualified Java class name that generated classes should extend by default
+     * (instead of implicitly extending java.lang.Object). Only applied if a generated class
+     * does not already define an explicit extends in the model.
+     * Example: de.mhus.nimbus.shared.base.BaseModel
+     */
+    public String defaultBaseClass;
+
     public static class PackageRule {
         /** Suffix of the TS source directory to match (e.g. "types"). */
         public String dirEndsWith;

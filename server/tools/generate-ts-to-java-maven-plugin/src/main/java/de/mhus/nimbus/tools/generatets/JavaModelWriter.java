@@ -21,16 +21,32 @@ public class JavaModelWriter {
 
     private final JavaModel model;
     private final java.util.Map<String, JavaType> indexByName;
+    private final java.util.Set<String> typesExtendedByOthers;
 
     public JavaModelWriter(JavaModel model) {
         this.model = model;
         java.util.Map<String, JavaType> idx = new java.util.HashMap<>();
+        java.util.Set<String> extendedByOthers = new java.util.HashSet<>();
         if (model != null && model.getTypes() != null) {
             for (JavaType t : model.getTypes()) {
                 if (t != null && t.getName() != null) idx.put(t.getName(), t);
             }
+            // compute which types are extended by other generated types
+            for (JavaType t : model.getTypes()) {
+                if (t == null) continue;
+                String ext = t.getExtendsName();
+                if (ext == null || ext.isBlank()) continue;
+                // ext might be FQCN; reduce to simple name for lookup
+                String simple = ext;
+                int lastDot = simple.lastIndexOf('.');
+                if (lastDot >= 0) simple = simple.substring(lastDot + 1);
+                if (idx.containsKey(simple)) {
+                    extendedByOthers.add(simple);
+                }
+            }
         }
         this.indexByName = idx;
+        this.typesExtendedByOthers = extendedByOthers;
     }
 
     public void write(File outputDir) throws IOException {
@@ -84,6 +100,12 @@ public class JavaModelWriter {
         sb.append("/*\n");
         if (tsFileName != null) sb.append(" * Source TS: ").append(tsFileName).append("\n");
         sb.append(" * Original TS: '").append(tsDecl).append("'\n");
+        // Note unresolved TS extends (for interfaces converted to classes)
+        List<String> unresolved = t.getUnresolvedTsExtends();
+        if (unresolved != null && !unresolved.isEmpty()) {
+            sb.append(" * NOTE: Unresolved TS extends: ").append(String.join(", ", unresolved)).append("\n");
+            sb.append(" *       Consider mapping them via configuration 'interfaceExtendsMappings'.\n");
+        }
         sb.append(" */\n");
 
         String pkg = t.getPackageName();
@@ -133,7 +155,12 @@ public class JavaModelWriter {
             // Add Lombok and Jackson annotations and emit class with private fields
             sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("@lombok.Data\n");
-            sb.append("@lombok.Builder\n");
+            String rawExtends = t.getExtendsName();
+            boolean hasRealSuper = rawExtends != null && !rawExtends.isBlank() && !"Object".equals(rawExtends) && !"java.lang.Object".equals(rawExtends);
+            boolean useSuperBuilder = hasRealSuper || typesExtendedByOthers.contains(name);
+            if (!useSuperBuilder) {
+                sb.append("@lombok.Builder\n");
+            }
             sb.append("public class ").append(name);
             String ext = renderExtends(t.getExtendsName(), currentPkg);
             if (!ext.isEmpty()) sb.append(" ").append(ext);

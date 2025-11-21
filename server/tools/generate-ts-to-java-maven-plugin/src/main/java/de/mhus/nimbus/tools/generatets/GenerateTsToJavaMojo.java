@@ -85,34 +85,78 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                     }
                 }
                 // Apply type name mappings from configuration to all model elements
-                if (configuration != null && configuration.typeMappings != null && !configuration.typeMappings.isEmpty()) {
+                // Apply optional type mappings and default base class configuration
+                if (configuration != null) {
                     for (JavaType t : javaModel.getTypes()) {
                         if (t == null) continue;
-                        // extends
-                        if (t.getExtendsName() != null) {
-                            String mapped = mapTypeString(t.getExtendsName(), configuration);
-                            if (mapped != null) t.setExtendsName(mapped);
-                        }
-                        // implements
-                        if (t.getImplementsNames() != null) {
-                            for (int i = 0; i < t.getImplementsNames().size(); i++) {
-                                String n = t.getImplementsNames().get(i);
-                                String mapped = mapTypeString(n, configuration);
-                                if (mapped != null) t.getImplementsNames().set(i, mapped);
+
+                        if (configuration.typeMappings != null && !configuration.typeMappings.isEmpty()) {
+                            // extends
+                            if (t.getExtendsName() != null) {
+                                String mapped = mapTypeString(t.getExtendsName(), configuration);
+                                if (mapped != null) t.setExtendsName(mapped);
+                            }
+                            // implements
+                            if (t.getImplementsNames() != null) {
+                                for (int i = 0; i < t.getImplementsNames().size(); i++) {
+                                    String n = t.getImplementsNames().get(i);
+                                    String mapped = mapTypeString(n, configuration);
+                                    if (mapped != null) t.getImplementsNames().set(i, mapped);
+                                }
+                            }
+                            // alias target
+                            if (t.getAliasTargetName() != null) {
+                                String mapped = mapTypeString(t.getAliasTargetName(), configuration);
+                                if (mapped != null) t.setAliasTargetName(mapped);
+                            }
+                            // properties
+                            if (t.getProperties() != null) {
+                                for (de.mhus.nimbus.tools.generatets.java.JavaProperty p : t.getProperties()) {
+                                    if (p == null) continue;
+                                    String mapped = mapTypeString(p.getType(), configuration);
+                                    if (mapped != null) p.setType(mapped);
+                                }
                             }
                         }
-                        // alias target
-                        if (t.getAliasTargetName() != null) {
-                            String mapped = mapTypeString(t.getAliasTargetName(), configuration);
-                            if (mapped != null) t.setAliasTargetName(mapped);
-                        }
-                        // properties
-                        if (t.getProperties() != null) {
-                            for (de.mhus.nimbus.tools.generatets.java.JavaProperty p : t.getProperties()) {
-                                if (p == null) continue;
-                                String mapped = mapTypeString(p.getType(), configuration);
-                                if (mapped != null) p.setType(mapped);
+                    }
+                    // Resolve unknown interface inheritance and apply interfaceExtendsMappings/defaultBaseClass
+                    java.util.Map<String, JavaType> idx = javaModel.getIndexByName();
+                    for (JavaType t : javaModel.getTypes()) {
+                        if (t == null) continue;
+                        // Only for TS interfaces converted to classes
+                        if ("interface".equals(t.getOriginalTsKind())) {
+                            String base = t.getExtendsName();
+                            if (base != null && !base.isBlank()) {
+                                boolean keep = false;
+                                // If refers to another generated type by simple name
+                                if (idx.containsKey(base)) {
+                                    keep = true;
+                                }
+                                // If already FQCN, assume external type is valid
+                                if (!keep && base.contains(".")) {
+                                    keep = true;
+                                }
+                                if (!keep) {
+                                    // Check configured replacement for unknown base
+                                    String repl = configuration.interfaceExtendsMappings != null ? configuration.interfaceExtendsMappings.get(base) : null;
+                                    if (repl != null && !repl.isBlank()) {
+                                        t.setExtendsName(repl.trim());
+                                        keep = true;
+                                    }
+                                }
+                                if (!keep) {
+                                    // Mark unresolved and drop extends
+                                    java.util.List<String> unresolved = t.getUnresolvedTsExtends();
+                                    if (unresolved != null) unresolved.add(base);
+                                    t.setExtendsName(null);
+                                }
                             }
+                        }
+                        // Apply default base if still none
+                        if (t.getKind() == de.mhus.nimbus.tools.generatets.java.JavaKind.CLASS
+                                && (t.getExtendsName() == null || t.getExtendsName().isBlank())
+                                && configuration.defaultBaseClass != null && !configuration.defaultBaseClass.isBlank()) {
+                            t.setExtendsName(configuration.defaultBaseClass.trim());
                         }
                     }
                 }

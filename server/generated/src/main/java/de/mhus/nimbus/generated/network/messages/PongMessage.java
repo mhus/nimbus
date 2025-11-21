@@ -4,8 +4,8 @@
  */
 package de.mhus.nimbus.generated.network.messages;
 
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
-public class PongMessage extends Object {
+public class PongMessage extends de.mhus.nimbus.generated.network.BaseMessage {
     private String r;
 }

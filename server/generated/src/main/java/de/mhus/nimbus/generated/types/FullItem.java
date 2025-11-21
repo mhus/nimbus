@@ -4,7 +4,8 @@
  */
 package de.mhus.nimbus.generated.types;
 
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
 @lombok.Builder
-public class FullItem extends Object {
+public class FullItem extends Item {
 }

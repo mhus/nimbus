@@ -4,6 +4,7 @@
  */
 package de.mhus.nimbus.generated.types;
 
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
 @lombok.Builder
 public class Vector2 extends Object {

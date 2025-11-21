@@ -105,6 +105,25 @@ public class TsParser {
         for (NameOccur n : findNamed(src, DECL_INTERFACE, '{')) {
             TsDeclarations.TsInterface d = new TsDeclarations.TsInterface();
             d.name = n.name;
+            // Parse header between name and opening '{' to capture extends list
+            int braceIdx = src.indexOf('{', n.startIndex);
+            if (braceIdx > n.startIndex) {
+                String header = src.substring(n.startIndex, braceIdx);
+                java.util.regex.Matcher em = java.util.regex.Pattern.compile("\\bextends\\s+([^\\{]+)").matcher(header);
+                if (em.find()) {
+                    String list = em.group(1);
+                    if (list != null) {
+                        for (String part : list.split(",")) {
+                            String id = part.trim();
+                            // strip generic args if any, keep simple identifier
+                            int lt = id.indexOf('<');
+                            if (lt > 0) id = id.substring(0, lt).trim();
+                            id = id.replaceAll("\\s+", "");
+                            if (!id.isEmpty()) d.extendsList.add(id);
+                        }
+                    }
+                }
+            }
             String body = safeSub(src, n.startIndex, n.endIndex);
             extractPropertiesFromBody(body, d.properties);
             file.getInterfaces().add(d);

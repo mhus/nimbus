@@ -4,8 +4,8 @@
  */
 package de.mhus.nimbus.generated.network;
 
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @lombok.Data
-@lombok.Builder
 public class BaseMessage extends Object {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String i;

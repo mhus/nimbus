@@ -35,8 +35,12 @@ public class JavaGenerator {
                     // Convert TS interface to Java class with fields
                     JavaType t = new JavaType(i.name, JavaKind.CLASS, srcPath);
                     t.setOriginalTsKind("interface");
-                    // Do not map extends/implements to avoid referencing non-generated interfaces
-                    // Properties -> public fields
+                    // capture extends list; TS allows multiple, Java class supports one extends
+                    if (i.extendsList != null && !i.extendsList.isEmpty()) {
+                        t.setExtendsName(i.extendsList.get(0));
+                        t.setOriginalTsExtends(new java.util.ArrayList<>(i.extendsList));
+                    }
+                    // Properties -> fields
                     if (i.properties != null) {
                         for (TsDeclarations.TsProperty p : i.properties) {
                             if (p == null || p.name == null) continue;

@@ -295,7 +295,7 @@
     "imports" : [ "./ItemModifier" ],
     "interfaces" : [ {
       "name" : "FullItem",
-      "extendsList" : [ ],
+      "extendsList" : [ "Item" ],
       "properties" : [ ],
       "methods" : [ ]
     }, {
@@ -652,7 +652,7 @@
       "methods" : [ ]
     }, {
       "name" : "AnimationTemplate",
-      "extendsList" : [ ],
+      "extendsList" : [ "AnimationData" ],
       "properties" : [ {
         "name" : "id",
         "type" : "string",
@@ -2925,7 +2925,7 @@
       "methods" : [ ]
     }, {
       "name" : "PingMessage",
-      "extendsList" : [ ],
+      "extendsList" : [ "BaseMessage" ],
       "properties" : [ {
         "name" : "i",
         "type" : "string",
@@ -2935,7 +2935,7 @@
       "methods" : [ ]
     }, {
       "name" : "PongMessage",
-      "extendsList" : [ ],
+      "extendsList" : [ "BaseMessage" ],
       "properties" : [ {
         "name" : "r",
         "type" : "string",
@@ -3153,7 +3153,7 @@
       "methods" : [ ]
     }, {
       "name" : "RequestMessage",
-      "extendsList" : [ ],
+      "extendsList" : [ "BaseMessage" ],
       "properties" : [ {
         "name" : "i",
         "type" : "string",
@@ -3163,7 +3163,7 @@
       "methods" : [ ]
     }, {
       "name" : "ResponseMessage",
-      "extendsList" : [ ],
+      "extendsList" : [ "BaseMessage" ],
       "properties" : [ {
         "name" : "r",
         "type" : "string",
@@ -3772,7 +3772,7 @@
       "methods" : [ ]
     }, {
       "name" : "PingMessage",
-      "extendsList" : [ ],
+      "extendsList" : [ "BaseMessage" ],
       "properties" : [ {
         "name" : "i",
         "type" : "string",
@@ -3782,7 +3782,7 @@
       "methods" : [ ]
     }, {
       "name" : "PongMessage",
-      "extendsList" : [ ],
+      "extendsList" : [ "BaseMessage" ],
       "properties" : [ {
         "name" : "r",
         "type" : "string",

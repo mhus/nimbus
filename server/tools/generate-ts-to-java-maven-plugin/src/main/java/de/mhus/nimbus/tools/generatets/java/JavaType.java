@@ -25,6 +25,10 @@ public class JavaType {
     private List<String> implementsNames = new ArrayList<>();
     private String aliasTargetName; // for type alias
 
+    // TS metadata for extends of interfaces/classes
+    private List<String> originalTsExtends = new ArrayList<>();
+    private List<String> unresolvedTsExtends = new ArrayList<>();
+
     // Resolved links (filled in second pass)
     @JsonIgnore
     private JavaType extendsType;
@@ -68,6 +72,11 @@ public class JavaType {
 
     public String getAliasTargetName() { return aliasTargetName; }
     public void setAliasTargetName(String aliasTargetName) { this.aliasTargetName = aliasTargetName; }
+
+    public List<String> getOriginalTsExtends() { return originalTsExtends; }
+    public void setOriginalTsExtends(List<String> originalTsExtends) { this.originalTsExtends = originalTsExtends; }
+
+    public List<String> getUnresolvedTsExtends() { return unresolvedTsExtends; }
 
     public JavaType getExtendsType() { return extendsType; }
     public void setExtendsType(JavaType extendsType) { this.extendsType = extendsType; }
