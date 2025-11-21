@@ -18,3 +18,15 @@ packageRules:
     pkg: de.mhus.nimbus.generated.rest
   - dirEndsWith: scrawl
     pkg: de.mhus.nimbus.generated.scrawl
+excludeDirSuffixes:
+  - errors
+  - logger
+  - utils
+  - validators
+additionalClassAnnotations:
+  - com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  - org.springframework.aot.hint.annotation.Reflective
+additionalFieldAnnotations:
+additionalOptionalFieldAnnotations:
+  - com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+additionalNonOptionalFieldAnnotations:

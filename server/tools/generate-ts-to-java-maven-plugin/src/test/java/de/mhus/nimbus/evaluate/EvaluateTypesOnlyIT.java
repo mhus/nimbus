@@ -63,6 +63,15 @@ public class EvaluateTypesOnlyIT {
         assertTrue(content.contains("@Deprecated"),
                 "Expected additional annotation @Deprecated to be present in generated class");
 
+        // verify TYPE_ALIAS generation creates a value field (ColorHex = string -> private String value;)
+        File colorHexFile = javaFiles.stream()
+                .filter(f -> f.getPath().contains(expectedPkgPath) && f.getName().equals("ColorHex.java"))
+                .findFirst().orElse(null);
+        assertNotNull(colorHexFile, "Expected generated ColorHex.java in types package to test type alias field generation");
+        String colorHexSrc = Files.readString(colorHexFile.toPath());
+        assertTrue(colorHexSrc.contains("private String value;"),
+                "Type alias 'ColorHex = string' should generate a field 'private String value;' in ColorHex.java");
+
         // verify field-level annotations configuration
         // Choose the Item class which has required (id, itemType) and optional (name, description, ...) fields
         File itemFile = javaFiles.stream()

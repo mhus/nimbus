@@ -1,14 +1,13 @@
 /*
- * Source TS: LogoutMessage.ts
- * Original TS: 'type LogoutMessage'
+ * Source TS: sample-types.ts
+ * Original TS: 'class User'
  */
-package de.mhus.nimbus.generated.network.messages;
+package de.mhus.nimbus.generated;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
 @lombok.Data
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
-public class LogoutMessage {
-    private String value;
+public class User {
 }

@@ -74,18 +74,9 @@
                             <!-- Configure where to read TS and where to write generated Java -->
                             <sourceDirs>
                                 <!--
-                                <sourceDir>${project.basedir}/../../client/packages/shared/src/types</sourceDir>
-                                <sourceDir>${project.basedir}/../../client/packages/shared/src/configs</sourceDir>
-                                <sourceDir>${project.basedir}/../../client/packages/shared/src/network/messages</sourceDir>
-                                <sourceDir>${project.basedir}/../../client/packages/shared/src/rest</sourceDir>
-                                <sourceDir>${project.basedir}/../../client/packages/shared/src/scrawl</sourceDir>
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src</sourceDir>
                                 -->
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/types</sourceDir>
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/configs</sourceDir>
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network</sourceDir>
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/network/messages</sourceDir>
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/rest</sourceDir>
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/scrawl</sourceDir>
+                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts</sourceDir>
                             </sourceDirs>
                             <outputDir>${project.basedir}/src/main/java</outputDir>
                             <modelFile>${project.basedir}/model.json</modelFile>

@@ -167,7 +167,8 @@ public class JavaModelWriter {
             // Always provide a no-args constructor
             sb.append("@lombok.NoArgsConstructor\n");
             // Add protected all-args constructor only if the class declares at least one field to avoid duplicate no-arg constructors
-            boolean hasAnyField = t.getProperties() != null && !t.getProperties().isEmpty();
+            boolean hasAnyField = (t.getProperties() != null && !t.getProperties().isEmpty())
+                    || (t.getAliasTargetName() != null && !t.getAliasTargetName().isBlank());
             if (hasAnyField) {
                 sb.append("@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)\n");
             }
@@ -178,6 +179,7 @@ public class JavaModelWriter {
             if (!impls.isEmpty()) sb.append(" ").append(impls);
             sb.append(" {\n");
             // class members: fields (deduplicate by property name)
+            boolean emittedAnyField = false;
             if (t.getProperties() != null) {
                 java.util.Set<String> seen = new java.util.HashSet<>();
                 for (JavaProperty p : t.getProperties()) {
@@ -188,7 +190,25 @@ public class JavaModelWriter {
                     // Emit configured annotations for fields
                     emitFieldAnnotations(sb, p.isOptional());
                     sb.append("    private ").append(type).append(' ').append(p.getName()).append(";\n");
+                    emittedAnyField = true;
                 }
+            }
+            // If this CLASS actually comes from a TS type alias (no properties) then emit a single 'value' field
+            if (!emittedAnyField && t.getAliasTargetName() != null && !t.getAliasTargetName().isBlank()) {
+                String qualified = qualifyType(t.getAliasTargetName(), currentPkg);
+                emitFieldAnnotations(sb, /*optional=*/false);
+                sb.append("    private ")
+                        .append(qualified == null || qualified.isBlank() ? "Object" : qualified)
+                        .append(" value;\n");
+            }
+            // Fallback: If this CLASS originates from a TS type alias but aliasTargetName couldn't be parsed,
+            // still generate a value field so the alias is usable. Default to String as the most common alias target.
+            if (!emittedAnyField && ("type".equalsIgnoreCase(t.getOriginalTsKind()))) {
+                String qualified = t.getAliasTargetName() == null ? "String" : qualifyType(t.getAliasTargetName(), currentPkg);
+                emitFieldAnnotations(sb, /*optional=*/false);
+                sb.append("    private ")
+                        .append(qualified == null || qualified.isBlank() ? "String" : qualified)
+                        .append(" value;\n");
             }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.TYPE_ALIAS) {
@@ -199,7 +219,14 @@ public class JavaModelWriter {
             sb.append("@lombok.experimental.SuperBuilder\n");
             sb.append("@lombok.NoArgsConstructor\n");
             sb.append("@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)\n");
-            sb.append("public class ").append(name).append(" {\n}\n");
+            sb.append("public class ").append(name).append(" {\n");
+            // For TS type aliases, represent the aliased value as a single field named 'value'
+            String aliasTarget = t.getAliasTargetName();
+            String qualified = qualifyType(aliasTarget, currentPkg);
+            // Apply configured field annotations; treat alias value as required (non-optional)
+            emitFieldAnnotations(sb, /*optional=*/false);
+            sb.append("    private ").append(qualified == null || qualified.isBlank() ? "Object" : qualified).append(" value;\n");
+            sb.append("}\n");
         } else {
             sb.append("public class ").append(name).append(" {\n}\n");
         }

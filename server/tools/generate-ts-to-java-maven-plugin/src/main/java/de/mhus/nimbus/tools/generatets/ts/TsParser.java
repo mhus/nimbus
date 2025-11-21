@@ -148,6 +148,19 @@ public class TsParser {
         for (NameOccur n : findNamed(src, DECL_TYPE, ';')) {
             TsDeclarations.TsTypeAlias d = new TsDeclarations.TsTypeAlias();
             d.name = n.name;
+            // Extract target type between '=' and ';'
+            String decl = safeSub(src, n.startIndex, n.endIndex);
+            if (decl != null) {
+                int eq = decl.indexOf('=');
+                if (eq >= 0) {
+                    String rhs = decl.substring(eq + 1).trim();
+                    // remove trailing semicolon if present (safeSub ends before ';' but keep safety)
+                    if (rhs.endsWith(";")) rhs = rhs.substring(0, rhs.length() - 1).trim();
+                    // collapse multiple spaces
+                    rhs = rhs.replaceAll("\n|\r", " ").trim();
+                    d.target = rhs.isEmpty() ? null : rhs;
+                }
+            }
             file.getTypeAliases().add(d);
         }
     }

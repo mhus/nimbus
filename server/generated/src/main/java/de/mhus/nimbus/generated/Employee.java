@@ -1,8 +1,8 @@
 /*
- * Source TS: PingMessage.ts
- * Original TS: 'interface PongData'
+ * Source TS: sample-types.ts
+ * Original TS: 'interface Employee'
  */
-package de.mhus.nimbus.generated.network.messages;
+package de.mhus.nimbus.generated;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,7 +10,6 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class PongData {
-    private double cTs;
-    private double sTs;
+public class Employee extends Person {
+    private double employeeId;
 }
