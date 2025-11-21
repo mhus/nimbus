@@ -13,7 +13,7 @@ security:
     expiresMinutes: 60
 
 server:
-  port: 8040
+  port: 9040
   error:
     include-message: always
     include-binding-errors: always

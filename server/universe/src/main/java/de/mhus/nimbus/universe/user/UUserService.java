@@ -50,6 +50,38 @@ public class UUserService {
     }
 
     /**
+     * Update username, email and roles (raw comma-separated) of a user.
+     * Performs uniqueness checks for username/email when changed.
+     */
+    public UUser update(String id, String username, String email, String rolesRaw) {
+        UUser user = userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+
+        // Username
+        if (username != null && !username.isBlank() && !username.equals(user.getUsername())) {
+            if (userRepository.existsByUsername(username)) {
+                throw new IllegalArgumentException("Username already exists: " + username);
+            }
+            user.setUsername(username);
+        }
+
+        // Email
+        if (email != null && !email.isBlank() && !email.equals(user.getEmail())) {
+            if (userRepository.existsByEmail(email)) {
+                throw new IllegalArgumentException("Email already exists: " + email);
+            }
+            user.setEmail(email);
+        }
+
+        // Roles raw (may be null/blank to clear)
+        if (rolesRaw != null) {
+            user.setRolesRaw(rolesRaw);
+        }
+
+        return userRepository.save(user);
+    }
+
+    /**
      * Hashes and sets a new password for the user using the user's id as salt.
      * @param userId the user id
      * @param plainPassword raw password (must not be blank)

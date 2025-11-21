@@ -18,7 +18,7 @@ import java.util.Optional;
  * gegen den Regions-Key prüft. Owner des KeyIds ist die regionId aus dem Pfad; die UUID
  * wird aus JwtProperties.regionKeyUuid bezogen (Fallback: Suffix von JwtProperties.keyId nach ':').
  */
-@Component
+// @Component
 public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BASE_PREFIX = "/universe/region/";
