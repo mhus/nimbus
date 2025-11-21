@@ -8,6 +8,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.PrivateKey; // hinzugefügt
 import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
@@ -20,8 +21,7 @@ class KeyServiceTest {
 
     private KeyService keyService;
     private PublicKey testPublicKey;
-    private SecretKey testSecretKey;
-    private static final KeyType TEST_TYPE = KeyType.UNIVERSE; // hinzugefügt
+    private PrivateKey testPrivateKey; // ersetzt testSecretKey für PrivateKey Tests
 
     // Simple ObjectProvider implementation for testing
     private static class TestObjectProvider<T> implements ObjectProvider<T> {
@@ -54,11 +54,11 @@ class KeyServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        keyPairGenerator.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         testPublicKey = keyPair.getPublic();
-        testSecretKey = new SecretKeySpec(new byte[32], "HmacSHA256");
+        testPrivateKey = keyPair.getPrivate();
     }
 
     // ================================================================
@@ -73,11 +73,11 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<KeyId> result = keyService.parseKeyId("owner:uuid");
+        Optional<KeyId> result = keyService.parseKeyId("owner:id");
 
         assertThat(result).isPresent();
         assertThat(result.get().owner()).isEqualTo("owner");
-        assertThat(result.get().uuid()).isEqualTo("uuid");
+        assertThat(result.get().id()).isEqualTo("id");
     }
 
     @Test
@@ -88,11 +88,11 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<KeyId> result = keyService.parseKeyId("  owner  :  uuid  ");
+        Optional<KeyId> result = keyService.parseKeyId("  owner  :  id  ");
 
         assertThat(result).isPresent();
         assertThat(result.get().owner()).isEqualTo("owner");
-        assertThat(result.get().uuid()).isEqualTo("uuid");
+        assertThat(result.get().id()).isEqualTo("id");
     }
 
     @Test
@@ -119,7 +119,7 @@ class KeyServiceTest {
         assertThat(keyService.parseKeyId("" )).isEmpty();
         assertThat(keyService.parseKeyId("   ")).isEmpty();
         assertThat(keyService.parseKeyId("owneruuid")).isEmpty();
-        assertThat(keyService.parseKeyId(":uuid")).isEmpty();
+        assertThat(keyService.parseKeyId(":id")).isEmpty();
         assertThat(keyService.parseKeyId("owner:")).isEmpty();
         assertThat(keyService.parseKeyId(":" )).isEmpty();
     }
@@ -130,7 +130,7 @@ class KeyServiceTest {
 
     @Test
     void findPublicKey_withValidKeyId_shouldReturnKey() {
-        KeyId keyId = KeyId.of("owner", "uuid");
+        KeyId keyId = KeyId.of("owner", "id");
         PublicKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testPublicKey) : Optional.empty();
 
         keyService = new KeyService(
@@ -139,7 +139,7 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<PublicKey> result = keyService.findPublicKey(TEST_TYPE, keyId);
+        Optional<PublicKey> result = keyService.findPublicKey(KeyType.UNIVERSE, keyId);
 
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testPublicKey);
@@ -147,7 +147,7 @@ class KeyServiceTest {
 
     @Test
     void findPublicKey_withStringKeyId_shouldReturnKey() {
-        KeyId keyId = KeyId.of("owner", "uuid");
+        KeyId keyId = KeyId.of("owner", "id");
         PublicKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testPublicKey) : Optional.empty();
 
         keyService = new KeyService(
@@ -156,7 +156,7 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<PublicKey> result = keyService.findPublicKey(TEST_TYPE, "owner:uuid");
+        Optional<PublicKey> result = keyService.findPublicKey(KeyType.UNIVERSE, "owner:id");
 
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testPublicKey);
@@ -170,7 +170,7 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<PublicKey> result = keyService.findPublicKey(TEST_TYPE, "owner:uuid");
+        Optional<PublicKey> result = keyService.findPublicKey(KeyType.UNIVERSE, "owner:id");
 
         assertThat(result).isEmpty();
     }
@@ -185,7 +185,7 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<PublicKey> result = keyService.findPublicKey(TEST_TYPE, "owner:uuid");
+        Optional<PublicKey> result = keyService.findPublicKey(KeyType.UNIVERSE, "owner:id");
 
         assertThat(result).isEmpty();
     }
@@ -195,9 +195,9 @@ class KeyServiceTest {
     // ================================================================
 
     @Test
-    void findSecretKey_withValidKeyId_shouldReturnKey() {
-        KeyId keyId = KeyId.of("owner", "uuid");
-        PrivateKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testSecretKey) : Optional.empty();
+    void findPrivateKey_withValidKeyId_shouldReturnKey() {
+        KeyId keyId = KeyId.of("owner", "id");
+        PrivateKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testPrivateKey) : Optional.empty();
 
         keyService = new KeyService(
             new TestObjectProvider<>(Collections::emptyList),
@@ -205,16 +205,16 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<SecretKey> result = keyService.findSecretKey(TEST_TYPE, keyId);
+        Optional<PrivateKey> result = keyService.findPrivateKey(KeyType.UNIVERSE, keyId);
 
         assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(testSecretKey);
+        assertThat(result.get()).isEqualTo(testPrivateKey);
     }
 
     @Test
-    void findSecretKey_withStringKeyId_shouldReturnKey() {
-        KeyId keyId = KeyId.of("owner", "uuid");
-        PrivateKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testSecretKey) : Optional.empty();
+    void findPrivateKey_withStringKeyId_shouldReturnKey() {
+        KeyId keyId = KeyId.of("owner", "id");
+        PrivateKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testPrivateKey) : Optional.empty();
 
         keyService = new KeyService(
             new TestObjectProvider<>(Collections::emptyList),
@@ -222,72 +222,21 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<SecretKey> result = keyService.findSecretKey(TEST_TYPE, "owner:uuid");
+        Optional<PrivateKey> result = keyService.findPrivateKey(KeyType.UNIVERSE, "owner:id");
 
         assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(testSecretKey);
+        assertThat(result.get()).isEqualTo(testPrivateKey);
     }
 
     @Test
-    void findSecretKey_noProviders_shouldReturnEmpty() {
+    void findPrivateKey_noProviders_shouldReturnEmpty() {
         keyService = new KeyService(
             new TestObjectProvider<>(Collections::emptyList),
             new TestObjectProvider<>(Collections::emptyList),
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<SecretKey> result = keyService.findSecretKey(TEST_TYPE, "owner:uuid");
-
-        assertThat(result).isEmpty();
-    }
-
-    // ================================================================
-    // findSyncKey tests
-    // ================================================================
-
-    @Test
-    void findSyncKey_withValidKeyId_shouldReturnKey() {
-        KeyId keyId = KeyId.of("owner", "uuid");
-        SymmetricKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testSecretKey) : Optional.empty();
-
-        keyService = new KeyService(
-            new TestObjectProvider<>(Collections::emptyList),
-            new TestObjectProvider<>(Collections::emptyList),
-            new TestObjectProvider<>(() -> List.of(provider))
-        );
-
-        Optional<SecretKey> result = keyService.findSyncKey(TEST_TYPE, keyId);
-
-        assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(testSecretKey);
-    }
-
-    @Test
-    void findSyncKey_withStringKeyId_shouldReturnKey() {
-        KeyId keyId = KeyId.of("owner", "uuid");
-        SymmetricKeyProvider provider = (type, id) -> id.equals(keyId) ? Optional.of(testSecretKey) : Optional.empty();
-
-        keyService = new KeyService(
-            new TestObjectProvider<>(Collections::emptyList),
-            new TestObjectProvider<>(Collections::emptyList),
-            new TestObjectProvider<>(() -> List.of(provider))
-        );
-
-        Optional<SecretKey> result = keyService.findSyncKey(TEST_TYPE, "owner:uuid");
-
-        assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(testSecretKey);
-    }
-
-    @Test
-    void findSyncKey_noProviders_shouldReturnEmpty() {
-        keyService = new KeyService(
-            new TestObjectProvider<>(Collections::emptyList),
-            new TestObjectProvider<>(Collections::emptyList),
-            new TestObjectProvider<>(Collections::emptyList)
-        );
-
-        Optional<SecretKey> result = keyService.findSyncKey(TEST_TYPE, "owner:uuid");
+        Optional<PrivateKey> result = keyService.findPrivateKey(KeyType.UNIVERSE, "owner:id");
 
         assertThat(result).isEmpty();
     }
@@ -298,7 +247,7 @@ class KeyServiceTest {
 
     @Test
     void findPublicKey_multipleProviders_firstReturnsKey_shouldReturnFromFirst() throws Exception {
-        KeyId keyId = KeyId.of("owner", "uuid");
+        KeyId keyId = KeyId.of("owner", "id");
         PublicKeyProvider provider1 = (type, id) -> id.equals(keyId) ? Optional.of(testPublicKey) : Optional.empty();
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
@@ -311,7 +260,7 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<PublicKey> result = keyService.findPublicKey(TEST_TYPE, keyId);
+        Optional<PublicKey> result = keyService.findPublicKey(KeyType.UNIVERSE, keyId);
 
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testPublicKey); // Should get from first provider
@@ -319,7 +268,7 @@ class KeyServiceTest {
 
     @Test
     void findPublicKey_multipleProviders_firstReturnsEmpty_shouldReturnFromSecond() throws Exception {
-        KeyId keyId = KeyId.of("owner", "uuid");
+        KeyId keyId = KeyId.of("owner", "id");
         PublicKeyProvider provider1 = (type, id) -> Optional.empty();
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
@@ -332,7 +281,7 @@ class KeyServiceTest {
             new TestObjectProvider<>(Collections::emptyList)
         );
 
-        Optional<PublicKey> result = keyService.findPublicKey(TEST_TYPE, keyId);
+        Optional<PublicKey> result = keyService.findPublicKey(KeyType.UNIVERSE, keyId);
 
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testPublicKey2); // Should get from second provider

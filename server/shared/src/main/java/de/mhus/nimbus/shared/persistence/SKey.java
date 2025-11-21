@@ -1,10 +1,17 @@
 package de.mhus.nimbus.shared.persistence;
 
+import de.mhus.nimbus.shared.security.Base64Service;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.ECPrivateKeySpec;
 import java.time.Instant;
+import java.util.Base64;
 
 /**
  * Persisted key definition to be stored in MongoDB.
@@ -24,7 +31,7 @@ public class SKey {
     // Algorithmus (z. B. RSA, EC, AES, HmacSHA256)
     private String algorithm;
 
-    // Name/Bezeichner (hier wird KeyId.uuid() gemappt)
+    // Name/Bezeichner (hier wird KeyId.id() gemappt)
     private String name;
 
     // Der Schluesselinhalt als Base64-kodierte Bytes
@@ -48,4 +55,31 @@ public class SKey {
     public void setKey(String key) { this.key = key; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public SKey() {}
+
+    // Convenience-Konstruktor für generischen Eintrag
+    public SKey(String type, String kind, String name, String algorithm, String base64Key) {
+        this.type = type;
+        this.kind = kind;
+        this.name = name;
+        this.algorithm = algorithm;
+        this.key = base64Key;
+    }
+
+    // Factory-Methoden
+    public static SKey ofPublicKey(String type, String owner, String name, PublicKey key) {
+        String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
+        return new SKey(type, "public", name, key.getAlgorithm(), base64);
+    }
+
+    public static SKey ofPrivateKey(String type, String owner, String name, PrivateKey key) {
+        String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
+        return new SKey(type, "private", name, key.getAlgorithm(), base64);
+    }
+
+    public static SKey ofSecretKey(String type, String owner, String name, SecretKey key) {
+        String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
+        return new SKey(type, "symmetric", name, key.getAlgorithm(), base64);
+    }
 }

@@ -19,7 +19,7 @@ public interface SymmetricKeyProvider {
     /**
      * Loads a symmetric key for the given id if available.
      *
-     * @param id the key id (owner + uuid), never null
+     * @param id the key id (owner + id), never null
      * @return optional containing the key if this provider can resolve it; empty if not found
      */
     Optional<SecretKey> loadSymmetricKey(KeyType type, KeyId id);

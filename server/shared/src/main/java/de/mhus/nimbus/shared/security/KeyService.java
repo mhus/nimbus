@@ -4,8 +4,15 @@ import lombok.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.ECGenParameterSpec;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -13,11 +20,11 @@ import java.util.Optional;
 /**
  * Spring-managed service that aggregates registered key providers and resolves keys on demand.
  *
- * <p>Key ids are expressed as a string using the format "owner:uuid". Both parts are trimmed.
+ * <p>Key ids are expressed as a string using the format "owner:id". Both parts are trimmed.
  * If the input cannot be parsed, an empty Optional will be returned by the finder methods.
  */
 @Service
-public class KeyService implements IKeyService {
+public class KeyService {
 
     // Inject provider lists lazily; there may be multiple providers of each type
     private final ObjectProvider<List<PublicKeyProvider>> publicKeyProviders;
@@ -50,13 +57,13 @@ public class KeyService implements IKeyService {
     // ------------------------------------------------------------
     // Secret keys
 
-    public Optional<SecretKey> findSecretKey(KeyType type, String keyId) {
-        return parseKeyId(keyId).flatMap(id -> findSecretKey(type, id));
+    public Optional<PrivateKey> findPrivateKey(KeyType type, String keyId) {
+        return parseKeyId(keyId).flatMap(id -> findPrivateKey(type, id));
     }
 
-    public Optional<SecretKey> findSecretKey(KeyType type, @NonNull KeyId id) {
+    public Optional<PrivateKey> findPrivateKey(KeyType type, @NonNull KeyId id) {
         for (PrivateKeyProvider provider : secretKeyProviders.getIfAvailable(Collections::emptyList)) {
-            Optional<SecretKey> key = provider.loadPrivateKey(type, id);
+            Optional<PrivateKey> key = provider.loadPrivateKey(type, id);
             if (key.isPresent()) return key;
         }
         return Optional.empty();
@@ -65,11 +72,11 @@ public class KeyService implements IKeyService {
     // ------------------------------------------------------------
     // Sync keys (synchronous/symmetric)
 
-    public Optional<SecretKey> findSyncKey(KeyType type, String keyId) {
-        return parseKeyId(keyId).flatMap(id -> findSyncKey(type, id));
+    public Optional<SecretKey> findSymetricKey(KeyType type, String keyId) {
+        return parseKeyId(keyId).flatMap(id -> findSymetricKey(type, id));
     }
 
-    public Optional<SecretKey> findSyncKey(KeyType type, @NonNull KeyId id) {
+    public Optional<SecretKey> findSymetricKey(KeyType type, @NonNull KeyId id) {
         for (SymmetricKeyProvider provider : syncKeyProviders.getIfAvailable(Collections::emptyList)) {
             Optional<SecretKey> key = provider.loadSymmetricKey(type, id);
             if (key.isPresent()) return key;
@@ -80,7 +87,7 @@ public class KeyService implements IKeyService {
     // ------------------------------------------------------------
 
     /**
-     * Parses a string in the form "owner:uuid" into a KeyId.
+     * Parses a string in the form "owner:id" into a KeyId.
      * Returns Optional.empty() if the input is null, blank, or malformed.
      */
     public Optional<KeyId> parseKeyId(String keyId) {
@@ -100,4 +107,19 @@ public class KeyService implements IKeyService {
             return Optional.empty();
         }
     }
+
+    public SecretKey createAESKey() throws NoSuchAlgorithmException {
+        // Generate test keys for AES
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256);
+        return keyGen.generateKey();
+    }
+
+    public KeyPair createECCKeys() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        var keyGen = KeyPairGenerator.getInstance("EC");
+        ECGenParameterSpec ecSpec = new ECGenParameterSpec("secp256r1");
+        keyGen.initialize(ecSpec);
+        return keyGen.generateKeyPair();
+    }
+
 }

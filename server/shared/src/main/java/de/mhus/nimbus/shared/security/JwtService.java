@@ -6,11 +6,13 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.time.Instant;
 import java.util.Date;
@@ -25,19 +27,15 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class JwtService {
 
-    private final IKeyService keyService;
-    private static final KeyType DEFAULT_KEY_TYPE = KeyType.UNIVERSE; // Neues Default
-
-    public JwtService(@NonNull IKeyService keyService) {
-        this.keyService = keyService;
-    }
+    private final KeyService keyService;
 
     /**
-     * Creates a JWT token signed with a secret key (HMAC algorithm).
+     * Creates a JWT token signed with an ECC private key (secp256r1). No symmetric fallback.
      *
-     * @param keyId    the key id in format "owner:uuid" to locate the signing key
+     * @param keyId    the key id in format "owner:id" to locate the signing key
      * @param subject  the subject claim (e.g., user id)
      * @param claims   additional claims to include in the token
      * @param expiresAt expiration time (null for no expiration)
@@ -48,30 +46,23 @@ public class JwtService {
                                             @NonNull String subject,
                                             Map<String, Object> claims,
                                             Instant expiresAt) {
-        SecretKey key = keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId)
-                .orElseThrow(() -> new IllegalArgumentException("Secret key not found: " + keyId));
-
+        PrivateKey key = keyService.findPrivateKey(KeyType.UNIVERSE, keyId)
+                .orElseThrow(() -> new IllegalArgumentException("ECC private key not found: " + keyId));
+        if (!"EC".equalsIgnoreCase(key.getAlgorithm())) {
+            throw new IllegalArgumentException("Private key for keyId " + keyId + " is not ECC (EC). Found: " + key.getAlgorithm());
+        }
         var builder = Jwts.builder()
-                .subject(subject)
-                .issuedAt(Date.from(Instant.now()));
-
-        if (claims != null && !claims.isEmpty()) {
-            builder.claims(claims);
-        }
-
-        if (expiresAt != null) {
-            builder.expiration(Date.from(expiresAt));
-        }
-
-        return builder
-                .signWith(key)
-                .compact();
+            .subject(subject)
+            .issuedAt(Date.from(Instant.now()));
+        if (claims != null && !claims.isEmpty()) builder.claims(claims);
+        if (expiresAt != null) builder.expiration(Date.from(expiresAt));
+        return builder.signWith(key).compact();
     }
 
     /**
      * Creates a JWT token signed with a secret key from SyncKeyProvider (HMAC algorithm).
      *
-     * @param keyId    the key id in format "owner:uuid" to locate the signing key
+     * @param keyId    the key id in format "owner:id" to locate the signing key
      * @param subject  the subject claim (e.g., user id)
      * @param claims   additional claims to include in the token
      * @param expiresAt expiration time (null for no expiration)
@@ -82,7 +73,7 @@ public class JwtService {
                                           @NonNull String subject,
                                           Map<String, Object> claims,
                                           Instant expiresAt) {
-        SecretKey key = keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId)
+        SecretKey key = keyService.findSymetricKey(KeyType.UNIVERSE, keyId)
                 .orElseThrow(() -> new IllegalArgumentException("Sync key not found: " + keyId));
 
         var builder = Jwts.builder()
@@ -106,23 +97,25 @@ public class JwtService {
      * Validates a JWT token using a secret key (HMAC algorithm).
      *
      * @param token the JWT token string
-     * @param keyId the key id in format "owner:uuid" to locate the verification key
+     * @param keyId the key id in format "owner:id" to locate the verification key
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithSecretKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId)
-                .flatMap(key -> parseToken(token, key));
+        // ECC Validierung über PublicKey
+        return keyService.findPublicKey(KeyType.UNIVERSE, keyId)
+                .filter(pk -> "EC".equalsIgnoreCase(pk.getAlgorithm()))
+                .flatMap(pk -> parseToken(token, pk));
     }
 
     /**
      * Validates a JWT token using a sync key (HMAC algorithm).
      *
      * @param token the JWT token string
-     * @param keyId the key id in format "owner:uuid" to locate the verification key
+     * @param keyId the key id in format "owner:id" to locate the verification key
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithSyncKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId)
+        return keyService.findSymetricKey(KeyType.UNIVERSE, keyId)
                 .flatMap(key -> parseToken(token, key));
     }
 
@@ -130,11 +123,11 @@ public class JwtService {
      * Validates a JWT token using a public key (RSA/ECDSA algorithm).
      *
      * @param token the JWT token string
-     * @param keyId the key id in format "owner:uuid" to locate the verification key
+     * @param keyId the key id in format "owner:id" to locate the verification key
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithPublicKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findPublicKey(DEFAULT_KEY_TYPE, keyId)
+        return keyService.findPublicKey(KeyType.UNIVERSE, keyId)
                 .flatMap(key -> parseToken(token, key));
     }
 

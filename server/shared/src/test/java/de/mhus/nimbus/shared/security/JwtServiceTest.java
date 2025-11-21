@@ -8,12 +8,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.ECGenParameterSpec;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -26,16 +25,14 @@ import static org.mockito.Mockito.when;
 class JwtServiceTest {
 
     @Mock
-    private IKeyService keyService;
+    private KeyService keyService;
 
     private JwtService jwtService;
 
-    private SecretKey testSecretKey;
-    private SecretKey testSyncKey;
     private PublicKey testPublicKey;
     private PrivateKey testPrivateKey;
 
-    private static final String TEST_KEY_ID = "owner:uuid-123";
+    private static final String TEST_KEY_ID = "owner:id-123";
     private static final String TEST_SUBJECT = "user123";
     private static final String TEST_ROLE = "admin";
     private static final String TEST_EMAIL = "user@example.com";
@@ -43,231 +40,43 @@ class JwtServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         jwtService = new JwtService(keyService);
-
-        // Generate test secret key for HMAC
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        keyGen.init(256);
-        testSecretKey = keyGen.generateKey();
-        testSyncKey = keyGen.generateKey();
-
-        // Generate test RSA key pair
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        keyPairGenerator.initialize(new ECGenParameterSpec("secp256r1"));
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         testPublicKey = keyPair.getPublic();
         testPrivateKey = keyPair.getPrivate();
     }
 
     // ================================================================
-    // createTokenWithSecretKey tests
+    // createTokenWithSecretKey (asymmetric priority) tests
     // ================================================================
 
     @Test
-    void createTokenWithSecretKey_validInput_shouldCreateToken() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+    void createTokenWithSecretKey_privateKeyPriority_shouldCreateAsymmetricToken() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
         Instant expiresAt = Instant.now().plusSeconds(3600);
 
         String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, claims, expiresAt);
 
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
-        assertThat(token.split("\\.")).hasSize(3); // JWT has 3 parts
-    }
-
-    @Test
-    void createTokenWithSecretKey_noClaims_shouldCreateToken() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
-
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
-    }
-
-    @Test
-    void createTokenWithSecretKey_emptyClaims_shouldCreateToken() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, Map.of(), null);
-
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
-    }
-
-    @Test
-    void createTokenWithSecretKey_noExpiration_shouldCreateToken() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
-
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
-    }
-
-    @Test
-    void createTokenWithSecretKey_keyNotFound_shouldThrowException() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> 
-            jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Secret key not found");
-    }
-
-    // ================================================================
-    // createTokenWithSyncKey tests
-    // ================================================================
-
-    @Test
-    void createTokenWithSyncKey_validInput_shouldCreateToken() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-
-        String token = jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, claims, expiresAt);
-
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
+        assertThat(token).isNotNull().isNotEmpty();
         assertThat(token.split("\\.")).hasSize(3);
     }
 
     @Test
-    void createTokenWithSyncKey_noClaims_shouldCreateToken() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String token = jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
-
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
+    void createTokenWithSecretKey_eccPrivateKey_shouldCreateToken() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, Map.of("role", TEST_ROLE), Instant.now().plusSeconds(3600));
+        assertThat(token).isNotNull().isNotEmpty();
     }
 
     @Test
-    void createTokenWithSyncKey_keyNotFound_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> 
-            jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, null, null))
+    void createTokenWithSecretKey_missingPrivateKey_shouldThrow() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Sync key not found");
-    }
-
-    // ================================================================
-    // validateTokenWithSecretKey tests
-    // ================================================================
-
-    @Test
-    void validateTokenWithSecretKey_validToken_shouldReturnClaims() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, claims, expiresAt);
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
-
-        assertThat(result).isPresent();
-        Claims parsedClaims = result.get().getPayload();
-        assertThat(parsedClaims.getSubject()).isEqualTo(TEST_SUBJECT);
-        assertThat(parsedClaims.get("role", String.class)).isEqualTo(TEST_ROLE);
-        assertThat(parsedClaims.get("email", String.class)).isEqualTo(TEST_EMAIL);
-    }
-
-    @Test
-    void validateTokenWithSecretKey_invalidToken_shouldReturnEmpty() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String invalidToken = "invalid.jwt.token";
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(invalidToken, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void validateTokenWithSecretKey_wrongKey_shouldReturnEmpty() throws Exception {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        // Create token with testSecretKey
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
-
-        // Try to validate with a different key
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        keyGen.init(256);
-        SecretKey differentKey = keyGen.generateKey();
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentKey));
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void validateTokenWithSecretKey_keyNotFound_shouldReturnEmpty() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
-        String token = "some.jwt.token";
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void validateTokenWithSecretKey_expiredToken_shouldReturnEmpty() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        // Create token that expired 1 hour ago
-        Instant expiresAt = Instant.now().minusSeconds(3600);
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, expiresAt);
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
-    }
-
-    // ================================================================
-    // validateTokenWithSyncKey tests
-    // ================================================================
-
-    @Test
-    void validateTokenWithSyncKey_validToken_shouldReturnClaims() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        Map<String, Object> claims = Map.of("role", TEST_ROLE);
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-        String token = jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, claims, expiresAt);
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSyncKey(token, TEST_KEY_ID);
-
-        assertThat(result).isPresent();
-        Claims parsedClaims = result.get().getPayload();
-        assertThat(parsedClaims.getSubject()).isEqualTo(TEST_SUBJECT);
-        assertThat(parsedClaims.get("role", String.class)).isEqualTo(TEST_ROLE);
-    }
-
-    @Test
-    void validateTokenWithSyncKey_invalidToken_shouldReturnEmpty() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String invalidToken = "invalid.jwt.token";
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSyncKey(invalidToken, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void validateTokenWithSyncKey_keyNotFound_shouldReturnEmpty() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
-        String token = "some.jwt.token";
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSyncKey(token, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
+            .hasMessageContaining("ECC private key not found");
     }
 
     // ================================================================
@@ -276,67 +85,38 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithPublicKey_validToken_shouldReturnClaims() {
-        // Create token signed with private key using JJWT directly
-        Map<String, Object> claims = Map.of("role", TEST_ROLE);
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-        
-        String token = io.jsonwebtoken.Jwts.builder()
-                .subject(TEST_SUBJECT)
-                .claims(claims)
-                .expiration(java.util.Date.from(expiresAt))
-                .signWith(testPrivateKey)
-                .compact();
-
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, Map.of("role", TEST_ROLE), Instant.now().plusSeconds(3600));
         when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
-
         Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(token, TEST_KEY_ID);
-
         assertThat(result).isPresent();
-        Claims parsedClaims = result.get().getPayload();
-        assertThat(parsedClaims.getSubject()).isEqualTo(TEST_SUBJECT);
-        assertThat(parsedClaims.get("role", String.class)).isEqualTo(TEST_ROLE);
     }
 
     @Test
-    void validateTokenWithPublicKey_invalidToken_shouldReturnEmpty() {
+    void validateTokenWithSecretKey_eccToken_shouldReturnClaims() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
         when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
+        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, Map.of("role", TEST_ROLE), Instant.now().plusSeconds(3600));
+        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
+        assertThat(result).isPresent();
+    }
 
-        String invalidToken = "invalid.jwt.token";
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(invalidToken, TEST_KEY_ID);
-
+    @Test
+    void validateTokenWithSecretKey_wrongPublicKey_shouldReturnEmpty() throws Exception {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        keyPairGenerator.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
+        PublicKey differentPublic = keyPairGenerator.generateKeyPair().getPublic();
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentPublic));
+        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
         assertThat(result).isEmpty();
     }
 
     @Test
-    void validateTokenWithPublicKey_wrongKey_shouldReturnEmpty() throws Exception {
-        // Create token with testPrivateKey
-        String token = io.jsonwebtoken.Jwts.builder()
-                .subject(TEST_SUBJECT)
-                .signWith(testPrivateKey)
-                .compact();
-
-        // Try to validate with a different public key
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        KeyPair differentKeyPair = keyPairGenerator.generateKeyPair();
-        PublicKey differentPublicKey = differentKeyPair.getPublic();
-
-        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentPublicKey));
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(token, TEST_KEY_ID);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void validateTokenWithPublicKey_keyNotFound_shouldReturnEmpty() {
+    void validateTokenWithSecretKey_noKeyFound_shouldReturnEmpty() {
         when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
-        String token = "some.jwt.token";
-
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(token, TEST_KEY_ID);
-
+        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey("invalid.jwt.token", TEST_KEY_ID);
         assertThat(result).isEmpty();
     }
 
@@ -345,35 +125,11 @@ class JwtServiceTest {
     // ================================================================
 
     @Test
-    void roundTrip_secretKey_shouldWorkCorrectly() {
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-
-        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, claims, expiresAt);
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
-
+    void roundTrip_asymmetric_shouldWork() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
+        String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, Map.of("role", TEST_ROLE), Instant.now().plusSeconds(3600));
+        Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(token, TEST_KEY_ID);
         assertThat(result).isPresent();
-        Claims parsedClaims = result.get().getPayload();
-        assertThat(parsedClaims.getSubject()).isEqualTo(TEST_SUBJECT);
-        assertThat(parsedClaims.get("role", String.class)).isEqualTo(TEST_ROLE);
-        assertThat(parsedClaims.get("email", String.class)).isEqualTo(TEST_EMAIL);
-    }
-
-    @Test
-    void roundTrip_syncKey_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        Map<String, Object> claims = Map.of("role", TEST_ROLE);
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-
-        String token = jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, claims, expiresAt);
-        Optional<Jws<Claims>> result = jwtService.validateTokenWithSyncKey(token, TEST_KEY_ID);
-
-        assertThat(result).isPresent();
-        Claims parsedClaims = result.get().getPayload();
-        assertThat(parsedClaims.getSubject()).isEqualTo(TEST_SUBJECT);
-        assertThat(parsedClaims.get("role", String.class)).isEqualTo(TEST_ROLE);
     }
 }

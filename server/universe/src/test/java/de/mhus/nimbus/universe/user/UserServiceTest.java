@@ -119,12 +119,14 @@ class UserServiceTest {
         UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));
-        when(hashService.hash("secret", "u1")).thenReturn("SHA-256:c2FsdF91MQ==:HASHED");
+        // Salt muss Base64(userId) sein: "u1" -> "dTE="
+        when(hashService.hash("secret", "u1")).thenReturn("SHA-256:dTE=:HASHED");
         when(userRepository.save(any(UUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UUser updated = userService.setPassword("u1", "secret");
         assertNotNull(updated.getPasswordHash());
         assertTrue(updated.getPasswordHash().startsWith("SHA-256:"));
+        assertTrue(updated.getPasswordHash().contains("dTE=:"));
         verify(hashService).hash("secret", "u1");
     }
 
@@ -132,21 +134,22 @@ class UserServiceTest {
     void validatePassword_ok() {
         UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
-        user.setPasswordHash("SHA-256:c2FsdF91MQ==:HASHED");
+        user.setPasswordHash("SHA-256:dTE=:HASHED");
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));
-        when(hashService.validate("secret", "u1", "SHA-256:c2FsdF91MQ==:HASHED")).thenReturn(true);
+        when(hashService.validate("secret", "u1", "SHA-256:dTE=:HASHED")).thenReturn(true);
         assertTrue(userService.validatePassword("u1", "secret"));
-        verify(hashService).validate("secret", "u1", "SHA-256:c2FsdF91MQ==:HASHED");
+        verify(hashService).validate("secret", "u1", "SHA-256:dTE=:HASHED");
     }
 
     @Test
     void validatePassword_wrong() {
         UUser user = new UUser("alpha","alpha@example.com");
         user.setId("u1");
-        user.setPasswordHash("SHA-256:c2FsdF91MQ==:HASHED");
+        user.setPasswordHash("SHA-256:dTE=:HASHED");
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));
-        when(hashService.validate("bad", "u1", "SHA-256:c2FsdF91MQ==:HASHED")).thenReturn(false);
+        when(hashService.validate("bad", "u1", "SHA-256:dTE=:HASHED")).thenReturn(false);
         assertFalse(userService.validatePassword("u1", "bad"));
+        verify(hashService).validate("bad", "u1", "SHA-256:dTE=:HASHED");
     }
 
     @Test

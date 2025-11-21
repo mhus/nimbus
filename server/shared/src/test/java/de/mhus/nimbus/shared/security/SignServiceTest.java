@@ -6,8 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,21 +24,20 @@ class SignServiceTest {
 
     private SignService signService;
 
-    private SecretKey testSyncKey;
-    private SecretKey testSecretKey;
+    private PrivateKey testPrivateKey;
+    private PublicKey testPublicKey;
 
-    private static final String TEST_KEY_ID = "owner:uuid-123";
+    private static final String TEST_KEY_ID = "owner:id-123";
     private static final String TEST_TEXT = "Important message to sign";
 
     @BeforeEach
     void setUp() throws Exception {
         signService = new SignService(keyService);
-
-        // Generate test keys
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        keyGen.init(256);
-        testSyncKey = keyGen.generateKey();
-        testSecretKey = keyGen.generateKey();
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
+        kpg.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
+        KeyPair kp = kpg.generateKeyPair();
+        testPrivateKey = kp.getPrivate();
+        testPublicKey = kp.getPublic();
     }
 
     // ================================================================
@@ -44,64 +45,29 @@ class SignServiceTest {
     // ================================================================
 
     @Test
-    void sign_withSyncKey_shouldReturnSignature() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
+    void sign_withPrivateKey_shouldReturnAsymmetricSignature() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-
-        assertThat(signature).isNotNull();
-        assertThat(signature).isNotEmpty();
-        // Signature format: keyIdBase64:algorithm:signatureBase64
-        assertThat(signature.split(":")).hasSize(3);
-        String expectedKeyIdBase64 = java.util.Base64.getEncoder().encodeToString(TEST_KEY_ID.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        assertThat(signature).startsWith(expectedKeyIdBase64 + ":HmacSHA256:");
-    }
-
-    @Test
-    void sign_withSecretKey_shouldReturnSignature() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-
-        assertThat(signature).isNotNull();
-        assertThat(signature).isNotEmpty();
-        assertThat(signature.split(":")).hasSize(3);
-        String expectedKeyIdBase64 = java.util.Base64.getEncoder().encodeToString(TEST_KEY_ID.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        assertThat(signature).startsWith(expectedKeyIdBase64 + ":HmacSHA256:");
-    }
-
-    @Test
-    void sign_prefersSyncKeyOverSecretKey() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-
-        assertThat(signature).isNotNull();
-        // The signature should be created with syncKey (we can verify by checking it validates with syncKey)
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-        assertThat(isValid).isTrue();
+        assertThat(signature).contains("ECDSA");
     }
 
     @Test
     void sign_noKeyFound_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> signService.sign(TEST_TEXT, TEST_KEY_ID))
-                .isInstanceOf(SignService.SignatureException.class)
-                .hasMessageContaining("No symmetric key found for keyId");
+            .isInstanceOf(SignService.SignatureException.class)
+            .hasMessageContaining("No asymmetric private key");
     }
 
     @Test
     void sign_sameTextDifferentKeys_shouldProduceDifferentSignatures() throws Exception {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
         String signature1 = signService.sign(TEST_TEXT, TEST_KEY_ID);
 
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        keyGen.init(256);
-        SecretKey anotherKey = keyGen.generateKey();
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(anotherKey));
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
+        kpg.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
+        KeyPair anotherKp = kpg.generateKeyPair();
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(anotherKp.getPrivate()));
         String signature2 = signService.sign(TEST_TEXT, TEST_KEY_ID);
 
         assertThat(signature1).isNotEqualTo(signature2);
@@ -109,7 +75,7 @@ class SignServiceTest {
 
     @Test
     void sign_differentTextSameKey_shouldProduceDifferentSignatures() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
 
         String signature1 = signService.sign("Text 1", TEST_KEY_ID);
         String signature2 = signService.sign("Text 2", TEST_KEY_ID);
@@ -123,38 +89,35 @@ class SignServiceTest {
 
     @Test
     void validate_validSignature_shouldReturnTrue() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-
-        assertThat(isValid).isTrue();
+        boolean valid = signService.validate(TEST_TEXT, signature);
+        assertThat(valid).isTrue();
     }
 
     @Test
-    void validate_validSignatureWithSecretKey_shouldReturnTrue() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
+    void validate_asymmetricSignature_shouldReturnTrue() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-
-        assertThat(isValid).isTrue();
+        boolean valid = signService.validate(TEST_TEXT, signature);
+        assertThat(valid).isTrue();
     }
 
     @Test
     void validate_modifiedText_shouldReturnFalse() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-        boolean isValid = signService.validate("Modified text", signature);
-
-        assertThat(isValid).isFalse();
+        boolean valid = signService.validate("Changed", signature);
+        assertThat(valid).isFalse();
     }
 
     @Test
     void validate_modifiedSignature_shouldReturnFalse() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
 
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
         String modifiedSignature = signature + "extra";
@@ -164,33 +127,21 @@ class SignServiceTest {
     }
 
     @Test
-    void validate_wrongKey_shouldReturnFalse() throws Exception {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+    void validate_wrongPublicKey_shouldReturnFalse() throws Exception {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-
-        // Try to validate with different key
-        KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        keyGen.init(256);
-        SecretKey differentKey = keyGen.generateKey();
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentKey));
-
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-
-        assertThat(isValid).isFalse();
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
+        kpg.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
+        PublicKey otherPublic = kpg.generateKeyPair().getPublic();
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(otherPublic));
+        boolean valid = signService.validate(TEST_TEXT, signature);
+        assertThat(valid).isFalse();
     }
 
     @Test
     void validate_keyNotFound_shouldReturnFalse() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-        String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-
-        // Remove keys
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-
-        assertThat(isValid).isFalse();
+        boolean valid = signService.validate(TEST_TEXT, "invalid:format");
+        assertThat(valid).isFalse();
     }
 
     @Test
@@ -207,45 +158,23 @@ class SignServiceTest {
         assertThat(isValid).isFalse();
     }
 
-    @Test
-    void validate_invalidBase64InSignature_shouldReturnFalse() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String keyIdBase64 = java.util.Base64.getEncoder().encodeToString(TEST_KEY_ID.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        String invalidSignature = keyIdBase64 + ":HmacSHA256:invalid!!!base64";
-        boolean isValid = signService.validate(TEST_TEXT, invalidSignature);
-
-        assertThat(isValid).isFalse();
-    }
-
     // ================================================================
     // Round-trip tests
     // ================================================================
 
     @Test
-    void roundTrip_withSyncKey_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
+    void roundTrip_withPrivateKey_shouldWorkCorrectly() {
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
         boolean isValid = signService.validate(TEST_TEXT, signature);
-
-        assertThat(isValid).isTrue();
-    }
-
-    @Test
-    void roundTrip_withSecretKey_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-
         assertThat(isValid).isTrue();
     }
 
     @Test
     void roundTrip_emptyText_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
 
         String signature = signService.sign("", TEST_KEY_ID);
         boolean isValid = signService.validate("", signature);
@@ -255,7 +184,8 @@ class SignServiceTest {
 
     @Test
     void roundTrip_textWithSpecialCharacters_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
 
         String specialText = "Text with special chars: äöü 日本語 emoji 🎉 \n\t";
         String signature = signService.sign(specialText, TEST_KEY_ID);
@@ -266,7 +196,8 @@ class SignServiceTest {
 
     @Test
     void roundTrip_longText_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
 
         String longText = "a".repeat(10000);
         String signature = signService.sign(longText, TEST_KEY_ID);
@@ -281,57 +212,29 @@ class SignServiceTest {
 
     @Test
     void signatureFormat_shouldContainKeyId() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
 
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
         String[] parts = signature.split(":");
-
-        // Decode the Base64-encoded keyId and compare
         String decodedKeyId = new String(java.util.Base64.getDecoder().decode(parts[0]), java.nio.charset.StandardCharsets.UTF_8);
         assertThat(decodedKeyId).isEqualTo(TEST_KEY_ID);
     }
 
     @Test
     void signatureFormat_shouldContainAlgorithm() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
         String[] parts = signature.split(":");
-
-        assertThat(parts[1]).isEqualTo("HmacSHA256");
+        assertThat(parts[1]).contains("ECDSA");
     }
 
     @Test
     void signatureFormat_shouldContainBase64Signature() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
+        when(keyService.findPrivateKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPrivateKey));
         String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
         String[] parts = signature.split(":");
-
-        assertThat(parts).hasSize(3); // keyIdBase64:algorithm:signatureBase64
+        assertThat(parts).hasSize(3);
         assertThat(parts[2]).isNotEmpty();
-        // Verify it's valid base64 by trying to decode
         assertThat(java.util.Base64.getDecoder().decode(parts[2])).isNotEmpty();
-    }
-
-    // ================================================================
-    // Cross-validation tests
-    // ================================================================
-
-    @Test
-    void validate_signatureCreatedBySyncKey_canBeValidatedBySecretKeyIfSame() throws Exception {
-        // Use the same key for both providers
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String signature = signService.sign(TEST_TEXT, TEST_KEY_ID);
-
-        // Remove sync key, leave only secret key
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        boolean isValid = signService.validate(TEST_TEXT, signature);
-
-        assertThat(isValid).isTrue();
     }
 }

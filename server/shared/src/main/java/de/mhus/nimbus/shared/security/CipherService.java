@@ -1,6 +1,7 @@
 package de.mhus.nimbus.shared.security;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ import java.util.Optional;
  * Service for encrypting and decrypting text using cryptographic keys from KeyService.
  *
  * <p>The cipher format is: "keyIdBase64:algorithm:encryptedDataBase64:ivBase64"
- * where keyIdBase64 is the Base64-encoded keyId (to avoid delimiter conflicts with "owner:uuid" format),
+ * where keyIdBase64 is the Base64-encoded keyId (to avoid delimiter conflicts with "owner:id" format),
  * algorithm is the cryptographic algorithm used, encryptedDataBase64 is the Base64-encoded encrypted data,
  * and ivBase64 is the Base64-encoded initialization vector (IV).
  *
@@ -25,14 +26,11 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CipherService {
 
-    private final IKeyService keyService;
+    private final KeyService keyService;
     private static final KeyType DEFAULT_KEY_TYPE = KeyType.UNIVERSE; // Neues Default
-
-    public CipherService(@NonNull IKeyService keyService) {
-        this.keyService = keyService;
-    }
 
     /**
      * Default algorithm used for encryption with symmetric keys.
@@ -54,23 +52,15 @@ public class CipherService {
      * The cipher format is "keyIdBase64:algorithm:encryptedDataBase64:ivBase64".
      *
      * @param text the text to encrypt, never null
-     * @param keyId the key identifier in format "owner:uuid", never null
+     * @param keyId the key identifier in format "owner:id", never null
      * @return the complete cipher string containing Base64-encoded keyId, algorithm, encrypted data, and IV
      * @throws CipherException if the key cannot be found or encryption fails
      */
     public String encrypt(@NonNull String text, @NonNull String keyId) {
-        // Try to find a sync key first (preferred for encryption)
-        Optional<SecretKey> syncKey = keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId);
+        Optional<SecretKey> syncKey = keyService.findSymetricKey(DEFAULT_KEY_TYPE, keyId);
         if (syncKey.isPresent()) {
             return encryptWithAesGcm(text, keyId, syncKey.get(), DEFAULT_CIPHER_ALGORITHM);
         }
-
-        // Fallback to secret key
-        Optional<SecretKey> secretKey = keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId);
-        if (secretKey.isPresent()) {
-            return encryptWithAesGcm(text, keyId, secretKey.get(), DEFAULT_CIPHER_ALGORITHM);
-        }
-
         throw new CipherException("No symmetric key found for keyId: " + keyId);
     }
 
@@ -84,22 +74,12 @@ public class CipherService {
      */
     public String decrypt(@NonNull String cipherString) {
         try {
-            // Parse the cipher string
             CipherParts parts = parseCipher(cipherString);
-
-            // Retrieve the key based on the extracted keyId
-            Optional<SecretKey> syncKey = keyService.findSyncKey(DEFAULT_KEY_TYPE, parts.keyId());
+            Optional<SecretKey> syncKey = keyService.findSymetricKey(DEFAULT_KEY_TYPE, parts.keyId());
             if (syncKey.isPresent()) {
                 return decryptWithAesGcm(parts, syncKey.get());
             }
-
-            Optional<SecretKey> secretKey = keyService.findSecretKey(DEFAULT_KEY_TYPE, parts.keyId());
-            if (secretKey.isPresent()) {
-                return decryptWithAesGcm(parts, secretKey.get());
-            }
-
-            throw new CipherException("No key found for keyId: " + parts.keyId());
-
+            throw new CipherException("No symmetric key found for keyId: " + parts.keyId());
         } catch (CipherException e) {
             throw e;
         } catch (Exception e) {

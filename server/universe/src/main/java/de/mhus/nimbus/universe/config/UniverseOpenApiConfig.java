@@ -2,6 +2,7 @@ package de.mhus.nimbus.universe.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,7 @@ public class UniverseOpenApiConfig {
     @Bean
     public OpenAPI universeOpenAPI() {
         OpenAPI api = new OpenAPI()
+                .components(new Components())
                 .info(new Info()
                         .title("Universe API")
                         .version("v1")

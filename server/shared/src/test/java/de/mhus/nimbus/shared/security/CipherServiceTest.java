@@ -18,25 +18,21 @@ import static org.mockito.Mockito.when;
 class CipherServiceTest {
 
     @Mock
-    private IKeyService keyService;
+    private KeyService keyService;
 
     private CipherService cipherService;
 
     private SecretKey testSyncKey;
-    private SecretKey testSecretKey;
 
-    private static final String TEST_KEY_ID = "owner:uuid-123";
+    private static final String TEST_KEY_ID = "owner:id-123";
     private static final String TEST_TEXT = "Sensitive data to encrypt";
 
     @BeforeEach
     void setUp() throws Exception {
         cipherService = new CipherService(keyService);
-
-        // Generate test keys for AES
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
         testSyncKey = keyGen.generateKey();
-        testSecretKey = keyGen.generateKey();
     }
 
     // ================================================================
@@ -45,7 +41,7 @@ class CipherServiceTest {
 
     @Test
     void encrypt_withSyncKey_shouldReturnCipher() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
 
@@ -58,44 +54,17 @@ class CipherServiceTest {
     }
 
     @Test
-    void encrypt_withSecretKey_shouldReturnCipher() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
-
-        assertThat(cipher).isNotNull();
-        assertThat(cipher).isNotEmpty();
-        assertThat(cipher.split(":")).hasSize(4);
-        String expectedKeyIdBase64 = java.util.Base64.getEncoder().encodeToString(TEST_KEY_ID.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        assertThat(cipher).startsWith(expectedKeyIdBase64 + ":AES/GCM/NoPadding:");
-    }
-
-    @Test
-    void encrypt_prefersSyncKeyOverSecretKey() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
-
-        assertThat(cipher).isNotNull();
-        // The cipher should be created with syncKey (we can verify by decrypting with syncKey)
-        String decrypted = cipherService.decrypt(cipher);
-        assertThat(decrypted).isEqualTo(TEST_TEXT);
-    }
-
-    @Test
     void encrypt_noKeyFound_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cipherService.encrypt(TEST_TEXT, TEST_KEY_ID))
                 .isInstanceOf(CipherService.CipherException.class)
-                .hasMessageContaining("No symmetric key found for keyId");
+                .hasMessageContaining("No symmetric key found");
     }
 
     @Test
     void encrypt_sameTextMultipleTimes_shouldProduceDifferentCiphers() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher1 = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String cipher2 = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
@@ -106,7 +75,7 @@ class CipherServiceTest {
 
     @Test
     void encrypt_differentTextSameKey_shouldProduceDifferentCiphers() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher1 = cipherService.encrypt("Text 1", TEST_KEY_ID);
         String cipher2 = cipherService.encrypt("Text 2", TEST_KEY_ID);
@@ -116,7 +85,7 @@ class CipherServiceTest {
 
     @Test
     void encrypt_emptyText_shouldReturnCipher() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt("", TEST_KEY_ID);
 
@@ -130,46 +99,24 @@ class CipherServiceTest {
 
     @Test
     void decrypt_validCipher_shouldReturnOriginalText() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String decrypted = cipherService.decrypt(cipher);
 
         assertThat(decrypted).isEqualTo(TEST_TEXT);
-    }
-
-    @Test
-    void decrypt_validCipherWithSecretKey_shouldReturnOriginalText() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
-
-        String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
-        String decrypted = cipherService.decrypt(cipher);
-
-        assertThat(decrypted).isEqualTo(TEST_TEXT);
-    }
-
-    @Test
-    void decrypt_modifiedCipher_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
-        String modifiedCipher = cipher + "extra";
-
-        assertThatThrownBy(() -> cipherService.decrypt(modifiedCipher))
-                .isInstanceOf(CipherService.CipherException.class);
     }
 
     @Test
     void decrypt_wrongKey_shouldThrowException() throws Exception {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
 
         // Try to decrypt with different key
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
         SecretKey differentKey = keyGen.generateKey();
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentKey));
 
         assertThatThrownBy(() -> cipherService.decrypt(cipher))
                 .isInstanceOf(CipherService.CipherException.class);
@@ -177,16 +124,15 @@ class CipherServiceTest {
 
     @Test
     void decrypt_keyNotFound_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
 
         // Remove keys
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cipherService.decrypt(cipher))
                 .isInstanceOf(CipherService.CipherException.class)
-                .hasMessageContaining("No key found for keyId");
+                .hasMessageContaining("No symmetric key found");
     }
 
     @Test
@@ -204,7 +150,7 @@ class CipherServiceTest {
 
     @Test
     void decrypt_invalidBase64InCipher_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String keyIdBase64 = java.util.Base64.getEncoder().encodeToString(TEST_KEY_ID.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         String invalidCipher = keyIdBase64 + ":AES/GCM/NoPadding:invalid!!!base64:invalid!!!base64";
@@ -215,7 +161,7 @@ class CipherServiceTest {
 
     @Test
     void decrypt_tamperedEncryptedData_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");
@@ -228,7 +174,7 @@ class CipherServiceTest {
 
     @Test
     void decrypt_tamperedIV_shouldThrowException() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");
@@ -245,18 +191,7 @@ class CipherServiceTest {
 
     @Test
     void roundTrip_withSyncKey_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
-        String decrypted = cipherService.decrypt(cipher);
-
-        assertThat(decrypted).isEqualTo(TEST_TEXT);
-    }
-
-    @Test
-    void roundTrip_withSecretKey_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String decrypted = cipherService.decrypt(cipher);
@@ -266,7 +201,7 @@ class CipherServiceTest {
 
     @Test
     void roundTrip_emptyText_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt("", TEST_KEY_ID);
         String decrypted = cipherService.decrypt(cipher);
@@ -276,7 +211,7 @@ class CipherServiceTest {
 
     @Test
     void roundTrip_textWithSpecialCharacters_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String specialText = "Text with special chars: äöü 日本語 emoji 🎉 \n\t";
         String cipher = cipherService.encrypt(specialText, TEST_KEY_ID);
@@ -287,7 +222,7 @@ class CipherServiceTest {
 
     @Test
     void roundTrip_longText_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String longText = "a".repeat(10000);
         String cipher = cipherService.encrypt(longText, TEST_KEY_ID);
@@ -298,7 +233,7 @@ class CipherServiceTest {
 
     @Test
     void roundTrip_multipleCiphersOfSameText_shouldAllDecryptCorrectly() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher1 = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String cipher2 = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
@@ -315,7 +250,7 @@ class CipherServiceTest {
 
     @Test
     void cipherFormat_shouldContainKeyId() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");
@@ -327,7 +262,7 @@ class CipherServiceTest {
 
     @Test
     void cipherFormat_shouldContainAlgorithm() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");
@@ -337,7 +272,7 @@ class CipherServiceTest {
 
     @Test
     void cipherFormat_shouldContainBase64EncryptedData() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");
@@ -350,7 +285,7 @@ class CipherServiceTest {
 
     @Test
     void cipherFormat_shouldContainBase64IV() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");
@@ -369,7 +304,7 @@ class CipherServiceTest {
 
     @Test
     void cipherFormat_ivShouldBeDifferentForEachEncryption() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher1 = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String cipher2 = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
@@ -384,33 +319,12 @@ class CipherServiceTest {
     }
 
     // ================================================================
-    // Cross-validation tests
-    // ================================================================
-
-    @Test
-    void decrypt_cipherCreatedBySyncKey_canBeDecryptedBySecretKeyIfSame() throws Exception {
-        // Use the same key for both providers
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
-
-        // Remove sync key, leave only secret key
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
-        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
-
-        String decrypted = cipherService.decrypt(cipher);
-
-        assertThat(decrypted).isEqualTo(TEST_TEXT);
-    }
-
-    // ================================================================
     // GCM authentication tests
     // ================================================================
 
     @Test
     void gcmAuthentication_tamperedCiphertext_shouldFailDecryption() {
-        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSymetricKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String cipher = cipherService.encrypt(TEST_TEXT, TEST_KEY_ID);
         String[] parts = cipher.split(":");

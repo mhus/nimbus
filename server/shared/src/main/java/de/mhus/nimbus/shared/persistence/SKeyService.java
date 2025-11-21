@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -30,21 +32,32 @@ public class SKeyService implements PublicKeyProvider, PrivateKeyProvider, Symme
     @Override
     public Optional<PublicKey> loadPublicKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndName(type.name(), "public", id.uuid())
+                .findByTypeAndKindAndName(type.name(), "public", id.id())
                 .flatMap(this::toPublicKey);
     }
 
     @Override
-    public Optional<SecretKey> loadPrivateKey(KeyType type, KeyId id) {
+    public Optional<PrivateKey> loadPrivateKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndName(type.name(), "private", id.uuid())
-                .flatMap(this::toSecretKey);
+                .findByTypeAndKindAndName(type.name(), "private", id.id())
+                .flatMap(this::toPrivateKey);
+    }
+
+    private Optional<PrivateKey> toPrivateKey(SKey sKey) {
+        try {
+            byte[] encoded = Base64.getDecoder().decode(sKey.getKey());
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
+            KeyFactory kf = KeyFactory.getInstance(sKey.getAlgorithm());
+            return Optional.of(kf.generatePrivate(spec));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Optional<SecretKey> loadSymmetricKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndName(type.name(), "symmetric", id.uuid())
+                .findByTypeAndKindAndName(type.name(), "symmetric", id.id())
                 .flatMap(this::toSecretKey);
     }
 

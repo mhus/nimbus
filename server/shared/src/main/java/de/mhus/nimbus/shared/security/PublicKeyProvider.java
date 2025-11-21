@@ -17,7 +17,7 @@ public interface PublicKeyProvider {
     /**
      * Loads a public key for the given id if available.
      *
-     * @param id the key id (owner + uuid), never null
+     * @param id the key id (owner + id), never null
      * @return optional containing the key if this provider can resolve it; empty if not found
      */
     Optional<PublicKey> loadPublicKey(KeyType type, KeyId id);

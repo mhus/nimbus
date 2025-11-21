@@ -107,8 +107,10 @@ public class UUserService {
     public boolean validatePassword(String userId, String plainPassword) {
         UUser user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        if (user.getPasswordHash() == null) return false;
-        return hashService.validate(plainPassword, user.getId(), user.getPasswordHash());
+        String hash = user.getPasswordHash();
+        if (hash == null || hash.isBlank()) return false;
+        // Support both salted and unsalted stored hashes transparently
+        return validatePasswordHash(user.getId(), plainPassword, hash);
     }
 
     /**
