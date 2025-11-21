@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +25,7 @@ public class RWorld {
     private String name;
     private String description;
 
-    private String apiUrl;
+    private String worldApiUrl;
     private String websocketUrl;
     private String controlsUrl;
 
@@ -45,7 +45,7 @@ public class RWorld {
     private List<EntryPoint> entryPoints = new ArrayList<>();
 
     @CreatedDate
-    private Instant createdAt;
+    private Date createdAt;
 
     public enum Visibility { PUBLIC, PRIVATE }
     public enum State { READY, ARCHIVED, WIP }
@@ -104,8 +104,8 @@ public class RWorld {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getApiUrl() { return apiUrl; }
-    public void setApiUrl(String apiUrl) { this.apiUrl = apiUrl; }
+    public String getApiUrl() { return worldApiUrl; }
+    public void setApiUrl(String apiUrl) { this.worldApiUrl = apiUrl; }
 
     public String getWebsocketUrl() { return websocketUrl; }
     public void setWebsocketUrl(String websocketUrl) { this.websocketUrl = websocketUrl; }
@@ -137,8 +137,15 @@ public class RWorld {
     public List<EntryPoint> getEntryPoints() { return entryPoints; }
     public void setEntryPoints(List<EntryPoint> entryPoints) { this.entryPoints = entryPoints != null ? new ArrayList<>(entryPoints) : new ArrayList<>(); }
 
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
+    // Region-Zuordnung (optional, je nach Einsatz)
+    private String regionId;
+
+    // Getter/Setter für regionId
+    public String getRegionId() { return regionId; }
+    public void setRegionId(String regionId) { this.regionId = regionId; }
 
     // Convenience methods
     public boolean addOwner(String userId) { return addUnique(owners, userId); }

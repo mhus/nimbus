@@ -55,3 +55,38 @@ Erstelle eine GET roue fuer /universe/region/{regionId}/world/{worldId}
 
 Erstelle im Modul 'region' einen RUniverseService mit dem die region auf die rest routen
 des universe servers auf /universe/region/{regionId}/world/{worldId} einfach zugreifen kann.
+
+```text
+Ein RUniverseService wurde im Modul region implementiert, der REST-Routen des Universe-Servers unter /universe/region/{regionId}/world/{worldId} zugänglich macht. Der Service nutzt einen konfigurierbaren RestTemplate-Client und erstellt automatisch ein Region-Bearer-Token. Das Projekt wurde erfolgreich gebaut ohne Kompilationsfehler.
+```
+
+---
+
+In module region werden sollen welten verwaltet/registriert werden in der Entity RWorld mit RWorldRepository und RWorldService.
+RWorld:
+- name:string
+- worldId:string
+- description:string
+- createdAt:Date
+- regionId:string
+- worldApiUrl:string
+
+---
+
+Erstelle im modul 'region' rest controller um welten zu verwalten.
+- Unter /region/{regionId}/world/{worldId}
+- Zugriff nur mit einem Token, der mit dem≥ world  Key erzeugt wurde.
+  - du kannst einen SecurityFilter auf /region/{regionId}/world/{worldId} erstellen. 
+- Erstelle create, update, get und delete Endpunkte.
+
+---
+
+Erstelle im module 'world' einen WRegionService mit dem der world server auf die endpunkte
+vom region server zugreifen kann.
+
+---
+
+Solltend die DTOs zum kommunizieren via REST zwischen den servern nicht ie gleichen sein?
+Die koennen im modul shared abgelegt sein.
+
+
