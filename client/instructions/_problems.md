@@ -14,3 +14,9 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 - sound 'audio/step/swim1.ogg' muss aus der World Config kommen
 
 - Nenne parameters in scrawl um in variables
+
+- Wenn bei texturen nur string angegeben wurde (keine komplexe), soll:
+  - backfaceCulling true sein
+  - Transparency auf auf ALPHAT_TEST sein
+????
+

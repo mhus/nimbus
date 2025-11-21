@@ -10,7 +10,7 @@
  * Each field (visibility, physics, wind, etc.) is merged independently.
  * If a field is undefined in a higher priority modifier, it falls back to lower priority.
  */
-import {BlockModifier, BlockType, Block, BlockStatus, Vector3} from '@nimbus/shared';
+import {BlockModifier, BlockType, Block, BlockStatus, SeasonStatus, Vector3} from '@nimbus/shared';
 import type { AppContext } from '../AppContext.js';
 
 /**
@@ -279,33 +279,59 @@ export function calculateStatus(
     return worldStatus; // world status takes precedence
   }
 
-  if (newStatus >= BlockStatus.WINTER && newStatus <= BlockStatus.AUTUMN_WINTER) {
+  const hasWinterStatus = (block.modifiers?.[BlockStatus.WINTER] !== undefined) || (blockType.modifiers[BlockStatus.WINTER] !== undefined);
+  const hasSpringStatus = (block.modifiers?.[BlockStatus.SPRING] !== undefined) || (blockType.modifiers[BlockStatus.SPRING] !== undefined);
+  const hasSummerStatus = (block.modifiers?.[BlockStatus.SUMMER] !== undefined) || (blockType.modifiers[BlockStatus.SUMMER] !== undefined);
+  const hasAutumnStatus = (block.modifiers?.[BlockStatus.AUTUMN] !== undefined) || (blockType.modifiers[BlockStatus.AUTUMN] !== undefined);
+
+  if (hasWinterStatus || hasSpringStatus || hasSummerStatus || hasAutumnStatus) {
     const seasonalStatus = appContext.worldInfo?.seasonStatus;
     const seasonalProgress = appContext.worldInfo?.seasonProgress;
 
-    if (seasonalStatus !== undefined && seasonalProgress !== undefined) {
-      // Map seasonalStatus and seasonalProgress to specific seasonal BlockStatus
-      switch (seasonalStatus) {
-        case 'winter':
-          newStatus = BlockStatus.WINTER;
-          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.WINTER_SPRING : BlockStatus.WINTER;
-          break;
-        case 'spring':
-          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.WINTER_SPRING : BlockStatus.SPRING;
-          break;
-        case 'summer':
-          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SPRING_SUMMER : BlockStatus.SUMMER;
-          break;
-        case 'autumn':
-          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SUMMER_AUTUMN : BlockStatus.AUTUMN;
-          break;
-        default:
-          newStatus = BlockStatus.WINTER; // Fallback to winter
-      }
+    if (block.blockTypeId == 137) {
+      console.log("SEASON CHECK pre ", newStatus, seasonalStatus, seasonalProgress);
     }
 
+    if (seasonalStatus !== undefined && seasonalProgress !== undefined) {
+      // Map seasonalStatus and seasonalProgress to specific seasonal BlockStatus
+      const rememberStatus = newStatus;
+      switch (seasonalStatus) {
+        case SeasonStatus.WINTER:
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.WINTER : BlockStatus.AUTUMN;
+          if (block.blockTypeId == 137) {
+            console.log("SEASON CHECK YO WINTER", newStatus, seasonalStatus, seasonalProgress);
+          }
+          break;
+        case SeasonStatus.SPRING:
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SPRING : BlockStatus.WINTER;
+          break;
+        case SeasonStatus.SUMMER:
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SUMMER : BlockStatus.SPRING;
+          break;
+        case SeasonStatus.AUTUMN:
+          newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.AUTUMN : BlockStatus.SUMMER;
+          break;
+        default:
+          // do not touch status
+          if (block.blockTypeId == 137) {
+            console.log("SEASON CHECK NOOOOO", JSON.stringify(seasonalStatus), typeof seasonalStatus);
+          }
+      }
+      if (
+          newStatus === BlockStatus.WINTER && !hasWinterStatus ||
+          newStatus === BlockStatus.SPRING && !hasSpringStatus ||
+          newStatus === BlockStatus.SUMMER && !hasSummerStatus ||
+          newStatus === BlockStatus.AUTUMN && !hasAutumnStatus
+      ){
+        if (block.blockTypeId == 137) {
+        }
+        newStatus = rememberStatus;
+      }
+    }
   }
-
+  if (block.blockTypeId == 137) {
+    console.log("SEASON CHECK post ", newStatus);
+  }
   return newStatus;
 }
 

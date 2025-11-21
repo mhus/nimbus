@@ -23,13 +23,9 @@ export enum BlockStatus {
 
   // Seasonal states
   WINTER = 10,
-  WINTER_SPRING = 11,
-  SPRING = 12,
-  SPRING_SUMMER = 13,
-  SUMMER = 14,
-  SUMMER_AUTUMN = 15,
-  AUTUMN = 16,
-  AUTUMN_WINTER = 17,
+  SPRING = 11,
+  SUMMER = 12,
+  AUTUMN = 13,
 
   // Custom states start at 100
   CUSTOM_START = 100,

@@ -132,7 +132,7 @@ export class WorldCommand extends CommandHandler {
       };
     }
 
-    const seasonStatus = String(args[0]);
+    const seasonStatus = Number(args[0]);
 
     try {
       // Update WorldInfo

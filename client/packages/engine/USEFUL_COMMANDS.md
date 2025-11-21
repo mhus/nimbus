@@ -18,3 +18,14 @@
    - /item remove <x> <y> <z>
    - Sendet __deleted__ Marker an Clients (bereits implementiert in Zeile 193)
 
+
+
+doSend('world','status', 666 )
+
+doSend('world','status', 0 )
+
+doSetShortcut('click0', 'use', {"itemId": "item_1763653693310_uv2m2pu", "wait": 100})
+
+doSend('world','season', 0 )
+
+doSend('world','seasonProgress', 1 )

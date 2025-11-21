@@ -7,17 +7,17 @@
   "assetPath": "/api/worlds/main/assets",
   "editorUrl": "http://localhost:3002/",
   "start": {
-    "x": -1028,
+    "x": -128,
     "y": -64,
-    "z": -1028
+    "z": -128
   },
   "stop": {
-    "x": 1028,
+    "x": 128,
     "y": 192,
-    "z": 1028
+    "z": 128
   },
   "createdAt": "2025-10-30T00:00:00.000Z",
-  "updatedAt": "2025-11-20T22:13:42.502Z",
+  "updatedAt": "2025-11-21T11:11:24.030Z",
   "owner": {
     "user": "admin",
     "displayName": "Administrator",
@@ -35,5 +35,7 @@
     "z": 0,
     "radius": 10,
     "rotation": 0
-  }
+  },
+  "seasonStatus": 1,
+  "seasonProgress": 0.5
 }
