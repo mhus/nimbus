@@ -14,7 +14,7 @@ import java.util.Optional;
  *
  * <p>No Spring dependency here to keep the shared module lightweight.</p>
  */
-public interface SyncKeyProvider {
+public interface SymmetricKeyProvider {
 
     /**
      * Loads a symmetric key for the given id if available.
@@ -22,12 +22,12 @@ public interface SyncKeyProvider {
      * @param id the key id (owner + uuid), never null
      * @return optional containing the key if this provider can resolve it; empty if not found
      */
-    Optional<SecretKey> loadSyncKey(KeyType type, KeyId id);
+    Optional<SecretKey> loadSymmetricKey(KeyType type, KeyId id);
 
     /**
      * Convenience overload to avoid manual KeyId construction.
      */
-    default Optional<SecretKey> loadSyncKey(KeyType type, String owner, String uuid) {
-        return loadSyncKey(type, KeyId.of(owner, uuid));
+    default Optional<SecretKey> loadSymmetricKey(KeyType type, String owner, String uuid) {
+        return loadSymmetricKey(type, KeyId.of(owner, uuid));
     }
 }

@@ -28,6 +28,7 @@ import java.util.Optional;
 public class CipherService {
 
     private final IKeyService keyService;
+    private static final KeyType DEFAULT_KEY_TYPE = KeyType.UNIVERSE; // Neues Default
 
     public CipherService(@NonNull IKeyService keyService) {
         this.keyService = keyService;
@@ -59,13 +60,13 @@ public class CipherService {
      */
     public String encrypt(@NonNull String text, @NonNull String keyId) {
         // Try to find a sync key first (preferred for encryption)
-        Optional<SecretKey> syncKey = keyService.findSyncKey(keyId);
+        Optional<SecretKey> syncKey = keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId);
         if (syncKey.isPresent()) {
             return encryptWithAesGcm(text, keyId, syncKey.get(), DEFAULT_CIPHER_ALGORITHM);
         }
 
         // Fallback to secret key
-        Optional<SecretKey> secretKey = keyService.findSecretKey(keyId);
+        Optional<SecretKey> secretKey = keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId);
         if (secretKey.isPresent()) {
             return encryptWithAesGcm(text, keyId, secretKey.get(), DEFAULT_CIPHER_ALGORITHM);
         }
@@ -87,12 +88,12 @@ public class CipherService {
             CipherParts parts = parseCipher(cipherString);
 
             // Retrieve the key based on the extracted keyId
-            Optional<SecretKey> syncKey = keyService.findSyncKey(parts.keyId());
+            Optional<SecretKey> syncKey = keyService.findSyncKey(DEFAULT_KEY_TYPE, parts.keyId());
             if (syncKey.isPresent()) {
                 return decryptWithAesGcm(parts, syncKey.get());
             }
 
-            Optional<SecretKey> secretKey = keyService.findSecretKey(parts.keyId());
+            Optional<SecretKey> secretKey = keyService.findSecretKey(DEFAULT_KEY_TYPE, parts.keyId());
             if (secretKey.isPresent()) {
                 return decryptWithAesGcm(parts, secretKey.get());
             }

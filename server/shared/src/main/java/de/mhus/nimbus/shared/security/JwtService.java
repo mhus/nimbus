@@ -28,6 +28,7 @@ import java.util.Optional;
 public class JwtService {
 
     private final IKeyService keyService;
+    private static final KeyType DEFAULT_KEY_TYPE = KeyType.UNIVERSE; // Neues Default
 
     public JwtService(@NonNull IKeyService keyService) {
         this.keyService = keyService;
@@ -47,7 +48,7 @@ public class JwtService {
                                             @NonNull String subject,
                                             Map<String, Object> claims,
                                             Instant expiresAt) {
-        SecretKey key = keyService.findSecretKey(keyId)
+        SecretKey key = keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId)
                 .orElseThrow(() -> new IllegalArgumentException("Secret key not found: " + keyId));
 
         var builder = Jwts.builder()
@@ -81,7 +82,7 @@ public class JwtService {
                                           @NonNull String subject,
                                           Map<String, Object> claims,
                                           Instant expiresAt) {
-        SecretKey key = keyService.findSyncKey(keyId)
+        SecretKey key = keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId)
                 .orElseThrow(() -> new IllegalArgumentException("Sync key not found: " + keyId));
 
         var builder = Jwts.builder()
@@ -109,7 +110,7 @@ public class JwtService {
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithSecretKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findSecretKey(keyId)
+        return keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId)
                 .flatMap(key -> parseToken(token, key));
     }
 
@@ -121,7 +122,7 @@ public class JwtService {
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithSyncKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findSyncKey(keyId)
+        return keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId)
                 .flatMap(key -> parseToken(token, key));
     }
 
@@ -133,7 +134,7 @@ public class JwtService {
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithPublicKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findPublicKey(keyId)
+        return keyService.findPublicKey(DEFAULT_KEY_TYPE, keyId)
                 .flatMap(key -> parseToken(token, key));
     }
 

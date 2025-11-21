@@ -12,7 +12,7 @@ import java.util.Optional;
  *
  * <p>No Spring dependency here to keep the shared module lightweight.
  */
-public interface SecretKeyProvider {
+public interface PrivateKeyProvider {
 
     /**
      * Loads a secret key for the given id if available.
@@ -20,12 +20,12 @@ public interface SecretKeyProvider {
      * @param id the key id (owner + uuid), never null
      * @return optional containing the key if this provider can resolve it; empty if not found
      */
-    Optional<SecretKey> loadSecretKey(KeyType type, KeyId id);
+    Optional<SecretKey> loadPrivateKey(KeyType type, KeyId id);
 
     /**
      * Convenience overload to avoid manual KeyId construction.
      */
-    default Optional<SecretKey> loadSecretKey(KeyType type, String owner, String uuid) {
-        return loadSecretKey(type, KeyId.of(owner, uuid));
+    default Optional<SecretKey> loadPrivateKey(KeyType type, String owner, String uuid) {
+        return loadPrivateKey(type, KeyId.of(owner, uuid));
     }
 }

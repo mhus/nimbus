@@ -64,7 +64,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSecretKey_validInput_shouldCreateToken() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
         Instant expiresAt = Instant.now().plusSeconds(3600);
@@ -78,7 +78,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSecretKey_noClaims_shouldCreateToken() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
 
@@ -88,7 +88,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSecretKey_emptyClaims_shouldCreateToken() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, Map.of(), null);
 
@@ -98,7 +98,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSecretKey_noExpiration_shouldCreateToken() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
 
@@ -108,7 +108,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSecretKey_keyNotFound_shouldThrowException() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> 
             jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null))
@@ -122,7 +122,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSyncKey_validInput_shouldCreateToken() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
         Instant expiresAt = Instant.now().plusSeconds(3600);
@@ -136,7 +136,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSyncKey_noClaims_shouldCreateToken() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String token = jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
 
@@ -146,7 +146,7 @@ class JwtServiceTest {
 
     @Test
     void createTokenWithSyncKey_keyNotFound_shouldThrowException() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> 
             jwtService.createTokenWithSyncKey(TEST_KEY_ID, TEST_SUBJECT, null, null))
@@ -160,7 +160,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSecretKey_validToken_shouldReturnClaims() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
         Instant expiresAt = Instant.now().plusSeconds(3600);
@@ -177,7 +177,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSecretKey_invalidToken_shouldReturnEmpty() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         String invalidToken = "invalid.jwt.token";
 
@@ -188,7 +188,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSecretKey_wrongKey_shouldReturnEmpty() throws Exception {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         // Create token with testSecretKey
         String token = jwtService.createTokenWithSecretKey(TEST_KEY_ID, TEST_SUBJECT, null, null);
@@ -197,7 +197,7 @@ class JwtServiceTest {
         KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
         keyGen.init(256);
         SecretKey differentKey = keyGen.generateKey();
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(differentKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentKey));
 
         Optional<Jws<Claims>> result = jwtService.validateTokenWithSecretKey(token, TEST_KEY_ID);
 
@@ -206,7 +206,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSecretKey_keyNotFound_shouldReturnEmpty() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         String token = "some.jwt.token";
 
@@ -217,7 +217,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSecretKey_expiredToken_shouldReturnEmpty() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         // Create token that expired 1 hour ago
         Instant expiresAt = Instant.now().minusSeconds(3600);
@@ -234,7 +234,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSyncKey_validToken_shouldReturnClaims() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE);
         Instant expiresAt = Instant.now().plusSeconds(3600);
@@ -250,7 +250,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSyncKey_invalidToken_shouldReturnEmpty() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         String invalidToken = "invalid.jwt.token";
 
@@ -261,7 +261,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithSyncKey_keyNotFound_shouldReturnEmpty() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         String token = "some.jwt.token";
 
@@ -287,7 +287,7 @@ class JwtServiceTest {
                 .signWith(testPrivateKey)
                 .compact();
 
-        when(keyService.findPublicKey(TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
 
         Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(token, TEST_KEY_ID);
 
@@ -299,7 +299,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithPublicKey_invalidToken_shouldReturnEmpty() {
-        when(keyService.findPublicKey(TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testPublicKey));
 
         String invalidToken = "invalid.jwt.token";
 
@@ -322,7 +322,7 @@ class JwtServiceTest {
         KeyPair differentKeyPair = keyPairGenerator.generateKeyPair();
         PublicKey differentPublicKey = differentKeyPair.getPublic();
 
-        when(keyService.findPublicKey(TEST_KEY_ID)).thenReturn(Optional.of(differentPublicKey));
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(differentPublicKey));
 
         Optional<Jws<Claims>> result = jwtService.validateTokenWithPublicKey(token, TEST_KEY_ID);
 
@@ -331,7 +331,7 @@ class JwtServiceTest {
 
     @Test
     void validateTokenWithPublicKey_keyNotFound_shouldReturnEmpty() {
-        when(keyService.findPublicKey(TEST_KEY_ID)).thenReturn(Optional.empty());
+        when(keyService.findPublicKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.empty());
 
         String token = "some.jwt.token";
 
@@ -346,7 +346,7 @@ class JwtServiceTest {
 
     @Test
     void roundTrip_secretKey_shouldWorkCorrectly() {
-        when(keyService.findSecretKey(TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
+        when(keyService.findSecretKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSecretKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE, "email", TEST_EMAIL);
         Instant expiresAt = Instant.now().plusSeconds(3600);
@@ -363,7 +363,7 @@ class JwtServiceTest {
 
     @Test
     void roundTrip_syncKey_shouldWorkCorrectly() {
-        when(keyService.findSyncKey(TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
+        when(keyService.findSyncKey(KeyType.UNIVERSE, TEST_KEY_ID)).thenReturn(Optional.of(testSyncKey));
 
         Map<String, Object> claims = Map.of("role", TEST_ROLE);
         Instant expiresAt = Instant.now().plusSeconds(3600);

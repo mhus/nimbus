@@ -21,12 +21,12 @@ public class KeyService implements IKeyService {
 
     // Inject provider lists lazily; there may be multiple providers of each type
     private final ObjectProvider<List<PublicKeyProvider>> publicKeyProviders;
-    private final ObjectProvider<List<SecretKeyProvider>> secretKeyProviders;
-    private final ObjectProvider<List<SyncKeyProvider>> syncKeyProviders;
+    private final ObjectProvider<List<PrivateKeyProvider>> secretKeyProviders;
+    private final ObjectProvider<List<SymmetricKeyProvider>> syncKeyProviders;
 
     public KeyService(@NonNull ObjectProvider<List<PublicKeyProvider>> publicKeyProviders,
-                      @NonNull ObjectProvider<List<SecretKeyProvider>> secretKeyProviders,
-                      @NonNull ObjectProvider<List<SyncKeyProvider>> syncKeyProviders) {
+                      @NonNull ObjectProvider<List<PrivateKeyProvider>> secretKeyProviders,
+                      @NonNull ObjectProvider<List<SymmetricKeyProvider>> syncKeyProviders) {
         this.publicKeyProviders = publicKeyProviders;
         this.secretKeyProviders = secretKeyProviders;
         this.syncKeyProviders = syncKeyProviders;
@@ -55,8 +55,8 @@ public class KeyService implements IKeyService {
     }
 
     public Optional<SecretKey> findSecretKey(KeyType type, @NonNull KeyId id) {
-        for (SecretKeyProvider provider : secretKeyProviders.getIfAvailable(Collections::emptyList)) {
-            Optional<SecretKey> key = provider.loadSecretKey(type, id);
+        for (PrivateKeyProvider provider : secretKeyProviders.getIfAvailable(Collections::emptyList)) {
+            Optional<SecretKey> key = provider.loadPrivateKey(type, id);
             if (key.isPresent()) return key;
         }
         return Optional.empty();
@@ -70,8 +70,8 @@ public class KeyService implements IKeyService {
     }
 
     public Optional<SecretKey> findSyncKey(KeyType type, @NonNull KeyId id) {
-        for (SyncKeyProvider provider : syncKeyProviders.getIfAvailable(Collections::emptyList)) {
-            Optional<SecretKey> key = provider.loadSyncKey(type, id);
+        for (SymmetricKeyProvider provider : syncKeyProviders.getIfAvailable(Collections::emptyList)) {
+            Optional<SecretKey> key = provider.loadSymmetricKey(type, id);
             if (key.isPresent()) return key;
         }
         return Optional.empty();

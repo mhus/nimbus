@@ -28,6 +28,7 @@ import java.util.Optional;
 public class SignService {
 
     private final IKeyService keyService;
+    private static final KeyType DEFAULT_KEY_TYPE = KeyType.UNIVERSE; // Neues Default
 
     public SignService(@NonNull IKeyService keyService) {
         this.keyService = keyService;
@@ -49,13 +50,13 @@ public class SignService {
      */
     public String sign(@NonNull String text, @NonNull String keyId) {
         // Try to find a sync key first (preferred for signing)
-        Optional<SecretKey> syncKey = keyService.findSyncKey(keyId);
+        Optional<SecretKey> syncKey = keyService.findSyncKey(DEFAULT_KEY_TYPE, keyId);
         if (syncKey.isPresent()) {
             return signWithHmac(text, keyId, syncKey.get(), DEFAULT_HMAC_ALGORITHM);
         }
 
         // Fallback to secret key
-        Optional<SecretKey> secretKey = keyService.findSecretKey(keyId);
+        Optional<SecretKey> secretKey = keyService.findSecretKey(DEFAULT_KEY_TYPE, keyId);
         if (secretKey.isPresent()) {
             return signWithHmac(text, keyId, secretKey.get(), DEFAULT_HMAC_ALGORITHM);
         }
@@ -77,12 +78,12 @@ public class SignService {
             SignatureParts parts = parseSignature(signatureString);
 
             // Retrieve the key based on the extracted keyId
-            Optional<SecretKey> syncKey = keyService.findSyncKey(parts.keyId());
+            Optional<SecretKey> syncKey = keyService.findSyncKey(DEFAULT_KEY_TYPE, parts.keyId());
             if (syncKey.isPresent()) {
                 return validateWithHmac(text, parts, syncKey.get());
             }
 
-            Optional<SecretKey> secretKey = keyService.findSecretKey(parts.keyId());
+            Optional<SecretKey> secretKey = keyService.findSecretKey(DEFAULT_KEY_TYPE, parts.keyId());
             if (secretKey.isPresent()) {
                 return validateWithHmac(text, parts, secretKey.get());
             }
