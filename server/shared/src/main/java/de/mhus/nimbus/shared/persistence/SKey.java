@@ -1,51 +1,41 @@
 package de.mhus.nimbus.shared.persistence;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.Instant;
 
 /**
- * Persistierte Schluesseldefinition. Minimal gehalten fuer das Shared-Modul.
+ * Persisted key definition to be stored in MongoDB.
  */
-@Entity
-@Table(name = "s_key")
+@Document(collection = "s_keys")
 public class SKey {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     // Frei waehlbarer Kontexttyp (z. B. UNIVERSE/REGION/WORLD -> KeyType.name())
-    @Column(nullable = false, length = 64)
     private String type;
 
     // Art des Schluessels: "public", "private", "symmetric"
-    @Column(nullable = false, length = 16)
     private String kind;
 
     // Algorithmus (z. B. RSA, EC, AES, HmacSHA256)
-    @Column(nullable = false, length = 64)
     private String algorithm;
 
     // Name/Bezeichner (hier wird KeyId.uuid() gemappt)
-    @Column(nullable = false, length = 128)
     private String name;
 
     // Der Schluesselinhalt als Base64-kodierte Bytes
-    @Lob
-    @Column(nullable = false)
     private String key;
 
-    @Column(nullable = false)
+    @CreatedDate
     private Instant createdAt;
 
-    @PrePersist
-    void onCreate() {
-        if (createdAt == null) createdAt = Instant.now();
-    }
-
     // Getter/Setter
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
     public String getKind() { return kind; }

@@ -4,9 +4,9 @@ import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
 import de.mhus.nimbus.universe.security.Role;
 import de.mhus.nimbus.shared.user.UniverseRoles;
-import de.mhus.nimbus.universe.user.dto.CreateSKeyRequest;
-import de.mhus.nimbus.universe.user.dto.SKeyDto;
-import de.mhus.nimbus.universe.user.dto.UpdateSKeyNameRequest;
+import de.mhus.nimbus.shared.dto.universe.CreateSKeyRequest;
+import de.mhus.nimbus.shared.dto.universe.SKeyDto;
+import de.mhus.nimbus.shared.dto.universe.UpdateSKeyNameRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -91,7 +91,7 @@ public class UKeysController {
         @ApiResponse(responseCode = "200", description = "Aktualisierte Metadaten"),
         @ApiResponse(responseCode = "404", description = "Nicht gefunden")
     })
-    public ResponseEntity<SKeyDto> updateName(@PathVariable("id") Long id, @Valid @RequestBody UpdateSKeyNameRequest req) {
+    public ResponseEntity<SKeyDto> updateName(@PathVariable("id") String id, @Valid @RequestBody UpdateSKeyNameRequest req) {
         Optional<SKey> opt = repository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
         SKey e = opt.get();
@@ -108,7 +108,7 @@ public class UKeysController {
         @ApiResponse(responseCode = "204", description = "Gelöscht"),
         @ApiResponse(responseCode = "404", description = "Nicht gefunden")
     })
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         if (!repository.existsById(id)) return ResponseEntity.notFound().build();
         repository.deleteById(id);
         return ResponseEntity.noContent().build();

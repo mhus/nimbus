@@ -12,6 +12,13 @@ security:
     secretBase64: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0
     expiresMinutes: 60
 
+server:
+  port: 8040
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: true
+
 logging:
   level:
     org.springframework.data.mongodb.core.MongoTemplate: INFO

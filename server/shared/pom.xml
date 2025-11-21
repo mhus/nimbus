@@ -25,10 +25,18 @@
             <artifactId>spring-data-commons</artifactId>
         </dependency>
 
-        <!-- JPA Annotations API (compile-time only) -->
+        <!-- Spring Data MongoDB annotations and repository base (no Boot starter here) -->
         <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+        </dependency>
+
+        <!-- JPA annotations not needed anymore for SKey (Mongo is used) -->
+
+        <!-- Jakarta Validation API for DTO constraints (no heavy runtime here) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
         <!-- JWT library for token creation and validation -->
