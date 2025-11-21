@@ -130,7 +130,8 @@ public class JavaModelWriter {
             }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.CLASS) {
-            // Add Lombok annotations and emit class with private fields
+            // Add Lombok and Jackson annotations and emit class with private fields
+            sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("@lombok.Data\n");
             sb.append("@lombok.Builder\n");
             sb.append("public class ").append(name);
@@ -157,10 +158,12 @@ public class JavaModelWriter {
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.TYPE_ALIAS) {
             sb.append("/** Type alias for: ").append(nullToEmpty(t.getAliasTargetName())).append(" */\n");
+            sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("@lombok.Data\n");
             sb.append("@lombok.Builder\n");
             sb.append("public class ").append(name).append(" {\n}\n");
         } else {
+            sb.append("@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)\n");
             sb.append("public class ").append(name).append(" {\n}\n");
         }
         return sb.toString();

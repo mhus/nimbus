@@ -117,7 +117,7 @@ public class UFavoritController {
         return service.getById(id)
                 .filter(f -> f.getUserId().equals(userId))
                 .map(existing -> {
-                    UFavorit updated = service.update(id, req.RegionId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
+                    UFavorit updated = service.update(id, req.regionId(), req.solarSystemId(), req.worldId(), req.entryPointId(), req.title(), req.favorit());
                     return ResponseEntity.ok(toResponse(updated));
                 })
                 .orElse(ResponseEntity.notFound().build());
