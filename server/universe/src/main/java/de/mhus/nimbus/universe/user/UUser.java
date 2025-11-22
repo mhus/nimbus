@@ -105,4 +105,5 @@ public class UUser {
     public boolean hasRole(UniverseRoles role) { return role != null && getRoles().contains(role); }
     public String getRolesRaw() { return roles; }
     public void setRolesRaw(String rolesRaw) { this.roles = (rolesRaw == null || rolesRaw.isBlank()) ? null : rolesRaw.trim(); }
+
 }

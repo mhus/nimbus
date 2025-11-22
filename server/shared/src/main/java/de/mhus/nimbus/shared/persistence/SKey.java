@@ -1,15 +1,15 @@
 package de.mhus.nimbus.shared.persistence;
 
-import de.mhus.nimbus.shared.security.Base64Service;
+import de.mhus.nimbus.shared.security.KeyKind;
+import de.mhus.nimbus.shared.security.KeyType;
+import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.ECPrivateKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 
@@ -17,75 +17,66 @@ import java.util.Base64;
  * Persisted key definition to be stored in MongoDB.
  */
 @Document(collection = "s_keys")
+@Data
 public class SKey {
 
     @Id
     private String id;
 
     // Frei waehlbarer Kontexttyp (z. B. UNIVERSE/REGION/WORLD -> KeyType.name())
-    private String type;
+    private KeyType type;
 
     // Art des Schluessels: "public", "private", "symmetric"
-    private String kind;
+    private KeyKind kind;
 
     // Algorithmus (z. B. RSA, EC, AES, HmacSHA256)
-    private String algorithm;
+    private String algorithm; // if known
+
+    // Besitzer (KeyId.owner()), e.g region id,world id
+    private String owner;
 
     // Name/Bezeichner (hier wird KeyId.id() gemappt)
-    private String name;
+    private String keyId;
 
     // Der Schluesselinhalt als Base64-kodierte Bytes
     private String key;
 
-    // Besitzer (KeyId.owner())
-    private String owner;
-
     @CreatedDate
     private Instant createdAt;
 
-    // Getter/Setter
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-    public String getKind() { return kind; }
-    public void setKind(String kind) { this.kind = kind; }
-    public String getAlgorithm() { return algorithm; }
-    public void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getKey() { return key; }
-    public void setKey(String key) { this.key = key; }
-    public String getOwner() { return owner; }
-    public void setOwner(String owner) { this.owner = owner; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    private Instant expiresAt;
+
+    private boolean enabled = true;
 
     public SKey() {}
 
     // Convenience-Konstruktor fuer generischen Eintrag inkl. Owner
-    public SKey(String type, String kind, String owner, String name, String algorithm, String base64Key) {
+    public SKey(KeyType type, KeyKind kind, String owner, String keyId, String algorithm, String base64Key) {
         this.type = type;
         this.kind = kind;
         this.owner = owner;
-        this.name = name;
+        this.keyId = keyId;
         this.algorithm = algorithm;
         this.key = base64Key;
     }
 
     // Factory-Methoden
-    public static SKey ofPublicKey(String type, String owner, String name, PublicKey key) {
+    public static SKey ofPublicKey(KeyType type, String owner, String name, PublicKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, "public", owner, name, key.getAlgorithm(), base64);
+        return new SKey(type, KeyKind.PUBLIC, owner, name, key.getAlgorithm(), base64);
     }
 
-    public static SKey ofPrivateKey(String type, String owner, String name, PrivateKey key) {
+    public static SKey ofPrivateKey(KeyType type, String owner, String name, PrivateKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, "private", owner, name, key.getAlgorithm(), base64);
+        return new SKey(type, KeyKind.PRIVATE, owner, name, key.getAlgorithm(), base64);
     }
 
-    public static SKey ofSecretKey(String type, String owner, String name, SecretKey key) {
+    public static SKey ofSecretKey(KeyType type, String owner, String name, SecretKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, "symmetric", owner, name, key.getAlgorithm(), base64);
+        return new SKey(type, KeyKind.SECRET, owner, name, key.getAlgorithm(), base64);
+    }
+
+    public boolean isExpired() {
+        return expiresAt != null && expiresAt.isBefore(Instant.now());
     }
 }

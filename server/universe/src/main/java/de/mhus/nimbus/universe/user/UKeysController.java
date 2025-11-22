@@ -56,7 +56,7 @@ public class UKeysController {
         StreamSupport.stream(all.spliterator(), false)
                 .filter(e -> type == null || type.equals(e.getType()))
                 .filter(e -> kind == null || kind.equals(e.getKind()))
-                .filter(e -> name == null || name.equals(e.getName()))
+                .filter(e -> name == null || name.equals(e.getKeyId()))
                 .filter(e -> algorithm == null || algorithm.equals(e.getAlgorithm()))
                 .map(this::toDto)
                 .forEach(out::add);
@@ -76,7 +76,7 @@ public class UKeysController {
         e.setType(req.type);
         e.setKind(req.kind);
         e.setAlgorithm(req.algorithm);
-        e.setName(req.name);
+        e.setKeyId(req.name);
         e.setKey(req.key); // wird nie zurückgegeben
         SKey saved = repository.save(e);
         SKeyDto dto = toDto(saved);
@@ -95,7 +95,7 @@ public class UKeysController {
         Optional<SKey> opt = repository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
         SKey e = opt.get();
-        e.setName(req.name);
+        e.setKeyId(req.name);
         SKey saved = repository.save(e);
         return ResponseEntity.ok(toDto(saved));
     }
@@ -121,7 +121,7 @@ public class UKeysController {
         dto.type = e.getType();
         dto.kind = e.getKind();
         dto.algorithm = e.getAlgorithm();
-        dto.name = e.getName();
+        dto.name = e.getKeyId();
         dto.createdAt = e.getCreatedAt();
         return dto;
     }

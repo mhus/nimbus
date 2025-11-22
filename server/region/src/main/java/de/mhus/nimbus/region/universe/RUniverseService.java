@@ -3,6 +3,9 @@ package de.mhus.nimbus.region.universe;
 import de.mhus.nimbus.shared.dto.universe.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.universe.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyService;
+import de.mhus.nimbus.shared.security.KeyType;
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -23,8 +26,9 @@ public class RUniverseService {
     private final RestTemplate rest;
     private final RUniverseProperties props;
     private final JwtService jwtService;
+    private final KeyService keyService;
 
-    public RUniverseService(RestTemplateBuilder builder, RUniverseProperties props, JwtService jwtService) {
+    public RUniverseService(RestTemplateBuilder builder, RUniverseProperties props, JwtService jwtService, KeyService keyService) {
         this.rest = builder
                 .requestFactory(() -> {
                     var f = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -36,6 +40,7 @@ public class RUniverseService {
                 .build();
         this.props = props;
         this.jwtService = jwtService;
+        this.keyService = keyService;
     }
 
     public Optional<RegionWorldResponse> getWorld(String regionId, String worldId) {
@@ -95,7 +100,9 @@ public class RUniverseService {
         String keyId = regionId + ":" + uuid.trim();
         // Subjekt beliebig; wir setzen auf die regionId. Kurzlebiges Token (5 Minuten).
         Instant exp = Instant.now().plus(Duration.ofMinutes(5));
-        return jwtService.createTokenWithSecretKey(keyId, regionId, null, exp);
+        var key = keyService.getLatestPrivateKey(KeyType.UNIVERSE, keyId)
+                .orElseThrow(() -> new IllegalStateException("Kein Private Key für Region-Token gefunden: " + keyId));
+        return jwtService.createTokenWithSecretKey(key, regionId, null, exp);
     }
 
     private static <T> T ensureBody(ResponseEntity<T> resp) {

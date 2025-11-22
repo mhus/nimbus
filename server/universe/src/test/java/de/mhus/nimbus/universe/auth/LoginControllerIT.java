@@ -2,7 +2,7 @@ package de.mhus.nimbus.universe.auth;
 
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
-import de.mhus.nimbus.universe.security.JwtProperties;
+import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.shared.security.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -49,7 +49,7 @@ class LoginControllerIT {
     private JwtService jwtService;
 
     @Autowired
-    private JwtProperties jwtProperties;
+    private USecurityProperties jwtProperties;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -71,7 +71,7 @@ class LoginControllerIT {
         assertNotNull(response.getBody());
         String token = response.getBody().token();
         assertNotNull(token);
-        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithSecretKey(token, jwtProperties.getKeyId());
+        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithSecretKey(token, jwtProperties.getAuthKeyId());
         assertTrue(claimsOpt.isPresent());
         Claims claims = claimsOpt.get().getPayload();
         assertEquals(response.getBody().userId(), claims.getSubject());

@@ -28,22 +28,20 @@ public class URegion {
     private String id; // ggf. von MongoDB gesetzt
     private String name;
     private String apiUrl;
-    private String publicSignKeyId;
+    private boolean enabled = true;
 
     // Liste von User-IDs mit MAINTAINER-Rechten (MongoDB-native Speicherung)
     private List<String> maintainers; // z.B. ["u1","u2","u3"] oder null/leer
 
-    public URegion(String name, String apiUrl, String publicSignKeyId) {
+    public URegion(String name, String apiUrl) {
         this.name = name;
         this.apiUrl = apiUrl;
-        this.publicSignKeyId = publicSignKeyId;
     }
 
-    public URegion(String id, String name, String apiUrl, String publicSignKeyId, Set<String> maintainerSet) {
+    public URegion(String id, String name, String apiUrl, Set<String> maintainerSet) {
         this.id = id;
         this.name = name;
         this.apiUrl = apiUrl;
-        this.publicSignKeyId = publicSignKeyId;
         setMaintainersFromSet(maintainerSet);
     }
 
@@ -103,4 +101,5 @@ public class URegion {
         }
         if (this.maintainers.isEmpty()) this.maintainers = null;
     }
+
 }

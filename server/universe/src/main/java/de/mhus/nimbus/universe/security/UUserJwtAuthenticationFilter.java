@@ -5,7 +5,6 @@ import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.security.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -19,13 +18,13 @@ import java.util.Optional;
 public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final JwtProperties jwtProperties;
+    private final USecurityProperties jwtProperties;
     private final UUserService userService;
     private final RequestUserHolder userHolder;
 
     private static final String AUTH_BASE = "/universe/user/auth";
 
-    public UUserJwtAuthenticationFilter(JwtService jwtService, JwtProperties jwtProperties, UUserService userService, RequestUserHolder userHolder) {
+    public UUserJwtAuthenticationFilter(JwtService jwtService, USecurityProperties jwtProperties, UUserService userService, RequestUserHolder userHolder) {
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
         this.userService = userService;
@@ -46,7 +45,7 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String token = auth.substring(7).trim();
-        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithSecretKey(token, jwtProperties.getKeyId());
+        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithSecretKey(token, jwtProperties.getAuthKeyId());
         if (claimsOpt.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

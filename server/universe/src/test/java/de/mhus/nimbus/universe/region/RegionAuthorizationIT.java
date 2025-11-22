@@ -2,7 +2,7 @@ package de.mhus.nimbus.universe.region;
 
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
-import de.mhus.nimbus.universe.security.JwtProperties;
+import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.shared.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class RegionAuthorizationIT {
     @Autowired private UUserService userService;
     @Autowired private TestRestTemplate restTemplate;
     @Autowired private JwtService jwtService; // ensure bean
-    @Autowired private JwtProperties jwtProperties; // ensure key
+    @Autowired private USecurityProperties jwtProperties; // ensure key
 
     private String adminToken;
     private String maintainerToken;

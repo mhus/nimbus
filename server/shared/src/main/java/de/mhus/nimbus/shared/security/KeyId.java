@@ -23,9 +23,9 @@ public record KeyId(String owner, String id) {
     /**
      * Creates a KeyId ensuring both components are trimmed.
      */
-    public static KeyId of(String owner, String uuid) {
+    public static KeyId of(String owner, String id) {
         Objects.requireNonNull(owner, "owner");
-        Objects.requireNonNull(uuid, "id");
-        return new KeyId(owner.trim(), uuid.trim());
+        Objects.requireNonNull(id, "id");
+        return new KeyId(owner.trim(), id.trim());
     }
 }

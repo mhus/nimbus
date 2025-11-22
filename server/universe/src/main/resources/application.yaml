@@ -6,11 +6,10 @@ spring:
       uri: mongodb://root:example@localhost:27017/universe?authSource=admin
       database: universe
 
-security:
-  jwt:
-    keyId: system:authkey
-    secretBase64: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0
-    expiresMinutes: 60
+universe:
+  security:
+    authExpiresMinutes: 15
+    refreshExpiresDays: 30
 
 server:
   port: 9040

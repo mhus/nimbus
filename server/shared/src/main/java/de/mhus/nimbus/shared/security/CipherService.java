@@ -30,7 +30,6 @@ import java.util.Optional;
 public class CipherService {
 
     private final KeyService keyService;
-    private static final KeyType DEFAULT_KEY_TYPE = KeyType.UNIVERSE; // Neues Default
 
     /**
      * Default algorithm used for encryption with symmetric keys.
@@ -56,8 +55,8 @@ public class CipherService {
      * @return the complete cipher string containing Base64-encoded keyId, algorithm, encrypted data, and IV
      * @throws CipherException if the key cannot be found or encryption fails
      */
-    public String encrypt(@NonNull String text, @NonNull String keyId) {
-        Optional<SecretKey> syncKey = keyService.findSymetricKey(DEFAULT_KEY_TYPE, keyId);
+    public String encryptAes(@NonNull String text, KeyType keyType, @NonNull String keyId) {
+        Optional<SecretKey> syncKey = keyService.getSecretKey(keyType, keyId);
         if (syncKey.isPresent()) {
             return encryptWithAesGcm(text, keyId, syncKey.get(), DEFAULT_CIPHER_ALGORITHM);
         }
@@ -72,10 +71,10 @@ public class CipherService {
      * @return the decrypted text
      * @throws CipherException if decryption fails or the cipher format is invalid
      */
-    public String decrypt(@NonNull String cipherString) {
+    public String decryptAes(@NonNull String cipherString, KeyType keyType) {
         try {
             CipherParts parts = parseCipher(cipherString);
-            Optional<SecretKey> syncKey = keyService.findSymetricKey(DEFAULT_KEY_TYPE, parts.keyId());
+            Optional<SecretKey> syncKey = keyService.getSecretKey(keyType, parts.keyId());
             if (syncKey.isPresent()) {
                 return decryptWithAesGcm(parts, syncKey.get());
             }

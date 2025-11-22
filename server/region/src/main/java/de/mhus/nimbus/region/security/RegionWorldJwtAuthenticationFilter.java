@@ -57,13 +57,8 @@ public class RegionWorldJwtAuthenticationFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
-        String keyId = worldId + ":" + uuid.trim();
 
-        Optional<Jws<Claims>> claims = jwtService.validateTokenWithSecretKey(token, keyId);
-        if (claims.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+        // TODO
 
         filterChain.doFilter(request, response);
     }

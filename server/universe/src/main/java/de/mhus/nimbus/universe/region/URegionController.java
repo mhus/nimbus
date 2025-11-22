@@ -36,11 +36,11 @@ public class URegionController {
 
     // DTOs
     public record URegionRequest(String name, String apiUrl, String publicSignKey, String maintainers) {}
-    public record URegionResponse(String id, String name, String apiUrl, String publicSignKey, List<String> maintainers) {}
+    public record URegionResponse(String id, String name, String apiUrl, List<String> maintainers) {}
 
     private URegionResponse toResponse(URegion q) {
         // Maintainer Set -> List
-        return new URegionResponse(q.getId(), q.getName(), q.getApiUrl(), q.getPublicSignKeyId(), q.getMaintainerSet().stream().toList());
+        return new URegionResponse(q.getId(), q.getName(), q.getApiUrl(), q.getMaintainerSet().stream().toList());
     }
 
     private CurrentUser current() { return userHolder.get(); }
@@ -89,7 +89,7 @@ public class URegionController {
     public ResponseEntity<URegionResponse> create(@RequestBody URegionRequest req) {
         if (current()==null) return ResponseEntity.status(401).build();
         if (!canCreateAsMaintainer(req.maintainers())) return ResponseEntity.status(403).build();
-        URegion q = service.create(req.name(), req.apiUrl(), req.publicSignKey(), req.maintainers());
+        URegion q = service.create(req.name(), req.apiUrl(), req.maintainers());
         return ResponseEntity.created(URI.create(BASE_PATH + "/" + q.getId())).body(toResponse(q));
     }
 
@@ -101,7 +101,7 @@ public class URegionController {
         URegion existing = service.getById(id).orElse(null);
         if (existing == null) return ResponseEntity.notFound().build();
         if (!canMaintain(existing)) return ResponseEntity.status(403).build();
-        URegion updated = service.update(id, req.name(), req.apiUrl(), req.publicSignKey(), req.maintainers());
+        URegion updated = service.update(id, req.name(), req.apiUrl(), req.maintainers());
         return ResponseEntity.ok(toResponse(updated));
     }
 

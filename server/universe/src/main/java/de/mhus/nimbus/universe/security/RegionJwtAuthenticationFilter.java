@@ -1,17 +1,17 @@
 package de.mhus.nimbus.universe.security;
 
+import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.JwtService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
+import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.universe.region.URegionService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Filter, der für alle Aufrufe unter /universe/region/{regionId}/** ein Bearer-Token
@@ -19,17 +19,15 @@ import java.util.Optional;
  * wird aus JwtProperties.regionKeyUuid bezogen (Fallback: Suffix von JwtProperties.keyId nach ':').
  */
 // @Component
+    @RequiredArgsConstructor
 public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BASE_PREFIX = "/universe/region/";
 
     private final JwtService jwtService;
-    private final JwtProperties jwtProperties;
-
-    public RegionJwtAuthenticationFilter(JwtService jwtService, JwtProperties jwtProperties) {
-        this.jwtService = jwtService;
-        this.jwtProperties = jwtProperties;
-    }
+    private final USecurityProperties jwtProperties;
+    private final URegionService regionService;
+    private final KeyService keyService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -50,16 +48,16 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        String token = auth.substring(7).trim();
 
-        String uuid = resolveRegionKeyUuid();
-        if (uuid == null || uuid.isBlank()) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        // get region from database
+        var region = regionService.getById(regionId);
+        if (!region.isPresent() || !region.get().isEnabled()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        String keyId = regionId + ":" + uuid;
-
-        Optional<Jws<Claims>> claims = jwtService.validateTokenWithSecretKey(token, keyId);
+        // validate token
+        var token = auth.substring(7).trim();
+        var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, regionId );
         if (claims.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -81,13 +79,4 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
         return rest.substring(0, slash);
     }
 
-    private String resolveRegionKeyUuid() {
-        String uuid = jwtProperties.getRegionKeyUuid();
-        if (uuid != null && !uuid.isBlank()) return uuid.trim();
-        String keyId = jwtProperties.getKeyId();
-        if (keyId == null) return null;
-        int idx = keyId.indexOf(':');
-        if (idx < 0 || idx >= keyId.length() - 1) return null;
-        return keyId.substring(idx + 1).trim();
-    }
 }

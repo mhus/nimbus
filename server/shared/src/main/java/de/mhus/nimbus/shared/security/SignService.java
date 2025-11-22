@@ -37,7 +37,7 @@ public class SignService {
      * @throws SignatureException if the key cannot be found or signing fails
      */
     public String sign(@NonNull String text, @NonNull String keyId) {
-        Optional<PrivateKey> privateKeyOpt = keyService.findPrivateKey(DEFAULT_KEY_TYPE, keyId);
+        Optional<PrivateKey> privateKeyOpt = keyService.getPrivateKey(DEFAULT_KEY_TYPE, keyId);
         if (privateKeyOpt.isEmpty()) {
             throw new SignatureException("No asymmetric private key (ECC/RSA) found for keyId: " + keyId);
         }
@@ -59,7 +59,7 @@ public class SignService {
             SignatureParts parts = parseSignature(signatureString);
             String algorithm = parts.algorithm();
             if (isAsymmetricAlgorithm(algorithm)) {
-                Optional<PublicKey> publicKeyOpt = keyService.findPublicKey(DEFAULT_KEY_TYPE, parts.keyId());
+                Optional<PublicKey> publicKeyOpt = keyService.getPublicKey(DEFAULT_KEY_TYPE, parts.keyId());
                 if (publicKeyOpt.isEmpty()) {
                     log.warn("No public key found for keyId '{}'", parts.keyId());
                     return false;

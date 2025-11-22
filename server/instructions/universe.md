@@ -171,4 +171,60 @@ Was alles gespeichert werden muss:
 - SplashScreen Image links(s) in der WeltInfo
 - DeathAmbiente Sound in der WeltInfo
 - SplashScreenSound in der WeltInfo (?)
-- 
+
+
+## Ids und pfade
+
+- Ids: \[a-zA-Z0-9_-\]{1,64}
+- Pfade: /[a-zA-Z0-9_-\]{1,64}(/[a-zA-Z0-9_-]{1,64})*
+- WorldCoordiante Kurz: W:regionId/worldId\[$subWorld\]\[:branch\]
+- WorldCoordiante Lang: U:galaxyId/regionId/starId/celestialBodyId/worldId\[$subWorld\]\[:branch\]
+- starId: galaxy coordinate: komma getrennte werte einer funktion, die den stern im galaxie gitter beschreibt
+- planetId: planetNr von innen\[,mond Nr von Innen\]
+
+## Tokens und Access
+
+- Login mit credentials am Universe Server: Access Token (15 Minuten gültig) - nur im Memory
+- Im Universe Server ein Refresh Token holen (30 Tage gültig) und in Session Cookie speichern
+- Mit Refresh Token kann neues Access Token erstellt werden und neues Access Token
+- Auswahl der Region/Welt/EntryPoint -> Universe lässt vom Region Server ein Visum Token ausstellen (5 Minuten gültig) - nur im Memory
+- Mit dem Visum wird im World eine Session (Status prepared) erstellt und im Memory gespeichert - Session ist im Redis gespeichert wird nach 5 Minuten abgelaufen
+- Sobald sich der Websochet an die session hängt wird diese als aktiv markiert und wird geloescht, wenn die Websocket disconnetced
+- Session Id ist der access token kann als Bearer oder via url query parameter übergeben werden
+  - Bearer sessionId:<sessionId>
+  - sessionId=<sessionId> 
+- Im Region Server kann sich auch mit der sessionId validiert werden, wird vom WorldServer
+  abgefragt und alle 5 minuten aktualisiert
+
+- SessionId kann jedes mal im redis direkt abgefragt werden
+- SessionId: <regionId>:<worldId>:<expireTimestamp>:<uuid><uuid>
+- expire ist 24 Stunden
+- uuid ohne '-'
+
+Ist die Session weg, muss am Unvierse Server ein neues Access Token erstellt werden
+und ein neues Visum geholt werden. Danach Session ersellen.
+
+## World EntryPoints und Visum
+
+Beim erstellen eines Visums gibt es meherer Wege:
+
+Vorher: 
+- User login
+- Asuwahl Region
+- Auswahl Character
+
+Visum erstellen:
+- Universe fragt Region, Region hat gespeichert welche EntryPoints der Character schon hat
+- Visum dafuer erstellen
+
+Im Visum (wird alles an der Session gemerkt):
+- Player
+- Character
+- WorldId
+- EntryPoint
+- ggf Ruckkehr-Punkt
+- Signieryt von Region Server
+
+Oder World Server stellt Visum direkt aus (z.b. bei World Wechsel / teleport)
+- Mit dem Visum wird eine neue Session erstellt und im Redis gespeichert
+- Bei Rückkehr zur main-Welt muss auch wieder ein Visum erstellt werden

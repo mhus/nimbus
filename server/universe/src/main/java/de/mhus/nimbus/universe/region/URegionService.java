@@ -15,25 +15,25 @@ public class URegionService {
         this.repository = repository;
     }
 
-    public URegion create(String name, String apiUrl, String publicSignKey, String maintainersCsv) {
+    public URegion create(String name, String apiUrl, String maintainersCsv) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        URegion q = new URegion(name, apiUrl, publicSignKey);
+        URegion q = new URegion(name, apiUrl);
         q.setMaintainers(maintainersCsv); // CSV normalisieren
         return repository.save(q);
     }
 
-    public URegion create(String name, String apiUrl, String publicSignKey) {
-        return create(name, apiUrl, publicSignKey, null);
+    public URegion create(String name, String apiUrl) {
+        return create(name, apiUrl, null);
     }
 
     public Optional<URegion> getById(String id) { return repository.findById(id); }
     public Optional<URegion> getByName(String name) { return repository.findByName(name); }
     public List<URegion> listAll() { return repository.findAll(); }
 
-    public URegion update(String id, String name, String apiUrl, String publicSignKey, String maintainersCsv) {
+    public URegion update(String id, String name, String apiUrl, String maintainersCsv) {
         URegion existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
@@ -44,7 +44,6 @@ public class URegionService {
             if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
             existing.setApiUrl(apiUrl);
         }
-        if (publicSignKey != null) existing.setPublicSignKeyId(publicSignKey);
         if (maintainersCsv != null) existing.setMaintainers(maintainersCsv);
         return repository.save(existing);
     }

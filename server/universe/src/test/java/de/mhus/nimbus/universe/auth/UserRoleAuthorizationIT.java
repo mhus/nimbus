@@ -3,7 +3,7 @@ package de.mhus.nimbus.universe.auth;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUserRepository;
 import de.mhus.nimbus.universe.user.UUser;
-import de.mhus.nimbus.universe.security.JwtProperties;
+import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.shared.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class UserRoleAuthorizationIT {
     @Autowired
     private JwtService jwtService; // optional not directly used but ensures bean context
     @Autowired
-    private JwtProperties jwtProperties; // ensures key config
+    private USecurityProperties jwtProperties; // ensures key config
 
     private String tokenWithRole;
     private String tokenWithoutRole;

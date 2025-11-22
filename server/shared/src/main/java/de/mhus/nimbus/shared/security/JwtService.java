@@ -42,14 +42,12 @@ public class JwtService {
      * @return the signed JWT token string
      * @throws IllegalArgumentException if the key cannot be found
      */
-    public String createTokenWithSecretKey(@NonNull String keyId,
+    public String createTokenWithSecretKey(@NonNull PrivateKey key,
                                             @NonNull String subject,
                                             Map<String, Object> claims,
                                             Instant expiresAt) {
-        PrivateKey key = keyService.findPrivateKey(KeyType.UNIVERSE, keyId)
-                .orElseThrow(() -> new IllegalArgumentException("ECC private key not found: " + keyId));
         if (!"EC".equalsIgnoreCase(key.getAlgorithm())) {
-            throw new IllegalArgumentException("Private key for keyId " + keyId + " is not ECC (EC). Found: " + key.getAlgorithm());
+            throw new IllegalArgumentException("Private key for key " + key + " is not ECC (EC). Found: " + key.getAlgorithm());
         }
         var builder = Jwts.builder()
             .subject(subject)
@@ -73,7 +71,7 @@ public class JwtService {
                                           @NonNull String subject,
                                           Map<String, Object> claims,
                                           Instant expiresAt) {
-        SecretKey key = keyService.findSymetricKey(KeyType.UNIVERSE, keyId)
+        SecretKey key = keyService.getSecretKey(KeyType.UNIVERSE, keyId)
                 .orElseThrow(() -> new IllegalArgumentException("Sync key not found: " + keyId));
 
         var builder = Jwts.builder()
@@ -94,20 +92,6 @@ public class JwtService {
     }
 
     /**
-     * Validates a JWT token using a secret key (HMAC algorithm).
-     *
-     * @param token the JWT token string
-     * @param keyId the key id in format "owner:id" to locate the verification key
-     * @return optional containing the parsed claims if valid; empty if validation fails
-     */
-    public Optional<Jws<Claims>> validateTokenWithSecretKey(@NonNull String token, @NonNull String keyId) {
-        // ECC Validierung über PublicKey
-        return keyService.findPublicKey(KeyType.UNIVERSE, keyId)
-                .filter(pk -> "EC".equalsIgnoreCase(pk.getAlgorithm()))
-                .flatMap(pk -> parseToken(token, pk));
-    }
-
-    /**
      * Validates a JWT token using a sync key (HMAC algorithm).
      *
      * @param token the JWT token string
@@ -115,7 +99,7 @@ public class JwtService {
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
     public Optional<Jws<Claims>> validateTokenWithSyncKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findSymetricKey(KeyType.UNIVERSE, keyId)
+        return keyService.getSecretKey(KeyType.UNIVERSE, keyId)
                 .flatMap(key -> parseToken(token, key));
     }
 
@@ -123,12 +107,15 @@ public class JwtService {
      * Validates a JWT token using a public key (RSA/ECDSA algorithm).
      *
      * @param token the JWT token string
-     * @param keyId the key id in format "owner:id" to locate the verification key
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
-    public Optional<Jws<Claims>> validateTokenWithPublicKey(@NonNull String token, @NonNull String keyId) {
-        return keyService.findPublicKey(KeyType.UNIVERSE, keyId)
-                .flatMap(key -> parseToken(token, key));
+    public Optional<Jws<Claims>> validateTokenWithPublicKey(@NonNull String token, KeyType type, @NonNull String owner) {
+
+        for (var publicKey : keyService.getPublicKeysForOwner(type, owner)) {
+            Optional<Jws<Claims>> result = parseToken(token, publicKey);
+            if (result.isPresent()) return result;
+        }
+        return Optional.empty();
     }
 
     /**
@@ -155,14 +142,10 @@ public class JwtService {
             Jws<Claims> jws = parser.parseSignedClaims(token);
             return Optional.of(jws);
         } catch (SignatureException e) {
-            if (log.isDebugEnabled()) {
-                log.debug("JWT signature validation failed", e);
-            }
+            log.debug("JWT signature validation failed", e);
             return Optional.empty();
         } catch (Exception e) {
-            if (log.isDebugEnabled()) {
-                log.debug("JWT parsing failed", e);
-            }
+            log.debug("JWT parsing failed", e);
             return Optional.empty();
         }
     }

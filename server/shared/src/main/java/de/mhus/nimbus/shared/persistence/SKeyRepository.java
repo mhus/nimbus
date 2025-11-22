@@ -3,6 +3,7 @@ package de.mhus.nimbus.shared.persistence;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,4 +14,8 @@ public interface SKeyRepository extends MongoRepository<SKey, String> {
 
     Optional<SKey> findByTypeAndKindAndOwnerAndName(String type, String kind, String owner, String name);
     void deleteByTypeAndKindAndOwnerAndName(String type, String kind, String owner, String name);
+
+    List<SKey> findAllByTypeAndKindAndOwnerByCreatedAtDesc(String name, String kindPrivate, String owner);
+
+    List<SKey> findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(String type, String kind, String owner);
 }

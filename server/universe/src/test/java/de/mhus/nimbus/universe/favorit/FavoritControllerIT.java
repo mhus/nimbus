@@ -1,7 +1,7 @@
 package de.mhus.nimbus.universe.favorit;
 
 import de.mhus.nimbus.universe.auth.ULoginResponse;
-import de.mhus.nimbus.universe.security.JwtProperties;
+import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,7 @@ class FavoritControllerIT {
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private JwtProperties jwtProperties;
+    private USecurityProperties jwtProperties;
 
     private String token;
 

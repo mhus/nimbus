@@ -1,6 +1,6 @@
 package de.mhus.nimbus.universe.auth;
 
-import de.mhus.nimbus.universe.security.JwtProperties;
+import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.user.UniverseRoles;
 import de.mhus.nimbus.universe.user.UUserService;
@@ -23,8 +23,8 @@ class LoginControllerTest {
     void login_success() {
         UUserService userService = mock(UUserService.class);
         JwtService jwtService = mock(JwtService.class);
-        JwtProperties props = new JwtProperties();
-        props.setKeyId("system:authkey");
+        USecurityProperties props = new USecurityProperties();
+        props.setAuthKeyId("system:authkey");
         props.setSecretBase64("c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0");
         props.setExpiresMinutes(60);
 
@@ -34,7 +34,7 @@ class LoginControllerTest {
         when(userService.getByUsername("alpha")).thenReturn(Optional.of(user));
         when(userService.validatePassword("u1","pw"))
                 .thenReturn(true);
-        when(jwtService.createTokenWithSecretKey(eq(props.getKeyId()), eq("u1"), any(Map.class), any(Instant.class)))
+        when(jwtService.createTokenWithSecretKey(eq(props.getAuthKeyId()), eq("u1"), any(Map.class), any(Instant.class)))
                 .thenReturn("jwt-token");
 
         ULoginController controller = new ULoginController(userService, jwtService, props);
@@ -49,8 +49,8 @@ class LoginControllerTest {
     void login_wrong_password() {
         UUserService userService = mock(UUserService.class);
         JwtService jwtService = mock(JwtService.class);
-        JwtProperties props = new JwtProperties();
-        props.setKeyId("system:authkey");
+        USecurityProperties props = new USecurityProperties();
+        props.setAuthKeyId("system:authkey");
         props.setSecretBase64("c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0");
 
         UUser user = new UUser("alpha","alpha@example.com");
@@ -70,8 +70,8 @@ class LoginControllerTest {
     void login_user_not_found() {
         UUserService userService = mock(UUserService.class);
         JwtService jwtService = mock(JwtService.class);
-        JwtProperties props = new JwtProperties();
-        props.setKeyId("system:authkey");
+        USecurityProperties props = new USecurityProperties();
+        props.setAuthKeyId("system:authkey");
         props.setSecretBase64("c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0");
 
         when(userService.getByUsername("alpha")).thenReturn(Optional.empty());
@@ -84,8 +84,8 @@ class LoginControllerTest {
     void login_bad_request() {
         UUserService userService = mock(UUserService.class);
         JwtService jwtService = mock(JwtService.class);
-        JwtProperties props = new JwtProperties();
-        props.setKeyId("system:authkey");
+        USecurityProperties props = new USecurityProperties();
+        props.setAuthKeyId("system:authkey");
         props.setSecretBase64("c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0");
         ULoginController controller = new ULoginController(userService, jwtService, props);
         ResponseEntity<ULoginResponse> resp = controller.login(new ULoginRequest(null,"pw"));

@@ -1,9 +1,12 @@
 package de.mhus.nimbus.universe.auth;
 
-import de.mhus.nimbus.universe.security.JwtProperties;
+import de.mhus.nimbus.shared.security.KeyService;
+import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.security.JwtService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,19 +28,15 @@ import java.util.Map;
 @RestController
 @RequestMapping(ULoginController.BASE_PATH)
 @Tag(name = "Auth", description = "Authentication operations")
+@RequiredArgsConstructor
 public class ULoginController {
 
     public static final String BASE_PATH = "/universe/user/auth";
 
     private final UUserService userService;
     private final JwtService jwtService;
-    private final JwtProperties jwtProperties;
-
-    public ULoginController(UUserService userService, JwtService jwtService, JwtProperties jwtProperties) {
-        this.userService = userService;
-        this.jwtService = jwtService;
-        this.jwtProperties = jwtProperties;
-    }
+    private final USecurityProperties jwtProperties;
+    private final KeyService keyService;
 
     @Operation(summary = "Login with username/password", description = "Returns JWT bearer token on success")
     @ApiResponses({
@@ -59,11 +58,11 @@ public class ULoginController {
         if (!valid) {
             return ResponseEntity.status(401).build();
         }
-        Instant exp = Instant.now().plus(jwtProperties.getExpiresMinutes(), ChronoUnit.MINUTES);
+        Instant exp = Instant.now().plus(jwtProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
         String rolesRaw = user.getRolesRaw();
         Map<String,Object> claims = rolesRaw == null ? Map.of("username", user.getUsername()) : Map.of("username", user.getUsername(), "universe", rolesRaw);
         String token = jwtService.createTokenWithSecretKey(
-                jwtProperties.getKeyId(),
+                keyService.getLatestPrivateKey(KeyType.UNIVERSE, "system" ).get(),
                 user.getId(),
                 claims,
                 exp
@@ -89,7 +88,7 @@ public class ULoginController {
             return ResponseEntity.status(401).build();
         }
         String oldToken = authorization.substring(7).trim();
-        var claimsOpt = jwtService.validateTokenWithSecretKey(oldToken, jwtProperties.getKeyId());
+        var claimsOpt = jwtService.validateTokenWithSecretKey(oldToken, jwtProperties.getAuthKeyId());
         if (claimsOpt.isEmpty()) {
             return ResponseEntity.status(401).build();
         }
@@ -101,7 +100,7 @@ public class ULoginController {
         Instant exp = Instant.now().plus(jwtProperties.getExpiresMinutes(), ChronoUnit.MINUTES);
         Map<String,Object> newClaims = rolesRaw == null ? Map.of("username", username) : Map.of("username", username, "universe", rolesRaw);
         String newToken = jwtService.createTokenWithSecretKey(
-                jwtProperties.getKeyId(),
+                jwtProperties.getAuthKeyId(),
                 userId,
                 newClaims,
                 exp

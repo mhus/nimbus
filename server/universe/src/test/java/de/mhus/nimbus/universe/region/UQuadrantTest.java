@@ -9,7 +9,7 @@ class URegionTest {
 
     @Test
     void testSetMaintainersCsvNormalization() {
-        URegion q = new URegion("name","url","key");
+        URegion q = new URegion("name","url");
         q.setMaintainers(" u1 , u2 ,u2,, u3 ");
         assertEquals(Set.of("u1","u2","u3"), q.getMaintainerSet(), "CSV sollte normalisiert und Duplikate entfernt werden");
         q.setMaintainers("   ");
@@ -18,7 +18,7 @@ class URegionTest {
 
     @Test
     void testAddRemoveMaintainer() {
-        URegion q = new URegion("name","url","key");
+        URegion q = new URegion("name","url");
         q.addMaintainer("u1");
         q.addMaintainer("u2");
         q.addMaintainer("u2"); // Duplikat
@@ -32,7 +32,7 @@ class URegionTest {
     @Test
     void testConstructorWithSet() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-            () -> new URegion("id","name","url","key", Set.of("x","y","x"))
+            () -> new URegion("id","name","url", Set.of("x","y","x"))
         );
         assertTrue(ex.getMessage().startsWith("duplicate element"), "Exception-Meldung sollte Duplikat anzeigen");
     }
