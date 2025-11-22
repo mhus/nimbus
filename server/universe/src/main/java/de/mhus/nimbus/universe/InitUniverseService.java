@@ -72,9 +72,9 @@ public class InitUniverseService {
             keyRepository.deleteByTypeAndKindAndName(KeyType.UNIVERSE.name(), "public", keyId.id());
             keyRepository.deleteByTypeAndKindAndName(KeyType.UNIVERSE.name(), "private", keyId.id());
 
-            keyRepository.save(SKey.ofPrivateKey(KeyType.UNIVERSE.name(), keyId.owner(), keyId.id(), keyPair.getPrivate()));
-            keyRepository.save(SKey.ofPublicKey(KeyType.UNIVERSE.name(), keyId.owner(), keyId.id(), keyPair.getPublic()));
-        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
+            keyRepository.save(SKey.ofPrivateKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPrivate()));
+            keyRepository.save(SKey.ofPublicKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPublic()));
+        } catch (Exception e) {
             log.error("ECC KeyPair-Erstellung fehlgeschlagen: {}", e.getMessage(), e);
         }
     }

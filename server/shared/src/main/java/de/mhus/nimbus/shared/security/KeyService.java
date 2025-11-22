@@ -9,8 +9,11 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
@@ -153,6 +156,17 @@ public class KeyService {
             return Optional.of(KeyId.of(owner, uuid));
         } catch (IllegalArgumentException ex) {
             return Optional.empty();
+        }
+    }
+
+    public KeyPair createECCKeys() {
+        // Erzeugt ein EC Schlüsselpaar mit Standard-Kurve secp256r1 (NIST P-256)
+        try {
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
+            kpg.initialize(new ECGenParameterSpec("secp256r1"));
+            return kpg.generateKeyPair();
+        } catch (Exception e) {
+            throw new IllegalStateException("EC KeyPair Generierung fehlgeschlagen", e);
         }
     }
 }

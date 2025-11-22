@@ -7,6 +7,8 @@ import de.mhus.nimbus.shared.user.UniverseRoles;
 import de.mhus.nimbus.shared.dto.universe.CreateSKeyRequest;
 import de.mhus.nimbus.shared.dto.universe.SKeyDto;
 import de.mhus.nimbus.shared.dto.universe.UpdateSKeyNameRequest;
+import de.mhus.nimbus.shared.security.KeyKind;
+import de.mhus.nimbus.shared.security.KeyType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,8 +56,8 @@ public class UKeysController {
         Iterable<SKey> all = repository.findAll();
         List<SKeyDto> out = new ArrayList<>();
         StreamSupport.stream(all.spliterator(), false)
-                .filter(e -> type == null || type.equals(e.getType()))
-                .filter(e -> kind == null || kind.equals(e.getKind()))
+                .filter(e -> type == null || (e.getType() != null && type.equalsIgnoreCase(e.getType().name())))
+                .filter(e -> kind == null || (e.getKind() != null && kind.equalsIgnoreCase(e.getKind().name())))
                 .filter(e -> name == null || name.equals(e.getKeyId()))
                 .filter(e -> algorithm == null || algorithm.equals(e.getAlgorithm()))
                 .map(this::toDto)
@@ -72,9 +74,17 @@ public class UKeysController {
         @ApiResponse(responseCode = "400", description = "Validierungsfehler")
     })
     public ResponseEntity<SKeyDto> create(@Valid @RequestBody CreateSKeyRequest req) {
+        KeyType keyType;
+        KeyKind keyKind;
+        try {
+            keyType = KeyType.valueOf(req.type.trim().toUpperCase());
+            keyKind = KeyKind.valueOf(req.kind.trim().toUpperCase());
+        } catch (Exception ex) { // IllegalArgumentException | NullPointerException
+            return ResponseEntity.badRequest().build();
+        }
         SKey e = new SKey();
-        e.setType(req.type);
-        e.setKind(req.kind);
+        e.setType(keyType);
+        e.setKind(keyKind);
         e.setAlgorithm(req.algorithm);
         e.setKeyId(req.name);
         e.setKey(req.key); // wird nie zurückgegeben
@@ -118,8 +128,8 @@ public class UKeysController {
     private SKeyDto toDto(SKey e) {
         SKeyDto dto = new SKeyDto();
         dto.id = e.getId();
-        dto.type = e.getType();
-        dto.kind = e.getKind();
+        dto.type = e.getType() != null ? e.getType().name() : null;
+        dto.kind = e.getKind() != null ? e.getKind().name() : null;
         dto.algorithm = e.getAlgorithm();
         dto.name = e.getKeyId();
         dto.createdAt = e.getCreatedAt();
