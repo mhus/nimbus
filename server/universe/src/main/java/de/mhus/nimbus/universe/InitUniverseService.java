@@ -54,14 +54,14 @@ public class InitUniverseService {
 
     private void checkRefreshToken() {
         var jwtKeyId = keyService.parseKeyId(USecurityProperties.JWT_REFRESH_TOKEN_KEY_ID).get();
-        if (!keyRepository.findByTypeAndKindAndName(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
+        if (!keyRepository.findByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
             createSystemAuthKey(jwtKeyId);
         }
     }
 
     private void checkAuthToken() {
         var jwtKeyId = keyService.parseKeyId(USecurityProperties.JWT_AUTH_TOKEN_KEY_ID).get();
-        if (!keyRepository.findByTypeAndKindAndName(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
+        if (!keyRepository.findByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
             createSystemAuthKey(jwtKeyId);
         }
     }
@@ -69,8 +69,8 @@ public class InitUniverseService {
     private void createSystemAuthKey(KeyId keyId) {
         try {
             var keyPair = keyService.createECCKeys();
-            keyRepository.deleteByTypeAndKindAndName(KeyType.UNIVERSE.name(), "public", keyId.id());
-            keyRepository.deleteByTypeAndKindAndName(KeyType.UNIVERSE.name(), "private", keyId.id());
+            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), "public", keyId.id());
+            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), "private", keyId.id());
 
             keyRepository.save(SKey.ofPrivateKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPrivate()));
             keyRepository.save(SKey.ofPublicKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPublic()));

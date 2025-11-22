@@ -9,13 +9,13 @@ import java.util.Optional;
 @Repository
 public interface SKeyRepository extends MongoRepository<SKey, String> {
 
-    Optional<SKey> findByTypeAndKindAndName(String type, String kind, String name);
-    void deleteByTypeAndKindAndName(String type, String kind, String name);
+    Optional<SKey> findByTypeAndKindAndKeyId(String type, String kind, String keyId);
+    void deleteByTypeAndKindAndKeyId(String type, String kind, String keyId);
 
-    Optional<SKey> findByTypeAndKindAndOwnerAndName(String type, String kind, String owner, String name);
-    void deleteByTypeAndKindAndOwnerAndName(String type, String kind, String owner, String name);
+    Optional<SKey> findByTypeAndKindAndOwnerAndKeyId(String type, String kind, String owner, String keyId);
+    void deleteByTypeAndKindAndOwnerAndKeyId(String type, String kind, String owner, String keyId);
 
-    List<SKey> findAllByTypeAndKindAndOwnerByCreatedAtDesc(String name, String kindPrivate, String owner);
+    List<SKey> findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(String type, String kind, String owner);
 
     List<SKey> findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(String type, String kind, String owner);
 }

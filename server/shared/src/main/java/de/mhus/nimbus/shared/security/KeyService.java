@@ -33,12 +33,12 @@ public class KeyService {
 
     public Optional<PublicKey> getPublicKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndOwnerAndName(type.name(), KIND_PUBLIC, id.owner(), id.id())
+                .findByTypeAndKindAndOwnerAndKeyId(type.name(), KIND_PUBLIC, id.owner(), id.id())
                 .flatMap(this::toPublicKey);
     }
 
     public List<PublicKey> getPublicKeysForOwner(KeyType type, String owner) {
-        return repository.findAllByTypeAndKindAndOwnerByCreatedAtDesc(type.name(), KIND_PUBLIC, owner)
+        return repository.findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(type.name(), KIND_PUBLIC, owner)
                 .stream()
                 .filter(sKey -> sKey.isEnabled() && !sKey.isExpired())
                 .map(key -> toPublicKey(key).orElse(null))
@@ -48,12 +48,12 @@ public class KeyService {
 
     public Optional<PrivateKey> getPrivateKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndOwnerAndName(type.name(), KIND_PRIVATE, id.owner(), id.id())
+                .findByTypeAndKindAndOwnerAndKeyId(type.name(), KIND_PRIVATE, id.owner(), id.id())
                 .flatMap(this::toPrivateKey);
     }
 
     public List<PrivateKey> getPrivateKeysForOwner(KeyType type, String owner) {
-        return repository.findAllByTypeAndKindAndOwnerByCreatedAtDesc(type.name(), KIND_PRIVATE, owner)
+        return repository.findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(type.name(), KIND_PRIVATE, owner)
                 .stream()
                 .filter(sKey -> sKey.isEnabled() && !sKey.isExpired())
                 .map(key -> toPrivateKey(key).orElse(null))
@@ -74,12 +74,12 @@ public class KeyService {
 
     public Optional<SecretKey> getSecretKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndOwnerAndName(type.name(), "symmetric", id.owner(), id.id())
+                .findByTypeAndKindAndOwnerAndKeyId(type.name(), "symmetric", id.owner(), id.id())
                 .flatMap(this::toSecretKey);
     }
 
     public List<SecretKey> getSecretKeysForOwner(KeyType type, String owner) {
-        return repository.findAllByTypeAndKindAndOwnerByCreatedAtDesc(type.name(), KIND_PRIVATE, owner)
+        return repository.findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(type.name(), KIND_PRIVATE, owner)
                 .stream()
                 .filter(sKey -> sKey.isEnabled() && !sKey.isExpired())
                 .map(key -> toSecretKey(key).orElse(null))
