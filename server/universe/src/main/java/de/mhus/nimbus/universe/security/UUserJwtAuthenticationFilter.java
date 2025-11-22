@@ -3,6 +3,7 @@ package de.mhus.nimbus.universe.security;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -11,6 +12,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -18,21 +20,20 @@ import java.util.Optional;
 public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final USecurityProperties jwtProperties;
     private final UUserService userService;
     private final RequestUserHolder userHolder;
 
     private static final String AUTH_BASE = "/universe/user/auth";
+    private static final String OWNER_SYSTEM = "system"; // Owner für Universe Public Keys
 
-    public UUserJwtAuthenticationFilter(JwtService jwtService, USecurityProperties jwtProperties, UUserService userService, RequestUserHolder userHolder) {
+    public UUserJwtAuthenticationFilter(JwtService jwtService, UUserService userService, RequestUserHolder userHolder) {
         this.jwtService = jwtService;
-        this.jwtProperties = jwtProperties;
         this.userService = userService;
         this.userHolder = userHolder;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
         // Allow auth endpoints without token
         if (isPublicPath(path)) {
@@ -45,7 +46,8 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String token = auth.substring(7).trim();
-        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithSecretKey(token, jwtProperties.getAuthKeyId());
+        // Nutzung von Public Keys statt Secret Keys
+        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, OWNER_SYSTEM);
         if (claimsOpt.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
