@@ -73,6 +73,7 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicPath(String path) {
-        return (AUTH_BASE + "/login").equals(path) || (AUTH_BASE + "/logout").equals(path);
+        // Login und Refresh dürfen mit (bzw. beim Refresh: benötigen eigenen Token-Flow im Controller)
+        return (AUTH_BASE + "/login").equals(path) || (AUTH_BASE + "/refresh").equals(path);
     }
 }
