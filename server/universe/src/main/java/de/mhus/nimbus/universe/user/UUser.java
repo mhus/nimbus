@@ -34,6 +34,8 @@ public class UUser {
     // Kommaseparierte Liste von Rollen-Namen (Enum.name())
     private String roles; // z.B. "USER,ADMIN"
 
+    private boolean enabled = true;
+
     public UUser() {}
 
     public UUser(final String username, final String email) {
@@ -79,6 +81,14 @@ public class UUser {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     // Rollen-Hilfsmethoden

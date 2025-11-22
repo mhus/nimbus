@@ -58,6 +58,10 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
         String userId = claims.getSubject();
         String username = claims.get("username", String.class);
         UUser user = userService.getById(userId).orElse(null);
+        if (user == null || !user.isEnabled()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
         CurrentUser cu = new CurrentUser(userId, username, user);
         userHolder.set(cu);
         try {

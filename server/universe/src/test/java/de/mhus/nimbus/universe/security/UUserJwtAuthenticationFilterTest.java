@@ -71,4 +71,23 @@ class UUserJwtAuthenticationFilterTest {
         assertTrue(attr instanceof CurrentUser);
         assertEquals("u1", ((CurrentUser)attr).userId());
     }
+
+    @Test
+    void unauthorizedDisabledUser() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest("GET","/other");
+        req.addHeader("Authorization", "Bearer tokenABC");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        @SuppressWarnings("unchecked") Jws<Claims> jws = Mockito.mock(Jws.class);
+        Claims claims = Mockito.mock(Claims.class);
+        Mockito.when(jws.getPayload()).thenReturn(claims);
+        Mockito.when(claims.getSubject()).thenReturn("u2");
+        Mockito.when(claims.get("username", String.class)).thenReturn("user2");
+        Mockito.when(claims.get("typ")).thenReturn("access");
+        Mockito.when(jwtService.validateTokenWithPublicKey("tokenABC", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
+        UUser user = new UUser(); user.setId("u2"); user.setUsername("user2"); user.setEnabled(false);
+        Mockito.when(userService.getById("u2")).thenReturn(Optional.of(user));
+        filter.doFilter(req, resp, (r, s) -> fail("Chain sollte nicht erreicht werden"));
+        assertEquals(401, resp.getStatus());
+        assertNull(holder.get());
+    }
 }

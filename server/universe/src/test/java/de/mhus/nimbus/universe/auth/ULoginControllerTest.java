@@ -137,4 +137,17 @@ class ULoginControllerTest {
         ResponseEntity<ULoginResponse> resp = controller.refresh("Bearer old");
         assertEquals(401, resp.getStatusCodeValue());
     }
+
+    @Test
+    void login_unauthorized_disabledUser() throws Exception {
+        UUserService userService = Mockito.mock(UUserService.class);
+        JwtService jwtService = Mockito.mock(JwtService.class);
+        USecurityProperties props = new USecurityProperties();
+        KeyService keyService = Mockito.mock(KeyService.class);
+        ULoginController controller = new ULoginController(userService, jwtService, props, keyService);
+        UUser user = new UUser(); user.setId("u1"); user.setUsername("user1"); user.setEnabled(false);
+        Mockito.when(userService.getByUsername("user1")).thenReturn(Optional.of(user));
+        ResponseEntity<ULoginResponse> resp = controller.login(new ULoginRequest("user1","pw"));
+        assertEquals(401, resp.getStatusCodeValue());
+    }
 }

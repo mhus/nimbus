@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import java.security.PrivateKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -55,6 +56,9 @@ public class ULoginController {
             return ResponseEntity.status(401).build();
         }
         UUser user = userOpt.get();
+        if (!user.isEnabled()) {
+            return ResponseEntity.status(401).build();
+        }
         boolean valid = userService.validatePassword(user.getId(), request.password());
         if (!valid) {
             return ResponseEntity.status(401).build();
@@ -103,6 +107,9 @@ public class ULoginController {
         String userId = payload.getSubject();
         String username = payload.get("username", String.class);
         UUser user = userService.getById(userId).orElse(null);
+        if (user == null || !user.isEnabled()) {
+            return ResponseEntity.status(401).build();
+        }
         String rolesRaw = user != null ? user.getRolesRaw() : null;
         Instant exp = Instant.now().plus(jwtProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
         Instant newRefreshExp = Instant.now().plus(jwtProperties.getRefreshExpiresDays(), ChronoUnit.DAYS);
