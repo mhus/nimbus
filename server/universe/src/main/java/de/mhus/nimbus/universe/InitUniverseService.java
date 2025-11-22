@@ -27,8 +27,8 @@ public class InitUniverseService {
 
     private final SKeyRepository keyRepository;
     private final KeyService keyService;
-    private UUserRepository userRepository;
-    private UUserService userService;
+    private final UUserRepository userRepository;
+    private final UUserService userService;
 
     @PostConstruct
     public void init() {
