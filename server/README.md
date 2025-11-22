@@ -16,4 +16,5 @@
   - Im Universe Service der Bereich auf den der Region Service zugreift ist /universe.region/*
   - Im Universe Service der Bereich auf den der User zugreift ist /universe/user/*
   - In Region Service der Bereich auf den der World Service zugreift ist /region/world/*
-- 
+- REST Controller haben die Aufgabe die Kommunikation zu erledigen. Alles was Business Logik 
+  beinhaltet muss in den Services liegen.

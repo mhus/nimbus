@@ -7,10 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 public class USecurityProperties {
 
-    public static final String JWT_AUTH_TOKEN_KEY_ID = "universe:auth-token:";
-    public static final String JWT_REFRESH_TOKEN_KEY_ID = "universe:refresh-token";
+    public static final String JWT_TOKEN_KEY_ID = "universe:jwt-auth-token";
     private int authExpiresMinutes = 60;
     private int refreshExpiresDays = 30;
+
+    private int refreshMaxTotalDays = 365;
 
 
 }

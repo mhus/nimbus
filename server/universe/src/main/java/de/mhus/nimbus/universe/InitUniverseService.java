@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j; // Logging
 import org.springframework.stereotype.Service;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,8 +31,7 @@ public class InitUniverseService {
 
     @PostConstruct
     public void init() {
-        checkAuthToken();
-        checkRefreshToken();
+        checkUniverseJwtToken();
         checkAdminUser();
     }
 
@@ -54,15 +51,8 @@ public class InitUniverseService {
         log.info("Admin user created: {} with Password {}", admin.getId(), password);
     }
 
-    private void checkRefreshToken() {
-        var jwtKeyId = keyService.parseKeyId(USecurityProperties.JWT_REFRESH_TOKEN_KEY_ID).get();
-        if (!keyRepository.findByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
-            createSystemAuthKey(jwtKeyId);
-        }
-    }
-
-    private void checkAuthToken() {
-        var jwtKeyId = keyService.parseKeyId(USecurityProperties.JWT_AUTH_TOKEN_KEY_ID).get();
+    private void checkUniverseJwtToken() {
+        var jwtKeyId = keyService.parseKeyId(USecurityProperties.JWT_TOKEN_KEY_ID).get();
         if (!keyRepository.findByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
             createSystemAuthKey(jwtKeyId);
         }
