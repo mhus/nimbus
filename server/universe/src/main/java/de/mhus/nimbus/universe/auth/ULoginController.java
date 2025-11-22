@@ -77,13 +77,6 @@ public class ULoginController {
         return ResponseEntity.ok(new ULoginResponse(accessToken, refreshToken, user.getId(), user.getUsername()));
     }
 
-    @Operation(summary = "Logout (stateless)", description = "No server action, provided for client flow")
-    @ApiResponse(responseCode = "200", description = "Logout acknowledged")
-    @GetMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        return ResponseEntity.ok().build();
-    }
-
     @Operation(summary = "Refresh JWT token", description = "Requires valid bearer token", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token refreshed"),

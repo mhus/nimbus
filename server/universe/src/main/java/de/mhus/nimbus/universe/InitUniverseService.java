@@ -3,6 +3,7 @@ package de.mhus.nimbus.universe;
 import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
 import de.mhus.nimbus.shared.security.KeyId;
+import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.shared.user.UniverseRoles;
@@ -47,6 +48,7 @@ public class InitUniverseService {
         UUser admin = new UUser("admin","");
         var password = UUID.randomUUID().toString() + UUID.randomUUID().toString();
         admin.setRoles(Set.of(UniverseRoles.ADMIN));
+        admin.setEnabled(true);
         userRepository.save(admin);
         userService.setPassword(admin.getId(), password);
         log.info("Admin user created: {} with Password {}", admin.getId(), password);
@@ -69,8 +71,8 @@ public class InitUniverseService {
     private void createSystemAuthKey(KeyId keyId) {
         try {
             var keyPair = keyService.createECCKeys();
-            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), "public", keyId.id());
-            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), "private", keyId.id());
+            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), KeyKind.PUBLIC.name(), keyId.id());
+            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), KeyKind.PRIVATE.name(), keyId.id());
 
             keyRepository.save(SKey.ofPrivateKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPrivate()));
             keyRepository.save(SKey.ofPublicKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPublic()));

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Implementierung der Provider-Interfaces, die Schluessel aus der SKey-Entity laedt.
+ * Implementierung der Provider-Interfaces, die Schlüssel aus der SKey-Entity lädt.
  */
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,8 @@ public class KeyService {
 
     public static final String KIND_PRIVATE = "private";
     public static final String KIND_PUBLIC = "public";
+    public static final String KIND_SECRET = "secret";
+
     private final SKeyRepository repository;
 
     public Optional<PublicKey> getPublicKey(KeyType type, KeyId id) {
@@ -74,12 +76,13 @@ public class KeyService {
 
     public Optional<SecretKey> getSecretKey(KeyType type, KeyId id) {
         return repository
-                .findByTypeAndKindAndOwnerAndKeyId(type.name(), "symmetric", id.owner(), id.id())
+                .findByTypeAndKindAndOwnerAndKeyId(type.name(), KIND_SECRET, id.owner(), id.id())
                 .flatMap(this::toSecretKey);
     }
 
     public List<SecretKey> getSecretKeysForOwner(KeyType type, String owner) {
-        return repository.findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(type.name(), KIND_PRIVATE, owner)
+        // Bugfix: vorher KIND_PRIVATE, korrekt ist KIND_SECRET ("symmetric")
+        return repository.findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(type.name(), KIND_SECRET, owner)
                 .stream()
                 .filter(sKey -> sKey.isEnabled() && !sKey.isExpired())
                 .map(key -> toSecretKey(key).orElse(null))
@@ -117,7 +120,7 @@ public class KeyService {
     }
 
     public Optional<SecretKey> getLatestSecretKey(KeyType keyType, String owner) {
-        return repository.findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(keyType.name(), "symmetric", owner)
+        return repository.findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(keyType.name(), KIND_SECRET, owner)
                 .stream()
                 .filter(SKey::isEnabled)
                 .filter(k -> !k.isExpired())

@@ -26,7 +26,7 @@ public class SKey {
     // Frei waehlbarer Kontexttyp (z. B. UNIVERSE/REGION/WORLD -> KeyType.name())
     private KeyType type;
 
-    // Art des Schluessels: "public", "private", "symmetric"
+    // Art des Schluessels: "public", "private", "secret" - for symmetric keys
     private KeyKind kind;
 
     // Algorithmus (z. B. RSA, EC, AES, HmacSHA256)
