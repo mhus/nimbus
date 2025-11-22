@@ -27,9 +27,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class KeyService {
 
-    public static final String KIND_PRIVATE = "private";
-    public static final String KIND_PUBLIC = "public";
-    public static final String KIND_SECRET = "secret";
+    public static final String KIND_PRIVATE = KeyKind.PRIVATE.name();
+    public static final String KIND_PUBLIC = KeyKind.PUBLIC.name();
+    public static final String KIND_SECRET = KeyKind.SECRET.name();
 
     private final SKeyRepository repository;
 
@@ -171,5 +171,20 @@ public class KeyService {
         } catch (Exception e) {
             throw new IllegalStateException("EC KeyPair Generierung fehlgeschlagen", e);
         }
+    }
+
+    public KeyId generateKeyId(String owner) {
+        return new KeyId(owner, java.util.UUID.randomUUID().toString());
+    }
+
+    public void storeKeyPair(KeyType keyType, KeyId keyId, KeyPair keyPair) {
+        repository.save(SKey.ofPrivateKey(keyType, keyId.owner(), keyId.id(), keyPair.getPrivate()));
+        repository.save(SKey.ofPublicKey(keyType, keyId.owner(), keyId.id(), keyPair.getPublic()));
+    }
+
+    public void deleteAllForOwner(String owner) {
+        repository.deleteAllByTypeAndKindAndOwner(KeyType.UNIVERSE.name(), KeyKind.PUBLIC.name(), owner);
+        repository.deleteAllByTypeAndKindAndOwner(KeyType.UNIVERSE.name(), KeyKind.PRIVATE.name(), owner);
+        repository.deleteAllByTypeAndKindAndOwner(KeyType.UNIVERSE.name(), KeyKind.SECRET.name(), owner);
     }
 }

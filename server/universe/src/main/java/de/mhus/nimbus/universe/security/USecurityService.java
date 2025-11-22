@@ -16,12 +16,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Kapselt die Business-Logik für Login und Refresh. Controller ruft nur noch diesen Service.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class USecurityService {
 
     private final UUserService userService;
@@ -38,14 +40,24 @@ public class USecurityService {
 
     public AuthResult login(ULoginRequest request) {
         if (request == null || request.username() == null || request.password() == null) {
+            log.warn("Login fehlgeschlagen: fehlende Felder request={}", request);
             return AuthResult.of(HttpStatus.BAD_REQUEST);
         }
         Optional<UUser> userOpt = userService.getByUsername(request.username());
-        if (userOpt.isEmpty()) return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        if (userOpt.isEmpty()) {
+            log.warn("Login fehlgeschlagen: Benutzer '{}' nicht gefunden", request.username());
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        }
         UUser user = userOpt.get();
-        if (!user.isEnabled()) return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        if (!user.isEnabled()) {
+            log.warn("Login fehlgeschlagen: Benutzer '{}' ist deaktiviert", user.getUsername());
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        }
         boolean valid = userService.validatePassword(user.getId(), request.password());
-        if (!valid) return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        if (!valid) {
+            log.warn("Login fehlgeschlagen: Passwort ungültig für Benutzer '{}'", user.getUsername());
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        }
 
         Instant accessExp = Instant.now().plus(securityProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
         Instant refreshExp = Instant.now().plus(securityProperties.getRefreshExpiresDays(), ChronoUnit.DAYS);
@@ -56,40 +68,61 @@ public class USecurityService {
                 Map.of("username", user.getUsername(), "typ","access", "loginAt", loginAtEpoch) :
                 Map.of("username", user.getUsername(), "universe", rolesRaw, "typ","access", "loginAt", loginAtEpoch);
 
-        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, securityProperties.JWT_TOKEN_KEY_ID);
-        if (privateKeyOpt.isEmpty()) return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER);
+        if (privateKeyOpt.isEmpty()) {
+            log.error("Login intern fehlgeschlagen: Kein PrivateKey für UNIVERSE owner='{}' gefunden", USecurityProperties.JWT_TOKEN_KEY_OWNER);
+            return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         PrivateKey privateKey = privateKeyOpt.get();
-        String accessToken = jwtService.createTokenWithSecretKey(privateKey, user.getId(), claims, accessExp);
-        String refreshToken = jwtService.createTokenWithSecretKey(privateKey, user.getId(), Map.of("username", user.getId(), "typ","refresh", "loginAt", loginAtEpoch), refreshExp);
-        return AuthResult.ok(new ULoginResponse(accessToken, refreshToken, user.getId(), user.getUsername()));
+        try {
+            String accessToken = jwtService.createTokenWithSecretKey(privateKey, user.getId(), claims, accessExp);
+            String refreshToken = jwtService.createTokenWithSecretKey(privateKey, user.getId(), Map.of("username", user.getId(), "typ","refresh", "loginAt", loginAtEpoch), refreshExp);
+            log.info("Login erfolgreich für Benutzer '{}'", user.getUsername());
+            return AuthResult.ok(new ULoginResponse(accessToken, refreshToken, user.getId(), user.getUsername()));
+        } catch (Exception e) {
+            log.error("Login Token-Erstellung schlug fehl für Benutzer '{}'", user.getUsername(), e);
+            return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public AuthResult refresh(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            log.warn("Refresh fehlgeschlagen: fehlender oder ungültiger Authorization Header");
             return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
         String refreshToken = authorizationHeader.substring(7).trim();
-        var claimsOpt = jwtService.validateTokenWithPublicKey(refreshToken, KeyType.UNIVERSE, securityProperties.JWT_TOKEN_KEY_ID);
-        if (claimsOpt.isEmpty()) return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        var claimsOpt = jwtService.validateTokenWithPublicKey(refreshToken, KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER);
+        if (claimsOpt.isEmpty()) {
+            log.warn("Refresh fehlgeschlagen: Token ungültig (Signatur/Struktur)");
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        }
         var payload = claimsOpt.get().getPayload();
-        if (!"refresh".equals(payload.get("typ"))) return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        if (!"refresh".equals(payload.get("typ"))) {
+            log.warn("Refresh fehlgeschlagen: falscher typ='{}'", payload.get("typ"));
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        }
 
         String userId = payload.getSubject();
         String username = payload.get("username", String.class);
         UUser user = userService.getById(userId).orElse(null);
-        if (user == null || !user.isEnabled()) return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        if (user == null || !user.isEnabled()) {
+            log.warn("Refresh fehlgeschlagen: Benutzer '{}' nicht gefunden oder deaktiviert", userId);
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
+        }
         String rolesRaw = user.getRolesRaw();
 
         Object loginAtObj = payload.get("loginAt");
         if (!(loginAtObj instanceof Number)) {
-            return AuthResult.of(HttpStatus.UNAUTHORIZED); // fehlender Ursprung
+            log.warn("Refresh fehlgeschlagen: loginAt Claim fehlt oder ungültig");
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
         long loginAtEpoch = ((Number)loginAtObj).longValue();
         Instant loginAt = Instant.ofEpochMilli(loginAtEpoch);
         long maxDays = securityProperties.getRefreshMaxTotalDays();
         Instant cutoff = loginAt.plus(maxDays, ChronoUnit.DAYS);
         if (Instant.now().isAfter(cutoff)) {
-            return AuthResult.of(HttpStatus.UNAUTHORIZED); // Gesamtzeit überschritten
+            log.info("Refresh blockiert: Gesamtlebensdauer überschritten für Benutzer '{}' (loginAt={}, maxDays={})", user.getUsername(), loginAt, maxDays);
+            return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
 
         Instant accessExp = Instant.now().plus(securityProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
@@ -98,11 +131,20 @@ public class USecurityService {
                 Map.of("username", username, "typ","access", "loginAt", loginAtEpoch) :
                 Map.of("username", username, "universe", rolesRaw, "typ","access", "loginAt", loginAtEpoch);
 
-        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, securityProperties.JWT_TOKEN_KEY_ID);
-        if (privateKeyOpt.isEmpty()) return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER);
+        if (privateKeyOpt.isEmpty()) {
+            log.error("Refresh intern fehlgeschlagen: Kein PrivateKey für UNIVERSE owner='{}' gefunden", USecurityProperties.JWT_TOKEN_KEY_OWNER);
+            return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         PrivateKey privateKey = privateKeyOpt.get();
-        String newAccess = jwtService.createTokenWithSecretKey(privateKey, userId, claims, accessExp);
-        String newRefresh = jwtService.createTokenWithSecretKey(privateKey, userId, Map.of("username", userId, "typ","refresh", "loginAt", loginAtEpoch), newRefreshExp);
-        return AuthResult.ok(new ULoginResponse(newAccess, newRefresh, userId, username));
+        try {
+            String newAccess = jwtService.createTokenWithSecretKey(privateKey, userId, claims, accessExp);
+            String newRefresh = jwtService.createTokenWithSecretKey(privateKey, userId, Map.of("username", userId, "typ","refresh", "loginAt", loginAtEpoch), newRefreshExp);
+            log.info("Refresh erfolgreich für Benutzer '{}'", username);
+            return AuthResult.ok(new ULoginResponse(newAccess, newRefresh, userId, username));
+        } catch (Exception e) {
+            log.error("Refresh Token-Erstellung schlug fehl für Benutzer '{}'", username, e);
+            return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

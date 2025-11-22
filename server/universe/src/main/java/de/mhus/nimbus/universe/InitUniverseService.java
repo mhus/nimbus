@@ -52,20 +52,19 @@ public class InitUniverseService {
     }
 
     private void checkUniverseJwtToken() {
-        var jwtKeyId = keyService.parseKeyId(USecurityProperties.JWT_TOKEN_KEY_ID).get();
-        if (!keyRepository.findByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), jwtKeyId.owner(), jwtKeyId.id() ).isPresent()) {
-            createSystemAuthKey(jwtKeyId);
+        if (keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER).isEmpty()) {
+            createSystemAuthKey(USecurityProperties.JWT_TOKEN_KEY_OWNER);
         }
     }
 
-    private void createSystemAuthKey(KeyId keyId) {
+    private void createSystemAuthKey(String owner) {
         try {
             var keyPair = keyService.createECCKeys();
-            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), KeyKind.PUBLIC.name(), keyId.id());
-            keyRepository.deleteByTypeAndKindAndKeyId(KeyType.UNIVERSE.name(), KeyKind.PRIVATE.name(), keyId.id());
+            keyService.deleteAllForOwner(owner);
 
-            keyRepository.save(SKey.ofPrivateKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPrivate()));
-            keyRepository.save(SKey.ofPublicKey(KeyType.UNIVERSE, keyId.owner(), keyId.id(), keyPair.getPublic()));
+            var jwtKeyId = keyService.generateKeyId(owner);
+            keyService.storeKeyPair(KeyType.UNIVERSE, jwtKeyId, keyPair);
+
         } catch (Exception e) {
             log.error("ECC KeyPair-Erstellung fehlgeschlagen: {}", e.getMessage(), e);
         }

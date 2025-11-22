@@ -3,7 +3,7 @@
 ## Entwicklung
 
 - asymetrische keys sollen immer vorrang vor symetrischen haben.
-- Nutze lombok
+- Nutze lombok, nutze @Slf4j, nutze @Getter, @Setter, @RequiredArgsConstructor, @Data, @Builder
 - Zur persistierung wird ausschliesslich JPA mti mongodb verwendet.
 - Zum Cachen / Kurzfristige schnelle Speicher und Messaging wird redis verwendet.
 - Zur Authentifizierung wird JWT verwendet, nur mit ECC Keys.

@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 public class USecurityProperties {
 
-    public static final String JWT_TOKEN_KEY_ID = "universe:jwt-auth-token";
+    public static final String JWT_TOKEN_KEY_OWNER = "jwt-auth-token";
     private int authExpiresMinutes = 60;
     private int refreshExpiresDays = 30;
 
