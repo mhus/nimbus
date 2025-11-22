@@ -29,7 +29,12 @@ class WRegionServiceTest {
         WRegionProperties props = new WRegionProperties(); props.setBaseUrl("http://localhost:8080");
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC"); kpg.initialize(256); KeyPair pair = kpg.generateKeyPair();
         Mockito.when(keyService.getLatestPrivateKey(KeyType.WORLD, "w1")).thenReturn(Optional.of(pair.getPrivate()));
-        Mockito.when(jwtService.createTokenWithSecretKey(pair.getPrivate(), "w1", null, Mockito.any())).thenReturn("TOK");
+        Mockito.when(jwtService.createTokenWithSecretKey(
+                Mockito.eq(pair.getPrivate()),
+                Mockito.eq("w1"),
+                Mockito.isNull(),
+                Mockito.any()
+        )).thenReturn("TOK");
         // Builder mit einfacher RestTemplate Instanz
         RestTemplateBuilder builder = new RestTemplateBuilder();
         WRegionService service = new WRegionService(builder, props, jwtService, keyService);
@@ -41,4 +46,3 @@ class WRegionServiceTest {
         Mockito.verify(jwtService).createTokenWithSecretKey(Mockito.eq(pair.getPrivate()), Mockito.eq("w1"), Mockito.isNull(), Mockito.any());
     }
 }
-

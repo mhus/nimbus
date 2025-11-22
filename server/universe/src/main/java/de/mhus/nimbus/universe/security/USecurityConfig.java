@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class USecurityConfig {
 
-//    @Bean
+    @Bean
     public FilterRegistrationBean<UUserJwtAuthenticationFilter> jwtFilterRegistration(UUserJwtAuthenticationFilter filter) {
         FilterRegistrationBean<UUserJwtAuthenticationFilter> reg = new FilterRegistrationBean<>();
         reg.setFilter(filter);

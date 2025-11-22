@@ -26,7 +26,7 @@ class JwtServiceTest {
         KeyPair pair = kpg.generateKeyPair();
         String token = jwtService.createTokenWithSecretKey(pair.getPrivate(), "subj", Map.of("a","b"), Instant.now().plusSeconds(60));
         assertNotNull(token);
-        assertTrue(token.split("\.").length >= 3, "JWT should have 3 parts");
+        assertTrue(token.split("\\.").length >= 3, "JWT should have 3 parts");
     }
 
     @Test

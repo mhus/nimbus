@@ -6,6 +6,8 @@ import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -16,7 +18,8 @@ import jakarta.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Optional;
 
-// @Component
+@Component
+@RequiredArgsConstructor
 public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -25,12 +28,6 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTH_BASE = "/universe/user/auth";
     private static final String OWNER_SYSTEM = "system"; // Owner für Universe Public Keys
-
-    public UUserJwtAuthenticationFilter(JwtService jwtService, UUserService userService, RequestUserHolder userHolder) {
-        this.jwtService = jwtService;
-        this.userService = userService;
-        this.userHolder = userHolder;
-    }
 
     @Override
     protected void doFilterInternal(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain chain) throws ServletException, IOException {

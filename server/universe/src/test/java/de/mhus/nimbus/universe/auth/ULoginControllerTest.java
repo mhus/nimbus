@@ -35,7 +35,12 @@ class ULoginControllerTest {
         Mockito.when(userService.validatePassword("u1", "pw")).thenReturn(true);
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC"); kpg.initialize(256); KeyPair pair = kpg.generateKeyPair();
         Mockito.when(keyService.getLatestPrivateKey(KeyType.UNIVERSE, "system")).thenReturn(Optional.of(pair.getPrivate()));
-        Mockito.when(jwtService.createTokenWithSecretKey(pair.getPrivate(), "u1", Map.of("username","user1","universe","admin"), Mockito.any())).thenReturn("tok");
+        Mockito.when(jwtService.createTokenWithSecretKey(
+                Mockito.eq(pair.getPrivate()),
+                Mockito.eq("u1"),
+                Mockito.eq(Map.of("username","user1","universe","admin")),
+                Mockito.any()
+        )).thenReturn("tok");
         ResponseEntity<ULoginResponse> resp = controller.login(new ULoginRequest("user1","pw"));
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals("tok", resp.getBody().token());
@@ -59,10 +64,62 @@ class ULoginControllerTest {
         PrivateKey priv = Mockito.mock(PrivateKey.class);
         Mockito.when(priv.getAlgorithm()).thenReturn("EC");
         Mockito.when(keyService.getLatestPrivateKey(KeyType.UNIVERSE, "system")).thenReturn(Optional.of(priv));
-        Mockito.when(jwtService.createTokenWithSecretKey(priv, "u1", Map.of("username","user1","universe","admin"), Mockito.any())).thenReturn("newTok");
+        Mockito.when(jwtService.createTokenWithSecretKey(
+                Mockito.eq(priv),
+                Mockito.eq("u1"),
+                Mockito.eq(Map.of("username","user1","universe","admin")),
+                Mockito.any()
+        )).thenReturn("newTok");
         ResponseEntity<ULoginResponse> resp = controller.refresh("Bearer old");
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals("newTok", resp.getBody().token());
     }
-}
 
+    @Test
+    void login_badRequest_nullPassword() {
+        UUserService userService = Mockito.mock(UUserService.class);
+        JwtService jwtService = Mockito.mock(JwtService.class);
+        USecurityProperties props = new USecurityProperties();
+        KeyService keyService = Mockito.mock(KeyService.class);
+        ULoginController controller = new ULoginController(userService, jwtService, props, keyService);
+        ResponseEntity<ULoginResponse> resp = controller.login(new ULoginRequest("user", null));
+        assertEquals(400, resp.getStatusCodeValue());
+    }
+
+    @Test
+    void login_unauthorized_wrongPassword() {
+        UUserService userService = Mockito.mock(UUserService.class);
+        JwtService jwtService = Mockito.mock(JwtService.class);
+        USecurityProperties props = new USecurityProperties();
+        KeyService keyService = Mockito.mock(KeyService.class);
+        ULoginController controller = new ULoginController(userService, jwtService, props, keyService);
+        UUser user = new UUser(); user.setId("u1"); user.setUsername("user1");
+        Mockito.when(userService.getByUsername("user1")).thenReturn(Optional.of(user));
+        Mockito.when(userService.validatePassword("u1", "wrong")).thenReturn(false);
+        ResponseEntity<ULoginResponse> resp = controller.login(new ULoginRequest("user1", "wrong"));
+        assertEquals(401, resp.getStatusCodeValue());
+    }
+
+    @Test
+    void refresh_missingHeader() {
+        UUserService userService = Mockito.mock(UUserService.class);
+        JwtService jwtService = Mockito.mock(JwtService.class);
+        USecurityProperties props = new USecurityProperties();
+        KeyService keyService = Mockito.mock(KeyService.class);
+        ULoginController controller = new ULoginController(userService, jwtService, props, keyService);
+        ResponseEntity<ULoginResponse> resp = controller.refresh(null);
+        assertEquals(401, resp.getStatusCodeValue());
+    }
+
+    @Test
+    void refresh_invalidToken() {
+        UUserService userService = Mockito.mock(UUserService.class);
+        JwtService jwtService = Mockito.mock(JwtService.class);
+        USecurityProperties props = new USecurityProperties();
+        KeyService keyService = Mockito.mock(KeyService.class);
+        ULoginController controller = new ULoginController(userService, jwtService, props, keyService);
+        Mockito.when(jwtService.validateTokenWithPublicKey("old", KeyType.UNIVERSE, "system")).thenReturn(Optional.empty());
+        ResponseEntity<ULoginResponse> resp = controller.refresh("Bearer old");
+        assertEquals(401, resp.getStatusCodeValue());
+    }
+}

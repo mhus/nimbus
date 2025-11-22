@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -18,8 +19,8 @@ import java.io.IOException;
  * gegen den Regions-Key prüft. Owner des KeyIds ist die regionId aus dem Pfad; die UUID
  * wird aus JwtProperties.regionKeyUuid bezogen (Fallback: Suffix von JwtProperties.keyId nach ':').
  */
-// @Component
-    @RequiredArgsConstructor
+ @Component
+ @RequiredArgsConstructor
 public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BASE_PREFIX = "/universe/region/";

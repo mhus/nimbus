@@ -55,10 +55,19 @@ class UUserJwtAuthenticationFilterTest {
         Mockito.when(jwtService.validateTokenWithPublicKey("token123", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
         UUser user = new UUser(); user.setId("u1"); user.setUsername("user1");
         Mockito.when(userService.getById("u1")).thenReturn(Optional.of(user));
-        filter.doFilterInternal(req, resp, (request, response) -> {});
+        java.util.concurrent.atomic.AtomicReference<CurrentUser> captured = new java.util.concurrent.atomic.AtomicReference<>();
+        filter.doFilter(req, resp, (request, response) -> {
+            assertNotNull(holder.get(), "Holder sollte innerhalb der Chain gesetzt sein");
+            captured.set(holder.get());
+        });
         assertEquals(200, resp.getStatus());
-        assertNotNull(holder.get());
-        assertEquals("u1", holder.get().id());
+        assertNotNull(captured.get(), "CurrentUser wurde nicht erfasst");
+        assertEquals("u1", captured.get().userId());
+        // Nach Filterlauf ist Holder geleert, aber Attribut bleibt bestehen
+        assertNull(holder.get(), "Holder sollte nach Filterlauf geleert sein");
+        Object attr = req.getAttribute("currentUser");
+        assertNotNull(attr, "Request Attribut currentUser sollte gesetzt sein");
+        assertTrue(attr instanceof CurrentUser);
+        assertEquals("u1", ((CurrentUser)attr).userId());
     }
 }
-
