@@ -38,12 +38,19 @@ class ULoginControllerTest {
         Mockito.when(jwtService.createTokenWithSecretKey(
                 Mockito.eq(pair.getPrivate()),
                 Mockito.eq("u1"),
-                Mockito.eq(Map.of("username","user1","universe","admin")),
+                Mockito.eq(Map.of("username","user1","universe","admin", "typ","access")),
                 Mockito.any()
-        )).thenReturn("tok");
+        )).thenReturn("accessTok");
+        Mockito.when(jwtService.createTokenWithSecretKey(
+                Mockito.eq(pair.getPrivate()),
+                Mockito.eq("u1"),
+                Mockito.eq(Map.of("username","u1","typ","refresh")),
+                Mockito.any()
+        )).thenReturn("refreshTok");
         ResponseEntity<ULoginResponse> resp = controller.login(new ULoginRequest("user1","pw"));
         assertEquals(200, resp.getStatusCodeValue());
-        assertEquals("tok", resp.getBody().token());
+        assertEquals("accessTok", resp.getBody().token());
+        assertEquals("refreshTok", resp.getBody().refreshToken());
     }
 
     @Test
@@ -60,19 +67,27 @@ class ULoginControllerTest {
         Mockito.when(jws.getPayload()).thenReturn(claims);
         Mockito.when(claims.getSubject()).thenReturn("u1");
         Mockito.when(claims.get("username", String.class)).thenReturn("user1");
-        Mockito.when(jwtService.validateTokenWithPublicKey("old", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
+        Mockito.when(jwtService.validateTokenWithPublicKey("oldRefresh", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
+        Mockito.when(claims.get("typ")).thenReturn("refresh");
         PrivateKey priv = Mockito.mock(PrivateKey.class);
         Mockito.when(priv.getAlgorithm()).thenReturn("EC");
         Mockito.when(keyService.getLatestPrivateKey(KeyType.UNIVERSE, "system")).thenReturn(Optional.of(priv));
         Mockito.when(jwtService.createTokenWithSecretKey(
                 Mockito.eq(priv),
                 Mockito.eq("u1"),
-                Mockito.eq(Map.of("username","user1","universe","admin")),
+                Mockito.eq(Map.of("username","user1","universe","admin", "typ","access")),
                 Mockito.any()
-        )).thenReturn("newTok");
-        ResponseEntity<ULoginResponse> resp = controller.refresh("Bearer old");
+        )).thenReturn("newAccess");
+        Mockito.when(jwtService.createTokenWithSecretKey(
+                Mockito.eq(priv),
+                Mockito.eq("u1"),
+                Mockito.eq(Map.of("username","u1","typ","refresh")),
+                Mockito.any()
+        )).thenReturn("newRefresh");
+        ResponseEntity<ULoginResponse> resp = controller.refresh("Bearer oldRefresh");
         assertEquals(200, resp.getStatusCodeValue());
-        assertEquals("newTok", resp.getBody().token());
+        assertEquals("newAccess", resp.getBody().token());
+        assertEquals("newRefresh", resp.getBody().refreshToken());
     }
 
     @Test

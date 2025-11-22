@@ -1,4 +1,3 @@
 package de.mhus.nimbus.universe.auth;
 
-public record ULoginResponse(String token, String userId, String username) {}
-
+public record ULoginResponse(String token, String refreshToken, String userId, String username) {}

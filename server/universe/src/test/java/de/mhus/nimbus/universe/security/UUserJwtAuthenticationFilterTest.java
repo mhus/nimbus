@@ -52,6 +52,7 @@ class UUserJwtAuthenticationFilterTest {
         Mockito.when(jws.getPayload()).thenReturn(claims);
         Mockito.when(claims.getSubject()).thenReturn("u1");
         Mockito.when(claims.get("username", String.class)).thenReturn("user1");
+        Mockito.when(claims.get("typ")).thenReturn("access");
         Mockito.when(jwtService.validateTokenWithPublicKey("token123", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
         UUser user = new UUser(); user.setId("u1"); user.setUsername("user1");
         Mockito.when(userService.getById("u1")).thenReturn(Optional.of(user));

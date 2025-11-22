@@ -50,6 +50,11 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         Claims claims = claimsOpt.get().getPayload();
+        Object typ = claims.get("typ");
+        if (typ != null && "refresh".equals(typ)) { // Refresh Tokens nicht für Resource Zugriff
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
         String userId = claims.getSubject();
         String username = claims.get("username", String.class);
         UUser user = userService.getById(userId).orElse(null);

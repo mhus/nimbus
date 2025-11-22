@@ -60,20 +60,17 @@ public class ULoginController {
             return ResponseEntity.status(401).build();
         }
         Instant exp = Instant.now().plus(jwtProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
+        Instant refreshExp = Instant.now().plus(jwtProperties.getRefreshExpiresDays(), ChronoUnit.DAYS);
         String rolesRaw = user.getRolesRaw();
-        Map<String,Object> claims = rolesRaw == null ? Map.of("username", user.getUsername()) : Map.of("username", user.getUsername(), "universe", rolesRaw);
+        Map<String,Object> claims = rolesRaw == null ? Map.of("username", user.getUsername(), "typ","access") : Map.of("username", user.getUsername(), "universe", rolesRaw, "typ","access");
         // Private Key laden
         var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, OWNER_SYSTEM);
         if (privateKeyOpt.isEmpty()) {
             return ResponseEntity.status(500).build();
         }
-        String token = jwtService.createTokenWithSecretKey(
-                privateKeyOpt.get(),
-                user.getId(),
-                claims,
-                exp
-        );
-        return ResponseEntity.ok(new ULoginResponse(token, user.getId(), user.getUsername()));
+        String accessToken = createAccessToken(privateKeyOpt.get(), user.getId(), claims, exp);
+        String refreshToken = createRefreshToken(privateKeyOpt.get(), user.getId(), refreshExp);
+        return ResponseEntity.ok(new ULoginResponse(accessToken, refreshToken, user.getId(), user.getUsername()));
     }
 
     @Operation(summary = "Logout (stateless)", description = "No server action, provided for client flow")
@@ -93,29 +90,37 @@ public class ULoginController {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).build();
         }
-        String oldToken = authorization.substring(7).trim();
+        String refreshToken = authorization.substring(7).trim();
         // Validierung über Public Keys
-        var claimsOpt = jwtService.validateTokenWithPublicKey(oldToken, KeyType.UNIVERSE, OWNER_SYSTEM);
+        var claimsOpt = jwtService.validateTokenWithPublicKey(refreshToken, KeyType.UNIVERSE, OWNER_SYSTEM);
         if (claimsOpt.isEmpty()) {
             return ResponseEntity.status(401).build();
         }
-        var claims = claimsOpt.get().getPayload();
-        String userId = claims.getSubject();
-        String username = claims.get("username", String.class);
+        var payload = claimsOpt.get().getPayload();
+        if ("refresh".equals(payload.get("typ")) == false) {
+            return ResponseEntity.status(401).build();
+        }
+        String userId = payload.getSubject();
+        String username = payload.get("username", String.class);
         UUser user = userService.getById(userId).orElse(null);
         String rolesRaw = user != null ? user.getRolesRaw() : null;
         Instant exp = Instant.now().plus(jwtProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
-        Map<String,Object> newClaims = rolesRaw == null ? Map.of("username", username) : Map.of("username", username, "universe", rolesRaw);
+        Instant newRefreshExp = Instant.now().plus(jwtProperties.getRefreshExpiresDays(), ChronoUnit.DAYS);
+        Map<String,Object> newClaims = rolesRaw == null ? Map.of("username", username, "typ","access") : Map.of("username", username, "universe", rolesRaw, "typ","access");
         var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, OWNER_SYSTEM);
         if (privateKeyOpt.isEmpty()) {
             return ResponseEntity.status(500).build();
         }
-        String newToken = jwtService.createTokenWithSecretKey(
-                privateKeyOpt.get(),
-                userId,
-                newClaims,
-                exp
-        );
-        return ResponseEntity.ok(new ULoginResponse(newToken, userId, username));
+        String newAccessToken = createAccessToken(privateKeyOpt.get(), userId, newClaims, exp);
+        String newRefreshToken = createRefreshToken(privateKeyOpt.get(), userId, newRefreshExp);
+        return ResponseEntity.ok(new ULoginResponse(newAccessToken, newRefreshToken, userId, username));
+    }
+
+    private String createAccessToken(PrivateKey key, String subject, Map<String,Object> claims, Instant exp) {
+        return jwtService.createTokenWithSecretKey(key, subject, claims, exp);
+    }
+
+    private String createRefreshToken(PrivateKey key, String subject, Instant exp) {
+        return jwtService.createTokenWithSecretKey(key, subject, Map.of("username", subject, "typ","refresh"), exp);
     }
 }
