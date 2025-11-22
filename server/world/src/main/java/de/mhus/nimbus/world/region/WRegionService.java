@@ -3,6 +3,8 @@ package de.mhus.nimbus.world.region;
 import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyService;
+import de.mhus.nimbus.shared.security.KeyType;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -23,8 +25,9 @@ public class WRegionService {
     private final RestTemplate rest;
     private final WRegionProperties props;
     private final JwtService jwtService;
+    private final KeyService keyService;
 
-    public WRegionService(RestTemplateBuilder builder, WRegionProperties props, JwtService jwtService) {
+    public WRegionService(RestTemplateBuilder builder, WRegionProperties props, JwtService jwtService, KeyService keyService) {
         this.rest = builder
                 .requestFactory(() -> {
                     var f = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -35,6 +38,7 @@ public class WRegionService {
                 .build();
         this.props = props;
         this.jwtService = jwtService;
+        this.keyService = keyService;
     }
 
     public Optional<RegionWorldResponse> getWorld(String regionId, String worldId) {
@@ -87,13 +91,12 @@ public class WRegionService {
     }
 
     private String createWorldToken(String worldId) {
-        String uuid = props.getWorldKeyUuid();
-        if (uuid == null || uuid.isBlank()) {
-            throw new IllegalStateException("region.client.worldKeyUuid ist nicht konfiguriert");
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.WORLD, worldId);
+        if (privateKeyOpt.isEmpty()) {
+            throw new IllegalStateException("Kein PrivateKey für WORLD owner=" + worldId + " gefunden");
         }
-        String keyId = worldId + ":" + uuid.trim();
         Instant exp = Instant.now().plus(Duration.ofMinutes(5));
-        return jwtService.createTokenWithSecretKey(keyId, worldId, null, exp);
+        return jwtService.createTokenWithSecretKey(privateKeyOpt.get(), worldId, null, exp);
     }
 
     private static <T> T ensureBody(ResponseEntity<T> resp) {

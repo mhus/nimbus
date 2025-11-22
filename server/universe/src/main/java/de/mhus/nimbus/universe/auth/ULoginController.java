@@ -32,6 +32,7 @@ import java.util.Map;
 public class ULoginController {
 
     public static final String BASE_PATH = "/universe/user/auth";
+    private static final String OWNER_SYSTEM = "system"; // Owner für Universe Keys
 
     private final UUserService userService;
     private final JwtService jwtService;
@@ -61,8 +62,13 @@ public class ULoginController {
         Instant exp = Instant.now().plus(jwtProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
         String rolesRaw = user.getRolesRaw();
         Map<String,Object> claims = rolesRaw == null ? Map.of("username", user.getUsername()) : Map.of("username", user.getUsername(), "universe", rolesRaw);
+        // Private Key laden
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, OWNER_SYSTEM);
+        if (privateKeyOpt.isEmpty()) {
+            return ResponseEntity.status(500).build();
+        }
         String token = jwtService.createTokenWithSecretKey(
-                keyService.getLatestPrivateKey(KeyType.UNIVERSE, "system" ).get(),
+                privateKeyOpt.get(),
                 user.getId(),
                 claims,
                 exp
@@ -88,7 +94,8 @@ public class ULoginController {
             return ResponseEntity.status(401).build();
         }
         String oldToken = authorization.substring(7).trim();
-        var claimsOpt = jwtService.validateTokenWithSecretKey(oldToken, jwtProperties.getAuthKeyId());
+        // Validierung über Public Keys
+        var claimsOpt = jwtService.validateTokenWithPublicKey(oldToken, KeyType.UNIVERSE, OWNER_SYSTEM);
         if (claimsOpt.isEmpty()) {
             return ResponseEntity.status(401).build();
         }
@@ -97,10 +104,14 @@ public class ULoginController {
         String username = claims.get("username", String.class);
         UUser user = userService.getById(userId).orElse(null);
         String rolesRaw = user != null ? user.getRolesRaw() : null;
-        Instant exp = Instant.now().plus(jwtProperties.getExpiresMinutes(), ChronoUnit.MINUTES);
+        Instant exp = Instant.now().plus(jwtProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
         Map<String,Object> newClaims = rolesRaw == null ? Map.of("username", username) : Map.of("username", username, "universe", rolesRaw);
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, OWNER_SYSTEM);
+        if (privateKeyOpt.isEmpty()) {
+            return ResponseEntity.status(500).build();
+        }
         String newToken = jwtService.createTokenWithSecretKey(
-                jwtProperties.getAuthKeyId(),
+                privateKeyOpt.get(),
                 userId,
                 newClaims,
                 exp
