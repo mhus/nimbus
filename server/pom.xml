@@ -21,7 +21,9 @@
         <module>shared</module>
         <module>universe</module>
         <module>region</module>
-        <module>world</module>
+        <module>world-shared</module>
+        <module>world-provider</module>
+        <module>world-editor</module>
     </modules>
 
     <properties>
