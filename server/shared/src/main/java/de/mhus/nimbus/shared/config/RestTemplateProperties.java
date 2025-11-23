@@ -11,3 +11,4 @@ public class RestTemplateProperties {
     private long readTimeout = 10000;
 
 }
+
