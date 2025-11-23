@@ -1,19 +1,23 @@
 package de.mhus.nimbus.world.provider.api;
 
+import de.mhus.nimbus.world.provider.security.RegionJwtFilter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(WorldInfoController.class)
 class WorldInfoControllerTest {
 
-    @Autowired
-    private MockMvc mvc;
+    MockMvc mvc;
+
+    @BeforeEach
+    void setup() {
+        mvc = MockMvcBuilders.standaloneSetup(new WorldInfoController()).build();
+    }
 
     @Test
     void infoEndpointOk() throws Exception {
