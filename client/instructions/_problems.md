@@ -15,8 +15,5 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 
 - Nenne parameters in scrawl um in variables
 
-- Wenn bei texturen nur string angegeben wurde (keine komplexe), soll:
-  - backfaceCulling true sein
-  - Transparency auf auf ALPHAT_TEST sein
-????
-
+- Im Material Editor probleme beim setzen von Transparency
+- Im Material Editor beim oeffen des editors, in der liste, item immer neu laden.

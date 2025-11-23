@@ -26,6 +26,8 @@ doSend('world','status', 0 )
 
 doSetShortcut('click0', 'use', {"itemId": "item_1763653693310_uv2m2pu", "wait": 100})
 
-doSend('world','season', 0 )
+doSend('world','season', 0 ) // NONE
+doSend('world','season', 1 ) // WINTER
+doSend('world','season', 3 ) // SUMMER
 
-doSend('world','seasonProgress', 1 )
+doSend('world','seasonProgress', 0.5 )

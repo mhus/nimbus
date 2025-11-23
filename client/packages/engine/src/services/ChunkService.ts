@@ -616,7 +616,7 @@ export class ChunkService {
         for (let i = batchStart; i < batchEnd; i++) {
           const item = itemList[i];
 
-          logger.info('Processing item', {
+          logger.debug('Processing item', {
             index: i,
             itemId: item.id,
             position: item.position,

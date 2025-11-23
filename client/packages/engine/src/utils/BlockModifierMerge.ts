@@ -288,19 +288,12 @@ export function calculateStatus(
     const seasonalStatus = appContext.worldInfo?.seasonStatus;
     const seasonalProgress = appContext.worldInfo?.seasonProgress;
 
-    if (block.blockTypeId == 137) {
-      console.log("SEASON CHECK pre ", newStatus, seasonalStatus, seasonalProgress);
-    }
-
     if (seasonalStatus !== undefined && seasonalProgress !== undefined) {
       // Map seasonalStatus and seasonalProgress to specific seasonal BlockStatus
       const rememberStatus = newStatus;
       switch (seasonalStatus) {
         case SeasonStatus.WINTER:
           newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.WINTER : BlockStatus.AUTUMN;
-          if (block.blockTypeId == 137) {
-            console.log("SEASON CHECK YO WINTER", newStatus, seasonalStatus, seasonalProgress);
-          }
           break;
         case SeasonStatus.SPRING:
           newStatus = switchSeason(seasonalProgress, block.position) ? BlockStatus.SPRING : BlockStatus.WINTER;
@@ -313,9 +306,6 @@ export function calculateStatus(
           break;
         default:
           // do not touch status
-          if (block.blockTypeId == 137) {
-            console.log("SEASON CHECK NOOOOO", JSON.stringify(seasonalStatus), typeof seasonalStatus);
-          }
       }
       if (
           newStatus === BlockStatus.WINTER && !hasWinterStatus ||
@@ -323,17 +313,19 @@ export function calculateStatus(
           newStatus === BlockStatus.SUMMER && !hasSummerStatus ||
           newStatus === BlockStatus.AUTUMN && !hasAutumnStatus
       ){
-        if (block.blockTypeId == 137) {
-        }
         newStatus = rememberStatus;
       }
     }
   }
-  if (block.blockTypeId == 137) {
-    console.log("SEASON CHECK post ", newStatus);
-  }
   return newStatus;
 }
+
+/*
+Adjusted switchSeason to slow mid progress: added SEASON_PROGRESS_CURVE_POWER = 2.2 and compare hash threshold against eased = progress^power. At progress 0.5 only about 0.5^2.2 ≈ 0.22 of blocks switch now. You can tune the power:
+Higher (>2.2) = even slower early fill
+Lower (>1) = faster If you prefer another curve (e.g. smoothstep, logistic) say so. Done.
+ */
+const SEASON_PROGRESS_CURVE_POWER = 2.2; // >1 slows early fill (p=0.5 -> ~0.5^power fraction)
 
 export function switchSeason(
     progress: number,
@@ -344,25 +336,24 @@ export function switchSeason(
   if (progress >= 1) return true;
   const p = progress; // already clamped
 
+  // Apply easing to slow early adoption (power > 1 => ease-in)
+  const eased = Math.pow(p, SEASON_PROGRESS_CURVE_POWER);
+
   // Deterministic pseudo-random in [0,1) based on integer-ish position.
-  // Use a simple hash + sine fract approach for uniform distribution.
   const x = position.x;
   const y = position.y;
   const z = position.z;
-
-  // Mix coordinates (avoid floating point noise skew by rounding lightly)
   const xi = Math.floor(x * 1000);
   const yi = Math.floor(y * 1000);
   const zi = Math.floor(z * 1000);
 
-  let n = xi * 374761393 + yi * 668265263 + zi * 2147483647; // large primes
-  n = (n ^ (n >> 13)) >>> 0; // mix bits
-  // Final hash transform
+  let n = xi * 374761393 + yi * 668265263 + zi * 2147483647;
+  n = (n ^ (n >> 13)) >>> 0;
   n = (n * 1274126177) >>> 0;
-  const rand = (n & 0xffffffff) / 0xffffffff; // [0,1]
+  const rand = (n & 0xffffffff) / 0xffffffff;
 
-  // A position becomes true when progress surpasses its threshold.
-  return p >= rand;
+  // Position switches when eased progress surpasses its threshold.
+  return eased >= rand;
 }
 
 /**
