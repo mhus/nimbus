@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.region;
 import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -91,7 +92,7 @@ public class WRegionService {
     }
 
     private String createWorldToken(String worldId) {
-        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.WORLD, worldId);
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.WORLD, KeyIntent.of(worldId, KeyIntent.MAIN_JWT_TOKEN));
         if (privateKeyOpt.isEmpty()) {
             throw new IllegalStateException("Kein PrivateKey für WORLD owner=" + worldId + " gefunden");
         }

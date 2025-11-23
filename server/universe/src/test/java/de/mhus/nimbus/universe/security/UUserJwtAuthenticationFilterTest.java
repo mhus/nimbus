@@ -2,6 +2,7 @@ package de.mhus.nimbus.universe.security;
 
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.universe.UniverseProperties;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
 import io.jsonwebtoken.Claims;
@@ -53,7 +54,7 @@ class UUserJwtAuthenticationFilterTest {
         Mockito.when(claims.getSubject()).thenReturn("u1");
         Mockito.when(claims.get("username", String.class)).thenReturn("user1");
         Mockito.when(claims.get("typ")).thenReturn("access");
-        Mockito.when(jwtService.validateTokenWithPublicKey("token123", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
+        Mockito.when(jwtService.validateTokenWithPublicKey("token123", KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT)).thenReturn(Optional.of(jws));
         UUser user = new UUser(); user.setId("u1"); user.setUsername("user1");
         Mockito.when(userService.getById("u1")).thenReturn(Optional.of(user));
         java.util.concurrent.atomic.AtomicReference<CurrentUser> captured = new java.util.concurrent.atomic.AtomicReference<>();
@@ -83,7 +84,7 @@ class UUserJwtAuthenticationFilterTest {
         Mockito.when(claims.getSubject()).thenReturn("u2");
         Mockito.when(claims.get("username", String.class)).thenReturn("user2");
         Mockito.when(claims.get("typ")).thenReturn("access");
-        Mockito.when(jwtService.validateTokenWithPublicKey("tokenABC", KeyType.UNIVERSE, "system")).thenReturn(Optional.of(jws));
+        Mockito.when(jwtService.validateTokenWithPublicKey("tokenABC", KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT)).thenReturn(Optional.of(jws));
         UUser user = new UUser(); user.setId("u2"); user.setUsername("user2"); user.setEnabled(false);
         Mockito.when(userService.getById("u2")).thenReturn(Optional.of(user));
         filter.doFilter(req, resp, (r, s) -> fail("Chain sollte nicht erreicht werden"));

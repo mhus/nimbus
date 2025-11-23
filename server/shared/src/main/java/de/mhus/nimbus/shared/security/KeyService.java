@@ -155,7 +155,12 @@ public class KeyService {
         String owner = parts[0].trim();
         String intent = parts[1].trim();
         String id = parts[2].trim();
-        return Optional.of(KeyId.of(owner, intent, id));
+        if (owner.isEmpty() || intent.isEmpty() || id.isEmpty()) return Optional.empty();
+        try {
+            return Optional.of(KeyId.of(owner, intent, id));
+        } catch (IllegalArgumentException ex) {
+            return Optional.empty();
+        }
     }
 
     public KeyPair createECCKeys() {

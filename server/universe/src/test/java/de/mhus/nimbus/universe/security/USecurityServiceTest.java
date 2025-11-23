@@ -70,7 +70,7 @@ class USecurityServiceTest {
         Mockito.when(claimsValid.get("username", String.class)).thenReturn("user1");
         Mockito.when(claimsValid.getSubject()).thenReturn("u1");
         Mockito.when(claimsValid.get("loginAt")).thenReturn(loginAt);
-        Mockito.when(jwt.validateTokenWithPublicKey("good", KeyType.UNIVERSE, UniverseProperties.JWT_TOKEN_KEY_OWNER)).thenReturn(Optional.of(jwsValid));
+        Mockito.when(jwt.validateTokenWithPublicKey("good", KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT)).thenReturn(Optional.of(jwsValid));
 
         // JWS/Claims für abgelaufenen Refresh (nach max Tage)
         @SuppressWarnings("unchecked") Jws<Claims> jwsExpired = Mockito.mock(Jws.class);
@@ -81,7 +81,7 @@ class USecurityServiceTest {
         Mockito.when(claimsExpired.get("username", String.class)).thenReturn("user1");
         Mockito.when(claimsExpired.getSubject()).thenReturn("u1");
         Mockito.when(claimsExpired.get("loginAt")).thenReturn(oldLoginAt);
-        Mockito.when(jwt.validateTokenWithPublicKey("expired", KeyType.UNIVERSE, UniverseProperties.JWT_TOKEN_KEY_OWNER)).thenReturn(Optional.of(jwsExpired));
+        Mockito.when(jwt.validateTokenWithPublicKey("expired", KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT)).thenReturn(Optional.of(jwsExpired));
 
         Mockito.when(jwt.createTokenWithSecretKey(Mockito.eq(privateKey), Mockito.eq("u1"), Mockito.anyMap(), Mockito.any()))
                 .thenReturn("newAccess", "newRefresh");
