@@ -39,8 +39,9 @@ class JwtServiceTest {
         PrivateKey priv = pair.getPrivate();
         PublicKey pub = pair.getPublic();
         String token = jwtService.createTokenWithSecretKey(priv, "user1", Map.of("x","y"), Instant.now().plusSeconds(60));
-        Mockito.when(keyService.getPublicKeysForOwner(KeyType.UNIVERSE, "system")).thenReturn(java.util.List.of(pub));
-        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, "system");
+        KeyIntent intent = KeyIntent.of("system","auth");
+        Mockito.when(keyService.getPublicKeysForIntent(KeyType.UNIVERSE, intent)).thenReturn(java.util.List.of(pub));
+        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, intent);
         assertTrue(claimsOpt.isPresent());
         assertEquals("user1", claimsOpt.get().getPayload().getSubject());
     }
@@ -49,13 +50,13 @@ class JwtServiceTest {
     void validateTokenWithPublicKey_invalidSignature_returnsEmpty() throws Exception {
         KeyService keyService = Mockito.mock(KeyService.class);
         JwtService jwtService = new JwtService(keyService);
-        // create token with one key, verify with different key
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
         kpg.initialize(256);
         KeyPair signer = kpg.generateKeyPair();
         String token = jwtService.createTokenWithSecretKey(signer.getPrivate(), "userX", null, Instant.now().plusSeconds(60));
         KeyPair other = kpg.generateKeyPair();
-        Mockito.when(keyService.getPublicKeysForOwner(KeyType.UNIVERSE, "system")).thenReturn(java.util.List.of(other.getPublic()));
-        assertTrue(jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, "system").isEmpty());
+        KeyIntent intent = KeyIntent.of("system","auth");
+        Mockito.when(keyService.getPublicKeysForIntent(KeyType.UNIVERSE, intent)).thenReturn(java.util.List.of(other.getPublic()));
+        assertTrue(jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, intent).isEmpty());
     }
 }
