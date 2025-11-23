@@ -1,0 +1,35 @@
+package de.mhus.nimbus.world.shared.session;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
+import java.time.Instant;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class WSession {
+    private String id; // 60 zufällige alphanumerische Zeichen
+    private WSessionStatus status;
+    private String worldId;
+    private String regionId;
+    private String userId;
+    private String characterId;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant expireAt;
+
+    public void touchCreate() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    public void touchUpdate() {
+        updatedAt = Instant.now();
+    }
+}
+
