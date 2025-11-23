@@ -109,9 +109,9 @@ public class JwtService {
      * @param token the JWT token string
      * @return optional containing the parsed claims if valid; empty if validation fails
      */
-    public Optional<Jws<Claims>> validateTokenWithPublicKey(@NonNull String token, KeyType type, @NonNull String owner) {
+    public Optional<Jws<Claims>> validateTokenWithPublicKey(@NonNull String token, KeyType type, @NonNull KeyIntent intent) {
 
-        for (var publicKey : keyService.getPublicKeysForOwner(type, owner)) {
+        for (var publicKey : keyService.getPublicKeysForIntent(type, intent)) {
             Optional<Jws<Claims>> result = parseToken(token, publicKey);
             if (result.isPresent()) return result;
         }

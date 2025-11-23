@@ -15,7 +15,7 @@ public interface SKeyRepository extends MongoRepository<SKey, String> {
     Optional<SKey> findByTypeAndKindAndOwnerAndKeyId(String type, String kind, String owner, String keyId);
     void deleteByTypeAndKindAndOwnerAndKeyId(String type, String kind, String owner, String keyId);
 
-    List<SKey> findAllByTypeAndKindAndOwnerOrderByCreatedAtDesc(String type, String kind, String owner);
+    List<SKey> findAllByTypeAndKindAndOwnerAndIntentOrderByCreatedAtDesc(String type, String kind, String owner, String intent);
 
     List<SKey> findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(String type, String kind, String owner);
 

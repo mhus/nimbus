@@ -1,13 +1,8 @@
 package de.mhus.nimbus.universe.auth;
 
-import de.mhus.nimbus.universe.security.USecurityProperties;
-import de.mhus.nimbus.universe.user.UUserService;
-import de.mhus.nimbus.universe.user.UUser;
-import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.universe.security.USecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;

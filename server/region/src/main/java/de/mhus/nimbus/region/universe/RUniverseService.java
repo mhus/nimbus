@@ -1,14 +1,14 @@
 package de.mhus.nimbus.region.universe;
 
+import de.mhus.nimbus.region.RegionProperties;
 import de.mhus.nimbus.region.registry.RRegionService;
 import de.mhus.nimbus.shared.dto.universe.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.universe.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -27,7 +27,7 @@ import java.util.Optional;
 public class RUniverseService {
 
     private final RestTemplate rest;
-    private final RUniverseProperties props;
+    private final RegionProperties props;
     private final JwtService jwtService;
     private final KeyService keyService;
     private final RRegionService regionService;
@@ -69,7 +69,7 @@ public class RUniverseService {
     // ------------------------------------------------------------
 
     private String worldUrl(String regionId, String worldId) {
-        String base = props.getBaseUrl();
+        String base = props.getUniverseBaseUrl();
         if (base.endsWith("/")) base = base.substring(0, base.length()-1);
         return base + "/universe/region/" + regionId + "/world/" + worldId;
     }
@@ -82,15 +82,15 @@ public class RUniverseService {
     }
 
     private String createRegionToken(String regionId) {
-        String uuid = props.getRegionKeyUuid();
-        if (uuid == null || uuid.isBlank()) {
-            throw new IllegalStateException("universe.client.regionKeyUuid ist nicht konfiguriert");
+        var regionName = regionService.getRegionNameById(regionId);
+        if (regionName.isEmpty()) {
+            throw new IllegalStateException("Unbekannte Region-ID: " + regionId);
         }
-        String keyId = regionId + ":" + uuid.trim();
+        var intent = KeyIntent.of(regionName.get(), KeyIntent.MAIN_JWT_TOKEN);
         // Subjekt beliebig; wir setzen auf die regionId. Kurzlebiges Token (5 Minuten).
         Instant exp = Instant.now().plus(Duration.ofMinutes(5));
-        var key = keyService.getLatestPrivateKey(KeyType.UNIVERSE, keyId)
-                .orElseThrow(() -> new IllegalStateException("Kein Private Key für Region-Token gefunden: " + keyId));
+        var key = keyService.getLatestPrivateKey(KeyType.UNIVERSE, intent)
+                .orElseThrow(() -> new IllegalStateException("Kein Private Key für Region-Token gefunden: " + intent));
         return jwtService.createTokenWithSecretKey(key, regionId, null, exp);
     }
 

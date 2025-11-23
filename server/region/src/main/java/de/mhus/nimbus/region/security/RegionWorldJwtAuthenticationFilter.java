@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,17 +20,12 @@ import java.util.Optional;
  * und die UUID wird aus RegionJwtProperties.worldKeyUuid entnommen.
  */
 @Component
+@RequiredArgsConstructor
 public class RegionWorldJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BASE_PREFIX = "/region/"; // erwartet .../region/{regionId}/world/{worldId}
 
     private final JwtService jwtService;
-    private final RegionJwtProperties props;
-
-    public RegionWorldJwtAuthenticationFilter(JwtService jwtService, RegionJwtProperties props) {
-        this.jwtService = jwtService;
-        this.props = props;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -52,11 +48,6 @@ public class RegionWorldJwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String token = auth.substring(7).trim();
 
-        String uuid = props.getWorldKeyUuid();
-        if (uuid == null || uuid.isBlank()) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            return;
-        }
 
         // TODO
 

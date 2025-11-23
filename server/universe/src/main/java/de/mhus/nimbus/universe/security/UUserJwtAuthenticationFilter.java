@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe.security;
 
+import de.mhus.nimbus.universe.UniverseProperties;
 import de.mhus.nimbus.universe.user.UUserService;
 import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.shared.security.JwtService;
@@ -44,7 +45,7 @@ public class UUserJwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String token = auth.substring(7).trim();
         // Nutzung von Public Keys statt Secret Keys
-        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, OWNER_SYSTEM);
+        Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT);
         if (claimsOpt.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

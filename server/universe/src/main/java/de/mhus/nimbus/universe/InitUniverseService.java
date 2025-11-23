@@ -1,13 +1,9 @@
 package de.mhus.nimbus.universe;
 
-import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
-import de.mhus.nimbus.shared.security.KeyId;
-import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.shared.user.UniverseRoles;
-import de.mhus.nimbus.universe.security.USecurityProperties;
 import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.universe.user.UUserRepository;
 import de.mhus.nimbus.universe.user.UUserService;
@@ -52,8 +48,8 @@ public class InitUniverseService {
     }
 
     private void checkUniverseJwtToken() {
-        if (keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.MAIN_JWT_TOKEN_INTENT).isEmpty()) {
-            keyService.createSystemAuthKey(KeyType.UNIVERSE, USecurityProperties.MAIN_JWT_TOKEN_INTENT);
+        if (keyService.getLatestPrivateKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT).isEmpty()) {
+            keyService.createSystemAuthKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT);
         }
     }
 

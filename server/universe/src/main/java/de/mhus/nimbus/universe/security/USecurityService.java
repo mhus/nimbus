@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe.security;
 
+import de.mhus.nimbus.universe.UniverseProperties;
 import de.mhus.nimbus.universe.auth.ULoginRequest;
 import de.mhus.nimbus.universe.auth.ULoginResponse;
 import de.mhus.nimbus.universe.user.UUserService;
@@ -28,7 +29,7 @@ public class USecurityService {
 
     private final UUserService userService;
     private final JwtService jwtService;
-    private final USecurityProperties securityProperties;
+    private final UniverseProperties securityProperties;
     private final KeyService keyService;
 
     /** Ergebnis-Kapsel mit HTTP-Status und optionalem Payload. */
@@ -59,8 +60,8 @@ public class USecurityService {
             return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
 
-        Instant accessExp = Instant.now().plus(securityProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
-        Instant refreshExp = Instant.now().plus(securityProperties.getRefreshExpiresDays(), ChronoUnit.DAYS);
+        Instant accessExp = Instant.now().plus(securityProperties.getSecurityAuthExpiresMinutes(), ChronoUnit.MINUTES);
+        Instant refreshExp = Instant.now().plus(securityProperties.getSecurityRefreshExpiresDays(), ChronoUnit.DAYS);
         Instant loginAt = Instant.now();
         long loginAtEpoch = loginAt.toEpochMilli();
         String rolesRaw = user.getRolesRaw();
@@ -68,9 +69,9 @@ public class USecurityService {
                 Map.of("username", user.getUsername(), "typ","access", "loginAt", loginAtEpoch) :
                 Map.of("username", user.getUsername(), "universe", rolesRaw, "typ","access", "loginAt", loginAtEpoch);
 
-        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER);
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT);
         if (privateKeyOpt.isEmpty()) {
-            log.error("Login intern fehlgeschlagen: Kein PrivateKey für UNIVERSE owner='{}' gefunden", USecurityProperties.JWT_TOKEN_KEY_OWNER);
+            log.error("Login intern fehlgeschlagen: Kein PrivateKey für UNIVERSE owner='{}' gefunden", UniverseProperties.MAIN_JWT_TOKEN_INTENT);
             return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         PrivateKey privateKey = privateKeyOpt.get();
@@ -91,7 +92,7 @@ public class USecurityService {
             return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
         String refreshToken = authorizationHeader.substring(7).trim();
-        var claimsOpt = jwtService.validateTokenWithPublicKey(refreshToken, KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER);
+        var claimsOpt = jwtService.validateTokenWithPublicKey(refreshToken, KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT);
         if (claimsOpt.isEmpty()) {
             log.warn("Refresh fehlgeschlagen: Token ungültig (Signatur/Struktur)");
             return AuthResult.of(HttpStatus.UNAUTHORIZED);
@@ -118,22 +119,22 @@ public class USecurityService {
         }
         long loginAtEpoch = ((Number)loginAtObj).longValue();
         Instant loginAt = Instant.ofEpochMilli(loginAtEpoch);
-        long maxDays = securityProperties.getRefreshMaxTotalDays();
+        long maxDays = securityProperties.getSecurityRefreshMaxTotalDays();
         Instant cutoff = loginAt.plus(maxDays, ChronoUnit.DAYS);
         if (Instant.now().isAfter(cutoff)) {
             log.info("Refresh blockiert: Gesamtlebensdauer überschritten für Benutzer '{}' (loginAt={}, maxDays={})", user.getUsername(), loginAt, maxDays);
             return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
 
-        Instant accessExp = Instant.now().plus(securityProperties.getAuthExpiresMinutes(), ChronoUnit.MINUTES);
-        Instant newRefreshExp = Instant.now().plus(securityProperties.getRefreshExpiresDays(), ChronoUnit.DAYS);
+        Instant accessExp = Instant.now().plus(securityProperties.getSecurityAuthExpiresMinutes(), ChronoUnit.MINUTES);
+        Instant newRefreshExp = Instant.now().plus(securityProperties.getSecurityRefreshExpiresDays(), ChronoUnit.DAYS);
         Map<String,Object> claims = rolesRaw == null ?
                 Map.of("username", username, "typ","access", "loginAt", loginAtEpoch) :
                 Map.of("username", username, "universe", rolesRaw, "typ","access", "loginAt", loginAtEpoch);
 
-        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER);
+        var privateKeyOpt = keyService.getLatestPrivateKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT);
         if (privateKeyOpt.isEmpty()) {
-            log.error("Refresh intern fehlgeschlagen: Kein PrivateKey für UNIVERSE owner='{}' gefunden", USecurityProperties.JWT_TOKEN_KEY_OWNER);
+            log.error("Refresh intern fehlgeschlagen: Kein PrivateKey für UNIVERSE owner='{}' gefunden", UniverseProperties.MAIN_JWT_TOKEN_INTENT);
             return AuthResult.of(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         PrivateKey privateKey = privateKeyOpt.get();

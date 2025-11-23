@@ -16,23 +16,23 @@ public class RRegionService {
         this.repository = repository;
     }
 
-    public RRegion create(String name, String apiUrl, String publicSignKey, String maintainers) {
+    public RRegion create(String name, String apiUrl, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        RRegion q = new RRegion(name, apiUrl, publicSignKey);
+        RRegion q = new RRegion(name, apiUrl);
         q.setMaintainers(maintainers);
         return repository.save(q);
     }
 
     // Bestehende create-Methode bleibt für Abwärtskompatibilität
-    public RRegion create(String name, String apiUrl, String publicSignKey) {
+    public RRegion create(String name, String apiUrl) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        RRegion q = new RRegion(name, apiUrl, publicSignKey);
+        RRegion q = new RRegion(name, apiUrl);
         return repository.save(q);
     }
 
@@ -48,7 +48,7 @@ public class RRegionService {
         return repository.findAllIds();
     }
 
-    public RRegion update(String id, String name, String apiUrl, String publicSignKey, String maintainers) {
+    public RRegion update(String id, String name, String apiUrl, String maintainers) {
         RRegion existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
@@ -59,7 +59,6 @@ public class RRegionService {
             if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
             existing.setApiUrl(apiUrl);
         }
-        if (publicSignKey != null) existing.setPublicSignKey(publicSignKey);
         if (maintainers != null) existing.setMaintainers(maintainers);
         return repository.save(existing);
     }
@@ -78,5 +77,9 @@ public class RRegionService {
 
     public void delete(String id) {
         repository.deleteById(id);
+    }
+
+    public Optional<String>  getRegionNameById(String regionId) {
+        return repository.getRegionNameByIdAndEnabled(regionId, true);
     }
 }

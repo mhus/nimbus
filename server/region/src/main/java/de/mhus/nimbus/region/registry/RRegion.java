@@ -15,20 +15,18 @@ public class RRegion {
     @Indexed(unique = true)
     private String name;
 
-    @Indexed(unique = true)
     private String apiUrl;
 
-    private String publicSignKey;
+    private boolean enabled = true;
 
     // Komma-separierte Liste von User-IDs mit MAINTAINER-Rechten für diesen Regionen
     private String maintainers; // z.B. "u1,u2,u3"
 
     public RRegion() {}
 
-    public RRegion(String name, String apiUrl, String publicSignKey) {
+    public RRegion(String name, String apiUrl) {
         this.name = name;
         this.apiUrl = apiUrl;
-        this.publicSignKey = publicSignKey;
     }
 
     public void setMaintainers(String maintainers) { this.maintainers = (maintainers==null||maintainers.isBlank())?null:maintainers.trim(); }

@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region.universe;
+package de.mhus.nimbus.region;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,13 +8,13 @@ import org.springframework.stereotype.Component;
  * Konfiguration für den Zugriff vom Region-Modul auf den Universe-Server.
  */
 @Component
-@ConfigurationProperties(prefix = "universe.client")
+@ConfigurationProperties(prefix = "region")
 @Data
-public class RUniverseProperties {
+public class RegionProperties {
 
     /**
      * Basis-URL des Universe-Servers, z. B. "http://localhost:8080".
      */
-    private String baseUrl = "http://localhost:8080";
+    private String universeBaseUrl = "http://localhost:9040";
 
 }

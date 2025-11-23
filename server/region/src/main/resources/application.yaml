@@ -5,3 +5,14 @@ spring:
     mongodb:
       uri: mongodb://root:example@localhost:27017/region?authSource=admin
       database: Region
+
+region:
+
+
+server:
+  port: 9041
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: true
+    include-stacktrace: always

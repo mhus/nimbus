@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe;
 
+import de.mhus.nimbus.shared.SharedProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -7,7 +8,6 @@ import org.springframework.context.annotation.ReflectiveScan;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import de.mhus.nimbus.universe.security.USecurityProperties;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.info.License;
 @ReflectiveScan(basePackages = {"de.mhus.nimbus.universe", "de.mhus.nimbus.shared"})
 @ComponentScan(basePackages = {"de.mhus.nimbus.universe", "de.mhus.nimbus.shared"})
 @EnableMongoRepositories(basePackages = {"de.mhus.nimbus.universe", "de.mhus.nimbus.shared"})
-@EnableConfigurationProperties(USecurityProperties.class)
+@EnableConfigurationProperties({UniverseProperties.class, SharedProperties.class})
 @OpenAPIDefinition(info = @Info(title = "Universe API", version = "v1", description = "API for user, favorites and auth", contact = @Contact(name="Nimbus"), license = @License(name="Apache-2.0")))
 public class UniverseApplication {
 

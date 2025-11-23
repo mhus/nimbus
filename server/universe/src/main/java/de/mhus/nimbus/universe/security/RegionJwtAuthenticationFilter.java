@@ -1,8 +1,10 @@
 package de.mhus.nimbus.universe.security;
 
+import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.universe.UniverseProperties;
 import de.mhus.nimbus.universe.region.URegionService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,7 +28,7 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BASE_PREFIX = "/universe/region/";
 
     private final JwtService jwtService;
-    private final USecurityProperties jwtProperties;
+    private final UniverseProperties jwtProperties;
     private final URegionService regionService;
     private final KeyService keyService;
 
@@ -58,7 +60,7 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
         }
         // validate token
         var token = auth.substring(7).trim();
-        var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, regionId );
+        var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, KeyIntent.of(regionId, KeyIntent.MAIN_JWT_TOKEN));
         if (claims.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

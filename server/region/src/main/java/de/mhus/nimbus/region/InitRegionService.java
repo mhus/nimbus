@@ -27,14 +27,14 @@ public class InitRegionService {
 
     private void checkRegionJwtTokens() {
         for (var regionId : regionService.listAllIds()) {
-            regionService.getById(regionId).ifPresent(
-                    region -> checkRegionJwtToken(region)
+            regionService.getRegionNameById(regionId).ifPresent(
+                    regionName -> checkRegionJwtToken(regionName)
             );
         }
     }
 
-    private void checkRegionJwtToken(RRegion region) {
-        var intent = KeyIntent.of(region.getName(), KeyIntent.MAIN_JWT_TOKEN );
+    private void checkRegionJwtToken(String regionName) {
+        var intent = KeyIntent.of(regionName, KeyIntent.MAIN_JWT_TOKEN );
         if (keyService.getLatestPrivateKey(KeyType.REGION, intent).isEmpty()) {
             keyService.createSystemAuthKey(KeyType.REGION, intent);
         }
