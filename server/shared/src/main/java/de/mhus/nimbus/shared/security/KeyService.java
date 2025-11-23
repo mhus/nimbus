@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -25,11 +26,12 @@ import java.util.Optional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class KeyService {
 
-    public static final String KIND_PRIVATE = KeyKind.PRIVATE.name();
-    public static final String KIND_PUBLIC = KeyKind.PUBLIC.name();
-    public static final String KIND_SECRET = KeyKind.SECRET.name();
+    private static final String KIND_PRIVATE = KeyKind.PRIVATE.name();
+    private static final String KIND_PUBLIC = KeyKind.PUBLIC.name();
+    private static final String KIND_SECRET = KeyKind.SECRET.name();
 
     private final SKeyRepository repository;
 
@@ -110,8 +112,8 @@ public class KeyService {
         }
     }
 
-    public Optional<PrivateKey> getLatestPrivateKey(KeyType keyType, String owner) {
-        return repository.findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(keyType.name(), KIND_PRIVATE, owner)
+    public Optional<PrivateKey> getLatestPrivateKey(KeyType keyType, KeyIntent intent) {
+        return repository.findTop1ByTypeAndKindAndOwnerAndIntentOrderByCreatedAtDesc(keyType.name(), KIND_PRIVATE, intent.owner(), intent.intent())
                 .stream()
                 .filter(SKey::isEnabled)
                 .filter(k -> !k.isExpired())
@@ -148,18 +150,12 @@ public class KeyService {
         if (keyId == null) return Optional.empty();
         String trimmed = keyId.trim();
         if (trimmed.isEmpty()) return Optional.empty();
-        int sep = trimmed.indexOf(':');
-        if (sep <= 0 || sep >= trimmed.length() - 1) {
-            return Optional.empty();
-        }
-        String owner = trimmed.substring(0, sep).trim();
-        String uuid = trimmed.substring(sep + 1).trim();
-        if (owner.isEmpty() || uuid.isEmpty()) return Optional.empty();
-        try {
-            return Optional.of(KeyId.of(owner, uuid));
-        } catch (IllegalArgumentException ex) {
-            return Optional.empty();
-        }
+        String[] parts = trimmed.split(":", 3);
+        if (parts.length != 3) return Optional.empty();
+        String owner = parts[0].trim();
+        String intent = parts[1].trim();
+        String id = parts[2].trim();
+        return Optional.of(KeyId.of(owner, intent, id));
     }
 
     public KeyPair createECCKeys() {
@@ -173,18 +169,31 @@ public class KeyService {
         }
     }
 
-    public KeyId generateKeyId(String owner) {
-        return new KeyId(owner, java.util.UUID.randomUUID().toString());
+    public KeyId generateKeyId(KeyIntent intent) {
+        return new KeyId(intent, java.util.UUID.randomUUID().toString());
     }
 
     public void storeKeyPair(KeyType keyType, KeyId keyId, KeyPair keyPair) {
-        repository.save(SKey.ofPrivateKey(keyType, keyId.owner(), keyId.id(), keyPair.getPrivate()));
-        repository.save(SKey.ofPublicKey(keyType, keyId.owner(), keyId.id(), keyPair.getPublic()));
+        repository.save(SKey.ofPrivateKey(keyType, keyId, keyPair.getPrivate()));
+        repository.save(SKey.ofPublicKey(keyType, keyId, keyPair.getPublic()));
     }
 
-    public void deleteAllForOwner(String owner) {
-        repository.deleteAllByTypeAndKindAndOwner(KeyType.UNIVERSE.name(), KeyKind.PUBLIC.name(), owner);
-        repository.deleteAllByTypeAndKindAndOwner(KeyType.UNIVERSE.name(), KeyKind.PRIVATE.name(), owner);
-        repository.deleteAllByTypeAndKindAndOwner(KeyType.UNIVERSE.name(), KeyKind.SECRET.name(), owner);
+    public void deleteAllForIntent(KeyIntent intent) {
+        repository.deleteAllByTypeAndKindAndOwnerAndIntent(KeyType.UNIVERSE.name(), KeyKind.PUBLIC.name(), intent.owner(), intent.intent());
+        repository.deleteAllByTypeAndKindAndOwnerAndIntent(KeyType.UNIVERSE.name(), KeyKind.PRIVATE.name(), intent.owner(), intent.intent());
+        repository.deleteAllByTypeAndKindAndOwnerAndIntent(KeyType.UNIVERSE.name(), KeyKind.SECRET.name(), intent.owner(), intent.intent());
+    }
+
+    public void createSystemAuthKey(KeyType type, KeyIntent intent) {
+        try {
+            var keyPair = createECCKeys();
+            deleteAllForIntent(intent);
+
+            var jwtKeyId = generateKeyId(intent);
+            storeKeyPair(type, jwtKeyId, keyPair);
+
+        } catch (Exception e) {
+            log.error("ECC KeyPair-Erstellung fehlgeschlagen: {}", e.getMessage(), e);
+        }
     }
 }

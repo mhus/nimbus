@@ -8,48 +8,48 @@ import org.springframework.validation.annotation.Validated;
 
 @Service
 @Validated
-public class RegionService {
+public class RRegionService {
 
-    private final RegionRepository repository;
+    private final RRegionRepository repository;
 
-    public RegionService(RegionRepository repository) {
+    public RRegionService(RRegionRepository repository) {
         this.repository = repository;
     }
 
-    public Region create(String name, String apiUrl, String publicSignKey, String maintainers) {
+    public RRegion create(String name, String apiUrl, String publicSignKey, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        Region q = new Region(name, apiUrl, publicSignKey);
+        RRegion q = new RRegion(name, apiUrl, publicSignKey);
         q.setMaintainers(maintainers);
         return repository.save(q);
     }
 
     // Bestehende create-Methode bleibt für Abwärtskompatibilität
-    public Region create(String name, String apiUrl, String publicSignKey) {
+    public RRegion create(String name, String apiUrl, String publicSignKey) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        Region q = new Region(name, apiUrl, publicSignKey);
+        RRegion q = new RRegion(name, apiUrl, publicSignKey);
         return repository.save(q);
     }
 
-    public Optional<Region> getById(String id) {
+    public Optional<RRegion> getById(String id) {
         return repository.findById(id);
     }
 
-    public Optional<Region> getByName(String name) {
+    public Optional<RRegion> getByName(String name) {
         return repository.findByName(name);
     }
 
-    public List<Region> listAll() {
-        return repository.findAll();
+    public List<String> listAllIds() {
+        return repository.findAllIds();
     }
 
-    public Region update(String id, String name, String apiUrl, String publicSignKey, String maintainers) {
-        Region existing = repository.findById(id)
+    public RRegion update(String id, String name, String apiUrl, String publicSignKey, String maintainers) {
+        RRegion existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
             if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
@@ -64,14 +64,14 @@ public class RegionService {
         return repository.save(existing);
     }
 
-    public Region addMaintainer(String id, String userId) {
-        Region existing = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
+    public RRegion addMaintainer(String id, String userId) {
+        RRegion existing = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         existing.addMaintainer(userId);
         return repository.save(existing);
     }
 
-    public Region removeMaintainer(String id, String userId) {
-        Region existing = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
+    public RRegion removeMaintainer(String id, String userId) {
+        RRegion existing = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         existing.removeMaintainer(userId);
         return repository.save(existing);
     }

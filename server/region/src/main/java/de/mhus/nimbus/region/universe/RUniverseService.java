@@ -1,11 +1,13 @@
 package de.mhus.nimbus.region.universe;
 
+import de.mhus.nimbus.region.registry.RRegionService;
 import de.mhus.nimbus.shared.dto.universe.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.universe.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -21,27 +23,14 @@ import java.util.Optional;
  * unter /universe/region/{regionId}/world/{worldId} zugreifen kann.
  */
 @Service
+@RequiredArgsConstructor
 public class RUniverseService {
 
     private final RestTemplate rest;
     private final RUniverseProperties props;
     private final JwtService jwtService;
     private final KeyService keyService;
-
-    public RUniverseService(RestTemplateBuilder builder, RUniverseProperties props, JwtService jwtService, KeyService keyService) {
-        this.rest = builder
-                .requestFactory(() -> {
-                    var f = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-                    // Timeouts in ms
-                    f.setConnectTimeout(5000);
-                    f.setReadTimeout(10000);
-                    return f;
-                })
-                .build();
-        this.props = props;
-        this.jwtService = jwtService;
-        this.keyService = keyService;
-    }
+    private final RRegionService regionService;
 
     public Optional<RegionWorldResponse> getWorld(String regionId, String worldId) {
         String url = worldUrl(regionId, worldId);

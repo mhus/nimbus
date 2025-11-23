@@ -52,21 +52,8 @@ public class InitUniverseService {
     }
 
     private void checkUniverseJwtToken() {
-        if (keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.JWT_TOKEN_KEY_OWNER).isEmpty()) {
-            createSystemAuthKey(USecurityProperties.JWT_TOKEN_KEY_OWNER);
-        }
-    }
-
-    private void createSystemAuthKey(String owner) {
-        try {
-            var keyPair = keyService.createECCKeys();
-            keyService.deleteAllForOwner(owner);
-
-            var jwtKeyId = keyService.generateKeyId(owner);
-            keyService.storeKeyPair(KeyType.UNIVERSE, jwtKeyId, keyPair);
-
-        } catch (Exception e) {
-            log.error("ECC KeyPair-Erstellung fehlgeschlagen: {}", e.getMessage(), e);
+        if (keyService.getLatestPrivateKey(KeyType.UNIVERSE, USecurityProperties.MAIN_JWT_TOKEN_INTENT).isEmpty()) {
+            keyService.createSystemAuthKey(KeyType.UNIVERSE, USecurityProperties.MAIN_JWT_TOKEN_INTENT);
         }
     }
 

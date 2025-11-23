@@ -131,7 +131,9 @@ public class UKeysController {
         dto.type = e.getType() != null ? e.getType().name() : null;
         dto.kind = e.getKind() != null ? e.getKind().name() : null;
         dto.algorithm = e.getAlgorithm();
-        dto.name = e.getKeyId();
+        dto.keyId = e.getKeyId();
+        dto.owner = e.getOwner();
+        dto.intent = e.getIntent();
         dto.createdAt = e.getCreatedAt();
         return dto;
     }

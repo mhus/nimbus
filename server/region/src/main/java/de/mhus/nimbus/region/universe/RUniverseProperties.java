@@ -1,5 +1,6 @@
 package de.mhus.nimbus.region.universe;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "universe.client")
+@Data
 public class RUniverseProperties {
 
     /**
@@ -15,14 +17,4 @@ public class RUniverseProperties {
      */
     private String baseUrl = "http://localhost:8080";
 
-    /**
-     * UUID-Teil des Region-KeyIds zum Signieren der Region-Token.
-     */
-    private String regionKeyUuid;
-
-    public String getBaseUrl() { return baseUrl; }
-    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
-
-    public String getRegionKeyUuid() { return regionKeyUuid; }
-    public void setRegionKeyUuid(String regionKeyUuid) { this.regionKeyUuid = regionKeyUuid; }
 }

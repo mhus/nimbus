@@ -12,6 +12,8 @@ public class SKeyDto {
     public String type;
     public String kind;
     public String algorithm;
-    public String name;
+    public String keyId;
     public Instant createdAt;
+    public String owner;
+    public String intent;
 }

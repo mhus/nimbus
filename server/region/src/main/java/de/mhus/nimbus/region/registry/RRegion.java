@@ -1,11 +1,13 @@
 package de.mhus.nimbus.region.registry;
 
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "regions")
-public class Region {
+@Data
+public class RRegion {
 
     @Id
     private String id;
@@ -21,27 +23,14 @@ public class Region {
     // Komma-separierte Liste von User-IDs mit MAINTAINER-Rechten für diesen Regionen
     private String maintainers; // z.B. "u1,u2,u3"
 
-    public Region() {}
+    public RRegion() {}
 
-    public Region(String name, String apiUrl, String publicSignKey) {
+    public RRegion(String name, String apiUrl, String publicSignKey) {
         this.name = name;
         this.apiUrl = apiUrl;
         this.publicSignKey = publicSignKey;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getApiUrl() { return apiUrl; }
-    public void setApiUrl(String apiUrl) { this.apiUrl = apiUrl; }
-
-    public String getPublicSignKey() { return publicSignKey; }
-    public void setPublicSignKey(String publicSignKey) { this.publicSignKey = publicSignKey; }
-
-    public String getMaintainers() { return maintainers; }
     public void setMaintainers(String maintainers) { this.maintainers = (maintainers==null||maintainers.isBlank())?null:maintainers.trim(); }
     public java.util.Set<String> getMaintainerSet() {
         if (maintainers == null || maintainers.isBlank()) return java.util.Collections.emptySet();

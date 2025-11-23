@@ -1,5 +1,7 @@
 package de.mhus.nimbus.shared.persistence;
 
+import de.mhus.nimbus.shared.security.KeyId;
+import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyType;
 import lombok.Data;
@@ -35,6 +37,9 @@ public class SKey {
     // Besitzer (KeyId.owner()), e.g region id,world id
     private String owner;
 
+    // Intent (KeyId.intent()), e.g "jwt-signing", "data-encryption"
+    private String intent;
+
     // Name/Bezeichner (hier wird KeyId.id() gemappt)
     private String keyId;
 
@@ -51,29 +56,30 @@ public class SKey {
     public SKey() {}
 
     // Convenience-Konstruktor fuer generischen Eintrag inkl. Owner
-    public SKey(KeyType type, KeyKind kind, String owner, String keyId, String algorithm, String base64Key) {
+    public SKey(KeyType type, KeyKind kind, KeyId id, String algorithm, String base64Key) {
         this.type = type;
         this.kind = kind;
-        this.owner = owner;
-        this.keyId = keyId;
+        this.owner = id.owner();
+        this.intent = id.intent();
+        this.keyId = id.id();
         this.algorithm = algorithm;
         this.key = base64Key;
     }
 
     // Factory-Methoden
-    public static SKey ofPublicKey(KeyType type, String owner, String name, PublicKey key) {
+    public static SKey ofPublicKey(KeyType type, KeyId id, PublicKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, KeyKind.PUBLIC, owner, name, key.getAlgorithm(), base64);
+        return new SKey(type, KeyKind.PUBLIC, id, key.getAlgorithm(), base64);
     }
 
-    public static SKey ofPrivateKey(KeyType type, String owner, String name, PrivateKey key) {
+    public static SKey ofPrivateKey(KeyType type, KeyId id, PrivateKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, KeyKind.PRIVATE, owner, name, key.getAlgorithm(), base64);
+        return new SKey(type, KeyKind.PRIVATE, id, key.getAlgorithm(), base64);
     }
 
-    public static SKey ofSecretKey(KeyType type, String owner, String name, SecretKey key) {
+    public static SKey ofSecretKey(KeyType type, KeyId id, SecretKey key) {
         String base64 = Base64.getEncoder().encodeToString(key.getEncoded());
-        return new SKey(type, KeyKind.SECRET, owner, name, key.getAlgorithm(), base64);
+        return new SKey(type, KeyKind.SECRET, id, key.getAlgorithm(), base64);
     }
 
     public boolean isExpired() {

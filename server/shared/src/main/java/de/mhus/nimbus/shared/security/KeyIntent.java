@@ -9,43 +9,29 @@ import java.util.Objects;
  * to uniquely identify a particular key version. The concrete format of both
  * fields is up to the implementation, but both must be non-null and non-blank.
  */
-public record KeyId(String owner, String intent, String id) {
+public record KeyIntent(String owner, String intent) {
 
-    public KeyId(KeyOwner owner, String intent, String id) {
-        this(owner.owner(), intent, id);
+    public static final String MAIN_JWT_TOKEN = "main-jwt-token";
+
+    public KeyIntent(KeyOwner owner, String intent) {
+        this(owner.owner(), intent);
     }
 
-    public KeyId(KeyIntent intent, String id) {
-        this(intent.owner(), intent.intent(), id);
-    }
-
-    public KeyId {
+    public KeyIntent {
         if (owner == null || owner.isBlank()) {
             throw new IllegalArgumentException("owner must not be null or blank");
         }
         if (intent == null || intent.isBlank()) {
             throw new IllegalArgumentException("intent must not be null or blank");
         }
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("id must not be null or blank");
-        }
-    }
-
-    public KeyIntent toIntent() {
-        return new KeyIntent(owner, intent);
-    }
-
-    public KeyOwner toOwner() {
-        return new KeyOwner(owner);
     }
 
     /**
      * Creates a KeyId ensuring both components are trimmed.
      */
-    public static KeyId of(String owner, String intent, String id) {
+    public static KeyIntent of(String owner, String intent) {
         Objects.requireNonNull(owner, "owner");
-        Objects.requireNonNull(id, "id");
         Objects.requireNonNull(intent, "intent");
-        return new KeyId(owner.trim(), intent.trim() ,id.trim());
+        return new KeyIntent(owner.trim(), intent.trim());
     }
 }
