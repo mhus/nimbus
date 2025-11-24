@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Nimbus Server" type="CompoundRunConfigurationType">
+    <toRun name="RegionApplication" type="Application" />
+    <toRun name="UniverseApplication" type="Application" />
+    <toRun name="WorldEditorApplication" type="Application" />
+    <toRun name="WorldPlayerApplication" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>
