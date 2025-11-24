@@ -3,6 +3,7 @@ package de.mhus.nimbus.shared.health;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -17,13 +18,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  - Wechselt sofort auf NOT_READY sobald der Shutdown beginnt (ContextClosedEvent).
  */
 @Slf4j
-@Component("readiness") // Bean-Name für /actuator/health/readiness
-public class ReadinessHealthIndicator implements HealthIndicator, ApplicationListener<Object> {
+@Component("startupReadiness") // Bean-Name für /actuator/health/readiness
+public class ReadinessHealthIndicator implements HealthIndicator, ApplicationListener<ApplicationEvent> {
 
     private final AtomicBoolean ready = new AtomicBoolean(false);
 
     @Override
-    public void onApplicationEvent(Object event) {
+    public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ContextRefreshedEvent) {
             ready.set(true);
             log.info("Readiness set to READY (context refreshed)");

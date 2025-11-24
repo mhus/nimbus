@@ -8,14 +8,21 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
+import de.mhus.nimbus.world.provider.readiness.WebSocketSessionTracker;
 
 @Component
 public class WorldWebSocketHandler extends TextWebSocketHandler {
 
     private final AtomicLong counter = new AtomicLong();
+    private final WebSocketSessionTracker tracker;
+
+    public WorldWebSocketHandler(WebSocketSessionTracker tracker) {
+        this.tracker = tracker;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        tracker.increment();
         String path = session.getUri() != null ? session.getUri().getPath() : "";
         String worldId = extractWorldId(path);
         session.sendMessage(new TextMessage("CONNECTED world-provider worldId=" + worldId + " " + Instant.now()));
@@ -42,6 +49,6 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        // no-op
+        tracker.decrement();
     }
 }
