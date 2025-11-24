@@ -114,6 +114,63 @@ public class EvaluateTypesOnlyIT {
         assertEquals(0, exit, "Maven build of evaluate module failed");
     }
 
+    @Test
+    public void generateWithBackdropHelper() throws Exception {
+        File pluginModuleBase = new File(System.getProperty("user.dir"));
+        File moduleBase = new File(pluginModuleBase, "evaluate").getCanonicalFile();
+        assertTrue(new File(moduleBase, "pom.xml").exists(), "evaluate/pom.xml must exist: " + moduleBase);
+
+        Path tsDir = moduleBase.toPath().resolve("ts");
+        File outJavaDir = moduleBase.toPath().resolve("src/main/java").toFile();
+        Path targetDir = moduleBase.toPath().resolve("target");
+        File modelFile = new File(targetDir.toFile(), "model.json");
+
+        // clean output
+        deleteRecursively(outJavaDir);
+        if (modelFile.exists()) assertTrue(modelFile.delete(), "Could not delete previous model file: " + modelFile);
+        Files.createDirectories(outJavaDir.toPath());
+        Files.createDirectories(targetDir);
+
+        GenerateTsToJavaMojo mojo = new GenerateTsToJavaMojo();
+        setField(mojo, "sourceDirs", Arrays.asList(tsDir.toFile().getAbsolutePath()));
+        setField(mojo, "outputDir", outJavaDir);
+        setField(mojo, "modelFile", modelFile);
+        setField(mojo, "configFile", new File(moduleBase, "ts-to-java-types.yaml"));
+        mojo.execute();
+
+        List<File> javaFiles = collectJavaFiles(outJavaDir);
+        String expectedPkgPath = "de.mhus.nimbus.evaluate.generated.types".replace('.', File.separatorChar);
+
+        // WithBackdrop.java should contain field of type WithBackdropBackdrop named backdrop
+        File withBackdrop = javaFiles.stream()
+                .filter(f -> f.getPath().contains(expectedPkgPath) && f.getName().equals("WithBackdrop.java"))
+                .findFirst().orElse(null);
+        assertNotNull(withBackdrop, "Expected generated WithBackdrop.java");
+        String withBackdropSrc = Files.readString(withBackdrop.toPath());
+        assertTrue(withBackdropSrc.contains("private WithBackdropBackdrop backdrop;") ||
+                        withBackdropSrc.contains("private de.mhus.nimbus.evaluate.generated.types.WithBackdropBackdrop backdrop;"),
+                "WithBackdrop.backdrop should be of type WithBackdropBackdrop");
+
+        // Helper class WithBackdropBackdrop with n,e,s,w fields
+        File helper = javaFiles.stream()
+                .filter(f -> f.getPath().contains(expectedPkgPath) && f.getName().equals("WithBackdropBackdrop.java"))
+                .findFirst().orElse(null);
+        assertNotNull(helper, "Expected generated WithBackdropBackdrop.java");
+        String helperSrc = Files.readString(helper.toPath());
+        assertTrue(helperSrc.contains("private java.util.List<Backdrop> n;") || helperSrc.contains("private List<Backdrop> n;"),
+                "Helper should contain field n as List<Backdrop>");
+        assertTrue(helperSrc.contains("private java.util.List<Backdrop> e;") || helperSrc.contains("private List<Backdrop> e;"),
+                "Helper should contain field e as List<Backdrop>");
+        assertTrue(helperSrc.contains("private java.util.List<Backdrop> s;") || helperSrc.contains("private List<Backdrop> s;"),
+                "Helper should contain field s as List<Backdrop>");
+        assertTrue(helperSrc.contains("private java.util.List<Backdrop> w;") || helperSrc.contains("private List<Backdrop> w;"),
+                "Helper should contain field w as List<Backdrop>");
+
+        // Build evaluate via maven
+        int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");
+        assertEquals(0, exit, "Maven build of evaluate module failed");
+    }
+
     private static void setField(Object target, String name, Object value) throws Exception {
         Field f = target.getClass().getDeclaredField(name);
         f.setAccessible(true);

@@ -27,6 +27,7 @@ public class PlayerInfo {
     private double effectiveRidingSpeed;
     private double effectiveJumpSpeed;
     private double eyeHeight;
+    private java.util.Map<String, Object> dimensions;
     private double stealthRange;
     private double distanceNotifyReductionWalk;
     private double distanceNotifyReductionCrouch;

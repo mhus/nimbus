@@ -24,8 +24,6 @@ public class ServerEntitySpawnDefinition {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private EntityPathway currentPathway;
     private java.util.List<Vector2> chunks;
-    private Vector3 position;
-    private Vector3 velocity;
-    private Rotation rotation;
-    private boolean grounded;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.util.Map<String, Object> physicsState;
 }

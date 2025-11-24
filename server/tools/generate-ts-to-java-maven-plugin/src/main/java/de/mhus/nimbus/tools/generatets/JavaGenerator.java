@@ -40,12 +40,20 @@ public class JavaGenerator {
                         t.setExtendsName(i.extendsList.get(0));
                         t.setOriginalTsExtends(new java.util.ArrayList<>(i.extendsList));
                     }
-                    // Properties -> fields
+                    // Properties -> fields (with special handling for inline backdrop object)
                     if (i.properties != null) {
                         for (TsDeclarations.TsProperty p : i.properties) {
                             if (p == null || p.name == null) continue;
-                            String jt = mapTsTypeToJava(p.type, p.optional);
-                            t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
+                            String propType = p.type;
+                            // If this is the well-known inline object property 'backdrop', synthesize a helper class
+                            if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
+                                String helperName = i.name + "Backdrop";
+                                ensureBackdropHelper(jm, helperName, srcPath);
+                                t.getProperties().add(new JavaProperty(p.name, helperName, p.optional, p.visibility));
+                            } else {
+                                String jt = mapTsTypeToJava(propType, p.optional);
+                                t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
+                            }
                         }
                     }
                     jm.addType(t);
@@ -77,12 +85,19 @@ public class JavaGenerator {
                             if (n != null && !n.isEmpty()) t.getImplementsNames().add(n);
                         }
                     }
-                    // Properties
+                    // Properties (with special handling for inline backdrop object)
                     if (c.properties != null) {
                         for (TsDeclarations.TsProperty p : c.properties) {
                             if (p == null || p.name == null) continue;
-                            String jt = mapTsTypeToJava(p.type, p.optional);
-                            t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
+                            String propType = p.type;
+                            if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
+                                String helperName = c.name + "Backdrop";
+                                ensureBackdropHelper(jm, helperName, srcPath);
+                                t.getProperties().add(new JavaProperty(p.name, helperName, p.optional, p.visibility));
+                            } else {
+                                String jt = mapTsTypeToJava(propType, p.optional);
+                                t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
+                            }
                         }
                     }
                     jm.addType(t);
@@ -134,6 +149,24 @@ public class JavaGenerator {
         return jm;
     }
 
+    /**
+     * Ensure the presence of a helper class for inline backdrop objects with fields n,e,s,w.
+     * The generated type will be named {@code helperName} and placed into the model once.
+     */
+    private void ensureBackdropHelper(JavaModel jm, String helperName, String srcPath) {
+        if (jm == null || helperName == null || helperName.isEmpty()) return;
+        Map<String, JavaType> idx = jm.getIndexByName();
+        if (idx != null && idx.containsKey(helperName)) return;
+        JavaType helper = new JavaType(helperName, JavaKind.CLASS, srcPath);
+        helper.setOriginalTsKind("type");
+        // Four optional arrays: n,e,s,w -> List<Backdrop>
+        helper.getProperties().add(new JavaProperty("n", "java.util.List<Backdrop>", true, "public"));
+        helper.getProperties().add(new JavaProperty("e", "java.util.List<Backdrop>", true, "public"));
+        helper.getProperties().add(new JavaProperty("s", "java.util.List<Backdrop>", true, "public"));
+        helper.getProperties().add(new JavaProperty("w", "java.util.List<Backdrop>", true, "public"));
+        jm.addType(helper);
+    }
+
     private String boxIfPrimitive(String type) {
         if (type == null) return null;
         switch (type) {
@@ -152,6 +185,10 @@ public class JavaGenerator {
     private String mapTsTypeToJava(String ts, boolean optional) {
         if (ts == null || ts.isBlank()) return "Object";
         String s = ts.trim();
+        // Inline object type -> generic map
+        if (s.contains("{") || s.contains("}")) {
+            return "java.util.Map<String, Object>";
+        }
         // Strip readonly or modifiers
         s = s.replaceAll("^readonly\\s+", "").trim();
         // Unwrap utility types that don't change representation in Java

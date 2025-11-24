@@ -1,6 +1,6 @@
 /*
  * Source TS: ChunkData.ts
- * Original TS: 'interface ChunkData'
+ * Original TS: 'type ChunkDataBackdrop'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,17 +10,13 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ChunkData {
-    private double cx;
-    private double cz;
-    private double size;
-    private java.util.List<Block> blocks;
+public class ChunkDataBackdrop {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<ItemBlockRef> i;
+    private java.util.List<Backdrop> n;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<HeightData> heightData;
+    private java.util.List<Backdrop> e;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<Status> status;
+    private java.util.List<Backdrop> s;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private ChunkDataBackdrop backdrop;
+    private java.util.List<Backdrop> w;
 }

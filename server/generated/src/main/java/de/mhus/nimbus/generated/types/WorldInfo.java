@@ -33,26 +33,12 @@ public class WorldInfo {
     private double seasonProgress;
     private String createdAt;
     private String updatedAt;
-    private String user;
-    private String displayName;
+    private java.util.Map<String, Object> owner;
+    private java.util.Map<String, Object> settings;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String email;
-    private double maxPlayers;
-    private boolean allowGuests;
-    private boolean pvpEnabled;
-    private double pingInterval;
+    private java.util.Map<String, Object> license;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String deadAmbientAudio;
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String swimStepAudio;
-    private String type;
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String expiresAt;
-    private double x;
-    private double y;
-    private double z;
-    private double radius;
-    private double rotation;
+    private java.util.Map<String, Object> startArea;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String editorUrl;
 }

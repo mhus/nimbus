@@ -1,8 +1,8 @@
 /*
- * Source TS: ChunkData.ts
- * Original TS: 'interface ChunkData'
+ * Source TS: ChunkMessage.ts
+ * Original TS: 'type ChunkDataTransferObjectBackdrop'
  */
-package de.mhus.nimbus.generated.types;
+package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,17 +10,13 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ChunkData {
-    private double cx;
-    private double cz;
-    private double size;
-    private java.util.List<Block> blocks;
+public class ChunkDataTransferObjectBackdrop {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<ItemBlockRef> i;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> n;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<HeightData> heightData;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> e;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<Status> status;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> s;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private ChunkDataBackdrop backdrop;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> w;
 }

@@ -11,8 +11,6 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PlayerTeleportData {
-    private double x;
-    private double y;
-    private double z;
+    private java.util.Map<String, Object> p;
     private de.mhus.nimbus.generated.types.Rotation r;
 }

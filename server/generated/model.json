@@ -822,7 +822,42 @@
     }, {
       "name" : "EntityDimensions",
       "extendsList" : [ ],
-      "properties" : [ ],
+      "properties" : [ {
+        "name" : "walk",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "sprint",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "crouch",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "swim",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "climb",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "fly",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "teleport",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null
+      } ],
       "methods" : [ ]
     }, {
       "name" : "EntityPhysicsProperties",
@@ -1176,23 +1211,8 @@
         "optional" : true,
         "visibility" : null
       }, {
-        "name" : "n",
-        "type" : "Array<Backdrop>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "e",
-        "type" : "Array<Backdrop>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "s",
-        "type" : "Array<Backdrop>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "w",
-        "type" : "Array<Backdrop>",
+        "name" : "backdrop",
+        "type" : "{\n     \n    n?: Array<Backdrop>;\n     \n    e?: Array<Backdrop>;\n     \n    s?: Array<Backdrop>;\n     \n    w?: Array<Backdrop>;\n  }",
         "optional" : true,
         "visibility" : null
       } ],
@@ -1338,64 +1358,9 @@
         "optional" : true,
         "visibility" : null
       }, {
-        "name" : "from",
-        "type" : "any",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "to",
-        "type" : "any",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "easing",
-        "type" : "EasingType",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "speed",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "projectileModel",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "trajectory",
-        "type" : "'linear' | 'arc' | 'homing'",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "radius",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "explosionIntensity",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "color",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "lightIntensity",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "soundPath",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "volume",
-        "type" : "number",
-        "optional" : true,
+        "name" : "params",
+        "type" : "{\n     \n    from?: any;\n    to?: any;\n    easing?: EasingType;\n\n     \n    speed?: number;\n    projectileModel?: string;\n    trajectory?: 'linear' | 'arc' | 'homing';\n\n     \n    radius?: number;\n    explosionIntensity?: number;\n\n     \n    color?: string;\n    lightIntensity?: number;\n\n     \n    soundPath?: string;\n    volume?: number;\n\n     \n    [key: string]: any;\n  }",
+        "optional" : false,
         "visibility" : null
       }, {
         "name" : "startTime",
@@ -1458,13 +1423,8 @@
         "optional" : true,
         "visibility" : null
       }, {
-        "name" : "type",
-        "type" : "'server' | 'client'",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "playerId",
-        "type" : "string",
+        "name" : "source",
+        "type" : "{\n    type: 'server' | 'client';\n    playerId?: string;\n  }",
         "optional" : true,
         "visibility" : null
       } ],
@@ -2487,24 +2447,9 @@
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "position",
-        "type" : "Vector3",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "velocity",
-        "type" : "Vector3",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "rotation",
-        "type" : "Rotation",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "grounded",
-        "type" : "boolean",
-        "optional" : false,
+        "name" : "physicsState",
+        "type" : "{\n     \n    position: Vector3;\n\n     \n    velocity: Vector3;\n\n     \n    rotation: Rotation;\n\n     \n    grounded: boolean;\n  }",
+        "optional" : true,
         "visibility" : null
       } ],
       "methods" : [ ]
@@ -2606,14 +2551,9 @@
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "intensity",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "color",
-        "type" : "string",
-        "optional" : true,
+        "name" : "p",
+        "type" : "{\n     \n    intensity?: number;\n\n     \n    color?: string;\n\n     \n    [key: string]: any;\n  }",
+        "optional" : false,
         "visibility" : null
       } ],
       "methods" : [ ]
@@ -2811,84 +2751,24 @@
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "user",
-        "type" : "string",
+        "name" : "owner",
+        "type" : "{\n    user: string;\n    displayName: string;\n    email?: string;\n  }",
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "displayName",
-        "type" : "string",
+        "name" : "settings",
+        "type" : "{\n    maxPlayers: number;\n    allowGuests: boolean;\n    pvpEnabled: boolean;\n    pingInterval: number;\n\n     \n     \n    deadAmbientAudio?: string;\n\n     \n    swimStepAudio?: string;\n  }",
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "email",
-        "type" : "string",
+        "name" : "license",
+        "type" : "{\n    type: string;\n    expiresAt?: string;\n  }",
         "optional" : true,
         "visibility" : null
       }, {
-        "name" : "maxPlayers",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "allowGuests",
-        "type" : "boolean",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "pvpEnabled",
-        "type" : "boolean",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "pingInterval",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "deadAmbientAudio",
-        "type" : "string",
+        "name" : "startArea",
+        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n    radius: number;\n    rotation: number;\n  }",
         "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "swimStepAudio",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "type",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "expiresAt",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "x",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "y",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "z",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "radius",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "rotation",
-        "type" : "number",
-        "optional" : false,
         "visibility" : null
       }, {
         "name" : "editorUrl",
@@ -2911,18 +2791,8 @@
       "name" : "MovementStateValues",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "height",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "width",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "footprint",
-        "type" : "number",
+        "name" : "dimensions",
+        "type" : "{\n    height: number;     \n    width: number;      \n    footprint: number;  \n  }",
         "optional" : false,
         "visibility" : null
       }, {
@@ -3058,6 +2928,11 @@
       }, {
         "name" : "eyeHeight",
         "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "dimensions",
+        "type" : "{\n    walk: { height: number; width: number; footprint: number };\n    sprint: { height: number; width: number; footprint: number };\n    crouch: { height: number; width: number; footprint: number };\n    swim: { height: number; width: number; footprint: number };\n    climb: { height: number; width: number; footprint: number };\n    fly: { height: number; width: number; footprint: number };\n    teleport: { height: number; width: number; footprint: number };\n  }",
         "optional" : false,
         "visibility" : null
       }, {
@@ -3518,23 +3393,8 @@
         "optional" : true,
         "visibility" : null
       }, {
-        "name" : "n",
-        "type" : "Array<Backdrop>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "e",
-        "type" : "Array<Backdrop>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "s",
-        "type" : "Array<Backdrop>",
-        "optional" : true,
-        "visibility" : null
-      }, {
-        "name" : "w",
-        "type" : "Array<Backdrop>",
+        "name" : "backdrop",
+        "type" : "{\n     \n    n?: Array<Backdrop>;\n     \n    e?: Array<Backdrop>;\n     \n    s?: Array<Backdrop>;\n     \n    w?: Array<Backdrop>;\n  }",
         "optional" : true,
         "visibility" : null
       } ],
@@ -3647,24 +3507,9 @@
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "x",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "y",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "z",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "ts",
-        "type" : "number",
-        "optional" : false,
+        "name" : "ta",
+        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n     \n    ts: number;\n  }",
+        "optional" : true,
         "visibility" : null
       } ],
       "methods" : [ ]
@@ -3830,19 +3675,9 @@
       "name" : "UserMovementData",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "x",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "y",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "z",
-        "type" : "number",
-        "optional" : false,
+        "name" : "p",
+        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n  }",
+        "optional" : true,
         "visibility" : null
       }, {
         "name" : "r",
@@ -3855,18 +3690,8 @@
       "name" : "PlayerTeleportData",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "x",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "y",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "z",
-        "type" : "number",
+        "name" : "p",
+        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n  }",
         "optional" : false,
         "visibility" : null
       }, {

@@ -173,10 +173,15 @@ public class TsParser {
 
     private void extractPropertiesFromBody(String body, List<TsDeclarations.TsProperty> out) {
         if (body == null || out == null) return;
-        // Very simple matcher for properties: [visibility]? name[?]: type; and exclude lines with '(' before ':' to avoid methods
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?m)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*([^;\\r\\n]+)[\\t ]*;[\\t ]*");
-        java.util.regex.Matcher m = p.matcher(body);
+        // Match TS property declarations of the form: [visibility]? name[?]: type;
+        java.util.regex.Pattern propPat = java.util.regex.Pattern.compile("(?ms)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*(.+?)\\s*;[\\t ]*");
+        java.util.regex.Matcher m = propPat.matcher(body);
         while (m.find()) {
+            int startIdx = m.start();
+            // Only accept properties at top-level of the declaration body (depth == 1 inside outer braces)
+            if (braceDepthAt(body, startIdx) != 1) {
+                continue;
+            }
             // Skip index signatures like [key: string]: any;
             try {
                 int nameStart = m.start(2);
@@ -193,8 +198,17 @@ public class TsParser {
                 }
             } catch (Exception ignored) {}
             String typeTxt = m.group(4) == null ? null : m.group(4).trim();
-            // Skip complex inline object types or import() types that tend to break naive generation
-            if (typeTxt != null && (typeTxt.contains("{") || typeTxt.contains("}") || typeTxt.contains("import("))) {
+            // If type starts with an inline object '{', try to capture the full object literal up to matching '}'
+            if (typeTxt != null && typeTxt.startsWith("{")) {
+                int absTypeStart = m.start(4);
+                int objEnd = findMatchingBrace(body, absTypeStart);
+                if (objEnd > absTypeStart) {
+                    typeTxt = body.substring(absTypeStart, objEnd).trim();
+                }
+            }
+            // Do NOT skip inline object types here; we keep them so the generator can synthesize helper classes.
+            // Still skip import(...) types that we cannot resolve sensibly.
+            if (typeTxt != null && typeTxt.contains("import(")) {
                 continue;
             }
             TsDeclarations.TsProperty pr = new TsDeclarations.TsProperty();
@@ -204,6 +218,20 @@ public class TsParser {
             pr.type = typeTxt;
             out.add(pr);
         }
+    }
+
+    /**
+     * Compute the brace nesting depth at a given position within a block that includes outer braces.
+     * Depth starts at 0 before the first '{'. After the first '{' it becomes 1 for the outer body.
+     */
+    private int braceDepthAt(String s, int pos) {
+        int depth = 0;
+        for (int i = 0; i < s.length() && i < pos; i++) {
+            char c = s.charAt(i);
+            if (c == '{') depth++;
+            else if (c == '}') depth = Math.max(0, depth - 1);
+        }
+        return depth;
     }
 
     private void extractEnumValuesFromBody(String body, java.util.List<String> out) {

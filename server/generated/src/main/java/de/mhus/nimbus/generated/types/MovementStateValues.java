@@ -11,9 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class MovementStateValues {
-    private double height;
-    private double width;
-    private double footprint;
+    private java.util.Map<String, Object> dimensions;
     private double baseMoveSpeed;
     private double effectiveMoveSpeed;
     private double baseJumpSpeed;
