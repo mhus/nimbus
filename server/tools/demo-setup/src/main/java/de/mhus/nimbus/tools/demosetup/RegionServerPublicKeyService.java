@@ -9,91 +9,122 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyFactory;
-import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service zum Laden des Region Server Public Keys (regionServerPublicKey.txt).
+ * Analog zu {@link AdminService}: konfigurierbarer Pfad (Property + ENV), optionaler Strict-Modus
+ * sowie Caching nach dem ersten erfolgreichen Laden.
+ *
+ * Konfiguration:
+ *  - Spring Property: region.public.key.file (Pfad zur Datei)
+ *  - Spring Property: region.public.key.strict (true/false für Deaktivierung der Fallback-Suche)
+ *  - Environment Variable: REGION_PUBLIC_KEY_FILE (überschreibt optional den Pfad)
+ *
+ * Fallback-Pfade (wenn strict=false):
+ *  confidential/regionServerPublicKey.txt sowie relative Varianten ../, ../../, ../../../
+ *
+ * Dateiformat:
+ *  - Beliebiger Text; leere Zeilen und Kommentarzeilen (# am Anfang) werden entfernt.
+ *  - Mehrzeilige Inhalte (z.B. PEM) werden nach dem Filtern wieder mit '\n' verbunden.
+ *
+ * Caching:
+ *  - Bei erstem erfolgreichen Laden wird der Schlüssel im Speicher gehalten.
+ *  - Bei nicht gefundenem Schlüssel bleibt der Cache leer und spätere Aufrufe versuchen erneut zu laden.
+ */
 @Service
 public class RegionServerPublicKeyService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RegionServerPublicKeyService.class);
 
     private final String configuredPath;
-    private String cachedBase64; // Cache des gelesenen Public Keys (Base64)
+    private final boolean strict;
+    private String cachedKey = null;
 
-    public RegionServerPublicKeyService(@Value("${region.server.public-key-file:}") String configuredPath) {
+    public RegionServerPublicKeyService(@Value("${region.public.key.file:}") String configuredPath,
+                                        @Value("${region.public.key.strict:false}") boolean strict) {
         this.configuredPath = configuredPath == null ? "" : configuredPath.trim();
+        this.strict = strict;
     }
 
+    /**
+     * Liefert den Public Key (optional) und cached das Ergebnis beim ersten erfolgreichen Laden.
+     */
+    public Optional<String> getRegionServerPublicKey() {
+        if (cachedKey != null) return Optional.of(cachedKey);
+        Optional<String> key = loadKey();
+        cachedKey = key.orElse(null); // null bedeutet: später nochmal versuchen erlaubt
+        return key;
+    }
+
+    /**
+     * Liefert den Public Key in einer Base64-geeigneten kompakten Darstellung.
+     * Falls die geladene Datei ein PEM-Format mit BEGIN/END Header hat, werden
+     * nur die Zeilen zwischen den Headern (ohne Newlines) zurückgegeben.
+     * Andernfalls wird der gesamte Inhalt ohne Whitespaces/Zeilenumbrüche geliefert.
+     */
     public Optional<String> getPublicKeyBase64() {
-        if (cachedBase64 != null) return Optional.of(cachedBase64);
-        Optional<String> pk = loadPublicKeyBase64();
-        cachedBase64 = pk.orElse(null);
-        return pk;
-    }
-
-    public Optional<PublicKey> getPublicKey() {
-        return getPublicKeyBase64().flatMap(b64 -> {
-            try {
-                byte[] der = Base64.getDecoder().decode(b64);
-                PublicKey pub = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(der));
-                return Optional.of(pub);
-            } catch (Exception e) {
-                LOG.error("Kann Public Key aus Base64 nicht parsen: {}", e.toString());
-                return Optional.empty();
+        return getRegionServerPublicKey().map(raw -> {
+            if (raw.contains("BEGIN PUBLIC KEY") && raw.contains("END PUBLIC KEY")) {
+                String[] lines = raw.split("\\R");
+                StringBuilder sb = new StringBuilder();
+                boolean inside = false;
+                for (String line : lines) {
+                    if (line.contains("BEGIN PUBLIC KEY")) { inside = true; continue; }
+                    if (line.contains("END PUBLIC KEY")) { break; }
+                    if (inside) sb.append(line.trim());
+                }
+                String pemPart = sb.toString().trim();
+                if (!pemPart.isEmpty()) return pemPart; // Rückgabe des PEM Base64 Inhalts
             }
+            // Kein PEM: entferne alle Whitespaces / Newlines
+            return raw.replaceAll("\\s+", "");
         });
     }
 
-    private Optional<String> loadPublicKeyBase64() {
+    private Optional<String> loadKey() {
         List<Path> candidates = new ArrayList<>();
-        String env = System.getenv("REGION_SERVER_PUBLIC_KEY_FILE");
+        String env = System.getenv("REGION_PUBLIC_KEY_FILE");
         if (!configuredPath.isBlank()) candidates.add(Path.of(configuredPath));
         if (env != null && !env.isBlank()) candidates.add(Path.of(env.trim()));
 
-        // Standardpfade relativ zum Startpunkt (analog AdminService mehrfach aufsteigend)
-        candidates.add(Path.of("confidential/regionServerPublicKey.txt"));
-        candidates.add(Path.of("../confidential/regionServerPublicKey.txt"));
-        candidates.add(Path.of("../../confidential/regionServerPublicKey.txt"));
-        candidates.add(Path.of("../../../confidential/regionServerPublicKey.txt"));
+        if (!strict) {
+            candidates.add(Path.of("confidential/regionServerPublicKey.txt"));
+            candidates.add(Path.of("../confidential/regionServerPublicKey.txt"));
+            candidates.add(Path.of("../../confidential/regionServerPublicKey.txt"));
+            candidates.add(Path.of("../../../confidential/regionServerPublicKey.txt"));
+        } else {
+            LOG.debug("Strict-Modus aktiv: verwende nur explizite Pfade und ENV");
+        }
 
         for (Path p : candidates) {
             try {
                 if (Files.exists(p) && Files.isRegularFile(p)) {
                     String raw = Files.readString(p, StandardCharsets.UTF_8);
-                    String line = raw.lines()
-                        .map(String::trim)
-                        .filter(l -> !l.isEmpty() && !l.startsWith("#"))
-                        .findFirst().orElse("");
-                    if (line.isEmpty()) {
+                    List<String> lines = raw.lines()
+                            .map(String::trim)
+                            .filter(l -> !l.isEmpty() && !l.startsWith("#"))
+                            .toList();
+                    if (lines.isEmpty()) {
                         LOG.warn("RegionServer Public Key Datei leer: {}", p.toAbsolutePath());
                         continue;
                     }
-                    if (!isBase64(line)) {
-                        LOG.warn("RegionServer Public Key kein gültiges Base64: {}", p.toAbsolutePath());
+                    // Für PEM oder Base64 mehrzeilig: wir erhalten die Originalzeilen (getrimmt) und fügen sie wieder zusammen
+                    String key = String.join("\n", lines);
+                    if (key.isEmpty()) {
+                        LOG.warn("RegionServer Public Key Datei enthält nach Filterung keinen Inhalt: {}", p.toAbsolutePath());
                         continue;
                     }
-                    LOG.info("RegionServer Public Key Datei gefunden: {} (Base64 Länge {} Zeichen)", p.toAbsolutePath(), line.length());
-                    return Optional.of(line);
+                    LOG.info("RegionServer Public Key Datei gefunden: {} (Schlüssellänge {} Zeichen)", p.toAbsolutePath(), key.length());
+                    return Optional.of(key);
                 }
             } catch (IOException e) {
-                LOG.warn("Kann RegionServer Public Key Datei '{}' nicht lesen: {}", p.toAbsolutePath(), e.toString());
+                LOG.warn("Kann Datei '{}' nicht lesen: {}", p.toAbsolutePath(), e.toString());
             }
         }
-        LOG.warn("Kein RegionServer Public Key gefunden ({} geprüfte Pfade)", candidates.size());
+        LOG.warn("Kein RegionServer Public Key gefunden (Dateiname regionServerPublicKey.txt, ENV REGION_PUBLIC_KEY_FILE oder Property region.public.key.file)");
         return Optional.empty();
-    }
-
-    private boolean isBase64(String s) {
-        try {
-            Base64.getDecoder().decode(s);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
     }
 }

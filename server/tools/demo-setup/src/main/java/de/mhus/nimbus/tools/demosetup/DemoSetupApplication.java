@@ -40,6 +40,9 @@ public class DemoSetupApplication implements CommandLineRunner {
                 () -> LOG.warn("Kein Admin-Passwort geladen.")
         );
 
+
+
+
         // Nutzer sicherstellen (nur wenn Universe konfiguriert)
         setupUsersRunner.run();
         regionSetupRunner.run();
@@ -48,6 +51,7 @@ public class DemoSetupApplication implements CommandLineRunner {
                 pk -> LOG.info("RegionServer Public Key geladen ({} Zeichen, Anfang='{}...')", pk.length(), pk.substring(0, Math.min(16, pk.length()))),
                 () -> LOG.warn("RegionServer Public Key nicht gefunden")
         );
+        // TODO
 
         failures = checkServiceHealth();
         int exitCode = (failures == 0) ? 0 : 1;
