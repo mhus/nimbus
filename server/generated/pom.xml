@@ -83,7 +83,7 @@
                                 <sourceDir>${project.basedir}/../client_shared_src</sourceDir>
                         <!--
                                 <sourceDir>${project.basedir}/../../client/packages/shared/src</sourceDir>
-                                <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts</sourceDir>
+                                <sourceDir>${project.basedir}/../plugins/generate-ts-to-java-maven-plugin/evaluate/ts</sourceDir>
                         -->
                             </sourceDirs>
                             <outputDir>${project.basedir}/src/main/java</outputDir>

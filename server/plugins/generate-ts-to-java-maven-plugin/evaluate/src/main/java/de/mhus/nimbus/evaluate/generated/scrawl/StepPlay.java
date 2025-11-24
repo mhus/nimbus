@@ -1,0 +1,22 @@
+/*
+ * Source TS: ScrawlStep.ts
+ * Original TS: 'interface StepPlay'
+ */
+package de.mhus.nimbus.evaluate.generated.scrawl;
+
+@Deprecated
+@lombok.Data
+@lombok.experimental.SuperBuilder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class StepPlay {
+    @Deprecated
+    @SuppressWarnings("required")
+    private String kind;
+    @Deprecated
+    @SuppressWarnings("required")
+    private String effectId;
+    @Deprecated
+    @SuppressWarnings("optional")
+    private java.util.Map<String, Object> ctx;
+}

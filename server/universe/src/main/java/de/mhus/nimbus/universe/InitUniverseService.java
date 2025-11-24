@@ -12,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j; // Logging
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,12 +43,28 @@ public class InitUniverseService {
 
     private void createAdminUser() {
         UUser admin = new UUser("admin","");
-        var password = UUID.randomUUID().toString() + UUID.randomUUID().toString();
+        var password = (UUID.randomUUID().toString() + UUID.randomUUID().toString()).replaceAll("-","");
         admin.setRoles(Set.of(UniverseRoles.ADMIN));
         admin.setEnabled(true);
         userRepository.save(admin);
         userService.setPassword(admin.getId(), password);
+        writePasswordToFile(password);
         log.info("Admin user created: {} with Password {}", admin.getId(), password);
+    }
+
+    private void writePasswordToFile(String password) {
+        try {
+            Path targetDir = Paths.get("target");
+            if (!Files.exists(targetDir)) {
+                Files.createDirectories(targetDir);
+            }
+            Path file = targetDir.resolve("admin.txt");
+            String line = "admin:" + password + System.lineSeparator();
+            Files.writeString(file, line, StandardOpenOption.CREATE_NEW);
+            log.info("Admin password written to {}", file.toAbsolutePath());
+        } catch (Exception e) {
+            log.warn("Failed to write admin password file", e);
+        }
     }
 
     private void checkUniverseJwtToken() {

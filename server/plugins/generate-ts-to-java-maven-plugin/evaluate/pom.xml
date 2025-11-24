@@ -4,9 +4,9 @@
 
     <parent>
         <groupId>de.mhus.nimbus</groupId>
-        <artifactId>nimbus-server</artifactId>
+        <artifactId>plugins</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
+        <relativePath>../../../plugins/pom.xml</relativePath>
     </parent>
 
     <artifactId>evaluate</artifactId>

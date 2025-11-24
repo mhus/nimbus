@@ -16,7 +16,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>tools</module>
+        <module>plugins</module>
         <module>generated</module>
         <module>shared</module>
         <module>universe</module>
@@ -24,6 +24,7 @@
         <module>world-shared</module>
         <module>world-player</module>
         <module>world-editor</module>
+        <module>tools</module>
     </modules>
 
     <properties>
