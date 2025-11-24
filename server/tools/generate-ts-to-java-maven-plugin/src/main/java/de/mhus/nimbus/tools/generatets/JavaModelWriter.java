@@ -23,6 +23,8 @@ public class JavaModelWriter {
     private final Configuration configuration;
     private final java.util.Map<String, JavaType> indexByName;
     private final java.util.Set<String> typesExtendedByOthers;
+    // Helper types that should be rendered as nested classes instead of separate top-level files
+    private final java.util.Map<String, JavaType> nestedHelperOwnerByName = new java.util.HashMap<>();
 
     public JavaModelWriter(JavaModel model) {
         this(model, null);
@@ -53,6 +55,29 @@ public class JavaModelWriter {
         }
         this.indexByName = idx;
         this.typesExtendedByOthers = extendedByOthers;
+
+        // Discover backdrop helper types that should be nested inside their parent class
+        if (model != null && model.getTypes() != null) {
+            for (JavaType parent : model.getTypes()) {
+                if (parent == null) continue;
+                if (parent.getKind() != JavaKind.CLASS) continue;
+                if (parent.getProperties() == null) continue;
+                String parentName = parent.getName();
+                if (parentName == null || parentName.isBlank()) continue;
+                String expectedHelper = parentName + "Backdrop";
+                for (JavaProperty p : parent.getProperties()) {
+                    if (p == null) continue;
+                    if (!"backdrop".equals(p.getName())) continue;
+                    String type = p.getType();
+                    if (type == null) continue;
+                    String base = baseType(type);
+                    if (expectedHelper.equals(base)) {
+                        // Record that this helper type should be nested under this parent
+                        nestedHelperOwnerByName.put(expectedHelper, parent);
+                    }
+                }
+            }
+        }
     }
 
     public void write(File outputDir) throws IOException {
@@ -66,6 +91,11 @@ public class JavaModelWriter {
             if (t == null) continue;
             String name = t.getName();
             if (!isValidJavaIdentifier(name)) continue;
+
+            // Skip helper types that will be emitted as nested inside their owner class
+            if (nestedHelperOwnerByName.containsKey(name)) {
+                continue;
+            }
 
             File pkgDir = outputDir;
             String pkg = t.getPackageName();
@@ -186,7 +216,7 @@ public class JavaModelWriter {
                     if (p == null || p.getName() == null) continue;
                     if (!isValidJavaIdentifier(p.getName())) continue;
                     if (!seen.add(p.getName())) continue;
-                    String type = p.getType() == null || p.getType().isBlank() ? "Object" : qualifyType(p.getType(), currentPkg);
+                    String type = resolveFieldTypeConsideringNested(p.getType(), currentPkg, name);
                     // Emit configured annotations for fields
                     emitFieldAnnotations(sb, p.isOptional());
                     sb.append("    private ").append(type).append(' ').append(p.getName()).append(";\n");
@@ -210,6 +240,18 @@ public class JavaModelWriter {
                         .append(qualified == null || qualified.isBlank() ? "String" : qualified)
                         .append(" value;\n");
             }
+            // If there is a nested backdrop helper for this class, render it inside as a public static class
+            JavaType nested = indexByName.get(name + "Backdrop");
+            if (nested != null && !nested.getName().isBlank() && !name.isBlank()) {
+                // Only render if this helper is registered to be nested
+                if (!nestedHelperOwnerByName.containsKey(nested.getName())) {
+                    nested = null;
+                }
+            }
+            if (nested != null) {
+                sb.append('\n');
+                sb.append(renderNestedBackdropHelper(nested, currentPkg));
+            }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.TYPE_ALIAS) {
             sb.append("/** Type alias for: ").append(nullToEmpty(t.getAliasTargetName())).append(" */\n");
@@ -231,6 +273,70 @@ public class JavaModelWriter {
             sb.append("public class ").append(name).append(" {\n}\n");
         }
         return sb.toString();
+    }
+
+    private String renderNestedBackdropHelper(JavaType helper, String currentPkg) {
+        StringBuilder sb = new StringBuilder();
+        String helperName = helper.getName();
+        if (helperName == null || helperName.isBlank()) return "";
+        // Header comment mirrors top-level but simpler for nested
+        sb.append("    /* Nested helper for inline 'backdrop' */\n");
+        // Apply additional class annotations if configured
+        if (configuration != null && configuration.additionalClassAnnotations != null) {
+            for (String raw : configuration.additionalClassAnnotations) {
+                if (raw == null) continue;
+                String ann = raw.trim();
+                if (ann.isEmpty()) continue;
+                if (ann.charAt(0) != '@') ann = "@" + ann;
+                sb.append("    ").append(ann).append('\n');
+            }
+        }
+        sb.append("    @lombok.Data\n");
+        sb.append("    @lombok.experimental.SuperBuilder\n");
+        sb.append("    @lombok.NoArgsConstructor\n");
+        sb.append("    @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)\n");
+        sb.append("    public static class ").append(helperName).append(" {\n");
+        if (helper.getProperties() != null) {
+            for (JavaProperty p : helper.getProperties()) {
+                if (p == null || p.getName() == null) continue;
+                if (!isValidJavaIdentifier(p.getName())) continue;
+                String type = resolveFieldTypeConsideringNested(p.getType(), currentPkg, helper.getName());
+                emitFieldAnnotations(sb, /*optional=*/p.isOptional());
+                sb.append("        private ").append(type).append(' ').append(p.getName()).append(";\n");
+            }
+        }
+        sb.append("    }\n");
+        return sb.toString();
+    }
+
+    private String resolveFieldTypeConsideringNested(String rawType, String currentPkg, String currentClassName) {
+        if (rawType == null || rawType.isBlank()) return "Object";
+        // Preserve generics by handling base type only
+        String type = rawType.trim();
+        int lt = type.indexOf('<');
+        String genericArgs = null;
+        String base = type;
+        if (lt >= 0 && type.endsWith(">")) {
+            base = type.substring(0, lt);
+            genericArgs = type.substring(lt); // includes '<...>'
+        }
+        String simpleBase = baseType(base);
+        // If the base is a helper destined to be nested, and current class is not its owner, qualify as Owner.Helper
+        if (nestedHelperOwnerByName.containsKey(simpleBase)) {
+            JavaType owner = nestedHelperOwnerByName.get(simpleBase);
+            String ownerName = owner != null ? owner.getName() : null;
+            if (ownerName != null && !ownerName.equals(currentClassName)) {
+                String ownerPkg = owner.getPackageName();
+                String qualifiedOwner = (ownerPkg == null || ownerPkg.isBlank() || ownerPkg.equals(currentPkg))
+                        ? ownerName
+                        : ownerPkg + '.' + ownerName;
+                String resolved = qualifiedOwner + '.' + simpleBase;
+                return genericArgs == null ? resolved : resolved + genericArgs;
+            }
+        }
+        // Default qualification
+        String q = qualifyType(rawType, currentPkg);
+        return (q == null || q.isBlank()) ? "Object" : q;
     }
 
     private void emitAdditionalAnnotations(StringBuilder sb) {

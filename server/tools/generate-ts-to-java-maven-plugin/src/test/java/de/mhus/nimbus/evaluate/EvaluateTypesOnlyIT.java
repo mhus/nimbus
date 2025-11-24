@@ -151,20 +151,22 @@ public class EvaluateTypesOnlyIT {
                         withBackdropSrc.contains("private de.mhus.nimbus.evaluate.generated.types.WithBackdropBackdrop backdrop;"),
                 "WithBackdrop.backdrop should be of type WithBackdropBackdrop");
 
-        // Helper class WithBackdropBackdrop with n,e,s,w fields
+        // Helper class should now be nested inside WithBackdrop.java as a public static class
         File helper = javaFiles.stream()
                 .filter(f -> f.getPath().contains(expectedPkgPath) && f.getName().equals("WithBackdropBackdrop.java"))
                 .findFirst().orElse(null);
-        assertNotNull(helper, "Expected generated WithBackdropBackdrop.java");
-        String helperSrc = Files.readString(helper.toPath());
-        assertTrue(helperSrc.contains("private java.util.List<Backdrop> n;") || helperSrc.contains("private List<Backdrop> n;"),
-                "Helper should contain field n as List<Backdrop>");
-        assertTrue(helperSrc.contains("private java.util.List<Backdrop> e;") || helperSrc.contains("private List<Backdrop> e;"),
-                "Helper should contain field e as List<Backdrop>");
-        assertTrue(helperSrc.contains("private java.util.List<Backdrop> s;") || helperSrc.contains("private List<Backdrop> s;"),
-                "Helper should contain field s as List<Backdrop>");
-        assertTrue(helperSrc.contains("private java.util.List<Backdrop> w;") || helperSrc.contains("private List<Backdrop> w;"),
-                "Helper should contain field w as List<Backdrop>");
+        assertNull(helper, "Standalone WithBackdropBackdrop.java should not be generated; helper is nested inside WithBackdrop");
+        // Validate nested class content in WithBackdrop.java
+        assertTrue(withBackdropSrc.contains("public static class WithBackdropBackdrop"),
+                "WithBackdrop.java should contain nested public static class WithBackdropBackdrop");
+        assertTrue(withBackdropSrc.contains("private java.util.List<Backdrop> n;") || withBackdropSrc.contains("private List<Backdrop> n;"),
+                "Nested helper should contain field n as List<Backdrop>");
+        assertTrue(withBackdropSrc.contains("private java.util.List<Backdrop> e;") || withBackdropSrc.contains("private List<Backdrop> e;"),
+                "Nested helper should contain field e as List<Backdrop>");
+        assertTrue(withBackdropSrc.contains("private java.util.List<Backdrop> s;") || withBackdropSrc.contains("private List<Backdrop> s;"),
+                "Nested helper should contain field s as List<Backdrop>");
+        assertTrue(withBackdropSrc.contains("private java.util.List<Backdrop> w;") || withBackdropSrc.contains("private List<Backdrop> w;"),
+                "Nested helper should contain field w as List<Backdrop>");
 
         // Build evaluate via maven
         int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");
