@@ -22,7 +22,7 @@
         <module>universe</module>
         <module>region</module>
         <module>world-shared</module>
-        <module>world-provider</module>
+        <module>world-player</module>
         <module>world-editor</module>
     </modules>
 

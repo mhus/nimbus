@@ -5,6 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.net.URI;
 import java.util.Map;
@@ -13,6 +17,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping(RUserWorldController.BASE_PATH)
 @Validated
+@Tag(name = "UserWorld", description = "User-Zugriff auf Main Worlds (Forward zu World & Universe Server)")
 public class RUserWorldController {
 
     public static final String BASE_PATH = "/region/user/world";
@@ -34,6 +39,13 @@ public class RUserWorldController {
     public record WorldInfoResponse(String worldId, Boolean enabled, String parent, String branch) {}
 
     @GetMapping
+    @Operation(summary = "Main World abrufen", description = "Lädt Informationen einer Main World über Forward zum World-Server")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Gefunden"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "404", description = "Nicht gefunden (Konfiguration oder Remote)"),
+        @ApiResponse(responseCode = "500", description = "Unerwarteter Fehler")
+    })
     public ResponseEntity<?> getMainWorld(@RequestParam String worldId) {
         if (worldId == null || worldId.isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
         WorldKind kind;
@@ -48,6 +60,12 @@ public class RUserWorldController {
     }
 
     @PostMapping
+    @Operation(summary = "Main World erstellen", description = "Erstellt eine Main World lokal und remote (World-Server, optional Universe). Nur main worldIds erlaubt.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Erstellt"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "502", description = "Fehler beim Forward (Universe oder World Server)")
+    })
     public ResponseEntity<?> createMainWorld(@RequestBody CreateMainWorldRequest req) {
         if (req.worldId() == null || req.worldId().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
         if (req.name() == null || req.name().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","name blank"));
@@ -75,4 +93,3 @@ public class RUserWorldController {
         }
     }
 }
-

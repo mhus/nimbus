@@ -1,0 +1,27 @@
+spring:
+        include: health,info
+      exposure:
+    web:
+  endpoints:
+management:
+
+    de.mhus.nimbus: DEBUG
+    root: INFO
+  level:
+logging:
+
+    include-stacktrace: always
+    include-exception: true
+    include-binding-errors: always
+    include-message: always
+  error:
+  port: 9051
+server:
+
+      database: world_provider
+      uri: mongodb://root:example@localhost:27017/world_provider?authSource=admin
+    mongodb:
+  data:
+    name: WorldProvider
+  application:
+

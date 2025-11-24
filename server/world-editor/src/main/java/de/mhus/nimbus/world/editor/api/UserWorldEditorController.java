@@ -3,6 +3,10 @@ package de.mhus.nimbus.world.editor.api;
 import de.mhus.nimbus.shared.world.WorldKind;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +22,7 @@ import java.util.Optional;
 @RequestMapping("/world/user/world")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "UserWorldEditor", description = "Bearbeitung von Child Worlds durch Nutzer")
 public class UserWorldEditorController {
 
     private final WWorldService worldService;
@@ -31,6 +36,14 @@ public class UserWorldEditorController {
     }
 
     @GetMapping
+    @Operation(summary = "Child/Main World abrufen", description = "Lädt Welt falls Berechtigung (owner oder publicFlag)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Gefunden"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "401", description = "Nicht authentifiziert"),
+        @ApiResponse(responseCode = "403", description = "Kein Zugriff"),
+        @ApiResponse(responseCode = "404", description = "Nicht gefunden")
+    })
     public ResponseEntity<?> get(@RequestParam String worldId, HttpServletRequest req) {
         String userId = currentUserId(req);
         if (userId == null) return unauthorized();
@@ -45,6 +58,14 @@ public class UserWorldEditorController {
     }
 
     @PostMapping
+    @Operation(summary = "Child World erstellen", description = "Erstellt eine Child World unter einer Main World (owner-Recht erforderlich)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Erstellt"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "401", description = "Nicht authentifiziert"),
+        @ApiResponse(responseCode = "403", description = "Kein Zugriff"),
+        @ApiResponse(responseCode = "409", description = "Bereits vorhanden")
+    })
     public ResponseEntity<?> create(@RequestBody CreateChildWorldRequest req, HttpServletRequest http) {
         String userId = currentUserId(http);
         if (userId == null) return unauthorized();
@@ -74,6 +95,14 @@ public class UserWorldEditorController {
     }
 
     @PutMapping
+    @Operation(summary = "Child World aktualisieren", description = "Ändert Attribute einer existierenden Child World")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Aktualisiert"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "401", description = "Nicht authentifiziert"),
+        @ApiResponse(responseCode = "403", description = "Kein Zugriff"),
+        @ApiResponse(responseCode = "404", description = "Nicht gefunden")
+    })
     public ResponseEntity<?> update(@RequestParam String worldId, @RequestBody UpdateChildWorldRequest req, HttpServletRequest http) {
         String userId = currentUserId(http);
         if (userId == null) return unauthorized();
@@ -99,6 +128,15 @@ public class UserWorldEditorController {
     }
 
     @DeleteMapping
+    @Operation(summary = "Child World löschen", description = "Löscht eine Child World (owner der Main World erforderlich)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Gelöscht"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "401", description = "Nicht authentifiziert"),
+        @ApiResponse(responseCode = "403", description = "Kein Zugriff"),
+        @ApiResponse(responseCode = "404", description = "Nicht gefunden"),
+        @ApiResponse(responseCode = "500", description = "Löschfehler")
+    })
     public ResponseEntity<?> delete(@RequestParam String worldId, HttpServletRequest http) {
         String userId = currentUserId(http);
         if (userId == null) return unauthorized();
@@ -131,4 +169,3 @@ public class UserWorldEditorController {
     private ResponseEntity<?> bad(String msg) { return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", msg)); }
     private ResponseEntity<?> unauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error","unauthorized")); }
 }
-

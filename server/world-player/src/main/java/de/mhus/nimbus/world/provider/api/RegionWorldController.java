@@ -4,6 +4,10 @@ import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.shared.world.WorldKind;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +21,7 @@ import java.util.Optional;
 @RequestMapping("/world/region/world")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "RegionWorld", description = "Verwaltung von Main Worlds im world-provider")
 public class RegionWorldController {
 
     private final WWorldService worldService;
@@ -26,6 +31,12 @@ public class RegionWorldController {
     public static class WorldResponse { public String worldId; public boolean enabled; public String parent; public String branch; public WorldInfo info; public WorldResponse(String w, boolean e, String p, String b, WorldInfo i){worldId=w;enabled=e;parent=p;branch=b;info=i;} }
 
     @GetMapping(produces = "application/json")
+    @Operation(summary = "Main World abrufen", description = "Liefert Daten einer Main World per worldId")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Gefunden"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "404", description = "Nicht gefunden")
+    })
     public ResponseEntity<?> getWorld(@RequestParam String worldId) {
         if (worldId == null || worldId.isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId missing"));
         Optional<WWorld> opt = worldService.getByWorldId(worldId);
@@ -34,6 +45,12 @@ public class RegionWorldController {
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
+    @Operation(summary = "Main World erstellen", description = "Erstellt eine neue Main World (nur worldId ohne Zone/Branch)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Erstellt"),
+        @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
+        @ApiResponse(responseCode = "409", description = "Bereits vorhanden")
+    })
     public ResponseEntity<?> createWorld(@RequestBody CreateWorldRequest req) {
         if (req.getWorldId() == null || req.getWorldId().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
         WorldKind kind;
