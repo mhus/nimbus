@@ -228,3 +228,16 @@ Im Visum (wird alles an der Session gemerkt):
 Oder World Server stellt Visum direkt aus (z.b. bei World Wechsel / teleport)
 - Mit dem Visum wird eine neue Session erstellt und im Redis gespeichert
 - Bei Rückkehr zur main-Welt muss auch wieder ein Visum erstellt werden
+
+## Zusammenfassung
+
+- World Server domaene ist User und World und deren Location im Universe
+- Region Server domaene ist Charaktere und alles was damit zu tun hat 
+  (Backpack, Inventar) und deshalb auch alle Items (ohne position) und 
+  welche Main Welten es gibt um diese zu verwalten
+- World Server hat die domaene der Welt Zonen, Branches und Welt Daten (Blocks, Positionen der Items, 
+  Entity), Welt Editing
+- Region Server kennt User nur, um Rollen in der entsprechenden Region zu definieren
+- World Server kennt keine User, Charakter+UserDaten sind als Player bekannt, aber nicht in der DB
+- 
+
