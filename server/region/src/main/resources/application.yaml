@@ -4,7 +4,8 @@ spring:
   data:
     mongodb:
       uri: mongodb://root:example@localhost:27017/region?authSource=admin
-      database: Region
+      database: region
+
 region:
   server:
     id: local-region-server

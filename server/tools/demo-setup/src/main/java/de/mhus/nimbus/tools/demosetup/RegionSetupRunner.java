@@ -11,32 +11,30 @@ public class RegionSetupRunner {
     private static final Logger LOG = LoggerFactory.getLogger(RegionSetupRunner.class);
 
     private final UniverseClientService universeClientService;
+    private final RegionClientService regionClientService;
     private final String oasisApiUrl;
     private final String oasisPublicKey; // optional verfügbar
 
     public RegionSetupRunner(UniverseClientService universeClientService,
+                             RegionClientService regionClientService,
                              @Value("${region.oasis.api-url:http://localhost:9050}") String oasisApiUrl,
                              @Value("${region.oasis.public-key:}") String oasisPublicKey) {
         this.universeClientService = universeClientService;
+        this.regionClientService = regionClientService;
         this.oasisApiUrl = oasisApiUrl;
         this.oasisPublicKey = oasisPublicKey;
     }
 
     public void run() {
-        if (!universeClientService.isConfigured()) {
-            LOG.warn("Universe Service nicht konfiguriert - überspringe Region Setup");
-            return;
-        }
-        if (!universeClientService.hasToken()) {
-            LOG.warn("Kein Token - Region Setup erst nach Admin Login möglich");
-            return;
-        }
         String name = "oasis";
-        universeClientService.ensureRegion(name, oasisApiUrl, oasisPublicKey);
-        boolean hasKey = universeClientService.checkRegionPublicKey(name);
-        if (!hasKey) {
-            LOG.warn("Public Key für Region '{}' fehlt noch", name);
+        String maintainers = "admin";
+        // Lokale Region im Region Server sicherstellen
+        if (regionClientService.isConfigured()) {
+            regionClientService.ensureRegion(name, oasisApiUrl, maintainers);
+        } else {
+            LOG.warn("RegionClientService nicht konfiguriert - lokale Region Anlage übersprungen");
         }
+
+        // TODO
     }
 }
-
