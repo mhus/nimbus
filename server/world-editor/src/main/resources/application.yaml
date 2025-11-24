@@ -7,7 +7,7 @@ spring:
       database: world_editor
 
 server:
-  port: 9061
+  port: 9043
   error:
     include-message: always
     include-binding-errors: always
@@ -23,5 +23,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
-
+        include: health,info,readyness,readiness

@@ -25,3 +25,9 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.data.mongodb.core.MongoTemplate: INFO
     de.mhus.nimbus: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,readyness,readiness

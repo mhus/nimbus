@@ -16,3 +16,14 @@ server:
     include-binding-errors: always
     include-exception: true
     include-stacktrace: always
+
+logging:
+  level:
+    root: INFO
+    de.mhus.nimbus: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,readyness,readiness
