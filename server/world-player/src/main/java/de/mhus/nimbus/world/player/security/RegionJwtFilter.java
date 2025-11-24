@@ -1,9 +1,8 @@
-package de.mhus.nimbus.world.provider.security;
+package de.mhus.nimbus.world.player.security;
 
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyType;
-import de.mhus.nimbus.world.shared.world.WWorldService; // falls spätere Prüfung benötigt
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Prüft für Pfade /world/region/{regionId}/** ein gültiges Region-JWT.

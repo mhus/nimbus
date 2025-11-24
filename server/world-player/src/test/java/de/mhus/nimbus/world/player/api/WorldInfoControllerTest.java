@@ -1,6 +1,5 @@
-package de.mhus.nimbus.world.provider.api;
+package de.mhus.nimbus.world.player.api;
 
-import de.mhus.nimbus.world.provider.security.RegionJwtFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;

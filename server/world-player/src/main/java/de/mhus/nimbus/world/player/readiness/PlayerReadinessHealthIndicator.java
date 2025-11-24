@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider.readiness;
+package de.mhus.nimbus.world.player.readiness;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;

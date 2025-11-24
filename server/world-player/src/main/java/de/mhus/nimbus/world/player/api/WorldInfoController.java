@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider.api;
+package de.mhus.nimbus.world.player.api;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider.readiness;
+package de.mhus.nimbus.world.player.readiness;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

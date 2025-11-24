@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider.ws;
+package de.mhus.nimbus.world.player.ws;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

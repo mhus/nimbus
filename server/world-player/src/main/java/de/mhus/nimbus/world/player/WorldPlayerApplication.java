@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider;
+package de.mhus.nimbus.world.player;
 
 import de.mhus.nimbus.shared.SharedProperties;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -16,14 +16,14 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableMongoAuditing
-@ReflectiveScan(basePackages = {"de.mhus.nimbus.world.provider","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
-@EnableMongoRepositories(basePackages = {"de.mhus.nimbus.world.provider","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
+@ReflectiveScan(basePackages = {"de.mhus.nimbus.world.player","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
+@EnableMongoRepositories(basePackages = {"de.mhus.nimbus.world.player","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
 @EnableConfigurationProperties({SharedProperties.class})
 @OpenAPIDefinition(info = @Info(title = "World Player API", version = "v1", description = "API for world player", contact = @Contact(name="Nimbus"), license = @License(name="Apache-2.0")))
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableScheduling
-@ComponentScan(basePackages = {"de.mhus.nimbus.world.provider","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
+@ComponentScan(basePackages = {"de.mhus.nimbus.world.player","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
 public class WorldPlayerApplication {
     public static void main(String[] args) {
         SpringApplication.run(WorldPlayerApplication.class, args);

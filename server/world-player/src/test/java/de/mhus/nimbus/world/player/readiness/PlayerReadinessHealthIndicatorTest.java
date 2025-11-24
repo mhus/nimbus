@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider.readiness;
+package de.mhus.nimbus.world.player.readiness;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.context.event.ContextClosedEvent;

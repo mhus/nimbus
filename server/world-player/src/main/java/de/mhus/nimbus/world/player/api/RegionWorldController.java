@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.provider.api;
+package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.shared.world.WorldKind;

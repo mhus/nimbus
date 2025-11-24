@@ -1,6 +1,5 @@
-package de.mhus.nimbus.world.provider.session;
+package de.mhus.nimbus.world.player.session;
 
-import de.mhus.nimbus.world.provider.security.RegionJwtFilter;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import de.mhus.nimbus.world.shared.session.WSessionService;
