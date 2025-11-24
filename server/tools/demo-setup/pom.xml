@@ -28,6 +28,12 @@
             <artifactId>generated</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- Zugriff auf SharedClientService -->
+        <dependency>
+            <groupId>de.mhus.nimbus</groupId>
+            <artifactId>shared</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Test-Dependency für JUnit -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

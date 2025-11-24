@@ -24,4 +24,6 @@ public interface SKeyRepository extends MongoRepository<SKey, String> {
     void deleteAllByTypeAndKindAndOwnerAndIntent(String name, String name1, String owner, String intent);
 
     Optional<SKey> findTop1ByTypeAndKindAndOwnerAndIntentOrderByCreatedAtDesc(String name, String kindPrivate, String owner, String intent);
+
+    boolean existsByTypeAndKindAndOwnerAndIntent(String type, String kind, String owner, String intent);
 }

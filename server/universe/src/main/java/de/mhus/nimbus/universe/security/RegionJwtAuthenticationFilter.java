@@ -6,6 +6,8 @@ import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.universe.UniverseProperties;
 import de.mhus.nimbus.universe.region.URegionService;
+import de.mhus.nimbus.shared.security.SharedClientService;
+import org.springframework.beans.factory.annotation.Value;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.UUID;
 
 /**
  * Filter, der für alle Aufrufe unter /universe/region/{regionId}/** ein Bearer-Token
@@ -31,6 +35,13 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
     private final UniverseProperties jwtProperties;
     private final URegionService regionService;
     private final KeyService keyService;
+    private final SharedClientService sharedClientService;
+
+    @Value("${region.server.id:local-region-server}")
+    private String regionServerId;
+
+    @Value("${universe.base.url:http://localhost:8080}")
+    private String universeBaseUrl;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -38,6 +49,19 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
         if (!applies(path)) {
             filterChain.doFilter(request, response);
             return;
+        }
+
+        if ("POST".equalsIgnoreCase(request.getMethod()) && path.matches("/universe/region/region/[^/]+/?")) {
+            try {
+                boolean exists = sharedClientService.existsKey(universeBaseUrl, "REGION", "PUBLIC", regionServerId, KeyIntent.MAIN_JWT_TOKEN);
+                if (!exists) {
+                    var pubOpt = sharedClientService.readPublicKeyFromFile(Path.of("confidential/regionServerPublicKey.txt"));
+                    if (pubOpt.isPresent()) {
+                        var base64Opt = sharedClientService.toBase64PublicKey(pubOpt.get());
+                        base64Opt.ifPresent(b64 -> sharedClientService.createKey(universeBaseUrl, "REGION", "PUBLIC", pubOpt.get().getAlgorithm(), regionServerId, KeyIntent.MAIN_JWT_TOKEN, regionServerId+":"+KeyIntent.MAIN_JWT_TOKEN+":"+UUID.randomUUID(), b64));
+                    }
+                }
+            } catch (Exception ignore) {}
         }
 
         String regionId = extractRegionId(path);
@@ -81,5 +105,6 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
         if (slash < 0) return rest; // nur regionId vorhanden
         return rest.substring(0, slash);
     }
+
 
 }
