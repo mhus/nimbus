@@ -1339,10 +1339,52 @@ export class PlayerService {
    *
    * @param shortcutKey Shortcut key (e.g., 'key1', 'click2')
    * @param itemId Item ID from shortcut definition
+   * @param target Target object (Block or Entity) from ShortcutService
+   * @param targetPosition Target position from ShortcutService
    */
-  emitShortcutActivated(shortcutKey: string, itemId?: string): void {
-    this.emit('shortcut:activated', { shortcutKey, itemId });
-    logger.debug('Shortcut activated event emitted', { shortcutKey, itemId });
+  emitShortcutActivated(
+    shortcutKey: string,
+    itemId?: string,
+    target?: any,
+    targetPosition?: { x: number; y: number; z: number }
+  ): void {
+    this.emit('shortcut:activated', { shortcutKey, itemId, target, targetPosition });
+    logger.debug('Shortcut activated event emitted', { shortcutKey, itemId, hasTarget: !!target });
+  }
+
+  /**
+   * Emit shortcut started event
+   *
+   * Emits 'shortcut:started' event when a shortcut script execution begins.
+   *
+   * @param data Shortcut start data
+   */
+  emitShortcutStarted(data: {
+    shortcutNr: number;
+    shortcutKey: string;
+    executorId: string;
+    itemId?: string;
+    exclusive: boolean;
+  }): void {
+    this.emit('shortcut:started', data);
+    logger.debug('Shortcut started event emitted', data);
+  }
+
+  /**
+   * Emit shortcut ended event
+   *
+   * Emits 'shortcut:ended' event when a shortcut key is released.
+   *
+   * @param data Shortcut end data
+   */
+  emitShortcutEnded(data: {
+    shortcutNr: number;
+    shortcutKey: string;
+    executorId: string;
+    duration: number;
+  }): void {
+    this.emit('shortcut:ended', data);
+    logger.debug('Shortcut ended event emitted', data);
   }
 
   // ============================================

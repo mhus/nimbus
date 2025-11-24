@@ -36,6 +36,10 @@ export enum MessageType {
   // Animation
   ANIMATION_START = 'a.s',
 
+  // Effects
+  EFFECT_TRIGGER = 'e.t',
+  EFFECT_PARAMETER_UPDATE = 'ef.p.u',
+
   // User/Player
   USER_MOVEMENT = 'u.m',
   PLAYER_TELEPORT = 'p.t',

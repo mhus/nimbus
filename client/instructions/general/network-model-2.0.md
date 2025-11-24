@@ -186,6 +186,9 @@ Der Server sendet angefragte Chunks an den Client.
   ],
   "a": [     // Area data (optional)
     AreaData
+  ],
+  "i": [
+    Item
   ]
 }
 ```
@@ -236,7 +239,7 @@ Der Server sendet Item-Block-Änderungen an den Client. Items sind spezielle Bil
 ```json
 {"t": "b.iu", "d":
         [
-          BlockData,  // BlockData mit metadata.id und metadata.displayName
+          Item,  // BlockData mit metadata.id und metadata.displayName
           ...
       ]
 }
@@ -249,21 +252,7 @@ Der Server sendet Item-Block-Änderungen an den Client. Items sind spezielle Bil
   "d": [
     {
       "position": {"x": 10, "y": 64, "z": 5},
-      "blockTypeId": 1,
-      "metadata": {
-        "id": "item_sword_123",
-        "displayName": "Schwert"
-      },
-      "modifiers": {
-        "0": {
-          "visibility": {
-            "shape": 28,  // Shape.ITEM
-            "textures": {
-              "0": "items/sword.png"
-            }
-          }
-        }
-      }
+      ...
     }
   ]
 }
@@ -816,4 +805,82 @@ Die Session wird nicht mehr vorgehalten.
 * q: query
 * r: register
 
+## Effeckt Trigger (Client -> Server)
 
+Der Client sendet eine Nachricht an den Server, wenn ein Spieler einen Effeckt-Trigger auslöst 
+(z.B. durch Betreten eines Bereichs).
+
+```json
+{"i":"12347", "t": "e.t", "d":
+  {
+    "entityId": "@player_1234", 
+    "effectId": "effect_1231j2829281928",
+    "chunks": [{1,4},{2,4}], 
+    "effect" : {
+      ...      
+    } // ScriptActionDefinition
+  }
+}
+```
+
+EffectTriggerData:
+- entityId: string (optional) - quelle entity die den effekt ausloest
+- effectId: string - unique id des effekts
+- chunks: ChunkPosition[] (optional) - liste von chunks die betroffen sind (wird aus source und targets ermittelt)
+- effect: ScriptActionDefinition // including source und target, targets
+
+## Effeckt Trigger (Server -> Client)
+
+Der Server sendet Nachrichten an den Client weiter, wenn ein Spieler einen Effeckt-Trigger auslöst
+(z.B. durch Betreten eines Bereichs).
+
+```json
+{"i":"12347", "t": "e.t", "d":
+  {
+    "entityId": "@player_1234",
+    "effectId": "effect_1231j2829281928",
+    "chunks": [{1,4},{2,4}],
+    "effect" : {
+      ...
+    } // ScriptActionDefinition
+  }
+}
+```
+
+## Effect Update (Client -> Server)
+
+Der Client sendet eine Nachricht an den Server, um den Status eines laufenden Effekts zu aktualisieren
+(variable hat sich geandert).
+
+```json
+{"i":"12348", "t": "e.u", "d":
+  {
+    "effectId": "effect_1231j2829281928",
+    "chunks": [{1,4},{2,4}],
+    "variables": {
+      "intensity": 0.8,
+      "duration": 5000,
+      ...
+    }
+  }
+}
+```
+
+## Effect Update (Server -> Client)
+
+Der Server sendet eine Nachricht an alle Clients, um den Status eines laufenden Effekts zu aktualisieren
+(variable hat sich geandert).
+
+```json
+{"i":"12348", "t": "e.u", "d":
+  {
+    "effectId": "effect_1231j2829281928",
+    "chunks": [{1,4},{2,4}],
+    "variables": {
+      "intensity": 0.8,
+      "duration": 5000,
+      ...
+    }
+  }
+}
+```

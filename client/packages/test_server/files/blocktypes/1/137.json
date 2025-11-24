@@ -7,7 +7,54 @@
       "visibility": {
         "shape": 1,
         "textures": {
-          "0": "textures/block/basic/birch_leaves.png"
+          "0": {
+            "path": "textures/block/basic/birch_leaves.png",
+            "transparencyMode": 1
+          }
+        }
+      }
+    },
+    "10": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": {
+            "path": "textures/block/basic/jungle_leaves.png",
+            "transparencyMode": 1
+          }
+        }
+      }
+    },
+    "11": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": {
+            "path": "textures/block/basic/leaves.png",
+            "transparencyMode": 1
+          }
+        }
+      }
+    },
+    "12": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": {
+            "path": "textures/block/basic/birch_leaves1.png",
+            "transparencyMode": 1
+          }
+        }
+      }
+    },
+    "13": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": {
+            "path": "textures/block/basic/leaves_birch.png",
+            "transparencyMode": 1
+          }
         }
       }
     }

@@ -558,11 +558,45 @@ GET /api/worlds/{worldId}/entity/{entityId}
 
 # Item
 
+## Item Suchen
+
+GET /api/worlds/{worldId}/items?query={searchTerm}
+
+Sucht nach items, es werden maximal 100 items zurueckgegeben.
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "itemId": "item123",
+      "name": "Health Potion",
+      "texture": "items/health_potion.png"
+    },
+    ...
+  ]
+}
+```
+
 ## Item Abrufen
 
 GET /api/worlds/{worldId}/item/{itemId}
 
 Gibt die Item definition zurueck.
+
+## Item Erstellen
+
+POST /api/worlds/{worldId}/item
+
+## Item Aktualisieren
+
+PUT /api/worlds/{worldId}/item/{itemId}
+
+## Item Loeschen
+
+DELETE /api/worlds/{worldId}/item/{itemId}
+
 
 # Speach Streaming
 
@@ -578,4 +612,81 @@ Parameter:
 Response:
 - Streamt die audio datei z.b. eine ansage oder aehnliches.
 
+# Item Type
+
+## Item Types Suchen
+
+Gibt bis 100 ItemTypes zurueck die dem Suchbegriff entsprechen:
+
+GET /api/worlds/{worldId}/itemtypes
+
+Response:
+
+```json
+{
+  "itemTypes": [
+    {
+      "id": "itemtype123",
+      "name": "Health Potion",
+    },
+    ...
+  ]
+}
+```
+
+Sucht in itemTypes nach dem Suchbegriff:
+
+GET /api/worlds/{worldId}/itemtypes?query={searchTerm}
+
+## Item Type Abrufen
+
+Gibt die ItemType definition zurueck:
+
+GET /api/worlds/{worldId}/itemtypes/{itemTypeId}
+
+Response: ItemType Objekt
+
+## ItemType Erstellen
+
+POST /api/worlds/{worldId}/itemtypes
+
+## ItemType Aktualisieren
+
+PUT /api/worlds/{worldId}/itemtypes/{itemTypeId}
+
+## ItemType Loeschen
+
+DELETE /api/worlds/{worldId}/itemtypes/{itemTypeId}
+
+# Config
+
+## Config Loading
+
+GET /api/worlds/{worldId}/config?client={clientType}
+
+Gibt eine EngineConfiguration Objekt zurueck mit allen konfigurierten werten fuer die welt, user und character.
+
+## Config PlayerInfo
+
+GET /api/worlds/{worldId}/config/playerinfo
+
+Gibt nur die aktuellen PlayerInfo werte zurueck.
+
+## Config World Info
+
+GET /api/worlds/{worldId}/config/worldinfo
+
+Gibt nur die aktuellen WorldInfo werte zurueck.
+
+## Config PlayerBackpack
+
+GET /api/worlds/{worldId}/config/playerbackpack
+
+Gibt nur die aktuellen PlayerBackpack werte zurueck.
+
+## Config Settings
+
+GET /api/worlds/{worldId}/config/settings?client={clientType}
+
+Gibt nur die aktuellen Settings werte zurueck.
 

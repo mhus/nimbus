@@ -8,6 +8,7 @@
  */
 
 import type { Block } from './Block';
+import type { ItemBlockRef } from './ItemBlockRef';
 import type { Backdrop } from './Backdrop';
 
 /**
@@ -69,12 +70,12 @@ export interface ChunkData {
   blocks: Block[];
 
   /**
-   * Item block data - array of Block instances for items
-   * Items are special billboard blocks that are managed separately
+   * Item data - array of Item instances
+   * Items are managed separately from blocks with their own structure
    * Items can only exist at AIR positions or replace existing items
-   * Each item has metadata with unique ID and display name
+   * Each item has a unique ID, position, itemType, and modifiers
    */
-  i?: Block[];
+  i?: ItemBlockRef[];
 
   /**
    * Height data per XZ position (optional)

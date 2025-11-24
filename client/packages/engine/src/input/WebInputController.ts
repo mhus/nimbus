@@ -147,6 +147,9 @@ export class WebInputController implements InputController {
       this.handlers.push(this.editConfigActivateHandler);
     }
 
+    // Note: Click and Shortcut handlers will be added in initialize()
+    // after they're retrieved from InputService
+
     // Setup key bindings
     this.setupKeyBindings();
 
@@ -211,9 +214,18 @@ export class WebInputController implements InputController {
 
       if (!this.clickHandler) {
         logger.warn('Click handler not available from InputService');
+      } else {
+        // Add click handler to handlers list for update loop
+        this.handlers.push(this.clickHandler);
+        logger.info('Click handler added to update loop');
       }
+
       if (!this.shortcutHandler) {
         logger.warn('Shortcut handler not available from InputService');
+      } else {
+        // Add shortcut handler to handlers list for update loop
+        this.handlers.push(this.shortcutHandler);
+        logger.info('Shortcut handler added to update loop');
       }
     } else {
       logger.warn('InputService not available');
@@ -224,6 +236,7 @@ export class WebInputController implements InputController {
     window.addEventListener('keyup', this.onKeyUp);
     this.canvas.addEventListener('click', this.onCanvasClick);
     this.canvas.addEventListener('mousedown', this.onMouseDown);
+    window.addEventListener('mouseup', this.onMouseUp); // On window to catch all mouse up events
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
     document.addEventListener('mousemove', this.onMouseMove);
 
@@ -308,6 +321,15 @@ export class WebInputController implements InputController {
    * Handle keyup event
    */
   private onKeyUp = (event: KeyboardEvent): void => {
+    // Handle shortcut key release (number keys 0-9)
+    if (event.key >= '0' && event.key <= '9') {
+      if (this.shortcutHandler && this.shortcutHandler.isActive()) {
+        this.shortcutHandler.deactivate();
+        event.preventDefault();
+      }
+      return;
+    }
+
     // Handle Space key dynamically based on movement mode
     if (event.key === ' ') {
       const mode = this.playerService.getMovementMode();
@@ -383,6 +405,31 @@ export class WebInputController implements InputController {
   };
 
   /**
+   * Handle mouse button up (for ending click shortcuts)
+   */
+  private onMouseUp = (event: MouseEvent): void => {
+    logger.debug('Mouse up event received', {
+      button: event.button,
+      pointerLocked: this.pointerLocked,
+      hasClickHandler: !!this.clickHandler
+    });
+
+    if (!this.pointerLocked) {
+      logger.debug('Mouse up ignored - pointer not locked');
+      return;
+    }
+
+    // Use ClickInputHandler from InputService
+    if (this.clickHandler) {
+      logger.debug('Calling clickHandler.deactivate()');
+      this.clickHandler.deactivate();
+      event.preventDefault();
+    } else {
+      logger.warn('Click handler not available for mouse up');
+    }
+  };
+
+  /**
    * Handle pointer lock change
    */
   private onPointerLockChange = (): void => {
@@ -426,6 +473,8 @@ export class WebInputController implements InputController {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     this.canvas.removeEventListener('click', this.onCanvasClick);
+    this.canvas.removeEventListener('mousedown', this.onMouseDown);
+    window.removeEventListener('mouseup', this.onMouseUp);
     document.removeEventListener('pointerlockchange', this.onPointerLockChange);
     document.removeEventListener('mousemove', this.onMouseMove);
 

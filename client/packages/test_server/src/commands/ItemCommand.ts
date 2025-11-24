@@ -2,8 +2,10 @@
  * ItemCommand - Manipulate items in the world
  *
  * Commands:
- * - /item add <x> <y> <z> <displayName> <texturePath> - Add item
- * - /item remove <x> <y> <z> - Remove item
+ * - /item add <displayName> <itemType> [texturePath] - Add item without position
+ * - /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item with position
+ * - /item place <itemId> <x> <y> <z> - Place item at position
+ * - /item remove <x> <y> <z> - Remove item from position
  * - /item list - List all items
  */
 
@@ -15,7 +17,7 @@ import { getLogger } from '@nimbus/shared';
 const logger = getLogger('ItemCommand');
 
 export class ItemCommand extends CommandHandler {
-  private readonly usage = '/item <add|remove|get|list> [args...]';
+  private readonly usage = '/item <add|place|remove|get|list> [args...]';
 
   constructor(
     private worldManager: WorldManager,
@@ -36,7 +38,7 @@ export class ItemCommand extends CommandHandler {
     if (args.length === 0) {
       return {
         rc: 1,
-        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <x> <y> <z> <displayName> <texturePath> - Add item\n  remove <x> <y> <z> - Remove item\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
+        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <displayName> <itemType> [texturePath] - Add item without position\n  add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item with position\n  place <itemId> <x> <y> <z> - Place item at position\n  remove <x> <y> <z> - Remove item from position\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
       };
     }
 
@@ -45,6 +47,8 @@ export class ItemCommand extends CommandHandler {
     switch (subcommand) {
       case 'add':
         return this.handleAdd(args.slice(1), context);
+      case 'place':
+        return this.handlePlace(args.slice(1), context);
       case 'remove':
         return this.handleRemove(args.slice(1), context);
       case 'get':
@@ -60,13 +64,14 @@ export class ItemCommand extends CommandHandler {
   }
 
   /**
-   * Handle /item add <x> <y> <z> <displayName> <texturePath>
+   * Handle /item add <displayName> <itemType> [texturePath]
+   * or /item add <x> <y> <z> <displayName> <itemType> [texturePath]
    */
   private async handleAdd(args: any[], context: CommandContext): Promise<CommandResult> {
-    if (args.length < 5) {
+    if (args.length < 2) {
       return {
         rc: 1,
-        message: 'Usage: /item add <x> <y> <z> <displayName> <texturePath>',
+        message: 'Usage:\n  /item add <displayName> <itemType> [texturePath] - Add without position\n  /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add with position',
       };
     }
 
@@ -86,10 +91,105 @@ export class ItemCommand extends CommandHandler {
       };
     }
 
-    // Parse coordinates
-    const x = parseInt(String(args[0]), 10);
-    const y = parseInt(String(args[1]), 10);
-    const z = parseInt(String(args[2]), 10);
+    // Check if first three args are coordinates
+    const firstArgIsNumber = !isNaN(parseInt(String(args[0]), 10));
+    const secondArgIsNumber = args.length >= 2 && !isNaN(parseInt(String(args[1]), 10));
+    const thirdArgIsNumber = args.length >= 3 && !isNaN(parseInt(String(args[2]), 10));
+    const hasCoordinates = firstArgIsNumber && secondArgIsNumber && thirdArgIsNumber;
+
+    let position: { x: number; y: number; z: number } | undefined;
+    let displayName: string;
+    let itemType: string;
+    let texturePath: string | undefined;
+
+    if (hasCoordinates) {
+      // Format: /item add <x> <y> <z> <displayName> <itemType> [texturePath]
+      if (args.length < 5) {
+        return {
+          rc: 1,
+          message: 'Usage: /item add <x> <y> <z> <displayName> <itemType> [texturePath]',
+        };
+      }
+
+      position = {
+        x: parseInt(String(args[0]), 10),
+        y: parseInt(String(args[1]), 10),
+        z: parseInt(String(args[2]), 10),
+      };
+      displayName = String(args[3]);
+      itemType = String(args[4]);
+      texturePath = args[5] ? String(args[5]) : undefined;
+    } else {
+      // Format: /item add <displayName> <itemType> [texturePath]
+      displayName = String(args[0]);
+      itemType = String(args[1]);
+      texturePath = args[2] ? String(args[2]) : undefined;
+    }
+
+    try {
+      // Add item to registry
+      const item = world.itemRegistry.addItem(displayName, itemType, position, texturePath);
+
+      // Queue item update for broadcast (only if item has position)
+      if (item.itemBlockRef) {
+        this.itemUpdateBuffer.addUpdate(worldId, item.itemBlockRef);
+      }
+
+      logger.info('Item added via command', {
+        worldId,
+        position,
+        displayName,
+        itemType,
+        texturePath,
+        itemId: item.item.id,
+      });
+
+      const posMsg = position ? ` at (${position.x}, ${position.y}, ${position.z})` : ' (no position)';
+      return {
+        rc: 0,
+        message: `Item "${displayName}" (${itemType}) added${posMsg}\nItem ID: ${item.item.id}`,
+      };
+    } catch (error) {
+      logger.error('Failed to add item', { worldId, position }, error as Error);
+      return {
+        rc: -1,
+        message: `Failed to add item: ${(error as Error).message}`,
+      };
+    }
+  }
+
+  /**
+   * Handle /item place <itemId> <x> <y> <z>
+   * Places an item (that has no position) at a specific position
+   */
+  private async handlePlace(args: any[], context: CommandContext): Promise<CommandResult> {
+    if (args.length < 4) {
+      return {
+        rc: 1,
+        message: 'Usage: /item place <itemId> <x> <y> <z>',
+      };
+    }
+
+    const worldId = context.session.worldId;
+    if (!worldId) {
+      return {
+        rc: 1,
+        message: 'Not in a world',
+      };
+    }
+
+    const world = this.worldManager.getWorld(worldId);
+    if (!world) {
+      return {
+        rc: 1,
+        message: `World not found: ${worldId}`,
+      };
+    }
+
+    const itemId = String(args[0]);
+    const x = parseInt(String(args[1]), 10);
+    const y = parseInt(String(args[2]), 10);
+    const z = parseInt(String(args[3]), 10);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
       return {
@@ -98,33 +198,71 @@ export class ItemCommand extends CommandHandler {
       };
     }
 
-    const displayName = String(args[3]);
-    const texturePath = String(args[4]);
-
     try {
-      // Add item to registry
-      const item = world.itemRegistry.addItem(x, y, z, displayName, texturePath);
+      // Get item by ID
+      const serverItem = world.itemRegistry.getItemById(itemId);
+      if (!serverItem) {
+        return {
+          rc: 1,
+          message: `Item not found: ${itemId}`,
+        };
+      }
+
+      // Check if item already has a position
+      if (serverItem.itemBlockRef) {
+        return {
+          rc: 1,
+          message: `Item already has a position at (${serverItem.itemBlockRef.position.x}, ${serverItem.itemBlockRef.position.y}, ${serverItem.itemBlockRef.position.z}). Remove it first.`,
+        };
+      }
+
+      // Check if target position is occupied
+      const existingItem = world.itemRegistry.getItem(x, y, z);
+      if (existingItem) {
+        return {
+          rc: 1,
+          message: `Position (${x}, ${y}, ${z}) already has an item: ${existingItem.item.name}`,
+        };
+      }
+
+      // Load ItemType to get modifier data
+      const itemType = String(serverItem.item.itemType);
+
+      // Remove item and re-add it with position using original ID
+      world.itemRegistry.removeItem(itemId);
+      const newItem = world.itemRegistry.addItem(
+        serverItem.item.name,
+        itemType,
+        { x, y, z },
+        serverItem.item.parameters?.texturePath as string | undefined,
+        serverItem.item.parameters,
+        itemId // Preserve original ID
+      );
+
+      // Restore full item data (modifier, description)
+      newItem.item.modifier = serverItem.item.modifier;
+      newItem.item.description = serverItem.item.description;
 
       // Queue item update for broadcast
-      this.itemUpdateBuffer.addUpdate(worldId, item);
+      if (newItem.itemBlockRef) {
+        this.itemUpdateBuffer.addUpdate(worldId, newItem.itemBlockRef);
+      }
 
-      logger.info('Item added via command', {
+      logger.info('Item placed via command', {
         worldId,
+        itemId,
         position: { x, y, z },
-        displayName,
-        texturePath,
-        itemId: item.metadata?.id,
       });
 
       return {
         rc: 0,
-        message: `Item "${displayName}" added at (${x}, ${y}, ${z})\nItem ID: ${item.metadata?.id}`,
+        message: `Item "${serverItem.item.name}" placed at (${x}, ${y}, ${z})`,
       };
     } catch (error) {
-      logger.error('Failed to add item', { worldId, position: { x, y, z } }, error as Error);
+      logger.error('Failed to place item', { worldId, itemId, position: { x, y, z } }, error as Error);
       return {
         rc: -1,
-        message: `Failed to add item: ${(error as Error).message}`,
+        message: `Failed to place item: ${(error as Error).message}`,
       };
     }
   }
@@ -179,25 +317,27 @@ export class ItemCommand extends CommandHandler {
       }
 
       // Remove item from registry
-      world.itemRegistry.removeItem(x, y, z);
+      world.itemRegistry.removeItem(item.item.id);
 
-      // Queue item deletion update for broadcast (blockTypeId: 0)
-      const deleteUpdate = {
+      // Queue item deletion update for broadcast
+      // Create a delete marker item with special itemType
+      const deleteItem: any = {
+        id: item.item.id,
+        texture: '__deleted__', // Special marker for deletion
         position: { x, y, z },
-        blockTypeId: 0, // AIR = deletion
       };
-      this.itemUpdateBuffer.addUpdate(worldId, deleteUpdate);
+      this.itemUpdateBuffer.addUpdate(worldId, deleteItem);
 
       logger.info('Item removed via command', {
         worldId,
         position: { x, y, z },
-        itemId: item.metadata?.id,
-        displayName: item.metadata?.displayName,
+        itemId: item.item.id,
+        displayName: item.item.name,
       });
 
       return {
         rc: 0,
-        message: `Item "${item.metadata?.displayName || 'unknown'}" removed from (${x}, ${y}, ${z})`,
+        message: `Item "${item.item.name || 'unknown'}" removed from (${x}, ${y}, ${z})`,
       };
     } catch (error) {
       logger.error('Failed to remove item', { worldId, position: { x, y, z } }, error as Error);
@@ -248,56 +388,49 @@ export class ItemCommand extends CommandHandler {
     }
 
     try {
-      // Get item data (includes parameters)
-      const itemData = world.itemRegistry.getItemData(x, y, z);
-      if (!itemData) {
+      // Get item (includes all data)
+      const item = world.itemRegistry.getItem(x, y, z);
+      if (!item) {
         return {
           rc: 0,
           message: `No item at position (${x}, ${y}, ${z})`,
         };
       }
 
-      const item = itemData.block;
-
       // Format item information
       const itemInfo = [
         `Item at (${x}, ${y}, ${z}):`,
-        `  Display Name: ${item.metadata?.displayName || 'unknown'}`,
-        `  Item ID: ${item.metadata?.id || 'unknown'}`,
-        `  Block Type ID: ${item.blockTypeId}`,
+        `  Display Name: ${item.item.name || 'unknown'}`,
+        `  Item ID: ${item.item.id || 'unknown'}`,
+        `  Type: ${item.item.itemType}`,
       ];
 
       // Add description if available
-      if (itemData.description) {
-        itemInfo.push(`  Description: ${itemData.description}`);
+      if (item.item.description) {
+        itemInfo.push(`  Description: ${item.item.description}`);
       }
 
-      // Add action properties if available
-      if (itemData.pose) {
-        itemInfo.push(`  Pose: ${itemData.pose}`);
-      }
-      if (itemData.wait !== undefined) {
-        itemInfo.push(`  Wait: ${itemData.wait}ms`);
-      }
-      if (itemData.duration !== undefined) {
-        itemInfo.push(`  Duration: ${itemData.duration}ms`);
-      }
-
-      // Add texture info if available
-      if (item.modifiers && item.modifiers['0']?.visibility?.textures) {
-        const texture = item.modifiers['0'].visibility.textures['0'];
-        if (texture) {
-          itemInfo.push(`  Texture: ${typeof texture === 'string' ? texture : texture.path || 'unknown'}`);
+      // Add modifier properties if available
+      if (item.item.modifier) {
+        if (item.item.modifier.pose) {
+          itemInfo.push(`  Pose: ${item.item.modifier.pose}`);
+        }
+        if (item.item.modifier.texture) {
+          itemInfo.push(`  Texture: ${item.item.modifier.texture}`);
+        }
+        if (item.item.modifier.scaleX !== undefined || item.item.modifier.scaleY !== undefined) {
+          itemInfo.push(`  Scale: ${item.item.modifier.scaleX ?? 0.5} x ${item.item.modifier.scaleY ?? 0.5}`);
         }
       }
 
       // Add position info
-      itemInfo.push(`  Position: x=${item.position.x}, y=${item.position.y}, z=${item.position.z}`);
-
+      if (item.itemBlockRef) {
+        itemInfo.push(`  Position: x=${item.itemBlockRef?.position.x}, y=${item.itemBlockRef?.position.y}, z=${item.itemBlockRef?.position.z}`);
+      }
       // Add parameters if they exist
-      if (itemData.parameters && Object.keys(itemData.parameters).length > 0) {
+      if (item.item.parameters && Object.keys(item.item.parameters).length > 0) {
         itemInfo.push(`  Parameters:`);
-        for (const [key, value] of Object.entries(itemData.parameters)) {
+        for (const [key, value] of Object.entries(item.item.parameters)) {
           itemInfo.push(`    ${key}: ${JSON.stringify(value)}`);
         }
       }
@@ -347,10 +480,11 @@ export class ItemCommand extends CommandHandler {
 
       const itemList = items
         .map((item, index) => {
-          const pos = item.position;
-          const name = item.metadata?.displayName || 'unknown';
-          const id = item.metadata?.id || 'unknown';
-          return `${index + 1}. "${name}" at (${pos.x}, ${pos.y}, ${pos.z}) [ID: ${id}]`;
+          const pos = item.itemBlockRef?.position || 'none';
+          const name = item.item.name || 'unknown';
+          const id = item.item.id || 'unknown';
+          const type = item.item.itemType || 'unknown';
+          return `${index + 1}. "${name}" (${type}) at (${pos}) [ID: ${id}]`;
         })
         .join('\n');
 

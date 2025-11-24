@@ -7,7 +7,7 @@
  * 2. Size-based: Flush immediately when MAX_BATCH_SIZE is reached
  */
 
-import { getLogger, type Block, ExceptionHandler } from '@nimbus/shared';
+import {getLogger, type Item, ExceptionHandler, ItemBlockRef} from '@nimbus/shared';
 
 const logger = getLogger('ItemUpdateBuffer');
 
@@ -34,13 +34,13 @@ const DEFAULT_CONFIG: ItemUpdateBufferConfig = {
  * ItemUpdateBuffer - Batches item updates for efficient broadcasting
  */
 export class ItemUpdateBuffer {
-  private pendingUpdates: Map<string, Block[]>; // worldId -> items[]
+  private pendingUpdates: Map<string, ItemBlockRef[]>; // worldId -> items[]
   private flushTimer: NodeJS.Timeout | null = null;
   private config: ItemUpdateBufferConfig;
-  private flushCallback: (worldId: string, items: Block[]) => void;
+  private flushCallback: (worldId: string, items: ItemBlockRef[]) => void;
 
   constructor(
-    flushCallback: (worldId: string, items: Block[]) => void,
+    flushCallback: (worldId: string, items: ItemBlockRef[]) => void,
     config?: Partial<ItemUpdateBufferConfig>
   ) {
     this.pendingUpdates = new Map();
@@ -57,9 +57,9 @@ export class ItemUpdateBuffer {
    * Add an item update to the buffer
    *
    * @param worldId World ID
-   * @param item Item block to update
+   * @param item Item to update
    */
-  addUpdate(worldId: string, item: Block): void {
+  addUpdate(worldId: string, item: ItemBlockRef): void {
     try {
       // Get or create items array for this world
       let items = this.pendingUpdates.get(worldId);
@@ -71,29 +71,28 @@ export class ItemUpdateBuffer {
       // Add item to buffer
       items.push(item);
 
-      logger.info('🔵 SERVER: Item update added to buffer', {
-        worldId,
-        position: item.position,
-        itemId: item.metadata?.id,
-        displayName: item.metadata?.displayName,
-        bufferedCount: items.length,
-        maxBatchSize: this.config.maxBatchSize,
-      });
+      // logger.info('🔵 SERVER: Item update added to buffer', {
+      //   worldId,
+      //   position: item.position,
+      //   itemId: item.id,
+      //   bufferedCount: items.length,
+      //   maxBatchSize: this.config.maxBatchSize,
+      // });
 
       // Check if we should flush immediately (size-based)
       if (items.length >= this.config.maxBatchSize) {
-        logger.info('🔵 SERVER: Max batch size reached, flushing immediately', {
-          worldId,
-          count: items.length,
-        });
+        // logger.info('🔵 SERVER: Max batch size reached, flushing immediately', {
+        //   worldId,
+        //   count: items.length,
+        // });
         this.flushWorld(worldId);
       } else {
         // Schedule timer-based flush
-        logger.info('🔵 SERVER: Scheduling timer-based flush', {
-          worldId,
-          bufferedCount: items.length,
-          flushInterval: this.config.flushInterval,
-        });
+        // logger.info('🔵 SERVER: Scheduling timer-based flush', {
+        //   worldId,
+        //   bufferedCount: items.length,
+        //   flushInterval: this.config.flushInterval,
+        // });
         this.scheduleFlush();
       }
     } catch (error) {
@@ -132,15 +131,14 @@ export class ItemUpdateBuffer {
       return;
     }
 
-    logger.info('🔵 SERVER: Flushing item updates for world', {
-      worldId,
-      count: items.length,
-      items: items.map((i) => ({
-        position: i.position,
-        itemId: i.metadata?.id,
-        displayName: i.metadata?.displayName,
-      })),
-    });
+    // logger.info('🔵 SERVER: Flushing item updates for world', {
+    //   worldId,
+    //   count: items.length,
+    //   items: items.map((i) => ({
+    //     position: i.position,
+    //     itemId: i.id,
+    //   })),
+    // });
 
     // Call flush callback
     this.flushCallback(worldId, items);

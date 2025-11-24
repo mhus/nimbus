@@ -100,6 +100,11 @@ export class PhysicsService {
   private fallModifier?: Modifier<PlayerMovementState>;
   private swimModifier?: Modifier<PlayerMovementState>;
 
+  // Player direction broadcast (for effects that need continuous target updates)
+  private sendPlayerDirectionEnabled: boolean = false;
+  private lastPlayerRotation: { yaw: number; pitch: number } | null = null;
+  private lastTargetPosition: Vector3 | null = null;
+
   // Physics constants (global, not player-specific)
   private readonly gravity: number = -20.0; // blocks per second²
   private readonly underwaterGravity: number = -0.5; // blocks per second² (2.5% of normal, extremely slow sinking)
@@ -1249,5 +1254,98 @@ export class PhysicsService {
     }
 
     logger.info('PhysicsService disposed');
+  }
+
+  /**
+   * Enable/disable player direction broadcast
+   *
+   * When enabled, emits 'player:direction' event when player rotation or target changes.
+   * Used by effects like beam:follow that need continuous target updates.
+   *
+   * @param enabled Whether to broadcast direction updates
+   */
+  setPlayerDirectionBroadcast(enabled: boolean): void {
+    this.sendPlayerDirectionEnabled = enabled;
+
+    if (!enabled) {
+      // Reset tracking when disabled
+      this.lastPlayerRotation = null;
+      this.lastTargetPosition = null;
+    }
+
+    logger.debug('Player direction broadcast', { enabled });
+  }
+
+  /**
+   * Check player direction and emit event if changed
+   * Should be called each frame (from update loop)
+   */
+  checkAndEmitPlayerDirection(): void {
+    if (!this.sendPlayerDirectionEnabled) {
+      return;
+    }
+
+    const playerService = this.appContext.services.player;
+    const cameraService = this.appContext.services.camera;
+    const selectService = this.appContext.services.select;
+
+    if (!playerService || !cameraService || !selectService) {
+      return;
+    }
+
+    // Get current rotation
+    const rotation = cameraService.getRotation();
+
+    // Get current target
+    const targetEntity = selectService.getCurrentSelectedEntity();
+    const targetBlock = selectService.getCurrentSelectedBlock();
+
+    let targetPos: Vector3 | null = null;
+    let isEntity = false;
+    let isBlock = false;
+
+    if (targetEntity) {
+      // ClientEntity has currentPosition, not position
+      const pos = targetEntity.currentPosition || targetEntity.position;
+      if (pos) {
+        // Add +1.0 Y offset for entities (to aim at center/head height)
+        targetPos = new Vector3(pos.x, pos.y + 1.0, pos.z);
+        isEntity = true;
+      }
+    } else if (targetBlock) {
+      // Add 0.5 offset for blocks to center
+      targetPos = new Vector3(
+        targetBlock.block.position.x + 0.5,
+        targetBlock.block.position.y + 0.5,
+        targetBlock.block.position.z + 0.5
+      );
+      isBlock = true;
+    }
+
+    // Check if rotation or target changed
+    const rotationChanged =
+      !this.lastPlayerRotation ||
+      this.lastPlayerRotation.yaw !== rotation.yaw ||
+      this.lastPlayerRotation.pitch !== rotation.pitch;
+
+    const targetChanged =
+      !this.lastTargetPosition ||
+      !targetPos ||
+      !this.lastTargetPosition.equals(targetPos);
+
+    if (rotationChanged || targetChanged) {
+      // Update tracking
+      this.lastPlayerRotation = { yaw: rotation.yaw, pitch: rotation.pitch };
+      this.lastTargetPosition = targetPos;
+
+      // Emit event with player position and target
+      const playerPos = playerService.getPosition();
+
+      playerService.emit('player:direction', {
+        playerPos,
+        rotation,
+        targetPos,
+      });
+    }
   }
 }

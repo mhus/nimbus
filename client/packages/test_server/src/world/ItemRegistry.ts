@@ -1,14 +1,11 @@
 /**
  * ItemRegistry - Manages items in the world
  *
- * Items are special billboard blocks that are managed separately from regular blocks.
- * Each item has a unique ID and can be placed at AIR positions in chunks.
- *
- * Items are stored internally as ItemData (block + parameters), but can be accessed
- * as Block objects for backward compatibility.
+ * Items are stored with position, id, and itemType directly (no Block wrapper).
+ * Items reference ItemType templates for default properties and can override them.
  */
 
-import type { Block, ItemData } from '@nimbus/shared';
+import type {Item, ItemBlockRef, ItemType, Vector3} from '@nimbus/shared';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -16,15 +13,42 @@ import * as path from 'path';
 const logger = getLogger('ItemRegistry');
 
 /**
- * Item template for creating new items
+ * Load ItemType from disk
+ *
+ * @param itemTypeId Item type identifier (e.g., 'sword', 'wand')
+ * @returns ItemType or undefined if not found
  */
-interface ItemTemplate {
-  blockTypeId: number;
-  modifiers: Record<string, any>;
-  metadata: {
-    displayName: string;
-    id: string;
-  };
+function loadItemType(itemTypeId: string): ItemType | undefined {
+  try {
+    // Load from files/itemtypes/{itemTypeId}.json
+    const filePath = path.join(process.cwd(), 'files', 'itemtypes', `${itemTypeId}.json`);
+
+    if (!fs.existsSync(filePath)) {
+      logger.warn('ItemType file not found', { itemTypeId, filePath });
+      return undefined;
+    }
+
+    const data = fs.readFileSync(filePath, 'utf-8');
+    const itemType: ItemType = JSON.parse(data);
+
+    logger.debug('ItemType loaded', { itemTypeId, filePath });
+    return itemType;
+  } catch (error) {
+    ExceptionHandler.handle(error, 'loadItemType', { itemTypeId });
+    return undefined;
+  }
+}
+
+export interface ServerItem {
+  /**
+   * If the item has an position in the world, this is the reference to it
+   * and other important data loaded from item and itemType in time of storage.
+   */
+  itemBlockRef?: ItemBlockRef;
+  /**
+   * The item data itself
+   */
+  item: Item;
 }
 
 /**
@@ -32,10 +56,7 @@ interface ItemTemplate {
  */
 export class ItemRegistry {
   /** All items in the world, keyed by position "x,y,z" */
-  private items: Map<string, ItemData>;
-
-  /** Template for creating new items */
-  private itemTemplate: ItemTemplate;
+  private items: Map<string, ServerItem>;
 
   /** World ID for this registry */
   private worldId: string;
@@ -46,107 +67,74 @@ export class ItemRegistry {
   constructor(worldId: string) {
     this.worldId = worldId;
     this.items = new Map();
-    this.itemTemplate = this.loadTemplate();
-  }
-
-  /**
-   * Load item template from file
-   */
-  private loadTemplate(): ItemTemplate {
-    try {
-      const templatePath = path.join(
-        __dirname,
-        '../..',
-        'templates',
-        'item_block.json'
-      );
-      const templateContent = fs.readFileSync(templatePath, 'utf-8');
-      const template = JSON.parse(templateContent);
-
-      logger.info('Item template loaded', { templatePath });
-      return template;
-    } catch (error) {
-      logger.error('Failed to load item template, using default', { error });
-      // Return default template
-      return {
-        blockTypeId: 1,
-        modifiers: {
-          '0': {
-            visibility: {
-              shape: 28, // Shape.ITEM
-              textures: {
-                '0': 'items/default.png',
-              },
-            },
-          },
-        },
-        metadata: {
-          displayName: 'Item',
-          id: 'item_default',
-        },
-      };
-    }
   }
 
   /**
    * Add item to registry
    *
-   * @param x World X coordinate
-   * @param y World Y coordinate
-   * @param z World Z coordinate
    * @param displayName Display name for the item
-   * @param texturePath Path to the item texture
+   * @param itemTypeId Item type identifier (e.g., 'sword', 'wand')
+   * @param position World Position (X,Y,Z) coordinate (optional)
+   * @param texturePath Optional texture path override
    * @param parameters Optional parameters for the item
-   * @returns Created item block
+   * @param itemId Optional item ID (if not provided, generates new one)
+   * @returns Created item
    */
   addItem(
-    x: number,
-    y: number,
-    z: number,
     displayName: string,
-    texturePath: string,
-    parameters?: Record<string, any>
-  ): Block {
-    const key = `${x},${y},${z}`;
+    itemTypeId: string,
+    position?: Vector3,
+    texturePath?: string,
+    parameters?: Record<string, any>,
+    itemId?: string
+  ): ServerItem {
 
-    // Generate unique ID
-    const id = `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // Use provided ID or generate new one
+    const id = itemId || `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-    // Create item block from template
-    const block: Block = {
-      position: { x, y, z },
-      blockTypeId: this.itemTemplate.blockTypeId,
-      modifiers: JSON.parse(JSON.stringify(this.itemTemplate.modifiers)), // Deep clone
-      metadata: {
-        id,
-        displayName,
-      },
-    };
+    const itemType = loadItemType(itemTypeId);
 
-    // Set texture path
-    if (block.modifiers && block.modifiers['0']?.visibility?.textures) {
-      block.modifiers['0'].visibility.textures['0'] = texturePath;
+    if (!itemType) {
+      logger.error('ItemType not found, cannot create item', { itemTypeId });
+      throw new Error(`ItemType not found: ${itemTypeId}`);
     }
 
-    // Create ItemData
-    const itemData: ItemData = {
-      block,
+    // Create Item
+    const item: Item = {
+      id,
+      itemType: itemTypeId,
+      name: displayName,
       parameters,
     };
 
+    const itemBlockRef: ItemBlockRef | undefined = position ? {
+      id,
+      position,
+      scaleX: itemType.modifier?.scaleX || 0,
+      scaleY: itemType.modifier?.scaleY || 0,
+      offset: itemType.modifier?.offset || [0, 0, 0],
+      texture: texturePath || itemType.modifier?.texture || '',
+    } : undefined;
+
+    const serverItem = {
+        itemBlockRef,
+        item,
+    }
+
     // Add to registry
-    this.items.set(key, itemData);
+    this.items.set(id, serverItem);
     this.isDirty = true;
 
     logger.info('Item added', {
-      position: { x, y, z },
+      position,
       id,
-      displayName,
+      name: displayName,
+      itemType,
       texturePath,
       hasParameters: !!parameters,
     });
 
-    return block;
+    return serverItem;
   }
 
   /**
@@ -157,13 +145,12 @@ export class ItemRegistry {
    * @param z World Z coordinate
    * @returns True if item was removed, false if no item at position
    */
-  removeItem(x: number, y: number, z: number): boolean {
-    const key = `${x},${y},${z}`;
-    const deleted = this.items.delete(key);
+  removeItem(id : string): boolean {
+    const deleted = this.items.delete(id);
 
     if (deleted) {
       this.isDirty = true;
-      logger.info('Item removed', { position: { x, y, z } });
+      logger.info('Item removed', id);
     }
 
     return deleted;
@@ -175,55 +162,30 @@ export class ItemRegistry {
    * @param x World X coordinate
    * @param y World Y coordinate
    * @param z World Z coordinate
-   * @returns Item block or undefined if no item at position
+   * @returns Item or undefined if no item at position
    */
-  getItem(x: number, y: number, z: number): Block | undefined {
-    const key = `${x},${y},${z}`;
-    const itemData = this.items.get(key);
-    return itemData?.block;
-  }
-
-  /**
-   * Get item data at position (including parameters)
-   *
-   * @param x World X coordinate
-   * @param y World Y coordinate
-   * @param z World Z coordinate
-   * @returns ItemData or undefined if no item at position
-   */
-  getItemData(x: number, y: number, z: number): ItemData | undefined {
-    const key = `${x},${y},${z}`;
-    return this.items.get(key);
+  getItem(x: number, y: number, z: number): ServerItem | undefined {
+    for (const item of this.items.values()) {
+      if (
+        item.itemBlockRef &&
+        item.itemBlockRef.position.x === x &&
+        item.itemBlockRef.position.y === y &&
+        item.itemBlockRef.position.z === z
+      ) {
+        return item;
+      }
+    }
+    return undefined;
   }
 
   /**
    * Get item by ID
    *
-   * @param itemId Item ID (from metadata.id)
-   * @returns Item block or undefined if not found
+   * @param itemId Item ID
+   * @returns Item or undefined if not found
    */
-  getItemById(itemId: string): Block | undefined {
-    for (const itemData of this.items.values()) {
-      if (itemData.block.metadata?.id === itemId) {
-        return itemData.block;
-      }
-    }
-    return undefined;
-  }
-
-  /**
-   * Get item data by ID (including parameters)
-   *
-   * @param itemId Item ID (from metadata.id)
-   * @returns ItemData or undefined if not found
-   */
-  getItemDataById(itemId: string): ItemData | undefined {
-    for (const itemData of this.items.values()) {
-      if (itemData.block.metadata?.id === itemId) {
-        return itemData;
-      }
-    }
-    return undefined;
+  getItemById(itemId: string): ServerItem | undefined {
+    return this.items.get(itemId);
   }
 
   /**
@@ -245,25 +207,25 @@ export class ItemRegistry {
    * @param cx Chunk X coordinate
    * @param cz Chunk Z coordinate
    * @param chunkSize Chunk size (blocks per side)
-   * @returns Array of item blocks in the chunk
+   * @returns Array of items in the chunk
    */
-  getItemsInChunk(cx: number, cz: number, chunkSize: number): Block[] {
+  getItemsInChunk(cx: number, cz: number, chunkSize: number): ItemBlockRef[] {
     const minX = cx * chunkSize;
     const maxX = minX + chunkSize - 1;
     const minZ = cz * chunkSize;
     const maxZ = minZ + chunkSize - 1;
 
-    const items: Block[] = [];
+    const items: ItemBlockRef[] = [];
 
-    for (const itemData of this.items.values()) {
-      const block = itemData.block;
+    for (const item of this.items.values()) {
       if (
-        block.position.x >= minX &&
-        block.position.x <= maxX &&
-        block.position.z >= minZ &&
-        block.position.z <= maxZ
+          item.itemBlockRef &&
+        item.itemBlockRef.position.x >= minX &&
+        item.itemBlockRef.position.x <= maxX &&
+        item.itemBlockRef.position.z >= minZ &&
+        item.itemBlockRef.position.z <= maxZ
       ) {
-        items.push(block);
+        items.push(item.itemBlockRef);
       }
     }
 
@@ -273,18 +235,9 @@ export class ItemRegistry {
   /**
    * Get all items in the world
    *
-   * @returns Array of all item blocks
+   * @returns Array of all items
    */
-  getAllItems(): Block[] {
-    return Array.from(this.items.values()).map((itemData) => itemData.block);
-  }
-
-  /**
-   * Get all item data in the world (including parameters)
-   *
-   * @returns Array of all ItemData
-   */
-  getAllItemData(): ItemData[] {
+  getAllItems(): ServerItem[] {
     return Array.from(this.items.values());
   }
 
@@ -310,7 +263,7 @@ export class ItemRegistry {
    * Save items to disk
    *
    * Saves all items to data/worlds/{worldId}/items.json
-   * Format: Array of ItemData objects
+   * Format: Array of Item objects
    */
   async save(): Promise<void> {
     try {
@@ -324,7 +277,7 @@ export class ItemRegistry {
       const itemsPath = path.join(dataDir, 'items.json');
       const itemsArray = Array.from(this.items.values());
 
-      // Write ItemData array to file
+      // Write Item array to file
       fs.writeFileSync(itemsPath, JSON.stringify(itemsArray, null, 2), 'utf-8');
 
       this.isDirty = false;
@@ -347,8 +300,7 @@ export class ItemRegistry {
    * Load items from disk
    *
    * Loads items from data/worlds/{worldId}/items.json
-   * Supports both old format (Block[]) and new format (ItemData[])
-   * for backward compatibility.
+   * Format: Array of Item objects
    *
    * @returns Number of items loaded
    */
@@ -367,30 +319,15 @@ export class ItemRegistry {
 
       // Read and parse items file
       const itemsContent = fs.readFileSync(itemsPath, 'utf-8');
-      const itemsArray: any[] = JSON.parse(itemsContent);
+      const serverItemsArray: ServerItem[] = JSON.parse(itemsContent);
 
       // Clear existing items
       this.items.clear();
 
       // Load items into registry
-      // Support both old format (Block[]) and new format (ItemData[])
-      for (const item of itemsArray) {
-        let itemData: ItemData;
-
-        // Check if this is new format (ItemData with block property)
-        if (item.block && item.block.position) {
-          // New format: ItemData
-          itemData = item as ItemData;
-        } else {
-          // Old format: Block - wrap in ItemData
-          itemData = {
-            block: item as Block,
-            parameters: undefined,
-          };
-        }
-
-        const key = `${itemData.block.position.x},${itemData.block.position.y},${itemData.block.position.z}`;
-        this.items.set(key, itemData);
+      for (const serverItem of serverItemsArray) {
+//        const key = `${item.position.x},${item.position.y},${item.position.z}`;
+        this.items.set(serverItem.item.id, serverItem);
       }
 
       this.isDirty = false;
@@ -398,10 +335,10 @@ export class ItemRegistry {
       logger.info('Items loaded from disk', {
         worldId: this.worldId,
         path: itemsPath,
-        itemCount: itemsArray.length,
+        itemCount: serverItemsArray.length,
       });
 
-      return itemsArray.length;
+      return serverItemsArray.length;
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
         error,

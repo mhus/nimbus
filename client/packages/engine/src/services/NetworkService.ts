@@ -645,6 +645,19 @@ export class NetworkService {
   }
 
   /**
+   * Get ItemType URL for loading item type definitions
+   *
+   * Constructs URL for ItemType REST API endpoint
+   *
+   * @param type - Item type identifier (e.g., 'sword', 'wand', 'potion')
+   * @returns Full ItemType URL
+   */
+  getItemTypeUrl(type: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    return `${this.apiUrl}/api/worlds/${worldId}/itemtypes/${type}`;
+  }
+
+  /**
    * Get speech URL for streaming speech audio
    *
    * Constructs full URL with sessionId and authToken as query parameters
@@ -744,7 +757,7 @@ export class NetworkService {
    */
   getItemUrl(itemId: string): string {
     const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/worlds/${worldId}/item/${itemId}`;
+    return `${this.apiUrl}/api/worlds/${worldId}/item/${itemId}`;
   }
 
   /**
@@ -755,7 +768,7 @@ export class NetworkService {
    */
   getItemDataUrl(itemId: string): string {
     const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/worlds/${worldId}/itemdata/${itemId}`;
+    return `${this.apiUrl}/api/worlds/${worldId}/itemdata/${itemId}`;
   }
 
   /**
@@ -772,6 +785,50 @@ export class NetworkService {
     }
 
     return url;
+  }
+
+  /**
+   * Send effect parameter update to server
+   *
+   * Used by ShortcutService to send position updates for running effects.
+   *
+   * @param effectId Effect ID
+   * @param paramName Parameter name (e.g., 'targetPos')
+   * @param value Parameter value (will be serialized)
+   */
+  sendEffectParameterUpdate(effectId: string, paramName: string, value: any): void {
+    try {
+      // Serialize value - extract only JSON-serializable data
+      let serializedValue = value;
+      if (value && typeof value === 'object') {
+        // For Vector3 or position objects
+        if (value.x !== undefined && value.y !== undefined && value.z !== undefined) {
+          serializedValue = { x: value.x, y: value.y, z: value.z };
+        }
+      }
+
+      const updateData = {
+        effectId,
+        paramName,
+        value: serializedValue,
+      };
+
+      this.send({
+        t: MessageType.EFFECT_PARAMETER_UPDATE,
+        d: updateData,
+      });
+
+      logger.debug('Effect parameter update sent to server', {
+        effectId,
+        paramName,
+      });
+    } catch (error) {
+      logger.warn('Failed to send effect parameter update', {
+        error: (error as Error).message,
+        effectId,
+        paramName,
+      });
+    }
   }
 
 }

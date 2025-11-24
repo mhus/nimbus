@@ -12,12 +12,15 @@ import {
   ChunkRegisterData,
   ChunkDataTransferObject,
   Block,
+  Item,
   Shape,
   getLogger,
   ExceptionHandler,
   Backdrop,
   Vector3,
   AudioType,
+  itemToBlock,
+  type AudioDefinition, ItemBlockRef,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -392,10 +395,9 @@ export class ChunkService {
     // STEP 1.5: Preload all BlockTypes needed for this chunk
     // Collect unique BlockType IDs from blocks AND items
     const blockTypeIds = new Set(chunkData.b.map(block => block.blockTypeId));
-    if (chunkData.i) {
-      for (const item of chunkData.i) {
-        blockTypeIds.add(item.blockTypeId);
-      }
+    if (chunkData.i && chunkData.i.length > 0) {
+      // All items use BlockType 1 (ITEM type)
+      blockTypeIds.add(1);
     }
     logger.debug('Preloading BlockTypes for chunk', {
       cx: chunkData.cx,
@@ -405,6 +407,63 @@ export class ChunkService {
 
     // Preload all required chunks in parallel
     await blockTypeService.preloadBlockTypes(Array.from(blockTypeIds));
+
+    // STEP 1.6: Preload unique audio files for all blocks in this chunk
+    // This prevents race conditions and reduces redundant function calls
+    const audioService = this.appContext.services.audio;
+    if (audioService) {
+      const uniqueAudioPaths = new Map<string, AudioType | string>();
+
+      // Collect all unique audio paths from blocks (with merged modifiers)
+      for (const block of chunkData.b) {
+        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        if (!blockType) {
+          continue;
+        }
+
+        // Get position key for this block
+        const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+
+        // Merge block modifiers to get final audio definitions (same as in block processing)
+        const currentModifier = mergeBlockModifier(this.appContext, block, blockType, statusData.get(posKey));
+        const audioModifier = currentModifier.audio;
+
+        if (audioModifier && audioModifier.length > 0) {
+          // Filter for STEPS and COLLISION audio (same as loadBlockAudio logic)
+          const audioToPreload = audioModifier.filter(
+            (def: AudioDefinition) => (def.type === AudioType.STEPS || def.type === AudioType.COLLISION) && def.enabled
+          );
+
+          audioToPreload.forEach((audioDef: AudioDefinition) => {
+            // Store path with type for proper pool sizing
+            uniqueAudioPaths.set(audioDef.path, audioDef.type);
+          });
+        }
+      }
+
+      // Preload all unique audio files in parallel
+      if (uniqueAudioPaths.size > 0) {
+        logger.debug('Preloading audio files for chunk', {
+          cx: chunkData.cx,
+          cz: chunkData.cz,
+          uniqueAudioFiles: uniqueAudioPaths.size,
+        });
+
+        const audioLoadPromises = Array.from(uniqueAudioPaths.entries()).map(([path, type]) => {
+          // Use initial pool size based on audio type (matches loadBlockAudio logic)
+          const initialPoolSize = type === AudioType.STEPS ? 3 : 1;
+          return audioService.loadSoundIntoPool(path, initialPoolSize).catch((error: Error) => {
+            logger.warn('Failed to preload audio file (non-blocking)', {
+              path,
+              type,
+              error: error.message,
+            });
+          });
+        });
+
+        await Promise.all(audioLoadPromises);
+      }
+    }
 
     // STEP 2: Process each block - creating ClientBlocks AND collecting height data in ONE pass
     // Process in batches to avoid blocking main thread
@@ -447,13 +506,8 @@ export class ChunkService {
       // Add to map with position key
       clientBlocksMap.set(posKey, clientBlock);
 
-      // Load audio files for this block (non-blocking - loads in background)
-      this.loadBlockAudio(clientBlock).catch(error => {
-        logger.warn('Failed to load block audio (non-blocking)', {
-          position: clientBlock.block.position,
-          error: (error as Error).message,
-        });
-      });
+      // Note: Audio files are now preloaded in batch before this loop (STEP 1.6)
+      // This prevents race conditions and reduces redundant function calls
 
       // PERFORMANCE: Calculate height data in same pass
       // Calculate local x, z coordinates within chunk
@@ -546,56 +600,91 @@ export class ChunkService {
 
     // STEP 3.5: Process items list - add items only at AIR positions
     if (chunkData.i && chunkData.i.length > 0) {
-      logger.debug('Processing items for chunk', {
+      logger.info('Processing items for chunk', {
         cx: chunkData.cx,
         cz: chunkData.cz,
         itemCount: chunkData.i.length,
+        firstItem: chunkData.i[0],
+        firstItemKeys: chunkData.i[0] ? Object.keys(chunkData.i[0]) : [],
       });
 
-      // BlockTypes already preloaded in STEP 1.5
-      // Process items in batches to avoid blocking main thread
-      const items = chunkData.i;
-      for (let batchStart = 0; batchStart < items.length; batchStart += BATCH_SIZE) {
-        const batchEnd = Math.min(batchStart + BATCH_SIZE, items.length);
+      // Process items (now Item[], no Block wrapper)
+      const itemList = chunkData.i;
+      for (let batchStart = 0; batchStart < itemList.length; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, itemList.length);
 
         for (let i = batchStart; i < batchEnd; i++) {
-          const item = items[i];
-        // Get position key
-        const posKey = getBlockPositionKey(item.position.x, item.position.y, item.position.z);
+          const item = itemList[i];
 
-        // Only add item if position is AIR (no block exists at this position)
+          logger.debug('Processing item', {
+            index: i,
+            itemId: item.id,
+            position: item.position,
+            keys: item ? Object.keys(item) : [],
+          });
+
+          // Validate item
+          if (!item || !item.position) {
+            logger.warn('Invalid item in chunk', { index: i, item });
+            continue;
+          }
+
+        // STEP 1: Check if position is AIR
+        const posKey = getBlockPositionKey(
+          item.position.x,
+          item.position.y,
+          item.position.z
+        );
+
         if (clientBlocksMap.has(posKey)) {
           logger.debug('Item skipped - position occupied by block', {
             position: item.position,
-            itemId: item.metadata?.id,
+            itemId: item.id,
           });
           continue;
         }
 
-        // Get BlockType for item
-        const blockType = blockTypeService.getBlockType(item.blockTypeId);
-        if (!blockType) {
-          logger.warn('BlockType not found for item', {
-            blockTypeId: item.blockTypeId,
+        // STEP 2: Fill Item via ItemService (merges ItemType)
+        const itemService = this.appContext.services.item;
+        if (!itemService) {
+          logger.warn('ItemService not available for item processing', {
             position: item.position,
-            itemId: item.metadata?.id,
+            itemId: item.id,
           });
           continue;
         }
 
-        // Merge block modifiers
-        const currentModifier = mergeBlockModifier(this.appContext, item, blockType, statusData.get(posKey));
+        // const filledItem = await itemService.fillItem(item);
+        // if (!filledItem) {
+        //   logger.warn('Failed to fill Item', {
+        //     position: item.position,
+        //     itemId: item.id,
+        //   });
+        //   continue;
+        // }
 
-        // Create ClientBlock for item
+        // STEP 3: Get BlockType 1 (ITEM type)
+        const blockType = blockTypeService.getBlockType(1);
+        if (!blockType) {
+          logger.warn('BlockType 1 (ITEM) not found');
+          continue;
+        }
+
+        // STEP 4: Convert Item to Block for rendering
+        // Items are converted to blocks only in ChunkService for rendering
+        const block = itemToBlock(item);
+
+        // STEP 5: Create ClientBlock with Item reference
         const clientBlock: ClientBlock = {
-          block: item,
+          block,
           chunk: { cx: chunkData.cx, cz: chunkData.cz },
           blockType,
-          currentModifier,
+          currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
           clientBlockType: blockType as any,
           isVisible: true,
           isDirty: false,
           lastUpdate: Date.now(),
+          itemBlockRef: item, // Store Item Block Ref
         };
 
         // Add to map with position key
@@ -611,13 +700,12 @@ export class ChunkService {
 
         logger.debug('Item added to chunk', {
           position: item.position,
-          itemId: item.metadata?.id,
-          displayName: item.metadata?.displayName,
+          itemId: item.id,
         });
         }
 
         // Yield to main thread after each batch (except last batch)
-        if (batchEnd < items.length) {
+        if (batchEnd < itemList.length) {
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
@@ -1069,6 +1157,177 @@ export class ChunkService {
   }
 
   /**
+   * Handle item updates from server (new method that receives Items, not Blocks)
+   *
+   * Receives Item[] from server, fills them with ItemType data, converts to Blocks,
+   * and updates the chunks.
+   *
+   * @param items - Array of item updates from server
+   */
+  async onItemUpdate(items: ItemBlockRef[]): Promise<void> {
+    try {
+      logger.info('🔵 ChunkService.onItemUpdate called', {
+        itemCount: items.length,
+      });
+
+      const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+      const blockTypeService = this.appContext.services.blockType;
+      const itemService = this.appContext.services.item;
+
+      if (!blockTypeService) {
+        logger.warn('BlockTypeService not available - cannot process item updates');
+        return;
+      }
+
+      if (!itemService) {
+        logger.warn('ItemService not available - cannot process item updates');
+        return;
+      }
+
+      // Preload BlockType 1 (ITEM)
+      await blockTypeService.preloadBlockTypes([1]);
+
+      // Track affected chunks for re-rendering
+      const affectedChunks = new Set<string>();
+
+      for (const item of items) {
+        // Check if this is a delete marker
+        if (item.texture === '__deleted__') {
+          // Handle deletion
+          const chunkCoord = worldToChunk(item.position.x, item.position.z, chunkSize);
+          const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
+          const clientChunk = this.chunks.get(chunkKey);
+
+          if (!clientChunk) {
+            logger.debug('Item delete for unloaded chunk, ignoring', {
+              position: item.position,
+              cx: chunkCoord.cx,
+              cz: chunkCoord.cz,
+            });
+            continue;
+          }
+
+          const posKey = getBlockPositionKey(item.position.x, item.position.y, item.position.z);
+          const existingBlock = clientChunk.data.data.get(posKey);
+
+          // Only delete if an item exists at this position
+          if (existingBlock && existingBlock.block.blockTypeId === 1) {
+            const wasDeleted = clientChunk.data.data.delete(posKey);
+            if (wasDeleted) {
+              logger.debug('Item deleted', {
+                position: item.position,
+                itemId: item.id,
+              });
+              affectedChunks.add(chunkKey);
+            }
+          }
+          continue;
+        }
+
+        // Calculate chunk coordinates
+        const chunkCoord = worldToChunk(item.position.x, item.position.z, chunkSize);
+        const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
+
+        // Get chunk
+        const clientChunk = this.chunks.get(chunkKey);
+        if (!clientChunk) {
+          logger.debug('Item update for unloaded chunk, ignoring', {
+            position: item.position,
+            cx: chunkCoord.cx,
+            cz: chunkCoord.cz,
+          });
+          continue;
+        }
+
+        // Get position key
+        const posKey = getBlockPositionKey(
+          item.position.x,
+          item.position.y,
+          item.position.z
+        );
+
+        // Get existing block at this position
+        const existingBlock = clientChunk.data.data.get(posKey);
+
+        // Check if position is AIR or already has an item
+        const isAir = !existingBlock;
+        const isItem = existingBlock && existingBlock.block.blockTypeId === 1;
+
+        if (!isAir && !isItem) {
+          logger.debug('Item add/update ignored - position occupied by non-item block', {
+            position: item.position,
+            existingBlockTypeId: existingBlock.block.blockTypeId,
+            itemId: item.id,
+          });
+          continue;
+        }
+
+        // Get BlockType 1 (ITEM)
+        const blockType = blockTypeService.getBlockType(1);
+        if (!blockType) {
+          logger.warn('BlockType 1 (ITEM) not found');
+          continue;
+        }
+
+        // Convert Item to Block
+        const block = itemToBlock(item);
+
+        // Create/update ClientBlock with Item reference
+        const clientBlock: ClientBlock = {
+          block,
+          chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
+          blockType,
+          currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
+          clientBlockType: blockType as any,
+          isVisible: true,
+          isDirty: true,
+          lastUpdate: Date.now(),
+          itemBlockRef: item, // Store complete Item
+        };
+
+        // Update in chunk
+        clientChunk.data.data.set(posKey, clientBlock);
+
+        // Load audio files for this block (non-blocking)
+        this.loadBlockAudio(clientBlock).catch(error => {
+          logger.warn('Failed to load item update audio (non-blocking)', {
+            position: clientBlock.block.position,
+            error: (error as Error).message,
+          });
+        });
+
+        affectedChunks.add(chunkKey);
+
+        logger.debug('Item added/updated', {
+          position: item.position,
+          itemId: item.id,
+          wasUpdate: isItem,
+        });
+      }
+
+      // Emit events for affected chunks (triggers re-rendering)
+      for (const chunkKey of affectedChunks) {
+        const chunk = this.chunks.get(chunkKey);
+        if (chunk) {
+          // Mark for re-rendering
+          chunk.isRendered = false;
+          this.emit('chunk:updated', chunk);
+          logger.info('🔵 Emitting chunk:updated event for items', { chunkKey });
+        }
+      }
+
+      logger.info('🔵 Item updates applied', {
+        totalItems: items.length,
+        affectedChunks: affectedChunks.size,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ChunkService.onItemUpdate', {
+        count: items.length,
+      });
+    }
+  }
+
+  /**
    * Resend last chunk registration (called after reconnect)
    */
   resendLastRegistration(): void {
@@ -1106,6 +1365,116 @@ export class ChunkService {
    */
   getAllChunks(): ClientChunk[] {
     return Array.from(this.chunks.values());
+  }
+
+  /**
+   * Redraw a specific chunk
+   *
+   * Marks the chunk as not rendered and emits update event to trigger re-rendering
+   *
+   * @param chunkX - Chunk X coordinate
+   * @param chunkZ - Chunk Z coordinate
+   * @returns True if chunk was found and marked for redraw, false otherwise
+   */
+  redrawChunk(chunkX: number, chunkZ: number): boolean {
+    const chunkKey = getChunkKey(chunkX, chunkZ);
+    const chunk = this.chunks.get(chunkKey);
+
+    if (!chunk) {
+      logger.warn('Cannot redraw chunk - chunk not loaded', { chunkX, chunkZ });
+      return false;
+    }
+
+    // Mark for re-rendering
+    chunk.isRendered = false;
+    this.emit('chunk:updated', chunk);
+
+    logger.info('Chunk marked for redraw', { chunkX, chunkZ, chunkKey });
+    return true;
+  }
+
+  /**
+   * Redraw all loaded chunks
+   *
+   * Marks all loaded chunks as not rendered and emits update events to trigger re-rendering
+   *
+   * @returns Number of chunks marked for redraw
+   */
+  redrawAllChunks(): number {
+    const chunks = Array.from(this.chunks.values());
+
+    logger.info('Redrawing all chunks', { count: chunks.length });
+
+    for (const chunk of chunks) {
+      chunk.isRendered = false;
+      this.emit('chunk:updated', chunk);
+    }
+
+    logger.info('All chunks marked for redraw', { count: chunks.length });
+    return chunks.length;
+  }
+
+  /**
+   * Recalculate all currentModifiers for all blocks in all loaded chunks
+   *
+   * This should be called when WorldInfo changes (status, seasonStatus, seasonProgress)
+   * as these values affect modifier merging.
+   *
+   * @returns Number of blocks whose modifiers were recalculated
+   */
+  recalculateAllModifiers(): number {
+    const chunks = Array.from(this.chunks.values());
+    let blockCount = 0;
+
+    logger.info('Recalculating all block modifiers', { chunkCount: chunks.length });
+
+    for (const chunk of chunks) {
+      // Iterate over all blocks in chunk
+      for (const clientBlock of chunk.data.data.values()) {
+        const posKey = getBlockPositionKey(
+          clientBlock.block.position.x,
+          clientBlock.block.position.y,
+          clientBlock.block.position.z
+        );
+
+        // Recalculate currentModifier using current WorldInfo
+        const newModifier = mergeBlockModifier(
+          this.appContext,
+          clientBlock.block,
+          clientBlock.blockType,
+          chunk.data.statusData.get(posKey)
+        );
+
+        // Update currentModifier
+        clientBlock.currentModifier = newModifier;
+        blockCount++;
+      }
+
+      // Mark chunk for re-rendering
+      chunk.isRendered = false;
+    }
+
+    logger.info('All block modifiers recalculated', { blockCount, chunkCount: chunks.length });
+    return blockCount;
+  }
+
+  /**
+   * Recalculate modifiers and redraw all chunks
+   *
+   * Convenience method that recalculates all modifiers and then triggers re-rendering.
+   * Should be called when WorldInfo status or season changes.
+   *
+   * @returns Object with blockCount and chunkCount
+   */
+  recalculateAndRedrawAll(): { blockCount: number; chunkCount: number } {
+    logger.info('Recalculating modifiers and redrawing all chunks');
+
+    const blockCount = this.recalculateAllModifiers();
+    const chunkCount = this.redrawAllChunks();
+
+    logger.info('Recalculation and redraw complete', { blockCount, chunkCount });
+
+    return { blockCount, chunkCount };
   }
 
   /**

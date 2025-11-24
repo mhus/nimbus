@@ -30,6 +30,17 @@
           "enabled": true
         }
       ]
+    },
+    "666": {
+      "visibility": {
+        "shape": 1,
+        "textures": {
+          "0": "textures/block/basic/red_glazed_terracotta.png"
+        }
+      },
+      "physics": {
+        "autoClimbable": true
+      }
     }
   },
   "description_old": "Grass block"

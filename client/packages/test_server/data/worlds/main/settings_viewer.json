@@ -1,0 +1,15 @@
+{
+  "name": "Player",
+  "inputController": "keyboard",
+  "inputMappings": {
+    "move_forward": "w",
+    "move_backward": "s",
+    "move_left": "a",
+    "move_right": "d",
+    "jump": "space",
+    "sprint": "shift",
+    "crouch": "ctrl",
+    "interact": "e",
+    "inventory": "i"
+  }
+}

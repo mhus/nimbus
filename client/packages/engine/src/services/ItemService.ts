@@ -1,5 +1,5 @@
 /**
- * ItemService - Loads and caches items from server
+ * ItemService - Loads and caches items and item types from server
  *
  * Provides access to item data including textures for UI display.
  * Items are loaded from the server REST API and cached locally.
@@ -7,7 +7,7 @@
  * Also handles item activation (pose, wait, duration) when shortcuts are triggered.
  */
 
-import type { Block, ItemData } from '@nimbus/shared';
+import {Item, ItemType, ItemModifier, FullItem} from '@nimbus/shared';
 import { getLogger, ExceptionHandler, ENTITY_POSES } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { StackName } from './ModifierService';
@@ -18,14 +18,17 @@ const logger = getLogger('ItemService');
  * ItemService manages item data from server
  */
 export class ItemService {
-  /** Cache of loaded items: itemId -> Block */
-  private itemCache: Map<string, Block> = new Map();
+  /** Cache of loaded items: itemId -> Item */
+  private itemCache: Map<string, Item> = new Map();
 
-  /** Cache of loaded ItemData: itemId -> ItemData */
-  private itemDataCache: Map<string, ItemData> = new Map();
+  /** Cache of loaded ItemTypes: type -> ItemType */
+  private itemTypeCache: Map<string, ItemType> = new Map();
 
   /** Pending requests to avoid duplicate fetches */
-  private pendingRequests: Map<string, Promise<Block | null>> = new Map();
+  private pendingRequests: Map<string, Promise<Item | null>> = new Map();
+
+  /** Pending ItemType requests to avoid duplicate fetches */
+  private pendingItemTypeRequests: Map<string, Promise<ItemType | null>> = new Map();
 
   /** Active pose timers (for duration cleanup) */
   private poseTimers: Map<string, number> = new Map();
@@ -46,8 +49,13 @@ export class ItemService {
     }
 
     // Subscribe to shortcut activation events
-    playerService.on('shortcut:activated', (data: { shortcutKey: string; itemId?: string }) => {
-      this.handleShortcutActivation(data.shortcutKey, data.itemId);
+    playerService.on('shortcut:activated', (data: {
+      shortcutKey: string;
+      itemId?: string;
+      target?: any;
+      targetPosition?: { x: number; y: number; z: number };
+    }) => {
+      this.handleShortcutActivation(data.shortcutKey, data.itemId, data.target, data.targetPosition);
     });
 
     logger.debug('ItemService event subscriptions initialized');
@@ -56,10 +64,12 @@ export class ItemService {
   /**
    * Get item by ID from cache or server
    *
-   * @param itemId Item ID (from metadata.id)
-   * @returns Block or null if not found
+   * Returns a filled item with merged ItemType data.
+   *
+   * @param itemId Item ID
+   * @returns Filled Item or null if not found
    */
-  async getItem(itemId: string): Promise<Block | null> {
+  async getItem(itemId: string): Promise<FullItem | null> {
     // Check cache first
     if (this.itemCache.has(itemId)) {
       return this.itemCache.get(itemId)!;
@@ -78,7 +88,13 @@ export class ItemService {
     try {
       const item = await promise;
       if (item) {
-        this.itemCache.set(itemId, item);
+        // Fill item with ItemType data before caching
+        const filledItem = await this.fillItem(item);
+        if (filledItem) {
+          this.itemCache.set(itemId, filledItem);
+          return filledItem;
+        }
+        return null;
       }
       return item;
     } finally {
@@ -90,9 +106,9 @@ export class ItemService {
    * Fetch item from server REST API
    *
    * @param itemId Item ID
-   * @returns Block or null if not found
+   * @returns Item or null if not found
    */
-  private async fetchItemFromServer(itemId: string): Promise<Block | null> {
+  private async fetchItemFromServer(itemId: string): Promise<Item | null> {
     try {
       const worldId = this.appContext.worldInfo?.worldId;
       if (!worldId) {
@@ -120,10 +136,15 @@ export class ItemService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const block: Block = await response.json();
-      logger.debug('Item loaded from server', { itemId });
+      const serverItem = await response.json();
 
-      return block;
+      // Extract Item from ServerItem
+      // ServerItem has structure: { item: Item, itemBlockRef?: ItemBlockRef }
+      const item: Item = (serverItem as any).item || serverItem;
+
+      logger.debug('Item loaded from server', { itemId, hasItemType: !!item.itemType });
+
+      return item;
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.fetchItemFromServer', { itemId });
       return null;
@@ -135,25 +156,14 @@ export class ItemService {
    *
    * Returns the asset URL for the item's texture that can be used in <img> tags.
    *
-   * @param item Item block
+   * @param item Item
    * @returns Texture URL or null if no texture
    */
-  getTextureUrl(item: Block): string | null {
+  async getTextureUrl(item: Item): Promise<string | null> {
     try {
-      // Get texture from modifiers
-      const modifier = item.modifiers?.['0'];
-      if (!modifier?.visibility?.textures) {
-        return null;
-      }
-
-      const texture = modifier.visibility.textures['0'];
-      if (!texture) {
-        return null;
-      }
-
-      // Get texture path
-      const texturePath = typeof texture === 'string' ? texture : texture.path;
-      if (!texturePath) {
+      // Get merged modifier
+      const mergedModifier = await this.getMergedModifier(item);
+      if (!mergedModifier?.texture) {
         return null;
       }
 
@@ -164,10 +174,10 @@ export class ItemService {
         return null;
       }
 
-      return networkService.getAssetUrl(`assets/${texturePath}`);
+      return networkService.getAssetUrl(mergedModifier.texture);
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.getTextureUrl', {
-        itemId: item.metadata?.id,
+        itemId: item.id,
       });
       return null;
     }
@@ -204,103 +214,136 @@ export class ItemService {
   }
 
   /**
-   * Get ItemData by ID (includes pose, wait, duration, description, parameters)
-   *
-   * @param itemId Item ID
-   * @returns ItemData or null if not found
-   */
-  async getItemData(itemId: string): Promise<ItemData | null> {
-    try {
-      // Check cache first
-      if (this.itemDataCache.has(itemId)) {
-        return this.itemDataCache.get(itemId)!;
-      }
-
-      // Fetch ItemData from server (full data endpoint)
-      const worldId = this.appContext.worldInfo?.worldId;
-      if (!worldId) {
-        logger.warn('Cannot fetch ItemData: no worldId', { itemId });
-        return null;
-      }
-
-      const networkService = this.appContext.services.network;
-      if (!networkService) {
-        logger.warn('NetworkService not available', { itemId });
-        return null;
-      }
-
-      const url = networkService.getItemDataUrl(itemId);
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        if (response.status === 404) {
-          logger.debug('ItemData not found', { itemId });
-          return null;
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const itemData: ItemData = await response.json();
-      this.itemDataCache.set(itemId, itemData);
-
-      // Also cache the block
-      this.itemCache.set(itemId, itemData.block);
-
-      return itemData;
-    } catch (error) {
-      ExceptionHandler.handle(error, 'ItemService.getItemData', { itemId });
-      return null;
-    }
-  }
-
-  /**
    * Handle shortcut activation
    *
    * Loads item data and activates pose with wait/duration timing.
    *
    * @param shortcutKey Shortcut key that was activated
    * @param itemId Item ID from shortcut
+   * @param target Target object (Block or Entity) from ShortcutService
+   * @param targetPosition Target position from ShortcutService
    */
-  private async handleShortcutActivation(shortcutKey: string, itemId?: string): Promise<void> {
+  private async handleShortcutActivation(
+    shortcutKey: string,
+    itemId?: string,
+    target?: any,
+    targetPosition?: { x: number; y: number; z: number }
+  ): Promise<void> {
     try {
       if (!itemId) {
         logger.debug('No itemId for shortcut activation', { shortcutKey });
         return;
       }
 
-      // Load ItemData (includes pose, wait, duration)
-      const itemData = await this.getItemData(itemId);
-      if (!itemData) {
-        logger.warn('ItemData not found for shortcut', { shortcutKey, itemId });
+      // Load Item
+      const item = await this.getItem(itemId);
+      if (!item) {
+        logger.warn('Item not found for shortcut', { shortcutKey, itemId });
         return;
       }
 
-      const { pose, wait, duration } = itemData;
-
-      // If no pose defined, nothing to do
-      if (!pose) {
-        logger.debug('No pose defined for item', { itemId });
+      // Get merged modifier (ItemType.modifier + item.modifier)
+      const mergedModifier = await this.getMergedModifier(item);
+      if (!mergedModifier) {
+        logger.warn('Item has no modifier', { shortcutKey, itemId });
         return;
       }
 
-      // Get pose ID from ENTITY_POSES
-      const poseId = (ENTITY_POSES as any)[pose.toUpperCase()];
-      if (poseId === undefined) {
-        logger.warn('Unknown pose', { pose, itemId });
-        return;
+      const { pose, onUseEffect } = mergedModifier;
+
+      // Execute scrawl script if defined
+      let executorId: string | undefined;
+      if (onUseEffect) {
+        const scrawlService = this.appContext.services.scrawl;
+        if (scrawlService) {
+          try {
+            logger.debug('Executing onUseEffect script', {
+              itemId,
+              shortcutKey,
+              hasTarget: !!target,
+              targetPosition,
+            });
+
+            // Get source (player)
+            const playerService = this.appContext.services.player;
+            const source = playerService?.getPlayerEntity();
+
+            // Prepare context - all values go into vars for consistency
+            // Target comes from ShortcutService (already resolved)
+            const scriptContext: any = {
+              vars: {
+                itemId: item.id,
+                shortcutKey,
+                item,
+                itemName: item.name,
+                itemTexture: mergedModifier.texture,
+                source,              // $source (Player)
+                target,              // $target (from ShortcutService)
+                targets: target ? [target] : [], // $targets
+              },
+            };
+
+            executorId = await scrawlService.executeAction(onUseEffect, scriptContext);
+          } catch (error) {
+            ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation.onUseEffect', {
+              shortcutKey,
+              itemId,
+            });
+            logger.warn('Failed to execute onUseEffect script', {
+              itemId,
+              error: (error as Error).message,
+            });
+          }
+        } else {
+          logger.debug('ScrawlService not available, skipping onUseEffect', { itemId });
+        }
       }
 
-      // Apply wait delay if specified
-      const waitMs = wait || 0;
-      if (waitMs > 0) {
-        logger.debug('Waiting before pose activation', { waitMs, pose, itemId });
-        await new Promise(resolve => setTimeout(resolve, waitMs));
+      // Register in ShortcutService if executorId exists
+      if (executorId) {
+        const shortcutService = this.appContext.services.shortcut;
+        const playerService = this.appContext.services.player;
+
+        if (shortcutService && playerService) {
+          const shortcutNr = this.extractShortcutNumber(shortcutKey);
+
+          // Get exclusive flag from merged modifier
+          const isExclusive = mergedModifier.exclusive ?? false;
+
+          shortcutService.startShortcut(shortcutNr, shortcutKey, executorId, isExclusive, itemId);
+
+          // Emit started event
+          playerService.emitShortcutStarted({
+            shortcutNr,
+            shortcutKey,
+            executorId,
+            itemId,
+            exclusive: isExclusive,
+          });
+
+          logger.debug('Shortcut registered in ShortcutService', {
+            shortcutNr,
+            executorId,
+            exclusive: isExclusive,
+          });
+        }
       }
 
-      // Activate pose with priority 10 (overrides idle=100, but not calculated movement poses)
-      this.activatePose(poseId, duration || 1000, itemId);
+      // Handle pose animation if defined
+      if (pose) {
+        // Get pose ID from ENTITY_POSES
+        const poseId = (ENTITY_POSES as any)[pose.toUpperCase()];
+        if (poseId === undefined) {
+          logger.warn('Unknown pose', { pose, itemId });
+          return;
+        }
 
-      logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId, duration });
+        // Activate pose with priority 10 (overrides idle=100, but not calculated movement poses)
+        // Default duration: 1000ms
+        this.activatePose(poseId, 1000, itemId);
+
+        logger.debug('Shortcut pose activated', { shortcutKey, itemId, pose, poseId });
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'ItemService.handleShortcutActivation', { shortcutKey, itemId });
     }
@@ -341,6 +384,175 @@ export class ItemService {
   }
 
   /**
+   * Get ItemType by type identifier
+   *
+   * Loads ItemType from server and caches it.
+   *
+   * @param type Item type identifier (e.g., 'sword', 'wand', 'potion')
+   * @returns ItemType or null if not found
+   */
+  async getItemType(type: string): Promise<ItemType | null> {
+    // Check cache first
+    if (this.itemTypeCache.has(type)) {
+      return this.itemTypeCache.get(type)!;
+    }
+
+    // Check if already fetching
+    const pending = this.pendingItemTypeRequests.get(type);
+    if (pending) {
+      return pending;
+    }
+
+    // Fetch from server
+    const promise = this.fetchItemTypeFromServer(type);
+    this.pendingItemTypeRequests.set(type, promise);
+
+    try {
+      const itemType = await promise;
+      if (itemType) {
+        this.itemTypeCache.set(type, itemType);
+      }
+      return itemType;
+    } finally {
+      this.pendingItemTypeRequests.delete(type);
+    }
+  }
+
+  /**
+   * Fetch ItemType from server
+   *
+   * @param type Item type identifier
+   * @returns ItemType or null if not found
+   */
+  private async fetchItemTypeFromServer(type: string): Promise<ItemType | null> {
+    const networkService = this.appContext.services.network;
+    if (!networkService) {
+      logger.warn('NetworkService not available');
+      return null;
+    }
+
+    try {
+      const url = networkService.getItemTypeUrl(type);
+
+      logger.info('Fetching ItemType from server', { type, url });
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) {
+          logger.debug('ItemType not found', { type });
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const itemType: ItemType = await response.json();
+
+      logger.debug('ItemType loaded', { type, name: itemType.name });
+
+      return itemType;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ItemService.fetchItemTypeFromServer', { type });
+      return null;
+    }
+  }
+
+  /**
+   * Get merged modifier for an item
+   *
+   * Merges ItemType.modifier with item.modifier (overrides).
+   *
+   * @param item Item
+   * @returns Merged ItemModifier or null if ItemType not found
+   */
+  async getMergedModifier(item: Item): Promise<ItemModifier | null> {
+    // Load ItemType
+    const itemType = await this.getItemType(item.itemType);
+    if (!itemType) {
+      logger.warn('ItemType not found', { type: item.itemType, itemId: item.id });
+      return null;
+    }
+
+    // Merge: ItemType.modifier + item.modifier
+    const mergedModifier: ItemModifier = {
+      ...itemType.modifier,
+      ...item.modifier,
+    };
+
+    return mergedModifier;
+  }
+
+
+  /**
+   * Fills item with merged ItemType data.
+   * Called by ChunkService for items from chunks.
+   *
+   * @param item Item from chunk (without merged modifier)
+   * @returns Item with merged modifier, or null if failed
+   */
+  async fillItem(item: Item): Promise<FullItem | null> {
+    logger.info('fillItem called', {
+      itemId: item.id,
+      itemType: item.itemType,
+      hasModifier: !!item.modifier,
+    });
+
+    if (!item.itemType) {
+      logger.warn('Item has no itemType', { itemId: item.id });
+      return null;
+    }
+
+    // Load ItemType
+    const itemType = await this.getItemType(item.itemType);
+    if (!itemType) {
+      logger.warn('ItemType not found', { type: item.itemType, itemId: item.id });
+      return null;
+    }
+
+    // Merge: ItemType.modifier + item.modifier
+    const mergedModifier = {
+      ...itemType.modifier,
+      ...item.modifier,
+    };
+
+    // Create filled item with merged modifier
+    const filledItem: FullItem = {
+      ...item,
+      modifier: mergedModifier,
+    };
+
+    logger.debug('Item filled', {
+      itemId: item.id,
+      itemType: item.itemType,
+      hasModifier: !!filledItem.modifier,
+    });
+
+    return filledItem;
+  }
+
+  /**
+   * Extracts the shortcut number from a shortcut key.
+   *
+   * @param shortcutKey Shortcut key (e.g., 'key1', 'key10', 'click2', 'slot5')
+   * @returns Shortcut number
+   */
+  private extractShortcutNumber(shortcutKey: string): number {
+    if (shortcutKey.startsWith('key')) {
+      // key0-key9 -> 0-9, key10 -> 10
+      return parseInt(shortcutKey.replace('key', ''), 10);
+    } else if (shortcutKey.startsWith('click')) {
+      // click0-9 -> 0-9
+      return parseInt(shortcutKey.replace('click', ''), 10);
+    } else if (shortcutKey.startsWith('slot')) {
+      // slot0-N -> 0-N
+      return parseInt(shortcutKey.replace('slot', ''), 10);
+    }
+
+    // Fallback: try to extract any number from the key
+    const match = shortcutKey.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  }
+
+  /**
    * Dispose service
    */
   dispose(): void {
@@ -349,8 +561,9 @@ export class ItemService {
     this.poseTimers.clear();
 
     this.itemCache.clear();
-    this.itemDataCache.clear();
+    this.itemTypeCache.clear();
     this.pendingRequests.clear();
+    this.pendingItemTypeRequests.clear();
     logger.info('ItemService disposed');
   }
 }

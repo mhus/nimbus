@@ -315,6 +315,9 @@ export class EngineService {
         this.selectService?.update(deltaTime); // Update block selection and highlighting
         this.environmentService?.update(deltaTime);
 
+        // Check and emit player direction updates (for beam:follow effects)
+        this.physicsService?.checkAndEmitPlayerDirection();
+
         // Render scene
         this.scene!.render();
       } catch (error) {

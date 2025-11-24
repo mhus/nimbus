@@ -12,7 +12,12 @@ export * from './Shape';
 export * from './Block';
 export * from './BlockType';
 export * from './BlockModifier';
-export * from './ItemData';
+
+// Item types
+export * from './Item';
+export * from './ItemBlockRef';
+export * from './ItemType';
+export * from './ItemModifier';
 
 // Chunk types
 export * from './ChunkData';

@@ -363,3 +363,61 @@ Der Modus heisst DEAD.
 - Sobald der chunk komplett geladen und verarbeitet ist, wird der parameter auf true gesetzt.
 - Pruefe in der physik nicht nur darauf, das der chunk vorhanden ist, sondern auch auf ready == true damit der chunk betreten werden kann.
 - Das gleiche kann bei teleport gemacht werden, dort muss ready == true sein damit der teleport finished ist.
+
+[x] Ich muss noch das item system erweitern. Items in ItemData.ts sollen einen itemType haben, das ist eine referenz zu einer ItemModifier definition.
+- Erweiterung von der server rest api um GET /api/world/{worldid}/itemtype/{type} die daten werden von dep platte unter client/packages/test_server/files/itemtypes geladen (wie auch blocktypes unter
+  client/packages/test_server/files/blocktypes).
+- Erweiterung ItemData.ts
+- Im ItemService das downloaded und cache der ItemTypes implementieren, im NetworkSerice eine getItemTypeUrl(...) anlegen und nutzen.
+- Mergen beim laden von Items von ItemType und custom modifiers.
+- Ich sehe noch ein problem, es muss einen separaten ItemModifier geben, der dann den BlockModifier in einem prarameter hat, denn onUseEffect soll auch im ItemType enthalten sein.
+- Ich sehe in Item das problem: Es wird nur ein BlockModifier benoetigt, hier ist aktuell eine Map in modifier enthalten. ggf. ersetze das komplett durch ItemModifier mit einem TexturePath (immer string)
+- Wo wird Item genutzt? in ChunkService, kann das hier adaptiert werden mit einer einfacheren Item/ItemModifier Struktur. onUseEffect kann dann auch in ItemModifier rein. 
+
+[x] Wenn Effekte ausgeloest werden, muessen die zum server gesendet werden, damit diese auch auf anderen clients ausgefuehrt
+werden koennen.
+Es werden also zwei neue network messages benoetigt:
+- Client to Server: 'effect.trigger' mit EffectTriggerData, name 'e.t'
+  - siehe "Effeckt Trigger (Client -> Server)" in client/instructions/general/network-model-2.0.md
+- Server to Client: 'effect.trigger' mit EffectTriggerData, name 'e.t'
+  - Siehe "Effeckt Trigger (Server -> Client)" in client/instructions/general/network-model-2.0.md
+- Der Server muss die events empfangen und an alle anderen clients, die diese chunks regsitriert haben, senden (broadcast)
+- Der Client muss die events empfangen und den EffectService aufrufen um die Effekte auszufuehren.
+- Der Client muss Effekte die local ausgefuehrt werden (z.b. durch Item use) auch an den server senden. Die chunk daten muessen ausgefuellt werden.
+- Ggf benennen wir im ScrawlService die scriote in 'local_...' und 'remote_...'
+- Achtung, wenn effecte via Server kommen, diese nicht nochmal an den server senden.
+- Sinn macht ein flag in ScriptActionDefinition 'sendToServer?: boolean' default true, wenn false, dann nicht senden.
+  - damit kann auch ein local effect gestartet werden, der nicht an den server gesendet wird.
+
+[?] Wenn ein effect parameters geupdated wird, muss das update an alle clients gesendet werden die den chunk geladen haben.
+- Client to Server, siehe "Effect Parameter Update (Client -> Server)" in client/instructions/general/network-model-2.0.md
+- Server to Client, siehe "Effect Parameter Update (Server -> Client)" in client/instructions/general/network-model-2.0.md
+- Es macht Sinn die affected chunks mit am ScriptActionDefinition zu speichern, dann muss das nru einmal berechnet werden
+- Wie bei EffectTrigger muessen die Events verteilt werden.
+- Im Client event empfangen, mit 'remote_' + effectId den EffectService aufrufen um die parameter zu updaten.
+- Im Client bei 'local_" effecten bei parameter update und wenn sendToServer==true , an den server senden.
+
+[x] In engine wird die worldInfo aktuell aus dem websocket geladen. Das soll anders werden. 
+- Schicke im server nicht mehr die worldInfo via websocket
+- Rufe in engine vor dem verbinden die REST API GET /api/world/{worldId}/config auf um alle configs zu laden.
+- Erstelle einen ConfigService der sich um das laden und cachen der configs kuemmert. Nutze den NetworkService wenn noetig. Der service wird in AppContext referenziert
+- Erstelle ein command mti dem die einzelnen configs im laufenden betrieb neu geladen werden.
+- Siehe client/packages/shared/src/configs/EngineConfiguration.ts
+- Siehe client/instructions/general/server_rest_api.md Abschnitt "Configs"
+
+[x] Erstelle ein Command in engine mit dem ein spezieller oder alle chunks neu gerendert werden.
+- Erstele dazu erst im ChunkService eine funktion 'redrawChunk(chunkX: number, chunkZ: number)' die den chunk neu rendert.
+- Erstelle im ChunkService eine funktion 'redrawAllChunks()' die alle geladenen chunks neu rendert.
+- Erstelle im CommandService ein command 'redrawChunk' mit den parametern chunkX?: number, chunkZ?: number
+  - Wenn chunkX und chunkZ gesetzt sind, rufe 'redrawChunk' auf
+  - Wenn keine parameter gesetzt sind, rufe 'redrawAllChunks' auf
+
+[?] Wenn beim WorldInfo update sich der status aendert, muessen alle currentModifier in ChunkService neu errechnet werden und die chunks neu gerendert werden.
+- Es soll ausserdem eine 'seasonStatus' und 'seasonProgress : number' in der WeltInfo geben. Auch hier muss bei aenderung die currentModifier neu berechnet werden.
+
+[?] Erstelle im Server commandos die es erlauben in WorldInfo den status, seasonStatus und seasonProgress zu aendern.
+- Wenn die Änderung erfolgt, muessen alle clients die worldInfo neu laden. Dazu wird in den engine clients das commando 'reloadWorldConfig' ausgefuehrt.
+
+[ ] Es soll eeinen neuen Bewegungsmodus neben FLY, WALK, SPRINT, CROUCH etc. geben: FREE_FLY, der Modus kommt vor FLY in der liste.
+- Nenne den jetztigen FLY modus in FREE_FLY um. - Wird nur im Editor modus aktiv, keine physik
+- Erstelle einen neuen Modus FLY, der wie FREE_FLY funktioniert, aber die physik aktiviert hat, d.h. alle Physik ausser GRAVITY ist aktiv und die Kamerasteuerung ist wie bei FREE_FLY.

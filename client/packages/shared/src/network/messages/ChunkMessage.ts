@@ -10,6 +10,7 @@ import type { Block } from '../../types/Block';
 import type { AreaData } from '../../types/AreaData';
 import type { HeightData } from '../../types/ChunkData';
 import type { Backdrop } from '../../types/Backdrop';
+import {ItemBlockRef} from "../../types";
 
 /**
  * Chunk coordinates (XZ only, Y is complete column)
@@ -32,8 +33,8 @@ export interface ChunkDataTransferObject {
   /** Block data */
   b: Block[];
 
-  /** Item block data - special billboard blocks managed separately */
-  i?: Block[];
+  /** Item data - Item instances with position, itemType reference, and modifiers */
+  i?: ItemBlockRef[];
 
   /** Height data, maximum height */
   h?: HeightData[];

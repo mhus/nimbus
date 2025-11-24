@@ -4,6 +4,14 @@
 
 import type { Vector3 } from './Vector3';
 
+export enum SeasonStatus {
+  NONE = 0,
+  WINTER = 1,
+  SPRING = 2,
+  SUMMER = 3,
+  AUTUMN = 4,
+}
+
 /**
  * World information
  * Contains all metadata and configuration for a world
@@ -36,27 +44,33 @@ export interface WorldInfo {
   /** Asset server port */
   assetPort?: number;
 
-  /** World group identifier */
-  worldGroupId?: string;
+  /** World region identifier */
+  worlRegion?: string;
 
   /** World status (0=active, 1=inactive, etc.) */
   status?: number;
 
+  /** Season status identifier (e.g., 'spring', 'summer', 'autumn', 'winter') */
+  seasonStatus: SeasonStatus;
+
+  /** Season progress (0.0 to 1.0, representing progress through current season) */
+  seasonProgress: number;
+
   /** Creation timestamp */
-  createdAt?: string;
+  createdAt: string;
 
   /** Last update timestamp */
-  updatedAt?: string;
+  updatedAt: string;
 
   /** World owner information */
-  owner?: {
+  owner: {
     user: string;
     displayName: string;
     email?: string;
   };
 
   /** World settings */
-  settings?: {
+  settings: {
     maxPlayers: number;
     allowGuests: boolean;
     pvpEnabled: boolean;

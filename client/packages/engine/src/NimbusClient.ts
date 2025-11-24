@@ -27,10 +27,14 @@ import { CommandService } from './services/CommandService';
 import { CompassService } from './services/CompassService';
 import { EntityService } from './services/EntityService';
 import { ItemService } from './services/ItemService';
+import { ScrawlService } from './scrawl/ScrawlService';
+import { ConfigService } from './services/ConfigService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { ItemBlockUpdateHandler } from './network/handlers/ItemBlockUpdateHandler';
+import { EffectTriggerHandler } from './network/handlers/EffectTriggerHandler';
+import { EffectParameterUpdateHandler } from './network/handlers/EffectParameterUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
 import { EntityPathwayMessageHandler } from './network/handlers/EntityPathwayMessageHandler';
 import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
@@ -39,6 +43,9 @@ import { ServerCommandHandler } from './network/handlers/ServerCommandHandler';
 import { HelpCommand } from './commands/HelpCommand';
 import { InfoCommand } from './commands/InfoCommand';
 import { ClearCommand } from './commands/ClearCommand';
+import { ReloadConfigCommand } from './commands/ReloadConfigCommand';
+import { ReloadWorldConfigCommand } from './commands/ReloadWorldConfigCommand';
+import { RedrawChunkCommand } from './commands/RedrawChunkCommand';
 import { SendCommand } from './commands/SendCommand';
 import { AudioCommand } from './commands/AudioCommand';
 import { TestAudioCommand } from './commands/TestAudioCommand';
@@ -81,6 +88,16 @@ import {
   WindGustStrengthCommand,
   WindSwayFactorCommand,
 } from './commands/wind';
+import {
+  ScrawlListCommand,
+  ScrawlStartCommand,
+  ScrawlActionCommand,
+  ScrawlSelectedActionCommand,
+  ScrawlStopCommand,
+  ScrawlStatusCommand,
+  ScrawlPauseCommand,
+  ScrawlResumeCommand,
+} from './commands/scrawl';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -141,6 +158,20 @@ async function initializeApp(): Promise<AppContext> {
     appContext.services.item = itemService;
     logger.debug('ItemService initialized');
 
+    // Initialize ScrawlService (before CommandService so commands can use it)
+    logger.info('Initializing ScrawlService...');
+    const scrawlService = new ScrawlService(appContext);
+    appContext.services.scrawl = scrawlService;
+    await scrawlService.initialize();
+    logger.debug('ScrawlService initialized');
+
+    // Initialize ShortcutService (after ScrawlService, for executor integration)
+    logger.info('Initializing ShortcutService...');
+    const { ShortcutService } = await import('./services/ShortcutService');
+    const shortcutService = new ShortcutService(appContext);
+    appContext.services.shortcut = shortcutService;
+    logger.debug('ShortcutService initialized');
+
     // Initialize CommandService (available in both EDITOR and VIEWER modes)
     logger.info('Initializing CommandService...');
     const commandService = new CommandService(appContext);
@@ -150,6 +181,9 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new HelpCommand(commandService));
     commandService.registerHandler(new InfoCommand(appContext));
     commandService.registerHandler(new ClearCommand());
+    commandService.registerHandler(new ReloadConfigCommand(appContext));
+    commandService.registerHandler(new ReloadWorldConfigCommand(appContext));
+    commandService.registerHandler(new RedrawChunkCommand(appContext));
     commandService.registerHandler(new SendCommand(commandService));
     commandService.registerHandler(new AudioCommand(appContext));
     commandService.registerHandler(new TestAudioCommand(appContext));
@@ -194,6 +228,16 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new WindGustStrengthCommand(appContext));
     commandService.registerHandler(new WindSwayFactorCommand(appContext));
 
+    // Register scrawl commands
+    commandService.registerHandler(new ScrawlListCommand(appContext));
+    commandService.registerHandler(new ScrawlStartCommand(appContext));
+    commandService.registerHandler(new ScrawlActionCommand(appContext));
+    commandService.registerHandler(new ScrawlSelectedActionCommand(appContext));
+    commandService.registerHandler(new ScrawlStopCommand(appContext));
+    commandService.registerHandler(new ScrawlStatusCommand(appContext));
+    commandService.registerHandler(new ScrawlPauseCommand(appContext));
+    commandService.registerHandler(new ScrawlResumeCommand(appContext));
+
     logger.debug('CommandService initialized with commands');
 
     logger.info('App initialization complete', {
@@ -214,6 +258,23 @@ async function initializeApp(): Promise<AppContext> {
 async function initializeCoreServices(appContext: AppContext): Promise<void> {
   try {
     logger.info('Initializing core services...');
+
+    // Initialize ConfigService BEFORE NetworkService
+    logger.info('Initializing ConfigService...');
+    const configService = new ConfigService(appContext);
+    appContext.services.config = configService;
+
+    // Load configuration from REST API before connecting to WebSocket
+    logger.info('Loading configuration from REST API...');
+    const clientType = __EDITOR__ ? 'editor' : 'viewer';
+    const worldId = appContext.config?.worldId || 'main';
+    try {
+      await configService.loadConfig(clientType, false, worldId);
+      logger.info('Configuration loaded successfully');
+    } catch (error) {
+      logger.error('Failed to load configuration from REST API', undefined, error as Error);
+      throw new Error('Failed to load configuration. Please check server connection.');
+    }
 
     // Initialize NetworkService
     logger.info('Initializing NetworkService...');
@@ -313,6 +374,19 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const entityPathwayHandler = new EntityPathwayMessageHandler(entityService);
     networkService.registerHandler(entityPathwayHandler);
     logger.info('🔵 EntityPathwayMessageHandler registered for message type: e.p');
+
+    // Register EffectTriggerHandler (ScrawlService was initialized earlier)
+    if (appContext.services.scrawl) {
+      const effectTriggerHandler = new EffectTriggerHandler(appContext.services.scrawl);
+      networkService.registerHandler(effectTriggerHandler);
+      logger.info('🔵 EffectTriggerHandler registered for message type: e.t');
+
+      const effectParameterUpdateHandler = new EffectParameterUpdateHandler(appContext.services.scrawl);
+      networkService.registerHandler(effectParameterUpdateHandler);
+      logger.info('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
+    } else {
+      logger.warn('ScrawlService not available - effect handlers not registered');
+    }
 
     // Register CommandMessageHandler and CommandResultHandler
     const commandService = appContext.services.command;

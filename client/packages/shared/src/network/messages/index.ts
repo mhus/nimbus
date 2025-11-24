@@ -24,6 +24,10 @@ export * from './EntityMessage';
 // Animation
 export * from './AnimationMessage';
 
+// Effects
+export * from './EffectTriggerMessage';
+export * from './EffectParameterUpdateMessage';
+
 // User/Player
 export * from './UserMessage';
 export * from './InteractionMessage';

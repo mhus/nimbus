@@ -5,7 +5,20 @@
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import { SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel, type Block, type HeightData, MessageType, type EntityPathway, type Vector2 } from '@nimbus/shared';
+import {
+  SHARED_VERSION,
+  getLogger,
+  ExceptionHandler,
+  LoggerFactory,
+  LogLevel,
+  type Block,
+  type Item,
+  type HeightData,
+  MessageType,
+  type EntityPathway,
+  type Vector2,
+  ItemBlockRef
+} from '@nimbus/shared';
 import { loadServerConfig } from './config/ServerConfig';
 import { WorldManager } from './world/WorldManager';
 import { TerrainGenerator } from './world/TerrainGenerator';
@@ -15,6 +28,9 @@ import { createAssetRoutes } from './api/routes/assetRoutes';
 import { createSpeechRoutes } from './api/routes/speechRoutes';
 import { createBackdropRoutes } from './api/routes/backdropRoutes';
 import { createEntityRoutes } from './api/routes/entityRoutes';
+import { createItemRoutes } from './api/routes/itemRoutes';
+import { createItemTypeRoutes } from './api/routes/itemTypeRoutes';
+import { createConfigRoutes } from './api/routes/configRoutes';
 import { getChunkKey } from './types/ServerTypes';
 import type { ClientSession } from './types/ServerTypes';
 import { BlockUpdateBuffer } from './network/BlockUpdateBuffer';
@@ -25,8 +41,10 @@ import { LoopCommand } from './commands/LoopCommand';
 import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
 import { NavigateSelectedBlockCommand } from './commands/NavigateSelectedBlockCommand';
 import { ItemCommand } from './commands/ItemCommand';
+import { WorldCommand } from './commands/WorldCommand';
 import { EntityManager } from './entity/EntityManager';
 import { EntitySimulator } from './entity/EntitySimulator';
+import {ServerItem} from "./world/ItemRegistry";
 
 const SERVER_VERSION = '2.0.0';
 const logger = getLogger('NimbusServer');
@@ -72,6 +90,10 @@ class NimbusServer {
     this.commandService.registerHandler(new SetSelectedEditBlockCommand(this.worldManager, this.blockUpdateBuffer));
     this.commandService.registerHandler(new NavigateSelectedBlockCommand());
     this.commandService.registerHandler(new ItemCommand(this.worldManager, this.itemUpdateBuffer));
+    this.commandService.registerHandler(new WorldCommand(
+      this.worldManager,
+      (worldId, cmd, args) => this.broadcastCommandToClients(worldId, cmd, args)
+    ));
   }
 
   /**
@@ -186,6 +208,15 @@ class NimbusServer {
         this.app.use('/api/worlds', authMiddleware, createEntityRoutes(this.entityManager));
       }
 
+      // Item routes
+      this.app.use('/api/worlds', authMiddleware, createItemRoutes(this.worldManager, this.itemUpdateBuffer));
+
+      // ItemType routes (public - no auth needed)
+      this.app.use('/api/worlds', createItemTypeRoutes());
+
+      // Config routes
+      this.app.use('/api/worlds', authMiddleware, createConfigRoutes(this.worldManager));
+
       // Backdrop configuration routes (public - no auth needed)
       this.app.use('/api/backdrop', createBackdropRoutes());
 
@@ -297,6 +328,12 @@ class NimbusServer {
       case 'b.int': // Block interaction (from client)
         this.handleBlockInteraction(session, i, d);
         break;
+      case 'e.t': // Effect trigger (from client)
+        this.handleEffectTrigger(session, d);
+        break;
+      case 'ef.p.u': // Effect parameter update (from client)
+        this.handleEffectParameterUpdate(session, d);
+        break;
       default:
         logger.warn(`Unknown message type: ${t}`);
     }
@@ -333,8 +370,6 @@ class NimbusServer {
       });
     }
 
-    const world = this.worldManager.getWorld(data.worldId);
-
     session.ws.send(JSON.stringify({
       r: messageId,
       t: 'loginResponse',
@@ -342,7 +377,6 @@ class NimbusServer {
         success: true,
         userId: session.userId,
         displayName: session.displayName,
-        worldInfo: world ? world.worldInfo : null,
         sessionId: session.sessionId,
       },
     }));
@@ -566,6 +600,191 @@ class NimbusServer {
    * Actions currently supported:
    * - 'click': Player clicked on block (left, right, or middle)
    */
+  /**
+   * Handle effect trigger from client
+   *
+   * Broadcasts the effect to all other clients that have registered the affected chunks.
+   *
+   * @param session Client session that sent the effect
+   * @param data Effect trigger data
+   */
+  private handleEffectTrigger(session: ClientSession, data: any): void {
+    try {
+      logger.info('🟢 SERVER: Effect trigger (e.t) received from client', {
+        sessionId: session.sessionId,
+        username: session.username,
+        effectId: data?.effectId,
+        entityId: data?.entityId,
+        chunkCount: data?.chunks?.length || 0,
+        rawData: data,
+      });
+
+      if (!data.effect || !data.effectId) {
+        logger.warn('Invalid effect trigger data', { sessionId: session.sessionId });
+        return;
+      }
+
+      const worldId = session.worldId;
+      if (!worldId) {
+        logger.warn('Cannot broadcast effect: session not in a world');
+        return;
+      }
+
+      // Get affected chunk keys
+      const affectedChunks = new Set<string>();
+      if (data.chunks && data.chunks.length > 0) {
+        for (const chunk of data.chunks) {
+          affectedChunks.add(getChunkKey(chunk.cx, chunk.cz));
+        }
+      }
+
+      logger.info('Broadcasting effect to other clients', {
+        worldId,
+        effectId: data.effectId,
+        affectedChunks: affectedChunks.size,
+      });
+
+      // Broadcast to all other clients in the same world that have registered affected chunks
+      let broadcastCount = 0;
+      for (const [otherSessionId, otherSession] of this.sessions) {
+        // Skip the sender
+        if (otherSessionId === session.sessionId) {
+          continue;
+        }
+
+        // Skip if different world
+        if (otherSession.worldId !== worldId) {
+          continue;
+        }
+
+        // Check if client has registered any affected chunks
+        let hasAffectedChunk = false;
+        if (affectedChunks.size > 0) {
+          for (const chunkKey of affectedChunks) {
+            if (otherSession.registeredChunks.has(chunkKey)) {
+              hasAffectedChunk = true;
+              break;
+            }
+          }
+        } else {
+          // No chunks specified, send to all clients in world
+          hasAffectedChunk = true;
+        }
+
+        if (hasAffectedChunk) {
+          // Send effect trigger to client
+          const message = {
+            t: 'e.t',
+            d: data,
+          };
+          otherSession.ws.send(JSON.stringify(message));
+          broadcastCount++;
+
+          logger.debug('Effect sent to client', {
+            sessionId: otherSessionId,
+            username: otherSession.username,
+            effectId: data.effectId,
+          });
+        }
+      }
+
+      logger.info('Effect broadcast complete', {
+        effectId: data.effectId,
+        recipientCount: broadcastCount,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.handleEffectTrigger', {
+        sessionId: session.sessionId,
+      });
+    }
+  }
+
+  /**
+   * Handle effect parameter update from client
+   *
+   * Broadcasts the parameter update to all other clients that have registered the affected chunks.
+   *
+   * @param session Client session that sent the update
+   * @param data Effect parameter update data
+   */
+  private handleEffectParameterUpdate(session: ClientSession, data: any): void {
+    try {
+      logger.info('Effect parameter update received from client', {
+        sessionId: session.sessionId,
+        username: session.username,
+        effectId: data?.effectId,
+        paramName: data?.paramName,
+      });
+
+      if (!data?.effectId || !data?.paramName) {
+        logger.warn('Invalid effect parameter update data', { sessionId: session.sessionId });
+        return;
+      }
+
+      const worldId = session.worldId;
+      if (!worldId) {
+        logger.warn('Cannot broadcast parameter update: session not in a world');
+        return;
+      }
+
+      // Get affected chunk keys
+      const affectedChunks = new Set<string>();
+      if (data.chunks && data.chunks.length > 0) {
+        for (const chunk of data.chunks) {
+          affectedChunks.add(getChunkKey(chunk.cx, chunk.cz));
+        }
+      }
+
+      // Broadcast to all other clients in the same world that have registered affected chunks
+      let broadcastCount = 0;
+      for (const [otherSessionId, otherSession] of this.sessions) {
+        // Skip the sender
+        if (otherSessionId === session.sessionId) {
+          continue;
+        }
+
+        // Skip if different world
+        if (otherSession.worldId !== worldId) {
+          continue;
+        }
+
+        // Check if client has registered any affected chunks
+        let hasAffectedChunk = false;
+        if (affectedChunks.size > 0) {
+          for (const chunkKey of affectedChunks) {
+            if (otherSession.registeredChunks.has(chunkKey)) {
+              hasAffectedChunk = true;
+              break;
+            }
+          }
+        } else {
+          // No chunks specified, send to all clients in world
+          hasAffectedChunk = true;
+        }
+
+        if (hasAffectedChunk) {
+          // Send parameter update to client
+          const message = {
+            t: 'ef.p.u',
+            d: data,
+          };
+          otherSession.ws.send(JSON.stringify(message));
+          broadcastCount++;
+        }
+      }
+
+      logger.info('Parameter update broadcast complete', {
+        effectId: data.effectId,
+        paramName: data.paramName,
+        recipientCount: broadcastCount,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NimbusServer.handleEffectParameterUpdate', {
+        sessionId: session.sessionId,
+      });
+    }
+  }
+
   private handleBlockInteraction(session: ClientSession, messageId: string, data: any) {
     if (!data || data.x === undefined || data.y === undefined || data.z === undefined || !data.ac) {
       logger.warn('Invalid block interaction data', {
@@ -793,7 +1012,7 @@ class NimbusServer {
    * @param worldId World ID
    * @param items Items to broadcast
    */
-  private broadcastItemUpdates(worldId: string, items: Block[]): void {
+  private broadcastItemUpdates(worldId: string, items: ItemBlockRef[]): void {
     try {
       if (items.length === 0) {
         return;
@@ -813,21 +1032,21 @@ class NimbusServer {
       }
 
       // Group items by chunk for efficient filtering
-      const itemsByChunk = new Map<string, Block[]>();
+      const itemsByChunk = new Map<string, ItemBlockRef[]>();
       for (const item of items) {
-        const cx = Math.floor(item.position.x / world.chunkSize);
-        const cz = Math.floor(item.position.z / world.chunkSize);
-        const chunkKey = getChunkKey(cx, cz);
+          const cx = Math.floor(item.position.x / world.chunkSize);
+          const cz = Math.floor(item.position.z / world.chunkSize);
+          const chunkKey = getChunkKey(cx, cz);
 
-        let chunkItems = itemsByChunk.get(chunkKey);
-        if (!chunkItems) {
-          chunkItems = [];
-          itemsByChunk.set(chunkKey, chunkItems);
-        }
-        chunkItems.push(item);
+          let chunkItems = itemsByChunk.get(chunkKey);
+          if (!chunkItems) {
+            chunkItems = [];
+            itemsByChunk.set(chunkKey, chunkItems);
+          }
+          chunkItems.push(item);
       }
 
-      logger.info('🔵 SERVER: Items grouped by chunks', {
+      logger.info('🔵 SERVER: ItemsBlockRef grouped by chunks', {
         worldId,
         totalItems: items.length,
         affectedChunks: itemsByChunk.size,
@@ -839,13 +1058,13 @@ class NimbusServer {
       let skippedCount = 0;
 
       for (const [sessionId, session] of this.sessions) {
-        logger.info('🔵 SERVER: Checking session for item updates', {
-          sessionId,
-          username: session.username,
-          sessionWorld: session.worldId,
-          targetWorld: worldId,
-          registeredChunks: Array.from(session.registeredChunks),
-        });
+        // logger.info('🔵 SERVER: Checking session for item updates', {
+        //   sessionId,
+        //   username: session.username,
+        //   sessionWorld: session.worldId,
+        //   targetWorld: worldId,
+        //   registeredChunks: Array.from(session.registeredChunks),
+        // });
 
         // Skip if not in this world
         if (session.worldId !== worldId) {
@@ -858,15 +1077,15 @@ class NimbusServer {
         }
 
         // Collect items for this client (only chunks they have registered)
-        const clientItems: Block[] = [];
+        const clientItems: ItemBlockRef[] = [];
         for (const [chunkKey, chunkItems] of itemsByChunk) {
           if (session.registeredChunks.has(chunkKey)) {
             clientItems.push(...chunkItems);
-            logger.info('🔵 SERVER: Client has chunk registered for items', {
-              sessionId,
-              chunkKey,
-              itemCount: chunkItems.length,
-            });
+            // logger.info('🔵 SERVER: Client has chunk registered for items', {
+            //   sessionId,
+            //   chunkKey,
+            //   itemCount: chunkItems.length,
+            // });
           } else {
             logger.info('🔴 SERVER: Client does NOT have chunk registered', {
               sessionId,
@@ -884,18 +1103,17 @@ class NimbusServer {
             };
             const messageStr = JSON.stringify(message);
 
-            logger.info('🔵 SERVER: Sending b.iu message to client', {
-              sessionId,
-              username: session.username,
-              itemCount: clientItems.length,
-              items: clientItems.map(i => ({
-                position: i.position,
-                itemId: i.metadata?.id,
-                displayName: i.metadata?.displayName,
-              })),
-              messageLength: messageStr.length,
-              wsReadyState: session.ws.readyState,
-            });
+            // logger.info('🔵 SERVER: Sending b.iu message to client', {
+            //   sessionId,
+            //   username: session.username,
+            //   itemCount: clientItems.length,
+            //   items: clientItems.map(i => ({
+            //     position: i.position,
+            //     itemId: i.id,
+            //   })),
+            //   messageLength: messageStr.length,
+            //   wsReadyState: session.ws.readyState,
+            // });
 
             session.ws.send(messageStr);
             clientCount++;
@@ -915,12 +1133,12 @@ class NimbusServer {
         }
       }
 
-      logger.info('🔵 SERVER: Item updates broadcast complete', {
-        worldId,
-        clientCount,
-        skippedCount,
-        totalItems: items.length,
-      });
+      // logger.info('🔵 SERVER: Item updates broadcast complete', {
+      //   worldId,
+      //   clientCount,
+      //   skippedCount,
+      //   totalItems: items.length,
+      // });
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.broadcastItemUpdates', { worldId });
     }
@@ -1101,6 +1319,52 @@ class NimbusServer {
     } catch (error) {
       ExceptionHandler.handle(error, 'NimbusServer.generatePlayerPathways');
     }
+  }
+
+  /**
+   * Broadcast a command to all clients in a specific world
+   *
+   * @param worldId World identifier (if null, broadcast to all clients)
+   * @param cmd Command name to execute on clients
+   * @param args Command arguments
+   */
+  broadcastCommandToClients(worldId: string | null, cmd: string, args: any[] = []): void {
+    let sentCount = 0;
+
+    for (const [sessionId, session] of this.sessions) {
+      // Filter by world if worldId specified
+      if (worldId && session.worldId !== worldId) {
+        continue;
+      }
+
+      try {
+        const message = {
+          t: MessageType.SCMD,
+          d: {
+            cmd,
+            args,
+          },
+        };
+
+        session.ws.send(JSON.stringify(message));
+        sentCount++;
+
+        logger.debug('Command sent to client', {
+          sessionId,
+          username: session.username,
+          cmd,
+          args,
+        });
+      } catch (error) {
+        logger.error('Failed to send command to client', { sessionId }, error as Error);
+      }
+    }
+
+    logger.info('Command broadcast complete', {
+      cmd,
+      worldId: worldId || 'all',
+      recipientCount: sentCount,
+    });
   }
 }
 

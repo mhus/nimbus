@@ -107,7 +107,7 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
     }
   });
 
-  // PUT /api/worlds/:worldId/assets/* - Update existing asset
+  // PUT /api/worlds/:worldId/assets/* - Update existing asset (or create if not exists)
   router.put('/:worldId/assets/*', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
     const worldId = req.params.worldId;
     const world = worldManager.getWorld(worldId);
@@ -127,17 +127,31 @@ export function createAssetRoutes(worldManager: WorldManager): Router {
       }
 
       // Get asset data from request body
-      const assetData = req.body as Buffer;
+      let assetData: Buffer;
+
+      if (Buffer.isBuffer(req.body)) {
+        assetData = req.body;
+      } else if (typeof req.body === 'object') {
+        // If body is an object (happens with some content types), convert to buffer
+        assetData = Buffer.from(JSON.stringify(req.body));
+      } else if (typeof req.body === 'string') {
+        assetData = Buffer.from(req.body);
+      } else {
+        return res.status(400).json({ error: 'Invalid asset data format' });
+      }
 
       if (!assetData || assetData.length === 0) {
         return res.status(400).json({ error: 'Asset data is required' });
       }
 
       const assetManager = worldManager.getAssetManager();
-      const updatedAsset = await assetManager.updateAsset(assetPath, assetData);
 
+      // Try to update first
+      let updatedAsset = await assetManager.updateAsset(assetPath, assetData);
+
+      // If asset doesn't exist, create it
       if (!updatedAsset) {
-        return res.status(404).json({ error: 'Asset not found' });
+        updatedAsset = await assetManager.createAsset(assetPath, assetData);
       }
 
       return res.json(updatedAsset);

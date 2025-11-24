@@ -129,8 +129,43 @@ export class InputService {
       for (const handler of this.handlers) {
         handler.update(deltaTime);
       }
+
+      // After updating handlers, propagate position updates to active executors
+      this.updateActiveExecutors();
     } catch (error) {
       ExceptionHandler.handle(error, 'InputService.update');
+    }
+  }
+
+  /**
+   * Propagates position/target updates from active shortcuts to ScrawlService.
+   * Called each frame after handlers have been updated.
+   */
+  private updateActiveExecutors(): void {
+    const shortcutService = this.appContext.services.shortcut;
+    const scrawlService = this.appContext.services.scrawl;
+
+    if (!shortcutService || !scrawlService) {
+      return;
+    }
+
+    // For each active shortcut, update its executor parameters
+    for (const shortcut of shortcutService.getActiveShortcuts()) {
+      if (shortcut.lastPlayerPos) {
+        scrawlService.updateExecutorParameter(
+          shortcut.executorId,
+          'playerPos',
+          shortcut.lastPlayerPos
+        );
+      }
+
+      if (shortcut.lastTargetPos) {
+        scrawlService.updateExecutorParameter(
+          shortcut.executorId,
+          'targetPos',
+          shortcut.lastTargetPos
+        );
+      }
     }
   }
 

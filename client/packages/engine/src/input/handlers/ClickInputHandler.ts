@@ -34,6 +34,9 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 const logger = getLogger('ClickInputHandler');
 
 export class ClickInputHandler extends InputHandler {
+  private activeButtonNumber: number | null = null;
+  private activeShortcutKey: string | null = null;
+
   constructor(playerService: PlayerService, appContext: AppContext) {
     super(playerService, appContext);
   }
@@ -84,107 +87,27 @@ export class ClickInputHandler extends InputHandler {
       const movementStatus = this.playerService.getMovementState();
 
       // Get shortcut configuration for this button
-      const playerInfo = playerEntity.playerInfo;
       const shortcutKey = `click${buttonNumber}`;
-      const shortcut = playerInfo.shortcuts?.[shortcutKey];
-      const shortcutType = shortcut?.type;
-      const shortcutItemId = shortcut?.itemId;
+      const shortcutService = this.appContext.services.shortcut;
 
-      // Priority 1: Check if entity is selected
-      const selectedEntity = selectService.getCurrentSelectedEntity();
-      if (selectedEntity) {
-        // Calculate distance to entity
-        const entityPos = selectedEntity.currentPosition;
-        const distance = Math.sqrt(
-          Math.pow(entityPos.x - playerPosition.x, 2) +
-          Math.pow(entityPos.y - playerPosition.y, 2) +
-          Math.pow(entityPos.z - playerPosition.z, 2)
-        );
+      // Fire shortcut through ShortcutService (centralized)
+      if (shortcutService) {
+        shortcutService.fireShortcut(buttonNumber, shortcutKey);
 
-        // Send entity interaction to server with full context
-        networkService.sendEntityInteraction(
-          selectedEntity.id,
-          'click',
+        // Mark handler as active for continuous updates
+        this.state.active = true;
+
+        // Track active shortcut for deactivation and continuous updates
+        this.activeButtonNumber = buttonNumber;
+        this.activeShortcutKey = shortcutKey;
+
+        logger.info('Click shortcut activated for continuous updates', {
           buttonNumber,
-          {
-            entityId: selectedEntity.id,
-            distance: parseFloat(distance.toFixed(2)),
-            targetPosition: entityPos,
-            playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
-            playerRotation: { yaw: rotation.y, pitch: rotation.x },
-            selectionRadius,
-            movementStatus,
-            shortcutType,
-            shortcutItemId,
-          }
-        );
-
-        logger.debug('Entity interaction sent', {
-          entityId: selectedEntity.id,
-          clickType: buttonNumber,
-          distance: distance.toFixed(2),
-          movementStatus,
-          shortcutType,
+          shortcutKey,
+          handlerActive: this.state.active,
         });
-
-        // Trigger highlight animation in UI (only for clicks 0-9)
-        if (buttonNumber >= 0 && buttonNumber <= 9) {
-          this.playerService.highlightShortcut(shortcutKey);
-          // Emit activation event for ItemService (pose handling)
-          this.playerService.emitShortcutActivated(shortcutKey, shortcutItemId);
-        }
-
-        return;
-      }
-
-      // Priority 2: Check if block is selected
-      const selectedBlock = selectService.getCurrentSelectedBlock();
-      if (selectedBlock) {
-        // Calculate distance to block center
-        const blockPos = selectedBlock.block.position;
-        const blockCenter = { x: blockPos.x + 0.5, y: blockPos.y + 0.5, z: blockPos.z + 0.5 };
-        const distance = Math.sqrt(
-          Math.pow(blockCenter.x - playerPosition.x, 2) +
-          Math.pow(blockCenter.y - playerPosition.y, 2) +
-          Math.pow(blockCenter.z - playerPosition.z, 2)
-        );
-
-        // Send block interaction to server with full context
-        networkService.sendBlockInteraction(
-          blockPos.x,
-          blockPos.y,
-          blockPos.z,
-          'click',
-          {
-            clickType: buttonNumber,
-            distance: parseFloat(distance.toFixed(2)),
-            targetPosition: blockCenter,
-            playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
-            playerRotation: { yaw: rotation.y, pitch: rotation.x },
-            selectionRadius,
-            movementStatus,
-            shortcutType,
-            shortcutItemId,
-          },
-          selectedBlock.block.metadata?.id,
-          selectedBlock.block.metadata?.groupId
-        );
-
-        logger.debug('Block interaction sent', {
-          position: blockPos,
-          clickType: buttonNumber,
-          distance: distance.toFixed(2),
-          movementStatus,
-          shortcutType,
-          id: selectedBlock.block.metadata?.id,
-        });
-
-        // Trigger highlight animation in UI (only for clicks 0-9)
-        if (buttonNumber >= 0 && buttonNumber <= 9) {
-          this.playerService.highlightShortcut(shortcutKey);
-          // Emit activation event for ItemService (pose handling)
-          this.playerService.emitShortcutActivated(shortcutKey, shortcutItemId);
-        }
+      } else {
+        logger.warn('ShortcutService not available for click shortcut');
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ClickInputHandler.onActivate', { buttonNumber });
@@ -192,16 +115,121 @@ export class ClickInputHandler extends InputHandler {
   }
 
   /**
-   * Handle click deactivation (no-op for clicks)
+   * Handle click deactivation
+   * Called when mouse button is released
    */
   protected onDeactivate(): void {
-    // Clicks are instantaneous, no deactivation needed
+    logger.info('ClickInputHandler.onDeactivate() called', {
+      activeButtonNumber: this.activeButtonNumber,
+      activeShortcutKey: this.activeShortcutKey
+    });
+
+    // Mark handler as inactive
+    this.state.active = false;
+
+    if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
+      logger.info('No active button to deactivate');
+      return;
+    }
+
+    try {
+      const shortcutService = this.appContext?.services.shortcut;
+      if (!shortcutService) {
+        logger.warn('ShortcutService not available for deactivation');
+        return;
+      }
+
+      // Get shortcut data before ending
+      const shortcut = shortcutService.endShortcut(this.activeButtonNumber);
+
+      logger.info('Shortcut ended', {
+        buttonNumber: this.activeButtonNumber,
+        shortcutKey: this.activeShortcutKey,
+        found: !!shortcut
+      });
+
+      // Emit ended event
+      if (shortcut) {
+        const duration = (Date.now() - shortcut.startTime) / 1000;
+
+        this.playerService.emitShortcutEnded({
+          shortcutNr: this.activeButtonNumber,
+          shortcutKey: this.activeShortcutKey!,
+          executorId: shortcut.executorId,
+          duration,
+        });
+
+        logger.info('Click shortcut ended event emitted', {
+          buttonNumber: this.activeButtonNumber,
+          shortcutKey: this.activeShortcutKey,
+          executorId: shortcut.executorId,
+          duration,
+        });
+      } else {
+        logger.warn('No active shortcut found to end', {
+          buttonNumber: this.activeButtonNumber
+        });
+      }
+
+      // Reset tracking
+      this.activeButtonNumber = null;
+      this.activeShortcutKey = null;
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ClickInputHandler.onDeactivate', {
+        buttonNumber: this.activeButtonNumber,
+      });
+    }
   }
 
   /**
-   * Update handler state (no-op for clicks)
+   * Update handler state
+   * Updates target position for continuous effects (like beam:follow)
    */
   protected onUpdate(deltaTime: number, value: number): void {
-    // Clicks are instantaneous, no continuous update needed
+    if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
+      logger.info('onUpdate skipped - no active button', {
+        activeButtonNumber: this.activeButtonNumber,
+      });
+      return;
+    }
+
+    const shortcutService = this.appContext?.services.shortcut;
+    const selectService = this.appContext?.services.select;
+    if (!shortcutService || !selectService) {
+      logger.info('onUpdate skipped - missing services', {
+        hasShortcutService: !!shortcutService,
+        hasSelectService: !!selectService,
+      });
+      return;
+    }
+
+    // Get current player position
+    const playerPos = this.playerService.getPosition();
+
+    // Get current target (block or entity)
+    const targetEntity = selectService.getCurrentSelectedEntity();
+    const targetBlock = selectService.getCurrentSelectedBlock();
+
+    let targetPos: any = undefined;
+    if (targetEntity) {
+      // ClientEntity has currentPosition, not position
+      targetPos = targetEntity.currentPosition || targetEntity.position;
+    } else if (targetBlock) {
+      targetPos = {
+        x: targetBlock.block.position.x + 0.5,
+        y: targetBlock.block.position.y + 0.5,
+        z: targetBlock.block.position.z + 0.5,
+      };
+    }
+
+    // Update shortcut position data
+    if (targetPos) {
+      shortcutService.updateShortcut(this.activeButtonNumber, playerPos, targetPos);
+
+      logger.info('Click handler updated shortcut position', {
+        buttonNumber: this.activeButtonNumber,
+        targetPos,
+      });
+    }
   }
 }

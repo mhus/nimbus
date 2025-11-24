@@ -47,16 +47,8 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
       // Debug log the response structure
       logger.debug('Login response data', { data: successData });
 
-      // Validate worldInfo exists
-      if (!successData.worldInfo) {
-        const error = 'Server error: Login response missing worldInfo. Please check server configuration.';
-        logger.error(error, { data: successData });
-        this.networkService.emit('login:error', new Error(error));
-        return;
-      }
-
-      // Update AppContext with WorldInfo and sessionId from server
-      this.appContext.worldInfo = successData.worldInfo;
+      // Update AppContext with sessionId from server
+      // Note: WorldInfo is now loaded via ConfigService before login
       this.appContext.sessionId = successData.sessionId;
 
       // Generate player entity ID from username and sessionId
@@ -76,14 +68,7 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
       logger.info('Login successful', {
         userId: successData.userId,
         displayName: successData.displayName,
-        worldId: successData.worldInfo.worldId,
-        worldName: successData.worldInfo.name,
         sessionId: successData.sessionId,
-      });
-
-      // Log complete WorldInfo for debugging
-      logger.info('Received WorldInfo from server', {
-        worldInfo: successData.worldInfo,
       });
 
       // Emit event for other services
