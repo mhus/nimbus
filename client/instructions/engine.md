@@ -358,3 +358,8 @@ Der Modus heisst DEAD.
 
 [x] Wenn disconnected im NetworkService setze zusaetzlich im NotificationService eine setCenterText("Disconnected from server") die in der Mitte des Bildschirms angezeigt wird.
 - Bei reconnect wird der Text entfernt.
+
+[ ] Erstelle in ClientChunk einen neuen parameter 'ready' der by default false ist
+- Sobald der chunk komplett geladen und verarbeitet ist, wird der parameter auf true gesetzt.
+- Pruefe in der physik nicht nur darauf, das der chunk vorhanden ist, sondern auch auf ready == true damit der chunk betreten werden kann.
+- Das gleiche kann bei teleport gemacht werden, dort muss ready == true sein damit der teleport finished ist.

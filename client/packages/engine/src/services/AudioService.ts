@@ -8,7 +8,7 @@
  * - Handling gameplay sound playback (step sounds, swim sounds, etc.)
  */
 
-import { getLogger, type AudioDefinition, type ClientEntity } from '@nimbus/shared';
+import { getLogger, type AudioDefinition, type ClientEntity, AudioType } from '@nimbus/shared';
 import { Vector3 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import { Scene, Sound, Engine, CreateAudioEngineAsync, CreateSoundAsync } from '@babylonjs/core';
@@ -32,6 +32,17 @@ interface StepOverEvent {
   entityId: string;
   block: ClientBlock; // For swim mode: contains position but no audioSteps
   movementType: string;
+}
+
+/**
+ * Collision with block event data
+ */
+interface CollideWithBlockEvent {
+  entityId: string;
+  block: ClientBlock;
+  x: number;
+  y: number;
+  z: number;
 }
 
 /**
@@ -304,6 +315,8 @@ export class AudioService {
   private currentAmbientSound?: any; // Current ambient music sound
   private currentAmbientPath?: string; // Current ambient music path
   private ambientFadeInterval?: number; // Fade in/out interval ID
+  private pendingAmbientPath?: string; // Pending ambient music path (waiting for engine ready)
+  private pendingAmbientVolume?: number; // Pending ambient music volume
 
   // Speech/narration
   private currentSpeech?: any; // Current speech sound
@@ -488,6 +501,7 @@ export class AudioService {
                 await this.audioEngine.unlockAsync();
                 logger.info('Audio engine unlocked and ready via user interaction');
                 this.playPendingSounds();
+                this.playPendingAmbientMusic();
 
                 // Remove event listeners after unlock
                 window.removeEventListener('click', unlockHandler);
@@ -510,6 +524,7 @@ export class AudioService {
         logger.info('Audio engine ready');
         // Already unlocked - play any pending sounds immediately
         this.playPendingSounds();
+        this.playPendingAmbientMusic();
       }
     } catch (error) {
       logger.error('Failed to create audio engine', {}, error as Error);
@@ -519,6 +534,9 @@ export class AudioService {
     if (this.physicsService) {
       this.physicsService.on('step:over', (event: StepOverEvent) => {
         this.onStepOver(event);
+      });
+      this.physicsService.on('collide:withBlock', (event: CollideWithBlockEvent) => {
+        this.onCollideWithBlock(event);
       });
       logger.info('AudioService subscribed to PhysicsService events');
     } else {
@@ -717,6 +735,30 @@ export class AudioService {
     // Always return true if audio engine exists
     // Babylon.js handles audio unlock internally via unlockAsync()
     return !!this.audioEngine;
+  }
+
+  /**
+   * Play pending ambient music after audio engine becomes ready
+   */
+  private async playPendingAmbientMusic(): Promise<void> {
+    if (!this.pendingAmbientPath || this.pendingAmbientPath.trim() === '') {
+      return; // No pending ambient music
+    }
+
+    logger.info('Playing pending ambient music', {
+      path: this.pendingAmbientPath,
+      volume: this.pendingAmbientVolume
+    });
+
+    const path = this.pendingAmbientPath;
+    const volume = this.pendingAmbientVolume ?? 1.0;
+
+    // Clear pending before playing (to avoid loops)
+    this.pendingAmbientPath = undefined;
+    this.pendingAmbientVolume = undefined;
+
+    // Play the ambient music
+    await this.playAmbientSound(path, true, volume);
   }
 
   /**
@@ -1347,7 +1389,17 @@ export class AudioService {
   async playAmbientSound(soundPath: string, stream: boolean = true, volume: number = 1.0): Promise<void> {
     // Empty path → stop ambient music
     if (!soundPath || soundPath.trim() === '') {
+      this.pendingAmbientPath = undefined;
+      this.pendingAmbientVolume = undefined;
       await this.stopAmbientSound();
+      return;
+    }
+
+    // Check if audio engine is ready
+    if (!this.audioEngine) {
+      logger.info('Audio engine not ready, deferring ambient music', { soundPath, volume });
+      this.pendingAmbientPath = soundPath;
+      this.pendingAmbientVolume = volume;
       return;
     }
 
@@ -1367,6 +1419,10 @@ export class AudioService {
       logger.info('Ambient music already playing', { soundPath });
       return;
     }
+
+    // Clear pending (we're playing now)
+    this.pendingAmbientPath = undefined;
+    this.pendingAmbientVolume = undefined;
 
     try {
       logger.info('Loading ambient music', { soundPath, stream, volume });
@@ -1567,8 +1623,72 @@ export class AudioService {
    * Handle step over event
    * Plays random step sound from block's audioSteps using pool system
    */
+  /**
+   * Handle collision with block event from PhysicsService
+   * Plays random collision sound from block's audio definitions
+   */
+  private async onCollideWithBlock(event: CollideWithBlockEvent): Promise<void> {
+    const { entityId, block, x, y, z } = event;
+
+    // Check if audio is enabled
+    if (!this.audioEnabled) {
+      return;
+    }
+
+    // Get collision audio definitions from block
+    const audioModifier = block.currentModifier.audio;
+    if (!audioModifier || audioModifier.length === 0) {
+      return; // No audio defined
+    }
+
+    // Filter for collision audio
+    const collisionAudioDefs = audioModifier.filter(
+      def => def.type === AudioType.COLLISION && def.enabled
+    );
+
+    if (collisionAudioDefs.length === 0) {
+      return; // No collision audio
+    }
+
+    // Select random collision audio
+    const randomIndex = Math.floor(Math.random() * collisionAudioDefs.length);
+    const audioDef = collisionAudioDefs[randomIndex];
+
+    // Get configuration
+    const maxDistance = audioDef.maxDistance ?? DEFAULT_MAX_DISTANCE;
+    const position = new Vector3(x, y, z);
+
+    // Get blocked sound from pool (auto-released via onEndedObservable)
+    const item = await this.getBlockedSoundFromPool(
+      audioDef.path,
+      position,
+      maxDistance
+    );
+
+    if (!item) {
+      logger.warn('Failed to get collision sound from pool', { path: audioDef.path });
+      return;
+    }
+
+    // Play sound with defined volume
+    const finalVolume = audioDef.volume;
+    item.play(finalVolume);
+
+    logger.debug('Collision audio played', {
+      entityId,
+      path: audioDef.path,
+      position: { x, y, z },
+      volume: finalVolume
+    });
+  }
+
   private async onStepOver(event: StepOverEvent): Promise<void> {
     const { entityId, block, movementType } = event;
+
+    // Check if audio engine is ready
+    if (!this.audioEngine) {
+      return; // Audio engine not initialized
+    }
 
     // Check if audio is enabled
     if (!this.audioEnabled) {
@@ -1581,22 +1701,27 @@ export class AudioService {
       return;
     }
 
-    // Check if block has step audio
-    if (!block.audioSteps || block.audioSteps.length === 0) {
-      return; // No step audio for this block
+    // Get step audio definitions from currentModifier
+    const audioModifier = block.currentModifier.audio;
+    if (!audioModifier || audioModifier.length === 0) {
+      return; // No audio defined
+    }
+
+    // Filter for step audio
+    const stepAudioDefs = audioModifier.filter(
+      def => def.type === AudioType.STEPS && def.enabled
+    );
+
+    if (stepAudioDefs.length === 0) {
+      return; // No step audio
     }
 
     // Select random step audio
-    const randomIndex = Math.floor(Math.random() * block.audioSteps.length);
-    const audioEntry = block.audioSteps[randomIndex];
-
-    if (!audioEntry || !audioEntry.definition) {
-      logger.warn('Invalid audio entry', { blockTypeId: block.blockType.id });
-      return;
-    }
+    const randomIndex = Math.floor(Math.random() * stepAudioDefs.length);
+    const audioDef = stepAudioDefs[randomIndex];
 
     // Get configuration
-    const maxDistance = audioEntry.definition.maxDistance ?? DEFAULT_MAX_DISTANCE;
+    const maxDistance = audioDef.maxDistance ?? DEFAULT_MAX_DISTANCE;
     const position = new Vector3(
       block.block.position.x,
       block.block.position.y,
@@ -1605,13 +1730,13 @@ export class AudioService {
 
     // Get blocked sound from pool (auto-released via onEndedObservable)
     const item = await this.getBlockedSoundFromPool(
-      audioEntry.definition.path,
+      audioDef.path,
       position,
       maxDistance
     );
 
     if (!item) {
-      logger.warn('Failed to get sound from pool', { path: audioEntry.definition.path });
+      logger.warn('Failed to get sound from pool', { path: audioDef.path });
       return;
     }
 
@@ -1623,7 +1748,7 @@ export class AudioService {
       volumeMultiplier *= 0.5;
     }
 
-    const finalVolume = audioEntry.definition.volume * volumeMultiplier;
+    const finalVolume = audioDef.volume * volumeMultiplier;
 
     // Play sound (automatically released via onended callback in AudioPoolItem)
     item.play(finalVolume);

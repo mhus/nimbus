@@ -163,6 +163,7 @@ const localValue = ref<AudioModifier>(
 const audioTypeOptions = [
   { value: AudioType.STEPS, label: 'Steps' },
   { value: AudioType.PERMANENT, label: 'Permanent' },
+  { value: AudioType.COLLISION, label: 'Collision' },
 ];
 
 // Asset picker state
