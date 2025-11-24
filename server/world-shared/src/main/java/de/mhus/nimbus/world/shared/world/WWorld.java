@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,6 +25,9 @@ public class WWorld {
     @Indexed(unique = true)
     private String worldId; // Externe World ID
 
+    @Indexed
+    private String regionId; // Zugehörige Region ID
+
     private WorldInfo info; // eingebettete Struktur aus generated Modul
 
     private Instant createdAt;
@@ -32,6 +36,20 @@ public class WWorld {
     private boolean enabled = true; // Standardmäßig aktiviert
     private String parent; // optionale Referenz auf übergeordnete Welt / Gruppe
     private String branch; // z.B. Entwicklungszweig / Variante
+
+    // Zugriff / Berechtigungen
+    @Builder.Default
+    private List<String> owner = List.of();
+    @Builder.Default
+    private List<String> editor = List.of();
+    @Builder.Default
+    private List<String> player = List.of();
+
+    @Builder.Default
+    private boolean publicFlag = false; // ob Welt öffentlich zugänglich ist
+
+    @Builder.Default
+    private List<WEntryPoint> entryPoints = List.of();
 
     public void touchForCreate() {
         Instant now = Instant.now();

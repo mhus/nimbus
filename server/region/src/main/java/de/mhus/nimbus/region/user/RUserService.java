@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import de.mhus.nimbus.shared.user.UniverseRoles;
+import de.mhus.nimbus.shared.user.RegionRoles; // neuer Import
 
 @Service
 @Validated
@@ -28,21 +28,13 @@ public class RUserService {
             throw new IllegalArgumentException("Email already exists: " + email);
         }
         RUser user = new RUser(username, email);
-        user.setRoles(UniverseRoles.USER);
+        user.addRole(RegionRoles.PLAYER); // Standardrolle
         return repository.save(user);
     }
 
-    public Optional<RUser> getById(String id) {
-        return repository.findById(id);
-    }
-
-    public Optional<RUser> getByUsername(String username) {
-        return repository.findByUsername(username);
-    }
-
-    public List<RUser> listAll() {
-        return repository.findAll();
-    }
+    public Optional<RUser> getById(String id) { return repository.findById(id); }
+    public Optional<RUser> getByUsername(String username) { return repository.findByUsername(username); }
+    public List<RUser> listAll() { return repository.findAll(); }
 
     public RUser update(String id, String username, String email, String rolesRaw) {
         RUser existing = repository.findById(id)
@@ -61,25 +53,19 @@ public class RUserService {
         return repository.save(existing);
     }
 
-    public void deleteById(String id) {
-        repository.deleteById(id);
-    }
+    public void deleteById(String id) { repository.deleteById(id); }
 
-    public RUser addRole(String id, UniverseRoles role) {
+    public RUser addRole(String id, RegionRoles role) {
         RUser existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
-        if (existing.addRole(role)) {
-            existing = repository.save(existing);
-        }
+        if (existing.addRole(role)) existing = repository.save(existing);
         return existing;
     }
 
-    public RUser removeRole(String id, UniverseRoles role) {
+    public RUser removeRole(String id, RegionRoles role) {
         RUser existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
-        if (existing.removeRole(role)) {
-            existing = repository.save(existing);
-        }
+        if (existing.removeRole(role)) existing = repository.save(existing);
         return existing;
     }
 }

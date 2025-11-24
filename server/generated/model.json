@@ -1149,6 +1149,28 @@
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Area.ts",
+    "imports" : [ "./Vector3" ],
+    "interfaces" : [ {
+      "name" : "Area",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "a",
+        "type" : "Vector3",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "b",
+        "type" : "Vector3",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../tools/generate-ts-to-java-maven-plugin/evaluate/ts/types/Rotation.ts",
     "imports" : [ "./Vector3" ],
     "interfaces" : [ {
