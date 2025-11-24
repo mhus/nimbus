@@ -24,7 +24,7 @@ import java.util.Optional;
  */
 @Service
 @RequiredArgsConstructor
-public class RUniverseService {
+public class RUniverseClientService {
 
     private final RestTemplate rest;
     private final RegionProperties props;
