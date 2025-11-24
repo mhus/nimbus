@@ -12,7 +12,7 @@ world:
       max-active-sessions: 100
 
 server:
-  port: 9051
+  port: 9042
   error:
     include-exception: true
     include-binding-errors: always

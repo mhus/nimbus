@@ -1,0 +1,11 @@
+ ______     ______     ______   __  __     ______
+/\  ___\   /\  ___\   /\__  _\ /\ \/\ \   /\  == \
+\ \___  \  \ \  __\   \/_/\ \/ \ \ \_\ \  \ \  _-/
+ \/\_____\  \ \_____\    \ \_\  \ \_____\  \ \_\
+  \/_____/   \/_____/     \/_/   \/_____/   \/_/
+
+ Demo Setup Tool - Initialisiert Benutzer & Region 'oasis'
+ ---------------------------------------------------------------------
+ WARNUNG: Dieses Tool führt automatisch Änderungen durch und beendet sich.
+ Version: ${application.version:1.0.0-SNAPSHOT}
+

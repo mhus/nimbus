@@ -18,3 +18,15 @@
   - In Region Service der Bereich auf den der World Service zugreift ist /region/world/*
 - REST Controller haben die Aufgabe die Kommunikation zu erledigen. Alles was Business Logik 
   beinhaltet muss in den Services liegen.
+
+## Links
+
+ASCII ART
+
+https://patorjk.com/software/taag/#p=display&f=Sub-Zero&t=editor&x=none&v=4&h=4&w=80&we=false
+
+JWT Tokens
+
+https://www.jwt.io
+
+
