@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.TestConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(UserWorldEditorControllerTest.MockConfig.class)
 class UserWorldEditorControllerTest {
 
-    @TestConfiguration
+    @Configuration
     static class MockConfig {
         @Bean JwtService jwtService() { return Mockito.mock(JwtService.class); }
         @Bean WWorldService worldService() { return Mockito.mock(WWorldService.class); }
