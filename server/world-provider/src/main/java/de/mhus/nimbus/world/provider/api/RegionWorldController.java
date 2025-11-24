@@ -22,10 +22,10 @@ public class RegionWorldController {
     private final WWorldService worldService;
 
     // DTOs
-    public record CreateWorldRequest(String worldId, WorldInfo info) {}
-    public record WorldResponse(String worldId, boolean enabled, String parent, String branch, WorldInfo info) {}
+    public static class CreateWorldRequest { public String worldId; public WorldInfo info; public String getWorldId(){return worldId;} public WorldInfo getInfo(){return info;} }
+    public static class WorldResponse { public String worldId; public boolean enabled; public String parent; public String branch; public WorldInfo info; public WorldResponse(String w, boolean e, String p, String b, WorldInfo i){worldId=w;enabled=e;parent=p;branch=b;info=i;} }
 
-    @GetMapping
+    @GetMapping(produces = "application/json")
     public ResponseEntity<?> getWorld(@RequestParam String worldId) {
         if (worldId == null || worldId.isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId missing"));
         Optional<WWorld> opt = worldService.getByWorldId(worldId);
@@ -33,24 +33,21 @@ public class RegionWorldController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","world not found")));
     }
 
-    @PostMapping
+    @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> createWorld(@RequestBody CreateWorldRequest req) {
-        if (req.worldId() == null || req.worldId().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
+        if (req.getWorldId() == null || req.getWorldId().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
         WorldKind kind;
-        try { kind = WorldKind.of(req.worldId()); } catch (IllegalArgumentException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
+        try { kind = WorldKind.of(req.getWorldId()); } catch (IllegalArgumentException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
         if (!kind.isMain()) {
-            return ResponseEntity.badRequest().body(Map.of("error","only main worlds can be created (no zone, no branch)", "worldId", req.worldId()));
+            return ResponseEntity.badRequest().body(Map.of("error","only main worlds can be created (no zone, no branch)", "worldId", req.getWorldId()));
         }
         try {
-            WWorld created = worldService.createWorld(req.worldId(), req.info());
+            WWorld created = worldService.createWorld(req.getWorldId(), req.getInfo());
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         }
     }
 
-    private WorldResponse toResponse(WWorld w) {
-        return new WorldResponse(w.getWorldId(), w.isEnabled(), w.getParent(), w.getBranch(), w.getInfo());
-    }
+    private WorldResponse toResponse(WWorld w) { return new WorldResponse(w.getWorldId(), w.isEnabled(), w.getParent(), w.getBranch(), w.getInfo()); }
 }
-
