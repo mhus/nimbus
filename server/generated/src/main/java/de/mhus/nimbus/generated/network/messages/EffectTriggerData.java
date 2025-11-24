@@ -1,8 +1,8 @@
 /*
- * Source TS: ScrawlStep.ts
- * Original TS: 'interface StepPlay'
+ * Source TS: EffectTriggerMessage.ts
+ * Original TS: 'interface EffectTriggerData'
  */
-package de.mhus.nimbus.generated.scrawl;
+package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,11 +10,11 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class StepPlay {
-    private String kind;
+public class EffectTriggerData {
     private String effectId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.Map<String, Object> ctx;
+    private String entityId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Boolean receivePlayerDirection;
+    private java.util.List<ChunkCoordinate> chunks;
+    private de.mhus.nimbus.generated.scrawl.ScriptActionDefinition effect;
 }

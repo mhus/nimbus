@@ -11,14 +11,10 @@ public enum BlockStatus {
     LOCKED(4),
     DESTROYED(5),
     WINTER(6),
-    WINTER_SPRING(7),
-    SPRING(8),
-    SPRING_SUMMER(9),
-    SUMMER(10),
-    SUMMER_AUTUMN(11),
-    AUTUMN(12),
-    AUTUMN_WINTER(13),
-    CUSTOM_START(14);
+    SPRING(7),
+    SUMMER(8),
+    AUTUMN(9),
+    CUSTOM_START(10);
 
     @lombok.Getter
     private final int tsIndex;

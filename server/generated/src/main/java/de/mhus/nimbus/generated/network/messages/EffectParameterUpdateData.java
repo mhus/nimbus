@@ -1,8 +1,8 @@
 /*
- * Source TS: sample-types.ts
- * Original TS: 'interface Person'
+ * Source TS: EffectParameterUpdateMessage.ts
+ * Original TS: 'interface EffectParameterUpdateData'
  */
-package de.mhus.nimbus.generated;
+package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,8 +10,10 @@ package de.mhus.nimbus.generated;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class Person {
-    private String id;
+public class EffectParameterUpdateData {
+    private String effectId;
+    private String paramName;
+    private Object value;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String name;
+    private java.util.List<ChunkCoordinate> chunks;
 }

@@ -73,10 +73,10 @@
                         <configuration>
                             <!-- Configure where to read TS and where to write generated Java -->
                             <sourceDirs>
-                                <!--
                                 <sourceDir>${project.basedir}/../../client/packages/shared/src</sourceDir>
-                                -->
+                        <!--
                                 <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts</sourceDir>
+                        -->
                             </sourceDirs>
                             <outputDir>${project.basedir}/src/main/java</outputDir>
                             <modelFile>${project.basedir}/model.json</modelFile>
@@ -86,6 +86,21 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/src/main/java/de/mhus/nimbus/generated</directory>
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
