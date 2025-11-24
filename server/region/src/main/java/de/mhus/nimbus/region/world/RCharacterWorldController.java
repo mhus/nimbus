@@ -1,7 +1,7 @@
 package de.mhus.nimbus.region.world;
 
+import de.mhus.nimbus.generated.types.RegionCharacterResponse;
 import de.mhus.nimbus.region.character.RCharacterService;
-import de.mhus.nimbus.shared.dto.region.RegionCharacterResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -46,16 +46,27 @@ public class RCharacterWorldController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "character not found"));
         }
         var c = opt.get();
-        var resp = new RegionCharacterResponse(
-                c.getId(),
-                c.getUserId(),
-                c.getName(),
-                c.getDisplay(),
-                c.getBackpack(),
-                c.getWearing(),
-                c.getSkills(),
-                c.getRegionId()
-        );
+        var resp = RegionCharacterResponse.builder()
+                .id(c.getId())
+                .userId(c.getUserId())
+                .regionId(c.getRegionId())
+                .name(c.getName())
+                .display(c.getDisplay())
+                .backpack(c.getBackpack())
+                .wearing(convertWearing(c))
+                .skills(convertSkills(c))
+                .build();
         return ResponseEntity.ok(resp);
+    }
+
+    private java.util.Map<java.lang.Double, de.mhus.nimbus.generated.types.RegionItemInfo> convertWearing(de.mhus.nimbus.region.character.RCharacter c) {
+        java.util.Map<java.lang.Double, de.mhus.nimbus.generated.types.RegionItemInfo> m = new java.util.HashMap<>();
+        c.getWearing().forEach((k,v) -> m.put(k.doubleValue(), v));
+        return m;
+    }
+    private java.util.Map<String, java.lang.Double> convertSkills(de.mhus.nimbus.region.character.RCharacter c) {
+        java.util.Map<String, java.lang.Double> m = new java.util.HashMap<>();
+        c.getSkills().forEach((k,v) -> m.put(k, v.doubleValue()));
+        return m;
     }
 }

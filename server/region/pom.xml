@@ -63,6 +63,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- Dependency on generated module -->
+        <dependency>
+            <groupId>de.mhus.nimbus</groupId>
+            <artifactId>generated</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

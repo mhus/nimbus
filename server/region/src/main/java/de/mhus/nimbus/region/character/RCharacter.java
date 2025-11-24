@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region.character;
 
-import de.mhus.nimbus.shared.dto.region.RegionItemInfo; // hinzugefügt
+import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;

@@ -1,7 +1,7 @@
 package de.mhus.nimbus.region.character;
 
-import de.mhus.nimbus.shared.dto.region.RegionCharacterResponse;
-import de.mhus.nimbus.shared.dto.region.RegionItemInfo;
+import de.mhus.nimbus.generated.types.RegionCharacterResponse;
+import de.mhus.nimbus.generated.types.RegionItemInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -125,16 +125,20 @@ public class RUserCharacterController {
     }
 
     private RegionCharacterResponse toResponse(RCharacter c) {
-        return new RegionCharacterResponse(
-                c.getId(),
-                c.getUserId(),
-                c.getName(),
-                c.getDisplay(),
-                c.getBackpack(),
-                c.getWearing(),
-                c.getSkills(),
-                c.getRegionId()
-        );
+        java.util.Map<String, RegionItemInfo> backpack = c.getBackpack();
+        java.util.Map<java.lang.Double, RegionItemInfo> wearingConv = new java.util.HashMap<>();
+        c.getWearing().forEach((k,v) -> wearingConv.put(k.doubleValue(), v));
+        java.util.Map<String, java.lang.Double> skillsConv = new java.util.HashMap<>();
+        c.getSkills().forEach((k,v) -> skillsConv.put(k, v.doubleValue()));
+        return RegionCharacterResponse.builder()
+                .id(c.getId())
+                .userId(c.getUserId())
+                .regionId(c.getRegionId())
+                .name(c.getName())
+                .display(c.getDisplay())
+                .backpack(backpack)
+                .wearing(wearingConv)
+                .skills(skillsConv)
+                .build();
     }
 }
-

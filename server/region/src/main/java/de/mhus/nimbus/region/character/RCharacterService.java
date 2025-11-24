@@ -1,8 +1,8 @@
 package de.mhus.nimbus.region.character;
 
+import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
 import de.mhus.nimbus.region.user.RUserRepository; // neuer Import
 import de.mhus.nimbus.region.user.RUser; // neuer Import
-import de.mhus.nimbus.shared.dto.region.RegionItemInfo; // neuer Import
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 

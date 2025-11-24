@@ -1,7 +1,7 @@
 package de.mhus.nimbus.region.world;
 
-import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
-import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
+import de.mhus.nimbus.generated.types.RegionWorldRequest; // geändert
+import de.mhus.nimbus.generated.types.RegionWorldResponse; // geändert
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -37,7 +37,15 @@ public class RRegionWorldController {
     }
 
     private RegionWorldResponse toResponse(RWorld w) {
-        return new RegionWorldResponse(w.getId(), w.getWorldId(), w.getName(), w.getDescription(), w.getApiUrl(), w.getRegionId(), w.getCreatedAt());
+        return RegionWorldResponse.builder()
+                .id(w.getId())
+                .worldId(w.getWorldId())
+                .name(w.getName())
+                .description(w.getDescription())
+                .worldApiUrl(w.getApiUrl())
+                .regionId(w.getRegionId())
+                .createdAt(w.getCreatedAt() == null ? null : w.getCreatedAt().toString())
+                .build();
     }
 
     @GetMapping("/{worldId}")
@@ -67,9 +75,9 @@ public class RRegionWorldController {
         Optional<RWorld> existing = worldRepository.findByWorldId(worldId);
         if (existing.isPresent()) return ResponseEntity.status(409).build();
 
-        RWorld w = worldService.create(worldId, req.name());
-        w.setDescription(req.description());
-        w.setApiUrl(req.worldApiUrl());
+        RWorld w = worldService.create(worldId, req.getName());
+        w.setDescription(req.getDescription());
+        w.setApiUrl(req.getWorldApiUrl());
         w.setRegionId(regionId);
         w = worldRepository.save(w);
         return ResponseEntity.created(URI.create("/region/" + regionId + "/world/" + worldId))
@@ -88,9 +96,9 @@ public class RRegionWorldController {
         RWorld w = worldRepository.findByWorldId(worldId).orElse(null);
         if (w == null || (w.getRegionId()!=null && !regionId.equals(w.getRegionId()))) return ResponseEntity.notFound().build();
         // Nur einfache Felder ändern, worldId bleibt unverändert
-        if (req.name() != null) w.setName(req.name());
-        if (req.description() != null) w.setDescription(req.description());
-        if (req.worldApiUrl() != null) w.setApiUrl(req.worldApiUrl());
+        if (req.getName() != null) w.setName(req.getName());
+        if (req.getDescription() != null) w.setDescription(req.getDescription());
+        if (req.getWorldApiUrl() != null) w.setApiUrl(req.getWorldApiUrl());
         if (w.getRegionId() == null) w.setRegionId(regionId); // erstmalig setzen
         w = worldRepository.save(w);
         return ResponseEntity.ok(toResponse(w));

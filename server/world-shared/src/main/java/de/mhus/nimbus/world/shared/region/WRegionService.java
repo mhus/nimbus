@@ -1,8 +1,8 @@
 package de.mhus.nimbus.world.shared.region;
 
-import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
-import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
-import de.mhus.nimbus.shared.dto.region.RegionCharacterResponse;
+import de.mhus.nimbus.generated.types.RegionWorldRequest;
+import de.mhus.nimbus.generated.types.RegionWorldResponse;
+import de.mhus.nimbus.generated.types.RegionCharacterResponse;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
