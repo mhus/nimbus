@@ -1,5 +1,7 @@
 package de.mhus.nimbus.region.character;
 
+import de.mhus.nimbus.region.user.RUserRepository; // neuer Import
+import de.mhus.nimbus.region.user.RUser; // neuer Import
 import de.mhus.nimbus.shared.dto.region.RegionItemInfo; // neuer Import
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -12,9 +14,13 @@ import java.util.Optional;
 public class RCharacterService {
 
     private final RCharacterRepository repository;
+    private final RUserRepository userRepository;
+    private final RegionCharacterLimitProperties limitProperties;
 
-    public RCharacterService(RCharacterRepository repository) {
+    public RCharacterService(RCharacterRepository repository, RUserRepository userRepository, RegionCharacterLimitProperties limitProperties) {
         this.repository = repository;
+        this.userRepository = userRepository;
+        this.limitProperties = limitProperties;
     }
 
     public RCharacter createCharacter(String userId, String regionId, String name, String display) {
@@ -23,6 +29,14 @@ public class RCharacterService {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name blank");
         if (repository.existsByUserIdAndRegionIdAndName(userId, regionId, name)) {
             throw new IllegalArgumentException("Character name already exists for user/region: " + name);
+        }
+        // Limit prüfen
+        RUser user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        Integer userLimit = user.getCharacterLimitForRegion(regionId);
+        int effectiveLimit = userLimit != null ? userLimit : limitProperties.getMaxPerRegion();
+        int currentCount = repository.findByUserIdAndRegionId(userId, regionId).size();
+        if (currentCount >= effectiveLimit) {
+            throw new IllegalStateException("Character limit exceeded for region=" + regionId + " (" + currentCount + "/" + effectiveLimit + ")");
         }
         RCharacter c = new RCharacter(userId, regionId, name, display != null ? display : name);
         return repository.save(c);

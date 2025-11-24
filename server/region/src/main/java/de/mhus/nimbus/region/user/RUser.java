@@ -38,6 +38,9 @@ public class RUser {
     @Field("roles") // liest alte Property 'roles' weiterhin ein
     private List<RegionRoles> serverRoles; // null oder leer -> keine Rollen
 
+    // Charakter-Limits pro Region: regionId -> maxCount
+    private java.util.Map<String,Integer> characterLimits;
+
     public RUser() { this.enabled = true; }
     public RUser(final String username, final String email) { this.username = username; this.email = email; this.enabled = true; }
 
@@ -67,6 +70,12 @@ public class RUser {
         }
         setServerRoles(list);
     }
+
+    // Charakter-Limits API
+    public java.util.Map<String,Integer> getCharacterLimits() { return characterLimits == null ? java.util.Map.of() : java.util.Map.copyOf(characterLimits); }
+    public void setCharacterLimits(java.util.Map<String,Integer> limits) { this.characterLimits = (limits == null || limits.isEmpty()) ? null : new java.util.HashMap<>(limits); }
+    public Integer getCharacterLimitForRegion(String regionId) { if (characterLimits == null) return null; return characterLimits.get(regionId); }
+    public void setCharacterLimitForRegion(String regionId, Integer limit) { if (characterLimits == null) characterLimits = new java.util.HashMap<>(); if (limit == null) characterLimits.remove(regionId); else characterLimits.put(regionId, limit); }
 
     @Deprecated public List<RegionRoles> getRoles() { return getServerRoles(); }
     @Deprecated public boolean addRole(RegionRoles role) { return addServerRole(role); }
