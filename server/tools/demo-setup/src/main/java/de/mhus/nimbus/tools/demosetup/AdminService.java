@@ -42,10 +42,10 @@ public class AdminService {
         if (env != null && !env.isBlank()) candidates.add(Path.of(env.trim()));
 
         if (!strict) {
-            candidates.add(Path.of("target/admin.txt"));
-            candidates.add(Path.of("../target/admin.txt"));
-            candidates.add(Path.of("../../target/admin.txt"));
-            candidates.add(Path.of("../../../target/admin.txt"));
+            candidates.add(Path.of("confidential/universe.txt"));
+            candidates.add(Path.of("../confidential/universe.txt"));
+            candidates.add(Path.of("../../confidential/universe.txt"));
+            candidates.add(Path.of("../../../confidential/universe.txt"));
         } else {
             LOG.debug("Strict-Modus aktiv: verwende nur explizite Pfade und ENV");
         }

@@ -5,10 +5,10 @@ spring:
     mongodb:
       uri: mongodb://root:example@localhost:27017/region?authSource=admin
       database: Region
-  region:
-    server:
-      id: local-region-server
-  universe:
+region:
+  server:
+    id: local-region-server
+universe:
     url: http://localhost:9040
 
 server:
