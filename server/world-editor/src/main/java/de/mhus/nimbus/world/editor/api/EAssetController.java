@@ -170,7 +170,8 @@ public class EAssetController {
         if (path == null) return null;
         return path.replaceAll("/{2,}", "/")
                    .replaceAll("^/+", "")
-                   .replaceAll("/+$(?<!^)", "");
+                .replaceAll("/+\\$", "") // remove trailing slashes
+                .replaceAll("/+\\$", ""); // idempotent second pass
     }
     private boolean blank(String s) { return s == null || s.isBlank(); }
     private ResponseEntity<Map<String,String>> bad(String msg) { return ResponseEntity.badRequest().body(Map.of("error", msg)); }
