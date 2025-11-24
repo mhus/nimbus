@@ -239,5 +239,3 @@ Oder World Server stellt Visum direkt aus (z.b. bei World Wechsel / teleport)
   Entity), Welt Editing
 - Region Server kennt User nur, um Rollen in der entsprechenden Region zu definieren
 - World Server kennt keine User, Charakter+UserDaten sind als Player bekannt, aber nicht in der DB
-- 
-

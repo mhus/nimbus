@@ -89,7 +89,7 @@ public class URegionController {
     public ResponseEntity<URegionResponse> create(@RequestBody URegionRequest req) {
         if (current()==null) return ResponseEntity.status(401).build();
         if (!canCreateAsMaintainer(req.maintainers())) return ResponseEntity.status(403).build();
-        URegion q = service.create(req.name(), req.apiUrl(), req.maintainers());
+        URegion q = service.create(req.name(), req.apiUrl(), req.maintainers(), req.publicSignKey());
         return ResponseEntity.created(URI.create(BASE_PATH + "/" + q.getId())).body(toResponse(q));
     }
 

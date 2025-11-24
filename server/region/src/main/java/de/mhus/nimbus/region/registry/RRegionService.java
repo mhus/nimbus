@@ -1,19 +1,40 @@
 package de.mhus.nimbus.region.registry;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+import de.mhus.nimbus.region.world.RUniverseClientService;
+import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyId;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import de.mhus.nimbus.shared.security.KeyService;
+import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.shared.security.KeyIntent;
+
 @Service
 @Validated
+@Slf4j
 public class RRegionService {
 
     private final RRegionRepository repository;
+    private final KeyService keyService; // neu
+    private final JwtService jwtService; // neu
+    private final RUniverseClientService universeClientService; // neu
 
-    public RRegionService(RRegionRepository repository) {
+    @Value("${universe.base-url:http://localhost:8080}")
+    private String universeBaseUrl;
+
+    public RRegionService(RRegionRepository repository, KeyService keyService, JwtService jwtService, RUniverseClientService universeClientService) {
         this.repository = repository;
+        this.keyService = keyService;
+        this.jwtService = jwtService;
+        this.universeClientService = universeClientService;
     }
 
     public RRegion create(String name, String apiUrl, String maintainers) {
@@ -23,7 +44,38 @@ public class RRegionService {
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
         RRegion q = new RRegion(name, apiUrl);
         q.setMaintainers(maintainers);
-        return repository.save(q);
+        RRegion saved = repository.save(q);
+        // KeyPair für Region erzeugen (Intent main-jwt-token, Owner = Regionsname)
+        try {
+            var keys = keyService.createECCKeys();
+            KeyId keyId = KeyId.of(saved.getName(), KeyIntent.MAIN_JWT_TOKEN, UUID.randomUUID().toString());
+            keyService.storeKeyPair(
+                KeyType.REGION,
+                keyId,
+                keys
+            );
+            // JWT erzeugen mit privatem Region Key (Subject = regionsname)
+            var privateKeyOpt = keyService.getPrivateKey(KeyType.REGION, keyId);
+            if (privateKeyOpt.isPresent()) {
+                String token = jwtService.createTokenWithSecretKey(privateKeyOpt.get(), saved.getName(), java.util.Map.of("region", saved.getName()), java.time.Instant.now().plusSeconds(300));
+                // Universe Client konfigurieren
+                universeClientService.setBaseUrl(universeBaseUrl);
+                // Public Key Base64 für Registrierung
+                var publicKeyOpt = keyService.getPublicKey(KeyType.REGION, keyId);
+                String publicBase64 = publicKeyOpt.map(pk -> Base64.getEncoder().encodeToString(pk.getEncoded())).orElse(null);
+                boolean registered = universeClientService.createRegion(token, saved.getName(), apiUrl, publicBase64, maintainers);
+                if (!registered) {
+                    log.warn("Region '{}' konnte im Universe nicht registriert werden", saved.getName());
+                } else {
+                    log.info("Region '{}' erfolgreich im Universe registriert", saved.getName());
+                }
+            } else {
+                log.warn("Privater Schlüssel für Region '{}' nicht gefunden – Universe Registrierung übersprungen", saved.getName());
+            }
+        } catch (Exception e) {
+            log.warn("Cannot create system auth key or register region {}: {}", saved.getName(), e.getMessage());
+        }
+        return saved;
     }
 
     // Bestehende create-Methode bleibt für Abwärtskompatibilität

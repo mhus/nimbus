@@ -2,31 +2,32 @@ package de.mhus.nimbus.universe.region;
 
 import java.util.List;
 import java.util.Optional;
+
+import de.mhus.nimbus.shared.security.KeyService;
+import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.universe.security.RequestUserHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 @Service
 @Validated
+@RequiredArgsConstructor
 public class URegionService {
 
     private final URegionRepository repository;
+    private final KeyService keyService;
 
-    public URegionService(URegionRepository repository) {
-        this.repository = repository;
-    }
-
-    public URegion create(String name, String apiUrl, String maintainersCsv) {
+    public URegion create(String name, String apiUrl, String maintainersCsv, String publicSignKey) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
+        if (publicSignKey == null || publicSignKey.isBlank()) throw new IllegalArgumentException("publicSignKey must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
         URegion q = new URegion(name, apiUrl);
         q.setMaintainers(maintainersCsv); // CSV normalisieren
+        keyService.storePublicKey(KeyType.REGION, name, publicSignKey);
         return repository.save(q);
-    }
-
-    public URegion create(String name, String apiUrl) {
-        return create(name, apiUrl, null);
     }
 
     public Optional<URegion> getById(String id) { return repository.findById(id); }

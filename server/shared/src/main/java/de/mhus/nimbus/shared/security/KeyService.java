@@ -189,16 +189,77 @@ public class KeyService {
         repository.deleteAllByTypeAndKindAndOwnerAndIntent(KeyType.UNIVERSE.name(), KeyKind.SECRET.name(), intent.owner(), intent.intent());
     }
 
-    public void createSystemAuthKey(KeyType type, KeyIntent intent) {
+    public void deleteAllForIntent(KeyType keyType, KeyIntent intent) {
+        repository.deleteAllByTypeAndKindAndOwnerAndIntent(keyType.name(), KeyKind.PUBLIC.name(), intent.owner(), intent.intent());
+        repository.deleteAllByTypeAndKindAndOwnerAndIntent(keyType.name(), KeyKind.PRIVATE.name(), intent.owner(), intent.intent());
+        repository.deleteAllByTypeAndKindAndOwnerAndIntent(keyType.name(), KeyKind.SECRET.name(), intent.owner(), intent.intent());
+    }
+
+    public void storePublicKey(KeyType type, String name, String publicKey) {
+        if (type == null || name == null || name.isBlank() || publicKey == null || publicKey.isBlank()) {
+            log.warn("storePublicKey: ungültige Parameter (type/name/publicKey)" );
+            throw new IllegalArgumentException("Ungültige Parameter für storePublicKey");
+        }
+        Optional<KeyId> keyIdOpt = parseKeyId(name);
+        if (keyIdOpt.isEmpty()) {
+            log.warn("storePublicKey: Name '{}' nicht im Format owner:intent:id", name);
+            throw new IllegalArgumentException("Name nicht im Format owner:intent:id: " + name);
+        }
+        KeyId keyId = keyIdOpt.get();
+        String ownerStr = keyId.owner();
+        String intentStr = keyId.intent();
+        // Existenz prüfen
+        if (repository.findByTypeAndKindAndOwnerAndKeyId(type.name(), KeyKind.PUBLIC.name(), ownerStr, keyId.id()).isPresent()) {
+            log.warn("storePublicKey: Public Key existiert bereits type={} owner={} intent={} keyId={}", type, ownerStr, intentStr, keyId.id());
+            throw new IllegalStateException("Public Key existiert bereits für " + name);
+        }
+        String trimmed = publicKey.trim();
+        String base64;
+        if (trimmed.contains("BEGIN PUBLIC KEY") && trimmed.contains("END PUBLIC KEY")) {
+            StringBuilder sb = new StringBuilder();
+            boolean inside = false;
+            for (String line : trimmed.split("\\R")) {
+                line = line.trim();
+                if (line.startsWith("-----BEGIN") && line.contains("PUBLIC KEY")) { inside = true; continue; }
+                if (line.startsWith("-----END") && line.contains("PUBLIC KEY")) { break; }
+                if (inside && !line.isEmpty() && !line.startsWith("#")) sb.append(line);
+            }
+            base64 = sb.toString();
+        } else {
+            base64 = java.util.Arrays.stream(trimmed.split("\\R"))
+                    .map(String::trim)
+                    .filter(l -> !l.isEmpty() && !l.startsWith("#"))
+                    .reduce("", (a,b) -> a + b);
+        }
+        if (base64.isBlank()) {
+            log.warn("storePublicKey: extrahierter Base64-Inhalt leer für owner='{}' intent='{}' keyId='{}'", ownerStr, intentStr, keyId.id());
+            throw new IllegalArgumentException("Leerer Public Key Inhalt");
+        }
+        byte[] der;
+        try { der = Base64.getDecoder().decode(base64); } catch (Exception e) {
+            log.warn("storePublicKey: Base64 Decode Fehler für owner='{}' intent='{}' keyId='{}': {}", ownerStr, intentStr, keyId.id(), e.toString());
+            throw new IllegalArgumentException("Public Key Base64 ungültig", e);
+        }
+        PublicKey pubKey;
+        String algorithm;
         try {
-            var keyPair = createECCKeys();
-            deleteAllForIntent(intent);
-
-            var jwtKeyId = generateKeyId(intent);
-            storeKeyPair(type, jwtKeyId, keyPair);
-
+            pubKey = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(der));
+            algorithm = "EC";
+        } catch (Exception ignore) {
+            try {
+                pubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(der));
+                algorithm = "RSA";
+            } catch (Exception ex) {
+                log.warn("storePublicKey: Algorithmus nicht erkannt für owner='{}' intent='{}' keyId='{}': {}", ownerStr, intentStr, keyId.id(), ex.toString());
+                throw new IllegalArgumentException("Public Key Algorithmus nicht erkannt", ex);
+            }
+        }
+        try {
+            repository.save(SKey.ofPublicKey(type, keyId, pubKey));
+            log.info("storePublicKey: Public Key gespeichert type={} owner={} intent={} keyId={} alg={}", type, ownerStr, intentStr, keyId.id(), algorithm);
         } catch (Exception e) {
-            log.error("ECC KeyPair-Erstellung fehlgeschlagen: {}", e.getMessage(), e);
+            log.error("storePublicKey: Fehler beim Speichern des Public Keys type={} owner={} intent={} keyId={}: {}", type, ownerStr, intentStr, keyId.id(), e.toString());
+            throw new IllegalStateException("Speichern des Public Keys fehlgeschlagen", e);
         }
     }
 }

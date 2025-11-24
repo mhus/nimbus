@@ -1,5 +1,7 @@
 package de.mhus.nimbus.region.world;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.Optional;
  *  POST /universe/region/{regionId}/world/{worldId}
  */
 @Service
+@Slf4j
 public class RUniverseClientService {
 
     private final RestTemplate restTemplate;
@@ -77,6 +80,36 @@ public class RUniverseClientService {
         } catch (RestClientException e) { throw new RuntimeException("Universe world create failed: " + e.getMessage(), e); }
     }
 
+    public boolean createRegion(String token, String name, String apiUrl, String publicSignKey, String maintainers) {
+        if (name == null || name.isBlank()) throw new IllegalArgumentException("name blank");
+        if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl blank");
+        String url = base() + "/universe/region";
+        Map<String,Object> body = new LinkedHashMap<>();
+        body.put("name", name);
+        body.put("apiUrl", apiUrl);
+        if (publicSignKey != null) body.put("publicSignKey", publicSignKey);
+        if (maintainers != null) body.put("maintainers", maintainers);
+        try {
+            var headers = new org.springframework.http.HttpEntity<>(body, buildHeaders(token));
+            @SuppressWarnings("unchecked") ResponseEntity<Map<String,Object>> resp = (ResponseEntity) restTemplate.postForEntity(url, headers, Map.class);
+            if (resp.getStatusCode() == HttpStatus.CREATED || resp.getStatusCode() == HttpStatus.OK) {
+                log.info("Universe Region Registrierung erfolgreich: name={} status={}", name, resp.getStatusCode());
+                return true;
+            }
+            log.warn("Universe Region Registrierung unerwarteter Status {} für name={}", resp.getStatusCode(), name);
+            return false;
+        } catch (RestClientException e) {
+            log.warn("Universe Region Registrierung fehlgeschlagen name={}: {}", name, e.getMessage());
+            return false;
+        }
+    }
+
+    private HttpHeaders buildHeaders(String token) {
+        HttpHeaders h = new HttpHeaders();
+        if (token != null && !token.isBlank()) h.set(HttpHeaders.AUTHORIZATION, "Bearer " + token.trim());
+        h.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        return h;
+    }
+
     private String encode(String v) { return java.net.URLEncoder.encode(v, java.nio.charset.StandardCharsets.UTF_8); }
 }
-
