@@ -1,5 +1,6 @@
 package de.mhus.nimbus.region.character;
 
+import de.mhus.nimbus.shared.dto.region.RegionItemInfo; // neuer Import
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -7,7 +8,7 @@ class RCharacterServiceTest {
 
     @Test
     void simplePojoTest() {
-        var item = new ItemInfo("sword01","Sword","tex_sword");
+        var item = new RegionItemInfo("sword01","Sword","tex_sword");
         var c = new RCharacter("user1","hero","Hero Display");
         c.putBackpackItem("slot1", item);
         c.putWearingItem(1, item);
@@ -18,4 +19,3 @@ class RCharacterServiceTest {
         assertTrue(c.getWearing().containsKey(1));
     }
 }
-

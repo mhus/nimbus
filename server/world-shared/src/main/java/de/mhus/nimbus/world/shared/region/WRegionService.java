@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.region;
 
 import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
+import de.mhus.nimbus.shared.dto.region.RegionCharacterResponse;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
@@ -76,12 +77,32 @@ public class WRegionService {
         rest.exchange(url, HttpMethod.DELETE, entity, Void.class);
     }
 
+    public Optional<RegionCharacterResponse> getCharacter(String characterId, String worldId) {
+        String url = characterUrl(characterId);
+        HttpEntity<Void> entity = new HttpEntity<>(authHeaders(worldId));
+        try {
+            ResponseEntity<RegionCharacterResponse> resp = rest.exchange(url, HttpMethod.GET, entity, RegionCharacterResponse.class);
+            if (resp.getStatusCode().is2xxSuccessful()) {
+                return Optional.ofNullable(resp.getBody());
+            }
+            return Optional.empty();
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
+    }
+
     // ------------------------------------------------------------
 
     private String worldUrl(String regionId, String worldId) {
         String base = props.getBaseUrl();
         if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
         return base + "/region/" + regionId + "/world/" + worldId;
+    }
+
+    private String characterUrl(String characterId) {
+        String base = props.getBaseUrl();
+        if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        return base + "/region/world/character/" + characterId;
     }
 
     private HttpHeaders authHeaders(String worldId) {

@@ -1,5 +1,6 @@
 package de.mhus.nimbus.region.character;
 
+import de.mhus.nimbus.shared.dto.region.RegionItemInfo; // neuer Import
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -41,7 +42,7 @@ public class RCharacterService {
         return repository.save(c);
     }
 
-    public RCharacter addBackpackItem(String userId, String name, String key, ItemInfo item) {
+    public RCharacter addBackpackItem(String userId, String name, String key, RegionItemInfo item) {
         RCharacter c = repository.findByUserIdAndName(userId, name)
                 .orElseThrow(() -> new IllegalArgumentException("Character not found"));
         c.putBackpackItem(key, item);
@@ -55,7 +56,7 @@ public class RCharacterService {
         return repository.save(c);
     }
 
-    public RCharacter wearItem(String userId, String name, Integer slot, ItemInfo item) {
+    public RCharacter wearItem(String userId, String name, Integer slot, RegionItemInfo item) {
         RCharacter c = repository.findByUserIdAndName(userId, name)
                 .orElseThrow(() -> new IllegalArgumentException("Character not found"));
         c.putWearingItem(slot, item);
@@ -88,5 +89,8 @@ public class RCharacterService {
                 .orElseThrow(() -> new IllegalArgumentException("Character not found"));
         repository.delete(c);
     }
-}
 
+    public Optional<RCharacter> getById(String id) {
+        return repository.findById(id);
+    }
+}
