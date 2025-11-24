@@ -1,5 +1,131 @@
 {
   "files" : [ {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionWorldRequest.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "RegionWorldRequest",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "description",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "worldApiUrl",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionWorldResponse.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "RegionWorldResponse",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "worldId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "description",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "worldApiUrl",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "regionId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "createdAt",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionCharacterResponse.ts",
+    "imports" : [ "./RegionItemInfo" ],
+    "interfaces" : [ {
+      "name" : "RegionCharacterResponse",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "userId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "regionId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "display",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "backpack",
+        "type" : "Record<string, RegionItemInfo>",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "wearing",
+        "type" : "Record<number, RegionItemInfo>",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "skills",
+        "type" : "Record<string, number>",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/scrawl/ScriptActionDefinition.ts",
     "imports" : [ "./ScrawlScript" ],
     "interfaces" : [ {
@@ -1551,33 +1677,6 @@
       "target" : null
     } ]
   }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/RegionWorldRequest.ts",
-    "imports" : [ ],
-    "interfaces" : [ {
-      "name" : "RegionWorldRequest",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "description",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "worldApiUrl",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/BlockModifier.ts",
     "imports" : [ "./Shape", "./Vector3", "./Block" ],
     "interfaces" : [ {
@@ -2427,53 +2526,6 @@
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/RegionWorldResponse.ts",
-    "imports" : [ ],
-    "interfaces" : [ {
-      "name" : "RegionWorldResponse",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "id",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "worldId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "description",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "worldApiUrl",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "regionId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "createdAt",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/ItemType.ts",
     "imports" : [ "./ItemModifier" ],
     "interfaces" : [ {
@@ -2530,58 +2582,6 @@
         "name" : "color",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/RegionCharacterResponse.ts",
-    "imports" : [ "./RegionItemInfo" ],
-    "interfaces" : [ {
-      "name" : "RegionCharacterResponse",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "id",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "userId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "regionId",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "display",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "backpack",
-        "type" : "Record<string, RegionItemInfo>",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "wearing",
-        "type" : "Record<number, RegionItemInfo>",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "skills",
-        "type" : "Record<string, number>",
-        "optional" : false,
         "visibility" : null
       } ],
       "methods" : [ ]

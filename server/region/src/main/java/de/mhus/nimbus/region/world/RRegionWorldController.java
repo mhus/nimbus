@@ -1,7 +1,7 @@
 package de.mhus.nimbus.region.world;
 
-import de.mhus.nimbus.generated.types.RegionWorldRequest; // geändert
-import de.mhus.nimbus.generated.types.RegionWorldResponse; // geändert
+import de.mhus.nimbus.generated.dto.RegionWorldRequest; // geändert
+import de.mhus.nimbus.generated.dto.RegionWorldResponse; // geändert
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

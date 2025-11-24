@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region.character;
 
-import de.mhus.nimbus.generated.types.RegionCharacterResponse;
+import de.mhus.nimbus.generated.dto.RegionCharacterResponse;
 import de.mhus.nimbus.generated.types.RegionItemInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -2,7 +2,7 @@
  * Source TS: RegionWorldRequest.ts
  * Original TS: 'interface RegionWorldRequest'
  */
-package de.mhus.nimbus.generated.types;
+package de.mhus.nimbus.generated.dto;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective

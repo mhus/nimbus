@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region.world;
 
-import de.mhus.nimbus.generated.types.RegionCharacterResponse;
+import de.mhus.nimbus.generated.dto.RegionCharacterResponse;
 import de.mhus.nimbus.region.character.RCharacterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
