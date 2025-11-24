@@ -73,8 +73,9 @@
                         <configuration>
                             <!-- Configure where to read TS and where to write generated Java -->
                             <sourceDirs>
-                                <sourceDir>${project.basedir}/../../client/packages/shared/src</sourceDir>
+                                <sourceDir>${project.basedir}/../client_shared_src</sourceDir>
                         <!--
+                                <sourceDir>${project.basedir}/../../client/packages/shared/src</sourceDir>
                                 <sourceDir>${project.basedir}/../tools/generate-ts-to-java-maven-plugin/evaluate/ts</sourceDir>
                         -->
                             </sourceDirs>
