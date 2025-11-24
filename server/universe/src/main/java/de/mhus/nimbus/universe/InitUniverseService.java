@@ -54,11 +54,11 @@ public class InitUniverseService {
 
     private void writePasswordToFile(String password) {
         try {
-            Path targetDir = Paths.get("target");
+            Path targetDir = Paths.get("confidential");
             if (!Files.exists(targetDir)) {
                 Files.createDirectories(targetDir);
             }
-            Path file = targetDir.resolve("admin.txt");
+            Path file = targetDir.resolve("universe.txt");
             String line = "admin:" + password + System.lineSeparator();
             Files.writeString(file, line, StandardOpenOption.CREATE_NEW);
             log.info("Admin password written to {}", file.toAbsolutePath());

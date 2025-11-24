@@ -48,6 +48,10 @@ public class RRegionService {
         return repository.findAllIds();
     }
 
+    public List<RRegion> listAll() {
+        return repository.findAll();
+    }
+
     public RRegion update(String id, String name, String apiUrl, String maintainers) {
         RRegion existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
@@ -60,6 +64,22 @@ public class RRegionService {
             existing.setApiUrl(apiUrl);
         }
         if (maintainers != null) existing.setMaintainers(maintainers);
+        return repository.save(existing);
+    }
+
+    public RRegion updateFull(String id, String name, String apiUrl, String maintainers, Boolean enabled) {
+        RRegion existing = repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
+        if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
+            if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
+            existing.setName(name);
+        }
+        if (apiUrl != null && !apiUrl.isBlank() && !apiUrl.equals(existing.getApiUrl())) {
+            if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
+            existing.setApiUrl(apiUrl);
+        }
+        if (maintainers != null) existing.setMaintainers(maintainers);
+        if (enabled != null) existing.setEnabled(enabled);
         return repository.save(existing);
     }
 
@@ -81,5 +101,12 @@ public class RRegionService {
 
     public Optional<String>  getRegionNameById(String regionId) {
         return repository.getRegionNameByIdAndEnabled(regionId, true);
+    }
+
+    public RRegion setEnabled(String id, boolean enabled) {
+        RRegion existing = repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
+        existing.setEnabled(enabled);
+        return repository.save(existing);
     }
 }

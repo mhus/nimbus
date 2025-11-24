@@ -18,6 +18,7 @@ public class DemoSetupApplication implements CommandLineRunner {
     private final AdminService adminService; // neu
     private final SetupUsersRunner setupUsersRunner; // neu für User Anlage
     private final RegionSetupRunner regionSetupRunner; // neu
+    private final RegionServerPublicKeyService regionServerPublicKeyService; // neu
 
     public static void main(String[] args) {
         SpringApplication.run(DemoSetupApplication.class, args);
@@ -25,6 +26,14 @@ public class DemoSetupApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+
+        int failures = checkServiceHealth();
+        if (failures > 0) {
+            LOG.error("Konnte nicht starten, weil Services nicht erreichbar sind.");
+            System.exit(1);
+        }
+
+        LOG.info("Starte Demo-Setup CLI Tool - initialisiere Services");
         // Admin Passwort zuerst laden
         adminService.getAdminPassword().ifPresentOrElse(
                 pw -> LOG.info("Admin-Passwort erfolgreich geladen."),
@@ -35,7 +44,18 @@ public class DemoSetupApplication implements CommandLineRunner {
         setupUsersRunner.run();
         regionSetupRunner.run();
 
-        LOG.info("Starte Demo-Setup CLI Tool - prüfe konfigurierte Server");
+        regionServerPublicKeyService.getPublicKeyBase64().ifPresentOrElse(
+                pk -> LOG.info("RegionServer Public Key geladen ({} Zeichen, Anfang='{}...')", pk.length(), pk.substring(0, Math.min(16, pk.length()))),
+                () -> LOG.warn("RegionServer Public Key nicht gefunden")
+        );
+
+        failures = checkServiceHealth();
+        int exitCode = (failures == 0) ? 0 : 1;
+        LOG.info("Beende Anwendung mit Exit-Code {}", exitCode);
+        System.exit(exitCode);
+    }
+
+    private int checkServiceHealth() {
         int failures = 0;
         for (ClientService service : services) {
             String name = service.getName();
@@ -57,8 +77,6 @@ public class DemoSetupApplication implements CommandLineRunner {
         } else {
             LOG.error("{} Service(s) mit Fehlern.", failures);
         }
-        int exitCode = (failures == 0) ? 0 : 1;
-        LOG.info("Beende Anwendung mit Exit-Code {}", exitCode);
-        System.exit(exitCode);
+        return failures;
     }
 }

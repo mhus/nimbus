@@ -14,8 +14,7 @@ class AdminServiceTest {
     @Test
     void parseValidAdminLine() throws IOException {
         Path temp = Files.createTempFile("admin", ".txt");
-        Files.writeString(temp, "admin:secretPass\n");
-        AdminService svc = new AdminService(temp.toString());
+        Files.writeString(temp, "admin:secretPass\n");AdminService svc = new AdminService(temp.toString(), true); // strict
         Optional<String> pw = svc.getAdminPassword();
         assertTrue(pw.isPresent());
         assertEquals("secretPass", pw.get());
@@ -25,7 +24,7 @@ class AdminServiceTest {
     void ignoreWrongUser() throws IOException {
         Path temp = Files.createTempFile("admin", ".txt");
         Files.writeString(temp, "bob:pw\n");
-        AdminService svc = new AdminService(temp.toString());
+        AdminService svc = new AdminService(temp.toString(), true); // strict
         Optional<String> pw = svc.getAdminPassword();
         assertFalse(pw.isPresent());
     }
@@ -34,9 +33,8 @@ class AdminServiceTest {
     void ignoreBadFormat() throws IOException {
         Path temp = Files.createTempFile("admin", ".txt");
         Files.writeString(temp, "nocolonline\n");
-        AdminService svc = new AdminService(temp.toString());
+        AdminService svc = new AdminService(temp.toString(), true); // strict
         Optional<String> pw = svc.getAdminPassword();
         assertFalse(pw.isPresent());
     }
 }
-

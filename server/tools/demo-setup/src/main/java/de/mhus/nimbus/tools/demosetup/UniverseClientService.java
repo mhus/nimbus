@@ -1,5 +1,7 @@
 package de.mhus.nimbus.tools.demosetup;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -8,10 +10,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Service
 public class UniverseClientService extends BaseClientService {
     private volatile String token;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public UniverseClientService(@Value("${universe.base-url:}") String baseUrl) {
         super(baseUrl);
@@ -38,19 +42,17 @@ public class UniverseClientService extends BaseClientService {
                 LOG.error("Admin Login Antwort leer");
                 return false;
             }
-            // primitive Token Extraktion
-            int pos = body.indexOf("\"token\":");
-            if (pos >= 0) {
-                int start = body.indexOf('"', pos + 8);
-                int end = body.indexOf('"', start + 1);
-                if (start >= 0 && end > start) {
-                    String t = body.substring(start + 1, end);
-                    if (!t.isBlank()) {
-                        token = t;
-                        LOG.info("Admin Token erhalten ({} Zeichen)", t.length());
-                        return true;
-                    }
+            try {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode tokenNode = node.get("token");
+                if (tokenNode != null && !tokenNode.asText().isBlank()) {
+                    token = tokenNode.asText();
+                    LOG.info("Admin Token erhalten ({} Zeichen)", token.length());
+                    return true;
                 }
+                LOG.error("Token Feld nicht gefunden oder leer im Login JSON");
+            } catch (Exception parseEx) {
+                LOG.error("Kann Login JSON nicht parsen: {}", parseEx.toString());
             }
             LOG.error("Token nicht im Login-Body gefunden");
             return false;
@@ -132,8 +134,11 @@ public class UniverseClientService extends BaseClientService {
         if (userExists(username)) {
             LOG.info("User '{}' existiert bereits - überspringe", username);
         } else {
-            LOG.info("User '{}' existiert nicht - lege an", username);
-            createUser(username, password);
+            LOG.info("User '{}' existiert nicht - lege an (Passwortlänge {} Zeichen)", username, password.length());
+            boolean created = createUser(username, password);
+            if (!created) {
+                LOG.error("Anlage von User '{}' fehlgeschlagen", username);
+            }
         }
     }
 
@@ -241,6 +246,50 @@ public class UniverseClientService extends BaseClientService {
         } catch (Exception e) {
             LOG.warn("Exception checkRegionPublicKey('{}'): {}", regionName, e.toString());
             return false;
+        }
+    }
+
+    public Optional<String> login(String username, String password) {
+        if (!isConfigured()) return Optional.empty();
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            LOG.warn("Login Parameter ungültig (username oder password leer)");
+            return Optional.empty();
+        }
+        try {
+            String body = webClient.post()
+                    .uri("/universe/user/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .onErrorResume(e -> {
+                        LOG.error("Login Fehler für '{}': {}", username, e.toString());
+                        return Mono.empty();
+                    })
+                    .block();
+            if (body == null) {
+                LOG.error("Login Antwort leer für '{}'", username);
+                return Optional.empty();
+            }
+            try {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode tokenNode = node.get("token");
+                if (tokenNode != null && !tokenNode.asText().isBlank()) {
+                    String t = tokenNode.asText();
+                    token = t; // aktuelles Token im Service aktualisieren
+                    LOG.info("Login erfolgreich für '{}' (Tokenlänge {} Zeichen)", username, t.length());
+                    return Optional.of(t);
+                } else {
+                    LOG.error("Token Feld fehlt oder leer im Login JSON für '{}'", username);
+                }
+            } catch (Exception parseEx) {
+                LOG.error("Kann Login JSON für '{}' nicht parsen: {}", username, parseEx.toString());
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.error("Exception beim Login für '{}': {}", username, e.toString());
+            return Optional.empty();
         }
     }
 }

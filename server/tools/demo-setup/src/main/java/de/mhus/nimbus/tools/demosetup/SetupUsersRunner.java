@@ -1,5 +1,6 @@
 package de.mhus.nimbus.tools.demosetup;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -7,9 +8,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
+@Slf4j
 public class SetupUsersRunner {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SetupUsersRunner.class);
 
     private final AdminService adminService;
     private final UniverseClientService universeClientService;
@@ -21,20 +21,16 @@ public class SetupUsersRunner {
 
     public void run() {
         if (!universeClientService.isConfigured()) {
-            LOG.warn("Universe Service nicht konfiguriert - überspringe User Setup");
+            log.warn("Universe Service nicht konfiguriert - überspringe User Setup");
             return;
         }
-        var pwOpt = adminService.getAdminPassword();
-        if (pwOpt.isEmpty()) {
-            LOG.warn("Kein Admin Passwort - kann Users nicht anlegen");
+        log.info("Login Admin");
+        universeClientService.loginAdmin(adminService.getAdminPassword().get());
+        if (!universeClientService.hasToken()) {
+            log.warn("Kein Token - User Setup übersprungen");
             return;
         }
-        boolean loginOk = universeClientService.loginAdmin(pwOpt.get());
-        if (!loginOk) {
-            LOG.error("Admin Login fehlgeschlagen - breche User Setup ab");
-            return;
-        }
-        LOG.info("Beginne Sicherstellung der User");
+        log.info("Beginne Sicherstellung der User");
         List<UserDef> users = List.of(
                 new UserDef("samanthaevelyncook", "password1"),
                 new UserDef("wadewatts", "password1"),
@@ -44,8 +40,15 @@ public class SetupUsersRunner {
         );
         for (UserDef u : users) {
             universeClientService.ensureUser(u.username(), u.password());
+            var token = universeClientService.login(u.username(), u.password());
+            System.out.println(token);
+            if (token.isEmpty()) {
+                log.error("Konnte mich nicht mit User '{}' einloggen nach Anlage!", u.username());
+            } else {
+                log.info("User '{}' erfolgreich angelegt und eingeloggt.", u.username());
+            }
         }
-        LOG.info("User Setup abgeschlossen");
+        log.info("User Setup abgeschlossen");
     }
 
     record UserDef(String username, String password) {}

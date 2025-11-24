@@ -19,10 +19,13 @@ public class AdminService {
     private static final Logger LOG = LoggerFactory.getLogger(AdminService.class);
 
     private final String configuredPath;
-    private String cachedPassword = null; // ersetzt Optional Cache
+    private final boolean strict;
+    private String cachedPassword = null;
 
-    public AdminService(@Value("${admin.file:}") String configuredPath) {
+    public AdminService(@Value("${admin.file:}") String configuredPath,
+                        @Value("${admin.strict:false}") boolean strict) {
         this.configuredPath = configuredPath == null ? "" : configuredPath.trim();
+        this.strict = strict;
     }
 
     public Optional<String> getAdminPassword() {
@@ -34,40 +37,39 @@ public class AdminService {
 
     private Optional<String> loadPassword() {
         List<Path> candidates = new ArrayList<>();
-
-        // 1) explizite Konfiguration über Property admin.file oder Env ADMIN_FILE
         String env = System.getenv("ADMIN_FILE");
         if (!configuredPath.isBlank()) candidates.add(Path.of(configuredPath));
         if (env != null && !env.isBlank()) candidates.add(Path.of(env.trim()));
 
-        // 2) relative Standardpfade (von Modul-Verzeichnis gesehen)
-        candidates.add(Path.of("target/admin.txt"));
-        candidates.add(Path.of("../target/admin.txt"));
-        candidates.add(Path.of("../../target/admin.txt"));
-        candidates.add(Path.of("../../../target/admin.txt")); // falls tiefer gestartet
+        if (!strict) {
+            candidates.add(Path.of("target/admin.txt"));
+            candidates.add(Path.of("../target/admin.txt"));
+            candidates.add(Path.of("../../target/admin.txt"));
+            candidates.add(Path.of("../../../target/admin.txt"));
+        } else {
+            LOG.debug("Strict-Modus aktiv: verwende nur explizite Pfade und ENV");
+        }
 
         for (Path p : candidates) {
             try {
                 if (Files.exists(p) && Files.isRegularFile(p)) {
                     String raw = Files.readString(p, StandardCharsets.UTF_8);
-                    // erste sinnvolle Zeile nehmen
                     String line = raw.lines()
                             .map(String::trim)
                             .filter(l -> !l.isEmpty() && !l.startsWith("#"))
                             .findFirst()
                             .orElse("");
                     if (!line.isEmpty()) {
-                        // Format: user:passwort
                         int idx = line.indexOf(':');
                         if (idx <= 0 || idx == line.length() - 1) {
                             LOG.warn("Admin-Passwort Datei ungültiges Format (user:passwort erwartet): {}", p.toAbsolutePath());
-                            continue; // versuche nächste Datei
+                            continue;
                         }
                         String user = line.substring(0, idx).trim();
                         String pass = line.substring(idx + 1).trim();
                         if (!"admin".equalsIgnoreCase(user)) {
                             LOG.warn("Admin-Passwort Datei Benutzer != 'admin': {} (gefunden '{}')", p.toAbsolutePath(), user);
-                            continue; // nächste Datei versuchen
+                            continue;
                         }
                         if (pass.isEmpty()) {
                             LOG.warn("Admin-Passwort Datei enthält leeres Passwort: {}", p.toAbsolutePath());
@@ -80,7 +82,7 @@ public class AdminService {
                     }
                 }
             } catch (IOException e) {
-                LOG.warn("Kann Datei '{}' nicht lesen: {}", p, e.toString());
+                LOG.warn("Kann Datei '{}' nicht lesen: {}", p.toAbsolutePath(), e.toString());
             }
         }
         LOG.warn("Kein Admin-Passwort gefunden (Format user:passwort, user muss 'admin' sein)");
