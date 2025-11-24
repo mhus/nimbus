@@ -77,8 +77,8 @@ public class WRegionService {
         rest.exchange(url, HttpMethod.DELETE, entity, Void.class);
     }
 
-    public Optional<RegionCharacterResponse> getCharacter(String characterId, String worldId) {
-        String url = characterUrl(characterId);
+    public Optional<RegionCharacterResponse> getCharacter(String regionId, String characterId, String worldId) {
+        String url = characterUrl(regionId, characterId);
         HttpEntity<Void> entity = new HttpEntity<>(authHeaders(worldId));
         try {
             ResponseEntity<RegionCharacterResponse> resp = rest.exchange(url, HttpMethod.GET, entity, RegionCharacterResponse.class);
@@ -99,10 +99,10 @@ public class WRegionService {
         return base + "/region/" + regionId + "/world/" + worldId;
     }
 
-    private String characterUrl(String characterId) {
+    private String characterUrl(String regionId, String characterId) {
         String base = props.getBaseUrl();
         if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
-        return base + "/region/world/character/" + characterId;
+        return base + "/region/world/character/" + regionId + "/" + characterId;
     }
 
     private HttpHeaders authHeaders(String worldId) {

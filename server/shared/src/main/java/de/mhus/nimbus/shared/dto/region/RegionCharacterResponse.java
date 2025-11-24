@@ -17,5 +17,5 @@ public class RegionCharacterResponse {
     private Map<String, RegionItemInfo> backpack;
     private Map<Integer, RegionItemInfo> wearing;
     private Map<String, Integer> skills;
+    private String regionId; // neu: Region, zu der der Charakter gehört
 }
-

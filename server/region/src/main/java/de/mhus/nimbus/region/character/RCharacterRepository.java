@@ -8,8 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface RCharacterRepository extends MongoRepository<RCharacter, String> {
-    Optional<RCharacter> findByUserIdAndName(String userId, String name);
-    boolean existsByUserIdAndName(String userId, String name);
-    List<RCharacter> findByUserId(String userId);
+    Optional<RCharacter> findByUserIdAndRegionIdAndName(String userId, String regionId, String name);
+    boolean existsByUserIdAndRegionIdAndName(String userId, String regionId, String name);
+    List<RCharacter> findByUserIdAndRegionId(String userId, String regionId);
+    Optional<RCharacter> findByIdAndRegionId(String id, String regionId);
 }
-

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Document(collection = "characters")
-@CompoundIndex(def = "{userId:1, name:1}", unique = true)
+@CompoundIndex(def = "{userId:1, regionId:1, name:1}", unique = true)
 @Data
 public class RCharacter {
 
@@ -38,9 +38,13 @@ public class RCharacter {
     // Skills (Skill-Name -> Level)
     private Map<String, Integer> skills;
 
+    @Indexed
+    private String regionId; // neu: Region-Zuordnung
+
     public RCharacter() { }
-    public RCharacter(String userId, String name, String display) {
+    public RCharacter(String userId, String regionId, String name, String display) {
         this.userId = userId;
+        this.regionId = regionId;
         this.name = name;
         this.display = display;
     }
