@@ -3,8 +3,8 @@ spring:
     name: WorldEditor
   data:
     mongodb:
-      uri: mongodb://root:example@localhost:27017/world_editor?authSource=admin
-      database: world_editor
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      database: world
 
 server:
   port: 9043

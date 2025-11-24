@@ -1,10 +1,10 @@
 spring:
   application:
-    name: WorldProvider
+    name: WorldPlayer
   data:
     mongodb:
-      database: world_provider
-      uri: mongodb://root:example@localhost:27017/world_provider?authSource=admin
+      database: world
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
 
 world:
   player:

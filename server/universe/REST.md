@@ -1,6 +1,9 @@
-REST-API Beispiele (Universe Modul)
+# REST-API Beispiele (Universe Modul)
 
 Dieser Leitfaden zeigt praktische curl-Beispiele für die im Universe‑Modul verfügbaren REST‑Endpunkte. Alle Endpunkte sind per JWT (Bearer Token) geschützt. Für die User‑ und Keys‑Verwaltung ist die Rolle ADMIN erforderlich.
+
+## Startup Banner
+Ein ASCII-Banner mit dem Modulnamen "universe" wurde in `src/main/resources/banner.txt` hinzugefügt und wird beim Start des Spring Boot Moduls angezeigt.
 
 Voraussetzungen
 - Laufender Server (Beispiel: http://localhost:9040)
