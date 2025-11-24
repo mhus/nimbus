@@ -207,8 +207,28 @@ public class JavaGenerator {
         if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith("\"") && s.endsWith("\""))) {
             return "String";
         }
-        // Union/intersection -> Object for now
-        if (s.contains("|") || s.contains("&")) return "Object";
+        // Union/intersection handling
+        // - If all union parts are string-like (string or string literals/backticks or null/undefined), map to String
+        // - Otherwise, fallback to Object
+        if (s.contains("|") || s.contains("&")) {
+            // Treat both union and intersection uniformly here; intersection maps to Object
+            if (s.contains("&")) return "Object";
+            String[] parts = s.split("\\|");
+            boolean allStringLike = true;
+            for (String part : parts) {
+                String a = part.trim();
+                // remove parentheses around parts like ("a")
+                while (a.startsWith("(") && a.endsWith(")") && a.length() > 1) {
+                    a = a.substring(1, a.length() - 1).trim();
+                }
+                if (!isStringLikeUnionAlt(a)) {
+                    allStringLike = false;
+                    break;
+                }
+            }
+            if (allStringLike) return "String";
+            return "Object";
+        }
         switch (s) {
             case "string": return "String";
             case "number": return optional ? "java.lang.Double" : "double";
@@ -230,6 +250,20 @@ public class JavaGenerator {
                 // Fallback: keep as-is
                 return s;
         }
+    }
+
+    private boolean isStringLikeUnionAlt(String s) {
+        if (s == null || s.isBlank()) return false;
+        String t = s.trim();
+        // string keyword
+        if ("string".equals(t)) return true;
+        // string literals: 'x', "x", `x`
+        if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith("\"") && t.endsWith("\"")) || (t.startsWith("`") && t.endsWith("`"))) {
+            return true;
+        }
+        // allow null/undefined in union with string literals -> still String
+        if ("null".equals(t) || "undefined".equals(t)) return true;
+        return false;
     }
 
     // Split a generic argument list by a delimiter at top-level (not inside nested <>)

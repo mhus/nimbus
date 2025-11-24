@@ -1,7 +1,7 @@
 package de.mhus.nimbus.universe.region;
 
-import de.mhus.nimbus.shared.dto.universe.RegionWorldRequest;
-import de.mhus.nimbus.shared.dto.universe.RegionWorldResponse;
+import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
+import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
 import de.mhus.nimbus.universe.world.UWorld;
 import de.mhus.nimbus.universe.world.UWorldRepository;
 import de.mhus.nimbus.universe.world.UWorldService;
@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -40,9 +39,16 @@ public class URegionWorldController {
     }
 
     private RegionWorldResponse toResponse(UWorld w) {
-        return new RegionWorldResponse(w.getId(), w.getName(), w.getDescription(), w.getCreatedAt(),
-                w.getRegionId(), w.getPlanetId(), w.getSolarSystemId(), w.getGalaxyId(),
-                w.getWorldId(), w.getCoordinates());
+        return RegionWorldResponse.builder()
+                .id(w.getId())
+                .worldId(w.getWorldId())
+                .name(w.getName())
+                .description(w.getDescription())
+                // apiUrl nicht mehr vorhanden -> null
+                .worldApiUrl(null)
+                .regionId(w.getRegionId())
+                .createdAt(w.getCreatedAt() == null ? null : w.getCreatedAt().toInstant().toString())
+                .build();
     }
 
     @GetMapping("/{worldId}")
@@ -58,6 +64,23 @@ public class URegionWorldController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping
+    @Operation(summary = "Welten einer Region listen", description = "Optionale Filter: name, worldId")
+    public ResponseEntity<java.util.List<RegionWorldResponse>> list(
+            @PathVariable String regionId,
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "worldId", required = false) String worldIdFilter) {
+        var all = worldRepository.findAll();
+        var out = new java.util.ArrayList<RegionWorldResponse>();
+        for (UWorld w : all) {
+            if (!regionId.equals(w.getRegionId())) continue;
+            if (name != null && !name.equals(w.getName())) continue;
+            if (worldIdFilter != null && !worldIdFilter.equals(w.getWorldId())) continue;
+            out.add(toResponse(w));
+        }
+        return ResponseEntity.ok(out);
+    }
+
     @PostMapping("/{worldId}")
     @Operation(summary = "Welt erstellen (Region)", description = "Erstellt eine Welt für die Region; worldId wird aus dem Pfad übernommen")
     @ApiResponses({
@@ -70,12 +93,23 @@ public class URegionWorldController {
                                                       @RequestBody RegionWorldRequest req) {
         Optional<UWorld> existing = worldRepository.findByRegionIdAndWorldId(regionId, worldId);
         if (existing.isPresent()) return ResponseEntity.status(409).build();
-        UWorld w = worldService.create(
-                req.name(), req.description(),
-                regionId, req.planetId(), req.solarSystemId(), req.galaxyId(),
-                worldId, req.coordinates());
-        return ResponseEntity.created(URI.create("/universe/region/" + regionId + "/world/" + worldId))
-                .body(toResponse(w));
+        try {
+            UWorld w = worldService.create(
+                    req.getName(),
+                    req.getDescription(),
+                    regionId,
+                    null, // planetId nicht im DTO
+                    null, // solarSystemId nicht im DTO
+                    null, // galaxyId nicht im DTO
+                    worldId,
+                    null  // coordinates nicht im DTO
+            );
+            w = worldRepository.save(w);
+            return ResponseEntity.created(URI.create("/universe/region/" + regionId + "/world/" + worldId))
+                    .body(toResponse(w));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{worldId}")
@@ -89,11 +123,22 @@ public class URegionWorldController {
                                                       @RequestBody RegionWorldRequest req) {
         UWorld w = worldRepository.findByRegionIdAndWorldId(regionId, worldId).orElse(null);
         if (w == null) return ResponseEntity.notFound().build();
-        UWorld updated = worldService.update(w.getId(),
-                req.name(), req.description(),
-                regionId, req.planetId(), req.solarSystemId(), req.galaxyId(),
-                worldId, req.coordinates());
-        return ResponseEntity.ok(toResponse(updated));
+        try {
+            UWorld updated = worldService.update(
+                    w.getId(),
+                    req.getName(),
+                    req.getDescription(),
+                    regionId, // region darf ggf. übernommen werden
+                    null,
+                    null,
+                    null,
+                    worldId, // worldId bleibt bestehen
+                    null
+            );
+            return ResponseEntity.ok(toResponse(updated));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @DeleteMapping("/{worldId}")

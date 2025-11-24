@@ -90,6 +90,25 @@ public class EvaluateTypesOnlyIT {
         assertTrue(itemSrc.contains("@SuppressWarnings(\"required\")"),
                 "Expected non-optional field annotation @SuppressWarnings(\"required\") on required fields");
 
+        // verify union-of-string mapping -> String
+        File plainReqFile = javaFiles.stream()
+                .filter(f -> f.getPath().contains(expectedPkgPath) && f.getName().equals("PlainReq.java"))
+                .findFirst().orElse(null);
+        assertNotNull(plainReqFile, "Expected generated PlainReq.java in types package");
+        String plainReqSrc = Files.readString(plainReqFile.toPath());
+        assertTrue(plainReqSrc.contains("private String kind;"),
+                "Union type '" + "'public'|'private'|'symmetric'|string" + "' should map to String for field 'kind'");
+
+        // verify fieldTypeMappings override: Req.kind -> ColorHex
+        File reqFile = javaFiles.stream()
+                .filter(f -> f.getPath().contains(expectedPkgPath) && f.getName().equals("Req.java"))
+                .findFirst().orElse(null);
+        assertNotNull(reqFile, "Expected generated Req.java in types package");
+        String reqSrc = Files.readString(reqFile.toPath());
+        assertTrue(reqSrc.contains("private de.mhus.nimbus.evaluate.generated.types.ColorHex kind;")
+                        || reqSrc.contains("private ColorHex kind;"),
+                "fieldTypeMappings should override Req.kind to ColorHex");
+
         // build evaluate via maven
         int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");
         assertEquals(0, exit, "Maven build of evaluate module failed");

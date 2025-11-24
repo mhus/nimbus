@@ -26,6 +26,8 @@ public class UWorld {
     private String worldId;
     private String description;
 
+    private String apiUrl;
+
     @CreatedDate
     private Date createdAt;
 

@@ -1,36 +1,9 @@
 {
   "files" : [ {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionWorldRequest.ts",
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/SKeyDto.ts",
     "imports" : [ ],
     "interfaces" : [ {
-      "name" : "RegionWorldRequest",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "name",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "description",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "worldApiUrl",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      } ],
-      "methods" : [ ]
-    } ],
-    "enums" : [ ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionWorldResponse.ts",
-    "imports" : [ ],
-    "interfaces" : [ {
-      "name" : "RegionWorldResponse",
+      "name" : "SKeyDto",
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "id",
@@ -38,32 +11,37 @@
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "worldId",
+        "name" : "type",
         "type" : "string",
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "name",
+        "name" : "kind",
         "type" : "string",
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "description",
+        "name" : "algorithm",
         "type" : "string",
         "optional" : false,
         "visibility" : null
       }, {
-        "name" : "worldApiUrl",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null
-      }, {
-        "name" : "regionId",
+        "name" : "keyId",
         "type" : "string",
         "optional" : false,
         "visibility" : null
       }, {
         "name" : "createdAt",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "owner",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "intent",
         "type" : "string",
         "optional" : false,
         "visibility" : null
@@ -117,6 +95,60 @@
       }, {
         "name" : "skills",
         "type" : "Record<string, number>",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/UpdateSKeyNameRequest.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "UpdateSKeyNameRequest",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/CreateSKeyRequest.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "CreateSKeyRequest",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "type",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "kind",
+        "type" : "'public' | 'private' | 'symmetric' | string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "algorithm",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "key",
+        "type" : "string",
         "optional" : false,
         "visibility" : null
       } ],

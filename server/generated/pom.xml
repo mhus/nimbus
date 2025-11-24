@@ -104,6 +104,9 @@
                             <includes>
                                 <include>**/*</include>
                             </includes>
+                            <excludes>
+                                <exclude>types/**</exclude>
+                            </excludes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
                     </filesets>

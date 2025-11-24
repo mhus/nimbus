@@ -15,6 +15,6 @@ public class StepRepeat {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Object times;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private Object untilEvent;
+    private String untilEvent;
     private ScrawlStep step;
 }

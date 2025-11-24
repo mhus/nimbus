@@ -2,9 +2,8 @@
  * Source TS: RegionWorldResponse.ts
  * Original TS: 'interface RegionWorldResponse'
  */
-package de.mhus.nimbus.generated.dto;
+package de.mhus.nimbus.shared.dto.region;
 
-@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
 @lombok.Data
 @lombok.experimental.SuperBuilder

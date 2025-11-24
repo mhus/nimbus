@@ -4,9 +4,9 @@ import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
 import de.mhus.nimbus.universe.security.Role;
 import de.mhus.nimbus.shared.user.UniverseRoles;
-import de.mhus.nimbus.shared.dto.universe.CreateSKeyRequest;
-import de.mhus.nimbus.shared.dto.universe.SKeyDto;
-import de.mhus.nimbus.shared.dto.universe.UpdateSKeyNameRequest;
+import de.mhus.nimbus.generated.dto.CreateSKeyRequest; // geändert
+import de.mhus.nimbus.generated.dto.SKeyDto; // geändert
+import de.mhus.nimbus.generated.dto.UpdateSKeyNameRequest; // geändert
 import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,20 +74,23 @@ public class UKeysController {
         @ApiResponse(responseCode = "400", description = "Validierungsfehler")
     })
     public ResponseEntity<SKeyDto> create(@Valid @RequestBody CreateSKeyRequest req) {
+        String rawType = req.getType();
+        String rawKind = req.getKind();
+        if (rawType == null || rawKind == null) return ResponseEntity.badRequest().build();
         KeyType keyType;
         KeyKind keyKind;
         try {
-            keyType = KeyType.valueOf(req.type.trim().toUpperCase());
-            keyKind = KeyKind.valueOf(req.kind.trim().toUpperCase());
-        } catch (Exception ex) { // IllegalArgumentException | NullPointerException
+            keyType = KeyType.valueOf(rawType.trim().toUpperCase());
+            keyKind = KeyKind.valueOf(rawKind.trim().toUpperCase());
+        } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
         SKey e = new SKey();
         e.setType(keyType);
         e.setKind(keyKind);
-        e.setAlgorithm(req.algorithm);
-        e.setKeyId(req.name);
-        e.setKey(req.key); // wird nie zurückgegeben
+        e.setAlgorithm(req.getAlgorithm());
+        e.setKeyId(req.getName());
+        e.setKey(req.getKey()); // wird nie zurückgegeben
         SKey saved = repository.save(e);
         SKeyDto dto = toDto(saved);
         return ResponseEntity.created(URI.create(BASE_PATH + "/" + saved.getId())).body(dto);
@@ -105,7 +108,7 @@ public class UKeysController {
         Optional<SKey> opt = repository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
         SKey e = opt.get();
-        e.setKeyId(req.name);
+        e.setKeyId(req.getName());
         SKey saved = repository.save(e);
         return ResponseEntity.ok(toDto(saved));
     }
@@ -126,15 +129,15 @@ public class UKeysController {
 
     // ------------------------------------------------------------
     private SKeyDto toDto(SKey e) {
-        SKeyDto dto = new SKeyDto();
-        dto.id = e.getId();
-        dto.type = e.getType() != null ? e.getType().name() : null;
-        dto.kind = e.getKind() != null ? e.getKind().name() : null;
-        dto.algorithm = e.getAlgorithm();
-        dto.keyId = e.getKeyId();
-        dto.owner = e.getOwner();
-        dto.intent = e.getIntent();
-        dto.createdAt = e.getCreatedAt();
-        return dto;
+        return SKeyDto.builder()
+                .id(e.getId())
+                .type(e.getType() != null ? e.getType().name() : null)
+                .kind(e.getKind() != null ? e.getKind().name() : null)
+                .algorithm(e.getAlgorithm())
+                .keyId(e.getKeyId())
+                .owner(e.getOwner())
+                .intent(e.getIntent())
+                .createdAt(e.getCreatedAt() == null ? null : e.getCreatedAt().toString())
+                .build();
     }
 }

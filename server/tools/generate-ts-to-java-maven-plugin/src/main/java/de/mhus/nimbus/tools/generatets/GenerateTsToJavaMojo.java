@@ -118,6 +118,18 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                                 }
                             }
                         }
+                        // Apply field-specific type overrides if configured
+                        if (configuration.fieldTypeMappings != null && !configuration.fieldTypeMappings.isEmpty()) {
+                            if (t.getProperties() != null && !t.getProperties().isEmpty()) {
+                                for (de.mhus.nimbus.tools.generatets.java.JavaProperty p : t.getProperties()) {
+                                    if (p == null || p.getName() == null) continue;
+                                    String override = resolveFieldTypeOverride(configuration, t.getPackageName(), t.getName(), p.getName());
+                                    if (override != null && !override.isBlank()) {
+                                        p.setType(override.trim());
+                                    }
+                                }
+                            }
+                        }
                     }
                     // Resolve unknown interface inheritance and apply interfaceExtendsMappings/defaultBaseClass
                     java.util.Map<String, JavaType> idx = javaModel.getIndexByName();
@@ -173,6 +185,29 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse TypeScript sources", e);
         }
+    }
+
+    private String resolveFieldTypeOverride(Configuration configuration, String pkg, String className, String fieldName) {
+        if (configuration == null || configuration.fieldTypeMappings == null || configuration.fieldTypeMappings.isEmpty()) return null;
+        String fq = (pkg == null || pkg.isBlank()) ? (className + "." + fieldName) : (pkg + "." + className + "." + fieldName);
+        String simple = className + "." + fieldName;
+
+        // 1) Exact FQ match
+        String exact = configuration.fieldTypeMappings.get(fq);
+        if (exact != null && !exact.isBlank()) return exact;
+        // 2) Simple class.field
+        String simp = configuration.fieldTypeMappings.get(simple);
+        if (simp != null && !simp.isBlank()) return simp;
+        // 3) Suffix match (e.g., "dto.Class.field")
+        for (java.util.Map.Entry<String, String> e : configuration.fieldTypeMappings.entrySet()) {
+            String key = e.getKey();
+            if (key == null || key.isBlank()) continue;
+            if (fq.endsWith(key.trim())) {
+                String val = e.getValue();
+                if (val != null && !val.isBlank()) return val;
+            }
+        }
+        return null;
     }
 
     private String mapTypeString(String input, Configuration cfg) {

@@ -15,3 +15,8 @@ additionalNonOptionalFieldAnnotations:
 packageRules:
   - dirEndsWith: types
     pkg: de.mhus.nimbus.evaluate.generated.types
+
+# Field-specific type overrides (for testing feature)
+fieldTypeMappings:
+  # Override Req.kind to be a ColorHex instead of default String
+  de.mhus.nimbus.evaluate.generated.types.Req.kind: de.mhus.nimbus.evaluate.generated.types.ColorHex

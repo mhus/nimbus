@@ -57,6 +57,20 @@ public class Configuration {
     public Map<String, String> typeMappings;
 
     /**
+     * Optional field-specific type mappings. Allows overriding the Java type of a concrete field.
+     * Key format variants supported (matched in this order):
+     * - Fully qualified: "com.example.pkg.ClassName.fieldName"
+     * - Simple: "ClassName.fieldName"
+     * - Suffix match: any suffix of the fully qualified form (e.g. "dto.ClassName.fieldName")
+     * The value is the Java type to use (fully qualified or simple if java.lang or imported).
+     *
+     * Example:
+     *   fieldTypeMappings:
+     *     "dto.CreateSKeyRequest.kind": "java.lang.String"
+     */
+    public Map<String, String> fieldTypeMappings;
+
+    /**
      * Optional mapping to replace unknown TS interface base types (extends) with concrete Java classes.
      * Key: TS interface name used in "extends" clause; Value: fully-qualified Java class to use instead.
      * If a TS interface extends an unknown type and a mapping exists here, the generated Java class will

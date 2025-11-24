@@ -2,8 +2,8 @@ package de.mhus.nimbus.region.universe;
 
 import de.mhus.nimbus.region.RegionProperties;
 import de.mhus.nimbus.region.registry.RRegionService;
-import de.mhus.nimbus.shared.dto.universe.RegionWorldRequest;
-import de.mhus.nimbus.shared.dto.universe.RegionWorldResponse;
+import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
+import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
