@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller zur Bereitstellung von Region-Assets (CRUD über SAssetService).
- * Pfade nutzen einen Wildcard PathVariable zur vollständigen Asset-Pfad-Erfassung.
+ * Pfade nutzen eine Catch-All PathVariable am Ende im Spring PathPattern-Format: {@code {*path}}.
+ * Content-Endpunkt wurde auf Prefix-Variante umgestellt: /{regionId}/asset/content/{*path},
+ * da ein Catch-All nicht mehr vor weiteren Segments stehen darf (Spring 6 PathPatternParser).
  */
 @RestController
 @RequestMapping(RAssetController.BASE_PATH)
@@ -51,13 +51,14 @@ public class RAssetController {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of("error","listing not implemented yet"));
     }
 
-    @GetMapping(value = "/{regionId}/asset/{path:**}")
+    @GetMapping(value = "/{regionId}/asset/{*path}")
     @Operation(summary = "Asset Metadaten abrufen")
     @ApiResponses({@ApiResponse(responseCode = "200"), @ApiResponse(responseCode = "404")})
     public ResponseEntity<?> get(@PathVariable String regionId,
                                  @PathVariable String path,
                                  @RequestParam(required = false) String worldId,
                                  @RequestParam(defaultValue = "false") boolean withContent) {
+        path = normalizePath(path);
         if (regionId == null || regionId.isBlank()) return badRequest("regionId blank");
         if (path == null || path.isBlank()) return badRequest("path blank");
         Optional<SAsset> opt = assetService.findByPath(regionId, worldId, path);
@@ -72,11 +73,12 @@ public class RAssetController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping(value = "/{regionId}/asset/{path:**}/content")
+    @GetMapping(value = "/{regionId}/asset/content/{*path}")
     @Operation(summary = "Rohinhalt abrufen", description = "Liefert den Binärinhalt des Assets")
     public ResponseEntity<?> getContent(@PathVariable String regionId,
                                         @PathVariable String path,
                                         @RequestParam(required = false) String worldId) {
+        path = normalizePath(path);
         Optional<SAsset> opt = assetService.findByPath(regionId, worldId, path);
         if (opt.isEmpty()) return notFound("asset not found");
         byte[] data = assetService.loadContent(opt.get());
@@ -84,7 +86,7 @@ public class RAssetController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(data);
     }
 
-    @PostMapping(value = "/{regionId}/asset/{path:**}")
+    @PostMapping(value = "/{regionId}/asset/{*path}")
     @Operation(summary = "Asset erstellen", description = "Erstellt ein neues Asset. Raw Bytes oder JSON mit base64Content.")
     public ResponseEntity<?> create(@PathVariable String regionId,
                                     @PathVariable String path,
@@ -93,6 +95,7 @@ public class RAssetController {
                                     @RequestBody(required = false) byte[] rawBody,
                                     @RequestBody(required = false) AssetContentRequest jsonBody,
                                     @RequestHeader(value = "X-User", required = false) String createdBy) {
+        path = normalizePath(path);
         try {
             if (exists(regionId, worldId, path)) return conflict("asset already exists");
             byte[] data = resolveBody(contentType, rawBody, jsonBody);
@@ -105,7 +108,7 @@ public class RAssetController {
         }
     }
 
-    @PutMapping(value = "/{regionId}/asset/{path:**}")
+    @PutMapping(value = "/{regionId}/asset/{*path}")
     @Operation(summary = "Asset ersetzen", description = "Ersetzt den Inhalt (oder erstellt falls nicht vorhanden)")
     public ResponseEntity<?> put(@PathVariable String regionId,
                                  @PathVariable String path,
@@ -114,6 +117,7 @@ public class RAssetController {
                                  @RequestBody(required = false) byte[] rawBody,
                                  @RequestBody(required = false) AssetContentRequest jsonBody,
                                  @RequestHeader(value = "X-User", required = false) String user) {
+        path = normalizePath(path);
         byte[] data = resolveBody(contentType, rawBody, jsonBody);
         Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
         if (existing.isEmpty()) {
@@ -128,12 +132,13 @@ public class RAssetController {
                 .orElseGet(() -> notFound("asset disappeared"));
     }
 
-    @PatchMapping(value = "/{regionId}/asset/{path:**}")
+    @PatchMapping(value = "/{regionId}/asset/{*path}")
     @Operation(summary = "Asset aktivieren/deaktivieren")
     public ResponseEntity<?> patchEnabled(@PathVariable String regionId,
                                           @PathVariable String path,
                                           @RequestParam(required = false) String worldId,
                                           @RequestParam Boolean enabled) {
+        path = normalizePath(path);
         Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
         if (existing.isEmpty()) return notFound("asset not found");
         SAsset asset = existing.get();
@@ -147,11 +152,12 @@ public class RAssetController {
         return ResponseEntity.ok(toDto(asset));
     }
 
-    @DeleteMapping(value = "/{regionId}/asset/{path:**}")
+    @DeleteMapping(value = "/{regionId}/asset/{*path}")
     @Operation(summary = "Asset löschen")
     public ResponseEntity<?> delete(@PathVariable String regionId,
                                     @PathVariable String path,
                                     @RequestParam(required = false) String worldId) {
+        path = normalizePath(path);
         Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
         if (existing.isEmpty()) return notFound("asset not found");
         assetService.delete(existing.get().getId());
@@ -179,8 +185,15 @@ public class RAssetController {
         return rawBytes == null ? new byte[0] : rawBytes;
     }
 
+    private String normalizePath(String path) {
+        if (path == null) return null;
+        return path.replaceAll("/{2,}", "/")
+                   .replaceAll("^/+", "")
+                   .replaceAll("/+\\$", "") // remove trailing slashes
+                   .replaceAll("/+\\$", ""); // idempotent second pass
+    }
+
     private ResponseEntity<Map<String,String>> badRequest(String msg) { return ResponseEntity.badRequest().body(Map.of("error", msg)); }
     private ResponseEntity<Map<String,String>> notFound(String msg) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", msg)); }
     private ResponseEntity<Map<String,String>> conflict(String msg) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", msg)); }
 }
-
