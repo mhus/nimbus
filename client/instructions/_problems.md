@@ -17,3 +17,6 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 
 - Im Material Editor probleme beim setzen von Transparency
 - Im Material Editor beim oeffen des editors, in der liste, item immer neu laden.
+
+- Im Sprint modus kein Jump
+- autoJump als number ? Jump height?

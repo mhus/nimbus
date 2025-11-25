@@ -1941,16 +1941,16 @@ doScrawlStart({
 })
 ```
 
-## Dynamic Fire ohne Ziel
+## Dynamic Fire ohne direktes Ziel
 
 Aktuell wird Ein input event an den ShortcutService geschickt, dort wird der SelectionService gefragt, ob etwas 
-selektiert ist, und wenn ja wird die action ausgefuehrt.
+selektiert ist, und wenn ja wird die action ausgefuehrt und interaction events richtung server.
 
-Dieses Verhalten soll so auch bleiben, nur die Darstellung, d.h. ausfuehren von Pose und Effekten sollen unabhaengig von
-selektierten Zielen werden.
+Dieses Verhalten soll so mit den interaction events auch bleiben, nur die Darstellung, d.h. ausfuehren von Pose und Effekten sollen unabhaengig von
+selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> server') muss sich dazu anpassen.
 
 - Logik mit Select und Events Richtung Server bleibt wie bisher
-- Am ItemModifier brauchen wir einen parameter 'actionTargeting', 
+- Am ItemModifier brauchen wir einen neuen parameter 'actionTargeting?', 
 - BOTH: bleibt alles wie bisher.
 - BLOCK: Nur bloecke werden als Ziel akzeptiert.
 - ENTITY: Nur entitys werden als Ziel akzeptiert.
@@ -1965,10 +1965,10 @@ selektierten Zielen werden.
 
 
 
-[ ] Ein aktueller Fall:
-⏺ Der ClickHandler ist NICHT in der this.handlers Liste! Das ist das Problem - er wird nicht bei InputService.update() 
-durchlaufen. Lass mich prüfen, ob er manuell aufgerufen werden muss oder zur Liste hinzugefügt werden sollte:
-Kann man nicht click und key handler events zusammen fuehren im InputService, der dann das handled, ggf. wenn wir 
+[x] Ein aktueller Fall der aufgetreten ist:
+"Der ClickHandler ist NICHT in der this.handlers Liste! Das ist das Problem - er wird nicht bei InputService.update() 
+durchlaufen. Lass mich prüfen, ob er manuell aufgerufen werden muss oder zur Liste hinzugefügt werden sollte:"
+- Kann man nicht click und key handler events zusammen fuehren im InputService, der dann das handled, ggf. wenn wir 
 spaeter auch andere handler nutzt, z.b. ein virtueller joystick auf dem bildschirm.
 
 ===
