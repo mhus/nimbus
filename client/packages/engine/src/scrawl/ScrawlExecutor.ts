@@ -776,7 +776,7 @@ export class ScrawlExecutor {
    * @param paramName Name of the parameter
    * @param value New value
    */
-  updateParameter(paramName: string, value: any): void {
+  updateParameter(paramName: string, value: any, targeting?: import('@nimbus/shared').SerializableTargetingContext): void {
     // Update context variable
     const ctx = this.createContext();
     ctx.vars = ctx.vars || {};
@@ -792,13 +792,59 @@ export class ScrawlExecutor {
 
     // Map InputService parameter names to script variable names
     if (paramName === 'targetPos') {
-      // InputService sends 'targetPos' as Vector3
-      // Convert to 'target' with both currentPosition (for entities) and position (for compatibility)
-      ctx.vars.target = {
-        currentPosition: value,
-        position: value,
-      };
-      logger.debug('Target position updated', { position: value, executorId: this.executorId });
+      if (targeting) {
+        // Use targeting context to reconstruct full target
+        switch (targeting.targetType) {
+          case 'entity':
+            ctx.vars.target = {
+              id: targeting.entityId,
+              currentPosition: value,
+              position: value,
+            };
+            logger.debug('Target updated from targeting context (entity)', {
+              entityId: targeting.entityId,
+              position: value,
+              executorId: this.executorId,
+            });
+            break;
+          case 'block':
+            ctx.vars.target = {
+              block: {
+                position: targeting.blockPosition,
+              },
+              position: value,
+              currentPosition: value,
+            };
+            logger.debug('Target updated from targeting context (block)', {
+              blockPosition: targeting.blockPosition,
+              position: value,
+              executorId: this.executorId,
+            });
+            break;
+          case 'ground':
+            ctx.vars.target = {
+              position: value,
+              currentPosition: value,
+            };
+            logger.debug('Target updated from targeting context (ground)', {
+              position: value,
+              executorId: this.executorId,
+            });
+            break;
+          case 'none':
+            ctx.vars.target = undefined;
+            logger.debug('Target cleared (none)', { executorId: this.executorId });
+            break;
+        }
+      } else {
+        // Legacy: InputService sends 'targetPos' as Vector3 without targeting context
+        // Convert to 'target' with both currentPosition (for entities) and position (for compatibility)
+        ctx.vars.target = {
+          currentPosition: value,
+          position: value,
+        };
+        logger.debug('Target position updated (legacy)', { position: value, executorId: this.executorId });
+      }
     } else if (paramName === 'playerPos') {
       // InputService sends 'playerPos' as Vector3
       // Convert to 'source' with both currentPosition and position

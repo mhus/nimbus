@@ -154,42 +154,14 @@ export class ShortcutInputHandler extends InputHandler {
   /**
    * Update handler state.
    * Called each frame while shortcut is active.
-   * Collects current position/target data and updates ShortcutService.
+   *
+   * Note: Position updates are now handled automatically by ShortcutService's
+   * 100ms timer loop which uses TargetingService to resolve current targets.
+   * This method is kept for potential future per-frame logic.
    */
   protected onUpdate(deltaTime: number, value: number): void {
-    if (!this.activeShortcutNr || !this.appContext) {
-      return;
-    }
-
-    try {
-      const selectService = this.appContext.services.select;
-      const shortcutService = this.appContext.services.shortcut;
-
-      if (!selectService || !shortcutService) {
-        return;
-      }
-
-      // Collect current context
-      const playerPos = this.playerService.getPosition();
-      const selectedEntity = selectService.getCurrentSelectedEntity();
-      const selectedBlock = selectService.getCurrentSelectedBlock();
-
-      // Determine target position
-      let targetPos: any | undefined;
-      if (selectedEntity) {
-        targetPos = selectedEntity.currentPosition;
-      } else if (selectedBlock) {
-        const pos = selectedBlock.block.position;
-        targetPos = { x: pos.x + 0.5, y: pos.y + 0.5, z: pos.z + 0.5 };
-      }
-
-      // Update in ShortcutService
-      shortcutService.updateShortcut(this.activeShortcutNr, playerPos, targetPos);
-    } catch (error) {
-      ExceptionHandler.handle(error, 'ShortcutInputHandler.onUpdate', {
-        shortcutNr: this.activeShortcutNr,
-      });
-    }
+    // No-op: ShortcutService.sendActiveShortcutUpdatesToServer() handles updates
+    // automatically every 100ms using TargetingService for dynamic target resolution
   }
 
   /**

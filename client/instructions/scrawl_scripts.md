@@ -1941,16 +1941,16 @@ doScrawlStart({
 })
 ```
 
-## Dynamic Fire ohne Ziel
+## Dynamic Fire ohne direktes Ziel
 
 Aktuell wird Ein input event an den ShortcutService geschickt, dort wird der SelectionService gefragt, ob etwas 
-selektiert ist, und wenn ja wird die action ausgefuehrt.
+selektiert ist, und wenn ja wird die action ausgefuehrt und interaction events richtung server.
 
-Dieses Verhalten soll so auch bleiben, nur die Darstellung, d.h. ausfuehren von Pose und Effekten sollen unabhaengig von
-selektierten Zielen werden.
+Dieses Verhalten soll so mit den interaction events auch bleiben, nur die Darstellung, d.h. ausfuehren von Pose und Effekten sollen unabhaengig von
+selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> server') muss sich dazu anpassen.
 
 - Logik mit Select und Events Richtung Server bleibt wie bisher
-- Am ItemModifier brauchen wir einen parameter 'actionTargeting', 
+- Am ItemModifier brauchen wir einen neuen parameter 'actionTargeting?', 
 - BOTH: bleibt alles wie bisher.
 - BLOCK: Nur bloecke werden als Ziel akzeptiert.
 - ENTITY: Nur entitys werden als Ziel akzeptiert.
@@ -1960,15 +1960,927 @@ selektierten Zielen werden.
 - Default ist ALL
 - itemModifier.actionTargeting: ENTITY, BLOCK, BOTH, GROUND, ALL
 - Wie schicken wir die events zum server
-  - 'e.u' events um die angepassten targets zu anderen clients zu senden
+  - 'ef.p.u' events um die angepassten targets zu anderen clients zu senden
   - Block interaction / Entity interaction
 
+### Implementation Status: ✅ COMPLETED & TESTED (2025-11-25)
+
+**Implementierte Features:**
+1. ✅ `actionTargeting` Parameter in ItemModifier (ENTITY/BLOCK/BOTH/GROUND/ALL, Default: ALL)
+2. ✅ TargetingService mit Strategy Pattern für alle Modi
+3. ✅ Dual Targeting: Server Interaction (BOTH) vs Visual Effects (actionTargeting)
+4. ✅ Extended ef.p.u Messages mit targeting context für Multiplayer
+5. ✅ Kontinuierliche Updates (60fps via InputService) mit dynamischer Target-Auflösung
+6. ✅ ShortcutInfoCommand für Debugging (JSON output)
+7. ✅ AIR Block Support - funktioniert auch von AIR aus
+8. ✅ Ground target objects mit position für Effects
+
+**Getestete Modi:**
+- ✅ ALL: Funktioniert mit Entity, Block, und AIR position
+- ✅ GROUND: Funktioniert mit Block raycast
+- Weitere Tests empfohlen: ENTITY, BLOCK, BOTH
+
+**Update-Mechanismus:**
+- InputService.updateActiveExecutors() - 60fps lokale Updates (LOKAL)
+- ShortcutService.sendActiveShortcutUpdatesToServer() - 100ms Multiplayer Sync (ef.p.u)
+- Beide nutzen TargetingService für dynamische Target-Auflösung
+
+**Neue/Geänderte Files:**
+- `packages/shared/src/types/ItemModifier.ts` - actionTargeting field
+- `packages/shared/src/types/TargetingTypes.ts` - NEW
+- `packages/shared/src/network/messages/EffectParameterUpdateMessage.ts` - targeting context
+- `packages/engine/src/services/TargetingService.ts` - NEW (mit Debug-Logging)
+- `packages/engine/src/services/ShortcutService.ts` - Dual targeting, targetingMode tracking
+- `packages/engine/src/services/ItemService.ts` - targetingMode weitergabe
+- `packages/engine/src/services/InputService.ts` - TargetingService integration (60fps updates)
+- `packages/engine/src/services/NetworkService.ts` - targeting parameter
+- `packages/engine/src/scrawl/ScrawlExecutor.ts` - targeting context handling
+- `packages/engine/src/input/handlers/ShortcutInputHandler.ts` - Simplified (no-op onUpdate)
+- `packages/engine/src/input/handlers/ClickInputHandler.ts` - INTERACTIVE mode check
+- `packages/engine/src/commands/ShortcutInfoCommand.ts` - NEW (JSON output)
+- `packages/engine/src/AppContext.ts` - TargetingService registration
+- `packages/engine/src/NimbusClient.ts` - Service initialization
+- `packages/test_server/src/NimbusServer.ts` - targeting logging
+- `packages/shared/src/dto/RegionCharacterResponse.ts` - Fixed import
+
+```text
+ Implementation Plan: Dynamic Fire ohne direktes Ziel
+
+ Clean Architecture with Extended ef.p.u
+
+ Executive Summary
+
+ This plan implements the actionTargeting feature to decouple visual effects (poses/effects) from server interaction targeting. We introduce a new TargetingService for clean separation of concerns and extend ef.p.u messages to transport full
+ targeting context for multiplayer synchronization.
+
+ Key Architectural Decisions
+
+ 1. New TargetingService: Centralizes all targeting logic using Strategy Pattern
+ 2. Separation of Concerns: Visual targeting vs Server interaction targeting are distinct
+ 3. Extended ef.p.u Protocol: Adds targeting metadata for remote clients
+ 4. Type-Safe Design: TypeScript discriminated unions ensure compile-time safety
+
+ ---
+ Architecture Overview
+
+ Current Flow (Problem)
+
+ ShortcutService.fireShortcut()
+   → Resolves target from SelectService (tightly coupled)
+   → Sends interaction to server
+   → Emits event with target
+   → ItemService executes pose + effects (requires target)
+
+ Issues:
+ - Selection and server interaction are tightly coupled
+ - Visual effects depend on selection state
+ - Can't have effects without selected targets
+
+ New Flow (Solution)
+
+ ShortcutService.fireShortcut()
+   → TargetingService.resolveTarget(mode='BOTH')     [For server interaction]
+   → Sends interaction to server IF target matches mode
+   → TargetingService.resolveTarget(mode=item.actionTargeting) [For visual effects]
+   → Emits event with visual target
+   → ItemService executes pose + effects (always works)
+
+ Benefits:
+ - Server interaction uses strict targeting (BOTH)
+ - Visual effects use flexible targeting (ENTITY/BLOCK/GROUND/ALL)
+ - Complete decoupling of visual and gameplay concerns
+
+ ---
+ Implementation Steps
+
+ Phase 1: Type Definitions
+
+ 1.1 Add actionTargeting to ItemModifier
+
+ File: packages/shared/src/types/ItemModifier.ts
+
+ export type ActionTargetingMode = 'ENTITY' | 'BLOCK' | 'BOTH' | 'GROUND' | 'ALL';
+
+ export interface ItemModifier {
+   texture: string;
+   // ... existing fields ...
+
+   /**
+    * Targeting mode for visual effects (pose, onUseEffect)
+    *
+    * - 'ENTITY': Only execute when entity is targeted
+    * - 'BLOCK': Only execute when block is targeted
+    * - 'BOTH': Execute when entity OR block is targeted
+    * - 'GROUND': Always execute with ground position from camera ray
+    * - 'ALL': Always execute (entity, block, or ground position)
+    *
+    * Default: 'ALL'
+    *
+    * Note: Server interactions always use 'BOTH' mode
+    */
+   actionTargeting?: ActionTargetingMode;
+ }
+
+ 1.2 Create Targeting Types
+
+ New File: packages/shared/src/types/TargetingTypes.ts
+
+ import type { Vector3 } from '@babylonjs/core';
+
+ export type TargetingMode = 'ENTITY' | 'BLOCK' | 'BOTH' | 'GROUND' | 'ALL';
+
+ /**
+  * Discriminated union for type-safe target resolution
+  */
+ export type ResolvedTarget =
+   | { type: 'entity'; entity: ClientEntity; position: Vector3 }
+   | { type: 'block'; block: ClientBlock; position: Vector3 }
+   | { type: 'ground'; position: Vector3 }
+   | { type: 'none' };
+
+ export interface ClientEntity {
+   id: string;
+   currentPosition: { x: number; y: number; z: number };
+   position: { x: number; y: number; z: number };
+   // ... other entity fields
+ }
+
+ export interface ClientBlock {
+   block: any; // BlockData
+   blockType: any; // BlockType
+   position: { x: number; y: number; z: number };
+ }
+
+ /**
+  * Targeting context for network synchronization
+  */
+ export interface TargetingContext {
+   mode: TargetingMode;
+   target: ResolvedTarget;
+ }
+
+ 1.3 Extend ef.p.u Message
+
+ File: packages/shared/src/network/messages/EffectParameterUpdateMessage.ts
+
+ import type { TargetingContext } from '../../types/TargetingTypes';
+
+ export interface EffectParameterUpdateData {
+   effectId: string;
+   paramName: string;
+   value?: any; // Now optional
+   chunks?: ChunkCoordinate[];
+
+   /**
+    * NEW: Targeting context for position-based parameters
+    * When paramName is 'targetPos', this provides full targeting context
+    * so remote clients can properly resolve/track targets
+    */
+   targeting?: TargetingContext;
+ }
+
+ ---
+ Phase 2: TargetingService Implementation
+
+ New File: packages/engine/src/services/TargetingService.ts
+
+ import { getLogger } from '@nimbus/shared';
+ import type { AppContext } from '../AppContext';
+ import type { TargetingMode, ResolvedTarget, ClientEntity, ClientBlock } from '@nimbus/shared';
+ import { Vector3 } from '@babylonjs/core';
+ import type { SelectService } from './SelectService';
+
+ const logger = getLogger('TargetingService');
+
+ /**
+  * TargetingService - Centralized target resolution using Strategy Pattern
+  *
+  * Provides clean separation between:
+  * - Visual targeting (for effects/poses)
+  * - Interaction targeting (for server events)
+  */
+ export class TargetingService {
+   constructor(private readonly appContext: AppContext) {
+     logger.info('TargetingService initialized');
+   }
+
+   /**
+    * Resolve target based on targeting mode
+    *
+    * @param mode Targeting mode
+    * @returns Resolved target or none
+    */
+   resolveTarget(mode: TargetingMode): ResolvedTarget {
+     const selectService = this.appContext.services.select;
+     if (!selectService) {
+       logger.warn('SelectService not available');
+       return { type: 'none' };
+     }
+
+     // Get current selections
+     const selectedEntity = selectService.getCurrentSelectedEntity();
+     const selectedBlock = selectService.getCurrentSelectedBlock();
+
+     return this.resolveTargetFromSelections(mode, selectedEntity, selectedBlock);
+   }
+
+   /**
+    * Resolve target from explicit selections
+    *
+    * @param mode Targeting mode
+    * @param entity Selected entity (or null)
+    * @param block Selected block (or null)
+    * @returns Resolved target
+    */
+   private resolveTargetFromSelections(
+     mode: TargetingMode,
+     entity: ClientEntity | null,
+     block: ClientBlock | null
+   ): ResolvedTarget {
+     switch (mode) {
+       case 'ENTITY':
+         return this.resolveEntity(entity);
+
+       case 'BLOCK':
+         return this.resolveBlock(block);
+
+       case 'BOTH':
+         return this.resolveEntityOrBlock(entity, block);
+
+       case 'GROUND':
+         return this.resolveGround();
+
+       case 'ALL':
+         return this.resolveAll(entity, block);
+
+       default:
+         logger.warn('Unknown targeting mode, defaulting to ALL', { mode });
+         return this.resolveAll(entity, block);
+     }
+   }
+
+   /**
+    * ENTITY strategy: Only resolve entity
+    */
+   private resolveEntity(entity: ClientEntity | null): ResolvedTarget {
+     if (!entity) {
+       return { type: 'none' };
+     }
+
+     return {
+       type: 'entity',
+       entity,
+       position: new Vector3(
+         entity.currentPosition.x,
+         entity.currentPosition.y,
+         entity.currentPosition.z
+       ),
+     };
+   }
+
+   /**
+    * BLOCK strategy: Only resolve block
+    */
+   private resolveBlock(block: ClientBlock | null): ResolvedTarget {
+     if (!block) {
+       return { type: 'none' };
+     }
+
+     const pos = block.block.position;
+     return {
+       type: 'block',
+       block,
+       position: new Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5),
+     };
+   }
+
+   /**
+    * BOTH strategy: Entity priority, fallback to block
+    */
+   private resolveEntityOrBlock(
+     entity: ClientEntity | null,
+     block: ClientBlock | null
+   ): ResolvedTarget {
+     if (entity) {
+       return this.resolveEntity(entity);
+     }
+     if (block) {
+       return this.resolveBlock(block);
+     }
+     return { type: 'none' };
+   }
+
+   /**
+    * GROUND strategy: Raycast to ground plane
+    */
+   private resolveGround(): ResolvedTarget {
+     const playerService = this.appContext.services.player;
+     const cameraService = this.appContext.services.camera;
+
+     if (!playerService || !cameraService) {
+       return { type: 'none' };
+     }
+
+     const playerPos = playerService.getPosition();
+     const rotation = cameraService.getRotation();
+
+     // Calculate ray direction from camera rotation
+     const pitch = rotation.x;
+     const yaw = rotation.y;
+
+     const dirX = Math.cos(pitch) * Math.sin(yaw);
+     const dirY = -Math.sin(pitch);
+     const dirZ = Math.cos(pitch) * Math.cos(yaw);
+
+     // Ground plane intersection (y=0)
+     if (dirY >= 0) {
+       // Looking up, no ground intersection
+       return { type: 'none' };
+     }
+
+     const t = -playerPos.y / dirY;
+     const groundPos = new Vector3(
+       playerPos.x + dirX * t,
+       0,
+       playerPos.z + dirZ * t
+     );
+
+     return {
+       type: 'ground',
+       position: groundPos,
+     };
+   }
+
+   /**
+    * ALL strategy: Try entity, then block, then ground
+    */
+   private resolveAll(
+     entity: ClientEntity | null,
+     block: ClientBlock | null
+   ): ResolvedTarget {
+     if (entity) {
+       return this.resolveEntity(entity);
+     }
+     if (block) {
+       return this.resolveBlock(block);
+     }
+     return this.resolveGround();
+   }
+
+   /**
+    * Check if target should trigger server interaction
+    *
+    * @param mode Targeting mode
+    * @param target Resolved target
+    * @returns true if interaction should be sent
+    */
+   shouldSendInteraction(mode: TargetingMode, target: ResolvedTarget): boolean {
+     switch (mode) {
+       case 'ENTITY':
+         return target.type === 'entity';
+       case 'BLOCK':
+         return target.type === 'block';
+       case 'BOTH':
+         return target.type === 'entity' || target.type === 'block';
+       case 'GROUND':
+       case 'ALL':
+         return true; // Always send
+       default:
+         return true;
+     }
+   }
+
+   /**
+    * Convert ResolvedTarget to legacy format for backward compatibility
+    */
+   toLegacyTarget(target: ResolvedTarget): {
+     target?: any;
+     targetPosition?: { x: number; y: number; z: number };
+   } {
+     switch (target.type) {
+       case 'entity':
+         return {
+           target: target.entity,
+           targetPosition: {
+             x: target.position.x,
+             y: target.position.y,
+             z: target.position.z,
+           },
+         };
+       case 'block':
+         return {
+           target: {
+             position: {
+               x: target.position.x,
+               y: target.position.y,
+               z: target.position.z,
+             },
+             block: target.block.block,
+             blockType: target.block.blockType,
+           },
+           targetPosition: {
+             x: target.position.x,
+             y: target.position.y,
+             z: target.position.z,
+           },
+         };
+       case 'ground':
+         return {
+           targetPosition: {
+             x: target.position.x,
+             y: target.position.y,
+             z: target.position.z,
+           },
+         };
+       case 'none':
+         return {};
+     }
+   }
+ }
+
+ ---
+ Phase 3: ShortcutService Integration
+
+ File: packages/engine/src/services/ShortcutService.ts
+
+ Changes:
+
+ 1. Import TargetingService:
+ import type { TargetingService } from './TargetingService';
+
+ 2. Modify fireShortcut() (lines 71-201):
+
+ async fireShortcut(shortcutNr: number, shortcutKey: string): Promise<void> {
+   try {
+     // Check if blocked
+     if (this.isShortcutBlocked(shortcutNr)) {
+       logger.debug('Shortcut blocked', { shortcutNr });
+       return;
+     }
+
+     const playerService = this.appContext.services.player;
+     const networkService = this.appContext.services.network;
+     const itemService = this.appContext.services.item;
+     const targetingService = this.appContext.services.targeting;
+
+     if (!playerService || !networkService || !targetingService) {
+       logger.warn('Required services not available');
+       return;
+     }
+
+     // Get player info and shortcut definition
+     const playerInfo = playerService.getPlayerEntity().playerInfo;
+     const shortcutDef = playerInfo.shortcuts?.[shortcutKey];
+
+     if (!shortcutDef) {
+       logger.debug('No shortcut definition', { shortcutKey });
+       return;
+     }
+
+     // Get player state
+     const playerPosition = playerService.getPosition();
+     const cameraService = this.appContext.services.camera;
+     const rotation = cameraService?.getRotation() || { x: 0, y: 0, z: 0 };
+     const movementStatus = playerService.getMovementState();
+
+     // --- NEW: Dual Targeting Resolution ---
+
+     // 1. SERVER INTERACTION: Always use BOTH mode (entity OR block required)
+     const interactionTarget = targetingService.resolveTarget('BOTH');
+     const shouldSendInteraction = targetingService.shouldSendInteraction('BOTH', interactionTarget);
+
+     // 2. VISUAL EFFECTS: Use item's actionTargeting mode
+     let visualTargetMode: TargetingMode = 'ALL'; // Default
+     if (shortcutDef.itemId && itemService) {
+       const item = await itemService.getItem(shortcutDef.itemId);
+       if (item) {
+         const mergedModifier = await itemService.getMergedModifier(item);
+         visualTargetMode = mergedModifier?.actionTargeting ?? 'ALL';
+       }
+     }
+     const visualTarget = targetingService.resolveTarget(visualTargetMode);
+
+     logger.info('Shortcut targeting resolved', {
+       shortcutNr,
+       interactionMode: 'BOTH',
+       interactionTarget: interactionTarget.type,
+       willSendInteraction: shouldSendInteraction,
+       visualMode: visualTargetMode,
+       visualTarget: visualTarget.type,
+     });
+
+     // Build interaction params
+     const params: any = {
+       shortcutNr,
+       playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+       playerRotation: { yaw: rotation.y, pitch: rotation.x },
+       selectionRadius: 5,
+       movementStatus,
+       shortcutType: shortcutDef.type,
+       shortcutItemId: shortcutDef.itemId,
+     };
+
+     // Add distance and target position if interaction target exists
+     if (interactionTarget.type !== 'none') {
+       const distance = Math.sqrt(
+         Math.pow(interactionTarget.position.x - playerPosition.x, 2) +
+         Math.pow(interactionTarget.position.y - playerPosition.y, 2) +
+         Math.pow(interactionTarget.position.z - playerPosition.z, 2)
+       );
+       params.distance = parseFloat(distance.toFixed(2));
+       params.targetPosition = {
+         x: interactionTarget.position.x,
+         y: interactionTarget.position.y,
+         z: interactionTarget.position.z,
+       };
+     }
+
+     // Send interaction to server (only if target matches BOTH mode)
+     if (shouldSendInteraction) {
+       if (interactionTarget.type === 'entity') {
+         networkService.sendEntityInteraction(
+           interactionTarget.entity.id,
+           'fireShortcut',
+           undefined,
+           params
+         );
+       } else if (interactionTarget.type === 'block') {
+         const pos = interactionTarget.block.block.position;
+         networkService.sendBlockInteraction(
+           pos.x,
+           pos.y,
+           pos.z,
+           'fireShortcut',
+           params,
+           interactionTarget.block.block.metadata?.id,
+           interactionTarget.block.block.metadata?.groupId
+         );
+       }
+     } else {
+       logger.debug('Skipping server interaction (no valid target for BOTH mode)');
+     }
+
+     // Emit PlayerService event with VISUAL target (always fires)
+     const legacyVisualTarget = targetingService.toLegacyTarget(visualTarget);
+     playerService.emitShortcutActivated(
+       shortcutKey,
+       shortcutDef.itemId,
+       legacyVisualTarget.target,
+       legacyVisualTarget.targetPosition
+     );
+
+     logger.debug('Shortcut fired', {
+       shortcutNr,
+       shortcutKey,
+       sentInteraction: shouldSendInteraction,
+       hasVisualTarget: visualTarget.type !== 'none',
+     });
+   } catch (error) {
+     logger.error('Failed to fire shortcut', { shortcutNr, shortcutKey }, error as Error);
+   }
+ }
+
+ 3. Modify sendActiveShortcutUpdatesToServer() (lines 413-477):
+
+ private sendActiveShortcutUpdatesToServer(): void {
+   if (this.activeShortcuts.size === 0) {
+     return;
+   }
+
+   const networkService = this.appContext.services.network;
+   const scrawlService = this.appContext.services.scrawl;
+   const targetingService = this.appContext.services.targeting;
+
+   if (!networkService || !scrawlService || !targetingService) {
+     logger.warn('Required services not available for server updates');
+     return;
+   }
+
+   let sentCount = 0;
+   let skippedCount = 0;
+
+   for (const shortcut of this.activeShortcuts.values()) {
+     // Get effectId for this executor
+     const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+     if (!effectId) {
+       skippedCount++;
+       continue;
+     }
+
+     // Resolve current target (use item's actionTargeting mode if available)
+     // For now, use ALL mode for continuous updates
+     const currentTarget = targetingService.resolveTarget('ALL');
+
+     if (currentTarget.type === 'none') {
+       logger.info('Skipping shortcut update - no target position', {
+         shortcutNr: shortcut.shortcutNr,
+       });
+       skippedCount++;
+       continue;
+     }
+
+     try {
+       // Send parameter update with targeting context
+       networkService.sendEffectParameterUpdate(
+         effectId,
+         'targetPos',
+         {
+           x: currentTarget.position.x,
+           y: currentTarget.position.y,
+           z: currentTarget.position.z,
+         },
+         {
+           mode: 'ALL',
+           target: currentTarget,
+         }
+       );
+
+       logger.info('Shortcut position update sent to server', {
+         shortcutNr: shortcut.shortcutNr,
+         effectId,
+         targetType: currentTarget.type,
+       });
+       sentCount++;
+     } catch (error) {
+       logger.warn('Failed to send shortcut update to server', {
+         error: (error as Error).message,
+         shortcutNr: shortcut.shortcutNr,
+       });
+     }
+   }
+
+   if (sentCount > 0 || skippedCount > 0) {
+     logger.info('Server update batch complete', { sentCount, skippedCount });
+   }
+ }
+
+ ---
+ Phase 4: NetworkService Extension
+
+ File: packages/engine/src/services/NetworkService.ts
+
+ Modify sendEffectParameterUpdate() (lines 799-832):
+
+ import type { TargetingContext } from '@nimbus/shared';
+
+ sendEffectParameterUpdate(
+   effectId: string,
+   paramName: string,
+   value: any,
+   targeting?: TargetingContext
+ ): void {
+   if (!this.socket || !this.isConnected) {
+     logger.warn('Cannot send effect parameter update: not connected');
+     return;
+   }
+
+   // Serialize Vector3 to plain object
+   let serializedValue = value;
+   if (value && typeof value === 'object' && 'x' in value && 'y' in value && 'z' in value) {
+     serializedValue = { x: value.x, y: value.y, z: value.z };
+   }
+
+   const data: EffectParameterUpdateData = {
+     effectId,
+     paramName,
+     value: serializedValue,
+     targeting, // NEW: Include targeting context
+   };
+
+   this.socket.emit(MessageType.EFFECT_PARAMETER_UPDATE, data);
+
+   logger.debug('Effect parameter update sent', {
+     effectId,
+     paramName,
+     hasTargeting: !!targeting,
+     targetingMode: targeting?.mode,
+   });
+ }
+
+ ---
+ Phase 5: ScrawlExecutor Extension
+
+ File: packages/engine/src/scrawl/ScrawlExecutor.ts
+
+ Modify updateParameter() (lines 779-829):
+
+ updateParameter(paramName: string, value: any, targeting?: TargetingContext): void {
+   const ctx = this.context;
+
+   logger.info('Parameter update received', {
+     executorId: this.id,
+     paramName,
+     hasValue: value !== undefined,
+     hasTargeting: !!targeting,
+     targetingMode: targeting?.mode,
+   });
+
+   // Special handling for targetPos with targeting context
+   if (paramName === 'targetPos') {
+     if (targeting) {
+       // Use targeting context to reconstruct full target
+       ctx.vars = ctx.vars || {};
+
+       switch (targeting.target.type) {
+         case 'entity':
+           ctx.vars.target = {
+             ...targeting.target.entity,
+             position: value,
+             currentPosition: value,
+           };
+           break;
+         case 'block':
+           ctx.vars.target = {
+             ...targeting.target.block,
+             position: value,
+           };
+           break;
+         case 'ground':
+           ctx.vars.target = {
+             position: value,
+             currentPosition: value,
+           };
+           break;
+         case 'none':
+           ctx.vars.target = undefined;
+           break;
+       }
+     } else {
+       // Legacy: just position
+       ctx.vars = ctx.vars || {};
+       ctx.vars.target = {
+         currentPosition: value,
+         position: value,
+       };
+     }
+   } else if (paramName === '__stop__') {
+     this.emit('stop_event');
+     return; // Don't notify effects for stop event
+   } else {
+     // Generic parameter
+     ctx.vars = ctx.vars || {};
+     ctx.vars[paramName] = value;
+   }
+
+   // Notify all running effects
+   for (const [effectId, effect] of this.runningEffects) {
+     if (effect.onParameterChanged) {
+       try {
+         effect.onParameterChanged(paramName, value, ctx);
+       } catch (error) {
+         logger.warn('Effect parameter change handler failed', {
+           effectId,
+           paramName,
+           error: (error as Error).message,
+         });
+       }
+     }
+   }
+ }
+
+ ---
+ Phase 6: AppContext Registration
+
+ File: packages/engine/src/NimbusClient.ts or packages/engine/src/AppContext.ts
+
+ import { TargetingService } from './services/TargetingService';
+
+ // In initialization:
+ const targetingService = new TargetingService(appContext);
+ appContext.services.targeting = targetingService;
+
+ File: packages/engine/src/AppContext.ts
+
+ export interface Services {
+   // ... existing services ...
+   targeting?: TargetingService;
+ }
+
+ ---
+ Testing Strategy
+
+ Test Case 1: ENTITY Targeting
+
+ Item:
+ {
+   "texture": "items/heal.png",
+   "actionTargeting": "ENTITY",
+   "pose": "cast",
+   "onUseEffect": { "kind": "Play", "effectId": "heal_beam" }
+ }
+
+ Expected Behavior:
+ - Server interaction: Only sent when entity selected
+ - Visual effects: Only execute when entity targeted
+ - Pose: Only activates with entity target
+ - ef.p.u: Only sends when entity is tracked
+
+ Test Case 2: GROUND Targeting
+
+ Item:
+ {
+   "texture": "items/fireball.png",
+   "actionTargeting": "GROUND",
+   "pose": "cast",
+   "onUseEffect": { "kind": "Play", "effectId": "fireball" }
+ }
+
+ Expected Behavior:
+ - Server interaction: NEVER sent (no entity/block requirement)
+ - Visual effects: ALWAYS execute at ground position
+ - Pose: ALWAYS activates
+ - ef.p.u: Sends ground position continuously
+
+ Test Case 3: ALL (Default)
+
+ Item:
+ {
+   "texture": "items/wand.png",
+   "pose": "use"
+ }
+
+ Expected Behavior:
+ - Backwards compatible with current behavior
+ - Works with entity, block, or ground
+ - Server interaction uses BOTH mode
+ - Visual effects use ALL mode
+
+ ---
+ Critical Files Summary
+
+ Type Definitions (New/Modified)
+
+ 1. packages/shared/src/types/ItemModifier.ts - Add actionTargeting field
+ 2. packages/shared/src/types/TargetingTypes.ts - NEW: Target resolution types
+ 3. packages/shared/src/network/messages/EffectParameterUpdateMessage.ts - Extend with targeting field
+
+ Core Services (New/Modified)
+
+ 4. packages/engine/src/services/TargetingService.ts - NEW: Central targeting logic
+ 5. packages/engine/src/services/ShortcutService.ts - Dual targeting resolution
+ 6. packages/engine/src/services/NetworkService.ts - Extended sendEffectParameterUpdate()
+ 7. packages/engine/src/scrawl/ScrawlExecutor.ts - Handle targeting context in updateParameter()
+
+ Integration (Modified)
+
+ 8. packages/engine/src/NimbusClient.ts - Register TargetingService
+ 9. packages/engine/src/AppContext.ts - Add targeting to Services interface
+
+ Server-Side (Modified)
+
+ 10. packages/test_server/src/NimbusServer.ts - Handle extended ef.p.u messages (pass through)
+
+ ---
+ Implementation Order
+
+ 1. Type definitions - Enable TypeScript support
+ 2. TargetingService - Core targeting logic
+ 3. ShortcutService integration - Dual targeting resolution
+ 4. NetworkService extension - ef.p.u with targeting
+ 5. ScrawlExecutor extension - Handle targeting context
+ 6. AppContext registration - Wire up service
+ 7. Testing - Verify all targeting modes
+
+ ---
+ Benefits of This Design
+
+ 1. Clean Separation: Visual vs Interaction targeting are explicit
+ 2. Extensible: Easy to add new targeting modes (RADIUS, CONE, etc.)
+ 3. Type-Safe: Discriminated unions catch errors at compile-time
+ 4. Testable: TargetingService can be unit tested independently
+ 5. Multiplayer: Full targeting context in ef.p.u enables proper remote tracking
+ 6. Backwards Compatible: Default 'ALL' mode preserves current behavior
+
+ ---
+ Migration Notes
+
+ - Existing items without actionTargeting default to 'ALL'
+ - Server interactions always use 'BOTH' mode (entity OR block required)
+ - Visual effects use item's actionTargeting mode
+ - No changes needed for existing item configurations
+```
+
+[x] Phase 1: Type Definitions
+[x] Phase 2: TargetingService Implementation
+[x] Phase 3: ShortcutService Integration
+[x] Phase 4: NetworkService Extension
+[x] Phase 5: ScrawlExecutor Extension
+[x] Phase 6: AppContext Registration
+
+[x] Visuell umgesetzt
+[x] Events werden richtig gefeuert
+[-] Effekte werden remote richtig abgespielt - Wird in einer nderen session getestet
+
+> Wichtig, targeting soll nur im  INTERACTIVE Mode beginnen. das ist dem modus mit dem der Player arbeitet. Andere autoModi sind fuer den Editor, der editor benoetigt diese zum editieren, nicht fuer shortcuts. Nur der  
+  INTERACTIVE Mode ist zum spielen gedacht. auch wenn jetzt nicht unbedingt mehr ein ineractives element gefunden werden muss zum starten des shortcuts.
 
 
-[ ] Ein aktueller Fall:
-⏺ Der ClickHandler ist NICHT in der this.handlers Liste! Das ist das Problem - er wird nicht bei InputService.update() 
-durchlaufen. Lass mich prüfen, ob er manuell aufgerufen werden muss oder zur Liste hinzugefügt werden sollte:
-Kann man nicht click und key handler events zusammen fuehren im InputService, der dann das handled, ggf. wenn wir 
+[x] Command ShortcutInfo erstellt (genaue abfrage eines shortcut effects)
+
+[x] Ein aktueller Fall der aufgetreten ist:
+"Der ClickHandler ist NICHT in der this.handlers Liste! Das ist das Problem - er wird nicht bei InputService.update() 
+durchlaufen. Lass mich prüfen, ob er manuell aufgerufen werden muss oder zur Liste hinzugefügt werden sollte:"
+- Kann man nicht click und key handler events zusammen fuehren im InputService, der dann das handled, ggf. wenn wir 
 spaeter auch andere handler nutzt, z.b. ein virtueller joystick auf dem bildschirm.
 
 ===

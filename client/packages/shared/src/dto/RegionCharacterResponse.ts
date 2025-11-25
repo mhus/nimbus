@@ -10,7 +10,7 @@
 //  - skills: Map<String, Integer>
 //  - regionId
 
-import { RegionItemInfo } from './RegionItemInfo';
+import { RegionItemInfo } from '../types/RegionItemInfo';
 
 export interface RegionCharacterResponse {
   id: string;

@@ -67,6 +67,7 @@ import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockComm
 import { GetSelectedEditBlockCommand } from './commands/GetSelectedEditBlockCommand';
 import { PlayerPositionInfoCommand } from './commands/PlayerPositionInfoCommand';
 import { SelectedBlockInfoCommand } from './commands/SelectedBlockInfoCommand';
+import { ShortcutInfoCommand } from './commands/ShortcutInfoCommand';
 import { MaterialInfoCommand } from './commands/MaterialInfoCommand';
 import { WireframeCommand } from './commands/WireframeCommand';
 import { UnderwaterCommand } from './commands/UnderwaterCommand';
@@ -165,7 +166,14 @@ async function initializeApp(): Promise<AppContext> {
     await scrawlService.initialize();
     logger.debug('ScrawlService initialized');
 
-    // Initialize ShortcutService (after ScrawlService, for executor integration)
+    // Initialize TargetingService (before ShortcutService, which depends on it)
+    logger.info('Initializing TargetingService...');
+    const { TargetingService } = await import('./services/TargetingService');
+    const targetingService = new TargetingService(appContext);
+    appContext.services.targeting = targetingService;
+    logger.debug('TargetingService initialized');
+
+    // Initialize ShortcutService (after ScrawlService and TargetingService)
     logger.info('Initializing ShortcutService...');
     const { ShortcutService } = await import('./services/ShortcutService');
     const shortcutService = new ShortcutService(appContext);
@@ -205,6 +213,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new GetSelectedEditBlockCommand(appContext));
     commandService.registerHandler(new PlayerPositionInfoCommand(appContext));
     commandService.registerHandler(new SelectedBlockInfoCommand(appContext));
+    commandService.registerHandler(new ShortcutInfoCommand(appContext));
     commandService.registerHandler(new MaterialInfoCommand(appContext));
     commandService.registerHandler(new WireframeCommand(appContext));
     commandService.registerHandler(new UnderwaterCommand(appContext));

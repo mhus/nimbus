@@ -6,15 +6,35 @@ Das Input System des Nimbus Clients folgt einer klaren Trennung zwischen Input-E
 
 ```
 AppContext
-  └── InputService
+  └── InputService (Zentrale Verwaltung)
         ├── HandlerRegistry (Map<string, InputHandler>)
         │     ├── 'click' → ClickInputHandler
         │     ├── 'shortcut' → ShortcutInputHandler
-        │     ├── (weitere zentrale Handler...)
+        │     ├── 'moveForward' → MoveForwardHandler
+        │     ├── 'moveBackward' → MoveBackwardHandler
+        │     ├── 'moveLeft' → MoveLeftHandler
+        │     ├── 'moveRight' → MoveRightHandler
+        │     ├── 'moveUp' → MoveUpHandler
+        │     ├── 'moveDown' → MoveDownHandler
+        │     ├── 'jump' → JumpHandler
+        │     ├── 'rotate' → RotateHandler
+        │     ├── 'cycleMovementState' → CycleMovementStateHandler
+        │     ├── 'toggleViewMode' → ToggleViewModeHandler
+        │     ├── 'toggleShortcuts' → ToggleShortcutsHandler
+        │     ├── 'editSelectionRotator' → EditSelectionRotatorHandler (__EDITOR__)
+        │     ├── 'editorActivate' → EditorActivateHandler (__EDITOR__)
+        │     ├── 'blockEditorActivate' → BlockEditorActivateHandler (__EDITOR__)
+        │     ├── 'editConfigActivate' → EditConfigActivateHandler (__EDITOR__)
         │     └── ...
-        └── Controller (WebInputController / GamePadController / TouchController)
-              └── bindet Handler an konkrete Inputs
+        └── Controller (Reine Binding-Schicht)
+              ├── WebInputController (Keyboard + Mouse)
+              ├── GamePadController (GamePad)
+              └── TouchController (Touch + Virtual Joystick)
+                    └── Bindet Input-Events → Handler.activate()
 ```
+
+**Wichtig:** ALLE Handler werden zentral im InputService erstellt.
+Controller sind reine Binding-Schichten ohne Business-Logik.
 
 ## Komponenten
 
@@ -74,18 +94,34 @@ interface InputController {
 **Beispiel: WebInputController**
 ```typescript
 class WebInputController implements InputController {
+  private handlers: InputHandler[] = [];
+
+  // All handlers retrieved from InputService
   private clickHandler?: InputHandler;
   private shortcutHandler?: InputHandler;
+  private moveForwardHandler?: InputHandler;
+  // ... weitere Handler
 
   initialize(): void {
-    // Handler aus InputService holen
+    // Alle Handler aus InputService holen
     const inputService = this.appContext.services.input;
     this.clickHandler = inputService.getHandler('click');
     this.shortcutHandler = inputService.getHandler('shortcut');
+    this.moveForwardHandler = inputService.getHandler('moveForward');
+    // ... retrieve all needed handlers
+
+    // Build handlers array for update loop
+    this.handlers = [
+      this.clickHandler,
+      this.shortcutHandler,
+      this.moveForwardHandler,
+      // ... weitere Handler
+    ].filter((h): h is InputHandler => h !== undefined);
 
     // Event-Listener registrieren
     this.canvas.addEventListener('mousedown', this.onMouseDown);
     window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keyup', this.onKeyUp);
   }
 
   private onMouseDown = (event: MouseEvent) => {
@@ -103,7 +139,34 @@ class WebInputController implements InputController {
         this.shortcutHandler.activate(shortcutNr);
       }
     }
+
+    // Binding: W-Taste → MoveForwardHandler
+    if (event.key === 'w' || event.key === 'W') {
+      if (this.moveForwardHandler && !this.moveForwardHandler.isActive()) {
+        this.moveForwardHandler.activate();
+      }
+    }
   };
+
+  private onKeyUp = (event: KeyboardEvent) => {
+    // Release: W-Taste → MoveForwardHandler
+    if (event.key === 'w' || event.key === 'W') {
+      if (this.moveForwardHandler && this.moveForwardHandler.isActive()) {
+        this.moveForwardHandler.deactivate();
+      }
+    }
+  };
+
+  getHandlers(): InputHandler[] {
+    return this.handlers;
+  }
+
+  dispose(): void {
+    // Event-Listener entfernen
+    this.canvas.removeEventListener('mousedown', this.onMouseDown);
+    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keyup', this.onKeyUp);
+  }
 }
 ```
 
@@ -267,112 +330,398 @@ class RotateHandler extends InputHandler {
 
 ## Handler registrieren
 
-### Zentrale Handler (im InputService)
-Werden einmal erstellt und von allen Controllern geteilt:
+### Alle Handler sind zentral (im InputService)
+**WICHTIG:** Alle Handler werden im InputService registriert und von allen Controllern geteilt.
+Dies ermöglicht maximale Wiederverwendbarkeit und konsistentes Verhalten über alle Input-Typen hinweg.
 
 ```typescript
 // In InputService.registerCentralHandlers()
+// Click und Shortcut Handler
 this.handlerRegistry.set('click', new ClickInputHandler(playerService, appContext));
 this.handlerRegistry.set('shortcut', new ShortcutInputHandler(playerService, appContext));
-```
 
-### Controller-spezifische Handler
-Werden vom Controller selbst erstellt und verwaltet:
+// Movement Handler
+this.handlerRegistry.set('moveForward', new MoveForwardHandler(playerService));
+this.handlerRegistry.set('moveBackward', new MoveBackwardHandler(playerService));
+this.handlerRegistry.set('moveLeft', new MoveLeftHandler(playerService));
+this.handlerRegistry.set('moveRight', new MoveRightHandler(playerService));
+this.handlerRegistry.set('moveUp', new MoveUpHandler(playerService));
+this.handlerRegistry.set('moveDown', new MoveDownHandler(playerService));
 
-```typescript
-// In WebInputController.constructor()
-this.moveForwardHandler = new MoveForwardHandler(playerService);
-this.rotateHandler = new RotateHandler(playerService);
+// Action Handler
+this.handlerRegistry.set('jump', new JumpHandler(playerService));
+this.handlerRegistry.set('cycleMovementState', new CycleMovementStateHandler(playerService));
+this.handlerRegistry.set('toggleViewMode', new ToggleViewModeHandler(playerService));
+this.handlerRegistry.set('toggleShortcuts', new ToggleShortcutsHandler(playerService, appContext));
+
+// Rotation Handler
+this.handlerRegistry.set('rotate', new RotateHandler(playerService));
+
+// Editor Handler (nur im Editor-Modus)
+if (__EDITOR__) {
+  this.handlerRegistry.set('editSelectionRotator', new EditSelectionRotatorHandler(playerService, appContext));
+  this.handlerRegistry.set('editorActivate', new EditorActivateHandler(playerService, appContext));
+  this.handlerRegistry.set('blockEditorActivate', new BlockEditorActivateHandler(playerService, appContext));
+  this.handlerRegistry.set('editConfigActivate', new EditConfigActivateHandler(playerService, appContext));
+}
 ```
 
 ## Neue Handler erstellen
 
-### 1. Handler-Klasse erstellen
+### Beispiel: Sprint-Handler hinzufügen
+
+#### 1. Handler-Klasse erstellen
 
 ```typescript
-// handlers/MyActionHandler.ts
-export class MyActionHandler extends InputHandler {
+// handlers/SprintHandler.ts
+import { InputHandler } from '../InputHandler';
+import type { PlayerService } from '../../services/PlayerService';
+
+export class SprintHandler extends InputHandler {
+  constructor(playerService: PlayerService) {
+    super(playerService);
+  }
+
   protected onActivate(value: number): void {
-    // Logik bei Aktivierung
+    // Setze Movement-Modus auf SPRINT
+    this.playerService.setMovementMode('sprint');
   }
 
   protected onDeactivate(): void {
-    // Logik bei Deaktivierung (optional)
+    // Zurück zum WALK-Modus
+    this.playerService.setMovementMode('walk');
   }
 
   protected onUpdate(deltaTime: number, value: number): void {
-    // Logik für kontinuierliche Updates (optional)
+    // Keine kontinuierlichen Updates nötig
   }
 }
 ```
 
-### 2. Im InputService registrieren (für zentrale Handler)
+#### 2. Im InputService registrieren
 
 ```typescript
-// InputService.registerCentralHandlers()
-this.handlerRegistry.set('myAction', new MyActionHandler(playerService, appContext));
+// InputService.ts - In registerCentralHandlers()
+import { SprintHandler } from '../input/handlers/SprintHandler';
+
+private registerCentralHandlers(): void {
+  // ... existing handlers ...
+
+  // Sprint Handler
+  this.handlerRegistry.set('sprint', new SprintHandler(this.playerService));
+
+  // ... rest of handlers ...
+}
 ```
 
-### 3. Im Controller binden
+#### 3. Im Controller binden
 
 ```typescript
-// WebInputController.initialize()
-this.myActionHandler = inputService.getHandler('myAction');
+// WebInputController.ts
+export class WebInputController implements InputController {
+  private sprintHandler?: InputHandler;
 
-// Event-Listener
-onKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'E') {
-    this.myActionHandler?.activate();
+  initialize(): void {
+    // ... retrieve other handlers ...
+
+    // Retrieve sprint handler
+    this.sprintHandler = inputService.getHandler('sprint');
+
+    // ... setup event listeners ...
   }
-};
+
+  private onKeyDown = (event: KeyboardEvent): void => {
+    // Bind Left Shift to Sprint
+    if (event.key === 'Shift' && event.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
+      if (this.sprintHandler && !this.sprintHandler.isActive()) {
+        this.sprintHandler.activate();
+        event.preventDefault();
+      }
+      return;
+    }
+
+    // ... rest of key handling ...
+  };
+
+  private onKeyUp = (event: KeyboardEvent): void => {
+    // Release sprint on Shift up
+    if (event.key === 'Shift' && event.location === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
+      if (this.sprintHandler && this.sprintHandler.isActive()) {
+        this.sprintHandler.deactivate();
+        event.preventDefault();
+      }
+      return;
+    }
+
+    // ... rest of key handling ...
+  };
+}
 ```
 
-## GamePad Controller (Zukünftig)
-
-Ein GamePad Controller würde dieselben Handler nutzen:
+#### 4. Handler zur Update-Liste hinzufügen
 
 ```typescript
-class GamePadController implements InputController {
+// WebInputController.ts - In initialize()
+const handlerList = [
+  this.clickHandler,
+  this.shortcutHandler,
+  this.moveForwardHandler,
+  // ... other handlers ...
+  this.sprintHandler,  // Add new handler here
+];
+
+// Filter out undefined handlers and build final list
+this.handlers = handlerList.filter((h): h is InputHandler => h !== undefined);
+```
+
+## Neuen Controller erstellen (GamePad-Beispiel)
+
+### GamePad Controller erstellen
+
+Ein GamePad Controller ist eine reine Binding-Schicht, die dieselben zentralen Handler nutzt wie WebInputController.
+
+```typescript
+// input/GamePadController.ts
+import { getLogger } from '@nimbus/shared';
+import type { InputController } from '../services/InputService';
+import type { PlayerService } from '../services/PlayerService';
+import type { AppContext } from '../AppContext';
+import type { InputHandler } from './InputHandler';
+
+const logger = getLogger('GamePadController');
+
+export class GamePadController implements InputController {
+  private playerService: PlayerService;
+  private appContext: AppContext;
+  private handlers: InputHandler[] = [];
+
+  // All handlers retrieved from InputService
   private clickHandler?: InputHandler;
   private shortcutHandler?: InputHandler;
   private moveForwardHandler?: InputHandler;
+  private moveBackwardHandler?: InputHandler;
+  private moveLeftHandler?: InputHandler;
+  private moveRightHandler?: InputHandler;
+  private rotateHandler?: InputHandler;
+  private jumpHandler?: InputHandler;
+
+  private gamepadIndex: number = -1;
+  private updateInterval?: number;
+
+  constructor(playerService: PlayerService, appContext: AppContext) {
+    this.playerService = playerService;
+    this.appContext = appContext;
+  }
 
   initialize(): void {
-    // Zentrale Handler holen
+    // Get all handlers from InputService
     const inputService = this.appContext.services.input;
+    if (!inputService) {
+      logger.warn('InputService not available');
+      return;
+    }
+
+    // Retrieve handlers
     this.clickHandler = inputService.getHandler('click');
     this.shortcutHandler = inputService.getHandler('shortcut');
+    this.moveForwardHandler = inputService.getHandler('moveForward');
+    this.moveBackwardHandler = inputService.getHandler('moveBackward');
+    this.moveLeftHandler = inputService.getHandler('moveLeft');
+    this.moveRightHandler = inputService.getHandler('moveRight');
+    this.rotateHandler = inputService.getHandler('rotate');
+    this.jumpHandler = inputService.getHandler('jump');
 
-    // Eigene Handler erstellen
-    this.moveForwardHandler = new MoveForwardHandler(playerService);
+    // Build handlers array for update loop
+    this.handlers = [
+      this.clickHandler,
+      this.shortcutHandler,
+      this.moveForwardHandler,
+      this.moveBackwardHandler,
+      this.moveLeftHandler,
+      this.moveRightHandler,
+      this.rotateHandler,
+      this.jumpHandler,
+    ].filter((h): h is InputHandler => h !== undefined);
 
-    // GamePad-Events binden
+    // Listen for gamepad connection
     window.addEventListener('gamepadconnected', this.onGamePadConnected);
+    window.addEventListener('gamepaddisconnected', this.onGamePadDisconnected);
+
+    logger.info('GamePadController initialized');
   }
+
+  private onGamePadConnected = (event: GamepadEvent): void => {
+    this.gamepadIndex = event.gamepad.index;
+    logger.info('Gamepad connected', { index: this.gamepadIndex });
+
+    // Start update loop
+    this.updateInterval = window.setInterval(() => this.updateGamePad(), 16); // ~60 FPS
+  };
+
+  private onGamePadDisconnected = (event: GamepadEvent): void => {
+    if (event.gamepad.index === this.gamepadIndex) {
+      this.gamepadIndex = -1;
+      logger.info('Gamepad disconnected');
+
+      // Stop update loop
+      if (this.updateInterval) {
+        clearInterval(this.updateInterval);
+        this.updateInterval = undefined;
+      }
+    }
+  };
 
   private updateGamePad(): void {
     const gamepads = navigator.getGamepads();
-    const pad = gamepads[0];
+    const pad = gamepads[this.gamepadIndex];
 
-    if (pad) {
-      // Trigger → Click
-      if (pad.buttons[0].pressed) {
-        this.clickHandler?.activate(0); // Trigger = Button 0
+    if (!pad) return;
+
+    // Right Trigger (RT) → Click (Button 0)
+    if (pad.buttons[7]?.pressed && this.clickHandler && !this.clickHandler.isActive()) {
+      this.clickHandler.activate(0);
+    } else if (!pad.buttons[7]?.pressed && this.clickHandler?.isActive()) {
+      this.clickHandler.deactivate();
+    }
+
+    // A Button → Jump
+    if (pad.buttons[0]?.pressed && this.jumpHandler && !this.jumpHandler.isActive()) {
+      this.jumpHandler.activate();
+    } else if (!pad.buttons[0]?.pressed && this.jumpHandler?.isActive()) {
+      this.jumpHandler.deactivate();
+    }
+
+    // D-Pad → Shortcuts (Buttons 12-15)
+    if (pad.buttons[12]?.pressed && this.shortcutHandler && !this.shortcutHandler.isActive()) {
+      this.shortcutHandler.activate(1); // D-Pad Up = Shortcut 1
+    } else if (pad.buttons[13]?.pressed && this.shortcutHandler && !this.shortcutHandler.isActive()) {
+      this.shortcutHandler.activate(2); // D-Pad Down = Shortcut 2
+    } else if (pad.buttons[14]?.pressed && this.shortcutHandler && !this.shortcutHandler.isActive()) {
+      this.shortcutHandler.activate(3); // D-Pad Left = Shortcut 3
+    } else if (pad.buttons[15]?.pressed && this.shortcutHandler && !this.shortcutHandler.isActive()) {
+      this.shortcutHandler.activate(4); // D-Pad Right = Shortcut 4
+    } else if (
+      !pad.buttons[12]?.pressed &&
+      !pad.buttons[13]?.pressed &&
+      !pad.buttons[14]?.pressed &&
+      !pad.buttons[15]?.pressed &&
+      this.shortcutHandler?.isActive()
+    ) {
+      this.shortcutHandler.deactivate();
+    }
+
+    // Left Stick → Movement (Axes 0=X, 1=Y)
+    const leftStickX = pad.axes[0] || 0;
+    const leftStickY = pad.axes[1] || 0;
+    const deadzone = 0.15;
+
+    // Forward/Backward
+    if (Math.abs(leftStickY) > deadzone) {
+      if (leftStickY < 0) {
+        // Forward (stick up = negative Y)
+        if (this.moveForwardHandler && !this.moveForwardHandler.isActive()) {
+          this.moveForwardHandler.activate(Math.abs(leftStickY));
+        }
+      } else {
+        // Backward (stick down = positive Y)
+        if (this.moveBackwardHandler && !this.moveBackwardHandler.isActive()) {
+          this.moveBackwardHandler.activate(Math.abs(leftStickY));
+        }
       }
-
-      // D-Pad → Shortcuts
-      if (pad.buttons[12].pressed) {
-        this.shortcutHandler?.activate(1); // D-Pad Up = Shortcut 1
+    } else {
+      // Release movement handlers when stick returns to center
+      if (this.moveForwardHandler?.isActive()) {
+        this.moveForwardHandler.deactivate();
       }
-
-      // Analog Stick → Bewegung
-      const stickY = pad.axes[1]; // Vertical axis
-      if (Math.abs(stickY) > 0.1) { // Deadzone
-        this.moveForwardHandler?.activate(stickY); // Kontinuierlicher Wert
+      if (this.moveBackwardHandler?.isActive()) {
+        this.moveBackwardHandler.deactivate();
       }
     }
+
+    // Left/Right
+    if (Math.abs(leftStickX) > deadzone) {
+      if (leftStickX < 0) {
+        // Left (stick left = negative X)
+        if (this.moveLeftHandler && !this.moveLeftHandler.isActive()) {
+          this.moveLeftHandler.activate(Math.abs(leftStickX));
+        }
+      } else {
+        // Right (stick right = positive X)
+        if (this.moveRightHandler && !this.moveRightHandler.isActive()) {
+          this.moveRightHandler.activate(Math.abs(leftStickX));
+        }
+      }
+    } else {
+      // Release movement handlers when stick returns to center
+      if (this.moveLeftHandler?.isActive()) {
+        this.moveLeftHandler.deactivate();
+      }
+      if (this.moveRightHandler?.isActive()) {
+        this.moveRightHandler.deactivate();
+      }
+    }
+
+    // Right Stick → Camera Rotation (Axes 2=X, 3=Y)
+    const rightStickX = pad.axes[2] || 0;
+    const rightStickY = pad.axes[3] || 0;
+
+    if (this.rotateHandler && (Math.abs(rightStickX) > deadzone || Math.abs(rightStickY) > deadzone)) {
+      // Convert stick input to rotation delta
+      const sensitivity = 5.0;
+      const deltaX = rightStickX * sensitivity;
+      const deltaY = rightStickY * sensitivity;
+
+      // Activate rotation handler with delta values
+      // Note: RotateHandler might need a setDelta() method for this
+      if (!this.rotateHandler.isActive()) {
+        this.rotateHandler.activate();
+      }
+      // Call setDelta if RotateHandler supports it
+      // (this.rotateHandler as RotateHandler).setDelta?.(deltaX, deltaY);
+    }
+  }
+
+  getHandlers(): InputHandler[] {
+    return this.handlers;
+  }
+
+  dispose(): void {
+    // Remove event listeners
+    window.removeEventListener('gamepadconnected', this.onGamePadConnected);
+    window.removeEventListener('gamepaddisconnected', this.onGamePadDisconnected);
+
+    // Stop update loop
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = undefined;
+    }
+
+    // Deactivate all handlers
+    for (const handler of this.handlers) {
+      if (handler.isActive()) {
+        handler.deactivate();
+      }
+    }
+
+    logger.info('GamePadController disposed');
   }
 }
+```
+
+### Controller aktivieren
+
+```typescript
+// In NimbusClient oder Bootstrap-Code
+const inputService = appContext.services.input;
+
+// WebInputController für Keyboard/Mouse
+const webController = new WebInputController(canvas, playerService, appContext);
+inputService.setController(webController);
+
+// GamePadController kann parallel verwendet werden
+// (Implementierung mit Multi-Controller-Support erforderlich)
+const gamepadController = new GamePadController(playerService, appContext);
+// gamepadController würde dann automatisch bei Gamepad-Verbindung aktiviert
 ```
 
 ## Best Practices

@@ -168,12 +168,22 @@ export class WorldManager {
       },
       createdAt: info.createdAt || now,
       updatedAt: now,
+      // Required fields with defaults
+      seasonStatus: info.seasonStatus ?? 0,
+      seasonProgress: info.seasonProgress ?? 0,
+      owner: info.owner || {
+        user: 'system',
+        displayName: 'System',
+      },
+      settings: info.settings || {
+        maxPlayers: 10,
+        allowGuests: true,
+        pvpEnabled: false,
+        pingInterval: 30000,
+      },
       // Optional fields from info.json
-      owner: info.owner,
-      settings: info.settings,
       license: info.license,
       startArea: info.startArea,
-      worldGroupId: info.worldGroupId,
       assetPort: info.assetPort,
     };
 
@@ -274,6 +284,19 @@ export class WorldManager {
       },
       createdAt: now,
       updatedAt: now,
+      // Required fields with defaults
+      seasonStatus: 0,
+      seasonProgress: 0,
+      owner: {
+        user: 'system',
+        displayName: 'System',
+      },
+      settings: {
+        maxPlayers: 10,
+        allowGuests: true,
+        pvpEnabled: false,
+        pingInterval: 30000,
+      },
     };
 
     const world: WorldInstance = {

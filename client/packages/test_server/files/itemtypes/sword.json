@@ -4,6 +4,7 @@
   "description": "A basic melee weapon for close combat",
   "modifier": {
     "texture": "textures/items/sword_crusty.png",
+    "actionTargeting": "ALL",
     "scaleX": 0.5,
     "scaleY": 0.5,
     "offset": [0, 0.2, 0],

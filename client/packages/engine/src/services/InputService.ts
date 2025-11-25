@@ -11,6 +11,28 @@ import type { PlayerService } from './PlayerService';
 import type { InputHandler } from '../input/InputHandler';
 import { ClickInputHandler } from '../input/handlers/ClickInputHandler';
 import { ShortcutInputHandler } from '../input/handlers/ShortcutInputHandler';
+import {
+  MoveForwardHandler,
+  MoveBackwardHandler,
+  MoveLeftHandler,
+  MoveRightHandler,
+  MoveUpHandler,
+  MoveDownHandler,
+} from '../input/handlers/MovementHandlers';
+import {
+  JumpHandler,
+  CycleMovementStateHandler,
+  ToggleViewModeHandler,
+  ToggleShortcutsHandler,
+  ToggleFullscreenHandler,
+} from '../input/handlers/ActionHandlers';
+import { RotateHandler } from '../input/handlers/RotationHandlers';
+import {
+  EditSelectionRotatorHandler,
+  EditorActivateHandler,
+  BlockEditorActivateHandler,
+  EditConfigActivateHandler,
+} from '../input/handlers/EditorHandlers';
 
 const logger = getLogger('InputService');
 
@@ -78,6 +100,32 @@ export class InputService {
     // Shortcut handler (for keyboard shortcuts, gamepad buttons)
     this.handlerRegistry.set('shortcut', new ShortcutInputHandler(this.playerService, this.appContext));
 
+    // Movement handlers
+    this.handlerRegistry.set('moveForward', new MoveForwardHandler(this.playerService));
+    this.handlerRegistry.set('moveBackward', new MoveBackwardHandler(this.playerService));
+    this.handlerRegistry.set('moveLeft', new MoveLeftHandler(this.playerService));
+    this.handlerRegistry.set('moveRight', new MoveRightHandler(this.playerService));
+    this.handlerRegistry.set('moveUp', new MoveUpHandler(this.playerService));
+    this.handlerRegistry.set('moveDown', new MoveDownHandler(this.playerService));
+
+    // Action handlers
+    this.handlerRegistry.set('jump', new JumpHandler(this.playerService));
+    this.handlerRegistry.set('cycleMovementState', new CycleMovementStateHandler(this.playerService));
+    this.handlerRegistry.set('toggleViewMode', new ToggleViewModeHandler(this.playerService));
+    this.handlerRegistry.set('toggleShortcuts', new ToggleShortcutsHandler(this.playerService, this.appContext));
+    this.handlerRegistry.set('toggleFullscreen', new ToggleFullscreenHandler(this.playerService));
+
+    // Rotation handler
+    this.handlerRegistry.set('rotate', new RotateHandler(this.playerService));
+
+    // Editor handlers (only in editor mode)
+    if (__EDITOR__) {
+      this.handlerRegistry.set('editSelectionRotator', new EditSelectionRotatorHandler(this.playerService, this.appContext));
+      this.handlerRegistry.set('editorActivate', new EditorActivateHandler(this.playerService, this.appContext));
+      this.handlerRegistry.set('blockEditorActivate', new BlockEditorActivateHandler(this.playerService, this.appContext));
+      this.handlerRegistry.set('editConfigActivate', new EditConfigActivateHandler(this.playerService, this.appContext));
+    }
+
     logger.debug('Central handlers registered', {
       handlers: Array.from(this.handlerRegistry.keys()),
     });
@@ -140,30 +188,52 @@ export class InputService {
   /**
    * Propagates position/target updates from active shortcuts to ScrawlService.
    * Called each frame after handlers have been updated.
+   *
+   * Uses TargetingService to dynamically resolve current targets based on
+   * each shortcut's targetingMode.
    */
   private updateActiveExecutors(): void {
     const shortcutService = this.appContext.services.shortcut;
     const scrawlService = this.appContext.services.scrawl;
+    const playerService = this.appContext.services.player;
+    const targetingService = this.appContext.services.targeting;
 
-    if (!shortcutService || !scrawlService) {
+    if (!shortcutService || !scrawlService || !playerService || !targetingService) {
       return;
     }
 
+    // Get current player position
+    const playerPos = playerService.getPosition();
+
     // For each active shortcut, update its executor parameters
     for (const shortcut of shortcutService.getActiveShortcuts()) {
-      if (shortcut.lastPlayerPos) {
-        scrawlService.updateExecutorParameter(
-          shortcut.executorId,
-          'playerPos',
-          shortcut.lastPlayerPos
-        );
-      }
+      // Update player position (always)
+      scrawlService.updateExecutorParameter(
+        shortcut.executorId,
+        'playerPos',
+        playerPos
+      );
 
-      if (shortcut.lastTargetPos) {
+      // Resolve current target using shortcut's targeting mode
+      const currentTarget = targetingService.resolveTarget(shortcut.targetingMode);
+
+      if (currentTarget.type !== 'none') {
+        // Create serializable targeting context
+        const targetingContext = targetingService.toSerializableContext(
+          shortcut.targetingMode,
+          currentTarget
+        );
+
+        // Update target position with targeting context
         scrawlService.updateExecutorParameter(
           shortcut.executorId,
           'targetPos',
-          shortcut.lastTargetPos
+          {
+            x: currentTarget.position.x,
+            y: currentTarget.position.y,
+            z: currentTarget.position.z,
+          },
+          targetingContext
         );
       }
     }

@@ -22,6 +22,9 @@ export * from './utils';
 // Constants
 export * from './constants';
 
+// Configs
+export * from './configs';
+
 // Errors
 export * from './errors';
 

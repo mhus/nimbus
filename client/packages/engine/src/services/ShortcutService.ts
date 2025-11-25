@@ -1,6 +1,7 @@
-import { getLogger } from '@nimbus/shared';
+import { getLogger, type TargetingMode } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { Vector3 } from '@babylonjs/core';
+import { SelectMode } from './SelectService';
 
 const logger = getLogger('ShortcutService');
 
@@ -26,10 +27,19 @@ export interface ActiveShortcut {
   /** Whether this shortcut blocks all other shortcuts */
   exclusive: boolean;
 
-  /** Last known player position */
+  /** Targeting mode for this shortcut (from item's actionTargeting) */
+  targetingMode: TargetingMode;
+
+  /** Last hit interactive entity ID (for continuous interaction sending) */
+  lastHitEntityId?: string;
+
+  /** Last hit interactive block position (for continuous interaction sending) */
+  lastHitBlockPos?: { x: number; y: number; z: number };
+
+  /** Last known player position (deprecated - kept for compatibility) */
   lastPlayerPos?: Vector3;
 
-  /** Last known target position */
+  /** Last known target position (deprecated - kept for compatibility) */
   lastTargetPos?: Vector3;
 }
 
@@ -59,11 +69,11 @@ export class ShortcutService {
   /**
    * Fire a shortcut (main entry point)
    *
-   * Centralized shortcut handling:
-   * 1. Resolves target (Block or Entity) once
-   * 2. Sends BlockInteraction to server
-   * 3. Emits PlayerService event with target data
-   * 4. Executes item script with target data
+   * Dual targeting strategy:
+   * 1. Server Interaction: Uses BOTH mode (entity OR block required)
+   * 2. Visual Effects: Uses item's actionTargeting mode (ENTITY/BLOCK/BOTH/GROUND/ALL)
+   * 3. Sends BlockInteraction to server (if applicable)
+   * 4. Emits PlayerService event with visual target data
    *
    * @param shortcutNr Shortcut number
    * @param shortcutKey Shortcut key identifier
@@ -77,11 +87,11 @@ export class ShortcutService {
       }
 
       const playerService = this.appContext.services.player;
-      const selectService = this.appContext.services.select;
       const networkService = this.appContext.services.network;
       const itemService = this.appContext.services.item;
+      const targetingService = this.appContext.services.targeting;
 
-      if (!playerService || !selectService || !networkService) {
+      if (!playerService || !networkService || !targetingService) {
         logger.warn('Required services not available');
         return;
       }
@@ -101,50 +111,22 @@ export class ShortcutService {
       const rotation = cameraService?.getRotation() || { x: 0, y: 0, z: 0 };
       const movementStatus = playerService.getMovementState();
 
-      // Resolve target ONCE (Block or Entity)
-      const selectedEntity = selectService.getCurrentSelectedEntity();
-      const selectedBlock = selectService.getCurrentSelectedBlock();
+      // --- DUAL TARGETING RESOLUTION ---
 
-      let distance: number | undefined;
-      let targetPosition: { x: number; y: number; z: number } | undefined;
-      let targetEntity: any = undefined;
-      let targetBlock: any = undefined;
-      let blockX: number | undefined;
-      let blockY: number | undefined;
-      let blockZ: number | undefined;
-      let blockId: string | undefined;
-      let blockGroupId: number | undefined;
+      // 1. SERVER INTERACTION: Always use BOTH mode (entity OR block required)
+      const interactionTarget = targetingService.resolveTarget('BOTH');
+      const shouldSendInteraction = targetingService.shouldSendInteraction('BOTH', interactionTarget);
 
-      if (selectedEntity) {
-        targetEntity = selectedEntity;
-        targetPosition = selectedEntity.currentPosition;
-        distance = Math.sqrt(
-          Math.pow(targetPosition.x - playerPosition.x, 2) +
-          Math.pow(targetPosition.y - playerPosition.y, 2) +
-          Math.pow(targetPosition.z - playerPosition.z, 2)
-        );
-      } else if (selectedBlock) {
-        const pos = selectedBlock.block.position;
-        blockX = pos.x;
-        blockY = pos.y;
-        blockZ = pos.z;
-        targetPosition = { x: pos.x + 0.5, y: pos.y + 0.5, z: pos.z + 0.5 };
-        blockId = selectedBlock.block.metadata?.id;
-        blockGroupId = selectedBlock.block.metadata?.groupId;
-        distance = Math.sqrt(
-          Math.pow(targetPosition.x - playerPosition.x, 2) +
-          Math.pow(targetPosition.y - playerPosition.y, 2) +
-          Math.pow(targetPosition.z - playerPosition.z, 2)
-        );
-
-        // Create simplified target object with position for script vars
-        // ClientBlock doesn't have .position, so we create a wrapper
-        targetBlock = {
-          position: targetPosition,
-          block: selectedBlock.block,
-          blockType: selectedBlock.blockType,
-        };
+      // 2. VISUAL EFFECTS: Use item's actionTargeting mode
+      let visualTargetMode: TargetingMode = 'ALL'; // Default
+      if (shortcutDef.itemId && itemService) {
+        const item = await itemService.getItem(shortcutDef.itemId);
+        if (item) {
+          const mergedModifier = await itemService.getMergedModifier(item);
+          visualTargetMode = mergedModifier?.actionTargeting ?? 'ALL';
+        }
       }
+      const visualTarget = targetingService.resolveTarget(visualTargetMode);
 
       // Build interaction params
       const params: any = {
@@ -157,44 +139,53 @@ export class ShortcutService {
         shortcutItemId: shortcutDef.itemId,
       };
 
-      if (distance !== undefined) {
+      // Add distance and target position if interaction target exists
+      if (interactionTarget.type !== 'none') {
+        const distance = Math.sqrt(
+          Math.pow(interactionTarget.position.x - playerPosition.x, 2) +
+            Math.pow(interactionTarget.position.y - playerPosition.y, 2) +
+            Math.pow(interactionTarget.position.z - playerPosition.z, 2)
+        );
         params.distance = parseFloat(distance.toFixed(2));
-      }
-      if (targetPosition) {
-        params.targetPosition = targetPosition;
-      }
-
-      // Send BlockInteraction to server
-      if (selectedEntity) {
-        networkService.sendEntityInteraction(
-          selectedEntity.id,
-          'fireShortcut',
-          undefined,
-          params
-        );
-      } else if (selectedBlock) {
-        networkService.sendBlockInteraction(
-          blockX!,
-          blockY!,
-          blockZ!,
-          'fireShortcut',
-          params,
-          blockId,
-          blockGroupId
-        );
-      } else {
-        networkService.sendBlockInteraction(0, 0, 0, 'fireShortcut', params);
+        params.targetPosition = {
+          x: interactionTarget.position.x,
+          y: interactionTarget.position.y,
+          z: interactionTarget.position.z,
+        };
       }
 
-      // Emit PlayerService event with target data
-      playerService.emitShortcutActivated(shortcutKey, shortcutDef.itemId, targetEntity || targetBlock, targetPosition);
+      // Send interaction to server (only if target matches BOTH mode)
+      if (shouldSendInteraction) {
+        if (interactionTarget.type === 'entity') {
+          networkService.sendEntityInteraction(
+            interactionTarget.entity.id,
+            'fireShortcut',
+            undefined,
+            params
+          );
+        } else if (interactionTarget.type === 'block') {
+          const pos = interactionTarget.block.block.position;
+          networkService.sendBlockInteraction(
+            pos.x,
+            pos.y,
+            pos.z,
+            'fireShortcut',
+            params,
+            interactionTarget.block.block.metadata?.id,
+            interactionTarget.block.block.metadata?.groupId
+          );
+        }
+      }
 
-      logger.debug('Shortcut fired', {
-        shortcutNr,
+      // Emit PlayerService event with VISUAL target (always fires)
+      const legacyVisualTarget = targetingService.toLegacyTarget(visualTarget);
+      playerService.emitShortcutActivated(
         shortcutKey,
-        hasTarget: !!(targetEntity || targetBlock),
-        targetPosition,
-      });
+        shortcutDef.itemId,
+        legacyVisualTarget.target,
+        legacyVisualTarget.targetPosition
+      );
+
     } catch (error) {
       logger.error('Failed to fire shortcut', { shortcutNr, shortcutKey }, error as Error);
     }
@@ -210,13 +201,15 @@ export class ShortcutService {
    * @param executorId ScrawlExecutor ID from ScrawlService
    * @param exclusive Whether this shortcut blocks all others
    * @param itemId Optional item ID
+   * @param targetingMode Targeting mode from item's actionTargeting (default: 'ALL')
    */
   startShortcut(
     shortcutNr: number,
     shortcutKey: string,
     executorId: string,
     exclusive: boolean,
-    itemId?: string
+    itemId?: string,
+    targetingMode: TargetingMode = 'ALL'
   ): void {
     const shortcut: ActiveShortcut = {
       shortcutNr,
@@ -225,22 +218,19 @@ export class ShortcutService {
       itemId,
       startTime: Date.now(),
       exclusive,
+      targetingMode,
     };
 
     this.activeShortcuts.set(shortcutNr, shortcut);
-
-    logger.debug('Shortcut started', {
-      shortcutNr,
-      shortcutKey,
-      executorId,
-      exclusive,
-      itemId,
-    });
   }
 
   /**
    * Updates shortcut position/target data.
-   * Called each frame from ShortcutInputHandler.onUpdate()
+   *
+   * @deprecated This method is no longer needed. ShortcutService now uses
+   * TargetingService to dynamically resolve targets every 100ms in
+   * sendActiveShortcutUpdatesToServer(). Kept for backward compatibility
+   * with ClickInputHandler.
    *
    * @param shortcutNr Shortcut number
    * @param playerPos Current player position
@@ -255,12 +245,6 @@ export class ShortcutService {
 
     shortcut.lastPlayerPos = playerPos;
     shortcut.lastTargetPos = targetPos;
-
-    logger.info('Shortcut position updated', {
-      shortcutNr,
-      hasTarget: !!targetPos,
-      executorId: shortcut.executorId,
-    });
   }
 
   /**
@@ -281,15 +265,6 @@ export class ShortcutService {
     this.sendShortcutStopToServer(shortcut);
 
     this.activeShortcuts.delete(shortcutNr);
-
-    const duration = (Date.now() - shortcut.startTime) / 1000;
-
-    logger.info('Shortcut ended', {
-      shortcutNr,
-      shortcutKey: shortcut.shortcutKey,
-      duration,
-      executorId: shortcut.executorId,
-    });
 
     return shortcut;
   }
@@ -321,11 +296,6 @@ export class ShortcutService {
         '__stop__', // Special parameter to signal stop
         true
       );
-
-      logger.info('Shortcut stop event sent to server', {
-        shortcutNr: shortcut.shortcutNr,
-        effectId,
-      });
     } catch (error) {
       logger.warn('Failed to send shortcut stop to server', {
         error: (error as Error).message,
@@ -405,8 +375,11 @@ export class ShortcutService {
   /**
    * Send position updates for all active shortcuts to server
    *
+   * Uses TargetingService to resolve current targets and send full targeting context
+   * to remote clients via ef.p.u messages.
+   *
    * Only sends if:
-   * - Shortcut has position data (lastPlayerPos, lastTargetPos)
+   * - TargetingService can resolve a target
    * - NetworkService is available
    * - ScrawlService has effectId for the executor
    */
@@ -417,9 +390,10 @@ export class ShortcutService {
 
     const networkService = this.appContext.services.network;
     const scrawlService = this.appContext.services.scrawl;
+    const targetingService = this.appContext.services.targeting;
 
-    if (!networkService || !scrawlService) {
-      logger.warn('NetworkService or ScrawlService not available for server updates');
+    if (!networkService || !scrawlService || !targetingService) {
+      logger.warn('Required services not available for server updates');
       return;
     }
 
@@ -427,42 +401,96 @@ export class ShortcutService {
     let skippedCount = 0;
 
     for (const shortcut of this.activeShortcuts.values()) {
-      // Only send if we have target position data
-      if (!shortcut.lastTargetPos) {
-        logger.info('Skipping shortcut update - no target position', {
-          shortcutNr: shortcut.shortcutNr,
-          hasPlayerPos: !!shortcut.lastPlayerPos,
-        });
-        skippedCount++;
-        continue;
-      }
-
       // Get effectId for this executor
       const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
       if (!effectId) {
-        // No effectId means no server synchronization needed
-        logger.info('Skipping shortcut update - no effectId', {
-          shortcutNr: shortcut.shortcutNr,
-          executorId: shortcut.executorId,
-        });
         skippedCount++;
         continue;
       }
 
-      // Send position update to server
+      // Resolve current target using TargetingService with item's targeting mode
+      const currentTarget = targetingService.resolveTarget(shortcut.targetingMode);
+
+      if (currentTarget.type === 'none') {
+        skippedCount++;
+        continue;
+      }
+
+      // Send position update to server with targeting context
       try {
+        const targetPosition = {
+          x: currentTarget.position.x,
+          y: currentTarget.position.y,
+          z: currentTarget.position.z,
+        };
+
+        // Create serializable targeting context
+        const targetingContext = targetingService.toSerializableContext(shortcut.targetingMode, currentTarget);
+
         networkService.sendEffectParameterUpdate(
           effectId,
           'targetPos',
-          shortcut.lastTargetPos
+          targetPosition,
+          targetingContext
         );
 
-        logger.info('Shortcut position update sent to server', {
-          shortcutNr: shortcut.shortcutNr,
-          effectId,
-          targetPos: shortcut.lastTargetPos,
-        });
         sentCount++;
+
+        // Check if we hit an interactive element (for server-side collision handling)
+        // Perform fresh raycast with INTERACTIVE mode to find interactive entities/blocks
+        const selectService = this.appContext.services.select;
+        if (!selectService) {
+          continue;
+        }
+
+        // Get interactive element via fresh raycast (not from auto-selection)
+        const selectedEntity = selectService.getSelectedEntityFromPlayer(5.0);
+        const selectedBlock = selectService.getSelectedBlockFromPlayer(
+          SelectMode.INTERACTIVE,
+          5.0
+        );
+
+        // Check if we have an interactive target
+        let interactiveTarget: import('@nimbus/shared').ResolvedTarget | null = null;
+
+        if (selectedEntity) {
+          interactiveTarget = {
+            type: 'entity',
+            entity: selectedEntity,
+            position: {
+              x: selectedEntity.currentPosition.x,
+              y: selectedEntity.currentPosition.y,
+              z: selectedEntity.currentPosition.z,
+            },
+          };
+        } else if (selectedBlock) {
+          // Block was found with INTERACTIVE mode, so it's already filtered as interactive
+          const pos = selectedBlock.block.position;
+          interactiveTarget = {
+            type: 'block',
+            block: selectedBlock,
+            position: {
+              x: pos.x + 0.5,
+              y: pos.y + 0.5,
+              z: pos.z + 0.5,
+            },
+          };
+        }
+
+        // Send interaction if we hit a new interactive element
+        if (interactiveTarget) {
+          const hitChanged = this.hasInteractiveTargetChanged(shortcut, interactiveTarget);
+
+          if (hitChanged) {
+            this.sendContinuousInteraction(shortcut, interactiveTarget);
+            this.updateLastHitTarget(shortcut, interactiveTarget);
+          }
+        } else {
+          // No interactive target - clear last hit
+          shortcut.lastHitEntityId = undefined;
+          shortcut.lastHitBlockPos = undefined;
+        }
+
       } catch (error) {
         logger.warn('Failed to send shortcut update to server', {
           error: (error as Error).message,
@@ -471,8 +499,105 @@ export class ShortcutService {
       }
     }
 
-    if (sentCount > 0 || skippedCount > 0) {
-      logger.info('Server update batch complete', { sentCount, skippedCount });
+  }
+
+  /**
+   * Check if the interactive target has changed (for continuous interaction sending)
+   */
+  private hasInteractiveTargetChanged(
+    shortcut: ActiveShortcut,
+    target: import('@nimbus/shared').ResolvedTarget
+  ): boolean {
+    if (target.type === 'entity') {
+      return shortcut.lastHitEntityId !== target.entity.id;
+    } else if (target.type === 'block') {
+      const pos = target.block.block.position;
+      const lastPos = shortcut.lastHitBlockPos;
+      return !lastPos || lastPos.x !== pos.x || lastPos.y !== pos.y || lastPos.z !== pos.z;
+    }
+    return false;
+  }
+
+  /**
+   * Update last hit target for tracking
+   */
+  private updateLastHitTarget(
+    shortcut: ActiveShortcut,
+    target: import('@nimbus/shared').ResolvedTarget
+  ): void {
+    if (target.type === 'entity') {
+      shortcut.lastHitEntityId = target.entity.id;
+      shortcut.lastHitBlockPos = undefined;
+    } else if (target.type === 'block') {
+      const pos = target.block.block.position;
+      shortcut.lastHitBlockPos = { x: pos.x, y: pos.y, z: pos.z };
+      shortcut.lastHitEntityId = undefined;
+    }
+  }
+
+  /**
+   * Send continuous interaction to server when hitting interactive elements
+   */
+  private sendContinuousInteraction(
+    shortcut: ActiveShortcut,
+    target: import('@nimbus/shared').ResolvedTarget
+  ): void {
+    const networkService = this.appContext.services.network;
+    const playerService = this.appContext.services.player;
+    const cameraService = this.appContext.services.camera;
+
+    if (!networkService || !playerService || !cameraService) {
+      return;
+    }
+
+    const playerPosition = playerService.getPosition();
+    const rotation = cameraService.getRotation();
+    const movementStatus = playerService.getMovementState();
+
+    const params: any = {
+      shortcutNr: shortcut.shortcutNr,
+      playerPosition: { x: playerPosition.x, y: playerPosition.y, z: playerPosition.z },
+      playerRotation: { yaw: rotation.y, pitch: rotation.x },
+      selectionRadius: 5,
+      movementStatus,
+      shortcutItemId: shortcut.itemId,
+      continuous: true, // Mark as continuous hit during active shortcut
+    };
+
+    // Calculate distance and target position (only if target has position)
+    if (target.type !== 'none') {
+      const distance = Math.sqrt(
+        Math.pow(target.position.x - playerPosition.x, 2) +
+        Math.pow(target.position.y - playerPosition.y, 2) +
+        Math.pow(target.position.z - playerPosition.z, 2)
+      );
+      params.distance = parseFloat(distance.toFixed(2));
+      params.targetPosition = {
+        x: target.position.x,
+        y: target.position.y,
+        z: target.position.z,
+      };
+    }
+
+    // Send appropriate interaction
+    if (target.type === 'entity') {
+      networkService.sendEntityInteraction(
+        target.entity.id,
+        'hitDuringShortcut',
+        undefined,
+        params
+      );
+    } else if (target.type === 'block') {
+      const pos = target.block.block.position;
+      networkService.sendBlockInteraction(
+        pos.x,
+        pos.y,
+        pos.z,
+        'hitDuringShortcut',
+        params,
+        target.block.block.metadata?.id,
+        target.block.block.metadata?.groupId
+      );
     }
   }
 

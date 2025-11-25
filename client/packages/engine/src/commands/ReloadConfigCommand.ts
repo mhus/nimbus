@@ -44,7 +44,7 @@ export class ReloadConfigCommand extends CommandHandler {
       logger.info('Configuration reloaded successfully');
       logger.info('WorldInfo:', {
         worldId: config.worldInfo?.worldId,
-        worldName: config.worldInfo?.worldName,
+        name: config.worldInfo?.name,
         chunkSize: config.worldInfo?.chunkSize,
         status: config.worldInfo?.status,
         seasonStatus: config.worldInfo?.seasonStatus,

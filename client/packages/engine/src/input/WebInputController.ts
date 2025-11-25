@@ -10,27 +10,6 @@ import type { InputController } from '../services/InputService';
 import type { PlayerService } from '../services/PlayerService';
 import type { AppContext } from '../AppContext';
 import type { InputHandler } from './InputHandler';
-import {
-  MoveForwardHandler,
-  MoveBackwardHandler,
-  MoveLeftHandler,
-  MoveRightHandler,
-  MoveUpHandler,
-  MoveDownHandler,
-} from './handlers/MovementHandlers';
-import {
-  JumpHandler,
-  CycleMovementStateHandler,
-  ToggleViewModeHandler,
-  ToggleShortcutsHandler,
-} from './handlers/ActionHandlers';
-import { RotateHandler } from './handlers/RotationHandlers';
-import {
-  EditSelectionRotatorHandler,
-  EditorActivateHandler,
-  BlockEditorActivateHandler,
-  EditConfigActivateHandler,
-} from './handlers/EditorHandlers';
 
 const logger = getLogger('WebInputController');
 
@@ -54,6 +33,8 @@ interface KeyBinding {
  * - Shift: Move down (Fly mode only)
  * - F: Cycle movement state (WALK → SPRINT → CROUCH → WALK, includes FLY in Editor)
  * - F5: Toggle Ego/Third-Person view
+ * - F6: Toggle fullscreen
+ * - T: Toggle shortcuts display
  * - . (Period): Rotate selection mode (Editor only)
  * - / (Slash): Activate selected block editor (Editor only)
  * - F9: Open edit configuration (Editor only)
@@ -68,28 +49,27 @@ export class WebInputController implements InputController {
   private handlers: InputHandler[] = [];
   private keyBindings: Map<string, InputHandler> = new Map();
 
-  // Handlers
-  private moveForwardHandler: MoveForwardHandler;
-  private moveBackwardHandler: MoveBackwardHandler;
-  private moveLeftHandler: MoveLeftHandler;
-  private moveRightHandler: MoveRightHandler;
-  private moveUpHandler: MoveUpHandler;
-  private moveDownHandler: MoveDownHandler;
-  private jumpHandler: JumpHandler;
-  private cycleMovementStateHandler: CycleMovementStateHandler;
-  private toggleViewModeHandler: ToggleViewModeHandler;
-  private toggleShortcutsHandler: ToggleShortcutsHandler;
-  private rotateHandler: RotateHandler;
-
-  // Editor handlers (Editor only)
-  private editSelectionRotatorHandler?: EditSelectionRotatorHandler;
-  private editorActivateHandler?: EditorActivateHandler;
-  private blockEditorActivateHandler?: BlockEditorActivateHandler;
-  private editConfigActivateHandler?: EditConfigActivateHandler;
-
-  // Central handlers from InputService
+  // All handlers are retrieved from InputService
+  private moveForwardHandler?: InputHandler;
+  private moveBackwardHandler?: InputHandler;
+  private moveLeftHandler?: InputHandler;
+  private moveRightHandler?: InputHandler;
+  private moveUpHandler?: InputHandler;
+  private moveDownHandler?: InputHandler;
+  private jumpHandler?: InputHandler;
+  private cycleMovementStateHandler?: InputHandler;
+  private toggleViewModeHandler?: InputHandler;
+  private toggleShortcutsHandler?: InputHandler;
+  private toggleFullscreenHandler?: InputHandler;
+  private rotateHandler?: InputHandler;
   private clickHandler?: InputHandler;
   private shortcutHandler?: InputHandler;
+
+  // Editor handlers (Editor only)
+  private editSelectionRotatorHandler?: InputHandler;
+  private editorActivateHandler?: InputHandler;
+  private blockEditorActivateHandler?: InputHandler;
+  private editConfigActivateHandler?: InputHandler;
 
   // Pointer lock state
   private pointerLocked: boolean = false;
@@ -99,59 +79,8 @@ export class WebInputController implements InputController {
     this.playerService = playerService;
     this.appContext = appContext;
 
-    // Create handlers
-    this.moveForwardHandler = new MoveForwardHandler(playerService);
-    this.moveBackwardHandler = new MoveBackwardHandler(playerService);
-    this.moveLeftHandler = new MoveLeftHandler(playerService);
-    this.moveRightHandler = new MoveRightHandler(playerService);
-    this.moveUpHandler = new MoveUpHandler(playerService);
-    this.moveDownHandler = new MoveDownHandler(playerService);
-    this.jumpHandler = new JumpHandler(playerService);
-    this.toggleViewModeHandler = new ToggleViewModeHandler(playerService);
-    this.toggleShortcutsHandler = new ToggleShortcutsHandler(playerService, appContext);
-    this.cycleMovementStateHandler = new CycleMovementStateHandler(playerService);
-    this.rotateHandler = new RotateHandler(playerService);
-
-    // Editor-only handlers
-    if (__EDITOR__) {
-      this.editSelectionRotatorHandler = new EditSelectionRotatorHandler(playerService, appContext);
-      this.editorActivateHandler = new EditorActivateHandler(playerService, appContext);
-      this.blockEditorActivateHandler = new BlockEditorActivateHandler(playerService, appContext);
-      this.editConfigActivateHandler = new EditConfigActivateHandler(playerService, appContext);
-    }
-
-    this.handlers = [
-      this.moveForwardHandler,
-      this.moveBackwardHandler,
-      this.moveLeftHandler,
-      this.moveRightHandler,
-      this.moveUpHandler,
-      this.moveDownHandler,
-      this.jumpHandler,
-      this.toggleViewModeHandler,
-      this.cycleMovementStateHandler,
-      this.rotateHandler,
-    ];
-
-    // Add editor handlers to handlers list if available
-    if (this.editSelectionRotatorHandler) {
-      this.handlers.push(this.editSelectionRotatorHandler);
-    }
-    if (this.editorActivateHandler) {
-      this.handlers.push(this.editorActivateHandler);
-    }
-    if (this.blockEditorActivateHandler) {
-      this.handlers.push(this.blockEditorActivateHandler);
-    }
-    if (this.editConfigActivateHandler) {
-      this.handlers.push(this.editConfigActivateHandler);
-    }
-
-    // Note: Click and Shortcut handlers will be added in initialize()
-    // after they're retrieved from InputService
-
-    // Setup key bindings
-    this.setupKeyBindings();
+    // Note: All handlers will be retrieved from InputService in initialize()
+    // This makes WebInputController a pure binding layer
 
     logger.info('WebInputController created');
   }
@@ -160,14 +89,39 @@ export class WebInputController implements InputController {
    * Setup key bindings
    */
   private setupKeyBindings(): void {
-    this.keyBindings.set('w', this.moveForwardHandler);
-    this.keyBindings.set('W', this.moveForwardHandler);
-    this.keyBindings.set('s', this.moveBackwardHandler);
-    this.keyBindings.set('S', this.moveBackwardHandler);
-    this.keyBindings.set('a', this.moveLeftHandler);
-    this.keyBindings.set('A', this.moveLeftHandler);
-    this.keyBindings.set('d', this.moveRightHandler);
-    this.keyBindings.set('D', this.moveRightHandler);
+    // Movement bindings
+    if (this.moveForwardHandler) {
+      this.keyBindings.set('w', this.moveForwardHandler);
+      this.keyBindings.set('W', this.moveForwardHandler);
+    }
+    if (this.moveBackwardHandler) {
+      this.keyBindings.set('s', this.moveBackwardHandler);
+      this.keyBindings.set('S', this.moveBackwardHandler);
+    }
+    if (this.moveLeftHandler) {
+      this.keyBindings.set('a', this.moveLeftHandler);
+      this.keyBindings.set('A', this.moveLeftHandler);
+    }
+    if (this.moveRightHandler) {
+      this.keyBindings.set('d', this.moveRightHandler);
+      this.keyBindings.set('D', this.moveRightHandler);
+    }
+
+    // Action bindings
+    if (this.cycleMovementStateHandler) {
+      this.keyBindings.set('f', this.cycleMovementStateHandler);
+      this.keyBindings.set('F', this.cycleMovementStateHandler);
+    }
+    if (this.toggleViewModeHandler) {
+      this.keyBindings.set('F5', this.toggleViewModeHandler);
+    }
+    if (this.toggleShortcutsHandler) {
+      this.keyBindings.set('t', this.toggleShortcutsHandler);
+      this.keyBindings.set('T', this.toggleShortcutsHandler);
+    }
+    if (this.toggleFullscreenHandler) {
+      this.keyBindings.set('F6', this.toggleFullscreenHandler);
+    }
 
     // Editor-only key bindings
     if (this.editSelectionRotatorHandler) {
@@ -183,17 +137,6 @@ export class WebInputController implements InputController {
       this.keyBindings.set('F10', this.blockEditorActivateHandler);
     }
 
-    // F: Cycle movement state (SPRINT → CROUCH → WALK, FLY in Editor)
-    this.keyBindings.set('f', this.cycleMovementStateHandler);
-    this.keyBindings.set('F', this.cycleMovementStateHandler);
-
-    // F5: Toggle view mode (ego/third-person)
-    this.keyBindings.set('F5', this.toggleViewModeHandler);
-
-    // T: Toggle shortcuts display (keys -> clicks -> slots0 -> slots1 -> off)
-    this.keyBindings.set('t', this.toggleShortcutsHandler);
-    this.keyBindings.set('T', this.toggleShortcutsHandler);
-
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)
     // . : Rotate selection mode (Editor only)
@@ -206,30 +149,73 @@ export class WebInputController implements InputController {
    * Initialize controller
    */
   initialize(): void {
-    // Get central handlers from InputService
+    // Get all handlers from InputService
     const inputService = this.appContext.services.input;
-    if (inputService) {
-      this.clickHandler = inputService.getHandler('click');
-      this.shortcutHandler = inputService.getHandler('shortcut');
-
-      if (!this.clickHandler) {
-        logger.warn('Click handler not available from InputService');
-      } else {
-        // Add click handler to handlers list for update loop
-        this.handlers.push(this.clickHandler);
-        logger.info('Click handler added to update loop');
-      }
-
-      if (!this.shortcutHandler) {
-        logger.warn('Shortcut handler not available from InputService');
-      } else {
-        // Add shortcut handler to handlers list for update loop
-        this.handlers.push(this.shortcutHandler);
-        logger.info('Shortcut handler added to update loop');
-      }
-    } else {
+    if (!inputService) {
       logger.warn('InputService not available');
+      return;
     }
+
+    // Retrieve all handlers from InputService
+    this.clickHandler = inputService.getHandler('click');
+    this.shortcutHandler = inputService.getHandler('shortcut');
+    this.moveForwardHandler = inputService.getHandler('moveForward');
+    this.moveBackwardHandler = inputService.getHandler('moveBackward');
+    this.moveLeftHandler = inputService.getHandler('moveLeft');
+    this.moveRightHandler = inputService.getHandler('moveRight');
+    this.moveUpHandler = inputService.getHandler('moveUp');
+    this.moveDownHandler = inputService.getHandler('moveDown');
+    this.jumpHandler = inputService.getHandler('jump');
+    this.cycleMovementStateHandler = inputService.getHandler('cycleMovementState');
+    this.toggleViewModeHandler = inputService.getHandler('toggleViewMode');
+    this.toggleShortcutsHandler = inputService.getHandler('toggleShortcuts');
+    this.toggleFullscreenHandler = inputService.getHandler('toggleFullscreen');
+    this.rotateHandler = inputService.getHandler('rotate');
+
+    // Editor handlers (only available in editor mode)
+    if (__EDITOR__) {
+      this.editSelectionRotatorHandler = inputService.getHandler('editSelectionRotator');
+      this.editorActivateHandler = inputService.getHandler('editorActivate');
+      this.blockEditorActivateHandler = inputService.getHandler('blockEditorActivate');
+      this.editConfigActivateHandler = inputService.getHandler('editConfigActivate');
+    }
+
+    // Build handlers array for update loop
+    const handlerList = [
+      this.clickHandler,
+      this.shortcutHandler,
+      this.moveForwardHandler,
+      this.moveBackwardHandler,
+      this.moveLeftHandler,
+      this.moveRightHandler,
+      this.moveUpHandler,
+      this.moveDownHandler,
+      this.jumpHandler,
+      this.cycleMovementStateHandler,
+      this.toggleViewModeHandler,
+      this.toggleShortcutsHandler,
+      this.rotateHandler,
+    ];
+
+    // Add editor handlers if available
+    if (this.editSelectionRotatorHandler) {
+      handlerList.push(this.editSelectionRotatorHandler);
+    }
+    if (this.editorActivateHandler) {
+      handlerList.push(this.editorActivateHandler);
+    }
+    if (this.blockEditorActivateHandler) {
+      handlerList.push(this.blockEditorActivateHandler);
+    }
+    if (this.editConfigActivateHandler) {
+      handlerList.push(this.editConfigActivateHandler);
+    }
+
+    // Filter out undefined handlers and build final list
+    this.handlers = handlerList.filter((h): h is InputHandler => h !== undefined);
+
+    // Setup key bindings (now that handlers are available)
+    this.setupKeyBindings();
 
     // Add event listeners
     window.addEventListener('keydown', this.onKeyDown);
@@ -241,9 +227,13 @@ export class WebInputController implements InputController {
     document.addEventListener('mousemove', this.onMouseMove);
 
     // Activate rotation handler (always active for mouse look)
-    this.rotateHandler.activate();
+    if (this.rotateHandler) {
+      this.rotateHandler.activate();
+    }
 
-    logger.info('WebInputController initialized');
+    logger.info('WebInputController initialized', {
+      handlerCount: this.handlers.length,
+    });
   }
 
   /**
@@ -255,13 +245,13 @@ export class WebInputController implements InputController {
       const mode = this.playerService.getMovementMode();
       if (mode === 'walk') {
         // Walk mode: Jump
-        if (!this.jumpHandler.isActive()) {
+        if (this.jumpHandler && !this.jumpHandler.isActive()) {
           this.jumpHandler.activate();
           event.preventDefault();
         }
       } else if (mode === 'fly') {
         // Fly mode: Move up
-        if (!this.moveUpHandler.isActive()) {
+        if (this.moveUpHandler && !this.moveUpHandler.isActive()) {
           this.moveUpHandler.activate();
           event.preventDefault();
         }
@@ -273,7 +263,7 @@ export class WebInputController implements InputController {
     if (event.key === 'Shift') {
       const mode = this.playerService.getMovementMode();
       if (mode === 'fly') {
-        if (!this.moveDownHandler.isActive()) {
+        if (this.moveDownHandler && !this.moveDownHandler.isActive()) {
           this.moveDownHandler.activate();
           event.preventDefault();
         }
@@ -283,7 +273,7 @@ export class WebInputController implements InputController {
 
     // Handle F key for cycling movement state
     if (event.key === 'f' || event.key === 'F') {
-      if (!this.cycleMovementStateHandler.isActive()) {
+      if (this.cycleMovementStateHandler && !this.cycleMovementStateHandler.isActive()) {
         this.cycleMovementStateHandler.activate();
         event.preventDefault();
       }
@@ -335,13 +325,13 @@ export class WebInputController implements InputController {
       const mode = this.playerService.getMovementMode();
       if (mode === 'walk') {
         // Walk mode: Jump
-        if (this.jumpHandler.isActive()) {
+        if (this.jumpHandler && this.jumpHandler.isActive()) {
           this.jumpHandler.deactivate();
           event.preventDefault();
         }
       } else if (mode === 'fly') {
         // Fly mode: Move up
-        if (this.moveUpHandler.isActive()) {
+        if (this.moveUpHandler && this.moveUpHandler.isActive()) {
           this.moveUpHandler.deactivate();
           event.preventDefault();
         }
@@ -353,7 +343,7 @@ export class WebInputController implements InputController {
     if (event.key === 'Shift') {
       const mode = this.playerService.getMovementMode();
       if (mode === 'fly') {
-        if (this.moveDownHandler.isActive()) {
+        if (this.moveDownHandler && this.moveDownHandler.isActive()) {
           this.moveDownHandler.deactivate();
           event.preventDefault();
         }
@@ -363,7 +353,7 @@ export class WebInputController implements InputController {
 
     // Handle F key for cycling movement state
     if (event.key === 'f' || event.key === 'F') {
-      if (this.cycleMovementStateHandler.isActive()) {
+      if (this.cycleMovementStateHandler && this.cycleMovementStateHandler.isActive()) {
         this.cycleMovementStateHandler.deactivate();
         event.preventDefault();
       }
@@ -455,7 +445,9 @@ export class WebInputController implements InputController {
     const deltaY = event.movementY || 0;
 
     // Update rotation handler
-    this.rotateHandler.setDelta(deltaX, deltaY);
+    if (this.rotateHandler) {
+      (this.rotateHandler as any).setDelta(deltaX, deltaY);
+    }
   };
 
   /**

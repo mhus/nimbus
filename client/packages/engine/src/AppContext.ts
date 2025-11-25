@@ -29,6 +29,7 @@ import type { AudioService } from './services/AudioService';
 import type { ScrawlService } from './scrawl/ScrawlService';
 import type { ShortcutService } from './services/ShortcutService';
 import type { ConfigService } from './services/ConfigService';
+import type { TargetingService } from './services/TargetingService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -124,6 +125,9 @@ export interface Services {
 
   /** Config service for loading and caching configuration */
   config?: ConfigService;
+
+  /** Targeting service for resolving targets using Strategy Pattern */
+  targeting?: TargetingService;
 
   // Future services will be added here:
   // render?: RenderService;

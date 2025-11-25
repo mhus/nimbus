@@ -231,7 +231,7 @@ export class ItemCommand extends CommandHandler {
       // Remove item and re-add it with position using original ID
       world.itemRegistry.removeItem(itemId);
       const newItem = world.itemRegistry.addItem(
-        serverItem.item.name,
+        serverItem.item.name || 'Item',
         itemType,
         { x, y, z },
         serverItem.item.parameters?.texturePath as string | undefined,

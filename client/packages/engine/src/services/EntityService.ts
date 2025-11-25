@@ -1059,6 +1059,11 @@ export class EntityService {
   ): { height: number; width: number; footprint: number } {
     const dimensions = entityModel.dimensions;
 
+    // If dimensions is undefined, return default
+    if (!dimensions) {
+      return { height: 1.8, width: 0.6, footprint: 0.6 };
+    }
+
     // Try specific movement mode first, then fallback
     return (
       dimensions[movementMode] ??
