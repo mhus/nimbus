@@ -98,7 +98,7 @@ public class DemoSetupApplication implements CommandLineRunner {
                 log.info("RegionServer Public Key geladen (Algorithmus={}, Länge={} Base64-Zeichen)", pub.getAlgorithm(), base64.length());
                 boolean exists = existsKeyInUniverse("REGION","PUBLIC", regionServerId, REGION_SERVER_JWT_TOKEN);
                 if (!exists) {
-                    createKeyInUniverse("REGION","PUBLIC", pub.getAlgorithm(), regionServerId, REGION_SERVER_JWT_TOKEN, regionServerId + ":" + REGION_SERVER_JWT_TOKEN + ":" + java.util.UUID.randomUUID(), base64);
+                    createKeyInUniverse("REGION","PUBLIC", pub.getAlgorithm(), regionServerId, REGION_SERVER_JWT_TOKEN, java.util.UUID.randomUUID().toString(), base64);
                 } else {
                     log.debug("RegionServer Public Key bereits registriert (owner={}, intent={})", regionServerId, REGION_SERVER_JWT_TOKEN);
                 }
@@ -120,7 +120,7 @@ public class DemoSetupApplication implements CommandLineRunner {
                 log.info("RegionServer Public Key geladen (Algorithmus={}, Länge={} Base64-Zeichen)", pub.getAlgorithm(), base64.length());
                 boolean exists = existsKeyInRegion("UNIVERSE","PUBLIC", regionServerId, MAIN_JWT_TOKEN);
                 if (!exists) {
-                    createKeyInRegion("UNIVERSE","PUBLIC", pub.getAlgorithm(), regionServerId, MAIN_JWT_TOKEN, regionServerId + ":" + MAIN_JWT_TOKEN + ":" + java.util.UUID.randomUUID(), base64);
+                    createKeyInRegion("UNIVERSE","PUBLIC", pub.getAlgorithm(), regionServerId, MAIN_JWT_TOKEN, java.util.UUID.randomUUID().toString(), base64);
                 } else {
                     log.debug("RegionServer Public Key bereits registriert (owner={}, intent={})", regionServerId, MAIN_JWT_TOKEN);
                 }
