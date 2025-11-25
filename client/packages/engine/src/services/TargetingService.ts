@@ -224,25 +224,17 @@ export class TargetingService {
   private resolveAllDynamic(): ResolvedTarget {
     const selectService = this.appContext.services.select;
     if (!selectService) {
-      logger.warn('SelectService not available in resolveAllDynamic');
       return { type: 'none' };
     }
 
     // Always check entity first (from current auto-selection)
     const selectedEntity = selectService.getCurrentSelectedEntity();
     if (selectedEntity) {
-      logger.info('ALL mode: Found entity', { entityId: selectedEntity.id });
       return this.resolveEntity(selectedEntity);
     }
 
     // Use SelectService with ALL mode - can return block or AIR position
     const selectedBlock = selectService.getSelectedBlockFromPlayer(SelectMode.ALL, 5.0);
-
-    logger.info('ALL mode: Raycast result', {
-      hasBlock: !!selectedBlock,
-      blockTypeId: selectedBlock?.blockType?.id,
-      blockPosition: selectedBlock?.block?.position,
-    });
 
     if (selectedBlock) {
       // Check if it's an AIR block by checking the block type ID (0 = AIR)
@@ -256,22 +248,16 @@ export class TargetingService {
           y: pos.y + 0.5,
           z: pos.z + 0.5,
         };
-        logger.info('ALL mode: Returning AIR block as ground position', { position });
         return {
           type: 'ground',
           position,
         };
       } else {
         // Solid block
-        logger.info('ALL mode: Returning solid block', {
-          blockPosition: selectedBlock.block.position,
-          blockTypeId: selectedBlock.blockType?.id,
-        });
         return this.resolveBlock(selectedBlock);
       }
     }
 
-    logger.warn('ALL mode: No target found (raycast returned null)');
     return { type: 'none' };
   }
 

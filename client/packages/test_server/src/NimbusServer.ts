@@ -714,10 +714,13 @@ class NimbusServer {
         username: session.username,
         effectId: data?.effectId,
         paramName: data?.paramName,
-        hasValue: data?.value !== undefined,
+        value: data?.value,
         hasTargeting: !!data?.targeting,
         targetingMode: data?.targeting?.mode,
         targetingType: data?.targeting?.targetType,
+        targetingPosition: data?.targeting?.position,
+        targetingEntityId: data?.targeting?.entityId,
+        targetingBlockPosition: data?.targeting?.blockPosition,
       });
 
       if (!data?.effectId || !data?.paramName) {

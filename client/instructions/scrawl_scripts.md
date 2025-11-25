@@ -2868,8 +2868,8 @@ selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> ser
 [x] Phase 6: AppContext Registration
 
 [x] Visuell umgesetzt
-[ ] Events werden richtig gefeuert
-[ ] Effekte werden remote richtig abgespielt
+[x] Events werden richtig gefeuert
+[-] Effekte werden remote richtig abgespielt - Wird in einer nderen session getestet
 
 > Wichtig, targeting soll nur im  INTERACTIVE Mode beginnen. das ist dem modus mit dem der Player arbeitet. Andere autoModi sind fuer den Editor, der editor benoetigt diese zum editieren, nicht fuer shortcuts. Nur der  
   INTERACTIVE Mode ist zum spielen gedacht. auch wenn jetzt nicht unbedingt mehr ein ineractives element gefunden werden muss zum starten des shortcuts.
