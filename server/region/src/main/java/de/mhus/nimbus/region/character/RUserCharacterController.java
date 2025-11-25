@@ -2,6 +2,7 @@ package de.mhus.nimbus.region.character;
 
 import de.mhus.nimbus.generated.dto.RegionCharacterResponse;
 import de.mhus.nimbus.generated.types.RegionItemInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -12,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping(RUserCharacterController.BASE_PATH)
 @Validated
+@Slf4j
 public class RUserCharacterController {
 
     public static final String BASE_PATH = "/region/user/character";
@@ -49,6 +51,7 @@ public class RUserCharacterController {
             var c = characterService.createCharacter(req.userId(), req.regionId(), req.name(), req.display());
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(c));
         } catch (IllegalArgumentException | IllegalStateException ex) {
+            log.warn("create character {} failed", req, ex);
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
     }

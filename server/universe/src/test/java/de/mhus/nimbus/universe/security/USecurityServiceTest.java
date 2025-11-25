@@ -53,8 +53,7 @@ class USecurityServiceTest {
         UUserService userService = Mockito.mock(UUserService.class);
         JwtService jwt = Mockito.mock(JwtService.class);
         KeyService keyService = Mockito.mock(KeyService.class);
-        UniverseProperties props = new UniverseProperties();
-        props.setSecurityRefreshMaxTotalDays(1); // sehr kurz
+        UniverseProperties props = new UniverseProperties(1,1,1);
         PrivateKey privateKey = Mockito.mock(PrivateKey.class);
         Mockito.when(privateKey.getAlgorithm()).thenReturn("EC");
         Mockito.when(keyService.getLatestPrivateKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT)).thenReturn(Optional.of(privateKey));

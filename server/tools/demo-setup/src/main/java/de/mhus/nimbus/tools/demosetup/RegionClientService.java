@@ -125,7 +125,10 @@ public class RegionClientService extends BaseClientService {
                     .toBodilessEntity()
                     .map(r -> r.getStatusCode().value())
                     .timeout(Duration.ofSeconds(8))
-                    .onErrorResume(e -> Mono.just(-1))
+                    .onErrorResume(e -> {
+                        log.warn("Fehler beim Erstellen von Character {}: {}", characterName, e.getMessage());
+                        return Mono.just(-1);
+                    })
                     .block();
             if (status != null && (status == 200 || status == 201))
                 return true;
