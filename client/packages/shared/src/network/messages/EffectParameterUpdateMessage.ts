@@ -8,6 +8,7 @@
 
 import type { BaseMessage } from '../BaseMessage';
 import type { ChunkCoordinate } from './ChunkMessage';
+import type { SerializableTargetingContext } from '../../types/TargetingTypes';
 
 /**
  * Effect parameter update data
@@ -27,9 +28,9 @@ export interface EffectParameterUpdateData {
   paramName: string;
 
   /**
-   * New parameter value
+   * New parameter value (optional when targeting context is provided)
    */
-  value: any;
+  value?: any;
 
   /**
    * Affected chunks (optional)
@@ -37,6 +38,19 @@ export interface EffectParameterUpdateData {
    * Copied from the original effect trigger
    */
   chunks?: ChunkCoordinate[];
+
+  /**
+   * Targeting context for position-based parameters (optional)
+   *
+   * When paramName is 'targetPos', this provides full targeting context
+   * so remote clients can properly resolve/track targets.
+   *
+   * This allows remote clients to understand:
+   * - What targeting mode was used (ENTITY, BLOCK, GROUND, etc.)
+   * - What type of target was resolved (entity ID, block position, etc.)
+   * - The final position of the target
+   */
+  targeting?: SerializableTargetingContext;
 }
 
 /**

@@ -11,6 +11,17 @@
 
 import type { ScriptActionDefinition } from '../scrawl/ScriptActionDefinition';
 
+/**
+ * Targeting mode for action effects
+ *
+ * - 'ENTITY': Only execute when entity is targeted
+ * - 'BLOCK': Only execute when block is targeted
+ * - 'BOTH': Execute when entity OR block is targeted
+ * - 'GROUND': Always execute with ground position from camera ray
+ * - 'ALL': Always execute (entity, block, or ground position)
+ */
+export type ActionTargetingMode = 'ENTITY' | 'BLOCK' | 'BOTH' | 'GROUND' | 'ALL';
+
 export interface ItemModifier {
   /**
    * Texture path for the item (e.g., 'items/sword.png')
@@ -88,4 +99,21 @@ export interface ItemModifier {
    * For example: automatic effects, passive abilities, environmental triggers
    */
   actionScript?: ScriptActionDefinition;
+
+  /**
+   * Targeting mode for visual effects (pose, onUseEffect)
+   *
+   * Controls when visual effects execute and what target they use:
+   * - 'ENTITY': Only execute when entity is targeted
+   * - 'BLOCK': Only execute when block is targeted
+   * - 'BOTH': Execute when entity OR block is targeted
+   * - 'GROUND': Always execute with ground position from camera ray
+   * - 'ALL': Always execute (entity, block, or ground position)
+   *
+   * Default: 'ALL'
+   *
+   * Note: Server interactions always use 'BOTH' mode (entity OR block required).
+   * This field only affects client-side visual effects and pose animations.
+   */
+  actionTargeting?: ActionTargetingMode;
 }

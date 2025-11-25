@@ -18,6 +18,7 @@ export * from './Item';
 export * from './ItemBlockRef';
 export * from './ItemType';
 export * from './ItemModifier';
+export * from './TargetingTypes';
 
 // Chunk types
 export * from './ChunkData';

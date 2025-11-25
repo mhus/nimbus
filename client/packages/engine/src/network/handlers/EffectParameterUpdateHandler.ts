@@ -38,6 +38,7 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
       effectId: data.effectId,
       paramName: data.paramName,
       value: data.value,
+      hasTargeting: !!data.targeting,
     });
 
     if (!data.effectId || !data.paramName) {
@@ -46,13 +47,14 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
     }
 
     try {
-      // Update the executor parameter
+      // Update the executor parameter with optional targeting context
       // The effectId from server corresponds to the executor ID
-      this.scrawlService.updateExecutorParameter(data.effectId, data.paramName, data.value);
+      this.scrawlService.updateExecutorParameter(data.effectId, data.paramName, data.value, data.targeting);
 
       logger.debug('Remote parameter update applied', {
         effectId: data.effectId,
         paramName: data.paramName,
+        hasTargeting: !!data.targeting,
       });
     } catch (error) {
       logger.warn('Failed to apply remote parameter update', {

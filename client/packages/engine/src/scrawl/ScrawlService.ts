@@ -434,8 +434,14 @@ export class ScrawlService {
    * @param executorIdOrEffectId ID of the executor or effectId (for remote updates)
    * @param paramName Name of the parameter (e.g. 'targetPos', 'mousePos', 'volume')
    * @param value New value (any type)
+   * @param targeting Optional targeting context from network synchronization
    */
-  updateExecutorParameter(executorIdOrEffectId: string, paramName: string, value: any): void {
+  updateExecutorParameter(
+    executorIdOrEffectId: string,
+    paramName: string,
+    value: any,
+    targeting?: import('@nimbus/shared').SerializableTargetingContext
+  ): void {
     // Try direct executor ID first
     let executor = this.runningExecutors.get(executorIdOrEffectId);
 
@@ -448,10 +454,11 @@ export class ScrawlService {
     }
 
     if (executor) {
-      executor.updateParameter(paramName, value);
+      executor.updateParameter(paramName, value, targeting);
       logger.debug('Executor parameter updated via ScrawlService', {
         id: executorIdOrEffectId,
         paramName,
+        hasTargeting: !!targeting,
       });
     } else {
       logger.debug(`Executor not found for parameter update: ${executorIdOrEffectId}`, {

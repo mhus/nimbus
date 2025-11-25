@@ -795,8 +795,14 @@ export class NetworkService {
    * @param effectId Effect ID
    * @param paramName Parameter name (e.g., 'targetPos')
    * @param value Parameter value (will be serialized)
+   * @param targeting Optional targeting context for network synchronization
    */
-  sendEffectParameterUpdate(effectId: string, paramName: string, value: any): void {
+  sendEffectParameterUpdate(
+    effectId: string,
+    paramName: string,
+    value: any,
+    targeting?: import('@nimbus/shared').SerializableTargetingContext
+  ): void {
     try {
       // Serialize value - extract only JSON-serializable data
       let serializedValue = value;
@@ -807,11 +813,16 @@ export class NetworkService {
         }
       }
 
-      const updateData = {
+      const updateData: any = {
         effectId,
         paramName,
         value: serializedValue,
       };
+
+      // Add targeting context if provided
+      if (targeting) {
+        updateData.targeting = targeting;
+      }
 
       this.send({
         t: MessageType.EFFECT_PARAMETER_UPDATE,
@@ -821,6 +832,8 @@ export class NetworkService {
       logger.debug('Effect parameter update sent to server', {
         effectId,
         paramName,
+        hasTargeting: !!targeting,
+        targetingMode: targeting?.mode,
       });
     } catch (error) {
       logger.warn('Failed to send effect parameter update', {
