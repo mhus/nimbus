@@ -117,8 +117,8 @@ export function createItemRoutes(worldManager: WorldManager, itemUpdateBuffer: I
 
       // Add to registry with specified ID
       const serverItem = world.itemRegistry.addItem(
-        newItem.name,
-        newItem.itemType,
+        newItem.name || 'Item',
+        newItem.itemType!,
         undefined, // No position from this API call
         newItem.modifier?.texture,
         newItem.parameters,

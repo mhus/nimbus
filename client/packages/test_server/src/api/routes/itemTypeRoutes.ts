@@ -76,7 +76,7 @@ router.get('/:worldId/itemtypes', async (req, res) => {
 
           // Apply search filter if query provided
           if (searchQuery) {
-            const matchesId = itemType.id?.toLowerCase().includes(searchQuery);
+            const matchesId = itemType.type?.toLowerCase().includes(searchQuery);
             const matchesName = itemType.name?.toLowerCase().includes(searchQuery);
             if (!matchesId && !matchesName) {
               continue; // Skip this item
@@ -118,24 +118,24 @@ router.post('/:worldId/itemtypes', async (req, res) => {
     const itemType: ItemType = req.body;
 
     // Validate required fields
-    if (!itemType.id) {
-      res.status(400).json({ error: 'ItemType.id is required' });
+    if (!itemType.type) {
+      res.status(400).json({ error: 'ItemType.type is required' });
       return;
     }
 
-    // Validate id format (alphanumeric + underscore only)
-    if (!/^[a-zA-Z0-9_]+$/.test(itemType.id)) {
-      res.status(400).json({ error: 'Invalid ItemType.id format (alphanumeric + underscore only)' });
+    // Validate type format (alphanumeric + underscore only)
+    if (!/^[a-zA-Z0-9_]+$/.test(itemType.type)) {
+      res.status(400).json({ error: 'Invalid ItemType.type format (alphanumeric + underscore only)' });
       return;
     }
 
     const itemTypesDir = path.join(__dirname, '../../../files/itemtypes');
-    const filePath = path.join(itemTypesDir, `${itemType.id}.json`);
+    const filePath = path.join(itemTypesDir, `${itemType.type}.json`);
 
     // Check if file already exists
     try {
       await fs.access(filePath);
-      res.status(409).json({ error: `ItemType already exists: ${itemType.id}` });
+      res.status(409).json({ error: `ItemType already exists: ${itemType.type}` });
       return;
     } catch {
       // File doesn't exist, continue
@@ -147,7 +147,7 @@ router.post('/:worldId/itemtypes', async (req, res) => {
     // Write to file
     await fs.writeFile(filePath, JSON.stringify(itemType, null, 2), 'utf-8');
 
-    console.log(`ItemType created: ${itemType.id}`);
+    console.log(`ItemType created: ${itemType.type}`);
     res.status(201).json(itemType);
   } catch (error: any) {
     console.error('Failed to create ItemType:', error);
@@ -193,7 +193,7 @@ router.put('/:worldId/itemtypes/:itemTypeId', async (req, res) => {
     const updatedItemType: ItemType = {
       ...existingItemType,
       ...updates,
-      id: itemTypeId, // Ensure id stays the same
+      type: itemTypeId, // Ensure type stays the same
     };
 
     // Write updated ItemType

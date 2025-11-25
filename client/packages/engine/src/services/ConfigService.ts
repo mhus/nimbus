@@ -73,28 +73,29 @@ export class ConfigService {
       }
 
       const oldWorldInfo = this.appContext.worldInfo;
-      this.config = await response.json();
+      const config: EngineConfiguration = await response.json();
+      this.config = config;
 
       // Update AppContext with loaded config
-      if (this.config.worldInfo) {
-        this.appContext.worldInfo = this.config.worldInfo;
+      if (config.worldInfo) {
+        this.appContext.worldInfo = config.worldInfo;
       }
-      if (this.config.playerInfo) {
-        this.appContext.playerInfo = this.config.playerInfo;
+      if (config.playerInfo) {
+        this.appContext.playerInfo = config.playerInfo;
       }
 
       logger.info('Configuration loaded successfully', {
-        hasWorldInfo: !!this.config.worldInfo,
-        hasPlayerInfo: !!this.config.playerInfo,
-        hasBackpack: !!this.config.playerBackpack,
-        hasSettings: !!this.config.settings,
+        hasWorldInfo: !!config.worldInfo,
+        hasPlayerInfo: !!config.playerInfo,
+        hasBackpack: !!config.playerBackpack,
+        hasSettings: !!config.settings,
       });
 
       // If reloading and status/season changed, recalculate modifiers
-      if (forceReload && oldWorldInfo && this.config.worldInfo) {
-        const statusChanged = oldWorldInfo.status !== this.config.worldInfo.status;
-        const seasonStatusChanged = oldWorldInfo.seasonStatus !== this.config.worldInfo.seasonStatus;
-        const seasonProgressChanged = oldWorldInfo.seasonProgress !== this.config.worldInfo.seasonProgress;
+      if (forceReload && oldWorldInfo && config.worldInfo) {
+        const statusChanged = oldWorldInfo.status !== config.worldInfo.status;
+        const seasonStatusChanged = oldWorldInfo.seasonStatus !== config.worldInfo.seasonStatus;
+        const seasonProgressChanged = oldWorldInfo.seasonProgress !== config.worldInfo.seasonProgress;
 
         if (statusChanged || seasonStatusChanged || seasonProgressChanged) {
           logger.info('WorldInfo status/season changed during reload, recalculating modifiers', {
@@ -111,7 +112,7 @@ export class ConfigService {
         }
       }
 
-      return this.config;
+      return config;
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
         error,

@@ -564,18 +564,20 @@ export class ShortcutService {
       continuous: true, // Mark as continuous hit during active shortcut
     };
 
-    // Calculate distance
-    const distance = Math.sqrt(
-      Math.pow(target.position.x - playerPosition.x, 2) +
-      Math.pow(target.position.y - playerPosition.y, 2) +
-      Math.pow(target.position.z - playerPosition.z, 2)
-    );
-    params.distance = parseFloat(distance.toFixed(2));
-    params.targetPosition = {
-      x: target.position.x,
-      y: target.position.y,
-      z: target.position.z,
-    };
+    // Calculate distance and target position (only if target has position)
+    if (target.type !== 'none') {
+      const distance = Math.sqrt(
+        Math.pow(target.position.x - playerPosition.x, 2) +
+        Math.pow(target.position.y - playerPosition.y, 2) +
+        Math.pow(target.position.z - playerPosition.z, 2)
+      );
+      params.distance = parseFloat(distance.toFixed(2));
+      params.targetPosition = {
+        x: target.position.x,
+        y: target.position.y,
+        z: target.position.z,
+      };
+    }
 
     // Send appropriate interaction
     if (target.type === 'entity') {

@@ -217,8 +217,8 @@ export class ClickInputHandler extends InputHandler {
 
     let targetPos: any = undefined;
     if (targetEntity) {
-      // ClientEntity has currentPosition, not position
-      targetPos = targetEntity.currentPosition || targetEntity.position;
+      // ClientEntity has currentPosition
+      targetPos = targetEntity.currentPosition;
     } else if (targetBlock) {
       targetPos = {
         x: targetBlock.block.position.x + 0.5,

@@ -1305,8 +1305,8 @@ export class PhysicsService {
     let isBlock = false;
 
     if (targetEntity) {
-      // ClientEntity has currentPosition, not position
-      const pos = targetEntity.currentPosition || targetEntity.position;
+      // ClientEntity has currentPosition
+      const pos = targetEntity.currentPosition;
       if (pos) {
         // Add +1.0 Y offset for entities (to aim at center/head height)
         targetPos = new Vector3(pos.x, pos.y + 1.0, pos.z);
@@ -1325,8 +1325,8 @@ export class PhysicsService {
     // Check if rotation or target changed
     const rotationChanged =
       !this.lastPlayerRotation ||
-      this.lastPlayerRotation.yaw !== rotation.yaw ||
-      this.lastPlayerRotation.pitch !== rotation.pitch;
+      this.lastPlayerRotation.yaw !== rotation.y ||
+      this.lastPlayerRotation.pitch !== rotation.x;
 
     const targetChanged =
       !this.lastTargetPosition ||
@@ -1335,17 +1335,17 @@ export class PhysicsService {
 
     if (rotationChanged || targetChanged) {
       // Update tracking
-      this.lastPlayerRotation = { yaw: rotation.yaw, pitch: rotation.pitch };
+      this.lastPlayerRotation = { yaw: rotation.y, pitch: rotation.x };
       this.lastTargetPosition = targetPos;
 
       // Emit event with player position and target
-      const playerPos = playerService.getPosition();
-
-      playerService.emit('player:direction', {
-        playerPos,
-        rotation,
-        targetPos,
-      });
+      // TODO: emit is private, need to implement public method or remove this feature
+      // const playerPos = playerService.getPosition();
+      // playerService.emit('player:direction', {
+      //   playerPos,
+      //   rotation,
+      //   targetPos,
+      // });
     }
   }
 }

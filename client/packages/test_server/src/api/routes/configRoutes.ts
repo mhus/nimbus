@@ -55,6 +55,65 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
   }
 
   /**
+   * Helper: Load player info from file
+   */
+  async function loadPlayerInfoFromFile(worldId: string): Promise<PlayerInfo> {
+    try {
+      const playerInfoPath = path.join(
+        process.cwd(),
+        'data',
+        'worlds',
+        worldId,
+        'playerinfo.json'
+      );
+
+      const data = await fs.readFile(playerInfoPath, 'utf-8');
+      return JSON.parse(data);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        // Return default player info if file doesn't exist
+        console.warn(`PlayerInfo file not found for world ${worldId}, returning defaults`);
+        return {
+          playerId: 'default-player',
+          displayName: 'Player',
+          stateValues: {} as any,
+          baseWalkSpeed: 5.0,
+          baseRunSpeed: 7.0,
+          baseUnderwaterSpeed: 3.0,
+          baseCrawlSpeed: 1.5,
+          baseRidingSpeed: 8.0,
+          baseJumpSpeed: 8.0,
+          effectiveWalkSpeed: 5.0,
+          effectiveRunSpeed: 7.0,
+          effectiveUnderwaterSpeed: 3.0,
+          effectiveCrawlSpeed: 1.5,
+          effectiveRidingSpeed: 8.0,
+          effectiveJumpSpeed: 8.0,
+          eyeHeight: 1.6,
+          dimensions: {
+            walk: { height: 2.0, width: 0.6, footprint: 0.3 },
+            sprint: { height: 2.0, width: 0.6, footprint: 0.3 },
+            crouch: { height: 1.0, width: 0.6, footprint: 0.3 },
+            swim: { height: 1.8, width: 0.6, footprint: 0.3 },
+            climb: { height: 1.8, width: 0.6, footprint: 0.3 },
+            fly: { height: 1.8, width: 0.6, footprint: 0.3 },
+            teleport: { height: 1.8, width: 0.6, footprint: 0.3 },
+          },
+          stealthRange: 8.0,
+          distanceNotifyReductionWalk: 0.0,
+          distanceNotifyReductionCrouch: 0.5,
+          selectionRadius: 5.0,
+          baseTurnSpeed: 0.003,
+          effectiveTurnSpeed: 0.003,
+          baseUnderwaterTurnSpeed: 0.002,
+          effectiveUnderwaterTurnSpeed: 0.002,
+        };
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Helper: Load player backpack from file
    */
   async function loadPlayerBackpackFromFile(worldId: string): Promise<PlayerBackpack> {
@@ -100,13 +159,16 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
       // Load settings from file
       const settings = await loadSettingsFromFile(worldId, clientType);
 
+      // Load player info from file
+      const playerInfo = await loadPlayerInfoFromFile(worldId);
+
       // Load player backpack from file
       const playerBackpack = await loadPlayerBackpackFromFile(worldId);
 
       // Build complete configuration
       const config: EngineConfiguration = {
         worldInfo: world.worldInfo,
-        playerInfo: world.playerInfo,
+        playerInfo,
         playerBackpack,
         settings,
       };
@@ -132,7 +194,8 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
         return;
       }
 
-      res.json(world.playerInfo);
+      const playerInfo = await loadPlayerInfoFromFile(worldId);
+      res.json(playerInfo);
     } catch (error: any) {
       console.error('Failed to load PlayerInfo:', error);
       res.status(500).json({ error: 'Failed to load PlayerInfo' });
