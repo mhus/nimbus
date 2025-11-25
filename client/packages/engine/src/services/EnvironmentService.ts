@@ -4,7 +4,7 @@
  * Handles lighting, sky, fog, and other environmental effects.
  */
 
-import { HemisphericLight, Vector3, Color3, Scene } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight, Vector3, Color3, Scene } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
@@ -43,7 +43,8 @@ export class EnvironmentService {
   private scene: Scene;
   private appContext: AppContext;
 
-  private light?: HemisphericLight;
+  private ambientLight?: HemisphericLight;
+  private sunLight?: DirectionalLight;
 
   // Wind parameters
   private windParameters: WindParameters;
@@ -116,17 +117,26 @@ export class EnvironmentService {
       // Set background color (light blue sky)
       this.scene.clearColor = new Color3(0.5, 0.7, 1.0).toColor4();
 
-      // Create hemispheric light
-      this.light = new HemisphericLight('environmentLight', new Vector3(0, 1, 0), this.scene);
+      // Create ambient hemispheric light
+      this.ambientLight = new HemisphericLight('ambientLight', new Vector3(0, 1, 0), this.scene);
 
-      // Set light properties
-      this.light.intensity = 1.0;
-      this.light.diffuse = new Color3(1, 1, 1); // White light
-      this.light.specular = new Color3(0, 0, 0); // No specular
-      this.light.groundColor = new Color3(0.3, 0.3, 0.3); // Dim ground light
+      // Set ambient light properties
+      this.ambientLight.intensity = 1.0;
+      this.ambientLight.diffuse = new Color3(1, 1, 1); // White light
+      this.ambientLight.specular = new Color3(0, 0, 0); // No specular
+      this.ambientLight.groundColor = new Color3(0.3, 0.3, 0.3); // Dim ground light
+
+      // Create sun directional light
+      this.sunLight = new DirectionalLight('sunLight', new Vector3(-1, -2, -1), this.scene);
+
+      // Set sun light properties
+      this.sunLight.intensity = 0.8;
+      this.sunLight.diffuse = new Color3(1, 0.95, 0.9); // Warm sunlight
+      this.sunLight.specular = new Color3(1, 1, 1); // White specular highlights
 
       logger.debug('Environment initialized', {
-        lightIntensity: this.light.intensity,
+        ambientLightIntensity: this.ambientLight.intensity,
+        sunLightIntensity: this.sunLight.intensity,
         backgroundColor: this.scene.clearColor,
       });
     } catch (error) {
@@ -135,31 +145,169 @@ export class EnvironmentService {
   }
 
   /**
-   * Get the main light
+   * Get the ambient light
    */
-  getLight(): HemisphericLight | undefined {
-    return this.light;
+  getAmbientLight(): HemisphericLight | undefined {
+    return this.ambientLight;
   }
 
   /**
-   * Set light intensity
+   * Get the sun light
+   */
+  getSunLight(): DirectionalLight | undefined {
+    return this.sunLight;
+  }
+
+  // ============================================
+  // Ambient Light Management
+  // ============================================
+
+  /**
+   * Set ambient light intensity
    *
    * @param intensity Light intensity (0-1 for normal, can go higher)
    */
-  setLightIntensity(intensity: number): void {
-    if (!this.light) {
-      logger.warn('Cannot set light intensity: light not initialized');
+  setAmbientLightIntensity(intensity: number): void {
+    if (!this.ambientLight) {
+      logger.warn('Cannot set ambient light intensity: light not initialized');
       return;
     }
 
-    this.light.intensity = intensity;
+    this.ambientLight.intensity = intensity;
+    logger.info('Ambient light intensity set', { intensity });
   }
 
   /**
-   * Get light intensity
+   * Get ambient light intensity
    */
-  getLightIntensity(): number {
-    return this.light?.intensity ?? 0;
+  getAmbientLightIntensity(): number {
+    return this.ambientLight?.intensity ?? 0;
+  }
+
+  /**
+   * Set ambient light specular color
+   *
+   * @param color Specular color
+   */
+  setAmbientLightSpecularColor(color: Color3): void {
+    if (!this.ambientLight) {
+      logger.warn('Cannot set ambient light specular color: light not initialized');
+      return;
+    }
+
+    this.ambientLight.specular = color;
+    logger.info('Ambient light specular color set', { color });
+  }
+
+  /**
+   * Set ambient light diffuse color
+   *
+   * @param color Diffuse color
+   */
+  setAmbientLightDiffuse(color: Color3): void {
+    if (!this.ambientLight) {
+      logger.warn('Cannot set ambient light diffuse color: light not initialized');
+      return;
+    }
+
+    this.ambientLight.diffuse = color;
+    logger.info('Ambient light diffuse color set', { color });
+  }
+
+  /**
+   * Set ambient light ground color
+   *
+   * @param color Ground color
+   */
+  setAmbientLightGroundColor(color: Color3): void {
+    if (!this.ambientLight) {
+      logger.warn('Cannot set ambient light ground color: light not initialized');
+      return;
+    }
+
+    this.ambientLight.groundColor = color;
+    logger.info('Ambient light ground color set', { color });
+  }
+
+  // ============================================
+  // Sun Light Management
+  // ============================================
+
+  /**
+   * Set sun light intensity
+   *
+   * @param intensity Light intensity (0-1 for normal, can go higher)
+   */
+  setSunLightIntensity(intensity: number): void {
+    if (!this.sunLight) {
+      logger.warn('Cannot set sun light intensity: light not initialized');
+      return;
+    }
+
+    this.sunLight.intensity = intensity;
+    logger.info('Sun light intensity set', { intensity });
+  }
+
+  /**
+   * Get sun light intensity
+   */
+  getSunLightIntensity(): number {
+    return this.sunLight?.intensity ?? 0;
+  }
+
+  /**
+   * Set sun light direction (vector will be normalized)
+   *
+   * @param x X component of direction
+   * @param y Y component of direction
+   * @param z Z component of direction
+   */
+  setSunLightDirection(x: number, y: number, z: number): void {
+    if (!this.sunLight) {
+      logger.warn('Cannot set sun light direction: light not initialized');
+      return;
+    }
+
+    const direction = new Vector3(x, y, z).normalize();
+    this.sunLight.direction = direction;
+    logger.info('Sun light direction set', { x: direction.x, y: direction.y, z: direction.z });
+  }
+
+  /**
+   * Get sun light direction
+   */
+  getSunLightDirection(): Vector3 {
+    return this.sunLight?.direction ?? new Vector3(0, -1, 0);
+  }
+
+  /**
+   * Set sun light diffuse color
+   *
+   * @param color Diffuse color
+   */
+  setSunLightDiffuse(color: Color3): void {
+    if (!this.sunLight) {
+      logger.warn('Cannot set sun light diffuse color: light not initialized');
+      return;
+    }
+
+    this.sunLight.diffuse = color;
+    logger.info('Sun light diffuse color set', { color });
+  }
+
+  /**
+   * Set sun light specular color
+   *
+   * @param color Specular color
+   */
+  setSunLightSpecularColor(color: Color3): void {
+    if (!this.sunLight) {
+      logger.warn('Cannot set sun light specular color: light not initialized');
+      return;
+    }
+
+    this.sunLight.specular = color;
+    logger.info('Sun light specular color set', { color });
   }
 
   /**
@@ -281,7 +429,8 @@ export class EnvironmentService {
    * Dispose environment
    */
   dispose(): void {
-    this.light?.dispose();
+    this.ambientLight?.dispose();
+    this.sunLight?.dispose();
     logger.info('Environment disposed');
   }
 }

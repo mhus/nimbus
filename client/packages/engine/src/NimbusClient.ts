@@ -90,6 +90,18 @@ import {
   WindSwayFactorCommand,
 } from './commands/wind';
 import {
+  AmbientLightIntensityCommand,
+  AmbientLightDiffuseCommand,
+  AmbientLightSpecularCommand,
+  AmbientLightGroundColorCommand,
+} from './commands/ambientLight';
+import {
+  SunLightIntensityCommand,
+  SunLightDirectionCommand,
+  SunLightDiffuseCommand,
+  SunLightSpecularCommand,
+} from './commands/sunLight';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -236,6 +248,18 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new WindStrengthCommand(appContext));
     commandService.registerHandler(new WindGustStrengthCommand(appContext));
     commandService.registerHandler(new WindSwayFactorCommand(appContext));
+
+    // Register ambient light commands
+    commandService.registerHandler(new AmbientLightIntensityCommand(appContext));
+    commandService.registerHandler(new AmbientLightDiffuseCommand(appContext));
+    commandService.registerHandler(new AmbientLightSpecularCommand(appContext));
+    commandService.registerHandler(new AmbientLightGroundColorCommand(appContext));
+
+    // Register sun light commands
+    commandService.registerHandler(new SunLightIntensityCommand(appContext));
+    commandService.registerHandler(new SunLightDirectionCommand(appContext));
+    commandService.registerHandler(new SunLightDiffuseCommand(appContext));
+    commandService.registerHandler(new SunLightSpecularCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));
