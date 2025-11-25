@@ -218,38 +218,6 @@ public class UniverseClientService extends BaseClientService {
         }
     }
 
-    public boolean checkRegionPublicKey(String regionName) {
-        if (!isConfigured() || !hasToken()) return false;
-        try {
-            String body = webClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/universe/user/keys")
-                            .queryParam("type", "REGION")
-                            .queryParam("kind", "PUBLIC")
-                            .queryParam("name", regionName)
-                            .build())
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(5))
-                    .onErrorResume(e -> {
-                        LOG.warn("Fehler checkRegionPublicKey('{}'): {}", regionName, e.toString());
-                        return Mono.empty();
-                    })
-                    .block();
-            if (body == null) return false;
-            boolean found = body.contains("\"keyId\":\"" + regionName + "\"");
-            if (found) {
-                LOG.info("Public Key für Region '{}' gefunden", regionName);
-            } else {
-                LOG.warn("Public Key für Region '{}' NICHT gefunden", regionName);
-            }
-            return found;
-        } catch (Exception e) {
-            LOG.warn("Exception checkRegionPublicKey('{}'): {}", regionName, e.toString());
-            return false;
-        }
-    }
-
     public Optional<String> login(String username, String password) {
         if (!isConfigured()) return Optional.empty();
         if (username == null || username.isBlank() || password == null || password.isBlank()) {
@@ -293,4 +261,5 @@ public class UniverseClientService extends BaseClientService {
             return Optional.empty();
         }
     }
+
 }

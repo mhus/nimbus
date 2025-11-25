@@ -1,5 +1,6 @@
 package de.mhus.nimbus.tools.demosetup;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -10,6 +11,7 @@ import java.time.Duration;
 public abstract class BaseClientService implements ClientService {
 
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
+    @Getter
     private final String baseUrl;
     protected final WebClient webClient;
 

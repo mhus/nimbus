@@ -1,6 +1,5 @@
 package de.mhus.nimbus.region;
 
-import de.mhus.nimbus.shared.SharedProperties;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -18,7 +17,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @ReflectiveScan(basePackages = {"de.mhus.nimbus.region", "de.mhus.nimbus.shared"})
 @ComponentScan(basePackages = {"de.mhus.nimbus.region", "de.mhus.nimbus.shared"})
 @EnableMongoRepositories(basePackages = {"de.mhus.nimbus.region", "de.mhus.nimbus.shared"})
-@EnableConfigurationProperties({RegionProperties.class, SharedProperties.class})
 @OpenAPIDefinition(info = @Info(title = "Universe API", version = "v1", description = "API for user, favorites and auth", contact = @Contact(name="Nimbus"), license = @License(name="Apache-2.0")))
 public class RegionApplication {
 

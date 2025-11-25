@@ -158,4 +158,24 @@ public class JwtService {
             return Optional.empty();
         }
     }
+
+    public String createTokenForRegion(String regionId) {
+        return createTokenWithPrivateKey(
+                KeyType.REGION,
+                KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN),
+                "region:" + regionId,
+                java.util.Map.of("region", regionId ),
+                java.time.Instant.now().plusSeconds(300)
+            );
+    }
+
+    public String createTokenForRegionServer(String regionServerId) {
+        return createTokenWithPrivateKey(
+                KeyType.REGION,
+                KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN),
+                "regionServer:" + regionServerId,
+                java.util.Map.of("regionServer", regionServerId ),
+                java.time.Instant.now().plusSeconds(300)
+        );
+    }
 }

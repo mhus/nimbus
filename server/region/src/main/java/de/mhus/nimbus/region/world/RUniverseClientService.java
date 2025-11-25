@@ -1,8 +1,13 @@
 package de.mhus.nimbus.region.world;
 
+import de.mhus.nimbus.region.RegionProperties;
 import de.mhus.nimbus.shared.dto.universe.URegionRequest;
 import de.mhus.nimbus.shared.dto.universe.URegionResponse;
 import de.mhus.nimbus.shared.security.FormattedKey;
+import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.security.KeyIntent;
+import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.shared.utils.RestTemplateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.LinkedHashMap;
@@ -32,18 +36,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RUniverseClientService {
 
-    private final RestTemplate restTemplate;
-
-    public record UniverseWorldDto(String id, String name, String description, String regionId, String worldId, String coordinates) {}
-
-    @Value("${universe.url}")
-    private String baseUrl; // konfigurierbar per Setter oder später aus Properties laden
-
-    private String base() { if (baseUrl == null || baseUrl.isBlank()) throw new IllegalStateException("Universe baseUrl not set"); return baseUrl.replaceAll("/+$", ""); }
+    private final JwtService jwtService;
+    private final RegionProperties regionProperties;
 
     public Optional<UniverseWorldDto> fetch(String regionId, String worldId) {
-        String url = base() + "/universe/region/" + encode(regionId) + "/world/" + encode(worldId);
+        String url = regionProperties.getUniverseBaseUrl() + "/universe/region/" + encode(regionId) + "/world/" + encode(worldId);
         try {
+            var restTemplate = RestTemplateUtil.create(jwtService.createTokenForRegion(regionId));
             @SuppressWarnings("unchecked") ResponseEntity<Map<String,Object>> resp = (ResponseEntity) restTemplate.getForEntity(URI.create(url), Map.class);
             if (resp.getStatusCode() == HttpStatus.OK && resp.getBody() != null) {
                 Map<String,Object> b = resp.getBody();
@@ -65,13 +64,14 @@ public class RUniverseClientService {
         if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId blank");
         if (worldId == null || worldId.isBlank()) throw new IllegalArgumentException("worldId blank");
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name blank");
-        String url = base() + "/universe/region/" + encode(regionId) + "/world/" + encode(worldId);
+        String url = regionProperties.getUniverseBaseUrl() + "/universe/region/" + encode(regionId) + "/world/" + encode(worldId);
         Map<String,Object> body = new LinkedHashMap<>();
         body.put("name", name);
         if (description != null) body.put("description", description);
         if (coordinates != null) body.put("coordinates", coordinates);
         try {
             var request = new org.springframework.http.HttpEntity<>(body, buildHeaders(null));
+            var restTemplate = RestTemplateUtil.create(jwtService.createTokenForRegion(regionId));
             @SuppressWarnings("unchecked") ResponseEntity<UniverseWorldDto> resp = restTemplate.postForEntity(url, request, UniverseWorldDto.class);
             if (resp.getStatusCode() == HttpStatus.CREATED && resp.getBody() != null) {
                 return resp.getBody();
@@ -83,12 +83,13 @@ public class RUniverseClientService {
     public boolean createRegion(String token, String name, String apiUrl, FormattedKey publicSignKey, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl blank");
-        String url = base() + "/universe/region";
+        String url = regionProperties.getUniverseBaseUrl() + "/universe/region";
         try {
-            var body = new URegionRequest(name, apiUrl, publicSignKey, maintainers);
+            var body = new URegionRequest(name, apiUrl, publicSignKey.toString(), maintainers);
             log.debug("Sending region request: {}", body);
             var request = new org.springframework.http.HttpEntity<>(body, buildHeaders(token));
             log.debug("POST to URL: {} with headers: {}", url, request.getHeaders());
+            var restTemplate = RestTemplateUtil.create(jwtService.createTokenForRegionServer(regionProperties.getRegionServerId()));
             ResponseEntity<URegionResponse> resp = restTemplate.postForEntity(url, request, URegionResponse.class);
             if (resp.getStatusCode() == HttpStatus.CREATED || resp.getStatusCode() == HttpStatus.OK) {
                 log.info("Universe Region Registrierung erfolgreich: name={} status={}", name, resp.getStatusCode());

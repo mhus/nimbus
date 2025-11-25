@@ -6,11 +6,10 @@ spring:
       uri: mongodb://root:example@localhost:27017/universe?authSource=admin
       database: universe
 
-nimbus:
-  universe:
-    security:
-      auth-expires-minutes: 15
-      refresh-expires-days: 30
+universe:
+  security:
+    auth-expires-minutes: 15
+    refresh-expires-days: 30
 
 server:
   port: 9040

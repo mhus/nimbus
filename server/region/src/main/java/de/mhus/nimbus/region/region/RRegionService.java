@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import de.mhus.nimbus.region.RegionProperties;
 import de.mhus.nimbus.region.world.RUniverseClientService;
 import de.mhus.nimbus.shared.security.FormattedKey;
 import de.mhus.nimbus.shared.security.JwtService;
@@ -31,15 +32,7 @@ public class RRegionService {
     private final KeyService keyService; // neu
     private final JwtService jwtService; // neu
     private final RUniverseClientService universeClientService; // neu
-
-    @Value("${universe.base-url:http://localhost:8080}")
-    private String universeBaseUrl;
-
-    @Value("${region.server.id}")
-    private String regionServerId;
-
-    @Value("${region.server.url}")
-    private String apiUrl;
+    private final RegionProperties regionProperties;
 
     public RRegion create(String name, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
@@ -58,16 +51,10 @@ public class RRegionService {
                 keys
             );
             // Register to the Universe with region server key
-            String token = jwtService.createTokenWithPrivateKey(
-                    KeyType.REGION,
-                    KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN),
-                    "region:" + regionServerId,
-                    java.util.Map.of("region", saved.getName()),
-                    java.time.Instant.now().plusSeconds(300)
-            );
+            String token = jwtService.createTokenForRegionServer(regionProperties.getRegionServerId());
              var publicKey = keys.getPublic();
             String publicBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
-            boolean registered = universeClientService.createRegion(token, saved.getName(), apiUrl,
+            boolean registered = universeClientService.createRegion(token, saved.getName(), regionProperties.getRegionServerUrl(),
                     FormattedKey.of(keyId, publicBase64).get(), maintainers);
             if (!registered) {
                 log.warn("Region '{}' konnte im Universe nicht registriert werden", saved.getName());

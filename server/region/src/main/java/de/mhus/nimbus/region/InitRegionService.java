@@ -18,13 +18,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class InitRegionService {
 
-    private final SKeyRepository keyRepository;
     private final KeyService keyService;
     private final RRegionService regionService;
-
-    @Value("${region.server.id}")
-    private String regionServerId;
-
+    private final RegionProperties regionProperties;
 
     @PostConstruct
     public void init() {
@@ -54,7 +50,7 @@ public class InitRegionService {
     }
 
     private void checkRegionServerJwtToken() {
-        var intent = KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN);
+        var intent = KeyIntent.of(regionProperties.getRegionServerId(), KeyIntent.REGION_SERVER_JWT_TOKEN);
         if (keyService.getLatestPrivateKey(KeyType.REGION, intent).isEmpty()) {
             var keys = keyService.createECCKeys();
             keyService.storeKeyPair(
@@ -62,7 +58,7 @@ public class InitRegionService {
                     KeyId.newOf(intent),
                     keys
             );
-            log.info("Created missing JWT token key for region server'{}'", regionServerId);
+            log.info("Created missing JWT token key for region server'{}'", regionProperties.getRegionServerId());
             ConfidentialUtil.save("regionServerPublicKey.txt", keys.getPublic());
         }
     }

@@ -1,7 +1,8 @@
 package de.mhus.nimbus.shared.security;
 
+import de.mhus.nimbus.shared.utils.RestTemplateUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -13,6 +14,7 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -21,11 +23,11 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class SharedClientService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
     public Optional<SharedKeyDto> createKey(String baseUrl,
+                                            String token,
                                             String type,
                                             String kind,
                                             String algorithm,
@@ -36,6 +38,7 @@ public class SharedClientService {
         try {
             var req = new CreateKeyRequest(type, kind, algorithm, name, base64Key, owner, intent);
             URI uri = URI.create(baseUrl + "/shared/key");
+            var restTemplate = RestTemplateUtil.create(token);
             ResponseEntity<SharedKeyDto> resp = restTemplate.postForEntity(uri, req, SharedKeyDto.class);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 log.info("Key angelegt: type={} kind={} owner={} intent={} id={}", type, kind, owner, intent, resp.getBody().getId());
@@ -48,9 +51,10 @@ public class SharedClientService {
         return Optional.empty();
     }
 
-    public Optional<SharedKeyDto> getKey(String baseUrl, String id) {
+    public Optional<SharedKeyDto> getKey(String baseUrl, String token, String id) {
         try {
             URI uri = URI.create(baseUrl + "/shared/key/" + id);
+            var restTemplate = RestTemplateUtil.create(token);
             ResponseEntity<SharedKeyDto> resp = restTemplate.getForEntity(uri, SharedKeyDto.class);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) return Optional.of(resp.getBody());
         } catch (Exception e) {
@@ -59,10 +63,11 @@ public class SharedClientService {
         return Optional.empty();
     }
 
-    public boolean updateKeyName(String baseUrl, String id, String newName) {
+    public boolean updateKeyName(String baseUrl, String token, String id, String newName) {
         try {
             URI uri = URI.create(baseUrl + "/shared/key/" + id);
             var body = java.util.Map.of("name", newName);
+            var restTemplate = RestTemplateUtil.create(token);
             restTemplate.put(uri, body);
             return true;
         } catch (Exception e) {
@@ -71,9 +76,10 @@ public class SharedClientService {
         }
     }
 
-    public boolean deleteKey(String baseUrl, String id) {
+    public boolean deleteKey(String baseUrl, String token, String id) {
         try {
             URI uri = URI.create(baseUrl + "/shared/key/" + id);
+            var restTemplate = RestTemplateUtil.create(token);
             restTemplate.delete(uri);
             return true;
         } catch (Exception e) {
@@ -82,16 +88,18 @@ public class SharedClientService {
         }
     }
 
-    public boolean existsKey(String baseUrl, String type, String kind, String owner, String intent) {
+    public boolean existsKey(String baseUrl, String token, String type, String kind, String owner, String intent) {
         try {
             URI uri = URI.create(baseUrl + "/shared/key/exists?type=" + type + "&kind=" + kind + "&owner=" + owner + "&intent=" + intent);
-            ResponseEntity<java.util.Map> resp = restTemplate.getForEntity(uri, java.util.Map.class);
+            var restTemplate = RestTemplateUtil.create(token);
+
+            ResponseEntity<Map> resp = restTemplate.getForEntity(uri, Map.class);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 Object val = resp.getBody().get("exists");
                 return Boolean.TRUE.equals(val) || (val instanceof Boolean b && b);
             }
         } catch (Exception e) {
-            log.debug("existsKey Fehler: {}", e.toString());
+            log.debug("existsKey Fehler", e);
         }
         return false;
     }
