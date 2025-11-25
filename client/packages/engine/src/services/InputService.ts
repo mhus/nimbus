@@ -186,30 +186,52 @@ export class InputService {
   /**
    * Propagates position/target updates from active shortcuts to ScrawlService.
    * Called each frame after handlers have been updated.
+   *
+   * Uses TargetingService to dynamically resolve current targets based on
+   * each shortcut's targetingMode.
    */
   private updateActiveExecutors(): void {
     const shortcutService = this.appContext.services.shortcut;
     const scrawlService = this.appContext.services.scrawl;
+    const playerService = this.appContext.services.player;
+    const targetingService = this.appContext.services.targeting;
 
-    if (!shortcutService || !scrawlService) {
+    if (!shortcutService || !scrawlService || !playerService || !targetingService) {
       return;
     }
 
+    // Get current player position
+    const playerPos = playerService.getPosition();
+
     // For each active shortcut, update its executor parameters
     for (const shortcut of shortcutService.getActiveShortcuts()) {
-      if (shortcut.lastPlayerPos) {
-        scrawlService.updateExecutorParameter(
-          shortcut.executorId,
-          'playerPos',
-          shortcut.lastPlayerPos
-        );
-      }
+      // Update player position (always)
+      scrawlService.updateExecutorParameter(
+        shortcut.executorId,
+        'playerPos',
+        playerPos
+      );
 
-      if (shortcut.lastTargetPos) {
+      // Resolve current target using shortcut's targeting mode
+      const currentTarget = targetingService.resolveTarget(shortcut.targetingMode);
+
+      if (currentTarget.type !== 'none') {
+        // Create serializable targeting context
+        const targetingContext = targetingService.toSerializableContext(
+          shortcut.targetingMode,
+          currentTarget
+        );
+
+        // Update target position with targeting context
         scrawlService.updateExecutorParameter(
           shortcut.executorId,
           'targetPos',
-          shortcut.lastTargetPos
+          {
+            x: currentTarget.position.x,
+            y: currentTarget.position.y,
+            z: currentTarget.position.z,
+          },
+          targetingContext
         );
       }
     }
