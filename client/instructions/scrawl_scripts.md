@@ -2859,6 +2859,10 @@ selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> ser
 [ ] Events werden richtig gefeuert
 [ ] Effekte werden remote richtig abgespielt
 
+> Wichtig, targeting soll nur im  INTERACTIVE Mode beginnen. das ist dem modus mit dem der Player arbeitet. Andere autoModi sind fuer den Editor, der editor benoetigt diese zum editieren, nicht fuer shortcuts. Nur der  
+  INTERACTIVE Mode ist zum spielen gedacht. auch wenn jetzt nicht unbedingt mehr ein ineractives element gefunden werden muss zum starten des shortcuts.
+
+
 [x] Command ShortcutInfo erstellt (genaue abfrage eines shortcut effects)
 
 [x] Ein aktueller Fall der aufgetreten ist:
