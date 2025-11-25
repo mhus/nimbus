@@ -1,1 +1,0 @@
-- Wenn debuging im focus ausfgegeben werden soll, dann immer log.info() nutzen, da log.debug() zu viel ausgabe ist und so besser im focus debugt werden kann.
