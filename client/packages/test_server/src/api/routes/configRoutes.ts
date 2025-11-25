@@ -16,6 +16,7 @@ import type {
   PlayerBackpack,
   Settings,
 } from '@nimbus/shared';
+import { DEFAULT_STATE_VALUES } from '@nimbus/shared';
 import type { WorldManager } from '../../world/WorldManager';
 
 /**
@@ -76,7 +77,7 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
         return {
           playerId: 'default-player',
           displayName: 'Player',
-          stateValues: {} as any,
+          stateValues: DEFAULT_STATE_VALUES,
           baseWalkSpeed: 5.0,
           baseRunSpeed: 7.0,
           baseUnderwaterSpeed: 3.0,
