@@ -1,6 +1,5 @@
 package de.mhus.nimbus.world.editor;
 
-import de.mhus.nimbus.shared.SharedProperties;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -18,7 +17,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableMongoAuditing
 @ReflectiveScan(basePackages = {"de.mhus.nimbus.world.editor","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
 @EnableMongoRepositories(basePackages = {"de.mhus.nimbus.world.editor","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
-@EnableConfigurationProperties({SharedProperties.class})
 @OpenAPIDefinition(info = @Info(title = "World Editor API", version = "v1", description = "API for world editor", contact = @Contact(name="Nimbus"), license = @License(name="Apache-2.0")))
 @SpringBootApplication
 @ConfigurationPropertiesScan
