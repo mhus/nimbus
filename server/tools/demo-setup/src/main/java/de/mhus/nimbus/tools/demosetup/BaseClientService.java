@@ -46,11 +46,8 @@ public abstract class BaseClientService implements ClientService {
 
     @Override
     public boolean check() {
-        // Default: versuche /actuator/health dann /health dann Root
         if (!isConfigured()) return false;
-        if (getHealth("/actuator/health")) return true;
-        if (getHealth("/health")) return true;
-        return getHealth("/");
+        return getHealth("/actuator/health");
     }
 }
 

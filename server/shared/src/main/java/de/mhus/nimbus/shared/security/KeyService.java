@@ -204,23 +204,21 @@ public class KeyService {
         repository.deleteAllByTypeAndKindAndOwnerAndIntent(keyType.name(), KeyKind.SECRET.name(), intent.owner(), intent.intent());
     }
 
-    public void storePublicKey(KeyType type, String name, String publicKey) {
-        if (type == null || name == null || name.isBlank() || publicKey == null || publicKey.isBlank()) {
+    public void storePublicKey(KeyType type, FormattedKey formattedKey) {
+        storePublicKey(type, formattedKey.getKeyId(), formattedKey.getKey());
+    }
+
+    public void storePublicKey(KeyType type, KeyId keyId, String publicKey) {
+        if (type == null || publicKey == null || publicKey.isBlank()) {
             log.warn("storePublicKey: ungültige Parameter (type/name/publicKey)" );
             throw new IllegalArgumentException("Ungültige Parameter für storePublicKey");
         }
-        Optional<KeyId> keyIdOpt = parseKeyId(name);
-        if (keyIdOpt.isEmpty()) {
-            log.warn("storePublicKey: Name '{}' nicht im Format owner:intent:id", name);
-            throw new IllegalArgumentException("Name nicht im Format owner:intent:id: " + name);
-        }
-        KeyId keyId = keyIdOpt.get();
         String ownerStr = keyId.owner();
         String intentStr = keyId.intent();
         // Existenz prüfen
         if (repository.findByTypeAndKindAndOwnerAndKeyId(type.name(), KeyKind.PUBLIC.name(), ownerStr, keyId.id()).isPresent()) {
             log.warn("storePublicKey: Public Key existiert bereits type={} owner={} intent={} keyId={}", type, ownerStr, intentStr, keyId.id());
-            throw new IllegalStateException("Public Key existiert bereits für " + name);
+            throw new IllegalStateException("Public Key existiert bereits für " + keyId);
         }
         String trimmed = publicKey.trim();
         String base64;

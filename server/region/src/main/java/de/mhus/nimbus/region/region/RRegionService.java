@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import de.mhus.nimbus.region.world.RUniverseClientService;
+import de.mhus.nimbus.shared.security.FormattedKey;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyId;
 import lombok.RequiredArgsConstructor;
@@ -64,9 +65,10 @@ public class RRegionService {
                     java.util.Map.of("region", saved.getName()),
                     java.time.Instant.now().plusSeconds(300)
             );
-            var publicKey = keys.getPublic();
+             var publicKey = keys.getPublic();
             String publicBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
-            boolean registered = universeClientService.createRegion(token, saved.getName(), apiUrl, publicBase64, maintainers);
+            boolean registered = universeClientService.createRegion(token, saved.getName(), apiUrl,
+                    FormattedKey.of(keyId, publicBase64).get(), maintainers);
             if (!registered) {
                 log.warn("Region '{}' konnte im Universe nicht registriert werden", saved.getName());
             } else {

@@ -6,6 +6,7 @@ import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import de.mhus.nimbus.universe.security.Role;
 import de.mhus.nimbus.shared.user.UniverseRoles;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,19 +23,15 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(URegionController.BASE_PATH)
-@SecurityRequirement(name = "bearerAuth")
+//@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "URegion", description = "Manage regions")
+@RequiredArgsConstructor
 public class URegionController {
 
     public static final String BASE_PATH = "/universe/region";
 
     private final URegionService service;
     private final RequestUserHolder userHolder;
-
-    public URegionController(URegionService service, RequestUserHolder userHolder) {
-        this.service = service;
-        this.userHolder = userHolder;
-    }
 
     private URegionResponse toResponse(URegion q) {
         // Maintainer Set -> List
@@ -83,10 +80,10 @@ public class URegionController {
     @Operation(summary = "Create Region")
     @ApiResponses({@ApiResponse(responseCode = "201", description = "Created"), @ApiResponse(responseCode = "403", description = "Forbidden"), @ApiResponse(responseCode = "400", description = "Validation error")})
     @PostMapping
-    @Role({UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+//    @Role({UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
     public ResponseEntity<URegionResponse> create(@RequestBody URegionRequest req) {
-        if (current()==null) return ResponseEntity.status(401).build();
-        if (!canCreateAsMaintainer(req.maintainers())) return ResponseEntity.status(403).build();
+//        if (current()==null) return ResponseEntity.status(401).build();
+//        if (!canCreateAsMaintainer(req.maintainers())) return ResponseEntity.status(403).build();
         URegion q = service.create(req.name(), req.apiUrl(), req.maintainers(), req.publicSignKey());
         return ResponseEntity.created(URI.create(BASE_PATH + "/" + q.getId())).body(toResponse(q));
     }

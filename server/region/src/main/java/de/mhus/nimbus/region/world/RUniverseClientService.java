@@ -2,6 +2,7 @@ package de.mhus.nimbus.region.world;
 
 import de.mhus.nimbus.shared.dto.universe.URegionRequest;
 import de.mhus.nimbus.shared.dto.universe.URegionResponse;
+import de.mhus.nimbus.shared.security.FormattedKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,10 +80,10 @@ public class RUniverseClientService {
         } catch (RestClientException e) { throw new RuntimeException("Universe world create failed: " + e.getMessage(), e); }
     }
 
-    public boolean createRegion(String token, String name, String apiUrl, String publicSignKey, String maintainers) {
+    public boolean createRegion(String token, String name, String apiUrl, FormattedKey publicSignKey, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl blank");
-        String url = base() + "/universe/region/" + encode(name);
+        String url = base() + "/universe/region";
         try {
             var body = new URegionRequest(name, apiUrl, publicSignKey, maintainers);
             log.debug("Sending region request: {}", body);

@@ -2,6 +2,7 @@ package de.mhus.nimbus.tools.demosetup;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.shared.security.FormattedKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -164,7 +165,7 @@ public class UniverseClientService extends BaseClientService {
         }
     }
 
-    public boolean createRegion(String name, String apiUrl, String publicSignKey) {
+    public boolean createRegion(String name, String apiUrl, FormattedKey publicSignKey) {
         if (!isConfigured() || !hasToken()) return false;
         try {
             String maintainers = "admin"; // Standard: Admin als Maintainer
@@ -200,7 +201,7 @@ public class UniverseClientService extends BaseClientService {
         }
     }
 
-    public void ensureRegion(String name, String apiUrl, String publicSignKey) {
+    public void ensureRegion(String name, String apiUrl, FormattedKey publicSignKey) {
         if (!isConfigured()) {
             LOG.warn("Universe nicht konfiguriert - kann Region '{}' nicht prüfen", name);
             return;

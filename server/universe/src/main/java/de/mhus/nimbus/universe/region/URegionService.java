@@ -3,6 +3,9 @@ package de.mhus.nimbus.universe.region;
 import java.util.List;
 import java.util.Optional;
 
+import de.mhus.nimbus.shared.security.FormattedKey;
+import de.mhus.nimbus.shared.security.KeyId;
+import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
@@ -26,7 +29,10 @@ public class URegionService {
         if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
         URegion q = new URegion(name, apiUrl);
         q.setMaintainers(maintainersCsv); // CSV normalisieren
-        keyService.storePublicKey(KeyType.REGION, name, publicSignKey);
+        var formattedKey = FormattedKey.of(publicSignKey).orElseGet(
+                () -> FormattedKey.of(KeyId.newOf(KeyIntent.of(name, KeyIntent.REGION_JWT_TOKEN)), publicSignKey).get()
+        );
+        keyService.storePublicKey(KeyType.REGION, formattedKey);
         return repository.save(q);
     }
 

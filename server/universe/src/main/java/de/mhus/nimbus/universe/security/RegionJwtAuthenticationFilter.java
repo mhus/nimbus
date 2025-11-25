@@ -30,7 +30,8 @@ import java.util.UUID;
  @RequiredArgsConstructor
 public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String BASE_PREFIX = "/universe/region/";
+    private static final String BASE_PREFIX1 = "/universe/region";
+    private static final String BASE_PREFIX2 = BASE_PREFIX1 + "/";
 
     private final JwtService jwtService;
     private final UniverseProperties jwtProperties;
@@ -51,15 +52,28 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String regionId = extractRegionId(path);
-        if (regionId == null || regionId.isBlank()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
         String auth = request.getHeader("Authorization");
         if (auth == null || !auth.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        var token = auth.substring(7).trim();
+
+        // validate token from region server key
+        if ("POST".equalsIgnoreCase(request.getMethod()) && path.equals("/universe/region")) {
+            try {
+                var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN));
+                if (claims.isPresent()) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+            } catch (Exception ignore) {}
+        }
+
+        String regionId = extractRegionId(path);
+        if (regionId == null || regionId.isBlank()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
@@ -68,18 +82,6 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
         if (!region.isPresent() || !region.get().isEnabled()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
-        }
-        var token = auth.substring(7).trim();
-
-        // validate token from region server key
-        if ("POST".equalsIgnoreCase(request.getMethod()) && path.matches("/universe/region/region/[^/]+/?")) {
-            try {
-                var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN));
-                if (claims.isPresent()) {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-            } catch (Exception ignore) {}
         }
 
         // validate token
@@ -93,13 +95,14 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean applies(String path) {
-        return path != null && path.startsWith(BASE_PREFIX);
+        return path != null &&
+                (path.equals(BASE_PREFIX1) || path.startsWith(BASE_PREFIX2));
     }
 
     private String extractRegionId(String path) {
         // erwartet Pfad wie: /universe/region/{regionId}/...
-        if (path == null) return null;
-        String rest = path.substring(BASE_PREFIX.length());
+        if (path == null || !path.startsWith(BASE_PREFIX2)) return null;
+        String rest = path.substring(BASE_PREFIX2.length());
         int slash = rest.indexOf('/');
         if (slash < 0) return rest; // nur regionId vorhanden
         return rest.substring(0, slash);
