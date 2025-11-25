@@ -1963,33 +1963,45 @@ selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> ser
   - 'ef.p.u' events um die angepassten targets zu anderen clients zu senden
   - Block interaction / Entity interaction
 
-### Implementation Status: ✅ COMPLETED (2025-11-25)
+### Implementation Status: ✅ COMPLETED & TESTED (2025-11-25)
 
 **Implementierte Features:**
 1. ✅ `actionTargeting` Parameter in ItemModifier (ENTITY/BLOCK/BOTH/GROUND/ALL, Default: ALL)
 2. ✅ TargetingService mit Strategy Pattern für alle Modi
 3. ✅ Dual Targeting: Server Interaction (BOTH) vs Visual Effects (actionTargeting)
 4. ✅ Extended ef.p.u Messages mit targeting context für Multiplayer
-5. ✅ Kontinuierliche Updates (alle 100ms) mit dynamischer Target-Auflösung
-6. ✅ ShortcutInfoCommand für Debugging
+5. ✅ Kontinuierliche Updates (60fps via InputService) mit dynamischer Target-Auflösung
+6. ✅ ShortcutInfoCommand für Debugging (JSON output)
+7. ✅ AIR Block Support - funktioniert auch von AIR aus
+8. ✅ Ground target objects mit position für Effects
+
+**Getestete Modi:**
+- ✅ ALL: Funktioniert mit Entity, Block, und AIR position
+- ✅ GROUND: Funktioniert mit Block raycast
+- Weitere Tests empfohlen: ENTITY, BLOCK, BOTH
+
+**Update-Mechanismus:**
+- InputService.updateActiveExecutors() - 60fps lokale Updates (LOKAL)
+- ShortcutService.sendActiveShortcutUpdatesToServer() - 100ms Multiplayer Sync (ef.p.u)
+- Beide nutzen TargetingService für dynamische Target-Auflösung
 
 **Neue/Geänderte Files:**
 - `packages/shared/src/types/ItemModifier.ts` - actionTargeting field
 - `packages/shared/src/types/TargetingTypes.ts` - NEW
 - `packages/shared/src/network/messages/EffectParameterUpdateMessage.ts` - targeting context
-- `packages/engine/src/services/TargetingService.ts` - NEW
-- `packages/engine/src/services/ShortcutService.ts` - Dual targeting resolution
+- `packages/engine/src/services/TargetingService.ts` - NEW (mit Debug-Logging)
+- `packages/engine/src/services/ShortcutService.ts` - Dual targeting, targetingMode tracking
 - `packages/engine/src/services/ItemService.ts` - targetingMode weitergabe
+- `packages/engine/src/services/InputService.ts` - TargetingService integration (60fps updates)
 - `packages/engine/src/services/NetworkService.ts` - targeting parameter
 - `packages/engine/src/scrawl/ScrawlExecutor.ts` - targeting context handling
-- `packages/engine/src/commands/ShortcutInfoCommand.ts` - NEW
+- `packages/engine/src/input/handlers/ShortcutInputHandler.ts` - Simplified (no-op onUpdate)
+- `packages/engine/src/input/handlers/ClickInputHandler.ts` - INTERACTIVE mode check
+- `packages/engine/src/commands/ShortcutInfoCommand.ts` - NEW (JSON output)
 - `packages/engine/src/AppContext.ts` - TargetingService registration
 - `packages/engine/src/NimbusClient.ts` - Service initialization
 - `packages/test_server/src/NimbusServer.ts` - targeting logging
-
-**Known Issues (Bugfixing Phase):**
-- Effect bewegt sich nicht frei (beam snapt auf initial target)
-- Zu debuggen: effectId, onParameterChanged(), ef.p.u frequency
+- `packages/shared/src/dto/RegionCharacterResponse.ts` - Fixed import
 
 ```text
  Implementation Plan: Dynamic Fire ohne direktes Ziel
@@ -2855,7 +2867,7 @@ selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> ser
 [x] Phase 5: ScrawlExecutor Extension
 [x] Phase 6: AppContext Registration
 
-[ ] Visuell umgesetzt
+[x] Visuell umgesetzt
 [ ] Events werden richtig gefeuert
 [ ] Effekte werden remote richtig abgespielt
 
