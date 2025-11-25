@@ -77,6 +77,7 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
         return {
           playerId: 'default-player',
           displayName: 'Player',
+          thirdPersonModelId: 'wizard1',
           stateValues: DEFAULT_STATE_VALUES,
           baseWalkSpeed: 5.0,
           baseRunSpeed: 7.0,
