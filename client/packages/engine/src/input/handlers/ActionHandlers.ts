@@ -6,7 +6,9 @@
 
 import { InputHandler } from '../InputHandler';
 import type { PlayerService } from '../../services/PlayerService';
-import { PlayerMovementState } from '@nimbus/shared';
+import { PlayerMovementState, getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ActionHandlers');
 
 /**
  * Jump Handler
@@ -91,6 +93,38 @@ export class ToggleViewModeHandler extends InputHandler {
   protected onActivate(value: number): void {
     // Toggle is a discrete action, execute immediately
     this.playerService.toggleViewMode();
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}
+
+/**
+ * Toggle Fullscreen Handler (F6)
+ * Toggles browser fullscreen mode
+ */
+export class ToggleFullscreenHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    try {
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        document.documentElement.requestFullscreen().catch(err => {
+          logger.error('Failed to enter fullscreen:', err);
+        });
+      } else {
+        // Exit fullscreen
+        document.exitFullscreen().catch(err => {
+          logger.error('Failed to exit fullscreen:', err);
+        });
+      }
+    } catch (error) {
+      logger.error('Fullscreen toggle error:', error);
+    }
   }
 
   protected onDeactivate(): void {
