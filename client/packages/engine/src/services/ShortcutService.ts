@@ -403,8 +403,11 @@ export class ShortcutService {
   /**
    * Send position updates for all active shortcuts to server
    *
+   * Uses TargetingService to resolve current targets and send full targeting context
+   * to remote clients via ef.p.u messages.
+   *
    * Only sends if:
-   * - Shortcut has position data (lastPlayerPos, lastTargetPos)
+   * - TargetingService can resolve a target
    * - NetworkService is available
    * - ScrawlService has effectId for the executor
    */
@@ -415,9 +418,10 @@ export class ShortcutService {
 
     const networkService = this.appContext.services.network;
     const scrawlService = this.appContext.services.scrawl;
+    const targetingService = this.appContext.services.targeting;
 
-    if (!networkService || !scrawlService) {
-      logger.warn('NetworkService or ScrawlService not available for server updates');
+    if (!networkService || !scrawlService || !targetingService) {
+      logger.warn('Required services not available for server updates');
       return;
     }
 
@@ -425,16 +429,6 @@ export class ShortcutService {
     let skippedCount = 0;
 
     for (const shortcut of this.activeShortcuts.values()) {
-      // Only send if we have target position data
-      if (!shortcut.lastTargetPos) {
-        logger.info('Skipping shortcut update - no target position', {
-          shortcutNr: shortcut.shortcutNr,
-          hasPlayerPos: !!shortcut.lastPlayerPos,
-        });
-        skippedCount++;
-        continue;
-      }
-
       // Get effectId for this executor
       const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
       if (!effectId) {
@@ -447,18 +441,40 @@ export class ShortcutService {
         continue;
       }
 
-      // Send position update to server
+      // Resolve current target using TargetingService (use ALL mode for continuous updates)
+      const currentTarget = targetingService.resolveTarget('ALL');
+
+      if (currentTarget.type === 'none') {
+        logger.info('Skipping shortcut update - no target position', {
+          shortcutNr: shortcut.shortcutNr,
+        });
+        skippedCount++;
+        continue;
+      }
+
+      // Send position update to server with targeting context
       try {
+        const targetPosition = {
+          x: currentTarget.position.x,
+          y: currentTarget.position.y,
+          z: currentTarget.position.z,
+        };
+
+        // Create serializable targeting context
+        const targetingContext = targetingService.toSerializableContext('ALL', currentTarget);
+
         networkService.sendEffectParameterUpdate(
           effectId,
           'targetPos',
-          shortcut.lastTargetPos
+          targetPosition,
+          targetingContext
         );
 
         logger.info('Shortcut position update sent to server', {
           shortcutNr: shortcut.shortcutNr,
           effectId,
-          targetPos: shortcut.lastTargetPos,
+          targetType: currentTarget.type,
+          hasTargetingContext: !!targetingContext,
         });
         sentCount++;
       } catch (error) {

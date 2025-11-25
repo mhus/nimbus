@@ -714,6 +714,10 @@ class NimbusServer {
         username: session.username,
         effectId: data?.effectId,
         paramName: data?.paramName,
+        hasValue: data?.value !== undefined,
+        hasTargeting: !!data?.targeting,
+        targetingMode: data?.targeting?.mode,
+        targetingType: data?.targeting?.targetType,
       });
 
       if (!data?.effectId || !data?.paramName) {

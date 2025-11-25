@@ -289,6 +289,55 @@ export class TargetingService {
   }
 
   /**
+   * Convert ResolvedTarget to SerializableTargetingContext for network transmission
+   *
+   * @param mode Targeting mode used
+   * @param target Resolved target
+   * @returns Serializable targeting context for ef.p.u messages
+   */
+  toSerializableContext(
+    mode: TargetingMode,
+    target: ResolvedTarget
+  ): import('@nimbus/shared').SerializableTargetingContext | undefined {
+    if (target.type === 'none') {
+      return undefined; // No targeting context needed
+    }
+
+    const position = {
+      x: target.position.x,
+      y: target.position.y,
+      z: target.position.z,
+    };
+
+    switch (target.type) {
+      case 'entity':
+        return {
+          mode,
+          targetType: 'entity',
+          entityId: target.entity.id,
+          position,
+        };
+      case 'block':
+        return {
+          mode,
+          targetType: 'block',
+          blockPosition: {
+            x: target.block.block.position.x,
+            y: target.block.block.position.y,
+            z: target.block.block.position.z,
+          },
+          position,
+        };
+      case 'ground':
+        return {
+          mode,
+          targetType: 'ground',
+          position,
+        };
+    }
+  }
+
+  /**
    * Dispose service (currently no cleanup needed)
    */
   dispose(): void {
