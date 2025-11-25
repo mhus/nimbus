@@ -1963,6 +1963,34 @@ selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> ser
   - 'ef.p.u' events um die angepassten targets zu anderen clients zu senden
   - Block interaction / Entity interaction
 
+### Implementation Status: ✅ COMPLETED (2025-11-25)
+
+**Implementierte Features:**
+1. ✅ `actionTargeting` Parameter in ItemModifier (ENTITY/BLOCK/BOTH/GROUND/ALL, Default: ALL)
+2. ✅ TargetingService mit Strategy Pattern für alle Modi
+3. ✅ Dual Targeting: Server Interaction (BOTH) vs Visual Effects (actionTargeting)
+4. ✅ Extended ef.p.u Messages mit targeting context für Multiplayer
+5. ✅ Kontinuierliche Updates (alle 100ms) mit dynamischer Target-Auflösung
+6. ✅ ShortcutInfoCommand für Debugging
+
+**Neue/Geänderte Files:**
+- `packages/shared/src/types/ItemModifier.ts` - actionTargeting field
+- `packages/shared/src/types/TargetingTypes.ts` - NEW
+- `packages/shared/src/network/messages/EffectParameterUpdateMessage.ts` - targeting context
+- `packages/engine/src/services/TargetingService.ts` - NEW
+- `packages/engine/src/services/ShortcutService.ts` - Dual targeting resolution
+- `packages/engine/src/services/ItemService.ts` - targetingMode weitergabe
+- `packages/engine/src/services/NetworkService.ts` - targeting parameter
+- `packages/engine/src/scrawl/ScrawlExecutor.ts` - targeting context handling
+- `packages/engine/src/commands/ShortcutInfoCommand.ts` - NEW
+- `packages/engine/src/AppContext.ts` - TargetingService registration
+- `packages/engine/src/NimbusClient.ts` - Service initialization
+- `packages/test_server/src/NimbusServer.ts` - targeting logging
+
+**Known Issues (Bugfixing Phase):**
+- Effect bewegt sich nicht frei (beam snapt auf initial target)
+- Zu debuggen: effectId, onParameterChanged(), ef.p.u frequency
+
 ```text
  Implementation Plan: Dynamic Fire ohne direktes Ziel
 
@@ -2825,12 +2853,13 @@ selektierten Zielen werden. Der transport der darstellung (ef.p.u 'client -> ser
 [x] Phase 3: ShortcutService Integration
 [x] Phase 4: NetworkService Extension
 [x] Phase 5: ScrawlExecutor Extension
-[ ] Phase 6: AppContext Registration
+[x] Phase 6: AppContext Registration
 
 [ ] Visuell umgesetzt
 [ ] Events werden richtig gefeuert
 [ ] Effekte werden remote richtig abgespielt
 
+[x] Command ShortcutInfo erstellt (genaue abfrage eines shortcut effects)
 
 [x] Ein aktueller Fall der aufgetreten ist:
 "Der ClickHandler ist NICHT in der this.handlers Liste! Das ist das Problem - er wird nicht bei InputService.update() 

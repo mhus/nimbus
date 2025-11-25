@@ -59,7 +59,17 @@ export class TargetingService {
       return { type: 'none' };
     }
 
-    // Get current selections from SelectService
+    // For GROUND and ALL modes, we need to perform fresh raycasts
+    // rather than relying on SelectService's current selection
+    if (mode === 'GROUND') {
+      return this.resolveGround();
+    }
+
+    if (mode === 'ALL') {
+      return this.resolveAllDynamic();
+    }
+
+    // For ENTITY, BLOCK, BOTH - use current selection
     const selectedEntity = selectService.getCurrentSelectedEntity();
     const selectedBlock = selectService.getCurrentSelectedBlock();
 
@@ -183,10 +193,10 @@ export class TargetingService {
   }
 
   /**
-   * ALL strategy: Use SelectService with ALL mode
+   * ALL strategy (from current selection): Use current selection first
    *
-   * Calls SelectService.getSelectedBlockFromPlayer() with ALL mode.
-   * This can return any block or AIR position - it's about the position.
+   * Used when we want to use the current auto-selected entity/block.
+   * Fallback to resolveAllDynamic() if no current selection.
    */
   private resolveAll(
     entity: ClientEntity | null,
@@ -196,13 +206,31 @@ export class TargetingService {
     if (entity) {
       return this.resolveEntity(entity);
     }
+    if (block) {
+      return this.resolveBlock(block);
+    }
 
+    // No current selection - do fresh raycast
+    return this.resolveAllDynamic();
+  }
+
+  /**
+   * ALL strategy (dynamic): Always perform fresh raycast with ALL mode
+   *
+   * Called for continuous updates to get real-time cursor position.
+   * Uses SelectService.getSelectedBlockFromPlayer() with ALL mode.
+   * This can return any block or AIR position - it's about the position.
+   */
+  private resolveAllDynamic(): ResolvedTarget {
     const selectService = this.appContext.services.select;
     if (!selectService) {
-      if (block) {
-        return this.resolveBlock(block);
-      }
       return { type: 'none' };
+    }
+
+    // Always check entity first (from current auto-selection)
+    const selectedEntity = selectService.getCurrentSelectedEntity();
+    if (selectedEntity) {
+      return this.resolveEntity(selectedEntity);
     }
 
     // Use SelectService with ALL mode - can return block or AIR position
