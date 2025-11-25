@@ -1,6 +1,7 @@
 package de.mhus.nimbus.tools.demosetup;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -8,16 +9,17 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
+@Slf4j
 public abstract class BaseClientService implements ClientService {
 
-    protected final Logger LOG = LoggerFactory.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     @Getter
     private final String baseUrl;
     protected final WebClient webClient;
 
     protected BaseClientService(String baseUrl) {
-        this.baseUrl = baseUrl != null && !baseUrl.isBlank() ? baseUrl.trim() : null;
-        this.webClient = WebClient.builder().baseUrl(this.baseUrl == null ? "http://localhost" : this.baseUrl).build();
+        this.baseUrl = baseUrl;
+        this.webClient = WebClient.builder().baseUrl(this.baseUrl).build();
     }
 
     @Override
@@ -35,13 +37,13 @@ public abstract class BaseClientService implements ClientService {
                     .timeout(Duration.ofSeconds(5))
                     .map(r -> r.getStatusCode().is2xxSuccessful())
                     .onErrorResume(e -> {
-                        LOG.error("Fehler beim Health-Check {}: {}", path, e.toString());
+                        log.error("Fehler beim Health-Check {}: {}", path, e.toString());
                         return Mono.just(false);
                     })
                     .blockOptional()
                     .orElse(false);
         } catch (Exception e) {
-            LOG.error("Exception beim Aufruf {}: {}", path, e.toString());
+            log.error("Exception beim Aufruf {}: {}", path, e.toString());
             return false;
         }
     }

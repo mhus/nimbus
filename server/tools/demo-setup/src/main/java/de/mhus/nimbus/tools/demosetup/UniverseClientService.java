@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -35,12 +34,12 @@ public class UniverseClientService extends BaseClientService {
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(5))
                     .onErrorResume(e -> {
-                        LOG.error("Admin Login Fehler: {}", e.toString());
+                        log.error("Admin Login Fehler: {}", e.toString());
                         return Mono.empty();
                     });
             String body = mono.block();
             if (body == null) {
-                LOG.error("Admin Login Antwort leer");
+                log.error("Admin Login Antwort leer");
                 return false;
             }
             try {
@@ -48,17 +47,17 @@ public class UniverseClientService extends BaseClientService {
                 JsonNode tokenNode = node.get("token");
                 if (tokenNode != null && !tokenNode.asText().isBlank()) {
                     token = tokenNode.asText();
-                    LOG.info("Admin Token erhalten ({} Zeichen)", token.length());
+                    log.info("Admin Token erhalten ({} Zeichen)", token.length());
                     return true;
                 }
-                LOG.error("Token Feld nicht gefunden oder leer im Login JSON");
+                log.error("Token Feld nicht gefunden oder leer im Login JSON");
             } catch (Exception parseEx) {
-                LOG.error("Kann Login JSON nicht parsen: {}", parseEx.toString());
+                log.error("Kann Login JSON nicht parsen: {}", parseEx.toString());
             }
-            LOG.error("Token nicht im Login-Body gefunden");
+            log.error("Token nicht im Login-Body gefunden");
             return false;
         } catch (Exception e) {
-            LOG.error("Exception beim Admin Login: {}", e.toString());
+            log.error("Exception beim Admin Login: {}", e.toString());
             return false;
         }
     }
@@ -75,14 +74,14 @@ public class UniverseClientService extends BaseClientService {
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(5))
                     .onErrorResume(e -> {
-                        LOG.warn("Fehler userExists('{}'): {}", username, e.toString());
+                        log.warn("Fehler userExists('{}'): {}", username, e.toString());
                         return Mono.empty();
                     })
                     .block();
             if (body == null) return false;
             return body.contains("\"username\":\"" + username + "\"");
         } catch (Exception e) {
-            LOG.warn("Exception userExists('{}'): {}", username, e.toString());
+            log.warn("Exception userExists('{}'): {}", username, e.toString());
             return false;
         }
     }
@@ -106,39 +105,39 @@ public class UniverseClientService extends BaseClientService {
                     .map(r -> r.getStatusCode().value())
                     .timeout(Duration.ofSeconds(5))
                     .onErrorResume(e -> {
-                        LOG.error("Fehler createUser('{}'): {}", username, e.toString());
+                        log.error("Fehler createUser('{}'): {}", username, e.toString());
                         return Mono.just(-1);
                     })
                     .block();
             if (status != null && (status == 200 || status == 201)) {
-                LOG.info("User '{}' angelegt (Status {})", username, status);
+                log.info("User '{}' angelegt (Status {})", username, status);
                 return true;
             } else {
-                LOG.error("User '{}' nicht angelegt (Status {})", username, status);
+                log.error("User '{}' nicht angelegt (Status {})", username, status);
                 return false;
             }
         } catch (Exception e) {
-            LOG.error("Exception createUser('{}'): {}", username, e.toString());
+            log.error("Exception createUser('{}'): {}", username, e.toString());
             return false;
         }
     }
 
     public void ensureUser(String username, String password) {
         if (!isConfigured()) {
-            LOG.warn("Universe nicht konfiguriert - kann User '{}' nicht prüfen", username);
+            log.warn("Universe nicht konfiguriert - kann User '{}' nicht prüfen", username);
             return;
         }
         if (!hasToken()) {
-            LOG.warn("Kein Token - erst Admin Login nötig für User '{}'", username);
+            log.warn("Kein Token - erst Admin Login nötig für User '{}'", username);
             return;
         }
         if (userExists(username)) {
-            LOG.info("User '{}' existiert bereits - überspringe", username);
+            log.info("User '{}' existiert bereits - überspringe", username);
         } else {
-            LOG.info("User '{}' existiert nicht - lege an (Passwortlänge {} Zeichen)", username, password.length());
+            log.info("User '{}' existiert nicht - lege an (Passwortlänge {} Zeichen)", username, password.length());
             boolean created = createUser(username, password);
             if (!created) {
-                LOG.error("Anlage von User '{}' fehlgeschlagen", username);
+                log.error("Anlage von User '{}' fehlgeschlagen", username);
             }
         }
     }
@@ -153,14 +152,14 @@ public class UniverseClientService extends BaseClientService {
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(5))
                     .onErrorResume(e -> {
-                        LOG.warn("Fehler regionExists('{}'): {}", name, e.toString());
+                        log.warn("Fehler regionExists('{}'): {}", name, e.toString());
                         return Mono.empty();
                     })
                     .block();
             if (body == null) return false;
             return body.contains("\"name\":\"" + name + "\"");
         } catch (Exception e) {
-            LOG.warn("Exception regionExists('{}'): {}", name, e.toString());
+            log.warn("Exception regionExists('{}'): {}", name, e.toString());
             return false;
         }
     }
@@ -184,36 +183,36 @@ public class UniverseClientService extends BaseClientService {
                     .map(r -> r.getStatusCode().value())
                     .timeout(Duration.ofSeconds(8))
                     .onErrorResume(e -> {
-                        LOG.error("Fehler createRegion('{}'): {}", name, e.toString());
+                        log.error("Fehler createRegion('{}'): {}", name, e.toString());
                         return Mono.just(-1);
                     })
                     .block();
             if (status != null && status == 201) {
-                LOG.info("Region '{}' angelegt (Status {})", name, status);
+                log.info("Region '{}' angelegt (Status {})", name, status);
                 return true;
             } else {
-                LOG.error("Region '{}' nicht angelegt (Status {})", name, status);
+                log.error("Region '{}' nicht angelegt (Status {})", name, status);
                 return false;
             }
         } catch (Exception e) {
-            LOG.error("Exception createRegion('{}'): {}", name, e.toString());
+            log.error("Exception createRegion('{}'): {}", name, e.toString());
             return false;
         }
     }
 
     public void ensureRegion(String name, String apiUrl, FormattedKey publicSignKey) {
         if (!isConfigured()) {
-            LOG.warn("Universe nicht konfiguriert - kann Region '{}' nicht prüfen", name);
+            log.warn("Universe nicht konfiguriert - kann Region '{}' nicht prüfen", name);
             return;
         }
         if (!hasToken()) {
-            LOG.warn("Kein Token - erst Admin Login nötig für Region '{}'");
+            log.warn("Kein Token - erst Admin Login nötig für Region '{}'");
             return;
         }
         if (regionExists(name)) {
-            LOG.info("Region '{}' existiert bereits - überspringe Anlage", name);
+            log.info("Region '{}' existiert bereits - überspringe Anlage", name);
         } else {
-            LOG.info("Region '{}' existiert nicht - lege an", name);
+            log.info("Region '{}' existiert nicht - lege an", name);
             createRegion(name, apiUrl, publicSignKey);
         }
     }
@@ -221,7 +220,7 @@ public class UniverseClientService extends BaseClientService {
     public Optional<String> login(String username, String password) {
         if (!isConfigured()) return Optional.empty();
         if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            LOG.warn("Login Parameter ungültig (username oder password leer)");
+            log.warn("Login Parameter ungültig (username oder password leer)");
             return Optional.empty();
         }
         try {
@@ -233,12 +232,12 @@ public class UniverseClientService extends BaseClientService {
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(5))
                     .onErrorResume(e -> {
-                        LOG.error("Login Fehler für '{}': {}", username, e.toString());
+                        log.error("Login Fehler für '{}': {}", username, e.toString());
                         return Mono.empty();
                     })
                     .block();
             if (body == null) {
-                LOG.error("Login Antwort leer für '{}'", username);
+                log.error("Login Antwort leer für '{}'", username);
                 return Optional.empty();
             }
             try {
@@ -247,17 +246,17 @@ public class UniverseClientService extends BaseClientService {
                 if (tokenNode != null && !tokenNode.asText().isBlank()) {
                     String t = tokenNode.asText();
                     token = t; // aktuelles Token im Service aktualisieren
-                    LOG.info("Login erfolgreich für '{}' (Tokenlänge {} Zeichen)", username, t.length());
+                    log.info("Login erfolgreich für '{}' (Tokenlänge {} Zeichen)", username, t.length());
                     return Optional.of(t);
                 } else {
-                    LOG.error("Token Feld fehlt oder leer im Login JSON für '{}'", username);
+                    log.error("Token Feld fehlt oder leer im Login JSON für '{}'", username);
                 }
             } catch (Exception parseEx) {
-                LOG.error("Kann Login JSON für '{}' nicht parsen: {}", username, parseEx.toString());
+                log.error("Kann Login JSON für '{}' nicht parsen: {}", username, parseEx.toString());
             }
             return Optional.empty();
         } catch (Exception e) {
-            LOG.error("Exception beim Login für '{}': {}", username, e.toString());
+            log.error("Exception beim Login für '{}': {}", username, e.toString());
             return Optional.empty();
         }
     }
