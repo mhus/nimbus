@@ -17,6 +17,7 @@ import type {
   ClientPosition,
 } from '@nimbus/shared';
 import { Vector3 } from '@babylonjs/core';
+import { SelectMode } from './SelectService';
 
 const logger = getLogger('TargetingService');
 
@@ -160,60 +161,76 @@ export class TargetingService {
   }
 
   /**
-   * GROUND strategy: Raycast to ground plane
+   * GROUND strategy: Use SelectService with BLOCK mode
+   *
+   * Calls SelectService.getSelectedBlockFromPlayer() to find a block.
+   * If a block is found, use it as target. Otherwise return none.
    */
   private resolveGround(): ResolvedTarget {
-    const playerService = this.appContext.services.player;
-    const cameraService = this.appContext.services.camera;
-
-    if (!playerService || !cameraService) {
+    const selectService = this.appContext.services.select;
+    if (!selectService) {
       return { type: 'none' };
     }
 
-    const playerPos = playerService.getPosition();
-    const rotation = cameraService.getRotation();
+    // Use SelectService with BLOCK mode to find ground block
+    const selectedBlock = selectService.getSelectedBlockFromPlayer(SelectMode.BLOCK, 5.0);
 
-    // Calculate ray direction from camera rotation
-    const pitch = rotation.x;
-    const yaw = rotation.y;
-
-    const dirX = Math.cos(pitch) * Math.sin(yaw);
-    const dirY = -Math.sin(pitch);
-    const dirZ = Math.cos(pitch) * Math.cos(yaw);
-
-    // Ground plane intersection (y=0)
-    if (dirY >= 0) {
-      // Looking up, no ground intersection
-      return { type: 'none' };
+    if (selectedBlock) {
+      return this.resolveBlock(selectedBlock);
     }
 
-    const t = -playerPos.y / dirY;
-    const position: ClientPosition = {
-      x: playerPos.x + dirX * t,
-      y: 0,
-      z: playerPos.z + dirZ * t,
-    };
-
-    return {
-      type: 'ground',
-      position,
-    };
+    return { type: 'none' };
   }
 
   /**
-   * ALL strategy: Try entity, then block, then ground
+   * ALL strategy: Use SelectService with ALL mode
+   *
+   * Calls SelectService.getSelectedBlockFromPlayer() with ALL mode.
+   * This can return any block or AIR position - it's about the position.
    */
   private resolveAll(
     entity: ClientEntity | null,
     block: ClientBlock | null
   ): ResolvedTarget {
+    // Priority: entity first (from current selection)
     if (entity) {
       return this.resolveEntity(entity);
     }
-    if (block) {
-      return this.resolveBlock(block);
+
+    const selectService = this.appContext.services.select;
+    if (!selectService) {
+      if (block) {
+        return this.resolveBlock(block);
+      }
+      return { type: 'none' };
     }
-    return this.resolveGround();
+
+    // Use SelectService with ALL mode - can return block or AIR position
+    const selectedBlock = selectService.getSelectedBlockFromPlayer(SelectMode.ALL, 5.0);
+
+    if (selectedBlock) {
+      // Check if it's an AIR block by checking the block type ID (0 = AIR)
+      const isAir = selectedBlock.blockType?.id === 0;
+
+      if (isAir) {
+        // AIR block - treat as ground position
+        const pos = selectedBlock.block.position;
+        const position: ClientPosition = {
+          x: pos.x + 0.5,
+          y: pos.y + 0.5,
+          z: pos.z + 0.5,
+        };
+        return {
+          type: 'ground',
+          position,
+        };
+      } else {
+        // Solid block
+        return this.resolveBlock(selectedBlock);
+      }
+    }
+
+    return { type: 'none' };
   }
 
   /**
