@@ -26,10 +26,13 @@ export interface ActiveShortcut {
   /** Whether this shortcut blocks all other shortcuts */
   exclusive: boolean;
 
-  /** Last known player position */
+  /** Targeting mode for this shortcut (from item's actionTargeting) */
+  targetingMode: TargetingMode;
+
+  /** Last known player position (deprecated - kept for compatibility) */
   lastPlayerPos?: Vector3;
 
-  /** Last known target position */
+  /** Last known target position (deprecated - kept for compatibility) */
   lastTargetPos?: Vector3;
 }
 
@@ -208,13 +211,15 @@ export class ShortcutService {
    * @param executorId ScrawlExecutor ID from ScrawlService
    * @param exclusive Whether this shortcut blocks all others
    * @param itemId Optional item ID
+   * @param targetingMode Targeting mode from item's actionTargeting (default: 'ALL')
    */
   startShortcut(
     shortcutNr: number,
     shortcutKey: string,
     executorId: string,
     exclusive: boolean,
-    itemId?: string
+    itemId?: string,
+    targetingMode: TargetingMode = 'ALL'
   ): void {
     const shortcut: ActiveShortcut = {
       shortcutNr,
@@ -223,6 +228,7 @@ export class ShortcutService {
       itemId,
       startTime: Date.now(),
       exclusive,
+      targetingMode,
     };
 
     this.activeShortcuts.set(shortcutNr, shortcut);
@@ -233,12 +239,17 @@ export class ShortcutService {
       executorId,
       exclusive,
       itemId,
+      targetingMode,
     });
   }
 
   /**
    * Updates shortcut position/target data.
-   * Called each frame from ShortcutInputHandler.onUpdate()
+   *
+   * @deprecated This method is no longer needed. ShortcutService now uses
+   * TargetingService to dynamically resolve targets every 100ms in
+   * sendActiveShortcutUpdatesToServer(). Kept for backward compatibility
+   * with ClickInputHandler.
    *
    * @param shortcutNr Shortcut number
    * @param playerPos Current player position
@@ -254,7 +265,7 @@ export class ShortcutService {
     shortcut.lastPlayerPos = playerPos;
     shortcut.lastTargetPos = targetPos;
 
-    logger.info('Shortcut position updated', {
+    logger.info('Shortcut position updated (deprecated - using TargetingService instead)', {
       shortcutNr,
       hasTarget: !!targetPos,
       executorId: shortcut.executorId,
@@ -441,12 +452,13 @@ export class ShortcutService {
         continue;
       }
 
-      // Resolve current target using TargetingService (use ALL mode for continuous updates)
-      const currentTarget = targetingService.resolveTarget('ALL');
+      // Resolve current target using TargetingService with item's targeting mode
+      const currentTarget = targetingService.resolveTarget(shortcut.targetingMode);
 
       if (currentTarget.type === 'none') {
         logger.info('Skipping shortcut update - no target position', {
           shortcutNr: shortcut.shortcutNr,
+          targetingMode: shortcut.targetingMode,
         });
         skippedCount++;
         continue;
@@ -461,7 +473,7 @@ export class ShortcutService {
         };
 
         // Create serializable targeting context
-        const targetingContext = targetingService.toSerializableContext('ALL', currentTarget);
+        const targetingContext = targetingService.toSerializableContext(shortcut.targetingMode, currentTarget);
 
         networkService.sendEffectParameterUpdate(
           effectId,

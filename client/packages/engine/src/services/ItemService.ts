@@ -307,10 +307,11 @@ export class ItemService {
         if (shortcutService && playerService) {
           const shortcutNr = this.extractShortcutNumber(shortcutKey);
 
-          // Get exclusive flag from merged modifier
+          // Get exclusive flag and targeting mode from merged modifier
           const isExclusive = mergedModifier.exclusive ?? false;
+          const targetingMode = mergedModifier.actionTargeting ?? 'ALL';
 
-          shortcutService.startShortcut(shortcutNr, shortcutKey, executorId, isExclusive, itemId);
+          shortcutService.startShortcut(shortcutNr, shortcutKey, executorId, isExclusive, itemId, targetingMode);
 
           // Emit started event
           playerService.emitShortcutStarted({
@@ -325,6 +326,7 @@ export class ItemService {
             shortcutNr,
             executorId,
             exclusive: isExclusive,
+            targetingMode,
           });
         }
       }
