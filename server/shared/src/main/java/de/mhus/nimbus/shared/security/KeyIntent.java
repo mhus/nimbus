@@ -12,6 +12,8 @@ import java.util.Objects;
 public record KeyIntent(String owner, String intent) {
 
     public static final String MAIN_JWT_TOKEN = "main-jwt-token";
+    public static final String REGION_SERVER_JWT_TOKEN = "region-server-jwt-token";
+    public static final String REGION_JWT_TOKEN = "region-jwt-token";
 
     public KeyIntent(KeyOwner owner, String intent) {
         this(owner.owner(), intent);

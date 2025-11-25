@@ -1,9 +1,11 @@
 package de.mhus.nimbus.universe;
 
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
+import de.mhus.nimbus.shared.security.KeyId;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.shared.user.UniverseRoles;
+import de.mhus.nimbus.shared.utils.ConfidentialUtil;
 import de.mhus.nimbus.universe.user.UUser;
 import de.mhus.nimbus.universe.user.UUserRepository;
 import de.mhus.nimbus.universe.user.UUserService;
@@ -48,28 +50,20 @@ public class InitUniverseService {
         admin.setEnabled(true);
         userRepository.save(admin);
         userService.setPassword(admin.getId(), password);
-        writePasswordToFile(password);
+        ConfidentialUtil.save("universeAdminPassword.txt", password);
         log.info("Admin user created: {} with Password {}", admin.getId(), password);
-    }
-
-    private void writePasswordToFile(String password) {
-        try {
-            Path targetDir = Paths.get("confidential");
-            if (!Files.exists(targetDir)) {
-                Files.createDirectories(targetDir);
-            }
-            Path file = targetDir.resolve("universe.txt");
-            String line = "admin:" + password + System.lineSeparator();
-            Files.writeString(file, line, StandardOpenOption.CREATE_NEW);
-            log.info("Admin password written to {}", file.toAbsolutePath());
-        } catch (Exception e) {
-            log.warn("Failed to write admin password file", e);
-        }
     }
 
     private void checkUniverseJwtToken() {
         if (keyService.getLatestPrivateKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT).isEmpty()) {
-            keyService.createSystemAuthKey(KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT);
+            var keys = keyService.createECCKeys();
+            keyService.storeKeyPair(
+                    KeyType.UNIVERSE,
+                    KeyId.newOf(UniverseProperties.MAIN_JWT_TOKEN_INTENT),
+                    keys
+            );
+            ConfidentialUtil.save("universeServerPublicKey.txt", keys.getPublic());
+            log.info("Universe JWT Token Key created");
         }
     }
 

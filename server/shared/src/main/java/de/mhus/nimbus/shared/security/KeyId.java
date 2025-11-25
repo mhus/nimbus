@@ -48,4 +48,16 @@ public record KeyId(String owner, String intent, String id) {
         Objects.requireNonNull(intent, "intent");
         return new KeyId(owner.trim(), intent.trim() ,id.trim());
     }
+
+    /**
+     * Creates a KeyId ensuring both components are trimmed.
+     */
+    public static KeyId of(KeyIntent intent, String id) {
+        return of(intent.owner(), intent.intent(), id);
+    }
+
+    public static KeyId newOf(KeyIntent intent) {
+        return of(intent, java.util.UUID.randomUUID().toString());
+    }
+
 }

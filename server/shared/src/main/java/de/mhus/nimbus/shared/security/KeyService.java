@@ -121,6 +121,15 @@ public class KeyService {
                 .flatMap(this::toPrivateKey);
     }
 
+    public Optional<PrivateKey> getLatestPublicKey(KeyType keyType, KeyIntent intent) {
+        return repository.findTop1ByTypeAndKindAndOwnerAndIntentOrderByCreatedAtDesc(keyType.name(), KIND_PUBLIC, intent.owner(), intent.intent())
+                .stream()
+                .filter(SKey::isEnabled)
+                .filter(k -> !k.isExpired())
+                .findFirst()
+                .flatMap(this::toPrivateKey);
+    }
+
     public Optional<SecretKey> getLatestSecretKey(KeyType keyType, String owner) {
         return repository.findTop1ByTypeAndKindAndOwnerOrderByCreatedAtDesc(keyType.name(), KIND_SECRET, owner)
                 .stream()

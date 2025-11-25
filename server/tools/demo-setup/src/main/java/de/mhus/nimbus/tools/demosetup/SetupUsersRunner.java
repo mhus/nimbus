@@ -1,5 +1,6 @@
 package de.mhus.nimbus.tools.demosetup;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,15 +10,11 @@ import java.util.List;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class SetupUsersRunner {
 
-    private final AdminService adminService;
     private final UniverseClientService universeClientService;
-
-    public SetupUsersRunner(AdminService adminService, UniverseClientService universeClientService) {
-        this.adminService = adminService;
-        this.universeClientService = universeClientService;
-    }
+    private final ConfidentialDataService confidentialDataService;
 
     public void run() {
         if (!universeClientService.isConfigured()) {
@@ -25,7 +22,7 @@ public class SetupUsersRunner {
             return;
         }
         log.info("Login Admin");
-        universeClientService.loginAdmin(adminService.getAdminPassword().get());
+        universeClientService.loginAdmin(confidentialDataService.getUniverseAdminPassword());
         if (!universeClientService.hasToken()) {
             log.warn("Kein Token - User Setup übersprungen");
             return;

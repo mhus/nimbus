@@ -1,31 +1,31 @@
 package de.mhus.nimbus.tools.cleanup;
 
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCommandException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoIterable;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
+@Slf4j
 public class MongoCleanupService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MongoCleanupService.class);
 
     private final String mongoUri;
     private final Set<String> targetDatabases;
 
-    public MongoCleanupService(@Value("${cleanup.mongo.uri:mongodb://localhost:27017}") String mongoUri,
-                               @Value("${cleanup.mongo.databases:universe,region,world}") String databasesCsv) {
+    public MongoCleanupService(@Value("${cleanup.mongo.uri}") String mongoUri,
+                               @Value("${cleanup.mongo.databases}") List<String> databasesCsv) {
         this.mongoUri = mongoUri;
         this.targetDatabases = new HashSet<>();
-        Arrays.stream(databasesCsv.split(","))
+        databasesCsv.stream()
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .forEach(targetDatabases::add);
@@ -34,17 +34,32 @@ public class MongoCleanupService {
     public Set<String> getTargetDatabases() { return new HashSet<>(targetDatabases); }
 
     public void cleanup() {
-        LOG.info("Verbinde zu MongoDB: {}", mongoUri);
+        log.info("Verbinde zu MongoDB (direkter Drop, kein Listing): {}", mongoUri);
         try (MongoClient client = MongoClients.create(MongoClientSettings.builder().applyConnectionString(new com.mongodb.ConnectionString(mongoUri)).build())) {
-            MongoIterable<String> dbs = client.listDatabaseNames();
-            for (String dbName : dbs) {
-                if (targetDatabases.contains(dbName)) {
-                    LOG.warn("Dropping DB '{}'", dbName);
+            for (String dbName : targetDatabases) {
+                try {
+                    log.warn("Dropping DB '{}'", dbName);
                     client.getDatabase(dbName).drop();
-                } else {
-                    LOG.debug("Überspringe DB '{}'", dbName);
+                    log.info("DB '{}' erfolgreich gedroppt", dbName);
+                } catch (MongoCommandException mce) {
+                    // Code 26: NamespaceNotFound (DB existiert nicht) – ignoriere
+                    if (mce.getCode() == 26) {
+                        log.info("DB '{}' existiert nicht – nichts zu löschen", dbName);
+                    } else if (mce.getCode() == 13) { // Unauthorized
+                        log.error("Keine Berechtigung zum Droppen von '{}' (Code 13). Prüfe Rollen oder Credentials.", dbName);
+                        throw mce; // Abbrechen: sicherheitsrelevant
+                    } else {
+                        log.error("MongoCommandException beim Droppen '{}' (Code {}): {}", dbName, mce.getCode(), mce.getErrorMessage(), mce);
+                        throw mce;
+                    }
+                } catch (Exception ex) {
+                    log.error("Unerwarteter Fehler beim Droppen '{}': {}", dbName, ex.getMessage(), ex);
+                    throw ex;
                 }
             }
+        } catch (Exception e) {
+            log.error("Cleanup insgesamt fehlgeschlagen: {}", e.getMessage());
+            throw e;
         }
     }
 }

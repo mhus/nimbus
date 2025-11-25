@@ -1,0 +1,13 @@
+spring:
+  main:
+    web-application-type: NONE
+
+cleanup:
+  mongo:
+    uri: mongodb://root:example@localhost:27017/?authSource=admin
+    databases: universe, region, world
+
+logging:
+  level:
+    root: INFO
+

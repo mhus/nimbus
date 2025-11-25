@@ -1,6 +1,7 @@
 package de.mhus.nimbus.universe.security;
 
 import de.mhus.nimbus.shared.security.KeyIntent;
+import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyType;
@@ -35,7 +36,6 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
     private final UniverseProperties jwtProperties;
     private final URegionService regionService;
     private final KeyService keyService;
-    private final SharedClientService sharedClientService;
 
     @Value("${region.server.id:local-region-server}")
     private String regionServerId;
@@ -49,19 +49,6 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
         if (!applies(path)) {
             filterChain.doFilter(request, response);
             return;
-        }
-
-        if ("POST".equalsIgnoreCase(request.getMethod()) && path.matches("/universe/region/region/[^/]+/?")) {
-            try {
-                boolean exists = sharedClientService.existsKey(universeBaseUrl, "REGION", "PUBLIC", regionServerId, KeyIntent.MAIN_JWT_TOKEN);
-                if (!exists) {
-                    var pubOpt = sharedClientService.readPublicKeyFromFile(Path.of("confidential/regionServerPublicKey.txt"));
-                    if (pubOpt.isPresent()) {
-                        var base64Opt = sharedClientService.toBase64PublicKey(pubOpt.get());
-                        base64Opt.ifPresent(b64 -> sharedClientService.createKey(universeBaseUrl, "REGION", "PUBLIC", pubOpt.get().getAlgorithm(), regionServerId, KeyIntent.MAIN_JWT_TOKEN, regionServerId+":"+KeyIntent.MAIN_JWT_TOKEN+":"+UUID.randomUUID(), b64));
-                    }
-                }
-            } catch (Exception ignore) {}
         }
 
         String regionId = extractRegionId(path);
@@ -82,9 +69,21 @@ public class RegionJwtAuthenticationFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        // validate token
         var token = auth.substring(7).trim();
-        var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, KeyIntent.of(regionId, KeyIntent.MAIN_JWT_TOKEN));
+
+        // validate token from region server key
+        if ("POST".equalsIgnoreCase(request.getMethod()) && path.matches("/universe/region/region/[^/]+/?")) {
+            try {
+                var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN));
+                if (claims.isPresent()) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+            } catch (Exception ignore) {}
+        }
+
+        // validate token
+        var claims = jwtService.validateTokenWithPublicKey(token, KeyType.REGION, KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN));
         if (claims.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
