@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region;
 
-import de.mhus.nimbus.region.registry.RRegionService;
+import de.mhus.nimbus.region.region.RRegionService;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
 import de.mhus.nimbus.shared.security.KeyId;
 import de.mhus.nimbus.shared.security.KeyIntent;
@@ -12,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor

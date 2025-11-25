@@ -1,6 +1,8 @@
-package de.mhus.nimbus.region.registry;
+package de.mhus.nimbus.region.region;
 
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,6 +10,7 @@ import java.util.UUID;
 import de.mhus.nimbus.region.world.RUniverseClientService;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyId;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ import de.mhus.nimbus.shared.security.KeyIntent;
 @Service
 @Validated
 @Slf4j
+@RequiredArgsConstructor
 public class RRegionService {
 
     private final RRegionRepository repository;
@@ -30,62 +34,48 @@ public class RRegionService {
     @Value("${universe.base-url:http://localhost:8080}")
     private String universeBaseUrl;
 
-    public RRegionService(RRegionRepository repository, KeyService keyService, JwtService jwtService, RUniverseClientService universeClientService) {
-        this.repository = repository;
-        this.keyService = keyService;
-        this.jwtService = jwtService;
-        this.universeClientService = universeClientService;
-    }
+    @Value("${region.server.id}")
+    private String regionServerId;
 
-    public RRegion create(String name, String apiUrl, String maintainers) {
+    @Value("${region.server.url}")
+    private String apiUrl;
+
+    public RRegion create(String name, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
-        if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
         if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
-        if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        RRegion q = new RRegion(name, apiUrl);
-        q.setMaintainers(maintainers);
+        RRegion q = new RRegion(name);
+        if (maintainers != null)
+            q.setMaintainers(new HashSet<>(Arrays.asList(maintainers.trim())));
         RRegion saved = repository.save(q);
         // KeyPair für Region erzeugen (Intent main-jwt-token, Owner = Regionsname)
         try {
             var keys = keyService.createECCKeys();
-            KeyId keyId = KeyId.of(saved.getName(), KeyIntent.MAIN_JWT_TOKEN, UUID.randomUUID().toString());
+            KeyId keyId = KeyId.of(saved.getName(), KeyIntent.REGION_JWT_TOKEN, UUID.randomUUID().toString());
             keyService.storeKeyPair(
                 KeyType.REGION,
                 keyId,
                 keys
             );
-            // JWT erzeugen mit privatem Region Key (Subject = regionsname)
-            var privateKeyOpt = keyService.getPrivateKey(KeyType.REGION, keyId);
-            if (privateKeyOpt.isPresent()) {
-                String token = jwtService.createTokenWithSecretKey(privateKeyOpt.get(), saved.getName(), java.util.Map.of("region", saved.getName()), java.time.Instant.now().plusSeconds(300));
-                // Universe Client konfigurieren
-                universeClientService.setBaseUrl(universeBaseUrl);
-                // Public Key Base64 für Registrierung
-                var publicKeyOpt = keyService.getPublicKey(KeyType.REGION, keyId);
-                String publicBase64 = publicKeyOpt.map(pk -> Base64.getEncoder().encodeToString(pk.getEncoded())).orElse(null);
-                boolean registered = universeClientService.createRegion(token, saved.getName(), apiUrl, publicBase64, maintainers);
-                if (!registered) {
-                    log.warn("Region '{}' konnte im Universe nicht registriert werden", saved.getName());
-                } else {
-                    log.info("Region '{}' erfolgreich im Universe registriert", saved.getName());
-                }
+            // Register to the Universe with region server key
+            String token = jwtService.createTokenWithPrivateKey(
+                    KeyType.REGION,
+                    KeyIntent.of(regionServerId, KeyIntent.REGION_SERVER_JWT_TOKEN),
+                    "region:" + regionServerId,
+                    java.util.Map.of("region", saved.getName()),
+                    java.time.Instant.now().plusSeconds(300)
+            );
+            var publicKey = keys.getPublic();
+            String publicBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+            boolean registered = universeClientService.createRegion(token, saved.getName(), apiUrl, publicBase64, maintainers);
+            if (!registered) {
+                log.warn("Region '{}' konnte im Universe nicht registriert werden", saved.getName());
             } else {
-                log.warn("Privater Schlüssel für Region '{}' nicht gefunden – Universe Registrierung übersprungen", saved.getName());
+                log.info("Region '{}' erfolgreich im Universe registriert", saved.getName());
             }
         } catch (Exception e) {
             log.warn("Cannot create system auth key or register region {}: {}", saved.getName(), e.getMessage());
         }
         return saved;
-    }
-
-    // Bestehende create-Methode bleibt für Abwärtskompatibilität
-    public RRegion create(String name, String apiUrl) {
-        if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");
-        if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl must not be blank");
-        if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
-        if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-        RRegion q = new RRegion(name, apiUrl);
-        return repository.save(q);
     }
 
     public Optional<RRegion> getById(String id) {
@@ -104,33 +94,27 @@ public class RRegionService {
         return repository.findAll();
     }
 
-    public RRegion update(String id, String name, String apiUrl, String maintainers) {
+    public RRegion update(String id, String name, String maintainers) {
         RRegion existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
             if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
             existing.setName(name);
         }
-        if (apiUrl != null && !apiUrl.isBlank() && !apiUrl.equals(existing.getApiUrl())) {
-            if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-            existing.setApiUrl(apiUrl);
-        }
-        if (maintainers != null) existing.setMaintainers(maintainers);
+        if (maintainers != null)
+            existing.setMaintainers(new HashSet<>(Arrays.asList(maintainers.trim())));
         return repository.save(existing);
     }
 
-    public RRegion updateFull(String id, String name, String apiUrl, String maintainers, Boolean enabled) {
+    public RRegion updateFull(String id, String name, String maintainers, Boolean enabled) {
         RRegion existing = repository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Region not found: " + id));
         if (name != null && !name.isBlank() && !name.equals(existing.getName())) {
             if (repository.existsByName(name)) throw new IllegalArgumentException("Region name exists: " + name);
             existing.setName(name);
         }
-        if (apiUrl != null && !apiUrl.isBlank() && !apiUrl.equals(existing.getApiUrl())) {
-            if (repository.existsByApiUrl(apiUrl)) throw new IllegalArgumentException("Region apiUrl exists: " + apiUrl);
-            existing.setApiUrl(apiUrl);
-        }
-        if (maintainers != null) existing.setMaintainers(maintainers);
+        if (maintainers != null)
+            existing.setMaintainers(new HashSet<>(Arrays.asList(maintainers.trim())));
         if (enabled != null) existing.setEnabled(enabled);
         return repository.save(existing);
     }

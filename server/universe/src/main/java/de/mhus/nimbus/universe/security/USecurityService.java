@@ -76,8 +76,8 @@ public class USecurityService {
         }
         PrivateKey privateKey = privateKeyOpt.get();
         try {
-            String accessToken = jwtService.createTokenWithSecretKey(privateKey, user.getId(), claims, accessExp);
-            String refreshToken = jwtService.createTokenWithSecretKey(privateKey, user.getId(), Map.of("username", user.getId(), "typ","refresh", "loginAt", loginAtEpoch), refreshExp);
+            String accessToken = jwtService.createTokenWithPrivateKey(privateKey, user.getId(), claims, accessExp);
+            String refreshToken = jwtService.createTokenWithPrivateKey(privateKey, user.getId(), Map.of("username", user.getId(), "typ","refresh", "loginAt", loginAtEpoch), refreshExp);
             log.info("Login erfolgreich für Benutzer '{}'", user.getUsername());
             return AuthResult.ok(new ULoginResponse(accessToken, refreshToken, user.getId(), user.getUsername()));
         } catch (Exception e) {
@@ -139,8 +139,8 @@ public class USecurityService {
         }
         PrivateKey privateKey = privateKeyOpt.get();
         try {
-            String newAccess = jwtService.createTokenWithSecretKey(privateKey, userId, claims, accessExp);
-            String newRefresh = jwtService.createTokenWithSecretKey(privateKey, userId, Map.of("username", userId, "typ","refresh", "loginAt", loginAtEpoch), newRefreshExp);
+            String newAccess = jwtService.createTokenWithPrivateKey(privateKey, userId, claims, accessExp);
+            String newRefresh = jwtService.createTokenWithPrivateKey(privateKey, userId, Map.of("username", userId, "typ","refresh", "loginAt", loginAtEpoch), newRefreshExp);
             log.info("Refresh erfolgreich für Benutzer '{}'", username);
             return AuthResult.ok(new ULoginResponse(newAccess, newRefresh, userId, username));
         } catch (Exception e) {

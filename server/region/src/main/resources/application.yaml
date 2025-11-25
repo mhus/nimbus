@@ -9,6 +9,7 @@ spring:
 region:
   server:
     id: local-region-server
+    url: http://localhost:9041
 universe:
     url: http://localhost:9040
 

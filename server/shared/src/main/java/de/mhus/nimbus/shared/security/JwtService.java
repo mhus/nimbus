@@ -32,17 +32,26 @@ public class JwtService {
 
     private final KeyService keyService;
 
-    /**
-     * Creates a JWT token signed with an ECC private key (secp256r1). No symmetric fallback.
-     *
-     * @param keyId    the key id in format "owner:id" to locate the signing key
-     * @param subject  the subject claim (e.g., user id)
-     * @param claims   additional claims to include in the token
-     * @param expiresAt expiration time (null for no expiration)
-     * @return the signed JWT token string
-     * @throws IllegalArgumentException if the key cannot be found
-     */
-    public String createTokenWithSecretKey(@NonNull PrivateKey key,
+    public String createTokenWithPrivateKey(@NonNull KeyType type,
+                                            @NonNull KeyIntent intent,
+                                            @NonNull String subject,
+                                            Map<String, Object> claims,
+                                            Instant expiresAt) {
+        var privatekey = keyService.getLatestPrivateKey(type, intent).orElseThrow();
+        return createTokenWithPrivateKey(privatekey, subject, claims, expiresAt);
+    }
+
+        /**
+         * Creates a JWT token signed with an ECC private key (secp256r1). No symmetric fallback.
+         *
+         * @param keyId    the key id in format "owner:id" to locate the signing key
+         * @param subject  the subject claim (e.g., user id)
+         * @param claims   additional claims to include in the token
+         * @param expiresAt expiration time (null for no expiration)
+         * @return the signed JWT token string
+         * @throws IllegalArgumentException if the key cannot be found
+         */
+    public String createTokenWithPrivateKey(@NonNull PrivateKey key,
                                             @NonNull String subject,
                                             Map<String, Object> claims,
                                             Instant expiresAt) {
@@ -56,40 +65,40 @@ public class JwtService {
         if (expiresAt != null) builder.expiration(Date.from(expiresAt));
         return builder.signWith(key).compact();
     }
-
-    /**
-     * Creates a JWT token signed with a secret key from SyncKeyProvider (HMAC algorithm).
-     *
-     * @param keyId    the key id in format "owner:id" to locate the signing key
-     * @param subject  the subject claim (e.g., user id)
-     * @param claims   additional claims to include in the token
-     * @param expiresAt expiration time (null for no expiration)
-     * @return the signed JWT token string
-     * @throws IllegalArgumentException if the key cannot be found
-     */
-    public String createTokenWithSyncKey(@NonNull String keyId,
-                                          @NonNull String subject,
-                                          Map<String, Object> claims,
-                                          Instant expiresAt) {
-        SecretKey key = keyService.getSecretKey(KeyType.UNIVERSE, keyId)
-                .orElseThrow(() -> new IllegalArgumentException("Sync key not found: " + keyId));
-
-        var builder = Jwts.builder()
-                .subject(subject)
-                .issuedAt(Date.from(Instant.now()));
-
-        if (claims != null && !claims.isEmpty()) {
-            builder.claims(claims);
-        }
-
-        if (expiresAt != null) {
-            builder.expiration(Date.from(expiresAt));
-        }
-
-        return builder
-                .signWith(key)
-                .compact();
-    }
+//
+//    /**
+//     * Creates a JWT token signed with a secret key from SyncKeyProvider (HMAC algorithm).
+//     *
+//     * @param keyId    the key id in format "owner:id" to locate the signing key
+//     * @param subject  the subject claim (e.g., user id)
+//     * @param claims   additional claims to include in the token
+//     * @param expiresAt expiration time (null for no expiration)
+//     * @return the signed JWT token string
+//     * @throws IllegalArgumentException if the key cannot be found
+//     */
+//    public String createTokenWithSyncKey(@NonNull String keyId,
+//                                          @NonNull String subject,
+//                                          Map<String, Object> claims,
+//                                          Instant expiresAt) {
+//        SecretKey key = keyService.getSecretKey(KeyType.UNIVERSE, keyId)
+//                .orElseThrow(() -> new IllegalArgumentException("Sync key not found: " + keyId));
+//
+//        var builder = Jwts.builder()
+//                .subject(subject)
+//                .issuedAt(Date.from(Instant.now()));
+//
+//        if (claims != null && !claims.isEmpty()) {
+//            builder.claims(claims);
+//        }
+//
+//        if (expiresAt != null) {
+//            builder.expiration(Date.from(expiresAt));
+//        }
+//
+//        return builder
+//                .signWith(key)
+//                .compact();
+//    }
 
     /**
      * Validates a JWT token using a sync key (HMAC algorithm).

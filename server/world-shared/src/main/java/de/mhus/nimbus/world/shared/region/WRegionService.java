@@ -118,7 +118,7 @@ public class WRegionService {
             throw new IllegalStateException("Kein PrivateKey für WORLD owner=" + worldId + " gefunden");
         }
         Instant exp = Instant.now().plus(Duration.ofMinutes(5));
-        return jwtService.createTokenWithSecretKey(privateKeyOpt.get(), worldId, null, exp);
+        return jwtService.createTokenWithPrivateKey(privateKeyOpt.get(), worldId, null, exp);
     }
 
     private static <T> T ensureBody(ResponseEntity<T> resp) {

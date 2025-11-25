@@ -77,7 +77,7 @@ public class DemoSetupApplication implements CommandLineRunner {
         registerUniverseServerPublicKeyAtRegion();
 
         // Nutzer sicherstellen (nur wenn Universe konfiguriert)
-        setupUsersRunner.run();
+//        setupUsersRunner.run();
         regionSetupRunner.run();
 
         failures = checkServiceHealth();

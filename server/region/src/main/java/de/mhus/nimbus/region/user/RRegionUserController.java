@@ -1,7 +1,7 @@
 package de.mhus.nimbus.region.user;
 
-import de.mhus.nimbus.region.registry.RRegion;
-import de.mhus.nimbus.region.registry.RRegionService;
+import de.mhus.nimbus.region.region.RRegion;
+import de.mhus.nimbus.region.region.RRegionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,13 +22,13 @@ public class RRegionUserController {
     }
 
     // DTOs
-    public record RegionRequest(String name, String apiUrl, String maintainers) {}
-    public record RegionResponse(String id, String name, String apiUrl, boolean enabled, List<String> maintainers) {}
+    public record RegionRequest(String name, String maintainers) {}
+    public record RegionResponse(String id, String name, boolean enabled, List<String> maintainers) {}
     public record MaintainerRequest(String userId) {}
 
     private RegionResponse toResponse(RRegion r) {
-        List<String> maint = r.getMaintainerSet().stream().toList();
-        return new RegionResponse(r.getId(), r.getName(), r.getApiUrl(), r.isEnabled(), maint);
+        List<String> maint = r.getMaintainers().stream().toList();
+        return new RegionResponse(r.getId(), r.getName(), r.isEnabled(), maint);
     }
 
     // LIST
@@ -54,7 +54,7 @@ public class RRegionUserController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody RegionRequest req) {
         try {
-            RRegion created = service.create(req.name(), req.apiUrl(), req.maintainers());
+            RRegion created = service.create(req.name(), req.maintainers());
             return ResponseEntity.created(URI.create(BASE_PATH + "/" + created.getId()))
                     .body(toResponse(created));
         } catch (IllegalArgumentException e) {
@@ -68,7 +68,7 @@ public class RRegionUserController {
                                     @RequestParam(name="enabled", required=false) Boolean enabled) {
         try {
             if (service.getById(id).isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            RRegion updated = service.updateFull(id, req.name(), req.apiUrl(), req.maintainers(), enabled);
+            RRegion updated = service.updateFull(id, req.name(), req.maintainers(), enabled);
             return ResponseEntity.ok(toResponse(updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -130,7 +130,7 @@ public class RRegionUserController {
     @GetMapping("/{id}/maintainers")
     public ResponseEntity<?> listMaintainers(@PathVariable String id) {
         return service.getById(id)
-                .map(r -> ResponseEntity.ok(r.getMaintainerSet().stream().toList()))
+                .map(r -> ResponseEntity.ok(r.getMaintainers().stream().toList()))
                 .orElse(ResponseEntity.notFound().build());
     }
 }

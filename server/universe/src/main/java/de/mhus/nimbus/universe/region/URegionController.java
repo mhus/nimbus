@@ -1,5 +1,7 @@
 package de.mhus.nimbus.universe.region;
 
+import de.mhus.nimbus.shared.dto.universe.URegionRequest;
+import de.mhus.nimbus.shared.dto.universe.URegionResponse;
 import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import de.mhus.nimbus.universe.security.Role;
@@ -33,10 +35,6 @@ public class URegionController {
         this.service = service;
         this.userHolder = userHolder;
     }
-
-    // DTOs
-    public record URegionRequest(String name, String apiUrl, String publicSignKey, String maintainers) {}
-    public record URegionResponse(String id, String name, String apiUrl, List<String> maintainers) {}
 
     private URegionResponse toResponse(URegion q) {
         // Maintainer Set -> List

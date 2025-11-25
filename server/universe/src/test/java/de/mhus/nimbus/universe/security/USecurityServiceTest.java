@@ -36,12 +36,12 @@ class USecurityServiceTest {
         Mockito.when(userService.getByUsername("user1")).thenReturn(Optional.of(user));
         Mockito.when(userService.validatePassword("u1","pw")).thenReturn(true);
         USecurityService service = new USecurityService(userService, jwt, props, keyService);
-        Mockito.when(jwt.createTokenWithSecretKey(Mockito.eq(privateKey), Mockito.eq("u1"), Mockito.anyMap(), Mockito.any()))
+        Mockito.when(jwt.createTokenWithPrivateKey(Mockito.eq(privateKey), Mockito.eq("u1"), Mockito.anyMap(), Mockito.any()))
                 .thenReturn("tok1", "tok2");
         var result = service.login(new ULoginRequest("user1","pw"));
         assertTrue(result.isOk());
         ArgumentCaptor<Map<String,Object>> claimsCap = ArgumentCaptor.forClass(Map.class);
-        Mockito.verify(jwt, Mockito.times(2)).createTokenWithSecretKey(Mockito.eq(privateKey), Mockito.eq("u1"), claimsCap.capture(), Mockito.any());
+        Mockito.verify(jwt, Mockito.times(2)).createTokenWithPrivateKey(Mockito.eq(privateKey), Mockito.eq("u1"), claimsCap.capture(), Mockito.any());
         Map<String,Object> accessClaims = claimsCap.getAllValues().get(0);
         assertEquals("access", accessClaims.get("typ"));
         assertTrue(accessClaims.containsKey("loginAt"));
@@ -83,7 +83,7 @@ class USecurityServiceTest {
         Mockito.when(claimsExpired.get("loginAt")).thenReturn(oldLoginAt);
         Mockito.when(jwt.validateTokenWithPublicKey("expired", KeyType.UNIVERSE, UniverseProperties.MAIN_JWT_TOKEN_INTENT)).thenReturn(Optional.of(jwsExpired));
 
-        Mockito.when(jwt.createTokenWithSecretKey(Mockito.eq(privateKey), Mockito.eq("u1"), Mockito.anyMap(), Mockito.any()))
+        Mockito.when(jwt.createTokenWithPrivateKey(Mockito.eq(privateKey), Mockito.eq("u1"), Mockito.anyMap(), Mockito.any()))
                 .thenReturn("newAccess", "newRefresh");
 
         USecurityService service = new USecurityService(userService, jwt, props, keyService);

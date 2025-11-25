@@ -1,10 +1,15 @@
 package de.mhus.nimbus.region.world;
 
+import de.mhus.nimbus.shared.dto.universe.URegionRequest;
+import de.mhus.nimbus.shared.dto.universe.URegionResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -22,18 +27,17 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class RUniverseClientService {
 
     private final RestTemplate restTemplate;
-    public RUniverseClientService() { this.restTemplate = new RestTemplate(); }
-    public RUniverseClientService(RestTemplate restTemplate) { this.restTemplate = restTemplate; }
 
     public record UniverseWorldDto(String id, String name, String description, String regionId, String worldId, String coordinates) {}
 
     @Value("${universe.url}")
     private String baseUrl; // konfigurierbar per Setter oder später aus Properties laden
 
-    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
     private String base() { if (baseUrl == null || baseUrl.isBlank()) throw new IllegalStateException("Universe baseUrl not set"); return baseUrl.replaceAll("/+$", ""); }
 
     public Optional<UniverseWorldDto> fetch(String regionId, String worldId) {
@@ -66,17 +70,10 @@ public class RUniverseClientService {
         if (description != null) body.put("description", description);
         if (coordinates != null) body.put("coordinates", coordinates);
         try {
-            @SuppressWarnings("unchecked") ResponseEntity<Map<String,Object>> resp = (ResponseEntity) restTemplate.postForEntity(url, body, Map.class);
+            var request = new org.springframework.http.HttpEntity<>(body, buildHeaders(null));
+            @SuppressWarnings("unchecked") ResponseEntity<UniverseWorldDto> resp = restTemplate.postForEntity(url, request, UniverseWorldDto.class);
             if (resp.getStatusCode() == HttpStatus.CREATED && resp.getBody() != null) {
-                Map<String,Object> b = resp.getBody();
-                return new UniverseWorldDto(
-                        (String)b.get("id"),
-                        (String)b.get("name"),
-                        (String)b.get("description"),
-                        (String)b.get("regionId"),
-                        (String)b.get("worldId"),
-                        (String)b.get("coordinates")
-                );
+                return resp.getBody();
             }
             throw new IllegalStateException("Unexpected status " + resp.getStatusCode());
         } catch (RestClientException e) { throw new RuntimeException("Universe world create failed: " + e.getMessage(), e); }
@@ -85,15 +82,13 @@ public class RUniverseClientService {
     public boolean createRegion(String token, String name, String apiUrl, String publicSignKey, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name blank");
         if (apiUrl == null || apiUrl.isBlank()) throw new IllegalArgumentException("apiUrl blank");
-        String url = base() + "/universe/region";
-        Map<String,Object> body = new LinkedHashMap<>();
-        body.put("name", name);
-        body.put("apiUrl", apiUrl);
-        if (publicSignKey != null) body.put("publicSignKey", publicSignKey);
-        if (maintainers != null) body.put("maintainers", maintainers);
+        String url = base() + "/universe/region/" + encode(name);
         try {
-            var headers = new org.springframework.http.HttpEntity<>(body, buildHeaders(token));
-            @SuppressWarnings("unchecked") ResponseEntity<Map<String,Object>> resp = (ResponseEntity) restTemplate.postForEntity(url, headers, Map.class);
+            var body = new URegionRequest(name, apiUrl, publicSignKey, maintainers);
+            log.debug("Sending region request: {}", body);
+            var request = new org.springframework.http.HttpEntity<>(body, buildHeaders(token));
+            log.debug("POST to URL: {} with headers: {}", url, request.getHeaders());
+            ResponseEntity<URegionResponse> resp = restTemplate.postForEntity(url, request, URegionResponse.class);
             if (resp.getStatusCode() == HttpStatus.CREATED || resp.getStatusCode() == HttpStatus.OK) {
                 log.info("Universe Region Registrierung erfolgreich: name={} status={}", name, resp.getStatusCode());
                 return true;
@@ -101,7 +96,7 @@ public class RUniverseClientService {
             log.warn("Universe Region Registrierung unerwarteter Status {} für name={}", resp.getStatusCode(), name);
             return false;
         } catch (RestClientException e) {
-            log.warn("Universe Region Registrierung fehlgeschlagen name={}: {}", name, e.getMessage());
+            log.warn("Universe Region Registrierung fehlgeschlagen name={}", name, e);
             return false;
         }
     }
@@ -109,7 +104,7 @@ public class RUniverseClientService {
     private HttpHeaders buildHeaders(String token) {
         HttpHeaders h = new HttpHeaders();
         if (token != null && !token.isBlank()) h.set(HttpHeaders.AUTHORIZATION, "Bearer " + token.trim());
-        h.set(HttpHeaders.CONTENT_TYPE, "application/json");
+        h.setContentType(MediaType.APPLICATION_JSON);
         return h;
     }
 

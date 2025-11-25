@@ -18,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwtServiceTest {
 
     @Test
-    void createTokenWithSecretKey_ecKey_success() throws Exception {
+    void createTokenWithPrivateKey_ecKey_success() throws Exception {
         KeyService keyService = Mockito.mock(KeyService.class); // not used directly
         JwtService jwtService = new JwtService(keyService);
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
         kpg.initialize(256);
         KeyPair pair = kpg.generateKeyPair();
-        String token = jwtService.createTokenWithSecretKey(pair.getPrivate(), "subj", Map.of("a","b"), Instant.now().plusSeconds(60));
+        String token = jwtService.createTokenWithPrivateKey(pair.getPrivate(), "subj", Map.of("a","b"), Instant.now().plusSeconds(60));
         assertNotNull(token);
         assertTrue(token.split("\\.").length >= 3, "JWT should have 3 parts");
     }
@@ -38,7 +38,7 @@ class JwtServiceTest {
         KeyPair pair = kpg.generateKeyPair();
         PrivateKey priv = pair.getPrivate();
         PublicKey pub = pair.getPublic();
-        String token = jwtService.createTokenWithSecretKey(priv, "user1", Map.of("x","y"), Instant.now().plusSeconds(60));
+        String token = jwtService.createTokenWithPrivateKey(priv, "user1", Map.of("x","y"), Instant.now().plusSeconds(60));
         KeyIntent intent = KeyIntent.of("system","auth");
         Mockito.when(keyService.getPublicKeysForIntent(KeyType.UNIVERSE, intent)).thenReturn(java.util.List.of(pub));
         Optional<Jws<Claims>> claimsOpt = jwtService.validateTokenWithPublicKey(token, KeyType.UNIVERSE, intent);
@@ -53,7 +53,7 @@ class JwtServiceTest {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
         kpg.initialize(256);
         KeyPair signer = kpg.generateKeyPair();
-        String token = jwtService.createTokenWithSecretKey(signer.getPrivate(), "userX", null, Instant.now().plusSeconds(60));
+        String token = jwtService.createTokenWithPrivateKey(signer.getPrivate(), "userX", null, Instant.now().plusSeconds(60));
         KeyPair other = kpg.generateKeyPair();
         KeyIntent intent = KeyIntent.of("system","auth");
         Mockito.when(keyService.getPublicKeysForIntent(KeyType.UNIVERSE, intent)).thenReturn(java.util.List.of(other.getPublic()));
