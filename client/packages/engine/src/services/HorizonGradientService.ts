@@ -243,7 +243,7 @@ export class HorizonGradientService {
     (material as any).useVertexColors = true; // Enable vertex colors (not in TypeScript types but exists)
     material.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
     material.backFaceCulling = false; // Visible from inside
-    material.alpha = 1.0; // Vertex alpha controls transparency
+    material.alpha = this.alpha; // Set initial alpha from config
 
     return material;
   }
@@ -360,7 +360,15 @@ export class HorizonGradientService {
     }
 
     this.alpha = alpha;
+
+    // Update vertex colors (RGBA with new alpha)
     this.updateVertexColors();
+
+    // Update material alpha for all planes
+    this.materials.forEach((material) => {
+      material.alpha = alpha;
+    });
+
     logger.info('Horizon gradient alpha updated', { alpha });
   }
 
