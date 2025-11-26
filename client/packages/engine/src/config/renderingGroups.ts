@@ -19,12 +19,12 @@ export const RENDERING_GROUPS = {
   WORLD: 2,
 
   /** Precipitation (rain, snow) - renders after world */
-  PRECIPITATION: 4,
+  PRECIPITATION: 3,
 
   /** Selection overlays (highlights) - renders on top */
   SELECTION_OVERLAY: 4,
 
-  /** Camera decorators (underwater/fog sphere effects) - renders after selection */
+  /** Camera decorators (underwater/fog sphere effects) - renders with world */
   CAM_DECORATORS: 2,
 
   // Future extensions:

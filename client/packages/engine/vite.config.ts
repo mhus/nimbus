@@ -32,6 +32,24 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3001,
       open: true,
+      hmr: {
+        overlay: true,
+      },
+      watch: {
+        // Use polling for better reliability with large projects
+        usePolling: false,
+        // Increase file descriptor limit awareness
+        ignored: ['**/node_modules/**', '**/dist/**'],
+      },
+    },
+    optimizeDeps: {
+      // Force re-optimization on startup
+      force: false,
+      // Increase esbuild memory and threads
+      esbuildOptions: {
+        // More memory for large dependencies
+        logLevel: 'info',
+      },
     },
   };
 });

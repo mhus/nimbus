@@ -15,7 +15,8 @@ import {
   Texture,
   Color4,
   Vector3,
-  TransformNode,
+  RawTexture,
+  Constants,
 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
@@ -42,17 +43,18 @@ export class PrecipitationService {
 
   // Particle system
   private particleSystem?: ParticleSystem;
-  private emitterNode?: TransformNode; // Dummy node as emitter, attached to camera root
 
   // Configuration
   private enabled: boolean = false;
   private intensity: number = 0; // 0-100
   private precipitationType: PrecipitationType = PrecipitationType.RAIN;
 
-  // Particle properties
-  private particleSize: number = 0.3; // Default size for rain
-  private particleColor: Color4 = new Color4(0.5, 0.5, 0.8, 1.0); // Slightly blue for rain
-  private particleTexture?: Texture;
+  // Particle properties (these are used when creating the particle system)
+  private particleSize: number = 0.3;
+  private particleColor: Color4 = new Color4(0.5, 0.5, 0.8, 1.0);
+  private particleSpeed: number = 25; // EmitPower
+  private particleGravity: number = 15; // Gravity strength
+  private particleTexture?: RawTexture;
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -125,25 +127,34 @@ export class PrecipitationService {
   public setPrecipitationType(type: PrecipitationType): void {
     if (this.precipitationType === type) return;
 
+    logger.info('🔄 setPrecipitationType called', {
+      newType: type,
+      oldType: this.precipitationType,
+      enabled: this.enabled,
+      hasParticleSystem: !!this.particleSystem,
+    });
+
+    // Remember current state
+    const wasEnabled = this.enabled;
+
+    // Change type
     this.precipitationType = type;
 
-    // Update default properties based on type
-    if (type === PrecipitationType.RAIN) {
-      this.particleSize = 0.3; // Medium size for visibility
-      this.particleColor = new Color4(0.5, 0.5, 0.8, 1.0); // Slightly blue
-    } else {
-      // Snow
-      this.particleSize = 0.5; // Larger for snow
-      this.particleColor = new Color4(1.0, 1.0, 1.0, 1.0); // White
-    }
-
-    // Recreate particle system with new settings
-    if (this.enabled) {
+    // Dispose old particle system if exists
+    if (this.particleSystem) {
+      logger.info('🗑️ Disposing old particle system');
       this.disposeParticleSystem();
-      this.createParticleSystem();
+      logger.info('✅ Old system disposed');
     }
 
-    logger.info('Precipitation type changed', { type });
+    // Recreate particle system if it was enabled
+    if (wasEnabled) {
+      logger.info('🔨 Creating new particle system for type:', type);
+      this.createParticleSystem();
+      logger.info('✅ New system created, isStarted:', this.particleSystem?.isStarted());
+    }
+
+    logger.info('✅ Precipitation type changed complete', { type, wasEnabled });
   }
 
   /**
@@ -164,13 +175,7 @@ export class PrecipitationService {
     }
 
     this.particleSize = size;
-
-    if (this.particleSystem) {
-      this.particleSystem.minSize = size * 0.8;
-      this.particleSystem.maxSize = size * 1.2;
-    }
-
-    logger.info('Particle size changed', { size });
+    logger.info('Particle size set', { size });
   }
 
   /**
@@ -187,13 +192,7 @@ export class PrecipitationService {
    */
   public setParticleColor(color: Color4): void {
     this.particleColor = color;
-
-    if (this.particleSystem) {
-      this.particleSystem.color1 = color;
-      this.particleSystem.color2 = color;
-    }
-
-    logger.info('Particle color changed', {
+    logger.info('Particle color set', {
       r: color.r,
       g: color.g,
       b: color.b,
@@ -207,6 +206,28 @@ export class PrecipitationService {
    */
   public getParticleColor(): Color4 {
     return this.particleColor.clone();
+  }
+
+  /**
+   * Set particle speed (emit power)
+   * @param speed Emit power value
+   */
+  public setParticleSpeed(speed: number): void {
+    if (speed < 0) {
+      throw new Error('Particle speed cannot be negative');
+    }
+
+    this.particleSpeed = speed;
+    logger.info('Particle speed set', { speed });
+  }
+
+  /**
+   * Set particle gravity
+   * @param gravity Gravity strength (negative for downward)
+   */
+  public setParticleGravity(gravity: number): void {
+    this.particleGravity = Math.abs(gravity);
+    logger.info('Particle gravity set', { gravity: this.particleGravity });
   }
 
   /**
@@ -245,10 +266,25 @@ export class PrecipitationService {
    */
   public update(deltaTime: number): void {
     // Update emitter position to follow camera
-    if (this.particleSystem && this.emitterNode && this.enabled) {
-      // Get world position of emitter node (which follows camera via parent)
-      const worldPos = this.emitterNode.getAbsolutePosition();
-      this.particleSystem.emitter = worldPos;
+    if (this.particleSystem && this.enabled) {
+      // Get camera position and update emitter
+      const cameraPos = this.cameraService.getPosition();
+      if (cameraPos) {
+        const emitterPos = cameraPos.clone();
+        emitterPos.y += 30; // 30 blocks above camera
+        this.particleSystem.emitter = emitterPos;
+
+        // Log every 60 frames (about once per second at 60fps)
+        if (Math.random() < 0.016) {
+          logger.info('🔄 Precipitation update', {
+            emitterPos,
+            cameraPos,
+            activeParticles: this.particleSystem.getActiveCount(),
+            isStarted: this.particleSystem.isStarted(),
+            emitRate: this.particleSystem.emitRate,
+          });
+        }
+      }
     }
   }
 
@@ -257,8 +293,6 @@ export class PrecipitationService {
    */
   public dispose(): void {
     this.disposeParticleSystem();
-    this.emitterNode?.dispose();
-    this.emitterNode = undefined;
     this.particleTexture?.dispose();
     logger.info('PrecipitationService disposed');
   }
@@ -269,83 +303,104 @@ export class PrecipitationService {
    * Create particle system
    */
   private createParticleSystem(): void {
-    // Get camera environment root
-    const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
-    if (!cameraRoot) {
-      logger.error('Camera environment root not available');
+    // Get camera position
+    const cameraPos = this.cameraService.getPosition();
+    if (!cameraPos) {
+      logger.error('Camera position not available');
       return;
     }
 
-    // Create dummy emitter node attached to camera environment root
-    this.emitterNode = new TransformNode('precipitationEmitter', this.scene);
-    this.emitterNode.parent = cameraRoot;
-    this.emitterNode.position.y = 20; // 20 blocks above camera
+    // Create particle texture (CRITICAL - without this, particles won't render!)
+    this.createParticleTexture();
 
-    // Create particle system
-    this.particleSystem = new ParticleSystem('precipitation', 2000, this.scene);
+    // Create particle system with more capacity
+    this.particleSystem = new ParticleSystem('precipitation', 5000, this.scene);
 
-    // Set emitter to the world position (will be updated in update())
-    this.particleSystem.emitter = this.emitterNode.getAbsolutePosition();
+    // Set emitter ABOVE camera
+    const emitterPos = cameraPos.clone();
+    emitterPos.y += 30; // 30 blocks above camera
+    this.particleSystem.emitter = emitterPos;
 
-    // Emitter area - emit particles in area around camera
-    this.particleSystem.minEmitBox = new Vector3(-50, 0, -50);
-    this.particleSystem.maxEmitBox = new Vector3(50, 0, 50);
+    // LARGE emitter area - min 5x5 chunks, camera in center
+    this.particleSystem.minEmitBox = new Vector3(-80, -5, -80);
+    this.particleSystem.maxEmitBox = new Vector3(80, 5, 80);
 
-    // Particle direction (downward)
-    this.particleSystem.direction1 = new Vector3(0, -1, 0);
-    this.particleSystem.direction2 = new Vector3(0, -1, 0);
+    // USE the texture we created
+    this.particleSystem.particleTexture = this.particleTexture!;
 
-    // Particle speed
-    if (this.precipitationType === PrecipitationType.RAIN) {
-      this.particleSystem.minEmitPower = 20;
-      this.particleSystem.maxEmitPower = 30;
-    } else {
-      // Snow falls slower
-      this.particleSystem.minEmitPower = 3;
-      this.particleSystem.maxEmitPower = 6;
-    }
+    // Use stored particle properties
+    this.particleSystem.direction1 = new Vector3(-0.1, -1, -0.1);
+    this.particleSystem.direction2 = new Vector3(0.1, -1, 0.1);
+    this.particleSystem.minEmitPower = this.particleSpeed * 0.8;
+    this.particleSystem.maxEmitPower = this.particleSpeed * 1.2;
+    this.particleSystem.gravity = new Vector3(0, -this.particleGravity, 0);
 
-    // Particle lifetime (longer to see them fall)
-    this.particleSystem.minLifeTime = 3;
-    this.particleSystem.maxLifeTime = 5;
-
-    // Particle size
+    // Particle size from stored value
     this.particleSystem.minSize = this.particleSize * 0.8;
     this.particleSystem.maxSize = this.particleSize * 1.2;
 
-    // Particle color
-    this.particleSystem.color1 = this.particleColor;
-    this.particleSystem.color2 = this.particleColor;
-    this.particleSystem.colorDead = new Color4(this.particleColor.r, this.particleColor.g, this.particleColor.b, 0);
+    // Particle color from stored value
+    this.particleSystem.addColorGradient(0.0, this.particleColor);
+    this.particleSystem.addColorGradient(1.0, this.particleColor);
 
-    // Texture - if no texture is set, particles will be rendered as simple sprites
-    if (this.particleTexture) {
-      this.particleSystem.particleTexture = this.particleTexture;
-    }
+    // Particle lifetime
+    this.particleSystem.minLifeTime = 4;
+    this.particleSystem.maxLifeTime = 6;
 
-    // Make sure particles are visible
-    this.particleSystem.updateSpeed = 0.01;
+    // Size gradients - constant size
+    this.particleSystem.addSizeGradient(0.0, 1.0);
+    this.particleSystem.addSizeGradient(1.0, 1.0);
 
-    // Emission rate (updated by intensity)
+    // Emission rate (based on intensity)
     this.updateParticleIntensity();
 
-    // Gravity (particles fall down)
-    this.particleSystem.gravity = new Vector3(0, -9.81, 0);
+    // Billboard mode
+    this.particleSystem.isBillboardBased = true;
 
-    // Blending
-    this.particleSystem.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+    // Blending - use ADD for better visibility
+    this.particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
 
-    // Rendering group
-    this.particleSystem.renderingGroupId = RENDERING_GROUPS.PRECIPITATION;
+    // Update speed
+    this.particleSystem.updateSpeed = 0.02;
+
+    // Rendering group - use WORLD for testing (we KNOW this works)
+    this.particleSystem.renderingGroupId = RENDERING_GROUPS.WORLD;
+
+    logger.info('⚠️ Using WORLD rendering group for debugging');
 
     // Start emitting
     this.particleSystem.start();
 
-    logger.info('Particle system created', {
+    logger.info('✨ Particle system created and started', {
       type: this.precipitationType,
       intensity: this.intensity,
-      size: this.particleSize,
-      color: this.particleColor,
+      emissionRate: this.particleSystem.emitRate,
+      particleCount: this.particleSystem.getCapacity(),
+      size: {
+        min: this.particleSystem.minSize,
+        max: this.particleSystem.maxSize,
+      },
+      color: {
+        r: this.particleColor.r,
+        g: this.particleColor.g,
+        b: this.particleColor.b,
+        a: this.particleColor.a,
+      },
+      emitPower: {
+        min: this.particleSystem.minEmitPower,
+        max: this.particleSystem.maxEmitPower,
+      },
+      lifetime: {
+        min: this.particleSystem.minLifeTime,
+        max: this.particleSystem.maxLifeTime,
+      },
+      emitterPosition: this.particleSystem.emitter,
+      emitBox: {
+        min: this.particleSystem.minEmitBox,
+        max: this.particleSystem.maxEmitBox,
+      },
+      renderingGroupId: this.particleSystem.renderingGroupId,
+      isStarted: this.particleSystem.isStarted(),
     });
   }
 
@@ -359,10 +414,51 @@ export class PrecipitationService {
     const emissionRate = (this.intensity / 100) * 500;
     this.particleSystem.emitRate = emissionRate;
 
-    logger.debug('Particle intensity updated', {
+    logger.info('💧 Particle intensity updated', {
       intensity: this.intensity,
       emissionRate,
+      isStarted: this.particleSystem.isStarted(),
     });
+  }
+
+  /**
+   * Create particle texture - simple circular gradient
+   */
+  private createParticleTexture(): void {
+    if (this.particleTexture) {
+      return;
+    }
+
+    const textureSize = 16;
+    const textureData = new Uint8Array(textureSize * textureSize * 4);
+    const center = textureSize / 2;
+
+    for (let y = 0; y < textureSize; y++) {
+      for (let x = 0; x < textureSize; x++) {
+        const dx = x - center + 0.5;
+        const dy = y - center + 0.5;
+        const dist = Math.sqrt(dx * dx + dy * dy) / center;
+        const texAlpha = Math.max(0, 1 - dist);
+
+        const index = (y * textureSize + x) * 4;
+        textureData[index] = 255;     // R
+        textureData[index + 1] = 255; // G
+        textureData[index + 2] = 255; // B
+        textureData[index + 3] = Math.floor(texAlpha * 255); // A
+      }
+    }
+
+    this.particleTexture = RawTexture.CreateRGBATexture(
+      textureData,
+      textureSize,
+      textureSize,
+      this.scene,
+      false,
+      false,
+      Constants.TEXTURE_BILINEAR_SAMPLINGMODE
+    );
+
+    logger.info('Particle texture created');
   }
 
   /**

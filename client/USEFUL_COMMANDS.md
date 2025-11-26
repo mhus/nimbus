@@ -89,3 +89,7 @@ doScrawlStart({
 }
 })
 
+Snow:
+
+doPrecipitationStart(50, 1.0, 1.0, 1.0, 0.6, 5, 3)
+
