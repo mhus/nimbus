@@ -108,6 +108,9 @@ import {
   SunColorCommand,
   SunTextureCommand,
   SunSizeCommand,
+  SunLensFlareEnableCommand,
+  SunLensFlareIntensityCommand,
+  SunLensFlareColorCommand,
 } from './commands/sun';
 import {
   ScrawlListCommand,
@@ -276,6 +279,9 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SunColorCommand(appContext));
     commandService.registerHandler(new SunTextureCommand(appContext));
     commandService.registerHandler(new SunSizeCommand(appContext));
+    commandService.registerHandler(new SunLensFlareEnableCommand(appContext));
+    commandService.registerHandler(new SunLensFlareIntensityCommand(appContext));
+    commandService.registerHandler(new SunLensFlareColorCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

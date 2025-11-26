@@ -104,7 +104,6 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
   - doSunEnable
   - ...
 ```text
-
   1. sunEnable - Sonne ein-/ausschalten
   - Usage: sunEnable [true|false]
   - Zeigt/versteckt die Sonne
@@ -128,7 +127,12 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
     - sunColor 1 0.5 0.2 - Orange
 ```
 
-[ ] Sun Lense Flare Effekt
+[ ] Groesse der Sonne soll einstellbar sein (radius)
+- Initial aus WorldInfo
+- Initial alle Sun Parameter aus WorldInfo holen
+- Erstelle ein Commando mit dem die Groesse der Sonne eingestellt werden kann
+
+[?] Sun Lense Flare Effekt
 - Es soll einen Lense Flare Effekt fuer die Sonne geben
 - Der Effekt kann in den SunService integriert werden
 - Ein Shader kann genutzt werden um den Effekt zu erzeugen
@@ -141,5 +145,11 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
 - Erstelle eine Methode setSunLenseFlareIntensity(intensity: number)
 - Erstelle eine Methode setSunLenseFlareColor(color: Color)
 - Erstelle in engine Commands um den Lense Flare Effekt zu steuern
+```text
+  sunLensFlareIntensity 1.5    # Intensität erhöhen
+  sunLensFlareColor 1 0.7 0.4  # Orange Flares
+  sunLensFlareEnable false     # Ausschalten zum Vergleich
+```
+- Wenn die sonne deaktiviert ist, soll auch der Lense Flare Effekt deaktiviert werden
 
 ## Sky

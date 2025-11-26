@@ -10,3 +10,6 @@ export { SunElevationCommand } from './SunElevationCommand';
 export { SunColorCommand } from './SunColorCommand';
 export { SunTextureCommand } from './SunTextureCommand';
 export { SunSizeCommand } from './SunSizeCommand';
+export { SunLensFlareEnableCommand } from './SunLensFlareEnableCommand';
+export { SunLensFlareIntensityCommand } from './SunLensFlareIntensityCommand';
+export { SunLensFlareColorCommand } from './SunLensFlareColorCommand';

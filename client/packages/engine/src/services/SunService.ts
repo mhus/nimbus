@@ -9,6 +9,8 @@ import {
   RawTexture,
   Constants,
   Texture,
+  LensFlareSystem,
+  LensFlare,
 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
@@ -34,6 +36,12 @@ export class SunService {
   private sunMesh?: Mesh;
   private sunMaterial?: StandardMaterial;
   private sunTexture?: Texture | RawTexture;
+
+  // Lens flare system
+  private lensFlareSystem?: LensFlareSystem;
+  private lensFlareEnabled: boolean = true;
+  private lensFlareIntensity: number = 1.0;
+  private lensFlareColor: Color3 = new Color3(1, 0.9, 0.7); // Warm flare color
 
   // Sun position parameters
   private currentAngleY: number = 90; // Default: East
@@ -88,11 +96,88 @@ export class SunService {
     // Set initial position
     this.updateSunPosition();
 
+    // Create lens flare system
+    this.createLensFlareSystem();
+
     logger.info('SunService initialized', {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
       hasCustomTexture: this.appContext.worldInfo?.settings.sunTexture !== undefined,
+      lensFlareEnabled: this.lensFlareEnabled,
     });
+  }
+
+  /**
+   * Create lens flare system attached to sun mesh
+   */
+  private createLensFlareSystem(): void {
+    if (!this.sunMesh) {
+      logger.error('Cannot create lens flare system: sun mesh not available');
+      return;
+    }
+
+    // Create lens flare system with sun mesh as emitter
+    this.lensFlareSystem = new LensFlareSystem('sunLensFlare', this.sunMesh, this.scene);
+
+    // Get lens flare texture URL from asset server
+    let flareTextureUrl: string;
+    if (this.networkService) {
+      flareTextureUrl = this.networkService.getAssetUrl('textures/sun/flare.png');
+    } else {
+      // Fallback to data URL if network service not available
+      flareTextureUrl = this.createLensFlareTextureDataUrl();
+    }
+
+    // Add multiple flares at different positions along the flare axis
+    // Position 0 = at emitter, 1 = opposite side, 0.5 = middle
+    // Create flares immediately like in the Babylon.js example
+
+    // Main bright flare at sun position
+    new LensFlare(0.3, 0, this.lensFlareColor, flareTextureUrl, this.lensFlareSystem);
+
+    // Secondary flares along the axis
+    new LensFlare(0.1, 0.2, new Color3(1, 0.8, 0.6), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.15, 0.4, new Color3(0.9, 0.7, 0.5), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.08, 0.6, new Color3(1, 0.9, 0.7), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.12, 0.8, new Color3(0.8, 0.6, 0.4), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.2, 1.0, new Color3(1, 0.85, 0.6), flareTextureUrl, this.lensFlareSystem);
+
+    // Configure lens flare system
+    this.lensFlareSystem.borderLimit = 300; // Distance from screen edge before fading
+    this.lensFlareSystem.isEnabled = this.lensFlareEnabled;
+
+    // Set lens flare rendering group - only occlude by world meshes
+    this.lensFlareSystem.meshesSelectionPredicate = (mesh) => {
+      return mesh.renderingGroupId === RENDERING_GROUPS.WORLD;
+    };
+
+    logger.info('Lens flare system created', {
+      textureUrl: flareTextureUrl,
+      enabled: this.lensFlareEnabled
+    });
+  }
+
+  /**
+   * Create data URL for lens flare texture (fallback if NetworkService unavailable)
+   */
+  private createLensFlareTextureDataUrl(): string {
+    const size = 128;
+    const center = size / 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+
+    // Create radial gradient
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    return canvas.toDataURL();
   }
 
   /**
@@ -326,7 +411,84 @@ export class SunService {
       this.sunMesh.setEnabled(enabled);
     }
 
+    // Also disable lens flare when sun is disabled
+    if (this.lensFlareSystem) {
+      this.lensFlareSystem.isEnabled = enabled && this.lensFlareEnabled;
+    }
+
     logger.info('Sun visibility changed', { enabled });
+  }
+
+  /**
+   * Enable/disable lens flare effect
+   * @param enabled True to show lens flare, false to hide
+   */
+  setSunLensFlareEnabled(enabled: boolean): void {
+    this.lensFlareEnabled = enabled;
+
+    if (this.lensFlareSystem) {
+      this.lensFlareSystem.isEnabled = enabled;
+    }
+
+    logger.info('Lens flare visibility changed', { enabled });
+  }
+
+  /**
+   * Set lens flare intensity
+   * @param intensity Intensity multiplier (0-2, default: 1.0)
+   */
+  setSunLensFlareIntensity(intensity: number): void {
+    this.lensFlareIntensity = intensity;
+
+    if (this.lensFlareSystem) {
+      // Update all flares in the system
+      this.lensFlareSystem.lensFlares.forEach((flare, index) => {
+        // Main flare (index 0) gets full intensity
+        if (index === 0) {
+          flare.size = 0.3 * intensity;
+        } else {
+          // Secondary flares get scaled intensity
+          const baseSizes = [0.1, 0.15, 0.08, 0.12, 0.2];
+          flare.size = baseSizes[index - 1] * intensity;
+        }
+      });
+    }
+
+    logger.info('Lens flare intensity set', { intensity });
+  }
+
+  /**
+   * Set lens flare color
+   * @param r Red component (0-1)
+   * @param g Green component (0-1)
+   * @param b Blue component (0-1)
+   */
+  setSunLensFlareColor(r: number, g: number, b: number): void {
+    this.lensFlareColor = new Color3(r, g, b);
+
+    if (this.lensFlareSystem && this.lensFlareSystem.lensFlares.length > 0) {
+      // Update main flare color
+      this.lensFlareSystem.lensFlares[0].color = this.lensFlareColor;
+
+      // Update secondary flares with tinted variations
+      if (this.lensFlareSystem.lensFlares.length > 1) {
+        this.lensFlareSystem.lensFlares[1].color = new Color3(r, g * 0.9, b * 0.8);
+      }
+      if (this.lensFlareSystem.lensFlares.length > 2) {
+        this.lensFlareSystem.lensFlares[2].color = new Color3(r * 0.95, g * 0.8, b * 0.7);
+      }
+      if (this.lensFlareSystem.lensFlares.length > 3) {
+        this.lensFlareSystem.lensFlares[3].color = new Color3(r, g * 0.95, b * 0.85);
+      }
+      if (this.lensFlareSystem.lensFlares.length > 4) {
+        this.lensFlareSystem.lensFlares[4].color = new Color3(r * 0.9, g * 0.75, b * 0.6);
+      }
+      if (this.lensFlareSystem.lensFlares.length > 5) {
+        this.lensFlareSystem.lensFlares[5].color = new Color3(r, g * 0.9, b * 0.75);
+      }
+    }
+
+    logger.info('Lens flare color updated', { r, g, b });
   }
 
   /**
@@ -343,6 +505,7 @@ export class SunService {
    * Cleanup and dispose resources
    */
   dispose(): void {
+    this.lensFlareSystem?.dispose();
     this.sunMesh?.dispose();
     this.sunMaterial?.dispose();
     this.sunTexture?.dispose();
