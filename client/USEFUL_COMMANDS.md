@@ -89,7 +89,10 @@ doScrawlStart({
 }
 })
 
-Snow:
 
+// Schnee
 doPrecipitationStart(50, 1.0, 1.0, 1.0, 0.6, 5, 3)
+
+// Regen (zweites Mal - sollte jetzt funktionieren!)
+doPrecipitationStart(50, 0.4, 0.4, 0.6, 0.3, 25, 15)
 

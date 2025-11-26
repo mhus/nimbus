@@ -68,20 +68,21 @@ export class PrecipitationStartCommand extends CommandHandler {
     }
 
     try {
-      // Stop any existing precipitation
-      if (precipitationService.isEnabled()) {
-        precipitationService.setEnabled(false);
-      }
-
-      // Set all parameters
+      // Set all parameters first (while system might be running)
       precipitationService.setIntensity(intensity);
       precipitationService.setParticleSize(size);
       precipitationService.setParticleColor(new Color4(r, g, b, 1.0));
       precipitationService.setParticleSpeed(speed);
       precipitationService.setParticleGravity(gravity);
 
-      // Start
-      precipitationService.setEnabled(true);
+      // If not enabled, enable it (creates system with new parameters)
+      if (!precipitationService.isEnabled()) {
+        precipitationService.setEnabled(true);
+      } else {
+        // Already enabled - need to recreate with new parameters
+        precipitationService.setEnabled(false);
+        precipitationService.setEnabled(true);
+      }
 
       logger.info('Precipitation started', { intensity, color: { r, g, b }, size, speed, gravity });
       return `Precipitation started: intensity=${intensity}, color=(${r},${g},${b}), size=${size}, speed=${speed}, gravity=${gravity}`;

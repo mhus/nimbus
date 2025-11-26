@@ -69,23 +69,37 @@ export class PrecipitationService {
    * @param enabled True to enable, false to disable
    */
   public setEnabled(enabled: boolean): void {
-    if (this.enabled === enabled) return;
+    logger.info('🔧 setEnabled called', {
+      enabled,
+      currentEnabled: this.enabled,
+      hasSystem: !!this.particleSystem,
+    });
+
+    if (this.enabled === enabled) {
+      logger.info('⏭️ Already in this state, skipping');
+      return;
+    }
 
     this.enabled = enabled;
 
     if (enabled) {
-      logger.info('Enabling precipitation...', {
+      logger.info('✅ Enabling precipitation...', {
         type: this.precipitationType,
         intensity: this.intensity,
         size: this.particleSize,
+        speed: this.particleSpeed,
+        gravity: this.particleGravity,
+        color: this.particleColor,
       });
       this.createParticleSystem();
+      logger.info('✅ Create complete, hasSystem:', !!this.particleSystem);
     } else {
-      logger.info('Disabling precipitation...');
+      logger.info('🛑 Disabling precipitation...');
       this.disposeParticleSystem();
+      logger.info('🛑 Dispose complete, hasSystem:', !!this.particleSystem);
     }
 
-    logger.info('Precipitation enabled state changed', { enabled });
+    logger.info('✅ setEnabled complete', { enabled, hasSystem: !!this.particleSystem });
   }
 
   /**
@@ -425,8 +439,14 @@ export class PrecipitationService {
    * Create particle texture - simple circular gradient
    */
   private createParticleTexture(): void {
+    // Always recreate texture to avoid disposed texture issues
     if (this.particleTexture) {
-      return;
+      try {
+        this.particleTexture.dispose();
+      } catch (e) {
+        // Ignore dispose errors
+      }
+      this.particleTexture = undefined;
     }
 
     const textureSize = 16;
