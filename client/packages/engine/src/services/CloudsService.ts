@@ -3,7 +3,7 @@ import {
   Scene,
   TransformNode,
   Mesh,
-  PlaneBuilder,
+  MeshBuilder,
   StandardMaterial,
   Color3,
   RawTexture,
@@ -75,11 +75,11 @@ interface CloudInstance {
  * CloudsService - Manages clouds in the sky
  *
  * Features:
- * - Billboard meshes that always face camera
+ * - Horizontal flat planes (lying on XZ plane)
  * - Individual textures per cloud
  * - Distance-based fading
  * - Movement with configurable speed and direction
- * - Maximum 10 clouds simultaneously
+ * - Unlimited clouds (dynamically managed)
  * - Attached to camera environment root
  */
 export class CloudsService {
@@ -559,18 +559,18 @@ export class CloudsService {
    * Create cloud mesh
    */
   private createCloudMesh(cloud: CloudInstance): Mesh {
-    const mesh = PlaneBuilder.CreatePlane(
+    // Use CreateGround for horizontal plane (lies flat on XZ plane)
+    const mesh = MeshBuilder.CreateGround(
       `cloud_${cloud.id}`,
       {
         width: cloud.width,
-        height: cloud.height,
+        height: cloud.height,  // height parameter is depth in Z direction
       },
       this.scene
     );
 
     mesh.material = cloud.material!;
-    mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;  // Always face camera
-    mesh.infiniteDistance = true;  // Always at horizon
+    // Note: infiniteDistance removed - clouds are at fixed camera-relative positions
     mesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
 
     return mesh;
