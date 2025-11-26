@@ -231,6 +231,37 @@ Ist es moeglich einen Halbmond darzustellen ohne spezielle texture (rein geometr
   - 3D-Effekt durch spherical shading
   - Anti-Aliasing am Rand
   - Phasen-Namen: New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, etc.
+
+
+       341 -      // If no moons in WorldInfo, create 3 default moons (ENABLED for testing)
+       342 -      if (this.moons.length === 0) {
+       343 -        this.moons.push({
+       344 -          enabled: true, // ENABLED!
+       345 -          size: 150, // Large size
+       346 -          positionOnCircle: 0, // North
+       347 -          heightOverCamera: 45,
+       348 -          distance: 200, // Close to camera
+       349 -          phase: 1.0, // Full moon
+       350 -          texture: 'textures/moon/moon1.png', // Moon texture
+       351 -        });
+       352 -        this.moons.push({
+       353 -          enabled: true, // ENABLED!
+       354 -          size: 150,
+       355 -          positionOnCircle: 120, // East-ish
+       356 -          heightOverCamera: 30,
+       357 -          distance: 400, // Medium distance
+       358 -          phase: 0.5, // Half moon
+       359 -          texture: 'textures/moon/moon1.png', // Moon texture
+       360 -        });
+       361 -        this.moons.push({
+       362 -          enabled: true, // ENABLED!
+       363 -          size: 150,
+       364 -          positionOnCircle: 240, // West-ish
+       365 -          heightOverCamera: 60,
+       366 -          distance: 800, // Far away
+       367 -          phase: 0.25, // Crescent
+       368 -          texture: 'textures/moon/moon1.png', // Moon texture
+       369 -        });
 ```
 
 ## Wolken

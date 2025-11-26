@@ -110,26 +110,42 @@ export class MoonService {
           baseColor = moonColor;
         }
 
-        // Calculate 3D sphere position (z-coordinate for shading)
-        float z = sqrt(max(0.0, 1.0 - centered.x * centered.x - centered.y * centered.y));
+        // Calculate 3D sphere position
+        float x = centered.x;
+        float y = centered.y;
+        float z = sqrt(max(0.0, 1.0 - x * x - y * y));
 
-        // Calculate moon phase (terminator position)
-        float phaseShift = (phase - 0.5) * 2.0; // -1 to 1
-        float terminator = phaseShift * 1.0;
+        // Calculate moon phase with CURVED terminator
+        // The terminator is an ellipse on the sphere surface
+        // Light comes from right, terminator position depends on phase
 
-        // Illumination based on phase (geometric clipping)
+        // Phase angle: 0 = new moon, 0.5 = half moon, 1 = full moon
+        float phaseAngle = (phase - 0.5) * 3.14159; // -PI/2 to PI/2
+
+        // The terminator is at angle phaseAngle on the sphere
+        // For a point (x,y,z) on the sphere, check if it's lit
+        // Lit if: x > sin(phaseAngle) when viewed from front
+
+        // But we need the CURVED edge: the terminator is where x = sin(phaseAngle) * sqrt(1 - y^2)
+        // This creates an ellipse
+        float terminatorXatY = sin(phaseAngle) * sqrt(max(0.0, 1.0 - y * y));
+
+        // Calculate if point is illuminated
         float illumination;
-        if (centered.x > terminator) {
-          // Lit side
-          illumination = 1.0;
+        float transition = 0.08;
+
+        if (phase < 0.5) {
+          // Waxing: crescent to half
+          // Dark from left, ellipse on right
+          illumination = smoothstep(terminatorXatY - transition, terminatorXatY + transition, x);
         } else {
-          // Dark side with smooth transition
-          float transition = 0.05;
-          illumination = smoothstep(terminator - transition, terminator + transition, centered.x);
+          // Waning: half to full
+          // Keep the ellipse shape
+          illumination = smoothstep(terminatorXatY - transition, terminatorXatY + transition, x);
         }
 
         // Apply sphere shading (Lambert)
-        float brightness = illumination * z;
+        float brightness = illumination * z * 1.2;
 
         // Final color (texture or solid color, clipped by phase)
         vec3 finalColor = baseColor * brightness;
@@ -181,24 +197,12 @@ export class MoonService {
   private async createMoon(index: number): Promise<void> {
     const moon = this.moons[index];
 
-    logger.info(`Creating moon ${index}...`, {
-      enabled: moon.enabled,
-      size: moon.size,
-      position: moon.positionOnCircle,
-      elevation: moon.heightOverCamera,
-      distance: moon.distance,
-    });
-
     const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
 
     if (!cameraRoot) {
       logger.error('Camera environment root not available');
       return;
     }
-
-    logger.info(`Camera root found for moon ${index}:`, {
-      position: cameraRoot.position,
-    });
 
     // Create root node
     moon.root = new TransformNode(`moon${index}Root`, this.scene);
@@ -217,7 +221,6 @@ export class MoonService {
 
     // Create material
     moon.material = this.createMoonMaterial(index);
-    logger.info(`Material created for moon ${index}`);
 
     // Create billboard mesh
     moon.mesh = PlaneBuilder.CreatePlane(
@@ -231,26 +234,15 @@ export class MoonService {
     moon.mesh.infiniteDistance = true;
     moon.mesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
     moon.mesh.setEnabled(moon.enabled);
-    moon.mesh.isVisible = true;
-
-    logger.info(`Mesh created for moon ${index}:`, {
-      isEnabled: moon.mesh.isEnabled(),
-      isVisible: moon.mesh.isVisible,
-      renderingGroupId: moon.mesh.renderingGroupId,
-      billboardMode: moon.mesh.billboardMode,
-      infiniteDistance: moon.mesh.infiniteDistance,
-      hasParent: !!moon.mesh.parent,
-    });
 
     // Set initial position
     this.updateMoonPosition(index);
 
-    logger.info(`Moon ${index} FULLY CREATED`, {
-      rootPosition: moon.root.position,
-      meshPosition: moon.mesh.absolutePosition,
+    logger.info(`Moon ${index} created`, {
       size: moon.size,
+      phase: moon.phase,
       enabled: moon.enabled,
-      visible: moon.mesh.isVisible,
+      hasTexture: !!moon.textureObject,
     });
   }
 
@@ -322,37 +314,7 @@ export class MoonService {
     // Load parameters from WorldInfo
     this.loadParametersFromWorldInfo();
 
-    // If no moons in WorldInfo, create 3 default moons (ENABLED for testing)
-    if (this.moons.length === 0) {
-      this.moons.push({
-        enabled: true, // ENABLED!
-        size: 150, // Large size
-        positionOnCircle: 0, // North
-        heightOverCamera: 45,
-        distance: 200, // Close to camera
-        phase: 1.0, // Full moon
-        texture: 'textures/moon/moon1.png', // Moon texture
-      });
-      this.moons.push({
-        enabled: true, // ENABLED!
-        size: 150,
-        positionOnCircle: 120, // East-ish
-        heightOverCamera: 30,
-        distance: 400, // Medium distance
-        phase: 0.5, // Half moon
-        texture: 'textures/moon/moon1.png', // Moon texture
-      });
-      this.moons.push({
-        enabled: true, // ENABLED!
-        size: 150,
-        positionOnCircle: 240, // West-ish
-        heightOverCamera: 60,
-        distance: 800, // Far away
-        phase: 0.25, // Crescent
-        texture: 'textures/moon/moon1.png', // Moon texture
-      });
-      logger.info('Created 3 default moons (ENABLED for testing)');
-    }
+    // No default moons - only create from WorldInfo
 
     // Create moons
     for (let i = 0; i < this.moons.length; i++) {
