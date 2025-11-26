@@ -138,8 +138,15 @@ export class CommandService {
         const functionName = 'do' + name.charAt(0).toUpperCase() + name.slice(1);
 
         // Create function that calls executeCommand
-        (window as any)[functionName] = (...params: string[]) => {
-          this.executeCommand(name, params)
+        // Accept any type of parameters (string, number, boolean, etc.) and convert to strings
+        (window as any)[functionName] = (...params: any[]) => {
+          // Convert all parameters to strings for the command system
+          const stringParams = params.map(p => {
+            if (p === null || p === undefined) return '';
+            return String(p);
+          });
+
+          this.executeCommand(name, stringParams)
             .then((result) => {
               // Log result to console
               if (result !== undefined && result !== null) {
