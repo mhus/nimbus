@@ -150,7 +150,11 @@ export class MoonService {
         // Final color (texture or solid color, clipped by phase)
         vec3 finalColor = baseColor * brightness;
 
-        gl_FragColor = vec4(finalColor, baseAlpha);
+        // Smooth alpha at edge to remove white border
+        float edgeSoftness = 0.02;
+        float edgeAlpha = smoothstep(1.0, 1.0 - edgeSoftness, dist);
+
+        gl_FragColor = vec4(finalColor, baseAlpha * edgeAlpha);
       }
     `;
 
