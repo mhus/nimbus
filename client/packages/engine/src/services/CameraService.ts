@@ -105,6 +105,14 @@ export class CameraService {
   }
 
   /**
+   * Get camera environment root node for attaching camera-relative effects
+   * @returns Camera environment root transform node
+   */
+  getCameraEnvironmentRoot(): TransformNode | undefined {
+    return this.cameraEnvironmentRoot;
+  }
+
+  /**
    * Initialize the camera
    */
   private initializeCamera(): void {

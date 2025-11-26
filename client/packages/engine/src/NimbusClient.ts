@@ -102,6 +102,12 @@ import {
   SunLightSpecularCommand,
 } from './commands/sunLight';
 import {
+  SunEnableCommand,
+  SunPositionCommand,
+  SunElevationCommand,
+  SunColorCommand,
+} from './commands/sun';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -260,6 +266,12 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SunLightDirectionCommand(appContext));
     commandService.registerHandler(new SunLightDiffuseCommand(appContext));
     commandService.registerHandler(new SunLightSpecularCommand(appContext));
+
+    // Register sun visualization commands
+    commandService.registerHandler(new SunEnableCommand(appContext));
+    commandService.registerHandler(new SunPositionCommand(appContext));
+    commandService.registerHandler(new SunElevationCommand(appContext));
+    commandService.registerHandler(new SunColorCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

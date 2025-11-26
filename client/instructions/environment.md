@@ -80,7 +80,7 @@ cameraEnvironmentRoot in CameraService
 
 Sonne:
 
-[ ] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunService.ts 
+[?] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunService.ts 
 - Der Service soll im RenderService referenziert werden
 - Die sonne soll ein Parikel System nutzen um die sonne darzustellen
 - Die sonne sieht aus wie ein stern, hat 8 strahlen die nach außen gehen, die horizontale und vertikale strahlen sind etwas dicker/weiter als die diagonalen strahlen
@@ -94,7 +94,39 @@ Sonne:
 - Die sonne kann deaktiviert werden (enabled = false)
 - Erstelle eine methode setSunPositionOnCircle(angleY: number)
 - Erstelle eine methode setSunHeightOverCamera(height: number)
+- Das rendern der Sonen soll in einer separaten methode in SunService geschehen, falls die darstellung angepasst werden muss
+- die Farbe der sonne soll einstellbar sein
 
+- Benutze in renderingGroups.ts die rendering group ENVIRONMENT fuer die sonne
+- Wenn ein shader genutzt wird, soll der ShaderService genutzt werden um den shader zu laden
 
+Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
 
+[?] Erstelle in engine Commands um die Sonne zu steuern.
+  - doSunEnable
+  - ...
+```text
+
+  1. sunEnable - Sonne ein-/ausschalten
+  - Usage: sunEnable [true|false]
+  - Zeigt/versteckt die Sonne
+
+  2. sunPosition - Horizontale Position
+  - Usage: sunPosition [angleY]
+  - 0° = Nord, 90° = Ost, 180° = Süd, 270° = West
+  - Ohne Parameter zeigt die aktuelle Position
+
+  3. sunElevation - Höhe über Kamera
+  - Usage: sunElevation [degrees]
+  - -90° = direkt unten, 0° = Horizont, 90° = Zenit
+  - Validierung: -90 bis +90 Grad
+
+  4. sunColor - Sonnenfarbe
+  - Usage: sunColor [r] [g] [b]
+  - RGB Werte zwischen 0 und 1
+  - Beispiele:
+    - sunColor 1 1 1 - Weiß
+    - sunColor 1 0.9 0.7 - Warmer Sonnenuntergang
+    - sunColor 1 0.5 0.2 - Orange
+```
 

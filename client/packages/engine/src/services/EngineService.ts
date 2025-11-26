@@ -20,6 +20,7 @@ import { InputService } from './InputService';
 import { PhysicsService } from './PhysicsService';
 import { SelectService, SelectMode } from './SelectService';
 import { BackdropService } from './BackdropService';
+import { SunService } from './SunService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -49,6 +50,7 @@ export class EngineService {
 
   // Sub-services
   private cameraService?: CameraService;
+  private sunService?: SunService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
@@ -124,6 +126,11 @@ export class EngineService {
       this.cameraService = new CameraService(this.scene, this.appContext);
       this.appContext.services.camera = this.cameraService;
       logger.debug('CameraService initialized');
+
+      // Initialize sun service (after CameraService, before EnvironmentService)
+      this.sunService = new SunService(this.scene, this.appContext);
+      this.appContext.services.sun = this.sunService;
+      logger.debug('SunService initialized');
 
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
@@ -485,6 +492,7 @@ export class EngineService {
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
+    this.sunService?.dispose();
     this.cameraService?.dispose();
     this.modelService?.dispose();
     this.materialService?.dispose();
