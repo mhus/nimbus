@@ -83,8 +83,24 @@ export interface WorldInfo {
     /** Step sound when swimming (optional, default: 'audio/liquid/swim1.ogg') */
     swimStepAudio?: string;
 
+    /** Sun visualization settings */
     /** Sun texture path (optional, default: 'textures/sun/sun1.png') */
     sunTexture?: string;
+
+    /** Sun size/radius (optional, default: 80) */
+    sunSize?: number;
+
+    /** Sun position angle Y in degrees (optional, default: 90 = East) */
+    sunAngleY?: number;
+
+    /** Sun elevation in degrees (optional, default: 45) */
+    sunElevation?: number;
+
+    /** Sun color RGB (optional, default: [1, 1, 0.9]) */
+    sunColor?: { r: number; g: number; b: number };
+
+    /** Sun enabled (optional, default: true) */
+    sunEnabled?: boolean;
   };
 
   /** License information */

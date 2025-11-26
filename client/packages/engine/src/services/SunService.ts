@@ -48,7 +48,7 @@ export class SunService {
   private currentElevation: number = 45; // Default: 45° above horizon
   private orbitRadius: number = 400; // Distance from camera
 
-  // Sun appearance
+  // Sun appearance (defaults, will be overridden by WorldInfo)
   private sunColor: Color3 = new Color3(1, 1, 0.9); // Warm white/yellow
   private sunSize: number = 80; // Billboard size
   private enabled: boolean = true;
@@ -62,7 +62,53 @@ export class SunService {
     this.initialize();
   }
 
+  /**
+   * Load initial sun parameters from WorldInfo settings
+   */
+  private loadParametersFromWorldInfo(): void {
+    const settings = this.appContext.worldInfo?.settings;
+    if (!settings) return;
+
+    // Load sun size
+    if (settings.sunSize !== undefined) {
+      this.sunSize = settings.sunSize;
+    }
+
+    // Load sun position
+    if (settings.sunAngleY !== undefined) {
+      this.currentAngleY = settings.sunAngleY;
+    }
+    if (settings.sunElevation !== undefined) {
+      this.currentElevation = settings.sunElevation;
+    }
+
+    // Load sun color
+    if (settings.sunColor) {
+      this.sunColor = new Color3(
+        settings.sunColor.r,
+        settings.sunColor.g,
+        settings.sunColor.b
+      );
+    }
+
+    // Load sun enabled state
+    if (settings.sunEnabled !== undefined) {
+      this.enabled = settings.sunEnabled;
+    }
+
+    logger.info('Sun parameters loaded from WorldInfo', {
+      size: this.sunSize,
+      angleY: this.currentAngleY,
+      elevation: this.currentElevation,
+      color: settings.sunColor,
+      enabled: this.enabled,
+    });
+  }
+
   private async initialize(): Promise<void> {
+    // Load initial parameters from WorldInfo
+    this.loadParametersFromWorldInfo();
+
     // Create sun root node attached to camera environment root
     const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
     if (!cameraRoot) {

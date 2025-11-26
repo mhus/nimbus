@@ -1,9 +1,9 @@
 /**
- * SunSizeCommand - Set sun size
+ * SunSizeCommand - Set sun size/radius
  *
  * Usage: sunSize [value]
  * - Without parameters: Shows current sun size
- * - With parameter: Sets sun billboard size (10-500)
+ * - With parameter: Sets sun billboard size/radius (10-500)
  */
 
 import { CommandHandler } from '../CommandHandler';
@@ -22,7 +22,7 @@ export class SunSizeCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Set sun size (10-500)';
+    return 'Set sun size/radius (10-500)';
   }
 
   async execute(parameters: string[]): Promise<string> {

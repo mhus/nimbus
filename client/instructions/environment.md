@@ -78,7 +78,7 @@ cameraEnvironmentRoot in CameraService
 
 ## Sonne
 
-[?] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunService.ts 
+[x] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunService.ts 
 - Der Service soll im RenderService referenziert werden
 - Die sonne soll ein Parikel System nutzen um die sonne darzustellen
 - Die sonne sieht aus wie ein stern, hat 8 strahlen die nach außen gehen, die horizontale und vertikale strahlen sind etwas dicker/weiter als die diagonalen strahlen
@@ -100,7 +100,7 @@ cameraEnvironmentRoot in CameraService
 
 Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
 
-[?] Erstelle in engine Commands um die Sonne zu steuern.
+[x] Erstelle in engine Commands um die Sonne zu steuern.
   - doSunEnable
   - ...
 ```text
@@ -127,12 +127,12 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
     - sunColor 1 0.5 0.2 - Orange
 ```
 
-[ ] Groesse der Sonne soll einstellbar sein (radius)
+[x] Groesse der Sonne soll einstellbar sein (radius)
 - Initial aus WorldInfo
 - Initial alle Sun Parameter aus WorldInfo holen
 - Erstelle ein Commando mit dem die Groesse der Sonne eingestellt werden kann
 
-[?] Sun Lense Flare Effekt
+[x] Sun Lense Flare Effekt
 - Es soll einen Lense Flare Effekt fuer die Sonne geben
 - Der Effekt kann in den SunService integriert werden
 - Ein Shader kann genutzt werden um den Effekt zu erzeugen
@@ -152,4 +152,4 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
 ```
 - Wenn die sonne deaktiviert ist, soll auch der Lense Flare Effekt deaktiviert werden
 
-## Sky
+## Sky Dome

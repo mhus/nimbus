@@ -180,6 +180,13 @@ export class WorldManager {
         allowGuests: true,
         pvpEnabled: false,
         pingInterval: 30000,
+        // Sun defaults
+        sunTexture: 'textures/sun/sun1.png',
+        sunSize: 80,
+        sunAngleY: 90,
+        sunElevation: 45,
+        sunColor: { r: 1, g: 1, b: 0.9 },
+        sunEnabled: true,
       },
       // Optional fields from info.json
       license: info.license,
@@ -296,6 +303,13 @@ export class WorldManager {
         allowGuests: true,
         pvpEnabled: false,
         pingInterval: 30000,
+        // Sun defaults
+        sunTexture: 'textures/sun/sun1.png',
+        sunSize: 80,
+        sunAngleY: 90,
+        sunElevation: 45,
+        sunColor: { r: 1, g: 1, b: 0.9 },
+        sunEnabled: true,
       },
     };
 
