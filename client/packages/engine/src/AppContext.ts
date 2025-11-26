@@ -34,6 +34,7 @@ import type { SunService } from './services/SunService';
 import type { SkyBoxService } from './services/SkyBoxService';
 import type { MoonService } from './services/MoonService';
 import type { CloudsService } from './services/CloudsService';
+import type { HorizonGradientService } from './services/HorizonGradientService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -144,6 +145,9 @@ export interface Services {
 
   /** Clouds service for cloud rendering and animation */
   clouds?: CloudsService;
+
+  /** Horizon gradient service for horizon atmospheric depth rendering */
+  horizonGradient?: HorizonGradientService;
 
   // Future services will be added here:
   // render?: RenderService;

@@ -67,7 +67,8 @@
       "Bash(python3:*)",
       "Bash(mkdir:*)",
       "Bash(/Users/hummel/sources/mhus/nimbus/client/packages/engine/src/scrawl/effects/ParticleFireSteadyEffect.ts)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(pnpm --filter @nimbus/shared build:shared:*)"
     ],
     "deny": [],
     "ask": []

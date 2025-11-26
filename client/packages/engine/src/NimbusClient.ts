@@ -140,6 +140,15 @@ import {
   CloudListCommand,
 } from './commands/clouds';
 import {
+  HorizonGradientEnableCommand,
+  HorizonGradientDistanceCommand,
+  HorizonGradientPositionCommand,
+  HorizonGradientHeightCommand,
+  HorizonGradientColor0Command,
+  HorizonGradientColor1Command,
+  HorizonGradientAlphaCommand,
+} from './commands/horizonGradient';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -336,6 +345,15 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new CloudPositionCommand(appContext));
     commandService.registerHandler(new CloudSizeCommand(appContext));
     commandService.registerHandler(new CloudListCommand(appContext));
+
+    // Register horizon gradient commands
+    commandService.registerHandler(new HorizonGradientEnableCommand(appContext));
+    commandService.registerHandler(new HorizonGradientDistanceCommand(appContext));
+    commandService.registerHandler(new HorizonGradientPositionCommand(appContext));
+    commandService.registerHandler(new HorizonGradientHeightCommand(appContext));
+    commandService.registerHandler(new HorizonGradientColor0Command(appContext));
+    commandService.registerHandler(new HorizonGradientColor1Command(appContext));
+    commandService.registerHandler(new HorizonGradientAlphaCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

@@ -300,4 +300,45 @@ Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird
 ```
 ## Horizont
 
-[ ] 
+[x] Ich muss noch etwas mit dem horizont machen, idee
+- Am horizont eine farbverlaeufe einbauen, die sich je nach tageszeit aendern
+- Um den horizont herum eine box ohne deckel und boden. Die vier seiten haben eine definierte y0 und y1 hoehe. Die Konfigurierbar sind
+- die Box hat einen abstand von der kamera auf der xz ebene (distance) der konfigurierbar ist
+- Die Box hat einen Farbverlauf, also color0 und color1
+- Die Box hat einen transparent wert, damit sie durchsichtig werden kann (alpha)
+- Die box kann deaktiviert werden (enabled = false)
+- Die box nutz die rendering group ENVIRONMENT
+- Die box wird an cameraEnvironmentRoot in CameraService gehaengt
+- anstelle von y0 y1 kann auch y und height angegeben werden
+
+[x] Erstelle in engine Commands um den Horizont zu steuern.
+```text
+  horizonGradientEnable true|false
+  horizonGradientDistance 300
+  horizonGradientPosition 0
+  horizonGradientHeight 100
+  horizonGradientColor0 0.7 0.8 0.9
+  horizonGradientColor1 0.3 0.5 0.8
+  horizonGradientAlpha 0.5
+```
+
+## Schnee und Regen (Niederschlag)
+
+[ ] Es soll ein PrecipitationService geben, der Schnee und Regen darstellt.
+- Der Service soll in RenderService referenziert werden
+- Der Niederschlag soll an cameraEnvironmentRoot in CameraService hängen
+- Der Niederschlag soll in der rendering group PRECIPITIATION gerendert werden, nach der WELT
+- Der Niederschlag soll als Partikel System dargestellt werden
+- Es wird die Partikel groesse, Farbe und Textur geben (klein und dunkel fuer regen, gross und weiss fuer schnee)
+- Der Niederschlag soll sich mit der Kamera bewegen
+- Der Niederschlag soll eine einstellbare Intensität haben (z.b. 0-100)
+- Der Niederschlag soll deaktivierbar sein (enabled = false) default ist false
+- Erstelle Methoden um die Eigenschaften des Niederschlags zu setzen
+
+[ ] Erstelle in engine Commands um den Niederschlag zu steuern.
+
+## WeatherService
+
+Vorbereitung:
+
+[ ] Es soll ein WeatherService geben, der verschiedene Wettereffekte steuert.

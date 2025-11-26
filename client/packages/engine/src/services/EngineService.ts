@@ -24,6 +24,7 @@ import { SunService } from './SunService';
 import { SkyBoxService } from './SkyBoxService';
 import { MoonService } from './MoonService';
 import { CloudsService } from './CloudsService';
+import { HorizonGradientService } from './HorizonGradientService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -57,6 +58,7 @@ export class EngineService {
   private skyBoxService?: SkyBoxService;
   private moonService?: MoonService;
   private cloudsService?: CloudsService;
+  private horizonGradientService?: HorizonGradientService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
@@ -148,10 +150,15 @@ export class EngineService {
       this.appContext.services.moon = this.moonService;
       logger.debug('MoonService initialized');
 
-      // Initialize clouds service (after MoonService, before EnvironmentService)
+      // Initialize clouds service (after MoonService, before HorizonGradientService)
       this.cloudsService = new CloudsService(this.scene, this.appContext);
       this.appContext.services.clouds = this.cloudsService;
       logger.debug('CloudsService initialized');
+
+      // Initialize horizon gradient service (after CloudsService, before EnvironmentService)
+      this.horizonGradientService = new HorizonGradientService(this.scene, this.appContext);
+      this.appContext.services.horizonGradient = this.horizonGradientService;
+      logger.debug('HorizonGradientService initialized');
 
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
@@ -514,6 +521,8 @@ export class EngineService {
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
+    this.horizonGradientService?.dispose();
+    this.cloudsService?.dispose();
     this.moonService?.dispose();
     this.skyBoxService?.dispose();
     this.sunService?.dispose();

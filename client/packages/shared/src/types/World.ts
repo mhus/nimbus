@@ -143,6 +143,24 @@ export interface WorldInfo {
       /** Moon texture path (optional, e.g., 'textures/moon/moon1.png') */
       texture?: string;
     }>;
+
+    /** Horizon gradient box settings (optional) */
+    horizonGradient?: {
+      /** Enabled (default: false) */
+      enabled: boolean;
+      /** Distance on XZ plane from camera (default: 300) */
+      distance?: number;
+      /** Y position of bottom edge (default: 0) */
+      y?: number;
+      /** Height of the vertical sides (default: 100) */
+      height?: number;
+      /** Bottom color RGB (default: {r: 0.7, g: 0.8, b: 0.9}) */
+      color0?: { r: number; g: number; b: number };
+      /** Top color RGB (default: {r: 0.3, g: 0.5, b: 0.8}) */
+      color1?: { r: number; g: number; b: number };
+      /** Transparency 0-1 (default: 0.5) */
+      alpha?: number;
+    };
   };
 
   /** License information */

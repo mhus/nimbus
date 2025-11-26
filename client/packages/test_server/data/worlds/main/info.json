@@ -27,7 +27,24 @@
     "maxPlayers": 10,
     "allowGuests": true,
     "pvpEnabled": false,
-    "pingInterval": 5000
+    "pingInterval": 5000,
+    "horizonGradient": {
+      "enabled": true,
+      "distance": 300,
+      "y": 0,
+      "height": 100,
+      "color0": {
+        "r": 0.7,
+        "g": 0.8,
+        "b": 0.9
+      },
+      "color1": {
+        "r": 0.3,
+        "g": 0.5,
+        "b": 0.8
+      },
+      "alpha": 0.5
+    }
   },
   "startArea": {
     "x": 0,
