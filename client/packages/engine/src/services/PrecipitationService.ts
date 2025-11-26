@@ -292,8 +292,10 @@ export class PrecipitationService {
     // Create particle texture (CRITICAL - without this, particles won't render!)
     this.createParticleTexture();
 
-    // Create particle system with more capacity
-    this.particleSystem = new ParticleSystem('precipitation', 5000, this.scene);
+    // Create particle system with large capacity
+    // At 500 particles/sec with 6 sec lifetime = 3000 particles
+    // Allow up to 20000 for heavy precipitation
+    this.particleSystem = new ParticleSystem('precipitation', 20000, this.scene);
 
     // Set emitter ABOVE camera
     const emitterPos = cameraPos.clone();

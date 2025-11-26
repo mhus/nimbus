@@ -324,7 +324,7 @@ Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird
 
 ## Schnee und Regen (Niederschlag)
 
-[?] Es soll ein PrecipitationService geben, der Schnee und Regen darstellt.
+[x] Es soll ein PrecipitationService geben, der Schnee und Regen darstellt.
 - Der Service soll in RenderService referenziert werden
 - Der Niederschlag soll an cameraEnvironmentRoot in CameraService hängen
 - Der Niederschlag soll in der rendering group PRECIPITIATION gerendert werden, nach der WELT
@@ -335,7 +335,14 @@ Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird
 - Der Niederschlag soll deaktivierbar sein (enabled = false) default ist false
 - Erstelle Methoden um die Eigenschaften des Niederschlags zu setzen
 
-[?] Erstelle in engine Commands um den Niederschlag zu steuern.
+[x] Erstelle in engine Commands um den Niederschlag zu steuern.
+
+## Blitze
+
+[ ] Im PrecipitationService, separates system, das auch Blitze darstellt.
+- Blitze mit Partikel Systemen darstellen
+- schnelle flashes mit viel zufall und nach unten verzweigungen.
+- durch command 
 
 ## WeatherService
 
