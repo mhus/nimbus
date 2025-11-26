@@ -132,15 +132,15 @@ export class SunService {
     // Position 0 = at emitter, 1 = opposite side, 0.5 = middle
     // Create flares immediately like in the Babylon.js example
 
-    // Main bright flare at sun position
-    new LensFlare(0.3, 0, this.lensFlareColor, flareTextureUrl, this.lensFlareSystem);
+    // Main bright flare at sun position (reduced intensity)
+    new LensFlare(0.3, 0, this.lensFlareColor.scale(0.5), flareTextureUrl, this.lensFlareSystem);
 
-    // Secondary flares along the axis
-    new LensFlare(0.1, 0.2, new Color3(1, 0.8, 0.6), flareTextureUrl, this.lensFlareSystem);
-    new LensFlare(0.15, 0.4, new Color3(0.9, 0.7, 0.5), flareTextureUrl, this.lensFlareSystem);
-    new LensFlare(0.08, 0.6, new Color3(1, 0.9, 0.7), flareTextureUrl, this.lensFlareSystem);
-    new LensFlare(0.12, 0.8, new Color3(0.8, 0.6, 0.4), flareTextureUrl, this.lensFlareSystem);
-    new LensFlare(0.2, 1.0, new Color3(1, 0.85, 0.6), flareTextureUrl, this.lensFlareSystem);
+    // Secondary flares along the axis (reduced intensity)
+    new LensFlare(0.1, 0.2, new Color3(0.5, 0.4, 0.3), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.15, 0.4, new Color3(0.45, 0.35, 0.25), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.08, 0.6, new Color3(0.5, 0.45, 0.35), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.12, 0.8, new Color3(0.4, 0.3, 0.2), flareTextureUrl, this.lensFlareSystem);
+    new LensFlare(0.2, 1.0, new Color3(0.5, 0.425, 0.3), flareTextureUrl, this.lensFlareSystem);
 
     // Configure lens flare system
     this.lensFlareSystem.borderLimit = 300; // Distance from screen edge before fading
