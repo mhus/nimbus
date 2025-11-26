@@ -31,3 +31,15 @@ doSend('world','season', 1 ) // WINTER
 doSend('world','season', 3 ) // SUMMER
 
 doSend('world','seasonProgress', 0.5 )
+
+
+## Moon
+
+doMoonTexture(0,'textures/moon/moon1.png');
+doMoonEnable(0,'true');
+doMoonSize(0, 70);
+doMoonPosition(0, 180);
+doMoonElevation(0, 60);
+doMoonDistance(0, 450);
+doMoonPhase(0, 1.0);
+

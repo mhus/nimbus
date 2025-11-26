@@ -184,4 +184,75 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
   skyBoxRotation 45
 ```
 
+## Mond
 
+[?] Es soll eine moeglichkeit geben bis zu drei Monde im Himmel darzustellen.
+- Erstelle einen MoonService
+- Der Service soll in RenderService referenziert werden
+- Die Monde sollen an cameraEnvironmentRoot in CameraService hängen
+- Die Monde sollen in der rendering group ENVIRONMENT gerendert werden
+- Jeder Mond hat folgende Eigenschaften:
+  - Enabled (boolean)
+  - Size (number) - groesse
+  - Texture (string) - Pfad zur Textur
+  - PositionOnCircle (number) - Winkel um die Y Achse (0-360)
+  - HeightOverCamera (number) - Hoehe ueber der Kamera
+  - distance - entfernung von der kamera
+- Erstelle Methoden um die Eigenschaften der Monde zu setzen
+
+Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
+
+orientiere dich an der sonne, der Abstand von der Kamera muss setzbar sein, sonst sind die monde hinter der SkyBox.
+
+Ist es moeglich einen Halbmond darzustellen ohne spezielle texture (rein geometrisch) mit einem parameter fuer die mond phase?
+
+```text
+# Mond 0: Vollmond
+  moonTexture 0 textures/moon/moon1.png
+  moonEnable 0 true
+  moonSize 0 70
+  moonPosition 0 180
+  moonElevation 0 60
+  moonDistance 0 450
+  moonPhase 0 1.0
+
+  # Mond 1: Halbmond
+  moonEnable 1 true
+  moonPhase 1 0.5
+
+  # Mond 2: Sichel
+  moonEnable 2 true
+  moonPhase 2 0.2
+
+  Besonderheiten:
+
+  ✨ Shader-basierte Mond-Phasen - Komplett geometrisch ohne Texturen!
+  - Smooth transitions zwischen Phasen
+  - 3D-Effekt durch spherical shading
+  - Anti-Aliasing am Rand
+  - Phasen-Namen: New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, etc.
+```
+
+## Wolken
+
+[ ] Es soll ein CloudsService geben, der Wolken im Himmel darstellt.
+- Der Service soll in RenderService referenziert werden
+- Die Wolken sollen an cameraEnvironmentRoot in CameraService hängen
+- Die Wolken sollen in der rendering group ENVIRONMENT gerendert werden
+- Wolken werden mit texturen dargestellt, es gibt verschiedene Wolken Texturen
+- Die Wolken sollen sich bewegen, die Geschwindigkeit und Richtung der Bewegung soll einstellbar sein
+- Wolken koennen deaktiviert werden (enabled = false)
+- Wolken bewegen sich auf verschiedenen hoehen (y position)
+- Wolken werden ein und ausgeblendet wenn sie nah an der Kamera sind
+- Erstelle Methoden um die Eigenschaften der Wolken zu setzen
+- Es koennen maximal 10 Wolken gleichzeitig dargestellt werden
+
+Wenn ich wolken moechte, dann sage ich auf welcher ebene, position (startX, startZ, y), groesse (width, height),
+mit welcher texture und welcher geschwindigkeit und richtung. Die Wolke wird dann von der seite kommend eingeblendet, 
+bewegt sich ueber die szene und wird auf der anderen seite wieder ausgeblendet.
+Wenn die geschwindigkeit 0 ist, dann wird die wolke statisch dargestellt.
+Wolken sollen wieder deaktiviert werden koennen. 
+
+## Horizont
+
+[ ] 

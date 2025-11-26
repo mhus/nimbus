@@ -22,6 +22,7 @@ import { SelectService, SelectMode } from './SelectService';
 import { BackdropService } from './BackdropService';
 import { SunService } from './SunService';
 import { SkyBoxService } from './SkyBoxService';
+import { MoonService } from './MoonService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -53,6 +54,7 @@ export class EngineService {
   private cameraService?: CameraService;
   private sunService?: SunService;
   private skyBoxService?: SkyBoxService;
+  private moonService?: MoonService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
@@ -138,6 +140,11 @@ export class EngineService {
       this.skyBoxService = new SkyBoxService(this.scene, this.appContext);
       this.appContext.services.skyBox = this.skyBoxService;
       logger.debug('SkyBoxService initialized');
+
+      // Initialize moon service (after SkyBoxService, before EnvironmentService)
+      this.moonService = new MoonService(this.scene, this.appContext);
+      this.appContext.services.moon = this.moonService;
+      logger.debug('MoonService initialized');
 
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
@@ -499,6 +506,7 @@ export class EngineService {
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
+    this.moonService?.dispose();
     this.skyBoxService?.dispose();
     this.sunService?.dispose();
     this.cameraService?.dispose();

@@ -125,6 +125,24 @@ export interface WorldInfo {
       /** SkyBox rotation in degrees (default: 0) */
       rotation?: number;
     };
+
+    /** Moon configurations (up to 3 moons) */
+    moons?: Array<{
+      /** Moon enabled (default: false) */
+      enabled: boolean;
+      /** Moon size (default: 60) */
+      size?: number;
+      /** Moon position on circle 0-360° (0=North, 90=East, default: spread evenly) */
+      positionOnCircle?: number;
+      /** Moon height over camera in degrees -90 to 90 (default: 45) */
+      heightOverCamera?: number;
+      /** Moon distance from camera (default: 450, must be > sun distance 400, < skybox ~1000) */
+      distance?: number;
+      /** Moon phase 0.0 (new moon) to 1.0 (full moon), default: 0.5 (half moon) */
+      phase?: number;
+      /** Moon texture path (optional, e.g., 'textures/moon/moon1.png') */
+      texture?: string;
+    }>;
   };
 
   /** License information */

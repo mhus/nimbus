@@ -120,6 +120,15 @@ import {
   SkyBoxRotationCommand,
 } from './commands/skybox';
 import {
+  MoonEnableCommand,
+  MoonSizeCommand,
+  MoonPositionCommand,
+  MoonElevationCommand,
+  MoonDistanceCommand,
+  MoonPhaseCommand,
+  MoonTextureCommand,
+} from './commands/moon';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -296,6 +305,15 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SkyBoxTextureCommand(appContext));
     commandService.registerHandler(new SkyBoxSizeCommand(appContext));
     commandService.registerHandler(new SkyBoxRotationCommand(appContext));
+
+    // Register moon commands
+    commandService.registerHandler(new MoonEnableCommand(appContext));
+    commandService.registerHandler(new MoonSizeCommand(appContext));
+    commandService.registerHandler(new MoonPositionCommand(appContext));
+    commandService.registerHandler(new MoonElevationCommand(appContext));
+    commandService.registerHandler(new MoonDistanceCommand(appContext));
+    commandService.registerHandler(new MoonPhaseCommand(appContext));
+    commandService.registerHandler(new MoonTextureCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

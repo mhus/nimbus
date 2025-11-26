@@ -1,0 +1,496 @@
+import { getLogger } from '@nimbus/shared';
+import {
+  Scene,
+  TransformNode,
+  Mesh,
+  PlaneBuilder,
+  ShaderMaterial,
+  Color3,
+  Effect,
+  Material,
+  Texture,
+} from '@babylonjs/core';
+import type { AppContext } from '../AppContext';
+import type { CameraService } from './CameraService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
+
+const logger = getLogger('MoonService');
+
+interface MoonInstance {
+  // Configuration
+  enabled: boolean;
+  size: number;
+  positionOnCircle: number; // 0-360°
+  heightOverCamera: number; // -90 to 90°
+  distance: number; // Distance from camera
+  phase: number; // 0.0 (new moon) to 1.0 (full moon)
+  texture?: string; // Optional texture path
+
+  // BabylonJS objects
+  root?: TransformNode;
+  mesh?: Mesh;
+  material?: ShaderMaterial;
+  textureObject?: Texture;
+}
+
+/**
+ * MoonService - Manages up to 3 moons in the sky
+ *
+ * Features:
+ * - Billboard meshes that always face camera
+ * - Shader-based moon phases (geometric, no textures needed)
+ * - Positioned using spherical coordinates
+ * - Attached to camera environment root
+ * - Renders in ENVIRONMENT rendering group
+ */
+export class MoonService {
+  private scene: Scene;
+  private appContext: AppContext;
+  private cameraService: CameraService;
+
+  private moons: MoonInstance[] = [];
+
+  constructor(scene: Scene, appContext: AppContext) {
+    this.scene = scene;
+    this.appContext = appContext;
+    this.cameraService = appContext.services.camera!;
+
+    this.initialize();
+  }
+
+  /**
+   * Register custom GLSL shaders for moon rendering
+   */
+  private registerShaders(): void {
+    // Vertex shader - simple pass-through
+    Effect.ShadersStore['moonVertexShader'] = `
+      precision highp float;
+
+      // Attributes
+      attribute vec3 position;
+      attribute vec2 uv;
+
+      // Uniforms
+      uniform mat4 worldViewProjection;
+
+      // Varying
+      varying vec2 vUV;
+
+      void main(void) {
+        gl_Position = worldViewProjection * vec4(position, 1.0);
+        vUV = uv;
+      }
+    `;
+
+    // Fragment shader - moon phase calculation with optional texture
+    Effect.ShadersStore['moonFragmentShader'] = `
+      precision highp float;
+
+      // Varying
+      varying vec2 vUV;
+
+      // Uniforms
+      uniform float phase;        // 0.0 = new moon, 0.5 = half moon, 1.0 = full moon
+      uniform vec3 moonColor;     // Base color (e.g., white/gray)
+      uniform float brightness;   // Overall brightness multiplier
+      uniform sampler2D moonTexture;  // Optional texture
+      uniform float hasTexture;   // 1.0 if texture is present, 0.0 otherwise
+
+      void main(void) {
+        // Convert UV to centered coordinates (-1 to 1)
+        vec2 centered = (vUV - 0.5) * 2.0;
+        float dist = length(centered);
+
+        // Discard pixels outside the circle
+        if (dist > 1.0) {
+          discard;
+        }
+
+        // Base color (from texture or solid color)
+        vec3 baseColor;
+        float baseAlpha = 1.0;
+
+        if (hasTexture > 0.5) {
+          // Use texture
+          vec4 texColor = texture2D(moonTexture, vUV);
+          baseColor = texColor.rgb;
+          baseAlpha = texColor.a;
+        } else {
+          // Use solid color
+          baseColor = moonColor;
+        }
+
+        // Calculate moon phase
+        float phaseShift = (phase - 0.5) * 2.0; // -1 to 1
+
+        // Calculate 3D sphere position (z-coordinate for shading)
+        float z = sqrt(max(0.0, 1.0 - centered.x * centered.x - centered.y * centered.y));
+
+        // Light comes from the right (x > 0)
+        // Phase determines the terminator position
+        float terminator = phaseShift * 1.2; // -1.2 to 1.2
+
+        float illumination;
+        if (centered.x > terminator) {
+          // Lit side
+          illumination = 1.0;
+        } else {
+          // Dark side (with smooth transition)
+          float transition = 0.05; // Smooth edge width
+          illumination = smoothstep(terminator - transition, terminator + transition, centered.x);
+        }
+
+        // Apply shading based on sphere curvature (Lambert shading)
+        float sphereShading = z;
+
+        // Combine illumination with shading
+        float finalBrightness = illumination * sphereShading * brightness;
+
+        // Anti-aliasing at circle edge
+        float edgeSmoothness = 0.02;
+        float alpha = smoothstep(1.0, 1.0 - edgeSmoothness, dist) * baseAlpha;
+
+        // Final color
+        vec3 finalColor = baseColor * finalBrightness;
+
+        gl_FragColor = vec4(finalColor, alpha);
+      }
+    `;
+
+    logger.info('Moon shaders registered');
+  }
+
+  /**
+   * Create shader material for a moon
+   */
+  private createMoonMaterial(index: number): ShaderMaterial {
+    const moon = this.moons[index];
+
+    const shaderMaterial = new ShaderMaterial(
+      `moon${index}Shader`,
+      this.scene,
+      {
+        vertex: 'moonVertex',
+        fragment: 'moonFragment',
+      },
+      {
+        attributes: ['position', 'uv'],
+        uniforms: ['worldViewProjection', 'phase', 'moonColor', 'brightness', 'hasTexture'],
+        samplers: ['moonTexture'],
+      }
+    );
+
+    // Set shader parameters
+    shaderMaterial.setFloat('phase', moon.phase);
+    shaderMaterial.setColor3('moonColor', new Color3(0.9, 0.9, 0.95)); // Cool white
+    shaderMaterial.setFloat('brightness', 1.0);
+    shaderMaterial.setFloat('hasTexture', moon.textureObject ? 1.0 : 0.0);
+
+    if (moon.textureObject) {
+      shaderMaterial.setTexture('moonTexture', moon.textureObject);
+    }
+
+    // Rendering settings
+    shaderMaterial.backFaceCulling = false;
+    shaderMaterial.transparencyMode = Material.MATERIAL_ALPHABLEND;
+
+    return shaderMaterial;
+  }
+
+  /**
+   * Create a moon mesh
+   */
+  private async createMoon(index: number): Promise<void> {
+    const moon = this.moons[index];
+    const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
+
+    if (!cameraRoot) {
+      logger.error('Camera environment root not available');
+      return;
+    }
+
+    // Create root node
+    moon.root = new TransformNode(`moon${index}Root`, this.scene);
+    moon.root.parent = cameraRoot;
+
+    // Load texture if specified
+    if (moon.texture) {
+      const networkService = this.appContext.services.network;
+      const textureUrl = networkService
+        ? networkService.getAssetUrl(moon.texture)
+        : moon.texture;
+
+      moon.textureObject = new Texture(textureUrl, this.scene, false, true);
+      moon.textureObject.hasAlpha = true;
+    }
+
+    // Create material with shader
+    moon.material = this.createMoonMaterial(index);
+
+    // Create billboard mesh
+    moon.mesh = PlaneBuilder.CreatePlane(
+      `moon${index}`,
+      { size: moon.size },
+      this.scene
+    );
+    moon.mesh.parent = moon.root;
+    moon.mesh.material = moon.material;
+    moon.mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    moon.mesh.infiniteDistance = true;
+    moon.mesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
+    moon.mesh.setEnabled(moon.enabled);
+
+    // Set initial position
+    this.updateMoonPosition(index);
+
+    logger.info(`Moon ${index} created`, {
+      size: moon.size,
+      phase: moon.phase,
+      enabled: moon.enabled,
+      hasTexture: !!moon.textureObject,
+    });
+  }
+
+  /**
+   * Update moon position using spherical coordinates
+   */
+  private updateMoonPosition(index: number): void {
+    const moon = this.moons[index];
+    if (!moon.root) return;
+
+    const angleYRad = moon.positionOnCircle * (Math.PI / 180);
+    const elevationRad = moon.heightOverCamera * (Math.PI / 180);
+    const distance = moon.distance;
+
+    // Spherical coordinates
+    const y = distance * Math.sin(elevationRad);
+    const horizontalDist = distance * Math.cos(elevationRad);
+    const x = horizontalDist * Math.sin(angleYRad);
+    const z = horizontalDist * Math.cos(angleYRad);
+
+    moon.root.position.set(x, y, z);
+
+    logger.info(`Moon ${index} position updated`, {
+      angleY: moon.positionOnCircle,
+      elevation: moon.heightOverCamera,
+      distance,
+      position: { x, y, z },
+    });
+  }
+
+  /**
+   * Load moon parameters from WorldInfo
+   */
+  private loadParametersFromWorldInfo(): void {
+    const settings = this.appContext.worldInfo?.settings;
+    if (!settings?.moons) {
+      logger.info('No moon configuration in WorldInfo');
+      return;
+    }
+
+    const moonConfigs = settings.moons.slice(0, 3); // Max 3 moons
+
+    for (let i = 0; i < moonConfigs.length; i++) {
+      const config = moonConfigs[i];
+
+      this.moons.push({
+        enabled: config.enabled ?? false,
+        size: config.size ?? 60,
+        positionOnCircle: config.positionOnCircle ?? i * 120, // Spread around sky
+        heightOverCamera: config.heightOverCamera ?? 45,
+        distance: config.distance ?? 450,
+        phase: config.phase ?? 0.5, // Default: half moon
+        texture: config.texture, // Optional texture
+      });
+    }
+
+    logger.info('Moon parameters loaded from WorldInfo', {
+      moonCount: this.moons.length,
+    });
+  }
+
+  /**
+   * Initialize moon service
+   */
+  private async initialize(): Promise<void> {
+    // Register shaders first
+    this.registerShaders();
+
+    // Load parameters from WorldInfo
+    this.loadParametersFromWorldInfo();
+
+    // Create moons
+    for (let i = 0; i < this.moons.length; i++) {
+      await this.createMoon(i);
+    }
+
+    logger.info('MoonService initialized', {
+      moonCount: this.moons.length,
+      enabledCount: this.moons.filter((m) => m.enabled).length,
+    });
+  }
+
+  // ========== Public API ==========
+
+  /**
+   * Enable or disable a moon
+   */
+  public setMoonEnabled(index: number, enabled: boolean): void {
+    if (index < 0 || index >= this.moons.length) return;
+
+    this.moons[index].enabled = enabled;
+    this.moons[index].mesh?.setEnabled(enabled);
+
+    logger.info(`Moon ${index} ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Set moon size
+   */
+  public setMoonSize(index: number, size: number): void {
+    if (index < 0 || index >= this.moons.length) return;
+
+    const oldSize = this.moons[index].size;
+    this.moons[index].size = size;
+
+    if (this.moons[index].mesh) {
+      const scale = size / oldSize;
+      this.moons[index].mesh!.scaling.scaleInPlace(scale);
+    }
+
+    logger.info(`Moon ${index} size set to ${size}`);
+  }
+
+  /**
+   * Set moon position on circle (horizontal angle)
+   */
+  public setMoonPositionOnCircle(index: number, angleY: number): void {
+    if (index < 0 || index >= this.moons.length) return;
+
+    this.moons[index].positionOnCircle = angleY;
+    this.updateMoonPosition(index);
+  }
+
+  /**
+   * Set moon height over camera (elevation angle)
+   */
+  public setMoonHeightOverCamera(index: number, elevation: number): void {
+    if (index < 0 || index >= this.moons.length) return;
+
+    this.moons[index].heightOverCamera = elevation;
+    this.updateMoonPosition(index);
+  }
+
+  /**
+   * Set moon distance from camera
+   */
+  public setMoonDistance(index: number, distance: number): void {
+    if (index < 0 || index >= this.moons.length) return;
+
+    this.moons[index].distance = distance;
+    this.updateMoonPosition(index);
+
+    logger.info(`Moon ${index} distance set to ${distance}`);
+  }
+
+  /**
+   * Set moon phase (0.0 = new moon, 1.0 = full moon)
+   */
+  public setMoonPhase(index: number, phase: number): void {
+    if (index < 0 || index >= this.moons.length) return;
+
+    // Clamp phase to 0.0 - 1.0
+    phase = Math.max(0.0, Math.min(1.0, phase));
+
+    this.moons[index].phase = phase;
+
+    // Update shader uniform
+    if (this.moons[index].material) {
+      this.moons[index].material!.setFloat('phase', phase);
+    }
+
+    logger.info(`Moon ${index} phase set to ${phase.toFixed(2)}`);
+  }
+
+  /**
+   * Set moon texture
+   */
+  public async setMoonTexture(index: number, texturePath: string | null): Promise<void> {
+    if (index < 0 || index >= this.moons.length) return;
+
+    const moon = this.moons[index];
+
+    // Dispose old texture
+    if (moon.textureObject) {
+      moon.textureObject.dispose();
+      moon.textureObject = undefined;
+    }
+
+    if (texturePath) {
+      // Load new texture
+      const networkService = this.appContext.services.network;
+      const textureUrl = networkService
+        ? networkService.getAssetUrl(texturePath)
+        : texturePath;
+
+      moon.texture = texturePath;
+      moon.textureObject = new Texture(textureUrl, this.scene, false, true);
+      moon.textureObject.hasAlpha = true;
+
+      // Update shader
+      if (moon.material) {
+        moon.material.setFloat('hasTexture', 1.0);
+        moon.material.setTexture('moonTexture', moon.textureObject);
+      }
+
+      logger.info(`Moon ${index} texture set to ${texturePath}`);
+    } else {
+      // Remove texture, use solid color
+      moon.texture = undefined;
+
+      if (moon.material) {
+        moon.material.setFloat('hasTexture', 0.0);
+      }
+
+      logger.info(`Moon ${index} texture removed`);
+    }
+  }
+
+  /**
+   * Get moon position
+   */
+  public getMoonPosition(
+    index: number
+  ): { angleY: number; elevation: number; distance: number } | null {
+    if (index < 0 || index >= this.moons.length) return null;
+
+    const moon = this.moons[index];
+    return {
+      angleY: moon.positionOnCircle,
+      elevation: moon.heightOverCamera,
+      distance: moon.distance,
+    };
+  }
+
+  /**
+   * Get moon phase
+   */
+  public getMoonPhase(index: number): number | null {
+    if (index < 0 || index >= this.moons.length) return null;
+    return this.moons[index].phase;
+  }
+
+  /**
+   * Dispose moon service
+   */
+  public dispose(): void {
+    for (const moon of this.moons) {
+      moon.mesh?.dispose();
+      moon.material?.dispose();
+      moon.root?.dispose();
+    }
+
+    this.moons = [];
+    logger.info('MoonService disposed');
+  }
+}
