@@ -16,6 +16,7 @@ import type { BlockModifier, TextureDefinition } from '@nimbus/shared';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
 import type { TextureAtlas } from './TextureAtlas';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('FogRenderer');
 
@@ -131,7 +132,7 @@ export class FogRenderer extends BlockRenderer {
 
       // Fog rendering settings
       fogMesh.isPickable = false;
-      fogMesh.renderingGroupId = 0; // Same as blocks for proper depth testing
+      fogMesh.renderingGroupId = RENDERING_GROUPS.WORLD; // Same as blocks for proper depth testing
 
       // Add to disposable resources
       renderContext.resourcesToDispose.addMesh(fogMesh);

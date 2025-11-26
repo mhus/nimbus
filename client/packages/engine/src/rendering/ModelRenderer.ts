@@ -11,6 +11,7 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('ModelRenderer');
 
@@ -136,6 +137,9 @@ export class ModelRenderer extends BlockRenderer {
       // Clone template mesh for this instance
       const modelMesh = templateMesh.clone(`model_${worldX}_${worldY}_${worldZ}`, null)!;
       modelMesh.setEnabled(true); // Enable the clone
+
+      // Set rendering group for world content
+      modelMesh.renderingGroupId = RENDERING_GROUPS.WORLD;
 
       // Calculate bounding box for automatic scaling
       modelMesh.computeWorldMatrix(true);

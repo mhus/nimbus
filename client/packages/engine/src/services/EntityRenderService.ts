@@ -13,6 +13,7 @@ import { getLogger, ExceptionHandler, type ClientEntity, type EntityPathway } fr
 import type { AppContext } from '../AppContext';
 import type { EntityService } from './EntityService';
 import type { ModelService } from './ModelService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('EntityRenderService');
 
@@ -226,6 +227,11 @@ export class EntityRenderService {
       // Get root node (might be TransformNode, not Mesh)
       const modelRootNode = result.rootNodes[0];
       modelRootNode.setEnabled(true);
+
+      // Set rendering group for all meshes in the entity model
+      modelRootNode.getChildMeshes().forEach(mesh => {
+        mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
+      });
 
       // Store entity ID in metadata for selection/raycasting
       modelRootNode.metadata = modelRootNode.metadata || {};

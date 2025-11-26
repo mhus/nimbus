@@ -33,6 +33,7 @@ import { FlameRenderer } from '../rendering/FlameRenderer';
 import { OceanRenderer } from '../rendering/OceanRenderer';
 import { DisposableResources } from '../rendering/DisposableResources';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('RenderService');
 
@@ -631,6 +632,9 @@ export class RenderService {
    */
   private createMesh(name: string, faceData: FaceData): Mesh {
     const mesh = new Mesh(name, this.scene);
+
+    // Set rendering group for world content (blocks)
+    mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
 
     // Create vertex data
     const vertexData = new VertexData();

@@ -18,6 +18,7 @@ import {
   ExceptionHandler,
   type Backdrop,
 } from '@nimbus/shared';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import { BackdropMaterialManager } from './BackdropMaterialManager';
@@ -323,8 +324,8 @@ export class BackdropService {
         const material = await this.materialManager.getBackdropMaterial(backdropConfig);
         mesh.material = material;
 
-        // Rendering settings - render in same group as blocks for proper depth testing
-        mesh.renderingGroupId = 0;
+        // Rendering settings - render backdrop between environment and world
+        mesh.renderingGroupId = RENDERING_GROUPS.BACKDROP;
         mesh.name = `backdrop_${key}`;
 
         // Store mesh

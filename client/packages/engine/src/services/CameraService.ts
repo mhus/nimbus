@@ -18,6 +18,7 @@ import {
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { PlayerService } from './PlayerService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('CameraService');
 
@@ -376,6 +377,9 @@ export class CameraService {
       // Flip normals so sphere is visible from inside
       this.waterSphereMesh.flipFaces(true);
 
+      // Set rendering group for camera decorators
+      this.waterSphereMesh.renderingGroupId = RENDERING_GROUPS.CAM_DECORATORS;
+
       // Create water material
       this.waterMaterial = new StandardMaterial('waterMaterial', this.scene);
       this.waterMaterial.diffuseColor = new Color3(0.1, 0.3, 0.6); // Blue color
@@ -515,6 +519,9 @@ export class CameraService {
 
       // Flip faces to render inside
       this.fogSphereMesh.flipFaces(true);
+
+      // Set rendering group for camera decorators
+      this.fogSphereMesh.renderingGroupId = RENDERING_GROUPS.CAM_DECORATORS;
 
       // Create fog material (gray/white translucent)
       this.fogMaterial = new StandardMaterial('fogMaterial', this.scene);

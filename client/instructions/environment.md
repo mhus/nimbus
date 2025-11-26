@@ -52,3 +52,30 @@ Erstelle in engine Commandos um beide lichtquellen zu steuern.
   - doSunLightDiffuse <r> <g> <b> - Set diffuse color (0-1)
   - doSunLightSpecular <r> <g> <b> - Set specular color (0-1)
 ```
+
+## Sonne
+
+Vorbereitung:
+
+[?] Ich möchte weitere Rendering Groups einführen, z.b. die Sonne. Deshalb möchte ich vorab eine Datei, 
+z.b. renderingGroups.ts erstellen, in der ich alle Rendering Groups als constante definiere. Damit
+können die Gruppen schnell justiert werden wenn eine neue Gruppe hinzukommt. Aktuell sollte es zwei Gruppen geben:
+- Backdrop
+- Default für alles andere / Bocke und Entities
+Welche rendering groups nutze ich zur zeit in BabylonJs? 
+```text
+Aktuell nutzt du zwei Rendering Groups:
+- Group 0: Backdrop, Fog und vermutlich alle Standard-Meshes (Blöcke/Entities)
+- Group 1: Selection Highlights (werden über allem gerendert)
+```
+
+Sonne:
+
+[ ] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunRender.ts 
+
+
+
+
+
+
+
