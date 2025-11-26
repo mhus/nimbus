@@ -6,9 +6,9 @@ import {
   PlaneBuilder,
   ShaderMaterial,
   Color3,
+  Texture,
   Effect,
   Material,
-  Texture,
 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
@@ -59,21 +59,15 @@ export class MoonService {
   }
 
   /**
-   * Register custom GLSL shaders for moon rendering
+   * Register shader
    */
   private registerShaders(): void {
-    // Vertex shader - simple pass-through
+    // Vertex shader
     Effect.ShadersStore['moonVertexShader'] = `
       precision highp float;
-
-      // Attributes
       attribute vec3 position;
       attribute vec2 uv;
-
-      // Uniforms
       uniform mat4 worldViewProjection;
-
-      // Varying
       varying vec2 vUV;
 
       void main(void) {
@@ -82,19 +76,15 @@ export class MoonService {
       }
     `;
 
-    // Fragment shader - moon phase calculation with optional texture
+    // Fragment shader - moon with phases and optional texture
     Effect.ShadersStore['moonFragmentShader'] = `
       precision highp float;
-
-      // Varying
       varying vec2 vUV;
 
-      // Uniforms
-      uniform float phase;        // 0.0 = new moon, 0.5 = half moon, 1.0 = full moon
-      uniform vec3 moonColor;     // Base color (e.g., white/gray)
-      uniform float brightness;   // Overall brightness multiplier
-      uniform sampler2D moonTexture;  // Optional texture
-      uniform float hasTexture;   // 1.0 if texture is present, 0.0 otherwise
+      uniform float phase;
+      uniform vec3 moonColor;
+      uniform sampler2D moonTexture;
+      uniform float hasTexture;
 
       void main(void) {
         // Convert UV to centered coordinates (-1 to 1)
@@ -111,7 +101,7 @@ export class MoonService {
         float baseAlpha = 1.0;
 
         if (hasTexture > 0.5) {
-          // Use texture
+          // Use texture (always full moon texture)
           vec4 texColor = texture2D(moonTexture, vUV);
           baseColor = texColor.rgb;
           baseAlpha = texColor.a;
@@ -120,40 +110,31 @@ export class MoonService {
           baseColor = moonColor;
         }
 
-        // Calculate moon phase
-        float phaseShift = (phase - 0.5) * 2.0; // -1 to 1
-
         // Calculate 3D sphere position (z-coordinate for shading)
         float z = sqrt(max(0.0, 1.0 - centered.x * centered.x - centered.y * centered.y));
 
-        // Light comes from the right (x > 0)
-        // Phase determines the terminator position
-        float terminator = phaseShift * 1.2; // -1.2 to 1.2
+        // Calculate moon phase (terminator position)
+        float phaseShift = (phase - 0.5) * 2.0; // -1 to 1
+        float terminator = phaseShift * 1.0;
 
+        // Illumination based on phase (geometric clipping)
         float illumination;
         if (centered.x > terminator) {
           // Lit side
           illumination = 1.0;
         } else {
-          // Dark side (with smooth transition)
-          float transition = 0.05; // Smooth edge width
+          // Dark side with smooth transition
+          float transition = 0.05;
           illumination = smoothstep(terminator - transition, terminator + transition, centered.x);
         }
 
-        // Apply shading based on sphere curvature (Lambert shading)
-        float sphereShading = z;
+        // Apply sphere shading (Lambert)
+        float brightness = illumination * z;
 
-        // Combine illumination with shading
-        float finalBrightness = illumination * sphereShading * brightness;
+        // Final color (texture or solid color, clipped by phase)
+        vec3 finalColor = baseColor * brightness;
 
-        // Anti-aliasing at circle edge
-        float edgeSmoothness = 0.02;
-        float alpha = smoothstep(1.0, 1.0 - edgeSmoothness, dist) * baseAlpha;
-
-        // Final color
-        vec3 finalColor = baseColor * finalBrightness;
-
-        gl_FragColor = vec4(finalColor, alpha);
+        gl_FragColor = vec4(finalColor, baseAlpha);
       }
     `;
 
@@ -170,29 +151,26 @@ export class MoonService {
       `moon${index}Shader`,
       this.scene,
       {
-        vertex: 'moonVertex',
-        fragment: 'moonFragment',
+        vertexSource: Effect.ShadersStore['moonVertexShader'],
+        fragmentSource: Effect.ShadersStore['moonFragmentShader'],
       },
       {
         attributes: ['position', 'uv'],
-        uniforms: ['worldViewProjection', 'phase', 'moonColor', 'brightness', 'hasTexture'],
+        uniforms: ['worldViewProjection', 'phase', 'moonColor', 'hasTexture'],
         samplers: ['moonTexture'],
       }
     );
 
-    // Set shader parameters
+    // Set uniforms
     shaderMaterial.setFloat('phase', moon.phase);
-    shaderMaterial.setColor3('moonColor', new Color3(0.9, 0.9, 0.95)); // Cool white
-    shaderMaterial.setFloat('brightness', 1.0);
+    shaderMaterial.setColor3('moonColor', new Color3(0.9, 0.9, 0.95));
     shaderMaterial.setFloat('hasTexture', moon.textureObject ? 1.0 : 0.0);
 
     if (moon.textureObject) {
       shaderMaterial.setTexture('moonTexture', moon.textureObject);
     }
 
-    // Rendering settings
     shaderMaterial.backFaceCulling = false;
-    shaderMaterial.transparencyMode = Material.MATERIAL_ALPHABLEND;
 
     return shaderMaterial;
   }
@@ -202,12 +180,25 @@ export class MoonService {
    */
   private async createMoon(index: number): Promise<void> {
     const moon = this.moons[index];
+
+    logger.info(`Creating moon ${index}...`, {
+      enabled: moon.enabled,
+      size: moon.size,
+      position: moon.positionOnCircle,
+      elevation: moon.heightOverCamera,
+      distance: moon.distance,
+    });
+
     const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
 
     if (!cameraRoot) {
       logger.error('Camera environment root not available');
       return;
     }
+
+    logger.info(`Camera root found for moon ${index}:`, {
+      position: cameraRoot.position,
+    });
 
     // Create root node
     moon.root = new TransformNode(`moon${index}Root`, this.scene);
@@ -224,8 +215,9 @@ export class MoonService {
       moon.textureObject.hasAlpha = true;
     }
 
-    // Create material with shader
+    // Create material
     moon.material = this.createMoonMaterial(index);
+    logger.info(`Material created for moon ${index}`);
 
     // Create billboard mesh
     moon.mesh = PlaneBuilder.CreatePlane(
@@ -239,15 +231,26 @@ export class MoonService {
     moon.mesh.infiniteDistance = true;
     moon.mesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
     moon.mesh.setEnabled(moon.enabled);
+    moon.mesh.isVisible = true;
+
+    logger.info(`Mesh created for moon ${index}:`, {
+      isEnabled: moon.mesh.isEnabled(),
+      isVisible: moon.mesh.isVisible,
+      renderingGroupId: moon.mesh.renderingGroupId,
+      billboardMode: moon.mesh.billboardMode,
+      infiniteDistance: moon.mesh.infiniteDistance,
+      hasParent: !!moon.mesh.parent,
+    });
 
     // Set initial position
     this.updateMoonPosition(index);
 
-    logger.info(`Moon ${index} created`, {
+    logger.info(`Moon ${index} FULLY CREATED`, {
+      rootPosition: moon.root.position,
+      meshPosition: moon.mesh.absolutePosition,
       size: moon.size,
-      phase: moon.phase,
       enabled: moon.enabled,
-      hasTexture: !!moon.textureObject,
+      visible: moon.mesh.isVisible,
     });
   }
 
@@ -313,11 +316,43 @@ export class MoonService {
    * Initialize moon service
    */
   private async initialize(): Promise<void> {
-    // Register shaders first
+    // Register shaders
     this.registerShaders();
 
     // Load parameters from WorldInfo
     this.loadParametersFromWorldInfo();
+
+    // If no moons in WorldInfo, create 3 default moons (ENABLED for testing)
+    if (this.moons.length === 0) {
+      this.moons.push({
+        enabled: true, // ENABLED!
+        size: 150, // Large size
+        positionOnCircle: 0, // North
+        heightOverCamera: 45,
+        distance: 200, // Close to camera
+        phase: 1.0, // Full moon
+        texture: 'textures/moon/moon1.png', // Moon texture
+      });
+      this.moons.push({
+        enabled: true, // ENABLED!
+        size: 150,
+        positionOnCircle: 120, // East-ish
+        heightOverCamera: 30,
+        distance: 400, // Medium distance
+        phase: 0.5, // Half moon
+        texture: 'textures/moon/moon1.png', // Moon texture
+      });
+      this.moons.push({
+        enabled: true, // ENABLED!
+        size: 150,
+        positionOnCircle: 240, // West-ish
+        heightOverCamera: 60,
+        distance: 800, // Far away
+        phase: 0.25, // Crescent
+        texture: 'textures/moon/moon1.png', // Moon texture
+      });
+      logger.info('Created 3 default moons (ENABLED for testing)');
+    }
 
     // Create moons
     for (let i = 0; i < this.moons.length; i++) {
