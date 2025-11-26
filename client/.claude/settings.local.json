@@ -66,7 +66,8 @@
       "Bash(tee:*)",
       "Bash(python3:*)",
       "Bash(mkdir:*)",
-      "Bash(/Users/hummel/sources/mhus/nimbus/client/packages/engine/src/scrawl/effects/ParticleFireSteadyEffect.ts)"
+      "Bash(/Users/hummel/sources/mhus/nimbus/client/packages/engine/src/scrawl/effects/ParticleFireSteadyEffect.ts)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

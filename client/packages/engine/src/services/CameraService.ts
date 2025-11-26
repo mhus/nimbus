@@ -14,6 +14,7 @@ import {
   Color3,
   Color4,
   Mesh,
+  TransformNode,
 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
@@ -59,6 +60,9 @@ export class CameraService {
   private fogSphereMesh?: Mesh;
   private fogMaterial?: StandardMaterial;
   private fogIntensity: number = 0; // 0 = disabled, 0.1-1.0 = intensity
+
+  // Camera environment root - parent for all camera-attached effects
+  private cameraEnvironmentRoot?: TransformNode;
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -115,6 +119,10 @@ export class CameraService {
 
       // Set initial rotation (looking forward)
       this.camera.rotation = new Vector3(0, 0, 0);
+
+      // Create root node for camera-attached environment effects
+      this.cameraEnvironmentRoot = new TransformNode('cameraEnvironmentRoot', this.scene);
+      this.cameraEnvironmentRoot.position.copyFrom(this.camera.position);
 
       // Attach camera to canvas for input (will be controlled by InputService later)
       // this.camera.attachControl(canvas, true);
@@ -301,17 +309,12 @@ export class CameraService {
   /**
    * Update camera (called each frame if needed)
    *
-   * Updates water sphere and fog sphere positions to follow camera
+   * Updates environment root position - all child effects follow automatically
    */
   update(deltaTime: number): void {
-    // Update water sphere position to follow camera
-    if (this.waterSphereMesh && this.camera && this.isUnderwater) {
-      this.waterSphereMesh.position.copyFrom(this.camera.position);
-    }
-
-    // Update fog sphere position to follow camera
-    if (this.fogSphereMesh && this.camera && this.fogIntensity > 0) {
-      this.fogSphereMesh.position.copyFrom(this.camera.position);
+    // Update environment root position - all children follow automatically
+    if (this.cameraEnvironmentRoot && this.camera) {
+      this.cameraEnvironmentRoot.position.copyFrom(this.camera.position);
     }
   }
 
@@ -388,8 +391,10 @@ export class CameraService {
 
       this.waterSphereMesh.material = this.waterMaterial;
 
-      // Position at camera
-      this.waterSphereMesh.position.copyFrom(this.camera.position);
+      // Attach to environment root (follows camera automatically)
+      if (this.cameraEnvironmentRoot) {
+        this.waterSphereMesh.parent = this.cameraEnvironmentRoot;
+      }
 
       logger.info('💧 Water sphere created', {
         position: this.waterSphereMesh.position,
@@ -530,8 +535,10 @@ export class CameraService {
 
       this.fogSphereMesh.material = this.fogMaterial;
 
-      // Position at camera
-      this.fogSphereMesh.position.copyFrom(this.camera.position);
+      // Attach to environment root (follows camera automatically)
+      if (this.cameraEnvironmentRoot) {
+        this.fogSphereMesh.parent = this.cameraEnvironmentRoot;
+      }
 
       logger.debug('🌫️ Fog sphere created', {
         position: this.fogSphereMesh.position,
@@ -637,6 +644,12 @@ export class CameraService {
     if (this.fogMaterial) {
       this.fogMaterial.dispose();
       this.fogMaterial = undefined;
+    }
+
+    // Dispose environment root (automatically disposes all children)
+    if (this.cameraEnvironmentRoot) {
+      this.cameraEnvironmentRoot.dispose();
+      this.cameraEnvironmentRoot = undefined;
     }
 
     // Dispose camera

@@ -57,7 +57,7 @@ Erstelle in engine Commandos um beide lichtquellen zu steuern.
 
 Vorbereitung:
 
-[?] Ich möchte weitere Rendering Groups einführen, z.b. die Sonne. Deshalb möchte ich vorab eine Datei, 
+[x] Ich möchte weitere Rendering Groups einführen, z.b. die Sonne. Deshalb möchte ich vorab eine Datei, 
 z.b. renderingGroups.ts erstellen, in der ich alle Rendering Groups als constante definiere. Damit
 können die Gruppen schnell justiert werden wenn eine neue Gruppe hinzukommt. Aktuell sollte es zwei Gruppen geben:
 - Backdrop
@@ -69,12 +69,31 @@ Aktuell nutzt du zwei Rendering Groups:
 - Group 1: Selection Highlights (werden über allem gerendert)
 ```
 
+[x] Es soll environment wie Wetter und Sonne geben, diese hängen alle fest an der Camera position.
+- Brauchen wir einen root mesh für die environment effekte, der an der kamera hängt damit diese kommenden anforderungen sauber umgesetzt werden können?
+> Bitte einen einfachen plan machen. Pruefe CameraService, hier gibt es schon mesh an der cam. gibt es schon einen cameraRootMesh oder haengen fog und underwater separat an der cam? Es gibt noch keine wetter environments, das
+  ist ja die vorbereitugn dazu. du kannst deutsch mit mir sprechen.
+
+```text
+cameraEnvironmentRoot in CameraService
+```
+
 Sonne:
 
-[ ] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunRender.ts 
-
-
-
+[ ] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunService.ts 
+- Der Service soll im RenderService referenziert werden
+- Die sonne soll ein Parikel System nutzen um die sonne darzustellen
+- Die sonne sieht aus wie ein stern, hat 8 strahlen die nach außen gehen, die horizontale und vertikale strahlen sind etwas dicker/weiter als die diagonalen strahlen
+- Die sonne soll immer an der position der kamera + einer gewissen entfernung in richtung
+- Die sonne hat eine hoehe (radius) ueber der camera, die hoehe soll einstellbar sein
+- Nutze cameraEnvironmentRoot in CameraService als root mesh fuer die sonne
+- Die position der sonne wird auf einer basis kreisbahn um die kamera berechnet, die parameter der kreisbahn sind:
+  - radius (entfernung von der kamera)
+  - winkel (x,y, z) - oder nur (x,z) ???
+- Zusaetzlich kann die Position auf dieser kreisbahn gesetzt werden durch eine einzelne Zahl (0-360) die den winkel um die Y achse angibt
+- Die sonne kann deaktiviert werden (enabled = false)
+- Erstelle eine methode setSunPositionOnCircle(angleY: number)
+- Erstelle eine methode setSunHeightOverCamera(height: number)
 
 
 
