@@ -341,4 +341,15 @@ Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird
 
 Vorbereitung:
 
+[ ] Um aenderungen an Parametern des Wetters ueber einen Zeitraum zu animieren, brauchen wir eine einfache
+Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier an.
+- Erweitere ModifierStack zu AnimationStack der wie andere Stacks in StackService verwaltet wird
+- Wenn sich in AnimationStack der soll wert aendert, wird der ist Wert nicht sofort gesetzt, sondern ein weiteres lambda
+  gibt den naechsten naeherungsschritt an und gibt auch zurueck ob ein weiterer schritt benoetigt wird.
+- Dann wird nach (wait) ms der naechste schritt ausgefuehrt bis der soll wert erreicht ist.
+- Aendert sich der Zielwert, ist das kein problem, denn der naechste schritt wird immer auf den aktuellen Zielwert bezogen.
+- 'wait' soll einstellbar sein fuer den AnimationStack, default 100ms
+
+WeatherService:
+
 [ ] Es soll ein WeatherService geben, der verschiedene Wettereffekte steuert.

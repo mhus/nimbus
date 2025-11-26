@@ -64,6 +64,9 @@ export class CameraService {
   // Camera environment root - parent for all camera-attached effects
   private cameraEnvironmentRoot?: TransformNode;
 
+  // Camera environment root XZ - follows only X/Z position (not Y) for horizon effects
+  private cameraEnvironmentRootXZ?: TransformNode;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -113,6 +116,15 @@ export class CameraService {
   }
 
   /**
+   * Get camera environment root XZ node for attaching horizon/ground-level effects
+   * Follows only X/Z position of camera (Y stays at 0)
+   * @returns Camera environment root XZ transform node
+   */
+  getCameraEnvironmentRootXZ(): TransformNode | undefined {
+    return this.cameraEnvironmentRootXZ;
+  }
+
+  /**
    * Initialize the camera
    */
   private initializeCamera(): void {
@@ -135,6 +147,10 @@ export class CameraService {
       // Create root node for camera-attached environment effects
       this.cameraEnvironmentRoot = new TransformNode('cameraEnvironmentRoot', this.scene);
       this.cameraEnvironmentRoot.position.copyFrom(this.camera.position);
+
+      // Create root node for XZ-only effects (horizon, etc.)
+      this.cameraEnvironmentRootXZ = new TransformNode('cameraEnvironmentRootXZ', this.scene);
+      this.cameraEnvironmentRootXZ.position.set(this.camera.position.x, 0, this.camera.position.z);
 
       // Attach camera to canvas for input (will be controlled by InputService later)
       // this.camera.attachControl(canvas, true);
@@ -329,6 +345,11 @@ export class CameraService {
     // Update environment root position - all children follow automatically
     if (this.cameraEnvironmentRoot && this.camera) {
       this.cameraEnvironmentRoot.position.copyFrom(this.camera.position);
+    }
+
+    // Update XZ-only environment root - horizon effects stay at ground level
+    if (this.cameraEnvironmentRootXZ && this.camera) {
+      this.cameraEnvironmentRootXZ.position.set(this.camera.position.x, 0, this.camera.position.z);
     }
   }
 

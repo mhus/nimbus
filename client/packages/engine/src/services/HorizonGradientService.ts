@@ -101,16 +101,16 @@ export class HorizonGradientService {
     // Load parameters from WorldInfo
     this.loadParametersFromWorldInfo();
 
-    // Get camera environment root
-    const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
-    if (!cameraRoot) {
-      logger.error('Camera environment root not available');
+    // Get camera environment root XZ (follows only X/Z, not Y)
+    const cameraRootXZ = this.cameraService.getCameraEnvironmentRootXZ();
+    if (!cameraRootXZ) {
+      logger.error('Camera environment root XZ not available');
       return;
     }
 
-    // Create root node attached to camera environment root
+    // Create root node attached to camera environment root XZ
     this.horizonRoot = new TransformNode('horizonGradientRoot', this.scene);
-    this.horizonRoot.parent = cameraRoot;
+    this.horizonRoot.parent = cameraRootXZ;
 
     // Create horizon box
     this.createHorizonBox();
