@@ -149,6 +149,11 @@ import {
   HorizonGradientAlphaCommand,
 } from './commands/horizonGradient';
 import {
+  PrecipitationEnableCommand,
+  PrecipitationIntensityCommand,
+  PrecipitationTypeCommand,
+} from './commands/precipitation';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -354,6 +359,11 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new HorizonGradientColor0Command(appContext));
     commandService.registerHandler(new HorizonGradientColor1Command(appContext));
     commandService.registerHandler(new HorizonGradientAlphaCommand(appContext));
+
+    // Register precipitation commands
+    commandService.registerHandler(new PrecipitationEnableCommand(appContext));
+    commandService.registerHandler(new PrecipitationIntensityCommand(appContext));
+    commandService.registerHandler(new PrecipitationTypeCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

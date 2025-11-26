@@ -18,13 +18,15 @@ export const RENDERING_GROUPS = {
   /** Main world content with depth testing (blocks, fog, entities) */
   WORLD: 2,
 
+  /** Precipitation (rain, snow) - renders after world */
+  PRECIPITATION: 4,
+
   /** Selection overlays (highlights) - renders on top */
-  SELECTION_OVERLAY: 3,
+  SELECTION_OVERLAY: 4,
 
   /** Camera decorators (underwater/fog sphere effects) - renders after selection */
   CAM_DECORATORS: 2,
 
   // Future extensions:
   // PARTICLES: 5    - Particle effects (fire, smoke, etc.)
-  // WEATHER: 6      - Weather effects (rain, snow)
 } as const;

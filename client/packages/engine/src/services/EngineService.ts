@@ -25,6 +25,7 @@ import { SkyBoxService } from './SkyBoxService';
 import { MoonService } from './MoonService';
 import { CloudsService } from './CloudsService';
 import { HorizonGradientService } from './HorizonGradientService';
+import { PrecipitationService } from './PrecipitationService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -59,6 +60,7 @@ export class EngineService {
   private moonService?: MoonService;
   private cloudsService?: CloudsService;
   private horizonGradientService?: HorizonGradientService;
+  private precipitationService?: PrecipitationService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
@@ -155,10 +157,15 @@ export class EngineService {
       this.appContext.services.clouds = this.cloudsService;
       logger.debug('CloudsService initialized');
 
-      // Initialize horizon gradient service (after CloudsService, before EnvironmentService)
+      // Initialize horizon gradient service (after CloudsService, before PrecipitationService)
       this.horizonGradientService = new HorizonGradientService(this.scene, this.appContext);
       this.appContext.services.horizonGradient = this.horizonGradientService;
       logger.debug('HorizonGradientService initialized');
+
+      // Initialize precipitation service (after HorizonGradientService, before EnvironmentService)
+      this.precipitationService = new PrecipitationService(this.scene, this.appContext);
+      this.appContext.services.precipitation = this.precipitationService;
+      logger.debug('PrecipitationService initialized');
 
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
@@ -236,6 +243,12 @@ export class EngineService {
         this.textureAtlas
       );
       logger.debug('RenderService initialized');
+
+      // Connect RenderService with PrecipitationService
+      if (this.precipitationService) {
+        this.renderService.setPrecipitationService(this.precipitationService);
+        logger.debug('RenderService connected to PrecipitationService');
+      }
 
       // Initialize entity render service (requires EntityService and ModelService)
       const entityService = this.appContext.services.entity;
@@ -349,6 +362,7 @@ export class EngineService {
         this.cameraService?.update(deltaTime);
         this.selectService?.update(deltaTime); // Update block selection and highlighting
         this.cloudsService?.update(deltaTime); // Update cloud positions and fading
+        this.precipitationService?.update(deltaTime); // Update precipitation particle positions
         this.environmentService?.update(deltaTime);
 
         // Check and emit player direction updates (for beam:follow effects)
@@ -521,6 +535,7 @@ export class EngineService {
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
+    this.precipitationService?.dispose();
     this.horizonGradientService?.dispose();
     this.cloudsService?.dispose();
     this.moonService?.dispose();

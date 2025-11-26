@@ -34,6 +34,7 @@ import { OceanRenderer } from '../rendering/OceanRenderer';
 import { DisposableResources } from '../rendering/DisposableResources';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import type { PrecipitationService } from './PrecipitationService';
 
 const logger = getLogger('RenderService');
 
@@ -79,6 +80,7 @@ export class RenderService {
   public materialService: MaterialService;
   private blockTypeService: BlockTypeService;
   private textureAtlas: TextureAtlas;
+  private precipitationService?: PrecipitationService;
 
   // Renderers
   private cubeRenderer: CubeRenderer;
@@ -145,6 +147,18 @@ export class RenderService {
     this.setupChunkEventListeners();
 
     logger.info('RenderService initialized');
+  }
+
+  /**
+   * Set PrecipitationService reference
+   *
+   * Called after PrecipitationService is created to provide access
+   *
+   * @param precipitationService PrecipitationService instance
+   */
+  setPrecipitationService(precipitationService: PrecipitationService): void {
+    this.precipitationService = precipitationService;
+    logger.debug('PrecipitationService connected to RenderService');
   }
 
   /**
