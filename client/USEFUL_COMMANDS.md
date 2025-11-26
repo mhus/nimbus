@@ -54,3 +54,38 @@ cloudAdd "cloud-east" 150 0 160 60 40 "textures/clouds/cloud2.png" 5 90 1
 # Wolke direkt über der Kamera
 cloudAdd "cloud-above" 0 0 200 100 60 "textures/clouds/cloud3.png" 0 0 2
 
+doCloudAdd("cloud-north6.",0, -200, 180, 280, 250, "textures/clouds/cloud6.png", 3, 0, 0);
+
+## More
+
+doSunSize(150)
+
+doSunLensFlareEnable('false')
+doAmbientLightIntensity(0)
+doSunLightIntensity(.5)
+doSkyBoxSize(450)
+doSkyBoxTexture('textures/skybox/space')
+doSkyBoxEnable('true')
+doSunLightDiffuse(1,0,0)
+doSunLightSpecular(1,0,0)
+doSunLightDirection(-1,1,1)
+
+
+doScrawlStart({
+"root": {
+"kind": "Play",
+"effectId": "positionFlash",
+"ctx": {
+"position": {"x": 1, "y": 70, "z": 18},
+"duration": 5,
+"color": "#ffffff",
+"height": 30,
+"textureFrames": [
+"textures/effects/blitz1.png"
+],
+"frameRate": 20,
+"light": true
+}
+}
+})
+
