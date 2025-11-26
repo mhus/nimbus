@@ -113,6 +113,13 @@ import {
   SunLensFlareColorCommand,
 } from './commands/sun';
 import {
+  SkyBoxEnableCommand,
+  SkyBoxColorCommand,
+  SkyBoxTextureCommand,
+  SkyBoxSizeCommand,
+  SkyBoxRotationCommand,
+} from './commands/skybox';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -282,6 +289,13 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SunLensFlareEnableCommand(appContext));
     commandService.registerHandler(new SunLensFlareIntensityCommand(appContext));
     commandService.registerHandler(new SunLensFlareColorCommand(appContext));
+
+    // Register skybox commands
+    commandService.registerHandler(new SkyBoxEnableCommand(appContext));
+    commandService.registerHandler(new SkyBoxColorCommand(appContext));
+    commandService.registerHandler(new SkyBoxTextureCommand(appContext));
+    commandService.registerHandler(new SkyBoxSizeCommand(appContext));
+    commandService.registerHandler(new SkyBoxRotationCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

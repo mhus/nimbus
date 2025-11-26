@@ -165,3 +165,23 @@ Es soll in SkyBoxService ein Sky Box geben, der den Himmel darstellt.
 - Ist es moeglich die sky box zu rotieren, dann soll der rotationswinkel einstellbar sein
 
 Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
+```text
+     Babylon.js erwartet automatisch diese Suffixe:
+     - _px.png (Positive X)
+     - _nx.png (Negative X)
+     - _py.png (Positive Y)
+     - _ny.png (Negative Y)
+     - _pz.png (Positive Z)
+     - _nz.png (Negative Z)
+
+     Beispiel: textures/skybox/stars → textures/skybox/stars_px.png, etc.
+
+ # Commands
+  skyBoxEnable on
+  skyBoxColor 0.2 0.5 1.0
+  skyBoxTexture textures/skybox/stars
+  skyBoxSize 2000
+  skyBoxRotation 45
+```
+
+

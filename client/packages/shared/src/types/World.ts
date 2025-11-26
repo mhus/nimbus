@@ -101,6 +101,23 @@ export interface WorldInfo {
 
     /** Sun enabled (optional, default: true) */
     sunEnabled?: boolean;
+
+    /** SkyBox settings */
+    /** SkyBox configuration (optional) */
+    skyBox?: {
+      /** SkyBox enabled (default: true) */
+      enabled: boolean;
+      /** SkyBox mode: 'color' or 'texture' (default: 'color') */
+      mode: 'color' | 'texture';
+      /** Color mode: RGB color (default: {r: 0.2, g: 0.5, b: 1.0}) */
+      color?: { r: number; g: number; b: number };
+      /** Texture mode: Base path for cube textures (e.g., 'textures/skybox/stars') */
+      texturePath?: string;
+      /** SkyBox size (default: 2000) */
+      size?: number;
+      /** SkyBox rotation in degrees (default: 0) */
+      rotation?: number;
+    };
   };
 
   /** License information */

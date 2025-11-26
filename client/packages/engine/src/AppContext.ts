@@ -31,6 +31,7 @@ import type { ShortcutService } from './services/ShortcutService';
 import type { ConfigService } from './services/ConfigService';
 import type { TargetingService } from './services/TargetingService';
 import type { SunService } from './services/SunService';
+import type { SkyBoxService } from './services/SkyBoxService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -132,6 +133,9 @@ export interface Services {
 
   /** Sun service for sun visualization and positioning */
   sun?: SunService;
+
+  /** Sky box service for sky rendering */
+  skyBox?: SkyBoxService;
 
   // Future services will be added here:
   // render?: RenderService;
