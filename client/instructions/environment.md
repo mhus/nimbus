@@ -152,4 +152,16 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
 ```
 - Wenn die sonne deaktiviert ist, soll auch der Lense Flare Effekt deaktiviert werden
 
-## Sky Dome
+## Sky Box
+
+Es soll in SkyBoxService ein Sky Box geben, der den Himmel darstellt.
+- Benutze Babylon SkyBox Mesh
+- Der Service soll in RenderService referenziert werden
+- Die Sky Box soll an cameraEnvironmentRoot in CameraService hängen
+- Die Sky Box soll in der rendering group ENVIRONMENT gerendert werden
+- Die Sky Box soll entweder eine Color oder Texture set nutzen können
+- Es wird immer der Basis-Pfad für die Texturen angegeben, z.b. "textures/skybox/stars" 
+- Die grosse der Sky Box Mesh soll einstellbar sein
+- Ist es moeglich die sky box zu rotieren, dann soll der rotationswinkel einstellbar sein
+
+Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
