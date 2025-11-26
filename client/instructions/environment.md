@@ -339,10 +339,12 @@ Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird
 
 ## Blitze
 
-[ ] Im PrecipitationService, separates system, das auch Blitze darstellt.
+[x] Im PrecipitationService, separates system, das auch Blitze darstellt.
 - Blitze mit Partikel Systemen darstellen
 - schnelle flashes mit viel zufall und nach unten verzweigungen.
-- durch command 
+- durch command ausloesen mit dauer und intensity und eher oben oder bis zum boden
+- Position zufaellig um die Kamera herum
+- (da es ein wetter blitz ist und kein effekt auf en target gibt es keinen feste position)
 
 ## WeatherService
 

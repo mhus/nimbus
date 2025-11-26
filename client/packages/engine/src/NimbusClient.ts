@@ -154,6 +154,7 @@ import {
   PrecipitationTypeCommand,
   PrecipitationStartCommand,
   PrecipitationStopCommand,
+  LightningCommand,
 } from './commands/precipitation';
 import {
   ScrawlListCommand,
@@ -365,6 +366,7 @@ async function initializeApp(): Promise<AppContext> {
     // Register precipitation commands
     commandService.registerHandler(new PrecipitationStartCommand(appContext));
     commandService.registerHandler(new PrecipitationStopCommand(appContext));
+    commandService.registerHandler(new LightningCommand(appContext));
     commandService.registerHandler(new PrecipitationEnableCommand(appContext));
     commandService.registerHandler(new PrecipitationIntensityCommand(appContext));
     commandService.registerHandler(new PrecipitationTypeCommand(appContext));

@@ -41,7 +41,7 @@ export class PrecipitationService {
   private appContext: AppContext;
   private cameraService: CameraService;
 
-  // Particle system
+  // Particle system (rain/snow)
   private particleSystem?: ParticleSystem;
 
   // Configuration
@@ -55,6 +55,9 @@ export class PrecipitationService {
   private particleSpeed: number = 25; // EmitPower
   private particleGravity: number = 15; // Gravity strength
   private particleTexture?: RawTexture;
+
+  // Lightning system
+  private lightningParticleSystems: ParticleSystem[] = [];
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -268,10 +271,176 @@ export class PrecipitationService {
   }
 
   /**
+   * Trigger lightning storm with multiple groups
+   * @param groupCount Number of lightning groups (each at different location)
+   * @param toGround True if lightning reaches ground, false if stays in sky
+   */
+  public triggerLightning(groupCount: number, toGround: boolean): void {
+    const cameraPos = this.cameraService.getPosition();
+    if (!cameraPos) {
+      logger.error('Camera position not available for lightning');
+      return;
+    }
+
+    // Create multiple lightning groups at different locations
+    for (let group = 0; group < groupCount; group++) {
+      const delay = group * (200 + Math.random() * 1800); // 200ms - 2sec pause between groups
+
+      setTimeout(() => {
+        this.createLightningGroup(cameraPos, toGround);
+      }, delay);
+    }
+
+    logger.info('Lightning storm triggered', {
+      groupCount,
+      toGround,
+    });
+  }
+
+  /**
+   * Create one lightning group (5-30 flashes at same location)
+   * Uses camera-relative coordinates via cameraEnvironmentRoot
+   */
+  private createLightningGroup(cameraPos: Vector3, toGround: boolean): void {
+    // Random RELATIVE position (x/z between -64 and 64, 4x4 chunks around camera)
+    const lightningX = -64 + Math.random() * 128;
+    const lightningZ = -64 + Math.random() * 128;
+
+    // Start Y position (high above, relative to camera)
+    const startY = 40 + Math.random() * 20;
+
+    // End Y position (relative to camera)
+    const endY = toGround ? -30 : (10 + Math.random() * 20);
+
+    // Generate zigzag path with RELATIVE coordinates
+    const path = this.generateZigzagPath(
+      new Vector3(lightningX, startY, lightningZ),
+      new Vector3(lightningX, endY, lightningZ)
+    );
+
+    // Random number of flashes in this group (5-30)
+    const flashCount = 5 + Math.floor(Math.random() * 26);
+
+    // First flash is brightest
+    this.createLightningFlash(path, 0.2, 1.0, 0);
+
+    // Subsequent flashes along same path
+    for (let i = 1; i < flashCount; i++) {
+      const delay = 20 + i * 30; // 20-30ms intervals
+      const brightness = 0.4 + Math.random() * 0.3;
+
+      setTimeout(() => {
+        this.createLightningFlash(path, 0.15, brightness, i);
+      }, delay);
+    }
+
+    logger.info('Lightning group created', {
+      position: { x: lightningX, z: lightningZ },
+      flashCount,
+      pathSegments: path.length - 1,
+    });
+  }
+
+  /**
+   * Generate realistic lightning path with organic zigzag
+   */
+  private generateZigzagPath(start: Vector3, end: Vector3): Vector3[] {
+    const segmentLength = 1.5;
+    const maxDeviation = 2.0;
+    const roughness = 0.8;
+
+    const points: Vector3[] = [];
+    points.push(start.clone());
+
+    let current = start.clone();
+
+    const totalDir = end.subtract(start);
+    const totalDist = totalDir.length();
+    if (totalDist === 0) {
+      return [start.clone(), end.clone()];
+    }
+
+    // Main loop: travel from top to bottom
+    let traveled = 0;
+    while (traveled < totalDist) {
+      const remaining = totalDist - traveled;
+      const step = Math.min(segmentLength, remaining);
+
+      // Direction to target from current position
+      const toEnd = end.subtract(current).normalize();
+
+      // Base movement towards target
+      let stepVec = toEnd.scale(step);
+
+      // Random lateral deviation
+      const randomSide = this.randomPerpendicular(toEnd);
+
+      // Deviation strength (slightly random scaled)
+      const deviationStrength = maxDeviation * (0.5 + Math.random() * roughness);
+      const deviation = randomSide.scale(deviationStrength);
+
+      // Don't let Y component get too strong (keep going down)
+      deviation.y *= 0.2;
+
+      stepVec = stepVec.add(deviation);
+
+      // Next point
+      current = current.add(stepVec);
+      points.push(current.clone());
+
+      traveled += stepVec.length();
+
+      // Safety break
+      if (points.length > 1000) break;
+    }
+
+    // Ensure we end exactly at target
+    points[points.length - 1] = end.clone();
+
+    return points;
+  }
+
+  /**
+   * Generate random vector perpendicular to direction
+   */
+  private randomPerpendicular(dir: Vector3): Vector3 {
+    // Choose fallback axis that's not parallel
+    const up = Math.abs(dir.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0);
+
+    // First perpendicular cross product
+    let side = Vector3.Cross(dir, up);
+    if (side.lengthSquared() < 0.0001) {
+      side = Vector3.Cross(dir, new Vector3(0, 0, 1));
+    }
+    side.normalize();
+
+    // Second, to have a "lateral plane"
+    let side2 = Vector3.Cross(dir, side).normalize();
+
+    // Random combination of both side directions
+    const a = (Math.random() * 2 - 1); // -1..1
+    const b = (Math.random() * 2 - 1); // -1..1
+
+    const result = side.scale(a).add(side2.scale(b));
+    return result.normalize();
+  }
+
+  /**
+   * Create single flash along zigzag path
+   */
+  private createLightningFlash(path: Vector3[], flashDuration: number, brightness: number, index: number): void {
+    // Create particles along each segment of the path
+    for (let i = 0; i < path.length - 1; i++) {
+      this.createLightningStrand(path[i], path[i + 1], flashDuration, index * 100 + i, brightness);
+    }
+  }
+
+  /**
    * Dispose precipitation service
    */
   public dispose(): void {
     this.disposeParticleSystem();
+    this.disposeLightning();
     this.particleTexture?.dispose();
     logger.info('PrecipitationService disposed');
   }
@@ -458,5 +627,154 @@ export class PrecipitationService {
       this.particleSystem = undefined;
       logger.debug('Particle system disposed');
     }
+  }
+
+  /**
+   * Create single lightning discharge strand
+   * @param brightness 0.0-1.0 (1.0 = main flash, lower = subsequent flashes)
+   */
+  private createLightningStrand(
+    startPos: Vector3,
+    endPos: Vector3,
+    flashDuration: number,
+    strandIndex: number,
+    brightness: number
+  ): void {
+    // Create fresh texture for each strand
+    const texture = this.createFreshLightningTexture();
+
+    const particleCount = Math.floor(400 * brightness); // Main flash has more particles
+    const ps = new ParticleSystem(`lightning_${Date.now()}_${strandIndex}`, particleCount + 100, this.scene);
+    ps.particleTexture = texture;
+
+    // Get camera environment root for relative positioning
+    const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
+    if (!cameraRoot) {
+      logger.error('Camera environment root not available');
+      return;
+    }
+
+    // Lightning emitter - RELATIVE position to camera
+    ps.emitter = startPos.clone();
+
+    // NO emit box - all particles from exact point
+    ps.minEmitBox = new Vector3(0, 0, 0);
+    ps.maxEmitBox = new Vector3(0, 0, 0);
+
+    // Exact direction from start to end - NO randomness
+    const direction = endPos.subtract(startPos).normalize();
+    ps.direction1 = direction;
+    ps.direction2 = direction;
+
+    // Very fast particles traveling from start to end
+    const distance = Vector3.Distance(startPos, endPos);
+    const speed = distance / 0.05; // Travel segment in 50ms
+    ps.minEmitPower = speed * 0.95;
+    ps.maxEmitPower = speed * 1.05;
+
+    // Very short lifetime for flash effect
+    ps.minLifeTime = 0.05;
+    ps.maxLifeTime = 0.1;
+
+    // Burst emission
+    ps.emitRate = 5000;
+    ps.manualEmitCount = particleCount;
+
+    // Thin lightning streaks
+    ps.minSize = 0.3 * brightness;
+    ps.maxSize = 0.5 * brightness;
+
+    // Bright white/blue color scaled by brightness
+    const alpha = brightness;
+    const lightningColor = new Color4(0.95, 0.95, 1.0, alpha);
+    ps.addColorGradient(0.0, lightningColor);
+    ps.addColorGradient(0.3, new Color4(0.95, 0.95, 1.0, alpha * 0.9));
+    ps.addColorGradient(1.0, new Color4(0.95, 0.95, 1.0, 0)); // Quick fade
+
+    // Size gradients - constant thin
+    ps.addSizeGradient(0.0, 1.0);
+    ps.addSizeGradient(1.0, 0.8);
+
+    // No gravity
+    ps.gravity = Vector3.Zero();
+
+    // Additive blending for intense brightness
+    ps.blendMode = ParticleSystem.BLENDMODE_ADD;
+
+    // Billboard
+    ps.isBillboardBased = true;
+
+    // Rendering group
+    ps.renderingGroupId = RENDERING_GROUPS.PRECIPITATION;
+
+    // Attach to camera environment root for relative positioning
+    ps.emitter = startPos.clone();
+    // Note: ParticleSystem doesn't have parent, but emitter position is relative to world
+    // We need to convert relative to absolute
+    const absoluteStart = cameraRoot.getAbsolutePosition().add(startPos);
+    ps.emitter = absoluteStart;
+
+    // Start immediately
+    ps.start();
+    this.lightningParticleSystems.push(ps);
+
+    // Stop emitting after initial burst
+    setTimeout(() => {
+      ps.stop();
+    }, 50);
+
+    // Dispose after flash duration
+    setTimeout(() => {
+      const index = this.lightningParticleSystems.indexOf(ps);
+      if (index > -1) {
+        this.lightningParticleSystems.splice(index, 1);
+      }
+      ps.dispose();
+    }, flashDuration * 1000);
+  }
+
+  /**
+   * Create fresh lightning texture (new instance each time)
+   */
+  private createFreshLightningTexture(): RawTexture {
+    const textureSize = 16;
+    const textureData = new Uint8Array(textureSize * textureSize * 4);
+    const center = textureSize / 2;
+
+    for (let y = 0; y < textureSize; y++) {
+      for (let x = 0; x < textureSize; x++) {
+        const dx = x - center + 0.5;
+        const dy = y - center + 0.5;
+        const dist = Math.sqrt(dx * dx + dy * dy) / center;
+        // Sharper falloff for lightning streaks
+        const texAlpha = Math.max(0, Math.pow(1 - dist, 2));
+
+        const index = (y * textureSize + x) * 4;
+        textureData[index] = 255;     // R
+        textureData[index + 1] = 255; // G
+        textureData[index + 2] = 255; // B
+        textureData[index + 3] = Math.floor(texAlpha * 255); // A
+      }
+    }
+
+    return RawTexture.CreateRGBATexture(
+      textureData,
+      textureSize,
+      textureSize,
+      this.scene,
+      false,
+      false,
+      Constants.TEXTURE_BILINEAR_SAMPLINGMODE
+    );
+  }
+
+  /**
+   * Dispose all lightning particle systems
+   */
+  private disposeLightning(): void {
+    for (const ps of this.lightningParticleSystems) {
+      ps.dispose();
+    }
+    this.lightningParticleSystems = [];
   }
 }
