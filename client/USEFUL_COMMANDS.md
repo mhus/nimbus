@@ -90,9 +90,16 @@ doScrawlStart({
 })
 
 
-// Schnee
-doPrecipitationStart(50, 1.0, 1.0, 1.0, 0.6, 5, 3)
+// Leichter Schnee
+doPrecipitationStart(100, 1.0, 1.0, 1.0, 0.6, 5, 3)
+
+// Mittlerer Schnee
+doPrecipitationStart(300, 1.0, 1.0, 1.0, 0.6, 5, 3)
+
+// Schneesturm!
+doPrecipitationStart(1000, 1.0, 1.0, 1.0, 0.6, 5, 3)
+
 
 // Regen (zweites Mal - sollte jetzt funktionieren!)
-doPrecipitationStart(50, 0.4, 0.4, 0.6, 0.3, 25, 15)
+doPrecipitationStart(530, 0.4, 0.4, 0.6, 0.3, 25, 15)
 

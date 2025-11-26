@@ -69,37 +69,17 @@ export class PrecipitationService {
    * @param enabled True to enable, false to disable
    */
   public setEnabled(enabled: boolean): void {
-    logger.info('🔧 setEnabled called', {
-      enabled,
-      currentEnabled: this.enabled,
-      hasSystem: !!this.particleSystem,
-    });
-
-    if (this.enabled === enabled) {
-      logger.info('⏭️ Already in this state, skipping');
-      return;
-    }
+    if (this.enabled === enabled) return;
 
     this.enabled = enabled;
 
     if (enabled) {
-      logger.info('✅ Enabling precipitation...', {
-        type: this.precipitationType,
-        intensity: this.intensity,
-        size: this.particleSize,
-        speed: this.particleSpeed,
-        gravity: this.particleGravity,
-        color: this.particleColor,
-      });
       this.createParticleSystem();
-      logger.info('✅ Create complete, hasSystem:', !!this.particleSystem);
     } else {
-      logger.info('🛑 Disabling precipitation...');
       this.disposeParticleSystem();
-      logger.info('🛑 Dispose complete, hasSystem:', !!this.particleSystem);
     }
 
-    logger.info('✅ setEnabled complete', { enabled, hasSystem: !!this.particleSystem });
+    logger.info('Precipitation enabled state changed', { enabled });
   }
 
   /**
@@ -112,11 +92,11 @@ export class PrecipitationService {
 
   /**
    * Set precipitation intensity
-   * @param intensity Intensity (0-100)
+   * @param intensity Intensity (0+, higher = more particles)
    */
   public setIntensity(intensity: number): void {
-    // Clamp to valid range
-    this.intensity = Math.max(0, Math.min(100, intensity));
+    // Clamp to non-negative
+    this.intensity = Math.max(0, intensity);
 
     // Update particle system if active
     if (this.particleSystem) {
@@ -141,13 +121,6 @@ export class PrecipitationService {
   public setPrecipitationType(type: PrecipitationType): void {
     if (this.precipitationType === type) return;
 
-    logger.info('🔄 setPrecipitationType called', {
-      newType: type,
-      oldType: this.precipitationType,
-      enabled: this.enabled,
-      hasParticleSystem: !!this.particleSystem,
-    });
-
     // Remember current state
     const wasEnabled = this.enabled;
 
@@ -156,19 +129,15 @@ export class PrecipitationService {
 
     // Dispose old particle system if exists
     if (this.particleSystem) {
-      logger.info('🗑️ Disposing old particle system');
       this.disposeParticleSystem();
-      logger.info('✅ Old system disposed');
     }
 
     // Recreate particle system if it was enabled
     if (wasEnabled) {
-      logger.info('🔨 Creating new particle system for type:', type);
       this.createParticleSystem();
-      logger.info('✅ New system created, isStarted:', this.particleSystem?.isStarted());
     }
 
-    logger.info('✅ Precipitation type changed complete', { type, wasEnabled });
+    logger.info('Precipitation type changed', { type, wasEnabled });
   }
 
   /**
@@ -288,16 +257,12 @@ export class PrecipitationService {
         emitterPos.y += 30; // 30 blocks above camera
         this.particleSystem.emitter = emitterPos;
 
-        // Log every 60 frames (about once per second at 60fps)
-        if (Math.random() < 0.016) {
-          logger.info('🔄 Precipitation update', {
-            emitterPos,
-            cameraPos,
-            activeParticles: this.particleSystem.getActiveCount(),
-            isStarted: this.particleSystem.isStarted(),
-            emitRate: this.particleSystem.emitRate,
-          });
-        }
+        // Optional: Debug logging (disabled by default)
+        // if (Math.random() < 0.016) {
+        //   logger.debug('Precipitation update', {
+        //     activeParticles: this.particleSystem.getActiveCount(),
+        //   });
+        // }
       }
     }
   }
@@ -365,6 +330,9 @@ export class PrecipitationService {
     this.particleSystem.addSizeGradient(0.0, 1.0);
     this.particleSystem.addSizeGradient(1.0, 1.0);
 
+    // Emission rate based on intensity (direct mapping: intensity = particles/sec)
+    this.particleSystem.emitRate = this.intensity;
+
     // Emission rate (based on intensity)
     this.updateParticleIntensity();
 
@@ -377,10 +345,8 @@ export class PrecipitationService {
     // Update speed
     this.particleSystem.updateSpeed = 0.02;
 
-    // Rendering group - use WORLD for testing (we KNOW this works)
-    this.particleSystem.renderingGroupId = RENDERING_GROUPS.WORLD;
-
-    logger.info('⚠️ Using WORLD rendering group for debugging');
+    // Rendering group
+    this.particleSystem.renderingGroupId = RENDERING_GROUPS.PRECIPITATION;
 
     // Start emitting
     this.particleSystem.start();

@@ -51,8 +51,8 @@ export class PrecipitationStartCommand extends CommandHandler {
     const gravity = parseFloat(parameters[6]);
 
     // Validate
-    if (isNaN(intensity) || intensity < 0 || intensity > 100) {
-      return 'Intensity must be 0-100';
+    if (isNaN(intensity) || intensity < 0) {
+      return 'Intensity must be non-negative';
     }
     if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || g < 0 || b < 0 || r > 1 || g > 1 || b > 1) {
       return 'RGB values must be 0.0-1.0';
