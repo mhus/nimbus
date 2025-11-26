@@ -129,6 +129,17 @@ import {
   MoonTextureCommand,
 } from './commands/moon';
 import {
+  CloudAddCommand,
+  CloudRemoveCommand,
+  CloudClearCommand,
+  CloudEnableCommand,
+  CloudSpeedCommand,
+  CloudDirectionCommand,
+  CloudPositionCommand,
+  CloudSizeCommand,
+  CloudListCommand,
+} from './commands/clouds';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
@@ -314,6 +325,17 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new MoonDistanceCommand(appContext));
     commandService.registerHandler(new MoonPhaseCommand(appContext));
     commandService.registerHandler(new MoonTextureCommand(appContext));
+
+    // Register cloud visualization commands
+    commandService.registerHandler(new CloudAddCommand(appContext));
+    commandService.registerHandler(new CloudRemoveCommand(appContext));
+    commandService.registerHandler(new CloudClearCommand(appContext));
+    commandService.registerHandler(new CloudEnableCommand(appContext));
+    commandService.registerHandler(new CloudSpeedCommand(appContext));
+    commandService.registerHandler(new CloudDirectionCommand(appContext));
+    commandService.registerHandler(new CloudPositionCommand(appContext));
+    commandService.registerHandler(new CloudSizeCommand(appContext));
+    commandService.registerHandler(new CloudListCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

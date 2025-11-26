@@ -23,6 +23,7 @@ import { BackdropService } from './BackdropService';
 import { SunService } from './SunService';
 import { SkyBoxService } from './SkyBoxService';
 import { MoonService } from './MoonService';
+import { CloudsService } from './CloudsService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -55,6 +56,7 @@ export class EngineService {
   private sunService?: SunService;
   private skyBoxService?: SkyBoxService;
   private moonService?: MoonService;
+  private cloudsService?: CloudsService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
@@ -141,10 +143,15 @@ export class EngineService {
       this.appContext.services.skyBox = this.skyBoxService;
       logger.debug('SkyBoxService initialized');
 
-      // Initialize moon service (after SkyBoxService, before EnvironmentService)
+      // Initialize moon service (after SkyBoxService, before CloudsService)
       this.moonService = new MoonService(this.scene, this.appContext);
       this.appContext.services.moon = this.moonService;
       logger.debug('MoonService initialized');
+
+      // Initialize clouds service (after MoonService, before EnvironmentService)
+      this.cloudsService = new CloudsService(this.scene, this.appContext);
+      this.appContext.services.clouds = this.cloudsService;
+      logger.debug('CloudsService initialized');
 
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
@@ -334,6 +341,7 @@ export class EngineService {
         this.playerService?.update(deltaTime);
         this.cameraService?.update(deltaTime);
         this.selectService?.update(deltaTime); // Update block selection and highlighting
+        this.cloudsService?.update(deltaTime); // Update cloud positions and fading
         this.environmentService?.update(deltaTime);
 
         // Check and emit player direction updates (for beam:follow effects)

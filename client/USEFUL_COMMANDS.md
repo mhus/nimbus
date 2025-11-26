@@ -43,3 +43,14 @@ doMoonElevation(0, 60);
 doMoonDistance(0, 450);
 doMoonPhase(0, 1.0);
 
+## Clouds
+
+# Wolke im Norden, 200 Blöcke entfernt, Höhe 180
+doCloudAdd("cloud-north",0, -200, 180, 80, 50, "textures/clouds/cloud1.png", 3, 0, 0);
+
+# Wolke im Osten, 150 Blöcke entfernt, Höhe 160
+cloudAdd "cloud-east" 150 0 160 60 40 "textures/clouds/cloud2.png" 5 90 1
+
+# Wolke direkt über der Kamera
+cloudAdd "cloud-above" 0 0 200 100 60 "textures/clouds/cloud3.png" 0 0 2
+

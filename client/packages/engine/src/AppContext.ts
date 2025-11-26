@@ -33,6 +33,7 @@ import type { TargetingService } from './services/TargetingService';
 import type { SunService } from './services/SunService';
 import type { SkyBoxService } from './services/SkyBoxService';
 import type { MoonService } from './services/MoonService';
+import type { CloudsService } from './services/CloudsService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -140,6 +141,9 @@ export interface Services {
 
   /** Moon service for moon visualization and positioning */
   moon?: MoonService;
+
+  /** Clouds service for cloud rendering and animation */
+  clouds?: CloudsService;
 
   // Future services will be added here:
   // render?: RenderService;

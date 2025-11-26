@@ -266,7 +266,7 @@ Ist es moeglich einen Halbmond darzustellen ohne spezielle texture (rein geometr
 
 ## Wolken
 
-[ ] Es soll ein CloudsService geben, der Wolken im Himmel darstellt.
+[?] Es soll ein CloudsService geben, der Wolken im Himmel darstellt.
 - Der Service soll in RenderService referenziert werden
 - Die Wolken sollen an cameraEnvironmentRoot in CameraService hängen
 - Die Wolken sollen in der rendering group ENVIRONMENT gerendert werden
@@ -284,6 +284,20 @@ bewegt sich ueber die szene und wird auf der anderen seite wieder ausgeblendet.
 Wenn die geschwindigkeit 0 ist, dann wird die wolke statisch dargestellt.
 Wolken sollen wieder deaktiviert werden koennen. 
 
+Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird die cloud id als string uebergeben.
+
+[?] Erstelle Commands in engine um die Wolken zu steuern.
+
+```text
+ # Wolke im Norden, 200 Blöcke entfernt, Höhe 180
+  cloudAdd "cloud-north" 0 -200 180 80 50 "textures/clouds/cloud1.png" 3 0 0
+
+  # Wolke im Osten, 150 Blöcke entfernt, Höhe 160
+  cloudAdd "cloud-east" 150 0 160 60 40 "textures/clouds/cloud2.png" 5 90 1
+
+  # Wolke direkt über der Kamera
+  cloudAdd "cloud-above" 0 0 200 100 60 "textures/clouds/cloud3.png" 0 0 2
+```
 ## Horizont
 
 [ ] 
