@@ -106,6 +106,8 @@ import {
   SunPositionCommand,
   SunElevationCommand,
   SunColorCommand,
+  SunTextureCommand,
+  SunSizeCommand,
 } from './commands/sun';
 import {
   ScrawlListCommand,
@@ -272,6 +274,8 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SunPositionCommand(appContext));
     commandService.registerHandler(new SunElevationCommand(appContext));
     commandService.registerHandler(new SunColorCommand(appContext));
+    commandService.registerHandler(new SunTextureCommand(appContext));
+    commandService.registerHandler(new SunSizeCommand(appContext));
 
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));

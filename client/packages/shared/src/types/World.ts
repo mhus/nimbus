@@ -82,6 +82,9 @@ export interface WorldInfo {
 
     /** Step sound when swimming (optional, default: 'audio/liquid/swim1.ogg') */
     swimStepAudio?: string;
+
+    /** Sun texture path (optional, default: 'textures/sun/sun1.png') */
+    sunTexture?: string;
   };
 
   /** License information */

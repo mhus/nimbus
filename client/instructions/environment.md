@@ -53,9 +53,7 @@ Erstelle in engine Commandos um beide lichtquellen zu steuern.
   - doSunLightSpecular <r> <g> <b> - Set specular color (0-1)
 ```
 
-## Sonne
-
-Vorbereitung:
+## Vorbereitung:
 
 [x] Ich möchte weitere Rendering Groups einführen, z.b. die Sonne. Deshalb möchte ich vorab eine Datei, 
 z.b. renderingGroups.ts erstellen, in der ich alle Rendering Groups als constante definiere. Damit
@@ -78,7 +76,7 @@ Aktuell nutzt du zwei Rendering Groups:
 cameraEnvironmentRoot in CameraService
 ```
 
-Sonne:
+## Sonne
 
 [?] Es soll eine sonne geben, es geht nur um die Darstellung der Sonne im SunService.ts 
 - Der Service soll im RenderService referenziert werden
@@ -130,3 +128,18 @@ Ist der plan sinnvoll, gibt es sinnvolle ergaenzungen?
     - sunColor 1 0.5 0.2 - Orange
 ```
 
+[ ] Sun Lense Flare Effekt
+- Es soll einen Lense Flare Effekt fuer die Sonne geben
+- Der Effekt kann in den SunService integriert werden
+- Ein Shader kann genutzt werden um den Effekt zu erzeugen
+- Der Effekt soll nur sichtbar sein wenn die Sonne im sichtfeld der Kamera ist
+- Der Effekt soll in der rendering group ENVIRONMENT gerendert werden
+- Es sollen ein paar Partikel genutzt werden um den Lense Flare Effekt zu erzeugen
+- Die Bewegung der Partikel soll sich an der Bewegung der Kamera orientieren
+- Der effekt soll deaktivierbar sein (Enabled = false)
+- Erstelle eine Methode setSunLenseFlareEnabled(enabled: boolean)
+- Erstelle eine Methode setSunLenseFlareIntensity(intensity: number)
+- Erstelle eine Methode setSunLenseFlareColor(color: Color)
+- Erstelle in engine Commands um den Lense Flare Effekt zu steuern
+
+## Sky

@@ -1,48 +1,39 @@
 import { getLogger } from '@nimbus/shared';
 import {
   Scene,
-  ParticleSystem,
   TransformNode,
-  Vector3,
-  Color4,
+  Mesh,
+  PlaneBuilder,
+  StandardMaterial,
+  Color3,
   RawTexture,
   Constants,
+  Texture,
 } from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
+import type { NetworkService } from './NetworkService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('SunService');
 
 /**
- * SunService - Manages sun visualization using particle systems
+ * SunService - Manages sun visualization using a simple billboard
  *
- * Creates a multi-layered particle-based sun with:
- * - Core center sphere
- * - Inner atmospheric glow
- * - 4 cardinal directional rays (N/S/E/W)
- * - Diagonal rays rendered via texture
+ * Creates a single billboard plane that always faces the camera.
+ * Supports custom texture from WorldInfo or fallback circular disc.
  */
 export class SunService {
   private scene: Scene;
   private appContext: AppContext;
   private cameraService: CameraService;
+  private networkService?: NetworkService;
 
-  // Sun emitter node (attached to camera environment root)
-  private sunEmitter?: TransformNode;
-
-  // Particle systems (5 total)
-  private coreSystem?: ParticleSystem;
-  private glowSystem?: ParticleSystem;
-  private northRaySystem?: ParticleSystem;
-  private southRaySystem?: ParticleSystem;
-  private eastRaySystem?: ParticleSystem;
-  private westRaySystem?: ParticleSystem;
-
-  // Textures
-  private coreTexture?: RawTexture; // Circle with 4 diagonal rays
-  private glowTexture?: RawTexture; // Soft radial gradient
-  private rayTexture?: RawTexture; // Elongated gradient for rays
+  // Sun components
+  private sunRoot?: TransformNode;
+  private sunMesh?: Mesh;
+  private sunMaterial?: StandardMaterial;
+  private sunTexture?: Texture | RawTexture;
 
   // Sun position parameters
   private currentAngleY: number = 90; // Default: East
@@ -50,55 +41,108 @@ export class SunService {
   private orbitRadius: number = 400; // Distance from camera
 
   // Sun appearance
-  private sunColor: Color4 = new Color4(1, 1, 0.9, 1); // Warm white/yellow
+  private sunColor: Color3 = new Color3(1, 1, 0.9); // Warm white/yellow
+  private sunSize: number = 80; // Billboard size
   private enabled: boolean = true;
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
     this.cameraService = appContext.services.camera!;
+    this.networkService = appContext.services.network;
 
     this.initialize();
   }
 
-  private initialize(): void {
-    // Create textures
-    this.coreTexture = this.createCoreTexture();
-    this.glowTexture = this.createGlowTexture();
-    this.rayTexture = this.createRayTexture();
-
-    // Create emitter node attached to camera environment root
+  private async initialize(): Promise<void> {
+    // Create sun root node attached to camera environment root
     const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
     if (!cameraRoot) {
       logger.error('Camera environment root not available');
       return;
     }
 
-    this.sunEmitter = new TransformNode('sunEmitter', this.scene);
-    this.sunEmitter.parent = cameraRoot;
+    this.sunRoot = new TransformNode('sunRoot', this.scene);
+    this.sunRoot.parent = cameraRoot;
 
-    // Create particle systems
-    this.createCoreSystem();
-    this.createGlowSystem();
-    this.createCardinalRays();
+    // Load texture (from WorldInfo or fallback to procedural)
+    await this.loadSunTexture();
+
+    // Create material
+    this.sunMaterial = new StandardMaterial('sunMaterial', this.scene);
+    this.sunMaterial.diffuseTexture = this.sunTexture!;
+    this.sunMaterial.emissiveTexture = this.sunTexture!;
+    this.sunMaterial.emissiveColor = this.sunColor;
+    this.sunMaterial.disableLighting = true;
+    this.sunMaterial.opacityTexture = this.sunTexture!;
+    this.sunMaterial.useAlphaFromDiffuseTexture = false;
+    this.sunMaterial.backFaceCulling = false;
+
+    // Create sun billboard mesh
+    this.sunMesh = PlaneBuilder.CreatePlane('sun', { size: this.sunSize }, this.scene);
+    this.sunMesh.parent = this.sunRoot;
+    this.sunMesh.material = this.sunMaterial;
+    this.sunMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    this.sunMesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
 
     // Set initial position
-    this.setSunPositionOnCircle(this.currentAngleY);
-    this.setSunHeightOverCamera(this.currentElevation);
+    this.updateSunPosition();
 
     logger.info('SunService initialized', {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
+      hasCustomTexture: this.appContext.worldInfo?.settings.sunTexture !== undefined,
     });
   }
 
   /**
-   * Create core texture with diagonal rays baked in
-   * Center sphere + 4 diagonal rays (NE, SE, SW, NW)
+   * Load sun texture from WorldInfo or use default
    */
-  private createCoreTexture(): RawTexture {
+  private async loadSunTexture(): Promise<void> {
+    const texturePath = this.appContext.worldInfo?.settings.sunTexture || 'textures/sun/sun1.png';
+
+    if (this.networkService) {
+      try {
+        // Load texture from asset server
+        const textureUrl = this.networkService.getAssetUrl(texturePath);
+        this.sunTexture = new Texture(
+          textureUrl,
+          this.scene,
+          false, // noMipmap
+          true, // invertY
+          Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+          () => {
+            logger.info('Sun texture loaded', { path: texturePath });
+          },
+          (message) => {
+            logger.error('Failed to load sun texture, using fallback', { path: texturePath, error: message });
+            this.sunTexture = this.createFallbackTexture();
+            if (this.sunMaterial) {
+              this.sunMaterial.diffuseTexture = this.sunTexture;
+              this.sunMaterial.emissiveTexture = this.sunTexture;
+              this.sunMaterial.opacityTexture = this.sunTexture;
+            }
+          }
+        );
+        this.sunTexture.hasAlpha = true;
+      } catch (error) {
+        logger.error('Error loading sun texture, using fallback', { error });
+        this.sunTexture = this.createFallbackTexture();
+      }
+    } else {
+      // Use fallback circular disc if network service not available
+      this.sunTexture = this.createFallbackTexture();
+      logger.info('Using fallback circular sun texture (no NetworkService)');
+    }
+  }
+
+  /**
+   * Create simple circular disc texture as fallback
+   */
+  private createFallbackTexture(): RawTexture {
     const size = 256;
     const center = size / 2;
+    const radius = size / 2 - 10;
     const textureData = new Uint8Array(size * size * 4);
 
     for (let y = 0; y < size; y++) {
@@ -106,17 +150,17 @@ export class SunService {
         const dx = x - center;
         const dy = y - center;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
 
         let alpha = 0;
 
-        // Core circle (bright center)
-        if (dist < 25) {
-          alpha = 1.0 - dist / 25;
-        }
-        // Diagonal rays (NE, SE, SW, NW at 45°, 135°, 225°, 315°)
-        else {
-          alpha = this.calculateDiagonalRayAlpha(dx, dy, dist, angle);
+        if (dist < radius) {
+          // Smooth edge falloff
+          const edgeDist = radius - dist;
+          if (edgeDist < 10) {
+            alpha = edgeDist / 10; // Soft edge
+          } else {
+            alpha = 1.0; // Full opacity
+          }
         }
 
         const idx = (y * size + x) * 4;
@@ -139,232 +183,63 @@ export class SunService {
   }
 
   /**
-   * Calculate alpha for diagonal rays (thinner than cardinal)
+   * Set sun texture from asset path
+   * @param texturePath Path to texture (will be loaded via NetworkService.getAssetUrl)
    */
-  private calculateDiagonalRayAlpha(
-    dx: number,
-    dy: number,
-    dist: number,
-    angle: number
-  ): number {
-    // Diagonal angles: 45°, 135°, 225°, 315° (π/4, 3π/4, 5π/4, 7π/4)
-    const diagonalAngles = [Math.PI / 4, (3 * Math.PI) / 4, (-3 * Math.PI) / 4, -Math.PI / 4];
-
-    const rayWidth = 10; // Thinner than cardinal rays
-    const rayLength = 90;
-
-    for (const targetAngle of diagonalAngles) {
-      const angleDiff = Math.abs(((angle - targetAngle + Math.PI) % (2 * Math.PI)) - Math.PI);
-
-      if (angleDiff < 0.2 && dist > 25 && dist < rayLength) {
-        // Within ray cone
-        const lengthFade = 1.0 - (dist - 25) / (rayLength - 25);
-        const widthFade = 1.0 - angleDiff / 0.2;
-        return lengthFade * widthFade * 0.6; // 60% opacity for diagonal rays
+  async setSunTexture(texturePath: string | null): Promise<void> {
+    if (!texturePath) {
+      // Use fallback
+      this.sunTexture?.dispose();
+      this.sunTexture = this.createFallbackTexture();
+      if (this.sunMaterial) {
+        this.sunMaterial.diffuseTexture = this.sunTexture;
+        this.sunMaterial.emissiveTexture = this.sunTexture;
+        this.sunMaterial.opacityTexture = this.sunTexture;
       }
+      logger.info('Sun texture reset to fallback');
+      return;
     }
 
-    return 0;
-  }
-
-  /**
-   * Create soft radial gradient for glow effect
-   */
-  private createGlowTexture(): RawTexture {
-    const size = 128;
-    const center = size / 2;
-    const textureData = new Uint8Array(size * size * 4);
-
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const dx = x - center;
-        const dy = y - center;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const normalizedDist = dist / center;
-
-        // Smooth falloff
-        const alpha = Math.max(0, 1.0 - normalizedDist);
-
-        const idx = (y * size + x) * 4;
-        textureData[idx] = 255;
-        textureData[idx + 1] = 255;
-        textureData[idx + 2] = 255;
-        textureData[idx + 3] = Math.floor(alpha * 255);
-      }
+    if (!this.networkService) {
+      logger.error('NetworkService not available, cannot load texture');
+      return;
     }
 
-    return RawTexture.CreateRGBATexture(
-      textureData,
-      size,
-      size,
-      this.scene,
-      false,
-      false,
-      Constants.TEXTURE_BILINEAR_SAMPLINGMODE
-    );
-  }
+    try {
+      const textureUrl = this.networkService.getAssetUrl(texturePath);
 
-  /**
-   * Create elongated gradient for directional rays
-   */
-  private createRayTexture(): RawTexture {
-    const width = 32;
-    const height = 128;
-    const textureData = new Uint8Array(width * height * 4);
+      // Dispose old texture
+      this.sunTexture?.dispose();
 
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const centerX = width / 2;
-        const distFromCenter = Math.abs(x - centerX) / centerX;
-
-        // Fade along length (top to bottom)
-        const lengthFade = 1.0 - y / height;
-
-        // Fade from center to edges (horizontally)
-        const widthFade = 1.0 - distFromCenter;
-
-        const alpha = lengthFade * widthFade;
-
-        const idx = (y * width + x) * 4;
-        textureData[idx] = 255;
-        textureData[idx + 1] = 255;
-        textureData[idx + 2] = 255;
-        textureData[idx + 3] = Math.floor(alpha * 255);
-      }
+      // Load new texture
+      this.sunTexture = new Texture(
+        textureUrl,
+        this.scene,
+        false,
+        true,
+        Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+        () => {
+          logger.info('Sun texture loaded', { path: texturePath });
+          if (this.sunMaterial) {
+            this.sunMaterial.diffuseTexture = this.sunTexture!;
+            this.sunMaterial.emissiveTexture = this.sunTexture!;
+            this.sunMaterial.opacityTexture = this.sunTexture!;
+          }
+        },
+        (message) => {
+          logger.error('Failed to load sun texture', { path: texturePath, error: message });
+          this.sunTexture = this.createFallbackTexture();
+          if (this.sunMaterial) {
+            this.sunMaterial.diffuseTexture = this.sunTexture;
+            this.sunMaterial.emissiveTexture = this.sunTexture;
+            this.sunMaterial.opacityTexture = this.sunTexture;
+          }
+        }
+      );
+      this.sunTexture.hasAlpha = true;
+    } catch (error) {
+      logger.error('Error loading sun texture', { error });
     }
-
-    return RawTexture.CreateRGBATexture(
-      textureData,
-      width,
-      height,
-      this.scene,
-      false,
-      false,
-      Constants.TEXTURE_BILINEAR_SAMPLINGMODE
-    );
-  }
-
-  /**
-   * Create core sun particle system
-   */
-  private createCoreSystem(): void {
-    this.coreSystem = new ParticleSystem('sunCore', 200, this.scene);
-    this.coreSystem.particleTexture = this.coreTexture!;
-    this.coreSystem.emitter = this.sunEmitter!.position;
-
-    // Size
-    this.coreSystem.minSize = 60;
-    this.coreSystem.maxSize = 70;
-
-    // Lifetime and emission
-    this.coreSystem.minLifeTime = 2.0;
-    this.coreSystem.maxLifeTime = 3.0;
-    this.coreSystem.emitRate = 80;
-
-    // Static particles (no movement)
-    this.coreSystem.direction1 = Vector3.Zero();
-    this.coreSystem.direction2 = Vector3.Zero();
-    this.coreSystem.minEmitPower = 0;
-    this.coreSystem.maxEmitPower = 0;
-
-    // Color
-    this.coreSystem.color1 = this.sunColor;
-    this.coreSystem.color2 = new Color4(1, 0.95, 0.8, 1);
-
-    // Blend mode and rendering
-    this.coreSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
-    this.coreSystem.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
-
-    this.coreSystem.start();
-  }
-
-  /**
-   * Create inner glow particle system
-   */
-  private createGlowSystem(): void {
-    this.glowSystem = new ParticleSystem('sunGlow', 300, this.scene);
-    this.glowSystem.particleTexture = this.glowTexture!;
-    this.glowSystem.emitter = this.sunEmitter!.position;
-
-    // Larger size for glow effect
-    this.glowSystem.minSize = 100;
-    this.glowSystem.maxSize = 120;
-
-    // Lifetime and emission
-    this.glowSystem.minLifeTime = 3.0;
-    this.glowSystem.maxLifeTime = 4.0;
-    this.glowSystem.emitRate = 100;
-
-    // Static particles
-    this.glowSystem.direction1 = Vector3.Zero();
-    this.glowSystem.direction2 = Vector3.Zero();
-    this.glowSystem.minEmitPower = 0;
-    this.glowSystem.maxEmitPower = 0;
-
-    // Softer color
-    this.glowSystem.color1 = new Color4(1, 0.95, 0.7, 0.5);
-    this.glowSystem.color2 = new Color4(1, 0.9, 0.6, 0.4);
-
-    // Blend mode and rendering
-    this.glowSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
-    this.glowSystem.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
-
-    this.glowSystem.start();
-  }
-
-  /**
-   * Create 4 cardinal ray particle systems (N, S, E, W)
-   */
-  private createCardinalRays(): void {
-    // North ray (rotated 0°)
-    this.northRaySystem = this.createRaySystem('sunRayNorth', 0);
-
-    // East ray (rotated 90°)
-    this.eastRaySystem = this.createRaySystem('sunRayEast', Math.PI / 2);
-
-    // South ray (rotated 180°)
-    this.southRaySystem = this.createRaySystem('sunRaySouth', Math.PI);
-
-    // West ray (rotated 270°)
-    this.westRaySystem = this.createRaySystem('sunRayWest', (3 * Math.PI) / 2);
-  }
-
-  /**
-   * Create a single directional ray particle system
-   */
-  private createRaySystem(name: string, rotationY: number): ParticleSystem {
-    const raySystem = new ParticleSystem(name, 150, this.scene);
-    raySystem.particleTexture = this.rayTexture!;
-    raySystem.emitter = this.sunEmitter!.position;
-
-    // Size (thicker than diagonal rays)
-    raySystem.minSize = 40;
-    raySystem.maxSize = 50;
-
-    // Lifetime and emission
-    raySystem.minLifeTime = 2.5;
-    raySystem.maxLifeTime = 3.5;
-    raySystem.emitRate = 60;
-
-    // Static particles
-    raySystem.direction1 = Vector3.Zero();
-    raySystem.direction2 = Vector3.Zero();
-    raySystem.minEmitPower = 0;
-    raySystem.maxEmitPower = 0;
-
-    // Color (slightly more intense)
-    raySystem.color1 = new Color4(1, 1, 0.95, 0.9);
-    raySystem.color2 = new Color4(1, 0.95, 0.85, 0.8);
-
-    // Billboard mode for proper orientation
-    raySystem.billboardMode = ParticleSystem.BILLBOARDMODE_ALL;
-
-    // Blend mode and rendering
-    raySystem.blendMode = ParticleSystem.BLENDMODE_ADD;
-    raySystem.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
-
-    raySystem.start();
-    return raySystem;
   }
 
   /**
@@ -386,10 +261,10 @@ export class SunService {
   }
 
   /**
-   * Update sun emitter position based on current angleY and elevation
+   * Update sun root position based on current angleY and elevation
    */
   private updateSunPosition(): void {
-    if (!this.sunEmitter) return;
+    if (!this.sunRoot) return;
 
     // Convert to radians
     const angleYRad = this.currentAngleY * (Math.PI / 180);
@@ -401,7 +276,7 @@ export class SunService {
     const x = horizontalDist * Math.sin(angleYRad);
     const z = horizontalDist * Math.cos(angleYRad);
 
-    this.sunEmitter.position.set(x, y, z);
+    this.sunRoot.position.set(x, y, z);
 
     logger.info('Sun position updated', {
       angleY: this.currentAngleY,
@@ -417,35 +292,27 @@ export class SunService {
    * @param b Blue component (0-1)
    */
   setSunColor(r: number, g: number, b: number): void {
-    this.sunColor = new Color4(r, g, b, 1);
+    this.sunColor = new Color3(r, g, b);
 
-    // Update all particle system colors
-    if (this.coreSystem) {
-      this.coreSystem.color1 = this.sunColor;
-      this.coreSystem.color2 = new Color4(r * 0.95, g * 0.95, b * 0.8, 1);
+    if (this.sunMaterial) {
+      this.sunMaterial.emissiveColor = this.sunColor;
     }
-
-    if (this.glowSystem) {
-      this.glowSystem.color1 = new Color4(r, g * 0.95, b * 0.7, 0.5);
-      this.glowSystem.color2 = new Color4(r, g * 0.9, b * 0.6, 0.4);
-    }
-
-    // Update ray colors
-    const raySystems = [
-      this.northRaySystem,
-      this.southRaySystem,
-      this.eastRaySystem,
-      this.westRaySystem,
-    ];
-
-    raySystems.forEach((system) => {
-      if (system) {
-        system.color1 = new Color4(r, g, b * 0.95, 0.9);
-        system.color2 = new Color4(r, g * 0.95, b * 0.85, 0.8);
-      }
-    });
 
     logger.info('Sun color updated', { r, g, b });
+  }
+
+  /**
+   * Set sun size
+   * @param size Billboard plane size
+   */
+  setSunSize(size: number): void {
+    this.sunSize = size;
+
+    if (this.sunMesh) {
+      this.sunMesh.scaling.setAll(size / 80); // Scale from default 80
+    }
+
+    logger.info('Sun size updated', { size });
   }
 
   /**
@@ -455,24 +322,9 @@ export class SunService {
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
 
-    const systems = [
-      this.coreSystem,
-      this.glowSystem,
-      this.northRaySystem,
-      this.southRaySystem,
-      this.eastRaySystem,
-      this.westRaySystem,
-    ];
-
-    systems.forEach((system) => {
-      if (system) {
-        if (enabled) {
-          system.start();
-        } else {
-          system.stop();
-        }
-      }
-    });
+    if (this.sunMesh) {
+      this.sunMesh.setEnabled(enabled);
+    }
 
     logger.info('Sun visibility changed', { enabled });
   }
@@ -491,21 +343,10 @@ export class SunService {
    * Cleanup and dispose resources
    */
   dispose(): void {
-    // Dispose particle systems
-    this.coreSystem?.dispose();
-    this.glowSystem?.dispose();
-    this.northRaySystem?.dispose();
-    this.southRaySystem?.dispose();
-    this.eastRaySystem?.dispose();
-    this.westRaySystem?.dispose();
-
-    // Dispose textures
-    this.coreTexture?.dispose();
-    this.glowTexture?.dispose();
-    this.rayTexture?.dispose();
-
-    // Dispose emitter
-    this.sunEmitter?.dispose();
+    this.sunMesh?.dispose();
+    this.sunMaterial?.dispose();
+    this.sunTexture?.dispose();
+    this.sunRoot?.dispose();
 
     logger.info('SunService disposed');
   }

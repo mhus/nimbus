@@ -8,3 +8,5 @@ export { SunEnableCommand } from './SunEnableCommand';
 export { SunPositionCommand } from './SunPositionCommand';
 export { SunElevationCommand } from './SunElevationCommand';
 export { SunColorCommand } from './SunColorCommand';
+export { SunTextureCommand } from './SunTextureCommand';
+export { SunSizeCommand } from './SunSizeCommand';
