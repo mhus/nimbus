@@ -137,6 +137,7 @@ export class SunService {
     this.sunMesh.parent = this.sunRoot;
     this.sunMesh.material = this.sunMaterial;
     this.sunMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    this.sunMesh.infiniteDistance = true; // Always at horizon
     this.sunMesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
 
     // Set initial position

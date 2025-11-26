@@ -83,6 +83,13 @@ export interface WorldInfo {
     /** Step sound when swimming (optional, default: 'audio/liquid/swim1.ogg') */
     swimStepAudio?: string;
 
+    /** Environment settings */
+    /** Scene clear/background color RGB (optional, default: {r: 0.5, g: 0.7, b: 1.0}) */
+    clearColor?: { r: number; g: number; b: number };
+
+    /** Camera far clipping plane (optional, default: 500) */
+    cameraMaxZ?: number;
+
     /** Sun visualization settings */
     /** Sun texture path (optional, default: 'textures/sun/sun1.png') */
     sunTexture?: string;
@@ -105,7 +112,7 @@ export interface WorldInfo {
     /** SkyBox settings */
     /** SkyBox configuration (optional) */
     skyBox?: {
-      /** SkyBox enabled (default: true) */
+      /** SkyBox enabled (default: false) */
       enabled: boolean;
       /** SkyBox mode: 'color' or 'texture' (default: 'color') */
       mode: 'color' | 'texture';

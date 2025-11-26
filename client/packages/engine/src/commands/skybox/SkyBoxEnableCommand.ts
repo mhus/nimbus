@@ -1,10 +1,10 @@
 /**
  * SkyBoxEnableCommand - Enable/disable skybox
  *
- * Usage: skyBoxEnable [on|off]
+ * Usage: skyBoxEnable [true|false]
  * - Without parameters: Shows usage information
- * - With "on": Enables skybox visibility
- * - With "off": Disables skybox visibility
+ * - With "true": Enables skybox visibility
+ * - With "false": Disables skybox visibility
  */
 
 import { CommandHandler } from '../CommandHandler';
@@ -23,7 +23,7 @@ export class SkyBoxEnableCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Enable/disable skybox (on|off)';
+    return 'Enable/disable skybox (true|false)';
   }
 
   async execute(parameters: string[]): Promise<string> {
@@ -35,21 +35,21 @@ export class SkyBoxEnableCommand extends CommandHandler {
 
     // Show usage if no parameters
     if (parameters.length === 0) {
-      return 'Usage: skyBoxEnable [on|off]\nExample: skyBoxEnable on';
+      return 'Usage: skyBoxEnable [true|false]\nExample: skyBoxEnable true';
     }
 
     const param = parameters[0].toLowerCase();
 
-    if (param === 'on') {
+    if (param === 'true') {
       skyBoxService.setEnabled(true);
       logger.info('SkyBox enabled via command');
       return 'SkyBox enabled';
-    } else if (param === 'off') {
+    } else if (param === 'false') {
       skyBoxService.setEnabled(false);
       logger.info('SkyBox disabled via command');
       return 'SkyBox disabled';
     } else {
-      return 'Invalid parameter. Use "on" or "off".';
+      return 'Invalid parameter. Use "true" or "false".';
     }
   }
 }

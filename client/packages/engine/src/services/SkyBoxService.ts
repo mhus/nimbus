@@ -45,12 +45,15 @@ export class SkyBoxService {
   private skyBoxMaterial?: StandardMaterial;
 
   // Configuration
-  private enabled: boolean = true;
+  private enabled: boolean = false; // Disabled by default
   private mode: 'color' | 'texture' = 'color';
   private skyBoxColor: Color3 = new Color3(0.2, 0.5, 1.0); // Sky blue
   private texturePath?: string;
   private size: number = 2000;
   private rotationY: number = 0; // Rotation in degrees
+
+  // Original clear color (from WorldInfo or default)
+  private originalClearColor: Color3 = new Color3(0.5, 0.7, 1.0);
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -117,6 +120,16 @@ export class SkyBoxService {
     // Load initial parameters from WorldInfo
     this.loadParametersFromWorldInfo();
 
+    // Store original clear color from WorldInfo or default
+    const settings = this.appContext.worldInfo?.settings;
+    if (settings?.clearColor) {
+      this.originalClearColor = new Color3(
+        settings.clearColor.r,
+        settings.clearColor.g,
+        settings.clearColor.b
+      );
+    }
+
     // Create skybox root node attached to camera environment root
     const cameraRoot = this.cameraService.getCameraEnvironmentRoot();
     if (!cameraRoot) {
@@ -137,9 +150,14 @@ export class SkyBoxService {
       this.applyColorMaterial();
     }
 
-    // Set enabled state
+    // Set enabled state and update clear color
     if (this.skyBoxMesh) {
       this.skyBoxMesh.setEnabled(this.enabled);
+    }
+
+    // Update scene clear color based on enabled state
+    if (this.enabled) {
+      this.scene.clearColor = new Color3(0, 0, 0).toColor4();
     }
 
     logger.info('SkyBoxService initialized', {
@@ -268,6 +286,14 @@ export class SkyBoxService {
 
     if (this.skyBoxMesh) {
       this.skyBoxMesh.setEnabled(enabled);
+    }
+
+    // When skybox is enabled, set scene clear color to black
+    // When disabled, restore original clear color from WorldInfo
+    if (enabled) {
+      this.scene.clearColor = new Color3(0, 0, 0).toColor4();
+    } else {
+      this.scene.clearColor = this.originalClearColor.toColor4();
     }
 
     logger.info('SkyBox visibility changed', { enabled });

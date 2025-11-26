@@ -114,8 +114,13 @@ export class EnvironmentService {
    */
   private initializeEnvironment(): void {
     try {
-      // Set background color (light blue sky)
-      this.scene.clearColor = new Color3(0.5, 0.7, 1.0).toColor4();
+      // Set background color from WorldInfo or use default (light blue sky)
+      const settings = this.appContext.worldInfo?.settings;
+      const clearColor = settings?.clearColor
+        ? new Color3(settings.clearColor.r, settings.clearColor.g, settings.clearColor.b)
+        : new Color3(0.5, 0.7, 1.0); // Default sky blue
+
+      this.scene.clearColor = clearColor.toColor4();
 
       // Create ambient hemispheric light
       this.ambientLight = new HemisphericLight('ambientLight', new Vector3(0, 1, 0), this.scene);

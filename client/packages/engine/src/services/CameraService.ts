@@ -122,7 +122,11 @@ export class CameraService {
 
       // Set camera properties
       this.camera.minZ = 0.1;
-      this.camera.maxZ = 500;
+
+      // Load maxZ from WorldInfo or use default
+      const settings = this.appContext.worldInfo?.settings;
+      this.camera.maxZ = settings?.cameraMaxZ ?? 500;
+
       this.camera.fov = 70 * (Math.PI / 180); // 70 degrees in radians
 
       // Set initial rotation (looking forward)
@@ -138,6 +142,8 @@ export class CameraService {
       logger.debug('Camera initialized', {
         position: this.camera.position,
         fov: this.camera.fov,
+        minZ: this.camera.minZ,
+        maxZ: this.camera.maxZ,
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'CameraService.initializeCamera');
