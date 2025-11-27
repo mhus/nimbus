@@ -168,6 +168,8 @@ export class EnvironmentService {
   private celestialBodiesConfig: CelestialBodiesConfig;
   private celestialUpdateTimer: number = 0;
   private lastCelestialUpdateTime: number = 0;
+  private sunPositionModifier?: any;
+  private moonPositionModifiers: Map<number, any> = new Map();
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -587,6 +589,7 @@ export class EnvironmentService {
         }
       }
     }
+    logger.info(`Loaded ${this.environmentScripts.size} environment scripts total`);
   }
 
   /**
@@ -662,11 +665,17 @@ export class EnvironmentService {
     await this.stopEnvironmentScriptByGroup(scriptDef.group);
 
     try {
-      // Ensure script is executed locally only (not sent to server)
+      // Use script action definition directly (already has script field)
+      // Ensure it's executed locally only
       const scriptAction: ScriptActionDefinition = {
         ...scriptDef.script,
-        sendToServer: false, // Always execute locally
+        sendToServer: false, // Override: Always execute locally
       };
+
+      logger.debug('Starting environment script', {
+        name: scriptDef.name,
+        group: scriptDef.group,
+      });
 
       const executorId = await scrawlService.executeAction(scriptAction);
 
@@ -1064,10 +1073,7 @@ export class EnvironmentService {
       this.updateMoonPosition(modifierService, i, currentWorldHour);
     }
 
-    logger.debug('Celestial bodies updated', {
-      worldTime: this.getWorldTimeCurrentAsString(),
-      worldHour: currentWorldHour.toFixed(2),
-    });
+    // Removed debug log for performance
   }
 
   /**
@@ -1085,14 +1091,13 @@ export class EnvironmentService {
     // Get sun position stack
     const sunPositionStack = modifierService.getModifierStack('sunPosition');
     if (sunPositionStack) {
-      // Get or create environment modifier (priority 40, lower than manual scripts)
-      let sunModifier = sunPositionStack.getModifierByOwner('environment');
-      if (!sunModifier) {
-        sunModifier = sunPositionStack.addModifier(sunAngleNormalized, 40, 'environment');
+      // Create modifier once and reuse it (priority 40, lower than manual scripts at 50+)
+      if (!this.sunPositionModifier) {
+        this.sunPositionModifier = sunPositionStack.addModifier(sunAngleNormalized, 40);
       } else {
-        sunModifier.setValue(sunAngleNormalized);
+        this.sunPositionModifier.setValue(sunAngleNormalized);
       }
-      sunModifier.setEnabled(true);
+      this.sunPositionModifier.setEnabled(true);
     }
   }
 
@@ -1133,10 +1138,11 @@ export class EnvironmentService {
     // Get moon position stack
     const moonPositionStack = modifierService.getModifierStack(stackName);
     if (moonPositionStack) {
-      // Get or create environment modifier (priority 40, lower than manual scripts)
-      let moonModifier = moonPositionStack.getModifierByOwner('environment');
+      // Create modifier once per moon and reuse it (priority 40, lower than manual scripts)
+      let moonModifier = this.moonPositionModifiers.get(moonIndex);
       if (!moonModifier) {
-        moonModifier = moonPositionStack.addModifier(moonAngleNormalized, 40, 'environment');
+        moonModifier = moonPositionStack.addModifier(moonAngleNormalized, 40);
+        this.moonPositionModifiers.set(moonIndex, moonModifier);
       } else {
         moonModifier.setValue(moonAngleNormalized);
       }

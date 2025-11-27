@@ -31,8 +31,8 @@
     "horizonGradient": {
       "enabled": true,
       "distance": 300,
-      "y": 0,
-      "height": 100,
+      "y": -200,
+      "height": 400,
       "color1": {
         "r": 0.7,
         "g": 0.8,
@@ -73,22 +73,37 @@
         "name": "daytime_change_night",
         "group": "daytime",
         "script": {
-          "actions": [
-            {
-              "type": "command",
-              "command": "ambientLightIntensity",
-              "parameter0": 0.3
-            },
-            {
-              "type": "command",
-              "command": "sunLightIntensity",
-              "parameter0": 0.1
-            },
-            {
-              "type": "log",
-              "message": "Night time: Reduced ambient and sun light intensity"
+          "script": {
+            "id": "daytime_change_night",
+            "root": {
+              "kind": "Sequence",
+              "steps": [
+                {
+                  "kind": "Play",
+                  "effectId": "command",
+                  "ctx": {
+                    "cmd": "ambientLightIntensity",
+                    "parameter0": 0.3
+                  }
+                },
+                {
+                  "kind": "Play",
+                  "effectId": "command",
+                  "ctx": {
+                    "cmd": "sunLightIntensity",
+                    "parameter0": 0.1
+                  }
+                },
+                {
+                  "kind": "Play",
+                  "effectId": "log",
+                  "ctx": {
+                    "message": "Night time: Reduced ambient and sun light intensity"
+                  }
+                }
+              ]
             }
-          ],
+          },
           "sendToServer": false
         }
       },
@@ -96,22 +111,37 @@
         "name": "season_winter",
         "group": "season",
         "script": {
-          "actions": [
-            {
-              "type": "command",
-              "command": "fogViewMode",
-              "parameter0": 0.3
-            },
-            {
-              "type": "command",
-              "command": "ambientLightIntensity",
-              "parameter0": 0.8
-            },
-            {
-              "type": "log",
-              "message": "Winter season: Added fog and reduced light"
+          "script": {
+            "id": "season_winter",
+            "root": {
+              "kind": "Sequence",
+              "steps": [
+                {
+                  "kind": "Play",
+                  "effectId": "command",
+                  "ctx": {
+                    "cmd": "fogViewMode",
+                    "parameter0": 0.3
+                  }
+                },
+                {
+                  "kind": "Play",
+                  "effectId": "command",
+                  "ctx": {
+                    "cmd": "ambientLightIntensity",
+                    "parameter0": 0.8
+                  }
+                },
+                {
+                  "kind": "Play",
+                  "effectId": "log",
+                  "ctx": {
+                    "message": "Winter season: Added fog and reduced light"
+                  }
+                }
+              ]
             }
-          ],
+          },
           "sendToServer": false
         }
       }
