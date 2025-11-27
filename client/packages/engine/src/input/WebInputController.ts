@@ -243,28 +243,10 @@ export class WebInputController implements InputController {
     // Handle Space key dynamically based on movement mode
     if (event.key === ' ') {
       const mode = this.playerService.getMovementMode();
-      if (mode === 'walk') {
-        // Walk mode: Jump
+      // Only WALK and SPRINT modes: Jump
+      if (mode === 'walk' || mode === 'sprint') {
         if (this.jumpHandler && !this.jumpHandler.isActive()) {
           this.jumpHandler.activate();
-          event.preventDefault();
-        }
-      } else if (mode === 'fly') {
-        // Fly mode: Move up
-        if (this.moveUpHandler && !this.moveUpHandler.isActive()) {
-          this.moveUpHandler.activate();
-          event.preventDefault();
-        }
-      }
-      return;
-    }
-
-    // Handle Shift key for Fly mode down movement
-    if (event.key === 'Shift') {
-      const mode = this.playerService.getMovementMode();
-      if (mode === 'fly') {
-        if (this.moveDownHandler && !this.moveDownHandler.isActive()) {
-          this.moveDownHandler.activate();
           event.preventDefault();
         }
       }
