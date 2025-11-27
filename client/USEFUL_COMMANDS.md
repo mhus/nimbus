@@ -106,3 +106,5 @@ doPrecipitationStart(530, 0.4, 0.4, 0.6, 0.3, 25, 15)
 
 
 doLightning(20, true)
+
+doSetStackModifier('sunPosition','default',270, 0.1, 50);

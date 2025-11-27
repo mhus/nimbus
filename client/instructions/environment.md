@@ -353,7 +353,7 @@ Systeme:
 - Wetter (regen, schnee, wind, wolken) (weather)
 - Jahreszeiten (season) - Wird vom Server gesteuert
 
-[?] Um aenderungen an Parametern des Wetters ueber einen Zeitraum zu animieren, brauchen wir eine einfache
+[x] Um aenderungen an Parametern des Wetters ueber einen Zeitraum zu animieren, brauchen wir eine einfache
 Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier an.
 - Erweitere ModifierStack zu AnimationStack der wie andere Stacks in StackService verwaltet wird
 - Wenn sich in AnimationStack der soll wert aendert, wird der ist Wert nicht sofort gesetzt, sondern ein weiteres lambda
@@ -364,8 +364,25 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - Beim setzen von Werten in AnimationStack kann jetz auch die wait time mit anegeben werden, die wird ueberschrieben wenn ein neuer wert gesetzt wird.
 - Erweitere das command setStackModifier um die angabe der wait time fuer AnimationStack
 - Erstelle ein command getStackModifierCurrentValue um den aktuellen wert eines modifiers im stack zu holen
+```text
+  - SetStackModifierCommand (commands/stack/SetStackModifierCommand.ts):
+    - Syntax: setStackModifier <stackName> <modifierName> <value> [prio] [waitTime]
+    - Erstellt oder aktualisiert einen Modifier im Stack
+    - Unterstützt waitTime Parameter für AnimationStacks
+  - GetStackModifierCurrentValueCommand (commands/stack/GetStackModifierCurrentValueCommand.ts):
+    - Syntax: getStackModifierCurrentValue <stackName>
+    - Gibt den aktuellen effektiven Wert eines Stacks zurück
 
-[ ] Erstelle in EnvironmentService ein kleines ScrowlScript controll system um einfache wetter aenderungen ueber zeit zu automatisieren
+ # Default-Wert direkt setzen
+  setStackModifier ambientLightIntensity '' 0.8
+
+  # Default-Wert mit Animation
+  setStackModifier sunPosition '' 90 0 500
+```
+
+[x] Erstelle ein Command in engine um alle bekannten ModifierStacks aufzulisten
+
+[ ] Erstelle in EnvironmentService ein kleines ScrawlScript controll system um einfache wetter aenderungen ueber zeit zu automatisieren
 - fuer verschiedene 'namen keys' koennen hinterlegt werden: EnvironmentScript
   - script: ScrawlActionDescriptions
   - group: string (z.b. 'environment')
@@ -428,8 +445,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - Wenn sich die Tageszeit ändert ('day' | 'evening' | 'night' | 'morning') wird das entsprechende Script hier im EnvironmentService gestartet
   'daytime_change_day', 'daytime_change_evening', 'daytime_change_night', 'daytime_change_morning'
 
-
-[?] Erstelle AnimationStack im StackModifierCreator:
+[x] Erstelle AnimationStack im StackModifierCreator:
 - ambienteLightIntensity in EnvironmentService
 - sunPosition in SunService
 - sunElevation in SunService
@@ -466,6 +482,8 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 
   # Beispiel: Aktuellen Wert abrufen
   getStackModifierCurrentValue ambientLightIntensity
+
+doSetStackModifier('sunPosition','default',270, 0.1, 50);
 ```
 
 [ ] Erstelle AnimationStack im StackModifierCreator:

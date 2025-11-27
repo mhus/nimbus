@@ -10,6 +10,61 @@ AnimationStacks wurden für folgende Environment-Eigenschaften erstellt:
 
 ## Command Usage
 
+### listStacks
+
+Listet alle verfügbaren ModifierStacks mit ihren aktuellen Werten auf.
+
+**Syntax:**
+```
+listStacks [verbose]
+```
+
+**Parameter:**
+- `verbose`: Optional - Zeigt detaillierte Informationen inklusive aller Modifier (Standard: false)
+
+**Beispiele:**
+
+```bash
+# Basis-Information über alle Stacks
+listStacks
+
+# Detaillierte Informationen mit allen Modifiern
+listStacks verbose
+
+# Kurzform für verbose
+listStacks v
+```
+
+**Ausgabe:**
+```
+================================================================================
+Available Modifier Stacks (9 total)
+================================================================================
+
+Stack: playerViewMode
+  Type: ModifierStack
+  Current Value: true
+  Default Value: true
+  Active Modifiers: 0
+
+Stack: ambientLightIntensity
+  Type: AnimationStack ⏱
+  Current Value: 0.500
+  Default Value: 1.000
+  Active Modifiers: 2
+  Modifiers:
+    [0] Name: "weather", Value: 0.500, Priority: 10, Enabled: true, Sequence: 5
+    [1] Name: "time_of_day", Value: 0.800, Priority: 20, Enabled: true, Sequence: 8
+
+...
+
+Summary:
+  Total Stacks: 9
+  - AnimationStacks: 4
+  - ModifierStacks: 5
+  Total Active Modifiers: 3
+```
+
 ### setStackModifier
 
 Setzt oder aktualisiert einen Modifier in einem Stack mit optionaler Animation.
@@ -22,30 +77,43 @@ setStackModifier <stackName> <modifierName> <value> [prio] [waitTime]
 **Parameter:**
 - `stackName`: Name des Stacks (z.B. 'ambientLightIntensity', 'sunPosition')
 - `modifierName`: Name/ID für den Modifier (zum Update oder Erstellen)
+  - **Verwende leeren String `''` um den Default-Wert direkt zu setzen**
 - `value`: Der zu setzende Wert (Typ abhängig vom Stack)
 - `prio`: Optional - Priorität (Standard: 50, niedriger = höhere Priorität)
+  - *Wird ignoriert wenn modifierName leer ist*
 - `waitTime`: Optional - Wartezeit in Millisekunden für AnimationStack (Standard: 100ms)
 
 **Beispiele:**
 
 ```bash
-# Ambient light intensity animiert von aktuell auf 0.5 setzen
+# Named Modifier: Ambient light intensity animiert von aktuell auf 0.5 setzen
 setStackModifier ambientLightIntensity weather 0.5 10
 
-# Mit custom wait time (langsamere Animation)
+# Named Modifier: Mit custom wait time (langsamere Animation)
 setStackModifier ambientLightIntensity weather 0.8 10 500
 
-# Sonne auf Sonnenuntergang-Position animieren (West = 270°)
+# Named Modifier: Sonne auf Sonnenuntergang-Position animieren (West = 270°)
 setStackModifier sunPosition sunset 270 20 200
 
-# Sonne zum Horizont animieren
+# Named Modifier: Sonne zum Horizont animieren
 setStackModifier sunElevation sunset 0 20 300
 
-# Horizont-Gradient ausblenden (transparent)
+# Named Modifier: Horizont-Gradient ausblenden (transparent)
 setStackModifier horizonGradientAlpha night 0.0 10 200
 
-# Horizont-Gradient einblenden
+# Named Modifier: Horizont-Gradient einblenden
 setStackModifier horizonGradientAlpha day 0.7 10 200
+
+# ===== DEFAULT-WERT SETZEN (ohne named modifier) =====
+
+# Default-Wert direkt setzen (leerer modifierName)
+setStackModifier ambientLightIntensity '' 1.0
+
+# Default-Wert mit Animation (waitTime wird beachtet)
+setStackModifier sunPosition '' 90 0 500
+
+# Default-Wert ändern ohne Animation
+setStackModifier horizonGradientAlpha '' 0.5
 ```
 
 ### getStackModifierCurrentValue
@@ -133,17 +201,27 @@ setStackModifier ambientLightIntensity instant 1.0 1 1
 
 ## Animation Characteristics
 
-Die AnimationStacks verwenden **exponential easing** für smooth Übergänge:
+Die AnimationStacks verwenden **lineare Interpolation** für gleichmäßige Übergänge:
 
-- **Ambient Light Intensity**: Faktor 0.1 (schnellere Anpassung)
-- **Sun Position**: Faktor 0.05 (langsamere, sanfte Bewegung)
-- **Sun Elevation**: Faktor 0.05 (langsamere, sanfte Bewegung)
-- **Horizon Gradient Alpha**: Faktor 0.1 (schnellere Anpassung)
+- **Ambient Light Intensity**: 0.01 pro Schritt (ca. 10 Sekunden für 0.0 → 1.0 bei 100ms Intervall)
+- **Sun Position**: 1.0° pro Schritt (ca. 36 Sekunden für 0° → 360° bei 100ms Intervall)
+- **Sun Elevation**: 0.5° pro Schritt (ca. 36 Sekunden für -90° → 90° bei 100ms Intervall)
+- **Horizon Gradient Alpha**: 0.01 pro Schritt (ca. 10 Sekunden für 0.0 → 1.0 bei 100ms Intervall)
 
-**Exponential Easing bedeutet:**
-- Anfangs schnellere Bewegung
-- Verlangsamung beim Annähern an den Zielwert
-- Sehr sanfte, natürliche Übergänge
+**Lineare Animation bedeutet:**
+- Konstante Geschwindigkeit während der gesamten Animation
+- Vorhersagbare Animationsdauer
+- Gleichmäßige Bewegung ohne Beschleunigung/Verlangsamung
+- Ideal für kontinuierliche Änderungen wie Tag/Nacht-Zyklen
+
+**Wichtig:** Neue AnimationModifier starten immer vom **aktuellen Stack-Wert** und animieren dann zum Zielwert. Das sorgt für smooth Übergänge ohne Sprünge.
+
+```bash
+# Beispiel: Stack ist aktuell bei 0.5
+# Neuer Modifier mit Ziel 1.0 startet bei 0.5 und animiert zu 1.0
+setStackModifier ambientLightIntensity weather 1.0 10 200
+# → Animiert von 0.5 zu 1.0 (nicht von 1.0 zu 1.0!)
+```
 
 ## Priority System
 
@@ -155,6 +233,79 @@ Niedrigere Prioritätswerte = höhere Priorität:
 - **51-100**: Niedrige Priorität (z.B. Ambient-Effekte)
 
 Wenn mehrere Modifier dieselbe Priorität haben, gewinnt der neueste.
+
+## Default-Wert vs Named Modifier
+
+### Wann Default-Wert verwenden?
+
+**Default-Wert (`modifierName = ''`):**
+- Ändert den Basis-/Fallback-Wert des Stacks
+- Gilt, wenn **keine anderen Modifier aktiv** sind
+- Ideal für permanente Basiswerte
+- Keine Priorität nötig (wird nur verwendet wenn Stack leer ist)
+
+```bash
+# Beispiel: Basis-Intensität permanent auf 0.8 setzen
+setStackModifier ambientLightIntensity '' 0.8
+```
+
+**Named Modifier:**
+- Temporäre Überschreibung des Default-Werts
+- Mit Priorität steuerbar
+- Kann jederzeit entfernt werden
+- Ideal für temporäre Effekte (Wetter, Events, etc.)
+
+```bash
+# Beispiel: Temporärer Wetter-Effekt überschreibt den Default
+setStackModifier ambientLightIntensity weather 0.3 10
+```
+
+### Beispiel-Szenario:
+
+```bash
+# 1. Setze Basis-Licht auf 0.8 (Default)
+setStackModifier ambientLightIntensity '' 0.8
+
+# 2. Wetter-System setzt dunkleres Licht (überschreibt Default)
+setStackModifier ambientLightIntensity weather 0.3 30
+
+# Aktueller Wert: 0.3 (weather gewinnt)
+
+# 3. Wetter-Modifier entfernen
+# (würde zurück zu Default 0.8 fallen, nicht zu ursprünglich 1.0!)
+
+# 4. Event mit höherer Priorität
+setStackModifier ambientLightIntensity boss_fight 0.1 5
+
+# Aktueller Wert: 0.1 (boss_fight hat höchste Priorität)
+```
+
+## Modifier Names Tracking
+
+Mit `listStacks verbose` kannst du sehen, welche named modifiers aktiv sind:
+
+```bash
+# Mehrere Modifier setzen
+setStackModifier ambientLightIntensity weather 0.3 30
+setStackModifier ambientLightIntensity time_of_day 0.8 10
+setStackModifier ambientLightIntensity spell_effect 0.1 5
+
+# Liste mit verbose anzeigen
+listStacks verbose
+
+# Ausgabe zeigt alle modifier Namen:
+# Stack: ambientLightIntensity
+#   Type: AnimationStack ⏱
+#   Current Value: 0.100  (spell_effect gewinnt wegen Priorität 5)
+#   Default Value: 1.000
+#   Active Modifiers: 3
+#   Modifiers:
+#     [0] Name: "spell_effect", Value: 0.100, Priority: 5, Enabled: true, Sequence: 3
+#     [1] Name: "time_of_day", Value: 0.800, Priority: 10, Enabled: true, Sequence: 2
+#     [2] Name: "weather", Value: 0.300, Priority: 30, Enabled: true, Sequence: 1
+```
+
+**Wichtig:** Modifier ohne Namen (z.B. direkt über ModifierService erstellt) werden als "(unnamed)" angezeigt.
 
 ## Integration mit Scrawl Scripts
 

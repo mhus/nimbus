@@ -7,6 +7,12 @@ import type { AppContext } from '../../AppContext';
 import { Modifier, AnimationModifier, AnimationStack } from '../../services/ModifierService';
 
 /**
+ * Global modifier registry to track named modifiers across commands
+ * Maps: stackName -> modifierName -> Modifier
+ */
+export const MODIFIER_REGISTRY = new Map<string, Map<string, Modifier<any> | AnimationModifier<any>>>();
+
+/**
  * SetStackModifier command - Set or update a modifier value in a stack
  *
  * Usage:
@@ -15,18 +21,21 @@ import { Modifier, AnimationModifier, AnimationStack } from '../../services/Modi
  * Parameters:
  *   stackName    - Name of the stack (e.g., 'fogViewMode', 'playerViewMode')
  *   modifierName - Name/ID for the modifier (to update existing or create new)
+ *                  Use empty string '' to set the default value directly
  *   value        - The value to set (type depends on stack)
  *   prio         - Optional priority (default: 50, lower = higher priority)
+ *                  Ignored when modifierName is empty
  *   waitTime     - Optional wait time in milliseconds for AnimationStack (default: 100ms)
  *
  * Examples:
  *   setStackModifier fogViewMode weather 0.5 10
  *   setStackModifier fogViewMode weather 0.8 10 200
  *   setStackModifier playerViewMode cutscene false 5
+ *   setStackModifier ambientLightIntensity '' 1.0        # Set default value
+ *   setStackModifier sunPosition '' 90 0 500             # Set default with waitTime
  */
 export class SetStackModifierCommand extends CommandHandler {
   private appContext: AppContext;
-  private modifierRegistry = new Map<string, Map<string, Modifier<any> | AnimationModifier<any>>>();
 
   constructor(appContext: AppContext) {
     super();
@@ -102,11 +111,41 @@ export class SetStackModifierCommand extends CommandHandler {
       return { error: `Failed to parse value. Expected type: ${typeof currentValue}` };
     }
 
+    // Special case: Empty modifierName sets the default value
+    if (modifierName === '' || modifierName === '""' || modifierName === "''") {
+      const defaultModifier = stack.getDefaultModifier();
+      const oldDefaultValue = defaultModifier.getValue();
+
+      // Set the new default value
+      if (stack instanceof AnimationStack && waitTime !== undefined) {
+        // For AnimationStack with waitTime
+        if ('setWaitTime' in defaultModifier && typeof (defaultModifier as any).setWaitTime === 'function') {
+          (defaultModifier as any).setWaitTime(waitTime);
+        }
+      }
+
+      defaultModifier.setValue(parsedValue);
+
+      const message = `Default value of stack '${stackName}' set to ${parsedValue}${waitTime !== undefined ? ` (waitTime: ${waitTime}ms)` : ''}`;
+      console.log(message);
+
+      return {
+        action: 'default_value_set',
+        stackName,
+        modifierName: '(default)',
+        oldValue: oldDefaultValue,
+        newValue: parsedValue,
+        currentValue: stack.getValue(),
+        waitTime,
+        message,
+      };
+    }
+
     // Get or create modifier registry for this stack
-    let stackModifiers = this.modifierRegistry.get(stackName);
+    let stackModifiers = MODIFIER_REGISTRY.get(stackName);
     if (!stackModifiers) {
       stackModifiers = new Map();
-      this.modifierRegistry.set(stackName, stackModifiers);
+      MODIFIER_REGISTRY.set(stackName, stackModifiers);
     }
 
     // Check if modifier already exists
@@ -163,7 +202,7 @@ export class SetStackModifierCommand extends CommandHandler {
    * @param modifierName The modifier name
    */
   removeModifier(stackName: string, modifierName: string): boolean {
-    const stackModifiers = this.modifierRegistry.get(stackName);
+    const stackModifiers = MODIFIER_REGISTRY.get(stackName);
     if (!stackModifiers) {
       return false;
     }
@@ -184,6 +223,24 @@ export class SetStackModifierCommand extends CommandHandler {
    * @param modifierName The modifier name
    */
   getModifier(stackName: string, modifierName: string): Modifier<any> | AnimationModifier<any> | undefined {
-    return this.modifierRegistry.get(stackName)?.get(modifierName);
+    return MODIFIER_REGISTRY.get(stackName)?.get(modifierName);
   }
+}
+
+/**
+ * Get the name of a modifier if it exists in the registry
+ * @param stackName The stack name
+ * @param modifier The modifier instance
+ * @returns The modifier name or undefined
+ */
+export function getModifierName(stackName: string, modifier: Modifier<any> | AnimationModifier<any>): string | undefined {
+  const stackModifiers = MODIFIER_REGISTRY.get(stackName);
+  if (!stackModifiers) return undefined;
+
+  for (const [name, mod] of stackModifiers.entries()) {
+    if (mod === modifier) {
+      return name;
+    }
+  }
+  return undefined;
 }

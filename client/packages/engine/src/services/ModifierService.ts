@@ -488,21 +488,29 @@ export class AnimationStack<T> extends ModifierStack<T> {
 
   /**
    * Add an animation modifier to the stack
-   * @param value The initial value
+   * @param targetValue The target value to animate to
    * @param prio The priority
    * @param waitTime Optional wait time in milliseconds (uses default if not specified)
    * @returns The created animation modifier
    */
-  addAnimationModifier(value: T, prio: number, waitTime?: number): AnimationModifier<T> {
+  addAnimationModifier(targetValue: T, prio: number, waitTime?: number): AnimationModifier<T> {
+    // Start from current stack value for smooth transition
+    const currentValue = this.getValue();
+
     const modifier = new AnimationModifier(
-      value,
+      currentValue, // Start from current value
       prio,
       this,
       this._stepFunction,
       waitTime ?? this._defaultWaitTime
     );
+
     (this as any)._modifiers.push(modifier);
     this.update(false);
+
+    // Now animate to target value
+    modifier.setValue(targetValue, waitTime);
+
     return modifier;
   }
 

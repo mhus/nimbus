@@ -13,7 +13,7 @@
 
 import { getLogger, PlayerMovementState } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
-import { StackName, createExponentialNumberAnimation } from './ModifierService';
+import { StackName, createLinearNumberAnimation } from './ModifierService';
 
 const logger = getLogger('StackModifierCreator');
 
@@ -125,7 +125,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
         environmentService.setAmbientLightIntensity(intensity);
       }
     },
-    createExponentialNumberAnimation(0.1), // Smooth easing
+    createLinearNumberAnimation(0.01), // Linear animation, 0.01 per step
     100 // Default wait time: 100ms
   );
 
@@ -139,7 +139,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
         sunService.setSunPositionOnCircle(angleY);
       }
     },
-    createExponentialNumberAnimation(0.05), // Slower smooth easing for position
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
     100 // Default wait time: 100ms
   );
 
@@ -153,7 +153,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
         sunService.setSunHeightOverCamera(elevation);
       }
     },
-    createExponentialNumberAnimation(0.05), // Slower smooth easing for elevation
+    createLinearNumberAnimation(0.5), // Linear animation, 0.5 degrees per step
     100 // Default wait time: 100ms
   );
 
@@ -167,7 +167,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
         horizonGradientService.setAlpha(alpha);
       }
     },
-    createExponentialNumberAnimation(0.1), // Smooth easing
+    createLinearNumberAnimation(0.01), // Linear animation, 0.01 per step
     100 // Default wait time: 100ms
   );
 

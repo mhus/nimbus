@@ -169,6 +169,7 @@ import {
 import {
   SetStackModifierCommand,
   GetStackModifierCurrentValueCommand,
+  ListStacksCommand,
 } from './commands/stack';
 
 const CLIENT_VERSION = '2.0.0';
@@ -385,6 +386,7 @@ async function initializeApp(): Promise<AppContext> {
     // Register stack modifier commands
     commandService.registerHandler(new SetStackModifierCommand(appContext));
     commandService.registerHandler(new GetStackModifierCurrentValueCommand(appContext));
+    commandService.registerHandler(new ListStacksCommand(appContext));
     commandService.registerHandler(new ScrawlStatusCommand(appContext));
     commandService.registerHandler(new ScrawlPauseCommand(appContext));
     commandService.registerHandler(new ScrawlResumeCommand(appContext));
