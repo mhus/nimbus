@@ -83,6 +83,7 @@ import { StartEnvironmentScriptCommand } from './commands/StartEnvironmentScript
 import { StopEnvironmentScriptCommand } from './commands/StopEnvironmentScriptCommand';
 import { GetCurrentEnvironmentScriptCommand } from './commands/GetCurrentEnvironmentScriptCommand';
 import { ListEnvironmentScriptsCommand } from './commands/ListEnvironmentScriptsCommand';
+import { ResetEnvironmentCommand } from './commands/ResetEnvironmentCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
 import { ClearBlockTypeCacheCommand } from './commands/ClearBlockTypeCacheCommand';
@@ -422,6 +423,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new StopEnvironmentScriptCommand(appContext));
     commandService.registerHandler(new GetCurrentEnvironmentScriptCommand(appContext));
     commandService.registerHandler(new ListEnvironmentScriptsCommand(appContext));
+    commandService.registerHandler(new ResetEnvironmentCommand(appContext));
 
     // Register World Time commands
     commandService.registerHandler(new WorldTimeConfigCommand(appContext));

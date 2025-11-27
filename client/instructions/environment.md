@@ -796,3 +796,13 @@ Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript g
     - executeAction() (Zeile 207-208)
     - executeScript() (Zeile 282-290)
 ```
+
+[?] Erstelle in EnvironmentService eine Methode um einen reset zum machen
+- Command in engine: resetEnvironment
+- ruft cloudService.clearClouds(false) auf
+- stoppt niederschlag: precipitationService.stop()
+  (das reicht erstmal, wird spaeter mehr)
+```text
+Verwendung:
+  /resetEnvironment
+```

@@ -1126,6 +1126,30 @@ export class EnvironmentService {
   }
 
   /**
+   * Reset environment to default state
+   * Clears clouds and stops precipitation
+   */
+  resetEnvironment(): void {
+    const cloudService = this.appContext.services.clouds;
+    if (cloudService) {
+      cloudService.clearClouds(false);
+      logger.info('Environment reset: clouds cleared');
+    } else {
+      logger.warn('CloudService not available for environment reset');
+    }
+
+    const precipitationService = this.appContext.services.precipitation;
+    if (precipitationService) {
+      precipitationService.setEnabled(false);
+      logger.info('Environment reset: precipitation stopped');
+    } else {
+      logger.warn('PrecipitationService not available for environment reset');
+    }
+
+    logger.info('Environment reset completed');
+  }
+
+  /**
    * Dispose environment
    */
   dispose(): void {

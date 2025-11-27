@@ -54,7 +54,7 @@ export class PrecipitationService {
   private particleColor: Color4 = new Color4(0.5, 0.5, 0.8, 1.0);
   private particleSpeed: number = 25; // EmitPower
   private particleGravity: number = 15; // Gravity strength
-  private particleTexture?: RawTexture;
+  private particleTexture?: Texture | RawTexture;
 
   // Lightning system
   private lightningParticleSystems: ParticleSystem[] = [];
