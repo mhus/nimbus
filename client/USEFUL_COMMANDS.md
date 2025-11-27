@@ -63,6 +63,7 @@ doSunSize(150)
 doSunLensFlareEnable('false')
 doAmbientLightIntensity(0)
 doSunLightIntensity(.5)
+
 doSkyBoxSize(450)
 doSkyBoxTexture('textures/skybox/space')
 doSkyBoxEnable('true')

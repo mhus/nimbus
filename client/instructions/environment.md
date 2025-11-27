@@ -346,9 +346,12 @@ Koennen wir die anzahl der Wolken dynamisch anpassen, je nach anfrage. dann wird
 - Position zufaellig um die Kamera herum
 - (da es ein wetter blitz ist und kein effekt auf en target gibt es keinen feste position)
 
-## WeatherService
+## Automatisierung
 
-Vorbereitung:
+Systeme:
+- Tageszeiten (daytime)
+- Wetter (regen, schnee, wind, wolken) (weather)
+- Jahreszeiten (season) - Wird vom Server gesteuert
 
 [ ] Um aenderungen an Parametern des Wetters ueber einen Zeitraum zu animieren, brauchen wir eine einfache
 Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier an.
@@ -358,7 +361,87 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - Dann wird nach (wait) ms der naechste schritt ausgefuehrt bis der soll wert erreicht ist.
 - Aendert sich der Zielwert, ist das kein problem, denn der naechste schritt wird immer auf den aktuellen Zielwert bezogen.
 - 'wait' soll einstellbar sein fuer den AnimationStack, default 100ms
+- Beim setzen von Werten in AnimationStack kann jetz auch die wait time mit anegeben werden, die wird ueberschrieben wenn ein neuer wert gesetzt wird.
+- Erweitere das command setStackModifier um die angabe der wait time fuer AnimationStack
+- Erstelle ein command getStackModifierCurrentValue um den aktuellen wert eines modifiers im stack zu holen
 
-WeatherService:
+[ ] Erstelle in EnvironmentService ein kleines ScrowlScript controll system um einfache wetter aenderungen ueber zeit zu automatisieren
+- fuer verschiedene 'namen keys' koennen hinterlegt werden: EnvironmentScript
+  - script: ScrawlActionDescriptions
+  - group: string (z.b. 'environment')
+  - currentScript (wird intern gesetzt)
+  - lastRunTime: number (timestamp der letzten ausfuehrung)
+- Diese scripte werden NICHT remote (zum server) uebertragen, sondern nur lokal ausgefuehrt (ggf wird hier in ScrawlActionDefinitions noch ein flag benoetigt)
+- Ein Script kann ausgeloest werden, dabei prueft EnvironmentService ob fuer die Gruppe schon ein script laeuft und bricht dieses ggf. ab
+- Erstelle ein Command um ein EnvironmentScript zu starten
+  - startEnvironmentScript(group: string, script: ScrawlActionDescriptions)
+- Erstelle ein Command um ein EnvironmentScript zu stoppen
+  - stopEnvironmentScript(group: string)
+- Erstelle ein Command im Scripte anzulegen und zu entfernene
+    - createEnvironmentScript(name: string, group: string, script: ScrawlActionDescriptions)
+    - deleteEnvironmentScript(name: string)
+- Eine Liste von definitionen soll im WorldInfo hinterlegt werden keonnen und beim starten/init automatisch gefuellt werden
+- Es soll moeglich sein das letzte ausgefuegrte script name por gruppe zu holen
+  - getCurrentEnvironmentScriptName(group: string) : string | null
 
-[ ] Es soll ein WeatherService geben, der verschiedene Wettereffekte steuert.
+[ ] Das commando clearClouds soll einen boolean parameter haben
+- false: loescht nur wolken mit der geschwindigkeit 0 (statische wolken) (default)
+- true: loescht alle wolken
+
+[ ] Erstelle in CloudService eine Methode die das erstellen von clouds ueber einen Zeitraum automaisiert
+- startCloudsAnimation(jobName : string,emitCountPerMinute: number, emitPropability: number, area: Area, speed:number, textures: string[])
+- Die methode startet eine animation die ueber den angegebenen Zeitraum immer wieder neue wolken erstellt
+- Alle parameter sollen mit einem leichten random arbeiten. emit emitiert mit emitpropability (0-1) eine neue wolke
+- es wird immer ein random wert in area fuer die position genutzt
+- es wird immer eine random textur aus der liste genutzt
+- der speed wird nur mit der y (hoehe) leicht schneller, bis zu 1%, da die wolken im gleichen 'wind' fliegen sollen sie eien aehnliche geschwindigkeit haben
+- neue wolken werden mit einer uuid als name erstellt
+- Erstelle auch ein commando um die animation zu starten, texturen werden als kommaseparierte liste uebergeben
+- Erstelle auch ein stopCloudsAnimation(jobName) um die animation zu stoppen, wird der name nicht angegeben werden alle animationen gestoppt
+- Erstelle auch hierfuer ein commando
+
+[ ] Erstelle in PrecipitationService - blitz sounds 
+- Einem methode mit der im laufenden Betrieb die Intensitaet des Niederschlags angepasst werden kann ohne das der Niederschlag komplett neu gestartet werden muss (nur wenn auch lauft)
+- Blitze sollen ein Event emittieren wenn ein Blitz erzeugt wurde, damit andere systeme darauf reagieren koennen (z.b. sound)
+  - coordinaten des blitzes
+  - intensity des blitzes
+- Erstelle in PrecipitationService eine methode der man eine liste von Blitz Sounds mitgeben kann, die liste wird statisch gehalten, ist die liste nicht angegeben, wird sie leer gemacht
+  - registerFlashSounds(soundPaths: string[])
+  - erstelle auch ein Command in engine dafuer.
+- Erstelle in PrecipitationService eine Methode die die Events fuer Blitze abonniert:
+  - wenn ein event empfangen wird, wird ein zufaelliger sound aus der liste abgespielt an der position des blitzes (ist die liste leer wird nichts abgespielt)
+  - es soll maximal alle 500ms ein sound abgespielt werden (damit es nicht zu viele sounds gibt)
+  - Nutze den AudioService um die sounds abzuspielen, an der Position des blitzes, die emmisions weite soll 20 + intensity * 2 (intensity ca. 5 -20?, max emmision weite soll ca. 64 sein) einheiten sein
+
+[ ] Erstelle in SunService einen Parameter automaticSunAdjustment (boolean),default true
+- erstelle ein Command in engine um den parameter zu setzen
+- Wenn automaticSunAdjustment true ist, werden sunLightDirection und sunLightIntensity automatisch angepasst wenn die sonnenPosition geaendert wird
+- Wenn die sonnenPosition (SunService) gesetzt wird, soll automatisch die sunLightDirection im EnvironmentService angepasst werden, berechne dafuer den winkel der sonne ueber dem horizont
+- Berechne auch die intensity der sonne anhand der elevation (je hoeher die sonne desto heller) und setze den wert sunLightIntensity und amienteLightDirection automatisch
+- Erstelle variablen (multiplier) im SunService womit diese Werte noch adjustiert werden koennen
+  - sunLigthIntensityMultiplier (default 1.0)
+  - ambientLightIntensityMultiplier (default 0.5)
+- Erstelle dafuer Methoden zum setzen/lesen und Commands in engine
+
+[ ] Erstelle in EnvironmentService einen mechanismus der die Tageszeit steuert
+- in WorldInfo wird ein parameter dayTimeSyn
+- Wenn sich die Tageszeit ändert ('day' | 'evening' | 'night' | 'morning') wird das entsprechende Script hier im EnvironmentService gestartet
+  'daytime_change_day', 'daytime_change_evening', 'daytime_change_night', 'daytime_change_morning'
+
+
+[ ] Erstelle AnimationStack im StackModifierCreator:
+- ambienteLightIntensity in EnvironmentService
+- sunPosition in SunService
+- sunElevation in SunService
+- sunLigthIntensityMultiplier in SunService
+- ambientLightIntensityMultiplier in SunService
+- horizonGradientAlpha in HorizonGradientService
+
+[ ] In EnvironmentService soll ein Handle auf einen ModifierStack Element fuer AmbienteAudio geben
+- dieser kann per command gesetzt werden/geloescht (leer string) werden
+- EnvironmentAmbienteAudio(audioFile)
+
+[ ] Wenn diw WorldInfo neu geladen wird, wird geprueft ob sich die season / seasonProgress geandert hat (gibt es schon) und
+ggf die chunls neu gerendert (gibt es schon).
+Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript gestartet werden das die season aendert.
+  - script name: season_winter, season_spring, season_summer, season_autumn
