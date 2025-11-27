@@ -9,7 +9,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('MoonElevationCommand');
 
@@ -26,7 +26,7 @@ export class MoonElevationCommand extends CommandHandler {
     return 'Set moon elevation angle (moonElevation [0-2] [-90 to 90])';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const moonService = this.appContext.services.moon;
 
     if (!moonService) {
@@ -37,12 +37,12 @@ export class MoonElevationCommand extends CommandHandler {
       return 'Usage: moonElevation [moonIndex] [elevation]\nExample: moonElevation 0 60';
     }
 
-    const moonIndex = parseInt(parameters[0], 10);
+    const moonIndex = toNumber(parameters[0]);
     if (isNaN(moonIndex) || moonIndex < 0 || moonIndex > 2) {
       return 'Invalid moonIndex. Must be 0, 1, or 2.';
     }
 
-    const elevation = parseFloat(parameters[1]);
+    const elevation = toNumber(parameters[1]);
     if (isNaN(elevation)) {
       return 'Invalid elevation. Must be a number (-90 to 90).';
     }

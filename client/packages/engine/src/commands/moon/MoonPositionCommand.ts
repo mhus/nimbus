@@ -9,7 +9,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('MoonPositionCommand');
 
@@ -26,7 +26,7 @@ export class MoonPositionCommand extends CommandHandler {
     return 'Set moon position on circular orbit (moonPosition [0-2] [0-360])';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const moonService = this.appContext.services.moon;
 
     if (!moonService) {
@@ -37,12 +37,12 @@ export class MoonPositionCommand extends CommandHandler {
       return 'Usage: moonPosition [moonIndex] [angleY]\nExample: moonPosition 0 180';
     }
 
-    const moonIndex = parseInt(parameters[0], 10);
+    const moonIndex = toNumber(parameters[0]);
     if (isNaN(moonIndex) || moonIndex < 0 || moonIndex > 2) {
       return 'Invalid moonIndex. Must be 0, 1, or 2.';
     }
 
-    const angleY = parseFloat(parameters[1]);
+    const angleY = toNumber(parameters[1]);
     if (isNaN(angleY)) {
       return 'Invalid angleY. Must be a number (0-360).';
     }

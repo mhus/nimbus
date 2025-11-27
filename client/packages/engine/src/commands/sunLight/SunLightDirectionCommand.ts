@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SunLightDirectionCommand');
 
@@ -24,7 +24,7 @@ export class SunLightDirectionCommand extends CommandHandler {
     return 'Set sun light direction (x y z, will be normalized)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const environmentService = this.appContext.services.environment;
 
     if (!environmentService) {
@@ -43,9 +43,9 @@ export class SunLightDirectionCommand extends CommandHandler {
     }
 
     // Parse parameters
-    const x = parseFloat(parameters[0]);
-    const y = parseFloat(parameters[1]);
-    const z = parseFloat(parameters[2]);
+    const x = toNumber(parameters[0]);
+    const y = toNumber(parameters[1]);
+    const z = toNumber(parameters[2]);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
       return 'Invalid parameters. All values must be numbers.';

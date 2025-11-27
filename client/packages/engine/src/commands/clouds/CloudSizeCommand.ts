@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('CloudSizeCommand');
 
@@ -25,7 +25,7 @@ export class CloudSizeCommand extends CommandHandler {
     return 'Set cloud size';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const cloudsService = this.appContext.services.clouds;
 
     if (!cloudsService) {
@@ -38,8 +38,8 @@ export class CloudSizeCommand extends CommandHandler {
     }
 
     const id = parameters[0];
-    const width = parseFloat(parameters[1]);
-    const height = parseFloat(parameters[2]);
+    const width = toNumber(parameters[1]);
+    const height = toNumber(parameters[2]);
 
     if (isNaN(width) || isNaN(height)) {
       return 'Invalid size values. Both width and height must be numbers.';

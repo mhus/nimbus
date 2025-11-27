@@ -10,7 +10,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('LightningCommand');
 
@@ -27,7 +27,7 @@ export class LightningCommand extends CommandHandler {
     return 'Trigger lightning storm (groupCount toGround)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const precipitationService = this.appContext.services.precipitation;
     if (!precipitationService) {
       return 'PrecipitationService not available';
@@ -38,7 +38,7 @@ export class LightningCommand extends CommandHandler {
       return 'Usage: lightning [groupCount] [toGround]\nExample: lightning 10 true';
     }
 
-    const groupCount = parseInt(parameters[0]);
+    const groupCount = toNumber(parameters[0]);
     const toGroundStr = parameters[1].toLowerCase();
 
     // Validate

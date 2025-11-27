@@ -11,7 +11,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 import { Color3 } from '@babylonjs/core';
 
 const logger = getLogger('SkyBoxColorCommand');
@@ -29,7 +29,7 @@ export class SkyBoxColorCommand extends CommandHandler {
     return 'Set skybox color (r g b, values 0-1)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const skyBoxService = this.appContext.services.skyBox;
 
     if (!skyBoxService) {
@@ -47,9 +47,9 @@ export class SkyBoxColorCommand extends CommandHandler {
     }
 
     // Parse and validate parameters
-    const r = parseFloat(parameters[0]);
-    const g = parseFloat(parameters[1]);
-    const b = parseFloat(parameters[2]);
+    const r = toNumber(parameters[0]);
+    const g = toNumber(parameters[1]);
+    const b = toNumber(parameters[2]);
 
     if (isNaN(r) || isNaN(g) || isNaN(b)) {
       return 'Invalid parameters. All values must be numbers (0-1).';

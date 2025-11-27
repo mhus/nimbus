@@ -3,6 +3,7 @@
  */
 
 import { CommandHandler } from '../CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../../AppContext';
 import { Modifier, AnimationModifier, AnimationStack } from '../../services/ModifierService';
 
@@ -66,8 +67,8 @@ export class SetStackModifierCommand extends CommandHandler {
     const stackName = parameters[0] as string;
     const modifierName = parameters[1] as string;
     const valueStr = parameters[2];
-    const prio = parameters.length >= 4 ? parseFloat(parameters[3]) : 50;
-    const waitTime = parameters.length >= 5 ? parseFloat(parameters[4]) : undefined;
+    const prio = parameters.length >= 4 ? toNumber(parameters[3]) : 50;
+    const waitTime = parameters.length >= 5 ? toNumber(parameters[4]) : undefined;
 
     // Validate priority
     if (isNaN(prio)) {

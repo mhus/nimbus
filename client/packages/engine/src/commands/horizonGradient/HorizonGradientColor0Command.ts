@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 import { Color3 } from '@babylonjs/core';
 
 const logger = getLogger('HorizonGradientColor0Command');
@@ -25,7 +25,7 @@ export class HorizonGradientColor0Command extends CommandHandler {
     return 'Set horizon gradient bottom color (r g b)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const service = this.appContext.services.horizonGradient;
 
     if (!service) {
@@ -36,9 +36,9 @@ export class HorizonGradientColor0Command extends CommandHandler {
       return 'Usage: horizonGradientColor0 <r> <g> <b>\nExample: horizonGradientColor0 1.0 0.8 0.5';
     }
 
-    const r = parseFloat(parameters[0]);
-    const g = parseFloat(parameters[1]);
-    const b = parseFloat(parameters[2]);
+    const r = toNumber(parameters[0]);
+    const g = toNumber(parameters[1]);
+    const b = toNumber(parameters[2]);
 
     if (isNaN(r) || isNaN(g) || isNaN(b)) {
       return 'Invalid color values. Must be numbers between 0.0 and 1.0.';

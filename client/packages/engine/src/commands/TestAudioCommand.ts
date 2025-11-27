@@ -3,6 +3,7 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 /**
@@ -44,7 +45,7 @@ export class TestAudioCommand extends CommandHandler {
     }
 
     const assetPath = String(parameters[0]);
-    const volume = parameters.length > 1 ? Number(parameters[1]) : 1.0;
+    const volume = parameters.length > 1 ? toNumber(parameters[1]) : 1.0;
 
     console.log(`Loading and playing audio: ${assetPath}`);
     console.log(`Volume: ${volume}`);

@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('HorizonGradientAlphaCommand');
 
@@ -24,7 +24,7 @@ export class HorizonGradientAlphaCommand extends CommandHandler {
     return 'Set horizon gradient transparency (alpha)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const service = this.appContext.services.horizonGradient;
 
     if (!service) {
@@ -35,7 +35,7 @@ export class HorizonGradientAlphaCommand extends CommandHandler {
       return 'Usage: horizonGradientAlpha <alpha>\nExample: horizonGradientAlpha 0.7';
     }
 
-    const alpha = parseFloat(parameters[0]);
+    const alpha = toNumber(parameters[0]);
 
     if (isNaN(alpha) || alpha < 0 || alpha > 1) {
       return 'Invalid alpha. Must be a number between 0.0 and 1.0.';

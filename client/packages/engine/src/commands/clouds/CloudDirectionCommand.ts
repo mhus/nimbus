@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('CloudDirectionCommand');
 
@@ -25,7 +25,7 @@ export class CloudDirectionCommand extends CommandHandler {
     return 'Set cloud movement direction (0=North, 90=East, 180=South, 270=West)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const cloudsService = this.appContext.services.clouds;
 
     if (!cloudsService) {
@@ -38,7 +38,7 @@ export class CloudDirectionCommand extends CommandHandler {
     }
 
     const id = parameters[0];
-    const direction = parseFloat(parameters[1]);
+    const direction = toNumber(parameters[1]);
 
     if (isNaN(direction)) {
       return 'Invalid direction value. Must be a number (0-360).';

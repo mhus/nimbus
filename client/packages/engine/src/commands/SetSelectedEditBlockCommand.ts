@@ -7,6 +7,7 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 /**
@@ -58,9 +59,9 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
     }
 
     // Parse coordinates
-    const x = parseFloat(parameters[0]);
-    const y = parseFloat(parameters[1]);
-    const z = parseFloat(parameters[2]);
+    const x = toNumber(parameters[0]);
+    const y = toNumber(parameters[1]);
+    const z = toNumber(parameters[2]);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
       console.error('✗ Coordinates must be valid numbers');

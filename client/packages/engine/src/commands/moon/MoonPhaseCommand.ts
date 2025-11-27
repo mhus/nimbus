@@ -13,7 +13,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('MoonPhaseCommand');
 
@@ -30,7 +30,7 @@ export class MoonPhaseCommand extends CommandHandler {
     return 'Set moon phase (moonPhase [0-2] [0.0-1.0], 0=new, 0.5=half, 1=full)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const moonService = this.appContext.services.moon;
 
     if (!moonService) {
@@ -41,12 +41,12 @@ export class MoonPhaseCommand extends CommandHandler {
       return 'Usage: moonPhase [moonIndex] [phase]\nExample: moonPhase 0 0.75 (gibbous moon)';
     }
 
-    const moonIndex = parseInt(parameters[0], 10);
+    const moonIndex = toNumber(parameters[0]);
     if (isNaN(moonIndex) || moonIndex < 0 || moonIndex > 2) {
       return 'Invalid moonIndex. Must be 0, 1, or 2.';
     }
 
-    const phase = parseFloat(parameters[1]);
+    const phase = toNumber(parameters[1]);
     if (isNaN(phase)) {
       return 'Invalid phase. Must be a number between 0.0 and 1.0.';
     }

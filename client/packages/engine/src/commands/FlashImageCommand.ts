@@ -3,6 +3,7 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 /**
@@ -51,8 +52,8 @@ export class FlashImageCommand extends CommandHandler {
     }
 
     const assetPath = parameters[0];
-    const duration = parseFloat(parameters[1]);
-    const opacity = parseFloat(parameters[2]);
+    const duration = toNumber(parameters[1]);
+    const opacity = toNumber(parameters[2]);
 
     // Validate assetPath
     if (typeof assetPath !== 'string') {

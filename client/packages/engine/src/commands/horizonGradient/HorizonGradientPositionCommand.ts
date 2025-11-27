@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('HorizonGradientPositionCommand');
 
@@ -24,7 +24,7 @@ export class HorizonGradientPositionCommand extends CommandHandler {
     return 'Set horizon gradient Y position (y)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const service = this.appContext.services.horizonGradient;
 
     if (!service) {
@@ -35,7 +35,7 @@ export class HorizonGradientPositionCommand extends CommandHandler {
       return 'Usage: horizonGradientPosition <y>\nExample: horizonGradientPosition -50';
     }
 
-    const y = parseFloat(parameters[0]);
+    const y = toNumber(parameters[0]);
 
     if (isNaN(y)) {
       return 'Invalid Y position. Must be a number.';

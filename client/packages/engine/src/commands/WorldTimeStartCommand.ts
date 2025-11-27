@@ -4,7 +4,7 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('WorldTimeStartCommand');
 
@@ -44,7 +44,7 @@ export class WorldTimeStartCommand extends CommandHandler {
       };
     }
 
-    const worldMinute = parseFloat(parameters[0]);
+    const worldMinute = toNumber(parameters[0]);
 
     if (isNaN(worldMinute)) {
       console.error('worldMinute must be a valid number');

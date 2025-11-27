@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toBoolean } from '@nimbus/shared';
 
 const logger = getLogger('SunLensFlareEnableCommand');
 
@@ -37,14 +37,8 @@ export class SunLensFlareEnableCommand extends CommandHandler {
       return 'Usage: sunLensFlareEnable [true|false]';
     }
 
-    // Parse parameter
-    const value = parameters[0].toLowerCase();
-
-    if (value !== 'true' && value !== 'false') {
-      return 'Invalid parameter. Value must be "true" or "false".';
-    }
-
-    const enabled = value === 'true';
+    // Parse parameter using CastUtil
+    const enabled = toBoolean(parameters[0]);
 
     // Set lens flare visibility
     sunService.setSunLensFlareEnabled(enabled);

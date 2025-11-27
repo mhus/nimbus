@@ -9,7 +9,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('MoonDistanceCommand');
 
@@ -26,7 +26,7 @@ export class MoonDistanceCommand extends CommandHandler {
     return 'Set moon distance from camera (moonDistance [0-2] [100-1900])';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const moonService = this.appContext.services.moon;
 
     if (!moonService) {
@@ -37,12 +37,12 @@ export class MoonDistanceCommand extends CommandHandler {
       return 'Usage: moonDistance [moonIndex] [distance]\nExample: moonDistance 0 500';
     }
 
-    const moonIndex = parseInt(parameters[0], 10);
+    const moonIndex = toNumber(parameters[0]);
     if (isNaN(moonIndex) || moonIndex < 0 || moonIndex > 2) {
       return 'Invalid moonIndex. Must be 0, 1, or 2.';
     }
 
-    const distance = parseFloat(parameters[1]);
+    const distance = toNumber(parameters[1]);
     if (isNaN(distance) || distance <= 0) {
       return 'Invalid distance. Must be a positive number.';
     }

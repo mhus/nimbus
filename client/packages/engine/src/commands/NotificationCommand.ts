@@ -7,6 +7,7 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NotificationType } from '../types/Notification';
 
@@ -51,7 +52,7 @@ export class NotificationCommand extends CommandHandler {
     }
 
     // Parse type
-    const type = parseInt(parameters[0], 10);
+    const type = toNumber(parameters[0]);
     if (isNaN(type) || type < 0 || type > 31) {
       console.error('Invalid type: must be a number between 0 and 31');
       return { error: 'Invalid type' };

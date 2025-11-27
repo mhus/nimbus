@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('CloudSpeedCommand');
 
@@ -25,7 +25,7 @@ export class CloudSpeedCommand extends CommandHandler {
     return 'Set cloud movement speed (0 = static)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const cloudsService = this.appContext.services.clouds;
 
     if (!cloudsService) {
@@ -38,7 +38,7 @@ export class CloudSpeedCommand extends CommandHandler {
     }
 
     const id = parameters[0];
-    const speed = parseFloat(parameters[1]);
+    const speed = toNumber(parameters[1]);
 
     if (isNaN(speed)) {
       return 'Invalid speed value. Must be a number.';

@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SunLightIntensityMultiplierCommand');
 
@@ -25,7 +25,7 @@ export class SunLightIntensityMultiplierCommand extends CommandHandler {
     return 'Set sun light intensity multiplier (e.g., 1.0)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const sunService = this.appContext.services.sun;
 
     if (!sunService) {
@@ -39,7 +39,7 @@ export class SunLightIntensityMultiplierCommand extends CommandHandler {
     }
 
     // Parse parameter
-    const multiplier = parseFloat(parameters[0]);
+    const multiplier = toNumber(parameters[0]);
 
     if (isNaN(multiplier)) {
       return 'Invalid parameter. Value must be a number.';

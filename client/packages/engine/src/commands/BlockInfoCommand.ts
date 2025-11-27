@@ -5,6 +5,7 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 /**
@@ -37,9 +38,9 @@ export class BlockInfoCommand extends CommandHandler {
       };
     }
 
-    const x = parseInt(parameters[0], 10);
-    const y = parseInt(parameters[1], 10);
-    const z = parseInt(parameters[2], 10);
+    const x = toNumber(parameters[0]);
+    const y = toNumber(parameters[1]);
+    const z = toNumber(parameters[2]);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
       console.error('Coordinates must be numbers');

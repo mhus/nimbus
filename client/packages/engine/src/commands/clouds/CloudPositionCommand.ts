@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('CloudPositionCommand');
 
@@ -25,7 +25,7 @@ export class CloudPositionCommand extends CommandHandler {
     return 'Set cloud position';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const cloudsService = this.appContext.services.clouds;
 
     if (!cloudsService) {
@@ -38,9 +38,9 @@ export class CloudPositionCommand extends CommandHandler {
     }
 
     const id = parameters[0];
-    const x = parseFloat(parameters[1]);
-    const z = parseFloat(parameters[2]);
-    const y = parseFloat(parameters[3]);
+    const x = toNumber(parameters[1]);
+    const z = toNumber(parameters[2]);
+    const y = toNumber(parameters[3]);
 
     if (isNaN(x) || isNaN(z) || isNaN(y)) {
       return 'Invalid position values. All values must be numbers.';

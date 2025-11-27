@@ -13,7 +13,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('CloudAddCommand');
 
@@ -30,7 +30,7 @@ export class CloudAddCommand extends CommandHandler {
     return 'Add a cloud to the scene';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const cloudsService = this.appContext.services.clouds;
 
     if (!cloudsService) {
@@ -44,15 +44,15 @@ export class CloudAddCommand extends CommandHandler {
 
     // Parse parameters
     const id = parameters[0];
-    const startX = parseFloat(parameters[1]);
-    const startZ = parseFloat(parameters[2]);
-    const y = parseFloat(parameters[3]);
-    const width = parseFloat(parameters[4]);
-    const height = parseFloat(parameters[5]);
+    const startX = toNumber(parameters[1]);
+    const startZ = toNumber(parameters[2]);
+    const y = toNumber(parameters[3]);
+    const width = toNumber(parameters[4]);
+    const height = toNumber(parameters[5]);
     const texture = parameters[6];
-    const speed = parseFloat(parameters[7]);
-    const direction = parseFloat(parameters[8]);
-    const level = parameters.length >= 10 ? parseInt(parameters[9]) : 0;
+    const speed = toNumber(parameters[7]);
+    const direction = toNumber(parameters[8]);
+    const level = parameters.length >= 10 ? toNumber(parameters[9]) : 0;
 
     // Validate parameters
     if (isNaN(startX) || isNaN(startZ) || isNaN(y) || isNaN(width) || isNaN(height) || isNaN(speed) || isNaN(direction)) {

@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('PrecipitationIntensityCommand');
 
@@ -24,7 +24,7 @@ export class PrecipitationIntensityCommand extends CommandHandler {
     return 'Set precipitation intensity (0-100)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const precipitationService = this.appContext.services.precipitation;
     if (!precipitationService) {
       return 'PrecipitationService not available';
@@ -35,7 +35,7 @@ export class PrecipitationIntensityCommand extends CommandHandler {
       return 'Usage: precipitationIntensity [intensity]\nExample: precipitationIntensity 50';
     }
 
-    const intensity = parseFloat(parameters[0]);
+    const intensity = toNumber(parameters[0]);
     if (isNaN(intensity) || intensity < 0 || intensity > 100) {
       return 'Intensity must be a number between 0 and 100';
     }

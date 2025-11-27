@@ -9,7 +9,7 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
-import { createEntity, createEntityPathway } from '@nimbus/shared';
+import { createEntity, createEntityPathway, toNumber } from '@nimbus/shared';
 
 /**
  * SpawnEntity command - Spawn a test entity in the world
@@ -43,9 +43,9 @@ export class SpawnEntityCommand extends CommandHandler {
 
     const entityId = parameters[0];
     const entityModelId = parameters[1];
-    const x = parseFloat(parameters[2]);
-    const y = parseFloat(parameters[3]);
-    const z = parseFloat(parameters[4]);
+    const x = toNumber(parameters[2]);
+    const y = toNumber(parameters[3]);
+    const z = toNumber(parameters[4]);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
       console.error('Coordinates must be numbers');

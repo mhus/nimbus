@@ -12,7 +12,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SkyBoxRotationCommand');
 
@@ -29,7 +29,7 @@ export class SkyBoxRotationCommand extends CommandHandler {
     return 'Set skybox rotation in degrees (Y axis)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const skyBoxService = this.appContext.services.skyBox;
 
     if (!skyBoxService) {
@@ -42,7 +42,7 @@ export class SkyBoxRotationCommand extends CommandHandler {
     }
 
     // Parse rotation parameter
-    const degrees = parseFloat(parameters[0]);
+    const degrees = toNumber(parameters[0]);
 
     if (isNaN(degrees)) {
       return 'Invalid rotation. Provide a valid number in degrees.';

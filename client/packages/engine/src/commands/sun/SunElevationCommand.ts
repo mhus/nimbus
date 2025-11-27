@@ -9,7 +9,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SunElevationCommand');
 
@@ -26,7 +26,7 @@ export class SunElevationCommand extends CommandHandler {
     return 'Set sun elevation over camera (-90 to 90 degrees, 0=horizon, 90=zenith)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const sunService = this.appContext.services.sun;
 
     if (!sunService) {
@@ -40,7 +40,7 @@ export class SunElevationCommand extends CommandHandler {
     }
 
     // Parse and validate parameter
-    const elevation = parseFloat(parameters[0]);
+    const elevation = toNumber(parameters[0]);
 
     if (isNaN(elevation)) {
       return 'Invalid parameter. Value must be a number (-90 to 90).';

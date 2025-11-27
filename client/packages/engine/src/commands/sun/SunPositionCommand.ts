@@ -9,7 +9,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SunPositionCommand');
 
@@ -26,7 +26,7 @@ export class SunPositionCommand extends CommandHandler {
     return 'Set sun position on circular orbit (0-360 degrees, 0=North, 90=East)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const sunService = this.appContext.services.sun;
 
     if (!sunService) {
@@ -40,7 +40,7 @@ export class SunPositionCommand extends CommandHandler {
     }
 
     // Parse and validate parameter
-    const angleY = parseFloat(parameters[0]);
+    const angleY = toNumber(parameters[0]);
 
     if (isNaN(angleY)) {
       return 'Invalid parameter. Value must be a number (0-360).';

@@ -4,6 +4,7 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+import { toBoolean, toNumber } from '@nimbus/shared';
 
 /**
  * Play sound command
@@ -49,8 +50,8 @@ export class PlaySoundCommand extends CommandHandler {
 
     // Parse parameters
     const soundPath = String(parameters[0]);
-    const stream = parameters.length > 1 ? String(parameters[1]).toLowerCase() === 'true' : false;
-    const volume = parameters.length > 2 ? parseFloat(String(parameters[2])) : 1.0;
+    const stream = parameters.length > 1 ? toBoolean(parameters[1]) : false;
+    const volume = parameters.length > 2 ? toNumber(parameters[2]) : 1.0;
 
     // Validate volume
     if (isNaN(volume) || volume < 0 || volume > 1) {

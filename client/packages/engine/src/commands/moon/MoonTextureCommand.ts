@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('MoonTextureCommand');
 
@@ -25,7 +25,7 @@ export class MoonTextureCommand extends CommandHandler {
     return 'Set moon texture (moonTexture [0-2] [path] or "none")';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const moonService = this.appContext.services.moon;
 
     if (!moonService) {
@@ -36,7 +36,7 @@ export class MoonTextureCommand extends CommandHandler {
       return 'Usage: moonTexture [moonIndex] [texturePath]\nExample: moonTexture 0 textures/moon/moon1.png\nOr: moonTexture 0 none (to remove texture)';
     }
 
-    const moonIndex = parseInt(parameters[0], 10);
+    const moonIndex = toNumber(parameters[0]);
     if (isNaN(moonIndex) || moonIndex < 0 || moonIndex > 2) {
       return 'Invalid moonIndex. Must be 0, 1, or 2.';
     }

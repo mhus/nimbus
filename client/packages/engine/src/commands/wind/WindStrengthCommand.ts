@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('WindStrengthCommand');
 
@@ -25,7 +25,7 @@ export class WindStrengthCommand extends CommandHandler {
     return 'Set wind strength (0-10)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const environmentService = this.appContext.services.environment;
 
     if (!environmentService) {
@@ -39,7 +39,7 @@ export class WindStrengthCommand extends CommandHandler {
     }
 
     // Parse and validate parameter
-    const value = parseFloat(parameters[0]);
+    const value = toNumber(parameters[0]);
 
     if (isNaN(value)) {
       return 'Invalid parameter. Value must be a number (0-10).';

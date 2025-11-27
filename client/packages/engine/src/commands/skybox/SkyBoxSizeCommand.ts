@@ -11,7 +11,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SkyBoxSizeCommand');
 
@@ -28,7 +28,7 @@ export class SkyBoxSizeCommand extends CommandHandler {
     return 'Set skybox size (number)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const skyBoxService = this.appContext.services.skyBox;
 
     if (!skyBoxService) {
@@ -41,7 +41,7 @@ export class SkyBoxSizeCommand extends CommandHandler {
     }
 
     // Parse size parameter
-    const size = parseFloat(parameters[0]);
+    const size = toNumber(parameters[0]);
 
     if (isNaN(size)) {
       return 'Invalid size. Provide a valid number.';

@@ -9,7 +9,7 @@
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
 import type { Area } from '../../services/CloudsService';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('CloudsAnimationStartCommand');
 
@@ -26,7 +26,7 @@ export class CloudsAnimationStartCommand extends CommandHandler {
     return 'Start automated cloud animation that creates clouds over time';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const cloudsService = this.appContext.services.clouds;
 
     if (!cloudsService) {
@@ -39,26 +39,26 @@ export class CloudsAnimationStartCommand extends CommandHandler {
 
     try {
       const jobName = parameters[0];
-      const emitCountPerMinute = parseFloat(parameters[1]);
-      const emitProbability = parseFloat(parameters[2]);
+      const emitCountPerMinute = toNumber(parameters[1]);
+      const emitProbability = toNumber(parameters[2]);
 
       // Parse area
       const area: Area = {
-        minX: parseFloat(parameters[3]),
-        maxX: parseFloat(parameters[4]),
-        minZ: parseFloat(parameters[5]),
-        maxZ: parseFloat(parameters[6]),
-        minY: parseFloat(parameters[7]),
-        maxY: parseFloat(parameters[8]),
-        minWidth: parseFloat(parameters[9]),
-        maxWidth: parseFloat(parameters[10]),
-        minHeight: parseFloat(parameters[11]),
-        maxHeight: parseFloat(parameters[12]),
+        minX: toNumber(parameters[3]),
+        maxX: toNumber(parameters[4]),
+        minZ: toNumber(parameters[5]),
+        maxZ: toNumber(parameters[6]),
+        minY: toNumber(parameters[7]),
+        maxY: toNumber(parameters[8]),
+        minWidth: toNumber(parameters[9]),
+        maxWidth: toNumber(parameters[10]),
+        minHeight: toNumber(parameters[11]),
+        maxHeight: toNumber(parameters[12]),
       };
 
-      const speed = parseFloat(parameters[13]);
-      const direction = parseFloat(parameters[14]);
-      const textures = parameters[15].split(',').map(t => t.trim());
+      const speed = toNumber(parameters[13]);
+      const direction = toNumber(parameters[14]);
+      const textures = parameters[15].split(',').map((t: string) => t.trim());
 
       // Validate numeric values
       if (isNaN(emitCountPerMinute) || isNaN(emitProbability) || isNaN(speed) || isNaN(direction)) {

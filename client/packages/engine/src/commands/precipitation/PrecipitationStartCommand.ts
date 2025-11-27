@@ -14,7 +14,7 @@
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
 import { Color4 } from '@babylonjs/core';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('PrecipitationStartCommand');
 
@@ -31,7 +31,7 @@ export class PrecipitationStartCommand extends CommandHandler {
     return 'Start precipitation with custom parameters (intensity r g b size speed gravity)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const precipitationService = this.appContext.services.precipitation;
     if (!precipitationService) {
       return 'PrecipitationService not available';
@@ -42,13 +42,13 @@ export class PrecipitationStartCommand extends CommandHandler {
       return 'Usage: precipitationStart [intensity] [r] [g] [b] [size] [speed] [gravity]\nExample: precipitationStart 50 0.4 0.4 0.6 0.3 25 15';
     }
 
-    const intensity = parseFloat(parameters[0]);
-    const r = parseFloat(parameters[1]);
-    const g = parseFloat(parameters[2]);
-    const b = parseFloat(parameters[3]);
-    const size = parseFloat(parameters[4]);
-    const speed = parseFloat(parameters[5]);
-    const gravity = parseFloat(parameters[6]);
+    const intensity = toNumber(parameters[0]);
+    const r = toNumber(parameters[1]);
+    const g = toNumber(parameters[2]);
+    const b = toNumber(parameters[3]);
+    const size = toNumber(parameters[4]);
+    const speed = toNumber(parameters[5]);
+    const gravity = toNumber(parameters[6]);
 
     // Validate
     if (isNaN(intensity) || intensity < 0) {

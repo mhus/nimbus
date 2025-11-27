@@ -3,6 +3,7 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { toNumber } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 /**
@@ -61,7 +62,7 @@ export class FogCommand extends CommandHandler {
     }
 
     // Parse intensity parameter
-    const intensity = parseFloat(parameters[0]);
+    const intensity = toNumber(parameters[0]);
 
     if (isNaN(intensity)) {
       console.error(`Invalid intensity: ${parameters[0]}. Use numeric value (0-1.0).`);

@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('HorizonGradientHeightCommand');
 
@@ -24,7 +24,7 @@ export class HorizonGradientHeightCommand extends CommandHandler {
     return 'Set horizon gradient height (height)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const service = this.appContext.services.horizonGradient;
 
     if (!service) {
@@ -35,7 +35,7 @@ export class HorizonGradientHeightCommand extends CommandHandler {
       return 'Usage: horizonGradientHeight <height>\nExample: horizonGradientHeight 150';
     }
 
-    const height = parseFloat(parameters[0]);
+    const height = toNumber(parameters[0]);
 
     if (isNaN(height) || height <= 0) {
       return 'Invalid height. Must be a positive number.';

@@ -5,6 +5,7 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
+import { toNumber } from '@nimbus/shared';
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
 
@@ -38,9 +39,9 @@ export class TeleportCommand extends CommandHandler {
       };
     }
 
-    const blockX = parseFloat(parameters[0]);
-    const blockY = parseFloat(parameters[1]);
-    const blockZ = parseFloat(parameters[2]);
+    const blockX = toNumber(parameters[0]);
+    const blockY = toNumber(parameters[1]);
+    const blockZ = toNumber(parameters[2]);
 
     if (isNaN(blockX) || isNaN(blockY) || isNaN(blockZ)) {
       console.error('Coordinates must be numbers');

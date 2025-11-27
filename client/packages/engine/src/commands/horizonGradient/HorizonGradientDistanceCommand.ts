@@ -7,7 +7,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('HorizonGradientDistanceCommand');
 
@@ -24,7 +24,7 @@ export class HorizonGradientDistanceCommand extends CommandHandler {
     return 'Set horizon gradient distance from camera (distance)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const service = this.appContext.services.horizonGradient;
 
     if (!service) {
@@ -35,7 +35,7 @@ export class HorizonGradientDistanceCommand extends CommandHandler {
       return 'Usage: horizonGradientDistance <distance>\nExample: horizonGradientDistance 400';
     }
 
-    const distance = parseFloat(parameters[0]);
+    const distance = toNumber(parameters[0]);
 
     if (isNaN(distance) || distance <= 0) {
       return 'Invalid distance. Must be a positive number.';

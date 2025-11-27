@@ -68,7 +68,8 @@
       "Bash(mkdir:*)",
       "Bash(/Users/hummel/sources/mhus/nimbus/client/packages/engine/src/scrawl/effects/ParticleFireSteadyEffect.ts)",
       "Bash(git log:*)",
-      "Bash(pnpm --filter @nimbus/shared build:shared:*)"
+      "Bash(pnpm --filter @nimbus/shared build:shared:*)",
+      "Bash(node scripts/update-commands-castutil.js:*)"
     ],
     "deny": [],
     "ask": []

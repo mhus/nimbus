@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('SunLensFlareIntensityCommand');
 
@@ -25,7 +25,7 @@ export class SunLensFlareIntensityCommand extends CommandHandler {
     return 'Set sun lens flare intensity (0-2)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const sunService = this.appContext.services.sun;
 
     if (!sunService) {
@@ -38,7 +38,7 @@ export class SunLensFlareIntensityCommand extends CommandHandler {
     }
 
     // Parse and validate parameter
-    const intensity = parseFloat(parameters[0]);
+    const intensity = toNumber(parameters[0]);
 
     if (isNaN(intensity)) {
       return 'Invalid parameter. Value must be a number (0-2).';

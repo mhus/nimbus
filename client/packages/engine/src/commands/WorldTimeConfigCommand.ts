@@ -4,7 +4,7 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('WorldTimeConfigCommand');
 
@@ -47,12 +47,12 @@ export class WorldTimeConfigCommand extends CommandHandler {
       };
     }
 
-    const minuteScaling = parseFloat(parameters[0]);
-    const minutesPerHour = parseInt(parameters[1], 10);
-    const hoursPerDay = parseInt(parameters[2], 10);
-    const daysPerMonth = parseInt(parameters[3], 10);
-    const monthsPerYear = parseInt(parameters[4], 10);
-    const yearsPerEra = parseInt(parameters[5], 10);
+    const minuteScaling = toNumber(parameters[0]);
+    const minutesPerHour = toNumber(parameters[1]);
+    const hoursPerDay = toNumber(parameters[2]);
+    const daysPerMonth = toNumber(parameters[3]);
+    const monthsPerYear = toNumber(parameters[4]);
+    const yearsPerEra = toNumber(parameters[5]);
 
     // Validate parameters
     if (
