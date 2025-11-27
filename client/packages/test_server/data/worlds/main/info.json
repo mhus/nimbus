@@ -44,6 +44,29 @@
         "b": 0.8
       },
       "alpha": 0.5
+    },
+    "worldTime": {
+      "minuteScaling": 10,
+      "minutesPerHour": 60,
+      "hoursPerDay": 24,
+      "daysPerMonth": 30,
+      "monthsPerYear": 12,
+      "yearsPerEra": 10000,
+      "daySections": {
+        "morningStart": 6,
+        "dayStart": 12,
+        "eveningStart": 18,
+        "nightStart": 0
+      },
+      "celestialBodies": {
+        "enabled": true,
+        "updateIntervalSeconds": 10,
+        "activeMoons": 2,
+        "sunRotationHours": 24,
+        "moon0RotationHours": 672,
+        "moon1RotationHours": 504,
+        "moon2RotationHours": 336
+      }
     }
   },
   "startArea": {

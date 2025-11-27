@@ -706,7 +706,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   }
 ```
 
-[ ] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world world.json
+[?] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world world.json
 
 [x] Erstelle AnimationStack im StackModifierCreator:
 - ambienteLightIntensity in EnvironmentService
@@ -761,3 +761,7 @@ doSetStackModifier('sunPosition','default',270, 0.1, 50);
 ggf die chunks neu gerendert (gibt es schon).
 Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript gestartet werden das die season aendert.
   - script name: season_winter, season_spring, season_summer, season_autumn
+
+[ ] Wenn im ScawlService ein neues script gestartet wird, sollen immer die folgenden standart parameter gesetzt sein:
+- wordlSeason
+- worldDaytime
