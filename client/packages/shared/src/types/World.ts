@@ -77,6 +77,13 @@ export interface WorldInfo {
     pvpEnabled: boolean;
     pingInterval: number;
 
+    /** Movement mode restrictions */
+    /** Allowed movement modes (optional, if not set all modes are allowed) */
+    allowedMovementModes?: string[];
+
+    /** Default movement mode when player enters the world (optional, default: 'WALK') */
+    defaultMovementMode?: string;
+
     /** Audio settings */
     /** Ambient music when player dies (optional) */
     deadAmbientAudio?: string;

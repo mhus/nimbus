@@ -200,6 +200,20 @@ export class PlayerService {
     // Initialize movement state modifier
     this.initializeMovementStateModifier();
 
+    // Set default movement mode from WorldInfo (if specified)
+    const defaultMode = appContext.worldInfo?.settings?.defaultMovementMode;
+    if (defaultMode) {
+      try {
+        const movementState = PlayerMovementState[defaultMode as keyof typeof PlayerMovementState];
+        if (movementState) {
+          this.currentMovementState = movementState;
+          logger.debug('Default movement mode set from WorldInfo', { defaultMode, movementState });
+        }
+      } catch (error) {
+        logger.warn('Invalid defaultMovementMode in WorldInfo', { defaultMode });
+      }
+    }
+
     // Initialize player position and sync camera
     this.syncCameraToPlayer();
 

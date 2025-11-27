@@ -32,49 +32,49 @@ export class JumpHandler extends InputHandler {
  * Cycle Movement State Handler (F key)
  * Cycles through movement states: FREE_FLY → FLY → SPRINT → CROUCH → WALK
  * FREE_FLY and FLY are only available in Editor mode (__EDITOR__ = true)
+ * Respects world's allowedMovementModes restriction
  */
 export class CycleMovementStateHandler extends InputHandler {
   protected onActivate(value: number): void {
     const current = this.playerService.getMovementState();
 
-    // Determine next state in cycle
-    let nextState: PlayerMovementState;
+    // Get allowed movement modes from WorldInfo
+    const worldInfo = this.appContext?.worldInfo;
+    const allowedModes = worldInfo?.settings?.allowedMovementModes;
 
-    if (__EDITOR__) {
-      // Editor mode: Include FREE_FLY and FLY in rotation
-      switch (current) {
-        case PlayerMovementState.WALK:
-          nextState = PlayerMovementState.FREE_FLY;
-          break;
-        case PlayerMovementState.FREE_FLY:
-          nextState = PlayerMovementState.FLY;
-          break;
-        case PlayerMovementState.FLY:
-          nextState = PlayerMovementState.SPRINT;
-          break;
-        case PlayerMovementState.SPRINT:
-          nextState = PlayerMovementState.CROUCH;
-          break;
-        case PlayerMovementState.CROUCH:
-        default:
-          nextState = PlayerMovementState.WALK;
-          break;
-      }
-    } else {
-      // Viewer mode: Skip FLY modes in rotation
-      switch (current) {
-        case PlayerMovementState.WALK:
-          nextState = PlayerMovementState.SPRINT;
-          break;
-        case PlayerMovementState.SPRINT:
-          nextState = PlayerMovementState.CROUCH;
-          break;
-        case PlayerMovementState.CROUCH:
-        default:
-          nextState = PlayerMovementState.WALK;
-          break;
-      }
+    // Build rotation list based on editor mode and allowed modes
+    const allStates = __EDITOR__
+      ? [
+          PlayerMovementState.WALK,
+          PlayerMovementState.FREE_FLY,
+          PlayerMovementState.FLY,
+          PlayerMovementState.SPRINT,
+          PlayerMovementState.CROUCH,
+        ]
+      : [
+          PlayerMovementState.WALK,
+          PlayerMovementState.SPRINT,
+          PlayerMovementState.CROUCH,
+        ];
+
+    // Filter by allowed modes if specified
+    const allowedStates = allowedModes
+      ? allStates.filter(state => allowedModes.includes(state))
+      : allStates;
+
+    // If no states allowed (shouldn't happen), fallback to WALK
+    if (allowedStates.length === 0) {
+      logger.warn('No allowed movement states, fallback to WALK');
+      this.playerService.setMovementState(PlayerMovementState.WALK);
+      return;
     }
+
+    // Find current index
+    const currentIndex = allowedStates.indexOf(current);
+
+    // Calculate next index (wrap around)
+    const nextIndex = (currentIndex + 1) % allowedStates.length;
+    const nextState = allowedStates[nextIndex];
 
     this.playerService.setMovementState(nextState);
   }

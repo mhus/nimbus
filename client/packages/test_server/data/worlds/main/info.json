@@ -28,6 +28,8 @@
     "allowGuests": true,
     "pvpEnabled": false,
     "pingInterval": 5000,
+    "allowedMovementModes": ["WALK", "SPRINT", "CROUCH", "FREE_FLY", "FLY"],
+    "defaultMovementMode": "WALK",
     "sunTexture": "textures/sun/sun1.png",
     "sunSize": 3.1,
     "sunAngleY": 90,

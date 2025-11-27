@@ -422,7 +422,7 @@ Es werden also zwei neue network messages benoetigt:
 - Nenne den jetztigen FLY modus in FREE_FLY um. - Wird nur im Editor modus aktiv, keine physik
 - Erstelle einen neuen Modus FLY, der wie FREE_FLY funktioniert, aber die physik aktiviert hat, d.h. alle Physik ausser GRAVITY ist aktiv und die Kamerasteuerung ist wie bei FREE_FLY.
 
-[ ] In WorldInfo wird definiert welche Bewegungsmodi erlaubt sind.
+[?] In WorldInfo wird definiert welche Bewegungsmodi erlaubt sind.
 - Erstelle in WorldInfo einen neuen parameter 'allowedMovementModes?: string[]' der die erlaubten Bewegungsmodi enthaelt.
 - Wenn der parameter nicht gesetzt ist, sind alle Bewegungsmodi erlaubt, wie bisher.
 - Erstelle einen parameter 'defaultMovementMode'?: string der den default Bewegungsmodus enthaelt, wenn der player die Welt betritt.
