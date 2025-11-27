@@ -13,7 +13,7 @@
 
 import { getLogger, PlayerMovementState } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
-import { StackName } from './ModifierService';
+import { StackName, createExponentialNumberAnimation } from './ModifierService';
 
 const logger = getLogger('StackModifierCreator');
 
@@ -109,6 +109,66 @@ export function createAllStackModifiers(appContext: AppContext): void {
         audioService.playAmbientSound(soundPath, true, 1.0);
       }
     }
+  );
+
+  // ========================================
+  // Animation Stacks for Environment
+  // ========================================
+
+  // Ambient Light Intensity Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.AMBIENT_LIGHT_INTENSITY,
+    1.0, // Default: normal intensity
+    (intensity: number) => {
+      const environmentService = appContext.services.environment;
+      if (environmentService) {
+        environmentService.setAmbientLightIntensity(intensity);
+      }
+    },
+    createExponentialNumberAnimation(0.1), // Smooth easing
+    100 // Default wait time: 100ms
+  );
+
+  // Sun Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.SUN_POSITION,
+    90, // Default: East (90 degrees)
+    (angleY: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setSunPositionOnCircle(angleY);
+      }
+    },
+    createExponentialNumberAnimation(0.05), // Slower smooth easing for position
+    100 // Default wait time: 100ms
+  );
+
+  // Sun Elevation Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.SUN_ELEVATION,
+    45, // Default: 45 degrees above horizon
+    (elevation: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setSunHeightOverCamera(elevation);
+      }
+    },
+    createExponentialNumberAnimation(0.05), // Slower smooth easing for elevation
+    100 // Default wait time: 100ms
+  );
+
+  // Horizon Gradient Alpha Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.HORIZON_GRADIENT_ALPHA,
+    0.5, // Default: semi-transparent
+    (alpha: number) => {
+      const horizonGradientService = appContext.services.horizonGradient;
+      if (horizonGradientService) {
+        horizonGradientService.setAlpha(alpha);
+      }
+    },
+    createExponentialNumberAnimation(0.1), // Smooth easing
+    100 // Default wait time: 100ms
   );
 
   // ========================================

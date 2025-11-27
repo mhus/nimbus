@@ -433,15 +433,50 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - ambienteLightIntensity in EnvironmentService
 - sunPosition in SunService
 - sunElevation in SunService
+- horizonGradientAlpha in HorizonGradientService
+```text
+
+  Ambient Light Intensity:
+  - Default: 1.0
+  - Animation: Exponential easing (Faktor 0.1)
+  - Callback: environmentService.setAmbientLightIntensity()
+
+  Sun Position:
+  - Default: 90° (Osten)
+  - Animation: Exponential easing (Faktor 0.05, langsamer)
+  - Callback: sunService.setSunPositionOnCircle()
+
+  Sun Elevation:
+  - Default: 45° (über Horizont)
+  - Animation: Exponential easing (Faktor 0.05, langsamer)
+  - Callback: sunService.setSunHeightOverCamera()
+
+  Horizon Gradient Alpha:
+  - Default: 0.5 (semi-transparent)
+  - Animation: Exponential easing (Faktor 0.1)
+  - Callback: horizonGradientService.setAlpha()
+
+  3. Verwendung
+
+  # Beispiel: Sanfter Übergang der Ambient Light Intensity
+  setStackModifier ambientLightIntensity weather 0.5 10 500
+
+  # Beispiel: Sonnenposition auf Westen animieren
+  setStackModifier sunPosition sunset 270 20 200
+
+  # Beispiel: Aktuellen Wert abrufen
+  getStackModifierCurrentValue ambientLightIntensity
+```
+
+[ ] Erstelle AnimationStack im StackModifierCreator:
 - sunLigthIntensityMultiplier in SunService
 - ambientLightIntensityMultiplier in SunService
-- horizonGradientAlpha in HorizonGradientService
 
 [ ] In EnvironmentService soll ein Handle auf einen ModifierStack Element fuer AmbienteAudio geben
 - dieser kann per command gesetzt werden/geloescht (leer string) werden
 - EnvironmentAmbienteAudio(audioFile)
 
 [ ] Wenn diw WorldInfo neu geladen wird, wird geprueft ob sich die season / seasonProgress geandert hat (gibt es schon) und
-ggf die chunls neu gerendert (gibt es schon).
+ggf die chunks neu gerendert (gibt es schon).
 Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript gestartet werden das die season aendert.
   - script name: season_winter, season_spring, season_summer, season_autumn

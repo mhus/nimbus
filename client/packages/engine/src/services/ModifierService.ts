@@ -67,6 +67,18 @@ export enum StackName {
   /** Ambient audio: string path to ambient music file (empty = no music) */
   AMBIENT_AUDIO = 'ambientAudio',
 
+  /** Ambient light intensity: number (0-10, default: 1.0) */
+  AMBIENT_LIGHT_INTENSITY = 'ambientLightIntensity',
+
+  /** Sun position: number angle in degrees (0-360, 0=North, 90=East, 180=South, 270=West) */
+  SUN_POSITION = 'sunPosition',
+
+  /** Sun elevation: number angle in degrees (-90 to 90, -90=down, 0=horizon, 90=up) */
+  SUN_ELEVATION = 'sunElevation',
+
+  /** Horizon gradient alpha: number (0-1, transparency) */
+  HORIZON_GRADIENT_ALPHA = 'horizonGradientAlpha',
+
   // Weitere Stacks hier hinzufügen
 }
 
