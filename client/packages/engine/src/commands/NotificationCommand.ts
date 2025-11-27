@@ -34,27 +34,27 @@ export class NotificationCommand extends CommandHandler {
     const notificationService = this.appContext.services.notification;
 
     if (!notificationService) {
-      console.error('NotificationService not available');
+      logger.error('NotificationService not available');
       return { error: 'NotificationService not available' };
     }
 
     if (parameters.length < 3) {
-      console.error('Usage: notification <type> <from> <message>');
-      console.error('  type: 0-31 (0=system, 10-12=chat, 20-21=overlay, 30-31=quest)');
-      console.error('  from: sender name or "null" for no sender');
-      console.error('  message: notification message');
-      console.error('');
-      console.error('Examples:');
-      console.error('  notification 0 null "System info"');
-      console.error('  notification 11 "Player1" "Hello everyone!"');
-      console.error('  notification 20 null "LEVEL UP!"');
+      logger.error('Usage: notification <type> <from> <message>');
+      logger.error('  type: 0-31 (0=system, 10-12=chat, 20-21=overlay, 30-31=quest)');
+      logger.error('  from: sender name or "null" for no sender');
+      logger.error('  message: notification message');
+      logger.error('');
+      logger.error('Examples:');
+      logger.error('  notification 0 null "System info"');
+      logger.error('  notification 11 "Player1" "Hello everyone!"');
+      logger.error('  notification 20 null "LEVEL UP!"');
       return { error: 'Invalid arguments' };
     }
 
     // Parse type
     const type = toNumber(parameters[0]);
     if (isNaN(type) || type < 0 || type > 31) {
-      console.error('Invalid type: must be a number between 0 and 31');
+      logger.error('Invalid type: must be a number between 0 and 31');
       return { error: 'Invalid type' };
     }
 
@@ -70,11 +70,11 @@ export class NotificationCommand extends CommandHandler {
       notificationService.newNotification(type as NotificationType, from, message);
 
       const result = `Notification created: type=${type}, from=${from || 'null'}, message="${message}"`;
-      console.log(`✓ ${result}`);
+      logger.debug(`✓ ${result}`);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`✗ Failed to create notification: ${errorMessage}`);
+      logger.error(`✗ Failed to create notification: ${errorMessage}`);
       throw error;
     }
   }

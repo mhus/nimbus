@@ -37,7 +37,7 @@ export class PlayerPositionInfoCommand extends CommandHandler {
     const clientService = this.appContext.services.client;
 
     if (!playerService || !chunkService) {
-      console.error('Required services not available');
+      logger.error('Required services not available');
       return { error: 'Services not available' };
     }
 
@@ -159,7 +159,7 @@ export class PlayerPositionInfoCommand extends CommandHandler {
     lines.push('============================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Return structured data
     return {

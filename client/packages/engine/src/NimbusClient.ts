@@ -824,7 +824,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
   appContextPromise.then((appContext) => {
     const ns = appContext.services.notification;
     if (!ns) {
-      console.error('NotificationService not initialized');
+      logger.error('NotificationService not initialized');
       return;
     }
 
@@ -848,7 +848,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     setTimeout(() => ns.newNotification(30, null, 'Quest: Find the Crystal'), 6000);
     setTimeout(() => ns.newNotification(31, null, 'Target: Search the cave (0/5)'), 6500);
 
-    console.log('Test sequence started. Notifications will appear over 7 seconds.');
+    logger.debug('Test sequence started. Notifications will appear over 7 seconds.');
   });
 };
 
@@ -895,7 +895,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const ns = appContext.services.notification;
     if (!ns) return;
     ns.clearChatNotifications();
-    console.log('Chat notifications cleared');
+    logger.debug('Chat notifications cleared');
   });
 };
 
@@ -904,7 +904,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const ns = appContext.services.notification;
     if (!ns) return;
     ns.notificationsVisible(visible);
-    console.log(`Notifications ${visible ? 'enabled' : 'disabled'}`);
+    logger.debug(`Notifications ${visible ? 'enabled' : 'disabled'}`);
   });
 };
 
@@ -914,13 +914,13 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const compass = appContext.services.compass;
     const player = appContext.services.player;
     if (!compass || !player) {
-      console.error('CompassService or PlayerService not initialized');
+      logger.error('CompassService or PlayerService not initialized');
       return;
     }
 
     const playerPos = player.getPosition();
     if (!playerPos) {
-      console.error('Player position not available');
+      logger.error('Player position not available');
       return;
     }
 
@@ -935,7 +935,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'top',
       100
     );
-    console.log('Added North marker (red arrow, 50 blocks North)');
+    logger.debug('Added North marker (red arrow, 50 blocks North)');
 
     // East marker (X+)
     const eastMarker = compass.addMarker(
@@ -945,7 +945,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'center',
       100
     );
-    console.log('Added East marker (yellow diamond, 50 blocks East)');
+    logger.debug('Added East marker (yellow diamond, 50 blocks East)');
 
     // South marker (Z-)
     const southMarker = compass.addMarker(
@@ -955,7 +955,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'bottom',
       100
     );
-    console.log('Added South marker (blue triangle, 50 blocks South)');
+    logger.debug('Added South marker (blue triangle, 50 blocks South)');
 
     // West marker (X-)
     const westMarker = compass.addMarker(
@@ -965,9 +965,9 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'center',
       100
     );
-    console.log('Added West marker (green circle, 50 blocks West)');
+    logger.debug('Added West marker (green circle, 50 blocks West)');
 
-    console.log('Compass test markers added. Move the camera to see them rotate!');
+    logger.debug('Compass test markers added. Move the camera to see them rotate!');
   });
 };
 
@@ -976,17 +976,17 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const compass = appContext.services.compass;
     const player = appContext.services.player;
     if (!compass || !player) {
-      console.error('CompassService or PlayerService not initialized');
+      logger.error('CompassService or PlayerService not initialized');
       return;
     }
 
     const playerPos = player.getPosition();
     if (!playerPos) {
-      console.error('Player position not available');
+      logger.error('Player position not available');
       return;
     }
 
-    console.log('Testing near-clip distance functionality...');
+    logger.debug('Testing near-clip distance functionality...');
 
     // Add marker very close (3 blocks) - should be hidden
     compass.addMarker(
@@ -997,7 +997,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       100,
       5  // nearClipDistance = 5 blocks
     );
-    console.log('Added marker 3 blocks away (should be HIDDEN, near clip = 5)');
+    logger.debug('Added marker 3 blocks away (should be HIDDEN, near clip = 5)');
 
     // Add marker at medium distance (10 blocks) - should be visible
     compass.addMarker(
@@ -1008,7 +1008,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       100,
       5  // nearClipDistance = 5 blocks
     );
-    console.log('Added marker 10 blocks away (should be VISIBLE, near clip = 5)');
+    logger.debug('Added marker 10 blocks away (should be VISIBLE, near clip = 5)');
 
     // Add marker with custom near clip (2 blocks)
     compass.addMarker(
@@ -1019,9 +1019,9 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       100,
       2  // nearClipDistance = 2 blocks
     );
-    console.log('Added marker 3 blocks away (should be VISIBLE, near clip = 2)');
+    logger.debug('Added marker 3 blocks away (should be VISIBLE, near clip = 2)');
 
-    console.log('Move towards the markers to see them disappear when too close!');
+    logger.debug('Move towards the markers to see them disappear when too close!');
   });
 };
 
@@ -1031,21 +1031,21 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     if (!compass) return;
 
     // Note: We don't have a clearAll method, but markers will be removed when out of range
-    console.log('Compass markers will be cleared when out of range');
+    logger.debug('Compass markers will be cleared when out of range');
   });
 };
 
-console.log('=== Notification Test Functions ===');
-console.log('testNotifications() - Test all types');
-console.log('testSystemNotifications() - System area');
-console.log('testChatNotifications() - Chat area');
-console.log('testOverlayNotifications() - Overlay area');
-console.log('testQuestNotifications() - Quest area');
-console.log('clearChat() - Clear chat notifications');
-console.log('toggleNotifications(true/false) - Enable/disable');
-console.log('===================================');
-console.log('');
-console.log('=== Compass Test Functions ===');
-console.log('testCompass() - Add test markers at N/E/S/W');
-console.log('testCompassNearClip() - Test near-clip distance functionality');
-console.log('===============================');
+logger.debug('=== Notification Test Functions ===');
+logger.debug('testNotifications() - Test all types');
+logger.debug('testSystemNotifications() - System area');
+logger.debug('testChatNotifications() - Chat area');
+logger.debug('testOverlayNotifications() - Overlay area');
+logger.debug('testQuestNotifications() - Quest area');
+logger.debug('clearChat() - Clear chat notifications');
+logger.debug('toggleNotifications(true/false) - Enable/disable');
+logger.debug('===================================');
+logger.debug('');
+logger.debug('=== Compass Test Functions ===');
+logger.debug('testCompass() - Add test markers at N/E/S/W');
+logger.debug('testCompassNearClip() - Test near-clip distance functionality');
+logger.debug('===============================');

@@ -33,14 +33,14 @@ export class AudioCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     // No parameters - show status
     if (parameters.length === 0) {
       const enabled = audioService.isAudioEnabled();
-      console.log(`Audio playback is currently: ${enabled ? 'ENABLED' : 'DISABLED'}`);
+      logger.debug(`Audio playback is currently: ${enabled ? 'ENABLED' : 'DISABLED'}`);
       return { enabled };
     }
 
@@ -49,14 +49,14 @@ export class AudioCommand extends CommandHandler {
 
     if (param === 'on' || param === 'enable' || param === '1' || param === 'true') {
       audioService.setAudioEnabled(true);
-      console.log('✓ Audio playback ENABLED');
+      logger.debug('✓ Audio playback ENABLED');
       return { enabled: true };
     } else if (param === 'off' || param === 'disable' || param === '0' || param === 'false') {
       audioService.setAudioEnabled(false);
-      console.log('✓ Audio playback DISABLED');
+      logger.debug('✓ Audio playback DISABLED');
       return { enabled: false };
     } else {
-      console.error(`Invalid parameter: ${param}. Use 'on' or 'off'`);
+      logger.error(`Invalid parameter: ${param}. Use 'on' or 'off'`);
       return { error: 'Invalid parameter' };
     }
   }

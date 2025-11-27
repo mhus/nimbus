@@ -33,7 +33,7 @@ export class SpawnEntityCommand extends CommandHandler {
   async execute(parameters: any[]): Promise<any> {
     // Validate parameters
     if (parameters.length !== 5) {
-      console.error('Usage: spawnEntity <id> <entityModelId> <x> <y> <z>');
+      logger.error('Usage: spawnEntity <id> <entityModelId> <x> <y> <z>');
       return {
         error: 'Invalid parameters',
         usage: 'spawnEntity <id> <entityModelId> <x> <y> <z>',
@@ -48,7 +48,7 @@ export class SpawnEntityCommand extends CommandHandler {
     const z = toNumber(parameters[4]);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
-      console.error('Coordinates must be numbers');
+      logger.error('Coordinates must be numbers');
       return {
         error: 'Invalid coordinates',
         x: parameters[2],
@@ -60,27 +60,27 @@ export class SpawnEntityCommand extends CommandHandler {
     const entityService = this.appContext.services.entity;
 
     if (!entityService) {
-      console.error('EntityService not available');
+      logger.error('EntityService not available');
       return { error: 'EntityService not available' };
     }
 
     try {
-      console.log(`Spawning entity '${entityId}' with model '${entityModelId}' at (${x}, ${y}, ${z})...`);
+      logger.debug(`Spawning entity '${entityId}' with model '${entityModelId}' at (${x}, ${y}, ${z})...`);
 
       // Load entity model first to verify it exists
       const entityModel = await entityService.getEntityModel(entityModelId);
       if (!entityModel) {
-        console.error(`Entity model '${entityModelId}' not found`);
-        console.log('');
-        console.log('Available entity models can be loaded from the server.');
-        console.log('Make sure the model file exists in files/entitymodels/ directory.');
+        logger.error(`Entity model '${entityModelId}' not found`);
+        logger.debug('');
+        logger.debug('Available entity models can be loaded from the server.');
+        logger.debug('Make sure the model file exists in files/entitymodels/ directory.');
         return {
           error: 'Entity model not found',
           entityModelId,
         };
       }
 
-      console.log(`✓ Entity model '${entityModelId}' loaded`);
+      logger.debug(`✓ Entity model '${entityModelId}' loaded`);
 
       // Create entity instance
       const entity = createEntity(entityId, entityModelId, entityModelId, 'passive');
@@ -109,8 +109,8 @@ export class SpawnEntityCommand extends CommandHandler {
         // Set the pathway (this will auto-load the entity if it doesn't exist)
         await entityService.setEntityPathway(pathway);
 
-        console.log(`✓ Entity '${entityId}' spawned at (${x}, ${y}, ${z})`);
-        console.log('');
+        logger.debug(`✓ Entity '${entityId}' spawned at (${x}, ${y}, ${z})`);
+        logger.debug('');
 
         // Get player position to calculate distance
         const playerService = this.appContext.services.player;
@@ -122,20 +122,20 @@ export class SpawnEntityCommand extends CommandHandler {
             Math.pow(z - playerPos.z, 2)
           );
 
-          console.log(`Distance to player: ${distance.toFixed(2)} blocks`);
-          console.log(`Visibility radius: ${entityService.visibilityRadius} blocks`);
+          logger.debug(`Distance to player: ${distance.toFixed(2)} blocks`);
+          logger.debug(`Visibility radius: ${entityService.visibilityRadius} blocks`);
 
           if (distance <= entityService.visibilityRadius) {
-            console.log('✓ Entity is within visibility range and should be visible');
+            logger.debug('✓ Entity is within visibility range and should be visible');
           } else {
-            console.log('⚠ Entity is outside visibility range and will not be visible');
-            console.log(`  Move closer or increase visibility radius with: entityService.visibilityRadius = ${Math.ceil(distance)}`);
+            logger.debug('⚠ Entity is outside visibility range and will not be visible');
+            logger.debug(`  Move closer or increase visibility radius with: entityService.visibilityRadius = ${Math.ceil(distance)}`);
           }
         }
 
-        console.log('');
-        console.log('Use "entityInfo ' + entityId + '" to view entity details');
-        console.log('Use "listEntities" to see all loaded entities');
+        logger.debug('');
+        logger.debug('Use "entityInfo ' + entityId + '" to view entity details');
+        logger.debug('Use "listEntities" to see all loaded entities');
 
         return {
           success: true,
@@ -145,14 +145,14 @@ export class SpawnEntityCommand extends CommandHandler {
           message: 'Entity spawned successfully',
         };
       } else {
-        console.error(`Entity '${entityId}' already exists`);
+        logger.error(`Entity '${entityId}' already exists`);
         return {
           error: 'Entity already exists',
           entityId,
         };
       }
     } catch (error) {
-      console.error('Failed to spawn entity:', error);
+      logger.error('Failed to spawn entity:', error);
       return {
         error: 'Failed to spawn entity',
         message: error instanceof Error ? error.message : 'Unknown error',

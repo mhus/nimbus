@@ -41,15 +41,15 @@ export class SpeakCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     // Require at least streamPath parameter
     if (parameters.length === 0) {
-      console.error('Usage: /speak <streamPath> [volume]');
-      console.log('Example: /speak welcome 1.0');
-      console.log('Example: /speak tutorial/intro');
+      logger.error('Usage: /speak <streamPath> [volume]');
+      logger.debug('Example: /speak welcome 1.0');
+      logger.debug('Example: /speak tutorial/intro');
       return { error: 'Missing streamPath parameter' };
     }
 
@@ -59,23 +59,23 @@ export class SpeakCommand extends CommandHandler {
 
     // Validate volume
     if (isNaN(volume) || volume < 0 || volume > 1) {
-      console.error('Invalid volume. Must be between 0.0 and 1.0');
+      logger.error('Invalid volume. Must be between 0.0 and 1.0');
       return { error: 'Invalid volume parameter' };
     }
 
     // Play speech and wait for completion
     try {
-      console.log(`🎙️ Playing speech: ${streamPath}`);
-      console.log(`  Volume: ${volume}, Speech Volume: ${audioService.getSpeechVolume()}`);
-      console.log('  Waiting for speech to finish...');
+      logger.debug(`🎙️ Playing speech: ${streamPath}`);
+      logger.debug(`  Volume: ${volume}, Speech Volume: ${audioService.getSpeechVolume()}`);
+      logger.debug('  Waiting for speech to finish...');
 
       // Wait for speech to complete
       await audioService.speak(streamPath, volume);
 
-      console.log(`✓ Speech completed: ${streamPath}`);
+      logger.debug(`✓ Speech completed: ${streamPath}`);
       return { status: 'completed', streamPath, volume };
     } catch (error) {
-      console.error('Failed to play speech', error);
+      logger.error('Failed to play speech', error);
       return { error: 'Failed to play speech' };
     }
   }

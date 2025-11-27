@@ -40,7 +40,7 @@ export class ListStacksCommand extends CommandHandler {
     const modifierService = this.appContext.services.modifier;
 
     if (!modifierService) {
-      console.error('ModifierService not available');
+      logger.error('ModifierService not available');
       return { error: 'ModifierService not available' };
     }
 
@@ -50,13 +50,13 @@ export class ListStacksCommand extends CommandHandler {
     const stackNames = modifierService.stackNames;
 
     if (stackNames.length === 0) {
-      console.log('No modifier stacks available');
+      logger.debug('No modifier stacks available');
       return { stacks: [] };
     }
 
-    console.log(`\n${'='.repeat(80)}`);
-    console.log(`Available Modifier Stacks (${stackNames.length} total)`);
-    console.log(`${'='.repeat(80)}\n`);
+    logger.debug(`\n${'='.repeat(80)}`);
+    logger.debug(`Available Modifier Stacks (${stackNames.length} total)`);
+    logger.debug(`${'='.repeat(80)}\n`);
 
     const stacksInfo: any[] = [];
 
@@ -78,14 +78,14 @@ export class ListStacksCommand extends CommandHandler {
       };
 
       // Basic output
-      console.log(`Stack: ${stackName}`);
-      console.log(`  Type: ${isAnimationStack ? 'AnimationStack ⏱' : 'ModifierStack'}`);
-      console.log(`  Current Value: ${this.formatValue(currentValue)}`);
-      console.log(`  Default Value: ${this.formatValue(defaultValue)}`);
-      console.log(`  Active Modifiers: ${modifierCount}`);
+      logger.debug(`Stack: ${stackName}`);
+      logger.debug(`  Type: ${isAnimationStack ? 'AnimationStack ⏱' : 'ModifierStack'}`);
+      logger.debug(`  Current Value: ${this.formatValue(currentValue)}`);
+      logger.debug(`  Default Value: ${this.formatValue(defaultValue)}`);
+      logger.debug(`  Active Modifiers: ${modifierCount}`);
 
       if (verbose && modifierCount > 0) {
-        console.log(`  Modifiers:`);
+        logger.debug(`  Modifiers:`);
         stackInfo.modifiers = [];
 
         const modifiers = stack.modifiers;
@@ -102,7 +102,7 @@ export class ListStacksCommand extends CommandHandler {
             sequence: modifier.sequence,
           };
 
-          console.log(`    [${i}] ${modifierName ? `Name: "${modifierName}", ` : ''}` +
+          logger.debug(`    [${i}] ${modifierName ? `Name: "${modifierName}", ` : ''}` +
             `Value: ${this.formatValue(modifier.getValue())}, ` +
             `Priority: ${modifier.prio}, ` +
             `Enabled: ${modifier.enabled}, ` +
@@ -112,23 +112,23 @@ export class ListStacksCommand extends CommandHandler {
         }
       }
 
-      console.log(''); // Empty line between stacks
+      logger.debug(''); // Empty line between stacks
       stacksInfo.push(stackInfo);
     }
 
-    console.log(`${'='.repeat(80)}\n`);
+    logger.debug(`${'='.repeat(80)}\n`);
 
     // Summary
     const animationStackCount = stacksInfo.filter(s => s.type === 'AnimationStack').length;
     const regularStackCount = stacksInfo.filter(s => s.type === 'ModifierStack').length;
     const totalModifiers = stacksInfo.reduce((sum, s) => sum + s.modifierCount, 0);
 
-    console.log('Summary:');
-    console.log(`  Total Stacks: ${stacksInfo.length}`);
-    console.log(`  - AnimationStacks: ${animationStackCount}`);
-    console.log(`  - ModifierStacks: ${regularStackCount}`);
-    console.log(`  Total Active Modifiers: ${totalModifiers}`);
-    console.log('');
+    logger.debug('Summary:');
+    logger.debug(`  Total Stacks: ${stacksInfo.length}`);
+    logger.debug(`  - AnimationStacks: ${animationStackCount}`);
+    logger.debug(`  - ModifierStacks: ${regularStackCount}`);
+    logger.debug(`  Total Active Modifiers: ${totalModifiers}`);
+    logger.debug('');
 
     return {
       stacks: stacksInfo,

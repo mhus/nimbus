@@ -311,8 +311,8 @@ export class CommandService {
     if (pending.onMessage) {
       pending.onMessage(message);
     } else {
-      // Default: log to console
-      console.log(`[Server] ${message}`);
+      // Default: log via logger
+      logger.info(`[Server] ${message}`);
     }
   }
 

@@ -41,13 +41,13 @@ export class FlashImageCommand extends CommandHandler {
     const notificationService = this.appContext.services.notification;
 
     if (!notificationService) {
-      console.error('NotificationService not available');
+      logger.error('NotificationService not available');
       return { error: 'NotificationService not available' };
     }
 
     // Validate parameters
     if (parameters.length < 3) {
-      console.error('Usage: flashImage <assetPath> <duration> <opacity>');
+      logger.error('Usage: flashImage <assetPath> <duration> <opacity>');
       return { error: 'Missing parameters. Usage: flashImage <assetPath> <duration> <opacity>' };
     }
 
@@ -57,19 +57,19 @@ export class FlashImageCommand extends CommandHandler {
 
     // Validate assetPath
     if (typeof assetPath !== 'string') {
-      console.error('Asset path must be a string');
+      logger.error('Asset path must be a string');
       return { error: 'Asset path must be a string' };
     }
 
     // Validate duration
     if (isNaN(duration) || duration <= 0) {
-      console.error(`Invalid duration: ${parameters[1]}. Must be positive number.`);
+      logger.error(`Invalid duration: ${parameters[1]}. Must be positive number.`);
       return { error: 'Duration must be a positive number (milliseconds)' };
     }
 
     // Validate opacity
     if (isNaN(opacity) || opacity < 0 || opacity > 1.0) {
-      console.error(`Invalid opacity: ${parameters[2]}. Must be 0.0-1.0.`);
+      logger.error(`Invalid opacity: ${parameters[2]}. Must be 0.0-1.0.`);
       return { error: 'Opacity must be between 0.0 and 1.0' };
     }
 
@@ -77,7 +77,7 @@ export class FlashImageCommand extends CommandHandler {
     notificationService.flashImage(assetPath, duration, opacity);
 
     const message = `Flashing image: ${assetPath} (${duration}ms, opacity ${opacity.toFixed(2)})`;
-    console.log(message);
+    logger.debug(message);
 
     return {
       assetPath,

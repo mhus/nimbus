@@ -37,7 +37,7 @@ export class RegisterFlashSoundsCommand extends CommandHandler {
     const precipitationService = this.appContext.services.precipitation;
 
     if (!precipitationService) {
-      console.error('PrecipitationService not available');
+      logger.error('PrecipitationService not available');
       return { error: 'PrecipitationService not available' };
     }
 
@@ -48,13 +48,13 @@ export class RegisterFlashSoundsCommand extends CommandHandler {
     precipitationService.registerFlashSounds(soundPaths);
 
     if (soundPaths.length === 0) {
-      console.log('✓ Thunder sounds cleared');
+      logger.debug('✓ Thunder sounds cleared');
       return { status: 'cleared', count: 0 };
     }
 
-    console.log(`✓ Registered ${soundPaths.length} thunder sound(s):`);
+    logger.debug(`✓ Registered ${soundPaths.length} thunder sound(s):`);
     soundPaths.forEach((path, index) => {
-      console.log(`  ${index + 1}. ${path}`);
+      logger.debug(`  ${index + 1}. ${path}`);
     });
 
     return { status: 'registered', count: soundPaths.length, paths: soundPaths };

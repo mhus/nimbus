@@ -35,21 +35,21 @@ export class OpenComponentCommand extends CommandHandler {
     const modalService = this.appContext.services.modal;
 
     if (!modalService) {
-      console.error('ModalService not available');
+      logger.error('ModalService not available');
       return { error: 'ModalService not available' };
     }
 
     if (parameters.length < 1) {
-      console.error('Usage: openComponent <component> <attributes...>');
-      console.error('');
-      console.error('Available components:');
-      console.error('');
-      console.error('  block_editor - Opens block editor at a specific position');
-      console.error('    Usage: openComponent block_editor <x> <y> <z>');
-      console.error('    Example: openComponent block_editor 10 64 5');
-      console.error('');
-      console.error('Future components:');
-      console.error('  settings, inventory, map, etc.');
+      logger.error('Usage: openComponent <component> <attributes...>');
+      logger.error('');
+      logger.error('Available components:');
+      logger.error('');
+      logger.error('  block_editor - Opens block editor at a specific position');
+      logger.error('    Usage: openComponent block_editor <x> <y> <z>');
+      logger.error('    Example: openComponent block_editor 10 64 5');
+      logger.error('');
+      logger.error('Future components:');
+      logger.error('  settings, inventory, map, etc.');
       return { error: 'Invalid arguments' };
     }
 
@@ -70,15 +70,15 @@ export class OpenComponentCommand extends CommandHandler {
         attributes,
       };
 
-      console.log(`✓ Modal opened successfully:`);
-      console.log(`  ID: ${modalRef.id}`);
-      console.log(`  Component: ${component}`);
-      console.log(`  Attributes: ${attributes.join(', ')}`);
+      logger.debug(`✓ Modal opened successfully:`);
+      logger.debug(`  ID: ${modalRef.id}`);
+      logger.debug(`  Component: ${component}`);
+      logger.debug(`  Attributes: ${attributes.join(', ')}`);
 
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`✗ Failed to open modal: ${errorMessage}`);
+      logger.error(`✗ Failed to open modal: ${errorMessage}`);
       return { error: errorMessage };
     }
   }

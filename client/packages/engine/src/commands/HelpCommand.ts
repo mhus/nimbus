@@ -38,7 +38,7 @@ export class HelpCommand extends CommandHandler {
 
       if (!handler) {
         const error = `Command '${commandName}' not found. Use 'help' to see all available commands.`;
-        console.error(error);
+        logger.error(error);
         return { error };
       }
 
@@ -56,7 +56,7 @@ export class HelpCommand extends CommandHandler {
       lines.push(`  ${functionName}(parameters...)`);
 
       const output = lines.join('\n');
-      console.log(output);
+      logger.debug(output);
       return output;
     }
 
@@ -77,7 +77,7 @@ export class HelpCommand extends CommandHandler {
     const output = lines.join('\n');
 
     // Return as both string and log to console
-    console.log(output);
+    logger.debug(output);
 
     return output;
   }

@@ -31,7 +31,7 @@ export class TeleportCommand extends CommandHandler {
   execute(parameters: any[]): any {
     // Validate parameters
     if (parameters.length !== 3) {
-      console.error('Usage: teleport <x> <y> <z>');
+      logger.error('Usage: teleport <x> <y> <z>');
       return {
         error: 'Invalid parameters',
         usage: 'teleport <x> <y> <z>',
@@ -44,7 +44,7 @@ export class TeleportCommand extends CommandHandler {
     const blockZ = toNumber(parameters[2]);
 
     if (isNaN(blockX) || isNaN(blockY) || isNaN(blockZ)) {
-      console.error('Coordinates must be numbers');
+      logger.error('Coordinates must be numbers');
       return {
         error: 'Invalid coordinates',
         x: parameters[0],
@@ -56,21 +56,21 @@ export class TeleportCommand extends CommandHandler {
     const physicsService = this.appContext.services.physics;
 
     if (!physicsService) {
-      console.error('PhysicsService not available');
+      logger.error('PhysicsService not available');
       return { error: 'PhysicsService not available' };
     }
 
     const playerEntity = physicsService.getEntity('player');
 
     if (!playerEntity) {
-      console.error('Player entity not available');
+      logger.error('Player entity not available');
       return { error: 'Player entity not available' };
     }
 
     // Use PhysicsService teleport method (converts to position internally)
     physicsService.teleport(playerEntity, new Vector3(blockX, blockY, blockZ));
 
-    console.log(`✓ Teleporting to block (${blockX}, ${blockY}, ${blockZ})`);
+    logger.debug(`✓ Teleporting to block (${blockX}, ${blockY}, ${blockZ})`);
 
     return {
       message: `Teleporting to block (${blockX}, ${blockY}, ${blockZ})`,

@@ -29,7 +29,7 @@ export class EntityInfoCommand extends CommandHandler {
   execute(parameters: any[]): any {
     // Validate parameters
     if (parameters.length !== 1) {
-      console.error('Usage: entityInfo <entityId>');
+      logger.error('Usage: entityInfo <entityId>');
       return {
         error: 'Invalid parameters',
         usage: 'entityInfo <entityId>',
@@ -41,7 +41,7 @@ export class EntityInfoCommand extends CommandHandler {
     const entityService = this.appContext.services.entity;
 
     if (!entityService) {
-      console.error('EntityService not available');
+      logger.error('EntityService not available');
       return { error: 'EntityService not available' };
     }
 
@@ -50,10 +50,10 @@ export class EntityInfoCommand extends CommandHandler {
     const clientEntity = allEntities.find(e => e.id === entityId);
 
     if (!clientEntity) {
-      console.error(`Entity '${entityId}' not found`);
-      console.log('');
-      console.log('Available entities:');
-      allEntities.forEach(e => console.log(`  - ${e.id}`));
+      logger.error(`Entity '${entityId}' not found`);
+      logger.debug('');
+      logger.debug('Available entities:');
+      allEntities.forEach(e => logger.debug(`  - ${e.id}`));
       return {
         error: 'Entity not found',
         entityId,
@@ -216,17 +216,17 @@ export class EntityInfoCommand extends CommandHandler {
     lines.push('==================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Output complete Entity object
-    console.log('');
-    console.log('=== Complete Entity Object ===');
-    console.log(JSON.stringify(clientEntity.entity, null, 2));
+    logger.debug('');
+    logger.debug('=== Complete Entity Object ===');
+    logger.debug(JSON.stringify(clientEntity.entity, null, 2));
 
     // Output complete EntityModel object
-    console.log('');
-    console.log('=== Complete EntityModel Object ===');
-    console.log(JSON.stringify(clientEntity.model, null, 2));
+    logger.debug('');
+    logger.debug('=== Complete EntityModel Object ===');
+    logger.debug(JSON.stringify(clientEntity.model, null, 2));
 
     // Return structured data
     return {

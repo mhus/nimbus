@@ -31,7 +31,7 @@ export class WorldTimeStopCommand extends CommandHandler {
   execute(parameters: any[]): any {
     const environmentService = this.appContext.services.environment;
     if (!environmentService) {
-      console.error('EnvironmentService not available');
+      logger.error('EnvironmentService not available');
       return { error: 'EnvironmentService not available' };
     }
 
@@ -42,11 +42,11 @@ export class WorldTimeStopCommand extends CommandHandler {
     environmentService.stopWorldTime();
 
     if (wasRunning) {
-      console.log('=== World Time Stopped ===');
-      console.log(`  Stopped at: ${currentTime}`);
-      console.log('===========================');
+      logger.debug('=== World Time Stopped ===');
+      logger.debug(`  Stopped at: ${currentTime}`);
+      logger.debug('===========================');
     } else {
-      console.log('World Time was not running');
+      logger.debug('World Time was not running');
     }
 
     return {

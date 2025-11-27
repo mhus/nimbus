@@ -39,12 +39,12 @@ export class GetStackModifierCurrentValueCommand extends CommandHandler {
     const modifierService = this.appContext.services.modifier;
 
     if (!modifierService) {
-      console.error('ModifierService not available');
+      logger.error('ModifierService not available');
       return { error: 'ModifierService not available' };
     }
 
     if (parameters.length < 1) {
-      console.error('Usage: getStackModifierCurrentValue <stackName>');
+      logger.error('Usage: getStackModifierCurrentValue <stackName>');
       return { error: 'Invalid parameters. Need stackName.' };
     }
 
@@ -53,7 +53,7 @@ export class GetStackModifierCurrentValueCommand extends CommandHandler {
     // Get the stack
     const stack = modifierService.getModifierStack(stackName);
     if (!stack) {
-      console.error(`Stack '${stackName}' does not exist`);
+      logger.error(`Stack '${stackName}' does not exist`);
       return { error: `Stack '${stackName}' does not exist` };
     }
 
@@ -61,7 +61,7 @@ export class GetStackModifierCurrentValueCommand extends CommandHandler {
     const modifierCount = stack.modifiers.length;
 
     const message = `Stack '${stackName}' current value: ${JSON.stringify(currentValue)} (${modifierCount} active modifiers)`;
-    console.log(message);
+    logger.debug(message);
 
     return {
       stackName,

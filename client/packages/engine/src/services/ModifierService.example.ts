@@ -180,7 +180,7 @@ export function setupCameraModifiers(
  */
 export function setupPriorityExamples(modifierService: ModifierService): void {
   modifierService.createModifierStack<string>('message', 'default', (msg) => {
-    console.log('Message:', msg);
+    logger.debug('Message:', msg);
   });
 
   // Add multiple modifiers with same priority
@@ -223,17 +223,17 @@ export function setupPriorityExamples(modifierService: ModifierService): void {
 export function setupMultipleStacks(modifierService: ModifierService): void {
   // Stack 1: Light intensity
   modifierService.createModifierStack<number>('lightIntensity', 1.0, (intensity) => {
-    console.log('Light intensity:', intensity);
+    logger.debug('Light intensity:', intensity);
   });
 
   // Stack 2: Fog density
   modifierService.createModifierStack<number>('fogDensity', 0.0, (density) => {
-    console.log('Fog density:', density);
+    logger.debug('Fog density:', density);
   });
 
   // Stack 3: Rain strength
   modifierService.createModifierStack<number>('rainStrength', 0.0, (strength) => {
-    console.log('Rain strength:', strength);
+    logger.debug('Rain strength:', strength);
   });
 
   // Add modifiers to different stacks independently

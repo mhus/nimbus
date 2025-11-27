@@ -59,7 +59,7 @@ export class InfoCommand extends CommandHandler {
     const output = lines.join('\n');
 
     // Log to console
-    console.log(output);
+    logger.debug(output);
 
     return info;
   }

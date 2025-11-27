@@ -53,7 +53,7 @@ export class IFrameHelper {
    */
   private static sendMessage(message: any): void {
     if (window.parent === window) {
-      console.warn('IFrameHelper: Not running in iframe, cannot send message');
+      logger.warn('IFrameHelper: Not running in iframe, cannot send message');
       return;
     }
 

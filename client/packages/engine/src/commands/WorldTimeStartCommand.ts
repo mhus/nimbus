@@ -31,13 +31,13 @@ export class WorldTimeStartCommand extends CommandHandler {
   execute(parameters: any[]): any {
     const environmentService = this.appContext.services.environment;
     if (!environmentService) {
-      console.error('EnvironmentService not available');
+      logger.error('EnvironmentService not available');
       return { error: 'EnvironmentService not available' };
     }
 
     // Parse parameter
     if (parameters.length !== 1) {
-      console.error('Usage: worldTimeStart <worldMinute>');
+      logger.error('Usage: worldTimeStart <worldMinute>');
       return {
         error: 'Invalid parameters',
         usage: 'worldTimeStart <worldMinute>',
@@ -47,7 +47,7 @@ export class WorldTimeStartCommand extends CommandHandler {
     const worldMinute = toNumber(parameters[0]);
 
     if (isNaN(worldMinute)) {
-      console.error('worldMinute must be a valid number');
+      logger.error('worldMinute must be a valid number');
       return { error: 'worldMinute must be a valid number' };
     }
 
@@ -57,11 +57,11 @@ export class WorldTimeStartCommand extends CommandHandler {
     const currentTime = environmentService.getWorldTimeCurrentAsString();
     const daySection = environmentService.getWorldDayTimeSection();
 
-    console.log('=== World Time Started ===');
-    console.log(`  Start Time      : ${currentTime}`);
-    console.log(`  Day Section     : ${daySection}`);
-    console.log(`  World Minute    : ${worldMinute.toFixed(2)}`);
-    console.log('==========================');
+    logger.debug('=== World Time Started ===');
+    logger.debug(`  Start Time      : ${currentTime}`);
+    logger.debug(`  Day Section     : ${daySection}`);
+    logger.debug(`  World Minute    : ${worldMinute.toFixed(2)}`);
+    logger.debug('==========================');
 
     return {
       success: true,

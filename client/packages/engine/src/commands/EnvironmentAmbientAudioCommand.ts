@@ -42,15 +42,15 @@ export class EnvironmentAmbientAudioCommand extends CommandHandler {
     const environmentService = this.appContext.services.environment;
 
     if (!environmentService) {
-      console.error('EnvironmentService not available');
+      logger.error('EnvironmentService not available');
       return { error: 'EnvironmentService not available' };
     }
 
     // Require soundPath parameter
     if (parameters.length === 0) {
-      console.error('Usage: /environmentAmbientAudio <soundPath>');
-      console.log('Example: /environmentAmbientAudio audio/music/ambient1.ogg');
-      console.log('Clear ambient: /environmentAmbientAudio ""');
+      logger.error('Usage: /environmentAmbientAudio <soundPath>');
+      logger.debug('Example: /environmentAmbientAudio audio/music/ambient1.ogg');
+      logger.debug('Clear ambient: /environmentAmbientAudio ""');
       return { error: 'Missing soundPath parameter' };
     }
 
@@ -62,15 +62,15 @@ export class EnvironmentAmbientAudioCommand extends CommandHandler {
       environmentService.setEnvironmentAmbientAudio(soundPath);
 
       if (soundPath.trim() === '') {
-        console.log('✓ Environment ambient music cleared');
+        logger.debug('✓ Environment ambient music cleared');
         return { status: 'cleared' };
       } else {
-        console.log(`✓ Environment ambient music set: ${soundPath}`);
-        console.log(`  Priority: 50 (environment level)`);
+        logger.debug(`✓ Environment ambient music set: ${soundPath}`);
+        logger.debug(`  Priority: 50 (environment level)`);
         return { status: 'set', soundPath };
       }
     } catch (error) {
-      console.error('Failed to set environment ambient music', error);
+      logger.error('Failed to set environment ambient music', error);
       return { error: 'Failed to set environment ambient music' };
     }
   }

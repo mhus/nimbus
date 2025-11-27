@@ -30,14 +30,14 @@ export class ListEntitiesCommand extends CommandHandler {
     const entityService = this.appContext.services.entity;
 
     if (!entityService) {
-      console.error('EntityService not available');
+      logger.error('EntityService not available');
       return { error: 'EntityService not available' };
     }
 
     const entities = entityService.getAllEntities();
 
     if (entities.length === 0) {
-      console.log('No entities loaded');
+      logger.debug('No entities loaded');
       return {
         message: 'No entities loaded',
         count: 0,
@@ -102,7 +102,7 @@ export class ListEntitiesCommand extends CommandHandler {
     lines.push('================================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Return structured data
     return {

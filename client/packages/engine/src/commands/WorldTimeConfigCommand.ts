@@ -31,13 +31,13 @@ export class WorldTimeConfigCommand extends CommandHandler {
   execute(parameters: any[]): any {
     const environmentService = this.appContext.services.environment;
     if (!environmentService) {
-      console.error('EnvironmentService not available');
+      logger.error('EnvironmentService not available');
       return { error: 'EnvironmentService not available' };
     }
 
     // Parse parameters
     if (parameters.length !== 6) {
-      console.error(
+      logger.error(
         'Usage: worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>'
       );
       return {
@@ -63,7 +63,7 @@ export class WorldTimeConfigCommand extends CommandHandler {
       isNaN(monthsPerYear) ||
       isNaN(yearsPerEra)
     ) {
-      console.error('All parameters must be valid numbers');
+      logger.error('All parameters must be valid numbers');
       return { error: 'All parameters must be valid numbers' };
     }
 
@@ -79,14 +79,14 @@ export class WorldTimeConfigCommand extends CommandHandler {
 
     const config = environmentService.getWorldTimeConfig();
 
-    console.log('=== World Time Config Updated ===');
-    console.log(`  @Minute Scaling    : ${config.minuteScaling} (world minutes per real minute)`);
-    console.log(`  @Minutes per Hour  : ${config.minutesPerHour}`);
-    console.log(`  @Hours per Day     : ${config.hoursPerDay}`);
-    console.log(`  @Days per Month    : ${config.daysPerMonth}`);
-    console.log(`  @Months per Year   : ${config.monthsPerYear}`);
-    console.log(`  @Years per Era     : ${config.yearsPerEra}`);
-    console.log('=================================');
+    logger.debug('=== World Time Config Updated ===');
+    logger.debug(`  @Minute Scaling    : ${config.minuteScaling} (world minutes per real minute)`);
+    logger.debug(`  @Minutes per Hour  : ${config.minutesPerHour}`);
+    logger.debug(`  @Hours per Day     : ${config.hoursPerDay}`);
+    logger.debug(`  @Days per Month    : ${config.daysPerMonth}`);
+    logger.debug(`  @Months per Year   : ${config.monthsPerYear}`);
+    logger.debug(`  @Years per Era     : ${config.yearsPerEra}`);
+    logger.debug('=================================');
 
     return { success: true, config };
   }

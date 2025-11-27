@@ -33,22 +33,22 @@ export class TestAudioCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     if (parameters.length === 0) {
-      console.error('Usage: /testaudio <path> [volume]');
-      console.log('Example: /testaudio audio/step/grass1.ogg');
-      console.log('Example: /testaudio audio/step/grass2.ogg 0.5');
+      logger.error('Usage: /testaudio <path> [volume]');
+      logger.debug('Example: /testaudio audio/step/grass1.ogg');
+      logger.debug('Example: /testaudio audio/step/grass2.ogg 0.5');
       return { error: 'Missing audio path parameter' };
     }
 
     const assetPath = String(parameters[0]);
     const volume = parameters.length > 1 ? toNumber(parameters[1]) : 1.0;
 
-    console.log(`Loading and playing audio: ${assetPath}`);
-    console.log(`Volume: ${volume}`);
+    logger.debug(`Loading and playing audio: ${assetPath}`);
+    logger.debug(`Volume: ${volume}`);
 
     try {
       // Load audio
@@ -60,11 +60,11 @@ export class TestAudioCommand extends CommandHandler {
       });
 
       if (!sound) {
-        console.error('Failed to load audio');
+        logger.error('Failed to load audio');
         return { error: 'Failed to load audio' };
       }
 
-      console.log('Sound loaded:', {
+      logger.debug('Sound loaded:', {
         assetPath,
         isPlaying: sound.isPlaying,
         hasOnEndedObservable: !!sound.onEndedObservable,
@@ -74,24 +74,24 @@ export class TestAudioCommand extends CommandHandler {
       const BABYLON = await import('@babylonjs/core');
       const audioEngine = BABYLON.Engine.audioEngine;
 
-      console.log('Audio engine status:', {
+      logger.debug('Audio engine status:', {
         hasAudioEngine: !!audioEngine,
         unlocked: audioEngine?.unlocked,
         canUseWebAudio: audioEngine?.canUseWebAudio,
       });
 
       if (audioEngine && !audioEngine.unlocked) {
-        console.warn('⚠️ Audio engine is LOCKED!');
-        console.warn('Audio cannot play until user interacts with the page (click, key press, etc.)');
-        console.warn('Try clicking on the canvas or pressing a key, then run /testaudio again');
+        logger.warn('⚠️ Audio engine is LOCKED!');
+        logger.warn('Audio cannot play until user interacts with the page (click, key press, etc.)');
+        logger.warn('Try clicking on the canvas or pressing a key, then run /testaudio again');
         return { error: 'Audio engine locked - user interaction required' };
       }
 
       // Play sound - Babylon.js will play when ready
-      console.log('Calling sound.play()...');
+      logger.debug('Calling sound.play()...');
       sound.play();
 
-      console.log('✓ sound.play() called:', {
+      logger.debug('✓ sound.play() called:', {
         assetPath,
         volume: sound.volume !== undefined ? sound.volume : (typeof sound.getVolume === 'function' ? sound.getVolume() : 'unknown'),
         isPlaying: sound.isPlaying !== undefined ? sound.isPlaying : 'unknown',
@@ -99,21 +99,21 @@ export class TestAudioCommand extends CommandHandler {
 
       // Check status after delays
       setTimeout(() => {
-        console.log('Sound status after 500ms:', {
+        logger.debug('Sound status after 500ms:', {
           isPlaying: sound.isPlaying !== undefined ? sound.isPlaying : 'unknown',
           isReady: typeof sound.isReady === 'function' ? sound.isReady() : 'unknown',
         });
       }, 500);
 
       setTimeout(() => {
-        console.log('Sound status after 2000ms:', {
+        logger.debug('Sound status after 2000ms:', {
           isPlaying: sound.isPlaying !== undefined ? sound.isPlaying : 'unknown',
           isReady: typeof sound.isReady === 'function' ? sound.isReady() : 'unknown',
         });
       }, 2000);
 
       setTimeout(() => {
-        console.log('Sound status after 5000ms:', {
+        logger.debug('Sound status after 5000ms:', {
           isPlaying: sound.isPlaying !== undefined ? sound.isPlaying : 'unknown',
           isReady: typeof sound.isReady === 'function' ? sound.isReady() : 'unknown',
         });
@@ -126,7 +126,7 @@ export class TestAudioCommand extends CommandHandler {
         isPlaying: sound.isPlaying,
       };
     } catch (error) {
-      console.error('Error playing audio:', error);
+      logger.error('Error playing audio:', error);
       return { error: (error as Error).message };
     }
   }

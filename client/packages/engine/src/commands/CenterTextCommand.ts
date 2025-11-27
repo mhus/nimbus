@@ -37,14 +37,14 @@ export class CenterTextCommand extends CommandHandler {
     const notificationService = this.appContext.services.notification;
 
     if (!notificationService) {
-      console.error('NotificationService not available');
+      logger.error('NotificationService not available');
       return { error: 'NotificationService not available' };
     }
 
     // No parameter or empty: clear text
     if (parameters.length === 0) {
       notificationService.clearCenterText();
-      console.log('Center text cleared');
+      logger.debug('Center text cleared');
       return { message: 'Center text cleared' };
     }
 
@@ -55,7 +55,7 @@ export class CenterTextCommand extends CommandHandler {
     notificationService.setCenterText(text);
 
     const message = `Center text set: "${text}"`;
-    console.log(message);
+    logger.debug(message);
 
     return {
       text,

@@ -30,7 +30,7 @@ export class BlockInfoCommand extends CommandHandler {
   execute(parameters: any[]): any {
     // Validate parameters
     if (parameters.length !== 3) {
-      console.error('Usage: blockInfo <x> <y> <z>');
+      logger.error('Usage: blockInfo <x> <y> <z>');
       return {
         error: 'Invalid parameters',
         usage: 'blockInfo <x> <y> <z>',
@@ -43,7 +43,7 @@ export class BlockInfoCommand extends CommandHandler {
     const z = toNumber(parameters[2]);
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
-      console.error('Coordinates must be numbers');
+      logger.error('Coordinates must be numbers');
       return {
         error: 'Invalid coordinates',
         x: parameters[0],
@@ -55,7 +55,7 @@ export class BlockInfoCommand extends CommandHandler {
     const chunkService = this.appContext.services.chunk;
 
     if (!chunkService) {
-      console.error('ChunkService not available');
+      logger.error('ChunkService not available');
       return { error: 'ChunkService not available' };
     }
 
@@ -63,7 +63,7 @@ export class BlockInfoCommand extends CommandHandler {
     const clientBlock = chunkService.getBlockAt(x, y, z);
 
     if (!clientBlock) {
-      console.log(`No block found at (${x}, ${y}, ${z}) - chunk may not be loaded`);
+      logger.debug(`No block found at (${x}, ${y}, ${z}) - chunk may not be loaded`);
       return {
         message: `No block at (${x}, ${y}, ${z})`,
         hint: 'Chunk may not be loaded or block is air',
@@ -165,7 +165,7 @@ export class BlockInfoCommand extends CommandHandler {
     lines.push('==================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Return structured data
     return {

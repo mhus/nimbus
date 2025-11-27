@@ -55,12 +55,12 @@ export class SetStackModifierCommand extends CommandHandler {
     const modifierService = this.appContext.services.modifier;
 
     if (!modifierService) {
-      console.error('ModifierService not available');
+      logger.error('ModifierService not available');
       return { error: 'ModifierService not available' };
     }
 
     if (parameters.length < 3) {
-      console.error('Usage: setStackModifier <stackName> <modifierName> <value> [prio] [waitTime]');
+      logger.error('Usage: setStackModifier <stackName> <modifierName> <value> [prio] [waitTime]');
       return { error: 'Invalid parameters. Need at least stackName, modifierName, and value.' };
     }
 
@@ -72,20 +72,20 @@ export class SetStackModifierCommand extends CommandHandler {
 
     // Validate priority
     if (isNaN(prio)) {
-      console.error(`Invalid priority: ${parameters[3]}`);
+      logger.error(`Invalid priority: ${parameters[3]}`);
       return { error: 'Invalid priority. Must be a number.' };
     }
 
     // Validate waitTime if provided
     if (waitTime !== undefined && isNaN(waitTime)) {
-      console.error(`Invalid waitTime: ${parameters[4]}`);
+      logger.error(`Invalid waitTime: ${parameters[4]}`);
       return { error: 'Invalid waitTime. Must be a number in milliseconds.' };
     }
 
     // Get the stack
     const stack = modifierService.getModifierStack(stackName);
     if (!stack) {
-      console.error(`Stack '${stackName}' does not exist`);
+      logger.error(`Stack '${stackName}' does not exist`);
       return { error: `Stack '${stackName}' does not exist` };
     }
 
@@ -108,7 +108,7 @@ export class SetStackModifierCommand extends CommandHandler {
         parsedValue = JSON.parse(valueStr);
       }
     } catch (error) {
-      console.error(`Failed to parse value '${valueStr}' for stack '${stackName}':`, error);
+      logger.error(`Failed to parse value '${valueStr}' for stack '${stackName}':`, error);
       return { error: `Failed to parse value. Expected type: ${typeof currentValue}` };
     }
 
@@ -128,7 +128,7 @@ export class SetStackModifierCommand extends CommandHandler {
       defaultModifier.setValue(parsedValue);
 
       const message = `Default value of stack '${stackName}' set to ${parsedValue}${waitTime !== undefined ? ` (waitTime: ${waitTime}ms)` : ''}`;
-      console.log(message);
+      logger.debug(message);
 
       return {
         action: 'default_value_set',
@@ -161,7 +161,7 @@ export class SetStackModifierCommand extends CommandHandler {
       }
 
       const message = `Updated modifier '${modifierName}' in stack '${stackName}' to value: ${parsedValue}${waitTime !== undefined ? ` (waitTime: ${waitTime}ms)` : ''}`;
-      console.log(message);
+      logger.debug(message);
 
       return {
         action: 'updated',
@@ -183,7 +183,7 @@ export class SetStackModifierCommand extends CommandHandler {
       stackModifiers.set(modifierName, modifier);
 
       const message = `Created modifier '${modifierName}' in stack '${stackName}' with value: ${parsedValue}, prio: ${prio}${waitTime !== undefined ? `, waitTime: ${waitTime}ms` : ''}`;
-      console.log(message);
+      logger.debug(message);
 
       return {
         action: 'created',

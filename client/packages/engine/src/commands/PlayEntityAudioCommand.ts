@@ -40,19 +40,19 @@ export class PlayEntityAudioCommand extends CommandHandler {
     const entityService = this.appContext.services.entity;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     if (!entityService) {
-      console.error('EntityService not available');
+      logger.error('EntityService not available');
       return { error: 'EntityService not available' };
     }
 
     // Require entityId and type parameters
     if (parameters.length < 2) {
-      console.error('Usage: /playEntityAudio <entityId> <type>');
-      console.log('Example: /playEntityAudio wizard1 attack');
+      logger.error('Usage: /playEntityAudio <entityId> <type>');
+      logger.debug('Example: /playEntityAudio wizard1 attack');
       return { error: 'Missing parameters' };
     }
 
@@ -63,17 +63,17 @@ export class PlayEntityAudioCommand extends CommandHandler {
       // Get entity from EntityService
       const entity = await entityService.getEntity(entityId);
       if (!entity) {
-        console.error(`Entity not found: ${entityId}`);
+        logger.error(`Entity not found: ${entityId}`);
         return { error: `Entity not found: ${entityId}` };
       }
 
       // Play entity audio
       await audioService.playEntityAudio(entity, audioType);
 
-      console.log(`✓ Playing entity audio: ${entityId} / ${audioType}`);
+      logger.debug(`✓ Playing entity audio: ${entityId} / ${audioType}`);
       return { status: 'playing', entityId, audioType };
     } catch (error) {
-      console.error('Failed to play entity audio', error);
+      logger.error('Failed to play entity audio', error);
       return { error: 'Failed to play entity audio' };
     }
   }
