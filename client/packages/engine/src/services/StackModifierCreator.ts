@@ -213,6 +213,34 @@ export function createAllStackModifiers(appContext: AppContext): void {
     100 // Default wait time: 100ms
   );
 
+  // Sun Light Intensity Multiplier Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.SUN_LIGHT_INTENSITY_MULTIPLIER,
+    1.0, // Default: normal intensity
+    (multiplier: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setSunLightIntensityMultiplier(multiplier);
+      }
+    },
+    createLinearNumberAnimation(0.05), // Linear animation, 0.05 per step
+    100 // Default wait time: 100ms
+  );
+
+  // Ambient Light Intensity Multiplier Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.AMBIENT_LIGHT_INTENSITY_MULTIPLIER,
+    0.5, // Default: 0.5 intensity
+    (multiplier: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setAmbientLightIntensityMultiplier(multiplier);
+      }
+    },
+    createLinearNumberAnimation(0.05), // Linear animation, 0.05 per step
+    100 // Default wait time: 100ms
+  );
+
   // ========================================
   // Weitere Stacks hier hinzufügen
   // ========================================

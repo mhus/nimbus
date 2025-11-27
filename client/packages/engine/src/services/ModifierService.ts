@@ -88,6 +88,12 @@ export enum StackName {
   /** Horizon gradient alpha: number (0-1, transparency) */
   HORIZON_GRADIENT_ALPHA = 'horizonGradientAlpha',
 
+  /** Sun light intensity multiplier: number (0-10, default: 1.0) */
+  SUN_LIGHT_INTENSITY_MULTIPLIER = 'sunLightIntensityMultiplier',
+
+  /** Ambient light intensity multiplier: number (0-10, default: 0.5) */
+  AMBIENT_LIGHT_INTENSITY_MULTIPLIER = 'ambientLightIntensityMultiplier',
+
   // Weitere Stacks hier hinzufügen
 }
 

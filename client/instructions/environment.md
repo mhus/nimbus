@@ -749,7 +749,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 doSetStackModifier('sunPosition','default',270, 0.1, 50);
 ```
 
-[ ] Erstelle AnimationStack im StackModifierCreator:
+[?] Erstelle AnimationStack im StackModifierCreator:
 - sunLigthIntensityMultiplier in SunService
 - ambientLightIntensityMultiplier in SunService
 
@@ -763,5 +763,5 @@ Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript g
   - script name: season_winter, season_spring, season_summer, season_autumn
 
 [ ] Wenn im ScawlService ein neues script gestartet wird, sollen immer die folgenden standart parameter gesetzt sein:
-- wordlSeason
-- worldDaytime
+- wordlSeason - aus WorldInfo
+- worldDaytime - aus EnvironmentService
