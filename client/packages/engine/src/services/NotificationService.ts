@@ -502,6 +502,9 @@ export class NotificationService {
   /** Center text display */
   private centerTextElement: HTMLElement | null = null;
 
+  /** Splash screen display */
+  private splashScreenElement: HTMLElement | null = null;
+
   /**
    * Get current shortcut mode
    *
@@ -1310,6 +1313,12 @@ export class NotificationService {
         this.centerTextElement = null;
       }
 
+      // Remove splash screen element
+      if (this.splashScreenElement) {
+        this.splashScreenElement.remove();
+        this.splashScreenElement = null;
+      }
+
       logger.debug('NotificationService disposed');
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.dispose');
@@ -1456,6 +1465,78 @@ export class NotificationService {
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.clearCenterText');
+    }
+  }
+
+  /**
+   * Show splash screen
+   *
+   * Displays a fullscreen image as splash screen.
+   * Call without assetPath (empty string) to remove the splash screen.
+   *
+   * @param assetPath Path to image asset (empty string to remove splash screen)
+   */
+  showSplashScreen(assetPath: string = ''): void {
+    try {
+      // Remove existing splash screen if present
+      if (this.splashScreenElement) {
+        this.splashScreenElement.remove();
+        this.splashScreenElement = null;
+        logger.debug('Splash screen removed');
+      }
+
+      // If empty path, just remove (already done above)
+      if (!assetPath || assetPath.trim() === '') {
+        return;
+      }
+
+      // Get full asset URL via NetworkService
+      const networkService = this.appContext.services.network;
+      if (!networkService) {
+        logger.warn('NetworkService not available for showSplashScreen');
+        return;
+      }
+
+      const imageUrl = networkService.getAssetUrl(assetPath);
+
+      logger.info('Showing splash screen', { assetPath, imageUrl });
+
+      // Create splash screen container
+      this.splashScreenElement = document.createElement('div');
+      this.splashScreenElement.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+        pointer-events: auto;
+      `;
+
+      // Create image element
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      `;
+      img.onerror = () => {
+        logger.warn('Failed to load splash screen image', { assetPath, imageUrl });
+      };
+
+      this.splashScreenElement.appendChild(img);
+      document.body.appendChild(this.splashScreenElement);
+
+      logger.info('Splash screen displayed', { assetPath });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.showSplashScreen', {
+        assetPath,
+      });
     }
   }
 }

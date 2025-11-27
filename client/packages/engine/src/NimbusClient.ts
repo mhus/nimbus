@@ -76,6 +76,7 @@ import { UnderwaterCommand } from './commands/UnderwaterCommand';
 import { FogCommand } from './commands/FogCommand';
 import { FlashImageCommand } from './commands/FlashImageCommand';
 import { CenterTextCommand } from './commands/CenterTextCommand';
+import { SplashScreenCommand } from './commands/SplashScreenCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
 import { CreateEnvironmentScriptCommand } from './commands/CreateEnvironmentScriptCommand';
 import { DeleteEnvironmentScriptCommand } from './commands/DeleteEnvironmentScriptCommand';
@@ -298,6 +299,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SetSpeechVolumeCommand(appContext));
     commandService.registerHandler(new RegisterFlashSoundsCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
+    commandService.registerHandler(new SplashScreenCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));
     commandService.registerHandler(new StatusEffectCommand(appContext));

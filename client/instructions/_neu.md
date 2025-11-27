@@ -26,7 +26,7 @@
 
 - Reconnect nach disconnect im client
 
-- Durchfallen durch welt beim start - safari
+[x] Durchfallen durch welt beim start - safari
 
 - Player daten in echt verwalten !!!
 
