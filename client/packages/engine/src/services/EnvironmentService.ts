@@ -113,6 +113,26 @@ interface WorldTimeState {
 }
 
 /**
+ * Celestial bodies configuration
+ */
+export interface CelestialBodiesConfig {
+  /** Enable automatic sun/moon position updates */
+  enabled: boolean;
+  /** Update interval in seconds */
+  updateIntervalSeconds: number;
+  /** Number of active moons (0-3) */
+  activeMoons: number;
+  /** Full rotation time for sun in @Hours */
+  sunRotationHours: number;
+  /** Full rotation time for moon 0 in @Hours */
+  moon0RotationHours: number;
+  /** Full rotation time for moon 1 in @Hours */
+  moon1RotationHours: number;
+  /** Full rotation time for moon 2 in @Hours */
+  moon2RotationHours: number;
+}
+
+/**
  * EnvironmentService - Manages environment rendering
  *
  * Features:
@@ -144,6 +164,11 @@ export class EnvironmentService {
   private worldTimeState: WorldTimeState;
   private currentDaySection: DaySection | null = null;
 
+  // Celestial bodies automatic update
+  private celestialBodiesConfig: CelestialBodiesConfig;
+  private celestialUpdateTimer: number = 0;
+  private lastCelestialUpdateTime: number = 0;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -160,6 +185,7 @@ export class EnvironmentService {
     // Initialize World Time configuration with defaults
     this.worldTimeConfig = this.loadWorldTimeConfigFromWorldInfo();
     this.daySectionConfig = this.loadDaySectionConfigFromWorldInfo();
+    this.celestialBodiesConfig = this.loadCelestialBodiesConfigFromWorldInfo();
     this.worldTimeState = {
       running: false,
       startWorldMinute: 0,
@@ -174,6 +200,7 @@ export class EnvironmentService {
       windParameters: this.windParameters,
       worldTimeConfig: this.worldTimeConfig,
       daySectionConfig: this.daySectionConfig,
+      celestialBodiesConfig: this.celestialBodiesConfig,
     });
   }
 
@@ -759,6 +786,23 @@ export class EnvironmentService {
   }
 
   /**
+   * Load Celestial Bodies configuration from WorldInfo
+   */
+  private loadCelestialBodiesConfigFromWorldInfo(): CelestialBodiesConfig {
+    const celestialBodies = this.appContext.worldInfo?.settings?.worldTime?.celestialBodies;
+
+    return {
+      enabled: celestialBodies?.enabled ?? false,
+      updateIntervalSeconds: celestialBodies?.updateIntervalSeconds ?? 10,
+      activeMoons: celestialBodies?.activeMoons ?? 0,
+      sunRotationHours: celestialBodies?.sunRotationHours ?? 24,
+      moon0RotationHours: celestialBodies?.moon0RotationHours ?? 672, // 28 days
+      moon1RotationHours: celestialBodies?.moon1RotationHours ?? 504, // 21 days
+      moon2RotationHours: celestialBodies?.moon2RotationHours ?? 336, // 14 days
+    };
+  }
+
+  /**
    * Set World Time configuration
    * Command: worldTimeConfig <minuteScaling> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>
    */
@@ -955,6 +999,129 @@ export class EnvironmentService {
       // Start corresponding environment script
       const scriptName = `daytime_change_${newDaySection}`;
       this.startEnvironmentScript(scriptName);
+    }
+
+    // Update celestial bodies positions if enabled
+    this.updateCelestialBodies(deltaTime);
+  }
+
+  /**
+   * Update celestial bodies positions (sun and moons)
+   * Called every frame but only updates at configured intervals
+   *
+   * @param deltaTime Time since last frame in seconds
+   */
+  private updateCelestialBodies(deltaTime: number): void {
+    if (!this.celestialBodiesConfig.enabled) {
+      return;
+    }
+
+    // Accumulate time
+    this.celestialUpdateTimer += deltaTime;
+
+    // Check if update interval has passed
+    if (this.celestialUpdateTimer < this.celestialBodiesConfig.updateIntervalSeconds) {
+      return;
+    }
+
+    // Reset timer
+    this.celestialUpdateTimer = 0;
+
+    // Get modifier service
+    const modifierService = this.appContext.services.modifier;
+    if (!modifierService) {
+      return;
+    }
+
+    // Get current world time
+    const currentWorldMinute = this.getWorldTimeCurrent();
+    const currentWorldHour = currentWorldMinute / this.worldTimeConfig.minutesPerHour;
+
+    // Update sun position
+    this.updateSunPosition(modifierService, currentWorldHour);
+
+    // Update moon positions
+    for (let i = 0; i < this.celestialBodiesConfig.activeMoons && i < 3; i++) {
+      this.updateMoonPosition(modifierService, i, currentWorldHour);
+    }
+
+    logger.debug('Celestial bodies updated', {
+      worldTime: this.getWorldTimeCurrentAsString(),
+      worldHour: currentWorldHour.toFixed(2),
+    });
+  }
+
+  /**
+   * Update sun position based on world time
+   */
+  private updateSunPosition(modifierService: any, currentWorldHour: number): void {
+    const sunRotationHours = this.celestialBodiesConfig.sunRotationHours;
+
+    // Calculate sun position (0-360 degrees)
+    // At hour 0, sun is at 0° (North)
+    // Sun rotates 360° over sunRotationHours
+    const sunAngle = (currentWorldHour / sunRotationHours) * 360;
+    const sunAngleNormalized = sunAngle % 360;
+
+    // Get sun position stack
+    const sunPositionStack = modifierService.getModifierStack('sunPosition');
+    if (sunPositionStack) {
+      // Get or create environment modifier (priority 40, lower than manual scripts)
+      let sunModifier = sunPositionStack.getModifierByOwner('environment');
+      if (!sunModifier) {
+        sunModifier = sunPositionStack.addModifier(sunAngleNormalized, 40, 'environment');
+      } else {
+        sunModifier.setValue(sunAngleNormalized);
+      }
+      sunModifier.setEnabled(true);
+    }
+  }
+
+  /**
+   * Update moon position based on world time
+   */
+  private updateMoonPosition(
+    modifierService: any,
+    moonIndex: number,
+    currentWorldHour: number
+  ): void {
+    let moonRotationHours: number;
+    let stackName: string;
+
+    // Select rotation hours and stack name based on moon index
+    switch (moonIndex) {
+      case 0:
+        moonRotationHours = this.celestialBodiesConfig.moon0RotationHours;
+        stackName = 'moon0Position';
+        break;
+      case 1:
+        moonRotationHours = this.celestialBodiesConfig.moon1RotationHours;
+        stackName = 'moon1Position';
+        break;
+      case 2:
+        moonRotationHours = this.celestialBodiesConfig.moon2RotationHours;
+        stackName = 'moon2Position';
+        break;
+      default:
+        return;
+    }
+
+    // Calculate moon position (0-360 degrees)
+    // Moon rotates 360° over moonRotationHours
+    const moonAngle = (currentWorldHour / moonRotationHours) * 360;
+    const moonAngleNormalized = moonAngle % 360;
+
+    // Get moon position stack
+    const moonPositionStack = modifierService.getModifierStack(stackName);
+    if (moonPositionStack) {
+      // Get or create environment modifier (priority 40, lower than manual scripts)
+      let moonModifier = moonPositionStack.getModifierByOwner('environment');
+      if (!moonModifier) {
+        moonModifier = moonPositionStack.addModifier(moonAngleNormalized, 40, 'environment');
+      } else {
+        moonModifier.setValue(moonAngleNormalized);
+      }
+      moonModifier.setEnabled(true);
     }
   }
 

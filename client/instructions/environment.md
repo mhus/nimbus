@@ -640,6 +640,71 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - berechnet wie der stand der Monde sein sollte (config aus WordlInfo, oder 0 Monde default)
 - setzt die Position der Sonne und Monde entsprechend
 - Zum setzen der sonnen position, benutze den StackModifier, erstelle auch fuer die position der drei modne jeweils einen animated StackModifier
+```text
+ 1. StackModifier für Himmelskörper
+
+  - Sonne: StackName.SUN_POSITION (bereits vorhanden)
+  - Mond 0: StackName.MOON_0_POSITION (neu)
+  - Mond 1: StackName.MOON_1_POSITION (neu)
+  - Mond 2: StackName.MOON_2_POSITION (neu)
+
+  2. Animation Stacks in StackModifierCreator (packages/engine/src/services/StackModifierCreator.ts:174-214)
+
+  - Alle 3 Monde haben jetzt animierte StackModifier
+  - Standardpositionen: 0°, 120°, 240° (gleichmäßig verteilt)
+  - Linear Animation mit 1° pro Step, 100ms Wartezeit
+
+  3. Erweiterte WorldInfo-Konfiguration (packages/shared/src/types/World.ts:203-219)
+
+  celestialBodies?: {
+    enabled?: boolean;                    // Aktivieren (default: false)
+    updateIntervalSeconds?: number;       // Update-Intervall (default: 10s)
+    activeMoons?: number;                 // Anzahl Monde 0-3 (default: 0)
+    sunRotationHours?: number;            // Sonnen-Rotation in @Hours (default: 24)
+    moon0RotationHours?: number;          // Mond 0 Rotation (default: 672 = 28 Tage)
+    moon1RotationHours?: number;          // Mond 1 Rotation (default: 504 = 21 Tage)
+    moon2RotationHours?: number;          // Mond 2 Rotation (default: 336 = 14 Tage)
+  }
+
+  4. EnvironmentService Updates (packages/engine/src/services/EnvironmentService.ts)
+
+  - Timer-System: Akkumuliert deltaTime und updated in konfigurierbaren Intervallen
+  - Positions-Berechnung:
+    - Position = (currentWorldHour / rotationHours) * 360
+    - Beispiel: Bei 24h Rotation und 12:00 Uhr → 180° (Süden)
+  - StackModifier-Integration:
+    - Erstellt Modifier mit Priority 40 (niedriger als manuelle Scripts = 50+)
+    - Owner: 'environment' für eindeutige Identifikation
+
+  5. Funktionsweise:
+
+  1. Weltzeit läuft (worldTimeStart)
+  2. Wenn celestialBodies.enabled = true:
+     - Jedes Frame: Timer akkumuliert deltaTime
+     - Alle X Sekunden (updateIntervalSeconds):
+       → Berechne aktuelle @Hour aus Weltzeit
+       → Berechne Sonnenposition basierend auf sunRotationHours
+       → Berechne Mondpositionen für activeMoons (0-3)
+       → Setze Positionen über StackModifier (animiert!)
+
+  Verwendungsbeispiel in WorldInfo:
+
+  {
+    "settings": {
+      "worldTime": {
+        "minuteScaling": 10,
+        "celestialBodies": {
+          "enabled": true,
+          "updateIntervalSeconds": 5,
+          "activeMoons": 2,
+          "sunRotationHours": 24,
+          "moon0RotationHours": 672,
+          "moon1RotationHours": 504
+        }
+      }
+    }
+  }
+```
 
 [ ] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world world.json
 
