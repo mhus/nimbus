@@ -434,11 +434,11 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - listEnvironmentScripts: Alle registrierten Environment Scripts auflisten
 ```
 
-[?] Das commando clearClouds soll einen boolean parameter haben
+[x] Das commando clearClouds soll einen boolean parameter haben
 - false: loescht nur wolken mit der geschwindigkeit 0 (statische wolken) (default)
 - true: loescht alle wolken
 
-[ ] Erstelle in CloudsService eine Methode die das erstellen von clouds ueber einen Zeitraum automaisiert
+[?] Erstelle in CloudsService eine Methode die das erstellen von clouds ueber einen Zeitraum automaisiert
 - startCloudsAnimation(jobName : string,emitCountPerMinute: number, emitPropability: number, area: Area, speed:number, textures: string[])
 - Die methode startet eine animation die ueber den angegebenen Zeitraum immer wieder neue wolken erstellt
 - Alle parameter sollen mit einem leichten random arbeiten. emit emitiert mit emitpropability (0-1) eine neue wolke
@@ -449,6 +449,40 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - Erstelle auch ein commando um die animation zu starten, texturen werden als kommaseparierte liste uebergeben
 - Erstelle auch ein stopCloudsAnimation(jobName) um die animation zu stoppen, wird der name nicht angegeben werden alle animationen gestoppt
 - Erstelle auch hierfuer ein commando
+```text
+ 1. CloudsService erweitert (packages/engine/src/services/CloudsService.ts)
+
+  Neue Interfaces:
+  - Area: Definition für die zufällige Cloud-Positionierung mit min/max Werten für Position, Größe und Richtung
+  - CloudAnimationJob: Interne Struktur für Animation-Jobs
+
+  Neue Methoden:
+  - startCloudsAnimation(): Startet automatisierte Cloud-Erstellung
+    - Parameter: jobName, emitCountPerMinute, emitProbability, area, speed, textures[]
+    - Erstellt Wolken mit randomisierten Parametern innerhalb der Area
+    - Speed variiert mit der Höhe um bis zu 1% (wie gewünscht)
+    - Verwendet UUIDs für Cloud-IDs
+  - stopCloudsAnimation(): Stoppt Animation-Jobs
+    - Optional: jobName (stoppt spezifischen Job)
+    - Ohne Parameter: stoppt alle Jobs
+  - getActiveAnimationJobs(): Liste aktiver Jobs
+
+  2. Commands erstellt
+
+  CloudsAnimationStartCommand (packages/engine/src/commands/clouds/CloudsAnimationStartCommand.ts)
+  Usage: cloudsAnimationStart <jobName> <emitCountPerMinute> <emitProbability> <minX> <maxX> <minZ> <maxZ> <minY> <maxY> <minWidth> <maxWidth> <minHeight> <maxHeight> <minDirection> <maxDirection> <speed>
+  <texture1,texture2,...>
+
+  Beispiel:
+  cloudsAnimationStart myJob 10 0.5 -100 100 -100 100 80 120 20 40 10 20 0 360 2.0 textures/cloud1.png,textures/cloud2.png
+
+  CloudsAnimationStopCommand (packages/engine/src/commands/clouds/CloudsAnimationStopCommand.ts)
+  Usage: cloudsAnimationStop [jobName]
+
+  Beispiele:
+  cloudsAnimationStop myJob    (stoppt spezifischen Job)
+  cloudsAnimationStop           (stoppt alle Jobs)
+```
 
 [ ] Erstelle in PrecipitationService - blitz sounds 
 - Einem methode mit der im laufenden Betrieb die Intensitaet des Niederschlags angepasst werden kann ohne das der Niederschlag komplett neu gestartet werden muss (nur wenn auch lauft)

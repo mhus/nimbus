@@ -13,3 +13,5 @@ export { CloudDirectionCommand } from './CloudDirectionCommand';
 export { CloudPositionCommand } from './CloudPositionCommand';
 export { CloudSizeCommand } from './CloudSizeCommand';
 export { CloudListCommand } from './CloudListCommand';
+export { CloudsAnimationStartCommand } from './CloudsAnimationStartCommand';
+export { CloudsAnimationStopCommand } from './CloudsAnimationStopCommand';

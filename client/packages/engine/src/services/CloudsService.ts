@@ -35,6 +35,38 @@ export interface CloudConfig {
 }
 
 /**
+ * Area definition for cloud spawning
+ */
+export interface Area {
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  minY: number;
+  maxY: number;
+  minWidth: number;
+  maxWidth: number;
+  minHeight: number;
+  maxHeight: number;
+  minDirection: number;
+  maxDirection: number;
+}
+
+/**
+ * Cloud animation job
+ */
+interface CloudAnimationJob {
+  jobName: string;
+  emitCountPerMinute: number;
+  emitProbability: number;
+  area: Area;
+  speed: number;
+  textures: string[];
+  intervalId: number;
+  lastEmitTime: number;
+}
+
+/**
  * Internal cloud instance
  */
 interface CloudInstance {
@@ -91,6 +123,9 @@ export class CloudsService {
   // Cloud management
   private cloudsRoot?: TransformNode;
   private clouds: Map<string, CloudInstance> = new Map();
+
+  // Animation jobs
+  private animationJobs: Map<string, CloudAnimationJob> = new Map();
 
   // Fade configuration
   private readonly fadeStartDistance: number = 200;  // Start fading
@@ -376,6 +411,119 @@ export class CloudsService {
   }
 
   /**
+   * Start automated cloud animation that creates clouds over time
+   * @param jobName Unique name for this animation job
+   * @param emitCountPerMinute Number of emit attempts per minute
+   * @param emitProbability Probability (0-1) that a cloud is actually created on each emit attempt
+   * @param area Area definition for random cloud positioning
+   * @param speed Base speed for clouds (slightly randomized)
+   * @param textures Array of texture paths to randomly choose from
+   */
+  public startCloudsAnimation(
+    jobName: string,
+    emitCountPerMinute: number,
+    emitProbability: number,
+    area: Area,
+    speed: number,
+    textures: string[]
+  ): void {
+    // Validate parameters
+    if (!jobName || jobName.trim() === '') {
+      throw new Error('Job name cannot be empty');
+    }
+
+    if (this.animationJobs.has(jobName)) {
+      throw new Error(`Animation job '${jobName}' already exists`);
+    }
+
+    if (emitCountPerMinute <= 0) {
+      throw new Error('Emit count per minute must be positive');
+    }
+
+    if (emitProbability < 0 || emitProbability > 1) {
+      throw new Error('Emit probability must be between 0 and 1');
+    }
+
+    if (!textures || textures.length === 0) {
+      throw new Error('At least one texture must be provided');
+    }
+
+    if (speed < 0) {
+      throw new Error('Speed cannot be negative');
+    }
+
+    // Calculate interval in milliseconds
+    const intervalMs = (60 * 1000) / emitCountPerMinute;
+
+    // Create animation job
+    const job: CloudAnimationJob = {
+      jobName,
+      emitCountPerMinute,
+      emitProbability,
+      area,
+      speed,
+      textures,
+      intervalId: 0,
+      lastEmitTime: Date.now(),
+    };
+
+    // Start interval
+    const intervalId = window.setInterval(() => {
+      this.emitCloudFromJob(job);
+    }, intervalMs);
+
+    job.intervalId = intervalId;
+    this.animationJobs.set(jobName, job);
+
+    logger.info('Cloud animation started', {
+      jobName,
+      emitCountPerMinute,
+      emitProbability,
+      speed,
+      textureCount: textures.length,
+      intervalMs,
+    });
+  }
+
+  /**
+   * Stop cloud animation job
+   * @param jobName Name of the job to stop, or undefined to stop all jobs
+   */
+  public stopCloudsAnimation(jobName?: string): void {
+    if (jobName) {
+      // Stop specific job
+      const job = this.animationJobs.get(jobName);
+      if (!job) {
+        logger.warn('Animation job not found', { jobName });
+        return;
+      }
+
+      window.clearInterval(job.intervalId);
+      this.animationJobs.delete(jobName);
+      logger.info('Cloud animation stopped', { jobName });
+    } else {
+      // Stop all jobs
+      const jobNames = Array.from(this.animationJobs.keys());
+      for (const name of jobNames) {
+        const job = this.animationJobs.get(name);
+        if (job) {
+          window.clearInterval(job.intervalId);
+        }
+      }
+      this.animationJobs.clear();
+      logger.info('All cloud animations stopped', { count: jobNames.length });
+    }
+  }
+
+  /**
+   * Get list of active animation jobs
+   * @returns Array of job names
+   */
+  public getActiveAnimationJobs(): string[] {
+    return Array.from(this.animationJobs.keys());
+  }
+
+  /**
    * Remove all clouds from the scene
    * @deprecated Use clearClouds(true) instead
    */
@@ -436,6 +584,10 @@ export class CloudsService {
    * Dispose clouds service
    */
   public dispose(): void {
+    // Stop all animations
+    this.stopCloudsAnimation();
+
+    // Dispose all clouds
     for (const cloud of this.clouds.values()) {
       this.disposeCloud(cloud);
     }
@@ -608,5 +760,75 @@ export class CloudsService {
     } catch (error) {
       logger.warn('Failed to dispose cloud', { id: cloud.id, error });
     }
+  }
+
+  /**
+   * Emit a cloud from an animation job
+   */
+  private emitCloudFromJob(job: CloudAnimationJob): void {
+    // Check probability
+    if (Math.random() > job.emitProbability) {
+      return;
+    }
+
+    try {
+      // Generate random values within area constraints
+      const x = this.randomInRange(job.area.minX, job.area.maxX);
+      const z = this.randomInRange(job.area.minZ, job.area.maxZ);
+      const y = this.randomInRange(job.area.minY, job.area.maxY);
+      const width = this.randomInRange(job.area.minWidth, job.area.maxWidth);
+      const height = this.randomInRange(job.area.minHeight, job.area.maxHeight);
+      const direction = this.randomInRange(job.area.minDirection, job.area.maxDirection);
+
+      // Speed varies slightly with height (up to 1% faster)
+      const heightFactor = (y - job.area.minY) / (job.area.maxY - job.area.minY);
+      const speedVariation = 1.0 + (heightFactor * 0.01);
+      const speed = job.speed * speedVariation;
+
+      // Random texture
+      const texture = job.textures[Math.floor(Math.random() * job.textures.length)];
+
+      // Generate UUID for cloud ID
+      const id = this.generateUUID();
+
+      // Create cloud configuration
+      const config: CloudConfig = {
+        id,
+        level: 5, // Default level
+        startX: x,
+        startZ: z,
+        y,
+        width,
+        height,
+        texture,
+        speed,
+        direction,
+      };
+
+      // Add cloud (async, but we don't wait)
+      this.addCloud(config).catch((error) => {
+        logger.warn('Failed to emit cloud from animation', { jobName: job.jobName, error });
+      });
+    } catch (error) {
+      logger.error('Error emitting cloud', { jobName: job.jobName, error });
+    }
+  }
+
+  /**
+   * Generate random value in range
+   */
+  private randomInRange(min: number, max: number): number {
+    return min + Math.random() * (max - min);
+  }
+
+  /**
+   * Generate a simple UUID
+   */
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
   }
 }

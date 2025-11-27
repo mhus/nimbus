@@ -144,6 +144,8 @@ import {
   CloudPositionCommand,
   CloudSizeCommand,
   CloudListCommand,
+  CloudsAnimationStartCommand,
+  CloudsAnimationStopCommand,
 } from './commands/clouds';
 import {
   HorizonGradientEnableCommand,
@@ -364,6 +366,8 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new CloudPositionCommand(appContext));
     commandService.registerHandler(new CloudSizeCommand(appContext));
     commandService.registerHandler(new CloudListCommand(appContext));
+    commandService.registerHandler(new CloudsAnimationStartCommand(appContext));
+    commandService.registerHandler(new CloudsAnimationStopCommand(appContext));
 
     // Register horizon gradient commands
     commandService.registerHandler(new HorizonGradientEnableCommand(appContext));
