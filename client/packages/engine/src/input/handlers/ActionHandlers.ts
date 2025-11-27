@@ -17,6 +17,10 @@ export class JumpHandler extends InputHandler {
   protected onActivate(value: number): void {
     // Jump is a discrete action, execute immediately
     this.playerService.jump();
+
+    // Immediately deactivate after jumping (discrete action, not continuous)
+    // This allows the handler to be activated again on next Space press
+    this.deactivate();
   }
 
   protected onDeactivate(): void {

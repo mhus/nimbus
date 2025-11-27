@@ -243,12 +243,21 @@ export class WebInputController implements InputController {
     // Handle Space key dynamically based on movement mode
     if (event.key === ' ') {
       const mode = this.playerService.getMovementMode();
+      logger.info('Space key pressed, movement mode:', { mode });
       // Only WALK and SPRINT modes: Jump
       if (mode === 'walk' || mode === 'sprint') {
         if (this.jumpHandler && !this.jumpHandler.isActive()) {
+          logger.info('Activating jump handler');
           this.jumpHandler.activate();
           event.preventDefault();
+        } else {
+          logger.info('Jump handler not available or already active', {
+            hasHandler: !!this.jumpHandler,
+            isActive: this.jumpHandler?.isActive()
+          });
         }
+      } else {
+        logger.info('Space key ignored - wrong movement mode', { mode });
       }
       return;
     }
