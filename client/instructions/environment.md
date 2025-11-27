@@ -476,6 +476,9 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   Beispiel:
   cloudsAnimationStart myJob 10 0.5 -100 100 -100 100 80 120 20 40 10 20 0 360 2.0 textures/cloud1.png,textures/cloud2.png
 
+  doCloudsAnimationStart('myJob', 10, 0.5, -100, 100, -100, 100, 80, 120, 20, 40, 10, 20, 0, 360, 2.0, 'textures/clouds/cloud1.png,textures/clouds/cloud2.png');
+
+
   CloudsAnimationStopCommand (packages/engine/src/commands/clouds/CloudsAnimationStopCommand.ts)
   Usage: cloudsAnimationStop [jobName]
 
