@@ -353,7 +353,7 @@ Systeme:
 - Wetter (regen, schnee, wind, wolken) (weather)
 - Jahreszeiten (season) - Wird vom Server gesteuert
 
-[ ] Um aenderungen an Parametern des Wetters ueber einen Zeitraum zu animieren, brauchen wir eine einfache
+[?] Um aenderungen an Parametern des Wetters ueber einen Zeitraum zu animieren, brauchen wir eine einfache
 Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier an.
 - Erweitere ModifierStack zu AnimationStack der wie andere Stacks in StackService verwaltet wird
 - Wenn sich in AnimationStack der soll wert aendert, wird der ist Wert nicht sofort gesetzt, sondern ein weiteres lambda
@@ -429,7 +429,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   'daytime_change_day', 'daytime_change_evening', 'daytime_change_night', 'daytime_change_morning'
 
 
-[ ] Erstelle AnimationStack im StackModifierCreator:
+[?] Erstelle AnimationStack im StackModifierCreator:
 - ambienteLightIntensity in EnvironmentService
 - sunPosition in SunService
 - sunElevation in SunService

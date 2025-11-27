@@ -8,6 +8,9 @@
 
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 
+// Export animation helpers for convenience
+export * from './AnimationHelpers';
+
 const logger = getLogger('ModifierService');
 
 /** Maximum priority value for default modifiers */
@@ -318,6 +321,191 @@ export class ModifierStack<T> {
 }
 
 /**
+ * Animation step function - returns the next value and whether to continue
+ * @param current The current value
+ * @param target The target value
+ * @returns [nextValue, shouldContinue]
+ */
+export type AnimationStepFunction<T> = (current: T, target: T) => [T, boolean];
+
+/**
+ * AnimationModifier - A modifier that animates value changes over time
+ * @template T The type of the value
+ */
+export class AnimationModifier<T> extends Modifier<T> {
+  private _targetValue: T;
+  private _animationTimeout: NodeJS.Timeout | null = null;
+  private readonly _stepFunction: AnimationStepFunction<T>;
+  private _waitTime: number;
+
+  /**
+   * Create a new animation modifier
+   * @param value The initial value
+   * @param prio The priority (higher values win)
+   * @param stack The owning stack
+   * @param stepFunction Function that calculates the next animation step
+   * @param waitTime Time in milliseconds between animation steps (default: 100ms)
+   */
+  constructor(
+    value: T,
+    prio: number,
+    stack: AnimationStack<T>,
+    stepFunction: AnimationStepFunction<T>,
+    waitTime: number = 100
+  ) {
+    super(value, prio, stack);
+    this._targetValue = value;
+    this._stepFunction = stepFunction;
+    this._waitTime = waitTime;
+  }
+
+  /**
+   * Get the target value
+   */
+  get targetValue(): T {
+    return this._targetValue;
+  }
+
+  /**
+   * Set a new target value and start animation
+   * @param value The new target value
+   * @param waitTime Optional new wait time in milliseconds
+   */
+  override setValue(value: T, waitTime?: number): void {
+    this._targetValue = value;
+    if (waitTime !== undefined) {
+      this._waitTime = waitTime;
+    }
+    this._startAnimation();
+  }
+
+  /**
+   * Get the wait time
+   */
+  get waitTime(): number {
+    return this._waitTime;
+  }
+
+  /**
+   * Set the wait time
+   * @param waitTime The new wait time in milliseconds
+   */
+  setWaitTime(waitTime: number): void {
+    this._waitTime = waitTime;
+  }
+
+  /**
+   * Start the animation loop
+   */
+  private _startAnimation(): void {
+    // Clear any existing animation
+    if (this._animationTimeout) {
+      clearTimeout(this._animationTimeout);
+      this._animationTimeout = null;
+    }
+
+    // Perform animation step
+    this._animationStep();
+  }
+
+  /**
+   * Perform one animation step
+   */
+  private _animationStep(): void {
+    const [nextValue, shouldContinue] = this._stepFunction(this.value, this._targetValue);
+
+    // Update the current value using the parent class method
+    super.setValue(nextValue);
+
+    // Continue animation if needed
+    if (shouldContinue && nextValue !== this._targetValue) {
+      this._animationTimeout = setTimeout(() => {
+        this._animationStep();
+      }, this._waitTime);
+    }
+  }
+
+  /**
+   * Stop the animation
+   */
+  stopAnimation(): void {
+    if (this._animationTimeout) {
+      clearTimeout(this._animationTimeout);
+      this._animationTimeout = null;
+    }
+  }
+
+  /**
+   * Close this modifier (remove from stack and stop animation)
+   */
+  override close(): void {
+    this.stopAnimation();
+    super.close();
+  }
+}
+
+/**
+ * AnimationStack - Manages a prioritized list of animation modifiers
+ * @template T The type of the values
+ */
+export class AnimationStack<T> extends ModifierStack<T> {
+  private readonly _stepFunction: AnimationStepFunction<T>;
+  private readonly _defaultWaitTime: number;
+
+  /**
+   * Create a new animation stack
+   * @param stackName The name of this stack
+   * @param defaultValue The default value (fallback)
+   * @param action The action to execute when the value changes
+   * @param service The ModifierService that owns this stack
+   * @param stepFunction Function that calculates the next animation step
+   * @param defaultWaitTime Default wait time in milliseconds (default: 100ms)
+   */
+  constructor(
+    stackName: string,
+    defaultValue: T,
+    action: (value: T) => void,
+    service: ModifierService,
+    stepFunction: AnimationStepFunction<T>,
+    defaultWaitTime: number = 100
+  ) {
+    super(stackName, defaultValue, action, service);
+    this._stepFunction = stepFunction;
+    this._defaultWaitTime = defaultWaitTime;
+  }
+
+  /**
+   * Add an animation modifier to the stack
+   * @param value The initial value
+   * @param prio The priority
+   * @param waitTime Optional wait time in milliseconds (uses default if not specified)
+   * @returns The created animation modifier
+   */
+  addAnimationModifier(value: T, prio: number, waitTime?: number): AnimationModifier<T> {
+    const modifier = new AnimationModifier(
+      value,
+      prio,
+      this,
+      this._stepFunction,
+      waitTime ?? this._defaultWaitTime
+    );
+    (this as any)._modifiers.push(modifier);
+    this.update(false);
+    return modifier;
+  }
+
+  /**
+   * Add a modifier to the stack (overridden to create AnimationModifier)
+   * @param value The value
+   * @param prio The priority
+   * @returns The created modifier
+   */
+  override addModifier(value: T, prio: number): AnimationModifier<T> {
+    return this.addAnimationModifier(value, prio);
+  }
+}
+
+/**
  * Modifier configuration for creating a modifier
  */
 export interface ModifierConfig<T> {
@@ -325,6 +513,8 @@ export interface ModifierConfig<T> {
   value: T;
   /** The priority (lower values = higher priority) */
   prio: number;
+  /** Optional wait time for AnimationStack (in milliseconds) */
+  waitTime?: number;
 }
 
 /**
@@ -372,6 +562,56 @@ export class ModifierService {
   }
 
   /**
+   * Create a new animation stack
+   * @param stackName The name of the stack
+   * @param defaultValue The default value
+   * @param action The action to execute when the value changes
+   * @param stepFunction Function that calculates the next animation step
+   * @param defaultWaitTime Default wait time in milliseconds (default: 100ms)
+   * @returns The created animation stack
+   */
+  createAnimationStack<T>(
+    stackName: string,
+    defaultValue: T,
+    action: (value: T) => void,
+    stepFunction: AnimationStepFunction<T>,
+    defaultWaitTime: number = 100
+  ): AnimationStack<T> {
+    try {
+      if (this.stackModifiers.has(stackName)) {
+        throw new Error(`AnimationStack '${stackName}' already exists`);
+      }
+
+      const stack = new AnimationStack(
+        stackName,
+        defaultValue,
+        action,
+        this,
+        stepFunction,
+        defaultWaitTime
+      );
+      this.stackModifiers.set(stackName, stack);
+
+      // Execute action immediately with default value
+      action(defaultValue);
+
+      logger.info('AnimationStack created', {
+        stackName,
+        defaultValue,
+        defaultWaitTime,
+      });
+
+      return stack;
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(
+        error,
+        'ModifierService.createAnimationStack',
+        { stackName, defaultValue, defaultWaitTime }
+      );
+    }
+  }
+
+  /**
    * Get or create a modifier stack
    * @param stackName The name of the stack
    * @param defaultValue The default value (only used if stack doesn't exist)
@@ -397,11 +637,16 @@ export class ModifierService {
    * @param config The modifier configuration
    * @returns The created modifier
    */
-  addModifier<T>(stackName: string, config: ModifierConfig<T>): Modifier<T> {
+  addModifier<T>(stackName: string, config: ModifierConfig<T>): Modifier<T> | AnimationModifier<T> {
     try {
       const stack = this.stackModifiers.get(stackName);
       if (!stack) {
         throw new Error(`ModifierStack '${stackName}' does not exist`);
+      }
+
+      // Check if it's an AnimationStack and use waitTime if provided
+      if (stack instanceof AnimationStack && config.waitTime !== undefined) {
+        return stack.addAnimationModifier(config.value, config.prio, config.waitTime);
       }
 
       return stack.addModifier(config.value, config.prio);
