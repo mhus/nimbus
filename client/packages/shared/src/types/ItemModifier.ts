@@ -116,4 +116,12 @@ export interface ItemModifier {
    * This field only affects client-side visual effects and pose animations.
    */
   actionTargeting?: ActionTargetingMode;
+
+  /**
+   * This item is a generic. This means it has an amount on the item instance
+   * and can be stacked in inventory. This kind of items have usually no special
+   * modifiers.
+   */
+  generic?: boolean;
+
 }

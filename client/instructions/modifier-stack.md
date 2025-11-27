@@ -67,12 +67,3 @@ windModifierByEffect.close() // results in windForce = 5 (next lower prio is win
 ```
 
 [x] ModifierService implementieren und in AppContext registrieren.
-
-### Auf ModifierStack umstellen
-
-[ ] egoView
-[ ] wind parameter
-[ ] beleuchtung, sky color, sky background intensity, sky sun intensity ????
-[ ] max speed (fuer alle bewegungen) - default MAX_SPEED=(to be defined)
-
-[ ] Is underwater (boolean) - wird von physics gesetzt (primär)
