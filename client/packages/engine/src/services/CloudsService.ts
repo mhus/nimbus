@@ -48,8 +48,6 @@ export interface Area {
   maxWidth: number;
   minHeight: number;
   maxHeight: number;
-  minDirection: number;
-  maxDirection: number;
 }
 
 /**
@@ -61,6 +59,7 @@ interface CloudAnimationJob {
   emitProbability: number;
   area: Area;
   speed: number;
+  direction: number;
   textures: string[];
   intervalId: number;
   lastEmitTime: number;
@@ -417,6 +416,7 @@ export class CloudsService {
    * @param emitProbability Probability (0-1) that a cloud is actually created on each emit attempt
    * @param area Area definition for random cloud positioning
    * @param speed Base speed for clouds (slightly randomized)
+   * @param direction Wind direction in degrees (0=North, 90=East, 180=South, 270=West) - same for all clouds
    * @param textures Array of texture paths to randomly choose from
    */
   public startCloudsAnimation(
@@ -425,6 +425,7 @@ export class CloudsService {
     emitProbability: number,
     area: Area,
     speed: number,
+    direction: number,
     textures: string[]
   ): void {
     // Validate parameters
@@ -462,6 +463,7 @@ export class CloudsService {
       emitProbability,
       area,
       speed,
+      direction,
       textures,
       intervalId: 0,
       lastEmitTime: Date.now(),
@@ -480,6 +482,7 @@ export class CloudsService {
       emitCountPerMinute,
       emitProbability,
       speed,
+      direction,
       textureCount: textures.length,
       intervalMs,
     });
@@ -778,7 +781,6 @@ export class CloudsService {
       const y = this.randomInRange(job.area.minY, job.area.maxY);
       const width = this.randomInRange(job.area.minWidth, job.area.maxWidth);
       const height = this.randomInRange(job.area.minHeight, job.area.maxHeight);
-      const direction = this.randomInRange(job.area.minDirection, job.area.maxDirection);
 
       // Speed varies slightly with height (up to 1% faster)
       const heightFactor = (y - job.area.minY) / (job.area.maxY - job.area.minY);
@@ -802,7 +804,7 @@ export class CloudsService {
         height,
         texture,
         speed,
-        direction,
+        direction: job.direction, // Use fixed wind direction from job
       };
 
       // Add cloud (async, but we don't wait)

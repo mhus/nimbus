@@ -1,9 +1,9 @@
 /**
  * CloudsAnimationStartCommand - Start automated cloud animation
  *
- * Usage: cloudsAnimationStart <jobName> <emitCountPerMinute> <emitProbability> <minX> <maxX> <minZ> <maxZ> <minY> <maxY> <minWidth> <maxWidth> <minHeight> <maxHeight> <minDirection> <maxDirection> <speed> <texture1,texture2,...>
+ * Usage: cloudsAnimationStart <jobName> <emitCountPerMinute> <emitProbability> <minX> <maxX> <minZ> <maxZ> <minY> <maxY> <minWidth> <maxWidth> <minHeight> <maxHeight> <speed> <direction> <texture1,texture2,...>
  *
- * Example: cloudsAnimationStart myJob 10 0.5 -100 100 -100 100 80 120 20 40 10 20 0 360 2.0 textures/cloud1.png,textures/cloud2.png
+ * Example: cloudsAnimationStart myJob 10 0.5 -100 100 -100 100 80 120 20 40 10 20 2.0 90 textures/cloud1.png,textures/cloud2.png
  */
 
 import { CommandHandler } from '../CommandHandler';
@@ -33,8 +33,8 @@ export class CloudsAnimationStartCommand extends CommandHandler {
       return 'CloudsService not available';
     }
 
-    if (parameters.length < 17) {
-      return 'Usage: cloudsAnimationStart <jobName> <emitCountPerMinute> <emitProbability> <minX> <maxX> <minZ> <maxZ> <minY> <maxY> <minWidth> <maxWidth> <minHeight> <maxHeight> <minDirection> <maxDirection> <speed> <texture1,texture2,...>';
+    if (parameters.length < 16) {
+      return 'Usage: cloudsAnimationStart <jobName> <emitCountPerMinute> <emitProbability> <minX> <maxX> <minZ> <maxZ> <minY> <maxY> <minWidth> <maxWidth> <minHeight> <maxHeight> <speed> <direction> <texture1,texture2,...>';
     }
 
     try {
@@ -54,15 +54,14 @@ export class CloudsAnimationStartCommand extends CommandHandler {
         maxWidth: parseFloat(parameters[10]),
         minHeight: parseFloat(parameters[11]),
         maxHeight: parseFloat(parameters[12]),
-        minDirection: parseFloat(parameters[13]),
-        maxDirection: parseFloat(parameters[14]),
       };
 
-      const speed = parseFloat(parameters[15]);
-      const textures = parameters[16].split(',').map(t => t.trim());
+      const speed = parseFloat(parameters[13]);
+      const direction = parseFloat(parameters[14]);
+      const textures = parameters[15].split(',').map(t => t.trim());
 
       // Validate numeric values
-      if (isNaN(emitCountPerMinute) || isNaN(emitProbability) || isNaN(speed)) {
+      if (isNaN(emitCountPerMinute) || isNaN(emitProbability) || isNaN(speed) || isNaN(direction)) {
         return 'Invalid numeric parameters';
       }
 
@@ -76,11 +75,12 @@ export class CloudsAnimationStartCommand extends CommandHandler {
         emitProbability,
         area,
         speed,
+        direction,
         textures
       );
 
-      logger.info('Cloud animation started via command', { jobName, emitCountPerMinute, emitProbability, speed });
-      return `Cloud animation '${jobName}' started (${emitCountPerMinute} emits/min, ${textures.length} textures)`;
+      logger.info('Cloud animation started via command', { jobName, emitCountPerMinute, emitProbability, speed, direction });
+      return `Cloud animation '${jobName}' started (${emitCountPerMinute} emits/min, direction: ${direction}°, ${textures.length} textures)`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Failed to start cloud animation', { error: errorMessage });
