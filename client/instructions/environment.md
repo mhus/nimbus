@@ -438,7 +438,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - false: loescht nur wolken mit der geschwindigkeit 0 (statische wolken) (default)
 - true: loescht alle wolken
 
-[ ] Erstelle in CloudService eine Methode die das erstellen von clouds ueber einen Zeitraum automaisiert
+[ ] Erstelle in CloudsService eine Methode die das erstellen von clouds ueber einen Zeitraum automaisiert
 - startCloudsAnimation(jobName : string,emitCountPerMinute: number, emitPropability: number, area: Area, speed:number, textures: string[])
 - Die methode startet eine animation die ueber den angegebenen Zeitraum immer wieder neue wolken erstellt
 - Alle parameter sollen mit einem leichten random arbeiten. emit emitiert mit emitpropability (0-1) eine neue wolke

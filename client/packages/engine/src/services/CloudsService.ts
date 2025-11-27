@@ -353,14 +353,34 @@ export class CloudsService {
   }
 
   /**
+   * Clear clouds from the scene
+   * @param clearAll If false (default), only static clouds (speed = 0) are cleared. If true, all clouds are cleared.
+   */
+  public clearClouds(clearAll: boolean = false): void {
+    const cloudIds = Array.from(this.clouds.keys());
+    let clearedCount = 0;
+
+    for (const id of cloudIds) {
+      const cloud = this.clouds.get(id);
+      if (!cloud) continue;
+
+      // Check if we should remove this cloud
+      if (clearAll || cloud.speed === 0) {
+        this.removeCloud(id);
+        clearedCount++;
+      }
+    }
+
+    const mode = clearAll ? 'all' : 'static';
+    logger.info(`Cleared ${mode} clouds`, { count: clearedCount });
+  }
+
+  /**
    * Remove all clouds from the scene
+   * @deprecated Use clearClouds(true) instead
    */
   public clearAllClouds(): void {
-    const cloudIds = Array.from(this.clouds.keys());
-    for (const id of cloudIds) {
-      this.removeCloud(id);
-    }
-    logger.info('All clouds cleared', { count: cloudIds.length });
+    this.clearClouds(true);
   }
 
   /**
