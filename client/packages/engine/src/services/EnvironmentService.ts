@@ -7,6 +7,7 @@
 import { HemisphericLight, DirectionalLight, Vector3, Color3, Scene } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import type { ScriptActionDefinition } from '@nimbus/shared';
 
 const logger = getLogger('EnvironmentService');
 
@@ -31,6 +32,38 @@ export interface WindParameters {
 }
 
 /**
+ * Environment script definition
+ * Scripts are stored by name and can be executed in groups
+ */
+export interface EnvironmentScript {
+  /** Script name (key) */
+  name: string;
+
+  /** Script group (e.g., 'environment', 'weather', 'daytime') */
+  group: string;
+
+  /** Script action definition */
+  script: ScriptActionDefinition;
+}
+
+/**
+ * Running environment script information
+ */
+interface RunningEnvironmentScript {
+  /** Script name */
+  name: string;
+
+  /** Script group */
+  group: string;
+
+  /** Executor ID from ScrawlService */
+  executorId: string;
+
+  /** Start time (timestamp) */
+  startTime: number;
+}
+
+/**
  * EnvironmentService - Manages environment rendering
  *
  * Features:
@@ -52,6 +85,10 @@ export class EnvironmentService {
   // Ambient audio modifier (priority 50)
   private ambientAudioModifier?: any; // Modifier<string>
 
+  // Environment script management
+  private environmentScripts: Map<string, EnvironmentScript> = new Map();
+  private runningScripts: Map<string, RunningEnvironmentScript> = new Map();
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -67,6 +104,7 @@ export class EnvironmentService {
 
     this.initializeEnvironment();
     this.initializeAmbientAudioModifier();
+    this.loadEnvironmentScriptsFromWorldInfo();
 
     logger.info('EnvironmentService initialized', {
       windParameters: this.windParameters,
@@ -430,10 +468,205 @@ export class EnvironmentService {
     return this.windParameters.windSwayFactor;
   }
 
+  // ============================================
+  // Environment Script Management
+  // ============================================
+
+  /**
+   * Load environment scripts from WorldInfo
+   */
+  private loadEnvironmentScriptsFromWorldInfo(): void {
+    const worldInfo = this.appContext.worldInfo;
+    if (!worldInfo?.settings?.environmentScripts) {
+      logger.info('No environment scripts defined in WorldInfo');
+      return;
+    }
+
+    const scripts = worldInfo.settings.environmentScripts;
+    if (Array.isArray(scripts)) {
+      for (const scriptDef of scripts) {
+        if (scriptDef.name && scriptDef.group && scriptDef.script) {
+          this.environmentScripts.set(scriptDef.name, scriptDef);
+          logger.info('Loaded environment script from WorldInfo', {
+            name: scriptDef.name,
+            group: scriptDef.group,
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * Create/register an environment script
+   *
+   * @param name Script name (unique identifier)
+   * @param group Script group (e.g., 'environment', 'weather')
+   * @param script Script action definition
+   */
+  createEnvironmentScript(name: string, group: string, script: ScriptActionDefinition): void {
+    const environmentScript: EnvironmentScript = {
+      name,
+      group,
+      script,
+    };
+
+    this.environmentScripts.set(name, environmentScript);
+    logger.info('Environment script created', { name, group });
+  }
+
+  /**
+   * Delete an environment script
+   *
+   * @param name Script name
+   */
+  deleteEnvironmentScript(name: string): boolean {
+    const existed = this.environmentScripts.delete(name);
+    if (existed) {
+      logger.info('Environment script deleted', { name });
+    } else {
+      logger.warn('Environment script not found for deletion', { name });
+    }
+    return existed;
+  }
+
+  /**
+   * Get an environment script by name
+   *
+   * @param name Script name
+   */
+  getEnvironmentScript(name: string): EnvironmentScript | undefined {
+    return this.environmentScripts.get(name);
+  }
+
+  /**
+   * Get all environment scripts
+   */
+  getAllEnvironmentScripts(): EnvironmentScript[] {
+    return Array.from(this.environmentScripts.values());
+  }
+
+  /**
+   * Start an environment script
+   * If a script is already running in the same group, it will be stopped first
+   *
+   * @param name Script name
+   * @returns Executor ID or null if script not found or ScrawlService unavailable
+   */
+  async startEnvironmentScript(name: string): Promise<string | null> {
+    const scriptDef = this.environmentScripts.get(name);
+    if (!scriptDef) {
+      logger.error('Environment script not found', { name });
+      return null;
+    }
+
+    const scrawlService = this.appContext.services.scrawl;
+    if (!scrawlService) {
+      logger.error('ScrawlService not available');
+      return null;
+    }
+
+    // Stop any running script in the same group
+    await this.stopEnvironmentScriptByGroup(scriptDef.group);
+
+    try {
+      // Ensure script is executed locally only (not sent to server)
+      const scriptAction: ScriptActionDefinition = {
+        ...scriptDef.script,
+        sendToServer: false, // Always execute locally
+      };
+
+      const executorId = await scrawlService.executeAction(scriptAction);
+
+      const runningScript: RunningEnvironmentScript = {
+        name: scriptDef.name,
+        group: scriptDef.group,
+        executorId,
+        startTime: Date.now(),
+      };
+
+      this.runningScripts.set(scriptDef.group, runningScript);
+
+      logger.info('Environment script started', {
+        name: scriptDef.name,
+        group: scriptDef.group,
+        executorId,
+      });
+
+      return executorId;
+    } catch (error: any) {
+      logger.error('Failed to start environment script', {
+        name,
+        error: error.message,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Stop environment script by group
+   *
+   * @param group Script group
+   */
+  async stopEnvironmentScriptByGroup(group: string): Promise<boolean> {
+    const runningScript = this.runningScripts.get(group);
+    if (!runningScript) {
+      logger.info('No running script in group', { group });
+      return false;
+    }
+
+    const scrawlService = this.appContext.services.scrawl;
+    if (!scrawlService) {
+      logger.error('ScrawlService not available');
+      return false;
+    }
+
+    const cancelled = scrawlService.cancelExecutor(runningScript.executorId);
+    if (cancelled) {
+      this.runningScripts.delete(group);
+
+      logger.info('Environment script stopped', {
+        name: runningScript.name,
+        group: runningScript.group,
+        executorId: runningScript.executorId,
+      });
+
+      return true;
+    } else {
+      logger.error('Failed to stop environment script', {
+        group,
+        executorId: runningScript.executorId,
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Get current running script name for a group
+   *
+   * @param group Script group
+   * @returns Script name or null if no script is running in the group
+   */
+  getCurrentEnvironmentScriptName(group: string): string | null {
+    const runningScript = this.runningScripts.get(group);
+    return runningScript?.name ?? null;
+  }
+
+  /**
+   * Get all running scripts
+   */
+  getRunningEnvironmentScripts(): RunningEnvironmentScript[] {
+    return Array.from(this.runningScripts.values());
+  }
+
   /**
    * Dispose environment
    */
   dispose(): void {
+    // Stop all running scripts
+    for (const group of this.runningScripts.keys()) {
+      this.stopEnvironmentScriptByGroup(group);
+    }
+
     this.ambientLight?.dispose();
     this.sunLight?.dispose();
     logger.info('Environment disposed');

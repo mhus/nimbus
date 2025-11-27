@@ -3,6 +3,7 @@
  */
 
 import type { Vector3 } from './Vector3';
+import type { ScriptActionDefinition } from '../scrawl/ScriptActionDefinition';
 
 export enum SeasonStatus {
   NONE = 0,
@@ -161,6 +162,16 @@ export interface WorldInfo {
       /** Transparency 0-1 (default: 0.5) */
       alpha?: number;
     };
+
+    /** Environment scripts (optional) */
+    environmentScripts?: Array<{
+      /** Script name (unique identifier) */
+      name: string;
+      /** Script group (e.g., 'environment', 'weather', 'daytime') */
+      group: string;
+      /** Script action definition */
+      script: ScriptActionDefinition;
+    }>;
   };
 
   /** License information */

@@ -382,7 +382,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 
 [x] Erstelle ein Command in engine um alle bekannten ModifierStacks aufzulisten
 
-[ ] Erstelle in EnvironmentService ein kleines ScrawlScript controll system um einfache wetter aenderungen ueber zeit zu automatisieren
+[?] Erstelle in EnvironmentService ein kleines ScrawlScript controll system um einfache wetter aenderungen ueber zeit zu automatisieren
 - fuer verschiedene 'namen keys' koennen hinterlegt werden: EnvironmentScript
   - script: ScrawlActionDescriptions
   - group: string (z.b. 'environment')
@@ -400,6 +400,39 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - Eine Liste von definitionen soll im WorldInfo hinterlegt werden keonnen und beim starten/init automatisch gefuellt werden
 - Es soll moeglich sein das letzte ausgefuegrte script name por gruppe zu holen
   - getCurrentEnvironmentScriptName(group: string) : string | null
+```text
+1. EnvironmentService Erweiterungen (packages/engine/src/services/EnvironmentService.ts)
+
+  - Interfaces hinzugefügt:
+    - EnvironmentScript: Definition für Environment Scripts mit name, group und script
+    - RunningEnvironmentScript: Tracking von laufenden Scripts mit executorId und startTime
+  - Methoden implementiert:
+    - createEnvironmentScript(name, group, script): Script anlegen
+    - deleteEnvironmentScript(name): Script entfernen
+    - startEnvironmentScript(name): Script starten (stoppt automatisch andere Scripts derselben Gruppe)
+    - stopEnvironmentScriptByGroup(group): Script nach Gruppe stoppen
+    - getCurrentEnvironmentScriptName(group): Name des aktuell laufenden Scripts für eine Gruppe abrufen
+    - loadEnvironmentScriptsFromWorldInfo(): Automatisches Laden von Scripts beim Start
+  - Wichtige Features:
+    - Scripts werden NICHT zum Server übertragen (sendToServer: false)
+    - Pro Gruppe kann nur ein Script gleichzeitig laufen
+    - Beim Starten wird ein eventuell laufendes Script der gleichen Gruppe automatisch gestoppt
+    - Alle Scripts werden beim Dispose gestoppt
+
+  2. WorldInfo Erweiterung (packages/shared/src/types/World.ts)
+
+  - Neues optionales Feld environmentScripts im settings Objekt
+  - Scripts können in WorldInfo definiert werden und werden beim Start automatisch geladen
+
+  3. Commands erstellt:
+
+  - CreateEnvironmentScriptCommand: Script erstellen/registrieren
+  - DeleteEnvironmentScriptCommand: Script löschen
+  - StartEnvironmentScriptCommand: Script starten
+  - StopEnvironmentScriptCommand: Script nach Gruppe stoppen
+  - GetCurrentEnvironmentScriptCommand: Aktuell laufendes Script einer Gruppe abfragen
+  - listEnvironmentScripts: Alle registrierten Environment Scripts auflisten
+```
 
 [ ] Das commando clearClouds soll einen boolean parameter haben
 - false: loescht nur wolken mit der geschwindigkeit 0 (statische wolken) (default)

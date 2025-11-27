@@ -75,6 +75,12 @@ import { FogCommand } from './commands/FogCommand';
 import { FlashImageCommand } from './commands/FlashImageCommand';
 import { CenterTextCommand } from './commands/CenterTextCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
+import { CreateEnvironmentScriptCommand } from './commands/CreateEnvironmentScriptCommand';
+import { DeleteEnvironmentScriptCommand } from './commands/DeleteEnvironmentScriptCommand';
+import { StartEnvironmentScriptCommand } from './commands/StartEnvironmentScriptCommand';
+import { StopEnvironmentScriptCommand } from './commands/StopEnvironmentScriptCommand';
+import { GetCurrentEnvironmentScriptCommand } from './commands/GetCurrentEnvironmentScriptCommand';
+import { ListEnvironmentScriptsCommand } from './commands/ListEnvironmentScriptsCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
 import { ClearBlockTypeCacheCommand } from './commands/ClearBlockTypeCacheCommand';
@@ -390,6 +396,14 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ScrawlStatusCommand(appContext));
     commandService.registerHandler(new ScrawlPauseCommand(appContext));
     commandService.registerHandler(new ScrawlResumeCommand(appContext));
+
+    // Register environment script commands
+    commandService.registerHandler(new CreateEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new DeleteEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new StartEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new StopEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new GetCurrentEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new ListEnvironmentScriptsCommand(appContext));
 
     logger.debug('CommandService initialized with commands');
 
