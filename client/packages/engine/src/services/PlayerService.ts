@@ -732,7 +732,7 @@ export class PlayerService {
   private initializeViewModeModifiers(): void {
     const stack = this.viewModeStack;
     if (!stack) {
-      logger.warn('View mode stack not available yet');
+      logger.debug('View mode stack not available yet');
       return;
     }
 

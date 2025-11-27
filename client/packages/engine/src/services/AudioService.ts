@@ -461,12 +461,12 @@ export class AudioService {
                 cameraName: scene.activeCamera.name
               });
             } else {
-              logger.warn('spatial.attach is not a function', {
+              logger.debug('spatial.attach is not a function', {
                 spatialType: typeof listener.spatial.attach
               });
             }
           } else {
-            logger.warn('Listener has no spatial property - checking alternatives');
+            logger.debug('Listener has no spatial property - checking alternatives');
 
             // Try direct attach
             if (typeof listener.attach === 'function') {

@@ -213,7 +213,7 @@ export class EnvironmentService {
   private initializeAmbientAudioModifier(): void {
     const modifierService = this.appContext.services.modifier;
     if (!modifierService) {
-      logger.warn('ModifierService not available, ambient audio modifier not created');
+      logger.info('ModifierService not available, ambient audio modifier not created');
       return;
     }
 

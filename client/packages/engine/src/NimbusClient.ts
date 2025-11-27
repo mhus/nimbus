@@ -522,6 +522,19 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       }, 30000);
     });
 
+    // Initialize ModifierService FIRST (before other services that depend on it)
+    logger.debug('Initializing ModifierService...');
+    const { ModifierService } = await import('./services/ModifierService');
+    const modifierService = new ModifierService();
+    appContext.services.modifier = modifierService;
+    logger.debug('ModifierService initialized');
+
+    // Create all StackModifiers centrally
+    logger.debug('Creating all StackModifiers...');
+    const { createAllStackModifiers } = await import('./services/StackModifierCreator');
+    createAllStackModifiers(appContext);
+    logger.debug('All StackModifiers created');
+
     // Initialize BlockTypeService (with lazy loading)
     logger.debug('Initializing BlockTypeService...');
     const blockTypeService = new BlockTypeService(appContext);
@@ -644,19 +657,6 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
     const compassService = new CompassService(appContext);
     appContext.services.compass = compassService;
     logger.debug('CompassService initialized');
-
-    // Initialize ModifierService
-    logger.debug('Initializing ModifierService...');
-    const { ModifierService } = await import('./services/ModifierService');
-    const modifierService = new ModifierService();
-    appContext.services.modifier = modifierService;
-    logger.debug('ModifierService initialized');
-
-    // Create all StackModifiers centrally
-    logger.debug('Creating all StackModifiers...');
-    const { createAllStackModifiers } = await import('./services/StackModifierCreator');
-    createAllStackModifiers(appContext);
-    logger.debug('All StackModifiers created');
 
     // Register some chunks around player spawn
     const chunkService = appContext.services.chunk;

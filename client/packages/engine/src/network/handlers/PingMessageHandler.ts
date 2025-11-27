@@ -65,12 +65,12 @@ export class PingMessageHandler extends MessageHandler {
    */
   set pingIntervalMs(value: number) {
     if (value < 100) {
-      logger.warn('Ping interval too low, setting minimum to 100ms', { requestedValue: value });
+      logger.debug('Ping interval too low, setting minimum to 100ms', { requestedValue: value });
       value = 100;
     }
 
     if (value > 60000) {
-      logger.warn('Ping interval too high, setting maximum to 60000ms', { requestedValue: value });
+      logger.debug('Ping interval too high, setting maximum to 60000ms', { requestedValue: value });
       value = 60000;
     }
 
