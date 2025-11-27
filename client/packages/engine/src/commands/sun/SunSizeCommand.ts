@@ -1,9 +1,9 @@
 /**
- * SunSizeCommand - Set sun size/radius
+ * SunSizeCommand - Set sun size/scaling factor
  *
  * Usage: sunSize [value]
  * - Without parameters: Shows current sun size
- * - With parameter: Sets sun billboard size/radius (10-500)
+ * - With parameter: Sets sun billboard scaling factor (0.1-10.0)
  */
 
 import { CommandHandler } from '../CommandHandler';
@@ -22,7 +22,7 @@ export class SunSizeCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Set sun size/radius (10-500)';
+    return 'Set sun size scaling factor (0.1-10.0, default: 1.0)';
   }
 
   async execute(parameters: string[]): Promise<string> {
@@ -34,18 +34,18 @@ export class SunSizeCommand extends CommandHandler {
 
     // Show current size if no parameters
     if (parameters.length === 0) {
-      return 'Usage: sunSize [value] (10-500)';
+      return 'Usage: sunSize [value] (0.1-10.0)';
     }
 
     // Parse and validate parameter
     const size = parseFloat(parameters[0]);
 
     if (isNaN(size)) {
-      return 'Invalid parameter. Value must be a number (10-500).';
+      return 'Invalid parameter. Value must be a number (0.1-10.0).';
     }
 
-    if (size < 10 || size > 500) {
-      return 'Value out of bounds. Sun size must be between 10 and 500.';
+    if (size < 0.1 || size > 10.0) {
+      return 'Value out of bounds. Sun size must be between 0.1 and 10.0.';
     }
 
     // Set sun size

@@ -49,6 +49,7 @@ export class ReloadWorldConfigCommand extends CommandHandler {
 
       // Note: ConfigService.loadWorldInfo() automatically calls
       // ChunkService.recalculateAndRedrawAll() if status/season changed
+      // For environment settings changes (sun, horizon, etc.), a client restart is needed
     } catch (error) {
       logger.error('Failed to reload WorldInfo', undefined, error as Error);
     }

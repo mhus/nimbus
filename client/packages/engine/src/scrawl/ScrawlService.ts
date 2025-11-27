@@ -443,10 +443,50 @@ export class ScrawlService {
           return script;
         }
 
-        // TODO: Load from assets (e.g., /assets/scripts/{id}.scrawl.json)
-        // For now, just return undefined
-        logger.warn(`Script not found in library: ${id}`);
-        return undefined;
+        // Load from assets server (e.g., /assets/scrawl/{id}.scrawl.json)
+        try {
+          const networkService = this.appContext.services.network;
+          if (!networkService) {
+            logger.error('NetworkService not available for loading scripts');
+            return undefined;
+          }
+
+          // Build asset path for script
+          const scriptPath = `scrawl/${id}.scrawl.json`;
+          const scriptUrl = networkService.getAssetUrl(scriptPath);
+
+          logger.info('Loading script from asset server', { id, scriptUrl });
+
+          // Fetch script from server
+          const response = await fetch(scriptUrl);
+          if (!response.ok) {
+            logger.error('Failed to load script from server', {
+              id,
+              status: response.status,
+              statusText: response.statusText,
+            });
+            return undefined;
+          }
+
+          // Parse JSON
+          script = await response.json();
+          if (!script) {
+            logger.error('Script loaded but failed to parse JSON', { id });
+            return undefined;
+          }
+
+          // Cache script for future use
+          scripts.set(id, script);
+
+          logger.info('Script loaded successfully', { id });
+          return script;
+        } catch (error) {
+          logger.error('Failed to load script', {
+            id,
+            error: (error as Error).message,
+          });
+          return undefined;
+        }
       },
 
       has: (id: string) => scripts.has(id),

@@ -28,20 +28,30 @@
     "allowGuests": true,
     "pvpEnabled": false,
     "pingInterval": 5000,
+    "sunTexture": "textures/sun/sun1.png",
+    "sunSize": 3.1,
+    "sunAngleY": 90,
+    "sunElevation": 45,
+    "sunColor": {
+      "r": 1,
+      "g": 1,
+      "b": 0.9
+    },
+    "sunEnabled": true,
     "horizonGradient": {
       "enabled": true,
       "distance": 300,
-      "y": -200,
-      "height": 400,
+      "y": -150,
+      "height": 200,
       "color1": {
-        "r": 0.7,
-        "g": 0.8,
-        "b": 0.9
+        "r": 0.152,
+        "g": 0.6,
+        "b": 0.925
       },
       "color0": {
-        "r": 0.3,
-        "g": 0.5,
-        "b": 0.8
+        "r": 0.407,
+        "g": 0.6,
+        "b": 0.92
       },
       "alpha": 0.5
     },
@@ -73,37 +83,7 @@
         "name": "daytime_change_night",
         "group": "daytime",
         "script": {
-          "script": {
-            "id": "daytime_change_night",
-            "root": {
-              "kind": "Sequence",
-              "steps": [
-                {
-                  "kind": "Play",
-                  "effectId": "command",
-                  "ctx": {
-                    "cmd": "ambientLightIntensity",
-                    "parameter0": 0.3
-                  }
-                },
-                {
-                  "kind": "Play",
-                  "effectId": "command",
-                  "ctx": {
-                    "cmd": "sunLightIntensity",
-                    "parameter0": 0.1
-                  }
-                },
-                {
-                  "kind": "Play",
-                  "effectId": "log",
-                  "ctx": {
-                    "message": "Night time: Reduced ambient and sun light intensity"
-                  }
-                }
-              ]
-            }
-          },
+          "scriptId": "daytime_change_night",
           "sendToServer": false
         }
       },

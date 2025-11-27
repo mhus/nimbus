@@ -447,6 +447,7 @@ export class ScrawlExecutor {
     }
 
     try {
+      // Pass parameters as-is - commands should use CastUtil for type conversion
       logger.debug('Executing command from Cmd step', {
         cmd,
         parameters,

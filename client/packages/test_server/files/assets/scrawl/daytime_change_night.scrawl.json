@@ -1,0 +1,1 @@
+{"id":"daytime_change_night","root":{"kind":"Sequence","steps":[{"kind":"Cmd","cmd":"sunEnable","parameters":[false]}]},"description":"daytime_change_night"}

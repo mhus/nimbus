@@ -19,7 +19,7 @@ const logger = getLogger('WorldCommand');
 type BroadcastCallback = (worldId: string | null, cmd: string, args?: any[]) => void;
 
 export class WorldCommand extends CommandHandler {
-  private readonly usage = '/world <status|season|seasonProgress|info> [args...]';
+  private readonly usage = '/world <status|season|seasonProgress|info|reload> [args...]';
 
   constructor(
     private worldManager: WorldManager,
@@ -33,14 +33,14 @@ export class WorldCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Manage world properties (status, season)';
+    return 'Manage world properties (status, season, reload)';
   }
 
   async execute(context: CommandContext, args: any[]): Promise<CommandResult> {
     if (args.length === 0) {
       return {
         rc: 1,
-        message: `Usage: ${this.usage}\n\nSubcommands:\n  status <value> - Set world status\n  season <seasonStatus> - Set season status\n  seasonProgress <value> - Set season progress (0.0-1.0)\n  info - Show current world info`,
+        message: `Usage: ${this.usage}\n\nSubcommands:\n  status <value> - Set world status\n  season <seasonStatus> - Set season status\n  seasonProgress <value> - Set season progress (0.0-1.0)\n  info - Show current world info\n  reload - Reload world info.json from disk`,
       };
     }
 
@@ -55,6 +55,8 @@ export class WorldCommand extends CommandHandler {
         return this.handleSeasonProgress(args.slice(1), context);
       case 'info':
         return this.handleInfo(context);
+      case 'reload':
+        return this.handleReload(context);
       default:
         return {
           rc: 1,
@@ -246,5 +248,39 @@ export class WorldCommand extends CommandHandler {
       rc: 0,
       message: info.join('\n'),
     };
+  }
+
+  /**
+   * Handle /world reload
+   */
+  private async handleReload(context: CommandContext): Promise<CommandResult> {
+    const worldId = context.session.worldId;
+    if (!worldId) {
+      return {
+        rc: 1,
+        message: 'Not in a world',
+      };
+    }
+
+    try {
+      // Reload world info from disk
+      this.worldManager.reloadWorldInfo(worldId);
+
+      // Broadcast reload command to all clients in this world
+      this.broadcastCommand(worldId, 'reloadWorldConfig');
+
+      logger.info('World info reloaded from disk and broadcast to clients', { worldId });
+
+      return {
+        rc: 0,
+        message: `World info reloaded from disk. Clients are reloading configuration.`,
+      };
+    } catch (error) {
+      logger.error('Failed to reload world info', { worldId }, error as Error);
+      return {
+        rc: -1,
+        message: `Failed to reload world info: ${(error as Error).message}`,
+      };
+    }
   }
 }

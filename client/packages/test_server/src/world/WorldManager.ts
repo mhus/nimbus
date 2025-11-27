@@ -164,10 +164,11 @@ export class WorldManager {
 
   /**
    * Load world info.json on demand
+   * @param forceReload If true, ignores cache and reloads from disk
    */
-  private loadWorldInfo(worldId: string): void {
-    // Check if already loaded
-    if (this.worldInfoCache.has(worldId)) {
+  private loadWorldInfo(worldId: string, forceReload: boolean = false): void {
+    // Check if already loaded (unless force reload)
+    if (!forceReload && this.worldInfoCache.has(worldId)) {
       return;
     }
 
@@ -197,7 +198,8 @@ export class WorldManager {
       // Update world instance with real data
       this.createWorldFromInfo(worldId, info, generatorConfig);
 
-      logger.info(`Lazy-loaded world info in ${Date.now() - loadStart}ms`, {
+      const action = forceReload ? 'Reloaded' : 'Lazy-loaded';
+      logger.info(`${action} world info in ${Date.now() - loadStart}ms`, {
         worldId,
         name: info.name || worldId,
         generator: generatorConfig?.type || 'default',
@@ -205,6 +207,15 @@ export class WorldManager {
     } catch (error) {
       ExceptionHandler.handle(error, 'WorldManager.loadWorldInfo', { worldId, infoPath });
     }
+  }
+
+  /**
+   * Reload world info.json from disk (invalidates cache)
+   * @param worldId World ID to reload
+   */
+  reloadWorldInfo(worldId: string): void {
+    logger.info('Reloading world info from disk', { worldId });
+    this.loadWorldInfo(worldId, true);
   }
 
   /**

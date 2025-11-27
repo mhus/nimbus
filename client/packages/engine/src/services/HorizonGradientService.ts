@@ -91,6 +91,9 @@ export class HorizonGradientService {
       distance: this.distance,
       y: this.y,
       height: this.height,
+      color0: { r: this.color0.r, g: this.color0.g, b: this.color0.b },
+      color1: { r: this.color1.r, g: this.color1.g, b: this.color1.b },
+      alpha: this.alpha,
     });
   }
 

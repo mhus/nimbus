@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toBoolean } from '@nimbus/shared';
 
 const logger = getLogger('SunEnableCommand');
 
@@ -25,7 +25,7 @@ export class SunEnableCommand extends CommandHandler {
     return 'Enable or disable sun visibility (true|false)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const sunService = this.appContext.services.sun;
 
     if (!sunService) {
@@ -37,14 +37,8 @@ export class SunEnableCommand extends CommandHandler {
       return 'Usage: sunEnable [true|false]';
     }
 
-    // Parse parameter
-    const value = parameters[0].toLowerCase();
-
-    if (value !== 'true' && value !== 'false') {
-      return 'Invalid parameter. Value must be "true" or "false".';
-    }
-
-    const enabled = value === 'true';
+    // Parse parameter using CastUtil
+    const enabled = toBoolean(parameters[0]);
 
     // Set sun visibility
     sunService.setEnabled(enabled);

@@ -62,7 +62,7 @@ export class ConfigService {
       // Get worldId from parameter, config, or default to 'main'
       const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
       const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-      const url = `${apiUrl}/api/worlds/${targetWorldId}/config?client=${clientType}`;
+      const url = `${apiUrl}/api/worlds/${targetWorldId}/config?client=${clientType}&t=${Date.now()}`;
 
       logger.info('Loading configuration from REST API', { url, clientType });
 
@@ -176,7 +176,7 @@ export class ConfigService {
   async loadWorldInfo(worldId?: string): Promise<WorldInfo> {
     const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
     const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/worldinfo`;
+    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/worldinfo?t=${Date.now()}`;
 
     const response = await fetch(url);
     if (!response.ok) {

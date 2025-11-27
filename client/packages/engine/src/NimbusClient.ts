@@ -174,6 +174,7 @@ import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
+  ScrawlScriptCommand,
   ScrawlSelectedActionCommand,
   ScrawlStopCommand,
   ScrawlStatusCommand,
@@ -405,6 +406,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ScrawlListCommand(appContext));
     commandService.registerHandler(new ScrawlStartCommand(appContext));
     commandService.registerHandler(new ScrawlActionCommand(appContext));
+    commandService.registerHandler(new ScrawlScriptCommand(appContext));
     commandService.registerHandler(new ScrawlSelectedActionCommand(appContext));
     commandService.registerHandler(new ScrawlStopCommand(appContext));
 

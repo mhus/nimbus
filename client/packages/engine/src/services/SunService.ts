@@ -50,7 +50,7 @@ export class SunService {
 
   // Sun appearance (defaults, will be overridden by WorldInfo)
   private sunColor: Color3 = new Color3(1, 1, 0.9); // Warm white/yellow
-  private sunSize: number = 80; // Billboard size
+  private sunSize: number = 1; // Billboard scaling factor (default: 1)
   private enabled: boolean = true;
 
   // Automatic sun adjustment
@@ -105,7 +105,6 @@ export class SunService {
       size: this.sunSize,
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
-      color: settings.sunColor,
       enabled: this.enabled,
     });
   }
@@ -137,13 +136,16 @@ export class SunService {
     this.sunMaterial.useAlphaFromDiffuseTexture = false;
     this.sunMaterial.backFaceCulling = false;
 
-    // Create sun billboard mesh
-    this.sunMesh = PlaneBuilder.CreatePlane('sun', { size: this.sunSize }, this.scene);
+    // Create sun billboard mesh (base size 80, then scaled by sunSize factor)
+    this.sunMesh = PlaneBuilder.CreatePlane('sun', { size: 80 }, this.scene);
     this.sunMesh.parent = this.sunRoot;
     this.sunMesh.material = this.sunMaterial;
     this.sunMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
     this.sunMesh.infiniteDistance = true; // Always at horizon
     this.sunMesh.renderingGroupId = RENDERING_GROUPS.ENVIRONMENT;
+
+    // Apply size scaling
+    this.sunMesh.scaling.setAll(this.sunSize);
 
     // Set initial position
     this.updateSunPosition();
@@ -498,13 +500,13 @@ export class SunService {
 
   /**
    * Set sun size
-   * @param size Billboard plane size
+   * @param size Billboard scaling factor (1.0 = default size)
    */
   setSunSize(size: number): void {
     this.sunSize = size;
 
     if (this.sunMesh) {
-      this.sunMesh.scaling.setAll(size / 80); // Scale from default 80
+      this.sunMesh.scaling.setAll(size);
     }
 
     logger.info('Sun size updated', { size });
