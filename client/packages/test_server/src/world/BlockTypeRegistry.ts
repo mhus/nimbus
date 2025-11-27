@@ -16,6 +16,7 @@ const logger = getLogger('BlockTypeRegistry');
 
 export class BlockTypeRegistry {
   private blocktypesDir: string;
+  private allBlockTypesCache: BlockType[] | null = null;
 
   constructor() {
     this.blocktypesDir = path.join(__dirname, '../../files/blocktypes');
@@ -81,11 +82,18 @@ export class BlockTypeRegistry {
    * @returns Array of all BlockTypes
    */
   getAllBlockTypes(): BlockType[] {
+    // Return cached data if available
+    if (this.allBlockTypesCache !== null) {
+      return this.allBlockTypesCache;
+    }
+
+    // Load from filesystem on first access
     try {
       const manifestPath = path.join(this.blocktypesDir, 'manifest.json');
 
       if (!fs.existsSync(manifestPath)) {
         logger.warn('Manifest not found, returning empty array');
+        this.allBlockTypesCache = [];
         return [];
       }
 
@@ -99,10 +107,14 @@ export class BlockTypeRegistry {
         }
       });
 
-      logger.info(`Loaded ${blockTypes.length} BlockTypes from manifest`);
+      logger.info(`Loaded ${blockTypes.length} BlockTypes from manifest (cached for future use)`);
+
+      // Cache the result
+      this.allBlockTypesCache = blockTypes;
       return blockTypes;
     } catch (error) {
       logger.error('Failed to load BlockTypes from manifest', {}, error as Error);
+      this.allBlockTypesCache = [];
       return [];
     }
   }

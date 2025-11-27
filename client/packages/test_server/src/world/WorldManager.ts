@@ -21,29 +21,44 @@ export class WorldManager {
   private blockTypeRegistry: BlockTypeRegistry;
   private assetManager: AssetManager;
   private chunkStorages = new Map<string, ChunkStorage>();
+  private worldInfoCache = new Map<string, any>(); // Cache for info.json
 
   constructor() {
+    const startTime = Date.now();
+    logger.info('WorldManager initialization started');
+
+    const registryStart = Date.now();
     this.blockTypeRegistry = new BlockTypeRegistry();
+    logger.info(`BlockTypeRegistry initialized in ${Date.now() - registryStart}ms`);
+
+    const assetStart = Date.now();
     this.assetManager = new AssetManager();
+    logger.info(`AssetManager initialized in ${Date.now() - assetStart}ms`);
 
-    // Load worlds from data directory
-    this.loadWorldsFromDirectory();
+    // Scan world directories (lazy loading)
+    const scanStart = Date.now();
+    this.scanWorldDirectories();
+    logger.info(`World directories scanned in ${Date.now() - scanStart}ms`);
 
-    // If no worlds loaded, initialize test worlds
+    // If no worlds found, initialize test worlds
     if (this.worlds.size === 0) {
       logger.warn('No worlds found in data directory, initializing test worlds');
       this.initializeTestWorlds();
     }
 
     // Start auto-save interval (every 30 seconds)
+    const autoSaveStart = Date.now();
     this.startAutoSave();
+    logger.info(`Auto-save initialized in ${Date.now() - autoSaveStart}ms`);
+
+    logger.info(`WorldManager initialization completed in ${Date.now() - startTime}ms`);
   }
 
   /**
-   * Load worlds from data directory
-   * Scans ./data/worlds/ for world folders containing info.json
+   * Scan world directories (lazy loading - only scan, don't load info.json yet)
+   * Creates placeholder worlds that will load info.json on first access
    */
-  private loadWorldsFromDirectory(): void {
+  private scanWorldDirectories(): void {
     const dataDir = path.join(process.cwd(), 'data', 'worlds');
 
     // Check if data directory exists
@@ -52,7 +67,7 @@ export class WorldManager {
       try {
         fs.mkdirSync(dataDir, { recursive: true });
       } catch (error) {
-        ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory.mkdir', { dataDir });
+        ExceptionHandler.handle(error, 'WorldManager.scanWorldDirectories.mkdir', { dataDir });
         return;
       }
     }
@@ -72,45 +87,123 @@ export class WorldManager {
           continue;
         }
 
-        // Load and parse info.json
+        // Create lazy-loaded world placeholder
+        this.createLazyWorld(entry.name);
+        logger.debug('Registered world for lazy loading', { worldId: entry.name });
+      }
+
+      logger.info(`Registered ${this.worlds.size} worlds for lazy loading`);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'WorldManager.scanWorldDirectories', { dataDir });
+    }
+  }
+
+  /**
+   * Create a lazy-loaded world placeholder
+   * The world will be fully initialized on first access
+   */
+  private createLazyWorld(worldId: string): void {
+    const now = new Date().toISOString();
+
+    // Create minimal world instance
+    const world: WorldInstance = {
+      worldId,
+      name: worldId, // Will be updated on first access
+      description: '',
+      chunkSize: 32,
+      dimensions: {
+        minX: -128,
+        maxX: 128,
+        minY: -64,
+        maxY: 192,
+        minZ: -128,
+        maxZ: 128,
+      },
+      seaLevel: 0,
+      groundLevel: 64,
+      status: 0,
+      chunks: new Map(),
+      generator: undefined, // Will be created on first access
+      itemRegistry: new ItemRegistry(worldId),
+      createdAt: now,
+      updatedAt: now,
+      worldInfo: {
+        worldId,
+        name: worldId,
+        seasonStatus: 0,
+        seasonProgress: 0,
+        createdAt: now,
+        updatedAt: now,
+        owner: {
+          user: 'system',
+          displayName: 'System',
+        },
+        settings: {
+          maxPlayers: 10,
+          allowGuests: true,
+          pvpEnabled: false,
+          pingInterval: 30000,
+        },
+      },
+    };
+
+    this.worlds.set(worldId, world);
+
+    // Initialize chunk storage
+    const storage = new ChunkStorage(worldId);
+    storage.initialize().catch((error) => {
+      logger.error('Failed to initialize chunk storage', { worldId }, error);
+    });
+    this.chunkStorages.set(worldId, storage);
+
+    // Load items from disk (async)
+    world.itemRegistry.load().catch((error) => {
+      logger.error('Failed to load items from disk', { worldId }, error);
+    });
+  }
+
+  /**
+   * Load world info.json on demand
+   */
+  private loadWorldInfo(worldId: string): void {
+    // Check if already loaded
+    if (this.worldInfoCache.has(worldId)) {
+      return;
+    }
+
+    const loadStart = Date.now();
+    const infoPath = path.join(process.cwd(), 'data', 'worlds', worldId, 'info.json');
+
+    try {
+      const infoContent = fs.readFileSync(infoPath, 'utf-8');
+      const info = JSON.parse(infoContent);
+
+      // Cache the info
+      this.worldInfoCache.set(worldId, info);
+
+      // Load generator.json if exists
+      const generatorPath = path.join(process.cwd(), 'data', 'worlds', worldId, 'generator.json');
+      let generatorConfig = null;
+      if (fs.existsSync(generatorPath)) {
         try {
-          const infoContent = fs.readFileSync(infoPath, 'utf-8');
-          const worldInfo = JSON.parse(infoContent);
-
-          // Load generator.json if exists
-          const generatorPath = path.join(worldPath, 'generator.json');
-          let generatorConfig = null;
-          if (fs.existsSync(generatorPath)) {
-            try {
-              const generatorContent = fs.readFileSync(generatorPath, 'utf-8');
-              generatorConfig = JSON.parse(generatorContent);
-              logger.debug('Loaded generator config', { worldId: entry.name, type: generatorConfig.type });
-            } catch (error) {
-              logger.warn('Failed to load generator.json, using default', { worldId: entry.name });
-            }
-          } else {
-            logger.debug('No generator.json found, using default', { worldId: entry.name });
-          }
-
-          // Create world instance with generator
-          this.createWorldFromInfo(entry.name, worldInfo, generatorConfig);
-
-          logger.info('Loaded world from directory', {
-            worldId: entry.name,
-            name: worldInfo.name || entry.name,
-            generator: generatorConfig?.type || 'default'
-          });
+          const generatorContent = fs.readFileSync(generatorPath, 'utf-8');
+          generatorConfig = JSON.parse(generatorContent);
+          logger.debug('Loaded generator config', { worldId, type: generatorConfig.type });
         } catch (error) {
-          ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory.loadWorld', {
-            worldPath,
-            infoPath
-          });
+          logger.warn('Failed to load generator.json, using default', { worldId });
         }
       }
 
-      logger.info(`Loaded ${this.worlds.size} worlds from data directory`);
+      // Update world instance with real data
+      this.createWorldFromInfo(worldId, info, generatorConfig);
+
+      logger.info(`Lazy-loaded world info in ${Date.now() - loadStart}ms`, {
+        worldId,
+        name: info.name || worldId,
+        generator: generatorConfig?.type || 'default',
+      });
     } catch (error) {
-      ExceptionHandler.handle(error, 'WorldManager.loadWorldsFromDirectory', { dataDir });
+      ExceptionHandler.handle(error, 'WorldManager.loadWorldInfo', { worldId, infoPath });
     }
   }
 
@@ -337,7 +430,12 @@ export class WorldManager {
   }
 
   getWorld(worldId: string): WorldInstance | undefined {
-    return this.worlds.get(worldId);
+    const world = this.worlds.get(worldId);
+    if (world) {
+      // Lazy-load world info if not already loaded
+      this.loadWorldInfo(worldId);
+    }
+    return world;
   }
 
   getAllWorlds(): WorldInstance[] {

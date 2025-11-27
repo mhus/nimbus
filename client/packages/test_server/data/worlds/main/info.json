@@ -67,7 +67,55 @@
         "moon1RotationHours": 504,
         "moon2RotationHours": 336
       }
-    }
+    },
+    "environmentScripts": [
+      {
+        "name": "daytime_change_night",
+        "group": "daytime",
+        "script": {
+          "actions": [
+            {
+              "type": "command",
+              "command": "ambientLightIntensity",
+              "parameter0": 0.3
+            },
+            {
+              "type": "command",
+              "command": "sunLightIntensity",
+              "parameter0": 0.1
+            },
+            {
+              "type": "log",
+              "message": "Night time: Reduced ambient and sun light intensity"
+            }
+          ],
+          "sendToServer": false
+        }
+      },
+      {
+        "name": "season_winter",
+        "group": "season",
+        "script": {
+          "actions": [
+            {
+              "type": "command",
+              "command": "fogViewMode",
+              "parameter0": 0.3
+            },
+            {
+              "type": "command",
+              "command": "ambientLightIntensity",
+              "parameter0": 0.8
+            },
+            {
+              "type": "log",
+              "message": "Winter season: Added fog and reduced light"
+            }
+          ],
+          "sendToServer": false
+        }
+      }
+    ]
   },
   "startArea": {
     "x": 0,

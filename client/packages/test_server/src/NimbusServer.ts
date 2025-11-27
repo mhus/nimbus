@@ -67,11 +67,23 @@ class NimbusServer {
   private entitySimulator: EntitySimulator | null = null;
 
   private constructor() {
+    const startTime = Date.now();
+    logger.info('NimbusServer constructor started');
+
+    const expressStart = Date.now();
     this.app = express();
+    logger.info(`Express initialized in ${Date.now() - expressStart}ms`);
+
+    const worldStart = Date.now();
     this.worldManager = new WorldManager();
+    logger.info(`WorldManager initialized in ${Date.now() - worldStart}ms`);
+
+    const terrainStart = Date.now();
     this.terrainGenerator = new TerrainGenerator();
+    logger.info(`TerrainGenerator initialized in ${Date.now() - terrainStart}ms`);
 
     // Initialize block update buffer with broadcast callback
+    const bufferStart = Date.now();
     this.blockUpdateBuffer = new BlockUpdateBuffer((worldId, blocks) => {
       this.broadcastBlockUpdates(worldId, blocks);
     });
@@ -80,8 +92,10 @@ class NimbusServer {
     this.itemUpdateBuffer = new ItemUpdateBuffer((worldId, items) => {
       this.broadcastItemUpdates(worldId, items);
     });
+    logger.info(`Update buffers initialized in ${Date.now() - bufferStart}ms`);
 
     // Initialize command service
+    const commandStart = Date.now();
     this.commandService = new CommandService();
 
     // Register command handlers
@@ -94,6 +108,9 @@ class NimbusServer {
       this.worldManager,
       (worldId, cmd, args) => this.broadcastCommandToClients(worldId, cmd, args)
     ));
+    logger.info(`CommandService initialized in ${Date.now() - commandStart}ms`);
+
+    logger.info(`NimbusServer constructor completed in ${Date.now() - startTime}ms`);
   }
 
   /**

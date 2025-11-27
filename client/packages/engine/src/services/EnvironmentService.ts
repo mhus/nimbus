@@ -854,10 +854,29 @@ export class EnvironmentService {
     // Set initial day section
     this.currentDaySection = this.getWorldDayTimeSection();
 
+    // Start script for initial day section
+    const dayScriptName = `daytime_change_${this.currentDaySection}`;
+    this.startEnvironmentScript(dayScriptName);
+
+    // Start script for current season
+    const seasonStatus = this.appContext.worldInfo?.seasonStatus;
+    if (seasonStatus !== undefined && seasonStatus !== 0) {
+      // Map season status to script name
+      const seasonNames = ['', 'winter', 'spring', 'summer', 'autumn'];
+      const seasonName = seasonNames[seasonStatus];
+      if (seasonName) {
+        const seasonScriptName = `season_${seasonName}`;
+        this.startEnvironmentScript(seasonScriptName);
+        logger.info('Started season script', { seasonStatus, seasonScriptName });
+      }
+    }
+
     logger.info('World Time started', {
       startWorldMinute: worldMinute,
       startWorldTime: this.getWorldTimeCurrentAsString(),
       daySection: this.currentDaySection,
+      initialDayScript: dayScriptName,
+      seasonStatus,
     });
   }
 
