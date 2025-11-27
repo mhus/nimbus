@@ -42,11 +42,11 @@ export class HorizonGradientEnableCommand extends CommandHandler {
 
     if (param === 'true') {
       service.setEnabled(true);
-      logger.info('Horizon gradient enabled via command');
+      logger.debug('Horizon gradient enabled via command');
       return 'Horizon gradient enabled';
     } else if (param === 'false') {
       service.setEnabled(false);
-      logger.info('Horizon gradient disabled via command');
+      logger.debug('Horizon gradient disabled via command');
       return 'Horizon gradient disabled';
     } else {
       return 'Invalid parameter. Use "true" or "false".';

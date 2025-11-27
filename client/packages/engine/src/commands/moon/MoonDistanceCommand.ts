@@ -50,7 +50,7 @@ export class MoonDistanceCommand extends CommandHandler {
     moonService.setMoonDistance(moonIndex, distance);
 
     const position = moonService.getMoonPosition(moonIndex);
-    logger.info(`Moon ${moonIndex} distance set`, position);
+    logger.debug(`Moon ${moonIndex} distance set`, position);
 
     return `Moon ${moonIndex} distance set to ${position?.distance}`;
   }

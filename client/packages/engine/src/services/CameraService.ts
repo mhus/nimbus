@@ -79,7 +79,7 @@ export class CameraService {
 
     this.initializeCamera();
 
-    logger.info('CameraService initialized', {
+    logger.debug('CameraService initialized', {
       turnSpeed: this.effectiveTurnSpeed,
     });
   }
@@ -384,7 +384,7 @@ export class CameraService {
         playerService.setUnderwaterViewMode(underwater);
       }
 
-      logger.info('Underwater state changed', { underwater });
+      logger.debug('Underwater state changed', { underwater });
     } catch (error) {
       ExceptionHandler.handle(error, 'CameraService.setUnderwater', { underwater });
     }
@@ -399,7 +399,7 @@ export class CameraService {
       return;
     }
 
-    logger.info('💧 ENABLING UNDERWATER EFFECTS');
+    logger.debug('💧 ENABLING UNDERWATER EFFECTS');
 
     // Create water sphere mesh around camera
     if (!this.waterSphereMesh) {
@@ -431,7 +431,7 @@ export class CameraService {
         this.waterSphereMesh.parent = this.cameraEnvironmentRoot;
       }
 
-      logger.info('💧 Water sphere created', {
+      logger.debug('💧 Water sphere created', {
         position: this.waterSphereMesh.position,
         diameter: 8,
         material: {
@@ -443,7 +443,7 @@ export class CameraService {
 
     // Show water sphere
     this.waterSphereMesh.isVisible = true;
-    logger.info('💧 Water sphere visible:', this.waterSphereMesh.isVisible);
+    logger.debug('💧 Water sphere visible:', this.waterSphereMesh.isVisible);
 
     // Store original fog settings
     this.originalFogDensity = this.scene.fogDensity;
@@ -457,7 +457,7 @@ export class CameraService {
     // Optionally reduce ambient light
     // this.scene.ambientColor = new Color3(0.3, 0.4, 0.5);
 
-    logger.info('💧 Underwater effects enabled', {
+    logger.debug('💧 Underwater effects enabled', {
       fogMode: this.scene.fogMode,
       fogDensity: this.scene.fogDensity,
       fogColor: { r: this.scene.fogColor.r, g: this.scene.fogColor.g, b: this.scene.fogColor.b },
@@ -469,12 +469,12 @@ export class CameraService {
    * Disable underwater visual effects
    */
   private disableUnderwaterEffects(): void {
-    logger.info('💧 DISABLING UNDERWATER EFFECTS');
+    logger.debug('💧 DISABLING UNDERWATER EFFECTS');
 
     // Hide water sphere
     if (this.waterSphereMesh) {
       this.waterSphereMesh.isVisible = false;
-      logger.info('💧 Water sphere hidden');
+      logger.debug('💧 Water sphere hidden');
     }
 
     // Restore original fog settings
@@ -485,7 +485,7 @@ export class CameraService {
     // Restore ambient light
     // this.scene.ambientColor = new Color3(1, 1, 1);
 
-    logger.info('💧 Underwater effects disabled', {
+    logger.debug('💧 Underwater effects disabled', {
       fogMode: this.scene.fogMode,
       fogRestored: true,
     });
@@ -527,7 +527,7 @@ export class CameraService {
         this.updateFogIntensity(intensity);
       }
 
-      logger.info('Fog mode intensity changed', { intensity, enabled: nowEnabled });
+      logger.debug('Fog mode intensity changed', { intensity, enabled: nowEnabled });
     } catch (error) {
       ExceptionHandler.handle(error, 'CameraService.setFogMode', { intensity });
     }
@@ -539,7 +539,7 @@ export class CameraService {
    * @param intensity Fog intensity (0.1-1.0)
    */
   private enableFogEffects(intensity: number): void {
-    logger.info('🌫️ ENABLING FOG EFFECTS', { intensity });
+    logger.debug('🌫️ ENABLING FOG EFFECTS', { intensity });
 
     if (!this.camera) {
       logger.warn('Cannot enable fog effects: camera not initialized');
@@ -586,7 +586,7 @@ export class CameraService {
     // Update intensity
     this.updateFogIntensity(intensity);
 
-    logger.info('🌫️ Fog effects enabled', {
+    logger.debug('🌫️ Fog effects enabled', {
       intensity,
       sphereVisible: this.fogSphereMesh.isVisible,
     });
@@ -632,12 +632,12 @@ export class CameraService {
    * Disable fog visual effects
    */
   private disableFogEffects(): void {
-    logger.info('🌫️ DISABLING FOG EFFECTS');
+    logger.debug('🌫️ DISABLING FOG EFFECTS');
 
     // Hide fog sphere
     if (this.fogSphereMesh) {
       this.fogSphereMesh.isVisible = false;
-      logger.info('🌫️ Fog sphere hidden');
+      logger.debug('🌫️ Fog sphere hidden');
     }
 
     // Restore original fog settings (only if not underwater)
@@ -647,7 +647,7 @@ export class CameraService {
       this.scene.fogColor = this.originalFogColor;
     }
 
-    logger.info('🌫️ Fog effects disabled', {
+    logger.debug('🌫️ Fog effects disabled', {
       fogMode: this.scene.fogMode,
       fogRestored: !this.isUnderwater,
     });
@@ -690,6 +690,6 @@ export class CameraService {
     // Dispose camera
     this.camera?.dispose();
 
-    logger.info('Camera disposed');
+    logger.debug('Camera disposed');
   }
 }

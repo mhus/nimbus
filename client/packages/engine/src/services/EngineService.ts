@@ -76,7 +76,7 @@ export class EngineService {
     this.appContext = appContext;
     this.canvas = canvas;
 
-    logger.info('EngineService created');
+    logger.debug('EngineService created');
   }
 
   /**
@@ -91,7 +91,7 @@ export class EngineService {
     }
 
     try {
-      logger.info('Initializing 3D engine');
+      logger.debug('Initializing 3D engine');
 
       // Check WebGL support
       const gl = this.canvas.getContext('webgl') || this.canvas.getContext('webgl2');
@@ -216,7 +216,7 @@ export class EngineService {
       const audioService = this.appContext.services.audio;
       if (audioService) {
         await audioService.initialize(this.scene);
-        logger.info('AudioService initialized with scene and subscribed to PhysicsService events');
+        logger.debug('AudioService initialized with scene and subscribed to PhysicsService events');
       } else {
         logger.warn('AudioService not available in AppContext');
       }
@@ -324,7 +324,7 @@ export class EngineService {
 
       this.isInitialized = true;
 
-      logger.info('3D engine initialized successfully');
+      logger.debug('3D engine initialized successfully');
     } catch (error) {
       this.isInitialized = false;
       throw ExceptionHandler.handleAndRethrow(error, 'EngineService.initialize');
@@ -344,7 +344,7 @@ export class EngineService {
       return;
     }
 
-    logger.info('Starting render loop');
+    logger.debug('Starting render loop');
 
     let lastTime = performance.now();
 
@@ -386,7 +386,7 @@ export class EngineService {
       return;
     }
 
-    logger.info('Stopping render loop');
+    logger.debug('Stopping render loop');
 
     this.engine?.stopRenderLoop();
     this.isRunning = false;
@@ -510,7 +510,7 @@ export class EngineService {
       material.wireframe = enabled;
     });
 
-    logger.info(`Wireframe mode ${enabled ? 'enabled' : 'disabled'}`, {
+    logger.debug(`Wireframe mode ${enabled ? 'enabled' : 'disabled'}`, {
       materialCount: this.scene.materials.length,
     });
   }
@@ -519,7 +519,7 @@ export class EngineService {
    * Dispose engine and all resources
    */
   dispose(): void {
-    logger.info('Disposing engine');
+    logger.debug('Disposing engine');
 
     this.stopRenderLoop();
 
@@ -552,6 +552,6 @@ export class EngineService {
     this.isInitialized = false;
     this.isRunning = false;
 
-    logger.info('Engine disposed');
+    logger.debug('Engine disposed');
   }
 }

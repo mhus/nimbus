@@ -31,9 +31,9 @@ export class ScrawlStopCommand extends CommandHandler {
 
     if (args.length === 0) {
       logger.error('Usage: scrawlStop <executorId|all>');
-      logger.info('Examples:');
-      logger.info('  scrawlStop executor_0');
-      logger.info('  scrawlStop all');
+      logger.debug('Examples:');
+      logger.debug('  scrawlStop executor_0');
+      logger.debug('  scrawlStop all');
       return;
     }
 
@@ -43,14 +43,14 @@ export class ScrawlStopCommand extends CommandHandler {
     if (executorId === 'all') {
       // Stop all running executors
       const runningIds = scrawlService.getRunningExecutorIds();
-      logger.info(`Stopping ${runningIds.length} executor(s)...`);
+      logger.debug(`Stopping ${runningIds.length} executor(s)...`);
       scrawlService.cancelAllExecutors();
-      logger.info('All executors stopped');
+      logger.debug('All executors stopped');
     } else {
       // Stop specific executor
       const success = scrawlService.cancelExecutor(executorId);
       if (success) {
-        logger.info(`Executor ${executorId} stopped`);
+        logger.debug(`Executor ${executorId} stopped`);
       } else {
         logger.error(`Executor ${executorId} not found`);
       }

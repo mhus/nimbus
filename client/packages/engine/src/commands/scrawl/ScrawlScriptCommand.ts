@@ -36,10 +36,10 @@ export class ScrawlScriptCommand extends CommandHandler {
 
     if (args.length === 0) {
       logger.error('Usage: scrawlScript("scriptName", {parameters})');
-      logger.info('Examples:');
-      logger.info('  scrawlScript("fireball", {damage: 50, radius: 10})');
-      logger.info('  scrawlScript("heal", {amount: 100})');
-      logger.info('  scrawlScript("test_script")');
+      logger.debug('Examples:');
+      logger.debug('  scrawlScript("fireball", {damage: 50, radius: 10})');
+      logger.debug('  scrawlScript("heal", {amount: 100})');
+      logger.debug('  scrawlScript("test_script")');
       return;
     }
 
@@ -66,7 +66,7 @@ export class ScrawlScriptCommand extends CommandHandler {
         }
       }
 
-      logger.info('Executing script', {
+      logger.debug('Executing script', {
         scriptName,
         parameters: Object.keys(parameters),
       });
@@ -77,7 +77,7 @@ export class ScrawlScriptCommand extends CommandHandler {
         vars: parameters,
       });
 
-      logger.info(`Script execution started with executor ID: ${executorId}`, {
+      logger.debug(`Script execution started with executor ID: ${executorId}`, {
         scriptName,
       });
     } catch (error: any) {

@@ -77,7 +77,7 @@ export class PingMessageHandler extends MessageHandler {
     const wasRunning = this.pingInterval !== undefined;
     this._pingIntervalMs = value;
 
-    logger.info('Ping interval changed', { intervalMs: value });
+    logger.debug('Ping interval changed', { intervalMs: value });
 
     // Restart interval if it was running
     if (wasRunning) {
@@ -120,7 +120,7 @@ export class PingMessageHandler extends MessageHandler {
   startPingInterval(): void {
     this.stopPingInterval();
 
-    logger.info('Starting ping interval', { intervalMs: this._pingIntervalMs });
+    logger.debug('Starting ping interval', { intervalMs: this._pingIntervalMs });
 
     this.pingInterval = setInterval(() => {
       this.sendPing();

@@ -33,7 +33,7 @@ export class ReloadConfigCommand extends CommandHandler {
     }
 
     try {
-      logger.info('Reloading configuration from server...');
+      logger.debug('Reloading configuration from server...');
 
       // Determine client type
       const clientType = __EDITOR__ ? 'editor' : 'viewer';
@@ -41,8 +41,8 @@ export class ReloadConfigCommand extends CommandHandler {
       // Reload configuration
       const config = await configService.reloadConfig(clientType);
 
-      logger.info('Configuration reloaded successfully');
-      logger.info('WorldInfo:', {
+      logger.debug('Configuration reloaded successfully');
+      logger.debug('WorldInfo:', {
         worldId: config.worldInfo?.worldId,
         name: config.worldInfo?.name,
         chunkSize: config.worldInfo?.chunkSize,
@@ -50,19 +50,19 @@ export class ReloadConfigCommand extends CommandHandler {
         seasonStatus: config.worldInfo?.seasonStatus,
         seasonProgress: config.worldInfo?.seasonProgress,
       });
-      logger.info('PlayerInfo:', {
+      logger.debug('PlayerInfo:', {
         displayName: config.playerInfo?.displayName,
         baseWalkSpeed: config.playerInfo?.baseWalkSpeed,
       });
-      logger.info('Settings:', {
+      logger.debug('Settings:', {
         name: config.settings?.name,
         inputController: config.settings?.inputController,
       });
-      logger.info('PlayerBackpack:', {
+      logger.debug('PlayerBackpack:', {
         itemCount: Object.keys(config.playerBackpack?.itemIds || {}).length,
         wearingCount: Object.keys(config.playerBackpack?.wearingItemIds || {}).length,
       });
-      logger.info('Note: If status/season changed, all block modifiers were automatically recalculated and chunks redrawn.');
+      logger.debug('Note: If status/season changed, all block modifiers were automatically recalculated and chunks redrawn.');
     } catch (error) {
       logger.error('Failed to reload configuration', undefined, error as Error);
     }

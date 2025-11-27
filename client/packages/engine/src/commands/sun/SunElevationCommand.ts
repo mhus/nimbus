@@ -54,7 +54,7 @@ export class SunElevationCommand extends CommandHandler {
     sunService.setSunHeightOverCamera(elevation);
 
     const position = sunService.getSunPosition();
-    logger.info('Sun elevation set', position);
+    logger.debug('Sun elevation set', position);
 
     return `Sun elevation set to ${position.elevation}°`;
   }

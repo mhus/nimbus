@@ -66,7 +66,7 @@ export class StopEnvironmentScriptCommand extends CommandHandler {
 
     if (stopped) {
       const message = `Environment script stopped for group: ${group}`;
-      logger.info(message);
+      logger.debug(message);
       return {
         group,
         stopped: true,
@@ -74,7 +74,7 @@ export class StopEnvironmentScriptCommand extends CommandHandler {
       };
     } else {
       const message = `No running script found for group: ${group}`;
-      logger.info(message);
+      logger.debug(message);
       return {
         group,
         stopped: false,

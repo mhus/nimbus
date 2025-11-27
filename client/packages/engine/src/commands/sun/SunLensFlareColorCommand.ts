@@ -59,7 +59,7 @@ export class SunLensFlareColorCommand extends CommandHandler {
     // Set lens flare color
     sunService.setSunLensFlareColor(r, g, b);
 
-    logger.info('Lens flare color set', { r, g, b });
+    logger.debug('Lens flare color set', { r, g, b });
 
     return `Lens flare color set to RGB(${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

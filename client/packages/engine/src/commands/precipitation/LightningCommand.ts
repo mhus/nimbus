@@ -53,7 +53,7 @@ export class LightningCommand extends CommandHandler {
 
     try {
       precipitationService.triggerLightning(groupCount, toGround);
-      logger.info('Lightning storm triggered via command', { groupCount, toGround });
+      logger.debug('Lightning storm triggered via command', { groupCount, toGround });
       return `Lightning storm triggered: ${groupCount} strikes (each with 5-30 flashes), ${toGround ? 'to ground' : 'in sky'}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

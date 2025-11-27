@@ -55,7 +55,7 @@ export class EditSelectionRotatorHandler extends InputHandler {
     // Set new mode
     selectService.autoSelectMode = nextMode;
 
-    logger.info(`Selection mode changed: ${currentMode} → ${nextMode}`);
+    logger.debug(`Selection mode changed: ${currentMode} → ${nextMode}`);
 
     // Show notification about mode change
     if (notificationService) {
@@ -116,7 +116,7 @@ export class EditorActivateHandler extends InputHandler {
 
     // Send setSelectedEditBlock command to server
     // Server will execute the configured editAction (OPEN_EDITOR, OPEN_CONFIG_DIALOG, etc.)
-    logger.info('Sending setSelectedEditBlock command to server', { position: pos });
+    logger.debug('Sending setSelectedEditBlock command to server', { position: pos });
 
     commandService
       .sendCommandToServer('setSelectedEditBlock', [pos.x, pos.y, pos.z])
@@ -215,7 +215,7 @@ export class BlockEditorActivateHandler extends InputHandler {
     const pos = selectedBlock.block.position;
 
     // Open block editor directly
-    logger.info('Opening block editor (triggered by F10 key)', { position: pos });
+    logger.debug('Opening block editor (triggered by F10 key)', { position: pos });
 
     try {
       modalService.openBlockEditor(pos.x, pos.y, pos.z);
@@ -258,7 +258,7 @@ export class EditConfigActivateHandler extends InputHandler {
     }
 
     // Open EditConfiguration modal
-    logger.info('Opening edit configuration modal (triggered by F9 key)');
+    logger.debug('Opening edit configuration modal (triggered by F9 key)');
 
     try {
       modalService.openEditConfiguration();

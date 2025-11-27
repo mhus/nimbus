@@ -82,7 +82,7 @@ export class WebInputController implements InputController {
     // Note: All handlers will be retrieved from InputService in initialize()
     // This makes WebInputController a pure binding layer
 
-    logger.info('WebInputController created');
+    logger.debug('WebInputController created');
   }
 
   /**
@@ -231,7 +231,7 @@ export class WebInputController implements InputController {
       this.rotateHandler.activate();
     }
 
-    logger.info('WebInputController initialized', {
+    logger.debug('WebInputController initialized', {
       handlerCount: this.handlers.length,
     });
   }
@@ -482,6 +482,6 @@ export class WebInputController implements InputController {
       }
     }
 
-    logger.info('WebInputController disposed');
+    logger.debug('WebInputController disposed');
   }
 }

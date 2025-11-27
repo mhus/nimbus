@@ -52,7 +52,7 @@ export class AmbientLightIntensityMultiplierCommand extends CommandHandler {
     // Set multiplier
     sunService.setAmbientLightIntensityMultiplier(multiplier);
 
-    logger.info('Ambient light intensity multiplier changed', { multiplier });
+    logger.debug('Ambient light intensity multiplier changed', { multiplier });
 
     return `Ambient light intensity multiplier set to ${multiplier.toFixed(2)}`;
   }

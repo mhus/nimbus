@@ -53,7 +53,7 @@ export class SunLightIntensityCommand extends CommandHandler {
     environmentService.setSunLightIntensity(value);
 
     const intensity = environmentService.getSunLightIntensity();
-    logger.info('Sun light intensity set', { intensity });
+    logger.debug('Sun light intensity set', { intensity });
 
     return `Sun light intensity set to ${intensity.toFixed(2)}`;
   }

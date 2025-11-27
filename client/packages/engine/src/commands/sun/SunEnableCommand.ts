@@ -43,7 +43,7 @@ export class SunEnableCommand extends CommandHandler {
     // Set sun visibility
     sunService.setEnabled(enabled);
 
-    logger.info('Sun visibility changed', { enabled });
+    logger.debug('Sun visibility changed', { enabled });
 
     return `Sun ${enabled ? 'enabled' : 'disabled'}`;
   }

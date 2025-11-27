@@ -111,3 +111,4 @@ doSetStackModifier('sunPosition','default',270, 0.1, 50);
 
 doCloudsAnimationStart('myJob', 10, 0.5, -100, 100, -100, 100, 80, 120, 20, 40, 10, 20, 2.0, 90, 'textures/clouds/cloud1.png,textures/clouds/cloud2.png');
 
+doSkyBoxStart({r:0.5, g:0.7, b:1},45, 450, 'textures/skybox/space')

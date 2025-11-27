@@ -54,7 +54,7 @@ export class AmbientLightDiffuseCommand extends CommandHandler {
     const color = new Color3(r, g, b);
     environmentService.setAmbientLightDiffuse(color);
 
-    logger.info('Ambient light diffuse color set', { r, g, b });
+    logger.debug('Ambient light diffuse color set', { r, g, b });
 
     return `Ambient light diffuse color set to (${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

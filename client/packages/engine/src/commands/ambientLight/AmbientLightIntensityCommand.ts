@@ -53,7 +53,7 @@ export class AmbientLightIntensityCommand extends CommandHandler {
     environmentService.setAmbientLightIntensity(value);
 
     const intensity = environmentService.getAmbientLightIntensity();
-    logger.info('Ambient light intensity set', { intensity });
+    logger.debug('Ambient light intensity set', { intensity });
 
     return `Ambient light intensity set to ${intensity.toFixed(2)}`;
   }

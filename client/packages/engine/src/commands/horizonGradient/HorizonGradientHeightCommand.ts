@@ -42,7 +42,7 @@ export class HorizonGradientHeightCommand extends CommandHandler {
     }
 
     service.setHeight(height);
-    logger.info('Horizon gradient height set via command', { height });
+    logger.debug('Horizon gradient height set via command', { height });
     return `Horizon gradient height set to ${height}`;
   }
 }

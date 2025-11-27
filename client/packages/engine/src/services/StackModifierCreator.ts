@@ -36,7 +36,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
     return;
   }
 
-  logger.info('Creating all StackModifiers...');
+  logger.debug('Creating all StackModifiers...');
 
   // ========================================
   // Player View Mode Stack
@@ -245,7 +245,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
   // Weitere Stacks hier hinzufügen
   // ========================================
 
-  logger.info('All StackModifiers created', {
+  logger.debug('All StackModifiers created', {
     stackCount: modifierService.stackNames.length,
     stacks: modifierService.stackNames,
   });

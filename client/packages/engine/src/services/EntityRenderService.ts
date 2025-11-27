@@ -71,7 +71,7 @@ export class EntityRenderService {
     this.entityService = entityService;
     this.modelService = modelService;
 
-    logger.info('EntityRenderService initialized');
+    logger.debug('EntityRenderService initialized');
 
     // Register event listeners
     this.registerEventListeners();
@@ -230,7 +230,10 @@ export class EntityRenderService {
 
       // Set rendering group for all meshes in the entity model
       modelRootNode.getChildMeshes().forEach(mesh => {
-        mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
+        // Skip instanced meshes (they inherit from source mesh)
+        if (!mesh.isAnInstance) {
+          mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
+        }
       });
 
       // Store entity ID in metadata for selection/raycasting
@@ -540,7 +543,7 @@ export class EntityRenderService {
    */
   set showPathways(value: boolean) {
     this._showPathways = value;
-    logger.info('Pathway visibility changed', { showPathways: value });
+    logger.debug('Pathway visibility changed', { showPathways: value });
 
     // Update all existing entities
     for (const [entityId, rendered] of this.renderedEntities.entries()) {
@@ -571,6 +574,6 @@ export class EntityRenderService {
       this.removeEntity(entityId);
     }
 
-    logger.info('EntityRenderService disposed');
+    logger.debug('EntityRenderService disposed');
   }
 }

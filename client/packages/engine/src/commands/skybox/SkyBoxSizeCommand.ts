@@ -54,7 +54,7 @@ export class SkyBoxSizeCommand extends CommandHandler {
     // Set skybox size
     skyBoxService.setSize(size);
 
-    logger.info('SkyBox size set via command', { size });
+    logger.debug('SkyBox size set via command', { size });
 
     return `SkyBox size set to: ${size}`;
   }

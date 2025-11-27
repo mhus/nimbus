@@ -84,7 +84,7 @@ export class PrecipitationStartCommand extends CommandHandler {
         precipitationService.setEnabled(true);
       }
 
-      logger.info('Precipitation started', { intensity, color: { r, g, b }, size, speed, gravity });
+      logger.debug('Precipitation started', { intensity, color: { r, g, b }, size, speed, gravity });
       return `Precipitation started: intensity=${intensity}, color=(${r},${g},${b}), size=${size}, speed=${speed}, gravity=${gravity}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

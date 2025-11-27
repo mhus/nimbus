@@ -68,7 +68,7 @@ export class StartEnvironmentScriptCommand extends CommandHandler {
 
     if (executorId) {
       const message = `Environment script started: ${name} (executor: ${executorId})`;
-      logger.info(message);
+      logger.debug(message);
       return {
         name,
         executorId,

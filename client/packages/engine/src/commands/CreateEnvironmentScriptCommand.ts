@@ -90,7 +90,7 @@ export class CreateEnvironmentScriptCommand extends CommandHandler {
     environmentService.createEnvironmentScript(name, group, scriptDefinition);
 
     const message = `Environment script created: ${name} (group: ${group})`;
-    logger.info(message);
+    logger.debug(message);
 
     return {
       name,

@@ -51,7 +51,7 @@ export class CloudSizeCommand extends CommandHandler {
 
     try {
       cloudsService.setCloudSize(id, width, height);
-      logger.info('Cloud size changed', { id, width, height });
+      logger.debug('Cloud size changed', { id, width, height });
       return `Cloud "${id}" size set to ${width}x${height}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

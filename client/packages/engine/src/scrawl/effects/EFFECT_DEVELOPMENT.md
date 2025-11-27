@@ -393,7 +393,7 @@ private animate = (): void => {
 logger.debug('Effect started', { options: this.options });
 
 // Info: Important milestones
-logger.info('Effect completed successfully');
+logger.debug('Effect completed successfully');
 
 // Warn: Non-critical issues (effect can continue)
 logger.warn('AudioService not available, skipping sound');
@@ -1169,7 +1169,7 @@ protected logInfo(message: string): void {
   if (this.deps.log) {
     this.deps.log(message);
   } else {
-    logger.info(message);
+    logger.debug(message);
   }
 }
 

@@ -101,7 +101,7 @@ export class CompassService {
       // Start update loop
       this.startUpdateLoop();
 
-      logger.info('CompassService initialized');
+      logger.debug('CompassService initialized');
     } catch (error) {
       ExceptionHandler.handle(error, 'Failed to initialize CompassService');
     }
@@ -347,6 +347,6 @@ export class CompassService {
     this.markers.clear();
     this.cardinalMarkers.clear();
 
-    logger.info('CompassService disposed');
+    logger.debug('CompassService disposed');
   }
 }

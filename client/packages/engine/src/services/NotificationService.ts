@@ -49,7 +49,7 @@ export class NotificationService {
     // Get container elements
     this.initializeContainers();
 
-    logger.info('NotificationService initialized');
+    logger.debug('NotificationService initialized');
   }
 
   /**
@@ -1265,7 +1265,7 @@ export class NotificationService {
         this.centerTextElement = null;
       }
 
-      logger.info('NotificationService disposed');
+      logger.debug('NotificationService disposed');
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.dispose');
     }
@@ -1300,7 +1300,7 @@ export class NotificationService {
 
       const imageUrl = networkService.getAssetUrl(assetPath);
 
-      logger.info('Flashing image', { assetPath, imageUrl, duration, opacity });
+      logger.debug('Flashing image', { assetPath, imageUrl, duration, opacity });
 
       // Create container for flash image
       const flashContainer = document.createElement('div');
@@ -1393,7 +1393,7 @@ export class NotificationService {
       this.centerTextElement.textContent = text;
       this.centerTextElement.style.display = 'block';
 
-      logger.info('Center text set', { text });
+      logger.debug('Center text set', { text });
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.setCenterText', { text });
     }
@@ -1407,7 +1407,7 @@ export class NotificationService {
       if (this.centerTextElement) {
         this.centerTextElement.style.display = 'none';
         this.centerTextElement.textContent = '';
-        logger.info('Center text cleared');
+        logger.debug('Center text cleared');
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.clearCenterText');

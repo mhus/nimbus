@@ -48,7 +48,7 @@ export class CloudPositionCommand extends CommandHandler {
 
     try {
       cloudsService.setCloudPosition(id, x, z, y);
-      logger.info('Cloud position changed', { id, x, z, y });
+      logger.debug('Cloud position changed', { id, x, z, y });
       return `Cloud "${id}" position set to (${x}, ${z}, ${y})`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

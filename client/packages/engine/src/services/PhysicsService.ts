@@ -161,7 +161,7 @@ export class PhysicsService {
     // This allows PlayerService and ModifierService to be fully initialized
     setTimeout(() => this.initializeMovementStateModifiers(), 100);
 
-    logger.info('PhysicsService initialized', {
+    logger.debug('PhysicsService initialized', {
       gravity: this.gravity,
       underwaterGravity: this.underwaterGravity,
       defaultWalkSpeed: this.defaultWalkSpeed,
@@ -228,7 +228,7 @@ export class PhysicsService {
       logger.debug('Swim modifier created (priority 30)');
     }
 
-    logger.info('Movement state modifiers initialized');
+    logger.debug('Movement state modifiers initialized');
   }
 
   /**
@@ -299,7 +299,7 @@ export class PhysicsService {
   enablePhysics(): void {
     if (!this.physicsEnabled) {
       this.physicsEnabled = true;
-      logger.info('Physics enabled - initial chunks loaded');
+      logger.debug('Physics enabled - initial chunks loaded');
     }
   }
 
@@ -308,7 +308,7 @@ export class PhysicsService {
    */
   disablePhysics(): void {
     this.physicsEnabled = false;
-    logger.info('Physics disabled');
+    logger.debug('Physics disabled');
   }
 
   /**
@@ -399,7 +399,7 @@ export class PhysicsService {
     // TODO: Reduce offset from 20 to 4 once groundLevel calculation is more accurate
     const targetY = heightData[4] + 20; // 4 = groundLevel
 
-    logger.info('Teleportation ready - positioning player', {
+    logger.debug('Teleportation ready - positioning player', {
       entityId,
       oldY,
       targetY,
@@ -410,7 +410,7 @@ export class PhysicsService {
     entity.position.y = targetY;
     entity.velocity.y = 0; // Reset vertical velocity
 
-    logger.info('Teleportation complete - player positioned', {
+    logger.debug('Teleportation complete - player positioned', {
       entityId,
       newY: entity.position.y,
     });
@@ -418,7 +418,7 @@ export class PhysicsService {
     // Clear timer and re-enable physics
     this.cancelTeleportation();
     this.physicsEnabled = true;
-    logger.info('Physics re-enabled after teleportation');
+    logger.debug('Physics re-enabled after teleportation');
   }
 
   /**
@@ -1253,7 +1253,7 @@ export class PhysicsService {
       this.walkController.dispose();
     }
 
-    logger.info('PhysicsService disposed');
+    logger.debug('PhysicsService disposed');
   }
 
   /**

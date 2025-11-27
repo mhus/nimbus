@@ -73,17 +73,17 @@ export class ListEnvironmentScriptsCommand extends CommandHandler {
     });
 
     // Log summary
-    logger.info(`Total environment scripts: ${scriptList.length}`);
-    logger.info(`Running scripts: ${runningScripts.length}`);
+    logger.debug(`Total environment scripts: ${scriptList.length}`);
+    logger.debug(`Running scripts: ${runningScripts.length}`);
 
     // Log each script
     if (scriptList.length === 0) {
-      logger.info('No environment scripts registered');
+      logger.debug('No environment scripts registered');
     } else {
-      logger.info('Environment scripts:');
+      logger.debug('Environment scripts:');
       for (const script of scriptList) {
         const status = script.running ? '[RUNNING]' : '[STOPPED]';
-        logger.info(`  ${status} ${script.name} (group: ${script.group}, scriptId: ${script.scriptId})`);
+        logger.debug(`  ${status} ${script.name} (group: ${script.group}, scriptId: ${script.scriptId})`);
       }
     }
 

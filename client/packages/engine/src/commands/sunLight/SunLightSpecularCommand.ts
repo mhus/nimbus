@@ -54,7 +54,7 @@ export class SunLightSpecularCommand extends CommandHandler {
     const color = new Color3(r, g, b);
     environmentService.setSunLightSpecularColor(color);
 
-    logger.info('Sun light specular color set', { r, g, b });
+    logger.debug('Sun light specular color set', { r, g, b });
 
     return `Sun light specular color set to (${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

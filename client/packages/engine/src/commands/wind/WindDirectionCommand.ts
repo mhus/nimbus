@@ -54,7 +54,7 @@ export class WindDirectionCommand extends CommandHandler {
     environmentService.setWindDirection(x, z);
 
     const dir = environmentService.getWindDirection();
-    logger.info('Wind direction set', { x: dir.x, z: dir.z });
+    logger.debug('Wind direction set', { x: dir.x, z: dir.z });
 
     return `Wind direction set to (${dir.x.toFixed(2)}, ${dir.z.toFixed(2)})`;
   }

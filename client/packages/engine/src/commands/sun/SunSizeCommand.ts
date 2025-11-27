@@ -51,7 +51,7 @@ export class SunSizeCommand extends CommandHandler {
     // Set sun size
     sunService.setSunSize(size);
 
-    logger.info('Sun size set', { size });
+    logger.debug('Sun size set', { size });
 
     return `Sun size set to ${size}`;
   }

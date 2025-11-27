@@ -290,7 +290,7 @@ export function checkUnderwaterState(
     const cameraService = appContext.services.camera;
     if (cameraService) {
       cameraService.setUnderwater(entity.inWater);
-      logger.info('💧 Water state changed', {
+      logger.debug('💧 Water state changed', {
         entityId: entity.entityId,
         inWater: entity.inWater,
       });

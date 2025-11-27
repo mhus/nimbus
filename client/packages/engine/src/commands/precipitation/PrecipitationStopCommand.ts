@@ -31,7 +31,7 @@ export class PrecipitationStopCommand extends CommandHandler {
 
     try {
       precipitationService.setEnabled(false);
-      logger.info('Precipitation stopped');
+      logger.debug('Precipitation stopped');
       return 'Precipitation stopped';
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

@@ -51,7 +51,7 @@ export class SkyBoxRotationCommand extends CommandHandler {
     // Set skybox rotation
     skyBoxService.setRotation(degrees);
 
-    logger.info('SkyBox rotation set via command', { degrees });
+    logger.debug('SkyBox rotation set via command', { degrees });
 
     return `SkyBox rotation set to: ${degrees}°`;
   }

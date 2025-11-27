@@ -58,7 +58,7 @@ export class MoonPhaseCommand extends CommandHandler {
     moonService.setMoonPhase(moonIndex, phase);
 
     const phaseName = this.getPhaseName(phase);
-    logger.info(`Moon ${moonIndex} phase set to ${phase.toFixed(2)}`, { phaseName });
+    logger.debug(`Moon ${moonIndex} phase set to ${phase.toFixed(2)}`, { phaseName });
 
     return `Moon ${moonIndex} phase set to ${phase.toFixed(2)} (${phaseName})`;
   }

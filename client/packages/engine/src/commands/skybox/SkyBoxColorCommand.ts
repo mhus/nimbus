@@ -62,7 +62,7 @@ export class SkyBoxColorCommand extends CommandHandler {
     // Set skybox color
     skyBoxService.setColorMode(new Color3(r, g, b));
 
-    logger.info('SkyBox color set via command', { r, g, b });
+    logger.debug('SkyBox color set via command', { r, g, b });
 
     return `SkyBox color set to RGB(${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

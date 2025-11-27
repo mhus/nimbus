@@ -53,7 +53,7 @@ export class WindSwayFactorCommand extends CommandHandler {
     environmentService.setWindSwayFactor(value);
 
     const factor = environmentService.getWindSwayFactor();
-    logger.info('Wind sway factor set', { swayFactor: factor });
+    logger.debug('Wind sway factor set', { swayFactor: factor });
 
     return `Wind sway factor set to ${factor.toFixed(2)}`;
   }

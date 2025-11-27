@@ -1,0 +1,5 @@
+{"id":"daytime_change_night","root":{"kind":"Sequence","steps":[
+  {"kind":"Cmd","cmd":"sunEnable","parameters":[true]},
+  {"kind":"Cmd","cmd":"ambientLightIntensity","parameters":[0]},
+  {"kind":"Cmd","cmd":"sunLightIntensity","parameters":[0.5]}
+]},"description":"daytime_change_night"}

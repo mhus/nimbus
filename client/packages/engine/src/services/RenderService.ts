@@ -146,7 +146,7 @@ export class RenderService {
     // Listen to chunk events
     this.setupChunkEventListeners();
 
-    logger.info('RenderService initialized');
+    logger.debug('RenderService initialized');
   }
 
   /**
@@ -795,6 +795,6 @@ export class RenderService {
     }
     this.chunkMeshes.clear();
 
-    logger.info('RenderService disposed');
+    logger.debug('RenderService disposed');
   }
 }

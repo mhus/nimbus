@@ -31,7 +31,7 @@ export class StepVolumeCommand {
       }
 
       const currentVolume = audioService.getStepVolume();
-      logger.info(`Current step volume: ${currentVolume}`);
+      logger.debug(`Current step volume: ${currentVolume}`);
       return;
     }
 
@@ -55,6 +55,6 @@ export class StepVolumeCommand {
     }
 
     audioService.setStepVolume(volume);
-    logger.info(`Step volume set to ${volume}`);
+    logger.debug(`Step volume set to ${volume}`);
   }
 }

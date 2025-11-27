@@ -31,7 +31,7 @@ export class BackdropMaterialManager {
     private scene: Scene,
     private appContext: AppContext
   ) {
-    logger.info('BackdropMaterialManager initialized');
+    logger.debug('BackdropMaterialManager initialized');
   }
 
   /**
@@ -94,7 +94,7 @@ export class BackdropMaterialManager {
 
       const textureUrl = networkService.getAssetUrl(config.texture);
 
-      logger.info('Loading backdrop texture', {
+      logger.debug('Loading backdrop texture', {
         texturePath: config.texture,
         textureUrl
       });
@@ -268,7 +268,7 @@ export class BackdropMaterialManager {
    * Dispose all backdrop materials
    */
   dispose(): void {
-    logger.info('Disposing all backdrop materials', {
+    logger.debug('Disposing all backdrop materials', {
       count: this.materials.size,
     });
 

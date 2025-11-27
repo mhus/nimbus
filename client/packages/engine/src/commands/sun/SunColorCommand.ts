@@ -61,7 +61,7 @@ export class SunColorCommand extends CommandHandler {
     // Set sun color
     sunService.setSunColor(r, g, b);
 
-    logger.info('Sun color set', { r, g, b });
+    logger.debug('Sun color set', { r, g, b });
 
     return `Sun color set to RGB(${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

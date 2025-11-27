@@ -51,7 +51,7 @@ export class SunLensFlareIntensityCommand extends CommandHandler {
     // Set lens flare intensity
     sunService.setSunLensFlareIntensity(intensity);
 
-    logger.info('Lens flare intensity set', { intensity });
+    logger.debug('Lens flare intensity set', { intensity });
 
     return `Lens flare intensity set to ${intensity.toFixed(2)}`;
   }

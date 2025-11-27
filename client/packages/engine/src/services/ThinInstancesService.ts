@@ -75,7 +75,7 @@ export class ThinInstancesService {
 
     this.createBaseMesh();
 
-    logger.info('ThinInstancesService initialized');
+    logger.debug('ThinInstancesService initialized');
   }
 
   /**
@@ -419,7 +419,7 @@ export class ThinInstancesService {
 
     this.baseMesh?.dispose();
 
-    logger.info('ThinInstancesService disposed');
+    logger.debug('ThinInstancesService disposed');
   }
 
   /**

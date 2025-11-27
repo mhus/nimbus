@@ -35,12 +35,12 @@ export class ScrawlStatusCommand extends CommandHandler {
       // Show all running executors
       const runningIds = scrawlService.getRunningExecutorIds();
 
-      logger.info('=== Running Scrawl Executors ===');
+      logger.debug('=== Running Scrawl Executors ===');
       if (runningIds.length === 0) {
-        logger.info('No scripts currently running');
+        logger.debug('No scripts currently running');
       } else {
-        logger.info(`Total running: ${runningIds.length}`);
-        logger.info('');
+        logger.debug(`Total running: ${runningIds.length}`);
+        logger.debug('');
         runningIds.forEach((id: string) => {
           const executor = scrawlService.getExecutor(id);
           if (executor) {
@@ -49,9 +49,9 @@ export class ScrawlStatusCommand extends CommandHandler {
               : executor.isPaused()
               ? 'paused'
               : 'running';
-            logger.info(`  ${id}:`);
-            logger.info(`    Script: ${executor.getScriptId()}`);
-            logger.info(`    Status: ${status}`);
+            logger.debug(`  ${id}:`);
+            logger.debug(`    Script: ${executor.getScriptId()}`);
+            logger.debug(`    Status: ${status}`);
           }
         });
       }
@@ -65,10 +65,10 @@ export class ScrawlStatusCommand extends CommandHandler {
         return;
       }
 
-      logger.info(`=== Executor ${executorId} ===`);
-      logger.info(`Script ID: ${executor.getScriptId()}`);
-      logger.info(`Cancelled: ${executor.isCancelled()}`);
-      logger.info(`Paused: ${executor.isPaused()}`);
+      logger.debug(`=== Executor ${executorId} ===`);
+      logger.debug(`Script ID: ${executor.getScriptId()}`);
+      logger.debug(`Cancelled: ${executor.isCancelled()}`);
+      logger.debug(`Paused: ${executor.isPaused()}`);
     }
   }
 }

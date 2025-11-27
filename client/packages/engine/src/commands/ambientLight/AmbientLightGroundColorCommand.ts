@@ -54,7 +54,7 @@ export class AmbientLightGroundColorCommand extends CommandHandler {
     const color = new Color3(r, g, b);
     environmentService.setAmbientLightGroundColor(color);
 
-    logger.info('Ambient light ground color set', { r, g, b });
+    logger.debug('Ambient light ground color set', { r, g, b });
 
     return `Ambient light ground color set to (${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

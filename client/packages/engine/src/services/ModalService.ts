@@ -102,7 +102,7 @@ export class ModalService {
     // Setup postMessage listener for IFrame communication
     this.setupPostMessageListener();
 
-    logger.info('ModalService initialized');
+    logger.debug('ModalService initialized');
   }
 
   /**
@@ -938,7 +938,7 @@ export class ModalService {
       const worldId = this.appContext.worldInfo?.worldId || 'main';
       const editorUrl = `${componentBaseUrl}block-editor.html${separator}world=${worldId}&x=${x}&y=${y}&z=${z}`;
 
-      logger.info('Opening block editor', { position: { x, y, z }, editorUrl });
+      logger.debug('Opening block editor', { position: { x, y, z }, editorUrl });
 
       return this.openModal(
         'block-editor', // referenceKey - reuse same modal for editor
@@ -980,7 +980,7 @@ export class ModalService {
 
       const editorUrl = `${componentBaseUrl}edit-config.html${separator}embedded=true&worldId=${worldId}&sessionId=${sessionId}`;
 
-      logger.info('Opening edit configuration modal', { editorUrl });
+      logger.debug('Opening edit configuration modal', { editorUrl });
 
       return this.openModal(
         'edit-config', // referenceKey
@@ -1069,7 +1069,7 @@ export class ModalService {
       this.modals.clear();
       this.modalsByReferenceKey.clear();
 
-      logger.info('ModalService disposed');
+      logger.debug('ModalService disposed');
     } catch (error) {
       ExceptionHandler.handle(error, 'ModalService.dispose');
     }

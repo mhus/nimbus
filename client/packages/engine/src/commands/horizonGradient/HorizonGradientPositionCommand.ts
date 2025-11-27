@@ -42,7 +42,7 @@ export class HorizonGradientPositionCommand extends CommandHandler {
     }
 
     service.setYPosition(y);
-    logger.info('Horizon gradient Y position set via command', { y });
+    logger.debug('Horizon gradient Y position set via command', { y });
     return `Horizon gradient Y position set to ${y}`;
   }
 }

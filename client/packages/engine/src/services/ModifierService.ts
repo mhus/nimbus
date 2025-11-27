@@ -581,7 +581,7 @@ export class ModifierService {
       // Execute action immediately with default value
       action(defaultValue);
 
-      logger.info('ModifierStack created', {
+      logger.debug('ModifierStack created', {
         stackName,
         defaultValue,
       });
@@ -630,7 +630,7 @@ export class ModifierService {
       // Execute action immediately with default value
       action(defaultValue);
 
-      logger.info('AnimationStack created', {
+      logger.debug('AnimationStack created', {
         stackName,
         defaultValue,
         defaultWaitTime,
@@ -723,7 +723,7 @@ export class ModifierService {
         stack.dispose();
         this.stackModifiers.delete(stackName);
 
-        logger.info('ModifierStack removed', { stackName });
+        logger.debug('ModifierStack removed', { stackName });
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ModifierService.removeStack', { stackName });
@@ -754,7 +754,7 @@ export class ModifierService {
       stack.dispose();
     }
     this.stackModifiers.clear();
-    logger.info('ModifierService disposed');
+    logger.debug('ModifierService disposed');
   }
 
   /**

@@ -53,7 +53,7 @@ export class WindStrengthCommand extends CommandHandler {
     environmentService.setWindStrength(value);
 
     const strength = environmentService.getWindStrength();
-    logger.info('Wind strength set', { strength });
+    logger.debug('Wind strength set', { strength });
 
     return `Wind strength set to ${strength.toFixed(2)}`;
   }

@@ -198,7 +198,7 @@ export class EnvironmentService {
     this.initializeAmbientAudioModifier();
     this.loadEnvironmentScriptsFromWorldInfo();
 
-    logger.info('EnvironmentService initialized', {
+    logger.debug('EnvironmentService initialized', {
       windParameters: this.windParameters,
       worldTimeConfig: this.worldTimeConfig,
       daySectionConfig: this.daySectionConfig,
@@ -222,7 +222,7 @@ export class EnvironmentService {
       // Create environment modifier (priority 50)
       this.ambientAudioModifier = stack.addModifier('', 50);
       this.ambientAudioModifier.setEnabled(false); // Disabled by default
-      logger.info('Environment ambient audio modifier created', { prio: 50 });
+      logger.debug('Environment ambient audio modifier created', { prio: 50 });
     }
   }
 
@@ -239,7 +239,7 @@ export class EnvironmentService {
     this.ambientAudioModifier.setValue(soundPath);
     this.ambientAudioModifier.setEnabled(soundPath.trim() !== '');
 
-    logger.info('Environment ambient audio set', { soundPath, enabled: soundPath.trim() !== '' });
+    logger.debug('Environment ambient audio set', { soundPath, enabled: soundPath.trim() !== '' });
   }
 
   /**
@@ -312,7 +312,7 @@ export class EnvironmentService {
     }
 
     this.ambientLight.intensity = intensity;
-    logger.info('Ambient light intensity set', { intensity });
+    logger.debug('Ambient light intensity set', { intensity });
   }
 
   /**
@@ -334,7 +334,7 @@ export class EnvironmentService {
     }
 
     this.ambientLight.specular = color;
-    logger.info('Ambient light specular color set', { color });
+    logger.debug('Ambient light specular color set', { color });
   }
 
   /**
@@ -349,7 +349,7 @@ export class EnvironmentService {
     }
 
     this.ambientLight.diffuse = color;
-    logger.info('Ambient light diffuse color set', { color });
+    logger.debug('Ambient light diffuse color set', { color });
   }
 
   /**
@@ -364,7 +364,7 @@ export class EnvironmentService {
     }
 
     this.ambientLight.groundColor = color;
-    logger.info('Ambient light ground color set', { color });
+    logger.debug('Ambient light ground color set', { color });
   }
 
   // ============================================
@@ -383,7 +383,7 @@ export class EnvironmentService {
     }
 
     this.sunLight.intensity = intensity;
-    logger.info('Sun light intensity set', { intensity });
+    logger.debug('Sun light intensity set', { intensity });
   }
 
   /**
@@ -408,7 +408,7 @@ export class EnvironmentService {
 
     const direction = new Vector3(x, y, z).normalize();
     this.sunLight.direction = direction;
-    logger.info('Sun light direction set', { x: direction.x, y: direction.y, z: direction.z });
+    logger.debug('Sun light direction set', { x: direction.x, y: direction.y, z: direction.z });
   }
 
   /**
@@ -430,7 +430,7 @@ export class EnvironmentService {
     }
 
     this.sunLight.diffuse = color;
-    logger.info('Sun light diffuse color set', { color });
+    logger.debug('Sun light diffuse color set', { color });
   }
 
   /**
@@ -445,7 +445,7 @@ export class EnvironmentService {
     }
 
     this.sunLight.specular = color;
-    logger.info('Sun light specular color set', { color });
+    logger.debug('Sun light specular color set', { color });
   }
 
   /**
@@ -573,7 +573,7 @@ export class EnvironmentService {
   private loadEnvironmentScriptsFromWorldInfo(): void {
     const worldInfo = this.appContext.worldInfo;
     if (!worldInfo?.settings?.environmentScripts) {
-      logger.info('No environment scripts defined in WorldInfo');
+      logger.debug('No environment scripts defined in WorldInfo');
       return;
     }
 
@@ -582,14 +582,14 @@ export class EnvironmentService {
       for (const scriptDef of scripts) {
         if (scriptDef.name && scriptDef.group && scriptDef.script) {
           this.environmentScripts.set(scriptDef.name, scriptDef);
-          logger.info('Loaded environment script from WorldInfo', {
+          logger.debug('Loaded environment script from WorldInfo', {
             name: scriptDef.name,
             group: scriptDef.group,
           });
         }
       }
     }
-    logger.info(`Loaded ${this.environmentScripts.size} environment scripts total`);
+    logger.debug(`Loaded ${this.environmentScripts.size} environment scripts total`);
   }
 
   /**
@@ -607,7 +607,7 @@ export class EnvironmentService {
     };
 
     this.environmentScripts.set(name, environmentScript);
-    logger.info('Environment script created', { name, group });
+    logger.debug('Environment script created', { name, group });
   }
 
   /**
@@ -618,7 +618,7 @@ export class EnvironmentService {
   deleteEnvironmentScript(name: string): boolean {
     const existed = this.environmentScripts.delete(name);
     if (existed) {
-      logger.info('Environment script deleted', { name });
+      logger.debug('Environment script deleted', { name });
     } else {
       logger.warn('Environment script not found for deletion', { name });
     }
@@ -688,7 +688,7 @@ export class EnvironmentService {
 
       this.runningScripts.set(scriptDef.group, runningScript);
 
-      logger.info('Environment script started', {
+      logger.debug('Environment script started', {
         name: scriptDef.name,
         group: scriptDef.group,
         executorId,
@@ -712,7 +712,7 @@ export class EnvironmentService {
   async stopEnvironmentScriptByGroup(group: string): Promise<boolean> {
     const runningScript = this.runningScripts.get(group);
     if (!runningScript) {
-      logger.info('No running script in group', { group });
+      logger.debug('No running script in group', { group });
       return false;
     }
 
@@ -726,7 +726,7 @@ export class EnvironmentService {
     if (cancelled) {
       this.runningScripts.delete(group);
 
-      logger.info('Environment script stopped', {
+      logger.debug('Environment script stopped', {
         name: runningScript.name,
         group: runningScript.group,
         executorId: runningScript.executorId,
@@ -832,7 +832,7 @@ export class EnvironmentService {
       yearsPerEra: Math.max(1, yearsPerEra),
     };
 
-    logger.info('World Time config updated', this.worldTimeConfig);
+    logger.debug('World Time config updated', this.worldTimeConfig);
   }
 
   /**
@@ -876,11 +876,11 @@ export class EnvironmentService {
       if (seasonName) {
         const seasonScriptName = `season_${seasonName}`;
         this.startEnvironmentScript(seasonScriptName);
-        logger.info('Started season script', { seasonStatus, seasonScriptName });
+        logger.debug('Started season script', { seasonStatus, seasonScriptName });
       }
     }
 
-    logger.info('World Time started', {
+    logger.debug('World Time started', {
       startWorldMinute: worldMinute,
       startWorldTime: this.getWorldTimeCurrentAsString(),
       daySection: this.currentDaySection,
@@ -909,7 +909,7 @@ export class EnvironmentService {
 
     this.currentDaySection = null;
 
-    logger.info('World Time stopped', {
+    logger.debug('World Time stopped', {
       stoppedAt: currentWorldTime,
       stoppedAtFormatted: this.formatWorldTime(currentWorldTime),
     });
@@ -970,8 +970,8 @@ export class EnvironmentService {
     const month = (remainingMinutes % config.monthsPerYear) + 1; // Months start at 1
     remainingMinutes = Math.floor(remainingMinutes / config.monthsPerYear);
 
-    const year = remainingMinutes % config.yearsPerEra;
-    const era = Math.floor(remainingMinutes / config.yearsPerEra);
+    const year = (remainingMinutes % config.yearsPerEra) + 1; // Years start at 1
+    const era = Math.floor(remainingMinutes / config.yearsPerEra) + 1; // Eras start at 1
 
     return `@${era}, @${year}.${month}.${day}, ${hour}:${minute.toString().padStart(2, '0')}`;
   }
@@ -1016,7 +1016,7 @@ export class EnvironmentService {
     const newDaySection = this.getWorldDayTimeSection();
 
     if (this.currentDaySection !== newDaySection) {
-      logger.info('Day section changed', {
+      logger.debug('Day section changed', {
         from: this.currentDaySection,
         to: newDaySection,
         worldTime: this.getWorldTimeCurrentAsString(),
@@ -1152,13 +1152,13 @@ export class EnvironmentService {
 
   /**
    * Reset environment to default state
-   * Clears clouds and stops precipitation
+   * Clears clouds, stops precipitation, and disables skybox and horizon gradient
    */
   resetEnvironment(): void {
     const cloudService = this.appContext.services.clouds;
     if (cloudService) {
       cloudService.clearClouds(false);
-      logger.info('Environment reset: clouds cleared');
+      logger.debug('Environment reset: clouds cleared');
     } else {
       logger.warn('CloudService not available for environment reset');
     }
@@ -1166,12 +1166,28 @@ export class EnvironmentService {
     const precipitationService = this.appContext.services.precipitation;
     if (precipitationService) {
       precipitationService.setEnabled(false);
-      logger.info('Environment reset: precipitation stopped');
+      logger.debug('Environment reset: precipitation stopped');
     } else {
       logger.warn('PrecipitationService not available for environment reset');
     }
 
-    logger.info('Environment reset completed');
+    const skyBoxService = this.appContext.services.skyBox;
+    if (skyBoxService) {
+      skyBoxService.setEnabled(false);
+      logger.debug('Environment reset: skybox disabled');
+    } else {
+      logger.warn('SkyBoxService not available for environment reset');
+    }
+
+    const horizonGradientService = this.appContext.services.horizonGradient;
+    if (horizonGradientService) {
+      horizonGradientService.setEnabled(false);
+      logger.debug('Environment reset: horizon gradient disabled');
+    } else {
+      logger.warn('HorizonGradientService not available for environment reset');
+    }
+
+    logger.debug('Environment reset completed');
   }
 
   /**
@@ -1190,6 +1206,6 @@ export class EnvironmentService {
 
     this.ambientLight?.dispose();
     this.sunLight?.dispose();
-    logger.info('Environment disposed');
+    logger.debug('Environment disposed');
   }
 }

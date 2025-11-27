@@ -79,7 +79,7 @@ export class CloudsAnimationStartCommand extends CommandHandler {
         textures
       );
 
-      logger.info('Cloud animation started via command', { jobName, emitCountPerMinute, emitProbability, speed, direction });
+      logger.debug('Cloud animation started via command', { jobName, emitCountPerMinute, emitProbability, speed, direction });
       return `Cloud animation '${jobName}' started (${emitCountPerMinute} emits/min, direction: ${direction}°, ${textures.length} textures)`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

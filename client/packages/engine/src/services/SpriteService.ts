@@ -63,7 +63,7 @@ export class SpriteService {
     // Setup animation loop
     this.setupAnimationLoop();
 
-    logger.info('SpriteService initialized with wind animation');
+    logger.debug('SpriteService initialized with wind animation');
   }
 
   /**
@@ -335,6 +335,6 @@ export class SpriteService {
     this.textureDimensions.clear();
     this.spriteData = [];
 
-    logger.info('SpriteService disposed');
+    logger.debug('SpriteService disposed');
   }
 }

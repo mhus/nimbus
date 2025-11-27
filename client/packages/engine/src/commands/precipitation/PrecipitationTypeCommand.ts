@@ -49,7 +49,7 @@ export class PrecipitationTypeCommand extends CommandHandler {
 
     try {
       precipitationService.setPrecipitationType(type);
-      logger.info('Precipitation type changed', { type });
+      logger.debug('Precipitation type changed', { type });
       return `Precipitation type set to ${type}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

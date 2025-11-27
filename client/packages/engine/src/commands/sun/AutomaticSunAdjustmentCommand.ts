@@ -44,7 +44,7 @@ export class AutomaticSunAdjustmentCommand extends CommandHandler {
     // Set automatic sun adjustment
     sunService.setAutomaticSunAdjustment(enabled);
 
-    logger.info('Automatic sun adjustment changed', { enabled });
+    logger.debug('Automatic sun adjustment changed', { enabled });
 
     return `Automatic sun adjustment ${enabled ? 'enabled' : 'disabled'}`;
   }

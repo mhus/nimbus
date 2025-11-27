@@ -50,7 +50,7 @@ export class MoonPositionCommand extends CommandHandler {
     moonService.setMoonPositionOnCircle(moonIndex, angleY);
 
     const position = moonService.getMoonPosition(moonIndex);
-    logger.info(`Moon ${moonIndex} position set`, position);
+    logger.debug(`Moon ${moonIndex} position set`, position);
 
     return `Moon ${moonIndex} position set to ${position?.angleY}° (0=North, 90=East, 180=South, 270=West)`;
   }

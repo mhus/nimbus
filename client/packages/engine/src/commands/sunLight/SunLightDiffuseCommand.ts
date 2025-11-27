@@ -54,7 +54,7 @@ export class SunLightDiffuseCommand extends CommandHandler {
     const color = new Color3(r, g, b);
     environmentService.setSunLightDiffuse(color);
 
-    logger.info('Sun light diffuse color set', { r, g, b });
+    logger.debug('Sun light diffuse color set', { r, g, b });
 
     return `Sun light diffuse color set to (${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)})`;
   }

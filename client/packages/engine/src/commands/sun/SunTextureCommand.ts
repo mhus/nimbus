@@ -50,13 +50,13 @@ export class SunTextureCommand extends CommandHandler {
     // Reset to default if null/reset
     if (texturePath === 'null' || texturePath === 'reset') {
       await sunService.setSunTexture(null);
-      logger.info('Sun texture reset to default');
+      logger.debug('Sun texture reset to default');
       return 'Sun texture reset to default circular disc';
     }
 
     // Set custom texture
     await sunService.setSunTexture(texturePath);
-    logger.info('Sun texture set', { path: texturePath });
+    logger.debug('Sun texture set', { path: texturePath });
 
     return `Sun texture set to: ${texturePath}`;
   }

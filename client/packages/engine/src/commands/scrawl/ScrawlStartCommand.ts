@@ -32,10 +32,10 @@ export class ScrawlStartCommand extends CommandHandler {
 
     if (args.length === 0) {
       logger.error('Usage: scrawlStart <scriptId|json|object>');
-      logger.info('Examples:');
-      logger.info('  scrawlStart my-script');
-      logger.info('  scrawlStart \'{"id":"test","root":{"kind":"Play","effectId":"test"}}\'');
-      logger.info('  scrawlStart({id:"test",root:{kind:"Play",effectId:"log",ctx:{message:"Hi"}}})');
+      logger.debug('Examples:');
+      logger.debug('  scrawlStart my-script');
+      logger.debug('  scrawlStart \'{"id":"test","root":{"kind":"Play","effectId":"test"}}\'');
+      logger.debug('  scrawlStart({id:"test",root:{kind:"Play",effectId:"log",ctx:{message:"Hi"}}})');
       return;
     }
 
@@ -49,7 +49,7 @@ export class ScrawlStartCommand extends CommandHandler {
       if (typeof args[0] === 'object' && args[0] !== null) {
         // Direct object passed
         script = args[0] as ScrawlScript;
-        logger.info(`Starting inline script (object): ${script.id}`);
+        logger.debug(`Starting inline script (object): ${script.id}`);
         executorId = await scrawlService.executeScript(script);
       } else {
         // String argument - could be JSON or script ID
@@ -58,16 +58,16 @@ export class ScrawlStartCommand extends CommandHandler {
         if (input.trim().startsWith('{')) {
           // Parse as JSON string
           script = JSON.parse(input);
-          logger.info(`Starting inline script (JSON): ${(script as ScrawlScript).id}`);
+          logger.debug(`Starting inline script (JSON): ${(script as ScrawlScript).id}`);
           executorId = await scrawlService.executeScript(script as ScrawlScript);
         } else {
           // Treat as script ID
-          logger.info(`Starting script: ${input}`);
+          logger.debug(`Starting script: ${input}`);
           executorId = await scrawlService.executeScript(input);
         }
       }
 
-      logger.info(`Script started with executor ID: ${executorId}`);
+      logger.debug(`Script started with executor ID: ${executorId}`);
     } catch (error: any) {
       logger.error('Failed to start script', { error: error.message });
     }

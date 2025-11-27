@@ -68,7 +68,7 @@ export class PrecipitationService {
     this.appContext = appContext;
     this.cameraService = appContext.services.camera!;
 
-    logger.info('PrecipitationService initialized');
+    logger.debug('PrecipitationService initialized');
   }
 
   /**
@@ -86,7 +86,7 @@ export class PrecipitationService {
       this.disposeParticleSystem();
     }
 
-    logger.info('Precipitation enabled state changed', { enabled });
+    logger.debug('Precipitation enabled state changed', { enabled });
   }
 
   /**
@@ -110,7 +110,7 @@ export class PrecipitationService {
       this.updateParticleIntensity();
     }
 
-    logger.info('Precipitation intensity changed', { intensity: this.intensity });
+    logger.debug('Precipitation intensity changed', { intensity: this.intensity });
   }
 
   /**
@@ -144,7 +144,7 @@ export class PrecipitationService {
       this.createParticleSystem();
     }
 
-    logger.info('Precipitation type changed', { type, wasEnabled });
+    logger.debug('Precipitation type changed', { type, wasEnabled });
   }
 
   /**
@@ -165,7 +165,7 @@ export class PrecipitationService {
     }
 
     this.particleSize = size;
-    logger.info('Particle size set', { size });
+    logger.debug('Particle size set', { size });
   }
 
   /**
@@ -182,7 +182,7 @@ export class PrecipitationService {
    */
   public setParticleColor(color: Color4): void {
     this.particleColor = color;
-    logger.info('Particle color set', {
+    logger.debug('Particle color set', {
       r: color.r,
       g: color.g,
       b: color.b,
@@ -208,7 +208,7 @@ export class PrecipitationService {
     }
 
     this.particleSpeed = speed;
-    logger.info('Particle speed set', { speed });
+    logger.debug('Particle speed set', { speed });
   }
 
   /**
@@ -217,7 +217,7 @@ export class PrecipitationService {
    */
   public setParticleGravity(gravity: number): void {
     this.particleGravity = Math.abs(gravity);
-    logger.info('Particle gravity set', { gravity: this.particleGravity });
+    logger.debug('Particle gravity set', { gravity: this.particleGravity });
   }
 
   /**
@@ -238,7 +238,7 @@ export class PrecipitationService {
         if (this.particleSystem) {
           this.particleSystem.particleTexture = this.particleTexture;
         }
-        logger.info('Particle texture loaded', { path: texturePath });
+        logger.debug('Particle texture loaded', { path: texturePath });
       } catch (error) {
         logger.error('Failed to load particle texture', { path: texturePath, error });
       }
@@ -295,7 +295,7 @@ export class PrecipitationService {
       }, delay);
     }
 
-    logger.info('Lightning storm triggered', {
+    logger.debug('Lightning storm triggered', {
       groupCount,
       toGround,
     });
@@ -307,7 +307,7 @@ export class PrecipitationService {
    */
   public registerFlashSounds(soundPaths: string[]): void {
     this.thunderSoundPaths = soundPaths;
-    logger.info('Thunder sounds registered', { count: soundPaths.length, paths: soundPaths });
+    logger.debug('Thunder sounds registered', { count: soundPaths.length, paths: soundPaths });
   }
 
   /**
@@ -347,7 +347,7 @@ export class PrecipitationService {
     // Play sound at position
     audioService.playSoundAtPosition(soundPath, position.x, position.y, position.z, 1.0);
 
-    logger.info('Thunder sound played', {
+    logger.debug('Thunder sound played', {
       soundPath,
       position: { x: position.x, y: position.y, z: position.z },
       intensity,
@@ -405,7 +405,7 @@ export class PrecipitationService {
       }, delay);
     }
 
-    logger.info('Lightning group created', {
+    logger.debug('Lightning group created', {
       position: { x: lightningX, z: lightningZ },
       flashCount,
       pathSegments: path.length - 1,
@@ -514,7 +514,7 @@ export class PrecipitationService {
     this.disposeParticleSystem();
     this.disposeLightning();
     this.particleTexture?.dispose();
-    logger.info('PrecipitationService disposed');
+    logger.debug('PrecipitationService disposed');
   }
 
   // ========== Private Helper Methods ==========
@@ -594,7 +594,7 @@ export class PrecipitationService {
     // Start emitting
     this.particleSystem.start();
 
-    logger.info('✨ Particle system created and started', {
+    logger.debug('✨ Particle system created and started', {
       type: this.precipitationType,
       intensity: this.intensity,
       emissionRate: this.particleSystem.emitRate,
@@ -637,7 +637,7 @@ export class PrecipitationService {
     const emissionRate = (this.intensity / 100) * 500;
     this.particleSystem.emitRate = emissionRate;
 
-    logger.info('💧 Particle intensity updated', {
+    logger.debug('💧 Particle intensity updated', {
       intensity: this.intensity,
       emissionRate,
       isStarted: this.particleSystem.isStarted(),
@@ -687,7 +687,7 @@ export class PrecipitationService {
       Constants.TEXTURE_BILINEAR_SAMPLINGMODE
     );
 
-    logger.info('Particle texture created');
+    logger.debug('Particle texture created');
   }
 
   /**

@@ -101,7 +101,7 @@ export abstract class ScrawlEffectHandler<O = unknown> {
     if (this.deps.log) {
       this.deps.log(message, ...args);
     } else {
-      logger.info(message, ...args);
+      logger.debug(message, ...args);
     }
   }
 

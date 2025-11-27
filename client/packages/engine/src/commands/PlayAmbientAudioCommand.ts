@@ -71,10 +71,10 @@ export class PlayAmbientAudioCommand extends CommandHandler {
       // Create or update command modifier (priority 100)
       if (!this.commandModifier) {
         this.commandModifier = stack.addModifier(soundPath, 100);
-        logger.info('Command modifier created', { soundPath, prio: 100 });
+        logger.debug('Command modifier created', { soundPath, prio: 100 });
       } else {
         this.commandModifier.setValue(soundPath);
-        logger.info('Command modifier updated', { soundPath });
+        logger.debug('Command modifier updated', { soundPath });
       }
 
       // Enable/disable based on path

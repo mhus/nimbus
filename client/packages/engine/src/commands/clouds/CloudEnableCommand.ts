@@ -61,7 +61,7 @@ export class CloudEnableCommand extends CommandHandler {
 
     try {
       cloudsService.setCloudEnabled(id, enabled);
-      logger.info('Cloud enabled state changed', { id, enabled });
+      logger.debug('Cloud enabled state changed', { id, enabled });
       return `Cloud "${id}" ${enabled ? 'enabled' : 'disabled'}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

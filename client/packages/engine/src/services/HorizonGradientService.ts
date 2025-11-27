@@ -86,7 +86,7 @@ export class HorizonGradientService {
       this.alpha = config.alpha;
     }
 
-    logger.info('Horizon gradient parameters loaded from WorldInfo', {
+    logger.debug('Horizon gradient parameters loaded from WorldInfo', {
       enabled: this.enabled,
       distance: this.distance,
       y: this.y,
@@ -121,7 +121,7 @@ export class HorizonGradientService {
     // Set enabled state
     this.setEnabled(this.enabled);
 
-    logger.info('HorizonGradientService initialized', {
+    logger.debug('HorizonGradientService initialized', {
       enabled: this.enabled,
       distance: this.distance,
       height: this.height,
@@ -202,7 +202,7 @@ export class HorizonGradientService {
       this.materials.push(material);
     });
 
-    logger.info('Horizon box created', {
+    logger.debug('Horizon box created', {
       planeCount: this.planes.length,
       distance: this.distance,
       height: this.height,
@@ -257,7 +257,7 @@ export class HorizonGradientService {
   private rebuildHorizonBox(): void {
     this.createHorizonBox();
     this.setEnabled(this.enabled);
-    logger.info('Horizon box rebuilt');
+    logger.debug('Horizon box rebuilt');
   }
 
   /**
@@ -267,7 +267,7 @@ export class HorizonGradientService {
     this.planes.forEach((plane) => {
       this.applyVertexGradient(plane);
     });
-    logger.info('Vertex colors updated');
+    logger.debug('Vertex colors updated');
   }
 
   /**
@@ -281,7 +281,7 @@ export class HorizonGradientService {
       plane.setEnabled(enabled);
     });
 
-    logger.info('Horizon gradient visibility changed', { enabled });
+    logger.debug('Horizon gradient visibility changed', { enabled });
   }
 
   /**
@@ -296,7 +296,7 @@ export class HorizonGradientService {
 
     this.distance = distance;
     this.rebuildHorizonBox();
-    logger.info('Horizon gradient distance updated', { distance });
+    logger.debug('Horizon gradient distance updated', { distance });
   }
 
   /**
@@ -306,7 +306,7 @@ export class HorizonGradientService {
   setYPosition(y: number): void {
     this.y = y;
     this.rebuildHorizonBox();
-    logger.info('Horizon gradient Y position updated', { y });
+    logger.debug('Horizon gradient Y position updated', { y });
   }
 
   /**
@@ -321,7 +321,7 @@ export class HorizonGradientService {
 
     this.height = height;
     this.rebuildHorizonBox();
-    logger.info('Horizon gradient height updated', { height });
+    logger.debug('Horizon gradient height updated', { height });
   }
 
   /**
@@ -331,7 +331,7 @@ export class HorizonGradientService {
   setColor0(color: Color3): void {
     this.color0 = color;
     this.updateVertexColors();
-    logger.info('Horizon gradient color0 updated', {
+    logger.debug('Horizon gradient color0 updated', {
       r: color.r,
       g: color.g,
       b: color.b,
@@ -345,7 +345,7 @@ export class HorizonGradientService {
   setColor1(color: Color3): void {
     this.color1 = color;
     this.updateVertexColors();
-    logger.info('Horizon gradient color1 updated', {
+    logger.debug('Horizon gradient color1 updated', {
       r: color.r,
       g: color.g,
       b: color.b,
@@ -372,7 +372,7 @@ export class HorizonGradientService {
       material.alpha = alpha;
     });
 
-    logger.info('Horizon gradient alpha updated', { alpha });
+    logger.debug('Horizon gradient alpha updated', { alpha });
   }
 
   /**
@@ -393,6 +393,6 @@ export class HorizonGradientService {
     this.planes = [];
     this.materials = [];
 
-    logger.info('HorizonGradientService disposed');
+    logger.debug('HorizonGradientService disposed');
   }
 }

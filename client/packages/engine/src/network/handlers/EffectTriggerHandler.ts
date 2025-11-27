@@ -36,7 +36,7 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
       return;
     }
 
-    logger.info('Effect trigger received from server', {
+    logger.debug('Effect trigger received from server', {
       effectId: data.effectId,
       entityId: data.entityId,
       chunkCount: data.chunks?.length || 0,
@@ -80,12 +80,12 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
         }
       );
 
-      logger.info('Remote executor should have isLocal: false', {
+      logger.debug('Remote executor should have isLocal: false', {
         executorId,
         contextIsLocal: false,
       });
 
-      logger.info('Remote effect executed', {
+      logger.debug('Remote effect executed', {
         executorId,
         effectId: data.effectId,
         entityId: data.entityId,

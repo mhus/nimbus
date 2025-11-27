@@ -42,11 +42,11 @@ export class SkyBoxEnableCommand extends CommandHandler {
 
     if (param === 'true') {
       skyBoxService.setEnabled(true);
-      logger.info('SkyBox enabled via command');
+      logger.debug('SkyBox enabled via command');
       return 'SkyBox enabled';
     } else if (param === 'false') {
       skyBoxService.setEnabled(false);
-      logger.info('SkyBox disabled via command');
+      logger.debug('SkyBox disabled via command');
       return 'SkyBox disabled';
     } else {
       return 'Invalid parameter. Use "true" or "false".';

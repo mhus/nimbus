@@ -52,7 +52,7 @@ export class SunLightIntensityMultiplierCommand extends CommandHandler {
     // Set multiplier
     sunService.setSunLightIntensityMultiplier(multiplier);
 
-    logger.info('Sun light intensity multiplier changed', { multiplier });
+    logger.debug('Sun light intensity multiplier changed', { multiplier });
 
     return `Sun light intensity multiplier set to ${multiplier.toFixed(2)}`;
   }

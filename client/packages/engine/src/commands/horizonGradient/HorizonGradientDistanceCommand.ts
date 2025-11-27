@@ -42,7 +42,7 @@ export class HorizonGradientDistanceCommand extends CommandHandler {
     }
 
     service.setDistance(distance);
-    logger.info('Horizon gradient distance set via command', { distance });
+    logger.debug('Horizon gradient distance set via command', { distance });
     return `Horizon gradient distance set to ${distance}`;
   }
 }

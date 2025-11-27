@@ -49,7 +49,7 @@ export class CloudListCommand extends CommandHandler {
       ].join('\n');
     }).join('\n\n');
 
-    logger.info('Cloud list requested', { count: clouds.length });
+    logger.debug('Cloud list requested', { count: clouds.length });
 
     return `Clouds (${clouds.length}):\n\n${cloudList}`;
   }

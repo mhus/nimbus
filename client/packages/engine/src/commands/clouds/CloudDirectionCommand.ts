@@ -46,7 +46,7 @@ export class CloudDirectionCommand extends CommandHandler {
 
     try {
       cloudsService.setCloudDirection(id, direction);
-      logger.info('Cloud direction changed', { id, direction });
+      logger.debug('Cloud direction changed', { id, direction });
       return `Cloud "${id}" direction set to ${direction}° (0=North, 90=East, 180=South, 270=West)`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

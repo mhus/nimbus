@@ -40,7 +40,7 @@ export class CloudRemoveCommand extends CommandHandler {
 
     try {
       cloudsService.removeCloud(id);
-      logger.info('Cloud removed', { id });
+      logger.debug('Cloud removed', { id });
       return `Cloud "${id}" removed`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

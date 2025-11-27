@@ -134,7 +134,7 @@ export class SelectService {
       this.initializeHighlight();
     }
 
-    logger.info('SelectService initialized');
+    logger.debug('SelectService initialized');
   }
 
   /**
@@ -1211,6 +1211,6 @@ export class SelectService {
     this.currentSelectedBlock = null;
     this.selectedEditBlock = null;
 
-    logger.info('SelectService disposed');
+    logger.debug('SelectService disposed');
   }
 }

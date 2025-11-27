@@ -155,7 +155,7 @@ export class ScrawlExecutor {
    */
   async start(): Promise<void> {
     try {
-      logger.info(`Starting script: ${this.script.id}`);
+      logger.debug(`Starting script: ${this.script.id}`);
 
       // Determine root step
       let rootStep: ScrawlStep | undefined;
@@ -176,7 +176,7 @@ export class ScrawlExecutor {
       // Execute root step
       await this.execStep(ctx, rootStep);
 
-      logger.info(`Script completed: ${this.script.id}`);
+      logger.debug(`Script completed: ${this.script.id}`);
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
         error,
@@ -290,13 +290,13 @@ export class ScrawlExecutor {
       if (physicsService) {
         physicsService.setPlayerDirectionBroadcast(true);
         this.playerDirectionBroadcastActive = true;
-        logger.info('Player direction broadcast enabled for Play effect', {
+        logger.debug('Player direction broadcast enabled for Play effect', {
           effectId: step.effectId,
           isLocal: effectCtx.isLocal,
         });
       }
     } else if (step.receivePlayerDirection && !effectCtx.isLocal) {
-      logger.info('Skipping player direction for remote Play effect', {
+      logger.debug('Skipping player direction for remote Play effect', {
         effectId: step.effectId,
         isLocal: effectCtx.isLocal,
       });
@@ -599,7 +599,7 @@ export class ScrawlExecutor {
       isLocal: isLocalValue,
     } as ScrawlExecContext;
 
-    logger.info('Context created', {
+    logger.debug('Context created', {
       scriptId: this.script.id,
       isLocal: ctx.isLocal,
       fromInitialContext: this.initialContext.isLocal,
@@ -784,7 +784,7 @@ export class ScrawlExecutor {
 
     // Handle special stop parameter (from remote shortcut end)
     if (paramName === '__stop__') {
-      logger.info('Stop event received via parameter update, emitting stop_event', {
+      logger.debug('Stop event received via parameter update, emitting stop_event', {
         executorId: this.executorId,
       });
       this.emit('stop_event');
@@ -900,14 +900,14 @@ export class ScrawlExecutor {
       if (physicsService) {
         physicsService.setPlayerDirectionBroadcast(true);
         this.playerDirectionBroadcastActive = true;
-        logger.info('Player direction broadcast ENABLED for While effect', {
+        logger.debug('Player direction broadcast ENABLED for While effect', {
           effectId: step.step.effectId,
           executorId: this.executorId,
           isLocal: ctx.isLocal,
         });
       }
     } else if (step.step.kind === 'Play' && step.step.receivePlayerDirection && !ctx.isLocal) {
-      logger.info('Skipping player direction for remote While effect', {
+      logger.debug('Skipping player direction for remote While effect', {
         effectId: step.step.effectId,
         isLocal: ctx.isLocal,
       });
@@ -978,7 +978,7 @@ export class ScrawlExecutor {
       // Disable player direction broadcast if we enabled it
       if (needsPlayerDirection && this.playerDirectionBroadcastActive) {
         this.cleanupPlayerDirectionListener();
-        logger.info('Player direction broadcast DISABLED after While loop');
+        logger.debug('Player direction broadcast DISABLED after While loop');
       }
     }
   }
@@ -1009,14 +1009,14 @@ export class ScrawlExecutor {
       if (physicsService) {
         physicsService.setPlayerDirectionBroadcast(true);
         this.playerDirectionBroadcastActive = true;
-        logger.info('Player direction broadcast ENABLED for Until effect', {
+        logger.debug('Player direction broadcast ENABLED for Until effect', {
           effectId: step.step.effectId,
           executorId: this.executorId,
           isLocal: ctx.isLocal,
         });
       }
     } else if (step.step.kind === 'Play' && step.step.receivePlayerDirection && !ctx.isLocal) {
-      logger.info('Skipping player direction for remote effect', {
+      logger.debug('Skipping player direction for remote effect', {
         effectId: step.step.effectId,
         isLocal: ctx.isLocal,
       });
@@ -1082,7 +1082,7 @@ export class ScrawlExecutor {
       // Disable player direction broadcast if we enabled it
       if (needsPlayerDirection && this.playerDirectionBroadcastActive) {
         this.cleanupPlayerDirectionListener();
-        logger.info('Player direction broadcast DISABLED after Until loop');
+        logger.debug('Player direction broadcast DISABLED after Until loop');
       }
     }
   }

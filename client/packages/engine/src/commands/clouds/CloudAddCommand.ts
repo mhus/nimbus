@@ -78,7 +78,7 @@ export class CloudAddCommand extends CommandHandler {
         direction,
       });
 
-      logger.info('Cloud added', { id, startX, startZ, y, width, height, texture, speed, direction, level });
+      logger.debug('Cloud added', { id, startX, startZ, y, width, height, texture, speed, direction, level });
 
       return `Cloud "${id}" added at position (${startX}, ${startZ}, ${y}) with size ${width}x${height}, speed ${speed}, direction ${direction}°`;
     } catch (error) {

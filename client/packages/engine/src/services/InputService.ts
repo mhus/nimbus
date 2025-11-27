@@ -83,10 +83,10 @@ export class InputService {
     // Listen for DEAD mode changes
     this.playerService.on('player:deadStateChanged', (isDead: boolean) => {
       this.inputEnabled = !isDead;
-      logger.info('Input enabled state changed', { enabled: this.inputEnabled });
+      logger.debug('Input enabled state changed', { enabled: this.inputEnabled });
     });
 
-    logger.info('InputService initialized');
+    logger.debug('InputService initialized');
   }
 
   /**
@@ -159,7 +159,7 @@ export class InputService {
     // Get handlers from controller
     this.handlers = this.controller.getHandlers();
 
-    logger.info('Input controller set', { handlerCount: this.handlers.length });
+    logger.debug('Input controller set', { handlerCount: this.handlers.length });
   }
 
   /**
@@ -256,6 +256,6 @@ export class InputService {
 
     this.handlers = [];
 
-    logger.info('InputService disposed');
+    logger.debug('InputService disposed');
   }
 }

@@ -48,7 +48,7 @@ export class MoonSizeCommand extends CommandHandler {
 
     moonService.setMoonSize(moonIndex, size);
 
-    logger.info(`Moon ${moonIndex} size set to ${size}`);
+    logger.debug(`Moon ${moonIndex} size set to ${size}`);
 
     return `Moon ${moonIndex} size set to ${size}`;
   }

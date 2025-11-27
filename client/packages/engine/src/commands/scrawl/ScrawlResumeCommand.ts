@@ -31,7 +31,7 @@ export class ScrawlResumeCommand extends CommandHandler {
 
     if (args.length === 0) {
       logger.error('Usage: scrawlResume <executorId>');
-      logger.info('Example: scrawlResume executor_0');
+      logger.debug('Example: scrawlResume executor_0');
       return;
     }
 
@@ -40,7 +40,7 @@ export class ScrawlResumeCommand extends CommandHandler {
 
     const success = scrawlService.resumeExecutor(executorId);
     if (success) {
-      logger.info(`Executor ${executorId} resumed`);
+      logger.debug(`Executor ${executorId} resumed`);
     } else {
       logger.error(`Executor ${executorId} not found`);
     }

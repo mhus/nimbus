@@ -38,7 +38,7 @@ export class CloudClearCommand extends CommandHandler {
 
     try {
       cloudsService.clearAllClouds();
-      logger.info('All clouds cleared', { count });
+      logger.debug('All clouds cleared', { count });
       return `All clouds cleared (${count} clouds removed)`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

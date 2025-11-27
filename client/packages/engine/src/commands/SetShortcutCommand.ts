@@ -82,7 +82,7 @@ export class SetShortcutCommand extends CommandHandler {
       if (command === 'clearAll') {
         playerInfo.shortcuts = {};
         playerService.updatePlayerInfo({ shortcuts: {} });
-        logger.info('All shortcuts cleared');
+        logger.debug('All shortcuts cleared');
         return 'All shortcuts cleared';
       }
 
@@ -95,7 +95,7 @@ export class SetShortcutCommand extends CommandHandler {
         if (playerInfo.shortcuts[key]) {
           delete playerInfo.shortcuts[key];
           playerService.updatePlayerInfo({ shortcuts: playerInfo.shortcuts });
-          logger.info('Shortcut cleared', { key });
+          logger.debug('Shortcut cleared', { key });
           return `Shortcut cleared: ${key}`;
         } else {
           return `No shortcut found for key: ${key}`;
@@ -150,7 +150,7 @@ export class SetShortcutCommand extends CommandHandler {
       playerInfo.shortcuts[key] = shortcut;
       playerService.updatePlayerInfo({ shortcuts: playerInfo.shortcuts });
 
-      logger.info('Shortcut set', { key, shortcut });
+      logger.debug('Shortcut set', { key, shortcut });
 
       return `Shortcut set: ${key}\n${JSON.stringify(shortcut, null, 2)}`;
 

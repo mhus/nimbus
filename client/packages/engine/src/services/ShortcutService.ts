@@ -60,7 +60,7 @@ export class ShortcutService {
   private serverUpdateTimerId: number | null = null;
 
   constructor(private readonly appContext: AppContext) {
-    logger.info('ShortcutService initialized');
+    logger.debug('ShortcutService initialized');
 
     // Start server update loop
     this.startServerUpdateLoop();
@@ -606,7 +606,7 @@ export class ShortcutService {
    * Called on service disposal.
    */
   dispose(): void {
-    logger.info('Disposing ShortcutService...', {
+    logger.debug('Disposing ShortcutService...', {
       activeShortcuts: this.activeShortcuts.size,
     });
 

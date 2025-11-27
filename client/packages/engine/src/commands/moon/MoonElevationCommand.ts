@@ -50,7 +50,7 @@ export class MoonElevationCommand extends CommandHandler {
     moonService.setMoonHeightOverCamera(moonIndex, elevation);
 
     const position = moonService.getMoonPosition(moonIndex);
-    logger.info(`Moon ${moonIndex} elevation set`, position);
+    logger.debug(`Moon ${moonIndex} elevation set`, position);
 
     return `Moon ${moonIndex} elevation set to ${position?.elevation}°`;
   }

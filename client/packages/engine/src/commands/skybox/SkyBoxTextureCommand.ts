@@ -49,7 +49,7 @@ export class SkyBoxTextureCommand extends CommandHandler {
       // Set skybox to texture mode
       await skyBoxService.setTextureMode(basePath);
 
-      logger.info('SkyBox texture set via command', { basePath });
+      logger.debug('SkyBox texture set via command', { basePath });
 
       return `SkyBox texture set to: ${basePath}`;
     } catch (error) {

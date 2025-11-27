@@ -50,7 +50,7 @@ export class HorizonGradientColor1Command extends CommandHandler {
 
     const color = new Color3(r, g, b);
     service.setColor1(color);
-    logger.info('Horizon gradient color1 set via command', { r, g, b });
+    logger.debug('Horizon gradient color1 set via command', { r, g, b });
     return `Horizon gradient top color set to RGB(${r}, ${g}, ${b})`;
   }
 }

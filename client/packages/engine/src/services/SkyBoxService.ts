@@ -107,7 +107,7 @@ export class SkyBoxService {
       this.rotationY = skyBoxSettings.rotation;
     }
 
-    logger.info('SkyBox parameters loaded from WorldInfo', {
+    logger.debug('SkyBox parameters loaded from WorldInfo', {
       enabled: this.enabled,
       mode: this.mode,
       size: this.size,
@@ -160,7 +160,7 @@ export class SkyBoxService {
       this.scene.clearColor = new Color3(0, 0, 0).toColor4();
     }
 
-    logger.info('SkyBoxService initialized', {
+    logger.debug('SkyBoxService initialized', {
       mode: this.mode,
       enabled: this.enabled,
       size: this.size,
@@ -192,7 +192,7 @@ export class SkyBoxService {
       this.skyBoxMesh.rotation.y = this.rotationY * (Math.PI / 180);
     }
 
-    logger.info('SkyBox mesh created', { size: this.size });
+    logger.debug('SkyBox mesh created', { size: this.size });
   }
 
   /**
@@ -213,7 +213,7 @@ export class SkyBoxService {
 
     this.skyBoxMesh.material = this.skyBoxMaterial;
 
-    logger.info('SkyBox color material applied', {
+    logger.debug('SkyBox color material applied', {
       color: { r: this.skyBoxColor.r, g: this.skyBoxColor.g, b: this.skyBoxColor.b },
     });
   }
@@ -239,7 +239,7 @@ export class SkyBoxService {
         ['_px.png', '_nx.png', '_py.png', '_ny.png', '_pz.png', '_nz.png']
       );
 
-      logger.info('CubeTexture loaded', { basePath });
+      logger.debug('CubeTexture loaded', { basePath });
       return cubeTexture;
     } catch (error) {
       logger.error('Failed to load CubeTexture', { basePath, error });
@@ -274,7 +274,7 @@ export class SkyBoxService {
 
     this.skyBoxMesh.material = this.skyBoxMaterial;
 
-    logger.info('SkyBox texture material applied', { basePath });
+    logger.debug('SkyBox texture material applied', { basePath });
   }
 
   /**
@@ -296,7 +296,7 @@ export class SkyBoxService {
       this.scene.clearColor = this.originalClearColor.toColor4();
     }
 
-    logger.info('SkyBox visibility changed', { enabled });
+    logger.debug('SkyBox visibility changed', { enabled });
   }
 
   /**
@@ -308,7 +308,7 @@ export class SkyBoxService {
     this.skyBoxColor = color;
     this.applyColorMaterial();
 
-    logger.info('SkyBox switched to color mode', {
+    logger.debug('SkyBox switched to color mode', {
       color: { r: color.r, g: color.g, b: color.b },
     });
   }
@@ -322,7 +322,7 @@ export class SkyBoxService {
     this.texturePath = basePath;
     await this.applyTextureMaterial(basePath);
 
-    logger.info('SkyBox switched to texture mode', { basePath });
+    logger.debug('SkyBox switched to texture mode', { basePath });
   }
 
   /**
@@ -337,7 +337,7 @@ export class SkyBoxService {
       this.skyBoxMesh.scaling.setAll(size / 2000);
     }
 
-    logger.info('SkyBox size updated', { size });
+    logger.debug('SkyBox size updated', { size });
   }
 
   /**
@@ -351,7 +351,7 @@ export class SkyBoxService {
       this.skyBoxMesh.rotation.y = degrees * (Math.PI / 180);
     }
 
-    logger.info('SkyBox rotation updated', { degrees });
+    logger.debug('SkyBox rotation updated', { degrees });
   }
 
   /**
@@ -376,6 +376,6 @@ export class SkyBoxService {
     this.skyBoxMaterial?.dispose();
     this.skyBoxRoot?.dispose();
 
-    logger.info('SkyBoxService disposed');
+    logger.debug('SkyBoxService disposed');
   }
 }

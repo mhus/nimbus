@@ -66,7 +66,7 @@ export class DeleteEnvironmentScriptCommand extends CommandHandler {
 
     if (deleted) {
       const message = `Environment script deleted: ${name}`;
-      logger.info(message);
+      logger.debug(message);
       return {
         name,
         deleted: true,

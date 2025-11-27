@@ -154,7 +154,7 @@ export class CloudsService {
     this.cloudsRoot = new TransformNode('cloudsRoot', this.scene);
     this.cloudsRoot.parent = cameraRoot;
 
-    logger.info('CloudsService initialized');
+    logger.debug('CloudsService initialized');
   }
 
   /**
@@ -215,7 +215,7 @@ export class CloudsService {
       // Add to clouds map
       this.clouds.set(id, cloud);
 
-      logger.info('Cloud added', {
+      logger.debug('Cloud added', {
         id,
         level: config.level,
         position: { x: config.startX, z: config.startZ, y: config.y },
@@ -245,7 +245,7 @@ export class CloudsService {
 
     this.disposeCloud(cloud);
     this.clouds.delete(id);
-    logger.info('Cloud removed', { id });
+    logger.debug('Cloud removed', { id });
   }
 
   /**
@@ -265,7 +265,7 @@ export class CloudsService {
       cloud.mesh.setEnabled(enabled);
     }
 
-    logger.info('Cloud enabled state changed', { id, enabled });
+    logger.debug('Cloud enabled state changed', { id, enabled });
   }
 
   /**
@@ -285,7 +285,7 @@ export class CloudsService {
     }
 
     cloud.speed = speed;
-    logger.info('Cloud speed changed', { id, speed });
+    logger.debug('Cloud speed changed', { id, speed });
   }
 
   /**
@@ -301,7 +301,7 @@ export class CloudsService {
     }
 
     cloud.direction = direction;
-    logger.info('Cloud direction changed', { id, direction });
+    logger.debug('Cloud direction changed', { id, direction });
   }
 
   /**
@@ -326,7 +326,7 @@ export class CloudsService {
       cloud.root.position.set(x, y, z);
     }
 
-    logger.info('Cloud position changed', { id, position: { x, z, y } });
+    logger.debug('Cloud position changed', { id, position: { x, z, y } });
   }
 
   /**
@@ -358,7 +358,7 @@ export class CloudsService {
       cloud.mesh.scaling.y *= scaleY;
     }
 
-    logger.info('Cloud size changed', { id, size: { width, height } });
+    logger.debug('Cloud size changed', { id, size: { width, height } });
   }
 
   /**
@@ -406,7 +406,7 @@ export class CloudsService {
     }
 
     const mode = clearAll ? 'all' : 'static';
-    logger.info(`Cleared ${mode} clouds`, { count: clearedCount });
+    logger.debug(`Cleared ${mode} clouds`, { count: clearedCount });
   }
 
   /**
@@ -477,7 +477,7 @@ export class CloudsService {
     job.intervalId = intervalId;
     this.animationJobs.set(jobName, job);
 
-    logger.info('Cloud animation started', {
+    logger.debug('Cloud animation started', {
       jobName,
       emitCountPerMinute,
       emitProbability,
@@ -503,7 +503,7 @@ export class CloudsService {
 
       window.clearInterval(job.intervalId);
       this.animationJobs.delete(jobName);
-      logger.info('Cloud animation stopped', { jobName });
+      logger.debug('Cloud animation stopped', { jobName });
     } else {
       // Stop all jobs
       const jobNames = Array.from(this.animationJobs.keys());
@@ -514,7 +514,7 @@ export class CloudsService {
         }
       }
       this.animationJobs.clear();
-      logger.info('All cloud animations stopped', { count: jobNames.length });
+      logger.debug('All cloud animations stopped', { count: jobNames.length });
     }
   }
 
@@ -596,7 +596,7 @@ export class CloudsService {
     }
     this.clouds.clear();
     this.cloudsRoot?.dispose();
-    logger.info('CloudsService disposed');
+    logger.debug('CloudsService disposed');
   }
 
   // ========== Private Helper Methods ==========
@@ -646,7 +646,7 @@ export class CloudsService {
           true,   // invertY
           Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
           () => {
-            logger.info('Cloud texture loaded', { path: texturePath });
+            logger.debug('Cloud texture loaded', { path: texturePath });
             resolve(texture);
           },
           (message) => {
@@ -709,7 +709,7 @@ export class CloudsService {
       Constants.TEXTURE_BILINEAR_SAMPLINGMODE
     );
 
-    logger.info('Fallback cloud texture created');
+    logger.debug('Fallback cloud texture created');
     return texture;
   }
 

@@ -25,7 +25,7 @@ export class ClientService {
     this.config = config;
     this.logToConsole = config.logToConsole;
 
-    logger.info('ClientService initialized', {
+    logger.debug('ClientService initialized', {
       clientType: this.getClientType(),
       isEditor: this.isEditor(),
       isDevMode: this.isDevMode(),
@@ -134,7 +134,7 @@ export class ClientService {
    */
   setLogToConsole(enabled: boolean): void {
     this.logToConsole = enabled;
-    logger.info(`Console logging ${enabled ? 'enabled' : 'disabled'}`);
+    logger.debug(`Console logging ${enabled ? 'enabled' : 'disabled'}`);
 
     // Reconfigure logger
     this.setupLogger();
@@ -144,7 +144,7 @@ export class ClientService {
    * Setup logger with appropriate transports based on environment
    */
   setupLogger(): void {
-    logger.info('Setting up logger', {
+    logger.debug('Setting up logger', {
       isDevMode: this.isDevMode(),
       isEditor: this.isEditor(),
       logToConsole: this.logToConsole,
@@ -210,7 +210,7 @@ export class ClientService {
       });
     }
 
-    logger.info('Logger setup complete', {
+    logger.debug('Logger setup complete', {
       transportCount: transports.length,
     });
   }

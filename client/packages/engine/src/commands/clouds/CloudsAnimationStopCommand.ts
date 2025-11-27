@@ -46,7 +46,7 @@ export class CloudsAnimationStopCommand extends CommandHandler {
         }
 
         cloudsService.stopCloudsAnimation(jobName);
-        logger.info('Cloud animation stopped via command', { jobName });
+        logger.debug('Cloud animation stopped via command', { jobName });
         return `Cloud animation '${jobName}' stopped`;
       } else {
         // Stop all jobs
@@ -56,7 +56,7 @@ export class CloudsAnimationStopCommand extends CommandHandler {
         }
 
         cloudsService.stopCloudsAnimation();
-        logger.info('All cloud animations stopped via command', { count: activeJobs.length });
+        logger.debug('All cloud animations stopped via command', { count: activeJobs.length });
         return `All cloud animations stopped (${activeJobs.length} jobs)`;
       }
     } catch (error) {

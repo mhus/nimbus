@@ -130,6 +130,7 @@ import {
   SkyBoxTextureCommand,
   SkyBoxSizeCommand,
   SkyBoxRotationCommand,
+  SkyBoxStartCommand,
 } from './commands/skybox';
 import {
   MoonEnableCommand,
@@ -204,75 +205,75 @@ const buildMode = __EDITOR__ ? 'Editor' : 'Viewer';
  */
 async function initializeApp(): Promise<AppContext> {
   try {
-    logger.info(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
-    logger.info(`Shared Library v${SHARED_VERSION}`);
+    logger.debug(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
+    logger.debug(`Shared Library v${SHARED_VERSION}`);
     logger.debug(`Build Mode: ${__BUILD_MODE__}`);
 
     // Load client configuration
-    logger.info('Loading client configuration...');
+    logger.debug('Loading client configuration...');
     const config = loadClientConfig();
 
     // Create ClientService
-    logger.info('Initializing ClientService...');
+    logger.debug('Initializing ClientService...');
     const clientService = new ClientService(config);
 
     // Setup logger with proper transports
     clientService.setupLogger();
 
     // Create AppContext
-    logger.info('Creating AppContext...');
+    logger.debug('Creating AppContext...');
     const appContext = createAppContext(config, clientService);
 
     // Initialize PlayerInfo with defaults
     // This can later be overridden by server configuration
     appContext.playerInfo = { ...DEFAULT_PLAYER_INFO };
-    logger.info('PlayerInfo initialized', {
+    logger.debug('PlayerInfo initialized', {
       displayName: appContext.playerInfo.displayName,
       baseWalkSpeed: appContext.playerInfo.baseWalkSpeed,
       effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
     });
 
     // Initialize ModalService (no dependencies, UI-only)
-    logger.info('Initializing ModalService...');
+    logger.debug('Initializing ModalService...');
     const modalService = new ModalService(appContext);
     appContext.services.modal = modalService;
     logger.debug('ModalService initialized');
 
     // Initialize NotificationService (no dependencies, UI-only)
-    logger.info('Initializing NotificationService...');
+    logger.debug('Initializing NotificationService...');
     const notificationService = new NotificationService(appContext);
     appContext.services.notification = notificationService;
     logger.debug('NotificationService initialized');
 
     // Initialize ItemService (loads items from server REST API)
-    logger.info('Initializing ItemService...');
+    logger.debug('Initializing ItemService...');
     const itemService = new ItemService(appContext);
     appContext.services.item = itemService;
     logger.debug('ItemService initialized');
 
     // Initialize ScrawlService (before CommandService so commands can use it)
-    logger.info('Initializing ScrawlService...');
+    logger.debug('Initializing ScrawlService...');
     const scrawlService = new ScrawlService(appContext);
     appContext.services.scrawl = scrawlService;
     await scrawlService.initialize();
     logger.debug('ScrawlService initialized');
 
     // Initialize TargetingService (before ShortcutService, which depends on it)
-    logger.info('Initializing TargetingService...');
+    logger.debug('Initializing TargetingService...');
     const { TargetingService } = await import('./services/TargetingService');
     const targetingService = new TargetingService(appContext);
     appContext.services.targeting = targetingService;
     logger.debug('TargetingService initialized');
 
     // Initialize ShortcutService (after ScrawlService and TargetingService)
-    logger.info('Initializing ShortcutService...');
+    logger.debug('Initializing ShortcutService...');
     const { ShortcutService } = await import('./services/ShortcutService');
     const shortcutService = new ShortcutService(appContext);
     appContext.services.shortcut = shortcutService;
     logger.debug('ShortcutService initialized');
 
     // Initialize CommandService (available in both EDITOR and VIEWER modes)
-    logger.info('Initializing CommandService...');
+    logger.debug('Initializing CommandService...');
     const commandService = new CommandService(appContext);
     appContext.services.command = commandService;
 
@@ -362,6 +363,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SkyBoxTextureCommand(appContext));
     commandService.registerHandler(new SkyBoxSizeCommand(appContext));
     commandService.registerHandler(new SkyBoxRotationCommand(appContext));
+    commandService.registerHandler(new SkyBoxStartCommand(appContext));
 
     // Register moon commands
     commandService.registerHandler(new MoonEnableCommand(appContext));
@@ -435,7 +437,7 @@ async function initializeApp(): Promise<AppContext> {
 
     logger.debug('CommandService initialized with commands');
 
-    logger.info('App initialization complete', {
+    logger.debug('App initialization complete', {
       clientType: clientService.getClientType(),
       isEditor: clientService.isEditor(),
       isDevMode: clientService.isDevMode(),
@@ -452,27 +454,27 @@ async function initializeApp(): Promise<AppContext> {
  */
 async function initializeCoreServices(appContext: AppContext): Promise<void> {
   try {
-    logger.info('Initializing core services...');
+    logger.debug('Initializing core services...');
 
     // Initialize ConfigService BEFORE NetworkService
-    logger.info('Initializing ConfigService...');
+    logger.debug('Initializing ConfigService...');
     const configService = new ConfigService(appContext);
     appContext.services.config = configService;
 
     // Load configuration from REST API before connecting to WebSocket
-    logger.info('Loading configuration from REST API...');
+    logger.debug('Loading configuration from REST API...');
     const clientType = __EDITOR__ ? 'editor' : 'viewer';
     const worldId = appContext.config?.worldId || 'main';
     try {
       await configService.loadConfig(clientType, false, worldId);
-      logger.info('Configuration loaded successfully');
+      logger.debug('Configuration loaded successfully');
     } catch (error) {
       logger.error('Failed to load configuration from REST API', undefined, error as Error);
       throw new Error('Failed to load configuration. Please check server connection.');
     }
 
     // Initialize NetworkService
-    logger.info('Initializing NetworkService...');
+    logger.debug('Initializing NetworkService...');
     const networkService = new NetworkService(appContext);
     appContext.services.network = networkService;
 
@@ -490,9 +492,9 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     });
 
     // Connect to server
-    logger.info('Connecting to server...');
+    logger.debug('Connecting to server...');
     await networkService.connect();
-    logger.info('Connected to server');
+    logger.debug('Connected to server');
 
     // Wait for login response and world info
     await new Promise<void>((resolve, reject) => {
@@ -503,13 +505,13 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       });
 
       networkService.once('login:success', () => {
-        logger.info('Login successful');
+        logger.debug('Login successful');
 
         // Start ping interval after successful login
         const pingInterval = appContext.worldInfo?.settings?.pingInterval || 30;
         pingHandler.pingIntervalMs = pingInterval * 1000; // Convert seconds to milliseconds
         pingHandler.startPingInterval();
-        logger.info('Ping interval started', { intervalSeconds: pingInterval });
+        logger.debug('Ping interval started', { intervalSeconds: pingInterval });
 
         resolve();
       });
@@ -521,10 +523,10 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     });
 
     // Initialize BlockTypeService (with lazy loading)
-    logger.info('Initializing BlockTypeService...');
+    logger.debug('Initializing BlockTypeService...');
     const blockTypeService = new BlockTypeService(appContext);
     appContext.services.blockType = blockTypeService;
-    logger.info('BlockTypeService initialized (chunks will be loaded on-demand)');
+    logger.debug('BlockTypeService initialized (chunks will be loaded on-demand)');
 
     // Register BlockType-dependent commands (after BlockTypeService is created)
     if (appContext.services.command) {
@@ -532,22 +534,22 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     }
 
     // Initialize ShaderService
-    logger.info('Initializing ShaderService...');
+    logger.debug('Initializing ShaderService...');
     const shaderService = new ShaderService(appContext);
     appContext.services.shader = shaderService;
 
     // Initialize AudioService (handles both audio loading and gameplay sounds)
-    logger.info('Initializing AudioService...');
+    logger.debug('Initializing AudioService...');
     const audioService = new AudioService(appContext);
     appContext.services.audio = audioService;
 
     // Initialize ChunkService
-    logger.info('Initializing ChunkService...');
+    logger.debug('Initializing ChunkService...');
     const chunkService = new ChunkService(networkService, appContext);
     appContext.services.chunk = chunkService;
 
     // Initialize EntityService
-    logger.info('Initializing EntityService...');
+    logger.debug('Initializing EntityService...');
     const entityService = new EntityService(appContext);
     appContext.services.entity = entityService;
 
@@ -558,27 +560,27 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     // Register BlockUpdateHandler
     const blockUpdateHandler = new BlockUpdateHandler(chunkService);
     networkService.registerHandler(blockUpdateHandler);
-    logger.info('🔵 BlockUpdateHandler registered for message type: b.u');
+    logger.debug('🔵 BlockUpdateHandler registered for message type: b.u');
 
     // Register ItemBlockUpdateHandler
     const itemBlockUpdateHandler = new ItemBlockUpdateHandler(chunkService);
     networkService.registerHandler(itemBlockUpdateHandler);
-    logger.info('🔵 ItemBlockUpdateHandler registered for message type: b.iu');
+    logger.debug('🔵 ItemBlockUpdateHandler registered for message type: b.iu');
 
     // Register EntityPathwayMessageHandler
     const entityPathwayHandler = new EntityPathwayMessageHandler(entityService);
     networkService.registerHandler(entityPathwayHandler);
-    logger.info('🔵 EntityPathwayMessageHandler registered for message type: e.p');
+    logger.debug('🔵 EntityPathwayMessageHandler registered for message type: e.p');
 
     // Register EffectTriggerHandler (ScrawlService was initialized earlier)
     if (appContext.services.scrawl) {
       const effectTriggerHandler = new EffectTriggerHandler(appContext.services.scrawl);
       networkService.registerHandler(effectTriggerHandler);
-      logger.info('🔵 EffectTriggerHandler registered for message type: e.t');
+      logger.debug('🔵 EffectTriggerHandler registered for message type: e.t');
 
       const effectParameterUpdateHandler = new EffectParameterUpdateHandler(appContext.services.scrawl);
       networkService.registerHandler(effectParameterUpdateHandler);
-      logger.info('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
+      logger.debug('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
     } else {
       logger.warn('ScrawlService not available - effect handlers not registered');
     }
@@ -600,7 +602,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       logger.debug('ServerCommandHandler registered for message type: scmd');
     }
 
-    logger.info('Core services initialized');
+    logger.debug('Core services initialized');
   } catch (error) {
     throw ExceptionHandler.handleAndRethrow(error, 'NimbusClient.initializeCoreServices');
   }
@@ -611,7 +613,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
  */
 async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElement): Promise<void> {
   try {
-    logger.info('Initializing 3D Engine...');
+    logger.debug('Initializing 3D Engine...');
 
     // Create EngineService
     const engineService = new EngineService(appContext, canvas);
@@ -619,7 +621,7 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
 
     // Initialize engine (loads textures, creates scene, etc.)
     await engineService.initialize();
-    logger.info('Engine initialized');
+    logger.debug('Engine initialized');
 
     // Initialize NotificationService event subscriptions (now that PlayerService exists)
     const notifService = appContext.services.notification;
@@ -635,23 +637,23 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
 
     // Start render loop
     engineService.startRenderLoop();
-    logger.info('Render loop started');
+    logger.debug('Render loop started');
 
     // Initialize CompassService
-    logger.info('Initializing CompassService...');
+    logger.debug('Initializing CompassService...');
     const compassService = new CompassService(appContext);
     appContext.services.compass = compassService;
     logger.debug('CompassService initialized');
 
     // Initialize ModifierService
-    logger.info('Initializing ModifierService...');
+    logger.debug('Initializing ModifierService...');
     const { ModifierService } = await import('./services/ModifierService');
     const modifierService = new ModifierService();
     appContext.services.modifier = modifierService;
     logger.debug('ModifierService initialized');
 
     // Create all StackModifiers centrally
-    logger.info('Creating all StackModifiers...');
+    logger.debug('Creating all StackModifiers...');
     const { createAllStackModifiers } = await import('./services/StackModifierCreator');
     createAllStackModifiers(appContext);
     logger.debug('All StackModifiers created');
@@ -663,7 +665,7 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
       const playerPos = playerService?.getPosition();
 
       if (playerPos) {
-        logger.info('Registering chunks around player', {
+        logger.debug('Registering chunks around player', {
           x: playerPos.x,
           y: playerPos.y,
           z: playerPos.z
@@ -672,7 +674,7 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
       }
     }
 
-    logger.info('3D Engine ready');
+    logger.debug('3D Engine ready');
   } catch (error) {
     throw ExceptionHandler.handleAndRethrow(error, 'NimbusClient.initializeEngine');
   }
@@ -684,7 +686,7 @@ const appContextPromise = initializeApp();
 // Main initialization
 appContextPromise
   .then(async (appContext) => {
-    logger.info('AppContext ready', {
+    logger.debug('AppContext ready', {
       hasConfig: !!appContext.config,
       hasClientService: !!appContext.services.client,
     });
@@ -731,14 +733,14 @@ appContextPromise
         loadingElement.classList.add('hidden');
       }
 
-      logger.info('Nimbus Client ready!');
+      logger.debug('Nimbus Client ready!');
     } catch (error) {
       throw error; // Re-throw to outer catch
     }
 
     // Editor-specific initialization (tree-shaken in viewer build)
     if (__EDITOR__) {
-      logger.info('Editor mode active');
+      logger.debug('Editor mode active');
 
       // Expose commands to browser console
       const commandService = appContext.services.command;
@@ -750,7 +752,7 @@ appContextPromise
       // TODO: Load editor UI components
     }
 
-    logger.info('Nimbus Client initialized successfully');
+    logger.debug('Nimbus Client initialized successfully');
   })
   .catch((error) => {
     ExceptionHandler.handle(error, 'NimbusClient.main');
@@ -826,7 +828,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       return;
     }
 
-    logger.info('Testing all notification types...');
+    logger.debug('Testing all notification types...');
 
     // System notifications
     ns.newNotification(0, null, 'System Info: Client initialized');
@@ -922,7 +924,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       return;
     }
 
-    logger.info('Testing compass with markers...');
+    logger.debug('Testing compass with markers...');
 
     // Add markers at different positions relative to player
     // North marker (Z+)

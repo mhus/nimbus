@@ -101,7 +101,7 @@ export class SunService {
       this.enabled = settings.sunEnabled;
     }
 
-    logger.info('Sun parameters loaded from WorldInfo', {
+    logger.debug('Sun parameters loaded from WorldInfo', {
       size: this.sunSize,
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
@@ -153,7 +153,7 @@ export class SunService {
     // Create lens flare system
     this.createLensFlareSystem();
 
-    logger.info('SunService initialized', {
+    logger.debug('SunService initialized', {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
       hasCustomTexture: this.appContext.worldInfo?.settings.sunTexture !== undefined,
@@ -205,7 +205,7 @@ export class SunService {
       return mesh.renderingGroupId === RENDERING_GROUPS.WORLD;
     };
 
-    logger.info('Lens flare system created', {
+    logger.debug('Lens flare system created', {
       textureUrl: flareTextureUrl,
       enabled: this.lensFlareEnabled
     });
@@ -251,7 +251,7 @@ export class SunService {
           true, // invertY
           Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
           () => {
-            logger.info('Sun texture loaded', { path: texturePath });
+            logger.debug('Sun texture loaded', { path: texturePath });
           },
           (message) => {
             logger.error('Failed to load sun texture, using fallback', { path: texturePath, error: message });
@@ -271,7 +271,7 @@ export class SunService {
     } else {
       // Use fallback circular disc if network service not available
       this.sunTexture = this.createFallbackTexture();
-      logger.info('Using fallback circular sun texture (no NetworkService)');
+      logger.debug('Using fallback circular sun texture (no NetworkService)');
     }
   }
 
@@ -335,7 +335,7 @@ export class SunService {
         this.sunMaterial.emissiveTexture = this.sunTexture;
         this.sunMaterial.opacityTexture = this.sunTexture;
       }
-      logger.info('Sun texture reset to fallback');
+      logger.debug('Sun texture reset to fallback');
       return;
     }
 
@@ -358,7 +358,7 @@ export class SunService {
         true,
         Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
         () => {
-          logger.info('Sun texture loaded', { path: texturePath });
+          logger.debug('Sun texture loaded', { path: texturePath });
           if (this.sunMaterial) {
             this.sunMaterial.diffuseTexture = this.sunTexture!;
             this.sunMaterial.emissiveTexture = this.sunTexture!;
@@ -422,7 +422,7 @@ export class SunService {
       this.updateAutomaticLighting();
     }
 
-    logger.info('Sun position updated', {
+    logger.debug('Sun position updated', {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
       position: { x, y, z },
@@ -472,7 +472,7 @@ export class SunService {
     const ambientLightIntensity = ambientBaseIntensity * this.ambientLightIntensityMultiplier;
     environmentService.setAmbientLightIntensity(ambientLightIntensity);
 
-    logger.info('Automatic lighting updated', {
+    logger.debug('Automatic lighting updated', {
       elevation: this.currentElevation,
       angleY: this.currentAngleY,
       sunLightDirection: { x: dirX, y: dirY, z: dirZ },
@@ -495,7 +495,7 @@ export class SunService {
       this.sunMaterial.emissiveColor = this.sunColor;
     }
 
-    logger.info('Sun color updated', { r, g, b });
+    logger.debug('Sun color updated', { r, g, b });
   }
 
   /**
@@ -509,7 +509,7 @@ export class SunService {
       this.sunMesh.scaling.setAll(size);
     }
 
-    logger.info('Sun size updated', { size });
+    logger.debug('Sun size updated', { size });
   }
 
   /**
@@ -528,7 +528,7 @@ export class SunService {
       this.lensFlareSystem.isEnabled = enabled && this.lensFlareEnabled;
     }
 
-    logger.info('Sun visibility changed', { enabled });
+    logger.debug('Sun visibility changed', { enabled });
   }
 
   /**
@@ -542,7 +542,7 @@ export class SunService {
       this.lensFlareSystem.isEnabled = enabled;
     }
 
-    logger.info('Lens flare visibility changed', { enabled });
+    logger.debug('Lens flare visibility changed', { enabled });
   }
 
   /**
@@ -566,7 +566,7 @@ export class SunService {
       });
     }
 
-    logger.info('Lens flare intensity set', { intensity });
+    logger.debug('Lens flare intensity set', { intensity });
   }
 
   /**
@@ -600,7 +600,7 @@ export class SunService {
       }
     }
 
-    logger.info('Lens flare color updated', { r, g, b });
+    logger.debug('Lens flare color updated', { r, g, b });
   }
 
   /**
@@ -625,7 +625,7 @@ export class SunService {
       this.updateAutomaticLighting();
     }
 
-    logger.info('Automatic sun adjustment changed', { enabled });
+    logger.debug('Automatic sun adjustment changed', { enabled });
   }
 
   /**
@@ -647,7 +647,7 @@ export class SunService {
       this.updateAutomaticLighting();
     }
 
-    logger.info('Sun light intensity multiplier set', { multiplier });
+    logger.debug('Sun light intensity multiplier set', { multiplier });
   }
 
   /**
@@ -669,7 +669,7 @@ export class SunService {
       this.updateAutomaticLighting();
     }
 
-    logger.info('Ambient light intensity multiplier set', { multiplier });
+    logger.debug('Ambient light intensity multiplier set', { multiplier });
   }
 
   /**
@@ -689,6 +689,6 @@ export class SunService {
     this.sunTexture?.dispose();
     this.sunRoot?.dispose();
 
-    logger.info('SunService disposed');
+    logger.debug('SunService disposed');
   }
 }

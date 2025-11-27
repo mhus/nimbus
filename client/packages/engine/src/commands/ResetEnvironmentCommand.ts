@@ -50,7 +50,7 @@ export class ResetEnvironmentCommand extends CommandHandler {
       environmentService.resetEnvironment();
 
       const message = 'Environment reset to default state';
-      logger.info(message);
+      logger.debug(message);
       console.log(`✓ ${message}`);
 
       return {

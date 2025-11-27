@@ -42,7 +42,7 @@ export class PrecipitationIntensityCommand extends CommandHandler {
 
     try {
       precipitationService.setIntensity(intensity);
-      logger.info('Precipitation intensity changed', { intensity });
+      logger.debug('Precipitation intensity changed', { intensity });
       return `Precipitation intensity set to ${intensity}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

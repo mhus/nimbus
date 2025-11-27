@@ -42,7 +42,7 @@ export class HorizonGradientAlphaCommand extends CommandHandler {
     }
 
     service.setAlpha(alpha);
-    logger.info('Horizon gradient alpha set via command', { alpha });
+    logger.debug('Horizon gradient alpha set via command', { alpha });
     return `Horizon gradient transparency set to ${alpha}`;
   }
 }

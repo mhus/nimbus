@@ -34,7 +34,7 @@ export class ItemService {
   private poseTimers: Map<string, number> = new Map();
 
   constructor(private appContext: AppContext) {
-    logger.info('ItemService initialized');
+    logger.debug('ItemService initialized');
   }
 
   /**
@@ -436,7 +436,7 @@ export class ItemService {
     try {
       const url = networkService.getItemTypeUrl(type);
 
-      logger.info('Fetching ItemType from server', { type, url });
+      logger.debug('Fetching ItemType from server', { type, url });
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -492,7 +492,7 @@ export class ItemService {
    * @returns Item with merged modifier, or null if failed
    */
   async fillItem(item: Item): Promise<FullItem | null> {
-    logger.info('fillItem called', {
+    logger.debug('fillItem called', {
       itemId: item.id,
       itemType: item.itemType,
       hasModifier: !!item.modifier,
@@ -566,6 +566,6 @@ export class ItemService {
     this.itemTypeCache.clear();
     this.pendingRequests.clear();
     this.pendingItemTypeRequests.clear();
-    logger.info('ItemService disposed');
+    logger.debug('ItemService disposed');
   }
 }

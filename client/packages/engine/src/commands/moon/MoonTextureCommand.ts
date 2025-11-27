@@ -45,11 +45,11 @@ export class MoonTextureCommand extends CommandHandler {
 
     if (texturePath.toLowerCase() === 'none') {
       await moonService.setMoonTexture(moonIndex, null);
-      logger.info(`Moon ${moonIndex} texture removed`);
+      logger.debug(`Moon ${moonIndex} texture removed`);
       return `Moon ${moonIndex} texture removed (using geometric rendering)`;
     } else {
       await moonService.setMoonTexture(moonIndex, texturePath);
-      logger.info(`Moon ${moonIndex} texture set to ${texturePath}`);
+      logger.debug(`Moon ${moonIndex} texture set to ${texturePath}`);
       return `Moon ${moonIndex} texture set to ${texturePath}`;
     }
   }

@@ -50,7 +50,7 @@ export class CloudSpeedCommand extends CommandHandler {
 
     try {
       cloudsService.setCloudSpeed(id, speed);
-      logger.info('Cloud speed changed', { id, speed });
+      logger.debug('Cloud speed changed', { id, speed });
       return `Cloud "${id}" speed set to ${speed} blocks/second`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

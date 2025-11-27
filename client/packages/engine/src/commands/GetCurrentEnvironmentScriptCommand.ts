@@ -68,7 +68,7 @@ export class GetCurrentEnvironmentScriptCommand extends CommandHandler {
 
     if (scriptName) {
       const message = `Current script for group ${group}: ${scriptName}`;
-      logger.info(message);
+      logger.debug(message);
       return {
         group,
         scriptName,
@@ -76,7 +76,7 @@ export class GetCurrentEnvironmentScriptCommand extends CommandHandler {
       };
     } else {
       const message = `No running script for group: ${group}`;
-      logger.info(message);
+      logger.debug(message);
       return {
         group,
         scriptName: null,

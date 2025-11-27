@@ -220,7 +220,7 @@ export class PlayerService {
     // Start vitals update loop (regen/degen every 100ms)
     this.startVitalsUpdate();
 
-    logger.info('PlayerService initialized', {
+    logger.debug('PlayerService initialized', {
       position: this.playerEntity.position,
       movementMode: this.playerEntity.movementMode,
       displayName: this.playerEntity.playerInfo.displayName,
@@ -594,7 +594,7 @@ export class PlayerService {
 
     this.isDead = isDead;
 
-    logger.info('Player DEAD mode changed', { isDead });
+    logger.debug('Player DEAD mode changed', { isDead });
 
     const poseStack = this.appContext.services.modifier?.getModifierStack<number>(StackName.PLAYER_POSE);
 
@@ -810,7 +810,7 @@ export class PlayerService {
 
     if (this.deathAmbientAudioModifier) {
       this.deathAmbientAudioModifier.setEnabled(enabled);
-      logger.info('Death ambient audio ' + (enabled ? 'enabled' : 'disabled'));
+      logger.debug('Death ambient audio ' + (enabled ? 'enabled' : 'disabled'));
     }
   }
 
@@ -970,7 +970,7 @@ export class PlayerService {
     const currentEgo = this.playerViewModifier.getValue();
     this.playerViewModifier.setValue(!currentEgo);
 
-    logger.info('Player toggled view mode', {
+    logger.debug('Player toggled view mode', {
       from: currentEgo ? 'ego' : 'third-person',
       to: !currentEgo ? 'ego' : 'third-person',
     });
@@ -1032,7 +1032,7 @@ export class PlayerService {
    * Public because it's called from StackModifierCreator callback
    */
   onViewModeChanged(isEgo: boolean): void {
-    logger.info('View mode changed', { isEgo });
+    logger.debug('View mode changed', { isEgo });
 
     if (isEgo) {
       // Switch to ego-view (first-person)
@@ -1062,7 +1062,7 @@ export class PlayerService {
     if (playerAvatarEntityId && this.entityRenderService) {
       // Show entity via visibility event
       this.entityRenderService.setEntityVisibility(playerAvatarEntityId, true);
-      logger.info('Third-person model shown via EntityRenderService');
+      logger.debug('Third-person model shown via EntityRenderService');
       return;
     }
 
@@ -1090,7 +1090,7 @@ export class PlayerService {
    */
   private async loadThirdPersonModel(modelId: string): Promise<void> {
     try {
-      logger.info('Loading player avatar via EntityRenderService', { modelId });
+      logger.debug('Loading player avatar via EntityRenderService', { modelId });
 
       // Get entity model
       const entityService = this.appContext.services.entity;
@@ -1132,7 +1132,7 @@ export class PlayerService {
         { y: 0, p: 0 }
       );
 
-      logger.info('Created ClientEntity for player avatar', {
+      logger.debug('Created ClientEntity for player avatar', {
         entityId: clientEntity.id,
         position: clientEntity.currentPosition,
       });
@@ -1155,7 +1155,7 @@ export class PlayerService {
 
       await this.entityRenderService.updateEntityPathway(initialPathway);
 
-      logger.info('Player avatar model loaded via EntityRenderService');
+      logger.debug('Player avatar model loaded via EntityRenderService');
 
       // Now update transform directly to set initial position
       this.entityRenderService.updateEntityTransform(
@@ -1164,7 +1164,7 @@ export class PlayerService {
         { y: 0, p: 0 }
       );
 
-      logger.info('Player avatar transform set');
+      logger.debug('Player avatar transform set');
 
       // Store entity ID and ClientEntity for later updates
       (this as any).playerAvatarEntityId = '@player_avatar';
@@ -1173,10 +1173,10 @@ export class PlayerService {
       // Initially hide in ego-mode (if we're starting in ego-mode)
       if (this.isEgoView()) {
         this.entityRenderService.setEntityVisibility('@player_avatar', false);
-        logger.info('Player avatar initially hidden (ego-mode)');
+        logger.debug('Player avatar initially hidden (ego-mode)');
       }
 
-      logger.info('Player avatar loaded successfully');
+      logger.debug('Player avatar loaded successfully');
     } catch (error) {
       logger.error('Failed to load player avatar via EntityRenderService', { modelId }, error as Error);
     }
@@ -1423,7 +1423,7 @@ export class PlayerService {
     // Emit event for UI update
     this.emit('statusEffects:changed', Array.from(this.statusEffects.values()));
 
-    logger.info('Status effect added', { effectId, itemId, duration });
+    logger.debug('Status effect added', { effectId, itemId, duration });
     return effectId;
   }
 
@@ -1452,7 +1452,7 @@ export class PlayerService {
     // Emit event for UI update
     this.emit('statusEffects:changed', Array.from(this.statusEffects.values()));
 
-    logger.info('Status effect removed', { effectId, itemId: effect.itemId });
+    logger.debug('Status effect removed', { effectId, itemId: effect.itemId });
     return true;
   }
 
@@ -1494,7 +1494,7 @@ export class PlayerService {
     // Emit event for UI update
     this.emit('statusEffects:changed', []);
 
-    logger.info('All status effects cleared');
+    logger.debug('All status effects cleared');
   }
 
   // ============================================
@@ -1514,7 +1514,7 @@ export class PlayerService {
       this.updateVitals();
     }, 100);
 
-    logger.info('Vitals update loop started');
+    logger.debug('Vitals update loop started');
   }
 
   /**
@@ -1524,7 +1524,7 @@ export class PlayerService {
     if (this.vitalsUpdateInterval) {
       clearInterval(this.vitalsUpdateInterval);
       this.vitalsUpdateInterval = undefined;
-      logger.info('Vitals update loop stopped');
+      logger.debug('Vitals update loop stopped');
     }
   }
 
@@ -1580,7 +1580,7 @@ export class PlayerService {
   setVital(vital: VitalsData): void {
     this.vitals.set(vital.type, vital);
     this.emit('vitals:changed', Array.from(this.vitals.values()));
-    logger.info('Vital set', { type: vital.type, current: vital.current, max: vital.max });
+    logger.debug('Vital set', { type: vital.type, current: vital.current, max: vital.max });
   }
 
   /**
@@ -1630,7 +1630,7 @@ export class PlayerService {
     const removed = this.vitals.delete(type);
     if (removed) {
       this.emit('vitals:changed', Array.from(this.vitals.values()));
-      logger.info('Vital removed', { type });
+      logger.debug('Vital removed', { type });
     }
     return removed;
   }
@@ -1641,7 +1641,7 @@ export class PlayerService {
   clearAllVitals(): void {
     this.vitals.clear();
     this.emit('vitals:changed', []);
-    logger.info('All vitals cleared');
+    logger.debug('All vitals cleared');
   }
 
   /**
@@ -1675,6 +1675,6 @@ export class PlayerService {
       this.thirdPersonMesh.dispose();
     }
 
-    logger.info('PlayerService disposed');
+    logger.debug('PlayerService disposed');
   }
 }

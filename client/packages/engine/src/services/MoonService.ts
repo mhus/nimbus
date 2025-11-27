@@ -158,7 +158,7 @@ export class MoonService {
       }
     `;
 
-    logger.info('Moon shaders registered');
+    logger.debug('Moon shaders registered');
   }
 
   /**
@@ -242,7 +242,7 @@ export class MoonService {
     // Set initial position
     this.updateMoonPosition(index);
 
-    logger.info(`Moon ${index} created`, {
+    logger.debug(`Moon ${index} created`, {
       size: moon.size,
       phase: moon.phase,
       enabled: moon.enabled,
@@ -269,7 +269,7 @@ export class MoonService {
 
     moon.root.position.set(x, y, z);
 
-    logger.info(`Moon ${index} position updated`, {
+    logger.debug(`Moon ${index} position updated`, {
       angleY: moon.positionOnCircle,
       elevation: moon.heightOverCamera,
       distance,
@@ -283,7 +283,7 @@ export class MoonService {
   private loadParametersFromWorldInfo(): void {
     const settings = this.appContext.worldInfo?.settings;
     if (!settings?.moons) {
-      logger.info('No moon configuration in WorldInfo');
+      logger.debug('No moon configuration in WorldInfo');
       return;
     }
 
@@ -303,7 +303,7 @@ export class MoonService {
       });
     }
 
-    logger.info('Moon parameters loaded from WorldInfo', {
+    logger.debug('Moon parameters loaded from WorldInfo', {
       moonCount: this.moons.length,
     });
   }
@@ -325,7 +325,7 @@ export class MoonService {
       await this.createMoon(i);
     }
 
-    logger.info('MoonService initialized', {
+    logger.debug('MoonService initialized', {
       moonCount: this.moons.length,
       enabledCount: this.moons.filter((m) => m.enabled).length,
     });
@@ -342,7 +342,7 @@ export class MoonService {
     this.moons[index].enabled = enabled;
     this.moons[index].mesh?.setEnabled(enabled);
 
-    logger.info(`Moon ${index} ${enabled ? 'enabled' : 'disabled'}`);
+    logger.debug(`Moon ${index} ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**
@@ -359,7 +359,7 @@ export class MoonService {
       this.moons[index].mesh!.scaling.scaleInPlace(scale);
     }
 
-    logger.info(`Moon ${index} size set to ${size}`);
+    logger.debug(`Moon ${index} size set to ${size}`);
   }
 
   /**
@@ -391,7 +391,7 @@ export class MoonService {
     this.moons[index].distance = distance;
     this.updateMoonPosition(index);
 
-    logger.info(`Moon ${index} distance set to ${distance}`);
+    logger.debug(`Moon ${index} distance set to ${distance}`);
   }
 
   /**
@@ -410,7 +410,7 @@ export class MoonService {
       this.moons[index].material!.setFloat('phase', phase);
     }
 
-    logger.info(`Moon ${index} phase set to ${phase.toFixed(2)}`);
+    logger.debug(`Moon ${index} phase set to ${phase.toFixed(2)}`);
   }
 
   /**
@@ -444,7 +444,7 @@ export class MoonService {
         moon.material.setTexture('moonTexture', moon.textureObject);
       }
 
-      logger.info(`Moon ${index} texture set to ${texturePath}`);
+      logger.debug(`Moon ${index} texture set to ${texturePath}`);
     } else {
       // Remove texture, use solid color
       moon.texture = undefined;
@@ -453,7 +453,7 @@ export class MoonService {
         moon.material.setFloat('hasTexture', 0.0);
       }
 
-      logger.info(`Moon ${index} texture removed`);
+      logger.debug(`Moon ${index} texture removed`);
     }
   }
 
@@ -492,6 +492,6 @@ export class MoonService {
     }
 
     this.moons = [];
-    logger.info('MoonService disposed');
+    logger.debug('MoonService disposed');
   }
 }

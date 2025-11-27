@@ -43,7 +43,7 @@ export class SunLensFlareEnableCommand extends CommandHandler {
     // Set lens flare visibility
     sunService.setSunLensFlareEnabled(enabled);
 
-    logger.info('Lens flare visibility changed', { enabled });
+    logger.debug('Lens flare visibility changed', { enabled });
 
     return `Lens flare ${enabled ? 'enabled' : 'disabled'}`;
   }

@@ -49,7 +49,7 @@ export class ScrawlService {
     // Initialize script library (simple in-memory implementation)
     this.scriptLibrary = this.createScriptLibrary();
 
-    logger.info('ScrawlService initialized');
+    logger.debug('ScrawlService initialized');
   }
 
   /**
@@ -57,12 +57,12 @@ export class ScrawlService {
    */
   async initialize(): Promise<void> {
     try {
-      logger.info('ScrawlService initializing...');
+      logger.debug('ScrawlService initializing...');
 
       // Register built-in effects
       this.registerBuiltInEffects();
 
-      logger.info('ScrawlService initialized successfully');
+      logger.debug('ScrawlService initialized successfully');
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ScrawlService.initialize');
     }
@@ -239,14 +239,14 @@ export class ScrawlService {
         },
       };
 
-      logger.info('ExecutionContext prepared', {
+      logger.debug('ExecutionContext prepared', {
         isLocal,
         fromContext: (context as any)?.isLocal,
         scriptId: script.id,
       });
 
       // Log all parameters for debugging
-      logger.info('Executing script with parameters', {
+      logger.debug('Executing script with parameters', {
         scriptId: script.id,
         hasSource: !!executionContext.vars?.source,
         hasTarget: !!executionContext.vars?.target,
@@ -326,13 +326,13 @@ export class ScrawlService {
       executor.setExecutorId(executorId); // Set executor ID for shortcut tracking
       this.runningExecutors.set(executorId, executor);
 
-      logger.info(`Starting script execution: ${script.id}`, { executorId });
+      logger.debug(`Starting script execution: ${script.id}`, { executorId });
 
       // Execute script (fire-and-forget)
       executor
         .start()
         .then(() => {
-          logger.info(`Script execution completed: ${script.id}`, { executorId });
+          logger.debug(`Script execution completed: ${script.id}`, { executorId });
           this.runningExecutors.delete(executorId);
         })
         .catch((error) => {
@@ -368,7 +368,7 @@ export class ScrawlService {
     if (executor) {
       executor.cancel();
       this.runningExecutors.delete(executorId);
-      logger.info(`Executor cancelled: ${executorId}`);
+      logger.debug(`Executor cancelled: ${executorId}`);
       return true;
     }
     return false;
@@ -381,7 +381,7 @@ export class ScrawlService {
     const executor = this.runningExecutors.get(executorId);
     if (executor) {
       executor.pause();
-      logger.info(`Executor paused: ${executorId}`);
+      logger.debug(`Executor paused: ${executorId}`);
       return true;
     }
     return false;
@@ -394,7 +394,7 @@ export class ScrawlService {
     const executor = this.runningExecutors.get(executorId);
     if (executor) {
       executor.resume();
-      logger.info(`Executor resumed: ${executorId}`);
+      logger.debug(`Executor resumed: ${executorId}`);
       return true;
     }
     return false;
@@ -413,7 +413,7 @@ export class ScrawlService {
   cancelAllExecutors(): void {
     const ids = this.getRunningExecutorIds();
     ids.forEach((id) => this.cancelExecutor(id));
-    logger.info(`Cancelled ${ids.length} executors`);
+    logger.debug(`Cancelled ${ids.length} executors`);
   }
 
   /**
@@ -455,7 +455,7 @@ export class ScrawlService {
           const scriptPath = `scrawl/${id}.scrawl.json`;
           const scriptUrl = networkService.getAssetUrl(scriptPath);
 
-          logger.info('Loading script from asset server', { id, scriptUrl });
+          logger.debug('Loading script from asset server', { id, scriptUrl });
 
           // Fetch script from server
           const response = await fetch(scriptUrl);
@@ -478,7 +478,7 @@ export class ScrawlService {
           // Cache script for future use
           scripts.set(id, script);
 
-          logger.info('Script loaded successfully', { id });
+          logger.debug('Script loaded successfully', { id });
           return script;
         } catch (error) {
           logger.error('Failed to load script', {
@@ -650,7 +650,7 @@ export class ScrawlService {
 
       // Send to server if NetworkService is available
       if (networkService) {
-        logger.info('🟢 CLIENT: Sending effect trigger to server', {
+        logger.debug('🟢 CLIENT: Sending effect trigger to server', {
           effectId,
           entityId,
           chunkCount: chunks.length,
@@ -663,7 +663,7 @@ export class ScrawlService {
           d: effectTriggerData,
         });
 
-        logger.info('🟢 CLIENT: Effect trigger sent to server', {
+        logger.debug('🟢 CLIENT: Effect trigger sent to server', {
           effectId,
         });
       } else {
@@ -719,9 +719,9 @@ export class ScrawlService {
    * Dispose the service
    */
   dispose(): void {
-    logger.info('Disposing ScrawlService...');
+    logger.debug('Disposing ScrawlService...');
     this.cancelAllExecutors();
     this.sentEffectIds.clear();
-    logger.info('ScrawlService disposed');
+    logger.debug('ScrawlService disposed');
   }
 }

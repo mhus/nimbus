@@ -45,7 +45,7 @@ export class PrecipitationEnableCommand extends CommandHandler {
 
     try {
       precipitationService.setEnabled(enabled);
-      logger.info('Precipitation enabled state changed', { enabled });
+      logger.debug('Precipitation enabled state changed', { enabled });
       return `Precipitation ${enabled ? 'enabled' : 'disabled'}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

@@ -45,7 +45,7 @@ export class MoonEnableCommand extends CommandHandler {
 
     moonService.setMoonEnabled(moonIndex, enabled);
 
-    logger.info(`Moon ${moonIndex} ${enabled ? 'enabled' : 'disabled'}`);
+    logger.debug(`Moon ${moonIndex} ${enabled ? 'enabled' : 'disabled'}`);
 
     return `Moon ${moonIndex} ${enabled ? 'enabled' : 'disabled'}`;
   }

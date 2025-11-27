@@ -60,7 +60,7 @@ export class SunLightDirectionCommand extends CommandHandler {
     environmentService.setSunLightDirection(x, y, z);
 
     const direction = environmentService.getSunLightDirection();
-    logger.info('Sun light direction set', { x: direction.x, y: direction.y, z: direction.z });
+    logger.debug('Sun light direction set', { x: direction.x, y: direction.y, z: direction.z });
 
     return `Sun light direction set to (${direction.x.toFixed(2)}, ${direction.y.toFixed(2)}, ${direction.z.toFixed(2)})`;
   }

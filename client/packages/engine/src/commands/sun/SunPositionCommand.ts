@@ -50,7 +50,7 @@ export class SunPositionCommand extends CommandHandler {
     sunService.setSunPositionOnCircle(angleY);
 
     const position = sunService.getSunPosition();
-    logger.info('Sun position set', position);
+    logger.debug('Sun position set', position);
 
     return `Sun position set to ${position.angleY}° (0=North, 90=East, 180=South, 270=West)`;
   }
