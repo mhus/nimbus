@@ -42,4 +42,10 @@ export interface ItemBlockRef {
      */
     offset?: [number, number, number];
 
+    /**
+     * If the item type is generic (like 'potion' or 'arrow'), this specifies the quantity.
+     * For unique items (like 'sword' or 'wand'), this is not possible.
+     */
+    amount?: number; //javaType: int
+
 }

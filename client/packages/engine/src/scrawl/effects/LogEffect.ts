@@ -79,7 +79,7 @@ export class LogEffect extends ScrawlEffectHandler<LogEffectOptions> {
         logger.debug(message, logContext);
         break;
       case 'info':
-        logger.info(message, logContext);
+        logger.debug(message, logContext);
         break;
       case 'warn':
         logger.warn(message, logContext);
@@ -88,7 +88,7 @@ export class LogEffect extends ScrawlEffectHandler<LogEffectOptions> {
         logger.error(message, logContext);
         break;
       default:
-        logger.info(message, logContext);
+        logger.debug(message, logContext);
     }
   }
 }

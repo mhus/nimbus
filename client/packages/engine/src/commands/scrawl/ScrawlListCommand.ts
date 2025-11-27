@@ -35,24 +35,24 @@ export class ScrawlListCommand extends CommandHandler {
     // Get all registered effects
     const effectKeys = scrawlService.getEffectFactory().getEffectKeys();
 
-    logger.info('=== Scrawl Scripts ===');
-    logger.info('Scripts in library: (implementation dependent)');
-    logger.info('');
+    logger.debug('=== Scrawl Scripts ===');
+    logger.debug('Scripts in library: (implementation dependent)');
+    logger.debug('');
 
-    logger.info('=== Registered Effects ===');
+    logger.debug('=== Registered Effects ===');
     if (effectKeys.length === 0) {
-      logger.info('No effects registered');
+      logger.debug('No effects registered');
     } else {
       effectKeys.forEach((key: string) => {
-        logger.info(`  - ${key}`);
+        logger.debug(`  - ${key}`);
       });
     }
-    logger.info('');
+    logger.debug('');
 
-    logger.info('=== Running Executors ===');
+    logger.debug('=== Running Executors ===');
     const runningIds = scrawlService.getRunningExecutorIds();
     if (runningIds.length === 0) {
-      logger.info('No scripts currently running');
+      logger.debug('No scripts currently running');
     } else {
       runningIds.forEach((id: string) => {
         const executor = scrawlService.getExecutor(id);
@@ -62,7 +62,7 @@ export class ScrawlListCommand extends CommandHandler {
             : executor.isPaused()
             ? 'paused'
             : 'running';
-          logger.info(`  - ${id} (${executor.getScriptId()}) - ${status}`);
+          logger.debug(`  - ${id} (${executor.getScriptId()}) - ${status}`);
         }
       });
     }

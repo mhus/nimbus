@@ -35,9 +35,9 @@ export class ScrawlSelectedActionCommand extends CommandHandler {
 
     if (args.length === 0) {
       logger.error('Usage: scrawlAction <json|object>');
-      logger.info('Examples:');
-      logger.info('  scrawlAction \'{"script":{"id":"test","root":{"kind":"Play","effectId":"log"}}}\'');
-      logger.info('  scrawlAction({script:{id:"test",root:{kind:"Play",effectId:"circleMarker"}}})');
+      logger.debug('Examples:');
+      logger.debug('  scrawlAction \'{"script":{"id":"test","root":{"kind":"Play","effectId":"log"}}}\'');
+      logger.debug('  scrawlAction({script:{id:"test",root:{kind:"Play",effectId:"circleMarker"}}})');
       return;
     }
 
@@ -87,7 +87,7 @@ export class ScrawlSelectedActionCommand extends CommandHandler {
         },
       };
 
-      logger.info('Executing scrawl action', {
+      logger.debug('Executing scrawl action', {
         hasScript: !!action.script,
         scriptId: action.scriptId || action.script?.id,
         hasSource: !!source,
@@ -98,7 +98,7 @@ export class ScrawlSelectedActionCommand extends CommandHandler {
       // Execute action (will send to server if sendToServer !== false)
       const executorId = await scrawlService.executeAction(action, context);
 
-      logger.info(`Scrawl action started with executor ID: ${executorId}`);
+      logger.debug(`Scrawl action started with executor ID: ${executorId}`);
     } catch (error: any) {
       logger.error('Failed to execute scrawl action', { error: error.message });
     }

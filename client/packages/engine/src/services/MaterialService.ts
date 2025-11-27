@@ -65,7 +65,7 @@ export class MaterialService {
     this.scene = scene;
     this.appContext = appContext;
 
-    logger.info('MaterialService initialized');
+    logger.debug('MaterialService initialized');
   }
 
   /**
@@ -905,7 +905,7 @@ export class MaterialService {
   clearCache(): void {
     this.materials.clear();
     this.textures.clear();
-    logger.info('Material and texture caches cleared');
+    logger.debug('Material and texture caches cleared');
   }
 
   /**
@@ -945,7 +945,7 @@ export class MaterialService {
     this.materials.clear();
     this.textures.clear();
 
-    logger.info('Materials and textures disposed');
+    logger.debug('Materials and textures disposed');
   }
 
   /**

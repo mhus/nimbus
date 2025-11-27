@@ -44,23 +44,23 @@ export class RedrawChunkCommand extends CommandHandler {
 
       if (isNaN(chunkX) || isNaN(chunkZ)) {
         logger.error('Invalid chunk coordinates. Must be integers.');
-        logger.info('Usage: /redrawChunk [chunkX] [chunkZ]');
+        logger.debug('Usage: /redrawChunk [chunkX] [chunkZ]');
         return;
       }
 
-      logger.info('Redrawing specific chunk', { chunkX, chunkZ });
+      logger.debug('Redrawing specific chunk', { chunkX, chunkZ });
       const success = chunkService.redrawChunk(chunkX, chunkZ);
 
       if (success) {
-        logger.info(`Chunk (${chunkX}, ${chunkZ}) marked for redraw`);
+        logger.debug(`Chunk (${chunkX}, ${chunkZ}) marked for redraw`);
       } else {
         logger.warn(`Chunk (${chunkX}, ${chunkZ}) not loaded - cannot redraw`);
       }
     } else {
       // Redraw all chunks
-      logger.info('Redrawing all loaded chunks');
+      logger.debug('Redrawing all loaded chunks');
       const count = chunkService.redrawAllChunks();
-      logger.info(`${count} chunk(s) marked for redraw`);
+      logger.debug(`${count} chunk(s) marked for redraw`);
     }
   }
 }

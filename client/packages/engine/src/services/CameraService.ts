@@ -14,10 +14,12 @@ import {
   Color3,
   Color4,
   Mesh,
+  TransformNode,
 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { PlayerService } from './PlayerService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('CameraService');
 
@@ -59,6 +61,12 @@ export class CameraService {
   private fogMaterial?: StandardMaterial;
   private fogIntensity: number = 0; // 0 = disabled, 0.1-1.0 = intensity
 
+  // Camera environment root - parent for all camera-attached effects
+  private cameraEnvironmentRoot?: TransformNode;
+
+  // Camera environment root XZ - follows only X/Z position (not Y) for horizon effects
+  private cameraEnvironmentRootXZ?: TransformNode;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -71,7 +79,7 @@ export class CameraService {
 
     this.initializeCamera();
 
-    logger.info('CameraService initialized', {
+    logger.debug('CameraService initialized', {
       turnSpeed: this.effectiveTurnSpeed,
     });
   }
@@ -100,6 +108,23 @@ export class CameraService {
   }
 
   /**
+   * Get camera environment root node for attaching camera-relative effects
+   * @returns Camera environment root transform node
+   */
+  getCameraEnvironmentRoot(): TransformNode | undefined {
+    return this.cameraEnvironmentRoot;
+  }
+
+  /**
+   * Get camera environment root XZ node for attaching horizon/ground-level effects
+   * Follows only X/Z position of camera (Y stays at 0)
+   * @returns Camera environment root XZ transform node
+   */
+  getCameraEnvironmentRootXZ(): TransformNode | undefined {
+    return this.cameraEnvironmentRootXZ;
+  }
+
+  /**
    * Initialize the camera
    */
   private initializeCamera(): void {
@@ -109,11 +134,23 @@ export class CameraService {
 
       // Set camera properties
       this.camera.minZ = 0.1;
-      this.camera.maxZ = 500;
+
+      // Load maxZ from WorldInfo or use default
+      const settings = this.appContext.worldInfo?.settings;
+      this.camera.maxZ = settings?.cameraMaxZ ?? 500;
+
       this.camera.fov = 70 * (Math.PI / 180); // 70 degrees in radians
 
       // Set initial rotation (looking forward)
       this.camera.rotation = new Vector3(0, 0, 0);
+
+      // Create root node for camera-attached environment effects
+      this.cameraEnvironmentRoot = new TransformNode('cameraEnvironmentRoot', this.scene);
+      this.cameraEnvironmentRoot.position.copyFrom(this.camera.position);
+
+      // Create root node for XZ-only effects (horizon, etc.)
+      this.cameraEnvironmentRootXZ = new TransformNode('cameraEnvironmentRootXZ', this.scene);
+      this.cameraEnvironmentRootXZ.position.set(this.camera.position.x, 0, this.camera.position.z);
 
       // Attach camera to canvas for input (will be controlled by InputService later)
       // this.camera.attachControl(canvas, true);
@@ -121,6 +158,8 @@ export class CameraService {
       logger.debug('Camera initialized', {
         position: this.camera.position,
         fov: this.camera.fov,
+        minZ: this.camera.minZ,
+        maxZ: this.camera.maxZ,
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'CameraService.initializeCamera');
@@ -300,17 +339,17 @@ export class CameraService {
   /**
    * Update camera (called each frame if needed)
    *
-   * Updates water sphere and fog sphere positions to follow camera
+   * Updates environment root position - all child effects follow automatically
    */
   update(deltaTime: number): void {
-    // Update water sphere position to follow camera
-    if (this.waterSphereMesh && this.camera && this.isUnderwater) {
-      this.waterSphereMesh.position.copyFrom(this.camera.position);
+    // Update environment root position - all children follow automatically
+    if (this.cameraEnvironmentRoot && this.camera) {
+      this.cameraEnvironmentRoot.position.copyFrom(this.camera.position);
     }
 
-    // Update fog sphere position to follow camera
-    if (this.fogSphereMesh && this.camera && this.fogIntensity > 0) {
-      this.fogSphereMesh.position.copyFrom(this.camera.position);
+    // Update XZ-only environment root - horizon effects stay at ground level
+    if (this.cameraEnvironmentRootXZ && this.camera) {
+      this.cameraEnvironmentRootXZ.position.set(this.camera.position.x, 0, this.camera.position.z);
     }
   }
 
@@ -345,7 +384,7 @@ export class CameraService {
         playerService.setUnderwaterViewMode(underwater);
       }
 
-      logger.info('Underwater state changed', { underwater });
+      logger.debug('Underwater state changed', { underwater });
     } catch (error) {
       ExceptionHandler.handle(error, 'CameraService.setUnderwater', { underwater });
     }
@@ -360,7 +399,7 @@ export class CameraService {
       return;
     }
 
-    logger.info('💧 ENABLING UNDERWATER EFFECTS');
+    logger.debug('💧 ENABLING UNDERWATER EFFECTS');
 
     // Create water sphere mesh around camera
     if (!this.waterSphereMesh) {
@@ -376,6 +415,9 @@ export class CameraService {
       // Flip normals so sphere is visible from inside
       this.waterSphereMesh.flipFaces(true);
 
+      // Set rendering group for camera decorators
+      this.waterSphereMesh.renderingGroupId = RENDERING_GROUPS.CAM_DECORATORS;
+
       // Create water material
       this.waterMaterial = new StandardMaterial('waterMaterial', this.scene);
       this.waterMaterial.diffuseColor = new Color3(0.1, 0.3, 0.6); // Blue color
@@ -384,10 +426,12 @@ export class CameraService {
 
       this.waterSphereMesh.material = this.waterMaterial;
 
-      // Position at camera
-      this.waterSphereMesh.position.copyFrom(this.camera.position);
+      // Attach to environment root (follows camera automatically)
+      if (this.cameraEnvironmentRoot) {
+        this.waterSphereMesh.parent = this.cameraEnvironmentRoot;
+      }
 
-      logger.info('💧 Water sphere created', {
+      logger.debug('💧 Water sphere created', {
         position: this.waterSphereMesh.position,
         diameter: 8,
         material: {
@@ -399,7 +443,7 @@ export class CameraService {
 
     // Show water sphere
     this.waterSphereMesh.isVisible = true;
-    logger.info('💧 Water sphere visible:', this.waterSphereMesh.isVisible);
+    logger.debug('💧 Water sphere visible:', this.waterSphereMesh.isVisible);
 
     // Store original fog settings
     this.originalFogDensity = this.scene.fogDensity;
@@ -413,7 +457,7 @@ export class CameraService {
     // Optionally reduce ambient light
     // this.scene.ambientColor = new Color3(0.3, 0.4, 0.5);
 
-    logger.info('💧 Underwater effects enabled', {
+    logger.debug('💧 Underwater effects enabled', {
       fogMode: this.scene.fogMode,
       fogDensity: this.scene.fogDensity,
       fogColor: { r: this.scene.fogColor.r, g: this.scene.fogColor.g, b: this.scene.fogColor.b },
@@ -425,12 +469,12 @@ export class CameraService {
    * Disable underwater visual effects
    */
   private disableUnderwaterEffects(): void {
-    logger.info('💧 DISABLING UNDERWATER EFFECTS');
+    logger.debug('💧 DISABLING UNDERWATER EFFECTS');
 
     // Hide water sphere
     if (this.waterSphereMesh) {
       this.waterSphereMesh.isVisible = false;
-      logger.info('💧 Water sphere hidden');
+      logger.debug('💧 Water sphere hidden');
     }
 
     // Restore original fog settings
@@ -441,7 +485,7 @@ export class CameraService {
     // Restore ambient light
     // this.scene.ambientColor = new Color3(1, 1, 1);
 
-    logger.info('💧 Underwater effects disabled', {
+    logger.debug('💧 Underwater effects disabled', {
       fogMode: this.scene.fogMode,
       fogRestored: true,
     });
@@ -483,7 +527,7 @@ export class CameraService {
         this.updateFogIntensity(intensity);
       }
 
-      logger.info('Fog mode intensity changed', { intensity, enabled: nowEnabled });
+      logger.debug('Fog mode intensity changed', { intensity, enabled: nowEnabled });
     } catch (error) {
       ExceptionHandler.handle(error, 'CameraService.setFogMode', { intensity });
     }
@@ -495,7 +539,7 @@ export class CameraService {
    * @param intensity Fog intensity (0.1-1.0)
    */
   private enableFogEffects(intensity: number): void {
-    logger.info('🌫️ ENABLING FOG EFFECTS', { intensity });
+    logger.debug('🌫️ ENABLING FOG EFFECTS', { intensity });
 
     if (!this.camera) {
       logger.warn('Cannot enable fog effects: camera not initialized');
@@ -516,6 +560,9 @@ export class CameraService {
       // Flip faces to render inside
       this.fogSphereMesh.flipFaces(true);
 
+      // Set rendering group for camera decorators
+      this.fogSphereMesh.renderingGroupId = RENDERING_GROUPS.CAM_DECORATORS;
+
       // Create fog material (gray/white translucent)
       this.fogMaterial = new StandardMaterial('fogMaterial', this.scene);
       this.fogMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Light gray
@@ -523,8 +570,10 @@ export class CameraService {
 
       this.fogSphereMesh.material = this.fogMaterial;
 
-      // Position at camera
-      this.fogSphereMesh.position.copyFrom(this.camera.position);
+      // Attach to environment root (follows camera automatically)
+      if (this.cameraEnvironmentRoot) {
+        this.fogSphereMesh.parent = this.cameraEnvironmentRoot;
+      }
 
       logger.debug('🌫️ Fog sphere created', {
         position: this.fogSphereMesh.position,
@@ -537,7 +586,7 @@ export class CameraService {
     // Update intensity
     this.updateFogIntensity(intensity);
 
-    logger.info('🌫️ Fog effects enabled', {
+    logger.debug('🌫️ Fog effects enabled', {
       intensity,
       sphereVisible: this.fogSphereMesh.isVisible,
     });
@@ -583,12 +632,12 @@ export class CameraService {
    * Disable fog visual effects
    */
   private disableFogEffects(): void {
-    logger.info('🌫️ DISABLING FOG EFFECTS');
+    logger.debug('🌫️ DISABLING FOG EFFECTS');
 
     // Hide fog sphere
     if (this.fogSphereMesh) {
       this.fogSphereMesh.isVisible = false;
-      logger.info('🌫️ Fog sphere hidden');
+      logger.debug('🌫️ Fog sphere hidden');
     }
 
     // Restore original fog settings (only if not underwater)
@@ -598,7 +647,7 @@ export class CameraService {
       this.scene.fogColor = this.originalFogColor;
     }
 
-    logger.info('🌫️ Fog effects disabled', {
+    logger.debug('🌫️ Fog effects disabled', {
       fogMode: this.scene.fogMode,
       fogRestored: !this.isUnderwater,
     });
@@ -632,9 +681,15 @@ export class CameraService {
       this.fogMaterial = undefined;
     }
 
+    // Dispose environment root (automatically disposes all children)
+    if (this.cameraEnvironmentRoot) {
+      this.cameraEnvironmentRoot.dispose();
+      this.cameraEnvironmentRoot = undefined;
+    }
+
     // Dispose camera
     this.camera?.dispose();
 
-    logger.info('Camera disposed');
+    logger.debug('Camera disposed');
   }
 }

@@ -41,10 +41,13 @@ const logger = getLogger('ChunkService');
 /**
  * Default backdrop configuration used when chunk data doesn't provide backdrop
  */
-const DEFAULT_BACKDROP: Backdrop = {
-    id: 'fadeout'
-};
+// const DEFAULT_BACKDROP: Backdrop = {
+//     id: 'fadeout'
+// };
 
+const DEFAULT_BACKDROP: Backdrop = {
+  id: 'none'
+};
 /**
  * Event listener
  */
@@ -81,7 +84,7 @@ export class ChunkService {
     this.renderDistance = getBrowserSpecificRenderDistance();
     this.unloadDistance = getBrowserSpecificUnloadDistance();
 
-    logger.info('ChunkService initialized', {
+    logger.debug('ChunkService initialized', {
       renderDistance: this.renderDistance,
       unloadDistance: this.unloadDistance,
     });
@@ -222,7 +225,7 @@ export class ChunkService {
       }
 
       if (chunksToUnload.length > 0) {
-        logger.info('Unloaded distant chunks', { count: chunksToUnload.length });
+        logger.debug('Unloaded distant chunks', { count: chunksToUnload.length });
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.unloadDistantChunks', {
@@ -320,7 +323,7 @@ export class ChunkService {
     const playerEntity = physicsService.getEntity('player');
     if (playerEntity) {
       physicsService.teleport(playerEntity, playerEntity.position);
-      logger.info('Initial spawn - teleportation mode started');
+      logger.debug('Initial spawn - teleportation mode started');
     } else {
       logger.warn('Player entity not found for initial spawn');
     }
@@ -600,7 +603,7 @@ export class ChunkService {
 
     // STEP 3.5: Process items list - add items only at AIR positions
     if (chunkData.i && chunkData.i.length > 0) {
-      logger.info('Processing items for chunk', {
+      logger.debug('Processing items for chunk', {
         cx: chunkData.cx,
         cz: chunkData.cz,
         itemCount: chunkData.i.length,
@@ -842,7 +845,7 @@ export class ChunkService {
    */
   async onBlockUpdate(blocks: Block[]): Promise<void> {
     try {
-      logger.info('🔵 ChunkService.onBlockUpdate called', {
+      logger.debug('🔵 ChunkService.onBlockUpdate called', {
         blockCount: blocks.length,
       });
 
@@ -964,11 +967,11 @@ export class ChunkService {
           // Mark for re-rendering
           chunk.isRendered = false;
           this.emit('chunk:updated', chunk);
-          logger.info('🔵 Emitting chunk:updated event', { chunkKey });
+          logger.debug('🔵 Emitting chunk:updated event', { chunkKey });
         }
       }
 
-      logger.info('🔵 Block updates applied', {
+      logger.debug('🔵 Block updates applied', {
         totalBlocks: blocks.length,
         affectedChunks: affectedChunks.size,
       });
@@ -991,7 +994,7 @@ export class ChunkService {
    */
   async onItemBlockUpdate(blocks: Block[]): Promise<void> {
     try {
-      logger.info('🔵 ChunkService.onItemBlockUpdate called', {
+      logger.debug('🔵 ChunkService.onItemBlockUpdate called', {
         itemCount: blocks.length,
       });
 
@@ -1141,11 +1144,11 @@ export class ChunkService {
           // Mark for re-rendering
           chunk.isRendered = false;
           this.emit('chunk:updated', chunk);
-          logger.info('🔵 Emitting chunk:updated event for items', { chunkKey });
+          logger.debug('🔵 Emitting chunk:updated event for items', { chunkKey });
         }
       }
 
-      logger.info('🔵 Item updates applied', {
+      logger.debug('🔵 Item updates applied', {
         totalItems: blocks.length,
         affectedChunks: affectedChunks.size,
       });
@@ -1166,7 +1169,7 @@ export class ChunkService {
    */
   async onItemUpdate(items: ItemBlockRef[]): Promise<void> {
     try {
-      logger.info('🔵 ChunkService.onItemUpdate called', {
+      logger.debug('🔵 ChunkService.onItemUpdate called', {
         itemCount: items.length,
       });
 
@@ -1312,11 +1315,11 @@ export class ChunkService {
           // Mark for re-rendering
           chunk.isRendered = false;
           this.emit('chunk:updated', chunk);
-          logger.info('🔵 Emitting chunk:updated event for items', { chunkKey });
+          logger.debug('🔵 Emitting chunk:updated event for items', { chunkKey });
         }
       }
 
-      logger.info('🔵 Item updates applied', {
+      logger.debug('🔵 Item updates applied', {
         totalItems: items.length,
         affectedChunks: affectedChunks.size,
       });
@@ -1332,7 +1335,7 @@ export class ChunkService {
    */
   resendLastRegistration(): void {
     if (this.lastRegistration.length > 0) {
-      logger.info('Resending last chunk registration after reconnect', {
+      logger.debug('Resending last chunk registration after reconnect', {
         count: this.lastRegistration.length,
       });
       this.registerChunks(this.lastRegistration);
@@ -1389,7 +1392,7 @@ export class ChunkService {
     chunk.isRendered = false;
     this.emit('chunk:updated', chunk);
 
-    logger.info('Chunk marked for redraw', { chunkX, chunkZ, chunkKey });
+    logger.debug('Chunk marked for redraw', { chunkX, chunkZ, chunkKey });
     return true;
   }
 
@@ -1403,14 +1406,14 @@ export class ChunkService {
   redrawAllChunks(): number {
     const chunks = Array.from(this.chunks.values());
 
-    logger.info('Redrawing all chunks', { count: chunks.length });
+    logger.debug('Redrawing all chunks', { count: chunks.length });
 
     for (const chunk of chunks) {
       chunk.isRendered = false;
       this.emit('chunk:updated', chunk);
     }
 
-    logger.info('All chunks marked for redraw', { count: chunks.length });
+    logger.debug('All chunks marked for redraw', { count: chunks.length });
     return chunks.length;
   }
 
@@ -1426,7 +1429,7 @@ export class ChunkService {
     const chunks = Array.from(this.chunks.values());
     let blockCount = 0;
 
-    logger.info('Recalculating all block modifiers', { chunkCount: chunks.length });
+    logger.debug('Recalculating all block modifiers', { chunkCount: chunks.length });
 
     for (const chunk of chunks) {
       // Iterate over all blocks in chunk
@@ -1454,7 +1457,7 @@ export class ChunkService {
       chunk.isRendered = false;
     }
 
-    logger.info('All block modifiers recalculated', { blockCount, chunkCount: chunks.length });
+    logger.debug('All block modifiers recalculated', { blockCount, chunkCount: chunks.length });
     return blockCount;
   }
 
@@ -1467,12 +1470,12 @@ export class ChunkService {
    * @returns Object with blockCount and chunkCount
    */
   recalculateAndRedrawAll(): { blockCount: number; chunkCount: number } {
-    logger.info('Recalculating modifiers and redrawing all chunks');
+    logger.debug('Recalculating modifiers and redrawing all chunks');
 
     const blockCount = this.recalculateAllModifiers();
     const chunkCount = this.redrawAllChunks();
 
-    logger.info('Recalculation and redraw complete', { blockCount, chunkCount });
+    logger.debug('Recalculation and redraw complete', { blockCount, chunkCount });
 
     return { blockCount, chunkCount };
   }
@@ -1610,7 +1613,7 @@ export class ChunkService {
           // Start playing (deferred sound will wait for audio unlock if needed)
           sound.play();
 
-          logger.info('Permanent sound registered for block (will play when audio unlocks)', {
+          logger.debug('Permanent sound registered for block (will play when audio unlocks)', {
             path: audioDef.path,
             blockTypeId: clientBlock.blockType.id,
             position: clientBlock.block.position,
@@ -1657,7 +1660,7 @@ export class ChunkService {
         oldSound.stop();
         oldSound.dispose();
         clientChunk.data.permanentAudioSounds.delete(posKey);
-        logger.info('Stopped old permanent sound for block update', {
+        logger.debug('Stopped old permanent sound for block update', {
           position: clientBlock.block.position,
         });
       } catch (error) {
@@ -1705,7 +1708,7 @@ export class ChunkService {
         // Start playing (deferred sound will wait for audio unlock if needed)
         sound.play();
 
-        logger.info('Permanent sound registered for block update (will play when audio unlocks)', {
+        logger.debug('Permanent sound registered for block update (will play when audio unlocks)', {
           path: audioDef.path,
           blockTypeId: clientBlock.blockType.id,
           position: clientBlock.block.position,
@@ -1745,7 +1748,7 @@ export class ChunkService {
    */
   private onSessionRestore(): void {
     try {
-      logger.info('Session restored, re-registering chunks', {
+      logger.debug('Session restored, re-registering chunks', {
         chunksToRegister: this.lastRegistration.length,
         registeredChunks: this.registeredChunks.size,
       });

@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('WindDirectionCommand');
 
@@ -25,7 +25,7 @@ export class WindDirectionCommand extends CommandHandler {
     return 'Set wind direction (x, z)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const environmentService = this.appContext.services.environment;
 
     if (!environmentService) {
@@ -43,8 +43,8 @@ export class WindDirectionCommand extends CommandHandler {
       return 'Missing parameters. Usage: windDirection <x> <z>';
     }
 
-    const x = parseFloat(parameters[0]);
-    const z = parseFloat(parameters[1]);
+    const x = toNumber(parameters[0]);
+    const z = toNumber(parameters[1]);
 
     if (isNaN(x) || isNaN(z)) {
       return 'Invalid parameters. Both x and z must be numbers.';
@@ -54,7 +54,7 @@ export class WindDirectionCommand extends CommandHandler {
     environmentService.setWindDirection(x, z);
 
     const dir = environmentService.getWindDirection();
-    logger.info('Wind direction set', { x: dir.x, z: dir.z });
+    logger.debug('Wind direction set', { x: dir.x, z: dir.z });
 
     return `Wind direction set to (${dir.x.toFixed(2)}, ${dir.z.toFixed(2)})`;
   }

@@ -547,12 +547,12 @@ export class GamePadController implements InputController {
     window.addEventListener('gamepadconnected', this.onGamePadConnected);
     window.addEventListener('gamepaddisconnected', this.onGamePadDisconnected);
 
-    logger.info('GamePadController initialized');
+    logger.debug('GamePadController initialized');
   }
 
   private onGamePadConnected = (event: GamepadEvent): void => {
     this.gamepadIndex = event.gamepad.index;
-    logger.info('Gamepad connected', { index: this.gamepadIndex });
+    logger.debug('Gamepad connected', { index: this.gamepadIndex });
 
     // Start update loop
     this.updateInterval = window.setInterval(() => this.updateGamePad(), 16); // ~60 FPS
@@ -561,7 +561,7 @@ export class GamePadController implements InputController {
   private onGamePadDisconnected = (event: GamepadEvent): void => {
     if (event.gamepad.index === this.gamepadIndex) {
       this.gamepadIndex = -1;
-      logger.info('Gamepad disconnected');
+      logger.debug('Gamepad disconnected');
 
       // Stop update loop
       if (this.updateInterval) {
@@ -703,7 +703,7 @@ export class GamePadController implements InputController {
       }
     }
 
-    logger.info('GamePadController disposed');
+    logger.debug('GamePadController disposed');
   }
 }
 ```

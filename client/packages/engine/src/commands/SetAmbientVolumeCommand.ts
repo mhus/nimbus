@@ -3,6 +3,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SetAmbientVolumeCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -37,14 +40,14 @@ export class SetAmbientVolumeCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     // No parameters - show current volume
     if (parameters.length === 0) {
       const currentVolume = audioService.getAmbientVolume();
-      console.log(`Current ambient volume: ${currentVolume.toFixed(2)}`);
+      logger.debug(`Current ambient volume: ${currentVolume.toFixed(2)}`);
       return { ambientVolume: currentVolume };
     }
 
@@ -52,7 +55,7 @@ export class SetAmbientVolumeCommand extends CommandHandler {
     const volume = parseFloat(String(parameters[0]));
 
     if (isNaN(volume)) {
-      console.error('Invalid volume parameter. Must be a number between 0.0 and 1.0');
+      logger.error('Invalid volume parameter. Must be a number between 0.0 and 1.0');
       return { error: 'Invalid volume parameter' };
     }
 
@@ -60,10 +63,10 @@ export class SetAmbientVolumeCommand extends CommandHandler {
     audioService.setAmbientVolume(volume);
 
     const actualVolume = audioService.getAmbientVolume();
-    console.log(`✓ Ambient volume set to ${actualVolume.toFixed(2)}`);
+    logger.debug(`✓ Ambient volume set to ${actualVolume.toFixed(2)}`);
 
     if (actualVolume <= 0) {
-      console.log('  Ambient music will be stopped/muted');
+      logger.debug('  Ambient music will be stopped/muted');
     }
 
     return { ambientVolume: actualVolume };

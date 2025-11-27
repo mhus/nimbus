@@ -49,7 +49,7 @@ export class NotificationService {
     // Get container elements
     this.initializeContainers();
 
-    logger.info('NotificationService initialized');
+    logger.debug('NotificationService initialized');
   }
 
   /**
@@ -206,8 +206,9 @@ export class NotificationService {
    * @param type Notification type (0-31)
    * @param from Sender name (null for system messages)
    * @param message Notification message
+   * @param texturePath Optional asset path for icon (e.g., 'items/sword.png')
    */
-  newNotification(type: NotificationType, from: string | null, message: string): void {
+  newNotification(type: NotificationType, from: string | null, message: string, texturePath?: string | null): void {
     try {
       // Don't show if notifications are suppressed
       if (!this.visible) {
@@ -233,6 +234,7 @@ export class NotificationService {
         message,
         timestamp: Date.now(),
         area,
+        texturePath: texturePath || null,
       };
 
       // Add to storage
@@ -332,24 +334,67 @@ export class NotificationService {
       element.className = `notification color-${style.color} size-${style.size}`;
       element.id = notification.id;
 
+      // Add icon if texturePath is provided
+      if (notification.texturePath) {
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'notification-icon';
+        iconContainer.style.cssText = `
+          width: 48px;
+          height: 48px;
+          background: rgba(50, 50, 50, 0.9);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          margin-right: 12px;
+        `;
+
+        const networkService = this.appContext.services.network;
+        if (networkService) {
+          const textureUrl = networkService.getAssetUrl(notification.texturePath);
+          const img = document.createElement('img');
+          img.src = textureUrl;
+          img.style.cssText = `
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            image-rendering: pixelated;
+          `;
+          img.onerror = () => {
+            logger.warn('Failed to load notification icon', { texturePath: notification.texturePath, textureUrl });
+          };
+          iconContainer.appendChild(img);
+        }
+
+        element.appendChild(iconContainer);
+      }
+
+      // Create text container for from and message
+      const textContainer = document.createElement('div');
+      textContainer.style.cssText = 'flex: 1; display: flex; flex-direction: column;';
+
       // Add from line if present
       if (notification.from) {
         const fromElement = document.createElement('div');
         fromElement.className = 'notification-from';
         fromElement.textContent = notification.from;
-        element.appendChild(fromElement);
+        textContainer.appendChild(fromElement);
       }
 
       // Add message
       const messageElement = document.createElement('div');
       messageElement.className = 'notification-message';
       messageElement.textContent = notification.message;
-      element.appendChild(messageElement);
+      textContainer.appendChild(messageElement);
+
+      element.appendChild(textContainer);
 
       // Add to container
       container.appendChild(element);
 
-      logger.debug('Notification rendered', { id: notification.id });
+      logger.debug('Notification rendered', { id: notification.id, hasIcon: !!notification.texturePath });
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.renderNotification', {
         notification,
@@ -1265,7 +1310,7 @@ export class NotificationService {
         this.centerTextElement = null;
       }
 
-      logger.info('NotificationService disposed');
+      logger.debug('NotificationService disposed');
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.dispose');
     }
@@ -1300,7 +1345,7 @@ export class NotificationService {
 
       const imageUrl = networkService.getAssetUrl(assetPath);
 
-      logger.info('Flashing image', { assetPath, imageUrl, duration, opacity });
+      logger.debug('Flashing image', { assetPath, imageUrl, duration, opacity });
 
       // Create container for flash image
       const flashContainer = document.createElement('div');
@@ -1393,7 +1438,7 @@ export class NotificationService {
       this.centerTextElement.textContent = text;
       this.centerTextElement.style.display = 'block';
 
-      logger.info('Center text set', { text });
+      logger.debug('Center text set', { text });
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.setCenterText', { text });
     }
@@ -1407,7 +1452,7 @@ export class NotificationService {
       if (this.centerTextElement) {
         this.centerTextElement.style.display = 'none';
         this.centerTextElement.textContent = '';
-        logger.info('Center text cleared');
+        logger.debug('Center text cleared');
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.clearCenterText');

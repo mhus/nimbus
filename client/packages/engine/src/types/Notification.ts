@@ -45,6 +45,7 @@ export interface Notification {
   message: string;
   timestamp: number;
   area: NotificationArea;
+  texturePath?: string | null; // Optional asset path for icon (e.g., 'items/sword.png')
 }
 
 /**

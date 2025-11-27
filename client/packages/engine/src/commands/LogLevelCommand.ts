@@ -3,7 +3,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
-import { LoggerFactory, LogLevel } from '@nimbus/shared';
+import { LoggerFactory, LogLevel, getLogger } from '@nimbus/shared';
+
+const logger = getLogger('LogLevelCommand');
 
 /**
  * LogLevel command - Controls logging verbosity
@@ -70,12 +72,12 @@ export class LogLevelCommand extends CommandHandler {
         };
       }
 
-      console.log(`[LogLevelCommand] Setting '${loggerName}' to level ${level}`);
+      logger.debug(`[LogLevelCommand] Setting '${loggerName}' to level ${level}`);
       LoggerFactory.setLoggerLevel(loggerName, level);
 
       // Verify it was set
       const loggerNames = LoggerFactory.getLoggerNames();
-      console.log(`[LogLevelCommand] Existing loggers:`, loggerNames);
+      logger.debug(`[LogLevelCommand] Existing loggers:`, loggerNames);
 
       return `Logger '${loggerName}' set to ${this.getLevelName(level)} (${level})`;
     }

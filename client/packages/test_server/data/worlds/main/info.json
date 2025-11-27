@@ -27,7 +27,105 @@
     "maxPlayers": 10,
     "allowGuests": true,
     "pvpEnabled": false,
-    "pingInterval": 5000
+    "pingInterval": 5000,
+    "sunTexture": "textures/sun/sun1.png",
+    "sunSize": 3.1,
+    "sunAngleY": 90,
+    "sunElevation": 45,
+    "sunColor": {
+      "r": 1,
+      "g": 1,
+      "b": 0.9
+    },
+    "sunEnabled": true,
+    "horizonGradient": {
+      "enabled": true,
+      "distance": 300,
+      "y": -150,
+      "height": 200,
+      "color1": {
+        "r": 0.152,
+        "g": 0.6,
+        "b": 0.925
+      },
+      "color0": {
+        "r": 0.407,
+        "g": 0.6,
+        "b": 0.92
+      },
+      "alpha": 0.5
+    },
+    "worldTime": {
+      "minuteScaling": 10,
+      "minutesPerHour": 60,
+      "hoursPerDay": 24,
+      "daysPerMonth": 30,
+      "monthsPerYear": 12,
+      "yearsPerEra": 10000,
+      "daySections": {
+        "morningStart": 6,
+        "dayStart": 12,
+        "eveningStart": 18,
+        "nightStart": 0
+      },
+      "celestialBodies": {
+        "enabled": true,
+        "updateIntervalSeconds": 10,
+        "activeMoons": 2,
+        "sunRotationHours": 24,
+        "moon0RotationHours": 672,
+        "moon1RotationHours": 504,
+        "moon2RotationHours": 336
+      }
+    },
+    "environmentScripts": [
+      {
+        "name": "daytime_change_night",
+        "group": "daytime",
+        "script": {
+          "scriptId": "daytime_change_night",
+          "sendToServer": false
+        }
+      },
+      {
+        "name": "season_winter",
+        "group": "season",
+        "script": {
+          "script": {
+            "id": "season_winter",
+            "root": {
+              "kind": "Sequence",
+              "steps": [
+                {
+                  "kind": "Play",
+                  "effectId": "command",
+                  "ctx": {
+                    "cmd": "fogViewMode",
+                    "parameter0": 0.3
+                  }
+                },
+                {
+                  "kind": "Play",
+                  "effectId": "command",
+                  "ctx": {
+                    "cmd": "ambientLightIntensity",
+                    "parameter0": 0.8
+                  }
+                },
+                {
+                  "kind": "Play",
+                  "effectId": "log",
+                  "ctx": {
+                    "message": "Winter season: Added fog and reduced light"
+                  }
+                }
+              ]
+            }
+          },
+          "sendToServer": false
+        }
+      }
+    ]
   },
   "startArea": {
     "x": 0,

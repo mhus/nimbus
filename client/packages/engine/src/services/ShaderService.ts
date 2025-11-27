@@ -55,7 +55,7 @@ export class ShaderService {
   private windMaterials: ShaderMaterial[] = [];
 
   constructor(private appContext: AppContext) {
-    logger.info('ShaderService initialized');
+    logger.debug('ShaderService initialized');
   }
 
   /**
@@ -174,7 +174,7 @@ export class ShaderService {
   clear(): void {
     this.effects.clear();
     this.windMaterials = [];
-    logger.info('Shader effects cleared');
+    logger.debug('Shader effects cleared');
   }
 
   // ============================================

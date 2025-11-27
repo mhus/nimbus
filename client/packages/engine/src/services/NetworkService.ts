@@ -82,7 +82,7 @@ export class NetworkService {
     this.websocketUrl = appContext.config.websocketUrl;
     this.apiUrl = appContext.config.apiUrl;
 
-    logger.info('NetworkService initialized', {
+    logger.debug('NetworkService initialized', {
       websocketUrl: this.websocketUrl,
       apiUrl: this.apiUrl,
     });
@@ -99,7 +99,7 @@ export class NetworkService {
 
     try {
       this.connectionState = ConnectionState.CONNECTING;
-      logger.info('Connecting to WebSocket server', { url: this.websocketUrl });
+      logger.debug('Connecting to WebSocket server', { url: this.websocketUrl });
 
       this.ws = new WebSocket(this.websocketUrl);
 
@@ -142,7 +142,7 @@ export class NetworkService {
     }
 
     this.connectionState = ConnectionState.DISCONNECTED;
-    logger.info('Disconnected from WebSocket server');
+    logger.debug('Disconnected from WebSocket server');
   }
 
   /**
@@ -278,7 +278,7 @@ export class NetworkService {
     this.reconnectAttempt = 0;
 
     if (isReconnect) {
-      logger.info('Reconnected to WebSocket server');
+      logger.debug('Reconnected to WebSocket server');
       this.emit('reconnected');
 
       // Clear center text notification
@@ -296,7 +296,7 @@ export class NetworkService {
 
       // Resend login with sessionId for session restoration
       if (this.appContext.sessionId) {
-        logger.info('Resending login with sessionId after reconnect', {
+        logger.debug('Resending login with sessionId after reconnect', {
           sessionId: this.appContext.sessionId,
         });
         this.sendLoginWithSession(this.appContext.sessionId);
@@ -305,7 +305,7 @@ export class NetworkService {
         this.send(this.lastLoginMessage);
       }
     } else {
-      logger.info('Connected to WebSocket server');
+      logger.debug('Connected to WebSocket server');
       this.emit('connected');
 
       // Send initial login
@@ -322,7 +322,7 @@ export class NetworkService {
 
       // Log ALL incoming messages (especially b.u for debugging)
       if (message.t === 'b.u') {
-        logger.info('🔵 INCOMING WebSocket Message: b.u', {
+        logger.debug('🔵 INCOMING WebSocket Message: b.u', {
           type: message.t,
           dataLength: message.d?.length,
           rawData: event.data,
@@ -346,7 +346,7 @@ export class NetworkService {
       const handlers = this.handlers.get(message.t);
       if (handlers && handlers.length > 0) {
         if (message.t === 'b.u') {
-          logger.info(`🔵 Found ${handlers.length} handler(s) for b.u, routing...`);
+          logger.debug(`🔵 Found ${handlers.length} handler(s) for b.u, routing...`);
         }
         handlers.forEach(handler => {
           try {
@@ -393,7 +393,7 @@ export class NetworkService {
     const wasConnected = this.connectionState === ConnectionState.CONNECTED;
 
     this.connectionState = ConnectionState.DISCONNECTED;
-    logger.info('WebSocket connection closed');
+    logger.debug('WebSocket connection closed');
 
     this.emit('disconnected');
 
@@ -438,7 +438,7 @@ export class NetworkService {
 
       // Redirect to exit URL
       const exitUrl = this.appContext.config.exitUrl || '/login';
-      logger.info('Redirecting to exit URL', { exitUrl });
+      logger.debug('Redirecting to exit URL', { exitUrl });
 
       // Use window.location for redirect
       if (typeof window !== 'undefined' && window.location) {
@@ -452,7 +452,7 @@ export class NetworkService {
 
     this.reconnectAttempt++;
 
-    logger.info('Attempting reconnect', {
+    logger.debug('Attempting reconnect', {
       attempt: this.reconnectAttempt,
       maxAttempts: this.maxReconnectAttempts,
       delay: this.reconnectIntervalMs,
@@ -506,7 +506,7 @@ export class NetworkService {
     this.lastLoginMessage = loginMessage;
     this.send(loginMessage);
 
-    logger.info('Sent login message', { username: loginMessage.d!.username, worldId: loginMessage.d!.worldId });
+    logger.debug('Sent login message', { username: loginMessage.d!.username, worldId: loginMessage.d!.worldId });
   }
 
   /**
@@ -526,7 +526,7 @@ export class NetworkService {
     this.lastLoginMessage = loginMessage;
     this.send(loginMessage);
 
-    logger.info('Sent login message with sessionId', { sessionId, worldId: loginMessage.d!.worldId });
+    logger.debug('Sent login message with sessionId', { sessionId, worldId: loginMessage.d!.worldId });
   }
 
   /**

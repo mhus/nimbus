@@ -31,7 +31,7 @@ export class ScrawlPauseCommand extends CommandHandler {
 
     if (args.length === 0) {
       logger.error('Usage: scrawlPause <executorId>');
-      logger.info('Example: scrawlPause executor_0');
+      logger.debug('Example: scrawlPause executor_0');
       return;
     }
 
@@ -40,7 +40,7 @@ export class ScrawlPauseCommand extends CommandHandler {
 
     const success = scrawlService.pauseExecutor(executorId);
     if (success) {
-      logger.info(`Executor ${executorId} paused`);
+      logger.debug(`Executor ${executorId} paused`);
     } else {
       logger.error(`Executor ${executorId} not found`);
     }

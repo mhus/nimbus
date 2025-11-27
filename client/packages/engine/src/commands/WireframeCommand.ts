@@ -3,6 +3,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('WireframeCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -34,7 +37,7 @@ export class WireframeCommand extends CommandHandler {
     const engineService = this.appContext.services.engine;
 
     if (!engineService) {
-      console.error('EngineService not available');
+      logger.error('EngineService not available');
       return { error: 'EngineService not available' };
     }
 
@@ -57,11 +60,11 @@ export class WireframeCommand extends CommandHandler {
         } else if (lower === 'false' || lower === '0' || lower === 'off' || lower === 'no') {
           enabled = false;
         } else {
-          console.error(`Invalid parameter: ${param}. Use true/false.`);
+          logger.error(`Invalid parameter: ${param}. Use true/false.`);
           return { error: 'Invalid parameter. Use true/false.' };
         }
       } else {
-        console.error('Invalid parameter type. Use true/false.');
+        logger.error('Invalid parameter type. Use true/false.');
         return { error: 'Invalid parameter type. Use true/false.' };
       }
     }
@@ -73,7 +76,7 @@ export class WireframeCommand extends CommandHandler {
     engineService.setWireframeMode(enabled);
 
     const message = `Wireframe mode ${enabled ? 'enabled' : 'disabled'}`;
-    console.log(message);
+    logger.debug(message);
 
     return {
       wireframeEnabled: enabled,

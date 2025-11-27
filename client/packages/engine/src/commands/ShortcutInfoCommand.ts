@@ -11,6 +11,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ShortcutInfoCommand');
 
 /**
  * ShortcutInfo command - Shows active shortcut details
@@ -43,7 +46,7 @@ export class ShortcutInfoCommand extends CommandHandler {
     const scrawlService = this.appContext.services.scrawl;
 
     if (!shortcutService || !playerService) {
-      console.error('Required services not available');
+      logger.error('Required services not available');
       return { error: 'Services not available' };
     }
 
@@ -99,7 +102,7 @@ export class ShortcutInfoCommand extends CommandHandler {
     lines.push('===================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Build detailed return object
     const result: any = {
@@ -130,11 +133,11 @@ export class ShortcutInfoCommand extends CommandHandler {
           result.mergedModifier = mergedModifier;
 
           // Explicitly show actionTargeting
-          console.log('\n=== ACTION TARGETING ===');
-          console.log('ItemType.modifier.actionTargeting:', itemType?.modifier?.actionTargeting);
-          console.log('Item.modifier.actionTargeting:', item.modifier?.actionTargeting);
-          console.log('MergedModifier.actionTargeting:', mergedModifier?.actionTargeting);
-          console.log('========================\n');
+          logger.debug('\n=== ACTION TARGETING ===');
+          logger.debug('ItemType.modifier.actionTargeting:', itemType?.modifier?.actionTargeting);
+          logger.debug('Item.modifier.actionTargeting:', item.modifier?.actionTargeting);
+          logger.debug('MergedModifier.actionTargeting:', mergedModifier?.actionTargeting);
+          logger.debug('========================\n');
         }
       }
 
@@ -152,14 +155,14 @@ export class ShortcutInfoCommand extends CommandHandler {
       }
     }
 
-    console.log('\n=== FULL OBJECTS (JSON) ===');
-    console.log('Shortcut:', JSON.stringify(result.shortcut, null, 2));
-    console.log('\nItem:', JSON.stringify(result.item, null, 2));
-    console.log('\nItemType:', JSON.stringify(result.itemType, null, 2));
-    console.log('\nMergedModifier:', JSON.stringify(result.mergedModifier, null, 2));
-    console.log('\nShortcutConfig:', JSON.stringify(result.shortcutConfig, null, 2));
-    console.log('\nCurrentTarget:', JSON.stringify(result.currentTarget, null, 2));
-    console.log('===========================\n');
+    logger.debug('\n=== FULL OBJECTS (JSON) ===');
+    logger.debug('Shortcut:', JSON.stringify(result.shortcut, null, 2));
+    logger.debug('\nItem:', JSON.stringify(result.item, null, 2));
+    logger.debug('\nItemType:', JSON.stringify(result.itemType, null, 2));
+    logger.debug('\nMergedModifier:', JSON.stringify(result.mergedModifier, null, 2));
+    logger.debug('\nShortcutConfig:', JSON.stringify(result.shortcutConfig, null, 2));
+    logger.debug('\nCurrentTarget:', JSON.stringify(result.currentTarget, null, 2));
+    logger.debug('===========================\n');
 
     return result;
   }

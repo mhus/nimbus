@@ -65,19 +65,19 @@ export class PingMessageHandler extends MessageHandler {
    */
   set pingIntervalMs(value: number) {
     if (value < 100) {
-      logger.warn('Ping interval too low, setting minimum to 100ms', { requestedValue: value });
+      logger.debug('Ping interval too low, setting minimum to 100ms', { requestedValue: value });
       value = 100;
     }
 
     if (value > 60000) {
-      logger.warn('Ping interval too high, setting maximum to 60000ms', { requestedValue: value });
+      logger.debug('Ping interval too high, setting maximum to 60000ms', { requestedValue: value });
       value = 60000;
     }
 
     const wasRunning = this.pingInterval !== undefined;
     this._pingIntervalMs = value;
 
-    logger.info('Ping interval changed', { intervalMs: value });
+    logger.debug('Ping interval changed', { intervalMs: value });
 
     // Restart interval if it was running
     if (wasRunning) {
@@ -120,7 +120,7 @@ export class PingMessageHandler extends MessageHandler {
   startPingInterval(): void {
     this.stopPingInterval();
 
-    logger.info('Starting ping interval', { intervalMs: this._pingIntervalMs });
+    logger.debug('Starting ping interval', { intervalMs: this._pingIntervalMs });
 
     this.pingInterval = setInterval(() => {
       this.sendPing();

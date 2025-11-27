@@ -34,7 +34,7 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
   async handle(message: BaseMessage<Block[]>): Promise<void> {
     const blocks = message.d;
 
-    logger.info('🔵 BLOCK UPDATE MESSAGE RECEIVED (b.u)', {
+    logger.debug('🔵 BLOCK UPDATE MESSAGE RECEIVED (b.u)', {
       messageType: message.t,
       blockCount: blocks?.length || 0,
       rawMessage: message,
@@ -45,7 +45,7 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
       return;
     }
 
-    logger.info('Processing block updates', {
+    logger.debug('Processing block updates', {
       count: blocks.length,
       blocks: blocks.map(b => ({
         position: b.position,
@@ -57,6 +57,6 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
     // Forward to ChunkService (await to ensure BlockTypes are loaded)
     await this.chunkService.onBlockUpdate(blocks);
 
-    logger.info('Block updates forwarded to ChunkService');
+    logger.debug('Block updates forwarded to ChunkService');
   }
 }

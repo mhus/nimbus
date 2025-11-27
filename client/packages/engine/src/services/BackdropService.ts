@@ -18,6 +18,7 @@ import {
   ExceptionHandler,
   type Backdrop,
 } from '@nimbus/shared';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
 import { BackdropMaterialManager } from './BackdropMaterialManager';
@@ -61,7 +62,7 @@ export class BackdropService {
 
     this.setupEventListeners();
 
-    logger.info('BackdropService initialized');
+    logger.debug('BackdropService initialized');
 
     // Initial update in case chunks are already loaded
     setTimeout(() => this.updateBackdrops(), 1000);
@@ -323,8 +324,8 @@ export class BackdropService {
         const material = await this.materialManager.getBackdropMaterial(backdropConfig);
         mesh.material = material;
 
-        // Rendering settings - render in same group as blocks for proper depth testing
-        mesh.renderingGroupId = 0;
+        // Rendering settings - render backdrop between environment and world
+        mesh.renderingGroupId = RENDERING_GROUPS.BACKDROP;
         mesh.name = `backdrop_${key}`;
 
         // Store mesh
@@ -729,7 +730,7 @@ export class BackdropService {
     const centerY = (yStart + yEnd) / 2;
     const centerZ = (zMin + zMax) / 2;
 
-    logger.info('Creating backdrop box', {
+    logger.debug('Creating backdrop box', {
       direction,
       dimensions: { width, height, depth: depthSize },
       center: { x: centerX, y: centerY, z: centerZ },
@@ -772,7 +773,7 @@ export class BackdropService {
    * Dispose all backdrops and cleanup resources
    */
   dispose(): void {
-    logger.info('Disposing BackdropService', {
+    logger.debug('Disposing BackdropService', {
       backdropCount: this.backdropMeshes.size,
     });
 
@@ -786,6 +787,6 @@ export class BackdropService {
     // Dispose materials
     this.materialManager.dispose();
 
-    logger.info('BackdropService disposed');
+    logger.debug('BackdropService disposed');
   }
 }

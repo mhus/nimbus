@@ -51,12 +51,14 @@ import { AudioCommand } from './commands/AudioCommand';
 import { TestAudioCommand } from './commands/TestAudioCommand';
 import { StepVolumeCommand } from './commands/StepVolumeCommand';
 import { PlayAmbientAudioCommand } from './commands/PlayAmbientAudioCommand';
+import { EnvironmentAmbientAudioCommand } from './commands/EnvironmentAmbientAudioCommand';
 import { SetAmbientVolumeCommand } from './commands/SetAmbientVolumeCommand';
 import { PlaySoundCommand } from './commands/PlaySoundCommand';
 import { PlaySoundAtPositionCommand } from './commands/PlaySoundAtPositionCommand';
 import { PlayEntityAudioCommand } from './commands/PlayEntityAudioCommand';
 import { SpeakCommand } from './commands/SpeakCommand';
 import { SetSpeechVolumeCommand } from './commands/SetSpeechVolumeCommand';
+import { RegisterFlashSoundsCommand } from './commands/RegisterFlashSoundsCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import { SetShortcutCommand } from './commands/SetShortcutCommand';
@@ -75,6 +77,13 @@ import { FogCommand } from './commands/FogCommand';
 import { FlashImageCommand } from './commands/FlashImageCommand';
 import { CenterTextCommand } from './commands/CenterTextCommand';
 import { LogLevelCommand } from './commands/LogLevelCommand';
+import { CreateEnvironmentScriptCommand } from './commands/CreateEnvironmentScriptCommand';
+import { DeleteEnvironmentScriptCommand } from './commands/DeleteEnvironmentScriptCommand';
+import { StartEnvironmentScriptCommand } from './commands/StartEnvironmentScriptCommand';
+import { StopEnvironmentScriptCommand } from './commands/StopEnvironmentScriptCommand';
+import { GetCurrentEnvironmentScriptCommand } from './commands/GetCurrentEnvironmentScriptCommand';
+import { ListEnvironmentScriptsCommand } from './commands/ListEnvironmentScriptsCommand';
+import { ResetEnvironmentCommand } from './commands/ResetEnvironmentCommand';
 import { BlockInfoCommand } from './commands/BlockInfoCommand';
 import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
 import { ClearBlockTypeCacheCommand } from './commands/ClearBlockTypeCacheCommand';
@@ -90,15 +99,98 @@ import {
   WindSwayFactorCommand,
 } from './commands/wind';
 import {
+  AmbientLightIntensityCommand,
+  AmbientLightDiffuseCommand,
+  AmbientLightSpecularCommand,
+  AmbientLightGroundColorCommand,
+} from './commands/ambientLight';
+import {
+  SunLightIntensityCommand,
+  SunLightDirectionCommand,
+  SunLightDiffuseCommand,
+  SunLightSpecularCommand,
+} from './commands/sunLight';
+import {
+  SunEnableCommand,
+  SunPositionCommand,
+  SunElevationCommand,
+  SunColorCommand,
+  SunTextureCommand,
+  SunSizeCommand,
+  SunLensFlareEnableCommand,
+  SunLensFlareIntensityCommand,
+  SunLensFlareColorCommand,
+  AutomaticSunAdjustmentCommand,
+  SunLightIntensityMultiplierCommand,
+  AmbientLightIntensityMultiplierCommand,
+} from './commands/sun';
+import {
+  SkyBoxEnableCommand,
+  SkyBoxColorCommand,
+  SkyBoxTextureCommand,
+  SkyBoxSizeCommand,
+  SkyBoxRotationCommand,
+  SkyBoxStartCommand,
+} from './commands/skybox';
+import {
+  MoonEnableCommand,
+  MoonSizeCommand,
+  MoonPositionCommand,
+  MoonElevationCommand,
+  MoonDistanceCommand,
+  MoonPhaseCommand,
+  MoonTextureCommand,
+} from './commands/moon';
+import {
+  CloudAddCommand,
+  CloudRemoveCommand,
+  CloudClearCommand,
+  CloudEnableCommand,
+  CloudSpeedCommand,
+  CloudDirectionCommand,
+  CloudPositionCommand,
+  CloudSizeCommand,
+  CloudListCommand,
+  CloudsAnimationStartCommand,
+  CloudsAnimationStopCommand,
+} from './commands/clouds';
+import {
+  HorizonGradientEnableCommand,
+  HorizonGradientDistanceCommand,
+  HorizonGradientPositionCommand,
+  HorizonGradientHeightCommand,
+  HorizonGradientColor0Command,
+  HorizonGradientColor1Command,
+  HorizonGradientAlphaCommand,
+} from './commands/horizonGradient';
+import {
+  PrecipitationEnableCommand,
+  PrecipitationIntensityCommand,
+  PrecipitationTypeCommand,
+  PrecipitationStartCommand,
+  PrecipitationStopCommand,
+  LightningCommand,
+} from './commands/precipitation';
+import {
   ScrawlListCommand,
   ScrawlStartCommand,
   ScrawlActionCommand,
+  ScrawlScriptCommand,
   ScrawlSelectedActionCommand,
   ScrawlStopCommand,
   ScrawlStatusCommand,
   ScrawlPauseCommand,
   ScrawlResumeCommand,
 } from './commands/scrawl';
+import {
+  SetStackModifierCommand,
+  GetStackModifierCurrentValueCommand,
+  ListStacksCommand,
+} from './commands/stack';
+import { WorldTimeConfigCommand } from './commands/WorldTimeConfigCommand';
+import { WorldTimeStartCommand } from './commands/WorldTimeStartCommand';
+import { WorldTimeStopCommand } from './commands/WorldTimeStopCommand';
+import { WorldTimeInfoCommand } from './commands/WorldTimeInfoCommand';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -113,75 +205,75 @@ const buildMode = __EDITOR__ ? 'Editor' : 'Viewer';
  */
 async function initializeApp(): Promise<AppContext> {
   try {
-    logger.info(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
-    logger.info(`Shared Library v${SHARED_VERSION}`);
+    logger.debug(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
+    logger.debug(`Shared Library v${SHARED_VERSION}`);
     logger.debug(`Build Mode: ${__BUILD_MODE__}`);
 
     // Load client configuration
-    logger.info('Loading client configuration...');
+    logger.debug('Loading client configuration...');
     const config = loadClientConfig();
 
     // Create ClientService
-    logger.info('Initializing ClientService...');
+    logger.debug('Initializing ClientService...');
     const clientService = new ClientService(config);
 
     // Setup logger with proper transports
     clientService.setupLogger();
 
     // Create AppContext
-    logger.info('Creating AppContext...');
+    logger.debug('Creating AppContext...');
     const appContext = createAppContext(config, clientService);
 
     // Initialize PlayerInfo with defaults
     // This can later be overridden by server configuration
     appContext.playerInfo = { ...DEFAULT_PLAYER_INFO };
-    logger.info('PlayerInfo initialized', {
+    logger.debug('PlayerInfo initialized', {
       displayName: appContext.playerInfo.displayName,
       baseWalkSpeed: appContext.playerInfo.baseWalkSpeed,
       effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
     });
 
     // Initialize ModalService (no dependencies, UI-only)
-    logger.info('Initializing ModalService...');
+    logger.debug('Initializing ModalService...');
     const modalService = new ModalService(appContext);
     appContext.services.modal = modalService;
     logger.debug('ModalService initialized');
 
     // Initialize NotificationService (no dependencies, UI-only)
-    logger.info('Initializing NotificationService...');
+    logger.debug('Initializing NotificationService...');
     const notificationService = new NotificationService(appContext);
     appContext.services.notification = notificationService;
     logger.debug('NotificationService initialized');
 
     // Initialize ItemService (loads items from server REST API)
-    logger.info('Initializing ItemService...');
+    logger.debug('Initializing ItemService...');
     const itemService = new ItemService(appContext);
     appContext.services.item = itemService;
     logger.debug('ItemService initialized');
 
     // Initialize ScrawlService (before CommandService so commands can use it)
-    logger.info('Initializing ScrawlService...');
+    logger.debug('Initializing ScrawlService...');
     const scrawlService = new ScrawlService(appContext);
     appContext.services.scrawl = scrawlService;
     await scrawlService.initialize();
     logger.debug('ScrawlService initialized');
 
     // Initialize TargetingService (before ShortcutService, which depends on it)
-    logger.info('Initializing TargetingService...');
+    logger.debug('Initializing TargetingService...');
     const { TargetingService } = await import('./services/TargetingService');
     const targetingService = new TargetingService(appContext);
     appContext.services.targeting = targetingService;
     logger.debug('TargetingService initialized');
 
     // Initialize ShortcutService (after ScrawlService and TargetingService)
-    logger.info('Initializing ShortcutService...');
+    logger.debug('Initializing ShortcutService...');
     const { ShortcutService } = await import('./services/ShortcutService');
     const shortcutService = new ShortcutService(appContext);
     appContext.services.shortcut = shortcutService;
     logger.debug('ShortcutService initialized');
 
     // Initialize CommandService (available in both EDITOR and VIEWER modes)
-    logger.info('Initializing CommandService...');
+    logger.debug('Initializing CommandService...');
     const commandService = new CommandService(appContext);
     appContext.services.command = commandService;
 
@@ -197,12 +289,14 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new TestAudioCommand(appContext));
     commandService.registerHandler(new StepVolumeCommand(appContext));
     commandService.registerHandler(new PlayAmbientAudioCommand(appContext));
+    commandService.registerHandler(new EnvironmentAmbientAudioCommand(appContext));
     commandService.registerHandler(new SetAmbientVolumeCommand(appContext));
     commandService.registerHandler(new PlaySoundCommand(appContext));
     commandService.registerHandler(new PlaySoundAtPositionCommand(appContext));
     commandService.registerHandler(new PlayEntityAudioCommand(appContext));
     commandService.registerHandler(new SpeakCommand(appContext));
     commandService.registerHandler(new SetSpeechVolumeCommand(appContext));
+    commandService.registerHandler(new RegisterFlashSoundsCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));
@@ -237,19 +331,113 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new WindGustStrengthCommand(appContext));
     commandService.registerHandler(new WindSwayFactorCommand(appContext));
 
+    // Register ambient light commands
+    commandService.registerHandler(new AmbientLightIntensityCommand(appContext));
+    commandService.registerHandler(new AmbientLightDiffuseCommand(appContext));
+    commandService.registerHandler(new AmbientLightSpecularCommand(appContext));
+    commandService.registerHandler(new AmbientLightGroundColorCommand(appContext));
+
+    // Register sun light commands
+    commandService.registerHandler(new SunLightIntensityCommand(appContext));
+    commandService.registerHandler(new SunLightDirectionCommand(appContext));
+    commandService.registerHandler(new SunLightDiffuseCommand(appContext));
+    commandService.registerHandler(new SunLightSpecularCommand(appContext));
+
+    // Register sun visualization commands
+    commandService.registerHandler(new SunEnableCommand(appContext));
+    commandService.registerHandler(new SunPositionCommand(appContext));
+    commandService.registerHandler(new SunElevationCommand(appContext));
+    commandService.registerHandler(new SunColorCommand(appContext));
+    commandService.registerHandler(new SunTextureCommand(appContext));
+    commandService.registerHandler(new SunSizeCommand(appContext));
+    commandService.registerHandler(new SunLensFlareEnableCommand(appContext));
+    commandService.registerHandler(new SunLensFlareIntensityCommand(appContext));
+    commandService.registerHandler(new SunLensFlareColorCommand(appContext));
+    commandService.registerHandler(new AutomaticSunAdjustmentCommand(appContext));
+    commandService.registerHandler(new SunLightIntensityMultiplierCommand(appContext));
+    commandService.registerHandler(new AmbientLightIntensityMultiplierCommand(appContext));
+
+    // Register skybox commands
+    commandService.registerHandler(new SkyBoxEnableCommand(appContext));
+    commandService.registerHandler(new SkyBoxColorCommand(appContext));
+    commandService.registerHandler(new SkyBoxTextureCommand(appContext));
+    commandService.registerHandler(new SkyBoxSizeCommand(appContext));
+    commandService.registerHandler(new SkyBoxRotationCommand(appContext));
+    commandService.registerHandler(new SkyBoxStartCommand(appContext));
+
+    // Register moon commands
+    commandService.registerHandler(new MoonEnableCommand(appContext));
+    commandService.registerHandler(new MoonSizeCommand(appContext));
+    commandService.registerHandler(new MoonPositionCommand(appContext));
+    commandService.registerHandler(new MoonElevationCommand(appContext));
+    commandService.registerHandler(new MoonDistanceCommand(appContext));
+    commandService.registerHandler(new MoonPhaseCommand(appContext));
+    commandService.registerHandler(new MoonTextureCommand(appContext));
+
+    // Register cloud visualization commands
+    commandService.registerHandler(new CloudAddCommand(appContext));
+    commandService.registerHandler(new CloudRemoveCommand(appContext));
+    commandService.registerHandler(new CloudClearCommand(appContext));
+    commandService.registerHandler(new CloudEnableCommand(appContext));
+    commandService.registerHandler(new CloudSpeedCommand(appContext));
+    commandService.registerHandler(new CloudDirectionCommand(appContext));
+    commandService.registerHandler(new CloudPositionCommand(appContext));
+    commandService.registerHandler(new CloudSizeCommand(appContext));
+    commandService.registerHandler(new CloudListCommand(appContext));
+    commandService.registerHandler(new CloudsAnimationStartCommand(appContext));
+    commandService.registerHandler(new CloudsAnimationStopCommand(appContext));
+
+    // Register horizon gradient commands
+    commandService.registerHandler(new HorizonGradientEnableCommand(appContext));
+    commandService.registerHandler(new HorizonGradientDistanceCommand(appContext));
+    commandService.registerHandler(new HorizonGradientPositionCommand(appContext));
+    commandService.registerHandler(new HorizonGradientHeightCommand(appContext));
+    commandService.registerHandler(new HorizonGradientColor0Command(appContext));
+    commandService.registerHandler(new HorizonGradientColor1Command(appContext));
+    commandService.registerHandler(new HorizonGradientAlphaCommand(appContext));
+
+    // Register precipitation commands
+    commandService.registerHandler(new PrecipitationStartCommand(appContext));
+    commandService.registerHandler(new PrecipitationStopCommand(appContext));
+    commandService.registerHandler(new LightningCommand(appContext));
+    commandService.registerHandler(new PrecipitationEnableCommand(appContext));
+    commandService.registerHandler(new PrecipitationIntensityCommand(appContext));
+    commandService.registerHandler(new PrecipitationTypeCommand(appContext));
+
     // Register scrawl commands
     commandService.registerHandler(new ScrawlListCommand(appContext));
     commandService.registerHandler(new ScrawlStartCommand(appContext));
     commandService.registerHandler(new ScrawlActionCommand(appContext));
+    commandService.registerHandler(new ScrawlScriptCommand(appContext));
     commandService.registerHandler(new ScrawlSelectedActionCommand(appContext));
     commandService.registerHandler(new ScrawlStopCommand(appContext));
+
+    // Register stack modifier commands
+    commandService.registerHandler(new SetStackModifierCommand(appContext));
+    commandService.registerHandler(new GetStackModifierCurrentValueCommand(appContext));
+    commandService.registerHandler(new ListStacksCommand(appContext));
     commandService.registerHandler(new ScrawlStatusCommand(appContext));
     commandService.registerHandler(new ScrawlPauseCommand(appContext));
     commandService.registerHandler(new ScrawlResumeCommand(appContext));
 
+    // Register environment script commands
+    commandService.registerHandler(new CreateEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new DeleteEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new StartEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new StopEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new GetCurrentEnvironmentScriptCommand(appContext));
+    commandService.registerHandler(new ListEnvironmentScriptsCommand(appContext));
+    commandService.registerHandler(new ResetEnvironmentCommand(appContext));
+
+    // Register World Time commands
+    commandService.registerHandler(new WorldTimeConfigCommand(appContext));
+    commandService.registerHandler(new WorldTimeStartCommand(appContext));
+    commandService.registerHandler(new WorldTimeStopCommand(appContext));
+    commandService.registerHandler(new WorldTimeInfoCommand(appContext));
+
     logger.debug('CommandService initialized with commands');
 
-    logger.info('App initialization complete', {
+    logger.debug('App initialization complete', {
       clientType: clientService.getClientType(),
       isEditor: clientService.isEditor(),
       isDevMode: clientService.isDevMode(),
@@ -266,27 +454,27 @@ async function initializeApp(): Promise<AppContext> {
  */
 async function initializeCoreServices(appContext: AppContext): Promise<void> {
   try {
-    logger.info('Initializing core services...');
+    logger.debug('Initializing core services...');
 
     // Initialize ConfigService BEFORE NetworkService
-    logger.info('Initializing ConfigService...');
+    logger.debug('Initializing ConfigService...');
     const configService = new ConfigService(appContext);
     appContext.services.config = configService;
 
     // Load configuration from REST API before connecting to WebSocket
-    logger.info('Loading configuration from REST API...');
+    logger.debug('Loading configuration from REST API...');
     const clientType = __EDITOR__ ? 'editor' : 'viewer';
     const worldId = appContext.config?.worldId || 'main';
     try {
       await configService.loadConfig(clientType, false, worldId);
-      logger.info('Configuration loaded successfully');
+      logger.debug('Configuration loaded successfully');
     } catch (error) {
       logger.error('Failed to load configuration from REST API', undefined, error as Error);
       throw new Error('Failed to load configuration. Please check server connection.');
     }
 
     // Initialize NetworkService
-    logger.info('Initializing NetworkService...');
+    logger.debug('Initializing NetworkService...');
     const networkService = new NetworkService(appContext);
     appContext.services.network = networkService;
 
@@ -304,9 +492,9 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     });
 
     // Connect to server
-    logger.info('Connecting to server...');
+    logger.debug('Connecting to server...');
     await networkService.connect();
-    logger.info('Connected to server');
+    logger.debug('Connected to server');
 
     // Wait for login response and world info
     await new Promise<void>((resolve, reject) => {
@@ -317,13 +505,13 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       });
 
       networkService.once('login:success', () => {
-        logger.info('Login successful');
+        logger.debug('Login successful');
 
         // Start ping interval after successful login
         const pingInterval = appContext.worldInfo?.settings?.pingInterval || 30;
         pingHandler.pingIntervalMs = pingInterval * 1000; // Convert seconds to milliseconds
         pingHandler.startPingInterval();
-        logger.info('Ping interval started', { intervalSeconds: pingInterval });
+        logger.debug('Ping interval started', { intervalSeconds: pingInterval });
 
         resolve();
       });
@@ -334,11 +522,24 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       }, 30000);
     });
 
+    // Initialize ModifierService FIRST (before other services that depend on it)
+    logger.debug('Initializing ModifierService...');
+    const { ModifierService } = await import('./services/ModifierService');
+    const modifierService = new ModifierService();
+    appContext.services.modifier = modifierService;
+    logger.debug('ModifierService initialized');
+
+    // Create all StackModifiers centrally
+    logger.debug('Creating all StackModifiers...');
+    const { createAllStackModifiers } = await import('./services/StackModifierCreator');
+    createAllStackModifiers(appContext);
+    logger.debug('All StackModifiers created');
+
     // Initialize BlockTypeService (with lazy loading)
-    logger.info('Initializing BlockTypeService...');
+    logger.debug('Initializing BlockTypeService...');
     const blockTypeService = new BlockTypeService(appContext);
     appContext.services.blockType = blockTypeService;
-    logger.info('BlockTypeService initialized (chunks will be loaded on-demand)');
+    logger.debug('BlockTypeService initialized (chunks will be loaded on-demand)');
 
     // Register BlockType-dependent commands (after BlockTypeService is created)
     if (appContext.services.command) {
@@ -346,22 +547,22 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     }
 
     // Initialize ShaderService
-    logger.info('Initializing ShaderService...');
+    logger.debug('Initializing ShaderService...');
     const shaderService = new ShaderService(appContext);
     appContext.services.shader = shaderService;
 
     // Initialize AudioService (handles both audio loading and gameplay sounds)
-    logger.info('Initializing AudioService...');
+    logger.debug('Initializing AudioService...');
     const audioService = new AudioService(appContext);
     appContext.services.audio = audioService;
 
     // Initialize ChunkService
-    logger.info('Initializing ChunkService...');
+    logger.debug('Initializing ChunkService...');
     const chunkService = new ChunkService(networkService, appContext);
     appContext.services.chunk = chunkService;
 
     // Initialize EntityService
-    logger.info('Initializing EntityService...');
+    logger.debug('Initializing EntityService...');
     const entityService = new EntityService(appContext);
     appContext.services.entity = entityService;
 
@@ -372,27 +573,27 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     // Register BlockUpdateHandler
     const blockUpdateHandler = new BlockUpdateHandler(chunkService);
     networkService.registerHandler(blockUpdateHandler);
-    logger.info('🔵 BlockUpdateHandler registered for message type: b.u');
+    logger.debug('🔵 BlockUpdateHandler registered for message type: b.u');
 
     // Register ItemBlockUpdateHandler
     const itemBlockUpdateHandler = new ItemBlockUpdateHandler(chunkService);
     networkService.registerHandler(itemBlockUpdateHandler);
-    logger.info('🔵 ItemBlockUpdateHandler registered for message type: b.iu');
+    logger.debug('🔵 ItemBlockUpdateHandler registered for message type: b.iu');
 
     // Register EntityPathwayMessageHandler
     const entityPathwayHandler = new EntityPathwayMessageHandler(entityService);
     networkService.registerHandler(entityPathwayHandler);
-    logger.info('🔵 EntityPathwayMessageHandler registered for message type: e.p');
+    logger.debug('🔵 EntityPathwayMessageHandler registered for message type: e.p');
 
     // Register EffectTriggerHandler (ScrawlService was initialized earlier)
     if (appContext.services.scrawl) {
       const effectTriggerHandler = new EffectTriggerHandler(appContext.services.scrawl);
       networkService.registerHandler(effectTriggerHandler);
-      logger.info('🔵 EffectTriggerHandler registered for message type: e.t');
+      logger.debug('🔵 EffectTriggerHandler registered for message type: e.t');
 
       const effectParameterUpdateHandler = new EffectParameterUpdateHandler(appContext.services.scrawl);
       networkService.registerHandler(effectParameterUpdateHandler);
-      logger.info('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
+      logger.debug('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
     } else {
       logger.warn('ScrawlService not available - effect handlers not registered');
     }
@@ -414,7 +615,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
       logger.debug('ServerCommandHandler registered for message type: scmd');
     }
 
-    logger.info('Core services initialized');
+    logger.debug('Core services initialized');
   } catch (error) {
     throw ExceptionHandler.handleAndRethrow(error, 'NimbusClient.initializeCoreServices');
   }
@@ -425,7 +626,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
  */
 async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElement): Promise<void> {
   try {
-    logger.info('Initializing 3D Engine...');
+    logger.debug('Initializing 3D Engine...');
 
     // Create EngineService
     const engineService = new EngineService(appContext, canvas);
@@ -433,7 +634,7 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
 
     // Initialize engine (loads textures, creates scene, etc.)
     await engineService.initialize();
-    logger.info('Engine initialized');
+    logger.debug('Engine initialized');
 
     // Initialize NotificationService event subscriptions (now that PlayerService exists)
     const notifService = appContext.services.notification;
@@ -449,26 +650,13 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
 
     // Start render loop
     engineService.startRenderLoop();
-    logger.info('Render loop started');
+    logger.debug('Render loop started');
 
     // Initialize CompassService
-    logger.info('Initializing CompassService...');
+    logger.debug('Initializing CompassService...');
     const compassService = new CompassService(appContext);
     appContext.services.compass = compassService;
     logger.debug('CompassService initialized');
-
-    // Initialize ModifierService
-    logger.info('Initializing ModifierService...');
-    const { ModifierService } = await import('./services/ModifierService');
-    const modifierService = new ModifierService();
-    appContext.services.modifier = modifierService;
-    logger.debug('ModifierService initialized');
-
-    // Create all StackModifiers centrally
-    logger.info('Creating all StackModifiers...');
-    const { createAllStackModifiers } = await import('./services/StackModifierCreator');
-    createAllStackModifiers(appContext);
-    logger.debug('All StackModifiers created');
 
     // Register some chunks around player spawn
     const chunkService = appContext.services.chunk;
@@ -477,7 +665,7 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
       const playerPos = playerService?.getPosition();
 
       if (playerPos) {
-        logger.info('Registering chunks around player', {
+        logger.debug('Registering chunks around player', {
           x: playerPos.x,
           y: playerPos.y,
           z: playerPos.z
@@ -486,7 +674,7 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
       }
     }
 
-    logger.info('3D Engine ready');
+    logger.debug('3D Engine ready');
   } catch (error) {
     throw ExceptionHandler.handleAndRethrow(error, 'NimbusClient.initializeEngine');
   }
@@ -498,7 +686,7 @@ const appContextPromise = initializeApp();
 // Main initialization
 appContextPromise
   .then(async (appContext) => {
-    logger.info('AppContext ready', {
+    logger.debug('AppContext ready', {
       hasConfig: !!appContext.config,
       hasClientService: !!appContext.services.client,
     });
@@ -545,14 +733,14 @@ appContextPromise
         loadingElement.classList.add('hidden');
       }
 
-      logger.info('Nimbus Client ready!');
+      logger.debug('Nimbus Client ready!');
     } catch (error) {
       throw error; // Re-throw to outer catch
     }
 
     // Editor-specific initialization (tree-shaken in viewer build)
     if (__EDITOR__) {
-      logger.info('Editor mode active');
+      logger.debug('Editor mode active');
 
       // Expose commands to browser console
       const commandService = appContext.services.command;
@@ -564,7 +752,7 @@ appContextPromise
       // TODO: Load editor UI components
     }
 
-    logger.info('Nimbus Client initialized successfully');
+    logger.debug('Nimbus Client initialized successfully');
   })
   .catch((error) => {
     ExceptionHandler.handle(error, 'NimbusClient.main');
@@ -636,11 +824,11 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
   appContextPromise.then((appContext) => {
     const ns = appContext.services.notification;
     if (!ns) {
-      console.error('NotificationService not initialized');
+      logger.error('NotificationService not initialized');
       return;
     }
 
-    logger.info('Testing all notification types...');
+    logger.debug('Testing all notification types...');
 
     // System notifications
     ns.newNotification(0, null, 'System Info: Client initialized');
@@ -660,7 +848,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     setTimeout(() => ns.newNotification(30, null, 'Quest: Find the Crystal'), 6000);
     setTimeout(() => ns.newNotification(31, null, 'Target: Search the cave (0/5)'), 6500);
 
-    console.log('Test sequence started. Notifications will appear over 7 seconds.');
+    logger.debug('Test sequence started. Notifications will appear over 7 seconds.');
   });
 };
 
@@ -707,7 +895,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const ns = appContext.services.notification;
     if (!ns) return;
     ns.clearChatNotifications();
-    console.log('Chat notifications cleared');
+    logger.debug('Chat notifications cleared');
   });
 };
 
@@ -716,7 +904,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const ns = appContext.services.notification;
     if (!ns) return;
     ns.notificationsVisible(visible);
-    console.log(`Notifications ${visible ? 'enabled' : 'disabled'}`);
+    logger.debug(`Notifications ${visible ? 'enabled' : 'disabled'}`);
   });
 };
 
@@ -726,17 +914,17 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const compass = appContext.services.compass;
     const player = appContext.services.player;
     if (!compass || !player) {
-      console.error('CompassService or PlayerService not initialized');
+      logger.error('CompassService or PlayerService not initialized');
       return;
     }
 
     const playerPos = player.getPosition();
     if (!playerPos) {
-      console.error('Player position not available');
+      logger.error('Player position not available');
       return;
     }
 
-    logger.info('Testing compass with markers...');
+    logger.debug('Testing compass with markers...');
 
     // Add markers at different positions relative to player
     // North marker (Z+)
@@ -747,7 +935,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'top',
       100
     );
-    console.log('Added North marker (red arrow, 50 blocks North)');
+    logger.debug('Added North marker (red arrow, 50 blocks North)');
 
     // East marker (X+)
     const eastMarker = compass.addMarker(
@@ -757,7 +945,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'center',
       100
     );
-    console.log('Added East marker (yellow diamond, 50 blocks East)');
+    logger.debug('Added East marker (yellow diamond, 50 blocks East)');
 
     // South marker (Z-)
     const southMarker = compass.addMarker(
@@ -767,7 +955,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'bottom',
       100
     );
-    console.log('Added South marker (blue triangle, 50 blocks South)');
+    logger.debug('Added South marker (blue triangle, 50 blocks South)');
 
     // West marker (X-)
     const westMarker = compass.addMarker(
@@ -777,9 +965,9 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       'center',
       100
     );
-    console.log('Added West marker (green circle, 50 blocks West)');
+    logger.debug('Added West marker (green circle, 50 blocks West)');
 
-    console.log('Compass test markers added. Move the camera to see them rotate!');
+    logger.debug('Compass test markers added. Move the camera to see them rotate!');
   });
 };
 
@@ -788,17 +976,17 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     const compass = appContext.services.compass;
     const player = appContext.services.player;
     if (!compass || !player) {
-      console.error('CompassService or PlayerService not initialized');
+      logger.error('CompassService or PlayerService not initialized');
       return;
     }
 
     const playerPos = player.getPosition();
     if (!playerPos) {
-      console.error('Player position not available');
+      logger.error('Player position not available');
       return;
     }
 
-    console.log('Testing near-clip distance functionality...');
+    logger.debug('Testing near-clip distance functionality...');
 
     // Add marker very close (3 blocks) - should be hidden
     compass.addMarker(
@@ -809,7 +997,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       100,
       5  // nearClipDistance = 5 blocks
     );
-    console.log('Added marker 3 blocks away (should be HIDDEN, near clip = 5)');
+    logger.debug('Added marker 3 blocks away (should be HIDDEN, near clip = 5)');
 
     // Add marker at medium distance (10 blocks) - should be visible
     compass.addMarker(
@@ -820,7 +1008,7 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       100,
       5  // nearClipDistance = 5 blocks
     );
-    console.log('Added marker 10 blocks away (should be VISIBLE, near clip = 5)');
+    logger.debug('Added marker 10 blocks away (should be VISIBLE, near clip = 5)');
 
     // Add marker with custom near clip (2 blocks)
     compass.addMarker(
@@ -831,9 +1019,9 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
       100,
       2  // nearClipDistance = 2 blocks
     );
-    console.log('Added marker 3 blocks away (should be VISIBLE, near clip = 2)');
+    logger.debug('Added marker 3 blocks away (should be VISIBLE, near clip = 2)');
 
-    console.log('Move towards the markers to see them disappear when too close!');
+    logger.debug('Move towards the markers to see them disappear when too close!');
   });
 };
 
@@ -843,21 +1031,21 @@ function showErrorMessage(canvas: HTMLCanvasElement, message: string): void {
     if (!compass) return;
 
     // Note: We don't have a clearAll method, but markers will be removed when out of range
-    console.log('Compass markers will be cleared when out of range');
+    logger.debug('Compass markers will be cleared when out of range');
   });
 };
 
-console.log('=== Notification Test Functions ===');
-console.log('testNotifications() - Test all types');
-console.log('testSystemNotifications() - System area');
-console.log('testChatNotifications() - Chat area');
-console.log('testOverlayNotifications() - Overlay area');
-console.log('testQuestNotifications() - Quest area');
-console.log('clearChat() - Clear chat notifications');
-console.log('toggleNotifications(true/false) - Enable/disable');
-console.log('===================================');
-console.log('');
-console.log('=== Compass Test Functions ===');
-console.log('testCompass() - Add test markers at N/E/S/W');
-console.log('testCompassNearClip() - Test near-clip distance functionality');
-console.log('===============================');
+logger.debug('=== Notification Test Functions ===');
+logger.debug('testNotifications() - Test all types');
+logger.debug('testSystemNotifications() - System area');
+logger.debug('testChatNotifications() - Chat area');
+logger.debug('testOverlayNotifications() - Overlay area');
+logger.debug('testQuestNotifications() - Quest area');
+logger.debug('clearChat() - Clear chat notifications');
+logger.debug('toggleNotifications(true/false) - Enable/disable');
+logger.debug('===================================');
+logger.debug('');
+logger.debug('=== Compass Test Functions ===');
+logger.debug('testCompass() - Add test markers at N/E/S/W');
+logger.debug('testCompassNearClip() - Test near-clip distance functionality');
+logger.debug('===============================');

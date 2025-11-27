@@ -330,7 +330,7 @@ export class AudioService {
   private unlockHandlerRegistered: boolean = false;
 
   constructor(private appContext: AppContext) {
-    logger.info('AudioService created');
+    logger.debug('AudioService created');
   }
 
   /**
@@ -339,7 +339,7 @@ export class AudioService {
    */
   setAudioEnabled(enabled: boolean): void {
     this.audioEnabled = enabled;
-    logger.info('Audio playback ' + (enabled ? 'enabled' : 'disabled'));
+    logger.debug('Audio playback ' + (enabled ? 'enabled' : 'disabled'));
 
     // Stop all playing audio when disabling
     if (!enabled) {
@@ -363,7 +363,7 @@ export class AudioService {
    */
   setStepVolume(volume: number): void {
     this.stepVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
-    logger.info('Step volume set to ' + this.stepVolume);
+    logger.debug('Step volume set to ' + this.stepVolume);
   }
 
   /**
@@ -379,7 +379,7 @@ export class AudioService {
    */
   setAmbientVolume(volume: number): void {
     this.ambientVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
-    logger.info('Ambient volume set to ' + this.ambientVolume);
+    logger.debug('Ambient volume set to ' + this.ambientVolume);
 
     // Update current ambient sound volume if playing
     if (this.currentAmbientSound && this.ambientVolume > 0) {
@@ -403,7 +403,7 @@ export class AudioService {
    */
   setSpeechVolume(volume: number): void {
     this.speechVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
-    logger.info('Speech volume set to ' + this.speechVolume);
+    logger.debug('Speech volume set to ' + this.speechVolume);
 
     // Update current speech volume if playing
     if (this.currentSpeech) {
@@ -437,7 +437,7 @@ export class AudioService {
     try {
       this.audioEngine = await CreateAudioEngineAsync();
 
-      logger.info('Audio engine created', {
+      logger.debug('Audio engine created', {
         hasEngine: !!this.audioEngine,
         unlocked: this.audioEngine?.unlocked,
         hasListener: !!this.audioEngine?.listener
@@ -451,27 +451,27 @@ export class AudioService {
           // Babylon.js 8.x: audioEngine.listener.spatial.attach(camera)
           // 'spatial' might be a getter, so try accessing it
           if (listener.spatial) {
-            logger.info('Listener has spatial property', {
+            logger.debug('Listener has spatial property', {
               spatialKeys: Object.keys(listener.spatial)
             });
 
             if (typeof listener.spatial.attach === 'function') {
               listener.spatial.attach(scene.activeCamera);
-              logger.info('Audio listener attached to camera via spatial.attach()', {
+              logger.debug('Audio listener attached to camera via spatial.attach()', {
                 cameraName: scene.activeCamera.name
               });
             } else {
-              logger.warn('spatial.attach is not a function', {
+              logger.debug('spatial.attach is not a function', {
                 spatialType: typeof listener.spatial.attach
               });
             }
           } else {
-            logger.warn('Listener has no spatial property - checking alternatives');
+            logger.debug('Listener has no spatial property - checking alternatives');
 
             // Try direct attach
             if (typeof listener.attach === 'function') {
               listener.attach(scene.activeCamera);
-              logger.info('Audio listener attached via direct attach()');
+              logger.debug('Audio listener attached via direct attach()');
             } else {
               logger.error('No attach method found on listener');
             }
@@ -489,7 +489,7 @@ export class AudioService {
 
       // Unlock audio engine (waits for user interaction if needed)
       if (this.audioEngine && !this.audioEngine.unlocked) {
-        logger.info('Audio engine locked - waiting for user interaction');
+        logger.debug('Audio engine locked - waiting for user interaction');
 
         // Register unlock handler only once
         if (!this.unlockHandlerRegistered) {
@@ -500,7 +500,7 @@ export class AudioService {
             try {
               if (this.audioEngine && !this.audioEngine.unlocked) {
                 await this.audioEngine.unlockAsync();
-                logger.info('Audio engine unlocked and ready via user interaction');
+                logger.debug('Audio engine unlocked and ready via user interaction');
                 this.playPendingSounds();
                 this.playPendingAmbientMusic();
 
@@ -519,10 +519,10 @@ export class AudioService {
           window.addEventListener('keydown', unlockHandler);
           window.addEventListener('touchstart', unlockHandler);
 
-          logger.info('Audio unlock listeners registered (click, keydown, touchstart)');
+          logger.debug('Audio unlock listeners registered (click, keydown, touchstart)');
         }
       } else if (this.audioEngine) {
-        logger.info('Audio engine ready');
+        logger.debug('Audio engine ready');
         // Already unlocked - play any pending sounds immediately
         this.playPendingSounds();
         this.playPendingAmbientMusic();
@@ -539,12 +539,12 @@ export class AudioService {
       this.physicsService.on('collide:withBlock', (event: CollideWithBlockEvent) => {
         this.onCollideWithBlock(event);
       });
-      logger.info('AudioService subscribed to PhysicsService events');
+      logger.debug('AudioService subscribed to PhysicsService events');
     } else {
       logger.warn('PhysicsService not available - gameplay sounds will not work');
     }
 
-    logger.info('AudioService initialized with scene');
+    logger.debug('AudioService initialized with scene');
   }
 
   /**
@@ -771,7 +771,7 @@ export class AudioService {
       return; // No pending ambient music
     }
 
-    logger.info('Playing pending ambient music', {
+    logger.debug('Playing pending ambient music', {
       path: this.pendingAmbientPath,
       volume: this.pendingAmbientVolume
     });
@@ -791,7 +791,7 @@ export class AudioService {
    * Play all pending sounds after audio unlock
    */
   private async playPendingSounds(): Promise<void> {
-    logger.info('Playing pending sounds', { count: this.pendingSounds.length });
+    logger.debug('Playing pending sounds', { count: this.pendingSounds.length });
 
     const soundsToPlay = [...this.pendingSounds];
     this.pendingSounds = []; // Clear immediately to avoid duplicates
@@ -806,11 +806,11 @@ export class AudioService {
           } else if (wrapper._sound) {
             // Sound already exists, play it
             wrapper._sound.play();
-            logger.info('Deferred sound played after audio unlock');
+            logger.debug('Deferred sound played after audio unlock');
             wrapper._playPending = false;
           } else if (sound) {
             sound.play();
-            logger.info('Deferred sound played after audio unlock');
+            logger.debug('Deferred sound played after audio unlock');
             wrapper._playPending = false;
           }
         } catch (error) {
@@ -840,11 +840,11 @@ export class AudioService {
             logger.warn('Sound created before unlock - attempting to play anyway');
           }
           wrapper._sound.play();
-          logger.info('Deferred sound played immediately (audio already unlocked)');
+          logger.debug('Deferred sound played immediately (audio already unlocked)');
         } else {
           wrapper._playPending = true;
           wrapper._needsRecreate = true; // Mark for recreation after unlock
-          logger.info('Deferred sound play pending (waiting for audio unlock)', {
+          logger.debug('Deferred sound play pending (waiting for audio unlock)', {
             pendingCount: this.pendingSounds.length + 1
           });
 
@@ -933,7 +933,7 @@ export class AudioService {
       _createSound: async () => {
         if (deferredWrapper._sound || deferredWrapper._disposed) return;
 
-        logger.info('Creating permanent sound for block', {
+        logger.debug('Creating permanent sound for block', {
           path: audioDef.path,
           position: blockPosition,
           volume: audioDef.volume
@@ -962,7 +962,7 @@ export class AudioService {
           sound.spatial.coneInnerAngle = 2 * Math.PI;
           sound.spatial.coneOuterAngle = 2 * Math.PI;
 
-          logger.info('Spatial audio configured', {
+          logger.debug('Spatial audio configured', {
             position: deferredWrapper._config.position,
             maxDistance: deferredWrapper._config.maxDistance,
             distanceModel: 'linear'
@@ -973,7 +973,7 @@ export class AudioService {
         sound.volume = deferredWrapper._config.volume;
         sound.loop = deferredWrapper._config.loop;
 
-        logger.info('Permanent sound created and ready', {
+        logger.debug('Permanent sound created and ready', {
           path: audioDef.path,
           position: deferredWrapper._config.position,
           volume: deferredWrapper._config.volume,
@@ -985,7 +985,7 @@ export class AudioService {
         // Auto-play permanent sounds (they should always play when loaded)
         if (!deferredWrapper._disposed) {
           sound.play();
-          logger.info('Auto-playing permanent sound after load', {
+          logger.debug('Auto-playing permanent sound after load', {
             path: audioDef.path
           });
           deferredWrapper._playPending = false;
@@ -1003,11 +1003,11 @@ export class AudioService {
 
           if (deferredWrapper._sound) {
             deferredWrapper._sound.play();
-            logger.info('Permanent sound playing (audio already unlocked)', { path: audioDef.path });
+            logger.debug('Permanent sound playing (audio already unlocked)', { path: audioDef.path });
           }
         } else {
           deferredWrapper._playPending = true;
-          logger.info('Permanent sound play pending (will create after unlock)', {
+          logger.debug('Permanent sound play pending (will create after unlock)', {
             path: audioDef.path
           });
 
@@ -1111,7 +1111,7 @@ export class AudioService {
         entity.currentPosition.z
       );
 
-      logger.info('Playing entity audio', {
+      logger.debug('Playing entity audio', {
         entityId: entity.id,
         type,
         path: audioDef.path,
@@ -1270,7 +1270,7 @@ export class AudioService {
    * Disposes all cached Sound objects
    */
   clearCache(): void {
-    logger.info('Clearing audio cache', { count: this.audioCache.size });
+    logger.debug('Clearing audio cache', { count: this.audioCache.size });
 
     this.audioCache.forEach((entry) => {
       entry.sound.dispose();
@@ -1283,7 +1283,7 @@ export class AudioService {
    * Dispose service and cleanup resources
    */
   dispose(): void {
-    logger.info('Disposing AudioService');
+    logger.debug('Disposing AudioService');
 
     // Stop ambient music
     this.stopAmbientSound();
@@ -1341,7 +1341,7 @@ export class AudioService {
         return;
       }
 
-      logger.info('Playing non-spatial sound', { soundPath, volume, stream });
+      logger.debug('Playing non-spatial sound', { soundPath, volume, stream });
     } catch (error) {
       logger.error('Failed to play sound', {
         soundPath,
@@ -1395,7 +1395,7 @@ export class AudioService {
     // Play sound (no loop, one-shot)
     item.play(volume);
 
-    logger.info('Playing sound at position', {
+    logger.debug('Playing sound at position', {
       soundPath,
       position: { x, y, z },
       volume
@@ -1423,7 +1423,7 @@ export class AudioService {
 
     // Check if audio engine is ready
     if (!this.audioEngine) {
-      logger.info('Audio engine not ready, deferring ambient music', { soundPath, volume });
+      logger.debug('Audio engine not ready, deferring ambient music', { soundPath, volume });
       this.pendingAmbientPath = soundPath;
       this.pendingAmbientVolume = volume;
       return;
@@ -1431,7 +1431,7 @@ export class AudioService {
 
     // Check if ambientVolume is 0 or below → don't play
     if (this.ambientVolume <= 0) {
-      logger.info('Ambient volume is 0 or below, not playing ambient music', { soundPath });
+      logger.debug('Ambient volume is 0 or below, not playing ambient music', { soundPath });
       return;
     }
 
@@ -1442,7 +1442,7 @@ export class AudioService {
 
     // Already playing this track → don't restart
     if (this.currentAmbientPath === soundPath && this.currentAmbientSound) {
-      logger.info('Ambient music already playing', { soundPath });
+      logger.debug('Ambient music already playing', { soundPath });
       return;
     }
 
@@ -1451,7 +1451,7 @@ export class AudioService {
     this.pendingAmbientVolume = undefined;
 
     try {
-      logger.info('Loading ambient music', { soundPath, stream, volume });
+      logger.debug('Loading ambient music', { soundPath, stream, volume });
 
       // Load ambient music (non-spatial, looping)
       const sound = await this.loadAudio(soundPath, {
@@ -1476,7 +1476,7 @@ export class AudioService {
       const targetVolume = volume * this.ambientVolume;
       await this.fadeSound(sound, 0, targetVolume, 2000); // 2 second fade in
 
-      logger.info('Ambient music playing', { soundPath, volume: targetVolume });
+      logger.debug('Ambient music playing', { soundPath, volume: targetVolume });
     } catch (error) {
       logger.error('Failed to play ambient music', { soundPath, error: (error as Error).message });
     }
@@ -1490,7 +1490,7 @@ export class AudioService {
       return; // No ambient music playing
     }
 
-    logger.info('Stopping ambient music', { path: this.currentAmbientPath });
+    logger.debug('Stopping ambient music', { path: this.currentAmbientPath });
 
     // Fade out
     const currentVolume = this.currentAmbientSound.volume;
@@ -1501,7 +1501,7 @@ export class AudioService {
     this.currentAmbientSound = undefined;
     this.currentAmbientPath = undefined;
 
-    logger.info('Ambient music stopped');
+    logger.debug('Ambient music stopped');
   }
 
   /**
@@ -1561,7 +1561,7 @@ export class AudioService {
 
     // Check if speechVolume is 0 or below → don't play
     if (this.speechVolume <= 0) {
-      logger.info('Speech volume is 0 or below, not playing speech', { streamPath });
+      logger.debug('Speech volume is 0 or below, not playing speech', { streamPath });
       return;
     }
 
@@ -1573,7 +1573,7 @@ export class AudioService {
     try {
       // Get speech URL from NetworkService
       const speechUrl = this.networkService.getSpeechUrl(streamPath);
-      logger.info('Loading speech', { streamPath, speechUrl, volume });
+      logger.debug('Loading speech', { streamPath, speechUrl, volume });
 
       // Load speech (non-spatial, non-looping, streamed)
       const sound = await CreateSoundAsync(streamPath, speechUrl);
@@ -1595,7 +1595,7 @@ export class AudioService {
         // Register onEnded callback
         if (sound.onEndedObservable) {
           sound.onEndedObservable.addOnce(() => {
-            logger.info('Speech ended', { streamPath });
+            logger.debug('Speech ended', { streamPath });
             this.currentSpeech = undefined;
             this.currentSpeechPath = undefined;
             resolve();
@@ -1604,7 +1604,7 @@ export class AudioService {
           // Fallback: assume speech ended after 60 seconds max
           logger.warn('onEndedObservable not available for speech, using 60s timeout');
           setTimeout(() => {
-            logger.info('Speech timeout reached', { streamPath });
+            logger.debug('Speech timeout reached', { streamPath });
             this.currentSpeech = undefined;
             this.currentSpeechPath = undefined;
             resolve();
@@ -1613,7 +1613,7 @@ export class AudioService {
 
         // Start playing
         sound.play();
-        logger.info('Speech playing', { streamPath, volume: finalVolume });
+        logger.debug('Speech playing', { streamPath, volume: finalVolume });
       });
     } catch (error) {
       logger.error('Failed to play speech', { streamPath, error: (error as Error).message });
@@ -1631,14 +1631,14 @@ export class AudioService {
       return; // No speech playing
     }
 
-    logger.info('Stopping speech', { path: this.currentSpeechPath });
+    logger.debug('Stopping speech', { path: this.currentSpeechPath });
 
     // Stop immediately (no fade for speech)
     this.currentSpeech.stop();
     this.currentSpeech = undefined;
     this.currentSpeechPath = undefined;
 
-    logger.info('Speech stopped');
+    logger.debug('Speech stopped');
   }
 
   // ========================================

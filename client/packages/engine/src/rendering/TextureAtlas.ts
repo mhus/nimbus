@@ -89,7 +89,7 @@ export class TextureAtlas {
     this.texturesPerRow = Math.floor(this.maxAtlasSize / this.textureSize);
     this.uvSize = 1.0 / this.texturesPerRow;
 
-    logger.info('TextureAtlas initialized', {
+    logger.debug('TextureAtlas initialized', {
       slots: `${this.texturesPerRow}x${this.texturesPerRow}`,
       atlasSize: `${this.maxAtlasSize}x${this.maxAtlasSize}px`,
     });
@@ -99,7 +99,7 @@ export class TextureAtlas {
    * Initialize the dynamic texture atlas
    */
   async load(): Promise<void> {
-    logger.info('Creating dynamic texture atlas');
+    logger.debug('Creating dynamic texture atlas');
 
     try {
       // Create our own canvas for drawing
@@ -133,7 +133,7 @@ export class TextureAtlas {
       // Enable alpha for atlas texture (contains both transparent and opaque textures)
       this.atlasTexture.hasAlpha = true;
 
-      logger.info('Dynamic atlas created', {
+      logger.debug('Dynamic atlas created', {
         ready: this.atlasTexture.isReady(),
       });
     } catch (error) {
@@ -335,7 +335,7 @@ export class TextureAtlas {
    */
   clearCache(): void {
     this.uvCache.clear();
-    logger.info('UV cache cleared');
+    logger.debug('UV cache cleared');
   }
 
   /**

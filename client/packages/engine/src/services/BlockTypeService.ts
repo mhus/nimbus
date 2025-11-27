@@ -45,7 +45,7 @@ export class BlockTypeService {
     // This ensures AIR is always available, even before server block types are loaded
     this.registerAirBlockType();
 
-    logger.info('BlockTypeService initialized with chunk-based lazy loading');
+    logger.debug('BlockTypeService initialized with chunk-based lazy loading');
   }
 
   /**
@@ -208,7 +208,7 @@ export class BlockTypeService {
     // Re-register AIR BlockType (id 0)
     this.registerAirBlockType();
 
-    logger.info('BlockType cache cleared', {
+    logger.debug('BlockType cache cleared', {
       clearedBlockTypes: beforeCount - 1, // -1 for AIR
       clearedChunks: beforeChunks,
     });
@@ -345,6 +345,6 @@ export class BlockTypeService {
     // Re-register static AIR BlockType
     this.registerAirBlockType();
 
-    logger.info('Block type cache cleared');
+    logger.debug('Block type cache cleared');
   }
 }

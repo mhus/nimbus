@@ -30,7 +30,7 @@ export class ClearBlockTypeCacheCommand extends CommandHandler {
     try {
       this.blockTypeService.clearCache();
 
-      logger.info('BlockType cache cleared');
+      logger.debug('BlockType cache cleared');
 
       return 'BlockType cache cleared. BlockTypes will be reloaded from server on next use.';
     } catch (error) {

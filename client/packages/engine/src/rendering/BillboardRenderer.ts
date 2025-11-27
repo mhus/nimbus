@@ -16,6 +16,7 @@ import { getLogger, TextureHelper } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('BillboardRenderer');
 
@@ -215,6 +216,9 @@ export class BillboardRenderer extends BlockRenderer {
 
     // Create mesh
     const mesh = new Mesh(meshName, scene);
+
+    // Set rendering group for world content
+    mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
 
     // Create vertex data
     const vertexData = new VertexData();

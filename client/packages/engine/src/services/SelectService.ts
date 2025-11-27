@@ -20,6 +20,7 @@ import type { EntityService } from './EntityService';
 import type { Block } from '@nimbus/shared';
 import type { ClientBlock } from '../types/ClientBlock';
 import { mergeBlockModifier } from '../utils/BlockModifierMerge';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('SelectService');
 
@@ -133,7 +134,7 @@ export class SelectService {
       this.initializeHighlight();
     }
 
-    logger.info('SelectService initialized');
+    logger.debug('SelectService initialized');
   }
 
   /**
@@ -561,7 +562,7 @@ export class SelectService {
 
       this.highlightMesh.material = this.highlightMaterial;
       this.highlightMesh.isPickable = false;
-      this.highlightMesh.renderingGroupId = 1; // Render on top
+      this.highlightMesh.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY; // Render on top
       this.highlightMesh.setEnabled(false); // Hidden by default
 
       // Create wireframe box for edit block highlighting (green)
@@ -579,7 +580,7 @@ export class SelectService {
 
       this.editHighlightMesh.material = this.editHighlightMaterial;
       this.editHighlightMesh.isPickable = false;
-      this.editHighlightMesh.renderingGroupId = 1; // Render on top
+      this.editHighlightMesh.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY; // Render on top
       this.editHighlightMesh.setEnabled(false); // Hidden by default
 
       // Initialize BabylonJS GUI for label display
@@ -1210,6 +1211,6 @@ export class SelectService {
     this.currentSelectedBlock = null;
     this.selectedEditBlock = null;
 
-    logger.info('SelectService disposed');
+    logger.debug('SelectService disposed');
   }
 }

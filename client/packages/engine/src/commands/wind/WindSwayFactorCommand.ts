@@ -8,7 +8,7 @@
 
 import { CommandHandler } from '../CommandHandler';
 import type { AppContext } from '../../AppContext';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, toNumber } from '@nimbus/shared';
 
 const logger = getLogger('WindSwayFactorCommand');
 
@@ -25,7 +25,7 @@ export class WindSwayFactorCommand extends CommandHandler {
     return 'Set wind sway factor (0-5)';
   }
 
-  async execute(parameters: string[]): Promise<string> {
+  async execute(parameters: any[]): Promise<string> {
     const environmentService = this.appContext.services.environment;
 
     if (!environmentService) {
@@ -39,7 +39,7 @@ export class WindSwayFactorCommand extends CommandHandler {
     }
 
     // Parse and validate parameter
-    const value = parseFloat(parameters[0]);
+    const value = toNumber(parameters[0]);
 
     if (isNaN(value)) {
       return 'Invalid parameter. Value must be a number (0-5).';
@@ -53,7 +53,7 @@ export class WindSwayFactorCommand extends CommandHandler {
     environmentService.setWindSwayFactor(value);
 
     const factor = environmentService.getWindSwayFactor();
-    logger.info('Wind sway factor set', { swayFactor: factor });
+    logger.debug('Wind sway factor set', { swayFactor: factor });
 
     return `Wind sway factor set to ${factor.toFixed(2)}`;
   }

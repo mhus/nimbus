@@ -58,6 +58,10 @@
   transition: opacity 0.3s ease-out, transform 0.3s ease-out;
   word-wrap: break-word;
   max-width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .notification.hiding {
@@ -109,6 +113,15 @@
   border-left: 4px solid #74c0fc;
 }
 
+/* === Notification Icon === */
+.notification-icon {
+  flex-shrink: 0;
+}
+
+.notification-icon img {
+  display: block;
+}
+
 /* === Notification Content === */
 .notification-from {
   font-weight: 600;
@@ -124,8 +137,12 @@
 /* === Overlay Specific === */
 .notification-container.overlay .notification {
   background: rgba(0, 0, 0, 0.95);
-  text-align: center;
   min-width: 300px;
+}
+
+/* Center text only when no icon is present */
+.notification-container.overlay .notification:not(:has(.notification-icon)) {
+  text-align: center;
 }
 
 .notification-container.overlay .notification.size-large {

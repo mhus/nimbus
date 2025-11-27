@@ -96,7 +96,7 @@ export class ModelService {
       cacheCleanupInterval: config?.cacheCleanupInterval ?? 120000, // 2 minutes
     };
 
-    logger.info('ModelService initialized', { config: this.config });
+    logger.debug('ModelService initialized', { config: this.config });
 
     // Start cache cleanup
     this.startCacheCleanup();
@@ -350,7 +350,7 @@ export class ModelService {
     }
     this.glbContainerCache.clear();
 
-    logger.info('Model cache cleared');
+    logger.debug('Model cache cleared');
   }
 
   /**

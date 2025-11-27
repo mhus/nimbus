@@ -22,7 +22,9 @@
  * ```
  */
 
-import { IFrameMessageType, ModalSizePreset } from '@nimbus/shared';
+import {  IFrameMessageType, ModalSizePreset , getLogger } from '@nimbus/shared';
+
+const logger = getLogger('IFrameHelper');
 
 /**
  * IFrameHelper class
@@ -53,7 +55,7 @@ export class IFrameHelper {
    */
   private static sendMessage(message: any): void {
     if (window.parent === window) {
-      console.warn('IFrameHelper: Not running in iframe, cannot send message');
+      logger.warn('IFrameHelper: Not running in iframe, cannot send message');
       return;
     }
 

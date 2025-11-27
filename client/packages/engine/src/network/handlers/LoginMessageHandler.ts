@@ -59,13 +59,13 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
         this.appContext.playerInfo.playerId = `@${username}_${sessionId}`;
         this.appContext.playerInfo.displayName = successData.displayName || username;
 
-        logger.info('Player ID generated', {
+        logger.debug('Player ID generated', {
           playerId: this.appContext.playerInfo.playerId,
           displayName: this.appContext.playerInfo.displayName,
         });
       }
 
-      logger.info('Login successful', {
+      logger.debug('Login successful', {
         userId: successData.userId,
         displayName: successData.displayName,
         sessionId: successData.sessionId,
@@ -80,7 +80,7 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
                           this.appContext.sessionId === successData.sessionId;
 
       if (isReconnect) {
-        logger.info('Session restored after reconnect');
+        logger.debug('Session restored after reconnect');
 
         // Clear DEAD mode after successful reconnect
         const playerService = this.appContext.services.player;

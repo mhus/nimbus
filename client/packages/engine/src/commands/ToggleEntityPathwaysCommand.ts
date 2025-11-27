@@ -7,6 +7,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ToggleEntityPathwaysCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -31,13 +34,13 @@ export class ToggleEntityPathwaysCommand extends CommandHandler {
   execute(parameters: any[]): any {
     const engineService = this.appContext.services.engine;
     if (!engineService) {
-      console.error('EngineService not available');
+      logger.error('EngineService not available');
       return { error: 'EngineService not available' };
     }
 
     const entityRenderService = engineService.getEntityRenderService();
     if (!entityRenderService) {
-      console.error('EntityRenderService not available');
+      logger.error('EntityRenderService not available');
       return { error: 'EntityRenderService not available' };
     }
 
@@ -54,7 +57,7 @@ export class ToggleEntityPathwaysCommand extends CommandHandler {
       } else if (param === 'off' || param === 'false' || param === '0') {
         newValue = false;
       } else {
-        console.error('Usage: toggleEntityPathways [on|off]');
+        logger.error('Usage: toggleEntityPathways [on|off]');
         return {
           error: 'Invalid parameter',
           usage: 'toggleEntityPathways [on|off]',
@@ -67,12 +70,12 @@ export class ToggleEntityPathwaysCommand extends CommandHandler {
     entityRenderService.showPathways = newValue;
 
     const status = newValue ? 'ON' : 'OFF';
-    console.log(`Entity pathway visualization: ${status}`);
+    logger.debug(`Entity pathway visualization: ${status}`);
 
     if (newValue) {
-      console.log('Green lines will be shown along entity movement paths');
+      logger.debug('Green lines will be shown along entity movement paths');
     } else {
-      console.log('Pathway lines hidden');
+      logger.debug('Pathway lines hidden');
     }
 
     return {

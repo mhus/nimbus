@@ -10,6 +10,7 @@ import { SpriteManager, Scene, Texture, Sprite } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { EnvironmentService } from './EnvironmentService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('SpriteService');
 
@@ -62,7 +63,7 @@ export class SpriteService {
     // Setup animation loop
     this.setupAnimationLoop();
 
-    logger.info('SpriteService initialized with wind animation');
+    logger.debug('SpriteService initialized with wind animation');
   }
 
   /**
@@ -167,6 +168,9 @@ export class SpriteService {
       // There is no built-in Y-axis-only billboard mode for sprites
       // To achieve Y-axis-only billboards, we would need to use Mesh with BILLBOARDMODE_Y instead
       // For now, sprites will face the camera completely (including up/down rotation)
+
+      // Set rendering group for world content
+      manager.renderingGroupId = RENDERING_GROUPS.WORLD;
 
       // Configure transparency
       manager.blendMode = 2; // ALPHA_COMBINE
@@ -331,6 +335,6 @@ export class SpriteService {
     this.textureDimensions.clear();
     this.spriteData = [];
 
-    logger.info('SpriteService disposed');
+    logger.debug('SpriteService disposed');
   }
 }

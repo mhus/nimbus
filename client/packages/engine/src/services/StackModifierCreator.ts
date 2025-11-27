@@ -13,7 +13,7 @@
 
 import { getLogger, PlayerMovementState } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
-import { StackName } from './ModifierService';
+import { StackName, createLinearNumberAnimation } from './ModifierService';
 
 const logger = getLogger('StackModifierCreator');
 
@@ -36,7 +36,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
     return;
   }
 
-  logger.info('Creating all StackModifiers...');
+  logger.debug('Creating all StackModifiers...');
 
   // ========================================
   // Player View Mode Stack
@@ -112,10 +112,140 @@ export function createAllStackModifiers(appContext: AppContext): void {
   );
 
   // ========================================
+  // Animation Stacks for Environment
+  // ========================================
+
+  // Ambient Light Intensity Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.AMBIENT_LIGHT_INTENSITY,
+    1.0, // Default: normal intensity
+    (intensity: number) => {
+      const environmentService = appContext.services.environment;
+      if (environmentService) {
+        environmentService.setAmbientLightIntensity(intensity);
+      }
+    },
+    createLinearNumberAnimation(0.01), // Linear animation, 0.01 per step
+    100 // Default wait time: 100ms
+  );
+
+  // Sun Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.SUN_POSITION,
+    90, // Default: East (90 degrees)
+    (angleY: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setSunPositionOnCircle(angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
+  // Sun Elevation Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.SUN_ELEVATION,
+    45, // Default: 45 degrees above horizon
+    (elevation: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setSunHeightOverCamera(elevation);
+      }
+    },
+    createLinearNumberAnimation(0.5), // Linear animation, 0.5 degrees per step
+    100 // Default wait time: 100ms
+  );
+
+  // Horizon Gradient Alpha Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.HORIZON_GRADIENT_ALPHA,
+    0.5, // Default: semi-transparent
+    (alpha: number) => {
+      const horizonGradientService = appContext.services.horizonGradient;
+      if (horizonGradientService) {
+        horizonGradientService.setAlpha(alpha);
+      }
+    },
+    createLinearNumberAnimation(0.01), // Linear animation, 0.01 per step
+    100 // Default wait time: 100ms
+  );
+
+  // Moon 0 Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.MOON_0_POSITION,
+    0, // Default: North (0 degrees)
+    (angleY: number) => {
+      const moonService = appContext.services.moon;
+      if (moonService) {
+        moonService.setMoonPositionOnCircle(0, angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
+  // Moon 1 Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.MOON_1_POSITION,
+    120, // Default: 120 degrees (evenly spaced from moon 0)
+    (angleY: number) => {
+      const moonService = appContext.services.moon;
+      if (moonService) {
+        moonService.setMoonPositionOnCircle(1, angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
+  // Moon 2 Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.MOON_2_POSITION,
+    240, // Default: 240 degrees (evenly spaced from moon 0 and 1)
+    (angleY: number) => {
+      const moonService = appContext.services.moon;
+      if (moonService) {
+        moonService.setMoonPositionOnCircle(2, angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
+  // Sun Light Intensity Multiplier Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.SUN_LIGHT_INTENSITY_MULTIPLIER,
+    1.0, // Default: normal intensity
+    (multiplier: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setSunLightIntensityMultiplier(multiplier);
+      }
+    },
+    createLinearNumberAnimation(0.05), // Linear animation, 0.05 per step
+    100 // Default wait time: 100ms
+  );
+
+  // Ambient Light Intensity Multiplier Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.AMBIENT_LIGHT_INTENSITY_MULTIPLIER,
+    0.5, // Default: 0.5 intensity
+    (multiplier: number) => {
+      const sunService = appContext.services.sun;
+      if (sunService) {
+        sunService.setAmbientLightIntensityMultiplier(multiplier);
+      }
+    },
+    createLinearNumberAnimation(0.05), // Linear animation, 0.05 per step
+    100 // Default wait time: 100ms
+  );
+
+  // ========================================
   // Weitere Stacks hier hinzufügen
   // ========================================
 
-  logger.info('All StackModifiers created', {
+  logger.debug('All StackModifiers created', {
     stackCount: modifierService.stackNames.length,
     stacks: modifierService.stackNames,
   });

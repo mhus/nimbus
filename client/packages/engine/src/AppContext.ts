@@ -30,6 +30,12 @@ import type { ScrawlService } from './scrawl/ScrawlService';
 import type { ShortcutService } from './services/ShortcutService';
 import type { ConfigService } from './services/ConfigService';
 import type { TargetingService } from './services/TargetingService';
+import type { SunService } from './services/SunService';
+import type { SkyBoxService } from './services/SkyBoxService';
+import type { MoonService } from './services/MoonService';
+import type { CloudsService } from './services/CloudsService';
+import type { HorizonGradientService } from './services/HorizonGradientService';
+import type { PrecipitationService } from './services/PrecipitationService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -128,6 +134,24 @@ export interface Services {
 
   /** Targeting service for resolving targets using Strategy Pattern */
   targeting?: TargetingService;
+
+  /** Sun service for sun visualization and positioning */
+  sun?: SunService;
+
+  /** Sky box service for sky rendering */
+  skyBox?: SkyBoxService;
+
+  /** Moon service for moon visualization and positioning */
+  moon?: MoonService;
+
+  /** Clouds service for cloud rendering and animation */
+  clouds?: CloudsService;
+
+  /** Horizon gradient service for horizon atmospheric depth rendering */
+  horizonGradient?: HorizonGradientService;
+
+  /** Precipitation service for rain and snow effects */
+  precipitation?: PrecipitationService;
 
   // Future services will be added here:
   // render?: RenderService;

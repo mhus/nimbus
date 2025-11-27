@@ -45,15 +45,15 @@ export class PlayAmbientAudioCommand extends CommandHandler {
     const modifierService = this.appContext.services.modifier;
 
     if (!modifierService) {
-      console.error('ModifierService not available');
+      logger.error('ModifierService not available');
       return { error: 'ModifierService not available' };
     }
 
     // Require at least soundPath parameter
     if (parameters.length === 0) {
-      console.error('Usage: /playAmbientAudio <soundPath>');
-      console.log('Example: /playAmbientAudio audio/music/ambient1.ogg');
-      console.log('Stop ambient: /playAmbientAudio ""');
+      logger.error('Usage: /playAmbientAudio <soundPath>');
+      logger.debug('Example: /playAmbientAudio audio/music/ambient1.ogg');
+      logger.debug('Stop ambient: /playAmbientAudio ""');
       return { error: 'Missing soundPath parameter' };
     }
 
@@ -64,32 +64,32 @@ export class PlayAmbientAudioCommand extends CommandHandler {
       // Get ambient audio stack
       const stack = modifierService.getModifierStack<string>(StackName.AMBIENT_AUDIO);
       if (!stack) {
-        console.error('Ambient audio stack not available');
+        logger.error('Ambient audio stack not available');
         return { error: 'Ambient audio stack not available' };
       }
 
       // Create or update command modifier (priority 100)
       if (!this.commandModifier) {
         this.commandModifier = stack.addModifier(soundPath, 100);
-        logger.info('Command modifier created', { soundPath, prio: 100 });
+        logger.debug('Command modifier created', { soundPath, prio: 100 });
       } else {
         this.commandModifier.setValue(soundPath);
-        logger.info('Command modifier updated', { soundPath });
+        logger.debug('Command modifier updated', { soundPath });
       }
 
       // Enable/disable based on path
       this.commandModifier.setEnabled(soundPath.trim() !== '');
 
       if (soundPath.trim() === '') {
-        console.log('✓ Ambient music command cleared (reverts to lower priority)');
+        logger.debug('✓ Ambient music command cleared (reverts to lower priority)');
         return { status: 'cleared' };
       } else {
-        console.log(`✓ Ambient music command set: ${soundPath}`);
-        console.log(`  Priority: 100 (command override)`);
+        logger.debug(`✓ Ambient music command set: ${soundPath}`);
+        logger.debug(`  Priority: 100 (command override)`);
         return { status: 'set', soundPath };
       }
     } catch (error) {
-      console.error('Failed to set ambient music', error);
+      logger.error('Failed to set ambient music', error);
       return { error: 'Failed to set ambient music' };
     }
   }

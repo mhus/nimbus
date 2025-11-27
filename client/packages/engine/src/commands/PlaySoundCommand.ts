@@ -4,6 +4,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+import {  toBoolean, toNumber , getLogger } from '@nimbus/shared';
+
+const logger = getLogger('PlaySoundCommand');
 
 /**
  * Play sound command
@@ -36,25 +39,25 @@ export class PlaySoundCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     // Require at least soundPath parameter
     if (parameters.length === 0) {
-      console.error('Usage: /playSound <soundPath> [stream] [volume]');
-      console.log('Example: /playSound audio/ui/click.ogg false 1.0');
+      logger.error('Usage: /playSound <soundPath> [stream] [volume]');
+      logger.debug('Example: /playSound audio/ui/click.ogg false 1.0');
       return { error: 'Missing soundPath parameter' };
     }
 
     // Parse parameters
     const soundPath = String(parameters[0]);
-    const stream = parameters.length > 1 ? String(parameters[1]).toLowerCase() === 'true' : false;
-    const volume = parameters.length > 2 ? parseFloat(String(parameters[2])) : 1.0;
+    const stream = parameters.length > 1 ? toBoolean(parameters[1]) : false;
+    const volume = parameters.length > 2 ? toNumber(parameters[2]) : 1.0;
 
     // Validate volume
     if (isNaN(volume) || volume < 0 || volume > 1) {
-      console.error('Invalid volume. Must be between 0.0 and 1.0');
+      logger.error('Invalid volume. Must be between 0.0 and 1.0');
       return { error: 'Invalid volume parameter' };
     }
 
@@ -62,12 +65,12 @@ export class PlaySoundCommand extends CommandHandler {
     try {
       await audioService.playSound(soundPath, stream, volume);
 
-      console.log(`✓ Playing sound: ${soundPath}`);
-      console.log(`  Stream: ${stream}, Volume: ${volume}`);
+      logger.debug(`✓ Playing sound: ${soundPath}`);
+      logger.debug(`  Stream: ${stream}, Volume: ${volume}`);
 
       return { status: 'playing', soundPath, stream, volume };
     } catch (error) {
-      console.error('Failed to play sound', error);
+      logger.error('Failed to play sound', error);
       return { error: 'Failed to play sound' };
     }
   }

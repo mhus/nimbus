@@ -3,6 +3,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('PlaySoundAtPositionCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -36,14 +39,14 @@ export class PlaySoundAtPositionCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     // Require at least soundPath and x, y, z parameters
     if (parameters.length < 4) {
-      console.error('Usage: /playSoundAtPosition <soundPath> <x> <y> <z> [volume]');
-      console.log('Example: /playSoundAtPosition audio/effects/explosion.ogg 10 64 5 1.0');
+      logger.error('Usage: /playSoundAtPosition <soundPath> <x> <y> <z> [volume]');
+      logger.debug('Example: /playSoundAtPosition audio/effects/explosion.ogg 10 64 5 1.0');
       return { error: 'Missing parameters (need at least: soundPath, x, y, z)' };
     }
 
@@ -56,13 +59,13 @@ export class PlaySoundAtPositionCommand extends CommandHandler {
 
     // Validate coordinates
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
-      console.error('Invalid coordinates. x, y, z must be numbers');
+      logger.error('Invalid coordinates. x, y, z must be numbers');
       return { error: 'Invalid coordinates' };
     }
 
     // Validate volume
     if (isNaN(volume) || volume < 0 || volume > 1) {
-      console.error('Invalid volume. Must be between 0.0 and 1.0');
+      logger.error('Invalid volume. Must be between 0.0 and 1.0');
       return { error: 'Invalid volume parameter' };
     }
 
@@ -70,13 +73,13 @@ export class PlaySoundAtPositionCommand extends CommandHandler {
     try {
       await audioService.playSoundAtPosition(soundPath, x, y, z, volume);
 
-      console.log(`✓ Playing sound at position: ${soundPath}`);
-      console.log(`  Position: (${x}, ${y}, ${z})`);
-      console.log(`  Volume: ${volume}`);
+      logger.debug(`✓ Playing sound at position: ${soundPath}`);
+      logger.debug(`  Position: (${x}, ${y}, ${z})`);
+      logger.debug(`  Volume: ${volume}`);
 
       return { status: 'playing', soundPath, position: { x, y, z }, volume };
     } catch (error) {
-      console.error('Failed to play sound at position', error);
+      logger.error('Failed to play sound at position', error);
       return { error: 'Failed to play sound' };
     }
   }

@@ -20,6 +20,12 @@ import { InputService } from './InputService';
 import { PhysicsService } from './PhysicsService';
 import { SelectService, SelectMode } from './SelectService';
 import { BackdropService } from './BackdropService';
+import { SunService } from './SunService';
+import { SkyBoxService } from './SkyBoxService';
+import { MoonService } from './MoonService';
+import { CloudsService } from './CloudsService';
+import { HorizonGradientService } from './HorizonGradientService';
+import { PrecipitationService } from './PrecipitationService';
 import { WebInputController } from '../input/WebInputController';
 
 const logger = getLogger('EngineService');
@@ -49,6 +55,12 @@ export class EngineService {
 
   // Sub-services
   private cameraService?: CameraService;
+  private sunService?: SunService;
+  private skyBoxService?: SkyBoxService;
+  private moonService?: MoonService;
+  private cloudsService?: CloudsService;
+  private horizonGradientService?: HorizonGradientService;
+  private precipitationService?: PrecipitationService;
   private environmentService?: EnvironmentService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
@@ -64,7 +76,7 @@ export class EngineService {
     this.appContext = appContext;
     this.canvas = canvas;
 
-    logger.info('EngineService created');
+    logger.debug('EngineService created');
   }
 
   /**
@@ -79,7 +91,7 @@ export class EngineService {
     }
 
     try {
-      logger.info('Initializing 3D engine');
+      logger.debug('Initializing 3D engine');
 
       // Check WebGL support
       const gl = this.canvas.getContext('webgl') || this.canvas.getContext('webgl2');
@@ -124,6 +136,36 @@ export class EngineService {
       this.cameraService = new CameraService(this.scene, this.appContext);
       this.appContext.services.camera = this.cameraService;
       logger.debug('CameraService initialized');
+
+      // Initialize sun service (after CameraService, before EnvironmentService)
+      this.sunService = new SunService(this.scene, this.appContext);
+      this.appContext.services.sun = this.sunService;
+      logger.debug('SunService initialized');
+
+      // Initialize skybox service (after SunService, before EnvironmentService)
+      this.skyBoxService = new SkyBoxService(this.scene, this.appContext);
+      this.appContext.services.skyBox = this.skyBoxService;
+      logger.debug('SkyBoxService initialized');
+
+      // Initialize moon service (after SkyBoxService, before CloudsService)
+      this.moonService = new MoonService(this.scene, this.appContext);
+      this.appContext.services.moon = this.moonService;
+      logger.debug('MoonService initialized');
+
+      // Initialize clouds service (after MoonService, before HorizonGradientService)
+      this.cloudsService = new CloudsService(this.scene, this.appContext);
+      this.appContext.services.clouds = this.cloudsService;
+      logger.debug('CloudsService initialized');
+
+      // Initialize horizon gradient service (after CloudsService, before PrecipitationService)
+      this.horizonGradientService = new HorizonGradientService(this.scene, this.appContext);
+      this.appContext.services.horizonGradient = this.horizonGradientService;
+      logger.debug('HorizonGradientService initialized');
+
+      // Initialize precipitation service (after HorizonGradientService, before EnvironmentService)
+      this.precipitationService = new PrecipitationService(this.scene, this.appContext);
+      this.appContext.services.precipitation = this.precipitationService;
+      logger.debug('PrecipitationService initialized');
 
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
@@ -174,7 +216,7 @@ export class EngineService {
       const audioService = this.appContext.services.audio;
       if (audioService) {
         await audioService.initialize(this.scene);
-        logger.info('AudioService initialized with scene and subscribed to PhysicsService events');
+        logger.debug('AudioService initialized with scene and subscribed to PhysicsService events');
       } else {
         logger.warn('AudioService not available in AppContext');
       }
@@ -201,6 +243,12 @@ export class EngineService {
         this.textureAtlas
       );
       logger.debug('RenderService initialized');
+
+      // Connect RenderService with PrecipitationService
+      if (this.precipitationService) {
+        this.renderService.setPrecipitationService(this.precipitationService);
+        logger.debug('RenderService connected to PrecipitationService');
+      }
 
       // Initialize entity render service (requires EntityService and ModelService)
       const entityService = this.appContext.services.entity;
@@ -276,7 +324,7 @@ export class EngineService {
 
       this.isInitialized = true;
 
-      logger.info('3D engine initialized successfully');
+      logger.debug('3D engine initialized successfully');
     } catch (error) {
       this.isInitialized = false;
       throw ExceptionHandler.handleAndRethrow(error, 'EngineService.initialize');
@@ -296,7 +344,7 @@ export class EngineService {
       return;
     }
 
-    logger.info('Starting render loop');
+    logger.debug('Starting render loop');
 
     let lastTime = performance.now();
 
@@ -313,6 +361,8 @@ export class EngineService {
         this.playerService?.update(deltaTime);
         this.cameraService?.update(deltaTime);
         this.selectService?.update(deltaTime); // Update block selection and highlighting
+        this.cloudsService?.update(deltaTime); // Update cloud positions and fading
+        this.precipitationService?.update(deltaTime); // Update precipitation particle positions
         this.environmentService?.update(deltaTime);
 
         // Check and emit player direction updates (for beam:follow effects)
@@ -336,7 +386,7 @@ export class EngineService {
       return;
     }
 
-    logger.info('Stopping render loop');
+    logger.debug('Stopping render loop');
 
     this.engine?.stopRenderLoop();
     this.isRunning = false;
@@ -460,7 +510,7 @@ export class EngineService {
       material.wireframe = enabled;
     });
 
-    logger.info(`Wireframe mode ${enabled ? 'enabled' : 'disabled'}`, {
+    logger.debug(`Wireframe mode ${enabled ? 'enabled' : 'disabled'}`, {
       materialCount: this.scene.materials.length,
     });
   }
@@ -469,7 +519,7 @@ export class EngineService {
    * Dispose engine and all resources
    */
   dispose(): void {
-    logger.info('Disposing engine');
+    logger.debug('Disposing engine');
 
     this.stopRenderLoop();
 
@@ -485,6 +535,12 @@ export class EngineService {
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
+    this.precipitationService?.dispose();
+    this.horizonGradientService?.dispose();
+    this.cloudsService?.dispose();
+    this.moonService?.dispose();
+    this.skyBoxService?.dispose();
+    this.sunService?.dispose();
     this.cameraService?.dispose();
     this.modelService?.dispose();
     this.materialService?.dispose();
@@ -496,6 +552,6 @@ export class EngineService {
     this.isInitialized = false;
     this.isRunning = false;
 
-    logger.info('Engine disposed');
+    logger.debug('Engine disposed');
   }
 }

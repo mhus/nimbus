@@ -136,7 +136,7 @@ export class EntityService {
     // Initialize physics controller
     this.physicsController = new EntityPhysicsController();
 
-    logger.info('EntityService initialized', { config: this.config });
+    logger.debug('EntityService initialized', { config: this.config });
 
     // Start cache cleanup
     this.startCacheCleanup();
@@ -466,7 +466,7 @@ export class EntityService {
     this.entityModelCache.clear();
     this.entityCache.clear();
     this.entityPathwayCache.clear();
-    logger.info('Entity caches cleared');
+    logger.debug('Entity caches cleared');
   }
 
   /**
@@ -1131,7 +1131,7 @@ export class EntityService {
         },
       });
 
-      logger.info('Entity proximity notification sent (entered range)', {
+      logger.debug('Entity proximity notification sent (entered range)', {
         entityId: clientEntity.id,
         distance,
         effectiveRange,
@@ -1182,7 +1182,7 @@ export class EntityService {
         },
       });
 
-      logger.info('Entity collision notification sent', {
+      logger.debug('Entity collision notification sent', {
         entityId,
         playerPosition,
       });

@@ -34,12 +34,12 @@ export class ReloadWorldConfigCommand extends CommandHandler {
     }
 
     try {
-      logger.info('Reloading WorldInfo from server...');
+      logger.debug('Reloading WorldInfo from server...');
 
       // Load WorldInfo (will automatically recalculate modifiers if status/season changed)
       const worldInfo = await configService.loadWorldInfo();
 
-      logger.info('WorldInfo reloaded successfully', {
+      logger.debug('WorldInfo reloaded successfully', {
         worldId: worldInfo.worldId,
         worldName: worldInfo.name,
         status: worldInfo.status,
@@ -49,6 +49,7 @@ export class ReloadWorldConfigCommand extends CommandHandler {
 
       // Note: ConfigService.loadWorldInfo() automatically calls
       // ChunkService.recalculateAndRedrawAll() if status/season changed
+      // For environment settings changes (sun, horizon, etc.), a client restart is needed
     } catch (error) {
       logger.error('Failed to reload WorldInfo', undefined, error as Error);
     }

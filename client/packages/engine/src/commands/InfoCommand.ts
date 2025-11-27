@@ -2,9 +2,11 @@
  * InfoCommand - Shows client information
  */
 
-import { SHARED_VERSION } from '@nimbus/shared';
+import {  SHARED_VERSION , getLogger } from '@nimbus/shared';
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+
+const logger = getLogger('InfoCommand');
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -59,7 +61,7 @@ export class InfoCommand extends CommandHandler {
     const output = lines.join('\n');
 
     // Log to console
-    console.log(output);
+    logger.debug(output);
 
     return info;
   }

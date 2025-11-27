@@ -152,6 +152,11 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
       const worldId = req.params.worldId;
       const clientType = (req.query.client as string) || 'viewer';
 
+      // Check if reload is requested (via t parameter for cache busting)
+      if (req.query.t) {
+        worldManager.reloadWorldInfo(worldId);
+      }
+
       const world = worldManager.getWorld(worldId);
       if (!world) {
         res.status(404).json({ error: 'World not found' });
@@ -211,6 +216,11 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
   router.get('/:worldId/config/worldinfo', async (req, res) => {
     try {
       const worldId = req.params.worldId;
+
+      // Check if reload is requested (via t parameter for cache busting)
+      if (req.query.t) {
+        worldManager.reloadWorldInfo(worldId);
+      }
 
       const world = worldManager.getWorld(worldId);
       if (!world) {

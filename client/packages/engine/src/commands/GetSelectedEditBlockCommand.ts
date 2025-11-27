@@ -6,6 +6,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('GetSelectedEditBlockCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -31,7 +34,7 @@ export class GetSelectedEditBlockCommand extends CommandHandler {
     const selectService = this.appContext.services.select;
 
     if (!selectService) {
-      console.error('SelectService not available');
+      logger.error('SelectService not available');
       return { error: 'SelectService not available' };
     }
 
@@ -39,7 +42,7 @@ export class GetSelectedEditBlockCommand extends CommandHandler {
     const position = selectService.getSelectedEditBlock();
 
     if (!position) {
-      console.log('No edit block currently selected');
+      logger.debug('No edit block currently selected');
       return { selected: false, position: null };
     }
 
@@ -48,8 +51,8 @@ export class GetSelectedEditBlockCommand extends CommandHandler {
       position,
     };
 
-    console.log('✓ Selected edit block:');
-    console.log(`  Position: (${position.x}, ${position.y}, ${position.z})`);
+    logger.debug('✓ Selected edit block:');
+    logger.debug(`  Position: (${position.x}, ${position.y}, ${position.z})`);
 
     return result;
   }

@@ -43,7 +43,7 @@ export class CommandService {
 
   constructor(appContext: AppContext) {
     this.appContext = appContext;
-    logger.info('CommandService initialized');
+    logger.debug('CommandService initialized');
   }
 
   /**
@@ -87,7 +87,7 @@ export class CommandService {
 
       if (!handler) {
         const error = new Error(`Command '${name}' not found`);
-        logger.error(`Command not found: ${name}`, { availableCommands: Array.from(this.handlers.keys()) });
+        logger.error(`Command not found: ${name}`);
         throw error;
       }
 
@@ -129,7 +129,7 @@ export class CommandService {
    */
   exposeToBrowserConsole(): void {
     try {
-      logger.info('Exposing commands to browser console...');
+      logger.debug('Exposing commands to browser console...');
 
       let exposedCount = 0;
 
@@ -138,7 +138,10 @@ export class CommandService {
         const functionName = 'do' + name.charAt(0).toUpperCase() + name.slice(1);
 
         // Create function that calls executeCommand
-        (window as any)[functionName] = (...params: string[]) => {
+        // Accept any type of parameters (string, number, boolean, object, etc.)
+        (window as any)[functionName] = (...params: any[]) => {
+          // Pass parameters as-is (no conversion)
+          // Commands will use CastUtil for proper type conversion
           this.executeCommand(name, params)
             .then((result) => {
               // Log result to console
@@ -161,7 +164,7 @@ export class CommandService {
         exposedCount++;
       }
 
-      logger.info(`${exposedCount} commands exposed to browser console`, {
+      logger.debug(`${exposedCount} commands exposed to browser console`, {
         commands: Array.from(this.handlers.keys()),
       });
 
@@ -308,8 +311,8 @@ export class CommandService {
     if (pending.onMessage) {
       pending.onMessage(message);
     } else {
-      // Default: log to console
-      console.log(`[Server] ${message}`);
+      // Default: log via logger
+      logger.info(`[Server] ${message}`);
     }
   }
 
@@ -419,7 +422,7 @@ export class CommandService {
    */
   async handleMultipleServerCommands(commands: SingleServerCommandData[], parallel: boolean = false): Promise<void> {
     try {
-      logger.info(`Executing ${commands.length} server commands`, { parallel });
+      logger.debug(`Executing ${commands.length} server commands`, { parallel });
 
       if (parallel) {
         // Execute all commands in parallel

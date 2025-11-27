@@ -9,6 +9,7 @@ import { Mesh, MeshBuilder, Scene, Matrix, Vector3, StandardMaterial, Texture, t
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ShaderService } from './ShaderService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('ThinInstancesService');
 
@@ -74,7 +75,7 @@ export class ThinInstancesService {
 
     this.createBaseMesh();
 
-    logger.info('ThinInstancesService initialized');
+    logger.debug('ThinInstancesService initialized');
   }
 
   /**
@@ -128,6 +129,9 @@ export class ThinInstancesService {
       }
       mesh.setVerticesData('uv', uvs);
     }
+
+    // Set rendering group for world content
+    mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
 
     return mesh;
   }
@@ -415,7 +419,7 @@ export class ThinInstancesService {
 
     this.baseMesh?.dispose();
 
-    logger.info('ThinInstancesService disposed');
+    logger.debug('ThinInstancesService disposed');
   }
 
   /**

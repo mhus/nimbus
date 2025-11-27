@@ -106,7 +106,7 @@ export class ClickInputHandler extends InputHandler {
         this.activeButtonNumber = buttonNumber;
         this.activeShortcutKey = shortcutKey;
 
-        logger.info('Click shortcut activated for continuous updates', {
+        logger.debug('Click shortcut activated for continuous updates', {
           buttonNumber,
           shortcutKey,
           handlerActive: this.state.active,
@@ -124,7 +124,7 @@ export class ClickInputHandler extends InputHandler {
    * Called when mouse button is released
    */
   protected onDeactivate(): void {
-    logger.info('ClickInputHandler.onDeactivate() called', {
+    logger.debug('ClickInputHandler.onDeactivate() called', {
       activeButtonNumber: this.activeButtonNumber,
       activeShortcutKey: this.activeShortcutKey
     });
@@ -133,7 +133,7 @@ export class ClickInputHandler extends InputHandler {
     this.state.active = false;
 
     if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
-      logger.info('No active button to deactivate');
+      logger.debug('No active button to deactivate');
       return;
     }
 
@@ -147,7 +147,7 @@ export class ClickInputHandler extends InputHandler {
       // Get shortcut data before ending
       const shortcut = shortcutService.endShortcut(this.activeButtonNumber);
 
-      logger.info('Shortcut ended', {
+      logger.debug('Shortcut ended', {
         buttonNumber: this.activeButtonNumber,
         shortcutKey: this.activeShortcutKey,
         found: !!shortcut
@@ -164,7 +164,7 @@ export class ClickInputHandler extends InputHandler {
           duration,
         });
 
-        logger.info('Click shortcut ended event emitted', {
+        logger.debug('Click shortcut ended event emitted', {
           buttonNumber: this.activeButtonNumber,
           shortcutKey: this.activeShortcutKey,
           executorId: shortcut.executorId,
@@ -192,7 +192,7 @@ export class ClickInputHandler extends InputHandler {
    */
   protected onUpdate(deltaTime: number, value: number): void {
     if (!this.activeButtonNumber && this.activeButtonNumber !== 0) {
-      logger.info('onUpdate skipped - no active button', {
+      logger.debug('onUpdate skipped - no active button', {
         activeButtonNumber: this.activeButtonNumber,
       });
       return;
@@ -201,7 +201,7 @@ export class ClickInputHandler extends InputHandler {
     const shortcutService = this.appContext?.services.shortcut;
     const selectService = this.appContext?.services.select;
     if (!shortcutService || !selectService) {
-      logger.info('onUpdate skipped - missing services', {
+      logger.debug('onUpdate skipped - missing services', {
         hasShortcutService: !!shortcutService,
         hasSelectService: !!selectService,
       });
@@ -231,7 +231,7 @@ export class ClickInputHandler extends InputHandler {
     if (targetPos) {
       shortcutService.updateShortcut(this.activeButtonNumber, playerPos, targetPos);
 
-      logger.info('Click handler updated shortcut position', {
+      logger.debug('Click handler updated shortcut position', {
         buttonNumber: this.activeButtonNumber,
         targetPos,
       });

@@ -83,12 +83,12 @@ der Spieler bewegt (Falls es nicht AIR ist) und mit welchem movementType (laufen
 
 [x] Auch der swim sound soll von WorldInfo kommen ('swimStepAudio'). Nicht mehr als Constante in AudioService. 
 
-[?] Funktion am AudioService fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
+[x] Funktion am AudioService fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Spielt einen sound an der uebergebenen position ab.
 - Erstelle commandos in der engine fuer playSoundAtPosition(soundPath: string, x, y, z, volume: number)
 - Kein loop!
 
-[?] Funktion am AudioService fuer playSound(soundPath: string, stream : boolean, volume: number)
+[x] Funktion am AudioService fuer playSound(soundPath: string, stream : boolean, volume: number)
 - Spielt einen sound direkt ab.
 - Erstelle commandos in der engine fuer playSound(soudnPath: string, stream: boolean, volume: number)
 - kein loop!

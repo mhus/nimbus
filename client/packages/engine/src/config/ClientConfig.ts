@@ -95,7 +95,7 @@ export function loadClientConfig(): ClientConfig {
     exitUrl,
   };
 
-  logger.info('Client configuration loaded', {
+  logger.debug('Client configuration loaded', {
     username,
     websocketUrl,
     apiUrl,

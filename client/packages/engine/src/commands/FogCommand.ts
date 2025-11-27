@@ -3,7 +3,10 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import {  toNumber , getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+
+const logger = getLogger('FogCommand');
 
 /**
  * Fog command - Set fog camera effect intensity
@@ -38,7 +41,7 @@ export class FogCommand extends CommandHandler {
     const playerService = this.appContext.services.player;
 
     if (!playerService) {
-      console.error('PlayerService not available');
+      logger.error('PlayerService not available');
       return { error: 'PlayerService not available' };
     }
 
@@ -53,7 +56,7 @@ export class FogCommand extends CommandHandler {
     if (parameters.length === 0) {
       const currentIntensity = fogStack?.getValue() ?? 0;
       const message = `Current fog intensity: ${currentIntensity.toFixed(2)} (0 = off, 1.0 = max)`;
-      console.log(message);
+      logger.debug(message);
       return {
         intensity: currentIntensity,
         message,
@@ -61,15 +64,15 @@ export class FogCommand extends CommandHandler {
     }
 
     // Parse intensity parameter
-    const intensity = parseFloat(parameters[0]);
+    const intensity = toNumber(parameters[0]);
 
     if (isNaN(intensity)) {
-      console.error(`Invalid intensity: ${parameters[0]}. Use numeric value (0-1.0).`);
+      logger.error(`Invalid intensity: ${parameters[0]}. Use numeric value (0-1.0).`);
       return { error: 'Invalid intensity. Use numeric value (0-1.0).' };
     }
 
     if (intensity < 0 || intensity > 1.0) {
-      console.error(`Intensity out of range: ${intensity}. Must be 0-1.0.`);
+      logger.error(`Intensity out of range: ${intensity}. Must be 0-1.0.`);
       return { error: 'Intensity must be between 0 and 1.0.' };
     }
 
@@ -79,7 +82,7 @@ export class FogCommand extends CommandHandler {
     const message = intensity === 0
       ? 'Fog disabled'
       : `Fog intensity set to ${intensity.toFixed(2)}`;
-    console.log(message);
+    logger.debug(message);
 
     return {
       intensity,

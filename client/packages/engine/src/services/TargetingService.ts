@@ -43,7 +43,7 @@ interface ClientBlock {
  */
 export class TargetingService {
   constructor(private readonly appContext: AppContext) {
-    logger.info('TargetingService initialized');
+    logger.debug('TargetingService initialized');
   }
 
   /**
@@ -398,6 +398,6 @@ export class TargetingService {
    * Dispose service (currently no cleanup needed)
    */
   dispose(): void {
-    logger.info('TargetingService disposed');
+    logger.debug('TargetingService disposed');
   }
 }

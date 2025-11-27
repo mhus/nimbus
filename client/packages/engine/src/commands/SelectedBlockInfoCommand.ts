@@ -10,6 +10,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SelectedBlockInfoCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -35,14 +38,14 @@ export class SelectedBlockInfoCommand extends CommandHandler {
     const selectService = this.appContext.services.select;
 
     if (!selectService) {
-      console.error('SelectService not available');
+      logger.error('SelectService not available');
       return { error: 'SelectService not available' };
     }
 
     const selectedBlock = selectService.getCurrentSelectedBlock();
 
     if (!selectedBlock) {
-      console.log('No block currently selected');
+      logger.debug('No block currently selected');
       return { error: 'No block selected' };
     }
 
@@ -147,7 +150,7 @@ export class SelectedBlockInfoCommand extends CommandHandler {
     lines.push('============================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Return structured data
     return {

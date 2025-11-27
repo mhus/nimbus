@@ -62,9 +62,9 @@ export class ConfigService {
       // Get worldId from parameter, config, or default to 'main'
       const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
       const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-      const url = `${apiUrl}/api/worlds/${targetWorldId}/config?client=${clientType}`;
+      const url = `${apiUrl}/api/worlds/${targetWorldId}/config?client=${clientType}&t=${Date.now()}`;
 
-      logger.info('Loading configuration from REST API', { url, clientType });
+      logger.debug('Loading configuration from REST API', { url, clientType });
 
       const response = await fetch(url);
 
@@ -84,7 +84,7 @@ export class ConfigService {
         this.appContext.playerInfo = config.playerInfo;
       }
 
-      logger.info('Configuration loaded successfully', {
+      logger.debug('Configuration loaded successfully', {
         hasWorldInfo: !!config.worldInfo,
         hasPlayerInfo: !!config.playerInfo,
         hasBackpack: !!config.playerBackpack,
@@ -98,7 +98,7 @@ export class ConfigService {
         const seasonProgressChanged = oldWorldInfo.seasonProgress !== config.worldInfo.seasonProgress;
 
         if (statusChanged || seasonStatusChanged || seasonProgressChanged) {
-          logger.info('WorldInfo status/season changed during reload, recalculating modifiers', {
+          logger.debug('WorldInfo status/season changed during reload, recalculating modifiers', {
             statusChanged,
             seasonStatusChanged,
             seasonProgressChanged,
@@ -107,7 +107,7 @@ export class ConfigService {
           const chunkService = this.appContext.services.chunk;
           if (chunkService) {
             const result = chunkService.recalculateAndRedrawAll();
-            logger.info('Modifiers recalculated and chunks redrawn', result);
+            logger.debug('Modifiers recalculated and chunks redrawn', result);
           }
         }
       }
@@ -131,7 +131,7 @@ export class ConfigService {
     clientType: 'viewer' | 'editor' = 'viewer',
     worldId?: string
   ): Promise<EngineConfiguration> {
-    logger.info('Reloading configuration');
+    logger.debug('Reloading configuration');
     return this.loadConfig(clientType, true, worldId);
   }
 
@@ -176,7 +176,7 @@ export class ConfigService {
   async loadWorldInfo(worldId?: string): Promise<WorldInfo> {
     const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
     const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/worldinfo`;
+    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/worldinfo?t=${Date.now()}`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -198,7 +198,7 @@ export class ConfigService {
 
     // If status or season changed, recalculate all modifiers
     if (statusChanged || seasonStatusChanged || seasonProgressChanged) {
-      logger.info('WorldInfo status/season changed, recalculating modifiers', {
+      logger.debug('WorldInfo status/season changed, recalculating modifiers', {
         statusChanged,
         seasonStatusChanged,
         seasonProgressChanged,
@@ -213,7 +213,20 @@ export class ConfigService {
       const chunkService = this.appContext.services.chunk;
       if (chunkService) {
         const result = chunkService.recalculateAndRedrawAll();
-        logger.info('Modifiers recalculated and chunks redrawn', result);
+        logger.debug('Modifiers recalculated and chunks redrawn', result);
+      }
+
+      // If season changed, start corresponding season script
+      if (seasonStatusChanged && newWorldInfo.seasonStatus) {
+        const environmentService = this.appContext.services.environment;
+        if (environmentService) {
+          const seasonScriptName = `season_${newWorldInfo.seasonStatus.toLowerCase()}`;
+          logger.debug('Starting season script', {
+            seasonStatus: newWorldInfo.seasonStatus,
+            scriptName: seasonScriptName
+          });
+          environmentService.startEnvironmentScript(seasonScriptName);
+        }
       }
     }
 
@@ -288,7 +301,7 @@ export class ConfigService {
    * Clear cached configuration
    */
   clearCache(): void {
-    logger.info('Clearing config cache');
+    logger.debug('Clearing config cache');
     this.config = null;
   }
 }

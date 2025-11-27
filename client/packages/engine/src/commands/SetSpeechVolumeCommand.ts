@@ -4,6 +4,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SetSpeechVolumeCommand');
 
 /**
  * Set speech volume command
@@ -37,14 +40,14 @@ export class SetSpeechVolumeCommand extends CommandHandler {
     const audioService = this.appContext.services.audio;
 
     if (!audioService) {
-      console.error('AudioService not available');
+      logger.error('AudioService not available');
       return { error: 'AudioService not available' };
     }
 
     // No parameters - show current volume
     if (parameters.length === 0) {
       const currentVolume = audioService.getSpeechVolume();
-      console.log(`Current speech volume: ${currentVolume.toFixed(2)}`);
+      logger.debug(`Current speech volume: ${currentVolume.toFixed(2)}`);
       return { speechVolume: currentVolume };
     }
 
@@ -52,7 +55,7 @@ export class SetSpeechVolumeCommand extends CommandHandler {
     const volume = parseFloat(String(parameters[0]));
 
     if (isNaN(volume)) {
-      console.error('Invalid volume parameter. Must be a number between 0.0 and 1.0');
+      logger.error('Invalid volume parameter. Must be a number between 0.0 and 1.0');
       return { error: 'Invalid volume parameter' };
     }
 
@@ -60,10 +63,10 @@ export class SetSpeechVolumeCommand extends CommandHandler {
     audioService.setSpeechVolume(volume);
 
     const actualVolume = audioService.getSpeechVolume();
-    console.log(`✓ Speech volume set to ${actualVolume.toFixed(2)}`);
+    logger.debug(`✓ Speech volume set to ${actualVolume.toFixed(2)}`);
 
     if (actualVolume <= 0) {
-      console.log('  Speech will be muted');
+      logger.debug('  Speech will be muted');
     }
 
     return { speechVolume: actualVolume };

@@ -183,3 +183,53 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Der text wird in der mitte des bildschirms angezeigt, in weiss mit schwarzem schatten.
 - Der text wird immer angezeigt, bis er entfernt wird.
 - Erstelle ein Command in engine um setCenterText aufzurufen.
+
+[x] Bei Notifications (NotificationService) kann ein Tetxure Pfad (assets) angeben werden, der dann links neben dem text als icon grosses icon angezeigt wird.
+- Siehe shortcut fuer die anzeige des icons
+- Die texture wird als werterer optionaler parameter in der notification hinzugefuegt.
+- Auch die Commandos erweitern.
+- Die Pfade auf die Icon Bilder werden vom NetworkService mit getAssetUrl geholt.
+- Rahmen wie bei shortcut icons.
+
+```text
+  1. Notification Interface erweitert (Notification.ts:48)
+
+  - Neues optionales Feld texturePath?: string | null hinzugefügt
+
+  2. NotificationService erweitert (NotificationService.ts)
+
+  - Zeile 211: newNotification() Methode um optionalen texturePath Parameter erweitert
+  - Zeile 237: texturePath wird in das Notification-Objekt übernommen
+  - Zeile 337-372: Icon-Rendering mit Rahmen in renderNotification() implementiert:
+    - Icon-Container mit 48x48px Größe
+    - Rahmen wie bei Shortcut-Icons (2px solid rgba(255, 255, 255, 0.3))
+    - Dunkler Hintergrund (rgba(50, 50, 50, 0.9))
+    - Image wird über NetworkService.getAssetUrl() geladen
+    - 44x44px Bildgröße mit pixelated rendering
+  - Zeile 375-392: Text-Container für From und Message (flexbox layout)
+
+  3. CSS angepasst (notifications.css)
+
+  - Zeile 61-63: Notification als Flexbox mit display: flex, align-items: center, gap: 8px
+  - Zeile 115-122: Neue .notification-icon Styles hinzugefügt
+
+  4. NotificationCommand erweitert (NotificationCommand.ts)
+
+  - Zeile 10: toString Import von CastUtil hinzugefügt
+  - Zeile 32: Description aktualisiert
+  - Zeile 44-53: Usage Hilfe aktualisiert mit texturePath Beispiel
+  - Zeile 68-77: Intelligente Erkennung des texturePath Parameters (wenn letzter Parameter / oder . enthält)
+  - Zeile 84: newNotification() Call mit texturePath Parameter
+
+  Verwendung:
+
+  // Ohne Icon
+  notification 0 null "System message"
+
+  // Mit Icon
+  notification 0 null "You found a sword!" items/sword.png
+  notification 11 "Player1" "Hello!" avatars/player1.png
+  notification 20 null "LEVEL UP!" ui/levelup.png
+
+  Die Icons werden links neben dem Text mit einem Rahmen angezeigt, genau wie bei den Shortcut-Icons!
+```

@@ -19,6 +19,7 @@ import { getLogger, TextureHelper, Shape } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('FlameRenderer');
 
@@ -258,6 +259,9 @@ export class FlameRenderer extends BlockRenderer {
 
     // Make flame not pickable (optimization)
     plane.isPickable = false;
+
+    // Set rendering group for world content
+    plane.renderingGroupId = RENDERING_GROUPS.WORLD;
 
     // Get texture paths (up to 3: diffuse, distortion, opacity)
     const texturePaths = this.getTexturePaths(textures);

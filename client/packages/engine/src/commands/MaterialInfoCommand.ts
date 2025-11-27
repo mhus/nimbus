@@ -7,6 +7,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('MaterialInfoCommand');
 import type { AppContext } from '../AppContext';
 
 /**
@@ -32,13 +35,13 @@ export class MaterialInfoCommand extends CommandHandler {
     const engineService = this.appContext.services.engine;
 
     if (!engineService) {
-      console.error('EngineService not available');
+      logger.error('EngineService not available');
       return { error: 'EngineService not available' };
     }
 
     const materialService = engineService.getMaterialService();
     if (!materialService) {
-      console.error('MaterialService not available');
+      logger.error('MaterialService not available');
       return { error: 'MaterialService not available' };
     }
 
@@ -56,7 +59,7 @@ export class MaterialInfoCommand extends CommandHandler {
 
       if (!material) {
         lines.push('Material not found in cache');
-        console.log(lines.join('\n'));
+        logger.debug(lines.join('\n'));
         return { error: 'Material not found', materialKey };
       }
 
@@ -133,7 +136,7 @@ export class MaterialInfoCommand extends CommandHandler {
     lines.push('============================');
 
     const output = lines.join('\n');
-    console.log(output);
+    logger.debug(output);
 
     // Return structured data
     if (materialKey) {

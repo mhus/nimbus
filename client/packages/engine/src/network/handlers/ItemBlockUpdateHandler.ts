@@ -47,7 +47,7 @@ export class ItemBlockUpdateHandler extends MessageHandler<ItemBlockRef[]> {
       return;
     }
 
-    logger.info('Processing item updates', {
+    logger.debug('Processing item updates', {
       count: items.length,
       items: items.map(item => ({
         position: item.position,
@@ -60,6 +60,6 @@ export class ItemBlockUpdateHandler extends MessageHandler<ItemBlockRef[]> {
     // ChunkService will handle filling and conversion
     await this.chunkService.onItemUpdate(items);
 
-    logger.info('Item updates forwarded to ChunkService');
+    logger.debug('Item updates forwarded to ChunkService');
   }
 }

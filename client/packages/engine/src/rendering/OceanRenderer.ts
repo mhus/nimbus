@@ -17,6 +17,7 @@ import { getLogger, TextureHelper, Shape } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('OceanRenderer');
 
@@ -205,6 +206,9 @@ export class OceanRenderer extends BlockRenderer {
           waterY,
           chunkCenterZ + randomOffsetZ
         );
+
+        // Set rendering group for world content
+        mesh.renderingGroupId = RENDERING_GROUPS.WORLD;
 
         return mesh;
       }

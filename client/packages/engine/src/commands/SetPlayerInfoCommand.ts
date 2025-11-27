@@ -75,7 +75,7 @@ export class SetPlayerInfoCommand extends CommandHandler {
       // Update PlayerInfo (this will emit 'playerInfo:updated' event)
       playerService.updatePlayerInfo(updates);
 
-      logger.info('PlayerInfo updated via command', { updates });
+      logger.debug('PlayerInfo updated via command', { updates });
 
       return `PlayerInfo updated successfully:\n${JSON.stringify(updates, null, 2)}`;
 
