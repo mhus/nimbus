@@ -164,6 +164,29 @@ export class ScrawlService {
   }
 
   /**
+   * Get standard parameters that are automatically added to every script execution
+   * @returns Object with worldSeason and worldDaytime parameters
+   */
+  private getStandardParameters(): Record<string, any> {
+    const worldInfo = this.appContext.worldInfo;
+    const environmentService = this.appContext.services.environment;
+
+    const params: Record<string, any> = {};
+
+    // Add worldSeason from WorldInfo
+    if (worldInfo?.seasonStatus) {
+      params.worldSeason = worldInfo.seasonStatus;
+    }
+
+    // Add worldDaytime from EnvironmentService
+    if (environmentService) {
+      params.worldDaytime = environmentService.getWorldDayTimeSection();
+    }
+
+    return params;
+  }
+
+  /**
    * Execute a script action definition
    * @param action Script action definition
    * @param context Initial execution context
@@ -204,9 +227,13 @@ export class ScrawlService {
       // Check if context specifies isLocal (from EffectTriggerHandler for remote effects)
       const isLocal = (context as any)?.isLocal ?? true; // Default to true for local
 
+      // Add standard parameters (worldSeason, worldDaytime)
+      const standardParams = this.getStandardParameters();
+
       const executionContext: Partial<ScrawlExecContext> = {
         isLocal, // Use from context if provided (remote: false), otherwise default to true (local)
         vars: {
+          ...standardParams,
           ...(context as any)?.vars,
           ...(action.parameters || {}),
         },
@@ -275,13 +302,23 @@ export class ScrawlService {
         throw new Error(`Script not found: ${scriptIdOrObj}`);
       }
 
+      // Add standard parameters to context
+      const standardParams = this.getStandardParameters();
+      const enrichedContext: Partial<ScrawlExecContext> = {
+        ...context,
+        vars: {
+          ...standardParams,
+          ...(context?.vars || {}),
+        },
+      };
+
       // Create executor
       const executor = new ScrawlExecutor(
         this.effectFactory,
         this.scriptLibrary,
         this.appContext,
         script,
-        context || {}
+        enrichedContext
       );
 
       // Generate executor ID

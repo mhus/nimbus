@@ -753,15 +753,46 @@ doSetStackModifier('sunPosition','default',270, 0.1, 50);
 - sunLigthIntensityMultiplier in SunService
 - ambientLightIntensityMultiplier in SunService
 
-[ ] In EnvironmentService soll ein Handle auf einen ModifierStack Element fuer AmbienteAudio geben
+[?] In EnvironmentService soll ein Handle auf einen ModifierStack Element fuer AmbienteAudio geben
 - dieser kann per command gesetzt werden/geloescht (leer string) werden
 - EnvironmentAmbienteAudio(audioFile)
 
-[ ] Wenn diw WorldInfo neu geladen wird, wird geprueft ob sich die season / seasonProgress geandert hat (gibt es schon) und
+[?] Wenn diw WorldInfo neu geladen wird, wird geprueft ob sich die season / seasonProgress geandert hat (gibt es schon) und
 ggf die chunks neu gerendert (gibt es schon).
 Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript gestartet werden das die season aendert.
   - script name: season_winter, season_spring, season_summer, season_autumn
 
-[ ] Wenn im ScawlService ein neues script gestartet wird, sollen immer die folgenden standart parameter gesetzt sein:
+[?] Wenn im ScawlService ein neues script gestartet wird, sollen immer die folgenden standart parameter gesetzt sein:
 - wordlSeason - aus WorldInfo
 - worldDaytime - aus EnvironmentService
+```text
+1. ✅ EnvironmentAmbientAudio Command erstellt
+
+  Neue Datei: packages/engine/src/commands/EnvironmentAmbientAudioCommand.ts
+  - Command zum Setzen/Löschen der Environment-Ambient-Audio
+  - Nutzt die bereits existierende setEnvironmentAmbientAudio() Methode im EnvironmentService
+  - Priority 50 (Environment-Level)
+  - Registriert in NimbusClient.ts:289
+
+  Verwendung:
+  /environmentAmbientAudio audio/music/ambient1.ogg
+  /environmentAmbientAudio ""  // zum Löschen
+
+  2. ✅ Automatischer Season-Script-Start bei WorldInfo-Änderung
+
+  Geänderte Datei: packages/engine/src/services/ConfigService.ts:219-230
+  - Wenn die Season in WorldInfo sich ändert, wird automatisch das entsprechende Season-Script gestartet
+  - Script-Namen: season_winter, season_spring, season_summer, season_autumn
+  - Wird nach dem Chunk-Redraw ausgeführt
+
+  3. ✅ Standard-Parameter für alle ScrawlService-Scripts
+
+  Geänderte Datei: packages/engine/src/scrawl/ScrawlService.ts
+  - Neue Methode getStandardParameters() (Zeile 170-187)
+  - Automatisch eingefügte Parameter bei jedem Script-Start:
+    - worldSeason - aus WorldInfo.seasonStatus
+    - worldDaytime - aus EnvironmentService.getWorldDayTimeSection()
+  - Angepasste Methoden:
+    - executeAction() (Zeile 207-208)
+    - executeScript() (Zeile 282-290)
+```

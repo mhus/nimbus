@@ -215,6 +215,19 @@ export class ConfigService {
         const result = chunkService.recalculateAndRedrawAll();
         logger.info('Modifiers recalculated and chunks redrawn', result);
       }
+
+      // If season changed, start corresponding season script
+      if (seasonStatusChanged && newWorldInfo.seasonStatus) {
+        const environmentService = this.appContext.services.environment;
+        if (environmentService) {
+          const seasonScriptName = `season_${newWorldInfo.seasonStatus.toLowerCase()}`;
+          logger.info('Starting season script', {
+            seasonStatus: newWorldInfo.seasonStatus,
+            scriptName: seasonScriptName
+          });
+          environmentService.startEnvironmentScript(seasonScriptName);
+        }
+      }
     }
 
     return newWorldInfo;
