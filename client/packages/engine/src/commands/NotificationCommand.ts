@@ -7,9 +7,11 @@
  */
 
 import { CommandHandler } from './CommandHandler';
-import { toNumber } from '@nimbus/shared';
+import {  toNumber , getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NotificationType } from '../types/Notification';
+
+const logger = getLogger('NotificationCommand');
 
 /**
  * Notification command - Creates notifications

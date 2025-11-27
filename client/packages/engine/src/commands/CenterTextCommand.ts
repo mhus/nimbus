@@ -3,6 +3,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('CenterTextCommand');
 import type { AppContext } from '../AppContext';
 
 /**

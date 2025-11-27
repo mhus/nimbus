@@ -3,9 +3,11 @@
  */
 
 import { CommandHandler } from '../CommandHandler';
-import { toNumber } from '@nimbus/shared';
+import {  toNumber , getLogger } from '@nimbus/shared';
 import type { AppContext } from '../../AppContext';
 import { Modifier, AnimationModifier, AnimationStack } from '../../services/ModifierService';
+
+const logger = getLogger('SetStackModifierCommand');
 
 /**
  * Global modifier registry to track named modifiers across commands

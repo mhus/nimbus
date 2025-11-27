@@ -6,6 +6,9 @@
  */
 
 import type { ModifierService } from './ModifierService';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ModifierService.example');
 import type { EnvironmentService } from './EnvironmentService';
 
 /**

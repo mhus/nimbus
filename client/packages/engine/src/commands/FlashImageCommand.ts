@@ -3,8 +3,10 @@
  */
 
 import { CommandHandler } from './CommandHandler';
-import { toNumber } from '@nimbus/shared';
+import {  toNumber , getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+
+const logger = getLogger('FlashImageCommand');
 
 /**
  * Flash image command - Displays an animated image flash

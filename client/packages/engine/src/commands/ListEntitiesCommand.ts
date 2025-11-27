@@ -5,6 +5,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ListEntitiesCommand');
 import type { AppContext } from '../AppContext';
 
 /**

@@ -5,9 +5,11 @@
  */
 
 import { Vector3 } from '@babylonjs/core';
-import { toNumber } from '@nimbus/shared';
+import {  toNumber , getLogger } from '@nimbus/shared';
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+
+const logger = getLogger('TeleportCommand');
 
 /**
  * Teleport command - Teleports player to coordinates

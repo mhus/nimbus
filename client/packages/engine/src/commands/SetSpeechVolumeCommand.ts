@@ -4,6 +4,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SetSpeechVolumeCommand');
 
 /**
  * Set speech volume command

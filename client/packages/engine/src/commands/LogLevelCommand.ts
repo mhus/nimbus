@@ -3,7 +3,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
-import { LoggerFactory, LogLevel } from '@nimbus/shared';
+import { LoggerFactory, LogLevel, getLogger } from '@nimbus/shared';
+
+const logger = getLogger('LogLevelCommand');
 
 /**
  * LogLevel command - Controls logging verbosity

@@ -8,6 +8,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('PlayerPositionInfoCommand');
 import type { AppContext } from '../AppContext';
 import { worldToChunk, getChunkKey } from '../utils/ChunkUtils';
 

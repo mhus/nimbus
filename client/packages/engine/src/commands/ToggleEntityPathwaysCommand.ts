@@ -7,6 +7,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ToggleEntityPathwaysCommand');
 import type { AppContext } from '../AppContext';
 
 /**

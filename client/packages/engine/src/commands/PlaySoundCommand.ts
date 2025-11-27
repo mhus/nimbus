@@ -4,7 +4,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
-import { toBoolean, toNumber } from '@nimbus/shared';
+import {  toBoolean, toNumber , getLogger } from '@nimbus/shared';
+
+const logger = getLogger('PlaySoundCommand');
 
 /**
  * Play sound command

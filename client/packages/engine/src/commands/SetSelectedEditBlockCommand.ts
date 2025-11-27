@@ -7,8 +7,10 @@
  */
 
 import { CommandHandler } from './CommandHandler';
-import { toNumber } from '@nimbus/shared';
+import { toNumber, getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+
+const logger = getLogger('SetSelectedEditBlockCommand');
 
 /**
  * SetSelectedEditBlock command - Sets or clears the selected edit block

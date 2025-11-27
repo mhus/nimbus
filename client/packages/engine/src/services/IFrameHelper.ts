@@ -22,7 +22,9 @@
  * ```
  */
 
-import { IFrameMessageType, ModalSizePreset } from '@nimbus/shared';
+import {  IFrameMessageType, ModalSizePreset , getLogger } from '@nimbus/shared';
+
+const logger = getLogger('IFrameHelper');
 
 /**
  * IFrameHelper class

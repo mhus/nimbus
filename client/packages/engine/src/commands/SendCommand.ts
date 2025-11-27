@@ -6,6 +6,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SendCommand');
 import type { CommandService } from '../services/CommandService';
 
 /**

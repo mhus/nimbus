@@ -10,6 +10,9 @@
  */
 
 import { CommandHandler } from './CommandHandler';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SelectedBlockInfoCommand');
 import type { AppContext } from '../AppContext';
 
 /**

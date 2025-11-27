@@ -9,7 +9,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
-import { createEntity, createEntityPathway, toNumber } from '@nimbus/shared';
+import { createEntity, createEntityPathway, toNumber, getLogger } from '@nimbus/shared';
+
+const logger = getLogger('SpawnEntityCommand');
 
 /**
  * SpawnEntity command - Spawn a test entity in the world

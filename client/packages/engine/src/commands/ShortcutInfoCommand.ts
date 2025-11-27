@@ -11,6 +11,9 @@
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('ShortcutInfoCommand');
 
 /**
  * ShortcutInfo command - Shows active shortcut details

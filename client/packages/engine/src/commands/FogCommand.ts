@@ -3,8 +3,10 @@
  */
 
 import { CommandHandler } from './CommandHandler';
-import { toNumber } from '@nimbus/shared';
+import {  toNumber , getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+
+const logger = getLogger('FogCommand');
 
 /**
  * Fog command - Set fog camera effect intensity
