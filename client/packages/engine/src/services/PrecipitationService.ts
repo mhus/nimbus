@@ -59,6 +59,10 @@ export class PrecipitationService {
   // Lightning system
   private lightningParticleSystems: ParticleSystem[] = [];
 
+  // Thunder sound system
+  private thunderSoundPaths: string[] = [];
+  private lastThunderSoundTime: number = 0;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -298,6 +302,60 @@ export class PrecipitationService {
   }
 
   /**
+   * Register thunder sound paths
+   * @param soundPaths Array of sound paths to use for thunder (empty array clears the list)
+   */
+  public registerFlashSounds(soundPaths: string[]): void {
+    this.thunderSoundPaths = soundPaths;
+    logger.info('Thunder sounds registered', { count: soundPaths.length, paths: soundPaths });
+  }
+
+  /**
+   * Play thunder sound at flash position
+   * Called directly when a flash is created (no event system needed)
+   * @param position Flash position in world coordinates
+   * @param intensity Flash intensity (affects sound emission range)
+   */
+  private playThunder(position: Vector3, intensity: number): void {
+    // Check if sounds are registered
+    if (this.thunderSoundPaths.length === 0) {
+      return; // No sounds to play
+    }
+
+    // Throttle: max one sound every 500ms
+    const now = Date.now();
+    if (now - this.lastThunderSoundTime < 500) {
+      return; // Too soon
+    }
+
+    this.lastThunderSoundTime = now;
+
+    // Select random sound from list
+    const randomIndex = Math.floor(Math.random() * this.thunderSoundPaths.length);
+    const soundPath = this.thunderSoundPaths[randomIndex];
+
+    // Calculate emission range: 20 + intensity * 2 (max 64)
+    const emissionRange = Math.min(64, 20 + intensity * 2);
+
+    // Get audio service
+    const audioService = this.appContext.services.audio;
+    if (!audioService) {
+      logger.warn('AudioService not available for thunder sound');
+      return;
+    }
+
+    // Play sound at position
+    audioService.playSoundAtPosition(soundPath, position.x, position.y, position.z, 1.0);
+
+    logger.info('Thunder sound played', {
+      soundPath,
+      position: { x: position.x, y: position.y, z: position.z },
+      intensity,
+      emissionRange,
+    });
+  }
+
+  /**
    * Create one lightning group (5-30 flashes at same location)
    * Uses camera-relative coordinates via cameraEnvironmentRoot
    */
@@ -321,6 +379,19 @@ export class PrecipitationService {
     // Random number of flashes in this group (5-30)
     const flashCount = 5 + Math.floor(Math.random() * 26);
 
+    // Calculate intensity based on flash count and brightness (5-20 range)
+    const intensity = 5 + (flashCount / 30) * 15;
+
+    // Calculate absolute world position for thunder sound (camera position + relative offset)
+    const thunderPosition = new Vector3(
+      cameraPos.x + lightningX,
+      cameraPos.y + startY,
+      cameraPos.z + lightningZ
+    );
+
+    // Play thunder sound at flash position
+    this.playThunder(thunderPosition, intensity);
+
     // First flash is brightest
     this.createLightningFlash(path, 0.2, 1.0, 0);
 
@@ -338,6 +409,7 @@ export class PrecipitationService {
       position: { x: lightningX, z: lightningZ },
       flashCount,
       pathSegments: path.length - 1,
+      intensity,
     });
   }
 

@@ -487,7 +487,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   cloudsAnimationStop           (stoppt alle Jobs)
 ```
 
-[ ] Erstelle in PrecipitationService - blitz sounds 
+[?] Erstelle in PrecipitationService - blitz sounds 
 - Einem methode mit der im laufenden Betrieb die Intensitaet des Niederschlags angepasst werden kann ohne das der Niederschlag komplett neu gestartet werden muss (nur wenn auch lauft)
 - Blitze sollen ein Event emittieren wenn ein Blitz erzeugt wurde, damit andere systeme darauf reagieren koennen (z.b. sound)
   - coordinaten des blitzes
@@ -499,6 +499,51 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - wenn ein event empfangen wird, wird ein zufaelliger sound aus der liste abgespielt an der position des blitzes (ist die liste leer wird nichts abgespielt)
   - es soll maximal alle 500ms ein sound abgespielt werden (damit es nicht zu viele sounds gibt)
   - Nutze den AudioService um die sounds abzuspielen, an der Position des blitzes, die emmisions weite soll 20 + intensity * 2 (intensity ca. 5 -20?, max emmision weite soll ca. 64 sein) einheiten sein
+--> Da emitter und listener im gleichen Service sind, kann auf das senden von Events verzichtet werden, die Methode playThunder() kann direkt aufgerufen werden.
+```text
+1. Intensitätsanpassung zur Laufzeit ✓
+
+  Die Methode setIntensity() existiert bereits und ermöglicht die Anpassung der Niederschlagsintensität im laufenden Betrieb ohne Neustart des Partikelsystems (packages/engine/src/services/PrecipitationService.ts:100-110).
+
+  2. Thunder Sound System ✓
+
+  Neue Properties:
+  - thunderSoundPaths: string[] - Statische Liste der registrierten Blitz-Sounds
+  - lastThunderSoundTime: number - Throttling-Zeitstempel
+
+  Neue Methoden:
+
+  registerFlashSounds(soundPaths: string[])
+
+  - Registriert eine Liste von Thunder-Sound-Pfaden
+  - Leere Liste löscht die registrierten Sounds
+  - Logging der Änderungen
+
+  playThunder(position: Vector3, intensity: number) (private)
+
+  - Spielt zufälligen Sound aus der registrierten Liste
+  - Throttling: Max. alle 500ms ein Sound
+  - Emission Range: 20 + intensity * 2 (max 64)
+  - Nutzt AudioService.playSoundAtPosition()
+  - Wird direkt in createLightningGroup() aufgerufen (keine Events nötig)
+
+  3. Integration in Lightning System ✓
+
+  In createLightningGroup():
+  - Berechnung der Intensity basierend auf flashCount (5-20 Range)
+  - Konvertierung der relativen Position in absolute Weltkoordinaten
+  - Direkter Aufruf von playThunder() bei Flash-Erstellung
+
+  4. Engine Command ✓
+
+  Neues Command: RegisterFlashSoundsCommand
+  - Datei: packages/engine/src/commands/RegisterFlashSoundsCommand.ts
+  - Usage: /registerFlashSounds [path1] [path2] ...
+  - Beispiele:
+  /registerFlashSounds audio/weather/thunder1.ogg audio/weather/thunder2.ogg
+  /registerFlashSounds (löscht die Liste)
+  - Registriert in NimbusClient.ts
+```
 
 [ ] Erstelle in SunService einen Parameter automaticSunAdjustment (boolean),default true
 - erstelle ein Command in engine um den parameter zu setzen
