@@ -9,42 +9,50 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "type",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "kind",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "algorithm",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "keyId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "createdAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "owner",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "intent",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -61,42 +69,50 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "userId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "regionId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "display",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "backpack",
         "type" : "Record<string, RegionItemInfo>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "wearing",
         "type" : "Record<number, RegionItemInfo>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "skills",
         "type" : "Record<string, number>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -113,7 +129,8 @@
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -130,27 +147,32 @@
         "name" : "type",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "kind",
         "type" : "'public' | 'private' | 'symmetric' | string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "algorithm",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "key",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -167,22 +189,26 @@
         "name" : "scriptId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "parameters",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "script",
         "type" : "ScrawlScript",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sendToServer",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -199,22 +225,26 @@
         "name" : "kind",
         "type" : "'Play'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ctx",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "receivePlayerDirection",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -224,12 +254,14 @@
         "name" : "kind",
         "type" : "'Wait'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "seconds",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -239,12 +271,14 @@
         "name" : "kind",
         "type" : "'Sequence'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "steps",
         "type" : "ScrawlStep[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -254,12 +288,14 @@
         "name" : "kind",
         "type" : "'Parallel'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "steps",
         "type" : "ScrawlStep[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -269,22 +305,26 @@
         "name" : "kind",
         "type" : "'Repeat'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "times",
         "type" : "number | null",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "untilEvent",
         "type" : "string | null",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "step",
         "type" : "ScrawlStep",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -294,22 +334,26 @@
         "name" : "kind",
         "type" : "'ForEach'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "collection",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "itemVar",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "step",
         "type" : "ScrawlStep",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -319,12 +363,14 @@
         "name" : "kind",
         "type" : "'LodSwitch'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "levels",
         "type" : "Partial<Record<ScrawlLodLevel, ScrawlStep>>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -334,17 +380,20 @@
         "name" : "kind",
         "type" : "'Call'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scriptId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "args",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -354,22 +403,26 @@
         "name" : "kind",
         "type" : "'If'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cond",
         "type" : "ScrawlCondition",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "then",
         "type" : "ScrawlStep",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "else",
         "type" : "ScrawlStep",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -379,17 +432,20 @@
         "name" : "kind",
         "type" : "'EmitEvent'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "payload",
         "type" : "any",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -399,17 +455,20 @@
         "name" : "kind",
         "type" : "'WaitEvent'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "timeout",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -419,17 +478,20 @@
         "name" : "kind",
         "type" : "'SetVar'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "value",
         "type" : "any",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -439,17 +501,20 @@
         "name" : "kind",
         "type" : "'Cmd'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cmd",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "parameters",
         "type" : "any[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -459,22 +524,26 @@
         "name" : "kind",
         "type" : "'While'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "taskId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "step",
         "type" : "ScrawlStep",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "timeout",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -484,22 +553,26 @@
         "name" : "kind",
         "type" : "'Until'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "event",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "step",
         "type" : "ScrawlStep",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "timeout",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -519,17 +592,20 @@
         "name" : "position",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "entityId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "blockId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -539,17 +615,20 @@
         "name" : "actor",
         "type" : "ScrawlSubject",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "patients",
         "type" : "ScrawlSubject[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "vars",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -572,22 +651,26 @@
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "type",
         "type" : "ScrawlParameterType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "default",
         "type" : "any",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -597,17 +680,20 @@
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "step",
         "type" : "ScrawlStep",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -617,37 +703,44 @@
         "name" : "schemaVersion",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "imports",
         "type" : "string[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "parameters",
         "type" : "ScrawlParameterDefinition[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sequences",
         "type" : "Record<string, ScrawlSequence>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "root",
         "type" : "ScrawlStep",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -674,17 +767,20 @@
         "name" : "kind",
         "type" : "'VarEquals'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "value",
         "type" : "any",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -694,12 +790,14 @@
         "name" : "kind",
         "type" : "'VarExists'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -709,12 +807,14 @@
         "name" : "kind",
         "type" : "'Chance'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "p",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -724,12 +824,14 @@
         "name" : "kind",
         "type" : "'HasTargets'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "min",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -739,7 +841,8 @@
         "name" : "kind",
         "type" : "'HasSource'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -749,17 +852,20 @@
         "name" : "kind",
         "type" : "'IsVarTrue'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "defaultValue",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -769,17 +875,20 @@
         "name" : "kind",
         "type" : "'IsVarFalse'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "defaultValue",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -806,17 +915,20 @@
         "name" : "animationName",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "speedMultiplier",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "loop",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -826,37 +938,44 @@
         "name" : "walk",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sprint",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "crouch",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "swim",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "climb",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "fly",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "teleport",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -866,22 +985,26 @@
         "name" : "mass",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "friction",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "restitution",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "drag",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -891,7 +1014,8 @@
         "name" : "audio",
         "type" : "AudioDefinition[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -901,67 +1025,80 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "type",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modelPath",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "positionOffset",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "rotationOffset",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scale",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "maxPitch",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "poseMapping",
         "type" : "Map<ENTITY_POSES, PoseAnimation>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "poseType",
         "type" : "PoseType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modelModifierMapping",
         "type" : "Map<string, string>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "dimensions",
         "type" : "EntityDimensions",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "physicsProperties",
         "type" : "EntityPhysicsProperties",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "audio",
         "type" : "AudioDefinition[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -971,67 +1108,80 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "model",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modelModifier",
         "type" : "Record<string, any>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modifier",
         "type" : "EntityModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "movementType",
         "type" : "MovementType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "controlledBy",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "solid",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "interactive",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "physics",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "clientPhysics",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "notifyOnCollision",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "notifyOnAttentionRange",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1041,22 +1191,26 @@
         "name" : "timestamp",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "target",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "rotation",
         "type" : "Rotation",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pose",
         "type" : "ENTITY_POSES",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1066,47 +1220,56 @@
         "name" : "entityId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "startAt",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "waypoints",
         "type" : "Waypoint[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "isLooping",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "queryAt",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "idlePose",
         "type" : "ENTITY_POSES",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "physicsEnabled",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "velocity",
         "type" : "Vector3",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "grounded",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1137,32 +1300,38 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "itemType",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modifier",
         "type" : "Partial<ItemModifier>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "parameters",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1179,42 +1348,50 @@
         "name" : "cx",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cz",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "size",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "blocks",
         "type" : "Block[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "i",
         "type" : "ItemBlockRef[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "heightData",
         "type" : "HeightData[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "status",
         "type" : "Status[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "backdrop",
         "type" : "{\n     \n    n?: Array<Backdrop>;\n     \n    e?: Array<Backdrop>;\n     \n    s?: Array<Backdrop>;\n     \n    w?: Array<Backdrop>;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1240,17 +1417,20 @@
         "name" : "playerId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "oldState",
         "type" : "PlayerMovementState",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "newState",
         "type" : "PlayerMovementState",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1270,17 +1450,20 @@
         "name" : "id",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "displayName",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "groupId",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1297,12 +1480,14 @@
         "name" : "a",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "b",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1319,17 +1504,20 @@
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "p",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "r",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1346,42 +1534,50 @@
         "name" : "id",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "type",
         "type" : "AnimationEffectType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "positions",
         "type" : "PositionRef[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "params",
         "type" : "{\n     \n    from?: any;\n    to?: any;\n    easing?: EasingType;\n\n     \n    speed?: number;\n    projectileModel?: string;\n    trajectory?: 'linear' | 'arc' | 'homing';\n\n     \n    radius?: number;\n    explosionIntensity?: number;\n\n     \n    color?: string;\n    lightIntensity?: number;\n\n     \n    soundPath?: string;\n    volume?: number;\n\n     \n    [key: string]: any;\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "startTime",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "duration",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "endTime",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "blocking",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1391,42 +1587,50 @@
         "name" : "id",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "duration",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effects",
         "type" : "AnimationEffect[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "placeholders",
         "type" : "string[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "loop",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "repeat",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "source",
         "type" : "{\n    type: 'server' | 'client';\n    playerId?: string;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1436,17 +1640,20 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "placeholders",
         "type" : "string[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1456,22 +1663,26 @@
         "name" : "templateId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "animation",
         "type" : "AnimationData",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "createdAt",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "triggeredBy",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1497,32 +1708,38 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "position",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "texture",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scaleX",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scaleY",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "offset",
         "type" : "[number, number, number]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1539,7 +1756,8 @@
         "name" : "value",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1549,12 +1767,14 @@
         "name" : "block",
         "type" : "Block",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentModifier",
         "type" : "BlockModifier",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1564,42 +1784,50 @@
         "name" : "position",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "blockTypeId",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "offsets",
         "type" : "Offsets",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "faceVisibility",
         "type" : "FaceVisibility",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "status",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modifiers",
         "type" : "Record<number, BlockModifier>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "metadata",
         "type" : "BlockMetadata",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1622,17 +1850,20 @@
         "name" : "itemId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "texture",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1688,47 +1919,56 @@
         "name" : "path",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "uvMapping",
         "type" : "UVMapping",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "samplingMode",
         "type" : "SamplingMode",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "transparencyMode",
         "type" : "TransparencyMode",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "opacity",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effect",
         "type" : "BlockEffect",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectParameters",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "color",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "backFaceCulling",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1738,62 +1978,74 @@
         "name" : "shape",
         "type" : "Shape",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effect",
         "type" : "BlockEffect",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectParameters",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "offsets",
         "type" : "number[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scalingX",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scalingY",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scalingZ",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "rotationX",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "rotationY",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "path",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "textures",
         "type" : "Record<number, TextureDefinition | string>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "faceVisibility",
         "type" : "FaceVisibility",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1803,22 +2055,26 @@
         "name" : "leafiness",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "stability",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "leverUp",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "leverDown",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1828,12 +2084,14 @@
         "name" : "color",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "strength",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1843,57 +2101,68 @@
         "name" : "solid",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "resistance",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "climbable",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "autoClimbable",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "autoMove",
         "type" : "Vector3",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "autoOrientationY",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "interactive",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "collisionEvent",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "passableFrom",
         "type" : "Direction",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "autoJump",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1903,17 +2172,20 @@
         "name" : "intensity",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "color",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "wind",
         "type" : "any",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1923,12 +2195,14 @@
         "name" : "forceEgoView",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sky",
         "type" : "SkyEffect",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1938,32 +2212,38 @@
         "name" : "type",
         "type" : "AudioType | string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "path",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "volume",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "loop",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "enabled",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "maxDistance",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -1973,32 +2253,38 @@
         "name" : "visibility",
         "type" : "VisibilityModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "wind",
         "type" : "WindModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "illumination",
         "type" : "IlluminationModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "physics",
         "type" : "PhysicsModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effects",
         "type" : "EffectsModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "audio",
         "type" : "AudioModifier",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2048,22 +2334,26 @@
         "name" : "type",
         "type" : "ShortcutActionType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "itemId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2089,52 +2379,62 @@
         "name" : "type",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "current",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "max",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "extended",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "extendExpiry",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "regenRate",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "degenRate",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "color",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "order",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2151,17 +2451,20 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2178,62 +2481,74 @@
         "name" : "type",
         "type" : "'none' | 'texture' | 'solid' | 'fog' | 'fadeout'",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "id",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "left",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "width",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "yBase",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "height",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "depth",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "texture",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "noiseTexture",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "color",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "alpha",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "alphaMode",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2243,17 +2558,20 @@
         "name" : "cx",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cz",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "directions",
         "type" : "BackdropDirection[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2273,62 +2591,74 @@
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "model",
         "type" : "EntityModel",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "entity",
         "type" : "Entity",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "visible",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "meshes",
         "type" : "any[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentPosition",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentRotation",
         "type" : "Rotation",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentWaypointIndex",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentPose",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentWaypoints",
         "type" : "Waypoint[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "lastAccess",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "lastStepTime",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2345,12 +2675,14 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2360,32 +2692,38 @@
         "name" : "minStepDistance",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "maxStepDistance",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "waypointsPerPath",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "minIdleDuration",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "maxIdleDuration",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pathwayInterval",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2395,62 +2733,74 @@
         "name" : "entityId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "entityModelId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "initialPosition",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "initialRotation",
         "type" : "Rotation",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "middlePoint",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "radius",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "speed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "behaviorModel",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "behaviorConfig",
         "type" : "BehaviorConfig",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "currentPathway",
         "type" : "EntityPathway",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "chunks",
         "type" : "Vector2[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "physicsState",
         "type" : "{\n     \n    position: Vector3;\n\n     \n    velocity: Vector3;\n\n     \n    rotation: Rotation;\n\n     \n    grounded: boolean;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2467,22 +2817,26 @@
         "name" : "id",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "initialStatus",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modifiers",
         "type" : "Record<number, BlockModifier>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2512,27 +2866,32 @@
         "name" : "type",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "modifier",
         "type" : "ItemModifier",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "parameters",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2549,12 +2908,14 @@
         "name" : "n",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "p",
         "type" : "{\n     \n    intensity?: number;\n\n     \n    color?: string;\n\n     \n    [key: string]: any;\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2578,17 +2939,20 @@
         "name" : "a",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "b",
         "type" : "Vector3",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "e",
         "type" : "EffectData[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2627,52 +2991,62 @@
         "name" : "texture",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scaleX",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "scaleY",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "offset",
         "type" : "[number, number, number]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "color",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pose",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "onUseEffect",
         "type" : "ScriptActionDefinition",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "exclusive",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "actionScript",
         "type" : "ScriptActionDefinition",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "actionTargeting",
         "type" : "ActionTargetingMode",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2692,97 +3066,116 @@
         "name" : "worldId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "start",
         "type" : "Vector3",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "stop",
         "type" : "Vector3",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "chunkSize",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "assetPath",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "assetPort",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "worlRegion",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "status",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "seasonStatus",
         "type" : "SeasonStatus",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "seasonProgress",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "createdAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "updatedAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "owner",
         "type" : "{\n    user: string;\n    displayName: string;\n    email?: string;\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "settings",
         "type" : "{\n    maxPlayers: number;\n    allowGuests: boolean;\n    pvpEnabled: boolean;\n    pingInterval: number;\n\n     \n     \n    deadAmbientAudio?: string;\n\n     \n    swimStepAudio?: string;\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "license",
         "type" : "{\n    type: string;\n    expiresAt?: string;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "startArea",
         "type" : "{\n    x: number;\n    y: number;\n    z: number;\n    radius: number;\n    rotation: number;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "editorUrl",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2802,12 +3195,14 @@
         "name" : "block",
         "type" : "{\n    position: { x: number; y: number; z: number };\n    metadata?: {\n      id?: string;\n      groupId?: number;\n      [key: string]: any;\n    };\n    [key: string]: any;\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "blockType",
         "type" : "any",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2817,17 +3212,20 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2837,12 +3235,14 @@
         "name" : "mode",
         "type" : "TargetingMode",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "target",
         "type" : "ResolvedTarget",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2852,27 +3252,32 @@
         "name" : "mode",
         "type" : "TargetingMode",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "targetType",
         "type" : "'entity' | 'block' | 'ground' | 'none'",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "entityId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "blockPosition",
         "type" : "{ x: number; y: number; z: number }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "position",
         "type" : "{ x: number; y: number; z: number }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -2895,57 +3300,68 @@
         "name" : "dimensions",
         "type" : "{\n    height: number;     \n    width: number;      \n    footprint: number;  \n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseMoveSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveMoveSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseJumpSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveJumpSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "eyeHeight",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseTurnSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveTurnSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "selectionRadius",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "stealthRange",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "distanceNotifyReduction",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2955,132 +3371,158 @@
         "name" : "playerId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "displayName",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "stateValues",
         "type" : "Record<MovementStateKey, MovementStateValues>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseWalkSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseRunSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseUnderwaterSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseCrawlSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseRidingSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseJumpSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveWalkSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveRunSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveUnderwaterSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveCrawlSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveRidingSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveJumpSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "eyeHeight",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "dimensions",
         "type" : "{\n    walk: { height: number; width: number; footprint: number };\n    sprint: { height: number; width: number; footprint: number };\n    crouch: { height: number; width: number; footprint: number };\n    swim: { height: number; width: number; footprint: number };\n    climb: { height: number; width: number; footprint: number };\n    fly: { height: number; width: number; footprint: number };\n    teleport: { height: number; width: number; footprint: number };\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "stealthRange",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "distanceNotifyReductionWalk",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "distanceNotifyReductionCrouch",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "selectionRadius",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseTurnSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveTurnSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "baseUnderwaterTurnSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effectiveUnderwaterTurnSpeed",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "thirdPersonModelId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3124,22 +3566,26 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "animation",
         "type" : "AnimationData",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3159,17 +3605,20 @@
         "name" : "cmd",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "args",
         "type" : "string[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "oneway",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3179,7 +3628,8 @@
         "name" : "message",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3189,12 +3639,14 @@
         "name" : "rc",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "message",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3220,12 +3672,14 @@
         "name" : "cmd",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "args",
         "type" : "string[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3235,27 +3689,32 @@
         "name" : "cmd",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "args",
         "type" : "string[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "oneway",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cmds",
         "type" : "SingleServerCommandData[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "parallel",
         "type" : "boolean",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3265,12 +3724,14 @@
         "name" : "rc",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "message",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3293,32 +3754,38 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "s",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "aa",
         "type" : "AnimationData[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ab",
         "type" : "AnimationData[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3328,37 +3795,44 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "id",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "gId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ac",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pa",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3384,22 +3858,26 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "g",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3409,7 +3887,8 @@
         "name" : "success",
         "type" : "true",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3419,17 +3898,20 @@
         "name" : "success",
         "type" : "false",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "errorCode",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "errorMessage",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3452,12 +3934,14 @@
         "name" : "cx",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cz",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3467,37 +3951,44 @@
         "name" : "cx",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "cz",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "b",
         "type" : "Block[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "i",
         "type" : "ItemBlockRef[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "h",
         "type" : "HeightData[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "a",
         "type" : "AreaData[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "backdrop",
         "type" : "{\n     \n    n?: Array<Backdrop>;\n     \n    e?: Array<Backdrop>;\n     \n    s?: Array<Backdrop>;\n     \n    w?: Array<Backdrop>;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3507,7 +3998,8 @@
         "name" : "c",
         "type" : "ChunkCoordinate[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3517,7 +4009,8 @@
         "name" : "c",
         "type" : "ChunkCoordinate[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3543,22 +4036,26 @@
         "name" : "effectId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "entityId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "chunks",
         "type" : "ChunkCoordinate[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "effect",
         "type" : "ScriptActionDefinition",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3581,37 +4078,44 @@
         "name" : "pl",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "p",
         "type" : "Vector3",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "r",
         "type" : "Rotation",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "v",
         "type" : "Vector3",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "po",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ts",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ta",
         "type" : "{\n    x: number;\n    y: number;\n    z: number;\n     \n    ts: number;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3621,22 +4125,26 @@
         "name" : "entityId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ts",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "ac",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pa",
         "type" : "Record<string, any>",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3662,7 +4170,8 @@
         "name" : "s",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3682,7 +4191,8 @@
         "name" : "cTs",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3692,12 +4202,14 @@
         "name" : "cTs",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sTs",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3707,7 +4219,8 @@
         "name" : "i",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3717,7 +4230,8 @@
         "name" : "r",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3741,27 +4255,32 @@
         "name" : "effectId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "paramName",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "value",
         "type" : "any",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "chunks",
         "type" : "ChunkCoordinate[]",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "targeting",
         "type" : "SerializableTargetingContext",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3784,12 +4303,14 @@
         "name" : "p",
         "type" : "{\n    x: number;\n    y: number;\n    z: number;\n  }",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "r",
         "type" : "Rotation",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3799,12 +4320,14 @@
         "name" : "p",
         "type" : "{\n    x: number;\n    y: number;\n    z: number;\n  }",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "r",
         "type" : "Rotation",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3827,32 +4350,38 @@
         "name" : "username",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "password",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "token",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "worldId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "clientType",
         "type" : "ClientType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sessionId",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3862,22 +4391,26 @@
         "name" : "success",
         "type" : "true",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "userId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "displayName",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "sessionId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3887,17 +4420,20 @@
         "name" : "success",
         "type" : "false",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "errorCode",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "errorMessage",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3933,22 +4469,26 @@
         "name" : "i",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "r",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "t",
         "type" : "MessageType",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "d",
         "type" : "T",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3958,7 +4498,8 @@
         "name" : "i",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -3968,7 +4509,8 @@
         "name" : "r",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3992,12 +4534,14 @@
         "name" : "itemIds",
         "type" : "Record<string, string>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "wearingItemIds",
         "type" : "Record<WEARABLE_SLOT, string>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4007,17 +4551,20 @@
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "inputController",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "inputMappings",
         "type" : "Record<string, string>",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4027,22 +4574,26 @@
         "name" : "worldInfo",
         "type" : "WorldInfo",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "playerInfo",
         "type" : "PlayerInfo",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "playerBackpack",
         "type" : "PlayerBackpack",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "settings",
         "type" : "Settings",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4076,17 +4627,20 @@
         "name" : "user",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "displayName",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "email",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4096,17 +4650,20 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4116,22 +4673,26 @@
         "name" : "maxPlayers",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "allowGuests",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pvpEnabled",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "pingInterval",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4141,32 +4702,38 @@
         "name" : "worldId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "owner",
         "type" : "UserDTO",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "createdAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "updatedAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4176,67 +4743,80 @@
         "name" : "worldId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "description",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "start",
         "type" : "Position3D",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "stop",
         "type" : "Position3D",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "chunkSize",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "assetPath",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "assetPort",
         "type" : "number",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "worldGroupId",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "createdAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "updatedAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "owner",
         "type" : "UserDTO",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "settings",
         "type" : "WorldSettingsDTO",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4256,47 +4836,56 @@
         "name" : "x",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "id",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "groups",
         "type" : "string[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "groupNames",
         "type" : "string[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "inheritedGroups",
         "type" : "string[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "inheritedGroupNames",
         "type" : "string[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "displayName",
         "type" : "string",
         "optional" : true,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4323,22 +4912,26 @@
         "name" : "solid",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "opaque",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "transparent",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "material",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4348,72 +4941,86 @@
         "name" : "id",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "name",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "displayName",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "shape",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "texture",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "options",
         "type" : "BlockTypeOptionsDTO",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "hardness",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "miningtime",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "tool",
         "type" : "string",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "unbreakable",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "solid",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "transparent",
         "type" : "boolean",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "windLeafiness",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "windStability",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4423,22 +5030,26 @@
         "name" : "blockTypes",
         "type" : "BlockTypeDTO[]",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "count",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "limit",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       }, {
         "name" : "offset",
         "type" : "number",
         "optional" : false,
-        "visibility" : null
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
