@@ -74,7 +74,7 @@ public class SharedKeyController {
         if (req.getOwner() != null && !req.getOwner().isBlank()) e.setOwner(req.getOwner().trim());
         if (req.getIntent() != null && !req.getIntent().isBlank()) e.setIntent(req.getIntent().trim());
         if ((e.getOwner() == null || e.getIntent() == null) && req.getName() != null) {
-            String[] parts = req.getName().split(":",3);
+            String[] parts = req.getName().split(";",3);
             if (parts.length == 3) {
                 if (e.getOwner() == null) e.setOwner(parts[0]);
                 if (e.getIntent() == null) e.setIntent(parts[1]);

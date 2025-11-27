@@ -50,7 +50,7 @@ public record KeyId(String owner, String intent, String id) {
     }
 
     public String toString() {
-        return owner + ":" + intent + ":" + id;
+        return owner + ";" + intent + ";" + id;
     }
 
     /**

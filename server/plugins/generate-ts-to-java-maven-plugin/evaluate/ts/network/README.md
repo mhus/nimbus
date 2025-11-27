@@ -77,20 +77,20 @@ All messages follow the base structure:
 
 ### Login Flow
 ```
-Client → Server: {"i":"1","t":"login","d":{...}}
-Server → Client: {"r":"1","t":"loginResponse","d":{...}}
+Client → Server: {"i";"1","t";"login","d":{...}}
+Server → Client: {"r";"1","t";"loginResponse","d":{...}}
 ```
 
 ### Ping/Pong
 ```
-Client → Server: {"i":"ping123","t":"p"}
-Server → Client: {"r":"ping123","t":"p"}
+Client → Server: {"i";"ping123","t";"p"}
+Server → Client: {"r";"ping123","t";"p"}
 ```
 
 ### Chunk Loading
 ```
-Client → Server: {"t":"c.r","d":{"c":[{"x":0,"z":0}]}}
-Server → Client: {"t":"c.u","d":[{...chunkData...}]}
+Client → Server: {"t";"c.r","d":{"c":[{"x":0,"z":0}]}}
+Server → Client: {"t";"c.u","d":[{...chunkData...}]}
 ```
 
 ## Connection Management

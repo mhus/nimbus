@@ -39,7 +39,7 @@ public class HashService {
             MessageDigest digest = MessageDigest.getInstance(DEFAULT_HASH_ALGORITHM);
             byte[] hashBytes = digest.digest(text.getBytes(StandardCharsets.UTF_8));
             String hashBase64 = Base64.getEncoder().encodeToString(hashBytes);
-            return DEFAULT_HASH_ALGORITHM + ":" + hashBase64;
+            return DEFAULT_HASH_ALGORITHM + ";" + hashBase64;
         } catch (NoSuchAlgorithmException e) {
             throw new HashException("Failed to hash text: " + e.getMessage(), e);
         }
@@ -62,7 +62,7 @@ public class HashService {
             byte[] hashBytes = digest.digest(text.getBytes(StandardCharsets.UTF_8));
             String hashBase64 = Base64.getEncoder().encodeToString(hashBytes);
             String saltBase64 = Base64.getEncoder().encodeToString(salt.getBytes(StandardCharsets.UTF_8));
-            return DEFAULT_HASH_ALGORITHM + ":" + saltBase64 + ":" + hashBase64;
+            return DEFAULT_HASH_ALGORITHM + ";" + saltBase64 + ";" + hashBase64;
         } catch (NoSuchAlgorithmException e) {
             throw new HashException("Failed to hash text with salt: " + e.getMessage(), e);
         }
@@ -140,7 +140,7 @@ public class HashService {
     // Private helper methods
 
     private HashParts parseHash(String hashString) {
-        String[] parts = hashString.split(":", 3);
+        String[] parts = hashString.split(";", 3);
         if (parts.length == 2) {
             // Format: algorithm:hashBase64 (no salt)
             return new HashParts(parts[0], null, parts[1]);
@@ -151,7 +151,7 @@ public class HashService {
             String salt = new String(Base64.getDecoder().decode(saltBase64), StandardCharsets.UTF_8);
             return new HashParts(parts[0], salt, parts[2]);
         } else {
-            throw new HashException("Invalid hash format. Expected 'algorithm:hashBase64' or 'algorithm:saltBase64:hashBase64'");
+            throw new HashException("Invalid hash format. Expected 'algorithm;hashBase64' or 'algorithm:saltBase64;hashBase64'");
         }
     }
 

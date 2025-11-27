@@ -159,7 +159,7 @@ public class KeyService {
         if (keyId == null) return Optional.empty();
         String trimmed = keyId.trim();
         if (trimmed.isEmpty()) return Optional.empty();
-        String[] parts = trimmed.split(":", 3);
+        String[] parts = trimmed.split(";", 3);
         if (parts.length != 3) return Optional.empty();
         String owner = parts[0].trim();
         String intent = parts[1].trim();

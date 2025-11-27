@@ -29,8 +29,8 @@ class HashServiceTest {
         assertThat(hash).isNotNull();
         assertThat(hash).isNotEmpty();
         // Hash format: algorithm:hashBase64
-        assertThat(hash.split(":")).hasSize(2);
-        assertThat(hash).startsWith("SHA-256:");
+        assertThat(hash.split(";")).hasSize(2);
+        assertThat(hash).startsWith("SHA-256;");
     }
 
     @Test
@@ -55,7 +55,7 @@ class HashServiceTest {
 
         assertThat(hash).isNotNull();
         assertThat(hash).isNotEmpty();
-        assertThat(hash).startsWith("SHA-256:");
+        assertThat(hash).startsWith("SHA-256;");
     }
 
     @Test
@@ -65,7 +65,7 @@ class HashServiceTest {
 
         assertThat(hash).isNotNull();
         assertThat(hash).isNotEmpty();
-        assertThat(hash).startsWith("SHA-256:");
+        assertThat(hash).startsWith("SHA-256;");
     }
 
     // ================================================================
@@ -79,9 +79,9 @@ class HashServiceTest {
         assertThat(hash).isNotNull();
         assertThat(hash).isNotEmpty();
         // Hash format: algorithm:saltBase64:hashBase64
-        assertThat(hash.split(":")).hasSize(3);
+        assertThat(hash.split(";")).hasSize(3);
         String expectedSaltBase64 = java.util.Base64.getEncoder().encodeToString(TEST_SALT.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        assertThat(hash).startsWith("SHA-256:" + expectedSaltBase64 + ":");
+        assertThat(hash).startsWith("SHA-256;" + expectedSaltBase64 + ";");
     }
 
     @Test
@@ -223,7 +223,7 @@ class HashServiceTest {
 
     @Test
     void validate_withSalt_invalidBase64_shouldReturnFalse() {
-        String invalidHash = "SHA-256:" + TEST_SALT + ":invalid!!!base64";
+        String invalidHash = "SHA-256;" + TEST_SALT + ";invalid!!!base64";
         boolean isValid = hashService.validate(TEST_TEXT, TEST_SALT, invalidHash);
 
         assertThat(isValid).isFalse();
@@ -299,7 +299,7 @@ class HashServiceTest {
     @Test
     void hashFormat_withoutSalt_shouldContainAlgorithm() {
         String hash = hashService.hash(TEST_TEXT);
-        String[] parts = hash.split(":");
+        String[] parts = hash.split(";");
 
         assertThat(parts).hasSize(2);
         assertThat(parts[0]).isEqualTo("SHA-256");
@@ -308,7 +308,7 @@ class HashServiceTest {
     @Test
     void hashFormat_withoutSalt_shouldContainBase64Hash() {
         String hash = hashService.hash(TEST_TEXT);
-        String[] parts = hash.split(":");
+        String[] parts = hash.split(";");
 
         assertThat(parts).hasSize(2);
         assertThat(parts[1]).isNotEmpty();
@@ -319,7 +319,7 @@ class HashServiceTest {
     @Test
     void hashFormat_withSalt_shouldContainAlgorithm() {
         String hash = hashService.hash(TEST_TEXT, TEST_SALT);
-        String[] parts = hash.split(":");
+        String[] parts = hash.split(";");
 
         assertThat(parts).hasSize(3);
         assertThat(parts[0]).isEqualTo("SHA-256");
@@ -328,7 +328,7 @@ class HashServiceTest {
     @Test
     void hashFormat_withSalt_shouldContainSalt() {
         String hash = hashService.hash(TEST_TEXT, TEST_SALT);
-        String[] parts = hash.split(":");
+        String[] parts = hash.split(";");
 
         assertThat(parts).hasSize(3);
         // Decode the Base64-encoded salt and compare
@@ -339,7 +339,7 @@ class HashServiceTest {
     @Test
     void hashFormat_withSalt_shouldContainBase64Hash() {
         String hash = hashService.hash(TEST_TEXT, TEST_SALT);
-        String[] parts = hash.split(":");
+        String[] parts = hash.split(";");
 
         assertThat(parts).hasSize(3);
         assertThat(parts[2]).isNotEmpty();

@@ -21,7 +21,7 @@ class WorldRedisMessagingServiceTest {
         RedisMessageListenerContainer container = Mockito.mock(RedisMessageListenerContainer.class);
         WorldRedisMessagingService svc = new WorldRedisMessagingService(template, container);
         AtomicReference<String> received = new AtomicReference<>();
-        svc.subscribe("w1","updates", (topic, msg) -> received.set(topic + ":" + msg));
+        svc.subscribe("w1","updates", (topic, msg) -> received.set(topic + ";" + msg));
         Mockito.verify(container).addMessageListener(any(MessageListener.class), eq(ChannelTopic.of("world:w1:updates")));
         svc.publish("w1","updates","hello");
         Mockito.verify(template).convertAndSend("world:w1:updates", "hello");

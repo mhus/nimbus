@@ -49,7 +49,7 @@ class KeyServiceTest {
     void parseKeyId_valid() {
         SKeyRepository repo = Mockito.mock(SKeyRepository.class);
         KeyService service = new KeyService(repo);
-        Optional<KeyId> id = service.parseKeyId("owner:intent:uuid");
+        Optional<KeyId> id = service.parseKeyId("owner;intent;uuid");
         assertTrue(id.isPresent());
         assertEquals("owner", id.get().owner());
         assertEquals("intent", id.get().intent());
@@ -59,9 +59,9 @@ class KeyServiceTest {
     @Test
     void parseKeyId_invalid() {
         KeyService service = new KeyService(Mockito.mock(SKeyRepository.class));
-        assertTrue(service.parseKeyId(":x:x").isEmpty()); // missing owner
-        assertTrue(service.parseKeyId("x::x").isEmpty()); // missing intent
-        assertTrue(service.parseKeyId("x:x:").isEmpty()); // missing id
+        assertTrue(service.parseKeyId(";x;x").isEmpty()); // missing owner
+        assertTrue(service.parseKeyId("x;;x").isEmpty()); // missing intent
+        assertTrue(service.parseKeyId("x;x;").isEmpty()); // missing id
         assertTrue(service.parseKeyId("no-colon").isEmpty());
         assertTrue(service.parseKeyId(null).isEmpty());
     }

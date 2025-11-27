@@ -50,6 +50,6 @@ public class WorldRedisMessagingService {
     }
 
     private String topic(String worldId, String channel) {
-        return "world:" + worldId + ":" + channel;
+        return "world:" + worldId + ";" + channel;
     }
 }

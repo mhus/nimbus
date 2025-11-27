@@ -111,7 +111,7 @@ public class CipherService {
             String keyIdBase64 = Base64.getEncoder().encodeToString(keyId.getBytes(StandardCharsets.UTF_8));
 
             // Return format: keyIdBase64:algorithm:encryptedDataBase64:ivBase64
-            return keyIdBase64 + ":" + algorithm + ":" + encryptedBase64 + ":" + ivBase64;
+            return keyIdBase64 + ";" + algorithm + ";" + encryptedBase64 + ";" + ivBase64;
 
         } catch (Exception e) {
             throw new CipherException("Failed to encrypt text: " + e.getMessage(), e);
@@ -141,7 +141,7 @@ public class CipherService {
     }
 
     private CipherParts parseCipher(String cipherString) {
-        String[] parts = cipherString.split(":", 4);
+        String[] parts = cipherString.split(";", 4);
         if (parts.length != 4) {
             throw new CipherException("Invalid cipher format. Expected 'keyIdBase64:algorithm:encryptedDataBase64:ivBase64'");
         }

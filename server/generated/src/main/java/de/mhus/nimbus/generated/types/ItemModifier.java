@@ -28,4 +28,6 @@ public class ItemModifier {
     private java.lang.Boolean exclusive;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private de.mhus.nimbus.generated.scrawl.ScriptActionDefinition actionScript;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private ActionTargetingMode actionTargeting;
 }

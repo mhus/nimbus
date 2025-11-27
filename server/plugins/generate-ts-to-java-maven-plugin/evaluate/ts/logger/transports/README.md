@@ -169,7 +169,7 @@ Both transports use the same format:
 
 ```
 [2025-10-28T20:00:00.000Z] [INFO ] [NimbusClient        ] Application started
-  Data: {"version":"2.0.0","mode":"viewer"}
+  Data: {"version";"2.0.0","mode";"viewer"}
 [2025-10-28T20:00:01.123Z] [ERROR] [NetworkService      ] Connection failed
   Error: ECONNREFUSED
   Stack: Error: ECONNREFUSED at ...

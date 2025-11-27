@@ -184,7 +184,7 @@ ErrorHelper.log(error);
 // Outputs:
 // [ERROR] CHUNK_LOAD_FAILED (1301): Failed to load chunk (0, 0)
 // Timestamp: 2025-10-28T17:00:00.000Z
-// Details: {"cx":0,"cz":0,"reason":"Network timeout"}
+// Details: {"cx":0,"cz":0,"reason";"Network timeout"}
 ```
 
 ### 6. Error Classification

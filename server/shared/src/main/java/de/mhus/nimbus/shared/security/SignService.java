@@ -100,7 +100,7 @@ public class SignService {
             byte[] signatureBytes = signature.sign();
             String signatureBase64 = Base64.getEncoder().encodeToString(signatureBytes);
             String keyIdBase64 = Base64.getEncoder().encodeToString(keyId.getBytes(StandardCharsets.UTF_8));
-            return keyIdBase64 + ":" + algorithm + ":" + signatureBase64;
+            return keyIdBase64 + ";" + algorithm + ";" + signatureBase64;
         } catch (Exception e) {
             throw new SignatureException("Failed to sign text with asymmetric key: " + e.getMessage(), e);
         }
@@ -120,7 +120,7 @@ public class SignService {
     }
 
     private SignatureParts parseSignature(String signatureString) {
-        String[] parts = signatureString.split(":", 3);
+        String[] parts = signatureString.split(";", 3);
         if (parts.length != 3) {
             throw new SignatureException("Invalid signature format. Expected 'keyIdBase64:algorithm:signatureBase64'");
         }

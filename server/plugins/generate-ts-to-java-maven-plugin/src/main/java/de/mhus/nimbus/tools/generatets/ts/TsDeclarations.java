@@ -12,6 +12,12 @@ public class TsDeclarations {
         public String type;
         public boolean optional;
         public String visibility; // public | private | protected | undefined
+        /**
+         * Optional in-source directive to force a specific Java type for this field.
+         * Recognized via a line comment placed on the same line or the immediately following line:
+         * //javaType: fully.qualified.Type or SimpleType
+         */
+        public String javaTypeHint;
     }
 
     public static class TsMethodParam {

@@ -115,7 +115,7 @@ public class UUserService {
 
     /**
      * Validates a plain password directly against a provided hash string.
-     * Supports unsalted format algorithm:hashBase64 and salted algorithm:saltBase64:hashBase64.
+     * Supports unsalted format algorithm;hashBase64 and salted algorithm:saltBase64:hashBase64.
      * If salted, the caller should provide the userId as salt for consistency.
      * @param plainPassword raw password
      * @param hash stored hash string (may contain salt)
@@ -124,12 +124,12 @@ public class UUserService {
     public boolean validatePasswordHash(String plainPassword, String hash) {
         if (plainPassword == null || hash == null) return false;
         // Decide salted vs unsalted by number of ':' parts
-        int parts = hash.split(":").length;
+        int parts = hash.split(";").length;
         if (parts == 2) { // algorithm:hash
             return hashService.validate(plainPassword, hash);
         } else if (parts == 3) { // algorithm:salt:hash
             // Extract salt for validation path by re-parsing via HashService; HashService.validate requires clear salt
-            String[] arr = hash.split(":",3);
+            String[] arr = hash.split(";",3);
             String saltBase64 = arr[1];
             String salt = new String(java.util.Base64.getDecoder().decode(saltBase64), java.nio.charset.StandardCharsets.UTF_8);
             return hashService.validate(plainPassword, salt, hash);
@@ -148,11 +148,11 @@ public class UUserService {
      */
     public boolean validatePasswordHash(String userId, String plainPassword, String hash) {
         if (plainPassword == null || hash == null || userId == null) return false;
-        int parts = hash.split(":").length;
+        int parts = hash.split(";").length;
         if (parts == 2) {
             return hashService.validate(plainPassword, hash);
         } else if (parts == 3) {
-            String[] arr = hash.split(":",3);
+            String[] arr = hash.split(";",3);
             String saltBase64 = arr[1];
             String salt = new String(java.util.Base64.getDecoder().decode(saltBase64), java.nio.charset.StandardCharsets.UTF_8);
             if (!userId.equals(salt)) return false;

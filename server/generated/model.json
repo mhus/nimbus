@@ -53,7 +53,7 @@
     "typeAliases" : [ ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionCharacterResponse.ts",
-    "imports" : [ "./RegionItemInfo" ],
+    "imports" : [ "../types/RegionItemInfo" ],
     "interfaces" : [ {
       "name" : "RegionCharacterResponse",
       "extendsList" : [ ],
@@ -2668,12 +2668,20 @@
         "type" : "ScriptActionDefinition",
         "optional" : true,
         "visibility" : null
+      }, {
+        "name" : "actionTargeting",
+        "type" : "ActionTargetingMode",
+        "optional" : true,
+        "visibility" : null
       } ],
       "methods" : [ ]
     } ],
     "enums" : [ ],
     "classes" : [ ],
-    "typeAliases" : [ ]
+    "typeAliases" : [ {
+      "name" : "ActionTargetingMode",
+      "target" : null
+    } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/World.ts",
     "imports" : [ "./Vector3" ],
@@ -2784,6 +2792,99 @@
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/TargetingTypes.ts",
+    "imports" : [ "./ClientEntity" ],
+    "interfaces" : [ {
+      "name" : "ClientBlock",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "block",
+        "type" : "{\n    position: { x: number; y: number; z: number };\n    metadata?: {\n      id?: string;\n      groupId?: number;\n      [key: string]: any;\n    };\n    [key: string]: any;\n  }",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "blockType",
+        "type" : "any",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ClientPosition",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "TargetingContext",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "mode",
+        "type" : "TargetingMode",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "target",
+        "type" : "ResolvedTarget",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "SerializableTargetingContext",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "mode",
+        "type" : "TargetingMode",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "targetType",
+        "type" : "'entity' | 'block' | 'ground' | 'none'",
+        "optional" : false,
+        "visibility" : null
+      }, {
+        "name" : "entityId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "blockPosition",
+        "type" : "{ x: number; y: number; z: number }",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "position",
+        "type" : "{ x: number; y: number; z: number }",
+        "optional" : false,
+        "visibility" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ {
+      "name" : "TargetingMode",
+      "target" : null
+    }, {
+      "name" : "ResolvedTarget",
+      "target" : null
+    } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/PlayerInfo.ts",
     "imports" : [ ],
@@ -3632,7 +3733,7 @@
     "typeAliases" : [ ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/network/messages/EffectParameterUpdateMessage.ts",
-    "imports" : [ "../BaseMessage", "./ChunkMessage" ],
+    "imports" : [ "../BaseMessage", "./ChunkMessage", "../../types/TargetingTypes" ],
     "interfaces" : [ {
       "name" : "EffectParameterUpdateData",
       "extendsList" : [ ],
@@ -3649,11 +3750,16 @@
       }, {
         "name" : "value",
         "type" : "any",
-        "optional" : false,
+        "optional" : true,
         "visibility" : null
       }, {
         "name" : "chunks",
         "type" : "ChunkCoordinate[]",
+        "optional" : true,
+        "visibility" : null
+      }, {
+        "name" : "targeting",
+        "type" : "SerializableTargetingContext",
         "optional" : true,
         "visibility" : null
       } ],
@@ -3944,6 +4050,13 @@
       "name" : "WEARABLE_SLOT",
       "values" : [ "HEAD", "BODY", "LEGS", "FEET", "HANDS", "NECK", "LEFT_RING", "RIGHT_RING", "LEFT_WEAPON_1", "RIGHT_WEAPON_1", "LEFT_WEAPON_2", "RIGHT_WEAPON_2" ]
     } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/configs/index.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ ],
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {

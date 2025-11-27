@@ -30,6 +30,6 @@ public class WorldRedisService {
     }
 
     private String ns(String worldId, String key) {
-        return "world:" + worldId + ":" + key;
+        return "world:" + worldId + ";" + key;
     }
 }

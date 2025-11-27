@@ -93,7 +93,7 @@ class UserServiceIT {
         assertNull(u.getPasswordHash());
         UUser withPwd = userService.setPassword(u.getId(), "secret123");
         assertNotNull(withPwd.getPasswordHash());
-        assertTrue(withPwd.getPasswordHash().contains(":"));
+        assertTrue(withPwd.getPasswordHash().contains(";"));
         assertTrue(userService.validatePassword(u.getId(), "secret123"));
         assertFalse(userService.validatePassword(u.getId(), "wrong"));
     }

@@ -125,7 +125,7 @@ class UserServiceTest {
 
         UUser updated = userService.setPassword("u1", "secret");
         assertNotNull(updated.getPasswordHash());
-        assertTrue(updated.getPasswordHash().startsWith("SHA-256:"));
+        assertTrue(updated.getPasswordHash().startsWith("SHA-256;"));
         assertTrue(updated.getPasswordHash().contains("dTE=:"));
         verify(hashService).hash("secret", "u1");
     }

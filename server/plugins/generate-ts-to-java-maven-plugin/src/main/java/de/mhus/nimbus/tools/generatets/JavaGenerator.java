@@ -44,7 +44,7 @@ public class JavaGenerator {
                     if (i.properties != null) {
                         for (TsDeclarations.TsProperty p : i.properties) {
                             if (p == null || p.name == null) continue;
-                            String propType = p.type;
+                            String propType = (p.javaTypeHint != null && !p.javaTypeHint.isBlank()) ? p.javaTypeHint : p.type;
                             // If this is the well-known inline object property 'backdrop', synthesize a helper class
                             if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
                                 String helperName = i.name + "Backdrop";
@@ -89,7 +89,7 @@ public class JavaGenerator {
                     if (c.properties != null) {
                         for (TsDeclarations.TsProperty p : c.properties) {
                             if (p == null || p.name == null) continue;
-                            String propType = p.type;
+                            String propType = (p.javaTypeHint != null && !p.javaTypeHint.isBlank()) ? p.javaTypeHint : p.type;
                             if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
                                 String helperName = c.name + "Backdrop";
                                 ensureBackdropHelper(jm, helperName, srcPath);
@@ -191,6 +191,22 @@ public class JavaGenerator {
         }
         // Strip readonly or modifiers
         s = s.replaceAll("^readonly\\s+", "").trim();
+
+        // If the incoming type is already a Java primitive hint (e.g. //javaType: int),
+        // respect optional by boxing to the corresponding java.lang wrapper.
+        switch (s) {
+            case "int":
+            case "long":
+            case "double":
+            case "float":
+            case "short":
+            case "byte":
+            case "char":
+            case "boolean":
+                return optional ? boxIfPrimitive(s) : s;
+            default:
+                // continue normal mapping
+        }
         // Unwrap utility types that don't change representation in Java
         if (s.startsWith("Readonly<") && s.endsWith(">")) {
             String inner = s.substring("Readonly<".length(), s.length() - 1).trim();

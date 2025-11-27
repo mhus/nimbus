@@ -43,7 +43,7 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
         if ("ping".equalsIgnoreCase(payload)) {
             session.sendMessage(new TextMessage("pong:" + id));
         } else {
-            session.sendMessage(new TextMessage("echo:" + id + ":" + payload));
+            session.sendMessage(new TextMessage("echo:" + id + ";" + payload));
         }
     }
 

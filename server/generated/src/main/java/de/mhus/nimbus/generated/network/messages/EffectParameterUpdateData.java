@@ -13,7 +13,10 @@ package de.mhus.nimbus.generated.network.messages;
 public class EffectParameterUpdateData {
     private String effectId;
     private String paramName;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Object value;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<ChunkCoordinate> chunks;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private de.mhus.nimbus.generated.types.SerializableTargetingContext targeting;
 }

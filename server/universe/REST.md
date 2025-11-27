@@ -47,7 +47,7 @@ curl -s -X POST \
 ```
 Beispiel, um das Token in die Variable TOKEN zu schreiben (jq):
 ```
-TOKEN=$(curl -s -X POST -H "$CT_JSON" -d '{"username":"alice","password":"SicheresPasswort123!"}' \
+TOKEN=$(curl -s -X POST -H "$CT_JSON" -d '{"username";"alice","password";"SicheresPasswort123!"}' \
   "$HOST/universe/user/auth/login" | jq -r .token)
 AUTH_HEADER="Authorization: Bearer $TOKEN"
 ```
