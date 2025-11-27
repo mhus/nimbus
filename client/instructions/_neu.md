@@ -32,7 +32,7 @@
 
 - Darstellung der shortcuts in der UI fehlt
 
-- Teleport Screen und Musik
+[x] Teleport Screen (und Musik)
 
 - Erlaubte Bewegungsmodi werden vom World-Server vorgegeben (walk, fly, sprint) - free_fly ist im EDITOR immer erlaubt. Unterscheidung free_fly und fly mit collision!
 

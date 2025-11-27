@@ -234,14 +234,13 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
   Die Icons werden links neben dem Text mit einem Rahmen angezeigt, genau wie bei den Shortcut-Icons!
 ```
 
-
 [x] Im NotificationHandler soll ein splash screen angezeigt werden koennen.
 - showSplashScreen(assetPath: string)
 - showSplashScreen(leer) um den splash screen zu entfernen
 - Der splash screen wird als fullscreen bild angezeigt, es wird ein asset pfad uebergeben. Mit NetworkService.getAssetUrl holen.
 - Erstelle ein Command in engine um den splash screen zu steuern.
 
-[ ] Beim Start der engine wird der splash screen angezeigt, das asset kommt aus dem WorldInfo objekt.
+[?] Beim Start der engine wird der splash screen angezeigt, das asset kommt aus dem WorldInfo objekt.
 - worldInfo.splashScreen: string (asset path)
 - Im EngineInitializer wird der splash screen angezeigt, bevor die Welt geladen wird.
 - Im PhysicService, sobald die teleportation abgeschlossen ist, wird der splash screen entfernt.

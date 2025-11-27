@@ -419,6 +419,13 @@ export class PhysicsService {
     this.cancelTeleportation();
     this.physicsEnabled = true;
     logger.debug('Physics re-enabled after teleportation');
+
+    // Remove splash screen after teleportation is complete
+    const notificationService = this.appContext.services.notification;
+    if (notificationService) {
+      notificationService.showSplashScreen('');
+      logger.debug('Splash screen removed after teleportation');
+    }
   }
 
   /**

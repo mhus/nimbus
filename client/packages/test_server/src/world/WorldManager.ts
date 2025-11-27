@@ -296,6 +296,7 @@ export class WorldManager {
       license: info.license,
       startArea: info.startArea,
       assetPort: info.assetPort,
+      splashScreen: info.splashScreen,
     };
 
     const world: WorldInstance = {

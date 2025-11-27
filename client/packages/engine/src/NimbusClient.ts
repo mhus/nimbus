@@ -480,6 +480,29 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const networkService = new NetworkService(appContext);
     appContext.services.network = networkService;
 
+    // Show splash screen if enabled and configured (after worldInfo and NetworkService are loaded)
+    const showSplashScreen = import.meta.env.VITE_SHOW_SPLASH_SCREEN !== 'false';
+    const splashScreenPath = appContext.worldInfo?.splashScreen;
+    logger.debug('Splash screen check', {
+      showSplashScreen,
+      splashScreenPath,
+      envValue: import.meta.env.VITE_SHOW_SPLASH_SCREEN,
+      worldInfoAvailable: !!appContext.worldInfo,
+      networkServiceAvailable: !!networkService
+    });
+
+    const notificationService = appContext.services.notification;
+    if (showSplashScreen && splashScreenPath && notificationService) {
+      logger.debug('Showing splash screen', { splashScreenPath });
+      notificationService.showSplashScreen(splashScreenPath);
+    } else {
+      logger.debug('Splash screen not shown', {
+        reason: !showSplashScreen ? 'disabled in env' :
+                !splashScreenPath ? 'no splashScreenPath in worldInfo' :
+                'notificationService not available'
+      });
+    }
+
     // Register message handlers BEFORE connecting
     logger.debug('Registering message handlers...');
     const loginHandler = new LoginMessageHandler(appContext, networkService);

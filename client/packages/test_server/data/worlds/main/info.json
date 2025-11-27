@@ -137,5 +137,6 @@
     "rotation": 0
   },
   "seasonStatus": 1,
-  "seasonProgress": 0.5
+  "seasonProgress": 0.5,
+  "splashScreen": "screens/blizzardskull.png"
 }

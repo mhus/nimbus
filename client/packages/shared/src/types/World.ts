@@ -244,4 +244,7 @@ export interface WorldInfo {
 
   /** Editor URL for block editing */
   editorUrl?: string;
+
+  /** Splash screen asset path (optional) */
+  splashScreen?: string;
 }

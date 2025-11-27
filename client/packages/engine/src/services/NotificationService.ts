@@ -1478,15 +1478,18 @@ export class NotificationService {
    */
   showSplashScreen(assetPath: string = ''): void {
     try {
+      logger.debug('showSplashScreen called', { assetPath });
+
       // Remove existing splash screen if present
       if (this.splashScreenElement) {
         this.splashScreenElement.remove();
         this.splashScreenElement = null;
-        logger.debug('Splash screen removed');
+        logger.debug('Existing splash screen removed');
       }
 
       // If empty path, just remove (already done above)
       if (!assetPath || assetPath.trim() === '') {
+        logger.debug('Empty assetPath, splash screen not shown');
         return;
       }
 
@@ -1499,10 +1502,11 @@ export class NotificationService {
 
       const imageUrl = networkService.getAssetUrl(assetPath);
 
-      logger.info('Showing splash screen', { assetPath, imageUrl });
+      logger.debug('Creating splash screen element', { assetPath, imageUrl });
 
       // Create splash screen container
       this.splashScreenElement = document.createElement('div');
+      this.splashScreenElement.id = 'splash-screen-container';
       this.splashScreenElement.style.cssText = `
         position: fixed;
         top: 0;
@@ -1525,14 +1529,22 @@ export class NotificationService {
         height: 100%;
         object-fit: contain;
       `;
-      img.onerror = () => {
-        logger.warn('Failed to load splash screen image', { assetPath, imageUrl });
+
+      img.onload = () => {
+        logger.debug('Splash screen image loaded successfully', { imageUrl });
+      };
+
+      img.onerror = (error) => {
+        logger.warn('Failed to load splash screen image', { assetPath, imageUrl, error });
       };
 
       this.splashScreenElement.appendChild(img);
       document.body.appendChild(this.splashScreenElement);
 
-      logger.info('Splash screen displayed', { assetPath });
+      logger.debug('Splash screen element appended to body', {
+        elementId: this.splashScreenElement.id,
+        parentElement: document.body.contains(this.splashScreenElement) ? 'YES' : 'NO'
+      });
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.showSplashScreen', {
         assetPath,

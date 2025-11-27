@@ -98,6 +98,7 @@ export function createConfigRoutes(worldManager: WorldManager): express.Router {
             crouch: { height: 1.0, width: 0.6, footprint: 0.3 },
             swim: { height: 1.8, width: 0.6, footprint: 0.3 },
             climb: { height: 1.8, width: 0.6, footprint: 0.3 },
+            free_fly: { height: 1.8, width: 0.6, footprint: 0.3 },
             fly: { height: 1.8, width: 0.6, footprint: 0.3 },
             teleport: { height: 1.8, width: 0.6, footprint: 0.3 },
           },
