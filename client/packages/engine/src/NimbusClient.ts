@@ -183,6 +183,10 @@ import {
   GetStackModifierCurrentValueCommand,
   ListStacksCommand,
 } from './commands/stack';
+import { WorldTimeConfigCommand } from './commands/WorldTimeConfigCommand';
+import { WorldTimeStartCommand } from './commands/WorldTimeStartCommand';
+import { WorldTimeStopCommand } from './commands/WorldTimeStopCommand';
+import { WorldTimeInfoCommand } from './commands/WorldTimeInfoCommand';
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -416,6 +420,12 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new StopEnvironmentScriptCommand(appContext));
     commandService.registerHandler(new GetCurrentEnvironmentScriptCommand(appContext));
     commandService.registerHandler(new ListEnvironmentScriptsCommand(appContext));
+
+    // Register World Time commands
+    commandService.registerHandler(new WorldTimeConfigCommand(appContext));
+    commandService.registerHandler(new WorldTimeStartCommand(appContext));
+    commandService.registerHandler(new WorldTimeStopCommand(appContext));
+    commandService.registerHandler(new WorldTimeInfoCommand(appContext));
 
     logger.debug('CommandService initialized with commands');
 

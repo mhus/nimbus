@@ -64,6 +64,55 @@ interface RunningEnvironmentScript {
 }
 
 /**
+ * World Time configuration
+ */
+export interface WorldTimeConfig {
+  /** @Minute scaling: How many world minutes pass per real minute */
+  minuteScaling: number;
+  /** @Hour: How many @Minutes in one @Hour */
+  minutesPerHour: number;
+  /** @Day: How many @Hours in one @Day */
+  hoursPerDay: number;
+  /** @Month: How many @Days in one @Month */
+  daysPerMonth: number;
+  /** @Year: How many @Months in one @Year */
+  monthsPerYear: number;
+  /** @Era: How many @Years in one @Era */
+  yearsPerEra: number;
+}
+
+/**
+ * Day section definitions
+ */
+export interface DaySectionConfig {
+  /** Morning start @Hour */
+  morningStart: number;
+  /** Day start @Hour */
+  dayStart: number;
+  /** Evening start @Hour */
+  eveningStart: number;
+  /** Night start @Hour */
+  nightStart: number;
+}
+
+/**
+ * Day section type
+ */
+export type DaySection = 'morning' | 'day' | 'evening' | 'night';
+
+/**
+ * World Time state
+ */
+interface WorldTimeState {
+  /** Is world time running */
+  running: boolean;
+  /** Start world time in @Minutes */
+  startWorldMinute: number;
+  /** Real time when world time was started (timestamp in ms) */
+  startRealTime: number;
+}
+
+/**
  * EnvironmentService - Manages environment rendering
  *
  * Features:
@@ -89,6 +138,12 @@ export class EnvironmentService {
   private environmentScripts: Map<string, EnvironmentScript> = new Map();
   private runningScripts: Map<string, RunningEnvironmentScript> = new Map();
 
+  // World Time management
+  private worldTimeConfig: WorldTimeConfig;
+  private daySectionConfig: DaySectionConfig;
+  private worldTimeState: WorldTimeState;
+  private currentDaySection: DaySection | null = null;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -102,12 +157,23 @@ export class EnvironmentService {
       time: 0, // Initialize time
     };
 
+    // Initialize World Time configuration with defaults
+    this.worldTimeConfig = this.loadWorldTimeConfigFromWorldInfo();
+    this.daySectionConfig = this.loadDaySectionConfigFromWorldInfo();
+    this.worldTimeState = {
+      running: false,
+      startWorldMinute: 0,
+      startRealTime: 0,
+    };
+
     this.initializeEnvironment();
     this.initializeAmbientAudioModifier();
     this.loadEnvironmentScriptsFromWorldInfo();
 
     logger.info('EnvironmentService initialized', {
       windParameters: this.windParameters,
+      worldTimeConfig: this.worldTimeConfig,
+      daySectionConfig: this.daySectionConfig,
     });
   }
 
@@ -370,7 +436,7 @@ export class EnvironmentService {
    * @param deltaTime Time since last frame in seconds
    */
   update(deltaTime: number): void {
-    // Future: Add time-of-day lighting, weather effects, etc.
+    this.updateWorldTime(deltaTime);
   }
 
   // ============================================
@@ -658,10 +724,249 @@ export class EnvironmentService {
     return Array.from(this.runningScripts.values());
   }
 
+  // ============================================
+  // World Time Management
+  // ============================================
+
+  /**
+   * Load World Time configuration from WorldInfo
+   */
+  private loadWorldTimeConfigFromWorldInfo(): WorldTimeConfig {
+    const worldTime = this.appContext.worldInfo?.settings?.worldTime;
+
+    return {
+      minuteScaling: worldTime?.minuteScaling ?? 10,
+      minutesPerHour: worldTime?.minutesPerHour ?? 60,
+      hoursPerDay: worldTime?.hoursPerDay ?? 24,
+      daysPerMonth: worldTime?.daysPerMonth ?? 30,
+      monthsPerYear: worldTime?.monthsPerYear ?? 12,
+      yearsPerEra: worldTime?.yearsPerEra ?? 10000,
+    };
+  }
+
+  /**
+   * Load Day Section configuration from WorldInfo
+   */
+  private loadDaySectionConfigFromWorldInfo(): DaySectionConfig {
+    const daySections = this.appContext.worldInfo?.settings?.worldTime?.daySections;
+
+    return {
+      morningStart: daySections?.morningStart ?? 6,
+      dayStart: daySections?.dayStart ?? 12,
+      eveningStart: daySections?.eveningStart ?? 18,
+      nightStart: daySections?.nightStart ?? 0,
+    };
+  }
+
+  /**
+   * Set World Time configuration
+   * Command: worldTimeConfig <minuteScaling> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>
+   */
+  setWorldTimeConfig(
+    minuteScaling: number,
+    minutesPerHour: number,
+    hoursPerDay: number,
+    daysPerMonth: number,
+    monthsPerYear: number,
+    yearsPerEra: number
+  ): void {
+    this.worldTimeConfig = {
+      minuteScaling: Math.max(0.1, minuteScaling),
+      minutesPerHour: Math.max(1, minutesPerHour),
+      hoursPerDay: Math.max(1, hoursPerDay),
+      daysPerMonth: Math.max(1, daysPerMonth),
+      monthsPerYear: Math.max(1, monthsPerYear),
+      yearsPerEra: Math.max(1, yearsPerEra),
+    };
+
+    logger.info('World Time config updated', this.worldTimeConfig);
+  }
+
+  /**
+   * Get World Time configuration
+   */
+  getWorldTimeConfig(): WorldTimeConfig {
+    return { ...this.worldTimeConfig };
+  }
+
+  /**
+   * Start World Time
+   * Command: worldTimeStart <worldMinute>
+   *
+   * @param worldMinute Start time in @Minutes since @0.1.1.0000 00:00:00
+   */
+  startWorldTime(worldMinute: number): void {
+    if (this.worldTimeState.running) {
+      logger.warn('World Time is already running, stopping first');
+      this.stopWorldTime();
+    }
+
+    this.worldTimeState = {
+      running: true,
+      startWorldMinute: worldMinute,
+      startRealTime: Date.now(),
+    };
+
+    // Set initial day section
+    this.currentDaySection = this.getWorldDayTimeSection();
+
+    logger.info('World Time started', {
+      startWorldMinute: worldMinute,
+      startWorldTime: this.getWorldTimeCurrentAsString(),
+      daySection: this.currentDaySection,
+    });
+  }
+
+  /**
+   * Stop World Time
+   * Command: worldTimeStop
+   */
+  stopWorldTime(): void {
+    if (!this.worldTimeState.running) {
+      logger.warn('World Time is not running');
+      return;
+    }
+
+    const currentWorldTime = this.getWorldTimeCurrent();
+
+    this.worldTimeState = {
+      running: false,
+      startWorldMinute: 0,
+      startRealTime: 0,
+    };
+
+    this.currentDaySection = null;
+
+    logger.info('World Time stopped', {
+      stoppedAt: currentWorldTime,
+      stoppedAtFormatted: this.formatWorldTime(currentWorldTime),
+    });
+  }
+
+  /**
+   * Check if World Time is running
+   */
+  isWorldTimeRunning(): boolean {
+    return this.worldTimeState.running;
+  }
+
+  /**
+   * Get current World Time in @Minutes
+   */
+  getWorldTimeCurrent(): number {
+    if (!this.worldTimeState.running) {
+      return 0;
+    }
+
+    const realElapsedMs = Date.now() - this.worldTimeState.startRealTime;
+    const realElapsedMinutes = realElapsedMs / (1000 * 60);
+    const worldElapsedMinutes = realElapsedMinutes * this.worldTimeConfig.minuteScaling;
+
+    return this.worldTimeState.startWorldMinute + worldElapsedMinutes;
+  }
+
+  /**
+   * Get current World Time as formatted string
+   * Format: @era, @year.@month.@day, @hour:@minute
+   */
+  getWorldTimeCurrentAsString(): string {
+    const worldMinute = this.getWorldTimeCurrent();
+    return this.formatWorldTime(worldMinute);
+  }
+
+  /**
+   * Format world time in minutes to string
+   * Format: @era, @year.@month.@day, @hour:@minute
+   *
+   * @param worldMinute World time in @Minutes
+   */
+  private formatWorldTime(worldMinute: number): string {
+    const config = this.worldTimeConfig;
+
+    // Calculate time components
+    let remainingMinutes = Math.floor(worldMinute);
+
+    const minute = remainingMinutes % config.minutesPerHour;
+    remainingMinutes = Math.floor(remainingMinutes / config.minutesPerHour);
+
+    const hour = remainingMinutes % config.hoursPerDay;
+    remainingMinutes = Math.floor(remainingMinutes / config.hoursPerDay);
+
+    const day = (remainingMinutes % config.daysPerMonth) + 1; // Days start at 1
+    remainingMinutes = Math.floor(remainingMinutes / config.daysPerMonth);
+
+    const month = (remainingMinutes % config.monthsPerYear) + 1; // Months start at 1
+    remainingMinutes = Math.floor(remainingMinutes / config.monthsPerYear);
+
+    const year = remainingMinutes % config.yearsPerEra;
+    const era = Math.floor(remainingMinutes / config.yearsPerEra);
+
+    return `@${era}, @${year}.${month}.${day}, ${hour}:${minute.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Get current day time section
+   */
+  getWorldDayTimeSection(): DaySection {
+    const worldMinute = this.getWorldTimeCurrent();
+    const config = this.worldTimeConfig;
+
+    // Calculate current hour of the day
+    const totalMinutesInDay = config.minutesPerHour * config.hoursPerDay;
+    const minuteOfDay = worldMinute % totalMinutesInDay;
+    const hourOfDay = Math.floor(minuteOfDay / config.minutesPerHour);
+
+    // Determine day section
+    const sections = this.daySectionConfig;
+
+    if (hourOfDay >= sections.morningStart && hourOfDay < sections.dayStart) {
+      return 'morning';
+    } else if (hourOfDay >= sections.dayStart && hourOfDay < sections.eveningStart) {
+      return 'day';
+    } else if (hourOfDay >= sections.eveningStart && hourOfDay < config.hoursPerDay) {
+      return 'evening';
+    } else {
+      return 'night';
+    }
+  }
+
+  /**
+   * Update World Time (called each frame)
+   * Checks for day section changes and triggers scripts
+   *
+   * @param deltaTime Time since last frame in seconds
+   */
+  private updateWorldTime(deltaTime: number): void {
+    if (!this.worldTimeState.running) {
+      return;
+    }
+
+    const newDaySection = this.getWorldDayTimeSection();
+
+    if (this.currentDaySection !== newDaySection) {
+      logger.info('Day section changed', {
+        from: this.currentDaySection,
+        to: newDaySection,
+        worldTime: this.getWorldTimeCurrentAsString(),
+      });
+
+      this.currentDaySection = newDaySection;
+
+      // Start corresponding environment script
+      const scriptName = `daytime_change_${newDaySection}`;
+      this.startEnvironmentScript(scriptName);
+    }
+  }
+
   /**
    * Dispose environment
    */
   dispose(): void {
+    // Stop world time
+    if (this.worldTimeState.running) {
+      this.stopWorldTime();
+    }
+
     // Stop all running scripts
     for (const group of this.runningScripts.keys()) {
       this.stopEnvironmentScriptByGroup(group);

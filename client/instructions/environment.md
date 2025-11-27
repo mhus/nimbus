@@ -555,7 +555,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - ambientLightIntensityMultiplier (default 0.5)
 - Erstelle dafuer Methoden zum setzen/lesen und Commands in engine
 
-[ ] Erstelle in EnvironmentService einen mechanismus der die Tageszeit steuert
+[?] Erstelle in EnvironmentService einen mechanismus der die Tageszeit steuert
 - der Mechanismus wird mit einem Command gestartet und gestoppt
 - Beim starten wird die aktuelle Zeit im system uebergeben und das scaling fuer die Tageszeit (z.b. 1 reale minute = 10 minuten im spiel)
   - Die Welt-Zeit kann dann ueber den Timestamp im System und dem scaling berechnet werden
@@ -583,6 +583,15 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - night: 0:00 - 6:00
 - Wenn sich die Tageszeit ändert ('day' | 'evening' | 'night' | 'morning') wird das entsprechende Script hier im EnvironmentService gestartet
   'daytime_change_day', 'daytime_change_evening', 'daytime_change_night', 'daytime_change_morning'
+
+[ ] Es soll automatisch die sunPosition/moonPosition aktualisiert werden
+- Nur wenn die wolrd time gesetzt wurde und laeuft
+- einen timer alle x sekunden (config aus WorldInfo, oder 10 sekunden default)
+- berechnet aus der minute/stunde wie der stand der Sonne sein sollte
+- berechnet wie der stand der Monde sein sollte (config aus WordlInfo, oder 0 Monde default)
+- setzt die Position der Sonne und Monde entsprechend
+
+[ ] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world world.json
 
 [x] Erstelle AnimationStack im StackModifierCreator:
 - ambienteLightIntensity in EnvironmentService

@@ -172,6 +172,34 @@ export interface WorldInfo {
       /** Script action definition */
       script: ScriptActionDefinition;
     }>;
+
+    /** World Time configuration (optional) */
+    worldTime?: {
+      /** @Minute scaling: How many world minutes pass per real minute (default: 10) */
+      minuteScaling?: number;
+      /** @Hour: How many @Minutes in one @Hour (default: 60) */
+      minutesPerHour?: number;
+      /** @Day: How many @Hours in one @Day (default: 24) */
+      hoursPerDay?: number;
+      /** @Month: How many @Days in one @Month (default: 30) */
+      daysPerMonth?: number;
+      /** @Year: How many @Months in one @Year (default: 12) */
+      monthsPerYear?: number;
+      /** @Era: How many @Years in one @Era (default: 10000) */
+      yearsPerEra?: number;
+
+      /** Day section definitions (in @Hours) */
+      daySections?: {
+        /** Morning start @Hour (default: 6) */
+        morningStart?: number;
+        /** Day start @Hour (default: 12) */
+        dayStart?: number;
+        /** Evening start @Hour (default: 18) */
+        eveningStart?: number;
+        /** Night start @Hour (default: 0) */
+        nightStart?: number;
+      };
+    };
   };
 
   /** License information */
