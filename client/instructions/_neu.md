@@ -1,5 +1,5 @@
 
-- Interaction mit NCP kann raus aus dem netzwerk, dafuer machen wir einen iframe auf.
+[x] Interaction mit NCP kann raus aus dem netzwerk, dafuer machen wir einen iframe auf.
 - mitteilungen kann raus, dafuer ein client command, das vom server gesendet wird.
 - client commands sollen vom server aufgerufen werden koennen
 - block changed client-> server raus, dafuer schickt der client server commands.

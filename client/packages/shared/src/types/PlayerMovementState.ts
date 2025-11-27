@@ -34,7 +34,10 @@ export enum PlayerMovementState {
   /** Falling - set by PhysicsService when airborne with negative y-velocity */
   FALL = 'FALL',
 
-  /** Flying - player toggle (editor only) */
+  /** Free flying - player toggle (editor only, no physics) */
+  FREE_FLY = 'FREE_FLY',
+
+  /** Flying with physics - player toggle (physics enabled, no gravity) */
   FLY = 'FLY',
 
   /** Swimming - set by PhysicsService when in water */

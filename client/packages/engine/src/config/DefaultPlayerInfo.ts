@@ -56,6 +56,7 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
     crouch: { height: 1.0, width: 0.6, footprint: 0.3 },
     swim: { height: 1.8, width: 0.6, footprint: 0.3 },
     climb: { height: 1.8, width: 0.6, footprint: 0.3 },
+    free_fly: { height: 1.8, width: 0.6, footprint: 0.3 },
     fly: { height: 1.8, width: 0.6, footprint: 0.3 },
     teleport: { height: 1.8, width: 0.6, footprint: 0.3 },
   },
@@ -143,6 +144,19 @@ export const DEFAULT_PLAYER_INFO: PlayerInfo = {
       selectionRadius: 4.0,
       stealthRange: 6.0,
       distanceNotifyReduction: 0.2,
+    },
+    free_fly: {
+      dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
+      baseMoveSpeed: 10.0,      // 2x walk (no hardcoded multiplier!)
+      effectiveMoveSpeed: 10.0,
+      baseJumpSpeed: 0.0,       // No jumping in free_fly
+      effectiveJumpSpeed: 0.0,
+      eyeHeight: 1.6,
+      baseTurnSpeed: 0.004,     // Faster turn in free_fly
+      effectiveTurnSpeed: 0.004,
+      selectionRadius: 8.0,     // Longer reach from air
+      stealthRange: 15.0,       // Very visible
+      distanceNotifyReduction: 0,
     },
     fly: {
       dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },

@@ -80,6 +80,7 @@ export interface EntityDimensions {
   crouch?: { height: number; width: number; footprint: number };
   swim?: { height: number; width: number; footprint: number };
   climb?: { height: number; width: number; footprint: number };
+  free_fly?: { height: number; width: number; footprint: number };
   fly?: { height: number; width: number; footprint: number };
   teleport?: { height: number; width: number; footprint: number };
 }

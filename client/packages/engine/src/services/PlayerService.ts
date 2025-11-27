@@ -148,6 +148,7 @@ export class PlayerService {
         crouch: { height: 1.0, width: 0.6, footprint: 0.3 },
         swim: { height: 1.8, width: 0.6, footprint: 0.3 },
         climb: { height: 1.8, width: 0.6, footprint: 0.3 },
+        free_fly: { height: 1.8, width: 0.6, footprint: 0.3 },
         fly: { height: 1.8, width: 0.6, footprint: 0.3 },
         teleport: { height: 1.8, width: 0.6, footprint: 0.3 },
       };
@@ -476,6 +477,7 @@ export class PlayerService {
           case PlayerMovementState.CROUCH:
             basePose = ENTITY_POSES.CROUCH;
             break;
+          case PlayerMovementState.FREE_FLY:
           case PlayerMovementState.FLY:
             basePose = ENTITY_POSES.FLY;
             break;
@@ -874,10 +876,11 @@ export class PlayerService {
       [PlayerMovementState.SPRINT]: 'sprint',
       [PlayerMovementState.CROUCH]: 'crouch',
       [PlayerMovementState.SWIM]: 'swim',
-      [PlayerMovementState.FLY]: 'fly',
-      [PlayerMovementState.RIDING]: 'walk',  // No riding mode yet
-      [PlayerMovementState.JUMP]: 'walk',    // Jump uses walk physics
-      [PlayerMovementState.FALL]: 'walk',    // Fall uses walk physics
+      [PlayerMovementState.FREE_FLY]: 'free_fly', // FREE_FLY: no physics, no collisions
+      [PlayerMovementState.FLY]: 'fly',           // FLY: physics enabled, no gravity
+      [PlayerMovementState.RIDING]: 'walk',       // No riding mode yet
+      [PlayerMovementState.JUMP]: 'walk',         // Jump uses walk physics
+      [PlayerMovementState.FALL]: 'walk',         // Fall uses walk physics
     };
 
     const newMode = movementModeMap[newState];
@@ -897,14 +900,14 @@ export class PlayerService {
       // Sync camera immediately to apply new eye height
       this.syncCameraToPlayer();
 
-      // Reset velocity when switching to/from fly mode
+      // Reset velocity when switching to/from fly modes
       // Prevents "falling while flying" or "flying momentum when landing"
-      if (newMode === 'fly' || oldState === PlayerMovementState.FLY) {
+      if (newMode === 'fly' || newMode === 'free_fly' || oldState === PlayerMovementState.FLY || oldState === PlayerMovementState.FREE_FLY) {
         this.playerEntity.velocity.set(0, 0, 0);
       }
 
-      // Set grounded false in fly mode (flying = not on ground)
-      if (newMode === 'fly') {
+      // Set grounded false in fly modes (flying = not on ground)
+      if (newMode === 'fly' || newMode === 'free_fly') {
         this.playerEntity.grounded = false;
       }
 
@@ -931,9 +934,11 @@ export class PlayerService {
     if (notificationService && oldState !== PlayerMovementState.FALL) {
       let message: string | null = null;
 
-      if (newState === PlayerMovementState.FLY && oldState !== PlayerMovementState.FLY) {
-        message = 'Flight Mode Activated';
-      } else if (oldState === PlayerMovementState.FLY && newState === PlayerMovementState.WALK) {
+      if (newState === PlayerMovementState.FREE_FLY && oldState !== PlayerMovementState.FREE_FLY) {
+        message = 'Free Flight Mode Activated';
+      } else if (newState === PlayerMovementState.FLY && oldState !== PlayerMovementState.FLY) {
+        message = 'Flight Mode Activated (Physics)';
+      } else if ((oldState === PlayerMovementState.FLY || oldState === PlayerMovementState.FREE_FLY) && newState === PlayerMovementState.WALK) {
         message = 'Flight Mode Deactivated';
       } else if (newState === PlayerMovementState.SPRINT) {
         message = 'Sprinting';

@@ -1014,7 +1014,7 @@ export class EntityService {
   getEntitiesInRadius(
     center: Vector3,
     radius: number,
-    movementMode: 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport' = 'walk'
+    movementMode: 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport' = 'walk'
   ): EntityCollisionInfo[] {
     const entitiesInRadius: EntityCollisionInfo[] = [];
 
@@ -1055,7 +1055,7 @@ export class EntityService {
    */
   private getEntityDimensions(
     entityModel: EntityModel,
-    movementMode: 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport'
+    movementMode: 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport'
   ): { height: number; width: number; footprint: number } {
     const dimensions = entityModel.dimensions;
 

@@ -15,7 +15,7 @@
 /**
  * Movement state key - maps to both MovementMode and PlayerMovementState
  */
-export type MovementStateKey = 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport' | 'riding';
+export type MovementStateKey = 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport' | 'riding';
 
 /**
  * Movement state configuration
@@ -146,6 +146,7 @@ export interface PlayerInfo {
     crouch: { height: number; width: number; footprint: number };
     swim: { height: number; width: number; footprint: number };
     climb: { height: number; width: number; footprint: number };
+    free_fly: { height: number; width: number; footprint: number };
     fly: { height: number; width: number; footprint: number };
     teleport: { height: number; width: number; footprint: number };
   };
@@ -269,6 +270,20 @@ export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues>
     distanceNotifyReduction: 0.2,
   },
 
+  free_fly: {
+    dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 10.0,
+    effectiveMoveSpeed: 10.0,
+    baseJumpSpeed: 0.0,
+    effectiveJumpSpeed: 0.0,
+    eyeHeight: 1.6,
+    baseTurnSpeed: 0.004,
+    effectiveTurnSpeed: 0.004,
+    selectionRadius: 8.0,
+    stealthRange: 15.0,
+    distanceNotifyReduction: 0.0,
+  },
+
   fly: {
     dimensions: { height: 1.8, width: 0.6, footprint: 0.3 },
     baseMoveSpeed: 10.0,
@@ -338,6 +353,7 @@ export function movementStateToKey(state: string): MovementStateKey {
     case 'SPRINT': return 'sprint';
     case 'CROUCH': return 'crouch';
     case 'SWIM': return 'swim';
+    case 'FREE_FLY': return 'free_fly';
     case 'FLY': return 'fly';
     case 'RIDING': return 'riding';
     case 'JUMP': return 'walk';  // Jump uses walk values
@@ -359,6 +375,7 @@ export function movementModeToKey(mode: string): MovementStateKey {
     case 'crouch': return 'crouch';
     case 'swim': return 'swim';
     case 'climb': return 'climb';
+    case 'free_fly': return 'free_fly';
     case 'fly': return 'fly';
     case 'teleport': return 'teleport';
     default: return 'walk';

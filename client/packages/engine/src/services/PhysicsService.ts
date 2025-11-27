@@ -464,14 +464,16 @@ export class PhysicsService {
       entity.movementMode === 'sprint' ||
       entity.movementMode === 'crouch' ||
       entity.movementMode === 'swim' ||
-      entity.movementMode === 'climb';
+      entity.movementMode === 'climb' ||
+      entity.movementMode === 'fly'; // NEW: FLY with physics (no gravity)
 
-    const useFlyController =
-      entity.movementMode === 'fly' ||
+    const useFreeFlyController =
+      entity.movementMode === 'free_fly' ||
       entity.movementMode === 'teleport';
 
     if (useWalkController && this.walkController) {
       // Use new modular walk controller
+      // For FLY mode: Physics enabled but no gravity (handled in WalkModeController)
       this.walkController.doMovement(
         entity,
         entity.wishMove,
@@ -481,10 +483,10 @@ export class PhysicsService {
       );
       // Reset jump flag after processing
       entity.jumpRequested = false;
-    } else if (useFlyController && this.flyController) {
-      // Use new modular fly controller
+    } else if (useFreeFlyController && this.flyController) {
+      // Use new modular fly controller (no physics, no collisions)
       this.flyController.update(entity, entity.wishMove, deltaTime);
-      // Reset jump flag (not used in fly mode)
+      // Reset jump flag (not used in free fly mode)
       entity.jumpRequested = false;
     } else {
       // Fallback to old system (should not happen)
@@ -492,7 +494,7 @@ export class PhysicsService {
 
       if (entity.movementMode === 'walk') {
         this.updateWalkMode(entity, deltaTime);
-      } else if (entity.movementMode === 'fly') {
+      } else if (entity.movementMode === 'fly' || entity.movementMode === 'free_fly') {
         this.updateFlyMode(entity, deltaTime);
       }
       entity.jumpRequested = false;
@@ -1066,7 +1068,7 @@ export class PhysicsService {
   moveForward(entity: PhysicsEntity, distance: number, cameraYaw: number, cameraPitch: number): void {
     // NEW SYSTEM: Accumulate wishMove (normalized input)
     // distance should be normalized (-1 to +1), not actual distance in meters
-    const usePitch = entity.movementMode === 'fly' || entity.movementMode === 'teleport';
+    const usePitch = entity.movementMode === 'free_fly' || entity.movementMode === 'fly' || entity.movementMode === 'teleport';
 
     if (usePitch) {
       // 3D movement with pitch
@@ -1103,7 +1105,7 @@ export class PhysicsService {
    */
   moveUp(entity: PhysicsEntity, distance: number): void {
     // NEW SYSTEM: Set wishMove for vertical movement
-    if (entity.movementMode === 'fly' || entity.movementMode === 'teleport' || entity.movementMode === 'swim') {
+    if (entity.movementMode === 'free_fly' || entity.movementMode === 'fly' || entity.movementMode === 'teleport' || entity.movementMode === 'swim') {
       entity.wishMove.y = distance;
     }
   }
@@ -1129,9 +1131,9 @@ export class PhysicsService {
    * Set movement mode
    */
   setMovementMode(entity: PhysicsEntity, mode: MovementMode): void {
-    // Fly mode only available in editor
-    if (mode === 'fly' && !__EDITOR__) {
-      logger.warn('Fly mode only available in Editor build');
+    // FREE_FLY mode only available in editor
+    if (mode === 'free_fly' && !__EDITOR__) {
+      logger.warn('FREE_FLY mode only available in Editor build');
       return;
     }
 
@@ -1141,17 +1143,17 @@ export class PhysicsService {
     // Reset velocity when switching modes
     entity.velocity.set(0, 0, 0);
 
-    // In fly mode, no ground state
-    if (mode === 'fly') {
+    // In fly modes, no ground state
+    if (mode === 'fly' || mode === 'free_fly') {
       entity.grounded = false;
     }
   }
 
   /**
-   * Toggle between Walk and Fly modes
+   * Toggle between Walk and FREE_FLY modes (editor only)
    */
   toggleMovementMode(entity: PhysicsEntity): void {
-    const newMode = entity.movementMode === 'walk' ? 'fly' : 'walk';
+    const newMode = entity.movementMode === 'walk' ? 'free_fly' : 'walk';
     this.setMovementMode(entity, newMode);
   }
 

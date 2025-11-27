@@ -30,8 +30,8 @@ export class JumpHandler extends InputHandler {
 
 /**
  * Cycle Movement State Handler (F key)
- * Cycles through movement states: FLY → SPRINT → CROUCH → WALK
- * FLY is only available in Editor mode (__EDITOR__ = true)
+ * Cycles through movement states: FREE_FLY → FLY → SPRINT → CROUCH → WALK
+ * FREE_FLY and FLY are only available in Editor mode (__EDITOR__ = true)
  */
 export class CycleMovementStateHandler extends InputHandler {
   protected onActivate(value: number): void {
@@ -41,9 +41,12 @@ export class CycleMovementStateHandler extends InputHandler {
     let nextState: PlayerMovementState;
 
     if (__EDITOR__) {
-      // Editor mode: Include FLY in rotation
+      // Editor mode: Include FREE_FLY and FLY in rotation
       switch (current) {
         case PlayerMovementState.WALK:
+          nextState = PlayerMovementState.FREE_FLY;
+          break;
+        case PlayerMovementState.FREE_FLY:
           nextState = PlayerMovementState.FLY;
           break;
         case PlayerMovementState.FLY:
@@ -58,7 +61,7 @@ export class CycleMovementStateHandler extends InputHandler {
           break;
       }
     } else {
-      // Viewer mode: Skip FLY in rotation
+      // Viewer mode: Skip FLY modes in rotation
       switch (current) {
         case PlayerMovementState.WALK:
           nextState = PlayerMovementState.SPRINT;

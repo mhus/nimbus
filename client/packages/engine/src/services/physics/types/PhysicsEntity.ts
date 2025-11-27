@@ -10,7 +10,7 @@ import type { PlayerBlockContext } from './BlockContext';
 /**
  * Movement mode
  */
-export type MovementMode = 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'fly' | 'teleport';
+export type MovementMode = 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport';
 
 /**
  * Climb animation state
