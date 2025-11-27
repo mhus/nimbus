@@ -199,6 +199,24 @@ export interface WorldInfo {
         /** Night start @Hour (default: 0) */
         nightStart?: number;
       };
+
+      /** Celestial bodies automatic update configuration */
+      celestialBodies?: {
+        /** Enable automatic sun/moon position updates (default: false) */
+        enabled?: boolean;
+        /** Update interval in seconds (default: 10) */
+        updateIntervalSeconds?: number;
+        /** Number of active moons (0-3, default: 0) */
+        activeMoons?: number;
+        /** Full rotation time for sun in @Hours (default: 24, means sun completes circle in 24 @Hours) */
+        sunRotationHours?: number;
+        /** Full rotation time for moon 0 in @Hours (default: 672 = 28 days) */
+        moon0RotationHours?: number;
+        /** Full rotation time for moon 1 in @Hours (default: 504 = 21 days) */
+        moon1RotationHours?: number;
+        /** Full rotation time for moon 2 in @Hours (default: 336 = 14 days) */
+        moon2RotationHours?: number;
+      };
     };
   };
 

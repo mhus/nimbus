@@ -76,6 +76,15 @@ export enum StackName {
   /** Sun elevation: number angle in degrees (-90 to 90, -90=down, 0=horizon, 90=up) */
   SUN_ELEVATION = 'sunElevation',
 
+  /** Moon 0 position: number angle in degrees (0-360, 0=North, 90=East, 180=South, 270=West) */
+  MOON_0_POSITION = 'moon0Position',
+
+  /** Moon 1 position: number angle in degrees (0-360, 0=North, 90=East, 180=South, 270=West) */
+  MOON_1_POSITION = 'moon1Position',
+
+  /** Moon 2 position: number angle in degrees (0-360, 0=North, 90=East, 180=South, 270=West) */
+  MOON_2_POSITION = 'moon2Position',
+
   /** Horizon gradient alpha: number (0-1, transparency) */
   HORIZON_GRADIENT_ALPHA = 'horizonGradientAlpha',
 

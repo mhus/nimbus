@@ -583,13 +583,63 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - night: 0:00 - 6:00
 - Wenn sich die Tageszeit ändert ('day' | 'evening' | 'night' | 'morning') wird das entsprechende Script hier im EnvironmentService gestartet
   'daytime_change_day', 'daytime_change_evening', 'daytime_change_night', 'daytime_change_morning'
+```text
+ 1. Weltzeit-Konfiguration (packages/shared/src/types/World.ts:176-202)
 
-[ ] Es soll automatisch die sunPosition/moonPosition aktualisiert werden
+  - Erweitert die WorldInfo-Typen um optionale worldTime-Konfiguration
+  - Unterstützt alle Parameter: @Minute Scaling, @Hour, @Day, @Month, @Year, @Era
+  - Konfigurierbare Tageszeitabschnitte (morning, day, evening, night)
+
+  2. EnvironmentService Erweiterungen (packages/engine/src/services/EnvironmentService.ts)
+
+  - Weltzeit-Berechnung: Berechnet die aktuelle Weltzeit basierend auf der realen Zeit und dem Scaling
+  - Formatierung: Zeigt Zeit im Format @era, @year.@month.@day, @hour:@minute
+  - Tageszeitabschnitte: Erkennt automatisch die aktuelle Tageszeit (morning/day/evening/night)
+  - Event-System: Startet automatisch entsprechende Scripts bei Tageszeitwechsel:
+    - daytime_change_morning
+    - daytime_change_day
+    - daytime_change_evening
+    - daytime_change_night
+
+  3. Commands erstellt:
+
+  - worldTimeConfig: Konfiguriert das Weltzeit-System
+    - Parameter: <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>
+  - worldTimeStart: Startet die Weltzeit
+    - Parameter: <worldMinute> (Weltzeit in Minuten seit @0.1.1.0000 00:00:00)
+  - worldTimeStop: Stoppt die Weltzeit
+  - worldTimeInfo: Zeigt Weltzeit-Informationen und Status
+
+  4. Integration:
+
+  - Commands sind in NimbusClient.ts registriert
+  - Update-Loop ruft updateWorldTime() jeden Frame auf
+  - Konfiguration wird aus WorldInfo geladen (mit sinnvollen Defaults)
+
+  Verwendungsbeispiel:
+
+  // Weltzeit konfigurieren: 10x Geschwindigkeit, 24h Tag, 30 Tage/Monat
+  worldTimeConfig 10 60 24 30 12 10000
+
+  // Weltzeit starten bei Tag 1, Stunde 6 (Morgen)
+  // 1 Tag = 24 Stunden * 60 Minuten = 1440 Minuten
+  // Stunde 6 = 6 * 60 = 360 Minuten
+  worldTimeStart 360
+
+  // Status anzeigen
+  worldTimeInfo
+
+  // Weltzeit stoppen
+  worldTimeStop
+```
+
+[?] Es soll automatisch die sunPosition/moonPosition aktualisiert werden
 - Nur wenn die wolrd time gesetzt wurde und laeuft
 - einen timer alle x sekunden (config aus WorldInfo, oder 10 sekunden default)
 - berechnet aus der minute/stunde wie der stand der Sonne sein sollte
 - berechnet wie der stand der Monde sein sollte (config aus WordlInfo, oder 0 Monde default)
 - setzt die Position der Sonne und Monde entsprechend
+- Zum setzen der sonnen position, benutze den StackModifier, erstelle auch fuer die position der drei modne jeweils einen animated StackModifier
 
 [ ] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world world.json
 

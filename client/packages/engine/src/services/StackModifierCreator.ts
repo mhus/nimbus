@@ -171,6 +171,48 @@ export function createAllStackModifiers(appContext: AppContext): void {
     100 // Default wait time: 100ms
   );
 
+  // Moon 0 Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.MOON_0_POSITION,
+    0, // Default: North (0 degrees)
+    (angleY: number) => {
+      const moonService = appContext.services.moon;
+      if (moonService) {
+        moonService.setMoonPositionOnCircle(0, angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
+  // Moon 1 Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.MOON_1_POSITION,
+    120, // Default: 120 degrees (evenly spaced from moon 0)
+    (angleY: number) => {
+      const moonService = appContext.services.moon;
+      if (moonService) {
+        moonService.setMoonPositionOnCircle(1, angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
+  // Moon 2 Position Animation Stack
+  modifierService.createAnimationStack<number>(
+    StackName.MOON_2_POSITION,
+    240, // Default: 240 degrees (evenly spaced from moon 0 and 1)
+    (angleY: number) => {
+      const moonService = appContext.services.moon;
+      if (moonService) {
+        moonService.setMoonPositionOnCircle(2, angleY);
+      }
+    },
+    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    100 // Default wait time: 100ms
+  );
+
   // ========================================
   // Weitere Stacks hier hinzufügen
   // ========================================
