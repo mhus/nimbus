@@ -434,7 +434,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - listEnvironmentScripts: Alle registrierten Environment Scripts auflisten
 ```
 
-[ ] Das commando clearClouds soll einen boolean parameter haben
+[?] Das commando clearClouds soll einen boolean parameter haben
 - false: loescht nur wolken mit der geschwindigkeit 0 (statische wolken) (default)
 - true: loescht alle wolken
 
