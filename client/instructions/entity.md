@@ -78,15 +78,15 @@ ClientEntity
 
 Der EntityService soll im AppContext verfuegbar sein 
 
-[?] Im ModelRenderer werden modelle geladen und gerendert. Es soll einen ModelService geben, der im EngineService referenziert wird. 
+[x] Im ModelRenderer werden modelle geladen und gerendert. Es soll einen ModelService geben, der im EngineService referenziert wird. 
 Er laed Modelle, cacht diese und stellt sie zum rendern bereit. Der ModelRenderer soll den ModelService nutzen um die modelle zu laden.
 
-[?] Es soll einen EntityRenderService geben, der die entitys in der welt rendert. Er wird vom EntityService benachrichtigt 
+[x] Es soll einen EntityRenderService geben, der die entitys in der welt rendert. Er wird vom EntityService benachrichtigt 
 wenn eine entity erscheint oder verschwindet. Sich die position, rotation oder die Pose aendert.
 - Modelle koenne vom ModelService geladen werden
 - EntityRenderService soll im EngineService referenziert sein
 
-[?] Im EntityService soll es einen Loop geben, der alle 100 (constante) ms die positionen und status der entitys aktualisiert
+[x] Im EntityService soll es einen Loop geben, der alle 100 (constante) ms die positionen und status der entitys aktualisiert
 - Kommt ein unbekannter entity pathway an, wird die entity und ggr entitymodel vom server geladen und ein ClientEntity objekt erstellt.
 - Die position der entity wird anhand der waypoints und des timestamps berechnet
 - Wenn die entity in der naehe (radius variable im EntityService - getter, setter) des spielers ist, wird sie 'visible' gestellt und an den EntityRenderService uebergeben um gerendert zu werden
@@ -95,17 +95,17 @@ wenn eine entity erscheint oder verschwindet. Sich die position, rotation oder d
 - Updates aus dem Netwerk werden in den ClientEntity objekten verarbeitet und die position, rotation und pose aktualisiert
 - Es wird das timeLag aus dem NetworkService genutzt um die position der entitys korrekt zu berechnen
 
-[?] Wird ein chunk entfernt, werden alle entitys die in diesem chunk gerendert auf visible=false gesetzt und entfernt, damit keine leichen in der welt bleiben
+[x] Wird ein chunk entfernt, werden alle entitys die in diesem chunk gerendert auf visible=false gesetzt und entfernt, damit keine leichen in der welt bleiben
 
-[?] Erstelle mir ein Commando in engine, mit dem ich infos ueber geladenene entitys bekommen kann, z.b. listEntities und entityInfo {entityId}
-[?] In EntityModel wird ein weiterer parameter scale : Vector3 hinzugefuegt, der die skalierung des modells angibt
+[x] Erstelle mir ein Commando in engine, mit dem ich infos ueber geladenene entitys bekommen kann, z.b. listEntities und entityInfo {entityId}
+[x] In EntityModel wird ein weiterer parameter scale : Vector3 hinzugefuegt, der die skalierung des modells angibt
 - Scalierung soll dann beim rendern im EntiryRenderService beruecksichtigt werden
 
 [ ] Erstelle mir ein Commando in engine, mit dem ich testweise eine neue Entity in der Welt spawnen kann, z.b. spawnentity {id} {entityModelId} {x} {y} {z}
 
 ### Server
 
-[?] Im Server muss es ein Entity Management geben, der die entitys verwaltet
+[x] Im Server muss es ein Entity Management geben, der die entitys verwaltet
 - EntityModelle werden als json in files/entitymodels/ gespeichert
 - Entitys werden im speicher gehalten, erstelle dazu einen EntityManager im test_server package
 - Erstelle die REST Endpunkte zum laden der entity modelle und entitys (siehe client/instructions/general/server_rest_api.md)
@@ -132,12 +132,12 @@ ServerEntitySpawnDefinition:
 
 - Erstelle ein Behavior System fuer die entity simulation, das verschiedene verhaltensweisen umsetzen kann
 
-[?] Server Entity per Session verwalten
+[x] Server Entity per Session verwalten
 - Es werden nur neue Pathways zum client gesendet, wenn er sich fuer den chunk angemeldet hat in dem diese statt finden.
 - Wird irgendwo ein neuer pathway erzeugt wird dieser an alle sessions handler im server gesendet und die session prueft ob die entity bewegung in einem der client chunks stattfindet.
 - Entity Pathways werden gesammelt und alle 100ms an den client gesendet und die queue geloescht.
 
-[?] Ich moechte fuer Entities, managed by EntityService auch eine leichte physik umsetzen, nicht so komplex wie fuer den lokalen player. Wie kann ich das machen? 
+[x] Ich moechte fuer Entities, managed by EntityService auch eine leichte physik umsetzen, nicht so komplex wie fuer den lokalen player. Wie kann ich das machen? 
 ```text
      Architektur-Überblick
 
@@ -237,7 +237,7 @@ gehen koennen.
 - Die pathway wird alle 100ms neu erstellt und neu gesendet (konfigurierbar)
 - Die geschwindigkeit des entitys soll zwischen 1 und 2 blocks per sekunde liegen (konfigurierbar)
 
-[?] Waypoints Zeichnen mit startpunkt aktuelle position der entity
+[x] Waypoints Zeichnen mit startpunkt aktuelle position der entity
 [2025-11-12T20:56:23.620Z] [DEBUG] [EntityRenderService] Not enough waypoints to draw lines
 Data: {
 "entityId": "farmer1",

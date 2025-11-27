@@ -706,7 +706,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   }
 ```
 
-[?] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world world.json
+[x] Erstelle fuer alle aktuellen WorldInfo parameter eintraege in test_world info.json
 
 [x] Erstelle AnimationStack im StackModifierCreator:
 - ambienteLightIntensity in EnvironmentService
@@ -749,20 +749,20 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 doSetStackModifier('sunPosition','default',270, 0.1, 50);
 ```
 
-[?] Erstelle AnimationStack im StackModifierCreator:
+[x] Erstelle AnimationStack im StackModifierCreator:
 - sunLigthIntensityMultiplier in SunService
 - ambientLightIntensityMultiplier in SunService
 
-[?] In EnvironmentService soll ein Handle auf einen ModifierStack Element fuer AmbienteAudio geben
+[x] In EnvironmentService soll ein Handle auf einen ModifierStack Element fuer AmbienteAudio geben
 - dieser kann per command gesetzt werden/geloescht (leer string) werden
 - EnvironmentAmbienteAudio(audioFile)
 
-[?] Wenn diw WorldInfo neu geladen wird, wird geprueft ob sich die season / seasonProgress geandert hat (gibt es schon) und
+[x] Wenn diw WorldInfo neu geladen wird, wird geprueft ob sich die season / seasonProgress geandert hat (gibt es schon) und
 ggf die chunks neu gerendert (gibt es schon).
 Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript gestartet werden das die season aendert.
   - script name: season_winter, season_spring, season_summer, season_autumn
 
-[?] Wenn im ScawlService ein neues script gestartet wird, sollen immer die folgenden standart parameter gesetzt sein:
+[x] Wenn im ScawlService ein neues script gestartet wird, sollen immer die folgenden standart parameter gesetzt sein:
 - wordlSeason - aus WorldInfo
 - worldDaytime - aus EnvironmentService
 ```text
@@ -797,7 +797,7 @@ Hier soll, wenn sich die season geandert hat automatisch ein EnvironmentScript g
     - executeScript() (Zeile 282-290)
 ```
 
-[?] Erstelle in EnvironmentService eine Methode um einen reset zum machen
+[x] Erstelle in EnvironmentService eine Methode um einen reset zum machen
 - Command in engine: resetEnvironment
 - ruft cloudService.clearClouds(false) auf
 - stoppt niederschlag: precipitationService.stop()

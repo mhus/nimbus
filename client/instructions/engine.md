@@ -302,7 +302,7 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - Schau mal ob der InputController fuer aktuell FLY immer erstellt wird, aktuell wurde der nur im EDITOR moduls erstellt, das muss jetzt immer sein.
 - Wenn der status von FALL auf einen anderen status geht, dann keine Notification
 
-[?] Erweitere den CommandService in engine und test_server so dass Commands asynchron ausgefuehrt werden koennen.
+[x] Erweitere den CommandService in engine und test_server so dass Commands asynchron ausgefuehrt werden koennen.
 - Erstelle eine neue funktion 'executeAsyncCommand' die ein command asynchron ausfuehrt. return ist void
 - Die function gibt oneway: true beim command ausfuehren mit.
 - Siehe 'Client Command (Client -> Server)' in client/instructions/general/network-model-2.0.md
@@ -310,11 +310,11 @@ WALK, SPRINT, JUMP, FALL, FLY, SWIM, CROUCH, RIDING
 - Implemetiere die jeweiligen NetworkHandler so, das bei einem asynchronen command oneway: true keine response gesendet wird.
 
 
-[?] im PhysicsService wird die Bewegung des Players geprueft und angepasst.
+[x] im PhysicsService wird die Bewegung des Players geprueft und angepasst.
 Wenn die bewegung mehr als einen Block pro frame ist, koennte es sein das der player durch einen block hindurch geht.
 In diese fall sollte die pruefung in mehreren schritten erfolgen. Jeweils ein schritt von max 0.8 block.
 
-[?] Prepare für Govenor
+[x] Prepare für Govenor
 - Bei laden von Assets wird aktuell immer die Base URL vom NetworkService geladen (getApiUrl) und dann manuell der Pfad angehaengt.
 - Erstelle im NetworkService eine funktion getAssetUrl(assetPath: string): string die den kompletten URL zurueck gibt.
 - Passe alle stellen an wo asset urls erstellt werden.
@@ -324,7 +324,7 @@ In diese fall sollte die pruefung in mehreren schritten erfolgen. Jeweils ein sc
   - getBackdropUrl(backdropTypeId)
   - getEntityUrl(entityId)
 
-[?] Prepare für Govenor
+[x] Prepare für Govenor
 - Der Aufruf von REST APIs im client appContext.config.apiUrl / config.apiUrl sollte ueber den NetworkService erfolgen.
 - Erstelle im NetworkService eine funktion getRestRequestUrl(endpoint: string): string die den kompletten URL zurueck gibt.
 - Passe alle stellen an wo REST API urls erstellt werden in 'engine'
@@ -339,7 +339,7 @@ Falls der Reconnect nicht funktioniert, dann spring auf die URL 'exitUrl' die im
  - Reconnect versuchen alle 5 Sekunden bis zu 5 mal.
  - Nach 5 fehlgeschlagenen versuchen, springe auf exitUrl
 
-[?] Ich brauche einen neuen Modus der Bei disconnected und auch bei Death greift.
+[x] Ich brauche einen neuen Modus der Bei disconnected und auch bei Death greift.
 Der Modus heisst DEAD.
 - Im DEAD modus ist Physics deaktiviert.
 - Im DEAD modus ist die Cam unterwasser aktiviert.
@@ -352,7 +352,7 @@ Der Modus heisst DEAD.
 
 [x] Beim stoppen des test_servers (Ctrl+C) soll gewartet werden bis alle chunks und items geschrieben wurden. So sollen currupt files vermieden werden.
 
-[?] Erweitere den CommandService im packet engine so dass multiple commandos in einem aufruf ausgefuehrt werden koennen.
+[x] Erweitere den CommandService im packet engine so dass multiple commandos in einem aufruf ausgefuehrt werden koennen.
 - Siehe "Multiple Commands (Server -> Client)" in client/instructions/general/network-model-2.0.md
 - Die bestehende methode wird erweitert, wenn die daten ain Array sind und kein object, dann werden die commandos nacheinander ausgefuehrt. (oder parallel?)
 
@@ -389,7 +389,7 @@ Es werden also zwei neue network messages benoetigt:
 - Sinn macht ein flag in ScriptActionDefinition 'sendToServer?: boolean' default true, wenn false, dann nicht senden.
   - damit kann auch ein local effect gestartet werden, der nicht an den server gesendet wird.
 
-[?] Wenn ein effect parameters geupdated wird, muss das update an alle clients gesendet werden die den chunk geladen haben.
+[x] Wenn ein effect parameters geupdated wird, muss das update an alle clients gesendet werden die den chunk geladen haben.
 - Client to Server, siehe "Effect Parameter Update (Client -> Server)" in client/instructions/general/network-model-2.0.md
 - Server to Client, siehe "Effect Parameter Update (Server -> Client)" in client/instructions/general/network-model-2.0.md
 - Es macht Sinn die affected chunks mit am ScriptActionDefinition zu speichern, dann muss das nru einmal berechnet werden
@@ -412,10 +412,10 @@ Es werden also zwei neue network messages benoetigt:
   - Wenn chunkX und chunkZ gesetzt sind, rufe 'redrawChunk' auf
   - Wenn keine parameter gesetzt sind, rufe 'redrawAllChunks' auf
 
-[?] Wenn beim WorldInfo update sich der status aendert, muessen alle currentModifier in ChunkService neu errechnet werden und die chunks neu gerendert werden.
+[x] Wenn beim WorldInfo update sich der status aendert, muessen alle currentModifier in ChunkService neu errechnet werden und die chunks neu gerendert werden.
 - Es soll ausserdem eine 'seasonStatus' und 'seasonProgress : number' in der WeltInfo geben. Auch hier muss bei aenderung die currentModifier neu berechnet werden.
 
-[?] Erstelle im Server commandos die es erlauben in WorldInfo den status, seasonStatus und seasonProgress zu aendern.
+[x] Erstelle im Server commandos die es erlauben in WorldInfo den status, seasonStatus und seasonProgress zu aendern.
 - Wenn die Änderung erfolgt, muessen alle clients die worldInfo neu laden. Dazu wird in den engine clients das commando 'reloadWorldConfig' ausgefuehrt.
 
 [ ] Es soll eeinen neuen Bewegungsmodus neben FLY, WALK, SPRINT, CROUCH etc. geben: FREE_FLY, der Modus kommt vor FLY in der liste.
