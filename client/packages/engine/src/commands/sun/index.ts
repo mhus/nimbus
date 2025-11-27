@@ -13,3 +13,6 @@ export { SunSizeCommand } from './SunSizeCommand';
 export { SunLensFlareEnableCommand } from './SunLensFlareEnableCommand';
 export { SunLensFlareIntensityCommand } from './SunLensFlareIntensityCommand';
 export { SunLensFlareColorCommand } from './SunLensFlareColorCommand';
+export { AutomaticSunAdjustmentCommand } from './AutomaticSunAdjustmentCommand';
+export { SunLightIntensityMultiplierCommand } from './SunLightIntensityMultiplierCommand';
+export { AmbientLightIntensityMultiplierCommand } from './AmbientLightIntensityMultiplierCommand';

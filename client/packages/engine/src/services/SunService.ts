@@ -53,6 +53,11 @@ export class SunService {
   private sunSize: number = 80; // Billboard size
   private enabled: boolean = true;
 
+  // Automatic sun adjustment
+  private automaticSunAdjustment: boolean = true;
+  private sunLightIntensityMultiplier: number = 1.0;
+  private ambientLightIntensityMultiplier: number = 0.5;
+
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
     this.appContext = appContext;
@@ -410,10 +415,68 @@ export class SunService {
 
     this.sunRoot.position.set(x, y, z);
 
+    // Apply automatic light adjustments if enabled
+    if (this.automaticSunAdjustment) {
+      this.updateAutomaticLighting();
+    }
+
     logger.info('Sun position updated', {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
       position: { x, y, z },
+      automaticAdjustment: this.automaticSunAdjustment,
+    });
+  }
+
+  /**
+   * Update sun light and ambient light based on sun position
+   * Automatically adjusts direction and intensity based on elevation
+   */
+  private updateAutomaticLighting(): void {
+    const environmentService = this.appContext.services.environment;
+    if (!environmentService) {
+      return;
+    }
+
+    // Convert angles to radians
+    const angleYRad = this.currentAngleY * (Math.PI / 180);
+    const elevationRad = this.currentElevation * (Math.PI / 180);
+
+    // Calculate sun light direction (pointing from sun position to origin)
+    // This creates shadows as if light is coming from the sun
+    const dirX = -Math.cos(elevationRad) * Math.sin(angleYRad);
+    const dirY = -Math.sin(elevationRad);
+    const dirZ = -Math.cos(elevationRad) * Math.cos(angleYRad);
+
+    // Set sun light direction
+    environmentService.setSunLightDirection(dirX, dirY, dirZ);
+
+    // Calculate intensity based on elevation
+    // Elevation range: -90° (below horizon) to 90° (zenith)
+    // Intensity: 0 when below horizon, max at zenith
+    const elevationNormalized = Math.max(0, this.currentElevation / 90); // 0-1 range
+
+    // Apply smooth curve for more realistic light falloff
+    // Use squared value for softer sunrise/sunset
+    const intensityFactor = Math.pow(elevationNormalized, 0.5);
+
+    // Calculate sun light intensity with multiplier
+    const sunLightIntensity = intensityFactor * this.sunLightIntensityMultiplier;
+    environmentService.setSunLightIntensity(sunLightIntensity);
+
+    // Calculate ambient light intensity with multiplier
+    // Ambient light should be softer and always present
+    const ambientBaseIntensity = 0.3 + (intensityFactor * 0.7); // Range: 0.3-1.0
+    const ambientLightIntensity = ambientBaseIntensity * this.ambientLightIntensityMultiplier;
+    environmentService.setAmbientLightIntensity(ambientLightIntensity);
+
+    logger.info('Automatic lighting updated', {
+      elevation: this.currentElevation,
+      angleY: this.currentAngleY,
+      sunLightDirection: { x: dirX, y: dirY, z: dirZ },
+      sunLightIntensity,
+      ambientLightIntensity,
+      intensityFactor,
     });
   }
 
@@ -546,6 +609,72 @@ export class SunService {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
     };
+  }
+
+  /**
+   * Set automatic sun adjustment
+   * @param enabled True to enable automatic light adjustment, false to disable
+   */
+  setAutomaticSunAdjustment(enabled: boolean): void {
+    this.automaticSunAdjustment = enabled;
+
+    // Apply adjustment immediately if enabled
+    if (enabled) {
+      this.updateAutomaticLighting();
+    }
+
+    logger.info('Automatic sun adjustment changed', { enabled });
+  }
+
+  /**
+   * Get automatic sun adjustment state
+   */
+  getAutomaticSunAdjustment(): boolean {
+    return this.automaticSunAdjustment;
+  }
+
+  /**
+   * Set sun light intensity multiplier
+   * @param multiplier Multiplier for sun light intensity (default: 1.0)
+   */
+  setSunLightIntensityMultiplier(multiplier: number): void {
+    this.sunLightIntensityMultiplier = multiplier;
+
+    // Re-apply lighting if automatic adjustment is enabled
+    if (this.automaticSunAdjustment) {
+      this.updateAutomaticLighting();
+    }
+
+    logger.info('Sun light intensity multiplier set', { multiplier });
+  }
+
+  /**
+   * Get sun light intensity multiplier
+   */
+  getSunLightIntensityMultiplier(): number {
+    return this.sunLightIntensityMultiplier;
+  }
+
+  /**
+   * Set ambient light intensity multiplier
+   * @param multiplier Multiplier for ambient light intensity (default: 0.5)
+   */
+  setAmbientLightIntensityMultiplier(multiplier: number): void {
+    this.ambientLightIntensityMultiplier = multiplier;
+
+    // Re-apply lighting if automatic adjustment is enabled
+    if (this.automaticSunAdjustment) {
+      this.updateAutomaticLighting();
+    }
+
+    logger.info('Ambient light intensity multiplier set', { multiplier });
+  }
+
+  /**
+   * Get ambient light intensity multiplier
+   */
+  getAmbientLightIntensityMultiplier(): number {
+    return this.ambientLightIntensityMultiplier;
   }
 
   /**

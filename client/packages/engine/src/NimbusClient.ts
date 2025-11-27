@@ -118,6 +118,9 @@ import {
   SunLensFlareEnableCommand,
   SunLensFlareIntensityCommand,
   SunLensFlareColorCommand,
+  AutomaticSunAdjustmentCommand,
+  SunLightIntensityMultiplierCommand,
+  AmbientLightIntensityMultiplierCommand,
 } from './commands/sun';
 import {
   SkyBoxEnableCommand,
@@ -341,6 +344,9 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SunLensFlareEnableCommand(appContext));
     commandService.registerHandler(new SunLensFlareIntensityCommand(appContext));
     commandService.registerHandler(new SunLensFlareColorCommand(appContext));
+    commandService.registerHandler(new AutomaticSunAdjustmentCommand(appContext));
+    commandService.registerHandler(new SunLightIntensityMultiplierCommand(appContext));
+    commandService.registerHandler(new AmbientLightIntensityMultiplierCommand(appContext));
 
     // Register skybox commands
     commandService.registerHandler(new SkyBoxEnableCommand(appContext));

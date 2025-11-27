@@ -545,7 +545,7 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
   - Registriert in NimbusClient.ts
 ```
 
-[ ] Erstelle in SunService einen Parameter automaticSunAdjustment (boolean),default true
+[?] Erstelle in SunService einen Parameter automaticSunAdjustment (boolean),default true
 - erstelle ein Command in engine um den parameter zu setzen
 - Wenn automaticSunAdjustment true ist, werden sunLightDirection und sunLightIntensity automatisch angepasst wenn die sonnenPosition geaendert wird
 - Wenn die sonnenPosition (SunService) gesetzt wird, soll automatisch die sunLightDirection im EnvironmentService angepasst werden, berechne dafuer den winkel der sonne ueber dem horizont
@@ -556,7 +556,31 @@ Methode um Werte ueber die Zeit zu aendern. Der ModifierStack bietet sich hier a
 - Erstelle dafuer Methoden zum setzen/lesen und Commands in engine
 
 [ ] Erstelle in EnvironmentService einen mechanismus der die Tageszeit steuert
-- in WorldInfo wird ein parameter dayTimeSyn
+- der Mechanismus wird mit einem Command gestartet und gestoppt
+- Beim starten wird die aktuelle Zeit im system uebergeben und das scaling fuer die Tageszeit (z.b. 1 reale minute = 10 minuten im spiel)
+  - Die Welt-Zeit kann dann ueber den Timestamp im System und dem scaling berechnet werden
+  - Die WeltZeit funktioniert in Minuten
+  - In der WorldTime schrieben wir immer in '@' dafur, damit ersichtilich ist, das es sich um World Time handelt, z.b. auch @1,10.12.2023 14:30
+    - @Era, @Year, @Month, @Day, @Hour, @Minute
+  - Wie das Konfiguriert ist, kann ueber die WeltInfo eingestellt und ueber ein Command ueberschrieben werden
+    - @Minute = Echte Minute (scaling, z.b. 10: 1 reale minute = 10 minuten in der welt)
+    - @Hour = Wieliele @Minuten hat ein @Hour - defualt 60
+    - @Day = Wie viele @Hours hat ein @Day - defualt 24
+    - @Month = Wie viele @Days hat ein @Month (immer die gleiche Anzahl!, NICHT 30/31 tage) - defualt 30
+    - @Year = Wie viele @Months hat ein @Year - defualt 12
+    - @Era = Wie viele @Years hat eine @Era (das ist ein Maximalwert, manche Areas haben laenger/kuerzer gedauert, default ist hier 10000 @years)
+  - Command: worldTimeConfig <minuteScaling> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>
+  - Command: worldTimeStart <worldMinute>
+    - worldMinute: number (minute since 1.1.0000 00:00:00 in der Welt in MINUTEN)
+  - Command: wordTimeStop
+  - getWorldTimeCurrent (number in minutes)
+  - getWorldTimeCurrentAsString (@ear, @year.@month.@day, @hour:@minute)
+  - getWorldDayTimeSection ('day' | 'evening' | 'night' | 'morning')
+- Die Tageszeit wird in 4 abschnitte unterteilt: - Auch das aus der WorldInfo uebernommen werden kann
+  - morning: 6:00 - 12:00
+  - day: 12:00 - 18:00
+  - evening: 18:00 - 24:00
+  - night: 0:00 - 6:00
 - Wenn sich die Tageszeit ändert ('day' | 'evening' | 'night' | 'morning') wird das entsprechende Script hier im EnvironmentService gestartet
   'daytime_change_day', 'daytime_change_evening', 'daytime_change_night', 'daytime_change_morning'
 
