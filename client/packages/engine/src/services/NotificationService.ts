@@ -91,17 +91,19 @@ export class NotificationService {
   }
 
   /**
-   * Initialize splash screen audio modifier
+   * Initialize splash screen audio modifier (internal, called from NimbusClient)
    * Creates a modifier in the AMBIENT_AUDIO stack with priority 5
    */
-  private initializeSplashScreenAudioModifier(): void {
+  initializeSplashScreenAudioModifierInternal(): void {
+
     const modifierService = this.appContext.services.modifier;
+
     if (!modifierService) {
-      logger.info('ModifierService not available, splash screen audio modifier not created');
       return;
     }
 
     const stack = modifierService.getModifierStack<string>(StackName.AMBIENT_AUDIO);
+
     if (!stack) {
       logger.warn('Ambient audio stack not available');
       return;
@@ -111,8 +113,21 @@ export class NotificationService {
     if (!this.splashScreenAudioModifier) {
       this.splashScreenAudioModifier = stack.addModifier('', 5); // Priority 5 (higher than environment=50, lower than death=10)
       this.splashScreenAudioModifier.setEnabled(false); // Disabled by default
-      logger.info('Splash screen audio modifier created', { prio: 5 });
     }
+  }
+
+  /**
+   * Activate splash screen audio (internal, called from NimbusClient)
+   * @param audioPath Path to audio file
+   */
+  activateSplashScreenAudio(audioPath: string): void {
+    if (!this.splashScreenAudioModifier) {
+      logger.warn('Splash screen audio modifier not initialized');
+      return;
+    }
+
+    this.splashScreenAudioModifier.setValue(audioPath);
+    this.splashScreenAudioModifier.setEnabled(true);
   }
 
   /**
@@ -1585,20 +1600,8 @@ export class NotificationService {
 
       // Handle audio if provided
       if (audioPath && audioPath.trim() !== '') {
-        logger.info('Attempting to enable splash screen audio', { audioPath });
-        this.initializeSplashScreenAudioModifier();
-
-        if (this.splashScreenAudioModifier) {
-          this.splashScreenAudioModifier.setValue(audioPath);
-          this.splashScreenAudioModifier.setEnabled(true);
-          logger.info('Splash screen audio enabled', {
-            audioPath,
-            modifierEnabled: this.splashScreenAudioModifier.enabled,
-            modifierValue: this.splashScreenAudioModifier.getValue()
-          });
-        } else {
-          logger.warn('Splash screen audio modifier not created', { audioPath });
-        }
+        this.initializeSplashScreenAudioModifierInternal();
+        this.activateSplashScreenAudio(audioPath);
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.showSplashScreen', {

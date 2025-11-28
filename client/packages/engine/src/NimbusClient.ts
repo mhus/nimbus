@@ -451,6 +451,25 @@ async function initializeApp(): Promise<AppContext> {
   }
 }
 
+function showSplashScreen(appContext: AppContext, networkService: NetworkService) {
+  // Show splash screen if enabled and configured (after worldInfo and NetworkService are loaded)
+  const showSplashScreen = import.meta.env.VITE_SHOW_SPLASH_SCREEN !== 'false';
+  const splashScreenPath = appContext.worldInfo?.splashScreen;
+  const splashScreenAudio = appContext.worldInfo?.splashScreenAudio;
+
+  const notificationService = appContext.services.notification;
+  if (showSplashScreen && splashScreenPath && notificationService) {
+    logger.debug('Showing splash screen', {splashScreenPath, splashScreenAudio});
+    notificationService.showSplashScreen(splashScreenPath, splashScreenAudio);
+  } else {
+    logger.warn('Splash screen not shown', {
+      reason: !showSplashScreen ? 'disabled in env' :
+          !splashScreenPath ? 'no splashScreenPath in worldInfo' :
+              'notificationService not available'
+    });
+  }
+}
+
 /**
  * Initialize core services (Network, BlockType, Shader, Chunk)
  */
@@ -479,31 +498,6 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.debug('Initializing NetworkService...');
     const networkService = new NetworkService(appContext);
     appContext.services.network = networkService;
-
-    // Show splash screen if enabled and configured (after worldInfo and NetworkService are loaded)
-    const showSplashScreen = import.meta.env.VITE_SHOW_SPLASH_SCREEN !== 'false';
-    const splashScreenPath = appContext.worldInfo?.splashScreen;
-    const splashScreenAudio = appContext.worldInfo?.splashScreenAudio;
-    logger.debug('Splash screen check', {
-      showSplashScreen,
-      splashScreenPath,
-      splashScreenAudio,
-      envValue: import.meta.env.VITE_SHOW_SPLASH_SCREEN,
-      worldInfoAvailable: !!appContext.worldInfo,
-      networkServiceAvailable: !!networkService
-    });
-
-    const notificationService = appContext.services.notification;
-    if (showSplashScreen && splashScreenPath && notificationService) {
-      logger.debug('Showing splash screen', { splashScreenPath, splashScreenAudio });
-      notificationService.showSplashScreen(splashScreenPath, splashScreenAudio);
-    } else {
-      logger.debug('Splash screen not shown', {
-        reason: !showSplashScreen ? 'disabled in env' :
-                !splashScreenPath ? 'no splashScreenPath in worldInfo' :
-                'notificationService not available'
-      });
-    }
 
     // Register message handlers BEFORE connecting
     logger.debug('Registering message handlers...');
@@ -582,6 +576,9 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     logger.debug('Initializing AudioService...');
     const audioService = new AudioService(appContext);
     appContext.services.audio = audioService;
+
+    // a good time to show splash screen
+    showSplashScreen(appContext, networkService);
 
     // Initialize ChunkService
     logger.debug('Initializing ChunkService...');

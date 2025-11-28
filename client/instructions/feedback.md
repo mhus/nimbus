@@ -253,7 +253,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Der splash screen wird als fullscreen bild angezeigt, es wird ein asset pfad uebergeben. Mit NetworkService.getAssetUrl holen.
 - Erstelle ein Command in engine um den splash screen zu steuern.
    
-[?] Erweitere das splash screen system im NotificationService um Audio.
+[x] Erweitere das splash screen system im NotificationService um Audio.
 - Es existiert ein ModifierStack fuer AmbienteAudio, erstelle hier einen neuen Modifier 'splashScreenAudio' mit prio 5 der im NotificationService verwaltet wird.
 - Der modifier ist by default enabled=false
 - Erweitere den splashCreen aufruf um einen optionalen audioPath parameter.
@@ -262,7 +262,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Wenn der splash screen entfernt wird, wird der Modifier deaktiviert.
 - Erweitere das Command im engine um den audioPath parameter.
 
-[ ] Erweitere auch WorldInfo um einen splashScreenAudio parameter.
+[x] Erweitere auch WorldInfo um einen splashScreenAudio parameter.
 - worldInfo.splashScreenAudio: string (asset path) - optional, default leer
 - Beim Anzeigen des Start - SplashScreen wird auch der audioPath aus der WorldInfo uebergeben
 - Im test_server muss der Parameter beim RETS aufruf von http://localhost:3011/api/worlds/main/config?client=editor&t=1 mit uebergeben werden.
