@@ -72,7 +72,9 @@
       "Bash(node scripts/update-commands-castutil.js:*)",
       "Bash(node scripts/replace-console-with-logger.js:*)",
       "Bash(node scripts/add-missing-logger-imports.js:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pnpm update:*)"
     ],
     "deny": [],
     "ask": []

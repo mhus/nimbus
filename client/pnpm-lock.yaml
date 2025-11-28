@@ -67,16 +67,16 @@ importers:
   packages/engine:
     dependencies:
       '@babylonjs/core':
-        specifier: ^7.0.0
+        specifier: ^7.54.3
         version: 7.54.3
       '@babylonjs/gui':
-        specifier: ^7.0.0
+        specifier: ^7.54.3
         version: 7.54.3(@babylonjs/core@7.54.3)
       '@babylonjs/loaders':
-        specifier: ^7.0.0
+        specifier: ^7.54.3
         version: 7.54.3(@babylonjs/core@7.54.3)(babylonjs-gltf2interface@7.54.3)
       '@babylonjs/materials':
-        specifier: ^7.0.0
+        specifier: ^7.54.3
         version: 7.54.3(@babylonjs/core@7.54.3)
       '@nimbus/shared':
         specifier: workspace:*
@@ -102,6 +102,16 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.23)
+
+  packages/shadow-test:
+    dependencies:
+      '@babylonjs/core':
+        specifier: ^7.54.3
+        version: 7.54.3
+    devDependencies:
+      vite:
+        specifier: ^5.4.21
         version: 5.4.21(@types/node@20.19.23)
 
   packages/shared:
@@ -520,8 +530,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: true
 
-  /@emnapi/core@1.6.0:
-    resolution: {integrity: sha512-zq/ay+9fNIJJtJiZxdTnXS20PllcYMX3OE23ESc4HK/bdYu3cOWYVhsOhVnXALfU/uqJIxn5NBPd9z4v+SfoSg==}
+  /@emnapi/core@1.7.1:
+    resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==}
     requiresBuild: true
     dependencies:
       '@emnapi/wasi-threads': 1.1.0
@@ -529,8 +539,8 @@ packages:
     dev: true
     optional: true
 
-  /@emnapi/runtime@1.6.0:
-    resolution: {integrity: sha512-obtUmAHTMjll499P+D9A3axeJFlhdjOWdKUNs/U6QIGT7V5RjcUW1xToAzjvmgTSQhDbYn/NwfTRoJcQ2rNBxA==}
+  /@emnapi/runtime@1.7.1:
+    resolution: {integrity: sha512-PVtJr5CmLwYAU9PZDMITZoR5iAOShYREoR45EyyLrbntV50mdePTgUn4AmOw90Ifcj+x2kRjdzr1HP3RrNiHGA==}
     requiresBuild: true
     dependencies:
       tslib: 2.8.1
@@ -1359,8 +1369,8 @@ packages:
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
     requiresBuild: true
     dependencies:
-      '@emnapi/core': 1.6.0
-      '@emnapi/runtime': 1.6.0
+      '@emnapi/core': 1.7.1
+      '@emnapi/runtime': 1.7.1
       '@tybys/wasm-util': 0.10.1
     dev: true
     optional: true

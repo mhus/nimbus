@@ -11,3 +11,7 @@ export { ShadowsDebugCommand } from './ShadowsDebugCommand';
 export { ShadowsTestCommand } from './ShadowsTestCommand';
 export { ShadowsGroundCommand } from './ShadowsGroundCommand';
 export { ShadowsSimpleTestCommand } from './ShadowsSimpleTestCommand';
+export { ShadowsVisualizeCommand } from './ShadowsVisualizeCommand';
+export { ShadowsSceneDebugCommand } from './ShadowsSceneDebugCommand';
+export { ShadowsSystemDebugCommand } from './ShadowsSystemDebugCommand';
+export { ShadowsMarkCasterCommand } from './ShadowsMarkCasterCommand';

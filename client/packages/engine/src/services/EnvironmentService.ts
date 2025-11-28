@@ -299,8 +299,8 @@ export class EnvironmentService {
       // Create ambient hemispheric light
       this.ambientLight = new HemisphericLight('ambientLight', new Vector3(0, 1, 0), this.scene);
 
-      // Set ambient light properties
-      this.ambientLight.intensity = 1.0;
+      // Set ambient light properties - MEDIUM INTENSITY for shadow visibility
+      this.ambientLight.intensity = 0.85; // Balanced for shadows + visibility
       this.ambientLight.diffuse = new Color3(1, 1, 1); // White light
       this.ambientLight.specular = new Color3(0, 0, 0); // No specular
       this.ambientLight.groundColor = new Color3(0.3, 0.3, 0.3); // Dim ground light
@@ -517,79 +517,42 @@ export class EnvironmentService {
       // FORCE SHADOWS ON FOR TESTING - ignore WorldInfo
       // const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
 
-      // Use medium quality settings
-      const quality = 'medium';
-      const mapSize = 1024;
+      // Use CASCADED shadow generator (like working example)
+      const mapSize = 2048;
 
-      // Create normal shadow generator (WebGL1 compatible)
-      this.shadowGenerator = new ShadowGenerator(mapSize, this.sunLight);
+      // Create CascadedShadowGenerator (WebGL2)
+      this.shadowGenerator = new CascadedShadowGenerator(mapSize, this.sunLight);
 
-      // CRITICAL: Force back faces only for proper shadows (especially for voxel geometry)
-      this.shadowGenerator.forceBackFacesOnly = true;
+      // Settings from working example
+      this.shadowGenerator.lambda = 0.2;
+      this.shadowGenerator.filter = 0; // No filter (hard shadows)
+      this.shadowGenerator.numCascades = 2;
 
-      // Set filter to 0 (like working example - no filtering!)
-      this.shadowGenerator.filter = 0;
-
-      // Increase bias for voxel geometry (prevent shadow acne)
-      this.shadowGenerator.bias = 0.001; // Higher bias
-      this.shadowGenerator.normalBias = 0.01; // Higher normal bias
-
-      // Enable transparency shadows (might help with some materials)
+      // Enable transparency shadows
       this.shadowGenerator.transparencyShadow = true;
 
-      // Set MAXIMUM darkness for visibility
-      this.shadowGenerator.setDarkness(1.0); // Full black shadows
-
-      logger.info('Shadow generator configured', {
-        forceBackFacesOnly: this.shadowGenerator.forceBackFacesOnly,
-        transparencyShadow: this.shadowGenerator.transparencyShadow,
-        bias: this.shadowGenerator.bias,
-      });
-
-      // Important: Set light position for shadow frustum calculation
-      // BabylonJS default: position = -direction, but we set it explicitly
-      const lightDir = this.sunLight.direction;
-      this.sunLight.position = new Vector3(-lightDir.x * 100, -lightDir.y * 100, -lightDir.z * 100);
-
-      // CRITICAL: Disable auto-update first (might cause issues)
-      this.sunLight.autoUpdateExtentsShadowMap = false;
-
-      // Set shadow min/max Z - CRITICAL for shadow visibility
-      this.sunLight.shadowMinZ = 1;
-      this.sunLight.shadowMaxZ = 5000;
-
-      // CRITICAL: Set camera.maxZ to match shadowMaxZ (from BabylonJS docs)
+      // Set camera.maxZ for shadow frustum
       const cameraService = this.appContext.services.camera;
       if (cameraService) {
         const camera = cameraService.getCamera();
         if (camera) {
-          camera.maxZ = 5000; // Match shadowMaxZ!
-          logger.info('Camera maxZ synchronized with shadow maxZ', { maxZ: 5000 });
+          camera.maxZ = 15000;
+          this.shadowGenerator.shadowMaxZ = 15000;
         }
       }
 
-      // Note: splitFrustum() only exists on CascadedShadowGenerator, not needed for regular ShadowGenerator
-
-      // CRITICAL: Enable shadow generation for custom shaders
-      // This tells BabylonJS to add shadow code to ALL materials (including ShaderMaterial)
-      this.shadowGenerator.enableSoftTransparentShadow = false;
-
-      // Force shadow map to refresh immediately
-      const shadowMap = this.shadowGenerator.getShadowMap();
-      if (shadowMap) {
-        shadowMap.refreshRate = 1; // RENDER_ONEVERYFRAME
-        shadowMap.renderList = shadowMap.renderList || [];
-      }
+      // Call splitFrustum (required for CascadedShadowGenerator)
+      this.shadowGenerator.splitFrustum();
 
       this.shadowEnabled = true;
-      this.shadowQuality = quality;
+      this.shadowQuality = 'medium';
 
-      logger.info('Shadow system FORCE ENABLED for testing', {
-        quality,
-        mapSize,
-        darkness: 1.0,
-        forceBackFacesOnly: this.shadowGenerator.forceBackFacesOnly,
-        refreshRate: shadowMap?.refreshRate,
+      logger.info('Shadow system initialized with CascadedShadowGenerator', {
+        type: 'CascadedShadowGenerator',
+        mapSize: mapSize,
+        lambda: 0.2,
+        numCascades: 2,
+        transparencyShadow: true,
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EnvironmentService.initializeShadows');

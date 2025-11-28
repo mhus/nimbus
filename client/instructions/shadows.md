@@ -1245,3 +1245,10 @@ Shadow-System Konzept für Nimbus Engine
 
   Das Shadow-System ist vollständig implementiert und produktionsbereit! 🚀
 ```
+
+[ ] Es wurde ein Shadow-System in EnvironmentService implementiert. Es wurde auf WebGL2 umgestellt, da dort
+shadows besser unterstützt werden.
+Aber das shadow system geht, auch nach mehreren Versuchen, nicht.
+Es gibt eine shadowTest command. Es zeichnet eine Kugel und eine Fläche auf die schatten geworfen werden sollten.
+Erweitere den test so.das um die Kugel herum 6 Sieten, ein Wuerfel von innen, gezeichnet wird, der die Schatten der Kugel aufnimmt.
+

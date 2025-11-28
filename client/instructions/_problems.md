@@ -21,8 +21,18 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 - Im Sprint modus kein Jump
 - autoJump als number ? Jump height?
 
-[ ] Alle services sollen im AppContext bzw. in den unteren Services wie RenderService referenziert sein. 
+[ ] Alle services sollen im AppContext bzw. in den unteren Services wie RenderService referenziert sein.
 Pruefe ob das so umgesetzt ist, es gab jetzt immer wieder faelle, da wurde das nicht erledigt.
 Auch wenn es nicht noetig ist, aber das ist das Konzept.
+
+[ ] **CRITICAL: Shadows funktionieren NICHT**
+- Shadow System wurde in EnvironmentService implementiert (CascadedShadowGenerator)
+- WebGL2 ist aktiv und funktioniert
+- Alle BabylonJS Settings sind korrekt (shadowsEnabled: true, receiveShadows, renderList, etc.)
+- Test-Scene wurde EXAKT wie funktionierendes BabylonJS Playground-Beispiel aufgebaut
+- ABER: Keine Schatten sichtbar - weder auf Test-Meshes noch auf Voxel-Chunks
+- Vermutung: Fundamentales Problem in der Rendering-Engine oder fehlende Bibliothek/Parameter
+- Commands zum Testen: shadowsSimpleTest, shadowsSystemDebug, shadowsInfo
+- Siehe: instructions/shadows.md für Details
 
 

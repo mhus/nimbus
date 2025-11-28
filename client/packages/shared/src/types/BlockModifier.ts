@@ -546,6 +546,9 @@ export interface PhysicsModifier {
   /** Solid collision */
   solid?: boolean;
 
+  /** Cast shadows - if true, this block will cast shadows, default: false */
+  castsShadows?: boolean;
+
   /** Movement resistance - speed reduction if on(solid)/in(!solid) the block, default: 0 */
   resistance?: number;
 
