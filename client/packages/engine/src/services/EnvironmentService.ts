@@ -544,7 +544,7 @@ export class EnvironmentService {
       if (cameraService) {
         const camera = cameraService.getCamera();
         if (camera) {
-          camera.maxZ = Math.max(shadowMaxZ, 1000);
+          camera.maxZ = Math.max(shadowMaxZ, 5000);
         }
       }
 
