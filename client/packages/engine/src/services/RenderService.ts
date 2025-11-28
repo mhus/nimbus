@@ -416,6 +416,22 @@ export class RenderService {
       if (meshMap.size > 0) {
         this.chunkMeshes.set(chunkKey, meshMap);
 
+        // Enable shadow receiving for all chunk meshes
+        const envService = this.appContext.services.environment;
+        if (envService && envService.getShadowGenerator) {
+          const shadowGenerator = envService.getShadowGenerator();
+          if (shadowGenerator) {
+            for (const mesh of meshMap.values()) {
+              mesh.receiveShadows = true;
+            }
+            logger.debug('Chunk meshes registered for shadow receiving', {
+              cx: chunk.cx,
+              cz: chunk.cz,
+              meshCount: meshMap.size,
+            });
+          }
+        }
+
         logger.debug('Chunk meshes rendered', {
           cx: chunk.cx,
           cz: chunk.cz,

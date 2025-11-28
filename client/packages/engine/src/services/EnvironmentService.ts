@@ -4,12 +4,44 @@
  * Handles lighting, sky, fog, and other environmental effects.
  */
 
-import { HemisphericLight, DirectionalLight, Vector3, Color3, Scene } from '@babylonjs/core';
+import {
+  HemisphericLight,
+  DirectionalLight,
+  Vector3,
+  Color3,
+  Scene,
+  ShadowGenerator,
+  RenderTargetTexture,
+} from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ScriptActionDefinition } from '@nimbus/shared';
 
 const logger = getLogger('EnvironmentService');
+
+/**
+ * Shadow quality presets
+ */
+const QUALITY_PRESETS = {
+  low: {
+    mapSize: 512,
+    useESM: false,
+    usePCF: false,
+    bias: 0.0001,
+  },
+  medium: {
+    mapSize: 1024,
+    useESM: true,
+    usePCF: false,
+    bias: 0.00005,
+  },
+  high: {
+    mapSize: 2048,
+    useESM: true,
+    usePCF: true,
+    bias: 0.00002,
+  },
+} as const;
 
 /**
  * Wind parameters for environment
@@ -151,6 +183,12 @@ export class EnvironmentService {
   // Wind parameters
   private windParameters: WindParameters;
 
+  // Shadow system
+  private shadowGenerator: ShadowGenerator | null = null;
+  private shadowEnabled: boolean = false;
+  private shadowQuality: 'low' | 'medium' | 'high' = 'low';
+  private shadowMaxDistance: number = 50;
+
   // Ambient audio modifier (priority 50)
   private ambientAudioModifier?: any; // Modifier<string>
 
@@ -196,6 +234,7 @@ export class EnvironmentService {
 
     this.initializeEnvironment();
     this.initializeAmbientAudioModifier();
+    this.initializeShadows();
     this.loadEnvironmentScriptsFromWorldInfo();
 
     logger.debug('EnvironmentService initialized', {
@@ -203,6 +242,7 @@ export class EnvironmentService {
       worldTimeConfig: this.worldTimeConfig,
       daySectionConfig: this.daySectionConfig,
       celestialBodiesConfig: this.celestialBodiesConfig,
+      shadowsEnabled: this.shadowEnabled,
     });
   }
 
@@ -457,6 +497,241 @@ export class EnvironmentService {
    */
   setBackgroundColor(r: number, g: number, b: number): void {
     this.scene.clearColor = new Color3(r, g, b).toColor4();
+  }
+
+  // ============================================
+  // Shadow System Management
+  // ============================================
+
+  /**
+   * Initialize shadow system from WorldInfo
+   */
+  private initializeShadows(): void {
+    const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
+
+    if (!shadowSettings?.enabled) {
+      logger.debug('Shadows disabled in WorldInfo');
+      return;
+    }
+
+    if (!this.sunLight) {
+      logger.warn('Cannot initialize shadows: sunLight not available');
+      return;
+    }
+
+    try {
+      // Get quality preset
+      const quality = shadowSettings.quality || 'low';
+      const mapSize = shadowSettings.mapSize || QUALITY_PRESETS[quality].mapSize;
+
+      // Create shadow generator
+      this.shadowGenerator = new ShadowGenerator(mapSize, this.sunLight);
+
+      // Apply quality settings
+      this.applyShadowQualitySettings(quality);
+
+      // Set initial darkness
+      const darkness = shadowSettings.darkness ?? 0.6;
+      this.shadowGenerator.setDarkness(darkness);
+
+      // Set max shadow distance for culling
+      if (shadowSettings.maxDistance) {
+        this.shadowMaxDistance = shadowSettings.maxDistance;
+      }
+
+      this.shadowEnabled = true;
+      this.shadowQuality = quality;
+
+      logger.debug('Shadow system initialized', {
+        quality,
+        mapSize,
+        darkness,
+        maxDistance: this.shadowMaxDistance,
+      });
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(error, 'EnvironmentService.initializeShadows');
+    }
+  }
+
+  /**
+   * Apply shadow quality preset settings
+   */
+  private applyShadowQualitySettings(quality: 'low' | 'medium' | 'high'): void {
+    if (!this.shadowGenerator) return;
+
+    const preset = QUALITY_PRESETS[quality];
+
+    // Configure filtering
+    this.shadowGenerator.useExponentialShadowMap = preset.useESM;
+    this.shadowGenerator.usePercentageCloserFiltering = preset.usePCF;
+
+    // Set bias to prevent shadow acne
+    this.shadowGenerator.bias = preset.bias;
+    this.shadowGenerator.normalBias = 0;
+
+    // For PCF, set filtering quality
+    if (preset.usePCF) {
+      this.shadowGenerator.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
+    }
+
+    logger.debug('Shadow quality settings applied', { quality, preset });
+  }
+
+  /**
+   * Enable or disable shadows
+   *
+   * @param enabled True to enable shadows, false to disable
+   */
+  setShadowsEnabled(enabled: boolean): void {
+    // If enabling shadows but generator doesn't exist, create it
+    if (enabled && !this.shadowGenerator) {
+      logger.info('Creating shadow generator on-the-fly');
+
+      if (!this.sunLight) {
+        logger.warn('Cannot create shadow generator: sunLight not available');
+        return;
+      }
+
+      try {
+        // Create shadow generator with default settings
+        const quality = 'low'; // Start with low quality
+        const mapSize = QUALITY_PRESETS[quality].mapSize;
+
+        this.shadowGenerator = new ShadowGenerator(mapSize, this.sunLight);
+        this.applyShadowQualitySettings(quality);
+        this.shadowGenerator.setDarkness(0.4); // Default darkness (0.6 intensity)
+        this.shadowQuality = quality;
+
+        logger.info('Shadow generator created successfully', { quality, mapSize });
+      } catch (error) {
+        logger.error('Failed to create shadow generator', { error });
+        return;
+      }
+    }
+
+    // If disabling or generator exists, proceed
+    if (!this.shadowGenerator) {
+      logger.warn('Shadow generator not initialized');
+      return;
+    }
+
+    this.shadowEnabled = enabled;
+    this.shadowGenerator.getShadowMap()!.renderList = enabled
+      ? this.shadowGenerator.getShadowMap()!.renderList
+      : [];
+
+    logger.info('Shadows ' + (enabled ? 'enabled' : 'disabled'));
+  }
+
+  /**
+   * Set shadow intensity (darkness)
+   *
+   * @param intensity Shadow darkness (0.0 = very dark shadows, 1.0 = no shadows/fully lit)
+   */
+  setShadowIntensity(intensity: number): void {
+    if (!this.shadowGenerator) {
+      logger.warn('Shadow generator not initialized');
+      return;
+    }
+
+    // Clamp intensity to 0-1
+    const clampedIntensity = Math.max(0, Math.min(1, intensity));
+
+    // BabylonJS darkness is inverted: 0 = no shadow, 1 = full shadow
+    // Our intensity: 0 = full shadow, 1 = no shadow
+    // So we need to invert it
+    this.shadowGenerator.setDarkness(1.0 - clampedIntensity);
+
+    logger.debug('Shadow intensity set', { intensity: clampedIntensity });
+  }
+
+  /**
+   * Set shadow quality preset
+   *
+   * @param quality Quality preset: 'low', 'medium', or 'high'
+   */
+  setShadowQuality(quality: 'low' | 'medium' | 'high'): void {
+    if (!this.shadowGenerator || !this.sunLight) {
+      logger.warn('Shadow generator not initialized');
+      return;
+    }
+
+    const oldMapSize = this.shadowGenerator.getShadowMap()?.getSize().width || 512;
+    const newMapSize = QUALITY_PRESETS[quality].mapSize;
+
+    // If map size changed, recreate shadow generator
+    if (oldMapSize !== newMapSize) {
+      logger.debug('Shadow map size changed, recreating shadow generator', {
+        oldSize: oldMapSize,
+        newSize: newMapSize,
+      });
+
+      // Store render list
+      const renderList = this.shadowGenerator.getShadowMap()!.renderList || [];
+
+      // Dispose old generator
+      this.shadowGenerator.dispose();
+
+      // Create new generator with new size
+      this.shadowGenerator = new ShadowGenerator(newMapSize, this.sunLight);
+
+      // Restore render list
+      if (renderList.length > 0) {
+        for (const mesh of renderList) {
+          this.shadowGenerator.addShadowCaster(mesh);
+        }
+      }
+    }
+
+    // Apply quality settings
+    this.applyShadowQualitySettings(quality);
+    this.shadowQuality = quality;
+
+    logger.info('Shadow quality set', { quality });
+  }
+
+  /**
+   * Get shadow generator for other services
+   *
+   * @returns Shadow generator or null if not initialized
+   */
+  getShadowGenerator(): ShadowGenerator | null {
+    return this.shadowGenerator;
+  }
+
+  /**
+   * Get shadow system info for debugging
+   *
+   * @returns Shadow system information
+   */
+  getShadowInfo(): {
+    enabled: boolean;
+    quality: string;
+    mapSize: number;
+    activeCasters: number;
+    darkness: number;
+  } {
+    if (!this.shadowGenerator) {
+      return {
+        enabled: false,
+        quality: 'none',
+        mapSize: 0,
+        activeCasters: 0,
+        darkness: 0,
+      };
+    }
+
+    const shadowMap = this.shadowGenerator.getShadowMap();
+    const darkness = this.shadowGenerator.getDarkness();
+
+    return {
+      enabled: this.shadowEnabled,
+      quality: this.shadowQuality,
+      mapSize: shadowMap?.getSize().width || 0,
+      activeCasters: shadowMap?.renderList?.length || 0,
+      // Convert BabylonJS darkness back to our intensity scale
+      darkness: 1.0 - darkness,
+    };
   }
 
   /**
@@ -1202,6 +1477,13 @@ export class EnvironmentService {
     // Stop all running scripts
     for (const group of this.runningScripts.keys()) {
       this.stopEnvironmentScriptByGroup(group);
+    }
+
+    // Dispose shadow generator
+    if (this.shadowGenerator) {
+      this.shadowGenerator.dispose();
+      this.shadowGenerator = null;
+      logger.debug('Shadow generator disposed');
     }
 
     this.ambientLight?.dispose();

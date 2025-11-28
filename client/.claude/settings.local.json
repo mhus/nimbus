@@ -71,7 +71,8 @@
       "Bash(pnpm --filter @nimbus/shared build:shared:*)",
       "Bash(node scripts/update-commands-castutil.js:*)",
       "Bash(node scripts/replace-console-with-logger.js:*)",
-      "Bash(node scripts/add-missing-logger-imports.js:*)"
+      "Bash(node scripts/add-missing-logger-imports.js:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

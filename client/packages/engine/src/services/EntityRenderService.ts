@@ -247,6 +247,27 @@ export class EntityRenderService {
       rotationNode.metadata = { entityId }; // Also store in rotation node
       modelRootNode.parent = rotationNode;
 
+      // Enable shadows for entity meshes
+      const envService = this.appContext.services.environment;
+      if (envService && envService.getShadowGenerator) {
+        const shadowGenerator = envService.getShadowGenerator();
+        if (shadowGenerator) {
+          // Get all child meshes and enable shadows
+          const childMeshes = modelRootNode.getChildMeshes();
+          for (const mesh of childMeshes) {
+            mesh.receiveShadows = true;
+            // Add as shadow caster
+            shadowGenerator.addShadowCaster(mesh);
+          }
+          if (childMeshes.length > 0) {
+            logger.debug('Entity meshes registered for shadows', {
+              entityId,
+              meshCount: childMeshes.length,
+            });
+          }
+        }
+      }
+
       // Get cloned animation groups (automatically retargeted to this instance)
       const animations = result.animationGroups || [];
 

@@ -116,6 +116,12 @@ import {
   SunLightSpecularCommand,
 } from './commands/sunLight';
 import {
+  ShadowsEnableCommand,
+  ShadowsIntensityCommand,
+  ShadowsQualityCommand,
+  ShadowsInfoCommand,
+} from './commands/shadows';
+import {
   SunEnableCommand,
   SunPositionCommand,
   SunElevationCommand,
@@ -355,6 +361,12 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new SunLightDirectionCommand(appContext));
     commandService.registerHandler(new SunLightDiffuseCommand(appContext));
     commandService.registerHandler(new SunLightSpecularCommand(appContext));
+
+    // Register shadow commands
+    commandService.registerHandler(new ShadowsEnableCommand(appContext));
+    commandService.registerHandler(new ShadowsIntensityCommand(appContext));
+    commandService.registerHandler(new ShadowsQualityCommand(appContext));
+    commandService.registerHandler(new ShadowsInfoCommand(appContext));
 
     // Register sun visualization commands
     commandService.registerHandler(new SunEnableCommand(appContext));
