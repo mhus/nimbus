@@ -252,21 +252,24 @@ export class EntityRenderService {
       if (envService && envService.getShadowGenerator) {
         const shadowGenerator = envService.getShadowGenerator();
         if (shadowGenerator) {
-          // Get all child meshes and enable shadows
-          const childMeshes = modelRootNode.getChildMeshes();
-          for (const mesh of childMeshes) {
-            // Skip instanced meshes - they inherit receiveShadows from source mesh
-            if (!mesh.isAnInstance) {
-              mesh.receiveShadows = true;
+          const shadowMap = shadowGenerator.getShadowMap();
+          if (shadowMap && shadowMap.renderList) {
+            // Get all child meshes and enable shadows
+            const childMeshes = modelRootNode.getChildMeshes();
+            for (const mesh of childMeshes) {
+              // Skip instanced meshes - they inherit receiveShadows from source mesh
+              if (!mesh.isAnInstance) {
+                mesh.receiveShadows = true;
+              }
+              // Add to renderList directly (like chunks)
+              shadowMap.renderList.push(mesh);
             }
-            // Add as shadow caster
-            shadowGenerator.addShadowCaster(mesh);
-          }
-          if (childMeshes.length > 0) {
-            logger.debug('Entity meshes registered for shadows', {
-              entityId,
-              meshCount: childMeshes.length,
-            });
+            if (childMeshes.length > 0) {
+              logger.debug('Entity meshes registered for shadows (casting + receiving)', {
+                entityId,
+                meshCount: childMeshes.length,
+              });
+            }
           }
         }
       }

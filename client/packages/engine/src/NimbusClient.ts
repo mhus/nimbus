@@ -122,14 +122,9 @@ import {
   ShadowsQualityCommand,
   ShadowsInfoCommand,
   ShadowsRefreshCommand,
+  ShadowsDistanceCommand,
   ShadowsDebugCommand,
-  ShadowsTestCommand,
-  ShadowsGroundCommand,
-  ShadowsSimpleTestCommand,
-  ShadowsVisualizeCommand,
-  ShadowsSceneDebugCommand,
-  ShadowsSystemDebugCommand,
-  ShadowsMarkCasterCommand,
+  ShadowsEngineInfoCommand,
 } from './commands/shadows';
 import {
   SunEnableCommand,
@@ -379,14 +374,9 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ShadowsQualityCommand(appContext));
     commandService.registerHandler(new ShadowsInfoCommand(appContext));
     commandService.registerHandler(new ShadowsRefreshCommand(appContext));
+    commandService.registerHandler(new ShadowsDistanceCommand(appContext));
     commandService.registerHandler(new ShadowsDebugCommand(appContext));
-    commandService.registerHandler(new ShadowsTestCommand(appContext));
-    commandService.registerHandler(new ShadowsGroundCommand(appContext));
-    commandService.registerHandler(new ShadowsSimpleTestCommand(appContext));
-    commandService.registerHandler(new ShadowsVisualizeCommand(appContext));
-    commandService.registerHandler(new ShadowsSceneDebugCommand(appContext));
-    commandService.registerHandler(new ShadowsSystemDebugCommand(appContext));
-    commandService.registerHandler(new ShadowsMarkCasterCommand(appContext));
+    commandService.registerHandler(new ShadowsEngineInfoCommand(appContext));
 
     // Register sun visualization commands
     commandService.registerHandler(new SunEnableCommand(appContext));

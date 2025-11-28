@@ -106,9 +106,6 @@ export class RenderService {
   // Each chunk can have multiple meshes (one per material type)
   private chunkMeshes: Map<string, Map<string, Mesh>> = new Map();
 
-  // Flag to disable rendering (for testing)
-  private renderingDisabled: boolean = false;
-
   constructor(
     scene: Scene,
     appContext: AppContext,
@@ -242,14 +239,6 @@ export class RenderService {
    * @param clientChunk Client-side chunk with processed ClientBlocks
    */
   async renderChunk(clientChunk: ClientChunk): Promise<void> {
-    // Check if rendering is disabled
-    if (this.renderingDisabled) {
-      logger.debug('Rendering disabled, skipping chunk', {
-        cx: clientChunk.cx,
-        cz: clientChunk.cz,
-      });
-      return;
-    }
     const chunk = clientChunk.data.transfer; // Get transfer object for chunk coordinates
     try {
       const chunkKey = this.getChunkKey(chunk.cx, chunk.cz);
@@ -410,17 +399,8 @@ export class RenderService {
           );
           mesh.material = material;
 
-          // TESTING: ALL meshes cast shadows (general test)
-          if (!mesh.metadata) {
-            mesh.metadata = {};
-          }
-          mesh.metadata.castsShadows = true;
-          material.backFaceCulling = false; // Disable for shadow casting
-
-          logger.info('ALL meshes marked as shadow casters (TEST)', {
-            blockCount: blocks.length,
-            backFaceCulling: material.backFaceCulling,
-          });
+          // Disable backFaceCulling for shadow casting
+          material.backFaceCulling = false;
 
           meshMap.set(materialKey, mesh);
 
@@ -439,8 +419,7 @@ export class RenderService {
       if (meshMap.size > 0) {
         this.chunkMeshes.set(chunkKey, meshMap);
 
-        // Enable shadow receiving for all chunk meshes
-        // Casting is controlled via mesh.metadata.castsShadows property
+        // Enable shadow receiving and casting for all chunk meshes
         const envService = this.appContext.services.environment;
         if (envService && envService.getShadowGenerator) {
           const shadowGenerator = envService.getShadowGenerator();
@@ -449,17 +428,12 @@ export class RenderService {
             if (shadowMap && shadowMap.renderList) {
               for (const mesh of meshMap.values()) {
                 mesh.receiveShadows = true;
-
-                // Check if this mesh should cast shadows (via metadata)
-                if (mesh.metadata?.castsShadows === true) {
-                  shadowMap.renderList.push(mesh);
-                }
+                shadowMap.renderList.push(mesh); // All meshes cast shadows
               }
-              logger.debug('Chunk meshes registered for shadows', {
+              logger.debug('Chunk meshes registered for shadows (casting + receiving)', {
                 cx: chunk.cx,
                 cz: chunk.cz,
                 meshCount: meshMap.size,
-                totalCasters: shadowMap.renderList.length,
               });
             }
           }
@@ -827,39 +801,6 @@ export class RenderService {
       totalVertices,
       totalFaces,
     };
-  }
-
-  /**
-   * Disable rendering (for testing)
-   */
-  disableRendering(): void {
-    this.renderingDisabled = true;
-    logger.info('RenderService rendering DISABLED');
-  }
-
-  /**
-   * Enable rendering
-   */
-  enableRendering(): void {
-    this.renderingDisabled = false;
-    logger.info('RenderService rendering ENABLED');
-  }
-
-  /**
-   * Clear all chunk meshes
-   */
-  clearAllChunks(): void {
-    logger.info('Clearing all chunk meshes', { count: this.chunkMeshes.size });
-
-    // Dispose all chunk meshes
-    for (const meshMap of this.chunkMeshes.values()) {
-      for (const mesh of meshMap.values()) {
-        mesh.dispose();
-      }
-    }
-    this.chunkMeshes.clear();
-
-    logger.info('All chunk meshes cleared');
   }
 
   /**

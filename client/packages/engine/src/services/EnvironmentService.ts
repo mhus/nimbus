@@ -514,30 +514,37 @@ export class EnvironmentService {
     }
 
     try {
-      // FORCE SHADOWS ON FOR TESTING - ignore WorldInfo
-      // const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
+      // Read from WorldInfo or use defaults
+      const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
+      const enabled = shadowSettings?.enabled ?? true; // Default: enabled
+      const quality = shadowSettings?.quality ?? 'low'; // Default: low
+      const distance = shadowSettings?.maxDistance ?? 500; // Default: 500 blocks
 
-      // Use CASCADED shadow generator (like working example)
-      const mapSize = 2048;
+      if (!enabled) {
+        logger.info('Shadows disabled in WorldInfo');
+        return;
+      }
 
-      // Create CascadedShadowGenerator (WebGL2)
+      // Get map size from quality preset
+      const mapSize = QUALITY_PRESETS[quality].mapSize;
+
+      // Create CascadedShadowGenerator
       this.shadowGenerator = new CascadedShadowGenerator(mapSize, this.sunLight);
-
-      // Settings from working example
       this.shadowGenerator.lambda = 0.2;
-      this.shadowGenerator.filter = 0; // No filter (hard shadows)
+      this.shadowGenerator.filter = 0;
       this.shadowGenerator.numCascades = 2;
-
-      // Enable transparency shadows
       this.shadowGenerator.transparencyShadow = true;
 
-      // Set camera.maxZ for shadow frustum
+      // Set shadow distance from WorldInfo
+      const shadowMaxZ = distance * 10; // Convert blocks to units
+      this.shadowGenerator.shadowMaxZ = shadowMaxZ;
+
+      // Set camera.maxZ to match
       const cameraService = this.appContext.services.camera;
       if (cameraService) {
         const camera = cameraService.getCamera();
         if (camera) {
-          camera.maxZ = 15000;
-          this.shadowGenerator.shadowMaxZ = 15000;
+          camera.maxZ = Math.max(shadowMaxZ, 1000);
         }
       }
 
@@ -545,14 +552,16 @@ export class EnvironmentService {
       this.shadowGenerator.splitFrustum();
 
       this.shadowEnabled = true;
-      this.shadowQuality = 'medium';
+      this.shadowQuality = quality;
 
-      logger.info('Shadow system initialized with CascadedShadowGenerator', {
+      logger.info('Shadow system initialized', {
         type: 'CascadedShadowGenerator',
         mapSize: mapSize,
+        quality: quality,
+        distance: distance,
+        shadowMaxZ: shadowMaxZ,
         lambda: 0.2,
         numCascades: 2,
-        transparencyShadow: true,
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EnvironmentService.initializeShadows');
@@ -687,15 +696,21 @@ export class EnvironmentService {
       // Dispose old generator
       this.shadowGenerator.dispose();
 
-      // Create new generator with new size
-      this.shadowGenerator = new ShadowGenerator(newMapSize, this.sunLight);
+      // Create new CascadedShadowGenerator (same as initializeShadows)
+      this.shadowGenerator = new CascadedShadowGenerator(newMapSize, this.sunLight);
+      this.shadowGenerator.lambda = 0.2;
+      this.shadowGenerator.filter = 0;
+      this.shadowGenerator.numCascades = 2;
+      this.shadowGenerator.transparencyShadow = true;
 
-      // Restore render list
-      if (renderList.length > 0) {
-        for (const mesh of renderList) {
-          this.shadowGenerator.addShadowCaster(mesh);
-        }
+      // Restore render list (push directly, not via addShadowCaster)
+      const newRenderList = this.shadowGenerator.getShadowMap()!.renderList!;
+      for (const mesh of renderList) {
+        newRenderList.push(mesh);
       }
+
+      // Call splitFrustum for CascadedShadowGenerator
+      this.shadowGenerator.splitFrustum();
     }
 
     // Apply quality settings
