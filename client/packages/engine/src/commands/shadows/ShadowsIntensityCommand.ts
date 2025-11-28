@@ -4,8 +4,8 @@
  * Usage: shadowsIntensity [value]
  * - Without parameters: Shows current intensity
  * - With parameter: Sets shadow intensity (0.0-1.0)
- *   0.0 = very dark shadows
- *   1.0 = no shadows (fully lit)
+ *   0.0 = no shadows (fully lit)
+ *   1.0 = very dark shadows
  */
 
 import { CommandHandler } from '../CommandHandler';
@@ -24,7 +24,7 @@ export class ShadowsIntensityCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Set shadow intensity/darkness (0.0-1.0, where 0=dark, 1=no shadows)';
+    return 'Set shadow intensity/darkness (0.0-1.0, where 0=no shadows, 1=dark)';
   }
 
   async execute(parameters: any[]): Promise<string> {
@@ -37,7 +37,7 @@ export class ShadowsIntensityCommand extends CommandHandler {
     // Show current intensity if no parameters
     if (parameters.length === 0) {
       const info = envService.getShadowInfo();
-      return `Current shadow darkness: ${info.darkness.toFixed(2)} (0=dark, 1=no shadows)`;
+      return `Current shadow darkness: ${info.darkness.toFixed(2)} (0=no shadows, 1=dark)`;
     }
 
     // Parse and validate parameter

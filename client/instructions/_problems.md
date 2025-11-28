@@ -20,3 +20,9 @@ Sollte aber mit teleportationPending behoben sein. Ist es aber nicht.
 
 - Im Sprint modus kein Jump
 - autoJump als number ? Jump height?
+
+[ ] Alle services sollen im AppContext bzw. in den unteren Services wie RenderService referenziert sein. 
+Pruefe ob das so umgesetzt ist, es gab jetzt immer wieder faelle, da wurde das nicht erledigt.
+Auch wenn es nicht noetig ist, aber das ist das Konzept.
+
+

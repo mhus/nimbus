@@ -35,13 +35,19 @@ export class ShadowsInfoCommand extends CommandHandler {
     const engineService = this.appContext.services.engine;
     const fps = engineService?.getEngine()?.getFps() ?? 0;
 
+    // Refresh rate meanings
+    const refreshRateName = info.refreshRate === 0 ? 'ONCE' :
+                           info.refreshRate === 1 ? 'EVERY_FRAME' :
+                           `CUSTOM(${info.refreshRate})`;
+
     return `
 Shadow System Info:
   Enabled: ${info.enabled}
   Quality: ${info.quality}
   Map Size: ${info.mapSize}px
   Active Casters: ${info.activeCasters}
-  Darkness: ${info.darkness.toFixed(2)} (0=dark, 1=no shadows)
+  Darkness: ${info.darkness.toFixed(2)} (0=no shadows, 1=dark)
+  Refresh Rate: ${refreshRateName}
   FPS: ${fps.toFixed(1)}
     `.trim();
   }

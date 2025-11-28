@@ -37,6 +37,8 @@ import type { CloudsService } from './services/CloudsService';
 import type { HorizonGradientService } from './services/HorizonGradientService';
 import type { PrecipitationService } from './services/PrecipitationService';
 import type { TeamService } from './services/TeamService';
+import type { RenderService } from './services/RenderService';
+import type { EntityRenderService } from './services/EntityRenderService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -157,8 +159,11 @@ export interface Services {
   /** Team service for team management and member status */
   team?: TeamService;
 
-  // Future services will be added here:
-  // render?: RenderService;
+  /** Render service for chunk and block rendering */
+  render?: RenderService;
+
+  /** Entity render service for entity visualization */
+  entityRender?: EntityRenderService;
 }
 
 /**

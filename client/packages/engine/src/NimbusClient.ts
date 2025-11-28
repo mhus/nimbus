@@ -97,6 +97,7 @@ import { ListEntitiesCommand } from './commands/ListEntitiesCommand';
 import { EntityInfoCommand } from './commands/EntityInfoCommand';
 import { SpawnEntityCommand } from './commands/SpawnEntityCommand';
 import { ToggleEntityPathwaysCommand } from './commands/ToggleEntityPathwaysCommand';
+import { WebGLCheckCommand } from './commands/WebGLCheckCommand';
 import {
   WindDirectionCommand,
   WindStrengthCommand,
@@ -120,6 +121,11 @@ import {
   ShadowsIntensityCommand,
   ShadowsQualityCommand,
   ShadowsInfoCommand,
+  ShadowsRefreshCommand,
+  ShadowsDebugCommand,
+  ShadowsTestCommand,
+  ShadowsGroundCommand,
+  ShadowsSimpleTestCommand,
 } from './commands/shadows';
 import {
   SunEnableCommand,
@@ -337,6 +343,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new BlockInfoCommand(appContext));
     commandService.registerHandler(new BlockTypeInfoCommand(appContext));
     commandService.registerHandler(new TeleportCommand(appContext));
+    commandService.registerHandler(new WebGLCheckCommand(appContext));
 
     // Register entity commands
     commandService.registerHandler(new ListEntitiesCommand(appContext));
@@ -367,6 +374,11 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new ShadowsIntensityCommand(appContext));
     commandService.registerHandler(new ShadowsQualityCommand(appContext));
     commandService.registerHandler(new ShadowsInfoCommand(appContext));
+    commandService.registerHandler(new ShadowsRefreshCommand(appContext));
+    commandService.registerHandler(new ShadowsDebugCommand(appContext));
+    commandService.registerHandler(new ShadowsTestCommand(appContext));
+    commandService.registerHandler(new ShadowsGroundCommand(appContext));
+    commandService.registerHandler(new ShadowsSimpleTestCommand(appContext));
 
     // Register sun visualization commands
     commandService.registerHandler(new SunEnableCommand(appContext));

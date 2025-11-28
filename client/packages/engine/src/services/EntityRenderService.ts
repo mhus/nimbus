@@ -255,7 +255,10 @@ export class EntityRenderService {
           // Get all child meshes and enable shadows
           const childMeshes = modelRootNode.getChildMeshes();
           for (const mesh of childMeshes) {
-            mesh.receiveShadows = true;
+            // Skip instanced meshes - they inherit receiveShadows from source mesh
+            if (!mesh.isAnInstance) {
+              mesh.receiveShadows = true;
+            }
             // Add as shadow caster
             shadowGenerator.addShadowCaster(mesh);
           }

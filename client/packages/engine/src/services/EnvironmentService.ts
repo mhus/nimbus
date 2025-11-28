@@ -11,6 +11,7 @@ import {
   Color3,
   Scene,
   ShadowGenerator,
+  CascadedShadowGenerator,
   RenderTargetTexture,
 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
@@ -184,7 +185,7 @@ export class EnvironmentService {
   private windParameters: WindParameters;
 
   // Shadow system
-  private shadowGenerator: ShadowGenerator | null = null;
+  private shadowGenerator: ShadowGenerator | CascadedShadowGenerator | null = null;
   private shadowEnabled: boolean = false;
   private shadowQuality: 'low' | 'medium' | 'high' = 'low';
   private shadowMaxDistance: number = 50;
@@ -507,46 +508,88 @@ export class EnvironmentService {
    * Initialize shadow system from WorldInfo
    */
   private initializeShadows(): void {
-    const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
-
-    if (!shadowSettings?.enabled) {
-      logger.debug('Shadows disabled in WorldInfo');
-      return;
-    }
-
     if (!this.sunLight) {
       logger.warn('Cannot initialize shadows: sunLight not available');
       return;
     }
 
     try {
-      // Get quality preset
-      const quality = shadowSettings.quality || 'low';
-      const mapSize = shadowSettings.mapSize || QUALITY_PRESETS[quality].mapSize;
+      // FORCE SHADOWS ON FOR TESTING - ignore WorldInfo
+      // const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
 
-      // Create shadow generator
+      // Use medium quality settings
+      const quality = 'medium';
+      const mapSize = 1024;
+
+      // Create normal shadow generator (WebGL1 compatible)
       this.shadowGenerator = new ShadowGenerator(mapSize, this.sunLight);
 
-      // Apply quality settings
-      this.applyShadowQualitySettings(quality);
+      // CRITICAL: Force back faces only for proper shadows (especially for voxel geometry)
+      this.shadowGenerator.forceBackFacesOnly = true;
 
-      // Set initial darkness
-      const darkness = shadowSettings.darkness ?? 0.6;
-      this.shadowGenerator.setDarkness(darkness);
+      // Set filter to 0 (like working example - no filtering!)
+      this.shadowGenerator.filter = 0;
 
-      // Set max shadow distance for culling
-      if (shadowSettings.maxDistance) {
-        this.shadowMaxDistance = shadowSettings.maxDistance;
+      // Increase bias for voxel geometry (prevent shadow acne)
+      this.shadowGenerator.bias = 0.001; // Higher bias
+      this.shadowGenerator.normalBias = 0.01; // Higher normal bias
+
+      // Enable transparency shadows (might help with some materials)
+      this.shadowGenerator.transparencyShadow = true;
+
+      // Set MAXIMUM darkness for visibility
+      this.shadowGenerator.setDarkness(1.0); // Full black shadows
+
+      logger.info('Shadow generator configured', {
+        forceBackFacesOnly: this.shadowGenerator.forceBackFacesOnly,
+        transparencyShadow: this.shadowGenerator.transparencyShadow,
+        bias: this.shadowGenerator.bias,
+      });
+
+      // Important: Set light position for shadow frustum calculation
+      // BabylonJS default: position = -direction, but we set it explicitly
+      const lightDir = this.sunLight.direction;
+      this.sunLight.position = new Vector3(-lightDir.x * 100, -lightDir.y * 100, -lightDir.z * 100);
+
+      // CRITICAL: Disable auto-update first (might cause issues)
+      this.sunLight.autoUpdateExtentsShadowMap = false;
+
+      // Set shadow min/max Z - CRITICAL for shadow visibility
+      this.sunLight.shadowMinZ = 1;
+      this.sunLight.shadowMaxZ = 5000;
+
+      // CRITICAL: Set camera.maxZ to match shadowMaxZ (from BabylonJS docs)
+      const cameraService = this.appContext.services.camera;
+      if (cameraService) {
+        const camera = cameraService.getCamera();
+        if (camera) {
+          camera.maxZ = 5000; // Match shadowMaxZ!
+          logger.info('Camera maxZ synchronized with shadow maxZ', { maxZ: 5000 });
+        }
+      }
+
+      // Note: splitFrustum() only exists on CascadedShadowGenerator, not needed for regular ShadowGenerator
+
+      // CRITICAL: Enable shadow generation for custom shaders
+      // This tells BabylonJS to add shadow code to ALL materials (including ShaderMaterial)
+      this.shadowGenerator.enableSoftTransparentShadow = false;
+
+      // Force shadow map to refresh immediately
+      const shadowMap = this.shadowGenerator.getShadowMap();
+      if (shadowMap) {
+        shadowMap.refreshRate = 1; // RENDER_ONEVERYFRAME
+        shadowMap.renderList = shadowMap.renderList || [];
       }
 
       this.shadowEnabled = true;
       this.shadowQuality = quality;
 
-      logger.debug('Shadow system initialized', {
+      logger.info('Shadow system FORCE ENABLED for testing', {
         quality,
         mapSize,
-        darkness,
-        maxDistance: this.shadowMaxDistance,
+        darkness: 1.0,
+        forceBackFacesOnly: this.shadowGenerator.forceBackFacesOnly,
+        refreshRate: shadowMap?.refreshRate,
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EnvironmentService.initializeShadows');
@@ -599,8 +642,19 @@ export class EnvironmentService {
 
         this.shadowGenerator = new ShadowGenerator(mapSize, this.sunLight);
         this.applyShadowQualitySettings(quality);
-        this.shadowGenerator.setDarkness(0.4); // Default darkness (0.6 intensity)
+        this.shadowGenerator.setDarkness(1.0); // Full shadow darkness
         this.shadowQuality = quality;
+
+        // Important: Set light position for shadow frustum calculation
+        // DirectionalLight needs a position to calculate the shadow frustum
+        this.sunLight.position = new Vector3(50, 100, 50);
+
+        // Enable automatic shadow frustum updates based on casters
+        this.sunLight.autoUpdateExtentsShadowMap = true;
+
+        // Set shadow min/max Z for better shadow quality
+        this.sunLight.shadowMinZ = 1;
+        this.sunLight.shadowMaxZ = 200;
 
         logger.info('Shadow generator created successfully', { quality, mapSize });
       } catch (error) {
@@ -626,7 +680,7 @@ export class EnvironmentService {
   /**
    * Set shadow intensity (darkness)
    *
-   * @param intensity Shadow darkness (0.0 = very dark shadows, 1.0 = no shadows/fully lit)
+   * @param intensity Shadow darkness (0.0 = no shadows/fully lit, 1.0 = very dark shadows)
    */
   setShadowIntensity(intensity: number): void {
     if (!this.shadowGenerator) {
@@ -637,10 +691,8 @@ export class EnvironmentService {
     // Clamp intensity to 0-1
     const clampedIntensity = Math.max(0, Math.min(1, intensity));
 
-    // BabylonJS darkness is inverted: 0 = no shadow, 1 = full shadow
-    // Our intensity: 0 = full shadow, 1 = no shadow
-    // So we need to invert it
-    this.shadowGenerator.setDarkness(1.0 - clampedIntensity);
+    // BabylonJS setDarkness: 0 = no shadow, 1 = full shadow
+    this.shadowGenerator.setDarkness(clampedIntensity);
 
     logger.debug('Shadow intensity set', { intensity: clampedIntensity });
   }
@@ -710,6 +762,7 @@ export class EnvironmentService {
     mapSize: number;
     activeCasters: number;
     darkness: number;
+    refreshRate: number;
   } {
     if (!this.shadowGenerator) {
       return {
@@ -718,6 +771,7 @@ export class EnvironmentService {
         mapSize: 0,
         activeCasters: 0,
         darkness: 0,
+        refreshRate: 0,
       };
     }
 
@@ -729,9 +783,32 @@ export class EnvironmentService {
       quality: this.shadowQuality,
       mapSize: shadowMap?.getSize().width || 0,
       activeCasters: shadowMap?.renderList?.length || 0,
-      // Convert BabylonJS darkness back to our intensity scale
-      darkness: 1.0 - darkness,
+      darkness: darkness,
+      refreshRate: shadowMap?.refreshRate || 0,
     };
+  }
+
+  /**
+   * Force shadow map refresh (useful after adding casters)
+   */
+  refreshShadowMap(): void {
+    if (!this.shadowGenerator) {
+      logger.warn('Shadow generator not initialized');
+      return;
+    }
+
+    const shadowMap = this.shadowGenerator.getShadowMap();
+    if (shadowMap) {
+      // Temporarily enable refresh, then set back
+      const oldRate = shadowMap.refreshRate;
+      shadowMap.refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONEVERYFRAME;
+
+      // Set back after next frame
+      setTimeout(() => {
+        shadowMap.refreshRate = oldRate;
+        logger.debug('Shadow map refreshed');
+      }, 100);
+    }
   }
 
   /**

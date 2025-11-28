@@ -93,26 +93,27 @@ export class EngineService {
     try {
       logger.debug('Initializing 3D engine');
 
-      // Check WebGL support
-      const gl = this.canvas.getContext('webgl') || this.canvas.getContext('webgl2');
-      if (!gl) {
-        throw new Error('WebGL not supported by this browser. Please use a modern browser with WebGL support.');
-      }
+      // DON'T create WebGL context manually - let BabylonJS handle it!
+      // Creating context here locks the canvas to that version
 
-      logger.debug('WebGL supported');
-
-      // Create Babylon.js Engine
+      // Create Babylon.js Engine - it will automatically choose WebGL2 if available
       this.engine = new Engine(this.canvas, true, {
         preserveDrawingBuffer: true,
         stencil: true,
-        antialias: false, // Disable for better performance
-      });
+        antialias: false,
+        powerPreference: 'high-performance',
+        doNotHandleContextLost: true,
+        // disableWebGL2Support: false, // Don't set this - let BabylonJS decide
+      }, true); // adaptToDeviceRatio = true
 
       if (!this.engine) {
         throw new Error('Failed to create Babylon.js Engine');
       }
 
-      logger.debug('Babylon.js Engine created');
+      logger.info('Babylon.js Engine created', {
+        webGLVersion: this.engine.webGLVersion,
+        isWebGL2: this.engine.isWebGL2,
+      });
 
       // Create Scene
       this.scene = new Scene(this.engine);
@@ -242,6 +243,7 @@ export class EngineService {
         this.materialService,
         this.textureAtlas
       );
+      this.appContext.services.render = this.renderService;
       logger.debug('RenderService initialized');
 
       // Connect RenderService with PrecipitationService
@@ -259,6 +261,7 @@ export class EngineService {
           entityService,
           this.modelService
         );
+        this.appContext.services.entityRender = this.entityRenderService;
 
         // Connect EntityRenderService to PlayerService for player avatar rendering
         if (this.playerService) {
