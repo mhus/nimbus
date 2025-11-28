@@ -267,7 +267,7 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Beim Anzeigen des Start - SplashScreen wird auch der audioPath aus der WorldInfo uebergeben
 - Im test_server muss der Parameter beim RETS aufruf von http://localhost:3011/api/worlds/main/config?client=editor&t=1 mit uebergeben werden.
 
-[ ] Visibility Toggle
+[x] Visibility Toggle
 - Mit der F2 Taste soll die Sichtbarkeit von elementen im NotificationService umgeschalten werden
 - Es wird immer durch die taste F2 der Naechste Status aktiviert und die sichtbarkeit angepasst.
 - Folgende Elemente werden gesteuert:

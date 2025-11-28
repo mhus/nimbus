@@ -32,6 +32,7 @@ interface KeyBinding {
  * - Space: Jump (Walk mode) / Move up (Fly mode)
  * - Shift: Move down (Fly mode only)
  * - F: Cycle movement state (WALK → SPRINT → CROUCH → WALK, includes FLY in Editor)
+ * - F2: Toggle visibility state (NONE_VISIBLE → ONLY_VITALS → ONLY_SHORTCUTS → ALL_VISIBLE)
  * - F5: Toggle Ego/Third-Person view
  * - F6: Toggle fullscreen
  * - T: Toggle shortcuts display
@@ -61,6 +62,7 @@ export class WebInputController implements InputController {
   private toggleViewModeHandler?: InputHandler;
   private toggleShortcutsHandler?: InputHandler;
   private toggleFullscreenHandler?: InputHandler;
+  private toggleVisibilityStateHandler?: InputHandler;
   private rotateHandler?: InputHandler;
   private clickHandler?: InputHandler;
   private shortcutHandler?: InputHandler;
@@ -122,6 +124,9 @@ export class WebInputController implements InputController {
     if (this.toggleFullscreenHandler) {
       this.keyBindings.set('F6', this.toggleFullscreenHandler);
     }
+    if (this.toggleVisibilityStateHandler) {
+      this.keyBindings.set('F2', this.toggleVisibilityStateHandler);
+    }
 
     // Editor-only key bindings
     if (this.editSelectionRotatorHandler) {
@@ -170,6 +175,7 @@ export class WebInputController implements InputController {
     this.toggleViewModeHandler = inputService.getHandler('toggleViewMode');
     this.toggleShortcutsHandler = inputService.getHandler('toggleShortcuts');
     this.toggleFullscreenHandler = inputService.getHandler('toggleFullscreen');
+    this.toggleVisibilityStateHandler = inputService.getHandler('toggleVisibilityState');
     this.rotateHandler = inputService.getHandler('rotate');
 
     // Editor handlers (only available in editor mode)
@@ -194,6 +200,7 @@ export class WebInputController implements InputController {
       this.cycleMovementStateHandler,
       this.toggleViewModeHandler,
       this.toggleShortcutsHandler,
+      this.toggleVisibilityStateHandler,
       this.rotateHandler,
     ];
 

@@ -25,6 +25,7 @@ import {
   ToggleViewModeHandler,
   ToggleShortcutsHandler,
   ToggleFullscreenHandler,
+  ToggleVisibilityStateHandler,
 } from '../input/handlers/ActionHandlers';
 import { RotateHandler } from '../input/handlers/RotationHandlers';
 import {
@@ -114,6 +115,7 @@ export class InputService {
     this.handlerRegistry.set('toggleViewMode', new ToggleViewModeHandler(this.playerService));
     this.handlerRegistry.set('toggleShortcuts', new ToggleShortcutsHandler(this.playerService, this.appContext));
     this.handlerRegistry.set('toggleFullscreen', new ToggleFullscreenHandler(this.playerService));
+    this.handlerRegistry.set('toggleVisibilityState', new ToggleVisibilityStateHandler(this.playerService, this.appContext));
 
     // Rotation handler
     this.handlerRegistry.set('rotate', new RotateHandler(this.playerService));

@@ -268,6 +268,12 @@ export class NotificationService {
         return;
       }
 
+      // Don't show static notifications (SYSTEM area) if visibility is disabled
+      if (area === NotificationArea.SYSTEM && !this.showStaticNotifications) {
+        logger.debug('Static notification suppressed by visibility state', { type, from, message });
+        return;
+      }
+
       // Get area config
       const config = NOTIFICATION_AREA_CONFIGS[area];
 
@@ -544,6 +550,16 @@ export class NotificationService {
   private vitalsContainer: HTMLElement | null = null;
   private showVitals: boolean = true; // Default: on
 
+  /** Visibility toggle states */
+  private visibilityStates = ['NONE_VISIBLE', 'ONLY_VITALS', 'ONLY_SHORTCUTS', 'ALL_VISIBLE'] as const;
+  private currentVisibilityState: typeof this.visibilityStates[number] = 'ALL_VISIBLE'; // Default: all visible
+
+  /** Static notifications visibility */
+  private showStaticNotifications: boolean = true; // Default: on
+
+  /** Status effects visibility */
+  private showStatusEffects: boolean = true; // Default: on
+
   /** Center text display */
   private centerTextElement: HTMLElement | null = null;
 
@@ -622,6 +638,101 @@ export class NotificationService {
       logger.debug('Shortcut display toggled', { mode: this.currentShortcutMode });
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.toggleShowShortcuts');
+    }
+  }
+
+  /**
+   * Toggle visibility state (F2 key)
+   *
+   * Cycles through:
+   * - NONE_VISIBLE: All elements hidden
+   * - ONLY_VITALS: Only vitals and team table visible
+   * - ONLY_SHORTCUTS: Only shortcuts visible
+   * - ALL_VISIBLE: All elements visible
+   */
+  toggleVisibilityState(): void {
+    try {
+      const currentIndex = this.visibilityStates.indexOf(this.currentVisibilityState);
+      const nextIndex = (currentIndex + 1) % this.visibilityStates.length;
+      const nextState = this.visibilityStates[nextIndex];
+
+      // Show notification before switching to NONE_VISIBLE
+      if (nextState === 'NONE_VISIBLE') {
+        this.newNotification(0, null, 'All UI elements hidden. Press F2 to restore.');
+      }
+
+      this.currentVisibilityState = nextState;
+
+      // Apply visibility settings based on state
+      this.applyVisibilityState();
+
+      logger.info('Visibility state toggled', { state: this.currentVisibilityState });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.toggleVisibilityState');
+    }
+  }
+
+  /**
+   * Apply visibility settings based on current state
+   */
+  private applyVisibilityState(): void {
+    try {
+      const playerService = this.appContext.services.player;
+
+      switch (this.currentVisibilityState) {
+        case 'NONE_VISIBLE':
+          // Hide all elements
+          this.showVitals = false;
+          this.showTeamTable(false);
+          this.currentShortcutMode = 'off';
+          this.showStaticNotifications = false;
+          this.showStatusEffects = false;
+          break;
+
+        case 'ONLY_VITALS':
+          // Only vitals and team table visible
+          this.showVitals = true;
+          this.showTeamTable(true);
+          this.currentShortcutMode = 'off';
+          this.showStaticNotifications = false;
+          this.showStatusEffects = false;
+          break;
+
+        case 'ONLY_SHORTCUTS':
+          // Only shortcuts visible (restore last mode or default to keys)
+          this.showVitals = false;
+          this.showTeamTable(false);
+          this.currentShortcutMode = this.currentShortcutMode === 'off' ? 'keys' : this.currentShortcutMode;
+          this.showStaticNotifications = false;
+          this.showStatusEffects = false;
+          break;
+
+        case 'ALL_VISIBLE':
+          // All elements visible
+          this.showVitals = true;
+          this.showTeamTable(true);
+          this.currentShortcutMode = this.currentShortcutMode === 'off' ? 'keys' : this.currentShortcutMode;
+          this.showStaticNotifications = true;
+          this.showStatusEffects = true;
+          break;
+      }
+
+      // Update displays
+      this.updateShortcutDisplay();
+      if (playerService) {
+        this.updateVitalsDisplay(playerService.getVitals());
+        this.updateStatusEffectsDisplay(playerService.getStatusEffects());
+      }
+
+      logger.debug('Visibility state applied', {
+        state: this.currentVisibilityState,
+        showVitals: this.showVitals,
+        showShortcuts: this.currentShortcutMode,
+        showStatusEffects: this.showStatusEffects,
+        showStaticNotifications: this.showStaticNotifications,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NotificationService.applyVisibilityState');
     }
   }
 
@@ -913,8 +1024,8 @@ export class NotificationService {
         this.statusEffectsContainer = null;
       }
 
-      // If no effects, don't create display
-      if (effects.length === 0) {
+      // If no effects or visibility disabled, don't create display
+      if (effects.length === 0 || !this.showStatusEffects) {
         return;
       }
 

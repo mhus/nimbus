@@ -117,3 +117,6 @@ doSkyBoxStart({r:0.5, g:0.7, b:1},45, 450, 'textures/skybox/space')
 doNotification(0,"aaa","bbb", "textures/magic/blue_crystal.png")
 
 doSplashscreen('screens/blizzardskull.png','audio/ambiente/blackmoor_tides.mp3')
+
+doSend('teamData','RedTeam','Player1','Player2','Player3')
+doSend('teamStatus','team_ teamData','player_0',50,1);    # Player1 health=50, alive - not working yet

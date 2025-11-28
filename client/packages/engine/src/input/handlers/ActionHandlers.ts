@@ -164,3 +164,25 @@ export class ToggleShortcutsHandler extends InputHandler {
     // Toggle doesn't need continuous updates
   }
 }
+
+/**
+ * Toggle Visibility State Handler (F2 key)
+ * Cycles through visibility states: NONE_VISIBLE -> ONLY_VITALS -> ONLY_SHORTCUTS -> ALL_VISIBLE
+ */
+export class ToggleVisibilityStateHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Toggle is a discrete action, execute immediately
+    const notificationService = this.appContext?.services.notification;
+    if (notificationService) {
+      notificationService.toggleVisibilityState();
+    }
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}
