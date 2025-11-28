@@ -36,6 +36,7 @@ import type { MoonService } from './services/MoonService';
 import type { CloudsService } from './services/CloudsService';
 import type { HorizonGradientService } from './services/HorizonGradientService';
 import type { PrecipitationService } from './services/PrecipitationService';
+import type { TeamService } from './services/TeamService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 
 /**
@@ -152,6 +153,9 @@ export interface Services {
 
   /** Precipitation service for rain and snow effects */
   precipitation?: PrecipitationService;
+
+  /** Team service for team management and member status */
+  team?: TeamService;
 
   // Future services will be added here:
   // render?: RenderService;

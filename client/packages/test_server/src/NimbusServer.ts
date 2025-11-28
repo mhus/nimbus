@@ -42,6 +42,8 @@ import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockComm
 import { NavigateSelectedBlockCommand } from './commands/NavigateSelectedBlockCommand';
 import { ItemCommand } from './commands/ItemCommand';
 import { WorldCommand } from './commands/WorldCommand';
+import { TeamDataCommand } from './commands/TeamDataCommand';
+import { TeamStatusCommand } from './commands/TeamStatusCommand';
 import { EntityManager } from './entity/EntityManager';
 import { EntitySimulator } from './entity/EntitySimulator';
 import {ServerItem} from "./world/ItemRegistry";
@@ -108,6 +110,8 @@ class NimbusServer {
       this.worldManager,
       (worldId, cmd, args) => this.broadcastCommandToClients(worldId, cmd, args)
     ));
+    this.commandService.registerHandler(new TeamDataCommand());
+    this.commandService.registerHandler(new TeamStatusCommand());
     logger.info(`CommandService initialized in ${Date.now() - commandStart}ms`);
 
     logger.info(`NimbusServer constructor completed in ${Date.now() - startTime}ms`);

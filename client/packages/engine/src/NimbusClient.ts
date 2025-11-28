@@ -23,6 +23,7 @@ import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
 import { ModalService } from './services/ModalService';
 import { NotificationService } from './services/NotificationService';
+import { TeamService } from './services/TeamService';
 import { CommandService } from './services/CommandService';
 import { CompassService } from './services/CompassService';
 import { EntityService } from './services/EntityService';
@@ -31,6 +32,8 @@ import { ScrawlService } from './scrawl/ScrawlService';
 import { ConfigService } from './services/ConfigService';
 import { LoginMessageHandler } from './network/handlers/LoginMessageHandler';
 import { ChunkMessageHandler } from './network/handlers/ChunkMessageHandler';
+import { TeamDataMessageHandler } from './network/handlers/TeamDataMessageHandler';
+import { TeamStatusMessageHandler } from './network/handlers/TeamStatusMessageHandler';
 import { BlockUpdateHandler } from './network/handlers/BlockUpdateHandler';
 import { ItemBlockUpdateHandler } from './network/handlers/ItemBlockUpdateHandler';
 import { EffectTriggerHandler } from './network/handlers/EffectTriggerHandler';
@@ -60,6 +63,7 @@ import { SpeakCommand } from './commands/SpeakCommand';
 import { SetSpeechVolumeCommand } from './commands/SetSpeechVolumeCommand';
 import { RegisterFlashSoundsCommand } from './commands/RegisterFlashSoundsCommand';
 import { NotificationCommand } from './commands/NotificationCommand';
+import { ShowTeamCommand } from './commands/ShowTeamCommand';
 import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
 import { SetShortcutCommand } from './commands/SetShortcutCommand';
 import { StatusEffectCommand } from './commands/StatusEffectCommand';
@@ -246,6 +250,12 @@ async function initializeApp(): Promise<AppContext> {
     appContext.services.notification = notificationService;
     logger.debug('NotificationService initialized');
 
+    // Initialize TeamService (depends on NotificationService)
+    logger.debug('Initializing TeamService...');
+    const teamService = new TeamService(appContext);
+    appContext.services.team = teamService;
+    logger.debug('TeamService initialized');
+
     // Initialize ItemService (loads items from server REST API)
     logger.debug('Initializing ItemService...');
     const itemService = new ItemService(appContext);
@@ -300,6 +310,7 @@ async function initializeApp(): Promise<AppContext> {
     commandService.registerHandler(new RegisterFlashSoundsCommand(appContext));
     commandService.registerHandler(new NotificationCommand(appContext));
     commandService.registerHandler(new SplashScreenCommand(appContext));
+    commandService.registerHandler(new ShowTeamCommand(appContext));
     commandService.registerHandler(new SetPlayerInfoCommand(appContext));
     commandService.registerHandler(new SetShortcutCommand(appContext));
     commandService.registerHandler(new StatusEffectCommand(appContext));
@@ -506,6 +517,15 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
 
     const pingHandler = new PingMessageHandler(networkService, appContext);
     networkService.registerHandler(pingHandler);
+
+    // Register team handlers
+    if (appContext.services.team) {
+      const teamDataHandler = new TeamDataMessageHandler(appContext, appContext.services.team);
+      networkService.registerHandler(teamDataHandler);
+
+      const teamStatusHandler = new TeamStatusMessageHandler(appContext, appContext.services.team);
+      networkService.registerHandler(teamStatusHandler);
+    }
 
     // Add error handler to prevent unhandled errors
     networkService.on('error', (error) => {

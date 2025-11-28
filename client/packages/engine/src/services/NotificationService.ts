@@ -8,7 +8,7 @@
  * - Quest (top-right): Quest info (no auto-hide, max 2)
  */
 
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, type TeamMember } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { StackName, type Modifier } from './ModifierService';
 import type {
@@ -37,6 +37,10 @@ export class NotificationService {
 
   // Container elements
   private containers: Map<NotificationArea, HTMLElement> = new Map();
+
+  // Team table
+  private teamTableContainer: HTMLElement | null = null;
+  private teamTableVisible: boolean = false;
 
   constructor(appContext: AppContext) {
     this.appContext = appContext;
@@ -1609,5 +1613,159 @@ export class NotificationService {
         audioPath,
       });
     }
+  }
+
+  /**
+   * Show/hide team table
+   * @param show Whether to show the team table
+   */
+  showTeamTable(show: boolean): void {
+    this.teamTableVisible = show;
+
+    if (this.teamTableContainer) {
+      this.teamTableContainer.style.display = show ? 'block' : 'none';
+    }
+
+    logger.info('Team table visibility', { visible: show });
+  }
+
+  /**
+   * Set complete team
+   * @param teamName Team name
+   * @param members Team members
+   */
+  setTeam(teamName: string, members: TeamMember[]): void {
+    // Create container if not exists
+    if (!this.teamTableContainer) {
+      this.createTeamTableContainer();
+    }
+
+    // Clear existing content
+    this.teamTableContainer!.innerHTML = '';
+
+    // Team name header
+    const header = document.createElement('div');
+    header.style.cssText = 'font-weight: bold; margin-bottom: 8px; font-size: 14px;';
+    header.textContent = teamName;
+    this.teamTableContainer!.appendChild(header);
+
+    // Members container
+    const membersContainer = document.createElement('div');
+    membersContainer.id = 'team-members-list';
+
+    members.forEach(member => {
+      const element = this.createTeamMemberElement(member);
+      membersContainer.appendChild(element);
+    });
+
+    this.teamTableContainer!.appendChild(membersContainer);
+    this.showTeamTable(true);
+
+    logger.info('Team table updated', { teamName, memberCount: members.length });
+  }
+
+  /**
+   * Update single team member
+   * @param member Team member
+   */
+  updateTeamMember(member: TeamMember): void {
+    const existingElement = document.getElementById(`team-member-${member.playerId}`);
+
+    if (existingElement) {
+      // Replace existing element
+      const newElement = this.createTeamMemberElement(member);
+      existingElement.replaceWith(newElement);
+    }
+  }
+
+  /**
+   * Create team table container
+   */
+  private createTeamTableContainer(): void {
+    this.teamTableContainer = document.createElement('div');
+    this.teamTableContainer.id = 'team-table';
+    this.teamTableContainer.style.cssText = `
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+      min-width: 200px;
+    `;
+
+    document.body.appendChild(this.teamTableContainer);
+  }
+
+  /**
+   * Create team member element
+   * @param member Team member
+   * @returns HTML element
+   */
+  private createTeamMemberElement(member: TeamMember): HTMLElement {
+    const container = document.createElement('div');
+    container.id = `team-member-${member.playerId}`;
+    container.style.cssText = 'display: flex; align-items: center; margin: 4px 0; gap: 8px;';
+
+    // Status indicator (colored square)
+    const statusColor = this.getTeamMemberStatusColor(member);
+    const statusIndicator = document.createElement('div');
+    statusIndicator.style.cssText = `
+      width: 16px;
+      height: 16px;
+      background-color: ${statusColor};
+      border: 1px solid rgba(255,255,255,0.3);
+    `;
+    container.appendChild(statusIndicator);
+
+    // Icon (if available)
+    if (member.icon) {
+      const icon = document.createElement('img');
+      icon.src = member.icon;
+      icon.style.cssText = 'width: 20px; height: 20px; border-radius: 3px;';
+      icon.onerror = () => {
+        icon.style.display = 'none';
+      }; // Hide if load fails
+      container.appendChild(icon);
+    }
+
+    // Name
+    const nameColor = member.status === 2 ? '#999999' : '#ffffff';
+    const name = document.createElement('span');
+    name.textContent = member.name;
+    name.style.cssText = `color: ${nameColor}; flex: 1;`;
+    container.appendChild(name);
+
+    // Health (nur bei alive)
+    if (member.status === 1 && member.health !== undefined) {
+      const health = document.createElement('span');
+      health.textContent = `${member.health}%`;
+      health.style.cssText = 'font-size: 10px; color: #aaaaaa;';
+      container.appendChild(health);
+    }
+
+    return container;
+  }
+
+  /**
+   * Get status color for team member
+   * @param member Team member
+   * @returns Color hex string
+   */
+  private getTeamMemberStatusColor(member: TeamMember): string {
+    if (member.status === 0) return '#000000'; // Disconnected: schwarz
+    if (member.status === 2) return '#999999'; // Dead: grau
+    if (member.status === 1) {
+      // Alive: grün, aber rot wenn health < 10
+      if (member.health !== undefined && member.health < 10) {
+        return '#ff0000'; // Low health: rot
+      }
+      return '#00ff00'; // Alive: grün
+    }
+    return '#ffffff'; // Default
   }
 }

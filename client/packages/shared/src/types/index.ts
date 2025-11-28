@@ -45,6 +45,9 @@ export * from './PlayerMovementState';
 export * from './ShortcutDefinition';
 export * from './VitalsData';
 
+// Team types
+export * from './TeamData';
+
 // Modal types (for IFrame communication)
 export * from './Modal';
 

@@ -266,3 +266,20 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - worldInfo.splashScreenAudio: string (asset path) - optional, default leer
 - Beim Anzeigen des Start - SplashScreen wird auch der audioPath aus der WorldInfo uebergeben
 - Im test_server muss der Parameter beim RETS aufruf von http://localhost:3011/api/worlds/main/config?client=editor&t=1 mit uebergeben werden.
+
+[ ] Visibility Toggle
+- Mit der F2 Taste soll die Sichtbarkeit von elementen im NotificationService umgeschalten werden
+- Es wird immer durch die taste F2 der Naechste Status aktiviert und die sichtbarkeit angepasst.
+- Folgende Elemente werden gesteuert:
+  - showShortcuts
+  - showVitals
+  - showStatusEffects
+  - showTeamTable
+  - showStaticNotifications
+- Folgende Status gibt es:
+  - NONE_VISIBLE - keine Elemente sichtbar
+  - ONLY_VITALS - nur Vitals sichtbar und TeamTable
+  - ONLY_SHORTCUTS - nur Shortcuts sichtbar
+  - ALL_VISIBLE - alle Elemente sichtbar
+- Das umschalten der sichtbarkeit triggert einfach die entsprechenden setter zur visibility. Alle anderen 
+  Eigenschaften (z.b. autom. einblenden) bleiben wie bisher.

@@ -56,6 +56,10 @@ export enum MessageType {
   // Server Commands (Server -> Client)
   SCMD = 'scmd',
   SCMD_RESULT = 'scmd.rs',
+
+  // Teams
+  TEAM_DATA = 't.d',
+  TEAM_STATUS = 't.s',
 }
 
 /**
