@@ -247,4 +247,7 @@ export interface WorldInfo {
 
   /** Splash screen asset path (optional) */
   splashScreen?: string;
+
+  /** Splash screen audio path (optional) */
+  splashScreenAudio?: string;
 }

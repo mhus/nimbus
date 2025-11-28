@@ -884,3 +884,50 @@ Der Server sendet eine Nachricht an alle Clients, um den Status eines laufenden 
   }
 }
 ```
+
+## Team Data (Server -> Client)
+
+Der Server schickt Team-Daten an den Client, es wird immer das komplette Team Set geschickt.
+Es handelt sich um die Metadaten des Teams. Damit wirt das Team im Client definiert, aktionen wie
+added, removed fallen dadurch weg. Wird ein Leer-Team geschickt, ist das Team aufgelöst.
+
+Daten sind nicht optional.
+
+```json
+{"t": "t.d", "d":
+  {
+    "name": "red", // team name
+    "id": "12345", // team id
+    "members": [
+      {
+        "player": "user123",
+        "name": "PlayerOne",
+        "icon": "/assets/avatars/playerone.png"
+      },
+      ...
+    ]
+  }
+}
+```
+
+## Team Status (Server -> Client)
+
+Der Server sendet einen Status Update für die Team-Miglieder an den Client. Es werden
+nur relevante Daten versendet und die Team-Metadaten damit angereichert. Diese Nachricht
+wird sehr oft versendet, daher nur die minimalen Daten.
+
+```json
+{"t": "t.s", "d":
+  {
+    "id": "red",
+    "ms": [ // member status
+      {
+        "id": "user123",  // player id
+        "h": 80, // health prozent, optional
+        "po": {"x":100,"y":64,"z":200}, // position optional
+        "st": 1 // status code, optional 0 -disconnected (at start), 1 - alive, 2 - dead
+      }
+    ]
+  }
+}
+```

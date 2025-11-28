@@ -297,6 +297,7 @@ export class WorldManager {
       startArea: info.startArea,
       assetPort: info.assetPort,
       splashScreen: info.splashScreen,
+      splashScreenAudio: info.splashScreenAudio,
     };
 
     const world: WorldInstance = {

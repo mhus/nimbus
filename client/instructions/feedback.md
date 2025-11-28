@@ -246,3 +246,23 @@ Im NotificationService wird es ein neues UI Element geben, das die aktuellen sho
 - Im PhysicService, sobald die teleportation abgeschlossen ist, wird der splash screen entfernt.
 - Erweitere auch in test_Serve die info.json um den splashScreen parameter mit dem werte 'screens/blizzardskull.png'
 - Wenn in der .env datei der parameter SHOW_SPLASH_SCREEN=false gesetzt ist, wird kein splash screen angezeigt.
+
+[x] Im NotificationHandler soll ein splash screen angezeigt werden koennen.
+- showSplashScreen(assetPath: string)
+- showSplashScreen(leer) um den splash screen zu entfernen
+- Der splash screen wird als fullscreen bild angezeigt, es wird ein asset pfad uebergeben. Mit NetworkService.getAssetUrl holen.
+- Erstelle ein Command in engine um den splash screen zu steuern.
+   
+[?] Erweitere das splash screen system im NotificationService um Audio.
+- Es existiert ein ModifierStack fuer AmbienteAudio, erstelle hier einen neuen Modifier 'splashScreenAudio' mit prio 5 der im NotificationService verwaltet wird.
+- Der modifier ist by default enabled=false
+- Erweitere den splashCreen aufruf um einen optionalen audioPath parameter.
+- showSplashScreen(assetPath: string, audioPath?: string)
+- Wenn audioPath gesetzt ist, wird der Modifier 'splashScreenAudio' mit dem audioPath aktiviert.
+- Wenn der splash screen entfernt wird, wird der Modifier deaktiviert.
+- Erweitere das Command im engine um den audioPath parameter.
+
+[ ] Erweitere auch WorldInfo um einen splashScreenAudio parameter.
+- worldInfo.splashScreenAudio: string (asset path) - optional, default leer
+- Beim Anzeigen des Start - SplashScreen wird auch der audioPath aus der WorldInfo uebergeben
+- Im test_server muss der Parameter beim RETS aufruf von http://localhost:3011/api/worlds/main/config?client=editor&t=1 mit uebergeben werden.

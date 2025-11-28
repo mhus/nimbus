@@ -1,9 +1,10 @@
 /**
  * SplashScreenCommand - Controls splash screen display
  *
- * Usage: splashscreen <assetPath>
+ * Usage: splashscreen <assetPath> [audioPath]
  * Usage: splashscreen (empty to remove)
  * Example: splashscreen images/logo.png
+ * Example: splashscreen images/logo.png audio/intro.ogg
  * Example: splashscreen
  */
 
@@ -29,7 +30,7 @@ export class SplashScreenCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Shows or hides splash screen (splashscreen [assetPath])';
+    return 'Shows or hides splash screen (splashscreen [assetPath] [audioPath])';
   }
 
   execute(parameters: any[]): any {
@@ -70,10 +71,15 @@ export class SplashScreenCommand extends CommandHandler {
       }
     }
 
+    // Parse optional audioPath
+    const audioPath = parameters.length > 1 ? toString(parameters[1]) : undefined;
+
     // Show splash screen
     try {
-      notificationService.showSplashScreen(assetPath);
-      const result = `Splash screen shown: ${assetPath}`;
+      notificationService.showSplashScreen(assetPath, audioPath);
+      const result = audioPath
+        ? `Splash screen shown: ${assetPath} with audio: ${audioPath}`
+        : `Splash screen shown: ${assetPath}`;
       logger.info(`✓ ${result}`);
       return result;
     } catch (error) {

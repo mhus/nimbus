@@ -116,3 +116,4 @@ doSkyBoxStart({r:0.5, g:0.7, b:1},45, 450, 'textures/skybox/space')
 
 doNotification(0,"aaa","bbb", "textures/magic/blue_crystal.png")
 
+doSplashscreen('screens/blizzardskull.png','audio/ambiente/blackmoor_tides.mp3')

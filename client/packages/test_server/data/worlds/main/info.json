@@ -138,5 +138,6 @@
   },
   "seasonStatus": 1,
   "seasonProgress": 0.5,
-  "splashScreen": "screens/blizzardskull.png"
+  "splashScreen": "screens/blizzardskull.png",
+  "splashScreenAudio": "audio/ambiente/blackmoor_tides.mp3"
 }

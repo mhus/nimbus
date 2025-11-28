@@ -10,6 +10,7 @@
 
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import { StackName, type Modifier } from './ModifierService';
 import type {
   Notification,
   NotificationType,
@@ -87,6 +88,31 @@ export class NotificationService {
     });
 
     logger.debug('NotificationService event subscriptions initialized');
+  }
+
+  /**
+   * Initialize splash screen audio modifier
+   * Creates a modifier in the AMBIENT_AUDIO stack with priority 5
+   */
+  private initializeSplashScreenAudioModifier(): void {
+    const modifierService = this.appContext.services.modifier;
+    if (!modifierService) {
+      logger.info('ModifierService not available, splash screen audio modifier not created');
+      return;
+    }
+
+    const stack = modifierService.getModifierStack<string>(StackName.AMBIENT_AUDIO);
+    if (!stack) {
+      logger.warn('Ambient audio stack not available');
+      return;
+    }
+
+    // Create splash screen audio modifier if not already created
+    if (!this.splashScreenAudioModifier) {
+      this.splashScreenAudioModifier = stack.addModifier('', 5); // Priority 5 (higher than environment=50, lower than death=10)
+      this.splashScreenAudioModifier.setEnabled(false); // Disabled by default
+      logger.info('Splash screen audio modifier created', { prio: 5 });
+    }
   }
 
   /**
@@ -504,6 +530,9 @@ export class NotificationService {
 
   /** Splash screen display */
   private splashScreenElement: HTMLElement | null = null;
+
+  /** Splash screen audio modifier (priority 5) */
+  private splashScreenAudioModifier?: Modifier<string>;
 
   /**
    * Get current shortcut mode
@@ -1472,19 +1501,27 @@ export class NotificationService {
    * Show splash screen
    *
    * Displays a fullscreen image as splash screen.
+   * Optionally plays audio via the AMBIENT_AUDIO modifier stack.
    * Call without assetPath (empty string) to remove the splash screen.
    *
    * @param assetPath Path to image asset (empty string to remove splash screen)
+   * @param audioPath Optional path to audio file to play during splash screen
    */
-  showSplashScreen(assetPath: string = ''): void {
+  showSplashScreen(assetPath: string = '', audioPath?: string): void {
     try {
-      logger.debug('showSplashScreen called', { assetPath });
+      logger.debug('showSplashScreen called', { assetPath, audioPath });
 
       // Remove existing splash screen if present
       if (this.splashScreenElement) {
         this.splashScreenElement.remove();
         this.splashScreenElement = null;
         logger.debug('Existing splash screen removed');
+      }
+
+      // Disable audio modifier when removing splash screen
+      if (this.splashScreenAudioModifier) {
+        this.splashScreenAudioModifier.setEnabled(false);
+        logger.debug('Splash screen audio modifier disabled');
       }
 
       // If empty path, just remove (already done above)
@@ -1545,9 +1582,28 @@ export class NotificationService {
         elementId: this.splashScreenElement.id,
         parentElement: document.body.contains(this.splashScreenElement) ? 'YES' : 'NO'
       });
+
+      // Handle audio if provided
+      if (audioPath && audioPath.trim() !== '') {
+        logger.info('Attempting to enable splash screen audio', { audioPath });
+        this.initializeSplashScreenAudioModifier();
+
+        if (this.splashScreenAudioModifier) {
+          this.splashScreenAudioModifier.setValue(audioPath);
+          this.splashScreenAudioModifier.setEnabled(true);
+          logger.info('Splash screen audio enabled', {
+            audioPath,
+            modifierEnabled: this.splashScreenAudioModifier.enabled,
+            modifierValue: this.splashScreenAudioModifier.getValue()
+          });
+        } else {
+          logger.warn('Splash screen audio modifier not created', { audioPath });
+        }
+      }
     } catch (error) {
       ExceptionHandler.handle(error, 'NotificationService.showSplashScreen', {
         assetPath,
+        audioPath,
       });
     }
   }

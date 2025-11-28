@@ -483,9 +483,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     // Show splash screen if enabled and configured (after worldInfo and NetworkService are loaded)
     const showSplashScreen = import.meta.env.VITE_SHOW_SPLASH_SCREEN !== 'false';
     const splashScreenPath = appContext.worldInfo?.splashScreen;
+    const splashScreenAudio = appContext.worldInfo?.splashScreenAudio;
     logger.debug('Splash screen check', {
       showSplashScreen,
       splashScreenPath,
+      splashScreenAudio,
       envValue: import.meta.env.VITE_SHOW_SPLASH_SCREEN,
       worldInfoAvailable: !!appContext.worldInfo,
       networkServiceAvailable: !!networkService
@@ -493,8 +495,8 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
 
     const notificationService = appContext.services.notification;
     if (showSplashScreen && splashScreenPath && notificationService) {
-      logger.debug('Showing splash screen', { splashScreenPath });
-      notificationService.showSplashScreen(splashScreenPath);
+      logger.debug('Showing splash screen', { splashScreenPath, splashScreenAudio });
+      notificationService.showSplashScreen(splashScreenPath, splashScreenAudio);
     } else {
       logger.debug('Splash screen not shown', {
         reason: !showSplashScreen ? 'disabled in env' :
