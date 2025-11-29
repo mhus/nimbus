@@ -18,13 +18,11 @@ import { NetworkService } from './services/NetworkService';
 import { BlockTypeService } from './services/BlockTypeService';
 import { ShaderService } from './services/ShaderService';
 import { AudioService } from './services/AudioService';
-import { SpriteService } from './services/SpriteService';
 import { ChunkService } from './services/ChunkService';
 import { EngineService } from './services/EngineService';
 import { ModalService } from './services/ModalService';
 import { NotificationService } from './services/NotificationService';
 import { TeamService } from './services/TeamService';
-import { CommandService } from './services/CommandService';
 import { CompassService } from './services/CompassService';
 import { EntityService } from './services/EntityService';
 import { ItemService } from './services/ItemService';
@@ -43,170 +41,8 @@ import { EntityPathwayMessageHandler } from './network/handlers/EntityPathwayMes
 import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
 import { CommandResultHandler } from './network/handlers/CommandResultHandler';
 import { ServerCommandHandler } from './network/handlers/ServerCommandHandler';
-import { HelpCommand } from './commands/HelpCommand';
-import { InfoCommand } from './commands/InfoCommand';
-import { ClearCommand } from './commands/ClearCommand';
-import { ReloadConfigCommand } from './commands/ReloadConfigCommand';
-import { ReloadWorldConfigCommand } from './commands/ReloadWorldConfigCommand';
-import { RedrawChunkCommand } from './commands/RedrawChunkCommand';
-import { SendCommand } from './commands/SendCommand';
-import { AudioCommand } from './commands/AudioCommand';
-import { TestAudioCommand } from './commands/TestAudioCommand';
-import { StepVolumeCommand } from './commands/StepVolumeCommand';
-import { PlayAmbientAudioCommand } from './commands/PlayAmbientAudioCommand';
-import { EnvironmentAmbientAudioCommand } from './commands/EnvironmentAmbientAudioCommand';
-import { SetAmbientVolumeCommand } from './commands/SetAmbientVolumeCommand';
-import { PlaySoundCommand } from './commands/PlaySoundCommand';
-import { PlaySoundAtPositionCommand } from './commands/PlaySoundAtPositionCommand';
-import { PlayEntityAudioCommand } from './commands/PlayEntityAudioCommand';
-import { SpeakCommand } from './commands/SpeakCommand';
-import { SetSpeechVolumeCommand } from './commands/SetSpeechVolumeCommand';
-import { RegisterFlashSoundsCommand } from './commands/RegisterFlashSoundsCommand';
-import { NotificationCommand } from './commands/NotificationCommand';
-import { ShowTeamCommand } from './commands/ShowTeamCommand';
-import { SetPlayerInfoCommand } from './commands/SetPlayerInfoCommand';
-import { SetShortcutCommand } from './commands/SetShortcutCommand';
-import { StatusEffectCommand } from './commands/StatusEffectCommand';
-import { VitalsCommand } from './commands/VitalsCommand';
-import { OpenComponentCommand } from './commands/OpenComponentCommand';
-import { SetSelectedEditBlockCommand } from './commands/SetSelectedEditBlockCommand';
-import { GetSelectedEditBlockCommand } from './commands/GetSelectedEditBlockCommand';
-import { PlayerPositionInfoCommand } from './commands/PlayerPositionInfoCommand';
-import { SelectedBlockInfoCommand } from './commands/SelectedBlockInfoCommand';
-import { ShortcutInfoCommand } from './commands/ShortcutInfoCommand';
-import { MaterialInfoCommand } from './commands/MaterialInfoCommand';
-import { WireframeCommand } from './commands/WireframeCommand';
-import { UnderwaterCommand } from './commands/UnderwaterCommand';
-import { FogCommand } from './commands/FogCommand';
-import { FlashImageCommand } from './commands/FlashImageCommand';
-import { CenterTextCommand } from './commands/CenterTextCommand';
-import { SplashScreenCommand } from './commands/SplashScreenCommand';
-import { LogLevelCommand } from './commands/LogLevelCommand';
-import { CreateEnvironmentScriptCommand } from './commands/CreateEnvironmentScriptCommand';
-import { DeleteEnvironmentScriptCommand } from './commands/DeleteEnvironmentScriptCommand';
-import { StartEnvironmentScriptCommand } from './commands/StartEnvironmentScriptCommand';
-import { StopEnvironmentScriptCommand } from './commands/StopEnvironmentScriptCommand';
-import { GetCurrentEnvironmentScriptCommand } from './commands/GetCurrentEnvironmentScriptCommand';
-import { ListEnvironmentScriptsCommand } from './commands/ListEnvironmentScriptsCommand';
-import { ResetEnvironmentCommand } from './commands/ResetEnvironmentCommand';
-import { BlockInfoCommand } from './commands/BlockInfoCommand';
-import { BlockTypeInfoCommand } from './commands/BlockTypeInfoCommand';
-import { ClearBlockTypeCacheCommand } from './commands/ClearBlockTypeCacheCommand';
-import { TeleportCommand } from './commands/TeleportCommand';
-import { ListEntitiesCommand } from './commands/ListEntitiesCommand';
-import { EntityInfoCommand } from './commands/EntityInfoCommand';
-import { SpawnEntityCommand } from './commands/SpawnEntityCommand';
-import { ToggleEntityPathwaysCommand } from './commands/ToggleEntityPathwaysCommand';
-import { WebGLCheckCommand } from './commands/WebGLCheckCommand';
-import {
-  WindDirectionCommand,
-  WindStrengthCommand,
-  WindGustStrengthCommand,
-  WindSwayFactorCommand,
-} from './commands/wind';
-import {
-  AmbientLightIntensityCommand,
-  AmbientLightDiffuseCommand,
-  AmbientLightSpecularCommand,
-  AmbientLightGroundColorCommand,
-} from './commands/ambientLight';
-import {
-  SunLightIntensityCommand,
-  SunLightDirectionCommand,
-  SunLightDiffuseCommand,
-  SunLightSpecularCommand,
-} from './commands/sunLight';
-import {
-  ShadowsEnableCommand,
-  ShadowsIntensityCommand,
-  ShadowsQualityCommand,
-  ShadowsInfoCommand,
-  ShadowsRefreshCommand,
-  ShadowsDistanceCommand,
-  ShadowsDebugCommand,
-  ShadowsEngineInfoCommand,
-} from './commands/shadows';
-import {
-  SunEnableCommand,
-  SunPositionCommand,
-  SunElevationCommand,
-  SunColorCommand,
-  SunTextureCommand,
-  SunSizeCommand,
-  SunLensFlareEnableCommand,
-  SunLensFlareIntensityCommand,
-  SunLensFlareColorCommand,
-  AutomaticSunAdjustmentCommand,
-  SunLightIntensityMultiplierCommand,
-  AmbientLightIntensityMultiplierCommand,
-} from './commands/sun';
-import {
-  SkyBoxEnableCommand,
-  SkyBoxColorCommand,
-  SkyBoxTextureCommand,
-  SkyBoxSizeCommand,
-  SkyBoxRotationCommand,
-  SkyBoxStartCommand,
-} from './commands/skybox';
-import {
-  MoonEnableCommand,
-  MoonSizeCommand,
-  MoonPositionCommand,
-  MoonElevationCommand,
-  MoonDistanceCommand,
-  MoonPhaseCommand,
-  MoonTextureCommand,
-} from './commands/moon';
-import {
-  CloudAddCommand,
-  CloudRemoveCommand,
-  CloudClearCommand,
-  CloudEnableCommand,
-  CloudSpeedCommand,
-  CloudDirectionCommand,
-  CloudPositionCommand,
-  CloudSizeCommand,
-  CloudListCommand,
-  CloudsAnimationStartCommand,
-  CloudsAnimationStopCommand,
-} from './commands/clouds';
-import {
-  HorizonGradientEnableCommand,
-  HorizonGradientDistanceCommand,
-  HorizonGradientPositionCommand,
-  HorizonGradientHeightCommand,
-  HorizonGradientColor0Command,
-  HorizonGradientColor1Command,
-  HorizonGradientAlphaCommand,
-} from './commands/horizonGradient';
-import {
-  PrecipitationEnableCommand,
-  PrecipitationIntensityCommand,
-  PrecipitationTypeCommand,
-  PrecipitationStartCommand,
-  PrecipitationStopCommand,
-  LightningCommand,
-} from './commands/precipitation';
-import {
-  ScrawlListCommand,
-  ScrawlStartCommand,
-  ScrawlActionCommand,
-  ScrawlScriptCommand,
-  ScrawlSelectedActionCommand,
-  ScrawlStopCommand,
-  ScrawlStatusCommand,
-  ScrawlPauseCommand,
-  ScrawlResumeCommand,
-} from './commands/scrawl';
-import {
-  SetStackModifierCommand,
-  GetStackModifierCurrentValueCommand,
-  ListStacksCommand,
-} from './commands/stack';
-import { WorldTimeConfigCommand } from './commands/WorldTimeConfigCommand';
-import { WorldTimeStartCommand } from './commands/WorldTimeStartCommand';
-import { WorldTimeStopCommand } from './commands/WorldTimeStopCommand';
-import { WorldTimeInfoCommand } from './commands/WorldTimeInfoCommand';
+
+import {CommandsFactory} from "./commands/CommandsFactory";
 
 const CLIENT_VERSION = '2.0.0';
 
@@ -294,183 +130,7 @@ async function initializeApp(): Promise<AppContext> {
     appContext.services.shortcut = shortcutService;
     logger.debug('ShortcutService initialized');
 
-    // Initialize CommandService (available in both EDITOR and VIEWER modes)
-    logger.debug('Initializing CommandService...');
-    const commandService = new CommandService(appContext);
-    appContext.services.command = commandService;
-
-    // Register command handlers
-    commandService.registerHandler(new HelpCommand(commandService));
-    commandService.registerHandler(new InfoCommand(appContext));
-    commandService.registerHandler(new ClearCommand());
-    commandService.registerHandler(new ReloadConfigCommand(appContext));
-    commandService.registerHandler(new ReloadWorldConfigCommand(appContext));
-    commandService.registerHandler(new RedrawChunkCommand(appContext));
-    commandService.registerHandler(new SendCommand(commandService));
-    commandService.registerHandler(new AudioCommand(appContext));
-    commandService.registerHandler(new TestAudioCommand(appContext));
-    commandService.registerHandler(new StepVolumeCommand(appContext));
-    commandService.registerHandler(new PlayAmbientAudioCommand(appContext));
-    commandService.registerHandler(new EnvironmentAmbientAudioCommand(appContext));
-    commandService.registerHandler(new SetAmbientVolumeCommand(appContext));
-    commandService.registerHandler(new PlaySoundCommand(appContext));
-    commandService.registerHandler(new PlaySoundAtPositionCommand(appContext));
-    commandService.registerHandler(new PlayEntityAudioCommand(appContext));
-    commandService.registerHandler(new SpeakCommand(appContext));
-    commandService.registerHandler(new SetSpeechVolumeCommand(appContext));
-    commandService.registerHandler(new RegisterFlashSoundsCommand(appContext));
-    commandService.registerHandler(new NotificationCommand(appContext));
-    commandService.registerHandler(new SplashScreenCommand(appContext));
-    commandService.registerHandler(new ShowTeamCommand(appContext));
-    commandService.registerHandler(new SetPlayerInfoCommand(appContext));
-    commandService.registerHandler(new SetShortcutCommand(appContext));
-    commandService.registerHandler(new StatusEffectCommand(appContext));
-    commandService.registerHandler(new VitalsCommand(appContext));
-    commandService.registerHandler(new OpenComponentCommand(appContext));
-    commandService.registerHandler(new SetSelectedEditBlockCommand(appContext));
-    commandService.registerHandler(new GetSelectedEditBlockCommand(appContext));
-    commandService.registerHandler(new PlayerPositionInfoCommand(appContext));
-    commandService.registerHandler(new SelectedBlockInfoCommand(appContext));
-    commandService.registerHandler(new ShortcutInfoCommand(appContext));
-    commandService.registerHandler(new MaterialInfoCommand(appContext));
-    commandService.registerHandler(new WireframeCommand(appContext));
-    commandService.registerHandler(new UnderwaterCommand(appContext));
-    commandService.registerHandler(new FogCommand(appContext));
-    commandService.registerHandler(new FlashImageCommand(appContext));
-    commandService.registerHandler(new CenterTextCommand(appContext));
-    commandService.registerHandler(new LogLevelCommand());
-    commandService.registerHandler(new BlockInfoCommand(appContext));
-    commandService.registerHandler(new BlockTypeInfoCommand(appContext));
-    commandService.registerHandler(new TeleportCommand(appContext));
-    commandService.registerHandler(new WebGLCheckCommand(appContext));
-
-    // Register entity commands
-    commandService.registerHandler(new ListEntitiesCommand(appContext));
-    commandService.registerHandler(new EntityInfoCommand(appContext));
-    commandService.registerHandler(new SpawnEntityCommand(appContext));
-    commandService.registerHandler(new ToggleEntityPathwaysCommand(appContext));
-
-    // Register wind commands
-    commandService.registerHandler(new WindDirectionCommand(appContext));
-    commandService.registerHandler(new WindStrengthCommand(appContext));
-    commandService.registerHandler(new WindGustStrengthCommand(appContext));
-    commandService.registerHandler(new WindSwayFactorCommand(appContext));
-
-    // Register ambient light commands
-    commandService.registerHandler(new AmbientLightIntensityCommand(appContext));
-    commandService.registerHandler(new AmbientLightDiffuseCommand(appContext));
-    commandService.registerHandler(new AmbientLightSpecularCommand(appContext));
-    commandService.registerHandler(new AmbientLightGroundColorCommand(appContext));
-
-    // Register sun light commands
-    commandService.registerHandler(new SunLightIntensityCommand(appContext));
-    commandService.registerHandler(new SunLightDirectionCommand(appContext));
-    commandService.registerHandler(new SunLightDiffuseCommand(appContext));
-    commandService.registerHandler(new SunLightSpecularCommand(appContext));
-
-    // Register shadow commands
-    commandService.registerHandler(new ShadowsEnableCommand(appContext));
-    commandService.registerHandler(new ShadowsIntensityCommand(appContext));
-    commandService.registerHandler(new ShadowsQualityCommand(appContext));
-    commandService.registerHandler(new ShadowsInfoCommand(appContext));
-    commandService.registerHandler(new ShadowsRefreshCommand(appContext));
-    commandService.registerHandler(new ShadowsDistanceCommand(appContext));
-    commandService.registerHandler(new ShadowsDebugCommand(appContext));
-    commandService.registerHandler(new ShadowsEngineInfoCommand(appContext));
-
-    // Register sun visualization commands
-    commandService.registerHandler(new SunEnableCommand(appContext));
-    commandService.registerHandler(new SunPositionCommand(appContext));
-    commandService.registerHandler(new SunElevationCommand(appContext));
-    commandService.registerHandler(new SunColorCommand(appContext));
-    commandService.registerHandler(new SunTextureCommand(appContext));
-    commandService.registerHandler(new SunSizeCommand(appContext));
-    commandService.registerHandler(new SunLensFlareEnableCommand(appContext));
-    commandService.registerHandler(new SunLensFlareIntensityCommand(appContext));
-    commandService.registerHandler(new SunLensFlareColorCommand(appContext));
-    commandService.registerHandler(new AutomaticSunAdjustmentCommand(appContext));
-    commandService.registerHandler(new SunLightIntensityMultiplierCommand(appContext));
-    commandService.registerHandler(new AmbientLightIntensityMultiplierCommand(appContext));
-
-    // Register skybox commands
-    commandService.registerHandler(new SkyBoxEnableCommand(appContext));
-    commandService.registerHandler(new SkyBoxColorCommand(appContext));
-    commandService.registerHandler(new SkyBoxTextureCommand(appContext));
-    commandService.registerHandler(new SkyBoxSizeCommand(appContext));
-    commandService.registerHandler(new SkyBoxRotationCommand(appContext));
-    commandService.registerHandler(new SkyBoxStartCommand(appContext));
-
-    // Register moon commands
-    commandService.registerHandler(new MoonEnableCommand(appContext));
-    commandService.registerHandler(new MoonSizeCommand(appContext));
-    commandService.registerHandler(new MoonPositionCommand(appContext));
-    commandService.registerHandler(new MoonElevationCommand(appContext));
-    commandService.registerHandler(new MoonDistanceCommand(appContext));
-    commandService.registerHandler(new MoonPhaseCommand(appContext));
-    commandService.registerHandler(new MoonTextureCommand(appContext));
-
-    // Register cloud visualization commands
-    commandService.registerHandler(new CloudAddCommand(appContext));
-    commandService.registerHandler(new CloudRemoveCommand(appContext));
-    commandService.registerHandler(new CloudClearCommand(appContext));
-    commandService.registerHandler(new CloudEnableCommand(appContext));
-    commandService.registerHandler(new CloudSpeedCommand(appContext));
-    commandService.registerHandler(new CloudDirectionCommand(appContext));
-    commandService.registerHandler(new CloudPositionCommand(appContext));
-    commandService.registerHandler(new CloudSizeCommand(appContext));
-    commandService.registerHandler(new CloudListCommand(appContext));
-    commandService.registerHandler(new CloudsAnimationStartCommand(appContext));
-    commandService.registerHandler(new CloudsAnimationStopCommand(appContext));
-
-    // Register horizon gradient commands
-    commandService.registerHandler(new HorizonGradientEnableCommand(appContext));
-    commandService.registerHandler(new HorizonGradientDistanceCommand(appContext));
-    commandService.registerHandler(new HorizonGradientPositionCommand(appContext));
-    commandService.registerHandler(new HorizonGradientHeightCommand(appContext));
-    commandService.registerHandler(new HorizonGradientColor0Command(appContext));
-    commandService.registerHandler(new HorizonGradientColor1Command(appContext));
-    commandService.registerHandler(new HorizonGradientAlphaCommand(appContext));
-
-    // Register precipitation commands
-    commandService.registerHandler(new PrecipitationStartCommand(appContext));
-    commandService.registerHandler(new PrecipitationStopCommand(appContext));
-    commandService.registerHandler(new LightningCommand(appContext));
-    commandService.registerHandler(new PrecipitationEnableCommand(appContext));
-    commandService.registerHandler(new PrecipitationIntensityCommand(appContext));
-    commandService.registerHandler(new PrecipitationTypeCommand(appContext));
-
-    // Register scrawl commands
-    commandService.registerHandler(new ScrawlListCommand(appContext));
-    commandService.registerHandler(new ScrawlStartCommand(appContext));
-    commandService.registerHandler(new ScrawlActionCommand(appContext));
-    commandService.registerHandler(new ScrawlScriptCommand(appContext));
-    commandService.registerHandler(new ScrawlSelectedActionCommand(appContext));
-    commandService.registerHandler(new ScrawlStopCommand(appContext));
-
-    // Register stack modifier commands
-    commandService.registerHandler(new SetStackModifierCommand(appContext));
-    commandService.registerHandler(new GetStackModifierCurrentValueCommand(appContext));
-    commandService.registerHandler(new ListStacksCommand(appContext));
-    commandService.registerHandler(new ScrawlStatusCommand(appContext));
-    commandService.registerHandler(new ScrawlPauseCommand(appContext));
-    commandService.registerHandler(new ScrawlResumeCommand(appContext));
-
-    // Register environment script commands
-    commandService.registerHandler(new CreateEnvironmentScriptCommand(appContext));
-    commandService.registerHandler(new DeleteEnvironmentScriptCommand(appContext));
-    commandService.registerHandler(new StartEnvironmentScriptCommand(appContext));
-    commandService.registerHandler(new StopEnvironmentScriptCommand(appContext));
-    commandService.registerHandler(new GetCurrentEnvironmentScriptCommand(appContext));
-    commandService.registerHandler(new ListEnvironmentScriptsCommand(appContext));
-    commandService.registerHandler(new ResetEnvironmentCommand(appContext));
-
-    // Register World Time commands
-    commandService.registerHandler(new WorldTimeConfigCommand(appContext));
-    commandService.registerHandler(new WorldTimeStartCommand(appContext));
-    commandService.registerHandler(new WorldTimeStopCommand(appContext));
-    commandService.registerHandler(new WorldTimeInfoCommand(appContext));
-
-    logger.debug('CommandService initialized with commands');
+    CommandsFactory.createCommands(appContext);
 
     logger.debug('App initialization complete', {
       clientType: clientService.getClientType(),
@@ -604,11 +264,6 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     appContext.services.blockType = blockTypeService;
     logger.debug('BlockTypeService initialized (chunks will be loaded on-demand)');
 
-    // Register BlockType-dependent commands (after BlockTypeService is created)
-    if (appContext.services.command) {
-      appContext.services.command.registerHandler(new ClearBlockTypeCacheCommand(blockTypeService));
-    }
-
     // Initialize ShaderService
     logger.debug('Initializing ShaderService...');
     const shaderService = new ShaderService(appContext);
@@ -724,22 +379,6 @@ async function initializeEngine(appContext: AppContext, canvas: HTMLCanvasElemen
     appContext.services.compass = compassService;
     logger.debug('CompassService initialized');
 
-    // Register some chunks around player spawn
-    const chunkService = appContext.services.chunk;
-    if (chunkService) {
-      const playerService = engineService.getPlayerService();
-      const playerPos = playerService?.getPosition();
-
-      if (playerPos) {
-        logger.debug('Registering chunks around player', {
-          x: playerPos.x,
-          y: playerPos.y,
-          z: playerPos.z
-        });
-        chunkService.updateChunksAroundPosition(playerPos.x, playerPos.z);
-      }
-    }
-
     logger.debug('3D Engine ready');
   } catch (error) {
     throw ExceptionHandler.handleAndRethrow(error, 'NimbusClient.initializeEngine');
@@ -770,6 +409,8 @@ appContextPromise
       // Initialize core services (Network, BlockType, Chunk)
       await initializeCoreServices(appContext);
 
+      await postCoreServiceInitialization(appContext);
+
       // Show progress
       showLoadingMessage(canvas, 'Initializing 3D engine...');
 
@@ -792,6 +433,10 @@ appContextPromise
       } else {
         throw new Error('Canvas has no parent element');
       }
+
+      await postEngineInitialization(appContext);
+
+      await startEngineAtPlayerPosition(appContext);
 
       // Hide loading screen
       const loadingElement = document.getElementById('loading');
@@ -830,6 +475,36 @@ appContextPromise
       showErrorMessage(canvas, error instanceof Error ? error.message : 'Unknown error');
     }
   });
+
+
+async function postCoreServiceInitialization(appContext: AppContext): Promise<void> {
+}
+
+async function postEngineInitialization(appContext: AppContext): Promise<void> {
+}
+
+async function startEngineAtPlayerPosition(appContext: AppContext): Promise<void> {
+  try {
+    // Register some chunks around player spawn
+    const chunkService = appContext.services.chunk;
+    if (chunkService) {
+      const playerService = appContext.services.engine?.getPlayerService();
+      const playerPos = playerService?.getPosition();
+
+      if (playerPos) {
+        logger.debug('Registering chunks around player', {
+          x: playerPos.x,
+          y: playerPos.y,
+          z: playerPos.z
+        });
+        chunkService.updateChunksAroundPosition(playerPos.x, playerPos.z);
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to register chunks around player', undefined, error as Error);
+    throw ExceptionHandler.handleAndRethrow(error, 'NimbusClient.startEngineAtPlayerPosition');
+  }
+}
 
 /**
  * Show loading message on canvas
