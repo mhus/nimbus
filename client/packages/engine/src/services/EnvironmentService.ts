@@ -535,31 +535,20 @@ export class EnvironmentService {
       this.shadowGenerator.numCascades = 2;
       this.shadowGenerator.transparencyShadow = true;
 
-      // Set shadow distance from WorldInfo
-      const shadowMaxZ = distance * 10; // Convert blocks to units
-      this.shadowGenerator.shadowMaxZ = shadowMaxZ;
-
-      // Set camera.maxZ to match
-      const cameraService = this.appContext.services.camera;
-      if (cameraService) {
-        const camera = cameraService.getCamera();
-        if (camera) {
-          camera.maxZ = Math.max(shadowMaxZ, 5000);
-        }
-      }
+      this.setShadowDistance(distance);
 
       // Call splitFrustum (required for CascadedShadowGenerator)
       this.shadowGenerator.splitFrustum();
 
       this.shadowEnabled = true;
       this.shadowQuality = quality;
+      this.setShadowDistance(distance);
 
-      logger.info('Shadow system initialized', {
+      logger.debug('Shadow system initialized', {
         type: 'CascadedShadowGenerator',
         mapSize: mapSize,
         quality: quality,
         distance: distance,
-        shadowMaxZ: shadowMaxZ,
         lambda: 0.2,
         numCascades: 2,
       });
@@ -647,6 +636,41 @@ export class EnvironmentService {
       : [];
 
     logger.info('Shadows ' + (enabled ? 'enabled' : 'disabled'));
+  }
+
+  setShadowDistance(distance: number): boolean {
+    if (!this.shadowGenerator) {
+      logger.warn('Shadow generator not initialized');
+      return false;
+    }
+
+    const shadowGenerator = this.getShadowGenerator();
+    if (!shadowGenerator) {
+      return false;
+    }
+
+    // Set shadowMaxZ (controls how far shadows are rendered)
+    const shadowMaxZ = distance * 10; // Convert blocks to units
+    shadowGenerator.shadowMaxZ = shadowMaxZ;
+
+    // Also update camera maxZ to match
+    const cameraService = this.appContext.services.camera;
+    if (cameraService) {
+      const camera = cameraService.getCamera();
+      if (camera) {
+        camera.maxZ = Math.max(shadowMaxZ, 1000);
+      }
+    }
+
+    // NOTE: DO NOT call splitFrustum() here - it causes duplicates/issues
+    // The shadow frustum will auto-adjust
+
+    logger.info('Shadow distance changed', {
+      distance,
+      shadowMaxZ,
+    });
+
+    return true;
   }
 
   /**

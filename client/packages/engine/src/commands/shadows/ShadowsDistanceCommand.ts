@@ -21,7 +21,12 @@ export class ShadowsDistanceCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Set shadow rendering distance in blocks (default: 100)';
+    return 'Set shadow rendering distance in blocks (default: 100)\n' +
+        'Smaller distance = better performance, shorter shadows\n' +
+        'Larger distance = worse performance, longer shadows\n' +
+        '\n' +
+        'Current: ${distance} blocks`;\n' +
+        '  }\n';
   }
 
   async execute(parameters: any[]): Promise<string> {
@@ -31,8 +36,8 @@ export class ShadowsDistanceCommand extends CommandHandler {
 
     const distance = toNumber(parameters[0]);
 
-    if (isNaN(distance) || distance < 10 || distance > 5000) {
-      return 'Invalid distance. Must be between 10 and 5000 blocks.';
+    if (isNaN(distance) || distance < 10 || distance > 15000) {
+      return 'Invalid distance. Must be between 10 and 15000 blocks.';
     }
 
     const envService = this.appContext.services.environment;
@@ -40,37 +45,10 @@ export class ShadowsDistanceCommand extends CommandHandler {
       return 'EnvironmentService not available';
     }
 
-    const shadowGenerator = envService.getShadowGenerator();
-    if (!shadowGenerator) {
+    if (envService.setShadowDistance(distance)) {
+      return `Shadow distance set to ${distance} blocks).`;
+    } else {
       return 'Shadow generator not initialized';
     }
-
-    // Set shadowMaxZ (controls how far shadows are rendered)
-    const shadowMaxZ = distance * 10; // Convert blocks to units
-    shadowGenerator.shadowMaxZ = shadowMaxZ;
-
-    // Also update camera maxZ to match
-    const cameraService = this.appContext.services.camera;
-    if (cameraService) {
-      const camera = cameraService.getCamera();
-      if (camera) {
-        camera.maxZ = Math.max(shadowMaxZ, 1000);
-      }
-    }
-
-    // NOTE: DO NOT call splitFrustum() here - it causes duplicates/issues
-    // The shadow frustum will auto-adjust
-
-    logger.info('Shadow distance changed', {
-      distance,
-      shadowMaxZ,
-    });
-
-    return `Shadow distance set to ${distance} blocks (shadowMaxZ: ${shadowMaxZ})
-
-Smaller distance = better performance, shorter shadows
-Larger distance = worse performance, longer shadows
-
-Current: ${distance} blocks`;
   }
 }
