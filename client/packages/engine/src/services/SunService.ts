@@ -42,6 +42,7 @@ export class SunService {
   private lensFlareEnabled: boolean = true;
   private lensFlareIntensity: number = 1.0;
   private lensFlareColor: Color3 = new Color3(1, 0.9, 0.7); // Warm flare color
+  private lensFlareTexture: string = 'textures/sun/flare.png';
 
   // Sun position parameters
   private currentAngleY: number = 90; // Default: East
@@ -176,10 +177,11 @@ export class SunService {
     // Get lens flare texture URL from asset server
     let flareTextureUrl: string;
     if (this.networkService) {
-      flareTextureUrl = this.networkService.getAssetUrl('textures/sun/flare.png');
+      flareTextureUrl = this.networkService.getAssetUrl(this.lensFlareTexture);
     } else {
       // Fallback to data URL if network service not available
       flareTextureUrl = this.createLensFlareTextureDataUrl();
+      logger.warn('NetworkService not available, using fallback lens flare texture');
     }
 
     // Add multiple flares at different positions along the flare axis

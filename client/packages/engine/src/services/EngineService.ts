@@ -5,7 +5,7 @@
  * Coordinates all rendering-related sub-services.
  */
 
-import { Engine, Scene } from '@babylonjs/core';
+import { Engine, Scene, RenderingManager } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { TextureAtlas } from '../rendering/TextureAtlas';
@@ -27,6 +27,7 @@ import { CloudsService } from './CloudsService';
 import { HorizonGradientService } from './HorizonGradientService';
 import { PrecipitationService } from './PrecipitationService';
 import { WebInputController } from '../input/WebInputController';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('EngineService');
 
@@ -117,7 +118,12 @@ export class EngineService {
 
       // Create Scene
       this.scene = new Scene(this.engine);
+
       logger.debug('Scene created');
+
+      // Configure rendering groups - enable all groups used in the application
+      // This ensures proper depth clearing and rendering order
+      this.configureRenderingGroups();
 
       // Initialize texture atlas
       this.textureAtlas = new TextureAtlas(this.scene, this.appContext);
@@ -393,6 +399,60 @@ export class EngineService {
 
     this.engine?.stopRenderLoop();
     this.isRunning = false;
+  }
+
+  /**
+   * Configure rendering groups for proper rendering order and depth clearing
+   *
+   * By default, BabylonJS only renders objects in rendering group 0.
+   * We need to enable all rendering groups used in the application.
+   *
+   * Rendering order (low to high):
+   * 0: ENVIRONMENT (sky, sun) - clears depth
+   * 1: BACKDROP (chunk boundaries)
+   * 2: WORLD (blocks, entities) - main content with depth testing
+   * 3: PRECIPITATION (rain, snow)
+   * 4: SELECTION_OVERLAY (highlights) - should render on top, clears depth
+   */
+  private configureRenderingGroups(): void {
+    if (!this.scene) {
+      logger.error('Cannot configure rendering groups: scene not available');
+      return;
+    }
+
+    // Get all unique rendering group IDs and find the maximum
+    const groupIds = [...new Set(Object.values(RENDERING_GROUPS))];
+    const maxGroupId = Math.max(...groupIds);
+
+    // Set MAX_RENDERINGGROUPS to enable all groups we need
+    // BabylonJS 7 requires this to be set explicitly
+    RenderingManager.MAX_RENDERINGGROUPS = maxGroupId + 1;
+
+    // Configure auto-clear behavior for each group
+    for (let groupId = 0; groupId <= maxGroupId; groupId++) {
+      let autoClearDepth = false;
+      let autoClearStencil = false;
+
+      if (groupId === RENDERING_GROUPS.ENVIRONMENT) {
+        // ENVIRONMENT (group 0): Clear depth to start fresh
+        autoClearDepth = true;
+        autoClearStencil = true;
+      } else if (groupId === RENDERING_GROUPS.SELECTION_OVERLAY) {
+        // SELECTION_OVERLAY: Clear depth so overlays render on top
+        autoClearDepth = true;
+        autoClearStencil = false;
+      }
+      // All other groups preserve depth from previous groups for proper occlusion
+
+      this.scene.setRenderingAutoClearDepthStencil(groupId, autoClearDepth, autoClearStencil);
+    }
+
+    logger.info('Rendering groups configured', {
+      maxGroupId,
+      maxRenderingGroups: RenderingManager.MAX_RENDERINGGROUPS,
+      configuredGroups: maxGroupId + 1,
+      usedGroupIds: groupIds.sort((a, b) => a - b),
+    });
   }
 
   /**

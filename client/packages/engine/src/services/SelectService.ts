@@ -6,7 +6,7 @@
  * Includes auto-select mode with visual highlighting.
  */
 
-import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Ray } from '@babylonjs/core';
+import { Vector3, Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Ray, Constants } from '@babylonjs/core';
 import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
 import {
   getLogger,
@@ -554,16 +554,23 @@ export class SelectService {
         this.scene
       );
 
-      // Create highlight material (yellow for selected block)
+      // Create highlight material (white semi-transparent block)
       this.highlightMaterial = new StandardMaterial('highlightMaterial', this.scene);
-      this.highlightMaterial.emissiveColor = new Color3(1, 1, 0); // Yellow
-      this.highlightMaterial.wireframe = true;
-      this.highlightMaterial.alpha = 0.8;
+      this.highlightMaterial.diffuseColor = new Color3(1, 1, 1); // White
+      this.highlightMaterial.emissiveColor = new Color3(0.5, 0.5, 0.5); // Slight emission for visibility
+      this.highlightMaterial.alpha = 0.3; // Semi-transparent
+      this.highlightMaterial.wireframe = false;
+      this.highlightMaterial.disableDepthWrite = true; // Don't write to depth buffer
 
       this.highlightMesh.material = this.highlightMaterial;
       this.highlightMesh.isPickable = false;
       this.highlightMesh.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY; // Render on top
       this.highlightMesh.setEnabled(false); // Hidden by default
+
+      // Enable edge rendering for thick, opaque borders
+      this.highlightMesh.enableEdgesRendering();
+      this.highlightMesh.edgesWidth = 3.0; // Thick edges
+      this.highlightMesh.edgesColor = new Color3(1, 1, 1).toColor4(1.0); // Opaque white edges
 
       // Create wireframe box for edit block highlighting (green)
       this.editHighlightMesh = MeshBuilder.CreateBox(
@@ -572,16 +579,23 @@ export class SelectService {
         this.scene
       );
 
-      // Create edit highlight material (green for edit block)
+      // Create edit highlight material (red semi-transparent block)
       this.editHighlightMaterial = new StandardMaterial('editHighlightMaterial', this.scene);
-      this.editHighlightMaterial.emissiveColor = new Color3(1, 0, 0); // Red
-      this.editHighlightMaterial.wireframe = true;
-      this.editHighlightMaterial.alpha = 0.8;
+      this.editHighlightMaterial.diffuseColor = new Color3(1, 0, 0); // Red
+      this.editHighlightMaterial.emissiveColor = new Color3(0.5, 0, 0); // Red emission for visibility
+      this.editHighlightMaterial.alpha = 0.3; // Semi-transparent
+      this.editHighlightMaterial.wireframe = false;
+      this.editHighlightMaterial.disableDepthWrite = true; // Don't write to depth buffer
 
       this.editHighlightMesh.material = this.editHighlightMaterial;
       this.editHighlightMesh.isPickable = false;
       this.editHighlightMesh.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY; // Render on top
       this.editHighlightMesh.setEnabled(false); // Hidden by default
+
+      // Enable edge rendering for thick, opaque borders
+      this.editHighlightMesh.enableEdgesRendering();
+      this.editHighlightMesh.edgesWidth = 3.0; // Thick edges
+      this.editHighlightMesh.edgesColor = new Color3(1, 0, 0).toColor4(1.0); // Opaque red edges
 
       // Initialize BabylonJS GUI for label display
       this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI', true, this.scene);

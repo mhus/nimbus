@@ -254,7 +254,7 @@ export class EnvironmentService {
   private initializeAmbientAudioModifier(): void {
     const modifierService = this.appContext.services.modifier;
     if (!modifierService) {
-      logger.info('ModifierService not available, ambient audio modifier not created');
+      logger.debug('ModifierService not available, ambient audio modifier not created');
       return;
     }
 
@@ -521,7 +521,7 @@ export class EnvironmentService {
       const distance = shadowSettings?.maxDistance ?? 500; // Default: 500 blocks
 
       if (!enabled) {
-        logger.info('Shadows disabled in WorldInfo');
+        logger.debug('Shadows disabled in WorldInfo');
         return;
       }
 
@@ -589,7 +589,7 @@ export class EnvironmentService {
   setShadowsEnabled(enabled: boolean): void {
     // If enabling shadows but generator doesn't exist, create it
     if (enabled && !this.shadowGenerator) {
-      logger.info('Creating shadow generator on-the-fly');
+      logger.debug('Creating shadow generator on-the-fly');
 
       if (!this.sunLight) {
         logger.warn('Cannot create shadow generator: sunLight not available');
@@ -617,7 +617,7 @@ export class EnvironmentService {
         this.sunLight.shadowMinZ = 1;
         this.sunLight.shadowMaxZ = 200;
 
-        logger.info('Shadow generator created successfully', { quality, mapSize });
+        logger.debug('Shadow generator created successfully', { quality, mapSize });
       } catch (error) {
         logger.error('Failed to create shadow generator', { error });
         return;
@@ -635,7 +635,7 @@ export class EnvironmentService {
       ? this.shadowGenerator.getShadowMap()!.renderList
       : [];
 
-    logger.info('Shadows ' + (enabled ? 'enabled' : 'disabled'));
+    logger.debug('Shadows ' + (enabled ? 'enabled' : 'disabled'));
   }
 
   setShadowDistance(distance: number): boolean {
@@ -665,7 +665,7 @@ export class EnvironmentService {
     // NOTE: DO NOT call splitFrustum() here - it causes duplicates/issues
     // The shadow frustum will auto-adjust
 
-    logger.info('Shadow distance changed', {
+    logger.debug('Shadow distance changed', {
       distance,
       shadowMaxZ,
     });
@@ -741,7 +741,7 @@ export class EnvironmentService {
     this.applyShadowQualitySettings(quality);
     this.shadowQuality = quality;
 
-    logger.info('Shadow quality set', { quality });
+    logger.debug('Shadow quality set', { quality });
   }
 
   /**
