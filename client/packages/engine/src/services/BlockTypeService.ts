@@ -5,7 +5,13 @@
  * BlockTypes are cached after initial load.
  */
 
-import { getLogger, ExceptionHandler, BlockType, normalizeBlockTypeId } from '@nimbus/shared';
+import {
+  getLogger,
+  ExceptionHandler,
+  BlockType,
+  normalizeBlockTypeId,
+  getBlockTypeGroup,
+} from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 const logger = getLogger('BlockTypeService');
@@ -21,31 +27,36 @@ interface BlockTypesResponse {
 }
 
 /**
- * BlockTypeService - Manages block type registry with chunk-based lazy loading
+ * BlockTypeService - Manages block type registry with group-based lazy loading
  *
  * Features:
- * - Lazy loads block types from server in chunks of 100
- * - Caches loaded chunks
+ * - Lazy loads block types from server in groups
+ * - Caches loaded groups
  * - Provides fast lookup by ID
  * - Validates block type data
  *
- * Chunk Strategy:
- * - BlockType ID 15 → loads chunk 0-99
- * - BlockType ID 234 → loads chunk 200-299
- * - Each chunk is loaded once and cached
+ * Group Strategy:
+ * - BlockType ID format: "{group}:{name}" (e.g., "core:stone", "custom:tree")
+ * - If no ":" in ID, default group "w" is used
+ * - All IDs are normalized to lowercase
+ * - Each group is loaded once and cached
+ *
+ * Examples:
+ * - "core:stone" → loads group "core"
+ * - "310" → loads group "w" (default)
+ * - "CUSTOM:Tree" → normalized to "custom:tree", loads group "custom"
  */
 export class BlockTypeService {
   private blockTypes: Map<string, BlockType> = new Map();
-  private loadedChunks: Set<number> = new Set(); // Track which chunks (0, 1, 2, ...) are loaded
-  private loadingChunks: Map<number, Promise<void>> = new Map(); // Track chunks currently being loaded
-  private readonly CHUNK_SIZE = 100;
+  private loadedGroups: Set<string> = new Set(); // Track which groups are loaded ('core', 'w', 'custom', ...)
+  private loadingGroups: Map<string, Promise<void>> = new Map(); // Track groups currently being loaded
 
   constructor(private appContext: AppContext) {
     // Register static AIR BlockType (id 0)
     // This ensures AIR is always available, even before server block types are loaded
     this.registerAirBlockType();
 
-    logger.debug('BlockTypeService initialized with chunk-based lazy loading');
+    logger.debug('BlockTypeService initialized with group-based lazy loading');
   }
 
   /**
@@ -75,99 +86,78 @@ export class BlockTypeService {
   }
 
   /**
-   * Calculate which chunk a BlockType ID belongs to
-   * Example: ID 15 → chunk 0 (0-99), ID 234 → chunk 2 (200-299)
+   * Load a group of BlockTypes from the server
+   * @param groupName The group name to load (e.g., 'core', 'w', 'custom')
    */
-  private getChunkIndex(blockTypeId: string | number): number {
-    const id = typeof blockTypeId === 'string' ? parseInt(blockTypeId, 10) : blockTypeId;
-    return Math.floor(id / this.CHUNK_SIZE);
-  }
+  private async loadGroup(groupName: string): Promise<void> {
+    const normalizedGroup = groupName.toLowerCase();
 
-  /**
-   * Get the range for a chunk
-   * Example: chunk 0 → [0, 99], chunk 2 → [200, 299]
-   */
-  private getChunkRange(chunkIndex: number): { from: number; to: number } {
-    return {
-      from: chunkIndex * this.CHUNK_SIZE,
-      to: (chunkIndex + 1) * this.CHUNK_SIZE - 1,
-    };
-  }
-
-  /**
-   * Load a chunk of BlockTypes from the server
-   * @param chunkIndex The chunk index to load (0, 1, 2, ...)
-   */
-  private async loadChunk(chunkIndex: number): Promise<void> {
-    // Check if chunk is already loaded
-    if (this.loadedChunks.has(chunkIndex)) {
-      logger.debug('Chunk already loaded', { chunkIndex });
+    // Check if group is already loaded
+    if (this.loadedGroups.has(normalizedGroup)) {
+      logger.debug('Group already loaded', { groupName: normalizedGroup });
       return;
     }
 
-    // Check if chunk is currently being loaded
-    const existingPromise = this.loadingChunks.get(chunkIndex);
+    // Check if group is currently being loaded
+    const existingPromise = this.loadingGroups.get(normalizedGroup);
     if (existingPromise) {
-      logger.debug('Chunk loading in progress, waiting...', { chunkIndex });
+      logger.debug('Group loading in progress, waiting...', { groupName: normalizedGroup });
       return existingPromise;
     }
 
-    // Start loading chunk
-    const loadingPromise = this.doLoadChunk(chunkIndex);
-    this.loadingChunks.set(chunkIndex, loadingPromise);
+    // Start loading group
+    const loadingPromise = this.doLoadGroup(normalizedGroup);
+    this.loadingGroups.set(normalizedGroup, loadingPromise);
 
     try {
       await loadingPromise;
     } finally {
-      this.loadingChunks.delete(chunkIndex);
+      this.loadingGroups.delete(normalizedGroup);
     }
   }
 
   /**
-   * Internal method that performs the actual chunk loading
+   * Internal method that performs the actual group loading
    */
-  private async doLoadChunk(chunkIndex: number): Promise<void> {
+  private async doLoadGroup(groupName: string): Promise<void> {
     try {
       const networkService = this.appContext.services.network;
       if (!networkService) {
         throw new Error('NetworkService not available');
       }
 
-      const range = this.getChunkRange(chunkIndex);
-      const url = networkService.getBlockTypesRangeUrl(range.from, range.to);
+      const url = networkService.getBlockTypesChunkUrl(groupName);
 
-      logger.debug('Loading BlockType chunk', { chunkIndex, range, url });
+      logger.debug('Loading BlockType group', { groupName, url });
 
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`Failed to load chunk: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to load group: ${response.status} ${response.statusText}`);
       }
 
       const blockTypes: BlockType[] = await response.json();
 
       if (!Array.isArray(blockTypes)) {
-        throw new Error('Invalid chunk response: expected array of BlockTypes');
+        throw new Error('Invalid group response: expected array of BlockTypes');
       }
 
-      // Validate and cache block types from this chunk
+      // Validate and cache block types from this group
       let validCount = 0;
       for (const blockType of blockTypes) {
-        logger.debug('Validating block type', { blockType });
         if (this.validateBlockType(blockType)) {
           this.blockTypes.set(normalizeBlockTypeId(blockType.id), blockType);
           validCount++;
         } else {
-          logger.warn('Invalid block type received in chunk', { blockType, chunkIndex });
+          logger.warn('Invalid block type received in group', { blockType, groupName });
         }
       }
 
-      // Mark chunk as loaded
-      this.loadedChunks.add(chunkIndex);
+      // Mark group as loaded
+      this.loadedGroups.add(groupName);
 
-      logger.debug('BlockType chunk loaded successfully', {
-        chunkIndex,
-        range,
+      logger.debug('BlockType group loaded successfully', {
+        groupName,
         received: blockTypes.length,
         valid: validCount,
         invalid: blockTypes.length - validCount,
@@ -175,44 +165,44 @@ export class BlockTypeService {
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(
         error,
-        'BlockTypeService.doLoadChunk',
-        { chunkIndex }
+        'BlockTypeService.doLoadGroup',
+        { groupName }
       );
     }
   }
 
   /**
-   * Ensure a BlockType is loaded (loads its chunk if needed)
+   * Ensure a BlockType is loaded (loads its group if needed)
    * @param blockTypeId The BlockType ID to ensure is loaded
    */
   private async ensureBlockTypeLoaded(blockTypeId: string | number): Promise<void> {
-    const chunkIndex = this.getChunkIndex(blockTypeId);
+    const groupName = getBlockTypeGroup(blockTypeId);
 
-    // If chunk not loaded, load it
-    if (!this.loadedChunks.has(chunkIndex)) {
-      await this.loadChunk(chunkIndex);
+    // If group not loaded, load it
+    if (!this.loadedGroups.has(groupName)) {
+      await this.loadGroup(groupName);
     }
   }
 
   /**
    * Clear the BlockType cache
    *
-   * Clears all cached BlockTypes and loaded chunk flags.
+   * Clears all cached BlockTypes and loaded group flags.
    * Next BlockType access will reload from server.
    */
   clearCache(): void {
     const beforeCount = this.blockTypes.size;
-    const beforeChunks = this.loadedChunks.size;
+    const beforeGroups = this.loadedGroups.size;
 
     this.blockTypes.clear();
-    this.loadedChunks.clear();
+    this.loadedGroups.clear();
 
     // Re-register AIR BlockType (id 0)
     this.registerAirBlockType();
 
     logger.debug('BlockType cache cleared', {
       clearedBlockTypes: beforeCount - 1, // -1 for AIR
-      clearedChunks: beforeChunks,
+      clearedGroups: beforeGroups,
     });
   }
 
@@ -280,7 +270,7 @@ export class BlockTypeService {
    * Get all currently loaded block types
    *
    * Note: This only returns BlockTypes that have been loaded so far.
-   * Use loadAllChunks() first if you need all BlockTypes.
+   * Use preloadGroups() first if you need specific groups.
    *
    * @returns Array of loaded block types
    */
@@ -289,18 +279,18 @@ export class BlockTypeService {
   }
 
   /**
-   * Check if a specific chunk is loaded
+   * Check if a specific group is loaded
    */
-  isChunkLoaded(chunkIndex: number): boolean {
-    return this.loadedChunks.has(chunkIndex);
+  isGroupLoaded(groupName: string): boolean {
+    return this.loadedGroups.has(groupName.toLowerCase());
   }
 
   /**
-   * Get statistics about loaded chunks
+   * Get statistics about loaded groups
    */
-  getLoadedChunksStats(): { loadedChunks: number; totalBlockTypes: number } {
+  getLoadedGroupsStats(): { loadedGroups: number; totalBlockTypes: number } {
     return {
-      loadedChunks: this.loadedChunks.size,
+      loadedGroups: this.loadedGroups.size,
       totalBlockTypes: this.blockTypes.size,
     };
   }
@@ -313,31 +303,28 @@ export class BlockTypeService {
   }
 
   /**
-   * Preload multiple chunks at once
-   * Useful for preloading common BlockType ranges
+   * Preload multiple groups at once
+   * Useful for preloading common BlockType groups
    *
-   * @param chunkIndices Array of chunk indices to load
+   * @param groupNames Array of group names to load (e.g., ['core', 'custom', 'w'])
    */
-  async preloadChunks(chunkIndices: number[]): Promise<void> {
-    const promises = chunkIndices.map(index => this.loadChunk(index));
+  async preloadGroups(groupNames: string[]): Promise<void> {
+    const promises = groupNames.map(name => this.loadGroup(name));
     await Promise.all(promises);
   }
 
   /**
    * Preload BlockTypes for a list of IDs
-   * Efficiently loads all required chunks
+   * Efficiently loads all required groups
    *
    * @param blockTypeIds Array of BlockType IDs to preload (string or legacy numbers)
    */
   async preloadBlockTypes(blockTypeIds: (string | number)[]): Promise<void> {
-    // Normalize all IDs first
-    const normalizedIds = blockTypeIds.map(id => normalizeBlockTypeId(id));
-    
-    // Calculate unique chunks needed
-    const chunksNeeded = new Set(normalizedIds.map(id => this.getChunkIndex(id)));
+    // Extract unique groups needed
+    const groupsNeeded = new Set(blockTypeIds.map(id => getBlockTypeGroup(id)));
 
-    // Load all chunks in parallel
-    await this.preloadChunks(Array.from(chunksNeeded));
+    // Load all groups in parallel
+    await this.preloadGroups(Array.from(groupsNeeded));
   }
 
   /**
@@ -347,8 +334,8 @@ export class BlockTypeService {
    */
   clear(): void {
     this.blockTypes.clear();
-    this.loadedChunks.clear();
-    this.loadingChunks.clear();
+    this.loadedGroups.clear();
+    this.loadingGroups.clear();
 
     // Re-register static AIR BlockType
     this.registerAirBlockType();

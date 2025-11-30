@@ -738,6 +738,7 @@ export class NetworkService {
 
   /**
    * Get block types range URL
+   * @deprecated Use getBlockTypesChunkUrl instead
    *
    * @param from - Start of range
    * @param to - End of range
@@ -747,6 +748,18 @@ export class NetworkService {
     const worldId = this.appContext.worldInfo?.worldId || 'main';
     const timestamp = Date.now();
     return `${this.apiUrl}/api/worlds/${worldId}/blocktypes/${from}/${to}?t=${timestamp}`;
+  }
+
+  /**
+   * Get block types chunk URL for a specific group
+   *
+   * @param groupName - BlockType group name (e.g., 'core', 'w', 'custom')
+   * @returns Full block types chunk URL with cache-busting timestamp
+   */
+  getBlockTypesChunkUrl(groupName: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const timestamp = Date.now();
+    return `${this.apiUrl}/api/worlds/${worldId}/blocktypeschunk/${groupName}?t=${timestamp}`;
   }
 
   /**

@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { getLogger } from '@nimbus/shared';
+import { getLogger, getBlockTypeGroup, buildBlockTypeId } from '@nimbus/shared';
 import type { BlockType } from '@nimbus/shared';
 import { fileURLToPath } from 'url';
 
@@ -303,6 +303,66 @@ export class BlockTypeRegistry {
     } catch (error) {
       logger.error('Failed to get next available ID', {}, error as Error);
       return 100;
+    }
+  }
+
+  /**
+   * Get all BlockTypes in a specific group
+   * Loads from: files/blocktypes/{groupName}/*.json
+   *
+   * @param groupName The group name (e.g., 'core', 'w', 'custom')
+   * @returns Array of BlockTypes in the group
+   */
+  getBlockTypesByGroup(groupName: string): BlockType[] {
+    try {
+      const groupDir = path.join(this.blocktypesDir, groupName);
+
+      logger.info(`Loading BlockTypes from group directory: ${groupDir}`);
+
+      // Check if group directory exists
+      if (!fs.existsSync(groupDir)) {
+        logger.warn(`BlockType group directory not found: ${groupName} (path: ${groupDir})`);
+        return [];
+      }
+
+      // Read all files in the group directory
+      const files = fs.readdirSync(groupDir);
+      logger.info(`Found ${files.length} files in group '${groupName}': ${files.join(', ')}`);
+
+      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      logger.info(`Found ${jsonFiles.length} JSON files in group '${groupName}': ${jsonFiles.join(', ')}`);
+
+      const blockTypes: BlockType[] = [];
+
+      for (const file of jsonFiles) {
+        try {
+          const filePath = path.join(groupDir, file);
+          logger.debug(`Loading BlockType from file: ${filePath}`);
+
+          const data = fs.readFileSync(filePath, 'utf-8');
+          const blockType = JSON.parse(data) as BlockType;
+
+          // Ensure the BlockType ID is properly formatted with the group
+          const blockTypeName = path.basename(file, '.json');
+          const idAsString = String(blockType.id);
+
+          // If ID doesn't contain ':', add the group prefix
+          if (!idAsString.includes(':')) {
+            blockType.id = buildBlockTypeId(groupName, blockTypeName);
+          }
+
+          logger.debug(`Loaded BlockType: ${blockType.id} (from file: ${file})`);
+          blockTypes.push(blockType);
+        } catch (error) {
+          logger.error(`Failed to load BlockType from file: ${file}`, {}, error as Error);
+        }
+      }
+
+      logger.info(`Successfully loaded ${blockTypes.length} BlockTypes from group '${groupName}'`);
+      return blockTypes;
+    } catch (error) {
+      logger.error(`Failed to load BlockTypes for group '${groupName}'`, {}, error as Error);
+      return [];
     }
   }
 }

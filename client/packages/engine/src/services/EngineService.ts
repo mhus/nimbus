@@ -447,7 +447,7 @@ export class EngineService {
       this.scene.setRenderingAutoClearDepthStencil(groupId, autoClearDepth, autoClearStencil);
     }
 
-    logger.info('Rendering groups configured', {
+    logger.debug('Rendering groups configured', {
       maxGroupId,
       maxRenderingGroups: RenderingManager.MAX_RENDERINGGROUPS,
       configuredGroups: maxGroupId + 1,

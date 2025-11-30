@@ -75,7 +75,30 @@ export function createWorldRoutes(
     return res.json(blockType);
   });
 
-  // GET /api/worlds/:id/blocktypes/:from/:to - Get BlockType range
+  // GET /api/worlds/:id/blocktypeschunk/:groupName - Get all BlockTypes in a group
+  router.get('/:id/blocktypeschunk/:groupName', (req, res) => {
+    const world = worldManager.getWorld(req.params.id);
+    if (!world) {
+      return res.status(404).json({ error: 'World not found' });
+    }
+
+    const groupName = req.params.groupName.toLowerCase();
+
+    // Validate group name (only a-z0-9_- allowed)
+    if (!/^[a-z0-9_-]+$/.test(groupName)) {
+      return res.status(400).json({ error: 'Invalid group name. Only lowercase letters, numbers, hyphens and underscores allowed.' });
+    }
+
+    try {
+      const blockTypes = worldManager.getBlockTypeRegistry().getBlockTypesByGroup(groupName);
+      return res.json(blockTypes);
+    } catch (error) {
+      console.error('Error loading BlockType group:', error);
+      return res.status(500).json({ error: 'Failed to load BlockType group' });
+    }
+  });
+
+  // GET /api/worlds/:id/blocktypes/:from/:to - Get BlockType range (deprecated)
   router.get('/:id/blocktypes/:from/:to', (req, res) => {
     const from = Number(req.params.from);
     const to = Number(req.params.to);
