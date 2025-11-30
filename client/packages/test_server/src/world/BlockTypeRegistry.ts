@@ -27,9 +27,10 @@ export class BlockTypeRegistry {
    * Get file path for BlockType ID
    * Schema: (id / 100)/id.json
    */
-  private getBlockTypeFilePath(id: number): string {
-    const subDir = Math.floor(id / 100);
-    return path.join(this.blocktypesDir, subDir.toString(), `${id}.json`);
+  private getBlockTypeFilePath(id: string | number): string {
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    const subDir = Math.floor(numericId / 100);
+    return path.join(this.blocktypesDir, subDir.toString(), `${numericId}.json`);
   }
 
   /**
@@ -37,7 +38,7 @@ export class BlockTypeRegistry {
    * @param id BlockType ID
    * @returns BlockType or undefined if not found
    */
-  getBlockType(id: number): BlockType | undefined {
+  getBlockType(id: string | number): BlockType | undefined {
     try {
       const filePath = this.getBlockTypeFilePath(id);
 
@@ -209,7 +210,7 @@ export class BlockTypeRegistry {
    * @param id BlockType ID to delete
    * @returns true if deleted successfully, false otherwise
    */
-  deleteBlockType(id: number): boolean {
+  deleteBlockType(id: string | number): boolean {
     try {
       const filePath = this.getBlockTypeFilePath(id);
 
@@ -238,7 +239,8 @@ export class BlockTypeRegistry {
    * @param id BlockType ID
    * @param action 'add' or 'remove'
    */
-  private updateManifest(id: number, action: 'add' | 'remove'): void {
+  private updateManifest(id: string | number, action: 'add' | 'remove'): void {
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
     try {
       const manifestPath = path.join(this.blocktypesDir, 'manifest.json');
 
@@ -249,30 +251,30 @@ export class BlockTypeRegistry {
 
       if (action === 'add') {
         // Add entry to manifest
-        const subDir = Math.floor(id / 100);
+        const subDir = Math.floor(numericId / 100);
         const entry = {
-          id,
-          name: `blocktype_${id}`, // Will be updated by the actual BlockType name if needed
-          file: `${subDir}/${id}.json`
+          id: numericId,
+          name: `blocktype_${numericId}`, // Will be updated by the actual BlockType name if needed
+          file: `${subDir}/${numericId}.json`
         };
 
         // Check if entry already exists
-        const existingIndex = manifest.findIndex((e: any) => e.id === id);
+        const existingIndex = manifest.findIndex((e: any) => e.id === numericId);
         if (existingIndex === -1) {
           manifest.push(entry);
           manifest.sort((a: any, b: any) => a.id - b.id);
         }
       } else if (action === 'remove') {
         // Remove entry from manifest
-        manifest = manifest.filter((e: any) => e.id !== id);
+        manifest = manifest.filter((e: any) => e.id !== numericId);
       }
 
       // Write updated manifest
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
 
-      logger.debug(`Updated manifest: ${action} BlockType ${id}`);
+      logger.debug(`Updated manifest: ${action} BlockType ${numericId}`);
     } catch (error) {
-      logger.error(`Failed to update manifest for BlockType ${id}`, {}, error as Error);
+      logger.error(`Failed to update manifest for BlockType ${numericId}`, {}, error as Error);
     }
   }
 

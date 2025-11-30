@@ -93,7 +93,7 @@ LIGHT:
   Direction: (${lightDir?.x.toFixed(2)}, ${lightDir?.y.toFixed(2)}, ${lightDir?.z.toFixed(2)})
   Position: (${lightPos?.x.toFixed(1)}, ${lightPos?.y.toFixed(1)}, ${lightPos?.z.toFixed(1)})
   Intensity: ${lightIntensity.toFixed(2)}
-  AutoUpdate: ${sunLight?.autoUpdateExtentsShadowMap}
+  AutoUpdate: ${(sunLight as any)?.autoUpdateExtentsShadowMap}
 
 SHADOW MAP:
   Refresh Rate: ${refreshNames[refreshRate] || `CUSTOM(${refreshRate})`}

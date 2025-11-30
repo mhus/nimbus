@@ -38,7 +38,7 @@ export interface BlockType {
   /**
    * Unique block type ID
    */
-  id: number;
+  id: string;
 
   /**
    * Initial status for new block instances

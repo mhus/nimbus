@@ -46,7 +46,7 @@ export class ShadowsEngineInfoCommand extends CommandHandler {
 
     // Get WebGL info
     const webglVersion = engine.webGLVersion;
-    const isWebGL2 = engine.isWebGL2;
+    const isWebGL2 = (engine as any).isWebGL2;
 
     // Get scene settings
     const autoClear = scene.autoClear;

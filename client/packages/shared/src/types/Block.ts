@@ -319,7 +319,7 @@ export interface Block {
   /**
    * Reference to BlockType by ID
    */
-  blockTypeId: number;
+  blockTypeId: string;
 
   /**
    * Geometry offsets (optional)

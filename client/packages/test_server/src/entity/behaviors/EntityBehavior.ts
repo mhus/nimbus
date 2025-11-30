@@ -189,7 +189,7 @@ export abstract class EntityBehavior {
       // Start from reasonable height and scan downward
       for (let y = 128; y >= 0; y--) {
         const block = await this.worldManager.getBlock(worldId, Math.floor(x), y, Math.floor(z));
-        if (block && block.blockTypeId !== 0) {
+        if (block && block.blockTypeId !== '0') {
           // Found solid block, return Y + 1 (top of block)
           return y + 1;
         }

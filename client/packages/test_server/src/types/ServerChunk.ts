@@ -193,8 +193,9 @@ export class ServerChunk {
   /**
    * Get blocks by type
    */
-  getBlocksByType(blockTypeId: number): Block[] {
-    return this.getAllBlocks().filter((b) => b.blockTypeId === blockTypeId);
+  getBlocksByType(blockTypeId: string | number): Block[] {
+    const normalizedId = typeof blockTypeId === 'number' ? String(blockTypeId) : blockTypeId;
+    return this.getAllBlocks().filter((b) => b.blockTypeId === normalizedId);
   }
 }
 

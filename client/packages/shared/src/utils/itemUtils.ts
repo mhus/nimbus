@@ -21,7 +21,7 @@ import {ItemBlockRef} from "../types";
 export function itemToBlock(item: ItemBlockRef): Block {
   return {
     position: item.position,
-    blockTypeId: 1, // ITEM blockType (fixed)
+    blockTypeId: '1', // ITEM blockType (fixed)
     offsets: item.offset ?? [0, 0, 0],
     modifiers: {
         0: {

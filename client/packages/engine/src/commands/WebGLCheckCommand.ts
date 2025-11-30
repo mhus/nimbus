@@ -49,10 +49,11 @@ export class WebGLCheckCommand extends CommandHandler {
       }
     } else if (gl1) {
       webglVersion = 'WebGL1';
-      const debugInfo = gl1.getExtension('WEBGL_debug_renderer_info');
+      const webgl1 = gl1 as WebGLRenderingContext;
+      const debugInfo = webgl1.getExtension('WEBGL_debug_renderer_info');
       if (debugInfo) {
-        vendor = (gl1 as any).getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'unknown';
-        renderer = (gl1 as any).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'unknown';
+        vendor = webgl1.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'unknown';
+        renderer = webgl1.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'unknown';
       }
     }
 
@@ -60,7 +61,7 @@ export class WebGLCheckCommand extends CommandHandler {
     const engineService = this.appContext.services.engine;
     const engine = engineService?.getEngine();
     const babylonWebGL = engine?.webGLVersion || 'unknown';
-    const babylonIsWebGL2 = engine?.isWebGL2 || false;
+    const babylonIsWebGL2 = (engine as any)?.isWebGL2 || false;
 
     logger.info('WebGL check complete', {
       hasWebGL1,

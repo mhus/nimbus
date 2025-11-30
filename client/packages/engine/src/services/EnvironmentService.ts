@@ -529,16 +529,17 @@ export class EnvironmentService {
       const mapSize = QUALITY_PRESETS[quality].mapSize;
 
       // Create CascadedShadowGenerator
-      this.shadowGenerator = new CascadedShadowGenerator(mapSize, this.sunLight);
-      this.shadowGenerator.lambda = 0.2;
-      this.shadowGenerator.filter = 0;
-      this.shadowGenerator.numCascades = 2;
-      this.shadowGenerator.transparencyShadow = true;
+      const cascadedGen = new CascadedShadowGenerator(mapSize, this.sunLight);
+      cascadedGen.lambda = 0.2;
+      cascadedGen.filter = 0;
+      cascadedGen.numCascades = 2;
+      cascadedGen.transparencyShadow = true;
+      this.shadowGenerator = cascadedGen;
 
       this.setShadowDistance(distance);
 
       // Call splitFrustum (required for CascadedShadowGenerator)
-      this.shadowGenerator.splitFrustum();
+      cascadedGen.splitFrustum();
 
       this.shadowEnabled = true;
       this.shadowQuality = quality;
@@ -611,7 +612,8 @@ export class EnvironmentService {
         this.sunLight.position = new Vector3(50, 100, 50);
 
         // Enable automatic shadow frustum updates based on casters
-        this.sunLight.autoUpdateExtentsShadowMap = true;
+        // Note: Using type assertion as this property exists at runtime but not in type definitions
+        (this.sunLight as any).autoUpdateExtentsShadowMap = true;
 
         // Set shadow min/max Z for better shadow quality
         this.sunLight.shadowMinZ = 1;
@@ -651,7 +653,7 @@ export class EnvironmentService {
 
     // Set shadowMaxZ (controls how far shadows are rendered)
     const shadowMaxZ = distance * 10; // Convert blocks to units
-    shadowGenerator.shadowMaxZ = shadowMaxZ;
+    (shadowGenerator as any).shadowMaxZ = shadowMaxZ;
 
     // Also update camera maxZ to match
     const cameraService = this.appContext.services.camera;
@@ -721,20 +723,21 @@ export class EnvironmentService {
       this.shadowGenerator.dispose();
 
       // Create new CascadedShadowGenerator (same as initializeShadows)
-      this.shadowGenerator = new CascadedShadowGenerator(newMapSize, this.sunLight);
-      this.shadowGenerator.lambda = 0.2;
-      this.shadowGenerator.filter = 0;
-      this.shadowGenerator.numCascades = 2;
-      this.shadowGenerator.transparencyShadow = true;
+      const cascadedGen = new CascadedShadowGenerator(newMapSize, this.sunLight);
+      cascadedGen.lambda = 0.2;
+      cascadedGen.filter = 0;
+      cascadedGen.numCascades = 2;
+      cascadedGen.transparencyShadow = true;
+      this.shadowGenerator = cascadedGen;
 
       // Restore render list (push directly, not via addShadowCaster)
-      const newRenderList = this.shadowGenerator.getShadowMap()!.renderList!;
+      const newRenderList = cascadedGen.getShadowMap()!.renderList!;
       for (const mesh of renderList) {
         newRenderList.push(mesh);
       }
 
       // Call splitFrustum for CascadedShadowGenerator
-      this.shadowGenerator.splitFrustum();
+      cascadedGen.splitFrustum();
     }
 
     // Apply quality settings

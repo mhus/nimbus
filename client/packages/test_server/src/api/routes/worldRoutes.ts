@@ -338,7 +338,7 @@ export function createWorldRoutes(
     // Broadcast deletion as block with blockTypeId: 0
     const deletionBlock = {
       position: { x, y, z },
-      blockTypeId: 0, // 0 = deletion
+      blockTypeId: '0', // 0 = deletion
       status: 0,
       metadata: {},
     };

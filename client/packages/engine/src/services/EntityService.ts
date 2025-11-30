@@ -18,6 +18,7 @@ import {
   ExceptionHandler,
   ENTITY_POSES,
   MessageType,
+  isAirBlockTypeId,
 } from '@nimbus/shared';
 import type { Rotation } from '@nimbus/shared';
 import { Vector3 } from '@babylonjs/core';
@@ -756,7 +757,7 @@ export class EntityService {
     // Helper: Check if block is solid (not air)
     const isBlockSolid = (x: number, y: number, z: number): boolean => {
       const block = getBlockAtPosition(x, y, z);
-      return block ? block.blockType.id !== 0 : false;
+      return block ? block.blockType.id !== '0' : false;
     };
 
     // Update physics
@@ -1256,7 +1257,7 @@ export class EntityService {
           block: {
             position: { x: floorX, y: floorY, z: floorZ },
           },
-          blockType: { id: 0 },
+          blockType: { id: '0' },
           audioSteps: undefined,
         };
 
@@ -1272,7 +1273,7 @@ export class EntityService {
     // Check block below entity (grounded check)
     const groundBlock = chunkService.getBlockAt(floorX, floorY - 1, floorZ);
 
-    if (!groundBlock || groundBlock.blockType.id === 0) {
+    if (!groundBlock || groundBlock.blockType.id === '0') {
       return; // No ground block or air - entity is floating/flying
     }
 
@@ -1372,7 +1373,7 @@ export class EntityService {
     // Check block below entity
     const groundBlock = chunkService.getBlockAt(floorX, floorY - 1, floorZ);
 
-    if (!groundBlock || groundBlock.blockType.id === 0) {
+    if (!groundBlock || isAirBlockTypeId(groundBlock.blockType.id)) {
       return; // No ground block or air
     }
 

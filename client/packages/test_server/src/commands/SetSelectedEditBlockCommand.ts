@@ -221,7 +221,7 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
     // Broadcast deletion as block with blockTypeId: 0
     const deletionBlock: Block = {
       position: { x: position.x, y: position.y, z: position.z },
-      blockTypeId: 0, // 0 = deletion
+      blockTypeId: '0', // 0 = deletion
       status: 0,
       metadata: {},
     };
@@ -317,7 +317,7 @@ export class SetSelectedEditBlockCommand extends CommandHandler {
         y: context.session.markedEditBlock.y,
         z: context.session.markedEditBlock.z,
       },
-      blockTypeId: 0, // 0 = deletion
+      blockTypeId: '0', // 0 = deletion
       status: 0,
       metadata: {},
     };

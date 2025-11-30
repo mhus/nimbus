@@ -8,7 +8,7 @@
  * Each targeting mode implements a specific strategy for resolving targets.
  */
 
-import { getLogger } from '@nimbus/shared';
+import { getLogger, isAirBlockTypeId } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type {
   TargetingMode,
@@ -238,7 +238,7 @@ export class TargetingService {
 
     if (selectedBlock) {
       // Check if it's an AIR block by checking the block type ID (0 = AIR)
-      const isAir = selectedBlock.blockType?.id === 0;
+      const isAir = selectedBlock.blockType?.id && isAirBlockTypeId(selectedBlock.blockType.id);
 
       if (isAir) {
         // AIR block - treat as ground position

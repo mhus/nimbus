@@ -113,7 +113,7 @@ export class EngineService {
 
       logger.info('Babylon.js Engine created', {
         webGLVersion: this.engine.webGLVersion,
-        isWebGL2: this.engine.isWebGL2,
+        isWebGL2: (this.engine as any).isWebGL2,
       });
 
       // Create Scene

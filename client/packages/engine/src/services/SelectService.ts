@@ -12,6 +12,7 @@ import {
   getLogger,
   ExceptionHandler,
   type ClientEntity,
+  type BlockType,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
@@ -329,12 +330,12 @@ export class SelectService {
   private createAirClientBlock(x: number, y: number, z: number): ClientBlock {
     // Get AIR blockType from registry (id 0)
     const blockTypeService = this.appContext.services.blockType;
-    let airBlockType = blockTypeService?.getBlockType(0);
+    let airBlockType: BlockType | undefined = blockTypeService?.getBlockType('0');
 
     // Fallback: Create minimal AIR BlockType if not found
     if (!airBlockType) {
       airBlockType = {
-        id: 0,
+        id: '0',
         initialStatus: 0,
         modifiers: {
           0: {
@@ -357,7 +358,7 @@ export class SelectService {
     // Create Block instance
     const block: Block = {
       position: { x, y, z },
-      blockTypeId: 0, // AIR block type
+      blockTypeId: '0', // AIR block type
     };
 
     // Get merged modifier using utility function

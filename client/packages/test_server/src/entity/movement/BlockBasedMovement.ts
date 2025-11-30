@@ -102,7 +102,7 @@ export class BlockBasedMovement {
       // Search downward for first solid block
       for (let y = maxHeight; y >= 0; y--) {
         const block = await this.worldManager.getBlock(worldId, floorX, y, floorZ);
-        if (block && block.blockTypeId !== 0) {
+        if (block && block.blockTypeId !== '0') {
           // Found solid block, stand on top
           return y + 1;
         }
@@ -142,7 +142,7 @@ export class BlockBasedMovement {
     try {
       // Check block at target position (same height)
       const blockAtTarget = await this.worldManager.getBlock(worldId, targetX, y, targetZ);
-      const targetSolid = blockAtTarget ? blockAtTarget.blockTypeId !== 0 : false;
+      const targetSolid = blockAtTarget ? blockAtTarget.blockTypeId !== '0' : false;
 
       // Check if target block is OCEAN - entities should not enter water
       if (await this.isWaterBlock(worldId, targetX, y, targetZ)) {
@@ -152,7 +152,7 @@ export class BlockBasedMovement {
       if (targetSolid) {
         // Block at target is solid → try stepping UP
         const blockAbove = await this.worldManager.getBlock(worldId, targetX, y + 1, targetZ);
-        const aboveSolid = blockAbove ? blockAbove.blockTypeId !== 0 : false;
+        const aboveSolid = blockAbove ? blockAbove.blockTypeId !== '0' : false;
 
         if (!aboveSolid) {
           // Block above is not solid → can step up
@@ -164,7 +164,7 @@ export class BlockBasedMovement {
       } else {
         // Block at target is NOT solid → check block BELOW
         const blockBelow = await this.worldManager.getBlock(worldId, targetX, y - 1, targetZ);
-        const belowSolid = blockBelow ? blockBelow.blockTypeId !== 0 : false;
+        const belowSolid = blockBelow ? blockBelow.blockTypeId !== '0' : false;
 
         // Check if block below is OCEAN - entities should not walk into water
         if (await this.isWaterBlock(worldId, targetX, y - 1, targetZ)) {
@@ -177,7 +177,7 @@ export class BlockBasedMovement {
         } else {
           // No block below → check 2 blocks down (step down)
           const blockBelow2 = await this.worldManager.getBlock(worldId, targetX, y - 2, targetZ);
-          const below2Solid = blockBelow2 ? blockBelow2.blockTypeId !== 0 : false;
+          const below2Solid = blockBelow2 ? blockBelow2.blockTypeId !== '0' : false;
 
           // Check if 2 blocks below is OCEAN
           if (await this.isWaterBlock(worldId, targetX, y - 2, targetZ)) {

@@ -30,7 +30,7 @@ export interface BlockTypeOptionsDTO {
  */
 export interface BlockTypeDTO {
   /** Unique block type ID */
-  id: number;
+  id: string;
 
   /** Internal block name (unique identifier) */
   name: string;

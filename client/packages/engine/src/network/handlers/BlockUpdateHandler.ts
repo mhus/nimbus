@@ -50,7 +50,7 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
       blocks: blocks.map(b => ({
         position: b.position,
         blockTypeId: b.blockTypeId,
-        isDelete: b.blockTypeId === 0,
+        isDelete: b.blockTypeId === '0',
       })),
     });
 

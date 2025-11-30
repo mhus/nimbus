@@ -5,7 +5,7 @@
  * BlockTypes are cached after initial load.
  */
 
-import { getLogger, ExceptionHandler, BlockType } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, BlockType, normalizeBlockTypeId } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 
 const logger = getLogger('BlockTypeService');
@@ -35,7 +35,7 @@ interface BlockTypesResponse {
  * - Each chunk is loaded once and cached
  */
 export class BlockTypeService {
-  private blockTypes: Map<number, BlockType> = new Map();
+  private blockTypes: Map<string, BlockType> = new Map();
   private loadedChunks: Set<number> = new Set(); // Track which chunks (0, 1, 2, ...) are loaded
   private loadingChunks: Map<number, Promise<void>> = new Map(); // Track chunks currently being loaded
   private readonly CHUNK_SIZE = 100;
@@ -56,7 +56,7 @@ export class BlockTypeService {
    */
   private registerAirBlockType(): void {
     const airBlockType: BlockType = {
-      id: 0,
+      id: '0',
       initialStatus: 0,
       modifiers: {
         0: {
@@ -70,7 +70,7 @@ export class BlockTypeService {
       },
     };
 
-    this.blockTypes.set(0, airBlockType);
+    this.blockTypes.set('0', airBlockType);
     logger.debug('Static AIR BlockType (id 0) registered');
   }
 
@@ -78,8 +78,9 @@ export class BlockTypeService {
    * Calculate which chunk a BlockType ID belongs to
    * Example: ID 15 → chunk 0 (0-99), ID 234 → chunk 2 (200-299)
    */
-  private getChunkIndex(blockTypeId: number): number {
-    return Math.floor(blockTypeId / this.CHUNK_SIZE);
+  private getChunkIndex(blockTypeId: string | number): number {
+    const id = typeof blockTypeId === 'string' ? parseInt(blockTypeId, 10) : blockTypeId;
+    return Math.floor(id / this.CHUNK_SIZE);
   }
 
   /**
@@ -183,7 +184,7 @@ export class BlockTypeService {
    * Ensure a BlockType is loaded (loads its chunk if needed)
    * @param blockTypeId The BlockType ID to ensure is loaded
    */
-  private async ensureBlockTypeLoaded(blockTypeId: number): Promise<void> {
+  private async ensureBlockTypeLoaded(blockTypeId: string | number): Promise<void> {
     const chunkIndex = this.getChunkIndex(blockTypeId);
 
     // If chunk not loaded, load it
@@ -222,7 +223,7 @@ export class BlockTypeService {
       return false;
     }
 
-    if (typeof blockType.id !== 'number') {
+    if (typeof blockType.id !== 'string' && typeof blockType.id !== 'number') {
       logger.warn('BlockType missing valid id', { blockType });
       return false;
     }
@@ -241,11 +242,12 @@ export class BlockTypeService {
    * Use this when you need immediate access to a BlockType.
    * Returns undefined if the chunk containing this BlockType is not loaded yet.
    *
-   * @param id Block type ID
+   * @param id Block type ID (string or legacy number)
    * @returns BlockType or undefined if not loaded
    */
-  getBlockType(id: number): BlockType | undefined {
-    return this.blockTypes.get(id);
+  getBlockType(id: string | number): BlockType | undefined {
+    const normalizedId = normalizeBlockTypeId(id);
+    return this.blockTypes.get(normalizedId);
   }
 
   /**
@@ -254,21 +256,23 @@ export class BlockTypeService {
    * Use this when you can await and want to ensure the BlockType is available.
    * This will automatically load the chunk containing the BlockType if needed.
    *
-   * @param id Block type ID
+   * @param id Block type ID (string or legacy number)
    * @returns BlockType or undefined if not found on server
    */
-  async getBlockTypeAsync(id: number): Promise<BlockType | undefined> {
+  async getBlockTypeAsync(id: string | number): Promise<BlockType | undefined> {
+    const normalizedId = normalizeBlockTypeId(id);
+    
     // Check if already in cache
-    const cached = this.blockTypes.get(id);
+    const cached = this.blockTypes.get(normalizedId);
     if (cached) {
       return cached;
     }
 
     // Load the chunk containing this BlockType
-    await this.ensureBlockTypeLoaded(id);
+    await this.ensureBlockTypeLoaded(normalizedId);
 
     // Return from cache (may still be undefined if server doesn't have it)
-    return this.blockTypes.get(id);
+    return this.blockTypes.get(normalizedId);
   }
 
   /**
@@ -322,11 +326,14 @@ export class BlockTypeService {
    * Preload BlockTypes for a list of IDs
    * Efficiently loads all required chunks
    *
-   * @param blockTypeIds Array of BlockType IDs to preload
+   * @param blockTypeIds Array of BlockType IDs to preload (string or legacy numbers)
    */
-  async preloadBlockTypes(blockTypeIds: number[]): Promise<void> {
+  async preloadBlockTypes(blockTypeIds: (string | number)[]): Promise<void> {
+    // Normalize all IDs first
+    const normalizedIds = blockTypeIds.map(id => normalizeBlockTypeId(id));
+    
     // Calculate unique chunks needed
-    const chunksNeeded = new Set(blockTypeIds.map(id => this.getChunkIndex(id)));
+    const chunksNeeded = new Set(normalizedIds.map(id => this.getChunkIndex(id)));
 
     // Load all chunks in parallel
     await this.preloadChunks(Array.from(chunksNeeded));

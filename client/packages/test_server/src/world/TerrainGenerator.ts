@@ -33,7 +33,7 @@ export class TerrainGenerator {
             y: 0,
             z: worldZ + localZ,
           },
-          blockTypeId: 220, // Stone
+          blockTypeId: '220', // Stone
         });
       }
     }

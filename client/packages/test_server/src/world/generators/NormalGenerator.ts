@@ -67,7 +67,7 @@ export class NormalGenerator implements WorldGenerator {
   /**
    * Find block ID by name
    */
-  private findBlockIdByName(name: string): number | null {
+  private findBlockIdByName(name: string): string | null {
     // Try to load all block types and find by description
     // This is inefficient but works for initialization
     const allBlockTypes = this.registry.getAllBlockTypes();
@@ -85,8 +85,9 @@ export class NormalGenerator implements WorldGenerator {
   /**
    * Get block ID by name
    */
-  private getBlockId(name: string): number {
-    return this.blockIds.get(name) ?? 0;
+  private getBlockId(name: string): string {
+    const id = this.blockIds.get(name);
+    return id !== undefined ? String(id) : '0';
   }
 
   /**
@@ -145,7 +146,7 @@ export class NormalGenerator implements WorldGenerator {
         // This keeps the world sparse and efficient
 
         // Top surface layer (terrainHeight)
-        let surfaceBlockId: number;
+        let surfaceBlockId: string;
 
         if (terrainHeight <= this.waterLevel) {
           // Underwater: sand
@@ -155,7 +156,7 @@ export class NormalGenerator implements WorldGenerator {
           surfaceBlockId = this.getBlockId('grass');
         }
 
-        if (surfaceBlockId !== 0) {
+        if (surfaceBlockId !== '0') {
           chunk.setBlock({
             position: { x: worldX, y: terrainHeight, z: worldZ },
             blockTypeId: surfaceBlockId,
@@ -164,7 +165,7 @@ export class NormalGenerator implements WorldGenerator {
 
         // Second layer below surface (terrainHeight - 1)
         const dirtId = this.getBlockId('dirt');
-        if (dirtId !== 0 && terrainHeight > 0) {
+        if (dirtId !== '0' && terrainHeight > 0) {
           chunk.setBlock({
             position: { x: worldX, y: terrainHeight - 1, z: worldZ },
             blockTypeId: dirtId,
@@ -174,7 +175,7 @@ export class NormalGenerator implements WorldGenerator {
         // Add water surface if terrain is below water level
         if (terrainHeight < this.waterLevel) {
           const waterBlockId = this.getBlockId('water');
-          if (waterBlockId !== 0) {
+          if (waterBlockId !== '0') {
             chunk.setBlock({
               position: { x: worldX, y: this.waterLevel, z: worldZ },
               blockTypeId: waterBlockId,

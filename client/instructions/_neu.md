@@ -1,4 +1,8 @@
-[ ] Umstellen BlockType to String
+[?] Umstellen BlockType to String
+  [ ] Controls fuer BlockType auf String umstellen
+  [ ] Script zum umstellen von allen blockType dateien
+  [ ] Script zum umstellen von allen chunk dateien
+  [ ] Entfernen des legacy int supports
 
 [x] Interaction mit NCP kann raus aus dem netzwerk, dafuer machen wir einen iframe auf.
 [x] mitteilungen kann raus, dafuer ein client command, das vom server gesendet wird.

@@ -21,6 +21,7 @@ import {
   AudioType,
   itemToBlock,
   type AudioDefinition, ItemBlockRef,
+  normalizeBlockTypeId,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -351,6 +352,13 @@ export class ChunkService {
    */
   private async processChunkData(chunkData: ChunkDataTransferObject): Promise<ClientChunkData> {
 
+    // Normalize blockTypeId for all blocks (convert legacy numbers to strings)
+    if (chunkData.b) {
+      for (const block of chunkData.b) {
+        block.blockTypeId = normalizeBlockTypeId(block.blockTypeId);
+      }
+    }
+
     const clientBlocksMap = new Map<string, ClientBlock>();
     const blockTypeService = this.appContext.services.blockType;
     const statusData = this.processStatusData(chunkData);
@@ -397,10 +405,10 @@ export class ChunkService {
 
     // STEP 1.5: Preload all BlockTypes needed for this chunk
     // Collect unique BlockType IDs from blocks AND items
-    const blockTypeIds = new Set(chunkData.b.map(block => block.blockTypeId));
+    const blockTypeIds = new Set(chunkData.b.map(block => normalizeBlockTypeId(block.blockTypeId)));
     if (chunkData.i && chunkData.i.length > 0) {
       // All items use BlockType 1 (ITEM type)
-      blockTypeIds.add(1);
+      blockTypeIds.add('1');
     }
     logger.debug('Preloading BlockTypes for chunk', {
       cx: chunkData.cx,
@@ -849,6 +857,11 @@ export class ChunkService {
         blockCount: blocks.length,
       });
 
+      // Normalize blockTypeId for all blocks (convert legacy numbers to strings)
+      for (const block of blocks) {
+        block.blockTypeId = normalizeBlockTypeId(block.blockTypeId);
+      }
+
       const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
       const blockTypeService = this.appContext.services.blockType;
 
@@ -860,7 +873,7 @@ export class ChunkService {
       // Preload all BlockTypes needed for these updates
       const blockTypeIds = new Set(
         blocks
-          .filter(block => block.blockTypeId !== 0) // Skip deletions
+          .filter(block => block.blockTypeId !== '0') // Skip deletions
           .map(block => block.blockTypeId)
       );
 
@@ -898,8 +911,8 @@ export class ChunkService {
           block.position.z
         );
 
-        // Handle deletion (blockTypeId: 0)
-        if (block.blockTypeId === 0) {
+        // Handle deletion (blockTypeId: '0')
+        if (block.blockTypeId === '0') {
           const wasDeleted = clientChunk.data.data.delete(posKey);
           if (wasDeleted) {
             logger.debug('Block deleted', { position: block.position });
@@ -998,6 +1011,11 @@ export class ChunkService {
         itemCount: blocks.length,
       });
 
+      // Normalize blockTypeId for all blocks (convert legacy numbers to strings)
+      for (const block of blocks) {
+        block.blockTypeId = normalizeBlockTypeId(block.blockTypeId);
+      }
+
       const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
       const blockTypeService = this.appContext.services.blockType;
 
@@ -1009,7 +1027,7 @@ export class ChunkService {
       // Preload all BlockTypes needed for these updates
       const blockTypeIds = new Set(
         blocks
-          .filter(block => block.blockTypeId !== 0) // Skip deletions
+          .filter(block => block.blockTypeId !== '0') // Skip deletions
           .map(block => block.blockTypeId)
       );
 
@@ -1050,10 +1068,10 @@ export class ChunkService {
         // Get existing block at this position
         const existingBlock = clientChunk.data.data.get(posKey);
 
-        // Handle deletion (blockTypeId: 0)
-        if (block.blockTypeId === 0) {
-          // Only delete if an item exists at this position (blockTypeId: 1)
-          if (existingBlock && existingBlock.block.blockTypeId === 1) {
+        // Handle deletion (blockTypeId: '0')
+        if (block.blockTypeId === '0') {
+          // Only delete if an item exists at this position (blockTypeId: '1')
+          if (existingBlock && existingBlock.block.blockTypeId === '1') {
             const wasDeleted = clientChunk.data.data.delete(posKey);
             if (wasDeleted) {
               logger.debug('Item deleted', {
@@ -1071,11 +1089,11 @@ export class ChunkService {
           continue;
         }
 
-        // Handle add/update (blockTypeId: 1)
-        if (block.blockTypeId === 1) {
+        // Handle add/update (blockTypeId: '1')
+        if (block.blockTypeId === '1') {
           // Check if position is AIR or already has an item
           const isAir = !existingBlock;
-          const isItem = existingBlock && existingBlock.block.blockTypeId === 1;
+          const isItem = existingBlock && existingBlock.block.blockTypeId === '1';
 
           if (!isAir && !isItem) {
             logger.debug('Item add/update ignored - position occupied by non-item block', {
@@ -1214,7 +1232,7 @@ export class ChunkService {
           const existingBlock = clientChunk.data.data.get(posKey);
 
           // Only delete if an item exists at this position
-          if (existingBlock && existingBlock.block.blockTypeId === 1) {
+          if (existingBlock && existingBlock.block.blockTypeId === '1') {
             const wasDeleted = clientChunk.data.data.delete(posKey);
             if (wasDeleted) {
               logger.debug('Item deleted', {
@@ -1254,7 +1272,7 @@ export class ChunkService {
 
         // Check if position is AIR or already has an item
         const isAir = !existingBlock;
-        const isItem = existingBlock && existingBlock.block.blockTypeId === 1;
+        const isItem = existingBlock && existingBlock.block.blockTypeId === '1';
 
         if (!isAir && !isItem) {
           logger.debug('Item add/update ignored - position occupied by non-item block', {
