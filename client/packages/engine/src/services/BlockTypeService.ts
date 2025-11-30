@@ -153,8 +153,9 @@ export class BlockTypeService {
       // Validate and cache block types from this chunk
       let validCount = 0;
       for (const blockType of blockTypes) {
+        logger.debug('Validating block type', { blockType });
         if (this.validateBlockType(blockType)) {
-          this.blockTypes.set(blockType.id, blockType);
+          this.blockTypes.set(normalizeBlockTypeId(blockType.id), blockType);
           validCount++;
         } else {
           logger.warn('Invalid block type received in chunk', { blockType, chunkIndex });

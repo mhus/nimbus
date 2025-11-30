@@ -1,8 +1,12 @@
 [?] Umstellen BlockType to String
   [ ] Controls fuer BlockType auf String umstellen
+  [ ] BlockType chunk loading umstellen auf string chunks - bei string erstend drei stellen ?
   [ ] Script zum umstellen von allen blockType dateien
   [ ] Script zum umstellen von allen chunk dateien
   [ ] Entfernen des legacy int supports
+
+[ ] Selection mit Model preview
+  [ ] Model actions (set, clear, rotate) via commands
 
 [x] Interaction mit NCP kann raus aus dem netzwerk, dafuer machen wir einen iframe auf.
 [x] mitteilungen kann raus, dafuer ein client command, das vom server gesendet wird.

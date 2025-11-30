@@ -26,6 +26,7 @@ export class BlockTypeRegistry {
   /**
    * Get file path for BlockType ID
    * Schema: (id / 100)/id.json
+   * XXX: handle as string not as int!
    */
   private getBlockTypeFilePath(id: string | number): string {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;

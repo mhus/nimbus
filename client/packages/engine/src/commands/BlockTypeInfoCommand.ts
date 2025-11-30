@@ -34,9 +34,9 @@ export class BlockTypeInfoCommand extends CommandHandler {
       return 'Usage: blockTypeInfo <blockTypeId>\n\nExample: blockTypeInfo 1';
     }
 
-    const blockTypeId = parseInt(String(parameters[0]), 10);
-    if (isNaN(blockTypeId)) {
-      return 'Error: blockTypeId must be a number';
+    const blockTypeId = String(parameters[0]);
+    if (!blockTypeId) {
+      return 'Error: blockTypeId is required';
     }
 
     const blockTypeService = this.appContext.services.blockType;

@@ -675,7 +675,7 @@ export class ChunkService {
         // }
 
         // STEP 3: Get BlockType 1 (ITEM type)
-        const blockType = blockTypeService.getBlockType(1);
+        const blockType = blockTypeService.getBlockType('1');
         if (!blockType) {
           logger.warn('BlockType 1 (ITEM) not found');
           continue;
@@ -1284,7 +1284,7 @@ export class ChunkService {
         }
 
         // Get BlockType 1 (ITEM)
-        const blockType = blockTypeService.getBlockType(1);
+        const blockType = blockTypeService.getBlockType('1');
         if (!blockType) {
           logger.warn('BlockType 1 (ITEM) not found');
           continue;
