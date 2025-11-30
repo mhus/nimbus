@@ -30,6 +30,7 @@ public class WorldRedisService {
     }
 
     private String ns(String worldId, String key) {
-        return "world:" + worldId + ";" + key;
+        // Use ':' delimiter to match test expectations and redis key convention
+        return "world:" + worldId + ":" + key;
     }
 }
