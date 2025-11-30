@@ -1,3 +1,4 @@
+[ ] Umstellen BlockType to String
 
 [x] Interaction mit NCP kann raus aus dem netzwerk, dafuer machen wir einen iframe auf.
 [x] mitteilungen kann raus, dafuer ein client command, das vom server gesendet wird.
@@ -10,7 +11,7 @@
 - Texturen auch als base64:... angeben koennen (wird von babylon unterstuetzt!), nur kleine erlaubt
 [x] Brauchen ein show status System: Leben, Gesundheit, Energie, Luft unter wasser... Die dann angezeigt werden koennen, hier Netzwerk Erweiterung oder Command?
 [x] Brauchen Kompass System, in welche richtung ist was auf dem Kompass, via Command, da selten updates
-[ ] (Team) Brauchen Gruppe Info System (Gesundgeit + Name, Position), hier Netzwerk Erweiterung oder Command?, vermutlich Netzwerk
+[x] (Team) Brauchen Gruppe Info System (Gesundgeit + Name, Position), hier Netzwerk Erweiterung oder Command?, vermutlich Netzwerk
 
 [x] Umstellen der '/' Taste von BlockEditor auf BlockAction, die wird als command zum server geschickt, hier ist eine Action
   hinterlegt, z.b. delet, create block xy, copy/select, paste, move to, open BlockEditor (edit), via View in nimbus_editors

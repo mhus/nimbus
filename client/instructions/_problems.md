@@ -36,4 +36,4 @@ Auch wenn es nicht noetig ist, aber das ist das Konzept.
 - Siehe: instructions/shadows.md für Details
 
 [ ] LensFlares funktionieren nicht richtig - wird nicht angezeigt
-[ ] Selection Box funktioniert nicht richtig - wird nicht angezeigt
+[x] Selection Box funktioniert nicht richtig - wird nicht angezeigt
