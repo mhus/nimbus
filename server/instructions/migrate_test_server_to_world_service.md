@@ -1,6 +1,12 @@
 
 # World Service
 
+## Test
+
+Erstelle ein neues Modul 'world-test' in tools.
+- Das modul testet mit unit tests alle Services und Endpoints des World Service.
+- Aktuell gegeb den test_server in ../client/packages/test_server auf port 3001
+
 ## Migration
 
 Die Aufgabe ist es die inbound funktionalitaet des TypeScript test_server packages zu migrieren.
@@ -81,3 +87,19 @@ Server Side Commands:
 - TeamDataCommand
 - TeamStatusCommand
 - WorldCommand
+
+Migration:
+
+[ ] Erstelle in tools ein neues modul 'demo-import'
+- Das tool soll daten aus dem test_server importieren und in mongoDB speichern.
+- Alle Assets aus client/packages/test_server/files/assets
+  - alle *.info.json dateien beinhalten die metadaten zu den Assets
+- Alle backdrops aus client/packages/test_server/files/backdrops
+- Alle blocktypes aus client/packages/test_server/files/blocktypes
+- Alle entitytypes aus client/packages/test_server/files/entitytypes
+- Alle itemtypes aus client/packages/test_server/files/itemtypes
+- Alle entitymodels aus client/packages/test_server/files/entitymodels
+- Alle entity aus client/packages/test_server/files/entities
+
+[ ] Import alle chunks aus client/packages/test_server/data/worlds/main/chunks in WChunk
+
