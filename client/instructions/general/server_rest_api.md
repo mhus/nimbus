@@ -244,8 +244,6 @@ BlockType ist hier nicht vollständig dargestellt, siehe Objekt Modell Dokumenta
 
 ### GET /api/worlds/{worldId}/blocktypeschunk/{blockTypeIdGroup}
 
-> Former: GET /api/worlds/{worldId}/blocktypeschunk/{from}/{to}
-
 Ruft einen Bereich von BlockTypes ab. Block Types haben das Format `{blockTypeGroup}:{blockTypeKey}`. Fehlt die Gruppe 
 im Key, wird `w` als Default genutzt. Alles in lower case (toLowerCase), erlaubte Zeichen 'a-z0-9_-'.
 - blockTypeKey muss nicht der gleiche Wert sein wie BlockType.name (!!!). Es handelt sich um einen eindeutigen, kurzen key.

@@ -60,26 +60,6 @@ export class BlockTypeRegistry {
   }
 
   /**
-   * Get range of BlockTypes
-   * @param from Start ID (inclusive)
-   * @param to End ID (inclusive)
-   * @returns Array of BlockTypes
-   */
-  getBlockTypeRange(from: number, to: number): BlockType[] {
-    const result: BlockType[] = [];
-
-    for (let id = from; id <= to; id++) {
-      const blockType = this.getBlockType(id);
-      if (blockType) {
-        result.push(blockType);
-      }
-    }
-
-    logger.debug(`Loaded ${result.length} BlockTypes from range ${from}-${to}`);
-    return result;
-  }
-
-  /**
    * Get all available BlockTypes (reads manifest)
    * @returns Array of all BlockTypes
    */

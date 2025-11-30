@@ -98,14 +98,6 @@ export function createWorldRoutes(
     }
   });
 
-  // GET /api/worlds/:id/blocktypes/:from/:to - Get BlockType range (deprecated)
-  router.get('/:id/blocktypes/:from/:to', (req, res) => {
-    const from = Number(req.params.from);
-    const to = Number(req.params.to);
-    const blockTypes = worldManager.getBlockTypeRegistry().getBlockTypeRange(from, to);
-    res.json(blockTypes);
-  });
-
   // POST /api/worlds/:id/blocktypes - Create new BlockType
   router.post('/:id/blocktypes', (req, res) => {
     const world = worldManager.getWorld(req.params.id);
