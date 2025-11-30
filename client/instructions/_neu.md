@@ -5,6 +5,19 @@
   [ ] Script zum umstellen von allen chunk dateien
   [ ] Entfernen des legacy int supports
 
+Der loadedChunks cache in BlockTypeService muss nun string als key haben. die blocktypeid hat ein ':' im string. 
+Alles vor dem ':' ist der key. ist kein ':' im key wird 'w' and default genommen.
+Stelle den block type chunk loader so um, dass er alle block typen eines chunk keys mit einem mal laden kann.
+- Format blockTypeId: {blockTypeIdGroup}:{blockTypeName}
+- blockTypeId wird immer in lower case umgewandelt!
+GET /api/worlds/{worldId}/blocktypeschunk/{blockTypeIdGroup}
+- Siehe "GET /api/worlds/{worldId}/blocktypeschunk/{blockTypeIdGroup}" in instructions/general/server_rest_api.md
+Auch im test_server muss der neue REST Knoten bereitgestellt werden. 
+- Ablage wie bisher in packages/test_server/files/blocktypes aber jetzt mit dem blockTypeIdGroup als unterorder. Validieren, das der
+  blockTypeIdGroup nur erlaubte zeichen hat (lower case) (a-z0-9_-)
+- Neue Ablage: packages/test_server/files/blocktypes/{blockTypeIdGroup}/{blockTypeName}.json
+- Die Migration der daten ist nicht teil dieses plans.
+
 [ ] Selection mit Model preview
   [ ] Model actions (set, clear, rotate) via commands
 

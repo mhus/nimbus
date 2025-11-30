@@ -216,7 +216,7 @@ Response:
 
 ```json
 {
-  "id": 1,
+  "id": "X:1",
   "name": "stone",
   "displayName": "Stone",
   "shape": "CUBE",
@@ -238,25 +238,28 @@ Response:
 }
 ```
 
-Als BlockType Id kann entweder die numerische ID oder der eindeutige Name genutzt werden.
+Als BlockType Id kann entweder die string ID ~~oder der eindeutige Name~~ genutzt werden.
 
 BlockType ist hier nicht vollständig dargestellt, siehe Objekt Modell Dokumentation für alle Felder.
 
-### GET /api/worlds/{worldId}/blocktypes/{from}/{to}
+### GET /api/worlds/{worldId}/blocktypeschunk/{blockTypeIdGroup}
 
-Ruft einen Bereich von BlockTypes ab.
+> Former: GET /api/worlds/{worldId}/blocktypeschunk/{from}/{to}
+
+Ruft einen Bereich von BlockTypes ab. Block Types haben das Format `{blockTypeGroup}:{blockTypeName}`. Fehlt die Gruppe 
+im Key, wird `w` als Default genutzt. Alles in lower case (toLowerCase), erlaubte Zeichen 'a-z0-9_-'.
 
 Response (Array):
 
 ```json
 [
   {
-    "id": 1,
+    "id": "X:1",
     "name": "stone",
     ...
   },
   {
-    "id": 2,
+    "id": "X:2",
     "name": "dirt",
     ...
   }
@@ -273,7 +276,7 @@ Request Body:
 
 ```json
 {
-  "id": 999,
+  "id": "X:999",
   "description": "My custom block",
   "initialStatus": 0,
   "modifiers": {
@@ -289,13 +292,14 @@ Request Body:
 }
 ```
 
-Falls `id` nicht angegeben wird, wird automatisch die nächste verfügbare ID vergeben.
+Falls `id` nicht angegeben wird, wird automatisch die nächste verfügbare ID vergeben. Oder nur die Gruppe 
+anegegben, z.B. `X:`, wurde.
 
 Response:
 
 ```json
 {
-  "id": 999
+  "id": "X:999"
 }
 ```
 
@@ -329,7 +333,7 @@ Response:
 
 ```json
 {
-  "id": 999,
+  "id": "X:999",
   "description": "Updated description",
   "modifiers": { ... }
 }
@@ -395,7 +399,7 @@ Request Body:
 
 ```json
 {
-  "blockTypeId": 1,
+  "blockTypeId": "X:1",
   "status": 0,
   "offsets": [0.5, 0.25, 0, -0.5, 0.25, 0],
   "faceVisibility": { "value": 63 },
@@ -428,7 +432,7 @@ Response:
     "y": 64,
     "z": 5
   },
-  "blockTypeId": 1,
+  "blockTypeId": "X:1",
   "status": 0,
   "metadata": {
     "displayName": "My Custom Block",
@@ -454,7 +458,7 @@ Request Body:
 
 ```json
 {
-  "blockTypeId": 2,
+  "blockTypeId": "X:2",
   "status": 1,
   "offsets": [1, 0, 0],
   "faceVisibility": { "value": 31 },
