@@ -35,24 +35,25 @@ class RestWorldApiTest extends AbstractRestTest {
 
                 if (!jsonNode.isEmpty()) {
                     JsonNode firstWorld = jsonNode.get(0);
-                    assertThat(firstWorld.has("worldId")).isTrue();
-                    assertThat(firstWorld.has("name")).isTrue();
-                    assertThat(firstWorld.has("description")).isTrue();
 
-                    // Validiere JSON Schema statt DTO Deserialization
-                    String worldId = firstWorld.get("worldId").asText();
-                    String name = firstWorld.get("name").asText();
+                    // Parse as WorldListItemDTO using generated type
+                    WorldListItemDTO worldListItem = objectMapper.treeToValue(firstWorld, WorldListItemDTO.class);
+                    assertThat(worldListItem.getWorldId()).isNotEmpty();
+                    assertThat(worldListItem.getName()).isNotEmpty();
 
-                    assertThat(worldId).isNotEmpty();
-                    assertThat(name).isNotEmpty();
-
-                    System.out.println("Found world: " + worldId + " (" + name + ")");
+                    System.out.println("Found world: " + worldListItem.getWorldId() + " (" + worldListItem.getName() + ")");
                 }
             } else if (jsonNode.has("worlds")) {
-                // Wrapped response format
+                // Wrapped response format - try to parse as WorldListResponseDTO
                 JsonNode worldsArray = jsonNode.get("worlds");
                 assertThat(worldsArray.isArray()).isTrue();
                 System.out.println("Found wrapped worlds response with " + worldsArray.size() + " worlds");
+
+                // Parse individual items as WorldListItemDTO
+                if (worldsArray.size() > 0) {
+                    WorldListItemDTO firstWorld = objectMapper.treeToValue(worldsArray.get(0), WorldListItemDTO.class);
+                    System.out.println("Sample world from wrapped response: " + firstWorld.getWorldId());
+                }
             }
 
 
