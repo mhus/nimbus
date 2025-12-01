@@ -38,6 +38,7 @@ class WebSocketLoginTest extends AbstractWebSocketTest {
                 System.out.println("✅ MessageType case-insensitive: '" + variant + "' -> MessageType.LOGIN");
             } catch (Exception e) {
                 System.out.println("❌ MessageType case-insensitive failed for: '" + variant + "' - " + e.getMessage());
+                e.printStackTrace();
                 // Should not fail with case-insensitive configuration
                 fail("Case-insensitive enum parsing should work for: " + variant);
             }

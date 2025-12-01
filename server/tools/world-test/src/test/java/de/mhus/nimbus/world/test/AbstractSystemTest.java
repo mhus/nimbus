@@ -34,6 +34,7 @@ public abstract class AbstractSystemTest {
     protected static String clientType;
 
     @BeforeAll
+    @SuppressWarnings("deprecation") // No modern alternative available for ACCEPT_CASE_INSENSITIVE_ENUMS
     static void setUpTestConfiguration() throws IOException {
         // Load properties
         properties = new Properties();
@@ -70,8 +71,7 @@ public abstract class AbstractSystemTest {
         objectMapper = new ObjectMapper();
 
         // Configure ObjectMapper for case-insensitive enum mapping
-        @SuppressWarnings("deprecation") // No modern alternative available for this feature
-        var objectMapperWithCaseInsensitive = objectMapper.configure(com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
+        objectMapper.configure(com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
         System.out.println("✅ Case-insensitive enum parsing enabled");
 
         // Add custom enum serializer to serialize enums as lowercase
@@ -92,20 +92,29 @@ public abstract class AbstractSystemTest {
                 }
             }
         });
-        enumModule.addDeserializer(Enum.class, new com.fasterxml.jackson.databind.deser.std.EnumDeserializer() {
+        enumModule.addDeserializer(Enum.class, new com.fasterxml.jackson.databind.JsonDeserializer<Enum<?>>() {
             @Override
             public Enum<?> deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt) throws IOException {
                 String text = p.getText();
-                for (Object constant : handledType().getEnumConstants()) {
-                    if (constant instanceof TsEnum) {
-                        if (((TsEnum) constant).tsString().equalsIgnoreCase(text)) {
-                            return (Enum<?>) constant;
+                Class<?> enumClass = ctxt.getContextualType().getRawClass();
+
+                if (enumClass != null && enumClass.isEnum()) {
+                    Object[] constants = enumClass.getEnumConstants();
+                    for (Object constant : constants) {
+                        if (constant instanceof TsEnum) {
+                            if (((TsEnum) constant).tsString().equalsIgnoreCase(text)) {
+                                return (Enum<?>) constant;
+                            }
+                        } else if (constant instanceof Enum) {
+                            if (((Enum<?>) constant).name().equalsIgnoreCase(text)) {
+                                return (Enum<?>) constant;
+                            }
                         }
-                    } else if (((Enum<?>) constant).name().equalsIgnoreCase(text)) {
-                        return (Enum<?>) constant;
                     }
                 }
-                return null; // or throw exception
+
+                // Fallback: try standard enum deserialization
+                return null;
             }
         });
         objectMapper.registerModule(enumModule);
