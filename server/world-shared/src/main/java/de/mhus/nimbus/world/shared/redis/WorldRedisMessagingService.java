@@ -50,6 +50,7 @@ public class WorldRedisMessagingService {
     }
 
     private String topic(String worldId, String channel) {
-        return "world:" + worldId + ";" + channel;
+        // Use ':' as delimiter to match Redis topic convention and tests
+        return "world:" + worldId + ":" + channel;
     }
 }
