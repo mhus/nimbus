@@ -34,6 +34,7 @@ class WebSocketLoginTest extends AbstractWebSocketTest {
 
             try {
                 MessageType messageType = objectMapper.treeToValue(testNode.get("t"), MessageType.class);
+//                MessageType messageType = objectMapper.convertValue(testNode.get("t"), MessageType.class);
                 assertThat(messageType).isEqualTo(MessageType.LOGIN);
                 System.out.println("✅ MessageType case-insensitive: '" + variant + "' -> MessageType.LOGIN");
             } catch (Exception e) {

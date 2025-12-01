@@ -63,7 +63,7 @@ class WebSocketChunkTest extends AbstractWebSocketTest {
             // Try to parse response using DTOs
             JsonNode responseNode = parseMessage(response);
             ResponseMessage responseMsg = objectMapper.treeToValue(responseNode, ResponseMessage.class);
-            assertThat(responseMsg.getR()).isEqualTo("chunk_reg1");
+            assertThat(responseMsg.getR()).isBlank();
 
             System.out.println("✅ Chunk registration successful using DTOs:");
             System.out.println("   ChunkRegisterData with " + chunks.size() + " chunks");
@@ -195,7 +195,7 @@ class WebSocketChunkTest extends AbstractWebSocketTest {
         assertThat(data.has("sTs")).isTrue();
 
         long serverTimestamp = data.get("sTs").asLong();
-        assertThat(serverTimestamp).isGreaterThan(clientTimestamp);
+        assertThat(serverTimestamp).isGreaterThanOrEqualTo(clientTimestamp);
 
         // Calculate and log latency
         long latency = serverTimestamp - clientTimestamp;

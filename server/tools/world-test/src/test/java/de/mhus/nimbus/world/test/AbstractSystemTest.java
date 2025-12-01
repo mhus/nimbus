@@ -74,8 +74,10 @@ public abstract class AbstractSystemTest {
         objectMapper.configure(com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
         System.out.println("✅ Case-insensitive enum parsing enabled");
 
-        // Add custom enum serializer to serialize enums as lowercase
+        // Add custom enum serializer and deserializer for TsEnum support
         SimpleModule enumModule = new SimpleModule();
+
+        // Custom serializer for all enums
         enumModule.addSerializer(new JsonSerializer<Enum<?>>() {
             @Override
             @SuppressWarnings("unchecked")
@@ -92,32 +94,66 @@ public abstract class AbstractSystemTest {
                 }
             }
         });
-        enumModule.addDeserializer(Enum.class, new com.fasterxml.jackson.databind.JsonDeserializer<Enum<?>>() {
-            @Override
-            public Enum<?> deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt) throws IOException {
-                String text = p.getText();
-                Class<?> enumClass = ctxt.getContextualType().getRawClass();
 
-                if (enumClass != null && enumClass.isEnum()) {
-                    Object[] constants = enumClass.getEnumConstants();
-                    for (Object constant : constants) {
-                        if (constant instanceof TsEnum) {
-                            if (((TsEnum) constant).tsString().equalsIgnoreCase(text)) {
-                                return (Enum<?>) constant;
+        objectMapper.registerModule(enumModule);
+
+        // Add a custom BeanDeserializerModifier for enum handling
+        SimpleModule deserializerModule = new SimpleModule();
+        deserializerModule.setDeserializerModifier(new com.fasterxml.jackson.databind.deser.BeanDeserializerModifier() {
+            @Override
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            public com.fasterxml.jackson.databind.JsonDeserializer<?> modifyEnumDeserializer(
+                    com.fasterxml.jackson.databind.DeserializationConfig config,
+                    com.fasterxml.jackson.databind.JavaType type,
+                    com.fasterxml.jackson.databind.BeanDescription beanDesc,
+                    com.fasterxml.jackson.databind.JsonDeserializer<?> deserializer) {
+
+                if (type.isEnumType()) {
+                    return new com.fasterxml.jackson.databind.JsonDeserializer<Enum<?>>() {
+                        @Override
+                        public Enum<?> deserialize(com.fasterxml.jackson.core.JsonParser p,
+                                com.fasterxml.jackson.databind.DeserializationContext ctxt) throws IOException {
+                            String text = p.getText();
+                            if (text == null) return null;
+
+                            Class<? extends Enum> enumClass = (Class<? extends Enum>) type.getRawClass();
+                            Object[] constants = enumClass.getEnumConstants();
+
+                            // First try TsEnum matching
+                            for (Object constant : constants) {
+                                if (constant instanceof TsEnum) {
+                                    if (((TsEnum) constant).tsString().equalsIgnoreCase(text)) {
+                                        return (Enum<?>) constant;
+                                    }
+                                }
                             }
-                        } else if (constant instanceof Enum) {
-                            if (((Enum<?>) constant).name().equalsIgnoreCase(text)) {
-                                return (Enum<?>) constant;
+
+                            // Then try standard enum name matching
+                            for (Object constant : constants) {
+                                if (constant instanceof Enum) {
+                                    if (((Enum<?>) constant).name().equalsIgnoreCase(text)) {
+                                        return (Enum<?>) constant;
+                                    }
+                                }
+                            }
+
+                            // If no match found, handle according to configuration
+                            if (config.isEnabled(com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)) {
+                                return null;
+                            } else {
+                                throw new com.fasterxml.jackson.databind.exc.InvalidFormatException(p,
+                                        "Cannot deserialize value '" + text + "' to enum " + enumClass.getSimpleName(),
+                                        text, enumClass);
                             }
                         }
-                    }
+                    };
                 }
 
-                // Fallback: try standard enum deserialization
-                return null;
+                return deserializer;
             }
         });
-        objectMapper.registerModule(enumModule);
+
+        objectMapper.registerModule(deserializerModule);
 
         // Additional useful configurations for WebSocket message parsing
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -126,6 +162,7 @@ public abstract class AbstractSystemTest {
         System.out.println("✅ ObjectMapper configured with:");
         System.out.println("   - Case-insensitive enum parsing support");
         System.out.println("   - Custom lowercase enum serialization (LOGIN -> 'login')");
+        System.out.println("   - Specialized enum deserializer with proper type resolution");
 
         httpClient = HttpClients.createDefault();
     }
