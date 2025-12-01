@@ -22,7 +22,7 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
     void shouldCreateBlockTypeDTO() {
         // Given - Create BlockTypeDTO using generated contract
         BlockTypeDTO blockType = BlockTypeDTO.builder()
-                .id(1.0)
+                .id("1")
                 .name("stone")
                 .displayName("Stone Block")
                 .shape("cube")
@@ -32,7 +32,7 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
                 .build();
 
         // When/Then - Validate contract fields
-        assertThat(blockType.getId()).isEqualTo(1.0);
+        assertThat(blockType.getId()).isEqualTo("1");
         assertThat(blockType.getName()).isEqualTo("stone");
         assertThat(blockType.getDisplayName()).isEqualTo("Stone Block");
         assertThat(blockType.getShape()).isEqualTo("cube");
@@ -46,13 +46,13 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
     void shouldCreateBlockTypeCoreType() {
         // Given - Create core BlockType
         BlockType blockType = BlockType.builder()
-                .id(1.0)
+                .id("1")
                 .initialStatus(0.0)
                 .description("A basic stone block")
                 .build();
 
         // When/Then - Validate core type
-        assertThat(blockType.getId()).isEqualTo(1.0);
+        assertThat(blockType.getId()).isEqualTo("1");
         assertThat(blockType.getInitialStatus()).isEqualTo(0.0);
         assertThat(blockType.getDescription()).isEqualTo("A basic stone block");
     }
@@ -107,7 +107,7 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
     void shouldSerializeGeneratedDTOs() throws Exception {
         // Given - Create DTO
         BlockTypeDTO blockType = BlockTypeDTO.builder()
-                .id(1.0)
+                .id("1")
                 .name("test_block")
                 .displayName("Test Block")
                 .build();
@@ -116,7 +116,7 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
         String json = objectMapper.writeValueAsString(blockType);
 
         // Then - Validate JSON contains expected fields
-        assertThat(json).contains("\"id\":1.0");
+        assertThat(json).contains("\"id\":\"1\"");
         assertThat(json).contains("\"name\":\"test_block\"");
         assertThat(json).contains("\"displayName\":\"Test Block\"");
 

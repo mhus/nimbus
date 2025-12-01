@@ -32,7 +32,9 @@ public enum MessageType {
     CMD_MESSAGE(25),
     CMD_RESULT(26),
     SCMD(27),
-    SCMD_RESULT(28);
+    SCMD_RESULT(28),
+    TEAM_DATA(29),
+    TEAM_STATUS(30);
 
     @lombok.Getter
     private final int tsIndex;

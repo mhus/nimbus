@@ -1,6 +1,6 @@
 /*
- * Source TS: BlockType.ts
- * Original TS: 'interface BlockType'
+ * Source TS: TeamData.ts
+ * Original TS: 'interface TeamMember'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,11 +10,14 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class BlockType {
-    private String id;
+public class TeamMember {
+    private String playerId;
+    private String name;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double initialStatus;
+    private String icon;
+    private Object status;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String description;
-    private java.util.Map<java.lang.Double, BlockModifier> modifiers;
+    private Vector3 position;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.lang.Double health;
 }

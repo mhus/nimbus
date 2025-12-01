@@ -217,7 +217,7 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
     void shouldMatchAllBlockTypeContracts() throws Exception {
         // Test BlockTypeDTO contract
         BlockTypeDTO blockTypeDTO = BlockTypeDTO.builder()
-                .id(1.0)
+                .id("1")
                 .name("test_block")
                 .displayName("Test Block")
                 .shape("CUBE")
@@ -227,18 +227,18 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                 .build();
 
         String blockTypeDTOJson = objectMapper.writeValueAsString(blockTypeDTO);
-        assertThat(blockTypeDTOJson).contains("\"id\":1.0");
+        assertThat(blockTypeDTOJson).contains("\"id\":\"1\"");
         assertThat(blockTypeDTOJson).contains("\"shape\":\"CUBE\"");
 
         // Test core BlockType contract - nur Serialization
         BlockType coreBlockType = BlockType.builder()
-                .id(1.0)
+                .id("1")
                 .description("Core block type")
                 .initialStatus(0.0)
                 .build();
 
         String coreBlockTypeJson = objectMapper.writeValueAsString(coreBlockType);
-        assertThat(coreBlockTypeJson).contains("\"id\":1.0");
+        assertThat(coreBlockTypeJson).contains("\"id\":\"1\"");
         assertThat(coreBlockTypeJson).contains("\"description\":\"Core block type\"");
 
         System.out.println("✅ BlockType JSON Serialization validated");

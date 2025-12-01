@@ -11,7 +11,7 @@ package de.mhus.nimbus.generated.rest;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class BlockTypeDTO {
-    private double id;
+    private String id;
     private String name;
     private String displayName;
     private String shape;

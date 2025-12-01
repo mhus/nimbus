@@ -965,6 +965,12 @@
         "visibility" : null,
         "javaTypeHint" : null
       }, {
+        "name" : "free_fly",
+        "type" : "{ height: number; width: number; footprint: number }",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
         "name" : "fly",
         "type" : "{ height: number; width: number; footprint: number }",
         "optional" : true,
@@ -1436,7 +1442,7 @@
     } ],
     "enums" : [ {
       "name" : "PlayerMovementState",
-      "values" : [ "WALK", "SPRINT", "JUMP", "FALL", "FLY", "SWIM", "CROUCH", "RIDING" ]
+      "values" : [ "WALK", "SPRINT", "JUMP", "FALL", "FREE_FLY", "FLY", "SWIM", "CROUCH", "RIDING" ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ ]
@@ -1740,6 +1746,12 @@
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null
+      }, {
+        "name" : "amount",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1788,7 +1800,7 @@
         "javaTypeHint" : null
       }, {
         "name" : "blockTypeId",
-        "type" : "number",
+        "type" : "string",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null
@@ -2442,6 +2454,94 @@
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/TeamData.ts",
+    "imports" : [ "./Vector3" ],
+    "interfaces" : [ {
+      "name" : "TeamMember",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "playerId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "icon",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "status",
+        "type" : "0 | 1 | 2",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "position",
+        "type" : "Vector3",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "health",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "TeamData",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "members",
+        "type" : "TeamMember[]",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "TeamStatusUpdate",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "ms",
+        "type" : "Array<{\n     \n    id: string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/Vector3.ts",
     "imports" : [ ],
     "interfaces" : [ {
@@ -2815,7 +2915,7 @@
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "id",
-        "type" : "number",
+        "type" : "string",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null
@@ -3047,6 +3147,12 @@
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null
+      }, {
+        "name" : "generic",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3058,7 +3164,7 @@
     } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/World.ts",
-    "imports" : [ "./Vector3" ],
+    "imports" : [ "./Vector3", "../scrawl/ScriptActionDefinition" ],
     "interfaces" : [ {
       "name" : "WorldInfo",
       "extendsList" : [ ],
@@ -3154,7 +3260,7 @@
         "javaTypeHint" : null
       }, {
         "name" : "settings",
-        "type" : "{\n    maxPlayers: number;\n    allowGuests: boolean;\n    pvpEnabled: boolean;\n    pingInterval: number;\n\n     \n     \n    deadAmbientAudio?: string;\n\n     \n    swimStepAudio?: string;\n  }",
+        "type" : "{\n    maxPlayers: number;\n    allowGuests: boolean;\n    pvpEnabled: boolean;\n    pingInterval: number;\n\n     \n     \n    allowedMovementModes?: string[];\n\n     \n    defaultMovementMode?: string;\n\n     \n     \n    deadAmbientAudio?: string;\n\n     \n    swimStepAudio?: string;\n\n     \n     \n    clearColor?: { r: number; g: number; b: number };\n\n     \n    cameraMaxZ?: number;\n\n     \n     \n    sunTexture?: string;\n\n     \n    sunSize?: number;\n\n     \n    sunAngleY?: number;\n\n     \n    sunElevation?: number;\n\n     \n    sunColor?: { r: number; g: number; b: number };\n\n     \n    sunEnabled?: boolean;\n\n     \n     \n    skyBox?: {\n       \n      enabled: boolean;\n       \n      mode: 'color' | 'texture';\n       \n      color?: { r: number; g: number; b: number };\n       \n      texturePath?: string;\n       \n      size?: number;\n       \n      rotation?: number;\n    };\n\n     \n    moons?: Array<{\n       \n      enabled: boolean;\n       \n      size?: number;\n       \n      positionOnCircle?: number;\n       \n      heightOverCamera?: number;\n       \n      distance?: number;\n       \n      phase?: number;\n       \n      texture?: string;\n    }>;\n\n     \n    horizonGradient?: {\n       \n      enabled: boolean;\n       \n      distance?: number;\n       \n      y?: number;\n       \n      height?: number;\n       \n      color0?: { r: number; g: number; b: number };\n       \n      color1?: { r: number; g: number; b: number };\n       \n      alpha?: number;\n    };\n\n     \n    environmentScripts?: Array<{\n       \n      name: string;\n       \n      group: string;\n       \n      script: ScriptActionDefinition;\n    }>;\n\n     \n    worldTime?: {\n       \n      minuteScaling?: number;\n       \n      minutesPerHour?: number;\n       \n      hoursPerDay?: number;\n       \n      daysPerMonth?: number;\n       \n      monthsPerYear?: number;\n       \n      yearsPerEra?: number;\n\n       \n      daySections?: {\n         \n        morningStart?: number;\n         \n        dayStart?: number;\n         \n        eveningStart?: number;\n         \n        nightStart?: number;\n      };\n\n       \n      celestialBodies?: {\n         \n        enabled?: boolean;\n         \n        updateIntervalSeconds?: number;\n         \n        activeMoons?: number;\n         \n        sunRotationHours?: number;\n         \n        moon0RotationHours?: number;\n         \n        moon1RotationHours?: number;\n         \n        moon2RotationHours?: number;\n      };\n    };\n\n     \n    shadows?: {\n       \n      enabled?: boolean;\n\n       \n      mapSize?: number;\n\n       \n      quality?: 'low' | 'medium' | 'high';\n\n       \n      darkness?: number;\n\n       \n      maxDistance?: number;\n    };\n  }",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null
@@ -3172,6 +3278,18 @@
         "javaTypeHint" : null
       }, {
         "name" : "editorUrl",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "splashScreen",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null
+      }, {
+        "name" : "splashScreenAudio",
         "type" : "string",
         "optional" : true,
         "visibility" : null,
@@ -3465,7 +3583,7 @@
         "javaTypeHint" : null
       }, {
         "name" : "dimensions",
-        "type" : "{\n    walk: { height: number; width: number; footprint: number };\n    sprint: { height: number; width: number; footprint: number };\n    crouch: { height: number; width: number; footprint: number };\n    swim: { height: number; width: number; footprint: number };\n    climb: { height: number; width: number; footprint: number };\n    fly: { height: number; width: number; footprint: number };\n    teleport: { height: number; width: number; footprint: number };\n  }",
+        "type" : "{\n    walk: { height: number; width: number; footprint: number };\n    sprint: { height: number; width: number; footprint: number };\n    crouch: { height: number; width: number; footprint: number };\n    swim: { height: number; width: number; footprint: number };\n    climb: { height: number; width: number; footprint: number };\n    free_fly: { height: number; width: number; footprint: number };\n    fly: { height: number; width: number; footprint: number };\n    teleport: { height: number; width: number; footprint: number };\n  }",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null
@@ -4452,7 +4570,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "MessageType",
-      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "ANIMATION_START", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT" ]
+      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "ANIMATION_START", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT", "TEAM_DATA", "TEAM_STATUS" ]
     }, {
       "name" : "ClientType",
       "values" : [ "WEB", "XBOX", "MOBILE", "DESKTOP" ]
@@ -4939,7 +5057,7 @@
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "id",
-        "type" : "number",
+        "type" : "string",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null

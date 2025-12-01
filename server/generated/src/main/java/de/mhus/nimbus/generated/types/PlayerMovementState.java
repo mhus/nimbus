@@ -9,10 +9,11 @@ public enum PlayerMovementState {
     SPRINT(2),
     JUMP(3),
     FALL(4),
-    FLY(5),
-    SWIM(6),
-    CROUCH(7),
-    RIDING(8);
+    FREE_FLY(5),
+    FLY(6),
+    SWIM(7),
+    CROUCH(8),
+    RIDING(9);
 
     @lombok.Getter
     private final int tsIndex;

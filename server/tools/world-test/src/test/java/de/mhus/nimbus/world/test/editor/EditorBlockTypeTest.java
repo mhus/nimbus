@@ -123,7 +123,7 @@ class EditorBlockTypeTest extends AbstractEditorTest {
                 BlockTypeDTO blockType = objectMapper.treeToValue(blockTypeNode, BlockTypeDTO.class);
 
                 System.out.println("Retrieved BlockType: " + blockType.getId() + " - " + blockType.getName());
-                assertThat(String.valueOf((int)blockType.getId())).isEqualTo(createdBlockTypeId);
+                assertThat(blockType.getId()).isEqualTo(createdBlockTypeId);
 
             } else {
                 System.out.println("GET single BlockType returned: " + response.getCode());
@@ -145,7 +145,7 @@ class EditorBlockTypeTest extends AbstractEditorTest {
 
         // Create updated BlockType
         BlockType updatedBlockType = BlockType.builder()
-                .id(Double.parseDouble(createdBlockTypeId))
+                .id(createdBlockTypeId)
                 .description("Updated Test Block description")
                 .initialStatus(1.0)
                 .build();
@@ -249,7 +249,7 @@ class EditorBlockTypeTest extends AbstractEditorTest {
 
             // UPDATE
             BlockType updateBlockType = BlockType.builder()
-                    .id(Double.parseDouble(createdId))
+                    .id(createdId)
                     .description("CRUD Cycle Test Block - UPDATED")
                     .initialStatus(1.0)
                     .build();
@@ -290,13 +290,13 @@ class EditorBlockTypeTest extends AbstractEditorTest {
         System.out.println("   JSON: " + contractJson);
         System.out.println("   Note: Deserialization requires Lombok runtime configuration");
         BlockTypeDTO dtoTest = BlockTypeDTO.builder()
-                .id(999.0)
+                .id("999")
                 .name("contract_test")
                 .displayName("Contract Test Block")
                 .build();
 
         String dtoJson = objectMapper.writeValueAsString(dtoTest);
-        assertThat(dtoJson).contains("\"id\":999.0");
+        assertThat(dtoJson).contains("\"id\":\"999\"");
         assertThat(dtoJson).contains("\"name\":\"contract_test\"");
 
         System.out.println("✅ Editor BlockTypeDTO JSON Serialization validated");
