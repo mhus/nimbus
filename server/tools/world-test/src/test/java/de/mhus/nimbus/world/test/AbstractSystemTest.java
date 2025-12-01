@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import de.mhus.nimbus.types.TsEnum;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.BeforeAll;
@@ -84,7 +85,11 @@ public abstract class AbstractSystemTest {
 
             @Override
             public void serialize(Enum<?> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                gen.writeString(value.name().toLowerCase());
+                if (value instanceof TsEnum) {
+                    gen.writeString(((TsEnum) value).tsString());
+                } else {
+                    gen.writeString(value.name().toLowerCase());
+                }
             }
         });
         objectMapper.registerModule(enumModule);
