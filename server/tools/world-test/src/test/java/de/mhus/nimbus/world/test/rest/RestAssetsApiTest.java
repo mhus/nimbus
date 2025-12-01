@@ -40,7 +40,7 @@ class RestAssetsApiTest extends AbstractRestTest {
                 System.out.println("Assets found: " + assets.size());
 
                 // If assets exist, validate structure
-                if (assets.size() > 0) {
+                if (!assets.isEmpty()) {
                     JsonNode firstAsset = assets.get(0);
                     assertThat(firstAsset.has("path")).isTrue();
                     assertThat(firstAsset.has("size")).isTrue();
@@ -138,7 +138,7 @@ class RestAssetsApiTest extends AbstractRestTest {
                 String listBody = getResponseBody(listResponse);
                 JsonNode listJson = objectMapper.readTree(listBody);
 
-                if (listJson.has("assets") && listJson.get("assets").size() > 0) {
+                if (listJson.has("assets") && !listJson.get("assets").isEmpty()) {
                     assetPath = listJson.get("assets").get(0).get("path").asText();
                     System.out.println("Using asset path for download test: " + assetPath);
                 }
@@ -184,7 +184,7 @@ class RestAssetsApiTest extends AbstractRestTest {
                 assertThat(jsonNode.has("assets")).isTrue();
                 JsonNode assets = jsonNode.get("assets");
 
-                if (assets.size() > 0) {
+                if (!assets.isEmpty()) {
                     JsonNode asset = assets.get(0);
 
                     // Required fields according to API documentation
