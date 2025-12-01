@@ -20,7 +20,7 @@ public class EntityPositionUpdateData {
     private de.mhus.nimbus.generated.types.Vector3 v;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double po;
-    private double ts;
+    private long ts;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.Map<String, Object> ta;
 }

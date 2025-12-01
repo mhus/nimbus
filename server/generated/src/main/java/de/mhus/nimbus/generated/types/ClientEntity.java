@@ -23,5 +23,5 @@ public class ClientEntity {
     private java.util.List<Waypoint> currentWaypoints;
     private double lastAccess;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double lastStepTime;
+    private java.lang.Long lastStepTime;
 }

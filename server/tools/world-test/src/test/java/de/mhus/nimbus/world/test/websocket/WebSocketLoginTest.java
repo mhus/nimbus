@@ -267,7 +267,7 @@ class WebSocketLoginTest extends AbstractWebSocketTest {
         // Given - Login first
         performLogin();
 
-        double clientTimestamp = System.currentTimeMillis();
+        long clientTimestamp = System.currentTimeMillis();
 
         // Try to use PingData DTO first
         try {

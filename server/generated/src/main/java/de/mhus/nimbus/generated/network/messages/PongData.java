@@ -11,6 +11,6 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PongData {
-    private double cTs;
-    private double sTs;
+    private long cTs;
+    private long sTs;
 }

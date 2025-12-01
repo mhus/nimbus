@@ -217,8 +217,91 @@ public class TsParser {
             pr.name = m.group(2);
             pr.optional = m.group(3) != null && !m.group(3).isEmpty();
             pr.type = typeTxt;
+
+            // Parse javaTypeHint from comments
+            pr.javaTypeHint = extractJavaTypeHint(body, m.start(), m.end());
+
             out.add(pr);
         }
+    }
+
+    /**
+     * Extract javaType hint from comments on the same line or immediately following line.
+     * Looks for patterns like: //javaType: fully.qualified.Type or SimpleType
+     */
+    private String extractJavaTypeHint(String body, int matchStart, int matchEnd) {
+        // First, look for javaType comment in the entire match (inline comment)
+        String matchText = body.substring(matchStart, matchEnd);
+        Pattern inlinePattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
+        Matcher inlineMatcher = inlinePattern.matcher(matchText);
+        if (inlineMatcher.find()) {
+            return inlineMatcher.group(1).trim();
+        }
+
+        // Look for javaType comment on the same line (extend search to end of line)
+        int lineEnd = findLineEnd(body, matchStart);
+        if (lineEnd > matchEnd) {
+            String lineText = body.substring(matchEnd, lineEnd);
+            Pattern linePattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
+            Matcher lineMatcher = linePattern.matcher(lineText);
+            if (lineMatcher.find()) {
+                return lineMatcher.group(1).trim();
+            }
+        }
+
+        // Look for javaType comment on the immediately following line
+        int nextLineStart = findNextLineStart(body, matchEnd);
+        if (nextLineStart > 0) {
+            int nextLineEnd = findLineEnd(body, nextLineStart);
+            String nextLineText = body.substring(nextLineStart, nextLineEnd);
+            Pattern nextPattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
+            Matcher nextMatcher = nextPattern.matcher(nextLineText);
+            if (nextMatcher.find()) {
+                return nextMatcher.group(1).trim();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find //javaType: comment within a specific range and extract the type
+     */
+    private String findJavaTypeCommentOnLine(String body, int start, int end) {
+        if (start < 0 || end > body.length() || start >= end) return null;
+
+        String lineText = body.substring(start, end);
+        Pattern javaTypePattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
+        Matcher matcher = javaTypePattern.matcher(lineText);
+
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
+    }
+
+    /**
+     * Find the start of the next line after the given position
+     */
+    private int findNextLineStart(String body, int fromPos) {
+        for (int i = fromPos; i < body.length(); i++) {
+            if (body.charAt(i) == '\n') {
+                return i + 1 < body.length() ? i + 1 : -1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Find the end of the line starting from the given position
+     */
+    private int findLineEnd(String body, int fromPos) {
+        for (int i = fromPos; i < body.length(); i++) {
+            if (body.charAt(i) == '\n') {
+                return i;
+            }
+        }
+        return body.length();
     }
 
     /**

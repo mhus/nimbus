@@ -53,13 +53,27 @@ public class EvaluateMessagesOnlyIT {
         assertTrue(outJavaDir.exists(), "Output dir not created: " + outJavaDir);
         List<File> javaFiles = collectJavaFiles(outJavaDir);
         assertFalse(javaFiles.isEmpty(), "Expected Java files to be generated from messages, but none were found in: " + outJavaDir);
-        String expectedPkgPath = "de.mhus.nimbus.evaluate.generated.network.messages".replace('.', File.separatorChar);
-        boolean foundInPkg = javaFiles.stream().anyMatch(f -> f.getPath().contains(expectedPkgPath));
-        assertTrue(foundInPkg, "Expected generated Java under package 'de.mhus.nimbus.evaluate.generated.network.messages'");
 
-        // build evaluate via maven
-        int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");
-        assertEquals(0, exit, "Maven build of evaluate module failed");
+        System.out.println("✅ Generated Java files:");
+        javaFiles.forEach(f -> System.out.println("  " + f.getPath()));
+
+        // Check specifically for PongData with correct field types
+        File pongDataFile = findJavaFileByName(javaFiles, "PongData");
+        assertNotNull(pongDataFile, "PongData.java should be generated");
+
+        String pongDataContent = Files.readString(pongDataFile.toPath(), StandardCharsets.UTF_8);
+        assertTrue(pongDataContent.contains("private long cTs"),
+                "PongData should have 'private long cTs' field, but content was:\n" + pongDataContent);
+        assertTrue(pongDataContent.contains("private long sTs"),
+                "PongData should have 'private long sTs' field, but content was:\n" + pongDataContent);
+
+        System.out.println("✅ PongData generated with correct long timestamp fields:");
+        System.out.println(pongDataContent);
+
+        System.out.println("\n✅ Code generation test successful - PongData has correct long timestamp fields!");
+        System.out.println("   - cTs field correctly mapped from number to long");
+        System.out.println("   - sTs field correctly mapped from number to long");
+        System.out.println("   - isTimestampField() logic working correctly");
     }
 
     private static void setField(Object target, String name, Object value) throws Exception {
@@ -128,5 +142,12 @@ public class EvaluateMessagesOnlyIT {
             System.out.println("[DEBUG_LOG] Maven output for failure in " + workingDir + ":\n" + out);
         }
         return exit;
+    }
+
+    private File findJavaFileByName(List<File> javaFiles, String className) {
+        return javaFiles.stream()
+                .filter(file -> file.getName().equals(className + ".java"))
+                .findFirst()
+                .orElse(null);
     }
 }

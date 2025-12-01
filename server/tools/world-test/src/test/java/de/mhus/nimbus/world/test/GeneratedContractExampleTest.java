@@ -28,7 +28,7 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
                 .shape("cube")
                 .texture("stone.png")
                 .hardness(2.5)
-                .miningtime(1.5)
+                .miningtime(1L)
                 .build();
 
         // When/Then - Validate contract fields

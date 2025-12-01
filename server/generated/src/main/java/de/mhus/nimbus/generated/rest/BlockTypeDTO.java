@@ -18,7 +18,7 @@ public class BlockTypeDTO {
     private String texture;
     private BlockTypeOptionsDTO options;
     private double hardness;
-    private double miningtime;
+    private long miningtime;
     private String tool;
     private boolean unbreakable;
     private boolean solid;

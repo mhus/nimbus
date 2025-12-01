@@ -223,7 +223,7 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                 .shape("CUBE")
                 .texture("test.png")
                 .hardness(1.5)
-                .miningtime(1500.0)
+                .miningtime(1500L)
                 .build();
 
         String blockTypeDTOJson = objectMapper.writeValueAsString(blockTypeDTO);

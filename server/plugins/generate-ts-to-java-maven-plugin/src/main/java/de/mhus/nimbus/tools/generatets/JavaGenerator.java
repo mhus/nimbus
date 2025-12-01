@@ -55,6 +55,7 @@ public class JavaGenerator {
                         for (TsDeclarations.TsProperty p : i.properties) {
                             if (p == null || p.name == null) continue;
                             String propType = (p.javaTypeHint != null && !p.javaTypeHint.isBlank()) ? p.javaTypeHint : p.type;
+
                             // If this is the well-known inline object property 'backdrop', synthesize a helper class
                             if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
                                 String helperName = i.name + "Backdrop";
@@ -62,6 +63,10 @@ public class JavaGenerator {
                                 t.getProperties().add(new JavaProperty(p.name, helperName, p.optional, p.visibility));
                             } else {
                                 String jt = mapTsTypeToJava(propType, p.optional);
+                                // Special case: Check if this is a timestamp field and map to long
+                                if ("number".equals(propType) && isTimestampField(p.name)) {
+                                    jt = p.optional ? "java.lang.Long" : "long";
+                                }
                                 t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
                             }
                         }
@@ -109,6 +114,10 @@ public class JavaGenerator {
                                 t.getProperties().add(new JavaProperty(p.name, helperName, p.optional, p.visibility));
                             } else {
                                 String jt = mapTsTypeToJava(propType, p.optional);
+                                // Special case: Check if this is a timestamp field and map to long
+                                if ("number".equals(propType) && isTimestampField(p.name)) {
+                                    jt = p.optional ? "java.lang.Long" : "long";
+                                }
                                 t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
                             }
                         }
@@ -178,6 +187,22 @@ public class JavaGenerator {
         helper.getProperties().add(new JavaProperty("s", "java.util.List<Backdrop>", true, "public"));
         helper.getProperties().add(new JavaProperty("w", "java.util.List<Backdrop>", true, "public"));
         jm.addType(helper);
+    }
+
+    /**
+     * Check if a field name suggests it's a timestamp that should be mapped to long
+     * instead of double for number types.
+     */
+    private boolean isTimestampField(String fieldName) {
+        if (fieldName == null) return false;
+        String lower = fieldName.toLowerCase();
+        return lower.contains("ts") ||
+               lower.contains("time") ||
+               lower.contains("stamp") ||
+               lower.equals("cts") ||
+               lower.equals("sts") ||
+               lower.endsWith("timestamp") ||
+               lower.endsWith("time");
     }
 
     private String boxIfPrimitive(String type) {
