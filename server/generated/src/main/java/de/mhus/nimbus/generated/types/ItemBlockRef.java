@@ -14,8 +14,10 @@ public class ItemBlockRef {
     private String id;
     private Vector3 position;
     private String texture;
+    @com.fasterxml.jackson.annotation.JsonProperty("scaleX")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double scaleX;
+    @com.fasterxml.jackson.annotation.JsonProperty("scaleY")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double scaleY;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

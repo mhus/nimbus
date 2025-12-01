@@ -12,8 +12,10 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ItemModifier {
     private String texture;
+    @com.fasterxml.jackson.annotation.JsonProperty("scaleX")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double scaleX;
+    @com.fasterxml.jackson.annotation.JsonProperty("scaleY")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double scaleY;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
@@ -22,12 +24,15 @@ public class ItemModifier {
     private String color;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String pose;
+    @com.fasterxml.jackson.annotation.JsonProperty("onUseEffect")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private de.mhus.nimbus.generated.scrawl.ScriptActionDefinition onUseEffect;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean exclusive;
+    @com.fasterxml.jackson.annotation.JsonProperty("actionScript")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private de.mhus.nimbus.generated.scrawl.ScriptActionDefinition actionScript;
+    @com.fasterxml.jackson.annotation.JsonProperty("actionTargeting")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private ActionTargetingMode actionTargeting;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

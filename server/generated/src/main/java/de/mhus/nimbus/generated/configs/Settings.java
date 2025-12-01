@@ -12,6 +12,8 @@ package de.mhus.nimbus.generated.configs;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Settings {
     private String name;
+    @com.fasterxml.jackson.annotation.JsonProperty("inputController")
     private String inputController;
+    @com.fasterxml.jackson.annotation.JsonProperty("inputMappings")
     private java.util.Map<String, String> inputMappings;
 }

@@ -11,8 +11,11 @@ package de.mhus.nimbus.generated.configs;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class EngineConfiguration {
+    @com.fasterxml.jackson.annotation.JsonProperty("worldInfo")
     private de.mhus.nimbus.generated.types.WorldInfo worldInfo;
+    @com.fasterxml.jackson.annotation.JsonProperty("playerInfo")
     private de.mhus.nimbus.generated.types.PlayerInfo playerInfo;
+    @com.fasterxml.jackson.annotation.JsonProperty("playerBackpack")
     private PlayerBackpack playerBackpack;
     private Settings settings;
 }

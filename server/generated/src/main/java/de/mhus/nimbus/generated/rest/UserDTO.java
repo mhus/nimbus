@@ -12,6 +12,7 @@ package de.mhus.nimbus.generated.rest;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class UserDTO {
     private String user;
+    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
     private String displayName;
     private String email;
 }

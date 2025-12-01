@@ -16,6 +16,7 @@ public class BlockInteractionData {
     private double z;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String id;
+    @com.fasterxml.jackson.annotation.JsonProperty("gId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String gId;
     private String ac;

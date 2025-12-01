@@ -11,7 +11,9 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PoseAnimation {
+    @com.fasterxml.jackson.annotation.JsonProperty("animationName")
     private String animationName;
+    @com.fasterxml.jackson.annotation.JsonProperty("speedMultiplier")
     private double speedMultiplier;
     private boolean loop;
 }

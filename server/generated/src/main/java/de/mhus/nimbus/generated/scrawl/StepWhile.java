@@ -12,6 +12,7 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class StepWhile {
     private String kind;
+    @com.fasterxml.jackson.annotation.JsonProperty("taskId")
     private String taskId;
     private ScrawlStep step;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

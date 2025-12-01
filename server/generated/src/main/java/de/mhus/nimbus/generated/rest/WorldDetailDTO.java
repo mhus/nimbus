@@ -11,17 +11,24 @@ package de.mhus.nimbus.generated.rest;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WorldDetailDTO {
+    @com.fasterxml.jackson.annotation.JsonProperty("worldId")
     private String worldId;
     private String name;
     private String description;
     private Position3D start;
     private Position3D stop;
+    @com.fasterxml.jackson.annotation.JsonProperty("chunkSize")
     private double chunkSize;
+    @com.fasterxml.jackson.annotation.JsonProperty("assetPath")
     private String assetPath;
+    @com.fasterxml.jackson.annotation.JsonProperty("assetPort")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double assetPort;
+    @com.fasterxml.jackson.annotation.JsonProperty("worldGroupId")
     private String worldGroupId;
+    @com.fasterxml.jackson.annotation.JsonProperty("createdAt")
     private String createdAt;
+    @com.fasterxml.jackson.annotation.JsonProperty("updatedAt")
     private String updatedAt;
     private UserDTO owner;
     private WorldSettingsDTO settings;

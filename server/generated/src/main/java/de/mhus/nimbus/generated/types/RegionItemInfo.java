@@ -11,6 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class RegionItemInfo {
+    @com.fasterxml.jackson.annotation.JsonProperty("itemId")
     private String itemId;
     private String name;
     private String texture;

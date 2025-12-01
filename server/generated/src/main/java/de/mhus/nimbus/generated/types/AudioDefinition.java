@@ -17,6 +17,7 @@ public class AudioDefinition {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean loop;
     private boolean enabled;
+    @com.fasterxml.jackson.annotation.JsonProperty("maxDistance")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double maxDistance;
 }

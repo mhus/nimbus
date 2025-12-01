@@ -16,9 +16,13 @@ public class BlockMetadataDTO {
     private double z;
     private String id;
     private java.util.List<String> groups;
+    @com.fasterxml.jackson.annotation.JsonProperty("groupNames")
     private java.util.List<String> groupNames;
+    @com.fasterxml.jackson.annotation.JsonProperty("inheritedGroups")
     private java.util.List<String> inheritedGroups;
+    @com.fasterxml.jackson.annotation.JsonProperty("inheritedGroupNames")
     private java.util.List<String> inheritedGroupNames;
+    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String displayName;
 }

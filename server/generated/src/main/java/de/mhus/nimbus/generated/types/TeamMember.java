@@ -11,6 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class TeamMember {
+    @com.fasterxml.jackson.annotation.JsonProperty("playerId")
     private String playerId;
     private String name;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

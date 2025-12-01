@@ -12,5 +12,6 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ClientBlock {
     private java.util.Map<String, Object> block;
+    @com.fasterxml.jackson.annotation.JsonProperty("blockType")
     private Object blockType;
 }

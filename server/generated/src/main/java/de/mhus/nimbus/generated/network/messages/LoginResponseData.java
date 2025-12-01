@@ -12,7 +12,10 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class LoginResponseData {
     private boolean success;
+    @com.fasterxml.jackson.annotation.JsonProperty("userId")
     private String userId;
+    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
     private String displayName;
+    @com.fasterxml.jackson.annotation.JsonProperty("sessionId")
     private String sessionId;
 }

@@ -11,8 +11,12 @@ package de.mhus.nimbus.generated.rest;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WorldSettingsDTO {
+    @com.fasterxml.jackson.annotation.JsonProperty("maxPlayers")
     private double maxPlayers;
+    @com.fasterxml.jackson.annotation.JsonProperty("allowGuests")
     private boolean allowGuests;
+    @com.fasterxml.jackson.annotation.JsonProperty("pvpEnabled")
     private boolean pvpEnabled;
+    @com.fasterxml.jackson.annotation.JsonProperty("pingInterval")
     private double pingInterval;
 }

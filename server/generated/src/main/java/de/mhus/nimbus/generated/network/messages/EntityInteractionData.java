@@ -11,6 +11,7 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class EntityInteractionData {
+    @com.fasterxml.jackson.annotation.JsonProperty("entityId")
     private String entityId;
     private long ts;
     private String ac;

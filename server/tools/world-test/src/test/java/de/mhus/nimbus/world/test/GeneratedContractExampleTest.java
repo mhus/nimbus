@@ -38,7 +38,7 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
         assertThat(blockType.getShape()).isEqualTo("cube");
         assertThat(blockType.getTexture()).isEqualTo("stone.png");
         assertThat(blockType.getHardness()).isEqualTo(2.5);
-        assertThat(blockType.getMiningtime()).isEqualTo(1.5);
+        assertThat(blockType.getMiningtime()).isEqualTo(1L);
     }
 
     @Test

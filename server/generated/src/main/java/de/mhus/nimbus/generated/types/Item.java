@@ -12,6 +12,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Item {
     private String id;
+    @com.fasterxml.jackson.annotation.JsonProperty("itemType")
     private String itemType;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String name;

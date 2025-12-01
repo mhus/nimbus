@@ -13,6 +13,7 @@ package de.mhus.nimbus.generated.rest;
 public class BlockTypeDTO {
     private String id;
     private String name;
+    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
     private String displayName;
     private String shape;
     private String texture;
@@ -23,6 +24,8 @@ public class BlockTypeDTO {
     private boolean unbreakable;
     private boolean solid;
     private boolean transparent;
+    @com.fasterxml.jackson.annotation.JsonProperty("windLeafiness")
     private double windLeafiness;
+    @com.fasterxml.jackson.annotation.JsonProperty("windStability")
     private double windStability;
 }

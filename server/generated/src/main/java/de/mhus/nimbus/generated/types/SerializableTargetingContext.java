@@ -12,9 +12,12 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class SerializableTargetingContext {
     private TargetingMode mode;
+    @com.fasterxml.jackson.annotation.JsonProperty("targetType")
     private String targetType;
+    @com.fasterxml.jackson.annotation.JsonProperty("entityId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String entityId;
+    @com.fasterxml.jackson.annotation.JsonProperty("blockPosition")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.Map<String, Object> blockPosition;
     private java.util.Map<String, Object> position;

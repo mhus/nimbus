@@ -11,10 +11,13 @@ package de.mhus.nimbus.generated.rest;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WorldListItemDTO {
+    @com.fasterxml.jackson.annotation.JsonProperty("worldId")
     private String worldId;
     private String name;
     private String description;
     private UserDTO owner;
+    @com.fasterxml.jackson.annotation.JsonProperty("createdAt")
     private String createdAt;
+    @com.fasterxml.jackson.annotation.JsonProperty("updatedAt")
     private String updatedAt;
 }

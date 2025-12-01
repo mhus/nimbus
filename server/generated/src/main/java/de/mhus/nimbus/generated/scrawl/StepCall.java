@@ -12,6 +12,7 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class StepCall {
     private String kind;
+    @com.fasterxml.jackson.annotation.JsonProperty("scriptId")
     private String scriptId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.Map<String, Object> args;

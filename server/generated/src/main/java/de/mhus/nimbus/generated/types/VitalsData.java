@@ -16,9 +16,12 @@ public class VitalsData {
     private double max;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double extended;
+    @com.fasterxml.jackson.annotation.JsonProperty("extendExpiry")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double extendExpiry;
+    @com.fasterxml.jackson.annotation.JsonProperty("regenRate")
     private double regenRate;
+    @com.fasterxml.jackson.annotation.JsonProperty("degenRate")
     private double degenRate;
     private String color;
     private String name;

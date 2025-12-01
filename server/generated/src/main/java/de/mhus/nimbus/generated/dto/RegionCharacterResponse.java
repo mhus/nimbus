@@ -12,7 +12,9 @@ package de.mhus.nimbus.generated.dto;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class RegionCharacterResponse {
     private String id;
+    @com.fasterxml.jackson.annotation.JsonProperty("userId")
     private String userId;
+    @com.fasterxml.jackson.annotation.JsonProperty("regionId")
     private String regionId;
     private String name;
     private String display;

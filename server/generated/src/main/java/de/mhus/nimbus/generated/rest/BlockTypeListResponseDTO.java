@@ -11,6 +11,7 @@ package de.mhus.nimbus.generated.rest;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class BlockTypeListResponseDTO {
+    @com.fasterxml.jackson.annotation.JsonProperty("blockTypes")
     private java.util.List<BlockTypeDTO> blockTypes;
     private double count;
     private double limit;

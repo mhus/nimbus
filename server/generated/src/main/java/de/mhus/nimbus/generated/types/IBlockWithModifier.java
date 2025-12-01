@@ -12,5 +12,6 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class IBlockWithModifier {
     private Block block;
+    @com.fasterxml.jackson.annotation.JsonProperty("currentModifier")
     private BlockModifier currentModifier;
 }

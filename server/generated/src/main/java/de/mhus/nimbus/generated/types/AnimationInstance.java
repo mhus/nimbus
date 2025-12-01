@@ -11,9 +11,12 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class AnimationInstance {
+    @com.fasterxml.jackson.annotation.JsonProperty("templateId")
     private String templateId;
     private AnimationData animation;
+    @com.fasterxml.jackson.annotation.JsonProperty("createdAt")
     private double createdAt;
+    @com.fasterxml.jackson.annotation.JsonProperty("triggeredBy")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String triggeredBy;
 }

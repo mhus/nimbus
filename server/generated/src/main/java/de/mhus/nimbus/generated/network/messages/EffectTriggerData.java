@@ -11,7 +11,9 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class EffectTriggerData {
+    @com.fasterxml.jackson.annotation.JsonProperty("effectId")
     private String effectId;
+    @com.fasterxml.jackson.annotation.JsonProperty("entityId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String entityId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

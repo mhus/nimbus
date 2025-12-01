@@ -15,7 +15,9 @@ public class SKeyDto {
     private String type;
     private String kind;
     private String algorithm;
+    @com.fasterxml.jackson.annotation.JsonProperty("keyId")
     private String keyId;
+    @com.fasterxml.jackson.annotation.JsonProperty("createdAt")
     private String createdAt;
     private String owner;
     private String intent;

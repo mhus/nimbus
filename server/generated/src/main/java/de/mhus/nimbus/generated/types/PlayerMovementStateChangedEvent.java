@@ -11,7 +11,10 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PlayerMovementStateChangedEvent {
+    @com.fasterxml.jackson.annotation.JsonProperty("playerId")
     private String playerId;
+    @com.fasterxml.jackson.annotation.JsonProperty("oldState")
     private PlayerMovementState oldState;
+    @com.fasterxml.jackson.annotation.JsonProperty("newState")
     private PlayerMovementState newState;
 }

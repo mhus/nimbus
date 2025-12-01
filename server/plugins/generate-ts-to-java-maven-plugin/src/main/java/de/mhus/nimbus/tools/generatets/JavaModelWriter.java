@@ -290,7 +290,7 @@ public class JavaModelWriter {
                     if (!seen.add(p.getName())) continue;
                     String type = resolveFieldTypeConsideringNested(p.getType(), currentPkg, name);
                     // Emit configured annotations for fields
-                    emitFieldAnnotations(sb, p.isOptional());
+                    emitFieldAnnotations(sb, p.isOptional(), p.getName());
                     sb.append("    private ").append(type).append(' ').append(p.getName()).append(";\n");
                     emittedAnyField = true;
                 }
@@ -423,6 +423,15 @@ public class JavaModelWriter {
     }
 
     private void emitFieldAnnotations(StringBuilder sb, boolean optional) {
+        emitFieldAnnotations(sb, optional, null);
+    }
+
+    private void emitFieldAnnotations(StringBuilder sb, boolean optional, String fieldName) {
+        // Add @JsonProperty for fields with problematic naming (camelCase with uppercase letters)
+        if (fieldName != null && needsJsonPropertyAnnotation(fieldName)) {
+            sb.append("    @com.fasterxml.jackson.annotation.JsonProperty(\"").append(fieldName).append("\")\n");
+        }
+
         if (configuration == null) return;
         // Common field annotations (apply to all fields)
         appendAnnotations(sb, configuration.additionalFieldAnnotations);
@@ -432,6 +441,29 @@ public class JavaModelWriter {
         } else {
             appendAnnotations(sb, configuration.additionalNonOptionalFieldAnnotations);
         }
+    }
+
+    /**
+     * Determines if a field name needs @JsonProperty annotation.
+     * Returns true for camelCase fields that contain uppercase letters after the first character.
+     */
+    private boolean needsJsonPropertyAnnotation(String fieldName) {
+        if (fieldName == null || fieldName.length() <= 1) return false;
+
+        // Check for camelCase pattern: starts lowercase, contains uppercase
+        if (!Character.isLowerCase(fieldName.charAt(0))) return false;
+
+        // Special handling for timestamp fields like cTs, sTs etc.
+        if (fieldName.matches("^[a-z][A-Z][a-z]*$")) {
+            return true;
+        }
+
+        for (int i = 1; i < fieldName.length(); i++) {
+            if (Character.isUpperCase(fieldName.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void appendAnnotations(StringBuilder sb, java.util.List<String> list) {

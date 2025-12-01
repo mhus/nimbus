@@ -13,6 +13,7 @@ package de.mhus.nimbus.generated.scrawl;
 public class StepForEach {
     private String kind;
     private String collection;
+    @com.fasterxml.jackson.annotation.JsonProperty("itemVar")
     private String itemVar;
     private ScrawlStep step;
 }
