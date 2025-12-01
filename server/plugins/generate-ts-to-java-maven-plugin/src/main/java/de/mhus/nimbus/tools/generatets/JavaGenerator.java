@@ -68,6 +68,9 @@ public class JavaGenerator {
                     if (e.values != null && !e.values.isEmpty()) {
                         t.getEnumValues().addAll(e.values);
                     }
+                    if (e.enumValues != null && !e.enumValues.isEmpty()) {
+                        t.getEnumValuesWithAssignments().addAll(e.enumValues);
+                    }
                     jm.addType(t);
                 }
             }

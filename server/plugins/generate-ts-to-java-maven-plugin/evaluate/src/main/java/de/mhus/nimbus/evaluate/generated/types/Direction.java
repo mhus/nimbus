@@ -5,14 +5,14 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum Direction {
-    NORTH(1),
-    SOUTH(2),
-    EAST(3),
-    WEST(4),
-    UP(5),
-    DOWN(6);
+    NORTH("1 << 0"),
+    SOUTH("1 << 1"),
+    EAST("1 << 2"),
+    WEST("1 << 3"),
+    UP("1 << 4"),
+    DOWN("1 << 5");
 
     @lombok.Getter
-    private final int tsIndex;
-    Direction(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    Direction(String tsIndex) { this.tsIndex = tsIndex; }
 }

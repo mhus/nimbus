@@ -41,9 +41,20 @@ public class TsDeclarations {
         public List<TsMethod> methods = new ArrayList<>();
     }
 
+    public static class TsEnumValue {
+        public String name;
+        public String value;
+
+        public TsEnumValue(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
     public static class TsEnum {
         public String name;
         public List<String> values = new ArrayList<>();
+        public List<TsEnumValue> enumValues = new ArrayList<>();
     }
 
     public static class TsTypeAlias {

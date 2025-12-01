@@ -2,6 +2,7 @@ package de.mhus.nimbus.tools.generatets.java;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import de.mhus.nimbus.tools.generatets.ts.TsDeclarations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,8 @@ public class JavaType {
     private List<JavaProperty> properties = new ArrayList<>();
     // For enums: list of constant names in declaration order
     private List<String> enumValues = new ArrayList<>();
+    // For enums: list of constant names with their assigned values
+    private List<TsDeclarations.TsEnumValue> enumValuesWithAssignments = new ArrayList<>();
 
     // Reference names captured during initial pass
     private String extendsName;
@@ -64,6 +67,9 @@ public class JavaType {
 
     public List<String> getEnumValues() { return enumValues; }
     public void setEnumValues(List<String> enumValues) { this.enumValues = enumValues; }
+
+    public List<TsDeclarations.TsEnumValue> getEnumValuesWithAssignments() { return enumValuesWithAssignments; }
+    public void setEnumValuesWithAssignments(List<TsDeclarations.TsEnumValue> enumValuesWithAssignments) { this.enumValuesWithAssignments = enumValuesWithAssignments; }
 
     public String getExtendsName() { return extendsName; }
     public void setExtendsName(String extendsName) { this.extendsName = extendsName; }

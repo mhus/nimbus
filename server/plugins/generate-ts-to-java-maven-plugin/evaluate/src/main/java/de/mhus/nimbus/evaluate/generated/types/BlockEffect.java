@@ -5,7 +5,7 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum BlockEffect {
-    NONE(1),
+    NONE(0),
     WIND(2);
 
     @lombok.Getter

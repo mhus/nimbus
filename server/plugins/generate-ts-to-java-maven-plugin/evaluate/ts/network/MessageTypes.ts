@@ -67,3 +67,31 @@ export enum ClientType {
   MOBILE = 'mobile',
   DESKTOP = 'desktop',
 }
+
+/**
+ * Test enum with numeric values to verify type detection
+ * This enum tests that the ts-to-java generator correctly:
+ * - Detects numeric enum values
+ * - Generates Java enum with int tsIndex
+ * - Uses the correct numeric values (not auto-incremented integers)
+ */
+export enum Priority {
+  LOW = 0,
+  MEDIUM = 1,
+  HIGH = 2,
+  CRITICAL = 5,
+}
+
+/**
+ * Test enum with mixed types to verify string fallback
+ * This enum tests that the ts-to-java generator correctly:
+ * - Detects mixed string/numeric enum values
+ * - Falls back to String tsIndex for mixed types
+ * - Converts all values to strings when mixing types
+ */
+export enum MixedEnum {
+  STRING_VAL = 'text',
+  NUMERIC_VAL = 42,
+  ANOTHER_STRING = 'hello',
+}
+

@@ -4,7 +4,6 @@
  */
 package de.mhus.nimbus.evaluate.generated.scrawl;
 
-@Deprecated
 @lombok.Data
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor

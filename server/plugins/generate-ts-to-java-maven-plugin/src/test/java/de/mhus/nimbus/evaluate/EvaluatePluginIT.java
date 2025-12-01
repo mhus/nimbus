@@ -75,6 +75,9 @@ public class EvaluatePluginIT {
         List<File> javaFiles = collectJavaFiles(outJavaDir);
         assertFalse(javaFiles.isEmpty(), "Expected Java files to be generated, but none were found in: " + outJavaDir);
 
+        // Validate enum type generation correctness
+        validateEnumTypes(outJavaDir);
+
         // Validate generation into expected package directories based on TS folders present
         assertGeneratedIfTsExists(tsDir.resolve("types"), javaFiles, "de.mhus.nimbus.evaluate.generated.types");
         assertGeneratedIfTsExists(tsDir.resolve("configs"), javaFiles, "de.mhus.nimbus.evaluate.generated.configs");
@@ -87,6 +90,41 @@ public class EvaluatePluginIT {
         // Finally, run a Maven build in the evaluate module to ensure the project compiles with generated sources
         int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");
         assertEquals(0, exit, "Maven build of evaluate module failed");
+    }
+
+    private static void validateEnumTypes(File outJavaDir) throws IOException {
+        // Validate MessageType enum (string values)
+        File messageTypeFile = new File(outJavaDir, "de/mhus/nimbus/evaluate/generated/network/MessageType.java");
+        if (messageTypeFile.exists()) {
+            String content = Files.readString(messageTypeFile.toPath());
+            assertTrue(content.contains("private final String tsIndex"),
+                      "MessageType should use String tsIndex for string values");
+            assertTrue(content.contains("LOGIN(\"login\")"),
+                      "MessageType LOGIN should have correct string value");
+            System.out.println("✓ MessageType enum validation passed (String values)");
+        }
+
+        // Validate Priority enum (numeric values)
+        File priorityFile = new File(outJavaDir, "de/mhus/nimbus/evaluate/generated/network/Priority.java");
+        if (priorityFile.exists()) {
+            String content = Files.readString(priorityFile.toPath());
+            assertTrue(content.contains("private final int tsIndex"),
+                      "Priority should use int tsIndex for numeric values");
+            assertTrue(content.contains("LOW(0)") && content.contains("CRITICAL(5)"),
+                      "Priority should have correct numeric values");
+            System.out.println("✓ Priority enum validation passed (int values)");
+        }
+
+        // Validate MixedEnum (mixed types should fallback to string)
+        File mixedFile = new File(outJavaDir, "de/mhus/nimbus/evaluate/generated/network/MixedEnum.java");
+        if (mixedFile.exists()) {
+            String content = Files.readString(mixedFile.toPath());
+            assertTrue(content.contains("private final String tsIndex"),
+                      "MixedEnum should use String tsIndex as fallback for mixed types");
+            assertTrue(content.contains("NUMERIC_VAL(\"42\")"),
+                      "MixedEnum should convert numeric values to strings");
+            System.out.println("✓ MixedEnum validation passed (mixed types → String fallback)");
+        }
     }
 
     private static void setField(Object target, String name, Object value) throws Exception {

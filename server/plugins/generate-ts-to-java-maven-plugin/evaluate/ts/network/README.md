@@ -128,8 +128,12 @@ Array of 4 integers per chunk position:
 ## Message Files
 
 **Base:**
-- `BaseMessage.ts` - Base message structure
-- `MessageTypes.ts` - Message type enums
+- `BaseMessage.ts` - Base message structure  
+- `MessageTypes.ts` - Message type enums + test enums for ts-to-java generator
+
+**Test Enums in MessageTypes.ts:**
+- `Priority` (numeric values) - Tests int tsIndex generation
+- `MixedEnum` (mixed types) - Tests String fallback generation
 
 **Messages:**
 - `LoginMessage.ts` - Authentication messages

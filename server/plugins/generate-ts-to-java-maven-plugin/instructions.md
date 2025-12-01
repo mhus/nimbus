@@ -29,6 +29,59 @@ An den enums fehlen die werte. die muessen auch engelegt werden. moeglichst mit 
 Enum value generation with tsIndex was implemented and tested successfully. The parser extracts enum member names, and generated Java enums include tsIndex and getter. Integration tests and full project build passed, ensuring correct compilation.
 ```
 
+## Enum-Wert-Behandlung (Dezember 2025 Update)
+
+### Problem behoben: String-Werte statt erfundene Integer
+
+**Issue**: Das Plugin generierte erfundene Integer-Werte (1, 2, 3...) für TypeScript String-Enums anstatt der tatsächlichen String-Werte ('login', 'logout', etc.).
+
+**Lösung**: Implementierung einer intelligenten Typ-Erkennung:
+- **String-Enums**: Verwenden `String tsIndex` mit korrekten String-Werten
+- **Numerische Enums**: Verwenden `int tsIndex` mit korrekten numerischen Werten  
+- **Gemischte Enums**: Fallback zu `String tsIndex` mit allen Werten als Strings
+
+### Implementierung
+
+1. **TsDeclarations.TsEnumValue** - Neue Klasse für Name+Wert Paare
+2. **TsParser.extractEnumValuesAndAssignments()** - Regex-basierter Parser für Enum-Zuweisungen
+3. **JavaType.enumValuesWithAssignments** - Speicherung der Wert-Zuweisungen
+4. **JavaModelWriter** - Intelligente Typ-Erkennung und Code-Generierung
+
+### Test-System erweitert
+
+**Permanente Test-Enums** in `evaluate/ts/network/MessageTypes.ts`:
+- `MessageType` (String-Werte) → `String tsIndex`
+- `Priority` (Numerische Werte) → `int tsIndex`  
+- `MixedEnum` (Gemischte Typen) → `String tsIndex` (Fallback)
+
+**Automatisierte Validierung** in `EvaluatePluginIT.validateEnumTypes()`:
+- Prüfung der korrekten tsIndex-Typen
+- Verifikation der Wert-Korrektheit
+- Kontinuierliche Regression-Tests
+
+### Verwendung des Test-Systems
+
+```bash
+# Plugin entwickeln/erweitern:
+# 1. Test-TypeScript in evaluate/ts/ hinzufügen
+# 2. Plugin-Code implementieren  
+# 3. Tests ausführen
+mvn clean install
+
+# Nur Enum-Tests prüfen
+cd evaluate && mvn clean generate-sources
+ls src/main/java/de/mhus/nimbus/evaluate/generated/network/
+
+# Integration Tests
+mvn test -Dtest=EvaluatePluginIT
+```
+
+Das evaluate-System dient als permanente Testumgebung für:
+- Neue Plugin-Features
+- Regressions-Tests
+- Code-Generierung-Verifikation
+- Kontinuierliche Integration
+
 Kannst du alle Parameter die optional sind in ts (parameter?) mit der Jackson annotation @JsonInclude(JsonInclude.Include.NON_NULL) damit beim serilisieren diese weggelassen werden
 
 ```text

@@ -4,12 +4,9 @@
  */
 package de.mhus.nimbus.evaluate.generated.scrawl;
 
-@Deprecated
 @lombok.Data
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 public class ScrawlParameterType {
-    @Deprecated
-    @SuppressWarnings("required")
     private String value;
 }

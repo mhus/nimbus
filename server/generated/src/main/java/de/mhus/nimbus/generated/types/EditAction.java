@@ -5,14 +5,14 @@
 package de.mhus.nimbus.generated.types;
 
 public enum EditAction {
-    OPEN_CONFIG_DIALOG(1),
-    OPEN_EDITOR(2),
-    MARK_BLOCK(3),
-    COPY_BLOCK(4),
-    DELETE_BLOCK(5),
-    MOVE_BLOCK(6);
+    OPEN_CONFIG_DIALOG("OPEN_CONFIG_DIALOG"),
+    OPEN_EDITOR("OPEN_EDITOR"),
+    MARK_BLOCK("MARK_BLOCK"),
+    COPY_BLOCK("COPY_BLOCK"),
+    DELETE_BLOCK("DELETE_BLOCK"),
+    MOVE_BLOCK("MOVE_BLOCK");
 
     @lombok.Getter
-    private final int tsIndex;
-    EditAction(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    EditAction(String tsIndex) { this.tsIndex = tsIndex; }
 }

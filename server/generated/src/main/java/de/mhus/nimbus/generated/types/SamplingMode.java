@@ -5,9 +5,9 @@
 package de.mhus.nimbus.generated.types;
 
 public enum SamplingMode {
-    NEAREST(1),
-    LINEAR(2),
-    MIPMAP(3);
+    NEAREST(0),
+    LINEAR(1),
+    MIPMAP(2);
 
     @lombok.Getter
     private final int tsIndex;

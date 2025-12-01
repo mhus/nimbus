@@ -134,6 +134,7 @@ public class TsParser {
             d.name = n.name;
             String body = safeSub(src, n.startIndex, n.endIndex);
             extractEnumValuesFromBody(body, d.values);
+            extractEnumValuesAndAssignments(body, d.enumValues);
             file.getEnums().add(d);
         }
         // Classes
@@ -250,6 +251,52 @@ public class TsParser {
             }
             if (!ok) continue;
             out.add(name);
+        }
+    }
+
+    private void extractEnumValuesAndAssignments(String body, java.util.List<TsDeclarations.TsEnumValue> out) {
+        if (body == null || out == null) return;
+        // Match enum member: NAME = 'value' or NAME = "value" or NAME (no assignment)
+        // Pattern explanation:
+        // ^[\\t ]*                       - line start with optional whitespace
+        // ([A-Za-z_$][A-Za-z0-9_$]*)    - capture group 1: valid identifier
+        // [\\t ]*                       - optional whitespace
+        // (?:                           - non-capturing group for optional assignment
+        //   =[\\t ]*                    - equals sign with optional whitespace
+        //   (?:                         - non-capturing group for value alternatives
+        //     (['\"])(.*?)\\2           - capture groups 2&3: quoted string value
+        //     |                         - or
+        //     ([^,\\r\\n]+)             - capture group 4: unquoted value
+        //   )
+        // )?                            - optional assignment
+        // [\\t ]*(?:,[\\t ]*)?          - optional comma and whitespace
+        // (?://.*)?$                    - optional comment
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?m)^[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(?:=[\\t ]*(?:(['\"])(.*?)\\2|([^,\\r\\n]+)))?[\\t ]*(?:,[\\t ]*)?(?://.*)?$");
+        java.util.regex.Matcher m = p.matcher(body);
+        while (m.find()) {
+            String name = m.group(1);
+            if (name == null || name.isEmpty()) continue;
+            // Filter out potential keywords
+            if (!java.lang.Character.isJavaIdentifierStart(name.charAt(0))) continue;
+            boolean ok = true;
+            for (int i = 1; i < name.length(); i++) {
+                if (!java.lang.Character.isJavaIdentifierPart(name.charAt(i))) { ok = false; break; }
+            }
+            if (!ok) continue;
+
+            String value = null;
+            if (m.group(3) != null) {
+                // String value in quotes
+                value = m.group(3);
+            } else if (m.group(4) != null) {
+                // Other value (number, etc.) - trim whitespace
+                value = m.group(4).trim();
+            } else {
+                // No assignment, use the name as default value
+                value = name;
+            }
+
+            out.add(new TsDeclarations.TsEnumValue(name, value));
         }
     }
 

@@ -5,12 +5,12 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum IFrameMessageType {
-    IFRAME_READY(1),
-    REQUEST_CLOSE(2),
-    REQUEST_POSITION_CHANGE(3),
-    NOTIFICATION(4);
+    IFRAME_READY("IFRAME_READY"),
+    REQUEST_CLOSE("REQUEST_CLOSE"),
+    REQUEST_POSITION_CHANGE("REQUEST_POSITION_CHANGE"),
+    NOTIFICATION("NOTIFICATION");
 
     @lombok.Getter
-    private final int tsIndex;
-    IFrameMessageType(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    IFrameMessageType(String tsIndex) { this.tsIndex = tsIndex; }
 }

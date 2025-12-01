@@ -5,15 +5,15 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum FaceFlag {
-    TOP(1),
-    BOTTOM(2),
-    LEFT(3),
-    RIGHT(4),
-    FRONT(5),
-    BACK(6),
-    FIXED(7);
+    TOP("1 << 0"),
+    BOTTOM("1 << 1"),
+    LEFT("1 << 2"),
+    RIGHT("1 << 3"),
+    FRONT("1 << 4"),
+    BACK("1 << 5"),
+    FIXED("1 << 6");
 
     @lombok.Getter
-    private final int tsIndex;
-    FaceFlag(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    FaceFlag(String tsIndex) { this.tsIndex = tsIndex; }
 }

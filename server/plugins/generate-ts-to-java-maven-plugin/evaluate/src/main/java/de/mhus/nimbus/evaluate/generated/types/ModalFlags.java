@@ -5,15 +5,15 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum ModalFlags {
-    NONE(1),
-    CLOSEABLE(2),
-    NO_BORDERS(3),
-    BREAK_OUT(4),
-    NO_BACKGROUND_LOCK(5),
-    MOVEABLE(6),
-    RESIZEABLE(7);
+    NONE("0"),
+    CLOSEABLE("1 << 0"),
+    NO_BORDERS("1 << 1"),
+    BREAK_OUT("1 << 2"),
+    NO_BACKGROUND_LOCK("1 << 3"),
+    MOVEABLE("1 << 4"),
+    RESIZEABLE("1 << 5");
 
     @lombok.Getter
-    private final int tsIndex;
-    ModalFlags(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    ModalFlags(String tsIndex) { this.tsIndex = tsIndex; }
 }

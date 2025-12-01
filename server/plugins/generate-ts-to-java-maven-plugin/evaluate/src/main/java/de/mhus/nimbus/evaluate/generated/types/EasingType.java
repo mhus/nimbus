@@ -5,15 +5,15 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum EasingType {
-    LINEAR(1),
-    EASE_IN(2),
-    EASE_OUT(3),
-    EASE_IN_OUT(4),
-    ELASTIC(5),
-    BOUNCE(6),
-    STEP(7);
+    LINEAR("linear"),
+    EASE_IN("easeIn"),
+    EASE_OUT("easeOut"),
+    EASE_IN_OUT("easeInOut"),
+    ELASTIC("elastic"),
+    BOUNCE("bounce"),
+    STEP("step");
 
     @lombok.Getter
-    private final int tsIndex;
-    EasingType(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    EasingType(String tsIndex) { this.tsIndex = tsIndex; }
 }

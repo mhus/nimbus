@@ -5,16 +5,16 @@
 package de.mhus.nimbus.generated.types;
 
 public enum BlockStatus {
-    DEFAULT(1),
-    OPEN(2),
-    CLOSED(3),
-    LOCKED(4),
+    DEFAULT(0),
+    OPEN(1),
+    CLOSED(2),
+    LOCKED(3),
     DESTROYED(5),
-    WINTER(6),
-    SPRING(7),
-    SUMMER(8),
-    AUTUMN(9),
-    CUSTOM_START(10);
+    WINTER(10),
+    SPRING(11),
+    SUMMER(12),
+    AUTUMN(13),
+    CUSTOM_START(100);
 
     @lombok.Getter
     private final int tsIndex;

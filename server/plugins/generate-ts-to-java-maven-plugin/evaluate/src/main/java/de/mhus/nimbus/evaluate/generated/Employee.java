@@ -4,13 +4,10 @@
  */
 package de.mhus.nimbus.evaluate.generated;
 
-@Deprecated
 @lombok.Data
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Employee extends Person {
-    @Deprecated
-    @SuppressWarnings("required")
     private double employeeId;
 }

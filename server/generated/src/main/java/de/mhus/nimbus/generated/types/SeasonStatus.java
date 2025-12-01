@@ -5,11 +5,11 @@
 package de.mhus.nimbus.generated.types;
 
 public enum SeasonStatus {
-    NONE(1),
-    WINTER(2),
-    SPRING(3),
-    SUMMER(4),
-    AUTUMN(5);
+    NONE(0),
+    WINTER(1),
+    SPRING(2),
+    SUMMER(3),
+    AUTUMN(4);
 
     @lombok.Getter
     private final int tsIndex;

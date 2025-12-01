@@ -5,16 +5,16 @@
 package de.mhus.nimbus.evaluate.generated.types;
 
 public enum PlayerMovementState {
-    WALK(1),
-    SPRINT(2),
-    JUMP(3),
-    FALL(4),
-    FLY(5),
-    SWIM(6),
-    CROUCH(7),
-    RIDING(8);
+    WALK("WALK"),
+    SPRINT("SPRINT"),
+    JUMP("JUMP"),
+    FALL("FALL"),
+    FLY("FLY"),
+    SWIM("SWIM"),
+    CROUCH("CROUCH"),
+    RIDING("RIDING");
 
     @lombok.Getter
-    private final int tsIndex;
-    PlayerMovementState(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsIndex;
+    PlayerMovementState(String tsIndex) { this.tsIndex = tsIndex; }
 }

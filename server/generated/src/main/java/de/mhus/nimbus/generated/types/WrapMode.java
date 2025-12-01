@@ -5,9 +5,9 @@
 package de.mhus.nimbus.generated.types;
 
 public enum WrapMode {
-    CLAMP(1),
-    REPEAT(2),
-    MIRROR(3);
+    CLAMP(0),
+    REPEAT(1),
+    MIRROR(2);
 
     @lombok.Getter
     private final int tsIndex;

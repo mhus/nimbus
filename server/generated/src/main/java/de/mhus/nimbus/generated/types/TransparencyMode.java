@@ -5,13 +5,13 @@
 package de.mhus.nimbus.generated.types;
 
 public enum TransparencyMode {
-    NONE(1),
-    ALPHA_TEST(2),
-    ALPHA_BLEND(3),
-    ALPHA_TEST_FROM_RGB(4),
-    ALPHA_BLEND_FROM_RGB(5),
-    ALPHA_TESTANDBLEND(6),
-    ALPHA_TESTANDBLEND_FROM_RGB(7);
+    NONE(0),
+    ALPHA_TEST(1),
+    ALPHA_BLEND(2),
+    ALPHA_TEST_FROM_RGB(3),
+    ALPHA_BLEND_FROM_RGB(4),
+    ALPHA_TESTANDBLEND(5),
+    ALPHA_TESTANDBLEND_FROM_RGB(6);
 
     @lombok.Getter
     private final int tsIndex;

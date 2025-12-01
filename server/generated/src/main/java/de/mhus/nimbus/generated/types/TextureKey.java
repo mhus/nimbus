@@ -5,26 +5,26 @@
 package de.mhus.nimbus.generated.types;
 
 public enum TextureKey {
-    ALL(1),
-    TOP(2),
-    BOTTOM(3),
-    LEFT(4),
-    RIGHT(5),
-    FRONT(6),
-    BACK(7),
-    SIDE(8),
-    DIFFUSE(9),
-    DISTORTION(10),
-    OPACITY(11),
-    WALL(12),
-    INSIDE_ALL(13),
-    INSIDE_TOP(14),
-    INSIDE_BOTTOM(15),
-    INSIDE_LEFT(16),
-    INSIDE_RIGHT(17),
-    INSIDE_FRONT(18),
-    INSIDE_BACK(19),
-    INSIDE_SIDE(20);
+    ALL(0),
+    TOP(1),
+    BOTTOM(2),
+    LEFT(3),
+    RIGHT(4),
+    FRONT(5),
+    BACK(6),
+    SIDE(7),
+    DIFFUSE(8),
+    DISTORTION(9),
+    OPACITY(10),
+    WALL(11),
+    INSIDE_ALL(20),
+    INSIDE_TOP(21),
+    INSIDE_BOTTOM(22),
+    INSIDE_LEFT(23),
+    INSIDE_RIGHT(24),
+    INSIDE_FRONT(25),
+    INSIDE_BACK(26),
+    INSIDE_SIDE(27);
 
     @lombok.Getter
     private final int tsIndex;

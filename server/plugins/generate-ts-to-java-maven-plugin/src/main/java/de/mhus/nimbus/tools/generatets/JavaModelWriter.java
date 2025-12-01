@@ -152,13 +152,72 @@ public class JavaModelWriter {
         String currentPkg = pkg == null ? "" : pkg;
         if (t.getKind() == JavaKind.ENUM) {
             sb.append("public enum ").append(name).append(" {\n");
+
+            // Use enumValuesWithAssignments if available, otherwise fall back to enumValues
+            java.util.List<de.mhus.nimbus.tools.generatets.ts.TsDeclarations.TsEnumValue> valuesWithAssignments = t.getEnumValuesWithAssignments();
             java.util.List<String> vals = t.getEnumValues();
-            if (vals != null && !vals.isEmpty()) {
+
+            if (valuesWithAssignments != null && !valuesWithAssignments.isEmpty()) {
+                // Determine if we have string or numeric values
+                boolean hasStringValues = false;
+                boolean hasNumericValues = false;
+
+                for (de.mhus.nimbus.tools.generatets.ts.TsDeclarations.TsEnumValue enumValue : valuesWithAssignments) {
+                    String value = enumValue.value;
+                    if (value != null) {
+                        // Check if value is numeric (integer)
+                        try {
+                            Integer.parseInt(value.trim());
+                            hasNumericValues = true;
+                        } catch (NumberFormatException e) {
+                            hasStringValues = true;
+                        }
+                    }
+                }
+
+                // If we have mixed types or only strings, use String type
+                boolean useStringType = hasStringValues || (!hasNumericValues && !hasStringValues);
+
+                // Generate enum constants
+                for (int i = 0; i < valuesWithAssignments.size(); i++) {
+                    de.mhus.nimbus.tools.generatets.ts.TsDeclarations.TsEnumValue enumValue = valuesWithAssignments.get(i);
+                    String enumName = enumValue.name;
+                    String enumVal = enumValue.value;
+                    if (!isValidJavaIdentifier(enumName)) continue;
+                    if (i > 0) sb.append(",\n");
+
+                    sb.append("    ").append(enumName).append("(");
+                    if (useStringType) {
+                        sb.append("\"").append(enumVal.replace("\"", "\\\"")).append("\"");
+                    } else {
+                        // Numeric value
+                        try {
+                            Integer.parseInt(enumVal.trim());
+                            sb.append(enumVal.trim());
+                        } catch (NumberFormatException e) {
+                            // Fallback to string if parsing fails
+                            sb.append("\"").append(enumVal.replace("\"", "\\\"")).append("\"");
+                            useStringType = true;
+                        }
+                    }
+                    sb.append(")");
+                }
+                sb.append(";\n\n");
+                sb.append("    @lombok.Getter\n");
+                if (useStringType) {
+                    sb.append("    private final String tsIndex;\n");
+                    sb.append("    ").append(name).append("(String tsIndex) { this.tsIndex = tsIndex; }\n");
+                } else {
+                    sb.append("    private final int tsIndex;\n");
+                    sb.append("    ").append(name).append("(int tsIndex) { this.tsIndex = tsIndex; }\n");
+                }
+            } else if (vals != null && !vals.isEmpty()) {
+                // Fall back to the old behavior with integer indices
                 for (int i = 0; i < vals.size(); i++) {
                     String v = vals.get(i);
                     if (!isValidJavaIdentifier(v)) continue;
                     if (i > 0) sb.append(",\n");
-                    sb.append("    ").append(v).append("(").append(String.valueOf(i + 1)).append(")");
+                    sb.append("    ").append(v).append("(").append(i + 1).append(")");
                 }
                 sb.append(";\n\n");
                 sb.append("    @lombok.Getter\n");
