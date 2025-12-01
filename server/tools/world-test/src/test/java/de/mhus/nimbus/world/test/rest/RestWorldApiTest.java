@@ -50,7 +50,7 @@ class RestWorldApiTest extends AbstractRestTest {
                 System.out.println("Found wrapped worlds response with " + worldsArray.size() + " worlds");
 
                 // Parse individual items as WorldListItemDTO
-                if (worldsArray.size() > 0) {
+                if (!worldsArray.isEmpty()) {
                     WorldListItemDTO firstWorld = objectMapper.treeToValue(worldsArray.get(0), WorldListItemDTO.class);
                     System.out.println("Sample world from wrapped response: " + firstWorld.getWorldId());
                 }

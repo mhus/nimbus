@@ -44,7 +44,7 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                             System.out.println("BlockTypes found (via DTO): " + listResponseDTO.getBlockTypes().size());
                             System.out.println("Count: " + listResponseDTO.getCount() + ", Limit: " + listResponseDTO.getLimit() + ", Offset: " + listResponseDTO.getOffset());
 
-                            BlockTypeDTO firstBlockTypeDTO = listResponseDTO.getBlockTypes().get(0);
+                            BlockTypeDTO firstBlockTypeDTO = listResponseDTO.getBlockTypes().getFirst();
                             assertThat(firstBlockTypeDTO.getId()).isNotEqualTo(0.0);
 
                             System.out.println("Sample BlockType ID: " + firstBlockTypeDTO.getId());

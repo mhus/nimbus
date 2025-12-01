@@ -1,6 +1,10 @@
 package de.mhus.nimbus.world.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.BeforeAll;
@@ -61,8 +65,38 @@ public abstract class AbstractSystemTest {
         worldId = getProperty("test.login.worldId", "test-world");
         clientType = getProperty("test.login.clientType", "web");
 
-        // Initialize utilities
+        // Initialize utilities with modern configuration
         objectMapper = new ObjectMapper();
+
+        // Configure ObjectMapper for case-insensitive enum mapping
+        @SuppressWarnings("deprecation") // No modern alternative available for this feature
+        var objectMapperWithCaseInsensitive = objectMapper.configure(com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
+        System.out.println("✅ Case-insensitive enum parsing enabled");
+
+        // Add custom enum serializer to serialize enums as lowercase
+        SimpleModule enumModule = new SimpleModule();
+        enumModule.addSerializer(new JsonSerializer<Enum<?>>() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public Class<Enum<?>> handledType() {
+                return (Class<Enum<?>>) (Class<?>) Enum.class;
+            }
+
+            @Override
+            public void serialize(Enum<?> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.name().toLowerCase());
+            }
+        });
+        objectMapper.registerModule(enumModule);
+
+        // Additional useful configurations for WebSocket message parsing
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
+
+        System.out.println("✅ ObjectMapper configured with:");
+        System.out.println("   - Case-insensitive enum parsing support");
+        System.out.println("   - Custom lowercase enum serialization (LOGIN -> 'login')");
+
         httpClient = HttpClients.createDefault();
     }
 

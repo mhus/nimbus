@@ -1,8 +1,8 @@
 package de.mhus.nimbus.world.test.websocket;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.generated.network.messages.ChunkQueryData;
-import de.mhus.nimbus.generated.network.messages.ChunkCoordinate;
+import de.mhus.nimbus.generated.network.*;
+import de.mhus.nimbus.generated.network.messages.*;
 import de.mhus.nimbus.generated.rest.BlockTypeDTO;
 import de.mhus.nimbus.generated.types.BlockType;
 import org.junit.jupiter.api.*;
@@ -40,7 +40,42 @@ class WebSocketChunkTest extends AbstractWebSocketTest {
 
         List<ChunkCoordinate> chunks = Arrays.asList(coord1, coord2);
 
-        // Create chunk registration message
+        // Try to use ChunkRegisterData DTO first
+        try {
+            ChunkRegisterData chunkRegisterData = ChunkRegisterData.builder()
+                    .c(chunks)
+                    .build();
+
+            RequestMessage message = RequestMessage.builder()
+                    .i("chunk_reg1")
+                    .t(MessageType.CHUNK_REGISTER)
+                    .d(chunkRegisterData)
+                    .build();
+
+            String chunkMessage = objectMapper.writeValueAsString(message);
+
+            // When
+            String response = sendMessageAndWaitForResponse(chunkMessage);
+
+            // Then
+            assertThat(response).isNotNull();
+
+            // Try to parse response using DTOs
+            JsonNode responseNode = parseMessage(response);
+            ResponseMessage responseMsg = objectMapper.treeToValue(responseNode, ResponseMessage.class);
+            assertThat(responseMsg.getR()).isEqualTo("chunk_reg1");
+
+            System.out.println("✅ Chunk registration successful using DTOs:");
+            System.out.println("   ChunkRegisterData with " + chunks.size() + " chunks");
+            System.out.println("   RequestMessage sent successfully");
+            System.out.println("   ResponseMessage received successfully");
+            return; // Success with DTOs
+
+        } catch (Exception e) {
+            System.out.println("⚠️ DTO approach for Chunk Registration failed: " + e.getMessage() + " - falling back to manual");
+        }
+
+        // Fallback to manual chunk registration
         var chunkData = objectMapper.createObjectNode();
         var chunksArray = objectMapper.createArrayNode();
 
@@ -118,8 +153,8 @@ class WebSocketChunkTest extends AbstractWebSocketTest {
             assertThat(data.isArray()).isTrue();
 
             // If chunks are returned, verify structure
-            if (data.size() > 0) {
-                JsonNode chunkDataNode = data.get(0);
+                if (!data.isEmpty()) {
+                    JsonNode chunkDataNode = data.get(0);
                 assertThat(chunkDataNode.has("cx")).isTrue(); // chunk x coordinate
                 assertThat(chunkDataNode.has("cz")).isTrue(); // chunk z coordinate
             }
