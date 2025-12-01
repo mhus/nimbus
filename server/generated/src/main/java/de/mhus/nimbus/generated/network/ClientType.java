@@ -4,7 +4,7 @@
  */
 package de.mhus.nimbus.generated.network;
 
-public enum ClientType {
+public enum ClientType implements de.mhus.nimbus.types.TsEnum {
     WEB("web"),
     XBOX("xbox"),
     MOBILE("mobile"),
@@ -13,4 +13,5 @@ public enum ClientType {
     @lombok.Getter
     private final String tsIndex;
     ClientType(String tsIndex) { this.tsIndex = tsIndex; }
+    public String tsString() { return this.tsIndex; }
 }

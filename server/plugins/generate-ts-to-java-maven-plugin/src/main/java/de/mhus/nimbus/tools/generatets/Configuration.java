@@ -86,6 +86,24 @@ public class Configuration {
      */
     public String defaultBaseClass;
 
+    /**
+     * Optional mapping to specify which interface generated enums should implement.
+     * This allows for identification and extension of enums at runtime.
+     *
+     * Key options:
+     * - "*" - All enums implement this interface (global default)
+     * - "EnumName" - Specific enum implements this interface
+     * - "package.prefix.*" - All enums in packages starting with this prefix
+     *
+     * Value: Fully qualified interface name that the enum should implement
+     *
+     * Example:
+     *   enumInterfaceMapping:
+     *     "*": "de.mhus.nimbus.types.TsEnum"
+     *     "MessageType": "de.mhus.nimbus.network.NetworkEnum"
+     */
+    public Map<String, String> enumInterfaceMapping;
+
     public static class PackageRule {
         /** Suffix of the TS source directory to match (e.g. "types"). */
         public String dirEndsWith;

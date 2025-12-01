@@ -4,7 +4,7 @@
  */
 package de.mhus.nimbus.generated.network;
 
-public enum MessageType {
+public enum MessageType implements de.mhus.nimbus.types.TsEnum {
     LOGIN("login"),
     LOGIN_RESPONSE("loginResponse"),
     LOGOUT("logout"),
@@ -39,4 +39,5 @@ public enum MessageType {
     @lombok.Getter
     private final String tsIndex;
     MessageType(String tsIndex) { this.tsIndex = tsIndex; }
+    public String tsString() { return this.tsIndex; }
 }

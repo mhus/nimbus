@@ -151,7 +151,15 @@ public class JavaModelWriter {
         String name = t.getName();
         String currentPkg = pkg == null ? "" : pkg;
         if (t.getKind() == JavaKind.ENUM) {
-            sb.append("public enum ").append(name).append(" {\n");
+            sb.append("public enum ").append(name);
+
+            // Add implements clause if specified
+            String implementsCsv = renderEnumImplementsCsv(t.getImplementsNames(), currentPkg);
+            if (!implementsCsv.isEmpty()) {
+                sb.append(" implements ").append(implementsCsv);
+            }
+
+            sb.append(" {\n");
 
             // Use enumValuesWithAssignments if available, otherwise fall back to enumValues
             java.util.List<de.mhus.nimbus.tools.generatets.ts.TsDeclarations.TsEnumValue> valuesWithAssignments = t.getEnumValuesWithAssignments();
@@ -207,9 +215,12 @@ public class JavaModelWriter {
                 if (useStringType) {
                     sb.append("    private final String tsIndex;\n");
                     sb.append("    ").append(name).append("(String tsIndex) { this.tsIndex = tsIndex; }\n");
+                    sb.append("    public String tsString() { return this.tsIndex; }\n");
                 } else {
                     sb.append("    private final int tsIndex;\n");
-                    sb.append("    ").append(name).append("(int tsIndex) { this.tsIndex = tsIndex; }\n");
+                    sb.append("    private final String tsString;\n");
+                    sb.append("    ").append(name).append("(int tsIndex) { this.tsIndex = tsIndex; this.tsString = String.valueOf(tsIndex); }\n");
+                    sb.append("    public String tsString() { return this.tsString; }\n");
                 }
             } else if (vals != null && !vals.isEmpty()) {
                 // Fall back to the old behavior with integer indices
@@ -222,7 +233,9 @@ public class JavaModelWriter {
                 sb.append(";\n\n");
                 sb.append("    @lombok.Getter\n");
                 sb.append("    private final int tsIndex;\n");
-                sb.append("    ").append(name).append("(int tsIndex) { this.tsIndex = tsIndex; }\n");
+                sb.append("    private final String tsString;\n");
+                sb.append("    ").append(name).append("(int tsIndex) { this.tsIndex = tsIndex; this.tsString = String.valueOf(tsIndex); }\n");
+                sb.append("    public String tsString() { return this.tsString; }\n");
             }
             sb.append("}\n");
         } else if (t.getKind() == JavaKind.INTERFACE) {
@@ -470,6 +483,22 @@ public class JavaModelWriter {
                 if (sb.length() > 0) sb.append(", ");
                 sb.append(q);
             }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Render the implements clause for enums as comma-separated qualified names.
+     */
+    private String renderEnumImplementsCsv(java.util.List<String> implementsNames, String currentPkg) {
+        if (implementsNames == null || implementsNames.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String name : implementsNames) {
+            if (name == null || name.trim().isEmpty()) continue;
+            if (!sb.isEmpty()) sb.append(", ");
+            sb.append(qualifyType(name.trim(), currentPkg));
         }
         return sb.toString();
     }

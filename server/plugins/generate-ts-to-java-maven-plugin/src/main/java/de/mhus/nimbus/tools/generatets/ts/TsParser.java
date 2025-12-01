@@ -29,7 +29,7 @@ public class TsParser {
     private static final Pattern IMPORT_SIDE_EFFECT = Pattern.compile("(?m)\\bimport\\s*['\"]([^'\"]+)['\"];?");
 
     private static final Pattern DECL_INTERFACE = Pattern.compile("\\bexport\\s+interface\\s+([A-Za-z0-9_]+)\\b|\\binterface\\s+([A-Za-z0-9_]+)\\b");
-    private static final Pattern DECL_ENUM = Pattern.compile("\\bexport\\s+enum\\s+([A-Za-z0-9_]+)\\b|\\benum\\s+([A-Za-z0-9_]+)\\b");
+    private static final Pattern DECL_ENUM = Pattern.compile("(?m)^\\s*(?:export\\s+)?enum\\s+([A-Za-z0-9_]+)\\s*\\{");
     private static final Pattern DECL_CLASS = Pattern.compile("\\bexport\\s+class\\s+([A-Za-z0-9_]+)\\b|\\bclass\\s+([A-Za-z0-9_]+)\\b");
     private static final Pattern DECL_TYPE = Pattern.compile("(?m)\\bexport\\s+type\\s+([A-Za-z0-9_]+)\\s*=|\\btype\\s+([A-Za-z0-9_]+)\\s*=");
 
@@ -311,8 +311,26 @@ public class TsParser {
             try { n2 = m.group(2); } catch (Exception ignored) {}
             String name = n1 != null ? n1 : n2;
             if (name == null) continue;
-            int start = m.end();
-            int end = (endBy == '{') ? findMatchingBrace(src, src.indexOf('{', start)) : src.indexOf(';', start);
+
+            int start, end;
+            if (pat == DECL_ENUM) {
+                // For the new ENUM pattern that includes the opening brace
+                // The match already includes the opening brace, so find the matching closing brace
+                int openBrace = src.lastIndexOf('{', m.end());
+                if (openBrace >= 0) {
+                    start = openBrace + 1; // Start after the opening brace
+                    end = findMatchingBrace(src, openBrace);
+                } else {
+                    // Fallback if brace not found
+                    start = m.end();
+                    end = src.indexOf('}', start);
+                }
+            } else {
+                // Original logic for other patterns
+                start = m.end();
+                end = (endBy == '{') ? findMatchingBrace(src, src.indexOf('{', start)) : src.indexOf(';', start);
+            }
+
             NameOccur o = new NameOccur();
             o.name = name;
             o.startIndex = start;

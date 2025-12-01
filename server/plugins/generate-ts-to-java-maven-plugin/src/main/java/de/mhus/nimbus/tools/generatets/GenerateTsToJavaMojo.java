@@ -6,6 +6,7 @@ import de.mhus.nimbus.tools.generatets.ts.TsModel;
 import de.mhus.nimbus.tools.generatets.ts.TsParser;
 import de.mhus.nimbus.tools.generatets.java.JavaModel;
 import de.mhus.nimbus.tools.generatets.java.JavaType;
+import de.mhus.nimbus.tools.generatets.java.JavaKind;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -36,12 +37,6 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
     private File outputDir;
 
     /**
-     * If true, the outputDir will be cleaned (deleted recursively) before writing new sources.
-     */
-    @Parameter(defaultValue = "true", property = "cleanOutputDir")
-    private boolean cleanOutputDir;
-
-    /**
      * Path to the TypeScript model file.
      */
     @Parameter(defaultValue = "${project.basedir}/model.json", property = "modelFile")
@@ -68,7 +63,7 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
 
             writeModelToFile(tsModel);
 
-            JavaGenerator generator = new JavaGenerator();
+            JavaGenerator generator = new JavaGenerator(configuration);
             JavaModel javaModel = generator.generate(tsModel);
             getLog().info("Java model created: types=" + (javaModel == null ? 0 : javaModel.getTypes().size()));
 
@@ -84,6 +79,16 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                         t.setPackageName(resolved);
                     }
                 }
+
+                // Apply enum interface mappings after packages are set
+                if (configuration != null && configuration.enumInterfaceMapping != null) {
+                    for (JavaType t : javaModel.getTypes()) {
+                        if (t != null && t.getKind() == JavaKind.ENUM) {
+                            applyEnumInterfaceMapping(t, configuration);
+                        }
+                    }
+                }
+
                 // Apply type name mappings from configuration to all model elements
                 // Apply optional type mappings and default base class configuration
                 if (configuration != null) {
@@ -172,12 +177,6 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
                         }
                     }
                 }
-            }
-
-            // Optionally clean output directory before writing
-            if (cleanOutputDir && outputDir != null && outputDir.exists()) {
-                getLog().info("Cleaning outputDir: " + outputDir.getAbsolutePath());
-                deleteRecursively(outputDir);
             }
 
             new JavaModelWriter(javaModel, configuration).write(outputDir);
@@ -618,5 +617,53 @@ public class GenerateTsToJavaMojo extends AbstractMojo {
             getLog().info("Parsing TS sources from: " + result.stream().map(File::getPath).collect(Collectors.joining(", ")));
         }
         return result;
+    }
+
+    /**
+     * Apply enum interface mappings from configuration to the given enum type.
+     * Supports specific enum names, package prefixes, and global mappings.
+     */
+    private void applyEnumInterfaceMapping(JavaType enumType, Configuration configuration) {
+        if (configuration == null || configuration.enumInterfaceMapping == null) {
+            getLog().info("DEBUG: No enum interface mapping configuration found");
+            return;
+        }
+
+        String enumName = enumType.getName();
+        String enumPackage = enumType.getPackageName();
+        getLog().info("DEBUG: Applying interface mapping for enum: " + enumName + " (package: " + enumPackage + ")");
+
+        // Try specific enum name mapping first
+        String interfaceName = configuration.enumInterfaceMapping.get(enumName);
+        getLog().info("DEBUG: Specific mapping for " + enumName + ": " + interfaceName);
+
+        // Try package prefix mapping
+        if (interfaceName == null && enumPackage != null) {
+            for (java.util.Map.Entry<String, String> entry : configuration.enumInterfaceMapping.entrySet()) {
+                String key = entry.getKey();
+                if (key.endsWith(".*")) {
+                    String packagePrefix = key.substring(0, key.length() - 2);
+                    if (enumPackage.startsWith(packagePrefix)) {
+                        interfaceName = entry.getValue();
+                        getLog().info("DEBUG: Package prefix mapping for " + enumName + ": " + interfaceName);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Try global mapping (*)
+        if (interfaceName == null) {
+            interfaceName = configuration.enumInterfaceMapping.get("*");
+            getLog().info("DEBUG: Global mapping for " + enumName + ": " + interfaceName);
+        }
+
+        // Add interface to implements list if found
+        if (interfaceName != null && !interfaceName.trim().isEmpty()) {
+            enumType.getImplementsNames().add(interfaceName.trim());
+            getLog().info("DEBUG: Added interface " + interfaceName + " to enum " + enumName + ". Implements list size: " + enumType.getImplementsNames().size());
+        } else {
+            getLog().info("DEBUG: No interface mapping found for enum " + enumName);
+        }
     }
 }

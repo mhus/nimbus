@@ -2823,18 +2823,6 @@
         "name" : "COLLISION",
         "value" : "collision"
       } ]
-    }, {
-      "name" : "to",
-      "values" : [ ],
-      "enumValues" : [ ]
-    }, {
-      "name" : "value",
-      "values" : [ ],
-      "enumValues" : [ ]
-    }, {
-      "name" : "value",
-      "values" : [ ],
-      "enumValues" : [ ]
     } ],
     "classes" : [ ],
     "typeAliases" : [ {

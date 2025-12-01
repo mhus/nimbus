@@ -21,6 +21,16 @@ import java.util.Set;
  */
 public class JavaGenerator {
 
+    private final Configuration configuration;
+
+    public JavaGenerator() {
+        this.configuration = null;
+    }
+
+    public JavaGenerator(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
     public JavaModel generate(TsModel tsModel) {
         JavaModel jm = new JavaModel();
         if (tsModel == null || tsModel.getFiles() == null) return jm;

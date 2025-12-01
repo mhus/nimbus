@@ -30,3 +30,8 @@ additionalFieldAnnotations:
 additionalOptionalFieldAnnotations:
   - com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
 additionalNonOptionalFieldAnnotations:
+
+# Enum interface mappings for runtime identification and extension
+enumInterfaceMapping:
+  "*": "de.mhus.nimbus.types.TsEnum"
+

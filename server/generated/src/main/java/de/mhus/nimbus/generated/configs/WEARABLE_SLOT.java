@@ -4,7 +4,7 @@
  */
 package de.mhus.nimbus.generated.configs;
 
-public enum WEARABLE_SLOT {
+public enum WEARABLE_SLOT implements de.mhus.nimbus.types.TsEnum {
     HEAD(0),
     BODY(1),
     LEGS(2),
@@ -20,5 +20,7 @@ public enum WEARABLE_SLOT {
 
     @lombok.Getter
     private final int tsIndex;
-    WEARABLE_SLOT(int tsIndex) { this.tsIndex = tsIndex; }
+    private final String tsString;
+    WEARABLE_SLOT(int tsIndex) { this.tsIndex = tsIndex; this.tsString = String.valueOf(tsIndex); }
+    public String tsString() { return this.tsString; }
 }

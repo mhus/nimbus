@@ -19,3 +19,10 @@ packageRules:
     pkg: de.mhus.nimbus.evaluate.generated.rest
   - dirEndsWith: scrawl
     pkg: de.mhus.nimbus.evaluate.generated.scrawl
+
+# Test enum interface mappings
+enumInterfaceMapping:
+  "*": "de.mhus.nimbus.types.TsEnum"
+  "MessageType": "de.mhus.nimbus.network.NetworkEnum"
+  "Priority": "de.mhus.nimbus.types.PriorityEnum"
+
