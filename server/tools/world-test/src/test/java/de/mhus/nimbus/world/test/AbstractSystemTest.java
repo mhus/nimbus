@@ -92,6 +92,22 @@ public abstract class AbstractSystemTest {
                 }
             }
         });
+        enumModule.addDeserializer(Enum.class, new com.fasterxml.jackson.databind.deser.std.EnumDeserializer() {
+            @Override
+            public Enum<?> deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt) throws IOException {
+                String text = p.getText();
+                for (Object constant : handledType().getEnumConstants()) {
+                    if (constant instanceof TsEnum) {
+                        if (((TsEnum) constant).tsString().equalsIgnoreCase(text)) {
+                            return (Enum<?>) constant;
+                        }
+                    } else if (((Enum<?>) constant).name().equalsIgnoreCase(text)) {
+                        return (Enum<?>) constant;
+                    }
+                }
+                return null; // or throw exception
+            }
+        });
         objectMapper.registerModule(enumModule);
 
         // Additional useful configurations for WebSocket message parsing

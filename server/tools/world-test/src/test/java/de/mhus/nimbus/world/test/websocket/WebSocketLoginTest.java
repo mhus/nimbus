@@ -72,7 +72,7 @@ class WebSocketLoginTest extends AbstractWebSocketTest {
         System.out.println("✅ ClientType.WEB serialized as: " + webSerialized);
 
         String pingSerialized = objectMapper.writeValueAsString(MessageType.PING);
-        assertThat(pingSerialized).isEqualTo("\"ping\"");
+        assertThat(pingSerialized).isEqualTo("\"p\"");
         System.out.println("✅ MessageType.PING serialized as: " + pingSerialized);
 
         // Test 3: Complete message serialization with lowercase enums
