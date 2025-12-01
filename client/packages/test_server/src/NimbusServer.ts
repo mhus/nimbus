@@ -318,7 +318,7 @@ class NimbusServer {
   private async handleMessage(session: ClientSession, message: any) {
     const { t, i, d } = message;
 
-    switch (t) {
+    switch (t.toLowerCase()) {
       case 'login':
         this.handleLogin(session, i, d);
         break;
