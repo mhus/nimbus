@@ -1,0 +1,21 @@
+# WebSocket Test Server Configuration
+test.server.websocket.url=ws://localhost:3011
+
+# REST APIs (Player & Editor) - beide auf Port 3011
+test.server.player.url=http://localhost:3011
+test.server.editor.url=http://localhost:3011
+
+# Login Credentials (werden in application.yaml hinterlegt)
+test.login.username=testuser
+test.login.password=testpass
+test.login.worldId=test-world
+test.login.clientType=web
+
+# Test Timeouts
+test.websocket.connect.timeout=5000
+test.websocket.message.timeout=3000
+test.http.timeout=10000
+
+# Test Data
+test.data.chunkX=0
+test.data.chunkZ=0

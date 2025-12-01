@@ -16,5 +16,6 @@
     <modules>
         <module>demo-setup</module>
         <module>local-cleanup</module>
+        <module>world-test</module>
     </modules>
 </project>
