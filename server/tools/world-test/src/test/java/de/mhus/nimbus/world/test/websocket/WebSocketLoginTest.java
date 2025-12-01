@@ -1,12 +1,22 @@
 package de.mhus.nimbus.world.test.websocket;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.generated.network.*;
-import de.mhus.nimbus.generated.network.messages.*;
-import org.junit.jupiter.api.*;
+import de.mhus.nimbus.generated.network.ClientType;
+import de.mhus.nimbus.generated.network.MessageType;
+import de.mhus.nimbus.generated.network.RequestMessage;
+import de.mhus.nimbus.generated.network.ResponseMessage;
+import de.mhus.nimbus.generated.network.messages.LoginRequestData;
+import de.mhus.nimbus.generated.network.messages.LoginResponseData;
+import de.mhus.nimbus.generated.network.messages.PingData;
+import de.mhus.nimbus.generated.network.messages.PongData;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * WebSocket System-Tests für Login und grundlegende Nachrichten.

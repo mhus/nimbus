@@ -1,11 +1,17 @@
 package de.mhus.nimbus.world.test.websocket;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.generated.network.*;
-import de.mhus.nimbus.generated.network.messages.*;
-import de.mhus.nimbus.generated.rest.BlockTypeDTO;
-import de.mhus.nimbus.generated.types.BlockType;
-import org.junit.jupiter.api.*;
+import de.mhus.nimbus.generated.network.MessageType;
+import de.mhus.nimbus.generated.network.RequestMessage;
+import de.mhus.nimbus.generated.network.ResponseMessage;
+import de.mhus.nimbus.generated.network.messages.ChunkCoordinate;
+import de.mhus.nimbus.generated.network.messages.ChunkQueryData;
+import de.mhus.nimbus.generated.network.messages.ChunkRegisterData;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.Arrays;
 import java.util.List;

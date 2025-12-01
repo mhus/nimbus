@@ -1,10 +1,8 @@
 package de.mhus.nimbus.world.test;
 
+import de.mhus.nimbus.generated.network.messages.ChunkCoordinate;
 import de.mhus.nimbus.generated.types.BlockType;
 import de.mhus.nimbus.generated.types.Entity;
-import de.mhus.nimbus.generated.rest.BlockTypeDTO;
-import de.mhus.nimbus.generated.network.messages.ChunkCoordinate;
-import de.mhus.nimbus.generated.network.ClientType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,30 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DisplayName("Generated DTOs Contract Examples")
 class GeneratedContractExampleTest extends AbstractSystemTest {
-
-    @Test
-    @DisplayName("BlockType DTO sollte korrekt instanziiert werden können")
-    void shouldCreateBlockTypeDTO() {
-        // Given - Create BlockTypeDTO using generated contract
-        BlockTypeDTO blockType = BlockTypeDTO.builder()
-                .id("1")
-                .name("stone")
-                .displayName("Stone Block")
-                .shape("cube")
-                .texture("stone.png")
-                .hardness(2.5)
-                .miningtime(1L)
-                .build();
-
-        // When/Then - Validate contract fields
-        assertThat(blockType.getId()).isEqualTo("1");
-        assertThat(blockType.getName()).isEqualTo("stone");
-        assertThat(blockType.getDisplayName()).isEqualTo("Stone Block");
-        assertThat(blockType.getShape()).isEqualTo("cube");
-        assertThat(blockType.getTexture()).isEqualTo("stone.png");
-        assertThat(blockType.getHardness()).isEqualTo(2.5);
-        assertThat(blockType.getMiningtime()).isEqualTo(1L);
-    }
 
     @Test
     @DisplayName("BlockType Core Type sollte korrekt funktionieren")
@@ -100,32 +74,6 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
 
         // Log available client types for reference
         System.out.println("Using client type: " + clientTypeValue);
-    }
-
-    @Test
-    @DisplayName("JSON Serialization sollte mit generated DTOs funktionieren")
-    void shouldSerializeGeneratedDTOs() throws Exception {
-        // Given - Create DTO
-        BlockTypeDTO blockType = BlockTypeDTO.builder()
-                .id("1")
-                .name("test_block")
-                .displayName("Test Block")
-                .build();
-
-        // When - Serialize to JSON
-        String json = objectMapper.writeValueAsString(blockType);
-
-        // Then - Validate JSON contains expected fields
-        assertThat(json).contains("\"id\":\"1\"");
-        assertThat(json).contains("\"name\":\"test_block\"");
-        assertThat(json).contains("\"displayName\":\"Test Block\"");
-
-        // Deserialization test commented out - depends on Lombok configuration
-        // BlockTypeDTO deserialized = objectMapper.readValue(json, BlockTypeDTO.class);
-        // assertThat(deserialized.getId()).isEqualTo(blockType.getId());
-
-        System.out.println("✅ JSON Serialization successful: " + json);
-        System.out.println("   Note: Deserialization requires proper Lombok configuration");
     }
 
     @Test

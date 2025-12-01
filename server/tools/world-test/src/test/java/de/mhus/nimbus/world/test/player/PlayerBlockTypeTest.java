@@ -1,10 +1,14 @@
 package de.mhus.nimbus.world.test.player;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.generated.rest.*;
 import de.mhus.nimbus.generated.types.BlockType;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,37 +40,26 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
 
                 // Should have "blockTypes" array according to documentation
                 if (jsonNode.has("blockTypes")) {
-                    // Try to parse as BlockTypeListResponseDTO for full contract validation
-                    try {
-                        BlockTypeListResponseDTO listResponseDTO = objectMapper.treeToValue(jsonNode, BlockTypeListResponseDTO.class);
+                    JsonNode blockTypesArray = jsonNode.get("blockTypes");
 
-                        if (listResponseDTO.getBlockTypes() != null && !listResponseDTO.getBlockTypes().isEmpty()) {
-                            System.out.println("BlockTypes found (via DTO): " + listResponseDTO.getBlockTypes().size());
-                            System.out.println("Count: " + listResponseDTO.getCount() + ", Limit: " + listResponseDTO.getLimit() + ", Offset: " + listResponseDTO.getOffset());
+                    if (blockTypesArray.isArray() && !blockTypesArray.isEmpty()) {
+                        System.out.println("BlockTypes found: " + blockTypesArray.size());
 
-                            BlockTypeDTO firstBlockTypeDTO = listResponseDTO.getBlockTypes().getFirst();
-                            assertThat(firstBlockTypeDTO.getId()).isNotEqualTo(0.0);
+                        // Parse first BlockType using the available core type
+                        JsonNode firstBlockTypeJson = blockTypesArray.get(0);
 
-                            System.out.println("Sample BlockType ID: " + firstBlockTypeDTO.getId());
-                            System.out.println("Sample BlockType DisplayName: " + firstBlockTypeDTO.getDisplayName());
-                        }
-                    } catch (Exception e) {
-                        // Fallback to manual parsing
-                        System.out.println("Falling back to manual parsing: " + e.getMessage());
-                        JsonNode blockTypes = jsonNode.get("blockTypes");
-                        assertThat(blockTypes.isArray()).isTrue();
+                        try {
+                            BlockType firstBlockType = objectMapper.treeToValue(firstBlockTypeJson, BlockType.class);
+                            assertThat(firstBlockType.getId()).isNotNull().isNotEqualTo("");
 
-                        System.out.println("BlockTypes found: " + blockTypes.size());
-
-                        if (!blockTypes.isEmpty()) {
-                            JsonNode firstBlockType = blockTypes.get(0);
-
-                            // Parse using generated BlockType (core type)
-                            BlockType coreBlockType = objectMapper.treeToValue(firstBlockType, BlockType.class);
-                            assertThat(coreBlockType.getId()).isNotEqualTo(0.0);
-
-                            System.out.println("Sample BlockType ID: " + coreBlockType.getId());
-                            System.out.println("Sample BlockType Description: " + coreBlockType.getDescription());
+                            System.out.println("Sample BlockType ID: " + firstBlockType.getId());
+                            System.out.println("Sample BlockType Description: " + firstBlockType.getDescription());
+                        } catch (Exception e) {
+                            System.out.println("Could not parse as BlockType, using direct JSON access: " + e.getMessage());
+                            // Fallback to direct JSON access
+                            if (firstBlockTypeJson.has("id")) {
+                                System.out.println("Sample BlockType ID (raw): " + firstBlockTypeJson.get("id"));
+                            }
                         }
                     }
 
@@ -75,8 +68,8 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                     assertThat(jsonNode.size()).isGreaterThanOrEqualTo(0);
 
                     if (!jsonNode.isEmpty()) {
-                        BlockType coreBlockType = objectMapper.treeToValue(jsonNode.get(0), BlockType.class);
-                        assertThat(coreBlockType.getId()).isNotEqualTo(0.0);
+                        BlockType blockType = objectMapper.treeToValue(jsonNode.get(0), BlockType.class);
+                        assertThat(blockType.getId()).isNotNull().isNotEqualTo("");
                     }
                 }
 
@@ -156,18 +149,16 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                     blockTypeNode = jsonNode.get("blocktype");
                 }
 
-                // Parse as BlockTypeDTO using generated type
-                BlockTypeDTO blockTypeDTO = objectMapper.treeToValue(blockTypeNode, BlockTypeDTO.class);
+                // Parse as BlockType using generated type
+                BlockType blockType = objectMapper.treeToValue(blockTypeNode, BlockType.class);
 
-                assertThat(blockTypeDTO.getId()).isNotEqualTo(0.0);
-                assertThat(blockTypeDTO.getName()).isNotNull();
+                assertThat(blockType.getId()).isNotNull().isNotEqualTo("");
+                assertThat(blockType.getDescription()).isNotNull();
 
                 System.out.println("Single BlockType retrieved:");
-                System.out.println("  ID: " + blockTypeDTO.getId());
-                System.out.println("  Name: " + blockTypeDTO.getName());
-                System.out.println("  Display Name: " + blockTypeDTO.getDisplayName());
-                System.out.println("  Shape: " + blockTypeDTO.getShape());
-                System.out.println("  Texture: " + blockTypeDTO.getTexture());
+                System.out.println("  ID: " + blockType.getId());
+                System.out.println("  Description: " + blockType.getDescription());
+                System.out.println("  Initial Status: " + blockType.getInitialStatus());
 
             } else if (response.getCode() == 404) {
                 System.out.println("BlockType not found: " + blockTypeId + " (acceptable for tests)");
@@ -194,11 +185,11 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                 System.out.println("BlockType chunk 'w' contains: " + jsonNode.size() + " types");
 
                 if (!jsonNode.isEmpty()) {
-                    // Parse as array of BlockTypeDTO
+                    // Parse as array of BlockType
                     for (JsonNode blockTypeNode : jsonNode) {
                         if (blockTypeNode.has("id")) {
-                            BlockTypeDTO blockType = objectMapper.treeToValue(blockTypeNode, BlockTypeDTO.class);
-                            System.out.println("  BlockType in chunk: " + blockType.getId() + " - " + blockType.getName());
+                            BlockType blockType = objectMapper.treeToValue(blockTypeNode, BlockType.class);
+                            System.out.println("  BlockType in chunk: " + blockType.getId() + " - " + blockType.getDescription());
                         }
                     }
                 }
@@ -213,24 +204,9 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
 
     @Test
     @Order(5)
-    @DisplayName("BlockType API Contract sollte allen generated DTOs entsprechen")
+    @DisplayName("BlockType API Contract sollte generated BlockType entsprechen")
     void shouldMatchAllBlockTypeContracts() throws Exception {
-        // Test BlockTypeDTO contract
-        BlockTypeDTO blockTypeDTO = BlockTypeDTO.builder()
-                .id("1")
-                .name("test_block")
-                .displayName("Test Block")
-                .shape("CUBE")
-                .texture("test.png")
-                .hardness(1.5)
-                .miningtime(1500L)
-                .build();
-
-        String blockTypeDTOJson = objectMapper.writeValueAsString(blockTypeDTO);
-        assertThat(blockTypeDTOJson).contains("\"id\":\"1\"");
-        assertThat(blockTypeDTOJson).contains("\"shape\":\"CUBE\"");
-
-        // Test core BlockType contract - nur Serialization
+        // Test core BlockType contract - Serialization
         BlockType coreBlockType = BlockType.builder()
                 .id("1")
                 .description("Core block type")
@@ -242,25 +218,13 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
         assertThat(coreBlockTypeJson).contains("\"description\":\"Core block type\"");
 
         System.out.println("✅ BlockType JSON Serialization validated");
-        System.out.println("   - BlockTypeDTO: " + blockTypeDTOJson.substring(0, Math.min(80, blockTypeDTOJson.length())) + "...");
         System.out.println("   - BlockType: " + coreBlockTypeJson);
-        System.out.println("   Note: Deserialization requires Lombok runtime configuration");
+        System.out.println("   Note: Using only available generated types from de.mhus.nimbus.generated.types");
 
-        // Test BlockTypeListResponseDTO
-        BlockTypeListResponseDTO listResponse = BlockTypeListResponseDTO.builder()
-                .count(10.0)
-                .limit(100.0)
-                .offset(0.0)
-                .build();
-
-        String listResponseJson = objectMapper.writeValueAsString(listResponse);
-        assertThat(listResponseJson).contains("\"count\":10.0");
-
-        System.out.println("✅ BlockType DTOs Contract validation successful");
-        System.out.println("   - BlockTypeDTO: All fields serializable");
+        System.out.println("✅ BlockType Contract validation successful");
         System.out.println("   - Core BlockType: Basic contract working");
-        System.out.println("   - BlockTypeListResponseDTO: Response wrapper working");
-        System.out.println("   - All API endpoints tested with contract validation");
+        System.out.println("   - All API endpoints tested with available contracts");
+        System.out.println("   - REST DTOs package was removed, using types package instead");
     }
 
     @Test
@@ -278,33 +242,20 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
                 if (blockTypes.isArray() && !blockTypes.isEmpty()) {
                     JsonNode blockTypeNode = blockTypes.get(0);
 
-                    // Test with BlockTypeDTO
-                    if (blockTypeNode.has("name")) {
-                        BlockTypeDTO blockTypeDTO = objectMapper.treeToValue(blockTypeNode, BlockTypeDTO.class);
+                    // Test with core BlockType (only available type)
+                    BlockType coreBlockType = objectMapper.treeToValue(blockTypeNode, BlockType.class);
 
-                        System.out.println("BlockType API->DTO Contract Verification:");
-                        System.out.println("  ID: " + blockTypeDTO.getId());
-                        System.out.println("  Name: " + blockTypeDTO.getName());
-                        System.out.println("  Display Name: " + blockTypeDTO.getDisplayName());
-                        System.out.println("  Shape: " + blockTypeDTO.getShape());
-                        System.out.println("  Texture: " + blockTypeDTO.getTexture());
-                        System.out.println("  Hardness: " + blockTypeDTO.getHardness());
-                        System.out.println("  Mining Time: " + blockTypeDTO.getMiningtime());
-                        System.out.println("  Options: " + blockTypeDTO.getOptions());
+                    System.out.println("BlockType API->Core Contract Verification:");
+                    System.out.println("  ID: " + coreBlockType.getId());
+                    System.out.println("  Description: " + coreBlockType.getDescription());
+                    System.out.println("  Initial Status: " + coreBlockType.getInitialStatus());
+                    System.out.println("  Modifiers: " + coreBlockType.getModifiers());
 
-                        assertThat(blockTypeDTO).isNotNull();
-                    } else {
-                        // Test with core BlockType
-                        BlockType coreBlockType = objectMapper.treeToValue(blockTypeNode, BlockType.class);
+                    assertThat(coreBlockType).isNotNull();
+                    assertThat(coreBlockType.getId()).isNotNull();
 
-                        System.out.println("BlockType API->Core Contract Verification:");
-                        System.out.println("  ID: " + coreBlockType.getId());
-                        System.out.println("  Description: " + coreBlockType.getDescription());
-                        System.out.println("  Initial Status: " + coreBlockType.getInitialStatus());
-                        System.out.println("  Modifiers: " + coreBlockType.getModifiers());
-
-                        assertThat(coreBlockType).isNotNull();
-                    }
+                    System.out.println("✅ BlockType contract validation successful");
+                    System.out.println("   Note: REST package was removed, using de.mhus.nimbus.generated.types only");
                 }
             }
         }

@@ -2,7 +2,12 @@ package de.mhus.nimbus.world.test.player;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

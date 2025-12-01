@@ -1,11 +1,15 @@
 package de.mhus.nimbus.world.test.player;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.generated.rest.Position3D;
-import de.mhus.nimbus.generated.rest.BlockMetadataDTO;
-import de.mhus.nimbus.generated.rest.BlockMetadataResponseDTO;
+import de.mhus.nimbus.generated.types.BlockMetadata;
+import de.mhus.nimbus.generated.types.Vector3;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,8 +54,8 @@ class PlayerBlockOperationsTest extends AbstractPlayerTest {
                 assertThat(position.has("y")).isTrue();
                 assertThat(position.has("z")).isTrue();
 
-                // Parse position as Position3D
-                Position3D blockPosition = objectMapper.treeToValue(position, Position3D.class);
+                // Parse position as Vector3
+                Vector3 blockPosition = objectMapper.treeToValue(position, Vector3.class);
                 assertThat(blockPosition.getX()).isEqualTo((double) x);
                 assertThat(blockPosition.getY()).isEqualTo((double) y);
                 assertThat(blockPosition.getZ()).isEqualTo((double) z);
@@ -60,7 +64,7 @@ class PlayerBlockOperationsTest extends AbstractPlayerTest {
                 if (jsonNode.has("metadata")) {
                     JsonNode metadata = jsonNode.get("metadata");
                     if (metadata != null && !metadata.isNull()) {
-                        BlockMetadataDTO metadataDTO = objectMapper.treeToValue(metadata, BlockMetadataDTO.class);
+                        BlockMetadata metadataDTO = objectMapper.treeToValue(metadata, BlockMetadata.class);
                         System.out.println("Block metadata present: " + metadataDTO.toString());
                     }
                 }
@@ -119,21 +123,21 @@ class PlayerBlockOperationsTest extends AbstractPlayerTest {
 
     @Test
     @Order(3)
-    @DisplayName("Block API Response sollte Position3D Contract entsprechen")
-    void shouldValidatePosition3DContract() throws Exception {
-        // Test Position3D DTO contract
-        Position3D position = Position3D.builder()
-                .x(10.0)
-                .y(64.0)
-                .z(5.0)
+    @DisplayName("Block API Response sollte Vector3 Contract entsprechen")
+    void shouldValidateVector3Contract() throws Exception {
+        // Test Vector3 DTO contract
+        Vector3 position = Vector3.builder()
+                .x(10.5)
+                .y(5.0)
+                .z(-3.2)
                 .build();
 
         String positionJson = objectMapper.writeValueAsString(position);
-        assertThat(positionJson).contains("\"x\":10.0");
-        assertThat(positionJson).contains("\"y\":64.0");
-        assertThat(positionJson).contains("\"z\":5.0");
+        assertThat(positionJson).contains("\"x\":10.5");
+        assertThat(positionJson).contains("\"y\":5.0");
+        assertThat(positionJson).contains("\"z\":-3.2");
 
-        System.out.println("✅ Position3D JSON Serialization validated: " + positionJson);
+        System.out.println("✅ Vector3 JSON Serialization validated: " + positionJson);
         System.out.println("   Note: Deserialization requires Lombok runtime configuration");
     }
 
@@ -141,24 +145,17 @@ class PlayerBlockOperationsTest extends AbstractPlayerTest {
     @Order(4)
     @DisplayName("Block Metadata DTO Contract Validation")
     void shouldValidateBlockMetadataContract() throws Exception {
-        // Test BlockMetadataDTO contract
-        BlockMetadataDTO metadata = BlockMetadataDTO.builder()
+        // Test BlockMetadata contract
+        BlockMetadata metadata = BlockMetadata.builder()
                 .displayName("Custom Block")
                 .build();
 
         String metadataJson = objectMapper.writeValueAsString(metadata);
         assertThat(metadataJson).contains("\"displayName\":\"Custom Block\"");
 
-        // Test BlockMetadataResponseDTO
-        BlockMetadataResponseDTO metadataResponse = BlockMetadataResponseDTO.builder()
-                .build();
-
-        String metadataResponseJson = objectMapper.writeValueAsString(metadataResponse);
-        assertThat(metadataResponseJson).isNotNull();
-
         System.out.println("✅ Block Metadata DTOs Contract validation successful");
-        System.out.println("   - BlockMetadataDTO: Working");
-        System.out.println("   - BlockMetadataResponseDTO: Working");
+        System.out.println("   - BlockMetadata: Working");
+        System.out.println("   Note: REST DTOs package was removed, using de.mhus.nimbus.generated.types only");
     }
 
     @Test
