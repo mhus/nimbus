@@ -15,7 +15,8 @@ public class WChunkServiceTest {
     void testInlineSaveAndLoad() {
         WChunkRepository repo = Mockito.mock(WChunkRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        WChunkService service = new WChunkService(repo, Optional.of(storage));
+        WWorldService worldService = Mockito.mock(WWorldService.class);
+        WChunkService service = new WChunkService(repo, Optional.of(storage), worldService);
         ChunkData cd = new ChunkData();
         cd.setCx(1); cd.setCz(2); cd.setSize((byte)16);
         WChunk chunk = WChunk.builder().regionId("r1").worldId("w1").chunk("c1").build();
@@ -30,7 +31,8 @@ public class WChunkServiceTest {
     void testExternalSave() {
         WChunkRepository repo = Mockito.mock(WChunkRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        WChunkService service = new WChunkService(repo, Optional.of(storage));
+        WWorldService worldService = Mockito.mock(WWorldService.class);
+        WChunkService service = new WChunkService(repo, Optional.of(storage), worldService);
         service.setInlineMaxSize(10); // sehr klein um external zu erzwingen
         ChunkData cd = new ChunkData();
         cd.setCx(1); cd.setCz(2); cd.setSize((byte)16);

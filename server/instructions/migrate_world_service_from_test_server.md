@@ -647,13 +647,13 @@ Migration:
 [?] Prüfe AssetEntity, dort sollen auch als publicData die Metadaten aus den '*.info.json' Dateien gespeichert werden.
 - Erstelle einen Asset Controller in world-player der die assets wie in test_server bereitstellt.
 
-[ ] Pruefe noch den ChunkService.
+[?] Pruefe noch den ChunkService.
 - Es soll keinen Generator geben, wenn keine Chunk-Daten vorhanden sind wird ein chunk erstellt, der auf der hoehe
   einer in WWorld definierten hoehe und Block-Type (muss hier noch angelegt werden).
   - Ocean Blocks erstellt (nur wenn vorhanden)
   - Ground Blocks erstellt (default hoehe 0, Block Type w:310).
 
-[ ] Implementiere eine automatische Migration in 'tools/demo-import' aller Datei die ich jederzeit ohne parameter wieder starten kann.
+[?] Implementiere eine automatische Migration in 'tools/demo-import' aller Datei die ich jederzeit ohne parameter wieder starten kann.
 - Daten kommen aus 
   - /client/packages/test_server/files/
   - /client/packages/test_server/data/worlds/main

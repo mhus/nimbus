@@ -1,11 +1,5 @@
 package de.mhus.nimbus.tools.demoimport;
 
-import de.mhus.nimbus.tools.demoimport.importers.AssetImporter;
-import de.mhus.nimbus.tools.demoimport.importers.BackdropImporter;
-import de.mhus.nimbus.tools.demoimport.importers.BlockTypeImporter;
-import de.mhus.nimbus.tools.demoimport.importers.EntityImporter;
-import de.mhus.nimbus.tools.demoimport.importers.EntityModelImporter;
-import de.mhus.nimbus.tools.demoimport.importers.ItemTypeImporter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -14,18 +8,30 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 /**
- * Demo Import Tool - Imports test_server data into MongoDB.
+ * Demo Import Tool - Automated migration from test_server to MongoDB.
  *
- * Usage:
- *   java -jar demo-import.jar --import.source-path=/path/to/test_server/files
+ * Usage (no parameters needed):
+ *   cd server/tools/demo-import
+ *   mvn spring-boot:run
  *
- * Imports:
- * - BlockTypes (614 files from blocktypes/)
- * - ItemTypes (5 files from itemtypes/)
- * - EntityModels (4 files from entitymodels/)
- * - Backdrops (9 files from backdrops/)
- * - Entities (player templates from entity/)
- * - Assets (641+ binary files with .info metadata from assets/)
+ * OR:
+ *   java -jar demo-import.jar
+ *
+ * Imports from:
+ * - ../../client/packages/test_server/files/     (templates)
+ * - ../../client/packages/test_server/data/      (world data)
+ *
+ * What gets imported:
+ * - World configuration (main world from data/worlds/main/info.json)
+ * - BlockTypes (614 templates)
+ * - ItemTypes (5 templates)
+ * - EntityModels (4 templates)
+ * - Backdrops (9 configs)
+ * - Entity templates (from files/entity/)
+ * - World entity instances (from data/worlds/main/entities/)
+ * - Assets (641+ files with .info metadata)
+ *
+ * Re-runnable: Can be executed multiple times (fresh import each time).
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {
@@ -37,12 +43,7 @@ import org.springframework.context.annotation.ComponentScan;
 @Slf4j
 public class DemoImportApplication implements CommandLineRunner {
 
-    private final BlockTypeImporter blockTypeImporter;
-    private final ItemTypeImporter itemTypeImporter;
-    private final EntityModelImporter entityModelImporter;
-    private final BackdropImporter backdropImporter;
-    private final EntityImporter entityImporter;
-    private final AssetImporter assetImporter;
+    private final MasterImporter masterImporter;
 
     public static void main(String[] args) {
         System.exit(SpringApplication.exit(SpringApplication.run(DemoImportApplication.class, args)));
@@ -50,67 +51,6 @@ public class DemoImportApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        log.info("=".repeat(60));
-        log.info("Demo Import Tool - Starting");
-        log.info("=".repeat(60));
-
-        long startTime = System.currentTimeMillis();
-        ImportStats totalStats = new ImportStats();
-
-        try {
-            // Import BlockTypes
-            log.info("");
-            log.info("=== Phase 1: BlockTypes ===");
-            ImportStats blockTypeStats = blockTypeImporter.importAll();
-            totalStats.merge(blockTypeStats);
-
-            // Import ItemTypes
-            log.info("");
-            log.info("=== Phase 2: ItemTypes ===");
-            ImportStats itemTypeStats = itemTypeImporter.importAll();
-            totalStats.merge(itemTypeStats);
-
-            // Import EntityModels
-            log.info("");
-            log.info("=== Phase 3: EntityModels ===");
-            ImportStats entityModelStats = entityModelImporter.importAll();
-            totalStats.merge(entityModelStats);
-
-            // Import Backdrops
-            log.info("");
-            log.info("=== Phase 4: Backdrops ===");
-            ImportStats backdropStats = backdropImporter.importAll();
-            totalStats.merge(backdropStats);
-
-            // Import Entities
-            log.info("");
-            log.info("=== Phase 5: Entities ===");
-            ImportStats entityStats = entityImporter.importAll();
-            totalStats.merge(entityStats);
-
-            // Import Assets (can be slow - 641+ files)
-            log.info("");
-            log.info("=== Phase 6: Assets ===");
-            log.info("This may take a while (641+ files)...");
-            ImportStats assetStats = assetImporter.importAll();
-            totalStats.merge(assetStats);
-
-            // Summary
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("");
-            log.info("=".repeat(60));
-            log.info("Import Completed Successfully");
-            log.info("=".repeat(60));
-            log.info("Total entities: {} imported, {} skipped, {} failed",
-                    totalStats.getSuccessCount(),
-                    totalStats.getSkippedCount(),
-                    totalStats.getFailureCount());
-            log.info("Duration: {}ms ({} seconds)", duration, duration / 1000.0);
-            log.info("=".repeat(60));
-
-        } catch (Exception e) {
-            log.error("Import failed with error", e);
-            throw e;
-        }
+        masterImporter.importAll();
     }
 }
