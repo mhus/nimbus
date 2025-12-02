@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.engine;
+package de.mhus.nimbus.shared.engine;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;

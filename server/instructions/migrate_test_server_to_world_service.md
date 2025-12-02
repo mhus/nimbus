@@ -9,38 +9,35 @@ Erstelle ein neues Modul 'world-test' in tools.
 - Alle typen in ../client/packages/shared/src sind im maven modul 'generated' bereits migriert, diese typen können nicht
   angepasst werden und dienen als contract.
 
-[?] Aktuell WebSocket gegen den test_server in ../client/packages/test_server auf port 3001
+[x] Aktuell WebSocket gegen den test_server in ../client/packages/test_server auf port 3011
 - Dokumentation unter instructions/general/network-model-2.0.md
 - Es muss immer ein Login gemacht werden, die daten werden in application.yaml hinterlegt.
 - Die Tests muessen teilweise aufeinander folgen.
 
-[?] Aktuell REST Endpunkte gegen den test_server in ../client/packages/test_server auf port 3002
+[x] Aktuell REST Endpunkte gegen den test_server in ../client/packages/test_server auf port 3011
 - Dokumentation unter instructions/general/server_rest_api.md
-- Es muss vorher via Websocket ein lgoin gemacht werden, hier kommt eine SessionId, die dann in den REST Endpunkten genutzt wird.
+- Es muss vorher via Websocket ein login gemacht werden, hier kommt eine SessionId, die dann in den REST Endpunkten genutzt wird.
 - Erstelle nur tests fuer lesenden Zugriff, also GET zugriffe
 
-[?] REST Modify Tests
+[ ] REST Modify Tests
 - Fuer Modify wird es einen separaten server geben, der sowohl GET als auch POST, PUT, DELETE unterstuetzt.
 - Der server (world-control) hat eine andere base url 
 - Die GET tests muessen auch hier getestet werden
 - Alle modify koennen nun hier getestet werden
 
 
-
 ## Migration
 
 Die Aufgabe ist es die inbound funktionalitaet des TypeScript test_server packages zu migrieren.
-- Pfad zum test_server: ../client/packages/test_server/src
-- Der test Server nutzt Typen in ../client/packages/shared/src
+- Pfad zum test_server: '../client/packages/test_server/src'
+- Der test Server nutzt Typen in '../client/packages/shared/src' diese wurden in modul 'generated' nach Java migriert und muessen mit dem EngineMapper Service de/serialisiert werden.
 - Es sollen alle rest endpunkte mit GET migriert werden (kein POST, PUT, DELETE).
 - Als Persistierung wird mongoDB genutzt. Es gibt Services (Beans) fuer die verschiedenen Entity Typen.
 - Für messaging wid redis benutzt.
-- Alle typen in ../client/packages/shared/src sind im maven modul 'generated' bereits migriert, diese typen können nicht 
-  angepasst werden und dienen als contract.
 
 Alle Migrationen in das Modul world-shared und world-player.
 
-Lets go:
+Let's go:
 
 [ ] Alle Daten-Services erstellen, JPA Entities, Repository, Service
 - schon vorhanden: AssetEntity, AssetRepository, AssetService (world-shared)
@@ -50,6 +47,7 @@ Lets go:
 - noch benoetigt: EntityType, EntityRepository, EntityService (world-shared)
 - noch benoetigt: EntityModelEntity, EntityModelRepository, EntityModelService (world-shared)
 - noch benoetigt: ItemTypeEntity, ItemTypeRepository, ItemTypeService (world-shared)
+Prüfe die Angaben und mache einen Plan, welche JPA Entitäten, Repositories, Services angelegt werden museesn
 
 [ ] Alle REST Endpoints erstellen (world-player)
 - Rest Endpunkte, siehe instructions/general/server_rest_api.md
