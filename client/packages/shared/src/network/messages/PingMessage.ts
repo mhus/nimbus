@@ -9,7 +9,7 @@ import type { BaseMessage } from '../BaseMessage';
  */
 export interface PingData {
   /** Client timestamp when ping was sent */
-  cTs: number;
+  cTs: number; // javaType: long
 }
 
 /**
@@ -17,10 +17,10 @@ export interface PingData {
  */
 export interface PongData {
   /** Client timestamp (echoed back from ping) */
-  cTs: number;
+  cTs: number; // javaType: long
 
   /** Server timestamp when pong was sent */
-  sTs: number;
+  sTs: number; // javaType: long
 }
 
 /**

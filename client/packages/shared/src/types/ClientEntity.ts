@@ -40,19 +40,19 @@ export interface ClientEntity {
   currentRotation: Rotation;
 
   /** Current waypoint index in pathway */
-  currentWaypointIndex: number;
+  currentWaypointIndex: number; // javaType: int
 
   /** Current pose ID */
-  currentPose: number;
+  currentPose: number; // javaType: int
 
   /** Current waypoints (from EntityPathway) */
   currentWaypoints: Waypoint[];
 
   /** Last access timestamp (for cache eviction) */
-  lastAccess: number;
+  lastAccess: number; // javaType: long
 
   /** Last step sound time for throttling (timestamp in ms) */
-  lastStepTime?: number;
+  lastStepTime?: number; // javaType: long
 }
 
 /**

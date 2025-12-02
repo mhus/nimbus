@@ -6,10 +6,11 @@ import type { BaseMessage } from '../BaseMessage';
 
 /**
  * World status update data
+ * Deprecated ? Should be done via Command
  */
 export interface WorldStatusUpdateData {
   /** New world status value */
-  s: number;
+  s: number; // javaType: int
 }
 
 /**

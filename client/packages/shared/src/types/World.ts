@@ -37,19 +37,19 @@ export interface WorldInfo {
   stop?: Vector3;
 
   /** Chunk size (default: 16) */
-  chunkSize?: number;
+  chunkSize?: number; // javaType: int
 
   /** Asset path for resources */
   assetPath?: string;
 
   /** Asset server port */
-  assetPort?: number;
+  assetPort?: number; // javaType: int
 
   /** World region identifier */
   worlRegion?: string;
 
   /** World status (0=active, 1=inactive, etc.) */
-  status?: number;
+  status?: number; // javaType: byte
 
   /** Season status identifier (e.g., 'spring', 'summer', 'autumn', 'winter') */
   seasonStatus: SeasonStatus;
@@ -72,10 +72,10 @@ export interface WorldInfo {
 
   /** World settings */
   settings: {
-    maxPlayers: number;
+    maxPlayers: number; // javaType: int
     allowGuests: boolean;
     pvpEnabled: boolean;
-    pingInterval: number;
+    pingInterval: number; // javaType: long
 
     /** Movement mode restrictions */
     /** Allowed movement modes (optional, if not set all modes are allowed) */
@@ -96,7 +96,7 @@ export interface WorldInfo {
     clearColor?: { r: number; g: number; b: number };
 
     /** Camera far clipping plane (optional, default: 500) */
-    cameraMaxZ?: number;
+    cameraMaxZ?: number; // javaType: int
 
     /** Sun visualization settings */
     /** Sun texture path (optional, default: 'textures/sun/sun1.png') */
@@ -183,28 +183,28 @@ export interface WorldInfo {
     /** World Time configuration (optional) */
     worldTime?: {
       /** @Minute scaling: How many world minutes pass per real minute (default: 10) */
-      minuteScaling?: number;
+      minuteScaling?: number; // javaType: int
       /** @Hour: How many @Minutes in one @Hour (default: 60) */
-      minutesPerHour?: number;
+      minutesPerHour?: number; // javaType: int
       /** @Day: How many @Hours in one @Day (default: 24) */
-      hoursPerDay?: number;
+      hoursPerDay?: number; // javaType: int
       /** @Month: How many @Days in one @Month (default: 30) */
-      daysPerMonth?: number;
+      daysPerMonth?: number; // javaType: int
       /** @Year: How many @Months in one @Year (default: 12) */
-      monthsPerYear?: number;
+      monthsPerYear?: number; // javaType: int
       /** @Era: How many @Years in one @Era (default: 10000) */
-      yearsPerEra?: number;
+      yearsPerEra?: number; // javaType: int
 
       /** Day section definitions (in @Hours) */
       daySections?: {
         /** Morning start @Hour (default: 6) */
-        morningStart?: number;
+        morningStart?: number; // javaType: int
         /** Day start @Hour (default: 12) */
-        dayStart?: number;
+        dayStart?: number; // javaType: int
         /** Evening start @Hour (default: 18) */
-        eveningStart?: number;
+        eveningStart?: number; // javaType: int
         /** Night start @Hour (default: 0) */
-        nightStart?: number;
+        nightStart?: number; // javaType: int
       };
 
       /** Celestial bodies automatic update configuration */
@@ -212,17 +212,17 @@ export interface WorldInfo {
         /** Enable automatic sun/moon position updates (default: false) */
         enabled?: boolean;
         /** Update interval in seconds (default: 10) */
-        updateIntervalSeconds?: number;
+        updateIntervalSeconds?: number; // javaType: int
         /** Number of active moons (0-3, default: 0) */
-        activeMoons?: number;
+        activeMoons?: number; // javaType: byte
         /** Full rotation time for sun in @Hours (default: 24, means sun completes circle in 24 @Hours) */
-        sunRotationHours?: number;
+        sunRotationHours?: number; // javaType: int
         /** Full rotation time for moon 0 in @Hours (default: 672 = 28 days) */
-        moon0RotationHours?: number;
+        moon0RotationHours?: number; // javaType: int
         /** Full rotation time for moon 1 in @Hours (default: 504 = 21 days) */
-        moon1RotationHours?: number;
+        moon1RotationHours?: number; // javaType: int
         /** Full rotation time for moon 2 in @Hours (default: 336 = 14 days) */
-        moon2RotationHours?: number;
+        moon2RotationHours?: number; // javaType: int
       };
     };
 
@@ -232,7 +232,7 @@ export interface WorldInfo {
       enabled?: boolean;
 
       /** Shadow map size: 512, 1024, 2048, 4096 (default: 512) */
-      mapSize?: number;
+      mapSize?: number; // javaType: int
 
       /** Shadow quality preset (default: 'low') */
       quality?: 'low' | 'medium' | 'high';
@@ -246,12 +246,14 @@ export interface WorldInfo {
   };
 
   /** License information */
+  // Deprecated
   license?: {
     type: string;
     expiresAt?: string;
   };
 
   /** Start area for new players */
+  // Deprecated - Use EntryPoints
   startArea?: {
     x: number;
     y: number;

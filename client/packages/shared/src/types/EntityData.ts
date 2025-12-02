@@ -222,7 +222,7 @@ export interface Entity {
  */
 export interface Waypoint {
   /** Target timestamp when entity should reach this waypoint */
-  timestamp: number;
+  timestamp: number; // javaType: long
 
   /** Target position (world coordinates) */
   target: Vector3;
@@ -245,7 +245,7 @@ export interface EntityPathway {
   entityId: string;
 
   /** Start timestamp for the pathway */
-  startAt: number;
+  startAt: number; // javaType: long
 
   /** Sequence of waypoints */
   waypoints: Waypoint[];
@@ -254,7 +254,7 @@ export interface EntityPathway {
   isLooping?: boolean;
 
   /** Timestamp for querying current position (interpolation) */
-  queryAt?: number;
+  queryAt?: number; // javaType: long
 
   /** Idle pose when not moving */
   idlePose?: ENTITY_POSES;

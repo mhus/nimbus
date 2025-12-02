@@ -38,7 +38,7 @@ export interface ClientBlock {
     position: { x: number; y: number; z: number };
     metadata?: {
       id?: string;
-      groupId?: number;
+      groupId?: number; // Deprecated?
       [key: string]: any;
     };
     [key: string]: any;

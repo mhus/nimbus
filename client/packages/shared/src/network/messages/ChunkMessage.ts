@@ -16,8 +16,8 @@ import {ItemBlockRef} from "../../types";
  * Chunk coordinates (XZ only, Y is complete column)
  */
 export interface ChunkCoordinate {
-  cx: number;
-  cz: number;
+  cx: number; // javaType: int
+  cz: number; // javaType: int
 }
 
 /**
@@ -25,10 +25,10 @@ export interface ChunkCoordinate {
  */
 export interface ChunkDataTransferObject {
   /** Chunk X coordinate */
-  cx: number;
+  cx: number; // javaType: int
 
   /** Chunk Z coordinate */
-  cz: number;
+  cz: number; // javaType: int
 
   /** Block data */
   b: Block[];

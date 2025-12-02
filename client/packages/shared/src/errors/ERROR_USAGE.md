@@ -68,7 +68,7 @@ interface GameError {
   message: string;
   severity: ErrorSeverity;
   details?: any;
-  timestamp?: number;
+  timestamp?: number; // javaType: long
   stack?: string;
 }
 ```

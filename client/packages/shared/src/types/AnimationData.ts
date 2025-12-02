@@ -115,13 +115,13 @@ export interface AnimationEffect {
   };
 
   /** Start time relative to animation timeline (ms) */
-  startTime: number;
+  startTime: number; // javaType: long
 
   /** Duration of effect (ms), or end time if endTime is not set */
-  duration?: number;
+  duration?: number; // javaType: int
 
   /** End time relative to animation timeline (ms) (alternative to duration) */
-  endTime?: number;
+  endTime?: number; // javaType: long
 
   /** Wait for this effect to complete before starting next sequential effect */
   blocking?: boolean;
@@ -138,7 +138,7 @@ export interface AnimationData {
   name: string;
 
   /** Total duration in milliseconds (calculated from effects if not set) */
-  duration?: number;
+  duration?: number; // javaType: int
 
   /** Timeline of effects */
   effects: AnimationEffect[];
@@ -150,7 +150,7 @@ export interface AnimationData {
   loop?: boolean;
 
   /** Number of times to repeat (if not looping) */
-  repeat?: number;
+  repeat?: number; // javaType: int
 
   /** Animation source (who created/filled this animation) */
   source?: {
@@ -184,7 +184,7 @@ export interface AnimationInstance {
   animation: AnimationData;
 
   /** Timestamp when created */
-  createdAt: number;
+  createdAt: number; // javaType: long
 
   /** Who triggered this animation */
   triggeredBy?: string; // Player ID

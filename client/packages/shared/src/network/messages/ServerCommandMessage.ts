@@ -84,7 +84,7 @@ export type ServerCommandMessage = RequestMessage<ServerCommandData>;
  */
 export interface ServerCommandResultData {
   /** Return code */
-  rc: number;
+  rc: number; // javaType: int
 
   /** Result/error message */
   message: string;

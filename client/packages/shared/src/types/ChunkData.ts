@@ -16,11 +16,11 @@ import type { Backdrop } from './Backdrop';
  * Array of 4 values describing height information for a specific XZ position
  */
 export type HeightData = readonly [
-  x: number,
-  z: number,
-  maxHeight: number,
-  groundLevel: number,
-  waterLevel?: number
+  x: number, // javaType: int
+  z: number, // javaType: int
+  maxHeight: number, // javaType: int
+  groundLevel: number, // javaType: int
+  waterLevel?: number // javaType: int
 ];
 
 /**
@@ -28,10 +28,10 @@ export type HeightData = readonly [
  * Array of 4 values: x, y, z, status
  */
 export type Status = [
-    x: number,
-    y: number,
-    z: number,
-    s: number
+    x: number, // javaType: int
+    y: number, // javaType: int
+    z: number, // javaType: int
+    s: number // javaType: int
 ];
 
 /**
@@ -50,17 +50,18 @@ export interface ChunkData {
   /**
    * Chunk X coordinate (in chunk space)
    */
-  cx: number;
+  cx: number; // javaType: int
 
   /**
    * Chunk Z coordinate (in chunk space)
    */
-  cz: number;
+  cz: number; // javaType: int
 
   /**
    * Chunk size (blocks per side, typically 16 or 32)
+   * Deprecated: use world settings instead
    */
-  size: number;
+  size: number; // javaType: byte
 
   /**
    * Sparse block data - array of Block instances

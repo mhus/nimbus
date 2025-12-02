@@ -47,7 +47,7 @@ export interface StepParallel {
 export interface StepRepeat {
   kind: 'Repeat';
   /** Number of times to repeat (if specified) */
-  times?: number | null;
+  times?: number | null; // javaType: int
   /** Event name to wait for as termination condition (if specified) */
   untilEvent?: string | null;
   /** Step to repeat */
@@ -119,7 +119,7 @@ export interface StepWaitEvent {
   /** Event name to wait for */
   name: string;
   /** Timeout in seconds (optional, 0 = no timeout) */
-  timeout?: number;
+  timeout?: number; // javaType: long
 }
 
 /**
@@ -155,7 +155,7 @@ export interface StepWhile {
   /** Step to execute repeatedly while task runs */
   step: ScrawlStep;
   /** Safety timeout in seconds (default: 60) */
-  timeout?: number;
+  timeout?: number; // javaType: long
 }
 
 /**
@@ -169,7 +169,7 @@ export interface StepUntil {
   /** Step to execute repeatedly until event */
   step: ScrawlStep;
   /** Safety timeout in seconds (default: 60) */
-  timeout?: number;
+  timeout?: number; // javaType: long
 }
 
 /**
