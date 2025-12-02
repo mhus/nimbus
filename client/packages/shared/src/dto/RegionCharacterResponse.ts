@@ -19,6 +19,6 @@ export interface RegionCharacterResponse {
   name: string;
   display: string;
   backpack: Record<string, RegionItemInfo>;
-  wearing: Record<number, RegionItemInfo>; // javaType: int
-  skills: Record<string, number>; // javaType: int
+  wearing: Record<number, RegionItemInfo>; // javaType: java.util.Map<Integer,RegionItemInfo>
+  skills: Record<string, number>; // javaType: java.util.Map<String,Integer>
 }
