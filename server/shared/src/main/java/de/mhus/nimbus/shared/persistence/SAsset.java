@@ -20,7 +20,7 @@ import java.time.Instant;
  */
 @Document(collection = "s_assets")
 @CompoundIndexes({
-        @CompoundIndex(name = "region_world_path_idx", def = "{ 'regionId': 1, 'worldId': 1, 'path': 1 }")
+        @CompoundIndex(name = "region_world_path_idx", def = "{ 'regionId': 1, 'worldId': 1, 'path': 1 }", unique = true)
 })
 @Data
 @Builder

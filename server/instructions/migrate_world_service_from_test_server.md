@@ -1379,3 +1379,12 @@ Here is Claude's plan:
   - Können on-demand implementiert werden wenn benötigt
   - Der Client kann bereits mit dem Server kommunizieren
 ```
+
+In der WS Session wird geseichert an welche chunks sich der Player registriert hat. (anfangs an keiner)
+Wenn eine Message kommt:
+
+2025-12-02T22:35:26.060+01:00 DEBUG 74329 --- [WorldPlayer] [nio-9042-exec-4] d.m.n.world.player.ws.MessageRouter      : Received message from abab6fa3-6961-9240-2352-38131f8f8543: {"t":"c.r","d":{"c":[{"cx":-1,"cz":-1},{"cx":-1,"cz":0},{"cx":-1,"cz":1},{"cx":0,"cz":-1},{"cx":0,"cz":0},{"cx":0,"cz":1},{"cx":1,"cz":-1},{"cx":1,"cz":0},{"cx":1,"cz":1}]}}
+2025-12-02T22:35:26.061+01:00 DEBUG 74329 --- [WorldPlayer] [nio-9042-exec-4] d.m.n.w.p.w.h.ChunkRegistrationHandler   : Chunk registration: session=abab6fa3-6961-9240-2352-38131f8f8543, chunks=9, worldId=main
+
+wird die registrierung aktualisiert und chunks an denen corher nicht registriert war werden jetzt an den client gesendet.
+Die registrierung wird gespeichert in der Session. Bei der naechsten registrierung wird das delta (neue chunks) an den client gesendet.

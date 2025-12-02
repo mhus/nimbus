@@ -119,17 +119,24 @@ public class AssetController {
             @PathVariable String worldId,
             @RequestParam String info) {
 
-        // Extract path from request (remove /api/worlds/{worldId}/assets/ prefix)
+        // Extract path from request and remove leading slash if present
         String assetPath = info;
+        if (assetPath != null && assetPath.startsWith("/")) {
+            assetPath = assetPath.substring(1);
+        }
+        final String finalAssetPath = assetPath; // Make final for lambda
 
         // Find asset
-        SAsset asset = assetService.findByPath(null, worldId, assetPath)
-                .or(() -> assetService.findByPath(null, null, assetPath))
+        // Try with worldId as regionId first (for main worlds), then fallback to null regionId
+        SAsset asset = assetService.findByPath(worldId, worldId, finalAssetPath)
+                .or(() -> assetService.findByPath(null, worldId, finalAssetPath))
+                .or(() -> assetService.findByPath(worldId, null, finalAssetPath))
+                .or(() -> assetService.findByPath(null, null, finalAssetPath))
                 .orElse(null);
 
         if (asset == null) {
             // Return empty description if asset not found (like test_server)
-            log.debug("Asset not found for info request: {}", assetPath);
+            log.debug("Asset not found for info request: {}", finalAssetPath);
             return ResponseEntity.ok(Map.of("description", ""));
         }
 
@@ -176,27 +183,36 @@ public class AssetController {
             @PathVariable String worldId,
             @PathVariable String assetPath) {
 
-        log.debug("Asset request: worldId={}, path={}", worldId, assetPath);
+        // Remove leading slash if present (Spring path variable includes it)
+        if (assetPath != null && assetPath.startsWith("/")) {
+            assetPath = assetPath.substring(1);
+        }
+        final String finalAssetPath = assetPath; // Make final for lambda
+
+        log.debug("Asset request: worldId={}, path={}", worldId, finalAssetPath);
 
         // Find asset in database
-        SAsset asset = assetService.findByPath(null, worldId, assetPath)
-                .or(() -> assetService.findByPath(null, null, assetPath))
+        // Try with worldId as regionId first (for main worlds), then fallback to null regionId
+        SAsset asset = assetService.findByPath(worldId, worldId, finalAssetPath)
+                .or(() -> assetService.findByPath(null, worldId, finalAssetPath))
+                .or(() -> assetService.findByPath(worldId, null, finalAssetPath))
+                .or(() -> assetService.findByPath(null, null, finalAssetPath))
                 .orElse(null);
 
         if (asset == null) {
-            log.debug("Asset not found: {}", assetPath);
+            log.debug("Asset not found: {}", finalAssetPath);
             return ResponseEntity.notFound().build();
         }
 
         if (!asset.isEnabled()) {
-            log.debug("Asset disabled: {}", assetPath);
+            log.debug("Asset disabled: {}", finalAssetPath);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         // Load binary content
         byte[] content = assetService.loadContent(asset);
         if (content == null || content.length == 0) {
-            log.warn("Asset has no content: {}", assetPath);
+            log.warn("Asset has no content: {}", finalAssetPath);
             return ResponseEntity.notFound().build();
         }
 
@@ -209,7 +225,11 @@ public class AssetController {
         headers.setContentLength(content.length);
         headers.setCacheControl("public, max-age=86400"); // 24 hours cache
 
-        log.trace("Serving asset: path={}, size={}, type={}", assetPath, content.length, contentType);
+        // Set filename for download (use asset name from DB)
+        String filename = asset.getName() != null ? asset.getName() : "asset";
+        headers.setContentDispositionFormData("inline", filename);
+
+        log.trace("Serving asset: path={}, size={}, type={}, filename={}", finalAssetPath, content.length, contentType, filename);
 
         return ResponseEntity.ok()
                 .headers(headers)
