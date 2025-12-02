@@ -53,6 +53,13 @@ public class WorldImporter {
                 return stats;
             }
 
+            // Check if world already exists
+            if (worldService.getByWorldId(worldInfo.getWorldId()).isPresent()) {
+                log.info("World already exists: {} - skipping", worldInfo.getWorldId());
+                stats.incrementSkipped();
+                return stats;
+            }
+
             // Create new world
             WWorld world = WWorld.builder()
                     .worldId(worldInfo.getWorldId())

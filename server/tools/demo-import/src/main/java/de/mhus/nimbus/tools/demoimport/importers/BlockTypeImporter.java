@@ -120,9 +120,17 @@ public class BlockTypeImporter {
                     continue;
                 }
 
-                // Create entity
+                // Check if already exists
+                if (service.findByBlockId(blockType.getId()).isPresent()) {
+                    log.trace("BlockType already exists: {} - skipping", blockType.getId());
+                    stats.incrementSkipped();
+                    continue;
+                }
+
+                // Create entity with blockTypeGroup
                 WBlockType entity = WBlockType.builder()
                         .blockId(blockType.getId())
+                        .blockTypeGroup(prefix)  // Store group separately (e.g., "w", "core")
                         .publicData(blockType)
                         .regionId(null)
                         .worldId(null)

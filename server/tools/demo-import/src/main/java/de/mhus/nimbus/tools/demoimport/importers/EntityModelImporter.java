@@ -65,6 +65,13 @@ public class EntityModelImporter {
                     continue;
                 }
 
+                // Check if already exists
+                if (service.findByModelId(entityModel.getId()).isPresent()) {
+                    log.trace("EntityModel already exists: {} - skipping", entityModel.getId());
+                    stats.incrementSkipped();
+                    continue;
+                }
+
                 // Create entity
                 WEntityModel entity = WEntityModel.builder()
                         .modelId(entityModel.getId())
@@ -86,9 +93,9 @@ public class EntityModelImporter {
             }
         }
 
-        // Batch save
+        // Batch save (only new entities)
         if (!entities.isEmpty()) {
-            log.info("Saving {} EntityModels to database...", entities.size());
+            log.info("Saving {} new EntityModels to database...", entities.size());
             service.saveAll(entities);
         }
 

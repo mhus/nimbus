@@ -22,6 +22,7 @@ public class MasterImporter {
     private final EntityImporter entityImporter;
     private final WorldEntityImporter worldEntityImporter;
     private final AssetImporter assetImporter;
+    private final ChunkImporter chunkImporter;
 
     /**
      * Execute complete import from test_server.
@@ -31,7 +32,8 @@ public class MasterImporter {
      * 2. Templates (BlockTypes, ItemTypes, EntityModels, Backdrops)
      * 3. Entity templates (from files/entity/)
      * 4. World entity instances (from data/worlds/main/entities/)
-     * 5. Assets (from files/assets/)
+     * 5. Chunks (from data/worlds/main/chunks/)
+     * 6. Assets (from files/assets/)
      */
     public ImportStats importAll() throws Exception {
         log.info("=".repeat(70));
@@ -85,8 +87,14 @@ public class MasterImporter {
             totalStats.merge(worldEntityStats);
             log.info("");
 
-            // Phase 5: Assets (can be slow)
-            log.info(">>> Phase 5: Assets (641+ files - may take a while)");
+            // Phase 5: Chunks (from data/worlds/main/chunks/)
+            log.info(">>> Phase 5: Chunks (201+ files)");
+            ImportStats chunkStats = chunkImporter.importAll();
+            totalStats.merge(chunkStats);
+            log.info("");
+
+            // Phase 6: Assets (can be slow)
+            log.info(">>> Phase 6: Assets (641+ files - may take a while)");
             ImportStats assetStats = assetImporter.importAll();
             totalStats.merge(assetStats);
             log.info("");

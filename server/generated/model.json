@@ -2261,8 +2261,8 @@
         "type" : "Offsets",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "java.util.List<java.lang.Float>",
+        "comment" : "// javaType: java.util.List<java.lang.Float>"
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
@@ -2687,8 +2687,8 @@
         "type" : "number[]",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "java.util.List<java.lang.Float>",
+        "comment" : "// javaType: java.util.List<java.lang.Float>"
       }, {
         "name" : "scalingX",
         "type" : "number",

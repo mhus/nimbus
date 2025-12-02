@@ -20,7 +20,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/world/blocktypes")
+@RequestMapping("/api/worlds/{worldId}")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "BlockTypes", description = "BlockType templates for rendering blocks")
@@ -28,27 +28,67 @@ public class BlockTypeController {
 
     private final WBlockTypeService service;
 
-    @GetMapping("/{blockId}")
+    /**
+     * GET /api/worlds/{worldId}/blocktypeschunk/{groupName}
+     * Returns all BlockTypes in a specific group for chunked loading.
+     */
+    @GetMapping("/blocktypeschunk/{groupName}")
+    @Operation(summary = "Get BlockTypes by group", description = "Returns all BlockTypes in a specific group for chunked loading")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of BlockTypes in group"),
+            @ApiResponse(responseCode = "400", description = "Invalid group name")
+    })
+    public ResponseEntity<?> getBlockTypesByGroup(
+            @PathVariable String worldId,
+            @PathVariable String groupName) {
+
+        // Validate group name (only a-z0-9_- allowed)
+        if (!groupName.matches("^[a-z0-9_-]+$")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid group name. Only lowercase letters, numbers, hyphens and underscores allowed."));
+        }
+
+        List<BlockType> blockTypes = service.findByBlockTypeGroup(groupName).stream()
+                .filter(WBlockType::isEnabled)
+                .map(WBlockType::getPublicData)
+                .toList();
+
+        log.debug("Returning {} BlockTypes for group: {}", blockTypes.size(), groupName);
+
+        return ResponseEntity.ok(blockTypes);
+    }
+
+    /**
+     * GET /api/worlds/{worldId}/blocktypes/{blockId}
+     * Returns a single BlockType by ID.
+     */
+    @GetMapping("/blocktypes/{blockId}")
     @Operation(summary = "Get BlockType by ID", description = "Returns BlockType template for a specific block ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "BlockType found"),
             @ApiResponse(responseCode = "404", description = "BlockType not found")
     })
-    public ResponseEntity<?> getBlockType(@PathVariable String blockId) {
+    public ResponseEntity<?> getBlockType(
+            @PathVariable String worldId,
+            @PathVariable String blockId) {
         return service.findByBlockId(blockId)
                 .map(WBlockType::getPublicData)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping
+    /**
+     * GET /api/worlds/{worldId}/blocktypes
+     * Returns all BlockTypes, optionally filtered.
+     */
+    @GetMapping("/blocktypes")
     @Operation(summary = "Get all BlockTypes", description = "Returns all enabled BlockType templates, optionally filtered")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of BlockTypes")
     })
     public ResponseEntity<?> getAllBlockTypes(
-            @RequestParam(required = false) String regionId,
-            @RequestParam(required = false) String worldId) {
+            @PathVariable String worldId,
+            @RequestParam(required = false) String regionId) {
 
         List<BlockType> blockTypes;
 

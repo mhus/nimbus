@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.player.ws.handlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.ws.PlayerSession;
 import de.mhus.nimbus.world.shared.world.WChunkService;
@@ -48,13 +49,14 @@ public class ChunkQueryHandler implements MessageHandler {
             int cx = chunkNode.has("x") ? chunkNode.get("x").asInt() : 0;
             int cz = chunkNode.has("z") ? chunkNode.get("z").asInt() : 0;
 
-            // Load chunk data from database
+            // Load chunk data from database (create=true to generate default if not found)
             String chunkKey = cx + ":" + cz;
-            chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey)
+            chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey, true)
                     .ifPresentOrElse(
                             chunkData -> {
-                                // Add chunk data to response
-                                responseChunks.add(objectMapper.valueToTree(chunkData));
+                                // Convert to transfer object for network transmission
+                                ChunkDataTransferObject dto = chunkService.toTransferObject(chunkData);
+                                responseChunks.add(objectMapper.valueToTree(dto));
                                 log.trace("Loaded chunk: cx={}, cz={}, worldId={}",
                                         cx, cz, session.getWorldId());
                             },

@@ -14,6 +14,8 @@ public interface WBlockTypeRepository extends MongoRepository<WBlockType, String
 
     Optional<WBlockType> findByBlockId(String blockId);
 
+    List<WBlockType> findByBlockTypeGroup(String blockTypeGroup);
+
     List<WBlockType> findByRegionId(String regionId);
 
     List<WBlockType> findByWorldId(String worldId);

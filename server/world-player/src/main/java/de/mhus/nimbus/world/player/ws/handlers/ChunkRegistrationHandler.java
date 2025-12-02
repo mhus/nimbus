@@ -1,11 +1,20 @@
 package de.mhus.nimbus.world.player.ws.handlers;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
+import de.mhus.nimbus.world.player.service.ExecutionService;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.shared.world.WChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles chunk registration messages from clients.
@@ -14,11 +23,17 @@ import org.springframework.stereotype.Component;
  * Clients register chunks they want to receive updates for.
  * Registration is based on player position and view distance.
  * Only registered chunks receive updates.
+ *
+ * Delta-based: Only newly registered chunks are sent to client.
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ChunkRegistrationHandler implements MessageHandler {
+
+    private final ExecutionService executionService;
+    private final WChunkService chunkService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public String getMessageType() {
@@ -34,25 +49,83 @@ public class ChunkRegistrationHandler implements MessageHandler {
             return;
         }
 
-        // Clear current registrations
-        session.clearChunks();
-
-        // Register new chunks
+        // Parse requested chunks
         JsonNode chunksArray = data.get("c");
-        int registeredCount = 0;
+        List<ChunkCoord> requestedChunks = new ArrayList<>();
 
         for (JsonNode chunkNode : chunksArray) {
-            int cx = chunkNode.has("x") ? chunkNode.get("x").asInt() : 0;
-            int cz = chunkNode.has("z") ? chunkNode.get("z").asInt() : 0;
-
-            session.registerChunk(cx, cz);
-            registeredCount++;
+            int cx = chunkNode.has("cx") ? chunkNode.get("cx").asInt() : 0;
+            int cz = chunkNode.has("cz") ? chunkNode.get("cz").asInt() : 0;
+            requestedChunks.add(new ChunkCoord(cx, cz));
         }
 
-        log.debug("Chunk registration: session={}, chunks={}, worldId={}",
-                session.getWebSocketSession().getId(), registeredCount, session.getWorldId());
+        // Calculate delta (new chunks = requested - already registered)
+        List<ChunkCoord> newChunks = new ArrayList<>();
+        for (ChunkCoord coord : requestedChunks) {
+            if (!session.isChunkRegistered(coord.cx, coord.cz)) {
+                newChunks.add(coord);
+            }
+        }
 
-        // TODO: Automatically send chunk data for newly registered chunks
-        // This will be handled by ChunkQueryHandler or a separate service
+        // Update registration (replace with new list)
+        session.clearChunks();
+        for (ChunkCoord coord : requestedChunks) {
+            session.registerChunk(coord.cx, coord.cz);
+        }
+
+        log.debug("Chunk registration: session={}, total={}, new={}, worldId={}",
+                session.getWebSocketSession().getId(), requestedChunks.size(),
+                newChunks.size(), session.getWorldId());
+
+        // Asynchronously send new chunks to client
+        if (!newChunks.isEmpty()) {
+            executionService.execute(() -> sendChunks(session, newChunks));
+        }
     }
+
+    /**
+     * Load and send chunks to client asynchronously.
+     */
+    private void sendChunks(PlayerSession session, List<ChunkCoord> chunks) {
+        try {
+            ArrayNode responseChunks = objectMapper.createArrayNode();
+
+            for (ChunkCoord coord : chunks) {
+                String chunkKey = coord.cx + ":" + coord.cz;
+                chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey, true)
+                        .ifPresentOrElse(
+                                chunkData -> {
+                                    // Convert to transfer object for network transmission
+                                    ChunkDataTransferObject dto = chunkService.toTransferObject(chunkData);
+                                    responseChunks.add(objectMapper.valueToTree(dto));
+                                    log.trace("Loaded chunk: cx={}, cz={}, worldId={}",
+                                            coord.cx, coord.cz, session.getWorldId());
+                                },
+                                () -> {
+                                    log.debug("Chunk not found: cx={}, cz={}, worldId={}",
+                                            coord.cx, coord.cz, session.getWorldId());
+                                }
+                        );
+            }
+
+            // Send chunk update if any chunks loaded
+            if (responseChunks.size() > 0) {
+                NetworkMessage response = NetworkMessage.builder()
+                        .t("c.u")
+                        .d(responseChunks)
+                        .build();
+
+                String json = objectMapper.writeValueAsString(response);
+                session.getWebSocketSession().sendMessage(new TextMessage(json));
+
+                log.debug("Sent {} new chunks to session={}", responseChunks.size(),
+                        session.getWebSocketSession().getId());
+            }
+        } catch (Exception e) {
+            log.error("Error sending chunks to session={}", session.getWebSocketSession().getId(), e);
+        }
+    }
+
+    private record ChunkCoord(int cx, int cz) {}
 }
+

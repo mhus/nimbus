@@ -65,6 +65,13 @@ public class BackdropImporter {
                     backdropId = file.getName().replace(".json", "");
                 }
 
+                // Check if already exists
+                if (service.findByBackdropId(backdropId).isPresent()) {
+                    log.trace("Backdrop already exists: {} - skipping", backdropId);
+                    stats.incrementSkipped();
+                    continue;
+                }
+
                 // Create entity
                 WBackdrop entity = WBackdrop.builder()
                         .backdropId(backdropId)

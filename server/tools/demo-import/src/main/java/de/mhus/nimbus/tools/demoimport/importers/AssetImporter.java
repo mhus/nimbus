@@ -81,6 +81,13 @@ public class AssetImporter {
 
     private void importAsset(File assetFile, String assetPath, ImportStats stats) {
         try {
+            // Check if already exists
+            if (service.findByPath("main", "main", assetPath).isPresent()) {
+                log.trace("Asset already exists: {} - skipping", assetPath);
+                stats.incrementSkipped();
+                return;
+            }
+
             // Read binary content
             byte[] content = Files.readAllBytes(assetFile.toPath());
 

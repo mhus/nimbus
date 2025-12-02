@@ -72,6 +72,13 @@ public class WorldEntityImporter {
                     continue;
                 }
 
+                // Check if already exists
+                if (service.findByWorldIdAndEntityId(defaultWorldId, entityId).isPresent()) {
+                    log.trace("WorldEntity already exists: {} - skipping", entityId);
+                    stats.incrementSkipped();
+                    continue;
+                }
+
                 // Create Entity DTO from test_server data
                 Entity entityData = new Entity();
                 entityData.setId(entityId);

@@ -26,6 +26,11 @@ public class WBlockTypeService {
     }
 
     @Transactional(readOnly = true)
+    public List<WBlockType> findByBlockTypeGroup(String blockTypeGroup) {
+        return repository.findByBlockTypeGroup(blockTypeGroup);
+    }
+
+    @Transactional(readOnly = true)
     public List<WBlockType> findByRegionId(String regionId) {
         return repository.findByRegionId(regionId);
     }

@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
@@ -101,7 +102,7 @@ public class WChunkService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<ChunkData> loadChunkData(String regionId, String worldId, String chunkKey) {
+    public Optional<ChunkData> loadChunkData(String regionId, String worldId, String chunkKey, boolean create) {
         Optional<WChunk> chunkOpt = repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey);
 
         if (chunkOpt.isPresent()) {
@@ -124,10 +125,13 @@ public class WChunkService {
                 log.warn("ChunkData Deserialisierung fehlgeschlagen chunkKey={} region={} world={}", chunkKey, regionId, worldId, e);
                 return Optional.empty();
             }
-        } else {
+        } else if (create) {
             // Chunk not found - generate default chunk based on world settings
             log.debug("Chunk not found in DB, generating default: chunkKey={} world={}", chunkKey, worldId);
             return Optional.ofNullable(generateDefaultChunk(regionId, worldId, chunkKey));
+        } else {
+            // Chunk not found and create=false - return empty
+            return Optional.empty();
         }
     }
 
@@ -233,6 +237,26 @@ public class WChunkService {
 
     private void safeDeleteExternal(StorageService storage, String storageId) {
         try { storage.delete(storageId); } catch (Exception e) { log.warn("Externer Chunk-Speicher konnte nicht gelöscht werden id={}", storageId, e); }
+    }
+
+    /**
+     * Convert ChunkData to ChunkDataTransferObject for network transmission.
+     * Komprimiert field names für optimierte Netzwerk-Übertragung.
+     *
+     * @param chunkData Internal chunk data
+     * @return Transfer object with compressed field names (blocks → b, heightData → h)
+     */
+    public ChunkDataTransferObject toTransferObject(ChunkData chunkData) {
+        if (chunkData == null) return null;
+
+        return ChunkDataTransferObject.builder()
+                .cx(chunkData.getCx())
+                .cz(chunkData.getCz())
+                .b(chunkData.getBlocks())        // blocks → b
+                .i(chunkData.getI())              // i → i (same)
+                .h(chunkData.getHeightData())     // heightData → h
+                // Note: AreaData (a) currently not in ChunkData
+                .build();
     }
 
     private boolean blank(String s) { return s == null || s.isBlank(); }

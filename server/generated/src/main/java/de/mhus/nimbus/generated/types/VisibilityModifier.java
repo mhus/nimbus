@@ -19,7 +19,7 @@ public class VisibilityModifier {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String effectParameters;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<java.lang.Double> offsets;
+    private java.util.List<java.lang.Float> offsets;
     @com.fasterxml.jackson.annotation.JsonProperty("scalingX")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double scalingX;

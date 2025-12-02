@@ -65,6 +65,13 @@ public class ItemTypeImporter {
                     continue;
                 }
 
+                // Check if already exists
+                if (service.findByItemType(itemType.getType()).isPresent()) {
+                    log.trace("ItemType already exists: {} - skipping", itemType.getType());
+                    stats.incrementSkipped();
+                    continue;
+                }
+
                 // Create entity
                 WItemType entity = WItemType.builder()
                         .itemType(itemType.getType())

@@ -74,6 +74,13 @@ public class EntityImporter {
                     continue;
                 }
 
+                // Check if already exists
+                if (service.findByWorldIdAndEntityId(defaultWorldId, entityData.getId()).isPresent()) {
+                    log.trace("Entity already exists: {} - skipping", entityData.getId());
+                    stats.incrementSkipped();
+                    continue;
+                }
+
                 // Extract modelId from entity data
                 String modelId = entityData.getModel();
 
