@@ -1275,8 +1275,8 @@
         "type" : "PoseType",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "String",
+        "comment" : "// javaType: String"
       }, {
         "name" : "modelModifierMapping",
         "type" : "Map<string, string>",
@@ -1507,7 +1507,7 @@
     } ],
     "enums" : [ {
       "name" : "ENTITY_POSES",
-      "values" : [ "IDLE", "WALK", "RUN", "SPRINT", "CROUCH", "JUMP", "SWIM", "FLY", "DEATH", "WALK_SLOW", "CLAPPING", "ROLL", "ATTACK", "OUT_OF_WATER", "SWIMMING_FAST", "SWIMMING_IMPULSIVE", "SWIMMING", "HIT_RECEIVED", "HIT_RECEIVED_STRONG", "KICK_LEFT", "KICK_RIGHT", "PUNCH_LEFT", "PUNCH_RIGHT", "RUN_BACKWARD", "RUN_LEFT", "RUN_RIGHT", "WAVE" ],
+      "values" : [ "IDLE", "WALK", "RUN", "SPRINT", "CROUCH", "JUMP", "SWIM", "FLY", "DEATH", "WALK_SLOW", "CLAPPING", "ROLL", "ATTACK", "OUT_OF_WATER", "SWIMMING_FAST", "SWIMMING_IMPULSIVE", "SWIMMING", "HIT_RECEIVED", "HIT_RECEIVED_STRONG", "KICK_LEFT", "KICK_RIGHT", "PUNCH_LEFT", "PUNCH_RIGHT", "RUN_BACKWARD", "RUN_LEFT", "RUN_RIGHT", "WAVE", "FALL" ],
       "enumValues" : [ {
         "name" : "IDLE",
         "value" : "0"
@@ -1589,6 +1589,9 @@
       }, {
         "name" : "WAVE",
         "value" : "26"
+      }, {
+        "name" : "FALL",
+        "value" : "27"
       } ]
     } ],
     "classes" : [ ],
@@ -4134,8 +4137,8 @@
         "type" : "ActionTargetingMode",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "String",
+        "comment" : "// javaType: String"
       }, {
         "name" : "generic",
         "type" : "boolean",

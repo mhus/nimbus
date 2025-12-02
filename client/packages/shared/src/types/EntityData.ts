@@ -68,6 +68,7 @@ export enum ENTITY_POSES {
   RUN_LEFT = 24,
   RUN_RIGHT = 25,
   WAVE = 26,
+  FALL = 27,
 }
 
 /**
@@ -143,7 +144,7 @@ export interface EntityModel {
   poseMapping: Map<ENTITY_POSES, PoseAnimation>;
 
   /** Type of movement/animation system */
-  poseType: PoseType;
+  poseType: PoseType; // javaType: String
 
   /** Mapping of modifier keys to visual modifications (e.g., skin colors, equipment) */
   modelModifierMapping: Map<string, string>;

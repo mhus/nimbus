@@ -31,7 +31,8 @@ public enum ENTITY_POSES implements de.mhus.nimbus.types.TsEnum {
     RUN_BACKWARD(23),
     RUN_LEFT(24),
     RUN_RIGHT(25),
-    WAVE(26);
+    WAVE(26),
+    FALL(27);
 
     @lombok.Getter
     private final int tsIndex;

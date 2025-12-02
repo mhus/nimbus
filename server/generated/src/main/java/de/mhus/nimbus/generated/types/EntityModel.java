@@ -26,7 +26,7 @@ public class EntityModel {
     @com.fasterxml.jackson.annotation.JsonProperty("poseMapping")
     private java.util.Map<ENTITY_POSES, PoseAnimation> poseMapping;
     @com.fasterxml.jackson.annotation.JsonProperty("poseType")
-    private PoseType poseType;
+    private String poseType;
     @com.fasterxml.jackson.annotation.JsonProperty("modelModifierMapping")
     private java.util.Map<String, String> modelModifierMapping;
     private EntityDimensions dimensions;

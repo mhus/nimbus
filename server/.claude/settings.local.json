@@ -6,7 +6,8 @@
       "Bash(mvn clean compile:*)",
       "Bash(mvn compile:*)",
       "Bash(mvn clean install:*)",
-      "Bash(mvn install:*)"
+      "Bash(mvn install:*)",
+      "Bash(mongosh:*)"
     ],
     "deny": [],
     "ask": []

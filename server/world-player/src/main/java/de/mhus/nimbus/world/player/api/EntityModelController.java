@@ -20,7 +20,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/world/entitymodels")
+@RequestMapping("/api/worlds/{worldId}/entitymodel")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "EntityModels", description = "EntityModel templates for 3D models and animations")
@@ -34,7 +34,9 @@ public class EntityModelController {
             @ApiResponse(responseCode = "200", description = "EntityModel found"),
             @ApiResponse(responseCode = "404", description = "EntityModel not found")
     })
-    public ResponseEntity<?> getEntityModel(@PathVariable String modelId) {
+    public ResponseEntity<?> getEntityModel(
+            @PathVariable String worldId,
+            @PathVariable String modelId) {
         return service.findByModelId(modelId)
                 .map(WEntityModel::getPublicData)
                 .map(ResponseEntity::ok)

@@ -34,7 +34,7 @@ public class ItemModifier {
     private de.mhus.nimbus.generated.scrawl.ScriptActionDefinition actionScript;
     @com.fasterxml.jackson.annotation.JsonProperty("actionTargeting")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private ActionTargetingMode actionTargeting;
+    private String actionTargeting;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean generic;
 }

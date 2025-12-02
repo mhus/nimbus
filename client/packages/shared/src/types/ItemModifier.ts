@@ -115,7 +115,7 @@ export interface ItemModifier {
    * Note: Server interactions always use 'BOTH' mode (entity OR block required).
    * This field only affects client-side visual effects and pose animations.
    */
-  actionTargeting?: ActionTargetingMode;
+  actionTargeting?: ActionTargetingMode; // javaType: String
 
   /**
    * This item is a generic. This means it has an amount on the item instance
