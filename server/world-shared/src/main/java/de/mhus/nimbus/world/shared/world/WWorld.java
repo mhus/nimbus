@@ -28,11 +28,16 @@ public class WWorld {
     @Indexed
     private String regionId; // Zugehörige Region ID
 
-    private WorldInfo info; // eingebettete Struktur aus generated Modul
+    /**
+     * Public data containing the generated WorldInfo DTO.
+     * This is what gets serialized and sent to clients.
+     */
+    private WorldInfo publicData; // eingebettete Struktur aus generated Modul
 
     private Instant createdAt;
     private Instant updatedAt;
 
+    @Builder.Default
     private boolean enabled = true; // Standardmäßig aktiviert
     private String parent; // optionale Referenz auf übergeordnete Welt / Gruppe
     private String branch; // z.B. Entwicklungszweig / Variante

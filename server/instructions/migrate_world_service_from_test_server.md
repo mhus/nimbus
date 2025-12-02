@@ -69,46 +69,46 @@ Migration der WebSocket Messages (world-player)
 - Network Messages, siehe instructions/general/network-model-2.0.md
 - Die WebSocket Session wird stateful gehalten. Bei einem Disconnect geht der Session-Status in DEPRECATED, nutxe WSockedService
 
-[ ] Login Message implementieren (Client -> Server)
+[?] Login Message implementieren (Client -> Server)
 - aktuell wird login implementiert, aber noch nicht validiert, wird nicht bleiben, deprecated
 - Wichtig, login mit sessionId wird bleiben
-[ ] Ping (Client -> Server)
+[?] Ping (Client -> Server)
 - WorldService - setStatus - wird in mongoDb gespeichert
-[ ] Chunk Registration (Client -> Server)
+[?] Chunk Registration (Client -> Server)
 - Wird in Websocket session gehalten
-[ ] Chunk Anfrage (Client -> Server)
-[ ] Block Interaction (Client -> Server)
-[ ] Entity Position Update (Client -> Server)
-[ ] Entity Interaction (Client -> Server)
-[ ] Animation Execution (Client -> Server)
-[ ] User Movement Update (Client -> Server)
-[ ] Interaction Request (Client -> Server)
-[ ] Client Command (Client -> Server)
+[?] Chunk Anfrage (Client -> Server)
+[?] Block Interaction (Client -> Server)
+[?] Entity Position Update (Client -> Server)
+[?] Entity Interaction (Client -> Server)
+[?] Animation Execution (Client -> Server)
+[?] User Movement Update (Client -> Server)
+[?] Interaction Request (Client -> Server)
+[?] Client Command (Client -> Server)
 [-] Logout (Client -> Server) 
 - Deprecated?
-[ ] Effeckt Trigger (Client -> Server)
-[ ] Effect Update (Client -> Server)
+[?] Effeckt Trigger (Client -> Server)
+[?] Effect Update (Client -> Server)
 
 Server sendet messages:
-[ ] Update world status (Server -> Client)
-[ ] Chunk Update (Server -> Client)
-[ ] Block Update (Server -> Client)
-[ ] Item Block Update (Server -> Client)
-[ ] Block Status Update (Server -> Client)
-[ ] Entity Chunk Pathway (Server -> Client)
-[ ] Animation Execution (Server -> Client oder Client -> Server)
+[?] Update world status (Server -> Client)
+[?] Chunk Update (Server -> Client)
+[?] Block Update (Server -> Client)
+[?] Item Block Update (Server -> Client)
+[?] Block Status Update (Server -> Client)
+[?] Entity Chunk Pathway (Server -> Client)
+[?] Animation Execution (Server -> Client oder Client -> Server)
 [-] Player Teleport (Server -> Client) - wird nicht umgesetzt, spaeter mit einem Engine-Command
 - Deprecated
-[ ] Server Command (Server -> Client)
+[?] Server Command (Server -> Client)
 - ServerCommandService
-[ ] Multiple Commands (Server -> Client)
-[ ] Effeckt Trigger (Server -> Client)
-[ ] Effect Update (Server -> Client)
-[ ] Team Data (Server -> Client)
-[ ] Team Status (Server -> Client)
+[?] Multiple Commands (Server -> Client)
+[?] Effeckt Trigger (Server -> Client)
+[?] Effect Update (Server -> Client)
+[?] Team Data (Server -> Client)
+[?] Team Status (Server -> Client)
 
 Server Side Commands:
-[ ] Migration von Server side Commands (world-player)
+[?] Migration von Server side Commands (world-player)
 - HelpCommand
 - ItemCommand
 - LoopCommand
@@ -120,7 +120,7 @@ Server Side Commands:
 
 Migration:
 
-[ ] Erstelle in tools ein neues modul 'demo-import'
+[?] Erstelle in tools ein neues modul 'demo-import'
 - Das tool soll daten aus dem test_server importieren und in mongoDB speichern.
 - Alle Assets aus client/packages/test_server/files/assets
   - alle *.info.json dateien beinhalten die metadaten zu den Assets
@@ -131,7 +131,7 @@ Migration:
 - Alle entitymodels aus client/packages/test_server/files/entitymodels
 - Alle entity aus client/packages/test_server/files/entities
 
-[ ] Import alle chunks aus client/packages/test_server/data/worlds/main/chunks in WChunk
+[?] Import alle chunks aus client/packages/test_server/data/worlds/main/chunks in WChunk
 
 ### Here is Claude's plan
 
@@ -641,10 +641,16 @@ Migration:
 
 ## Verfeinern
 
-[ ] Prüfe noch den WWorld/WWorldService
+[?] Prüfe noch den WWorld/WWorldService
 - Implementiert er WorldInfo (generated) in publicData, muss noch etwas angepasst werden?
 
 [ ] Prüfe AssetEntity, dort sollen auch als publicData die Metadaten aus den '*.info.json' Dateien gespeichert werden.
+
+[ ] Pruefe noch den ChunkService.
+- Es soll keinen Generator geben, wenn keine Chunk-Daten vorhanden sind wird ein chunk erstellt, der auf der hoehe
+  einer in WWorld definierten hoehe und Block-Type (muss hier noch angelegt werden).
+  - Ocean Blocks erstellt (nur wenn vorhanden)
+  - Ground Blocks erstellt (default hoehe 0, Block Type w:310).
 
 [ ] Implementiere eine automatische Migration in 'tools/demo-import' aller Datei die ich jederzeit ohne parameter wieder starten kann.
 - Daten kommen aus 
@@ -653,7 +659,4 @@ Migration:
 - Migriert soll auch die World 'main' aus /client/packages/test_server/data/worlds/main/info.json
 - Import der '*.info.json' Dateien zu den Assets
 
-[ ] Pruefe noch den ChunkService.
-- Es soll keinen Generator geben, wenn keine Chunk-Daten vorhanden sind
-
-
+[ ] Gibt es noch offene Punkte aus der migration?

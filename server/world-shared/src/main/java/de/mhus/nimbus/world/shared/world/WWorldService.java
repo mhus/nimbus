@@ -27,7 +27,7 @@ public class WWorldService {
         }
         WWorld entity = WWorld.builder()
                 .worldId(worldId)
-                .info(info)
+                .publicData(info)
                 .build();
         entity.touchForCreate();
         repository.save(entity);
@@ -42,7 +42,7 @@ public class WWorldService {
         }
         WWorld entity = WWorld.builder()
                 .worldId(worldId)
-                .info(info)
+                .publicData(info)
                 .parent(parent)
                 .branch(branch)
                 .enabled(enabled == null ? true : enabled)

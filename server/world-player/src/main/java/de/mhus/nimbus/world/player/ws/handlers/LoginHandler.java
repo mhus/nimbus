@@ -3,9 +3,12 @@ package de.mhus.nimbus.world.player.ws.handlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.ws.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
+import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -30,6 +33,7 @@ public class LoginHandler implements MessageHandler {
 
     private final ObjectMapper objectMapper;
     private final SessionManager sessionManager;
+    private final WWorldService worldService;
 
     @Override
     public String getMessageType() {
@@ -51,6 +55,15 @@ public class LoginHandler implements MessageHandler {
         log.info("Login attempt: username={}, token={}, worldId={}, existingSessionId={}",
                 username, token != null ? "***" : null, worldId, existingSessionId);
 
+        // Check if world exists
+        String targetWorldId = worldId != null ? worldId : session.getWorldId();
+        WWorld world = worldService.getByWorldId(targetWorldId).orElse(null);
+        if (world == null || world.getPublicData() == null) {
+            log.warn("World not found in database: {}, login failed", targetWorldId);
+            sendLoginResponse(session, message.getI(), false, "World not found: " + targetWorldId, null, null);
+            return;
+        }
+
         // TODO: Implement real authentication
         // For now, accept all logins
         boolean authenticated = true;
@@ -58,7 +71,7 @@ public class LoginHandler implements MessageHandler {
         String displayName = username != null ? username : "Guest";
 
         if (!authenticated) {
-            sendLoginResponse(session, message.getI(), false, "Invalid credentials", null);
+            sendLoginResponse(session, message.getI(), false, "Invalid credentials", null, null);
             return;
         }
 
@@ -70,21 +83,21 @@ public class LoginHandler implements MessageHandler {
         session.setAuthenticatedAt(Instant.now());
         session.setUserId(userId);
         session.setDisplayName(displayName);
-        session.setWorldId(worldId != null ? worldId : session.getWorldId());
+        session.setWorldId(targetWorldId);
         session.setStatus(PlayerSession.SessionStatus.AUTHENTICATED);
 
         // Register session ID
         sessionManager.setSessionId(session, sessionId);
 
-        // Send success response
-        sendLoginResponse(session, message.getI(), true, null, sessionId);
+        // Send success response with world data
+        sendLoginResponse(session, message.getI(), true, null, sessionId, world);
 
         log.info("Login successful: user={}, sessionId={}, worldId={}",
                 displayName, sessionId, session.getWorldId());
     }
 
     private void sendLoginResponse(PlayerSession session, String requestId, boolean success,
-                                   String errorMessage, String sessionId) throws Exception {
+                                   String errorMessage, String sessionId, WWorld world) throws Exception {
         ObjectNode data = objectMapper.createObjectNode();
         data.put("success", success);
 
@@ -93,20 +106,22 @@ public class LoginHandler implements MessageHandler {
             data.put("displayName", session.getDisplayName());
             data.put("sessionId", sessionId);
 
-            // Add worldInfo (simplified for now)
-            ObjectNode worldInfo = objectMapper.createObjectNode();
-            worldInfo.put("worldId", session.getWorldId());
-            worldInfo.put("name", "World " + session.getWorldId());
-            worldInfo.put("chunkSize", 16);
-            worldInfo.put("status", 0);
-            worldInfo.put("createdAt", Instant.now().toString());
-            worldInfo.put("updatedAt", Instant.now().toString());
+            // Use world data passed from caller
+            if (world != null && world.getPublicData() != null) {
+                WorldInfo worldInfo = world.getPublicData();
 
-            ObjectNode settings = objectMapper.createObjectNode();
-            settings.put("pingInterval", session.getPingInterval());
-            worldInfo.set("settings", settings);
+                // Convert WorldInfo to JSON and add settings
+                ObjectNode worldInfoNode = objectMapper.valueToTree(worldInfo);
 
-            data.set("worldInfo", worldInfo);
+                // Add settings object with pingInterval (not part of WorldInfo)
+                ObjectNode settings = objectMapper.createObjectNode();
+                settings.put("pingInterval", session.getPingInterval());
+                settings.put("maxPlayers", 100);
+                settings.put("allowGuests", true);
+                worldInfoNode.set("settings", settings);
+
+                data.set("worldInfo", worldInfoNode);
+            }
         } else {
             data.put("errorCode", 401);
             data.put("errorMessage", errorMessage != null ? errorMessage : "Authentication failed");

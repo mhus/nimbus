@@ -66,5 +66,5 @@ public class RegionWorldController {
         }
     }
 
-    private WorldResponse toResponse(WWorld w) { return new WorldResponse(w.getWorldId(), w.isEnabled(), w.getParent(), w.getBranch(), w.getInfo()); }
+    private WorldResponse toResponse(WWorld w) { return new WorldResponse(w.getWorldId(), w.isEnabled(), w.getParent(), w.getBranch(), w.getPublicData()); }
 }
