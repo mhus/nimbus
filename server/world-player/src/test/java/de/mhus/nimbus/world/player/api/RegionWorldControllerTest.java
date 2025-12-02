@@ -51,7 +51,7 @@ class RegionWorldControllerTest {
         String body = "{\"worldId\":\"terra\",\"info\":{\"name\":\"Terra\"}}";
         WorldInfo info = new WorldInfo();
         info.setName("Terra");
-        WWorld created = WWorld.builder().worldId("terra").info(info).createdAt(Instant.now()).updatedAt(Instant.now()).build();
+        WWorld created = WWorld.builder().worldId("terra").publicData(info).createdAt(Instant.now()).updatedAt(Instant.now()).build();
         Mockito.when(localService.createWorld(Mockito.eq("terra"), Mockito.any(WorldInfo.class))).thenReturn(created);
 
         mockMvc.perform(post("/world/region/world")

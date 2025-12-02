@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 /**
  * Demo Import Tool - Automated migration from test_server to MongoDB.
@@ -36,7 +37,12 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan(basePackages = {
         "de.mhus.nimbus.tools.demoimport",
-        "de.mhus.nimbus.world.shared",
+        "de.mhus.nimbus.world",
+        "de.mhus.nimbus.shared"
+})
+@EnableMongoRepositories(basePackages = {
+        "de.mhus.nimbus.tools.demoimport",
+        "de.mhus.nimbus.world",
         "de.mhus.nimbus.shared"
 })
 @RequiredArgsConstructor

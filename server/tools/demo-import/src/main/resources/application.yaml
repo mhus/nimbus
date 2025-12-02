@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: demo-import
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      database: world
+  main:
+    web-application-type: NONE
+
+
+# Import Source Paths (relative to server/ directory)
+# Files path: templates (BlockTypes, ItemTypes, EntityModels, Backdrops, Assets)
+import:
+  source-path: ../client/packages/test_server/files
+  # Data path: world instances (World info, Entity instances)
+  data-path: ../client/packages/test_server/data
+  # Import Configuration
+  batch-size: 100
+  asset-batch-size: 50
+  default-world-id: main
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.data.mongodb.core.MongoTemplate: INFO
+    de.mhus.nimbus: DEBUG

@@ -79,7 +79,7 @@ public class UserWorldEditorController {
         WWorld main = mainOpt.get();
         if (!main.getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not an owner of main world"));
         try {
-            WWorld created = worldService.createWorld(req.worldId(), main.getInfo(), main.getWorldId(), kind.isBranch() ? kind.branch() : null, req.enabled());
+            WWorld created = worldService.createWorld(req.worldId(), main.getPublicData(), main.getWorldId(), kind.isBranch() ? kind.branch() : null, req.enabled());
             // publicFlag separat updaten falls gesetzt
             if (req.publicFlag() != null || req.enabled() != null) {
                 worldService.updateWorld(created.getWorldId(), w -> {
