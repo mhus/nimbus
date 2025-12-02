@@ -636,3 +636,23 @@ Migration:
  3. Phase 2: REST Endpoints nach Entities fertig
  4. Phase 3: WebSocket Handlers nach REST fertig
  5. Phase 4: Demo Import Tool am Ende
+
+---
+
+## Verfeinern
+
+[ ] Gibt es noch offene Punkte aus der migration?
+
+[ ] Prüfe noch den WorldService
+- Implementiert er WorldInfo in publicData, muss noch etwas angepasst werden?
+
+[ ] Implementiere eine automatische Migration aller Datei die ich jederzeit ohne parameter wieder starten kann.
+- Daten kommen aus 
+  - /client/packages/test_server/files/
+  - /client/packages/test_server/data/worlds/main
+- Migriert soll auch die World 'main' aus /client/packages/test_server/data/worlds/main/info.json
+
+[ ] Pruefe noch den ChunkService.
+- Es soll keinen Generator geben, wenn keine Chunk-Daten vorhanden sind
+
+
