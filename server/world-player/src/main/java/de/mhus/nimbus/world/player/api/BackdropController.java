@@ -20,7 +20,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/world/backdrops")
+@RequestMapping("/api/worlds/{worldId}")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Backdrops", description = "Backdrop configurations for visual effects at chunk boundaries")
@@ -28,27 +28,29 @@ public class BackdropController {
 
     private final WBackdropService service;
 
-    @GetMapping("/{backdropId}")
+    @GetMapping("/backdrop/{backdropId}")
     @Operation(summary = "Get Backdrop by ID", description = "Returns Backdrop configuration for a specific backdrop ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Backdrop found"),
             @ApiResponse(responseCode = "404", description = "Backdrop not found")
     })
-    public ResponseEntity<?> getBackdrop(@PathVariable String backdropId) {
+    public ResponseEntity<?> getBackdrop(
+            @PathVariable String worldId,
+            @PathVariable String backdropId) {
         return service.findByBackdropId(backdropId)
                 .map(WBackdrop::getPublicData)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping
+    @GetMapping("/backdrops")
     @Operation(summary = "Get all Backdrops", description = "Returns all enabled Backdrop configurations, optionally filtered")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of Backdrops")
     })
     public ResponseEntity<?> getAllBackdrops(
-            @RequestParam(required = false) String regionId,
-            @RequestParam(required = false) String worldId) {
+            @PathVariable String worldId,
+            @RequestParam(required = false) String regionId) {
 
         List<Backdrop> backdrops;
 

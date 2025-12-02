@@ -33,6 +33,9 @@ public class BackdropImporter {
     @Value("${import.source-path:../../client/packages/test_server/files}")
     private String sourcePath;
 
+    @Value("${import.default-world-id:main}")
+    private String defaultWorldId;
+
     public ImportStats importAll() throws Exception {
         log.info("Starting Backdrop import from: {}/backdrops/", sourcePath);
 
@@ -72,12 +75,12 @@ public class BackdropImporter {
                     continue;
                 }
 
-                // Create entity
+                // Create entity with worldId from config
                 WBackdrop entity = WBackdrop.builder()
                         .backdropId(backdropId)
                         .publicData(backdrop)
                         .regionId(null)
-                        .worldId(null)
+                        .worldId(defaultWorldId)  // Set worldId from config (e.g., "main")
                         .enabled(true)
                         .build();
                 entity.touchCreate();

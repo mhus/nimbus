@@ -120,9 +120,16 @@ public class BlockTypeImporter {
                     continue;
                 }
 
-                // Check if already exists
-                if (service.findByBlockId(blockType.getId()).isPresent()) {
-                    log.trace("BlockType already exists: {} - skipping", blockType.getId());
+                // Check if already exists (handle duplicates gracefully)
+                try {
+                    if (service.findByBlockId(blockType.getId()).isPresent()) {
+                        log.trace("BlockType already exists: {} - skipping", blockType.getId());
+                        stats.incrementSkipped();
+                        continue;
+                    }
+                } catch (Exception e) {
+                    // If query fails due to duplicates, skip this entry
+                    log.warn("Duplicate blockId detected in DB: {} - skipping import", blockType.getId());
                     stats.incrementSkipped();
                     continue;
                 }
