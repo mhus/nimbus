@@ -58,7 +58,7 @@ public class EvaluatePluginTest {
 
         Files.createDirectories(outJavaDir.toPath());
         Files.createDirectories(targetDir);
-        generateJavaFsEnum(outJavaDir);
+        generateJavaTsEnum(outJavaDir);
 
         // Run Mojo (simulate plugin execution inside evaluate)
         GenerateTsToJavaMojo mojo = new GenerateTsToJavaMojo();
@@ -90,13 +90,13 @@ public class EvaluatePluginTest {
         assertEquals(0, exit, "Maven build of evaluate module failed");
     }
 
-    private void generateJavaFsEnum(File outJavaDir) {
-        var fsEnum = new File(outJavaDir, "de/mhus/nimbus/types/FsEnum.java");
+    private void generateJavaTsEnum(File outJavaDir) {
+        var fsEnum = new File(outJavaDir, "de/mhus/nimbus/types/TsEnum.java");
         //create root dir
         fsEnum.getParentFile().mkdirs();
         if (!fsEnum.exists()) {
             try {
-                Files.writeString(fsEnum.toPath(), "package  de.mhus.nimbus.types;\n\npublic interface FsEnum { }");
+                Files.writeString(fsEnum.toPath(), "package  de.mhus.nimbus.types;\n\npublic interface TsEnum { }");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

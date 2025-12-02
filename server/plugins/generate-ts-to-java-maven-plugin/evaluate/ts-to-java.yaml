@@ -23,6 +23,6 @@ packageRules:
 # Test enum interface mappings
 enumInterfaceMapping:
   "*": "de.mhus.nimbus.types.TsEnum"
-  "MessageType": "de.mhus.nimbus.network.NetworkEnum"
-  "Priority": "de.mhus.nimbus.types.PriorityEnum"
+#  "MessageType": "de.mhus.nimbus.network.NetworkEnum"
+#  "Priority": "de.mhus.nimbus.types.PriorityEnum"
 
