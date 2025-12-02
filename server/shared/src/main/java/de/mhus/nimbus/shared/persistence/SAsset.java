@@ -1,6 +1,9 @@
 package de.mhus.nimbus.shared.persistence;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -13,12 +16,16 @@ import java.time.Instant;
 /**
  * MongoDB Asset Entity. Speichert kleine Binärdaten direkt (content) bis zur konfigurierten Grenze.
  * Größere Inhalte werden über einen externen StorageService ausgelagert und via storageId referenziert.
+ * Metadaten aus *.info Dateien werden in publicData gespeichert.
  */
 @Document(collection = "s_assets")
 @CompoundIndexes({
         @CompoundIndex(name = "region_world_path_idx", def = "{ 'regionId': 1, 'worldId': 1, 'path': 1 }")
 })
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SAsset {
 
     @Id
@@ -42,11 +49,18 @@ public class SAsset {
     /** Inline Content (wenn size <= inlineMaxSize). */
     private byte[] content;
 
+    /**
+     * Public metadata from *.info files.
+     * Contains description, dimensions, color, mimeType, etc.
+     */
+    private AssetMetadata publicData;
+
     @CreatedDate
     private Instant createdAt;
 
     private String createdBy;
 
+    @Builder.Default
     private boolean enabled = true;
 
     /** Pflicht: Region Identifier. */

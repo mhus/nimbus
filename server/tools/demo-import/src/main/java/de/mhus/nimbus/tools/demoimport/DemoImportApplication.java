@@ -1,5 +1,6 @@
 package de.mhus.nimbus.tools.demoimport;
 
+import de.mhus.nimbus.tools.demoimport.importers.AssetImporter;
 import de.mhus.nimbus.tools.demoimport.importers.BackdropImporter;
 import de.mhus.nimbus.tools.demoimport.importers.BlockTypeImporter;
 import de.mhus.nimbus.tools.demoimport.importers.EntityImporter;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.ComponentScan;
  * - EntityModels (4 files from entitymodels/)
  * - Backdrops (9 files from backdrops/)
  * - Entities (player templates from entity/)
+ * - Assets (641+ binary files with .info metadata from assets/)
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {
@@ -40,6 +42,7 @@ public class DemoImportApplication implements CommandLineRunner {
     private final EntityModelImporter entityModelImporter;
     private final BackdropImporter backdropImporter;
     private final EntityImporter entityImporter;
+    private final AssetImporter assetImporter;
 
     public static void main(String[] args) {
         System.exit(SpringApplication.exit(SpringApplication.run(DemoImportApplication.class, args)));
@@ -84,6 +87,13 @@ public class DemoImportApplication implements CommandLineRunner {
             log.info("=== Phase 5: Entities ===");
             ImportStats entityStats = entityImporter.importAll();
             totalStats.merge(entityStats);
+
+            // Import Assets (can be slow - 641+ files)
+            log.info("");
+            log.info("=== Phase 6: Assets ===");
+            log.info("This may take a while (641+ files)...");
+            ImportStats assetStats = assetImporter.importAll();
+            totalStats.merge(assetStats);
 
             // Summary
             long duration = System.currentTimeMillis() - startTime;

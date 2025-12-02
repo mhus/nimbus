@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.asset;
 
+import de.mhus.nimbus.shared.persistence.AssetMetadata;
 import de.mhus.nimbus.shared.persistence.SAsset;
 import de.mhus.nimbus.shared.persistence.SAssetRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,41 @@ public class SAssetService {
         asset.setCreatedBy(createdBy);
         asset.setEnabled(true);
         asset.setSize(data.length);
+
+        if (data.length <= inlineMaxSize) {
+            asset.setContent(data);
+            log.debug("Storing asset inline path={} size={} region={} world={}", path, data.length, regionId, worldId);
+        } else {
+            StorageService storage = storageService.orElseThrow(() -> new IllegalStateException("No StorageService available for large asset"));
+            String storageId = storage.store(data);
+            asset.setStorageId(storageId);
+            log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, data.length, storageId, regionId, worldId);
+        }
+        return repository.save(asset);
+    }
+
+    /**
+     * Speichert ein Asset mit Metadaten (publicData).
+     * Für Import aus test_server mit .info Dateien.
+     */
+    @Transactional
+    public SAsset saveAsset(String regionId, String worldId, String path, byte[] data,
+                           String createdBy, AssetMetadata publicData) {
+        if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId required");
+        if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
+        if (data == null) data = new byte[0];
+
+        SAsset asset = SAsset.builder()
+                .regionId(regionId)
+                .worldId(worldId)
+                .path(path)
+                .name(extractName(path))
+                .createdBy(createdBy)
+                .enabled(true)
+                .size(data.length)
+                .publicData(publicData)
+                .build();
+        asset.setCreatedAt(Instant.now());
 
         if (data.length <= inlineMaxSize) {
             asset.setContent(data);

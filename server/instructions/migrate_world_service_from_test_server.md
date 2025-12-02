@@ -644,7 +644,8 @@ Migration:
 [?] Prüfe noch den WWorld/WWorldService
 - Implementiert er WorldInfo (generated) in publicData, muss noch etwas angepasst werden?
 
-[ ] Prüfe AssetEntity, dort sollen auch als publicData die Metadaten aus den '*.info.json' Dateien gespeichert werden.
+[?] Prüfe AssetEntity, dort sollen auch als publicData die Metadaten aus den '*.info.json' Dateien gespeichert werden.
+- Erstelle einen Asset Controller in world-player der die assets wie in test_server bereitstellt.
 
 [ ] Pruefe noch den ChunkService.
 - Es soll keinen Generator geben, wenn keine Chunk-Daten vorhanden sind wird ein chunk erstellt, der auf der hoehe
