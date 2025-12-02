@@ -74,6 +74,7 @@
 
     <build>
         <plugins>
+            <!-- Surefire Plugin für Unit Tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -83,6 +84,8 @@
                         <include>**/*Test.java</include>
                         <include>**/*Tests.java</include>
                     </includes>
+                    <!-- Explizit nur src/test/java verwenden -->
+                    <testSourceDirectory>src/test/java</testSourceDirectory>
                     <!-- Tests müssen sequenziell laufen da sie aufeinander aufbauen -->
                     <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>
@@ -90,6 +93,65 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Profil für Integration Tests - erfordert laufenden Server -->
+        <profile>
+            <id>integration-tests</id>
+            <build>
+                <plugins>
+                    <!-- Failsafe Plugin für Integration Tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*IT.java</include>
+                                <include>**/*IntegrationTest.java</include>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <!-- Explizit Integration Test Source Directory verwenden -->
+                            <testSourceDirectory>src/integration-test/java</testSourceDirectory>
+                            <testClassesDirectory>${project.build.directory}/integration-test-classes</testClassesDirectory>
+                            <!-- Integration Tests müssen ebenfalls sequenziell laufen -->
+                            <forkCount>1</forkCount>
+                            <reuseForks>false</reuseForks>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Compiler Plugin für Integration Tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile-integration-tests</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>testCompile</goal>
+                                </goals>
+                                <configuration>
+                                    <compileSourceRoots>
+                                        <compileSourceRoot>src/integration-test/java</compileSourceRoot>
+                                    </compileSourceRoots>
+                                    <outputDirectory>${project.build.directory}/integration-test-classes</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 
 </project>
