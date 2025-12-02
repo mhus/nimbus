@@ -19,6 +19,6 @@ public class RegionCharacterResponse {
     private String name;
     private String display;
     private java.util.Map<String, de.mhus.nimbus.generated.types.RegionItemInfo> backpack;
-    private java.util.Map<java.lang.Double, de.mhus.nimbus.generated.types.RegionItemInfo> wearing;
-    private java.util.Map<String, java.lang.Double> skills;
+    private int wearing;
+    private int skills;
 }

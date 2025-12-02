@@ -12,5 +12,4 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class TeamStatusUpdate {
     private String id;
-    private java.util.Map<String, Object> ms;
 }

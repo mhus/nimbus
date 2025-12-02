@@ -12,8 +12,8 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class InteractionRequestData {
     private int x;
-    private double y;
-    private double z;
+    private int y;
+    private int z;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String g;
 }

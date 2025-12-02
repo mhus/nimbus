@@ -11,6 +11,6 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class CommandResultData {
-    private double rc;
+    private int rc;
     private String message;
 }

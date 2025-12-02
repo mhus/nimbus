@@ -1,8 +1,8 @@
 /*
- * Source TS: ServerCommandMessage.ts
- * Original TS: 'interface ServerCommandResultData'
+ * Source TS: RegionItemInfo.ts
+ * Original TS: 'interface mirroring'
  */
-package de.mhus.nimbus.generated.network.messages;
+package de.mhus.nimbus.generated.types;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,7 +10,9 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ServerCommandResultData {
-    private int rc;
-    private String message;
+public class mirroring {
+    @com.fasterxml.jackson.annotation.JsonProperty("itemId")
+    private String itemId;
+    private String name;
+    private String texture;
 }

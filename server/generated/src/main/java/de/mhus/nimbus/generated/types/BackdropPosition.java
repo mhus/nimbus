@@ -11,7 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class BackdropPosition {
-    private double cx;
-    private double cz;
+    private int cx;
+    private int cz;
     private java.util.List<BackdropDirection> directions;
 }

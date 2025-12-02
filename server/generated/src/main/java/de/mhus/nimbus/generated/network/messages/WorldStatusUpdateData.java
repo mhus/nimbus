@@ -11,5 +11,5 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WorldStatusUpdateData {
-    private double s;
+    private int s;
 }

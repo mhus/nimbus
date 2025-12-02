@@ -43,7 +43,6 @@ public class PlayerInfo {
     private double effectiveJumpSpeed;
     @com.fasterxml.jackson.annotation.JsonProperty("eyeHeight")
     private double eyeHeight;
-    private java.util.Map<String, Object> dimensions;
     @com.fasterxml.jackson.annotation.JsonProperty("stealthRange")
     private double stealthRange;
     @com.fasterxml.jackson.annotation.JsonProperty("distanceNotifyReductionWalk")

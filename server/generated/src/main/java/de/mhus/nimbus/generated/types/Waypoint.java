@@ -11,7 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Waypoint {
-    private double timestamp;
+    private long timestamp;
     private Vector3 target;
     private Rotation rotation;
     private ENTITY_POSES pose;

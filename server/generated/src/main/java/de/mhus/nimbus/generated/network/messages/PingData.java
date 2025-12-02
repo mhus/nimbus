@@ -12,5 +12,5 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PingData {
     @com.fasterxml.jackson.annotation.JsonProperty("cTs")
-    private double cTs;
+    private long cTs;
 }

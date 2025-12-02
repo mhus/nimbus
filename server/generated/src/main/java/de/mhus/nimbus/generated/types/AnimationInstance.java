@@ -15,7 +15,7 @@ public class AnimationInstance {
     private String templateId;
     private AnimationData animation;
     @com.fasterxml.jackson.annotation.JsonProperty("createdAt")
-    private double createdAt;
+    private long createdAt;
     @com.fasterxml.jackson.annotation.JsonProperty("triggeredBy")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String triggeredBy;

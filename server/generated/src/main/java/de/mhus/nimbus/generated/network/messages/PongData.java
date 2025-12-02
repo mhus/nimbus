@@ -12,7 +12,7 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PongData {
     @com.fasterxml.jackson.annotation.JsonProperty("cTs")
-    private double cTs;
+    private long cTs;
     @com.fasterxml.jackson.annotation.JsonProperty("sTs")
-    private double sTs;
+    private long sTs;
 }

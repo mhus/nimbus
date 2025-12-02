@@ -13,7 +13,7 @@ package de.mhus.nimbus.generated.scrawl;
 public class StepRepeat {
     private String kind;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private Object times;
+    private int times;
     @com.fasterxml.jackson.annotation.JsonProperty("untilEvent")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String untilEvent;

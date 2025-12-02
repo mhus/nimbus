@@ -32,6 +32,7 @@ public class TsParser {
     private static final Pattern DECL_ENUM = Pattern.compile("(?m)^\\s*(?:export\\s+)?enum\\s+([A-Za-z0-9_]+)\\s*\\{");
     private static final Pattern DECL_CLASS = Pattern.compile("\\bexport\\s+class\\s+([A-Za-z0-9_]+)\\b|\\bclass\\s+([A-Za-z0-9_]+)\\b");
     private static final Pattern DECL_TYPE = Pattern.compile("(?m)\\bexport\\s+type\\s+([A-Za-z0-9_]+)\\s*=|\\btype\\s+([A-Za-z0-9_]+)\\s*=");
+    public static final String DECL_STEP = "(?m)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*([^;\\r\\n]+?)\\s*;[\\t ]*(//.*)?[\\t ]*$";
 
     public TsModel parse(List<File> sourceDirs) throws IOException {
         TsModel model = new TsModel();
@@ -43,7 +44,7 @@ public class TsParser {
         }
         for (File f : files) {
             String content = readFile(f);
-            String src = stripComments(content);
+            String src = stripCommentBlocks(content);
             TsSourceFile ts = new TsSourceFile(relativize(f));
             // imports
             extractImports(src, ts);
@@ -80,11 +81,9 @@ public class TsParser {
         return sb.toString();
     }
 
-    private String stripComments(String src) {
+    private String stripCommentBlocks(String src) {
         // Remove /* */ comments
-        String noBlock = src.replaceAll("/\\*.*?\\*/", " ");
-        // Remove // comments
-        return noBlock.replaceAll("(?m)//.*$", " ");
+        return src.replaceAll("/\\*.*?\\*/", " ");
     }
 
     private void extractImports(String src, TsSourceFile file) {
@@ -183,7 +182,7 @@ public class TsParser {
     private void extractPropertiesFromBodyWithOriginal(String strippedBody, String originalBody, List<TsDeclarations.TsProperty> out) {
         if (strippedBody == null || out == null) return;
         // Match TS property declarations of the form: [visibility]? name[?]: type;
-        java.util.regex.Pattern propPat = java.util.regex.Pattern.compile("(?ms)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*(.+?)\\s*;[\\t ]*");
+        java.util.regex.Pattern propPat = java.util.regex.Pattern.compile(DECL_STEP);
         java.util.regex.Matcher m = propPat.matcher(strippedBody);
         while (m.find()) {
             int startIdx = m.start();
@@ -227,48 +226,17 @@ public class TsParser {
             pr.name = m.group(2);
             pr.optional = m.group(3) != null && !m.group(3).isEmpty();
             pr.type = typeTxt;
-
-            // Extract both comment and javaTypeHint from the original (non-stripped) source
-            String[] commentAndHint = extractCommentAndJavaTypeHint(originalBody, pr.name);
-            pr.comment = commentAndHint[0];
-            pr.javaTypeHint = commentAndHint[1];
-
+            pr.comment = m.group(5) != null ? m.group(5).trim() : null;
+            pr.javaTypeHint = extractJavaTypeHint(pr.comment);
             out.add(pr);
         }
     }
 
-    /**
-     * Extract both comment and javaType hint from the original source for a property
-     * Returns an array with [comment, javaTypeHint] where either can be null
-     */
-    private String[] extractCommentAndJavaTypeHint(String originalBody, String propertyName) {
-        if (originalBody == null || propertyName == null) {
-            return new String[]{null, null};
-        }
-
-        // Search the original body for a line containing this property name and a comment
-        String[] lines = originalBody.split("\n");
-        for (String line : lines) {
-            // Look for property declaration line - more flexible matching
-            if (line.contains(propertyName) && line.contains(":") && line.contains("//")) {
-                // Verify this is actually a property declaration, not just any line with the name
-                String trimmedLine = line.trim();
-                if (trimmedLine.contains(propertyName + ":") ||
-                    trimmedLine.matches(".*\\b" + propertyName + "\\s*:.*")) {
-
-                    // Extract the comment part (everything after //)
-                    int commentStart = line.lastIndexOf("//");
-                    String fullComment = line.substring(commentStart).trim();
-
-                    // Extract javaType hint from this comment
-                    String javaTypeHint = parseJavaTypeHintFromLine(line);
-
-                    return new String[]{fullComment, javaTypeHint};
-                }
-            }
-        }
-
-        return new String[]{null, null};
+    private String extractJavaTypeHint(String comment) {
+        if (comment == null) return null;
+        var pos = comment.indexOf("javaType:");
+        if (pos == -1) return null;
+        return comment.substring(pos + "javaType:".length()).trim().split(" ", 2)[0];
     }
 
     /**

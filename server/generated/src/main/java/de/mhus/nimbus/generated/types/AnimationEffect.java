@@ -16,14 +16,13 @@ public class AnimationEffect {
     private AnimationEffectType type;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<PositionRef> positions;
-    private java.util.Map<String, Object> params;
     @com.fasterxml.jackson.annotation.JsonProperty("startTime")
-    private double startTime;
+    private long startTime;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double duration;
+    private int duration;
     @com.fasterxml.jackson.annotation.JsonProperty("endTime")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double endTime;
+    private long endTime;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean blocking;
 }

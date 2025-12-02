@@ -54,19 +54,8 @@ public class JavaGenerator {
                     if (i.properties != null) {
                         for (TsDeclarations.TsProperty p : i.properties) {
                             if (p == null || p.name == null) continue;
-                            // Special handling for seconds property: number -> int
-                            String propType = "seconds".equals(p.name) && "number".equals(p.type) ? "int" :
-                                              (p.javaTypeHint != null && !p.javaTypeHint.isBlank()) ? p.javaTypeHint : p.type;
-
-                            // If this is the well-known inline object property 'backdrop', synthesize a helper class
-                            if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
-                                String helperName = i.name + "Backdrop";
-                                ensureBackdropHelper(jm, helperName, srcPath);
-                                t.getProperties().add(new JavaProperty(p.name, helperName, p.optional, p.visibility));
-                            } else {
-                                String jt = mapTsTypeToJava(propType, p.optional);
-                                t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
-                            }
+                            String jt = (p.javaTypeHint != null && !p.javaTypeHint.isBlank()) ? p.javaTypeHint : mapTsTypeToJava(p.type, p.optional);
+                            t.getProperties().add(new JavaProperty(p.name, jt, p.optional, p.visibility));
                         }
                     }
                     jm.addType(t);

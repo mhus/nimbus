@@ -32,7 +32,4 @@ public class ServerEntitySpawnDefinition {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private EntityPathway currentPathway;
     private java.util.List<Vector2> chunks;
-    @com.fasterxml.jackson.annotation.JsonProperty("physicsState")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.Map<String, Object> physicsState;
 }

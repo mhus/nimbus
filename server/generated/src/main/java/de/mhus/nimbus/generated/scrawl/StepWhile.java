@@ -16,5 +16,5 @@ public class StepWhile {
     private String taskId;
     private ScrawlStep step;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double timeout;
+    private long timeout;
 }

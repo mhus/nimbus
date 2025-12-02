@@ -3,7 +3,7 @@
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/SKeyDto.ts",
     "imports" : [ ],
     "interfaces" : [ {
-      "name" : "SKeyDto",
+      "name" : "mirroring",
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "id",
@@ -11,14 +11,14 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "//  - id: string"
+        "comment" : null
       }, {
         "name" : "type",
         "type" : "string",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "//  - type: string"
+        "comment" : null
       }, {
         "name" : "kind",
         "type" : "string",
@@ -46,7 +46,68 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
+        "comment" : "// ISO-8601 Timestamp"
+      }, {
+        "name" : "owner",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "intent",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "SKeyDto",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "type",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "kind",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "algorithm",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "keyId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "createdAt",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// ISO-8601 Timestamp"
       }, {
         "name" : "owner",
         "type" : "string",
@@ -71,6 +132,11 @@
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/RegionCharacterResponse.ts",
     "imports" : [ "../types/RegionItemInfo" ],
     "interfaces" : [ {
+      "name" : "mirroring",
+      "extendsList" : [ ],
+      "properties" : [ ],
+      "methods" : [ ]
+    }, {
       "name" : "RegionCharacterResponse",
       "extendsList" : [ ],
       "properties" : [ {
@@ -114,21 +180,21 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "//  - backpack: Map<String, RegionItemInfo>"
+        "comment" : null
       }, {
         "name" : "wearing",
         "type" : "Record<number, RegionItemInfo>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : "//  - wearing: Map<Integer, RegionItemInfo>"
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "skills",
         "type" : "Record<string, number>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : "//  - skills: Ma"
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -139,6 +205,18 @@
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/UpdateSKeyNameRequest.ts",
     "imports" : [ ],
     "interfaces" : [ {
+      "name" : "mirroring",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
       "name" : "UpdateSKeyNameRequest",
       "extendsList" : [ ],
       "properties" : [ {
@@ -158,7 +236,7 @@
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/CreateSKeyRequest.ts",
     "imports" : [ ],
     "interfaces" : [ {
-      "name" : "CreateSKeyRequest",
+      "name" : "mirroring",
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "type",
@@ -173,7 +251,7 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// string fallback erlaubt"
       }, {
         "name" : "algorithm",
         "type" : "string",
@@ -194,7 +272,47 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
+        "comment" : "// Base64 kodierter Schlüsselinhalt"
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "CreateSKeyRequest",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "type",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "kind",
+        "type" : "'public' | 'private' | 'symmetric' | string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// string fallback erlaubt"
+      }, {
+        "name" : "algorithm",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "key",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Base64 kodierter Schlüsselinhalt"
       } ],
       "methods" : [ ]
     } ],
@@ -292,8 +410,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     }, {
@@ -349,8 +467,8 @@
         "type" : "number | null",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "untilEvent",
         "type" : "string | null",
@@ -526,8 +644,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       } ],
       "methods" : [ ]
     }, {
@@ -611,8 +729,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       } ],
       "methods" : [ ]
     }, {
@@ -644,8 +762,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       } ],
       "methods" : [ ]
     } ],
@@ -1046,63 +1164,7 @@
     }, {
       "name" : "EntityDimensions",
       "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "walk",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "sprint",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "crouch",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "swim",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "climb",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "free_fly",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "fly",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "teleport",
-        "type" : "{ height: number; width: number; footprint: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      } ],
+      "properties" : [ ],
       "methods" : [ ]
     }, {
       "name" : "EntityPhysicsProperties",
@@ -1268,7 +1330,7 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// EntityModel ID"
       }, {
         "name" : "modelModifier",
         "type" : "Record<string, any>",
@@ -1349,8 +1411,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "target",
         "type" : "Vector3",
@@ -1389,8 +1451,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "waypoints",
         "type" : "Waypoint[]",
@@ -1410,8 +1472,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "idlePose",
         "type" : "ENTITY_POSES",
@@ -1651,13 +1713,6 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
-      }, {
-        "name" : "backdrop",
-        "type" : "{\n     \n    n?: Array<Backdrop>;\n     \n    e?: Array<Backdrop>;\n     \n    s?: Array<Backdrop>;\n     \n    w?: Array<Backdrop>;\n  }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1762,8 +1817,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -1848,7 +1903,7 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// e.g., \"player\", \"target\", \"impact\""
+        "comment" : null
       }, {
         "name" : "positions",
         "type" : "PositionRef[]",
@@ -1857,33 +1912,26 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "params",
-        "type" : "{\n     \n    from?: any;\n    to?: any;\n    easing?: EasingType;\n\n     \n    speed?: number;\n    projectileModel?: string;\n    trajectory?: 'linear' | 'arc' | 'homing';\n\n     \n    radius?: number;\n    explosionIntensity?: number;\n\n     \n    color?: string;\n    lightIntensity?: number;\n\n     \n    soundPath?: string;\n    volume?: number;\n\n     \n    [key: string]: any;\n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "startTime",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "duration",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "endTime",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "blocking",
         "type" : "boolean",
@@ -1915,8 +1963,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "effects",
         "type" : "AnimationEffect[]",
@@ -1943,15 +1991,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "source",
-        "type" : "{\n    type: 'server' | 'client';\n    playerId?: string;\n  }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     }, {
@@ -2002,15 +2043,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "triggeredBy",
         "type" : "string",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Player ID"
       } ],
       "methods" : [ ]
     } ],
@@ -2153,8 +2194,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "//javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -2238,15 +2279,15 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "modifiers",
         "type" : "Record<number, BlockModifier>",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "metadata",
         "type" : "BlockMetadata",
@@ -2292,6 +2333,32 @@
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/RegionItemInfo.ts",
     "imports" : [ ],
     "interfaces" : [ {
+      "name" : "mirroring",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "itemId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "texture",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
       "name" : "RegionItemInfo",
       "extendsList" : [ ],
       "properties" : [ {
@@ -2834,7 +2901,7 @@
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// TODO: Define weather structure"
       } ],
       "methods" : [ ]
     }, {
@@ -3198,15 +3265,15 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "extendExpiry",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "regenRate",
         "type" : "number",
@@ -3240,8 +3307,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -3294,8 +3361,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     }, {
@@ -3330,13 +3397,6 @@
       "properties" : [ {
         "name" : "id",
         "type" : "string",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "ms",
-        "type" : "Array<{\n     \n    id: string",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -3405,36 +3465,36 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "byte",
+        "comment" : "// javaType: byte"
       }, {
         "name" : "width",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "byte",
+        "comment" : "// javaType: byte"
       }, {
         "name" : "yBase",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "height",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "depth",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "texture",
         "type" : "string",
@@ -3468,8 +3528,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "byte",
+        "comment" : "// javaType: byte"
       } ],
       "methods" : [ ]
     }, {
@@ -3480,15 +3540,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "cz",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "directions",
         "type" : "BackdropDirection[]",
@@ -3558,7 +3618,7 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// Mesh[] - using any to avoid Babylon.js dependency in sha"
+        "comment" : "// Mesh[] - using any to avoid Babylon.js dependency in shared"
       }, {
         "name" : "currentPosition",
         "type" : "Vector3",
@@ -3578,15 +3638,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "currentPose",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "currentWaypoints",
         "type" : "Waypoint[]",
@@ -3599,15 +3659,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "lastStepTime",
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       } ],
       "methods" : [ ]
     } ],
@@ -3763,13 +3823,6 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
-      }, {
-        "name" : "physicsState",
-        "type" : "{\n     \n    position: Vector3;\n\n     \n    velocity: Vector3;\n\n     \n    rotation: Rotation;\n\n     \n    grounded: boolean;\n  }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -3794,8 +3847,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "description",
         "type" : "string",
@@ -3808,8 +3861,8 @@
         "type" : "Record<number, BlockModifier>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -3935,13 +3988,6 @@
       "properties" : [ {
         "name" : "n",
         "type" : "string",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "p",
-        "type" : "{\n     \n    intensity?: number;\n\n     \n    color?: string;\n\n     \n    [key: string]: any;\n  }",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -4152,8 +4198,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "assetPath",
         "type" : "string",
@@ -4166,8 +4212,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "worlRegion",
         "type" : "string",
@@ -4180,8 +4226,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "byte",
+        "comment" : "// javaType: byte"
       }, {
         "name" : "seasonStatus",
         "type" : "SeasonStatus",
@@ -4207,34 +4253,6 @@
         "name" : "updatedAt",
         "type" : "string",
         "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "owner",
-        "type" : "{\n    user: string;\n    displayName: string;\n    email?: string;\n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "settings",
-        "type" : "{\n    maxPlayers: number;  \n    allowGuests: boolean;\n    pvpEnabled: boolean;\n    pingInterval: number;  \n\n     \n     \n    allowedMovementModes?: string[];\n\n     \n    defaultMovementMode?: string;\n\n     \n     \n    deadAmbientAudio?: string;\n\n     \n    swimStepAudio?: string;\n\n     \n     \n    clearColor?: { r: number; g: number; b: number };\n\n     \n    cameraMaxZ?: number;  \n\n     \n     \n    sunTexture?: string;\n\n     \n    sunSize?: number;\n\n     \n    sunAngleY?: number;\n\n     \n    sunElevation?: number;\n\n     \n    sunColor?: { r: number; g: number; b: number };\n\n     \n    sunEnabled?: boolean;\n\n     \n     \n    skyBox?: {\n       \n      enabled: boolean;\n       \n      mode: 'color' | 'texture';\n       \n      color?: { r: number; g: number; b: number };\n       \n      texturePath?: string;\n       \n      size?: number;\n       \n      rotation?: number;\n    };\n\n     \n    moons?: Array<{\n       \n      enabled: boolean;\n       \n      size?: number;\n       \n      positionOnCircle?: number;\n       \n      heightOverCamera?: number;\n       \n      distance?: number;\n       \n      phase?: number;\n       \n      texture?: string;\n    }>;\n\n     \n    horizonGradient?: {\n       \n      enabled: boolean;\n       \n      distance?: number;\n       \n      y?: number;\n       \n      height?: number;\n       \n      color0?: { r: number; g: number; b: number };\n       \n      color1?: { r: number; g: number; b: number };\n       \n      alpha?: number;\n    };\n\n     \n    environmentScripts?: Array<{\n       \n      name: string;\n       \n      group: string;\n       \n      script: ScriptActionDefinition;\n    }>;\n\n     \n    worldTime?: {\n       \n      minuteScaling?: number;  \n       \n      minutesPerHour?: number;  \n       \n      hoursPerDay?: number;  \n       \n      daysPerMonth?: number;  \n       \n      monthsPerYear?: number;  \n       \n      yearsPerEra?: number;  \n\n       \n      daySections?: {\n         \n        morningStart?: number;  \n         \n        dayStart?: number;  \n         \n        eveningStart?: number;  \n         \n        nightStart?: number;  \n      };\n\n       \n      celestialBodies?: {\n         \n        enabled?: boolean;\n         \n        updateIntervalSeconds?: number;  \n         \n        activeMoons?: number;  \n         \n        sunRotationHours?: number;  \n         \n        moon0RotationHours?: number;  \n         \n        moon1RotationHours?: number;  \n         \n        moon2RotationHours?: number;  \n      };\n    };\n\n     \n    shadows?: {\n       \n      enabled?: boolean;\n\n       \n      mapSize?: number;  \n\n       \n      quality?: 'low' | 'medium' | 'high';\n\n       \n      darkness?: number;\n\n       \n      maxDistance?: number;\n    };\n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "license",
-        "type" : "{\n    type: string;\n    expiresAt?: string;\n  }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "startArea",
-        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n    radius: number;\n    rotation: number;\n  }",
-        "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
@@ -4291,19 +4309,12 @@
       "name" : "ClientBlock",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "block",
-        "type" : "{\n    position: { x: number; y: number; z: number };\n    metadata?: {\n      id?: string;\n      groupId?: number;  \n      [key: string]: any;\n    };\n    [key: string]: any;\n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "blockType",
         "type" : "any",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// BlockType ("
+        "comment" : "// BlockType (full definition in engine package)"
       } ],
       "methods" : [ ]
     }, {
@@ -4375,20 +4386,6 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
-      }, {
-        "name" : "blockPosition",
-        "type" : "{ x: number; y: number; z: number }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "position",
-        "type" : "{ x: number; y: number; z: number }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4408,13 +4405,6 @@
       "name" : "MovementStateValues",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "dimensions",
-        "type" : "{\n    height: number;     \n    width: number;      \n    footprint: number;  \n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "baseMoveSpeed",
         "type" : "number",
         "optional" : false,
@@ -4434,56 +4424,56 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// Jump/verti"
+        "comment" : "// Jump/vertical speed"
       }, {
         "name" : "effectiveJumpSpeed",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Base + modifiers"
       }, {
         "name" : "eyeHeight",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Eye position relative to feet (for camera)"
       }, {
         "name" : "baseTurnSpeed",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Degrees/second (mouse sensitivity)"
       }, {
         "name" : "effectiveTurnSpeed",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Base + modifiers"
       }, {
         "name" : "selectionRadius",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Block selection/interaction reach"
       }, {
         "name" : "stealthRange",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// How far entities can detect player"
       }, {
         "name" : "distanceNotifyReduction",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : null
+        "comment" : "// Stealth modifier (0.0 = normal, 1.0 = invisible)"
       } ],
       "methods" : [ ]
     }, {
@@ -4600,13 +4590,6 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// Eye position relative to feet (for camera)"
-      }, {
-        "name" : "dimensions",
-        "type" : "{\n    walk: { height: number; width: number; footprint: number };\n    sprint: { height: number; width: number; footprint: number };\n    crouch: { height: number; width: number; footprint: number };\n    swim: { height: number; width: number; footprint: number };\n    climb: { height: number; width: number; footprint: number };\n    free_fly: { height: number; width: number; footprint: number };\n    fly: { height: number; width: number; footprint: number };\n    teleport: { height: number; width: number; footprint: number };\n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
         "comment" : null
       }, {
         "name" : "stealthRange",
@@ -4614,7 +4597,7 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// How far entities can detect player"
+        "comment" : null
       }, {
         "name" : "distanceNotifyReductionWalk",
         "type" : "number",
@@ -4635,21 +4618,21 @@
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// Block selection/interaction reach"
+        "comment" : null
       }, {
         "name" : "baseTurnSpeed",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// Degrees/second (mouse sensitivity)"
+        "comment" : null
       }, {
         "name" : "effectiveTurnSpeed",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
-        "comment" : "// Base + modifiers"
+        "comment" : null
       }, {
         "name" : "baseUnderwaterTurnSpeed",
         "type" : "number",
@@ -4796,8 +4779,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "message",
         "type" : "string",
@@ -4890,8 +4873,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "message",
         "type" : "string",
@@ -4936,15 +4919,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "s",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "aa",
         "type" : "AnimationData[]",
@@ -4969,22 +4952,22 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "y",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "id",
         "type" : "string",
@@ -5046,15 +5029,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "z",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "g",
         "type" : "string",
@@ -5091,8 +5074,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "errorMessage",
         "type" : "string",
@@ -5130,8 +5113,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     }, {
@@ -5175,13 +5158,6 @@
       }, {
         "name" : "a",
         "type" : "AreaData[]",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "backdrop",
-        "type" : "{\n     \n    n?: Array<Backdrop>;\n     \n    e?: Array<Backdrop>;\n     \n    s?: Array<Backdrop>;\n     \n    w?: Array<Backdrop>;\n  }",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -5310,8 +5286,8 @@
         "type" : "number",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "byte",
+        "comment" : "// javaType: byte"
       }, {
         "name" : "ts",
         "type" : "number",
@@ -5319,13 +5295,6 @@
         "visibility" : null,
         "javaTypeHint" : "long",
         "comment" : "// javaType: long"
-      }, {
-        "name" : "ta",
-        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n     \n    ts: number;  \n  }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -5343,8 +5312,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "ac",
         "type" : "string",
@@ -5385,8 +5354,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -5407,8 +5376,8 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       } ],
       "methods" : [ ]
     }, {
@@ -5419,15 +5388,15 @@
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       }, {
         "name" : "sTs",
         "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "long",
+        "comment" : "// javaType: long"
       } ],
       "methods" : [ ]
     }, {
@@ -5525,13 +5494,6 @@
       "name" : "UserMovementData",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "p",
-        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n  }",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "r",
         "type" : "Rotation",
         "optional" : true,
@@ -5544,13 +5506,6 @@
       "name" : "PlayerTeleportData",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "p",
-        "type" : "{\n    x: number;\n    y: number;\n    z: number;\n  }",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "r",
         "type" : "Rotation",
         "optional" : false,

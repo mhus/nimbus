@@ -11,7 +11,6 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class MovementStateValues {
-    private java.util.Map<String, Object> dimensions;
     @com.fasterxml.jackson.annotation.JsonProperty("baseMoveSpeed")
     private double baseMoveSpeed;
     @com.fasterxml.jackson.annotation.JsonProperty("effectiveMoveSpeed")

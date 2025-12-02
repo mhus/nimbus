@@ -21,14 +21,14 @@ public class ClientEntity {
     @com.fasterxml.jackson.annotation.JsonProperty("currentRotation")
     private Rotation currentRotation;
     @com.fasterxml.jackson.annotation.JsonProperty("currentWaypointIndex")
-    private double currentWaypointIndex;
+    private int currentWaypointIndex;
     @com.fasterxml.jackson.annotation.JsonProperty("currentPose")
-    private double currentPose;
+    private int currentPose;
     @com.fasterxml.jackson.annotation.JsonProperty("currentWaypoints")
     private java.util.List<Waypoint> currentWaypoints;
     @com.fasterxml.jackson.annotation.JsonProperty("lastAccess")
-    private double lastAccess;
+    private long lastAccess;
     @com.fasterxml.jackson.annotation.JsonProperty("lastStepTime")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double lastStepTime;
+    private long lastStepTime;
 }

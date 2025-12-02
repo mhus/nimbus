@@ -14,5 +14,5 @@ public class StepWaitEvent {
     private String kind;
     private String name;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double timeout;
+    private long timeout;
 }

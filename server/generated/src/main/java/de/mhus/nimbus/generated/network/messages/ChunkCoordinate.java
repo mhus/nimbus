@@ -12,5 +12,5 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ChunkCoordinate {
     private int cx;
-    private double cz;
+    private int cz;
 }

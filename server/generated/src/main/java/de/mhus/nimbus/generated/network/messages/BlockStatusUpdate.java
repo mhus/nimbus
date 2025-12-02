@@ -13,8 +13,8 @@ package de.mhus.nimbus.generated.network.messages;
 public class BlockStatusUpdate {
     private int x;
     private int y;
-    private double z;
-    private double s;
+    private int z;
+    private int s;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<de.mhus.nimbus.generated.types.AnimationData> aa;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
