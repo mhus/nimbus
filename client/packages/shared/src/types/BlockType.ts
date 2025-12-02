@@ -64,5 +64,5 @@ export interface BlockType {
    *   2: { visibility: { shape: Shape.CUBE }, ... }   // closed
    * }
    */
-  modifiers: Record<number, BlockModifier>; // javaType: int
+  modifiers: Record<number, BlockModifier>; // javaType: java.util.Map<Integer,BlockModifier>
 }

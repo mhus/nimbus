@@ -391,7 +391,7 @@ export interface Block {
    *   1: { visibility: { shape: Shape.CUBE, textures: {...} } }  // custom open state
    * }
    */
-  modifiers?: Record<number, BlockModifier>; // javaType: int
+  modifiers?: Record<number, BlockModifier>; // javaType: java.util.Map<Integer,BlockModifier>
 
   /**
    * Block-specific metadata (optional)
