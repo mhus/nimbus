@@ -20,7 +20,7 @@ export interface StepPlay {
 export interface StepWait {
   kind: 'Wait';
   /** Duration in seconds */
-  seconds: number;
+  seconds: number; // javaType: int
 }
 
 /**
