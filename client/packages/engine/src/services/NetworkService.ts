@@ -720,8 +720,10 @@ export class NetworkService {
    * @returns Full backdrop URL with cache-busting timestamp
    */
   getBackdropUrl(backdropTypeId: string): string {
+    const worldId = this.appContext.worldInfo?.worldId || 'main';
     const timestamp = Date.now();
-    return `${this.apiUrl}/api/backdrop/${backdropTypeId}?t=${timestamp}`;
+//    return `${this.apiUrl}/api/backdrop/${backdropTypeId}?t=${timestamp}`;
+    return `${this.apiUrl}/api/worlds/${worldId}/backdrop/${backdropTypeId}?t=${timestamp}`;
   }
 
   /**
