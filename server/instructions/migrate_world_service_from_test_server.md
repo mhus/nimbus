@@ -133,3 +133,506 @@ Migration:
 
 [ ] Import alle chunks aus client/packages/test_server/data/worlds/main/chunks in WChunk
 
+### Here is Claude's plan
+
+ Migration Plan: Test Server → World Service (Java/Spring Boot)
+
+ Übersicht
+
+ Migration der TypeScript test_server Funktionalität nach Java mit MongoDB Persistierung. Die Implementierung erfolgt in mehreren Phasen:
+
+ 1. JPA Entities, Repositories, Services (world-shared)
+ 2. REST Endpoints (world-player)
+ 3. WebSocket Handlers (world-player)
+ 4. Demo Import Tool (tools/demo-import)
+
+ ---
+ Phase 1: JPA Entities, Repositories, Services (world-shared)
+
+ 1.1 Entity-Struktur
+
+ Alle Entities folgen dem 'public' Field Pattern:
+
+ @Document(collection = "w_blocktypes")
+ @CompoundIndexes({
+     @CompoundIndex(name = "blockId_idx", def = "{ 'blockId': 1 }", unique = true)
+ })
+ @Data
+ @Builder
+ @NoArgsConstructor
+ @AllArgsConstructor
+ public class WBlockType {
+     @Id
+     private String id;  // MongoDB _id
+
+     @Indexed(unique = true)
+     private String blockId;  // External ID (z.B. "core:stone")
+
+     private BlockType publicData;  // Generated type aus 'generated' module
+
+     @Indexed
+     private String regionId;
+
+     @Indexed
+     private String worldId;
+
+     private Instant createdAt;
+     private Instant updatedAt;
+
+     @Indexed
+     private boolean enabled = true;
+
+     public void touchCreate() {
+         Instant now = Instant.now();
+         createdAt = now;
+         updatedAt = now;
+     }
+
+     public void touchUpdate() {
+         updatedAt = Instant.now();
+     }
+ }
+
+ Wichtig: Der publicData Field enthält das generated DTO und wird bei REST Requests ausgeliefert.
+
+ 1.2 Entities zu erstellen
+
+ WBlockType (Template)
+
+ - Location: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/WBlockType.java
+ - Collection: w_blocktypes
+ - Generated Type: BlockType
+ - Unique Index: blockId (String, z.B. "core:stone", "w:123")
+ - Felder: id, blockId, publicData (BlockType), regionId, worldId, createdAt, updatedAt, enabled
+ - Storage: Inline (1-50KB JSON via EngineMapper)
+
+ WItemType (Template)
+
+ - Location: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/WItemType.java
+ - Collection: w_itemtypes
+ - Generated Type: ItemType
+ - Unique Index: itemType (String, z.B. "sword", "axe")
+ - Felder: id, itemType, publicData (ItemType), regionId, worldId, createdAt, updatedAt, enabled
+ - Storage: Inline (1-5KB JSON)
+
+ WEntityModel (Template)
+
+ - Location: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/WEntityModel.java
+ - Collection: w_entity_models
+ - Generated Type: EntityModel
+ - Unique Index: modelId (String, z.B. "cow1", "farmer1")
+ - Felder: id, modelId, publicData (EntityModel), regionId, worldId, createdAt, updatedAt, enabled
+ - Storage: Inline (1-2KB JSON)
+
+ WEntity (Instanz im World)
+
+ - Location: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/WEntity.java
+ - Collection: w_entities
+ - Generated Type: Entity
+ - Compound Unique Index: (worldId, entityId)
+ - Additional Indexes: worldId, chunk (für Chunk-basierte Queries)
+ - Felder: id, worldId, entityId, publicData (Entity), chunk, modelId (String reference zu WEntityModel), createdAt, updatedAt, enabled
+ - Storage: Inline (0.5-5KB JSON)
+
+ WBackdrop (Config)
+
+ - Location: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/WBackdrop.java
+ - Collection: w_backdrops
+ - Generated Type: Backdrop
+ - Unique Index: backdropId (String)
+ - Felder: id, backdropId, publicData (Backdrop), regionId, worldId, createdAt, updatedAt, enabled
+ - Storage: Inline (0.1-0.5KB JSON)
+
+ 1.3 Repositories
+
+ Alle Repositories in: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/
+
+ WBlockTypeRepository.java
+
+ @Repository
+ public interface WBlockTypeRepository extends MongoRepository<WBlockType, String> {
+     Optional<WBlockType> findByBlockId(String blockId);
+     List<WBlockType> findByRegionId(String regionId);
+     List<WBlockType> findByWorldId(String worldId);
+     List<WBlockType> findByEnabled(boolean enabled);
+     boolean existsByBlockId(String blockId);
+ }
+
+ WItemTypeRepository.java
+
+ @Repository
+ public interface WItemTypeRepository extends MongoRepository<WItemType, String> {
+     Optional<WItemType> findByItemType(String itemType);
+     List<WItemType> findByEnabled(boolean enabled);
+     boolean existsByItemType(String itemType);
+ }
+
+ WEntityModelRepository.java
+
+ @Repository
+ public interface WEntityModelRepository extends MongoRepository<WEntityModel, String> {
+     Optional<WEntityModel> findByModelId(String modelId);
+     List<WEntityModel> findByEnabled(boolean enabled);
+     boolean existsByModelId(String modelId);
+ }
+
+ WEntityRepository.java
+
+ @Repository
+ public interface WEntityRepository extends MongoRepository<WEntity, String> {
+     Optional<WEntity> findByWorldIdAndEntityId(String worldId, String entityId);
+     List<WEntity> findByWorldId(String worldId);
+     List<WEntity> findByWorldIdAndChunk(String worldId, String chunk);
+     List<WEntity> findByModelId(String modelId);
+     boolean existsByWorldIdAndEntityId(String worldId, String entityId);
+ }
+
+ WBackdropRepository.java
+
+ @Repository
+ public interface WBackdropRepository extends MongoRepository<WBackdrop, String> {
+     Optional<WBackdrop> findByBackdropId(String backdropId);
+     List<WBackdrop> findByEnabled(boolean enabled);
+     boolean existsByBackdropId(String backdropId);
+ }
+
+ 1.4 Services
+
+ Alle Services in: server/world-shared/src/main/java/de/mhus/nimbus/world/shared/types/
+
+ Pattern: Folge WChunkService Pattern mit:
+ - EngineMapper für Serialisierung/Deserialisierung
+ - @Transactional(readOnly = true) für Lesezugriffe
+ - @Transactional für Schreibzugriffe
+ - Parameter-Validierung
+ - Consumer-basierte Updates
+ - Batch-Operationen für Import
+
+ WBlockTypeService.java
+
+ @Service
+ @RequiredArgsConstructor
+ @Slf4j
+ public class WBlockTypeService {
+     private final WBlockTypeRepository repository;
+
+     @Transactional(readOnly = true)
+     public Optional<WBlockType> findByBlockId(String blockId) {
+         return repository.findByBlockId(blockId);
+     }
+
+     @Transactional
+     public WBlockType save(String blockId, BlockType publicData, String regionId, String worldId) {
+         if (blank(blockId)) throw new IllegalArgumentException("blockId required");
+         if (publicData == null) throw new IllegalArgumentException("publicData required");
+
+         WBlockType entity = repository.findByBlockId(blockId).orElseGet(() -> {
+             WBlockType neu = WBlockType.builder()
+                 .blockId(blockId)
+                 .regionId(regionId)
+                 .worldId(worldId)
+                 .enabled(true)
+                 .build();
+             neu.touchCreate();
+             return neu;
+         });
+
+         entity.setPublicData(publicData);
+         entity.touchUpdate();
+         return repository.save(entity);
+     }
+
+     @Transactional
+     public List<WBlockType> saveAll(List<WBlockType> entities) {
+         entities.forEach(e -> {
+             if (e.getCreatedAt() == null) e.touchCreate();
+             e.touchUpdate();
+         });
+         return repository.saveAll(entities);
+     }
+
+     private boolean blank(String s) { return s == null || s.isBlank(); }
+ }
+
+ Services erstellen für:
+ - WBlockTypeService
+ - WItemTypeService
+ - WEntityModelService
+ - WEntityService
+ - WBackdropService
+
+ ---
+ Phase 2: REST Endpoints (world-player)
+
+ 2.1 Controller Location
+
+ Alle Controller in: server/world-player/src/main/java/de/mhus/nimbus/world/player/api/
+
+ 2.2 Endpoint-Struktur
+
+ Wichtig:
+ - Nur GET Zugriffe
+ - Response enthält nur entity.getPublicData() (das generated DTO)
+ - Folge EAssetController Pattern
+
+ 2.3 REST Endpoints zu erstellen
+
+ BlockTypeController.java
+
+ @RestController
+ @RequestMapping("/world/blocktypes")
+ @RequiredArgsConstructor
+ @Slf4j
+ @Tag(name = "BlockTypes", description = "BlockType Templates abrufen")
+ public class BlockTypeController {
+     private final WBlockTypeService service;
+
+     @GetMapping("/{blockId}")
+     @Operation(summary = "BlockType abrufen")
+     public ResponseEntity<?> getBlockType(@PathVariable String blockId) {
+         return service.findByBlockId(blockId)
+             .map(entity -> ResponseEntity.ok(entity.getPublicData()))
+             .orElseGet(() -> ResponseEntity.notFound().build());
+     }
+
+     @GetMapping
+     @Operation(summary = "Alle BlockTypes abrufen")
+     public ResponseEntity<?> getAllBlockTypes(
+             @RequestParam(required = false) String regionId,
+             @RequestParam(required = false) String worldId) {
+         // Filter logic, return List<BlockType> (publicData)
+     }
+ }
+
+ Controllers erstellen für:
+ - BlockTypeController → /world/blocktypes
+ - ItemTypeController → /world/itemtypes
+ - EntityModelController → /world/entitymodels
+ - EntityController → /world/entities
+ - BackdropController → /world/backdrops
+
+ 2.4 REST API Referenz
+
+ Siehe: instructions/general/server_rest_api.md für alle Endpoints.
+
+ ---
+ Phase 3: WebSocket Handlers (world-player)
+
+ 3.1 WebSocket Location
+
+ Handler in: server/world-player/src/main/java/de/mhus/nimbus/world/player/websocket/
+
+ 3.2 WebSocket Session State
+
+ - Stateful: Session-Status wird im Speicher gehalten
+ - Disconnect: Session → DEPRECATED (via WebSocketService)
+ - Redis: Für Multi-Session Events (Broadcasting)
+
+ 3.3 Message Handlers zu implementieren
+
+ Client → Server Messages
+
+ Referenz: instructions/general/network-model-2.0.md
+
+ 1. Login (mit sessionId) - Authentifizierung
+ 2. Ping - WorldService.setStatus → MongoDB
+ 3. Chunk Registration - In WebSocket Session halten
+ 4. Chunk Request - Chunk Data aus MongoDB laden
+ 5. Block Interaction - Block Updates
+ 6. Entity Position Update - Entity Movement
+ 7. Entity Interaction - Entity Actions
+ 8. Animation Execution - Animation Trigger
+ 9. User Movement Update - Player Movement
+ 10. Interaction Request - Interaction Handling
+ 11. Client Command - Command Processing
+ 12. Effect Trigger - Effect Events
+ 13. Effect Update - Effect State Updates
+
+ Server → Client Messages
+
+ 1. Update World Status - World State Broadcasting
+ 2. Chunk Update - Chunk Data Push
+ 3. Block Update - Block State Changes
+ 4. Item Block Update - Item Changes
+ 5. Block Status Update - Block Status Changes
+ 6. Entity Chunk Pathway - Entity Movement Broadcasting
+ 7. Animation Execution - Animation Broadcasting
+ 8. Server Command - ServerCommandService
+ 9. Multiple Commands - Batch Commands
+ 10. Effect Trigger - Effect Broadcasting
+ 11. Effect Update - Effect State Broadcasting
+ 12. Team Data - Team Information
+ 13. Team Status - Team State Updates
+
+ 3.4 WebSocket Handler Pattern
+
+ @Component
+ @RequiredArgsConstructor
+ @Slf4j
+ public class ChunkRequestHandler implements MessageHandler {
+
+     private final WChunkService chunkService;
+     private final WebSocketService webSocketService;
+     private final RedisTemplate<String, Object> redisTemplate;
+
+     @Override
+     public void handle(WebSocketSession session, NetworkMessage message) {
+         // 1. Parse message (EngineMapper)
+         // 2. Validate session state
+         // 3. Load data from MongoDB
+         // 4. Send response to client
+         // 5. If needed, broadcast via Redis to other sessions
+     }
+ }
+
+ ---
+ Phase 4: Demo Import Tool (tools/demo-import)
+
+ 4.1 Modul-Struktur
+
+ server/tools/demo-import/
+ ├── pom.xml
+ ├── README.md
+ └── src/main/
+     ├── java/de/mhus/nimbus/tools/demoimport/
+     │   ├── DemoImportApplication.java
+     │   ├── importers/
+     │   │   ├── BlockTypeImporter.java
+     │   │   ├── ItemTypeImporter.java
+     │   │   ├── EntityModelImporter.java
+     │   │   ├── EntityImporter.java
+     │   │   ├── BackdropImporter.java
+     │   │   ├── AssetImporter.java
+     │   │   └── ChunkImporter.java
+     │   ├── services/
+     │   │   ├── ImportService.java
+     │   │   ├── FileSystemService.java
+     │   │   └── ValidationService.java
+     │   └── config/
+     │       └── ImportConfiguration.java
+     └── resources/
+         └── application.properties
+
+ 4.2 Import-Reihenfolge
+
+ 1. BlockTypes (614 files) - client/packages/test_server/files/blocktypes/
+   - Parse manifest.json
+   - Load hierarchical files (id/100 = subdirectory)
+ 2. ItemTypes (5 files) - client/packages/test_server/files/itemtypes/
+ 3. EntityModels (4 files) - client/packages/test_server/files/entitymodels/
+ 4. Backdrops (9 files) - client/packages/test_server/files/backdrops/
+ 5. Assets (641 files) - client/packages/test_server/files/assets/
+   - Parse *.info.json für Metadaten
+ 6. Entities (1 player template) - client/packages/test_server/files/entity/
+ 7. Chunks - client/packages/test_server/data/worlds/main/chunks/
+
+ 4.3 Import-Strategie
+
+ - Spring Boot CommandLineRunner (wie demo-setup)
+ - MongoDB Connection: via application.properties
+ - Idempotent: Upsert by natural key (blockId, itemType, modelId, etc.)
+ - Batch Processing: repository.saveAll() für Performance
+ - Validation: Schema validation vor DB write
+ - Error Handling: Skip on error, log failures
+ - Progress Tracking: Console output mit Statistiken
+
+ 4.4 Command-Line Interface
+
+ java -jar demo-import.jar \
+   --source /path/to/test_server/files \
+   --db mongodb://localhost:27017/nimbus \
+   --types blocktype,itemtype,entitymodel,backdrop,asset,chunk
+
+ ---
+ Kritische Dateien zur Referenz
+
+ Existing Patterns
+
+ - /server/shared/src/main/java/de/mhus/nimbus/shared/persistence/SAsset.java - Entity Pattern
+ - /server/world-shared/src/main/java/de/mhus/nimbus/world/shared/world/WChunk.java - Entity + Storage Pattern
+ - /server/world-shared/src/main/java/de/mhus/nimbus/world/shared/world/WChunkService.java - Service Pattern
+ - /server/shared/src/main/java/de/mhus/nimbus/shared/engine/EngineMapper.java - Serialization
+
+ Generated Types
+
+ - /server/generated/src/main/java/de/mhus/nimbus/generated/types/BlockType.java
+ - /server/generated/src/main/java/de/mhus/nimbus/generated/types/ItemType.java
+ - /server/generated/src/main/java/de/mhus/nimbus/generated/types/EntityModel.java
+ - /server/generated/src/main/java/de/mhus/nimbus/generated/types/Entity.java
+ - /server/generated/src/main/java/de/mhus/nimbus/generated/types/Backdrop.java
+
+ Test Server Sources
+
+ - /client/packages/test_server/files/blocktypes/ - BlockType JSON files
+ - /client/packages/test_server/files/itemtypes/ - ItemType JSON files
+ - /client/packages/test_server/files/entitymodels/ - EntityModel JSON files
+ - /client/packages/test_server/files/backdrops/ - Backdrop JSON files
+ - /client/packages/test_server/files/assets/ - Binary Assets
+ - /client/packages/test_server/data/worlds/main/chunks/ - Chunk Data
+
+ Documentation
+
+ - /server/instructions/general/server_rest_api.md - REST API Specification
+ - /server/instructions/general/network-model-2.0.md - WebSocket Message Protocol
+
+ ---
+ Implementierungs-Reihenfolge
+
+ Schritt 1: Entities, Repositories, Services (world-shared)
+
+ 1. Erstelle alle 5 Entity-Klassen mit Annotations
+ 2. Erstelle alle 5 Repository-Interfaces
+ 3. Erstelle alle 5 Service-Klassen
+ 4. Schreibe Unit Tests für Services
+
+ Schritt 2: REST Endpoints (world-player)
+
+ 1. Erstelle alle 5 Controller-Klassen
+ 2. Implementiere GET Endpoints
+ 3. Teste Endpoints mit Integration Tests
+
+ Schritt 3: WebSocket Handlers (world-player)
+
+ 1. Implementiere Client→Server Message Handlers
+ 2. Implementiere Server→Client Message Broadcasters
+ 3. Integriere Redis für Multi-Session Events
+ 4. Teste WebSocket Kommunikation
+
+ Schritt 4: Demo Import Tool (tools/demo-import)
+
+ 1. Erstelle Modul-Struktur
+ 2. Implementiere alle Importers
+ 3. Implementiere Validation & Error Handling
+ 4. Teste Import mit test_server Daten
+
+ ---
+ Validierung
+
+ Nach jeder Phase:
+ - ✅ Compile Check: mvn clean compile
+ - ✅ Test Check: mvn test
+ - ✅ Integration Test: mvn verify -Pintegration-tests
+ - ✅ MongoDB Verbindung prüfen
+ - ✅ REST API testen (z.B. mit curl)
+ - ✅ WebSocket Verbindung testen (mit Client)
+
+ ---
+ Wichtige Design-Entscheidungen
+
+ 1. 'public' Field Pattern: Trennung von JPA Metadaten und Domain-Daten
+ 2. Inline Storage: Alle Entities < 10KB, kein externes Storage nötig
+ 3. EngineMapper: Zentrale Serialisierung für generated types
+ 4. Compound Indexes: Uniqueness auf natural keys (blockId, itemType, etc.)
+ 5. Spring Boot CommandLineRunner: Für demo-import Tool
+ 6. Redis: Für WebSocket Multi-Session Broadcasting
+ 7. Stateful WebSocket: Session-State im Speicher, DEPRECATED on disconnect
+
+ ---
+ Nächste Schritte
+
+ Nach Bestätigung des Plans:
+ 1. Phase 1 starten: Entities, Repositories, Services erstellen
+ 2. Compile & Test: Nach jedem Entity-Typ
+ 3. Phase 2: REST Endpoints nach Entities fertig
+ 4. Phase 3: WebSocket Handlers nach REST fertig
+ 5. Phase 4: Demo Import Tool am Ende
