@@ -641,16 +641,17 @@ Migration:
 
 ## Verfeinern
 
-[ ] Gibt es noch offene Punkte aus der migration?
+[ ] Prüfe noch den WWorld/WWorldService
+- Implementiert er WorldInfo (generated) in publicData, muss noch etwas angepasst werden?
 
-[ ] Prüfe noch den WorldService
-- Implementiert er WorldInfo in publicData, muss noch etwas angepasst werden?
+[ ] Prüfe AssetEntity, dort sollen auch als publicData die Metadaten aus den '*.info.json' Dateien gespeichert werden.
 
-[ ] Implementiere eine automatische Migration aller Datei die ich jederzeit ohne parameter wieder starten kann.
+[ ] Implementiere eine automatische Migration in 'tools/demo-import' aller Datei die ich jederzeit ohne parameter wieder starten kann.
 - Daten kommen aus 
   - /client/packages/test_server/files/
   - /client/packages/test_server/data/worlds/main
 - Migriert soll auch die World 'main' aus /client/packages/test_server/data/worlds/main/info.json
+- Import der '*.info.json' Dateien zu den Assets
 
 [ ] Pruefe noch den ChunkService.
 - Es soll keinen Generator geben, wenn keine Chunk-Daten vorhanden sind

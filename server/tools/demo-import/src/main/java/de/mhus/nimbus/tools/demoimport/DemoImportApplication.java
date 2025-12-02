@@ -1,6 +1,8 @@
 package de.mhus.nimbus.tools.demoimport;
 
+import de.mhus.nimbus.tools.demoimport.importers.BackdropImporter;
 import de.mhus.nimbus.tools.demoimport.importers.BlockTypeImporter;
+import de.mhus.nimbus.tools.demoimport.importers.EntityImporter;
 import de.mhus.nimbus.tools.demoimport.importers.EntityModelImporter;
 import de.mhus.nimbus.tools.demoimport.importers.ItemTypeImporter;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ import org.springframework.context.annotation.ComponentScan;
  * - ItemTypes (5 files from itemtypes/)
  * - EntityModels (4 files from entitymodels/)
  * - Backdrops (9 files from backdrops/)
- * - Assets (641 files from assets/)
+ * - Entities (player templates from entity/)
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {
@@ -36,6 +38,8 @@ public class DemoImportApplication implements CommandLineRunner {
     private final BlockTypeImporter blockTypeImporter;
     private final ItemTypeImporter itemTypeImporter;
     private final EntityModelImporter entityModelImporter;
+    private final BackdropImporter backdropImporter;
+    private final EntityImporter entityImporter;
 
     public static void main(String[] args) {
         System.exit(SpringApplication.exit(SpringApplication.run(DemoImportApplication.class, args)));
@@ -68,6 +72,18 @@ public class DemoImportApplication implements CommandLineRunner {
             log.info("=== Phase 3: EntityModels ===");
             ImportStats entityModelStats = entityModelImporter.importAll();
             totalStats.merge(entityModelStats);
+
+            // Import Backdrops
+            log.info("");
+            log.info("=== Phase 4: Backdrops ===");
+            ImportStats backdropStats = backdropImporter.importAll();
+            totalStats.merge(backdropStats);
+
+            // Import Entities
+            log.info("");
+            log.info("=== Phase 5: Entities ===");
+            ImportStats entityStats = entityImporter.importAll();
+            totalStats.merge(entityStats);
 
             // Summary
             long duration = System.currentTimeMillis() - startTime;
