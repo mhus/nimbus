@@ -129,10 +129,10 @@ public class RUserCharacterController {
 
     private RegionCharacterResponse toResponse(RCharacter c) {
         java.util.Map<String, RegionItemInfo> backpack = c.getBackpack();
-        java.util.Map<java.lang.Double, RegionItemInfo> wearingConv = new java.util.HashMap<>();
-        c.getWearing().forEach((k,v) -> wearingConv.put(k.doubleValue(), v));
-        java.util.Map<String, java.lang.Double> skillsConv = new java.util.HashMap<>();
-        c.getSkills().forEach((k,v) -> skillsConv.put(k, v.doubleValue()));
+        java.util.Map<java.lang.Integer, RegionItemInfo> wearingConv = new java.util.HashMap<>();
+        c.getWearing().forEach((k,v) -> wearingConv.put(k.intValue(), v));
+        java.util.Map<String, java.lang.Integer> skillsConv = new java.util.HashMap<>();
+        c.getSkills().forEach((k,v) -> skillsConv.put(k, v.intValue()));
         return RegionCharacterResponse.builder()
                 .id(c.getId())
                 .userId(c.getUserId())

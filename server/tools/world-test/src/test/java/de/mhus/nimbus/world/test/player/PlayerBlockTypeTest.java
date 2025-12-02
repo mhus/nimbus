@@ -210,7 +210,7 @@ class PlayerBlockTypeTest extends AbstractPlayerTest {
         BlockType coreBlockType = BlockType.builder()
                 .id("1")
                 .description("Core block type")
-                .initialStatus(0.0)
+                .initialStatus(0)
                 .build();
 
         String coreBlockTypeJson = objectMapper.writeValueAsString(coreBlockType);

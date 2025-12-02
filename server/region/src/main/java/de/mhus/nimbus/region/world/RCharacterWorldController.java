@@ -59,14 +59,14 @@ public class RCharacterWorldController {
         return ResponseEntity.ok(resp);
     }
 
-    private java.util.Map<java.lang.Double, de.mhus.nimbus.generated.types.RegionItemInfo> convertWearing(de.mhus.nimbus.region.character.RCharacter c) {
-        java.util.Map<java.lang.Double, de.mhus.nimbus.generated.types.RegionItemInfo> m = new java.util.HashMap<>();
-        c.getWearing().forEach((k,v) -> m.put(k.doubleValue(), v));
+    private java.util.Map<java.lang.Integer, de.mhus.nimbus.generated.types.RegionItemInfo> convertWearing(de.mhus.nimbus.region.character.RCharacter c) {
+        java.util.Map<java.lang.Integer, de.mhus.nimbus.generated.types.RegionItemInfo> m = new java.util.HashMap<>();
+        c.getWearing().forEach((k,v) -> m.put(k.intValue(), v));
         return m;
     }
-    private java.util.Map<String, java.lang.Double> convertSkills(de.mhus.nimbus.region.character.RCharacter c) {
-        java.util.Map<String, java.lang.Double> m = new java.util.HashMap<>();
-        c.getSkills().forEach((k,v) -> m.put(k, v.doubleValue()));
+    private java.util.Map<String, java.lang.Integer> convertSkills(de.mhus.nimbus.region.character.RCharacter c) {
+        java.util.Map<String, java.lang.Integer> m = new java.util.HashMap<>();
+        c.getSkills().forEach((k,v) -> m.put(k, v.intValue()));
         return m;
     }
 }

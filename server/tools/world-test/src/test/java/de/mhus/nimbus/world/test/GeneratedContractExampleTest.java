@@ -21,13 +21,13 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
         // Given - Create core BlockType
         BlockType blockType = BlockType.builder()
                 .id("1")
-                .initialStatus(0.0)
+                .initialStatus(0)
                 .description("A basic stone block")
                 .build();
 
         // When/Then - Validate core type
         assertThat(blockType.getId()).isEqualTo("1");
-        assertThat(blockType.getInitialStatus()).isEqualTo(0.0);
+        assertThat(blockType.getInitialStatus()).isEqualTo(0);
         assertThat(blockType.getDescription()).isEqualTo("A basic stone block");
     }
 
@@ -36,13 +36,13 @@ class GeneratedContractExampleTest extends AbstractSystemTest {
     void shouldCreateChunkCoordinate() {
         // Given - Create ChunkCoordinate with correct field names
         ChunkCoordinate coord = ChunkCoordinate.builder()
-                .cx(10.0)  // chunk x coordinate
-                .cz(20.0)  // chunk z coordinate
+                .cx(10)  // chunk x coordinate
+                .cz(20)  // chunk z coordinate
                 .build();
 
         // When/Then - Validate coordinate fields
-        assertThat(coord.getCx()).isEqualTo(10.0);
-        assertThat(coord.getCz()).isEqualTo(20.0);
+        assertThat(coord.getCx()).isEqualTo(10);
+        assertThat(coord.getCz()).isEqualTo(20);
     }
 
     @Test

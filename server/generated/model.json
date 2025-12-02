@@ -186,15 +186,15 @@
         "type" : "Record<number, RegionItemInfo>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : "java.util.Map<Integer,RegionItemInfo>",
+        "comment" : "// javaType: java.util.Map<Integer,RegionItemInfo>"
       }, {
         "name" : "skills",
         "type" : "Record<string, number>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : "java.util.Map<String,Integer>",
+        "comment" : "// javaType: java.util.Map<String,Integer>"
       } ],
       "methods" : [ ]
     } ],
@@ -2286,8 +2286,8 @@
         "type" : "Record<number, BlockModifier>",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : "java.util.Map<Integer,BlockModifier>",
+        "comment" : "// javaType: java.util.Map<Integer,BlockModifier>"
       }, {
         "name" : "metadata",
         "type" : "BlockMetadata",
@@ -3861,8 +3861,8 @@
         "type" : "Record<number, BlockModifier>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : "java.util.Map<Integer,BlockModifier>",
+        "comment" : "// javaType: java.util.Map<Integer,BlockModifier>"
       } ],
       "methods" : [ ]
     } ],

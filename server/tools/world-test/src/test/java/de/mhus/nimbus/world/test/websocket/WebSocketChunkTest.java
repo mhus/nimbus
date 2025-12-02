@@ -35,13 +35,13 @@ class WebSocketChunkTest extends AbstractWebSocketTest {
 
         // Create chunk coordinates using generated types
         ChunkCoordinate coord1 = ChunkCoordinate.builder()
-                .cx(0.0)
-                .cz(0.0)
+                .cx(0)
+                .cz(0)
                 .build();
 
         ChunkCoordinate coord2 = ChunkCoordinate.builder()
-                .cx(1.0)
-                .cz(0.0)
+                .cx(1)
+                .cz(0)
                 .build();
 
         List<ChunkCoordinate> chunks = Arrays.asList(coord1, coord2);
@@ -121,8 +121,8 @@ class WebSocketChunkTest extends AbstractWebSocketTest {
 
         // Create chunk query using generated ChunkQueryData
         ChunkCoordinate coord = ChunkCoordinate.builder()
-                .cx(0.0)
-                .cz(0.0)
+                .cx(0)
+                .cz(0)
                 .build();
 
         ChunkQueryData queryData = ChunkQueryData.builder()

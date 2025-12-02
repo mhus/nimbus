@@ -17,7 +17,7 @@ public class WChunkServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
         WChunkService service = new WChunkService(repo, Optional.of(storage));
         ChunkData cd = new ChunkData();
-        cd.setCx(1); cd.setCz(2); cd.setSize(16);
+        cd.setCx(1); cd.setCz(2); cd.setSize((byte)16);
         WChunk chunk = WChunk.builder().regionId("r1").worldId("w1").chunk("c1").build();
         Mockito.when(repo.findByRegionIdAndWorldIdAndChunk("r1","w1","c1")).thenReturn(Optional.empty());
         Mockito.when(repo.save(Mockito.any())).thenAnswer(a -> a.getArgument(0));
@@ -33,7 +33,7 @@ public class WChunkServiceTest {
         WChunkService service = new WChunkService(repo, Optional.of(storage));
         service.setInlineMaxSize(10); // sehr klein um external zu erzwingen
         ChunkData cd = new ChunkData();
-        cd.setCx(1); cd.setCz(2); cd.setSize(16);
+        cd.setCx(1); cd.setCz(2); cd.setSize((byte)16);
         cd.setBlocks(java.util.List.of());
         String largeJson = "{" + "\"cx\":1," + "\"cz\":2," + "\"size\":16," + "\"blocks\":[]}"; // > inlineMaxSize garantiert
         Mockito.when(repo.findByRegionIdAndWorldIdAndChunk("r1","w1","c2")).thenReturn(Optional.empty());

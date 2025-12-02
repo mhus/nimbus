@@ -17,5 +17,5 @@ public class BlockType {
     private int initialStatus;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String description;
-    private int modifiers;
+    private java.util.Map<Integer, BlockModifier> modifiers;
 }
