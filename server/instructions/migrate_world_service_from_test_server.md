@@ -39,7 +39,7 @@ Alle Migrationen in das Modul world-shared und world-player.
 
 Let's go:
 
-[ ] Alle Daten-Services erstellen, JPA Entities, Repository, Service
+Alle Daten-Services erstellen, JPA Entities, Repository, Service
 - schon vorhanden: AssetEntity, AssetRepository, AssetService (world-shared)
 - noch benoetigt: BlockTypeEntity, BlockTypeRepository, BlockTypeService (world-shared)
 - noch benoetigt: ModelTypeEntity, ModelTypeRepository, ModelTypeService (world-shared)
@@ -47,10 +47,22 @@ Let's go:
 - noch benoetigt: EntityType, EntityRepository, EntityService (world-shared)
 - noch benoetigt: EntityModelEntity, EntityModelRepository, EntityModelService (world-shared)
 - noch benoetigt: ItemTypeEntity, ItemTypeRepository, ItemTypeService (world-shared)
-Prüfe die Angaben und mache einen Plan, welche JPA Entitäten, Repositories, Services angelegt werden museesn
+
+- Prüfe die Angaben und mache einen Plan, welche JPA Entitäten, Repositories, Services angelegt werden müssen.
+- Im nächsten Schritt werden REST Endpoints und WebSocket-Handler angelegt.
+- Nutze als Entitäten eigene Entitäten und binde die aus 'generated' im Parameter 'public' sinnvoll ein.
+- Prüfe welche entitäten test_server benutzt.
+- Das Ziel ist es, das der bestehende Client ('../client/packages/engine') mit dem neuen World Service kommunizieren kann.
+
+Die Migration wird in folgenden Schritten durchgeführt:
+- Entitäten vorbereiten
+- Alle Rest endpukte anlegen
+- WebSocket Handler erstellen
+- Migration von bestehenden Resourcen in mongoDB
 
 [ ] Alle REST Endpoints erstellen (world-player)
 - Rest Endpunkte, siehe instructions/general/server_rest_api.md
+- Es werden immer die Daten aus mongoDB gelesen und der parameter 'public' ausgeliefert.
 
 Migration der WebSocket Messages (world-player)
 - wenn events auf andere sessions verteilt werden muessen, dann redis nutzen.
