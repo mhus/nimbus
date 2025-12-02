@@ -19,6 +19,6 @@ export interface RegionCharacterResponse {
   name: string;
   display: string;
   backpack: Record<string, RegionItemInfo>;
-  wearing: Record<number, RegionItemInfo>; // numerische Slots
-  skills: Record<string, number>; // Skill-Name -> Level
+  wearing: Record<number, RegionItemInfo>; // javaType: int
+  skills: Record<string, number>; // javaType: int
 }

@@ -376,7 +376,7 @@ export interface Block {
    * - 10-17: Seasonal (WINTER, SPRING, SUMMER, AUTUMN)
    * - 100+: Custom world-specific states
    */
-  status?: number;
+  status?: number; // javaType: int
 
   /**
    * Instance-specific modifiers map: status → BlockModifier
@@ -391,7 +391,7 @@ export interface Block {
    *   1: { visibility: { shape: Shape.CUBE, textures: {...} } }  // custom open state
    * }
    */
-  modifiers?: Record<number, BlockModifier>;
+  modifiers?: Record<number, BlockModifier>; // javaType: int
 
   /**
    * Block-specific metadata (optional)

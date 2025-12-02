@@ -22,13 +22,13 @@ export interface VitalsData {
    * Current value
    * Range: 0 to (max + extended)
    */
-  current: number;
+  current: number; // javaType: int
 
   /**
    * Maximum base value
    * This is the permanent maximum
    */
-  max: number;
+  max: number; // javaType: int
 
   /**
    * Extended maximum (temporary bonus)
@@ -36,14 +36,14 @@ export interface VitalsData {
    * Example: Buff adds +20 max health temporarily
    * Default: 0
    */
-  extended?: number;
+  extended?: number; // javaType: int
 
   /**
    * Timestamp when extension expires (milliseconds)
    * Optional - when this time is reached, extended is set to 0
    * If not specified, extension is permanent until manually changed
    */
-  extendExpiry?: number;
+  extendExpiry?: number; // javaType: long
 
   /**
    * Regeneration rate per second
@@ -79,55 +79,5 @@ export interface VitalsData {
    * Lower numbers appear first (top)
    * Example: health=0, hunger=1, stamina=2
    */
-  order: number;
+  order: number; // javaType: int
 }
-
-/**
- * Default vitals configuration examples
- */
-export const DEFAULT_VITALS: Record<string, VitalsData> = {
-  health: {
-    type: 'health',
-    current: 100,
-    max: 100,
-    extended: 0,
-    regenRate: 0.5, // Regenerate 0.5 HP/s
-    degenRate: 0,
-    color: '#ff0000', // Red
-    name: 'Health',
-    order: 0,
-  },
-  hunger: {
-    type: 'hunger',
-    current: 100,
-    max: 100,
-    extended: 0,
-    regenRate: 0,
-    degenRate: 0.1, // Hunger decreases 0.1/s
-    color: '#ff8800', // Orange
-    name: 'Hunger',
-    order: 1,
-  },
-  stamina: {
-    type: 'stamina',
-    current: 100,
-    max: 100,
-    extended: 0,
-    regenRate: 5.0, // Fast regeneration
-    degenRate: 0,
-    color: '#00ff00', // Green
-    name: 'Stamina',
-    order: 2,
-  },
-  mana: {
-    type: 'mana',
-    current: 100,
-    max: 100,
-    extended: 0,
-    regenRate: 1.0,
-    degenRate: 0,
-    color: '#0088ff', // Blue
-    name: 'Mana',
-    order: 3,
-  },
-};

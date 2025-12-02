@@ -44,7 +44,7 @@ export interface BlockType {
    * Initial status for new block instances
    * @default 0 (BlockStatus.DEFAULT)
    */
-  initialStatus?: number;
+  initialStatus?: number; // javaType: int
 
   /**
    * Detailed description of the block type to be used by AI systems.
@@ -64,5 +64,5 @@ export interface BlockType {
    *   2: { visibility: { shape: Shape.CUBE }, ... }   // closed
    * }
    */
-  modifiers: Record<number, BlockModifier>;
+  modifiers: Record<number, BlockModifier>; // javaType: int
 }

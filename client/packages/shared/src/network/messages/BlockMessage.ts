@@ -17,16 +17,16 @@ export type BlockUpdateMessage = BaseMessage<Block[]>;
  */
 export interface BlockStatusUpdate {
   /** Block X position */
-  x: number;
+  x: number; // javaType: int
 
   /** Block Y position */
-  y: number;
+  y: number; // javaType: int
 
   /** Block Z position */
-  z: number;
+  z: number; // javaType: int
 
   /** New status value */
-  s: number;
+  s: number; // javaType: int
 
   /** Optional animations before status change */
   aa?: AnimationData[];
@@ -46,13 +46,13 @@ export type BlockStatusUpdateMessage = BaseMessage<BlockStatusUpdate[]>;
  */
 export interface BlockInteractionData {
   /** Block X position */
-  x: number;
+  x: number; // javaType: int
 
   /** Block Y position */
-  y: number;
+  y: number; // javaType: int
 
   /** Block Z position */
-  z: number;
+  z: number; // javaType: int
 
   /** Block ID from metadata (optional) */
   id?: string;

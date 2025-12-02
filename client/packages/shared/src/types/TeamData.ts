@@ -26,7 +26,7 @@ export interface TeamMember {
   position?: Vector3;
 
   /** Optional Health (0-100) */
-  health?: number;
+  health?: number; // javaType: int
 }
 
 /**
@@ -57,7 +57,7 @@ export interface TeamStatusUpdate {
     id: string;
 
     /** Health Percent (optional) */
-    h?: number;
+    h?: number; // javaType: int
 
     /** Position (optional) */
     po?: Vector3;

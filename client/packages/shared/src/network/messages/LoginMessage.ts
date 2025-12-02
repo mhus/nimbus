@@ -35,7 +35,7 @@ export interface LoginResponseData {
  */
 export interface LoginErrorData {
   success: false;
-  errorCode: number;
+  errorCode: number; // javaType: int
   errorMessage: string;
 }
 

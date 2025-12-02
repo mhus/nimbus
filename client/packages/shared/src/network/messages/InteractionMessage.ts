@@ -9,13 +9,13 @@ import type { RequestMessage, ResponseMessage } from '../BaseMessage';
  */
 export interface InteractionRequestData {
   /** Block X position */
-  x: number;
+  x: number; // javaType: int
 
   /** Block Y position */
-  y: number;
+  y: number; // javaType: int
 
   /** Block Z position */
-  z: number;
+  z: number; // javaType: int
 
   /** Group ID of block (optional) */
   g?: string;
@@ -34,7 +34,7 @@ export interface InteractionSuccessData {
  */
 export interface InteractionErrorData {
   success: false;
-  errorCode: number;
+  errorCode: number; // javaType: int
   errorMessage: string;
 }
 

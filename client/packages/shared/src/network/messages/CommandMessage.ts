@@ -78,7 +78,7 @@ export type CommandMessageMessage = BaseMessage<CommandMessageData>;
  */
 export interface CommandResultData {
   /** Return code */
-  rc: number;
+  rc: number; // javaType: int
 
   /** Result/error message */
   message: string;

@@ -21,6 +21,7 @@ export interface BlockMetadata {
 
   /**
    * Group ID for organization/categorization
+   * Deprecated?
    */
-  groupId?: number;
+  groupId?: number; // javaType: int
 }

@@ -32,10 +32,10 @@ export interface EntityPositionUpdateData {
   v?: Vector3;
 
   /** Pose ID (optional) */
-  po?: number;
+  po?: number; // javaType: byte
 
   /** Server timestamp */
-  ts: number;
+  ts: number; // javaType: long
 
   /** Target arrival (optional) - interpolated target position
    * Client already calculates for server where player will move in next 200ms
@@ -46,7 +46,7 @@ export interface EntityPositionUpdateData {
     y: number;
     z: number;
     /** Target arrival timestamp */
-    ts: number;
+    ts: number; // javaType: long
   };
 }
 
@@ -65,7 +65,7 @@ export interface EntityInteractionData {
   entityId: string;
 
   /** Timestamp of interaction */
-  ts: number;
+  ts: number; // javaType: long
 
   /** Action (e.g., 'use', 'talk', 'attack', 'touch') */
   ac: string;

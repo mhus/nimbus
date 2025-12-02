@@ -22,19 +22,19 @@ export interface Backdrop {
   id?: string;
 
   /** Left position - local X/Z coordinate (0-16), default 0 */
-  left?: number;
+  left?: number; // javaType: byte
 
   /** Width of the backdrop segment (0-16), default 16 */
-  width?: number;
+  width?: number; // javaType: byte
 
   /** Base Y coordinate (bottom) - if not provided, use groundLevel at this edge */
-  yBase?: number;
+  yBase?: number; // javaType: int
 
   /** Height of the backdrop - relative to yBase, default 60 */
-  height?: number;
+  height?: number; // javaType: int
 
   /** Depth of the backdrop in blocks - if 0 or undefined: plane, if > 0: box/cube */
-  depth?: number;
+  depth?: number; // javaType: int
 
   /** Texture path (e.g., "textures/backdrop/hills.png") */
   texture?: string;
@@ -49,7 +49,7 @@ export interface Backdrop {
   alpha?: number;
 
   /** Alpha blending mode */
-  alphaMode?: number;
+  alphaMode?: number; // javaType: byte
 }
 
 /**
@@ -64,13 +64,14 @@ export enum BackdropDirection {
 
 /**
  * Backdrop position - identifies where a backdrop should be rendered
+ * No Usage ?
  */
 export interface BackdropPosition {
   /** Chunk X coordinate where backdrop is needed */
-  cx: number;
+  cx: number; // javaType: int
 
   /** Chunk Z coordinate where backdrop is needed */
-  cz: number;
+  cz: number; // javaType: int
 
   /** Which direction(s) need backdrops at this position */
   directions: BackdropDirection[];
