@@ -193,7 +193,7 @@ export interface Entity {
   modifier?: EntityModifier;
 
   /** Movement behavior type */
-  movementType: MovementType;
+  movementType: MovementType; // javaType: String
 
   /** Who controls this entity: 'player', 'server', 'ai', 'client' */
   controlledBy: string;

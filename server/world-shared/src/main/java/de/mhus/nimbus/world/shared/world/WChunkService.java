@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
-import de.mhus.nimbus.shared.asset.StorageService;
+import de.mhus.nimbus.shared.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +74,7 @@ public class WChunkService {
         } else {
             StorageService storage = storageService.orElseThrow(() -> new IllegalStateException("Kein StorageService für große Chunks"));
             if (entity.getStorageId() != null) storageService.ifPresent(s -> safeDeleteExternal(s, entity.getStorageId()));
-            String storageId = storage.store(bytes);
+            String storageId = storage.store("chunk/" + worldId + "/" + chunkKey, bytes);
             entity.setStorageId(storageId);
             entity.setContent(null);
             log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}", chunkKey, bytes.length, storageId, regionId, worldId);

@@ -19,7 +19,7 @@ public class Entity {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private EntityModifier modifier;
     @com.fasterxml.jackson.annotation.JsonProperty("movementType")
-    private MovementType movementType;
+    private String movementType;
     @com.fasterxml.jackson.annotation.JsonProperty("controlledBy")
     private String controlledBy;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

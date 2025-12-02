@@ -1,6 +1,8 @@
 package de.mhus.nimbus.tools.demoimport.importers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.generated.types.BlockType;
 import de.mhus.nimbus.tools.demoimport.ImportStats;
 import de.mhus.nimbus.world.shared.world.WBlockType;
@@ -14,7 +16,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Imports BlockType definitions from test_server files.
@@ -62,10 +66,35 @@ public class BlockTypeImporter {
             importFromDirectory(wDir, "w", entities, stats);
         }
 
-        // Batch save
+        // Batch save with detailed error tracking
         if (!entities.isEmpty()) {
             log.info("Saving {} BlockTypes to database...", entities.size());
-            service.saveAll(entities);
+
+            // Try batch save first
+            try {
+                service.saveAll(entities);
+            } catch (Exception e) {
+                log.error("Batch save failed, trying individual saves to identify problem entities...", e);
+
+                // Fall back to individual saves to identify the problematic entity
+                for (WBlockType entity : entities) {
+                    try {
+                        service.save(
+                            entity.getBlockId(),
+                            entity.getPublicData(),
+                            entity.getRegionId(),
+                            entity.getWorldId()
+                        );
+                    } catch (Exception individualError) {
+                        log.error("Failed to save BlockType: blockId={}, file might be: {}.json",
+                                entity.getBlockId(), entity.getBlockId(), individualError);
+                        log.error("PublicData content: {}",
+                                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity.getPublicData()));
+                        stats.incrementFailure();
+                        stats.decrementSuccess(); // Correct the counter
+                    }
+                }
+            }
         }
 
         log.info("BlockType import completed: {} imported, {} skipped, {} failed",
@@ -109,7 +138,8 @@ public class BlockTypeImporter {
                 }
 
             } catch (Exception e) {
-                log.error("Failed to import BlockType from file: {}", file.getName(), e);
+                log.error("Failed to parse BlockType from file: {} - Error: {}",
+                        file.getAbsolutePath(), e.getMessage(), e);
                 stats.incrementFailure();
             }
         }

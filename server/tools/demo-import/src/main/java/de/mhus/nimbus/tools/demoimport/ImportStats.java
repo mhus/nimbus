@@ -27,6 +27,12 @@ public class ImportStats {
         failureCount++;
     }
 
+    public void decrementSuccess() {
+        if (successCount > 0) {
+            successCount--;
+        }
+    }
+
     public void merge(ImportStats other) {
         this.totalCount += other.totalCount;
         this.successCount += other.successCount;

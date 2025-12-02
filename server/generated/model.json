@@ -1350,8 +1350,8 @@
         "type" : "MovementType",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "String",
+        "comment" : "// javaType: String"
       }, {
         "name" : "controlledBy",
         "type" : "string",
@@ -2733,8 +2733,8 @@
         "type" : "Record<number, TextureDefinition | string>",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "Map<Integer,Object>",
+        "comment" : "// javaType: Map<Integer,Object>"
       }, {
         "name" : "faceVisibility",
         "type" : "FaceVisibility",
@@ -3013,8 +3013,8 @@
         "type" : "AudioModifier",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "List<AudioDefinition>",
+        "comment" : "// javaType: List<AudioDefinition>"
       } ],
       "methods" : [ ]
     } ],

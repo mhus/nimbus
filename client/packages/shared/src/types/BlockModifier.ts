@@ -501,7 +501,7 @@ export interface VisibilityModifier {
   path?: string;
 
   /** Texture definitions (key = TextureKey) */
-  textures?: Record<number, TextureDefinition | string>;
+  textures?: Record<number, TextureDefinition | string>; // javaType: Map<Integer,Object>
 
   /**
    * Face visibility flags (1 byte bitfield)
@@ -691,7 +691,7 @@ export interface BlockModifier {
   effects?: EffectsModifier;
 
   /** Audio properties */
-  audio?: AudioModifier;
+  audio?: AudioModifier; // javaType: List<AudioDefinition>
 }
 
 /**

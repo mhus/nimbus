@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.ChunkData;
-import de.mhus.nimbus.shared.asset.StorageService;
+import de.mhus.nimbus.shared.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -39,7 +39,7 @@ public class WChunkServiceTest {
         cd.setBlocks(java.util.List.of());
         String largeJson = "{" + "\"cx\":1," + "\"cz\":2," + "\"size\":16," + "\"blocks\":[]}"; // > inlineMaxSize garantiert
         Mockito.when(repo.findByRegionIdAndWorldIdAndChunk("r1","w1","c2")).thenReturn(Optional.empty());
-        Mockito.when(storage.store(Mockito.any())).thenReturn("STORAGE-ID");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STORAGE-ID");
         Mockito.when(repo.save(Mockito.any())).thenAnswer(a -> a.getArgument(0));
         WChunk saved = service.saveChunk("r1","w1","c2", cd);
         assertNull(saved.getContent());

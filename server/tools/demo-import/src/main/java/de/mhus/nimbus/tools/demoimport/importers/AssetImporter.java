@@ -107,7 +107,7 @@ public class AssetImporter {
             }
 
             // Save asset with metadata
-            service.saveAsset(null, null, assetPath, content, "demo-import", metadata);
+            service.saveAsset("main", "main", assetPath, content, "demo-import", metadata);
             stats.incrementSuccess();
 
             if (stats.getSuccessCount() % batchSize == 0) {
@@ -119,6 +119,7 @@ public class AssetImporter {
         } catch (Exception e) {
             log.error("Failed to import asset: {}", assetPath, e);
             stats.incrementFailure();
+            System.exit(1);
         }
     }
 

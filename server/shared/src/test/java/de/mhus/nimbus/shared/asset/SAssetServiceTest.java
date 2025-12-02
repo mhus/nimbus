@@ -2,6 +2,7 @@ package de.mhus.nimbus.shared.asset;
 
 import de.mhus.nimbus.shared.persistence.SAsset;
 import de.mhus.nimbus.shared.persistence.SAssetRepository;
+import de.mhus.nimbus.shared.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -28,7 +29,7 @@ class SAssetServiceTest {
     void testExternalSave() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        Mockito.when(storage.store(Mockito.any())).thenReturn("STOR-1");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STOR-1");
         SAssetService service = new SAssetService(repo, Optional.of(storage));
         // Setze inline Grenze sehr klein damit external greift
         byte[] big = new byte[200];
@@ -47,7 +48,7 @@ class SAssetServiceTest {
     void testUpdateToExternal() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        Mockito.when(storage.store(Mockito.any())).thenReturn("STOR-NEW");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STOR-NEW");
         SAssetService service = new SAssetService(repo, Optional.of(storage));
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
         SAsset inline = service.saveAsset("r1", null, "file.bin", new byte[100], "tester");

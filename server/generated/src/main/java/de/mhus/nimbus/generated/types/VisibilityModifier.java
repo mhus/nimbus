@@ -38,7 +38,7 @@ public class VisibilityModifier {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String path;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.Map<java.lang.Double, Object> textures;
+    private java.util.Map<Integer, Object> textures;
     @com.fasterxml.jackson.annotation.JsonProperty("faceVisibility")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private FaceVisibility faceVisibility;
