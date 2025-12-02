@@ -11,9 +11,9 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ChunkData {
-    private double cx;
-    private double cz;
-    private double size;
+    private int cx;
+    private int cz;
+    private byte size;
     private java.util.List<Block> blocks;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<ItemBlockRef> i;

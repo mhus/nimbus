@@ -18,6 +18,11 @@ public class TsDeclarations {
          * //javaType: fully.qualified.Type or SimpleType
          */
         public String javaTypeHint;
+        /**
+         * The complete comment line from the TypeScript source (if any)
+         * Used for extracting javaTypeHint and other metadata
+         */
+        public String comment;
     }
 
     public static class TsMethodParam {

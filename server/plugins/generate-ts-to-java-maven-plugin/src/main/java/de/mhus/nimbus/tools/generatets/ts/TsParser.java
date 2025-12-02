@@ -47,8 +47,8 @@ public class TsParser {
             TsSourceFile ts = new TsSourceFile(relativize(f));
             // imports
             extractImports(src, ts);
-            // declarations
-            extractDeclarations(src, ts);
+            // declarations - pass both stripped and ORIGINAL (unstripped) source
+            extractDeclarations(src, content, ts);  // content is the original with comments!
             model.addFile(ts);
         }
         return model;
@@ -100,7 +100,7 @@ public class TsParser {
         }
     }
 
-    private void extractDeclarations(String src, TsSourceFile file) {
+    private void extractDeclarations(String src, String originalSrc, TsSourceFile file) {
         // Interfaces
         for (NameOccur n : findNamed(src, DECL_INTERFACE, '{')) {
             TsDeclarations.TsInterface d = new TsDeclarations.TsInterface();
@@ -125,7 +125,8 @@ public class TsParser {
                 }
             }
             String body = safeSub(src, n.startIndex, n.endIndex);
-            extractPropertiesFromBody(body, d.properties);
+            String originalBody = safeSub(originalSrc, n.startIndex, n.endIndex);
+            extractPropertiesFromBodyWithOriginal(body, originalBody, d.properties);
             file.getInterfaces().add(d);
         }
         // Enums
@@ -142,7 +143,8 @@ public class TsParser {
             TsDeclarations.TsClass d = new TsDeclarations.TsClass();
             d.name = n.name;
             String body = safeSub(src, n.startIndex, n.endIndex);
-            extractPropertiesFromBody(body, d.properties);
+            String originalBody = safeSub(originalSrc, n.startIndex, n.endIndex);
+            extractPropertiesFromBodyWithOriginal(body, originalBody, d.properties);
             file.getClasses().add(d);
         }
         // Type aliases (end by semicolon)
@@ -173,38 +175,45 @@ public class TsParser {
     }
 
     private void extractPropertiesFromBody(String body, List<TsDeclarations.TsProperty> out) {
-        if (body == null || out == null) return;
+        // This method is called with stripped source, we need the original for javaType hints
+        // For now, use the existing logic without javaType hints
+        extractPropertiesFromBodyWithOriginal(body, body, out);
+    }
+
+    private void extractPropertiesFromBodyWithOriginal(String strippedBody, String originalBody, List<TsDeclarations.TsProperty> out) {
+        if (strippedBody == null || out == null) return;
         // Match TS property declarations of the form: [visibility]? name[?]: type;
         java.util.regex.Pattern propPat = java.util.regex.Pattern.compile("(?ms)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*(.+?)\\s*;[\\t ]*");
-        java.util.regex.Matcher m = propPat.matcher(body);
+        java.util.regex.Matcher m = propPat.matcher(strippedBody);
         while (m.find()) {
             int startIdx = m.start();
             // Only accept properties at top-level of the declaration body (depth == 1 inside outer braces)
-            if (braceDepthAt(body, startIdx) != 1) {
+            if (braceDepthAt(strippedBody, startIdx) != 1) {
                 continue;
             }
             // Skip index signatures like [key: string]: any;
             try {
                 int nameStart = m.start(2);
-                if (nameStart > 0 && body.charAt(nameStart - 1) == '[') {
+                if (nameStart > 0 && strippedBody.charAt(nameStart - 1) == '[') {
                     continue;
                 }
                 // Skip if there's a '(' before the ':' in the matched segment (likely a method signature)
-                int colon = body.indexOf(':', m.start());
+                int colon = strippedBody.indexOf(':', m.start());
                 if (colon > m.start()) {
-                    String beforeColon = body.substring(m.start(), colon);
+                    String beforeColon = strippedBody.substring(m.start(), colon);
                     if (beforeColon.contains("(")) {
                         continue;
                     }
                 }
             } catch (Exception ignored) {}
+
             String typeTxt = m.group(4) == null ? null : m.group(4).trim();
             // If type starts with an inline object '{', try to capture the full object literal up to matching '}'
             if (typeTxt != null && typeTxt.startsWith("{")) {
                 int absTypeStart = m.start(4);
-                int objEnd = findMatchingBrace(body, absTypeStart);
+                int objEnd = findMatchingBrace(strippedBody, absTypeStart);
                 if (objEnd > absTypeStart) {
-                    typeTxt = body.substring(absTypeStart, objEnd).trim();
+                    typeTxt = strippedBody.substring(absTypeStart, objEnd).trim();
                 }
             }
             // Do NOT skip inline object types here; we keep them so the generator can synthesize helper classes.
@@ -212,72 +221,134 @@ public class TsParser {
             if (typeTxt != null && typeTxt.contains("import(")) {
                 continue;
             }
+
             TsDeclarations.TsProperty pr = new TsDeclarations.TsProperty();
             pr.visibility = m.group(1);
             pr.name = m.group(2);
             pr.optional = m.group(3) != null && !m.group(3).isEmpty();
             pr.type = typeTxt;
 
-            // Parse javaTypeHint from comments
-            pr.javaTypeHint = extractJavaTypeHint(body, m.start(), m.end());
+            // Extract both comment and javaTypeHint from the original (non-stripped) source
+            String[] commentAndHint = extractCommentAndJavaTypeHint(originalBody, pr.name);
+            pr.comment = commentAndHint[0];
+            pr.javaTypeHint = commentAndHint[1];
 
             out.add(pr);
         }
     }
 
     /**
-     * Extract javaType hint from comments on the same line or immediately following line.
-     * Looks for patterns like: //javaType: fully.qualified.Type or SimpleType
+     * Extract both comment and javaType hint from the original source for a property
+     * Returns an array with [comment, javaTypeHint] where either can be null
      */
-    private String extractJavaTypeHint(String body, int matchStart, int matchEnd) {
-        // First, look for javaType comment in the entire match (inline comment)
-        String matchText = body.substring(matchStart, matchEnd);
-        Pattern inlinePattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
-        Matcher inlineMatcher = inlinePattern.matcher(matchText);
-        if (inlineMatcher.find()) {
-            return inlineMatcher.group(1).trim();
+    private String[] extractCommentAndJavaTypeHint(String originalBody, String propertyName) {
+        if (originalBody == null || propertyName == null) {
+            return new String[]{null, null};
         }
 
-        // Look for javaType comment on the same line (extend search to end of line)
-        int lineEnd = findLineEnd(body, matchStart);
-        if (lineEnd > matchEnd) {
-            String lineText = body.substring(matchEnd, lineEnd);
-            Pattern linePattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
-            Matcher lineMatcher = linePattern.matcher(lineText);
-            if (lineMatcher.find()) {
-                return lineMatcher.group(1).trim();
+        // Search the original body for a line containing this property name and a comment
+        String[] lines = originalBody.split("\n");
+        for (String line : lines) {
+            // Look for property declaration line - more flexible matching
+            if (line.contains(propertyName) && line.contains(":") && line.contains("//")) {
+                // Verify this is actually a property declaration, not just any line with the name
+                String trimmedLine = line.trim();
+                if (trimmedLine.contains(propertyName + ":") ||
+                    trimmedLine.matches(".*\\b" + propertyName + "\\s*:.*")) {
+
+                    // Extract the comment part (everything after //)
+                    int commentStart = line.lastIndexOf("//");
+                    String fullComment = line.substring(commentStart).trim();
+
+                    // Extract javaType hint from this comment
+                    String javaTypeHint = parseJavaTypeHintFromLine(line);
+
+                    return new String[]{fullComment, javaTypeHint};
+                }
             }
         }
 
-        // Look for javaType comment on the immediately following line
-        int nextLineStart = findNextLineStart(body, matchEnd);
-        if (nextLineStart > 0) {
-            int nextLineEnd = findLineEnd(body, nextLineStart);
-            String nextLineText = body.substring(nextLineStart, nextLineEnd);
-            Pattern nextPattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
-            Matcher nextMatcher = nextPattern.matcher(nextLineText);
-            if (nextMatcher.find()) {
-                return nextMatcher.group(1).trim();
-            }
-        }
-
-        return null;
+        return new String[]{null, null};
     }
 
     /**
-     * Find //javaType: comment within a specific range and extract the type
+     * Robust parsing of javaType hints from a TypeScript line
+     * Handles various formats: //javaType:type, // javaType: type, //javaType=type
      */
-    private String findJavaTypeCommentOnLine(String body, int start, int end) {
-        if (start < 0 || end > body.length() || start >= end) return null;
-
-        String lineText = body.substring(start, end);
-        Pattern javaTypePattern = Pattern.compile("//\\s*javaType:\\s*([A-Za-z0-9_.]+)");
-        Matcher matcher = javaTypePattern.matcher(lineText);
-
-        if (matcher.find()) {
-            return matcher.group(1).trim();
+    private String parseJavaTypeHintFromLine(String line) {
+        if (line == null || line.trim().isEmpty()) {
+            return null;
         }
-        return null;
+
+        // Find the last // comment in the line
+        int commentStart = line.lastIndexOf("//");
+        if (commentStart == -1) {
+            return null;
+        }
+
+        String comment = line.substring(commentStart + 2).trim();
+        String lowerComment = comment.toLowerCase();
+
+        // Search for "javatype" (case insensitive) followed by : or =
+        int javaTypeStart = lowerComment.indexOf("javatype");
+        if (javaTypeStart == -1) {
+            return null;
+        }
+
+        // Find the separator after "javatype"
+        int separatorPos = javaTypeStart + "javatype".length();
+
+        // Skip whitespace
+        while (separatorPos < lowerComment.length() && Character.isWhitespace(lowerComment.charAt(separatorPos))) {
+            separatorPos++;
+        }
+
+        // Check for : or =
+        if (separatorPos >= lowerComment.length()) {
+            return null;
+        }
+
+        char separator = lowerComment.charAt(separatorPos);
+        if (separator != ':' && separator != '=') {
+            return null;
+        }
+
+        // Extract the type after the separator
+        int typeStart = separatorPos + 1;
+
+        // Skip whitespace after the separator
+        while (typeStart < comment.length() && Character.isWhitespace(comment.charAt(typeStart))) {
+            typeStart++;
+        }
+
+        if (typeStart >= comment.length()) {
+            return null;
+        }
+
+        String typeStr = comment.substring(typeStart);
+
+        // Remove trailing comments (if any)
+        int nextComment = typeStr.indexOf("//");
+        if (nextComment != -1) {
+            typeStr = typeStr.substring(0, nextComment).trim();
+        }
+
+        // Remove trailing whitespace and semicolon
+        typeStr = typeStr.replaceAll("[\\s;]*$", "");
+
+        return typeStr.isEmpty() ? null : typeStr;
+    }
+
+    /**
+     * Find the start of the line containing the given position
+     */
+    private int findLineStart(String body, int fromPos) {
+        for (int i = fromPos - 1; i >= 0; i--) {
+            if (body.charAt(i) == '\n') {
+                return i + 1;
+            }
+        }
+        return 0; // Beginning of file
     }
 
     /**
@@ -318,52 +389,37 @@ public class TsParser {
         return depth;
     }
 
-    private void extractEnumValuesFromBody(String body, java.util.List<String> out) {
+    private void extractEnumValuesFromBody(String body, List<String> out) {
         if (body == null || out == null) return;
         // Match enum member names: NAME [= ...] , or NAME at end
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?m)^[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(?:=[^,\\r\\n]+)?[\\t ]*(?:,[\\t ]*)?(?://.*)?$");
-        java.util.regex.Matcher m = p.matcher(body);
+        Pattern p = Pattern.compile("(?m)^[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(?:=[^,\\r\\n]+)?[\\t ]*(?:,[\\t ]*)?(?://.*)?$");
+        Matcher m = p.matcher(body);
         while (m.find()) {
             String name = m.group(1);
             if (name == null || name.isEmpty()) continue;
             // Filter out potential keywords
-            if (!java.lang.Character.isJavaIdentifierStart(name.charAt(0))) continue;
+            if (!Character.isJavaIdentifierStart(name.charAt(0))) continue;
             boolean ok = true;
             for (int i = 1; i < name.length(); i++) {
-                if (!java.lang.Character.isJavaIdentifierPart(name.charAt(i))) { ok = false; break; }
+                if (!Character.isJavaIdentifierPart(name.charAt(i))) { ok = false; break; }
             }
             if (!ok) continue;
             out.add(name);
         }
     }
 
-    private void extractEnumValuesAndAssignments(String body, java.util.List<TsDeclarations.TsEnumValue> out) {
+    private void extractEnumValuesAndAssignments(String body, List<TsDeclarations.TsEnumValue> out) {
         if (body == null || out == null) return;
-        // Match enum member: NAME = 'value' or NAME = "value" or NAME (no assignment)
-        // Pattern explanation:
-        // ^[\\t ]*                       - line start with optional whitespace
-        // ([A-Za-z_$][A-Za-z0-9_$]*)    - capture group 1: valid identifier
-        // [\\t ]*                       - optional whitespace
-        // (?:                           - non-capturing group for optional assignment
-        //   =[\\t ]*                    - equals sign with optional whitespace
-        //   (?:                         - non-capturing group for value alternatives
-        //     (['\"])(.*?)\\2           - capture groups 2&3: quoted string value
-        //     |                         - or
-        //     ([^,\\r\\n]+)             - capture group 4: unquoted value
-        //   )
-        // )?                            - optional assignment
-        // [\\t ]*(?:,[\\t ]*)?          - optional comma and whitespace
-        // (?://.*)?$                    - optional comment
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?m)^[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(?:=[\\t ]*(?:(['\"])(.*?)\\2|([^,\\r\\n]+)))?[\\t ]*(?:,[\\t ]*)?(?://.*)?$");
-        java.util.regex.Matcher m = p.matcher(body);
+        Pattern p = Pattern.compile("(?m)^[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(?:=[\\t ]*(?:(['\"])(.*?)\\2|([^,\\r\\n]+)))?[\\t ]*(?:,[\\t ]*)?(?://.*)?$");
+        Matcher m = p.matcher(body);
         while (m.find()) {
             String name = m.group(1);
             if (name == null || name.isEmpty()) continue;
             // Filter out potential keywords
-            if (!java.lang.Character.isJavaIdentifierStart(name.charAt(0))) continue;
+            if (!Character.isJavaIdentifierStart(name.charAt(0))) continue;
             boolean ok = true;
             for (int i = 1; i < name.length(); i++) {
-                if (!java.lang.Character.isJavaIdentifierPart(name.charAt(i))) { ok = false; break; }
+                if (!Character.isJavaIdentifierPart(name.charAt(i))) { ok = false; break; }
             }
             if (!ok) continue;
 
@@ -383,7 +439,11 @@ public class TsParser {
         }
     }
 
-    private static class NameOccur { String name; int startIndex; int endIndex; }
+    private static class NameOccur {
+        String name;
+        int startIndex;
+        int endIndex;
+    }
 
     private List<NameOccur> findNamed(String src, Pattern pat, char endBy) {
         List<NameOccur> out = new ArrayList<>();

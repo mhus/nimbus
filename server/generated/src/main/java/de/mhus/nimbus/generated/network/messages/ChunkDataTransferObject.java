@@ -11,8 +11,8 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ChunkDataTransferObject {
-    private double cx;
-    private double cz;
+    private int cx;
+    private int cz;
     private java.util.List<de.mhus.nimbus.generated.types.Block> b;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<de.mhus.nimbus.generated.types.ItemBlockRef> i;

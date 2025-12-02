@@ -19,7 +19,7 @@ public class BehaviorConfig {
     private java.lang.Double maxStepDistance;
     @com.fasterxml.jackson.annotation.JsonProperty("waypointsPerPath")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Long waypointsPerPath;
+    private java.lang.Double waypointsPerPath;
     @com.fasterxml.jackson.annotation.JsonProperty("minIdleDuration")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double minIdleDuration;

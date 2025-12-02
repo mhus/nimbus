@@ -11,8 +11,8 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class BlockStatusUpdate {
-    private double x;
-    private double y;
+    private int x;
+    private int y;
     private double z;
     private double s;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

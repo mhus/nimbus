@@ -30,5 +30,5 @@ public class ClientEntity {
     private double lastAccess;
     @com.fasterxml.jackson.annotation.JsonProperty("lastStepTime")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Long lastStepTime;
+    private java.lang.Double lastStepTime;
 }

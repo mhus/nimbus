@@ -13,7 +13,7 @@ package de.mhus.nimbus.generated.network.messages;
 public class LoginErrorData {
     private boolean success;
     @com.fasterxml.jackson.annotation.JsonProperty("errorCode")
-    private double errorCode;
+    private int errorCode;
     @com.fasterxml.jackson.annotation.JsonProperty("errorMessage")
     private String errorMessage;
 }

@@ -12,8 +12,8 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class VitalsData {
     private String type;
-    private double current;
-    private double max;
+    private int current;
+    private int max;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double extended;
     @com.fasterxml.jackson.annotation.JsonProperty("extendExpiry")
