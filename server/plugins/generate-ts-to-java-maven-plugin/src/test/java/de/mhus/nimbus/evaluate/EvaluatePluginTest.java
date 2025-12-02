@@ -3,9 +3,6 @@ package de.mhus.nimbus.evaluate;
 import de.mhus.nimbus.tools.generatets.GenerateTsToJavaMojo;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.JavaCompiler;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +11,6 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -23,7 +19,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EvaluatePluginIT {
+public class EvaluatePluginTest {
 
     private static void assertGeneratedIfTsExists(Path tsSubDir, List<File> javaFiles, String expectedPackage) throws IOException {
         if (tsSubDir == null) return;
@@ -35,6 +31,7 @@ public class EvaluatePluginIT {
         String pkgPath = expectedPackage.replace('.', File.separatorChar);
         boolean found = javaFiles.stream().anyMatch(f -> f.getPath().contains(pkgPath));
         assertTrue(found, "Expected generated Java under package '" + expectedPackage + "' for TS sources at " + tsSubDir);
+
     }
 
     @Test
@@ -61,6 +58,7 @@ public class EvaluatePluginIT {
 
         Files.createDirectories(outJavaDir.toPath());
         Files.createDirectories(targetDir);
+        generateJavaFsEnum(outJavaDir);
 
         // Run Mojo (simulate plugin execution inside evaluate)
         GenerateTsToJavaMojo mojo = new GenerateTsToJavaMojo();
@@ -90,6 +88,19 @@ public class EvaluatePluginIT {
         // Finally, run a Maven build in the evaluate module to ensure the project compiles with generated sources
         int exit = runMaven(moduleBase, "clean", "package", "-DskipTests", "-Dmaven.compiler.release=21");
         assertEquals(0, exit, "Maven build of evaluate module failed");
+    }
+
+    private void generateJavaFsEnum(File outJavaDir) {
+        var fsEnum = new File(outJavaDir, "de/mhus/nimbus/types/FsEnum.java");
+        //create root dir
+        fsEnum.getParentFile().mkdirs();
+        if (!fsEnum.exists()) {
+            try {
+                Files.writeString(fsEnum.toPath(), "package  de.mhus.nimbus.types;\n\npublic interface FsEnum { }");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private static void validateEnumTypes(File outJavaDir) throws IOException {

@@ -105,9 +105,7 @@ public class JavaGenerator {
                     if (c.properties != null) {
                         for (TsDeclarations.TsProperty p : c.properties) {
                             if (p == null || p.name == null) continue;
-                            // Special handling for seconds property: number -> int
-                            String propType = "seconds".equals(p.name) && "number".equals(p.type) ? "int" :
-                                              (p.javaTypeHint != null && !p.javaTypeHint.isBlank()) ? p.javaTypeHint : p.type;
+                            String propType = p.type;
                             if (propType != null && propType.contains("{") && "backdrop".equals(p.name)) {
                                 String helperName = c.name + "Backdrop";
                                 ensureBackdropHelper(jm, helperName, srcPath);

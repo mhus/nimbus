@@ -1,4 +1,4 @@
-package test;
+package de.mhus.nimbus.test;
 
 import de.mhus.nimbus.tools.generatets.ts.TsParser;
 import de.mhus.nimbus.tools.generatets.ts.TsModel;

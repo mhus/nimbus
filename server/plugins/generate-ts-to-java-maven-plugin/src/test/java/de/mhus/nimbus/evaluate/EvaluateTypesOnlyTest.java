@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EvaluateTypesOnlyIT {
+public class EvaluateTypesOnlyTest {
 
     @Test
     public void generateFromTypesAndCompile() throws Exception {

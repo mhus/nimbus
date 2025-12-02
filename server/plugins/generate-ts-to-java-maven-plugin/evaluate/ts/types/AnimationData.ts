@@ -138,7 +138,7 @@ export interface AnimationData {
   name: string;
 
   /** Total duration in milliseconds (calculated from effects if not set) */
-  duration?: number;
+  duration?: number;  // javaType: long
 
   /** Timeline of effects */
   effects: AnimationEffect[];

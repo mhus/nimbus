@@ -19,10 +19,13 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EvaluateMessagesOnlyIT {
+public class EvaluateMessagesOnlyTest {
 
     @Test
     public void generateFromMessagesAndCompile() throws Exception {
+
+        System.out.println("🔍 Starting code generation test for evaluate module (messages only)...");
+
         File pluginModuleBase = new File(System.getProperty("user.dir"));
         File moduleBase = new File(pluginModuleBase, "evaluate").getCanonicalFile();
         assertTrue(new File(moduleBase, "pom.xml").exists(), "evaluate/pom.xml must exist: " + moduleBase);
