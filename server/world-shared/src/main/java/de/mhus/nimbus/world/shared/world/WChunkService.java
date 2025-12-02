@@ -1,7 +1,9 @@
 package de.mhus.nimbus.world.shared.world;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
+import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.asset.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -12,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,10 +28,14 @@ public class WChunkService {
 
     private final WChunkRepository repository;
     private final Optional<StorageService> storageService; // optional injection
+    private final WWorldService worldService;
 
     @Value("${nimbus.chunk.inline-max-size:1048576}")
     @Setter
     private long inlineMaxSize = 1048576L; // 1 MB Default
+
+    @Value("${nimbus.chunk.size:16}")
+    private int chunkSize = 16;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -94,7 +102,11 @@ public class WChunkService {
 
     @Transactional(readOnly = true)
     public Optional<ChunkData> loadChunkData(String regionId, String worldId, String chunkKey) {
-        return repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey).map(entity -> {
+        Optional<WChunk> chunkOpt = repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey);
+
+        if (chunkOpt.isPresent()) {
+            // Chunk exists in database - load it
+            WChunk entity = chunkOpt.get();
             byte[] raw;
             if (entity.isInline()) {
                 String c = entity.getContent();
@@ -105,12 +117,106 @@ public class WChunkService {
             } else {
                 raw = new byte[0];
             }
-            if (raw.length == 0) return null;
-            try { return objectMapper.readValue(raw, ChunkData.class); } catch (Exception e) {
+            if (raw.length == 0) return Optional.empty();
+            try {
+                return Optional.ofNullable(objectMapper.readValue(raw, ChunkData.class));
+            } catch (Exception e) {
                 log.warn("ChunkData Deserialisierung fehlgeschlagen chunkKey={} region={} world={}", chunkKey, regionId, worldId, e);
+                return Optional.empty();
+            }
+        } else {
+            // Chunk not found - generate default chunk based on world settings
+            log.debug("Chunk not found in DB, generating default: chunkKey={} world={}", chunkKey, worldId);
+            return Optional.ofNullable(generateDefaultChunk(regionId, worldId, chunkKey));
+        }
+    }
+
+    /**
+     * Generate default chunk based on world configuration.
+     * Creates ground blocks up to groundLevel and water blocks up to waterLevel.
+     */
+    private ChunkData generateDefaultChunk(String regionId, String worldId, String chunkKey) {
+        try {
+            // Parse chunk coordinates from key (format: "cx:cz")
+            String[] parts = chunkKey.split(":");
+            if (parts.length != 2) {
+                log.warn("Invalid chunk key format: {}", chunkKey);
                 return null;
             }
-        });
+
+            int cx = Integer.parseInt(parts[0]);
+            int cz = Integer.parseInt(parts[1]);
+
+            // Load world configuration
+            WWorld world = worldService.getByWorldId(worldId).orElse(null);
+            if (world == null) {
+                log.warn("World not found for default chunk generation: {}", worldId);
+                return null;
+            }
+
+            int groundLevel = world.getGroundLevel();
+            Integer waterLevel = world.getWaterLevel();
+            String groundBlockType = world.getGroundBlockType();
+            String waterBlockType = world.getWaterBlockType();
+
+            // Create chunk data
+            ChunkData chunkData = new ChunkData();
+            chunkData.setCx(cx);
+            chunkData.setCz(cz);
+            chunkData.setSize((byte) chunkSize);
+
+            List<Block> blocks = new ArrayList<>();
+
+            // Generate blocks for the chunk (16x16 xz area)
+            for (int localX = 0; localX < chunkSize; localX++) {
+                for (int localZ = 0; localZ < chunkSize; localZ++) {
+                    int worldX = cx * chunkSize + localX;
+                    int worldZ = cz * chunkSize + localZ;
+
+                    // Create ground block at groundLevel
+                    if (groundLevel >= 0 && groundBlockType != null) {
+                        Block groundBlock = createBlock(worldX, groundLevel, worldZ, groundBlockType);
+                        blocks.add(groundBlock);
+                    }
+
+                    // Create water blocks from groundLevel+1 to waterLevel
+                    if (waterLevel != null && waterLevel > groundLevel && waterBlockType != null) {
+                        for (int y = groundLevel + 1; y <= waterLevel; y++) {
+                            Block waterBlock = createBlock(worldX, y, worldZ, waterBlockType);
+                            blocks.add(waterBlock);
+                        }
+                    }
+                }
+            }
+
+            chunkData.setBlocks(blocks);
+
+            log.debug("Generated default chunk: cx={}, cz={}, blocks={}, groundLevel={}, waterLevel={}",
+                    cx, cz, blocks.size(), groundLevel, waterLevel);
+
+            return chunkData;
+
+        } catch (Exception e) {
+            log.error("Failed to generate default chunk: chunkKey={}", chunkKey, e);
+            return null;
+        }
+    }
+
+    /**
+     * Create a simple block at the given position.
+     */
+    private Block createBlock(int x, int y, int z, String blockTypeId) {
+        Block block = new Block();
+
+        Vector3 position = new Vector3();
+        position.setX(x);
+        position.setY(y);
+        position.setZ(z);
+        block.setPosition(position);
+
+        block.setBlockTypeId(blockTypeId);
+
+        return block;
     }
 
     @Transactional

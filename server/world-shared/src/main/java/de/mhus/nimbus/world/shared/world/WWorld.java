@@ -56,6 +56,33 @@ public class WWorld {
     @Builder.Default
     private List<WEntryPoint> entryPoints = List.of();
 
+    /**
+     * Default ground level for chunk generation (Y coordinate).
+     * Used when no chunk data exists in database.
+     */
+    @Builder.Default
+    private int groundLevel = 0;
+
+    /**
+     * Water level for ocean generation (Y coordinate).
+     * If set, water blocks are generated up to this level.
+     */
+    private Integer waterLevel;
+
+    /**
+     * Block type ID for ground blocks (e.g., "w:310" for grass).
+     * Used when generating default chunks.
+     */
+    @Builder.Default
+    private String groundBlockType = "w:310";
+
+    /**
+     * Block type ID for water blocks (e.g., "core:water").
+     * Used when generating ocean in default chunks.
+     */
+    @Builder.Default
+    private String waterBlockType = "core:water";
+
     public void touchForCreate() {
         Instant now = Instant.now();
         createdAt = now;
