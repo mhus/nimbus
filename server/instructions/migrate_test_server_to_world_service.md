@@ -21,7 +21,7 @@ Erstelle ein neues Modul 'world-test' in tools.
 
 [?] REST Modify Tests
 - Fuer Modify wird es einen separaten server geben, der sowohl GET als auch POST, PUT, DELETE unterstuetzt.
-- Der server (world-editor) hat eine andere base url 
+- Der server (world-control) hat eine andere base url 
 - Die GET tests muessen auch hier getestet werden
 - Alle modify koennen nun hier getestet werden
 

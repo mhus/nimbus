@@ -8,8 +8,8 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>world-editor</artifactId>
-    <name>world-editor</name>
+    <artifactId>world-control</artifactId>
+    <name>world-control</name>
     <packaging>jar</packaging>
 
     <dependencies>

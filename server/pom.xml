@@ -23,7 +23,7 @@
         <module>region</module>
         <module>world-shared</module>
         <module>world-player</module>
-        <module>world-editor</module>
+        <module>world-control</module>
         <module>tools</module>
     </modules>
 

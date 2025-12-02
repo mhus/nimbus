@@ -4,9 +4,11 @@
 Die server REST API soll so afgebaut werden, dass sie sich nicht ueberschneiden und durch Filter die separaten
 Akteure getrennt werden.
 
+Das Konzept der kompletten Trennung ist deprecated. Umstellung jeweils auf /api wird geplant.
+
 ## Universe
 
-Universe Server bekommt den einstiegspunkt '/uiap'
+Universe Server bekommt den einstiegspunkt '/api' Deprecated: '/universe'
 
 Folgende Akteure und ihre Basispfade:
 
@@ -14,7 +16,8 @@ Folgende Akteure und ihre Basispfade:
 - '/universe/Region' - Zugriff durch den Region Server, wird durch den RegionServerSecurityFilter geschuetzt
 - '/universe/world' - Zugriff durch den World Server, wird durch den WorldServerSecurityFilter geschuetzt
 
-Alle Internen Entitäten und Server beginnen mit dem prefix U, also
+
+Deprecated: Alle Internen Entitäten und Server beginnen mit dem prefix U, also
 - UserSeecurityFilter -> UUserSeecurityFilter
 - RegionServerSecurityFilter -> URegionServerSecurityFilter
 - WorldServerSecurityFilter -> UWorldServerSecurityFilter
@@ -24,7 +27,7 @@ Alle Internen Entitäten und Server beginnen mit dem prefix U, also
 
 ## Region
 
-Region Server bekommt den einstiegspunkt '/qapi'
+Region Server bekommt den einstiegspunkt '/api' Deprecated: '/region'
 
 Folgende Akteure und ihre Basispfade:
 
@@ -32,11 +35,11 @@ Folgende Akteure und ihre Basispfade:
 - '/Region/universe' - Zugriff durch den Universe Server, wird durch den UniverseServerSecurityFilter geschuetzt
 - '/Region/user' - Zugriff durch den User Server, wird durch den UserServerSecurityFilter geschuetzt
 
-Alle Internen Entitäten und Server beginnen mit dem prefix Q.
+Deprecated: Alle Internen Entitäten und Server beginnen mit dem prefix R.
 
 ## World
 
-World Server bekommt den einstiegspunkt '/wapi'
+World Server bekommt den einstiegspunkt '/api'
 
 Folgende Akteure und ihre Basispfade:
 
@@ -44,4 +47,4 @@ Folgende Akteure und ihre Basispfade:
 - '/world/user' - Zugriff durch den User Server, wird durch den UserServerSecurityFilter geschuetzt
 - '/world/Region' - Zugriff durch den Region Server, wird durch den RegionServerSecurityFilter geschuetzt
 
-Alle Internen Entitäten und Server beginnen mit dem prefix W.
+Deprecated: Alle Internen Entitäten und Server beginnen mit dem prefix W.
