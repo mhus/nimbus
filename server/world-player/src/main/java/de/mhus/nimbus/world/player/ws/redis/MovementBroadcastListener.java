@@ -3,25 +3,16 @@ package de.mhus.nimbus.world.player.ws.redis;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import de.mhus.nimbus.world.player.ws.NetworkMessage;
-import de.mhus.nimbus.world.player.ws.PlayerSession;
-import de.mhus.nimbus.world.player.ws.SessionManager;
+import de.mhus.nimbus.world.player.ws.BroadcastService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.TextMessage;
 
 /**
  * Redis listener for user movement updates.
- * Receives movement events from Redis and distributes to relevant sessions.
- *
- * Distribution rules:
- * - Session must be authenticated
- * - Session must be in same world
- * - Session must NOT be the originating session (ignore own events)
- * - Session must have the player's chunk registered (cx, cz)
+ * Receives movement events from Redis and distributes to relevant sessions via BroadcastService.
  *
  * Redis message format:
  * {
@@ -40,7 +31,7 @@ import org.springframework.web.socket.TextMessage;
 public class MovementBroadcastListener {
 
     private final WorldRedisMessagingService redisMessaging;
-    private final SessionManager sessionManager;
+    private final BroadcastService broadcastService;
     private final ObjectMapper objectMapper;
 
     /**
@@ -88,45 +79,8 @@ public class MovementBroadcastListener {
             if (data.has("p")) clientData.set("p", data.get("p"));
             if (data.has("r")) clientData.set("r", data.get("r"));
 
-            NetworkMessage networkMessage = NetworkMessage.builder()
-                    .t("u.m")
-                    .d(clientData)
-                    .build();
-
-            String json = objectMapper.writeValueAsString(networkMessage);
-            TextMessage textMessage = new TextMessage(json);
-
-            // Distribute to relevant sessions
-            int sentCount = 0;
-            for (PlayerSession session : sessionManager.getAllSessions().values()) {
-                // Skip if not authenticated
-                if (!session.isAuthenticated()) continue;
-
-                // Skip if different world
-                if (!worldId.equals(session.getWorldId())) continue;
-
-                // Skip if this is the originating session (ignore own events)
-                if (originatingSessionId.equals(session.getSessionId())) {
-                    log.trace("Skipping originating session: {}", session.getSessionId());
-                    continue;
-                }
-
-                // Check if session has registered the chunk where player is located
-                if (cx != null && cz != null) {
-                    if (!session.isChunkRegistered(cx, cz)) {
-                        log.trace("Session {} has not registered chunk ({}, {}), skipping",
-                                session.getSessionId(), cx, cz);
-                        continue;
-                    }
-                }
-
-                // Send to session
-                session.getWebSocketSession().sendMessage(textMessage);
-                sentCount++;
-            }
-
-            log.trace("Distributed movement update to {} sessions (origin={}, chunk={},{})",
-                    sentCount, originatingSessionId, cx, cz);
+            // Delegate to BroadcastService for session filtering and distribution
+            broadcastService.broadcastToWorld(worldId, "u.m", clientData, originatingSessionId, cx, cz);
 
         } catch (Exception e) {
             log.error("Failed to handle movement update from Redis: {}", message, e);

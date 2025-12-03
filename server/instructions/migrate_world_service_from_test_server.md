@@ -1409,20 +1409,24 @@ Ich brauche weitere MessageHandler fuer die WebSocket.
 
 ---
 
-[ ] (u.m) User Position/Rotation Updates
+[?] (u.m) User Position/Rotation Updates
 In diesem fall soll das event zum redis gesendet werden. Der redis broadcastet das event an alle world-player pods 
 - auch an den eigenen zurueck? - dann kann das event genutzt werden, ansonsten muss es simuliert werden im eigenen pod.
 - es muss einen listener fuer dieses event vom redis geben, der listener shcikt das event an alle sessions
 - Die session die das event urspruenglich gesendet hat, muss erkennen, dass es ihr eigenes event ist und es nicht nochmal verarbeiten.
 - Alle anderen sessions pruefen ob das event im registrierten chunk liegt und schicken es an den client wenn ja.
 
-[ ] (a.s) - Client → Server Animation Broadcasting
-Wie schon bei (u.m) muss das Event über redis vertel werden an die anderen world-player pods und sessions.
+[?] (a.s) - Client → Server Animation Broadcasting
+Wie schon bei (u.m) muss das Event über redis verteilt werden an die anderen world-player pods und sessions.
+
+[ ] (e.t) - Effect Trigger Client → Server
+Wie schon bei (u.m) muss das Event über redis verteilt werden an die anderen world-player pods und sessions.
+
+[ ] (e.u) - Effect Updates Client → Server
+Wie schon bei (u.m) muss das Event über redis verteilt werden an die anderen world-player pods und sessions.
 
 [ ] (e.int.r) - Entity Interaktionen
 Eine entity interaction muss immer im server verarbeitet werden. Aktuell soll der handler eine log message schreiben.
-
-
 
 [ ] (int.r) - Generelle Interaktionsanfragen
 Eine entity interaction muss immer im server verarbeitet werden. Aktuell soll der handler eine log message schreiben.
@@ -1433,5 +1437,3 @@ Soll an den CommandService gegeben werden und die antwort dann an den Client ges
 - Commands werden als Bean-Service breitgestellt und im CommandService ausgefuehrt.
 - Erstelle die Klasse HelpCommand
 
-[ ] (e.t) - Effect Trigger Client → Server
-[ ] (e.u) - Effect Updates Client → Server
