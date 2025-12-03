@@ -26,7 +26,7 @@ Erstelle ein neues Modul 'world-test' in tools.
 - Alle modify koennen nun hier getestet werden
 
 
-## Migration
+## Migration Player
 
 Die Aufgabe ist es die inbound funktionalitaet des TypeScript test_server packages zu migrieren.
 - Pfad zum test_server: '../client/packages/test_server/src'
@@ -69,10 +69,10 @@ Migration der WebSocket Messages (world-player)
 - Network Messages, siehe instructions/general/network-model-2.0.md
 - Die WebSocket Session wird stateful gehalten. Bei einem Disconnect geht der Session-Status in DEPRECATED, nutxe WSockedService
 
-[?] Login Message implementieren (Client -> Server)
+[x] Login Message implementieren (Client -> Server)
 - aktuell wird login implementiert, aber noch nicht validiert, wird nicht bleiben, deprecated
 - Wichtig, login mit sessionId wird bleiben
-[?] Ping (Client -> Server)
+[x] Ping (Client -> Server)
 - WorldService - setStatus - wird in mongoDb gespeichert
 [?] Chunk Registration (Client -> Server)
 - Wird in Websocket session gehalten
@@ -2123,3 +2123,31 @@ So ist es moeglich die arbeit bei vielen aktiven entities zu skalieren.
 
 [x] Interaktionen mit entities werden an den world-life server via redis messages gesendet.
 - Die Instanz, die gerade die entitaet owned, schickt die information an den EntityBehavior Service, dieser kann (muss nicht) dann neue Pathways finden.
+
+## Migration world-control
+
+Die Aufgabe ist es die REST Endpunkte des TypeScript test_server packages zu migrieren.
+- REST Spezifikation, siehe instructions/general/server_rest_api.md
+- Pfad zum test_server: '../client/packages/test_server/src'
+- Die Implementierung in test_Server ist immer die richtige referenz.
+- Der test Server nutzt Typen in '../client/packages/shared/src' diese wurden in modul 'generated' nach Java migriert und muessen mit dem EngineMapper Service de/serialisiert werden.
+- Es sollen alle rest endpunkte GET, POST, PUT, DELETE in den world-control server migriert werden.
+- Es wurden bereits GET Endpunkte in world-player migriert.
+- Es wurden bereits alle Entity Typen in world-shared erstellt und in die mongoDB importiert.
+- Dem client package components soll es ermöglicht werden über die Endpunkte mit dem world-control server zu kommunizieren.
+- Aktuell wird keine Authentifizierung benötigt, diese kann später hinzugefügt werden.
+
+[ ] Erstelle alle Asset REST Endpunkte in world-control
+- /api/worlds/{worldId}/assets
+[ ] Erstelle alle backdrops REST Endpunkte in world-control (nicht in rest dokumentation)
+- /api/worlds/{worldId}/backdrops
+[ ] Erstelle alle blocktypes REST Endpunkte in world-control
+- /api/worlds/{worldId}/blocktypes
+[ ] Erstelle alle itemtypes REST Endpunkte in world-control
+- /api/worlds/{worldId}/itemtypes
+[ ] Erstelle alle entitymodels REST Endpunkte in world-control
+- /api/worlds/{worldId}/entitymodel
+[ ] Erstelle alle entities REST Endpunkte in world-control
+- /api/worlds/{worldId}/entity
+[ ] Erstelle alle items REST Endpunkte in world-control
+- /api/worlds/{worldId}/items
