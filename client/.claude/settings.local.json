@@ -74,7 +74,8 @@
       "Bash(node scripts/add-missing-logger-imports.js:*)",
       "Bash(xargs:*)",
       "Bash(npm run dev:*)",
-      "Bash(pnpm update:*)"
+      "Bash(pnpm update:*)",
+      "Bash(pnpm --filter @nimbus/engine build:shared:*)"
     ],
     "deny": [],
     "ask": []

@@ -507,8 +507,9 @@ export interface VisibilityModifier {
    * Face visibility flags (1 byte bitfield)
    * Determines which faces are visible or if it's auto-calculated
    * Priority: VisibilityModifier.faceVisibility > Block.faceVisibility > default (all visible)
+   * Can be stored as number (preferred) or FaceVisibility object (legacy)
    */
-  faceVisibility?: FaceVisibility;
+  faceVisibility?: number | FaceVisibility;
 }
 
 /**
