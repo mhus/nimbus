@@ -43,6 +43,7 @@ public class EntityController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+
     @GetMapping
     @Operation(summary = "Get all Entities", description = "Returns all enabled Entity instances, filtered by world or chunk")
     @ApiResponses({

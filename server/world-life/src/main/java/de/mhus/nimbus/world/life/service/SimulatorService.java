@@ -66,8 +66,16 @@ public class SimulatorService {
 
         // Initialize simulation state for each entity
         int initializedCount = 0;
+        int missingPositionCount = 0;
         for (WEntity entity : entities) {
             if (!entity.isEnabled()) {
+                continue;
+            }
+
+            // Check if entity has position set
+            if (entity.getPosition() == null) {
+                log.warn("Entity {} has no position set, skipping simulation", entity.getEntityId());
+                missingPositionCount++;
                 continue;
             }
 
@@ -79,7 +87,8 @@ public class SimulatorService {
         // Register for chunk change notifications (optional - not critical for now)
         chunkAliveService.addChangeListener(this::onChunksChanged);
 
-        log.info("SimulatorService initialized: {} entities ready for simulation", initializedCount);
+        log.info("SimulatorService initialized: {} entities ready for simulation ({} skipped - no position)",
+                initializedCount, missingPositionCount);
     }
 
     /**
@@ -172,6 +181,16 @@ public class SimulatorService {
         EntityPathway pathway = behavior.update(entity, state, currentTime, properties.getWorldId());
 
         if (pathway != null) {
+            // Update in-memory position to last waypoint target
+            List<Waypoint> waypoints = pathway.getWaypoints();
+            if (waypoints != null && !waypoints.isEmpty()) {
+                Waypoint lastWaypoint = waypoints.get(waypoints.size() - 1);
+                entity.setPosition(lastWaypoint.getTarget());
+
+                // Update chunk if entity moved to different chunk
+                updateEntityChunk(entity);
+            }
+
             // Update simulation state
             state.setLastPathwayTime(currentTime);
             state.setCurrentPathway(pathway);
@@ -289,5 +308,57 @@ public class SimulatorService {
      */
     public int getOwnedEntityCount() {
         return ownershipService.getOwnedEntityCount();
+    }
+
+    /**
+     * Update entity chunk based on current position.
+     * Recalculates chunk coordinates and updates if changed.
+     *
+     * @param entity Entity to update
+     */
+    private void updateEntityChunk(WEntity entity) {
+        if (entity.getPosition() == null) {
+            return;
+        }
+
+        int cx = (int) Math.floor(entity.getPosition().getX() / 16);
+        int cz = (int) Math.floor(entity.getPosition().getZ() / 16);
+        String newChunk = cx + ":" + cz;
+
+        if (!newChunk.equals(entity.getChunk())) {
+            String oldChunk = entity.getChunk();
+            entity.setChunk(newChunk);
+
+            log.debug("Entity {} moved to new chunk: {} -> {}", entity.getEntityId(), oldChunk, newChunk);
+
+            // Update ownership with new chunk
+            if (ownershipService.isOwnedByThisPod(entity.getEntityId())) {
+                ownershipService.releaseEntity(entity.getEntityId());
+                ownershipService.claimEntity(entity.getEntityId(), newChunk);
+            }
+        }
+    }
+
+    /**
+     * Snapshot entity positions to database periodically.
+     * Runs every 60 seconds to persist in-memory position changes.
+     */
+    @Scheduled(fixedDelay = 60000)
+    public void snapshotEntityPositions() {
+        List<WEntity> toUpdate = new ArrayList<>();
+
+        for (SimulationState state : simulationStates.values()) {
+            WEntity entity = state.getEntity();
+
+            // Only snapshot entities owned by this pod
+            if (ownershipService.isOwnedByThisPod(entity.getEntityId())) {
+                toUpdate.add(entity);
+            }
+        }
+
+        if (!toUpdate.isEmpty()) {
+            entityRepository.saveAll(toUpdate);
+            log.info("Snapshotted {} entity positions to database", toUpdate.size());
+        }
     }
 }
