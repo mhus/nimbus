@@ -2121,5 +2121,5 @@ So ist es moeglich die arbeit bei vielen aktiven entities zu skalieren.
  world-player Changes: 3 neue Listener/Publisher + 1 Handler-Änderung
 ```
 
-[ ] Interaktionen mit entities werden an den world-life server via redis messages gesendet.
+[x] Interaktionen mit entities werden an den world-life server via redis messages gesendet.
 - Die Instanz, die gerade die entitaet owned, schickt die information an den EntityBehavior Service, dieser kann (muss nicht) dann neue Pathways finden.

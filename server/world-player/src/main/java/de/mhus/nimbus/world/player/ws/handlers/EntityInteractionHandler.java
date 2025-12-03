@@ -31,6 +31,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EntityInteractionHandler implements MessageHandler {
 
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService redisMessaging;
+
     @Override
     public String getMessageType() {
         return "e.int.r";
@@ -57,24 +60,59 @@ public class EntityInteractionHandler implements MessageHandler {
             return;
         }
 
-        // TODO: Load entity from database
-        // TODO: Check if entity is interactive
-        // TODO: Validate player has permission to interact
-        // TODO: Execute interaction logic based on action type
-        // TODO: Send response to client if needed
+        // Publish interaction to Redis for world-life processing
+        publishEntityInteraction(session, entityId, action, timestamp, params);
 
-        // For now, just log the interaction
-        log.info("Entity interaction: entityId={}, action={}, params={}, user={}, session={}",
-                entityId, action, params, session.getDisplayName(), session.getSessionId());
+        log.debug("Entity interaction forwarded to world-life: entityId={}, action={}, user={}",
+                entityId, action, session.getDisplayName());
+    }
 
-        // Example actions to handle in future:
-        // - "click" → Open dialog, trigger action
-        // - "fireShortcut" → Execute shortcut action
-        // - "use" → Use item on entity
-        // - "talk" → Start conversation
-        // - "attack" → Combat action
-        // - "touch" → Proximity trigger
-        // - "entityCollision" → Collision event
-        // - "entityProximity" → Attention range event
+    /**
+     * Publish entity interaction to Redis for world-life processing.
+     * Channel: world:{worldId}:e.int
+     *
+     * Message format:
+     * {
+     *   "entityId": "cow2",
+     *   "action": "click",
+     *   "timestamp": 1234567890,
+     *   "params": {...},
+     *   "userId": "user123",
+     *   "sessionId": "session-abc",
+     *   "displayName": "Player"
+     * }
+     *
+     * @param session Player session
+     * @param entityId Entity ID being interacted with
+     * @param action Interaction action type
+     * @param timestamp Client timestamp
+     * @param params Action-specific parameters
+     */
+    private void publishEntityInteraction(PlayerSession session, String entityId, String action,
+                                          Long timestamp, JsonNode params) {
+        try {
+            com.fasterxml.jackson.databind.node.ObjectNode message = objectMapper.createObjectNode();
+            message.put("entityId", entityId);
+            message.put("action", action);
+            message.put("timestamp", timestamp != null ? timestamp : System.currentTimeMillis());
+
+            if (params != null) {
+                message.set("params", params);
+            }
+
+            // Add session/player context
+            message.put("userId", session.getUserId());
+            message.put("sessionId", session.getSessionId());
+            message.put("displayName", session.getDisplayName());
+
+            String json = objectMapper.writeValueAsString(message);
+            redisMessaging.publish(session.getWorldId(), "e.int", json);
+
+            log.trace("Published entity interaction to Redis: entityId={}, action={}", entityId, action);
+
+        } catch (Exception e) {
+            log.error("Failed to publish entity interaction to Redis: entityId={}, action={}",
+                    entityId, action, e);
+        }
     }
 }
