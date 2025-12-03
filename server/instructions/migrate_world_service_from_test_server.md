@@ -1388,3 +1388,17 @@ Wenn eine Message kommt:
 
 wird die registrierung aktualisiert und chunks an denen corher nicht registriert war werden jetzt an den client gesendet.
 Die registrierung wird gespeichert in der Session. Bei der naechsten registrierung wird das delta (neue chunks) an den client gesendet.
+
+---
+
+Mit dem neuen server scheinen Daten anzukommen, aber es wird nichts angezeigt. Deshalb moechte
+ich auf den alten server eine zpezialisierten test auf diw world 'main' erstellen.
+- Der test macht eine Websocket auf und liest den chunk 0,0
+- Der test liest die BlockTypen in der gruppe 'w'
+- Der test prueft einen Block an position x:0,z:0
+- Geprueft wird die JSON struktur ohne DTO Objekte
+- Der test muss ggf. iterative erstellt werden, wir verlassen uns im ertsen schritt auf die Daten die vom server kommen.
+Im Zeiten schritt will ich den test auf den neuen Server machen um die unterschiede zu sehen.
+TestKlasse habe ich schon selektiert. Es gibt bereits tests mit Rest und WebSocket in diesem Bereich. 
+> mein vorschlag, in BeforeAll bereich die daten vom server zu laden und dann in einelnen tests diese auf ihre struktur zu pruefen 
+

@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.test;
 
+import de.mhus.nimbus.AbstractSystemTest;
 import de.mhus.nimbus.generated.network.messages.ChunkCoordinate;
 import de.mhus.nimbus.generated.types.BlockType;
 import de.mhus.nimbus.generated.types.Entity;

@@ -10,7 +10,10 @@
       "Bash(mongosh:*)",
       "Bash(done)",
       "Bash(readlink:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mvn test-compile:*)",
+      "Bash(mvn clean verify:*)",
+      "Bash(mvn verify:*)"
     ],
     "deny": [],
     "ask": []

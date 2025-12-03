@@ -480,7 +480,7 @@ export interface VisibilityModifier {
    * Corner offsets (8 corners × 3 axes = 24 values)
    * Values are numbers (supports both integers and floats)
    */
-  offsets?: number[];
+  offsets?: number[]; // javaType: java.util.List<java.lang.Float>
 
   /** Scaling factor X */
   scalingX?: number;

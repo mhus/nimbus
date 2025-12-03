@@ -8,7 +8,7 @@ import de.mhus.nimbus.generated.network.ResponseMessage;
 import de.mhus.nimbus.generated.network.messages.LoginRequestData;
 import de.mhus.nimbus.generated.network.messages.LoginResponseData;
 import de.mhus.nimbus.generated.network.messages.PingData;
-import de.mhus.nimbus.world.test.AbstractSystemTest;
+import de.mhus.nimbus.AbstractSystemTest;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.junit.jupiter.api.AfterEach;
