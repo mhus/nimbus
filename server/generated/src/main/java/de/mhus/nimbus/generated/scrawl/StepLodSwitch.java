@@ -12,5 +12,5 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class StepLodSwitch {
     private String kind;
-    private java.util.Map<ScrawlLodLevel, ScrawlStep> levels;
+    private java.util.Map<String, ScrawlStep> levels;
 }

@@ -73,7 +73,7 @@ export interface StepForEach {
 export interface StepLodSwitch {
   kind: 'LodSwitch';
   /** Steps for different LOD levels */
-  levels: Partial<Record<ScrawlLodLevel, ScrawlStep>>;
+  levels: Partial<Record<ScrawlLodLevel, ScrawlStep>>; // javaType: java.util.Map<String,ScrawlStep>
 }
 
 /**

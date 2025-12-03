@@ -533,8 +533,8 @@
         "type" : "Partial<Record<ScrawlLodLevel, ScrawlStep>>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "java.util.Map<String,ScrawlStep>",
+        "comment" : "// javaType: java.util.Map<String,ScrawlStep>"
       } ],
       "methods" : [ ]
     }, {
@@ -856,8 +856,8 @@
         "type" : "ScrawlParameterType",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "String",
+        "comment" : "// javaType: String"
       }, {
         "name" : "default",
         "type" : "any",
@@ -2275,8 +2275,8 @@
         "type" : "FaceVisibility",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "status",
         "type" : "number",

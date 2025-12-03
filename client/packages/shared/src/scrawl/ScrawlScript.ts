@@ -9,7 +9,7 @@ export interface ScrawlParameterDefinition {
   name: string;
 
   /** Parameter type */
-  type: ScrawlParameterType;
+  type: ScrawlParameterType; // javaType: String
 
   /** Default value (optional) */
   default?: any;

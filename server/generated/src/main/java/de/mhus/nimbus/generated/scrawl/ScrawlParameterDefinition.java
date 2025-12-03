@@ -12,7 +12,7 @@ package de.mhus.nimbus.generated.scrawl;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ScrawlParameterDefinition {
     private String name;
-    private ScrawlParameterType type;
+    private String type;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String description;
 }

@@ -361,7 +361,7 @@ export interface Block {
    * Face visibility flags (1 byte)
    * Determines which faces are visible or if it's auto-calculated
    */
-  faceVisibility?: FaceVisibility;
+  faceVisibility?: FaceVisibility; // javaType: int
 
   /**
    * Current status (0-255)

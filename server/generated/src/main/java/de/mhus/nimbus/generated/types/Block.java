@@ -21,7 +21,7 @@ public class Block {
     private java.util.List<Object> cornerHeights;
     @com.fasterxml.jackson.annotation.JsonProperty("faceVisibility")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private FaceVisibility faceVisibility;
+    private int faceVisibility;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private int status;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
