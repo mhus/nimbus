@@ -1402,3 +1402,36 @@ Im Zeiten schritt will ich den test auf den neuen Server machen um die unterschi
 TestKlasse habe ich schon selektiert. Es gibt bereits tests mit Rest und WebSocket in diesem Bereich. 
 > mein vorschlag, in BeforeAll bereich die daten vom server zu laden und dann in einelnen tests diese auf ihre struktur zu pruefen 
 
+---
+
+Jetzt koennen wir mit dem migrations plan weiter machen.
+Ich brauche weitere MessageHandler fuer die WebSocket.
+
+---
+
+[ ] (u.m) User Position/Rotation Updates
+In diesem fall soll das event zum redis gesendet werden. Der redis broadcastet das event an alle world-player pods 
+- auch an den eigenen zurueck? - dann kann das event genutzt werden, ansonsten muss es simuliert werden im eigenen pod.
+- es muss einen listener fuer dieses event vom redis geben, der listener shcikt das event an alle sessions
+- Die session die das event urspruenglich gesendet hat, muss erkennen, dass es ihr eigenes event ist und es nicht nochmal verarbeiten.
+- Alle anderen sessions pruefen ob das event im registrierten chunk liegt und schicken es an den client wenn ja.
+
+[ ] (a.s) - Client → Server Animation Broadcasting
+Wie schon bei (u.m) muss das Event über redis vertel werden an die anderen world-player pods und sessions.
+
+[ ] (e.int.r) - Entity Interaktionen
+Eine entity interaction muss immer im server verarbeitet werden. Aktuell soll der handler eine log message schreiben.
+
+
+
+[ ] (int.r) - Generelle Interaktionsanfragen
+Eine entity interaction muss immer im server verarbeitet werden. Aktuell soll der handler eine log message schreiben.
+
+[ ] (cmd) - Client Commands Processing
+Soll an den CommandService gegeben werden und die antwort dann an den Client gesendet werden.
+- Der CommandService hat keine Ahnung von Messages, der Request muss abstrahiert werden.
+- Commands werden als Bean-Service breitgestellt und im CommandService ausgefuehrt.
+- Erstelle die Klasse HelpCommand
+
+[ ] (e.t) - Effect Trigger Client → Server
+[ ] (e.u) - Effect Updates Client → Server
