@@ -460,7 +460,7 @@ export enum BlockEffect {
  */
 export interface VisibilityModifier {
   /** Shape type */
-  shape?: Shape;
+  shape?: Shape;  // javaType: int
 
   /** Effect type (NONE, FLIPBOX, WIND)
    * Applies to all textures by default

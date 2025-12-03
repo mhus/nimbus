@@ -54,9 +54,12 @@ public abstract class AbstractSystemTest {
         }
 
         // Initialize configuration
-        webSocketUrl = getProperty("test.server.websocket.url", "ws://localhost:3011");
-        playerUrl = getProperty("test.server.player.url", "http://localhost:3011");
-        editorUrl = getProperty("test.server.editor.url", "http://localhost:3011");
+        webSocketUrl = getProperty("test.server.websocket.url", "ws://localhost:9042/ws/world/main");
+        playerUrl = getProperty("test.server.player.url", "http://localhost:9042");
+        editorUrl = getProperty("test.server.editor.url", "http://localhost:9042");
+//        webSocketUrl = getProperty("test.server.websocket.url", "ws://localhost:3011/");
+//        playerUrl = getProperty("test.server.player.url", "http://localhost:3011");
+//        editorUrl = getProperty("test.server.editor.url", "http://localhost:3011");
         loginUsername = getProperty("test.login.username", "testuser");
         loginPassword = getProperty("test.login.password", "testpass");
         worldId = getProperty("test.login.worldId", "test-world");

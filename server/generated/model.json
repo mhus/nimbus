@@ -2666,8 +2666,8 @@
         "type" : "Shape",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       }, {
         "name" : "effect",
         "type" : "BlockEffect",
@@ -4236,8 +4236,8 @@
         "type" : "SeasonStatus",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "byte",
+        "comment" : "// javaType: byte"
       }, {
         "name" : "seasonProgress",
         "type" : "number",

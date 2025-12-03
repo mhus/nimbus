@@ -3,6 +3,7 @@ package de.mhus.nimbus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Nur plain JSON mit Jackson, keine DTOs.
  * Kann später gegen neuen Server laufen um Unterschiede zu identifizieren.
  */
+@Slf4j
 @DisplayName("Main World Block Data Structure Test")
 public class MainBlockDataTest extends AbstractSystemTest {
 
@@ -93,10 +95,29 @@ public class MainBlockDataTest extends AbstractSystemTest {
 
             ws.send(mapper.writeValueAsString(loginMsg));
 
-            // Wait for login response
+            // Wait for login response (may get "connected" event first from new server)
             Thread.sleep(500);
-            String loginResponse = messages.poll();
-            assertThat(loginResponse).isNotNull();
+
+            String loginResponse = null;
+            while (!messages.isEmpty()) {
+                String msg = messages.poll();
+                JsonNode msgNode = mapper.readTree(msg);
+                String msgType = msgNode.get("t").asText();
+
+                log.info("--- Received message type: {}", msgType);
+
+                if ("connected".equals(msgType)) {
+                    System.out.println("   (Skipping 'connected' event from new server)");
+                    continue;
+                }
+
+                if ("loginResponse".equals(msgType)) {
+                    loginResponse = msg;
+                    break;
+                }
+            }
+
+            assertThat(loginResponse).as("Should receive login response").isNotNull();
 
             JsonNode loginNode = mapper.readTree(loginResponse);
             String sessionId = loginNode.get("d").get("sessionId").asText();
@@ -205,18 +226,151 @@ public class MainBlockDataTest extends AbstractSystemTest {
                     System.out.println("  - " + field + ": " + firstBlock.get(field))
                 );
 
-                // Find block at position 0,0 (any y)
-                System.out.println("\nSearching for block at x:0, z:0...");
+                // Find block at position (8, 72, 1) - should be BlockType 310
+                System.out.println("\n=== Searching for Block at (8, 72, 1) ===");
+                JsonNode targetBlock = null;
                 for (JsonNode block : blocks) {
-                    if (block.has("x") && block.has("z")) {
-                        int x = block.get("x").asInt();
-                        int z = block.get("z").asInt();
-                        if (x == 0 && z == 0) {
-                            System.out.println("Found block at x:0, z:0, y:" + block.get("y").asInt());
-                            System.out.println("  Type: " + (block.has("t") ? block.get("t").asText() : "N/A"));
-                            System.out.println("  Status: " + (block.has("s") ? block.get("s").asInt() : "N/A"));
-                            break;
+                    // Check both formats: direct x,y,z or position object
+                    int bx = -1, by = -1, bz = -1;
+
+                    if (block.has("position")) {
+                        JsonNode pos = block.get("position");
+                        bx = pos.get("x").asInt();
+                        by = pos.get("y").asInt();
+                        bz = pos.get("z").asInt();
+                    } else if (block.has("x") && block.has("y") && block.has("z")) {
+                        bx = block.get("x").asInt();
+                        by = block.get("y").asInt();
+                        bz = block.get("z").asInt();
+                    }
+
+                    if (bx == 8 && by == 72 && bz == 1) {
+                        targetBlock = block;
+                        break;
+                    }
+                }
+
+                if (targetBlock == null) {
+                    System.out.println("❌ Block at (8, 72, 1) NOT FOUND!");
+                } else {
+                    System.out.println("✅ Found block at (8, 72, 1)");
+                    System.out.println("\nComplete block structure:");
+                    System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(targetBlock));
+
+                    // Validate ALL block fields
+                    System.out.println("\n=== Validating ALL block fields ===");
+
+                    boolean blockHasErrors = false;
+
+                    // 1. Position - REQUIRED
+                    if (targetBlock.has("position")) {
+                        JsonNode pos = targetBlock.get("position");
+                        if (pos.has("x") && pos.has("y") && pos.has("z")) {
+                            int x = pos.get("x").asInt();
+                            int y = pos.get("y").asInt();
+                            int z = pos.get("z").asInt();
+                            System.out.println("✅ position: {x:" + x + ", y:" + y + ", z:" + z + "}");
+                            if (x != 8 || y != 72 || z != 1) {
+                                System.out.println("❌ WRONG VALUES: Expected (8,72,1), got (" + x + "," + y + "," + z + ")");
+                                blockHasErrors = true;
+                            }
+                        } else {
+                            System.out.println("❌ position object missing x,y,z fields");
+                            blockHasErrors = true;
                         }
+                    } else if (targetBlock.has("x") && targetBlock.has("y") && targetBlock.has("z")) {
+                        int x = targetBlock.get("x").asInt();
+                        int y = targetBlock.get("y").asInt();
+                        int z = targetBlock.get("z").asInt();
+                        System.out.println("✅ x,y,z: (" + x + ", " + y + ", " + z + ")");
+                        if (x != 8 || y != 72 || z != 1) {
+                            System.out.println("❌ WRONG VALUES: Expected (8,72,1)");
+                            blockHasErrors = true;
+                        }
+                    } else {
+                        System.out.println("❌ MISSING: position or x,y,z fields");
+                        blockHasErrors = true;
+                    }
+
+                    // 2. BlockTypeId - REQUIRED, must be Number 310
+                    if (targetBlock.has("blockTypeId")) {
+                        JsonNode typeNode = targetBlock.get("blockTypeId");
+                        if (typeNode.isNumber()) {
+                            int typeId = typeNode.asInt();
+                            System.out.println("✅ blockTypeId: " + typeId + " (Number)");
+                            if (typeId != 310) {
+                                System.out.println("❌ WRONG VALUE: Expected 310, got " + typeId);
+                                blockHasErrors = true;
+                            }
+                        } else {
+                            System.out.println("❌ WRONG TYPE: blockTypeId is not a Number");
+                            blockHasErrors = true;
+                        }
+                    } else if (targetBlock.has("t")) {
+                        JsonNode typeNode = targetBlock.get("t");
+                        if (typeNode.isTextual()) {
+                            String type = typeNode.asText();
+                            System.out.println("✅ t (type): \"" + type + "\" (String)");
+                            if (!"w:310".equals(type)) {
+                                System.out.println("❌ WRONG VALUE: Expected 'w:310', got '" + type + "'");
+                                blockHasErrors = true;
+                            }
+                        } else {
+                            System.out.println("❌ WRONG TYPE: t is not a String");
+                            blockHasErrors = true;
+                        }
+                    } else {
+                        System.out.println("❌ MISSING: blockTypeId or t field");
+                        blockHasErrors = true;
+                    }
+
+                    // 3. Offsets - should be Array[24] with numbers
+                    if (targetBlock.has("offsets")) {
+                        JsonNode offsets = targetBlock.get("offsets");
+                        if (offsets.isArray()) {
+                            System.out.println("✅ offsets: Array[" + offsets.size() + "]");
+                            if (offsets.size() != 24) {
+                                System.out.println("⚠️  Expected 24 offsets, got " + offsets.size());
+                            }
+                            // Check all are numbers
+                            boolean allNumbers = true;
+                            for (JsonNode offset : offsets) {
+                                if (!offset.isNumber()) {
+                                    allNumbers = false;
+                                    break;
+                                }
+                            }
+                            if (!allNumbers) {
+                                System.out.println("❌ Offsets contain non-number values");
+                                blockHasErrors = true;
+                            }
+                        } else {
+                            System.out.println("❌ offsets is not an array");
+                            blockHasErrors = true;
+                        }
+                    } else if (targetBlock.has("s")) {
+                        JsonNode statusNode = targetBlock.get("s");
+                        if (statusNode.isNumber()) {
+                            System.out.println("✅ s (status): " + statusNode.asInt() + " (Number)");
+                        } else {
+                            System.out.println("❌ s is not a Number");
+                            blockHasErrors = true;
+                        }
+                    } else {
+                        System.out.println("⚠️  No offsets or s field");
+                    }
+
+                    // List all fields
+                    System.out.println("\nAll fields in block (8,72,1):");
+                    targetBlock.fieldNames().forEachRemaining(field ->
+                        System.out.println("  - " + field)
+                    );
+
+                    if (blockHasErrors) {
+                        System.out.println("\n❌❌❌ BLOCK HAS ERRORS ❌❌❌");
+                        assertThat(blockHasErrors).as("Block at (8,72,1) must be valid").isFalse();
+                    } else {
+                        System.out.println("\n✅ Block (8,72,1) is valid");
                     }
                 }
             }
@@ -249,6 +403,180 @@ public class MainBlockDataTest extends AbstractSystemTest {
             System.out.println("\nSample BlockType IDs:");
             for (int i = 0; i < Math.min(5, blockTypes.size()); i++) {
                 System.out.println("  - " + blockTypes.get(i).get("id").asText());
+            }
+
+            // Find and validate BlockType 310 (used in first block)
+            System.out.println("\n=================================================");
+            System.out.println("BLOCKTYPE 310 VALIDATION (Grass Block)");
+            System.out.println("=================================================");
+
+            JsonNode blockType310 = null;
+            for (JsonNode bt : blockTypes) {
+                String id = bt.get("id").asText();
+                if ("w:310".equals(id) || "310".equals(id)) {
+                    blockType310 = bt;
+                    break;
+                }
+            }
+
+            if (blockType310 == null) {
+                System.out.println("❌ CRITICAL ERROR: BlockType 310 NOT FOUND!");
+                System.out.println("   Blocks are invisible because BlockType is missing!");
+                assertThat(blockType310).as("BlockType 310 must exist").isNotNull();
+                return;
+            }
+
+            System.out.println("✅ Found BlockType 310");
+            System.out.println("\nComplete structure:");
+            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(blockType310));
+
+            // Validate ALL BlockType 310 fields
+            System.out.println("\n=== Validating ALL BlockType 310 fields ===");
+
+            boolean hasErrors = false;
+
+            // 1. id - REQUIRED
+            if (blockType310.has("id")) {
+                String id = blockType310.get("id").asText();
+                System.out.println("✅ id: \"" + id + "\"");
+                if (!"w:310".equals(id)) {
+                    System.out.println("❌ WRONG VALUE: Expected 'w:310', got '" + id + "'");
+                    hasErrors = true;
+                }
+            } else {
+                System.out.println("❌ MISSING: id");
+                hasErrors = true;
+            }
+
+            // 2. name - REQUIRED
+            if (blockType310.has("name")) {
+                System.out.println("✅ name: \"" + blockType310.get("name").asText() + "\"");
+            } else {
+                System.out.println("❌ MISSING: name");
+                hasErrors = true;
+            }
+
+            // 3. description - REQUIRED
+            if (blockType310.has("description")) {
+                String desc = blockType310.get("description").asText();
+                System.out.println("✅ description: \"" + desc.substring(0, Math.min(50, desc.length())) + "...\"");
+            } else {
+                System.out.println("❌ MISSING: description");
+                hasErrors = true;
+            }
+
+            // 4. modifiers - REQUIRED
+            if (!blockType310.has("modifiers")) {
+                System.out.println("❌ MISSING: modifiers object");
+                hasErrors = true;
+            } else {
+                JsonNode modifiers = blockType310.get("modifiers");
+                System.out.println("✅ modifiers: Object with " + modifiers.size() + " entries");
+
+                // 4.1. modifiers.0 (default modifier) - REQUIRED
+                if (!modifiers.has("0")) {
+                    System.out.println("❌ MISSING: modifiers.0 (default modifier)");
+                    hasErrors = true;
+                } else {
+                    JsonNode mod0 = modifiers.get("0");
+                    System.out.println("✅ modifiers.0: exists");
+
+                    // 4.1.1. visibility - REQUIRED
+                    if (!mod0.has("visibility")) {
+                        System.out.println("❌ MISSING: modifiers.0.visibility");
+                        hasErrors = true;
+                    } else {
+                        JsonNode visibility = mod0.get("visibility");
+                        System.out.println("✅ modifiers.0.visibility: exists");
+
+                        // 4.1.1.1. shape - REQUIRED, must be Number 1
+                        if (!visibility.has("shape")) {
+                            System.out.println("❌ MISSING: modifiers.0.visibility.shape");
+                            hasErrors = true;
+                        } else {
+                            JsonNode shapeNode = visibility.get("shape");
+
+                            // Check type - MUST be number, not string!
+                            if (shapeNode.isNumber()) {
+                                int shape = shapeNode.asInt();
+                                System.out.println("✅ modifiers.0.visibility.shape = " + shape + " (Number)");
+
+                                // Validate value - must be 1 for CUBE
+                                if (shape != 1) {
+                                    System.out.println("❌ WRONG VALUE: Expected 1 (CUBE), got " + shape);
+                                    hasErrors = true;
+                                }
+                            } else if (shapeNode.isTextual()) {
+                                String shapeStr = shapeNode.asText();
+                                System.out.println("❌ WRONG TYPE: modifiers.0.visibility.shape = \"" + shapeStr + "\" (String)");
+                                System.out.println("   *** THIS IS THE BUG! Client expects Number (1), not String (\"CUBE\")! ***");
+                                hasErrors = true;
+                            } else {
+                                System.out.println("❌ WRONG TYPE: modifiers.0.visibility.shape is " + shapeNode.getNodeType());
+                                hasErrors = true;
+                            }
+                        }
+
+                        // 4.1.1.2. textures - REQUIRED
+                        if (!visibility.has("textures")) {
+                            System.out.println("❌ MISSING: modifiers.0.visibility.textures");
+                            hasErrors = true;
+                        } else {
+                            JsonNode textures = visibility.get("textures");
+                            System.out.println("✅ modifiers.0.visibility.textures: Object");
+
+                            // texture 0 - REQUIRED
+                            if (!textures.has("0")) {
+                                System.out.println("❌ MISSING: modifiers.0.visibility.textures.0");
+                                hasErrors = true;
+                            } else {
+                                JsonNode tex0 = textures.get("0");
+                                if (tex0.isTextual()) {
+                                    String texture0 = tex0.asText();
+                                    System.out.println("✅ modifiers.0.visibility.textures.0 = \"" + texture0 + "\" (String)");
+                                    if (!"textures/block/basic/grass_top.png".equals(texture0)) {
+                                        System.out.println("⚠️  Expected 'textures/block/basic/grass_top.png', got '" + texture0 + "'");
+                                    }
+                                } else {
+                                    System.out.println("❌ WRONG TYPE: texture.0 is not a String");
+                                    hasErrors = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // 4.1.2. physics - OPTIONAL but expected
+                    if (mod0.has("physics")) {
+                        JsonNode physics = mod0.get("physics");
+                        System.out.println("✅ modifiers.0.physics: exists");
+
+                        if (physics.has("solid")) {
+                            boolean solid = physics.get("solid").asBoolean();
+                            System.out.println("✅ modifiers.0.physics.solid = " + solid);
+                        }
+
+                        if (physics.has("autoClimbable")) {
+                            boolean autoClimb = physics.get("autoClimbable").asBoolean();
+                            System.out.println("✅ modifiers.0.physics.autoClimbable = " + autoClimb);
+                        }
+                    }
+
+                    // 4.1.3. audio - OPTIONAL
+                    if (mod0.has("audio")) {
+                        JsonNode audio = mod0.get("audio");
+                        if (audio.isArray()) {
+                            System.out.println("✅ modifiers.0.audio: Array[" + audio.size() + "]");
+                        }
+                    }
+                }
+            }
+
+            if (hasErrors) {
+                System.out.println("\n❌❌❌ BLOCKTYPE 310 HAS ERRORS ❌❌❌");
+                System.out.println("This is why blocks are invisible in the client!");
+                assertThat(hasErrors).as("BlockType 310 must be valid").isFalse();
+            } else {
+                System.out.println("\n✅ BlockType 310 is completely valid");
             }
 
             // ===== FINAL SUMMARY =====

@@ -2,10 +2,10 @@
 test.server.websocket.url=ws://localhost:3011
 
 # REST APIs (Player & Editor) - beide auf Port 3011
-test.server.player.url=http://localhost:3011
-test.server.editor.url=http://localhost:3011
-#test.server.player.url=http://localhost:9042
-#test.server.editor.url=http://localhost:9042
+#test.server.player.url=http://localhost:3011
+#test.server.editor.url=http://localhost:3011
+test.server.player.url=http://localhost:9042
+test.server.editor.url=http://localhost:9042
 
 # Login Credentials (werden in application.yaml hinterlegt)
 test.login.username=testuser

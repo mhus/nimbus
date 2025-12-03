@@ -52,7 +52,7 @@ export interface WorldInfo {
   status?: number; // javaType: byte
 
   /** Season status identifier (e.g., 'spring', 'summer', 'autumn', 'winter') */
-  seasonStatus: SeasonStatus;
+  seasonStatus: SeasonStatus; // javaType: byte
 
   /** Season progress (0.0 to 1.0, representing progress through current season) */
   seasonProgress: number;

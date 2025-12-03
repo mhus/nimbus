@@ -35,7 +35,7 @@ public class WorldInfo {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private byte status;
     @com.fasterxml.jackson.annotation.JsonProperty("seasonStatus")
-    private SeasonStatus seasonStatus;
+    private byte seasonStatus;
     @com.fasterxml.jackson.annotation.JsonProperty("seasonProgress")
     private double seasonProgress;
     @com.fasterxml.jackson.annotation.JsonProperty("createdAt")

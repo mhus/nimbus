@@ -13,7 +13,8 @@
       "Bash(curl:*)",
       "Bash(mvn test-compile:*)",
       "Bash(mvn clean verify:*)",
-      "Bash(mvn verify:*)"
+      "Bash(mvn verify:*)",
+      "Bash(mvn test:*)"
     ],
     "deny": [],
     "ask": []

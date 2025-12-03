@@ -44,16 +44,14 @@ public class MessageRouter {
             NetworkMessage networkMessage = objectMapper.readValue(payload, NetworkMessage.class);
 
             if (networkMessage.getT() == null) {
-                log.warn("Message without type from {}", session.getWebSocketSession().getId());
-                sendError(session, networkMessage.getI(), "Missing message type");
+                log.warn("Message without type from {} - ignoring", session.getWebSocketSession().getId());
                 return;
             }
 
             // Find handler
             MessageHandler handler = handlers.get(networkMessage.getT());
             if (handler == null) {
-                log.warn("No handler for message type: {}", networkMessage.getT());
-                sendError(session, networkMessage.getI(), "Unknown message type: " + networkMessage.getT());
+                log.warn("No handler for message type: {} - ignoring", networkMessage.getT());
                 return;
             }
 
@@ -61,26 +59,8 @@ public class MessageRouter {
             handler.handle(session, networkMessage);
 
         } catch (Exception e) {
-            log.error("Error routing message from {}", session.getWebSocketSession().getId(), e);
-            try {
-                sendError(session, null, "Internal server error: " + e.getMessage());
-            } catch (Exception ex) {
-                log.error("Failed to send error response", ex);
-            }
+            log.error("Error routing message from {} - ignoring message", session.getWebSocketSession().getId(), e);
         }
     }
 
-    /**
-     * Send error response to client.
-     */
-    private void sendError(PlayerSession session, String requestId, String errorMessage) throws Exception {
-        NetworkMessage response = NetworkMessage.builder()
-                .r(requestId)
-                .t("error")
-                .d(objectMapper.createObjectNode()
-                        .put("error", errorMessage))
-                .build();
-        String json = objectMapper.writeValueAsString(response);
-        session.getWebSocketSession().sendMessage(new TextMessage(json));
-    }
 }
