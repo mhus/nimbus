@@ -1456,3 +1456,14 @@ Soll an den CommandService gegeben werden und die antwort dann an den Client ges
   | "e.u"        | EffectUpdateHandler         | Effect Update (Redis)     |
   | "cmd"        | ClientCommandHandler        | Client Commands           |
 ```
+
+[x] Jetzt muessen noch die Item Referenzen/Positions importiert werden.
+Da drin stehen die Positionen der Items in der Welt.
+- Datei: packages/test_server/data/worlds/main/items.json
+- Siehe auch test_server: packages/test_server/src/world/ItemRegistry.ts
+- Erstelle ItemPosition Entity, Repository, ItemRegistryService
+  - Erstelle die Positionen einzeln mit einem 'chunk' key ('0:0').
+  - Suche nach chunk muss indiziert sein
+  - ItemBlockRef als 'publicData'
+- Wenn ein chunk ausgeleifert wird, muessen die ItemBlockRef mitgeliefert werden
+- Erstelle einen importer, der dann auch die ItemBlockRef aus items.json importiert

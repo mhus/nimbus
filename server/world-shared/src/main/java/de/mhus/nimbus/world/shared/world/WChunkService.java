@@ -30,6 +30,7 @@ public class WChunkService {
     private final WChunkRepository repository;
     private final Optional<StorageService> storageService; // optional injection
     private final WWorldService worldService;
+    private final WItemRegistryService itemRegistryService;
 
     @Value("${nimbus.chunk.inline-max-size:1048576}")
     @Setter
@@ -242,18 +243,29 @@ public class WChunkService {
     /**
      * Convert ChunkData to ChunkDataTransferObject for network transmission.
      * Komprimiert field names für optimierte Netzwerk-Übertragung.
+     * Loads and includes items from item registry.
      *
+     * @param worldId World identifier
+     * @param universeId Universe identifier
      * @param chunkData Internal chunk data
-     * @return Transfer object with compressed field names (blocks → b, heightData → h)
+     * @return Transfer object with compressed field names (blocks → b, heightData → h, items → i)
      */
-    public ChunkDataTransferObject toTransferObject(ChunkData chunkData) {
+    public ChunkDataTransferObject toTransferObject(String worldId, String universeId, ChunkData chunkData) {
         if (chunkData == null) return null;
+
+        // Load items for this chunk from registry
+        var items = itemRegistryService.getItemsInChunk(worldId, universeId, chunkData.getCx(), chunkData.getCz());
+
+        log.trace("Converting chunk to transfer object: cx={}, cz={}, blocks={}, items={}",
+                chunkData.getCx(), chunkData.getCz(),
+                chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0,
+                items.size());
 
         return ChunkDataTransferObject.builder()
                 .cx(chunkData.getCx())
                 .cz(chunkData.getCz())
                 .b(chunkData.getBlocks())        // blocks → b
-                .i(chunkData.getI())              // i → i (same)
+                .i(items.isEmpty() ? null : items)  // items from registry → i
                 .h(chunkData.getHeightData())     // heightData → h
                 // Note: AreaData (a) currently not in ChunkData
                 .build();

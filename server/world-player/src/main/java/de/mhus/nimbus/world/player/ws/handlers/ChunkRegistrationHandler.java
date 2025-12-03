@@ -95,8 +95,9 @@ public class ChunkRegistrationHandler implements MessageHandler {
                 chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey, true)
                         .ifPresentOrElse(
                                 chunkData -> {
-                                    // Convert to transfer object for network transmission
-                                    ChunkDataTransferObject dto = chunkService.toTransferObject(chunkData);
+                                    // Convert to transfer object for network transmission (includes items)
+                                    ChunkDataTransferObject dto = chunkService.toTransferObject(
+                                            session.getWorldId(), session.getWorldId(), chunkData);
                                     responseChunks.add(objectMapper.valueToTree(dto));
                                     log.trace("Loaded chunk: cx={}, cz={}, worldId={}",
                                             coord.cx, coord.cz, session.getWorldId());

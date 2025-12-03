@@ -10,7 +10,7 @@ import java.io.File;
 @Slf4j
 public class FileStorageService implements StorageService {
 
-    @Value("${nimbus.storage.path:target/data}")
+    @Value("${nimbus.storage.path:data}")
     private String basePath;
 
     @Override
