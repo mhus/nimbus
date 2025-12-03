@@ -691,7 +691,7 @@ export interface BlockModifier {
   effects?: EffectsModifier;
 
   /** Audio properties */
-  audio?: AudioModifier;
+  audio?: AudioModifier;  // javaType: java.util.List<AudioDefinition>
 }
 
 /**

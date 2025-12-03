@@ -9,7 +9,5 @@ package de.mhus.nimbus.generated.types;
 @lombok.Data
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
-@lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class FaceVisibility {
-    private double value;
 }

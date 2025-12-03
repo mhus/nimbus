@@ -335,7 +335,7 @@ export interface Block {
    *
    * @see Offsets for detailed documentation
    */
-  offsets?: Offsets;
+  offsets?: number[];  // javaType: java.util.List<java.lang.Float>
 
   /**
    * Corner heights for sloped/ramped blocks (optional)

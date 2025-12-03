@@ -2211,14 +2211,7 @@
     "interfaces" : [ {
       "name" : "FaceVisibility",
       "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "value",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      } ],
+      "properties" : [ ],
       "methods" : [ ]
     }, {
       "name" : "IBlockWithModifier",
@@ -2258,11 +2251,11 @@
         "comment" : null
       }, {
         "name" : "offsets",
-        "type" : "Offsets",
+        "type" : "number[]",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "java.util.List<java.lang.Float>",
+        "comment" : "// javaType: java.util.List<java.lang.Float>"
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
@@ -2572,7 +2565,7 @@
     } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/BlockModifier.ts",
-    "imports" : [ "./Shape", "./Vector3", "./Block" ],
+    "imports" : [ "./Shape", "./Vector3" ],
     "interfaces" : [ {
       "name" : "serves",
       "extendsList" : [ ],
@@ -3009,8 +3002,8 @@
         "type" : "AudioModifier",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "java.util.List<AudioDefinition>",
+        "comment" : "// javaType: java.util.List<AudioDefinition>"
       } ],
       "methods" : [ ]
     } ],
