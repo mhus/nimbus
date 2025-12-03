@@ -56,7 +56,7 @@ export class EntitySimulator {
     this.registerBehavior('PreyAnimalBehavior', new PreyAnimalBehavior());
 
     // Load spawn definitions
-    this.loadSpawnDefinitions();
+//XXX disabled   this.loadSpawnDefinitions();
   }
 
   /**

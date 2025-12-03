@@ -70,6 +70,7 @@ class NimbusServer {
 
   private constructor() {
     const startTime = Date.now();
+    LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
     logger.info('NimbusServer constructor started');
 
     const expressStart = Date.now();
@@ -125,6 +126,39 @@ class NimbusServer {
       NimbusServer.instance = new NimbusServer();
     }
     return NimbusServer.instance;
+  }
+
+  /**
+   * Send WebSocket message with debug logging
+   */
+  private sendWsMessage(session: ClientSession, message: any): void {
+    const messageStr = typeof message === 'string' ? message : JSON.stringify(message);
+
+    // Parse message for logging
+    const parsedMessage = typeof message === 'string' ? JSON.parse(message) : message;
+
+    // Shorten chunk data for logging
+    let logMessage = parsedMessage;
+    if (parsedMessage.t === 'c.u' && Array.isArray(parsedMessage.d)) {
+      logMessage = {
+        t: parsedMessage.t,
+        d: `[${parsedMessage.d.length} chunks]`,
+        chunkSummary: parsedMessage.d.map((c: any) => ({
+          cx: c.cx,
+          cz: c.cz,
+          blocks: c.b?.length || 0,
+          items: c.i?.length || 0,
+          heightData: c.h?.length || 0,
+        }))
+      };
+    }
+
+    logger.debug('📤 WS OUT:', {
+      sessionId: session.sessionId,
+      username: session.username,
+      message: logMessage
+    });
+    session.ws.send(messageStr);
   }
 
   /**
@@ -239,7 +273,7 @@ class NimbusServer {
       this.app.use('/api/worlds', authMiddleware, createConfigRoutes(this.worldManager));
 
       // Backdrop configuration routes (public - no auth needed)
-      this.app.use('/api/backdrop', createBackdropRoutes());
+      this.app.use('/api/worlds', createBackdropRoutes());
 
       // Health check
       this.app.get('/health', (_req, res) => res.json({ status: 'ok', version: SERVER_VERSION }));
@@ -280,6 +314,7 @@ class NimbusServer {
       ws.on('message', async (data) => {
         try {
           const message = JSON.parse(data.toString());
+          logger.debug('📨 WS IN:', { sessionId, username: session.username, message });
           await this.handleMessage(session, message);
         } catch (error) {
           logger.error('Failed to parse message', {}, error as Error);
@@ -329,7 +364,7 @@ class NimbusServer {
           cTs: d?.cTs ?? Date.now(), // Echo client timestamp
           sTs: Date.now(), // Server timestamp
         };
-        session.ws.send(JSON.stringify({ r: i, t: 'p', d: pongData }));
+        this.sendWsMessage(session, { r: i, t: 'p', d: pongData });
         break;
       case 'c.r': // Chunk registration
         await this.handleChunkRegistration(session, d);
@@ -391,7 +426,7 @@ class NimbusServer {
       });
     }
 
-    session.ws.send(JSON.stringify({
+    this.sendWsMessage(session, {
       r: messageId,
       t: 'loginResponse',
       d: {
@@ -400,7 +435,7 @@ class NimbusServer {
         displayName: session.displayName,
         sessionId: session.sessionId,
       },
-    }));
+    });
 
     logger.info(`Login successful: ${session.username} in world ${data.worldId}`);
   }
@@ -427,7 +462,9 @@ class NimbusServer {
       session.registeredChunks.add(key);
     });
 
-    logger.debug(`Registered ${chunks.length} chunks for ${session.username}`, {
+    const world = this.worldManager.getWorld(session.worldId || '?');
+
+    logger.debug(`World ${world} Registered ${chunks.length} chunks for ${session.username}`, {
       newChunks: newChunks.length,
     });
 
@@ -698,7 +735,7 @@ class NimbusServer {
             t: 'e.t',
             d: data,
           };
-          otherSession.ws.send(JSON.stringify(message));
+          this.sendWsMessage(otherSession, message);
           broadcastCount++;
 
           logger.debug('Effect sent to client', {
@@ -796,7 +833,7 @@ class NimbusServer {
             t: 'ef.p.u',
             d: data,
           };
-          otherSession.ws.send(JSON.stringify(message));
+          this.sendWsMessage(otherSession, message);
           broadcastCount++;
         }
       }
@@ -890,10 +927,10 @@ class NimbusServer {
 
     const chunkData = (await Promise.all(chunkDataPromises)).filter(c => c !== null);
 
-    session.ws.send(JSON.stringify({
+    this.sendWsMessage(session, {
       t: 'c.u',
       d: chunkData,
-    }));
+    });
 
     logger.debug(`Sent ${chunkData.length} chunks to ${session.username}`);
   }
@@ -993,17 +1030,15 @@ class NimbusServer {
               t: 'b.u',
               d: clientBlocks,
             };
-            const messageStr = JSON.stringify(message);
 
             logger.info('🔵 SERVER: Sending b.u message to client', {
               sessionId,
               username: session.username,
               blockCount: clientBlocks.length,
-              messageLength: messageStr.length,
               wsReadyState: session.ws.readyState,
             });
 
-            session.ws.send(messageStr);
+            this.sendWsMessage(session, message);
             clientCount++;
 
             logger.info('✅ SERVER: Message sent successfully', {
@@ -1129,21 +1164,8 @@ class NimbusServer {
               t: MessageType.ITEM_BLOCK_UPDATE, // 'b.iu'
               d: clientItems,
             };
-            const messageStr = JSON.stringify(message);
 
-            // logger.info('🔵 SERVER: Sending b.iu message to client', {
-            //   sessionId,
-            //   username: session.username,
-            //   itemCount: clientItems.length,
-            //   items: clientItems.map(i => ({
-            //     position: i.position,
-            //     itemId: i.id,
-            //   })),
-            //   messageLength: messageStr.length,
-            //   wsReadyState: session.ws.readyState,
-            // });
-
-            session.ws.send(messageStr);
+            this.sendWsMessage(session, message);
             clientCount++;
 
             logger.info('✅ SERVER: Item update message sent successfully', {
@@ -1230,7 +1252,7 @@ class NimbusServer {
             d: session.entityPathwayQueue,
           };
 
-          session.ws.send(JSON.stringify(message));
+          this.sendWsMessage(session, message);
 
           logger.debug('Sent pathways to client', {
             sessionId: session.sessionId,
@@ -1374,7 +1396,7 @@ class NimbusServer {
           },
         };
 
-        session.ws.send(JSON.stringify(message));
+        this.sendWsMessage(session, message);
         sentCount++;
 
         logger.debug('Command sent to client', {

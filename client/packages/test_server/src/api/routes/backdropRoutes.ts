@@ -16,14 +16,14 @@ export function createBackdropRoutes(): Router {
   const router = Router();
 
   /**
-   * GET /api/backdrop/:id
+   * GET /api/worlds/:worldId/backdrop/:id
    *
    * Serves backdrop configuration from files/backdrops/{id}.json
-   * Example: GET /api/backdrop/stone -> files/backdrops/stone.json
+   * Example: GET /api/worlds/main/backdrop/stone -> files/backdrops/stone.json
    *
    * Returns BackdropConfig JSON with texture path, alpha, color, etc.
    */
-  router.get('/:id', async (req, res) => {
+  router.get('/:worldId/backdrop/:id', async (req, res) => {
     const backdropId = req.params.id;
 
     try {
