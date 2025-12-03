@@ -1188,7 +1188,7 @@ export class EntityService {
         playerPosition,
       });
     } else {
-      logger.debug('Player collision with entity (no notification)', {
+      logger.trace('Player collision with entity (no notification)', {
         entityId,
         playerPosition,
       });

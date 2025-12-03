@@ -205,6 +205,7 @@ export class TextureAtlas {
         }
 
         const url = networkService.getAssetUrl(textureDef.path);
+        logger.debug('Loading texture into atlas', { path: textureDef.path, url });
         img = await this.loadImage(url);
 
         // Cache the loaded image for future use

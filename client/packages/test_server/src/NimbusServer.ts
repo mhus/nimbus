@@ -70,7 +70,7 @@ class NimbusServer {
 
   private constructor() {
     const startTime = Date.now();
-    LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
+    // LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
     logger.info('NimbusServer constructor started');
 
     const expressStart = Date.now();
