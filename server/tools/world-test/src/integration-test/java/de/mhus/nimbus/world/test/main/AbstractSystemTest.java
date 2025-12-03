@@ -1,4 +1,4 @@
-package de.mhus.nimbus;
+package de.mhus.nimbus.world.test.main;
 
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;

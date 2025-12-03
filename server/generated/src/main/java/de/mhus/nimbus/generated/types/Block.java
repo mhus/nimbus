@@ -15,13 +15,10 @@ public class Block {
     @com.fasterxml.jackson.annotation.JsonProperty("blockTypeId")
     private String blockTypeId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<java.lang.Float> offsets;
+    private Offsets offsets;
     @com.fasterxml.jackson.annotation.JsonProperty("cornerHeights")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<Object> cornerHeights;
-    @com.fasterxml.jackson.annotation.JsonProperty("faceVisibility")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private Integer faceVisibility;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private int status;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

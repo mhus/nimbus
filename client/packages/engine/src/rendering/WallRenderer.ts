@@ -253,10 +253,7 @@ export class WallRenderer extends BlockRenderer {
     const isOuterBackVisible = FaceVisibilityHelper.isVisible(block, FaceFlag.BACK);
 
     // Inner face visibility: Only from modifier.visibility.faceVisibility (NOT from block)
-    const faceVisibilityRaw = modifier.visibility?.faceVisibility;
-    const modifierFaceVisibility = typeof faceVisibilityRaw === 'number'
-      ? faceVisibilityRaw
-      : faceVisibilityRaw?.value ?? 63; // Default: all visible
+    const modifierFaceVisibility = modifier.visibility?.faceVisibility ?? 63; // Default: all visible
     const isInnerTopVisible = (modifierFaceVisibility & FaceFlag.TOP) !== 0;
     const isInnerBottomVisible = (modifierFaceVisibility & FaceFlag.BOTTOM) !== 0;
     const isInnerLeftVisible = (modifierFaceVisibility & FaceFlag.LEFT) !== 0;

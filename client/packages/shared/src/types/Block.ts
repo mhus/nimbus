@@ -58,10 +58,10 @@ export type Offsets = number[];
  * 1 bit for fixed/auto mode
  * Total: 1 byte
  */
-export interface FaceVisibility {
-  /** Bitfield: bit 0-5 = faces, bit 6 = fixed/auto */
-  value: number;
-}
+// export interface FaceVisibility {
+//   /** Bitfield: bit 0-5 = faces, bit 6 = fixed/auto */
+//   value: number;
+// }
 
 /**
  * Face flags for bitfield operations
@@ -94,23 +94,22 @@ export namespace FaceVisibilityHelper {
   /**
    * Create a new FaceVisibility with all faces invisible
    */
-  export function create(): FaceVisibility {
-    return { value: 0 };
+  export function create(): number {
+    return 0;
   }
 
   /**
    * Create a new FaceVisibility with all faces visible
    */
-  export function createAllVisible(): FaceVisibility {
-    return {
-      value:
-        FaceFlag.TOP |
-        FaceFlag.BOTTOM |
-        FaceFlag.LEFT |
-        FaceFlag.RIGHT |
-        FaceFlag.FRONT |
-        FaceFlag.BACK,
-    };
+  export function createAllVisible(): number {
+    return (
+      FaceFlag.TOP |
+      FaceFlag.BOTTOM |
+      FaceFlag.LEFT |
+      FaceFlag.RIGHT |
+      FaceFlag.FRONT |
+      FaceFlag.BACK
+    );
   }
 
   /**
@@ -123,13 +122,13 @@ export namespace FaceVisibilityHelper {
    * - Priority: modifier.faceVisibility > block.faceVisibility > default (all visible)
    *
    * Overload 3: isVisible(fv, face)
-   * - Direct FaceVisibility check (accepts number or FaceVisibility object)
+   * - Direct FaceVisibility check (accepts number)
    */
   export function isVisible(blockWithModifier: IBlockWithModifier, face: FaceFlag): boolean;
   export function isVisible(block: Block, modifier: VisibilityModifier | undefined, face: FaceFlag): boolean;
-  export function isVisible(fv: FaceVisibility | number, face: FaceFlag): boolean;
+  export function isVisible(fv: number, face: FaceFlag): boolean;
   export function isVisible(
-    blockOrFvOrBlockWithModifier: Block | FaceVisibility | number | IBlockWithModifier,
+    blockOrFvOrBlockWithModifier: Block | number | IBlockWithModifier,
     modifierOrFace: VisibilityModifier | undefined | FaceFlag,
     face?: FaceFlag
   ): boolean {
@@ -148,18 +147,12 @@ export namespace FaceVisibilityHelper {
 
       // 1. Priority: modifier.faceVisibility
       if (modifier?.faceVisibility !== undefined) {
-        const value = typeof modifier.faceVisibility === 'number'
-          ? modifier.faceVisibility
-          : modifier.faceVisibility.value;
-        return (value & face) !== 0;
+        return (modifier.faceVisibility & face) !== 0;
       }
 
       // 2. Fallback: block.faceVisibility
       if (block.faceVisibility !== undefined) {
-        const value = typeof block.faceVisibility === 'number'
-          ? block.faceVisibility
-          : block.faceVisibility.value;
-        return (value & face) !== 0;
+        return (block.faceVisibility & face) !== 0;
       }
 
       // 3. Default: all faces visible
@@ -167,70 +160,74 @@ export namespace FaceVisibilityHelper {
     }
 
     // Third overload: isVisible(fv, face)
-    const fv = blockOrFvOrBlockWithModifier as FaceVisibility | number;
+    const fv = blockOrFvOrBlockWithModifier as number;
     const faceFlag = modifierOrFace as FaceFlag;
-    const value = typeof fv === 'number' ? fv : fv.value;
-    return (value & faceFlag) !== 0;
+    return (fv & faceFlag) !== 0;
   }
 
   /**
    * Set a face as visible
-   * @param fv FaceVisibility to modify
+   * @param fv FaceVisibility bitfield
    * @param face Face flag to set
+   * @returns New bitfield value with face set
    */
-  export function setVisible(fv: FaceVisibility, face: FaceFlag): void {
-    fv.value |= face;
+  export function setVisible(fv: number, face: FaceFlag): number {
+    return fv | face;
   }
 
   /**
    * Set a face as invisible
-   * @param fv FaceVisibility to modify
+   * @param fv FaceVisibility bitfield
    * @param face Face flag to clear
+   * @returns New bitfield value with face cleared
    */
-  export function setInvisible(fv: FaceVisibility, face: FaceFlag): void {
-    fv.value &= ~face;
+  export function setInvisible(fv: number, face: FaceFlag): number {
+    return fv & ~face;
   }
 
   /**
    * Toggle a face visibility
-   * @param fv FaceVisibility to modify
+   * @param fv FaceVisibility bitfield
    * @param face Face flag to toggle
+   * @returns New bitfield value with face toggled
    */
-  export function toggle(fv: FaceVisibility, face: FaceFlag): void {
-    fv.value ^= face;
+  export function toggle(fv: number, face: FaceFlag): number {
+    return fv ^ face;
   }
 
   /**
    * Check if fixed mode is enabled (not auto-calculated)
-   * @param fv FaceVisibility to check
+   * @param fv FaceVisibility bitfield
    * @returns true if fixed mode
    */
-  export function isFixed(fv: FaceVisibility): boolean {
-    return (fv.value & FaceFlag.FIXED) !== 0;
+  export function isFixed(fv: number): boolean {
+    return (fv & FaceFlag.FIXED) !== 0;
   }
 
   /**
    * Set fixed mode (disable auto-calculation)
-   * @param fv FaceVisibility to modify
+   * @param fv FaceVisibility bitfield
+   * @returns New bitfield value with fixed mode set
    */
-  export function setFixed(fv: FaceVisibility): void {
-    fv.value |= FaceFlag.FIXED;
+  export function setFixed(fv: number): number {
+    return fv | FaceFlag.FIXED;
   }
 
   /**
    * Set auto mode (enable auto-calculation)
-   * @param fv FaceVisibility to modify
+   * @param fv FaceVisibility bitfield
+   * @returns New bitfield value with fixed mode cleared
    */
-  export function setAuto(fv: FaceVisibility): void {
-    fv.value &= ~FaceFlag.FIXED;
+  export function setAuto(fv: number): number {
+    return fv & ~FaceFlag.FIXED;
   }
 
   /**
    * Get all visible faces as array
-   * @param fv FaceVisibility (number or object) to check
+   * @param fv FaceVisibility bitfield
    * @returns Array of visible face names
    */
-  export function getVisibleFaces(fv: FaceVisibility | number): string[] {
+  export function getVisibleFaces(fv: number): string[] {
     const faces: string[] = [];
     if (isVisible(fv, FaceFlag.TOP)) faces.push('top');
     if (isVisible(fv, FaceFlag.BOTTOM)) faces.push('bottom');
@@ -243,13 +240,13 @@ export namespace FaceVisibilityHelper {
 
   /**
    * Count number of visible faces
-   * @param fv FaceVisibility (number or object) to check
+   * @param fv FaceVisibility bitfield
    * @returns Number of visible faces (0-6)
    */
-  export function countVisible(fv: FaceVisibility | number): number {
+  export function countVisible(fv: number): number {
     let count = 0;
     // Count set bits in first 6 bits
-    const value = (typeof fv === 'number' ? fv : fv.value) & 0b00111111; // Mask out FIXED bit
+    const value = fv & 0b00111111; // Mask out FIXED bit
     let bits = value;
     while (bits) {
       count += bits & 1;
@@ -262,53 +259,53 @@ export namespace FaceVisibilityHelper {
    * Create FaceVisibility from face names
    * @param faces Array of face names
    * @param fixed Whether to use fixed mode
-   * @returns New FaceVisibility
+   * @returns FaceVisibility bitfield
    */
-  export function fromFaces(faces: string[], fixed = false): FaceVisibility {
-    const fv = create();
+  export function fromFaces(faces: string[], fixed = false): number {
+    let fv = create();
     faces.forEach((face) => {
       switch (face.toLowerCase()) {
         case 'top':
-          setVisible(fv, FaceFlag.TOP);
+          fv = setVisible(fv, FaceFlag.TOP);
           break;
         case 'bottom':
-          setVisible(fv, FaceFlag.BOTTOM);
+          fv = setVisible(fv, FaceFlag.BOTTOM);
           break;
         case 'left':
-          setVisible(fv, FaceFlag.LEFT);
+          fv = setVisible(fv, FaceFlag.LEFT);
           break;
         case 'right':
-          setVisible(fv, FaceFlag.RIGHT);
+          fv = setVisible(fv, FaceFlag.RIGHT);
           break;
         case 'front':
-          setVisible(fv, FaceFlag.FRONT);
+          fv = setVisible(fv, FaceFlag.FRONT);
           break;
         case 'back':
-          setVisible(fv, FaceFlag.BACK);
+          fv = setVisible(fv, FaceFlag.BACK);
           break;
       }
     });
     if (fixed) {
-      setFixed(fv);
+      fv = setFixed(fv);
     }
     return fv;
   }
 
   /**
    * Clone a FaceVisibility
-   * @param fv FaceVisibility to clone
-   * @returns New FaceVisibility with same value
+   * @param fv FaceVisibility bitfield
+   * @returns Copy of the bitfield value
    */
-  export function clone(fv: FaceVisibility): FaceVisibility {
-    return { value: fv.value };
+  export function clone(fv: number): number {
+    return fv;
   }
 
   /**
    * Convert to string representation for debugging
-   * @param fv FaceVisibility to convert
+   * @param fv FaceVisibility bitfield
    * @returns String representation
    */
-  export function toString(fv: FaceVisibility): string {
+  export function toString(fv: number): string {
     const faces = getVisibleFaces(fv);
     const mode = isFixed(fv) ? 'fixed' : 'auto';
     return `FaceVisibility(${faces.join(',')}, ${mode})`;

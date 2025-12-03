@@ -8,7 +8,7 @@ import { CubeRenderer } from './CubeRenderer';
 import { RenderContext } from '../services/RenderService';
 import { DisposableResources } from './DisposableResources';
 import type { ClientBlock, ClientBlockType } from '../types';
-import type { Block, BlockType, BlockModifier, FaceVisibility, TextureDefinition } from '@nimbus/shared';
+import type { Block, BlockType, BlockModifier, TextureDefinition } from '@nimbus/shared';
 import { FaceVisibilityHelper, Shape, FaceFlag } from '@nimbus/shared';
 import type { TextureAtlas, AtlasUV } from './TextureAtlas';
 
@@ -108,7 +108,7 @@ describe('CubeRenderer', () => {
     x: number = 0,
     y: number = 0,
     z: number = 0,
-    faceVisibility?: FaceVisibility,
+    faceVisibility?: number,
     textures?: Record<number, TextureDefinition>
   ): ClientBlock {
     const block: Block = {
@@ -252,9 +252,9 @@ describe('CubeRenderer', () => {
   describe('Face Visibility', () => {
     it('should only render visible faces when faceVisibility is specified', async () => {
       // Create block with only top and bottom faces visible
-      const faceVisibility = FaceVisibilityHelper.create();
-      FaceVisibilityHelper.setVisible(faceVisibility, FaceFlag.TOP);
-      FaceVisibilityHelper.setVisible(faceVisibility, FaceFlag.BOTTOM);
+      let faceVisibility = FaceVisibilityHelper.create();
+      faceVisibility = FaceVisibilityHelper.setVisible(faceVisibility, FaceFlag.TOP);
+      faceVisibility = FaceVisibilityHelper.setVisible(faceVisibility, FaceFlag.BOTTOM);
 
       const block = createTestBlock(0, 0, 0, faceVisibility);
 
@@ -304,8 +304,8 @@ describe('CubeRenderer', () => {
           resourcesToDispose: new DisposableResources()
         };
 
-        const faceVisibility = FaceVisibilityHelper.create();
-        FaceVisibilityHelper.setVisible(faceVisibility, flag);
+        let faceVisibility = FaceVisibilityHelper.create();
+        faceVisibility = FaceVisibilityHelper.setVisible(faceVisibility, flag);
 
         const block = createTestBlock(0, 0, 0, faceVisibility);
 

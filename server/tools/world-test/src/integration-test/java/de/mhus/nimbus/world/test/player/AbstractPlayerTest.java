@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.test.player;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.AbstractSystemTest;
+import de.mhus.nimbus.world.test.main.AbstractSystemTest;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.core5.http.io.entity.EntityUtils;

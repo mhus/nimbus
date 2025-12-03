@@ -1,4 +1,4 @@
-package de.mhus.nimbus;
+package de.mhus.nimbus.world.test.main;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

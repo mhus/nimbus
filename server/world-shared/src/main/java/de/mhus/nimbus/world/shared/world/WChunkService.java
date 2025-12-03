@@ -28,7 +28,7 @@ import java.util.Optional;
 public class WChunkService {
 
     private final WChunkRepository repository;
-    private final Optional<StorageService> storageService; // optional injection
+    private final StorageService storageService; // optional injection
     private final WWorldService worldService;
     private final WItemRegistryService itemRegistryService;
 
@@ -69,14 +69,13 @@ public class WChunkService {
                     return neu;
                 });
         if (bytes.length <= inlineMaxSize) {
-            if (entity.getStorageId() != null) storageService.ifPresent(s -> safeDeleteExternal(s, entity.getStorageId()));
+            if (entity.getStorageId() != null)
+                safeDeleteExternal(storageService, entity.getStorageId());
             entity.setStorageId(null);
             entity.setContent(json);
             log.debug("Chunk inline gespeichert chunkKey={} size={} region={} world={}", chunkKey, bytes.length, regionId, worldId);
         } else {
-            StorageService storage = storageService.orElseThrow(() -> new IllegalStateException("Kein StorageService für große Chunks"));
-            if (entity.getStorageId() != null) storageService.ifPresent(s -> safeDeleteExternal(s, entity.getStorageId()));
-            String storageId = storage.store("chunk/" + worldId + "/" + chunkKey, bytes);
+            String storageId = storageService.update("chunk/" + worldId + "/" + chunkKey, bytes);
             entity.setStorageId(storageId);
             entity.setContent(null);
             log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}", chunkKey, bytes.length, storageId, regionId, worldId);
@@ -95,8 +94,7 @@ public class WChunkService {
             return new ByteArrayInputStream(d);
         }
         if (chunk.isExternal()) {
-            StorageService storage = storageService.orElseThrow(() -> new IllegalStateException("Kein StorageService zum Laden"));
-            byte[] d = storage.load(chunk.getStorageId());
+            byte[] d = storageService.load(chunk.getStorageId());
             return d == null ? new ByteArrayInputStream(new byte[0]) : new ByteArrayInputStream(d);
         }
         return new ByteArrayInputStream(new byte[0]);
@@ -114,8 +112,7 @@ public class WChunkService {
                 String c = entity.getContent();
                 raw = c == null ? new byte[0] : c.getBytes(java.nio.charset.StandardCharsets.UTF_8);
             } else if (entity.isExternal()) {
-                StorageService storage = storageService.orElseThrow(() -> new IllegalStateException("Kein StorageService zum Laden"));
-                raw = storage.load(entity.getStorageId());
+                raw = storageService.load(entity.getStorageId());
             } else {
                 raw = new byte[0];
             }
@@ -228,7 +225,7 @@ public class WChunkService {
     public boolean delete(String regionId, String worldId, String chunkKey) {
         return repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey).map(c -> {
             if (c.isExternal()) {
-                storageService.ifPresent(s -> safeDeleteExternal(s, c.getStorageId()));
+                safeDeleteExternal(storageService, c.getStorageId());
             }
             repository.delete(c);
             log.debug("Chunk gelöscht chunkKey={} region={} world={}", chunkKey, regionId, worldId);

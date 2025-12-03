@@ -2261,8 +2261,8 @@
         "type" : "Offsets",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "java.util.List<java.lang.Float>",
-        "comment" : "// javaType: java.util.List<java.lang.Float>"
+        "javaTypeHint" : null,
+        "comment" : null
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
@@ -2270,13 +2270,6 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
-      }, {
-        "name" : "faceVisibility",
-        "type" : "FaceVisibility",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : "Integer",
-        "comment" : "// javaType: Integer"
       }, {
         "name" : "status",
         "type" : "number",
@@ -2740,7 +2733,7 @@
         "comment" : "// javaType: Map<Integer,Object>"
       }, {
         "name" : "faceVisibility",
-        "type" : "FaceVisibility",
+        "type" : "number",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : "Integer",
@@ -3016,8 +3009,8 @@
         "type" : "AudioModifier",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "List<AudioDefinition>",
-        "comment" : "// javaType: List<AudioDefinition>"
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],

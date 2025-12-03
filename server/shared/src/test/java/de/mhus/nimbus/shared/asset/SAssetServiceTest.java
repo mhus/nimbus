@@ -16,7 +16,7 @@ class SAssetServiceTest {
     void testInlineSave() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        SAssetService service = new SAssetService(repo, Optional.of(storage));
+        SAssetService service = new SAssetService(repo, storage);
         byte[] data = new byte[100];
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
         SAsset asset = service.saveAsset("r1", null, "folder/test.txt", data, "tester");
@@ -30,7 +30,7 @@ class SAssetServiceTest {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
         Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STOR-1");
-        SAssetService service = new SAssetService(repo, Optional.of(storage));
+        SAssetService service = new SAssetService(repo, storage);
         // Setze inline Grenze sehr klein damit external greift
         byte[] big = new byte[200];
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
@@ -49,7 +49,7 @@ class SAssetServiceTest {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
         Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STOR-NEW");
-        SAssetService service = new SAssetService(repo, Optional.of(storage));
+        SAssetService service = new SAssetService(repo, storage);
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
         SAsset inline = service.saveAsset("r1", null, "file.bin", new byte[100], "tester");
         assertTrue(inline.isInline());
@@ -67,7 +67,7 @@ class SAssetServiceTest {
     void testDisable() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        SAssetService service = new SAssetService(repo, Optional.of(storage));
+        SAssetService service = new SAssetService(repo, storage);
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
         SAsset asset = service.saveAsset("r1", null, "folder/test.txt", new byte[10], "tester");
         Mockito.when(repo.findById(asset.getId())).thenReturn(Optional.of(asset));

@@ -9,7 +9,6 @@
 
 import type { Shape } from './Shape';
 import type { Vector3 } from './Vector3';
-import type { FaceVisibility } from './Block';
 
 /**
  * Texture mapping keys
