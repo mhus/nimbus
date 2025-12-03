@@ -24,6 +24,7 @@
         <module>world-shared</module>
         <module>world-player</module>
         <module>world-control</module>
+        <module>world-life</module>
         <module>tools</module>
     </modules>
 

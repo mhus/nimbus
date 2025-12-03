@@ -64,6 +64,50 @@ public class WEntity {
     @Indexed
     private String modelId;
 
+    /**
+     * Server-side simulation data (not sent to clients).
+     * Stored separately from publicData which is client-facing.
+     */
+
+    /**
+     * Entity's current position in the world.
+     * Updated during simulation.
+     */
+    private de.mhus.nimbus.generated.types.Vector3 position;
+
+    /**
+     * Entity's current rotation.
+     */
+    private de.mhus.nimbus.generated.types.Rotation rotation;
+
+    /**
+     * Middle point for entity movement (center of roaming area).
+     * Entities typically roam around this point within a certain radius.
+     */
+    private de.mhus.nimbus.generated.types.Vector3 middlePoint;
+
+    /**
+     * Movement radius around middle point (blocks).
+     */
+    private Double radius;
+
+    /**
+     * Movement speed (blocks per second).
+     */
+    private Double speed;
+
+    /**
+     * Behavior model identifier (e.g., "PreyAnimalBehavior").
+     * Determines simulation behavior for this entity.
+     */
+    private String behaviorModel;
+
+    /**
+     * Behavior-specific configuration (JSON).
+     * Stored as Map for flexibility.
+     */
+    private java.util.Map<String, Object> behaviorConfig;
+
     private Instant createdAt;
     private Instant updatedAt;
 

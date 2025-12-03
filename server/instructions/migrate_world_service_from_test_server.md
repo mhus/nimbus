@@ -1467,3 +1467,659 @@ Da drin stehen die Positionen der Items in der Welt.
   - ItemBlockRef als 'publicData'
 - Wenn ein chunk ausgeleifert wird, muessen die ItemBlockRef mitgeliefert werden
 - Erstelle einen importer, der dann auch die ItemBlockRef aus items.json importiert
+
+## Entities
+
+[?] Es wird ein neues Modul benoetigt 'world-life' es nutzt world-shared und soll
+entities simulieren die in der Welt leben.
+- entities wurden bereits importiert
+- Siehe packages/test_server/src/entity/EntitySimulator.ts
+- Erstelle ein aehnliche system wie in test_server um entities zu simulieren.
+- Der world-player soll via redis events an world-life versenden wenn sich auf chunks registriert wird (alle als list).
+- der world-life kann anfordern diese information anfordern, dann schicken alle world-player eine liste aktuell registrierter chunks
+- in world-life gibt es einen ChunkAlifeService der diese informationen auf nimmt und immer weiss, welche chunks gerade bei clients angezeigt werden.
+  - Er schickt regelmaesig, alle 5 minuten eine aufforderung an worpd-player die aktuellen chunks zu senden. Damit kann er 'veraltete' chunks entfernen.
+  - Er informiert SimulatorService darueber, wenn chunks dazu gekommen oder entfernt wurden.
+- SimulatorService managed die simulierten Entities und die EntityBehavior (pro Strategie ein Service vom Typ EntityBehavior).
+  - Wie im test_server eine PreyAnimalBehavior als default.
+- Neu berechnete Pathways werden per redis an alle world-player gesendet. Diese verteilen die Infos an die Session, diese entscheiden ob sie die an die client schicken (registrierte chunks).
+
+Ist es möglich die Datenhaltung fuer aktive Entities im redis zu machen und die world--life pods sich die arbeit teilen zu lassen.
+So ist es moeglich die arbeit bei vielen aktiven entities zu skalieren.
+
+- world-life hat auch zugriff auf die Chunk Block daten um die Entities auf der oberflaeche zu steuern (wie in test_server)
+- Es ist auch ok, wenn die ownership einer entity fuer eine zeit von einem pod uebernommen wird. Wenn ein entity verweisst, muss das erkannt und delegiert werden. 
+
+```text
+ Here is Claude's plan:
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ World-Live Module Implementation Plan
+
+ Überblick
+
+ Neues Spring Boot Modul world-life für Entity-Simulation in der Welt:
+ - Überwacht aktive Chunks (welche Chunks sehen Player gerade)
+ - Simuliert nur Entities in aktiven Chunks (CPU-Optimierung)
+ - Terrain-aware Bewegung (wie test_server BlockBasedMovement)
+ - Multi-Pod Entity Ownership mit Orphan Detection
+ - Generiert Pathways und verteilt via Redis an world-player Pods
+
+ Deployment: Eigenständiger Pod auf Port 9044
+
+ ---
+ 1. Module Struktur
+
+ Maven Setup
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/pom.xml
+ - Dependencies: shared, world-shared, Spring Boot starters
+ - Packaging: jar (executable)
+
+ ÄNDERN: /Users/hummel/sources/mhus/nimbus-server/server/pom.xml
+ - <module>world-life</module> zu <modules> hinzufügen (nach world-control)
+
+ Package Struktur
+
+ world-life/src/main/java/de/mhus/nimbus/world/life/
+ ├── WorldLiveApplication.java          # Main class (@SpringBootApplication, @EnableScheduling)
+ ├── config/WorldLiveProperties.java    # Configuration
+ ├── redis/
+ │   ├── ChunkRegistrationListener.java # Subscribed: c.r
+ │   ├── ChunkListRequestPublisher.java # Publishes: c.l.req
+ │   └── PathwayPublisher.java          # Publishes: e.p
+ ├── service/
+ │   ├── ChunkAlifeService.java         # Tracks active chunks
+ │   ├── SimulatorService.java          # Main simulation loop
+ │   ├── EntityOwnershipService.java    # Entity ownership & heartbeats
+ │   └── TerrainService.java            # Chunk data access for height lookup
+ ├── behavior/
+ │   ├── EntityBehavior.java            # Interface
+ │   ├── PreyAnimalBehavior.java        # Default implementation
+ │   └── BehaviorRegistry.java          # Behavior factory
+ ├── movement/
+ │   └── BlockBasedMovement.java        # Terrain-aware pathfinding
+ ├── model/
+ │   ├── SimulationState.java           # Per-entity state
+ │   ├── ChunkCoordinate.java           # Chunk coord wrapper
+ │   ├── EntityOwnership.java           # Ownership metadata
+ │   └── PathwayGenerationContext.java
+ └── scheduled/
+     ├── ChunkRefreshTask.java          # Request chunks every 5 min
+     └── OrphanDetectionTask.java       # Claim orphaned entities
+
+ ---
+ 2. Redis Kommunikation
+
+ Channels
+
+ | Channel  | Publisher    | Subscriber       | Purpose                                |
+ |----------|--------------|------------------|----------------------------------------|
+ | c.r      | world-player | world-life       | Chunk registration changes             |
+ | c.l.req  | world-life   | world-player     | Request chunk lists (all pods respond) |
+ | c.l.resp | world-player | world-life       | Current registered chunks              |
+ | e.p      | world-life   | world-player     | Entity pathways                        |
+ | e.o      | world-life   | world-life (all) | Entity ownership announcements         |
+
+ Message Formate
+
+ c.r - Chunk Registration
+ {"action": "add|remove", "chunks": [{"cx": 6, "cz": -13}], "sessionId": "..."}
+
+ c.l.req - Chunk List Request
+ {"requestId": "uuid", "timestamp": 1234567890}
+
+ c.l.resp - Chunk List Response
+ {"requestId": "uuid", "podId": "world-player-1", "chunks": [...]}
+
+ e.p - Entity Pathways
+ {
+   "pathways": [{
+     "entityId": "entity_001",
+     "startAt": 1234567890,
+     "waypoints": [{"timestamp": ..., "target": {...}, "rotation": {...}, "pose": 1}],
+     "isLooping": false
+   }],
+   "affectedChunks": [{"cx": 6, "cz": -13}]
+ }
+
+ e.o - Entity Ownership
+ {"action": "claim|release", "entityId": "entity_001", "podId": "world-life-1", "timestamp": ..., "chunk": "6:-13"}
+
+ ---
+ 3. Terrain-Zugriff
+
+ TerrainService
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/service/TerrainService.java
+
+ Purpose: Chunk-Daten für Entity-Positionierung bereitstellen
+
+ Key Methods:
+ // Suche Ground-Höhe an Position (x, z)
+ public int getGroundHeight(String worldId, int x, int z, int startY) {
+     // 1. Berechne Chunk-Koordinaten
+     int chunkX = Math.floorDiv(x, 16);
+     int chunkZ = Math.floorDiv(z, 16);
+
+     // 2. Lade Chunk aus MongoDB via WChunkService
+     String chunkKey = chunkX + ":" + chunkZ;
+     Optional<WChunk> chunk = chunkService.find(worldId, worldId, chunkKey);
+
+     // 3. Suche von startY abwärts nach solidem Block
+     for (int y = startY; y >= 0; y--) {
+         if (isSolidBlock(getBlockAt(chunk, x, y, z))) {
+             return y + 1; // Stehe oben auf dem Block
+         }
+     }
+     return 64; // Default
+ }
+
+ Dependencies: WChunkRepository, WChunkService (world-shared)
+
+ BlockBasedMovement
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/movement/BlockBasedMovement.java
+
+ Purpose: Terrain-aware Pathfinding (wie test_server)
+
+ Key Features:
+ - Findet Start-Position auf festem Grund
+ - Generiert Waypoints in zufälliger Richtung
+ - Prüft Terrain-Höhe für jedes Waypoint
+ - Vermeidet zu steile Hänge (>3 Blocks Höhendifferenz)
+
+ Key Methods:
+ public int findStartPosition(String worldId, double x, double z) {
+     return terrainService.getGroundHeight(worldId, (int)Math.floor(x), (int)Math.floor(z), 128);
+ }
+
+ public List<Waypoint> generatePathway(
+     String worldId, Vector3 startPosition, Vector3 direction,
+     int waypointCount, double speed, long currentTime) {
+     // Für jeden Waypoint:
+     // 1. Nächste Position berechnen (2-3 Blocks in Richtung)
+     // 2. Ground-Höhe finden
+     // 3. Terrain traversable? (Höhendiff <3 Blocks)
+     // 4. Waypoint erstellen mit berechneter Duration
+ }
+
+ ---
+ 4. Entity Ownership System
+
+ EntityOwnershipService
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/service/EntityOwnershipService.java
+
+ Purpose: Multi-Pod Entity Ownership Management
+
+ Pattern: Redis Heartbeat-basiert
+ - Jeder Pod claimed Entities via Redis announcement (e.o)
+ - Heartbeats alle 5 Sekunden
+ - Stale-Threshold: 10 Sekunden (2 fehlende Heartbeats)
+ - Orphan Detection: Andere Pods können verwaiste Entities claimen
+
+ Key Methods:
+ // Entity claimen
+ public boolean claimEntity(String entityId, String chunk) {
+     // 1. Check ob schon von anderem Pod owned (und nicht stale)
+     // 2. Claim entity lokal
+     // 3. Publish ownership announcement via Redis
+ }
+
+ // Heartbeats senden (scheduled, alle 5s)
+ @Scheduled(fixedDelay = 5000)
+ public void sendHeartbeats() {
+     for (String entityId : ownedEntities) {
+         publishOwnershipAnnouncement("claim", entityId, chunk);
+     }
+ }
+
+ // Orphaned entities finden
+ public List<String> getOrphanedEntities() {
+     // Return entities with stale ownership (>10s seit letztem Heartbeat)
+ }
+
+ Trade-off: Ownership-State ist ephemeral (Redis), nicht persistent. Entities werden bei Pod-Restart neu geclaimed.
+
+ OrphanDetectionTask
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/scheduled/OrphanDetectionTask.java
+
+ @Scheduled(fixedDelay = 30000) // Alle 30 Sekunden
+ public void detectAndClaimOrphans() {
+     List<String> orphans = ownershipService.getOrphanedEntities();
+     for (String entityId : orphans) {
+         simulatorService.tryClaimOrphanedEntity(entityId);
+     }
+ }
+
+ ---
+ 5. ChunkAlifeService
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/service/ChunkAlifeService.java
+
+ Purpose: Trackt welche Chunks aktuell aktiv sind (von Clients angeschaut)
+
+ Data Structure: Set<ChunkCoordinate> activeChunks
+
+ Key Methods:
+ public void addChunks(List<ChunkCoordinate> chunks)
+ public void removeChunks(List<ChunkCoordinate> chunks)
+ public void replaceChunks(Set<ChunkCoordinate> newChunks) // Für 5-Minuten-Refresh
+ public boolean isChunkActive(int cx, int cz)
+ public void addChangeListener(Consumer<Set<ChunkCoordinate>> listener)
+
+ Integration: ChunkRegistrationListener subscribed zu c.r, ruft addChunks/removeChunks auf
+
+ ---
+ 6. SimulatorService
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/service/SimulatorService.java
+
+ Purpose: Hauptorchestrator für Entity-Simulation
+
+ Initialization:
+ @PostConstruct
+ public void initialize() {
+     // 1. Lade alle Entities aus MongoDB (WEntityRepository)
+     // 2. Erstelle SimulationState für jede Entity
+     // 3. Registriere Listener bei ChunkAlifeService
+ }
+
+ Simulation Loop:
+ @Scheduled(fixedDelayString = "#{${world.life.simulation-interval-ms:1000}}")
+ public void simulationLoop() {
+     long currentTime = System.currentTimeMillis();
+     Set<ChunkCoordinate> activeChunks = chunkAlifeService.getActiveChunks();
+
+     for (SimulationState state : simulationStates.values()) {
+         // 1. Check: Entity in active chunk?
+         if (!chunkAlifeService.isChunkActive(entity.getChunk())) {
+             ownershipService.releaseEntity(entityId);
+             continue;
+         }
+
+         // 2. Check: Entity von diesem Pod owned?
+         if (!ownershipService.isOwnedByThisPod(entityId)) {
+             boolean claimed = ownershipService.claimEntity(entityId, chunk);
+             if (!claimed) continue; // Anderer Pod besitzt Entity
+         }
+
+         // 3. Simulate entity
+         Optional<EntityPathway> pathway = simulateEntity(entity, state, currentTime);
+         pathway.ifPresent(newPathways::add);
+     }
+
+     // 4. Publish pathways via Redis
+     if (!newPathways.isEmpty()) {
+         pathwayPublisher.publishPathways(newPathways, affectedChunks);
+     }
+ }
+
+ ---
+ 7. Behavior System
+
+ EntityBehavior Interface
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/behavior/EntityBehavior.java
+
+ public interface EntityBehavior {
+     String getBehaviorType();
+
+     EntityPathway update(WEntity entity, SimulationState state,
+                         long currentTime, String worldId);
+
+     default boolean needsNewPathway(SimulationState state, long currentTime) {
+         return state.getCurrentPathway() == null
+             || currentTime >= state.getPathwayEndTime();
+     }
+ }
+
+ PreyAnimalBehavior
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/java/de/mhus/nimbus/world/life/behavior/PreyAnimalBehavior.java
+
+ Pattern: Langsam bewegendes Tier, roamt um Spawn-Punkt
+
+ @Component
+ public class PreyAnimalBehavior implements EntityBehavior {
+
+     private final BlockBasedMovement blockMovement;
+
+     public EntityPathway update(WEntity entity, SimulationState state,
+                                long currentTime, String worldId) {
+         if (!needsNewPathwayWithInterval(state, currentTime)) {
+             return null;
+         }
+
+         // 1. Start-Position auf festem Grund
+         Vector3 start = entity.getPublicData().getPosition();
+         int startY = blockMovement.findStartPosition(worldId, start.getX(), start.getZ());
+
+         // 2. Zufällige Richtung
+         Vector3 direction = blockMovement.getRandomDirection();
+
+         // 3. Waypoints generieren (terrain-aware)
+         List<Waypoint> waypoints = blockMovement.generatePathway(
+             worldId, new Vector3(start.getX(), startY, start.getZ()),
+             direction, 5, entity.getSpeed(), currentTime
+         );
+
+         // 4. Idle-Pausen zwischen Waypoints
+         List<Waypoint> waypointsWithIdle = addIdlePauses(waypoints);
+
+         return EntityPathway.builder()
+             .entityId(entity.getEntityId())
+             .startAt(currentTime)
+             .waypoints(waypointsWithIdle)
+             .build();
+     }
+ }
+
+ ---
+ 8. world-player Integration
+
+ Chunk Registration Publisher
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-player/src/main/java/de/mhus/nimbus/world/player/ws/redis/ChunkRegistrationPublisher.java
+
+ Purpose: Publiziert Chunk-Registrierungen an world-life
+
+ Integration Point: ChunkRegistrationHandler (world-player)
+
+ // In ChunkRegistrationHandler.java (ÄNDERN):
+ @Component
+ @RequiredArgsConstructor
+ public class ChunkRegistrationHandler implements MessageHandler {
+     private final WorldRedisMessagingService redisMessaging;
+
+     @Override
+     public void handle(PlayerSession session, NetworkMessage message) {
+         // ... existing chunk registration logic ...
+
+         // NEU: Publish zu Redis
+         publishChunkRegistrationUpdate(session.getWorldId(), "add", newChunks);
+     }
+
+     private void publishChunkRegistrationUpdate(String worldId, String action,
+                                                List<ChunkCoord> chunks) {
+         ObjectNode message = objectMapper.createObjectNode();
+         message.put("action", action);
+         ArrayNode chunksArray = message.putArray("chunks");
+         for (ChunkCoord c : chunks) {
+             chunksArray.addObject().put("cx", c.cx).put("cz", c.cz);
+         }
+         redisMessaging.publish(worldId, "c.r", objectMapper.writeValueAsString(message));
+     }
+ }
+
+ Chunk List Request Listener
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-player/src/main/java/de/mhus/nimbus/world/player/ws/redis/ChunkListRequestListener.java
+
+ @Service
+ @RequiredArgsConstructor
+ public class ChunkListRequestListener {
+
+     @PostConstruct
+     public void subscribe() {
+         redisMessaging.subscribe("main", "c.l.req", this::handleChunkListRequest);
+     }
+
+     private void handleChunkListRequest(String topic, String message) {
+         JsonNode data = objectMapper.readTree(message);
+         String requestId = data.get("requestId").asText();
+
+         // Sammle alle aktuell registrierten Chunks von allen Sessions
+         Set<ChunkCoordinate> allChunks = sessionManager.getAllSessions().values()
+             .stream()
+             .filter(PlayerSession::isAuthenticated)
+             .flatMap(s -> s.getRegisteredChunks().stream())
+             .map(this::parseChunk)
+             .collect(Collectors.toSet());
+
+         // Response publishen
+         ObjectNode response = objectMapper.createObjectNode();
+         response.put("requestId", requestId);
+         response.put("podId", getPodId());
+         ArrayNode chunksArray = response.putArray("chunks");
+         for (ChunkCoordinate c : allChunks) {
+             chunksArray.addObject().put("cx", c.cx).put("cz", c.cz);
+         }
+
+         redisMessaging.publish("main", "c.l.resp", objectMapper.writeValueAsString(response));
+     }
+ }
+
+ Pathway Broadcast Listener
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-player/src/main/java/de/mhus/nimbus/world/player/ws/redis/PathwayBroadcastListener.java
+
+ @Service
+ @RequiredArgsConstructor
+ public class PathwayBroadcastListener {
+
+     private final BroadcastService broadcastService;
+
+     @PostConstruct
+     public void subscribe() {
+         redisMessaging.subscribe("main", "e.p", this::handlePathwayUpdate);
+     }
+
+     private void handlePathwayUpdate(String topic, String message) {
+         JsonNode data = objectMapper.readTree(message);
+         JsonNode pathways = data.get("pathways");
+         JsonNode affectedChunks = data.get("affectedChunks");
+
+         // Für jeden affected chunk: Broadcasten an Sessions
+         for (JsonNode chunk : affectedChunks) {
+             int cx = chunk.get("cx").asInt();
+             int cz = chunk.get("cz").asInt();
+
+             // Filtert automatisch nach chunk-registrierung
+             broadcastService.broadcastToWorld("main", "e.p", pathways, null, cx, cz);
+         }
+     }
+ }
+
+ ---
+ 9. Configuration
+
+ application.yaml
+
+ NEU: /Users/hummel/sources/mhus/nimbus-server/server/world-life/src/main/resources/application.yaml
+
+ spring:
+   application:
+     name: WorldLive
+   data:
+     mongodb:
+       uri: mongodb://root:example@localhost:27017/world?authSource=admin
+       database: world
+
+ world:
+   life:
+     world-id: main
+     simulation-interval-ms: 1000         # 1 second
+     chunk-refresh-interval-ms: 300000    # 5 minutes
+
+ server:
+   port: 9044
+
+ logging:
+   level:
+     root: INFO
+     de.mhus.nimbus.world.life: DEBUG
+
+ ---
+ 10. Implementation Order
+
+ Phase 1: Foundation (Day 1)
+
+ 1. Module-Struktur (pom.xml, packages)
+ 2. WorldLiveApplication.java
+ 3. Configuration (WorldLiveProperties, application.yaml)
+ 4. Data Models (ChunkCoordinate, SimulationState, EntityOwnership)
+
+ Phase 2: Terrain (Day 2)
+
+ 5. TerrainService
+ 6. BlockBasedMovement
+ 7. Unit Tests
+
+ Phase 3: Chunk Tracking (Day 3)
+
+ 8. ChunkAlifeService
+ 9. ChunkRegistrationListener (world-life)
+ 10. ChunkRefreshTask
+
+ Phase 4: Entity Ownership (Day 4)
+
+ 11. EntityOwnershipService
+ 12. Ownership Redis channel (e.o)
+ 13. OrphanDetectionTask
+ 14. Unit Tests
+
+ Phase 5: Redis Integration (Day 5)
+
+ 15. ChunkListRequestPublisher (world-life)
+ 16. ChunkRegistrationPublisher (world-player)
+ 17. ChunkListRequestListener (world-player)
+ 18. Test Redis end-to-end
+
+ Phase 6: Behavior System (Day 6)
+
+ 19. EntityBehavior interface
+ 20. PreyAnimalBehavior (mit BlockBasedMovement)
+ 21. BehaviorRegistry
+ 22. Unit Tests
+
+ Phase 7: Simulation (Day 7)
+
+ 23. SimulatorService (mit Ownership)
+ 24. Entity loading from MongoDB
+ 25. Simulation loop mit ownership claims
+ 26. Multi-pod testing
+
+ Phase 8: Pathway Distribution (Day 8)
+
+ 27. PathwayPublisher (world-life)
+ 28. PathwayBroadcastListener (world-player)
+ 29. Integration mit BroadcastService
+ 30. End-to-end test
+
+ Phase 9: Integration & Testing (Day 9-10)
+
+ 31. Integration testing
+ 32. Multi-pod testing (orphan detection)
+ 33. Performance testing
+ 34. Documentation
+
+ ---
+ 11. Kritische Dateien
+
+ Höchste Priorität (Core Functionality)
+
+ 1. TerrainService.java
+   - Path: world-life/src/main/java/de/mhus/nimbus/world/life/service/TerrainService.java
+   - Reason: Einzigartig für dieses Design, greift auf Chunk-Daten zu
+ 2. BlockBasedMovement.java
+   - Path: world-life/src/main/java/de/mhus/nimbus/world/life/movement/BlockBasedMovement.java
+   - Reason: Terrain-aware Pathfinding, übersetzt test_server Logik
+ 3. EntityOwnershipService.java
+   - Path: world-life/src/main/java/de/mhus/nimbus/world/life/service/EntityOwnershipService.java
+   - Reason: Multi-Pod Ownership, Heartbeats, Orphan Detection
+ 4. SimulatorService.java
+   - Path: world-life/src/main/java/de/mhus/nimbus/world/life/service/SimulatorService.java
+   - Reason: Hauptorchestrator, integriert alle Systeme
+ 5. PreyAnimalBehavior.java
+   - Path: world-life/src/main/java/de/mhus/nimbus/world/life/behavior/PreyAnimalBehavior.java
+   - Reason: Default Behavior mit Terrain-Integration
+
+ world-player Änderungen
+
+ 6. ChunkRegistrationPublisher.java (NEU)
+   - Path: world-player/.../redis/ChunkRegistrationPublisher.java
+ 7. ChunkListRequestListener.java (NEU)
+   - Path: world-player/.../redis/ChunkListRequestListener.java
+ 8. PathwayBroadcastListener.java (NEU)
+   - Path: world-player/.../redis/PathwayBroadcastListener.java
+ 9. ChunkRegistrationHandler.java (ÄNDERN)
+   - Path: world-player/.../handlers/ChunkRegistrationHandler.java
+   - Add: Publish chunk registration to Redis
+
+ ---
+ 12. Design Decisions
+
+ Redis Heartbeats statt Database Locks
+
+ - Vorteil: Niedrige Latenz, natürliches Failover bei Pod-Ausfall
+ - Trade-off: Ephemeral state (geht bei Redis-Restart verloren, wird schnell neu-claimed)
+
+ Terrain-Zugriff via world-shared
+
+ - Vorteil: Nutzt existierende MongoDB-Zugriffe, keine Duplikation
+ - Performance: Cache erwägen (Caffeine, 1000 Chunks, 5min TTL)
+
+ 10-Sekunden Orphan Threshold
+
+ - Heartbeats: alle 5 Sekunden
+ - Stale nach 10 Sekunden (erlaubt 1 missed heartbeat)
+ - Balance: Responsiveness vs. False Positives
+
+ Single World per Pod
+
+ - Jeder world-life Pod simuliert 1 Welt (konfigurierbar)
+ - Skalierung: Deploy mehrere Pods für verschiedene Welten
+ - Zukunft: Multi-World Support möglich
+
+ ---
+ 13. Data Flow
+
+ Entity Ownership Claim
+
+ world-life Pod A
+   ├─ SimulatorService: Entity "cow_001" in chunk 6:-13
+   ├─ Nicht owned → claimEntity()
+   └─ Publish e.o: {"action":"claim", "entityId":"cow_001", ...}
+          │
+          ▼
+     Redis: world:main:e.o
+          │
+          ▼
+ world-life Pod B
+   └─ EntityOwnershipService: Ownership announcement empfangen
+      └─ Skip simulation für "cow_001" (Pod A besitzt es)
+
+ Terrain-Aware Pathway Generation
+
+ PreyAnimalBehavior.update()
+   └─ generatePathway()
+       ├─ 1. Start-Position → findStartPosition() → TerrainService
+       │     └─ Load chunk 6:-13, finde Ground Y=65
+       ├─ 2. Zufällige Richtung wählen (SE)
+       ├─ 3. Nächste Position: (103, ?, -197)
+       ├─ 4. Ground-Höhe: TerrainService.getGroundHeight(103, -197)
+       │     └─ Y=65 (solid block)
+       ├─ 5. Traversable? |65-65| = 0 < 3 ✓
+       └─ 6. Waypoint: {timestamp: T+2500, target: (103, 65, -197), pose: WALK}
+
+ ---
+ Zusammenfassung
+
+ Neues Modul: world-life (eigenständiger Pod, Port 9044)
+
+ Hauptfunktionen:
+ - ✅ Trackt aktive Chunks via Redis
+ - ✅ Simuliert nur Entities in aktiven Chunks
+ - ✅ Terrain-aware Movement (BlockBasedMovement + TerrainService)
+ - ✅ Multi-Pod Entity Ownership (Heartbeats, Orphan Detection)
+ - ✅ Pathway-Distribution via Redis an world-player
+
+ Redis Channels: 5 neue Channels (c.r, c.l.req, c.l.resp, e.p, e.o)
+
+ world-player Changes: 3 neue Listener/Publisher + 1 Handler-Änderung
+```
+
+[ ] Interaktionen mit entities werden an den world-life server via redis messages gesendet.
+- Die Instanz, die gerade die entitaet owned, schickt die information an den EntityBehavior Service, dieser kann (muss nicht) dann neue Pathways finden.

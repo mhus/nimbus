@@ -34,6 +34,7 @@ public class ChunkRegistrationHandler implements MessageHandler {
     private final ExecutionService executionService;
     private final WChunkService chunkService;
     private final ObjectMapper objectMapper;
+    private final de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService redisMessaging;
 
     @Override
     public String getMessageType() {
@@ -76,6 +77,11 @@ public class ChunkRegistrationHandler implements MessageHandler {
         log.debug("Chunk registration: session={}, total={}, new={}, worldId={}",
                 session.getWebSocketSession().getId(), requestedChunks.size(),
                 newChunks.size(), session.getWorldId());
+
+        // Publish chunk registration to Redis for world-life
+        if (!newChunks.isEmpty()) {
+            publishChunkRegistrationUpdate(session.getWorldId(), "add", newChunks);
+        }
 
         // Asynchronously send new chunks to client
         if (!newChunks.isEmpty()) {
@@ -124,6 +130,36 @@ public class ChunkRegistrationHandler implements MessageHandler {
             }
         } catch (Exception e) {
             log.error("Error sending chunks to session={}", session.getWebSocketSession().getId(), e);
+        }
+    }
+
+    /**
+     * Publish chunk registration update to Redis for world-life.
+     * Channel: world:{worldId}:c.r
+     *
+     * @param worldId World identifier
+     * @param action "add" or "remove"
+     * @param chunks List of chunk coordinates
+     */
+    private void publishChunkRegistrationUpdate(String worldId, String action, List<ChunkCoord> chunks) {
+        try {
+            com.fasterxml.jackson.databind.node.ObjectNode message = objectMapper.createObjectNode();
+            message.put("action", action);
+
+            ArrayNode chunksArray = message.putArray("chunks");
+            for (ChunkCoord chunk : chunks) {
+                com.fasterxml.jackson.databind.node.ObjectNode chunkObj = chunksArray.addObject();
+                chunkObj.put("cx", chunk.cx);
+                chunkObj.put("cz", chunk.cz);
+            }
+
+            String json = objectMapper.writeValueAsString(message);
+            redisMessaging.publish(worldId, "c.r", json);
+
+            log.trace("Published chunk registration to Redis: action={}, chunks={}", action, chunks.size());
+
+        } catch (Exception e) {
+            log.error("Failed to publish chunk registration to Redis: action={}", action, e);
         }
     }
 

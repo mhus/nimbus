@@ -79,7 +79,7 @@ public class WorldEntityImporter {
                     continue;
                 }
 
-                // Create Entity DTO from test_server data
+                // Create Entity DTO from test_server data (client-facing)
                 Entity entityData = new Entity();
                 entityData.setId(entityId);
                 entityData.setName(json.has("name") ? json.get("name").asText() : entityId);
@@ -91,24 +91,66 @@ public class WorldEntityImporter {
                 if (json.has("physics")) entityData.setPhysics(json.get("physics").asBoolean());
                 if (json.has("solid")) entityData.setSolid(json.get("solid").asBoolean());
 
-                // Determine chunk from initialPosition
+                // Parse simulation data (server-only, from ServerEntitySpawnDefinition)
+                de.mhus.nimbus.generated.types.Vector3 initialPosition = null;
                 String chunk = null;
                 if (json.has("initialPosition")) {
                     JsonNode pos = json.get("initialPosition");
-                    int x = pos.has("x") ? pos.get("x").asInt() : 0;
-                    int z = pos.has("z") ? pos.get("z").asInt() : 0;
-                    int cx = x >> 4;  // Divide by 16
-                    int cz = z >> 4;
+                    double x = pos.has("x") ? pos.get("x").asDouble() : 0;
+                    double y = pos.has("y") ? pos.get("y").asDouble() : 64;
+                    double z = pos.has("z") ? pos.get("z").asDouble() : 0;
+
+                    initialPosition = new de.mhus.nimbus.generated.types.Vector3();
+                    initialPosition.setX(x);
+                    initialPosition.setY(y);
+                    initialPosition.setZ(z);
+
+                    int cx = (int) Math.floor(x / 16);
+                    int cz = (int) Math.floor(z / 16);
                     chunk = cx + ":" + cz;
                 }
 
-                // Create WEntity
+                de.mhus.nimbus.generated.types.Rotation initialRotation = null;
+                if (json.has("initialRotation")) {
+                    JsonNode rot = json.get("initialRotation");
+                    initialRotation = new de.mhus.nimbus.generated.types.Rotation();
+                    initialRotation.setY(rot.has("y") ? rot.get("y").asDouble() : 0);
+                    initialRotation.setP(rot.has("p") ? rot.get("p").asDouble() : 0);
+                }
+
+                de.mhus.nimbus.generated.types.Vector3 middlePoint = null;
+                if (json.has("middlePoint")) {
+                    JsonNode mp = json.get("middlePoint");
+                    middlePoint = new de.mhus.nimbus.generated.types.Vector3();
+                    middlePoint.setX(mp.has("x") ? mp.get("x").asDouble() : 0);
+                    middlePoint.setY(mp.has("y") ? mp.get("y").asDouble() : 64);
+                    middlePoint.setZ(mp.has("z") ? mp.get("z").asDouble() : 0);
+                }
+
+                Double radius = json.has("radius") ? json.get("radius").asDouble() : null;
+                Double speed = json.has("speed") ? json.get("speed").asDouble() : 1.0;
+                String behaviorModel = json.has("behaviorModel") ? json.get("behaviorModel").asText() : "PreyAnimalBehavior";
+
+                // Parse behaviorConfig if present
+                java.util.Map<String, Object> behaviorConfig = null;
+                if (json.has("behaviorConfig")) {
+                    behaviorConfig = objectMapper.convertValue(json.get("behaviorConfig"), java.util.Map.class);
+                }
+
+                // Create WEntity with simulation data
                 WEntity entity = WEntity.builder()
                         .worldId(defaultWorldId)
                         .entityId(entityId)
                         .publicData(entityData)
                         .chunk(chunk)
                         .modelId(modelId)
+                        .position(initialPosition)
+                        .rotation(initialRotation)
+                        .middlePoint(middlePoint)
+                        .radius(radius)
+                        .speed(speed)
+                        .behaviorModel(behaviorModel)
+                        .behaviorConfig(behaviorConfig)
                         .enabled(true)
                         .build();
                 entity.touchCreate();

@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: WorldLife
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      database: world
+
+world:
+  life:
+    world-id: main
+    simulation-interval-ms: 1000          # 1 second
+    chunk-refresh-interval-ms: 300000     # 5 minutes
+    ownership-heartbeat-interval-ms: 5000 # 5 seconds
+    ownership-stale-threshold-ms: 10000   # 10 seconds
+    orphan-detection-interval-ms: 30000   # 30 seconds
+    pathway-interval-ms: 5000             # 5 seconds
+
+server:
+  port: 9044
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: true
+    include-stacktrace: always
+
+logging:
+  level:
+    root: INFO
+    de.mhus.nimbus: DEBUG
+    de.mhus.nimbus.world.life.service.SimulatorService: DEBUG
+    de.mhus.nimbus.world.life.service.EntityOwnershipService: DEBUG
+    de.mhus.nimbus.world.life.service.ChunkAliveService: DEBUG
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
