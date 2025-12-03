@@ -123,18 +123,18 @@ export namespace FaceVisibilityHelper {
    * - Priority: modifier.faceVisibility > block.faceVisibility > default (all visible)
    *
    * Overload 3: isVisible(fv, face)
-   * - Direct FaceVisibility check
+   * - Direct FaceVisibility check (accepts number or FaceVisibility object)
    */
   export function isVisible(blockWithModifier: IBlockWithModifier, face: FaceFlag): boolean;
   export function isVisible(block: Block, modifier: VisibilityModifier | undefined, face: FaceFlag): boolean;
-  export function isVisible(fv: FaceVisibility, face: FaceFlag): boolean;
+  export function isVisible(fv: FaceVisibility | number, face: FaceFlag): boolean;
   export function isVisible(
-    blockOrFvOrBlockWithModifier: Block | FaceVisibility | IBlockWithModifier,
+    blockOrFvOrBlockWithModifier: Block | FaceVisibility | number | IBlockWithModifier,
     modifierOrFace: VisibilityModifier | undefined | FaceFlag,
     face?: FaceFlag
   ): boolean {
     // Check if first overload: isVisible(blockWithModifier, face)
-    if (face === undefined && typeof modifierOrFace === 'number' && 'currentModifier' in blockOrFvOrBlockWithModifier) {
+    if (face === undefined && typeof modifierOrFace === 'number' && typeof blockOrFvOrBlockWithModifier === 'object' && 'currentModifier' in blockOrFvOrBlockWithModifier) {
       const blockWithModifier = blockOrFvOrBlockWithModifier as IBlockWithModifier;
       const faceFlag = modifierOrFace as FaceFlag;
       // Delegate to second overload
@@ -147,13 +147,19 @@ export namespace FaceVisibilityHelper {
       const modifier = modifierOrFace as VisibilityModifier | undefined;
 
       // 1. Priority: modifier.faceVisibility
-      if (modifier?.faceVisibility) {
-        return (modifier.faceVisibility.value & face) !== 0;
+      if (modifier?.faceVisibility !== undefined) {
+        const value = typeof modifier.faceVisibility === 'number'
+          ? modifier.faceVisibility
+          : modifier.faceVisibility.value;
+        return (value & face) !== 0;
       }
 
       // 2. Fallback: block.faceVisibility
-      if (block.faceVisibility) {
-        return (block.faceVisibility.value & face) !== 0;
+      if (block.faceVisibility !== undefined) {
+        const value = typeof block.faceVisibility === 'number'
+          ? block.faceVisibility
+          : block.faceVisibility.value;
+        return (value & face) !== 0;
       }
 
       // 3. Default: all faces visible
@@ -161,9 +167,10 @@ export namespace FaceVisibilityHelper {
     }
 
     // Third overload: isVisible(fv, face)
-    const fv = blockOrFvOrBlockWithModifier as FaceVisibility;
+    const fv = blockOrFvOrBlockWithModifier as FaceVisibility | number;
     const faceFlag = modifierOrFace as FaceFlag;
-    return (fv.value & faceFlag) !== 0;
+    const value = typeof fv === 'number' ? fv : fv.value;
+    return (value & faceFlag) !== 0;
   }
 
   /**
@@ -220,10 +227,10 @@ export namespace FaceVisibilityHelper {
 
   /**
    * Get all visible faces as array
-   * @param fv FaceVisibility to check
+   * @param fv FaceVisibility (number or object) to check
    * @returns Array of visible face names
    */
-  export function getVisibleFaces(fv: FaceVisibility): string[] {
+  export function getVisibleFaces(fv: FaceVisibility | number): string[] {
     const faces: string[] = [];
     if (isVisible(fv, FaceFlag.TOP)) faces.push('top');
     if (isVisible(fv, FaceFlag.BOTTOM)) faces.push('bottom');
@@ -236,16 +243,17 @@ export namespace FaceVisibilityHelper {
 
   /**
    * Count number of visible faces
-   * @param fv FaceVisibility to check
+   * @param fv FaceVisibility (number or object) to check
    * @returns Number of visible faces (0-6)
    */
-  export function countVisible(fv: FaceVisibility): number {
+  export function countVisible(fv: FaceVisibility | number): number {
     let count = 0;
     // Count set bits in first 6 bits
-    let value = fv.value & 0b00111111; // Mask out FIXED bit
-    while (value) {
-      count += value & 1;
-      value >>= 1;
+    const value = (typeof fv === 'number' ? fv : fv.value) & 0b00111111; // Mask out FIXED bit
+    let bits = value;
+    while (bits) {
+      count += bits & 1;
+      bits >>= 1;
     }
     return count;
   }
@@ -330,7 +338,7 @@ export interface Block {
    *
    * @see Offsets for detailed documentation
    */
-  offsets?: Offsets; // javaType: java.util.List<java.lang.Float>
+  offsets?: Offsets;
 
   /**
    * Corner heights for sloped/ramped blocks (optional)
@@ -360,8 +368,9 @@ export interface Block {
   /**
    * Face visibility flags (1 byte)
    * Determines which faces are visible or if it's auto-calculated
+   * Can be stored as number (preferred) or FaceVisibility object (legacy)
    */
-  faceVisibility?: FaceVisibility; // javaType: Integer
+  faceVisibility?: number // javaType: Integer
 
   /**
    * Current status (0-255)

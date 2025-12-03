@@ -453,6 +453,8 @@ export class MaterialService {
         return this.textures.get(cacheKey)!;
       }
 
+      logger.debug('Loading texture', { path: textureDef.path, url });
+
       // Create Babylon.js Texture
       const texture = new Texture(url, this.scene);
 

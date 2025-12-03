@@ -146,7 +146,38 @@ export class BlockTypeService {
       let validCount = 0;
       for (const blockType of blockTypes) {
         if (this.validateBlockType(blockType)) {
-          this.blockTypes.set(normalizeBlockTypeId(blockType.id), blockType);
+          // Ensure BlockType ID has correct group prefix
+          const originalId = String(blockType.id);
+          let correctedId: string;
+
+          if (originalId.includes(':')) {
+            // ID has group, check if it matches the loaded group
+            const [existingGroup, name] = originalId.split(':', 2);
+            if (existingGroup.toLowerCase() !== groupName.toLowerCase()) {
+              // Wrong group in ID, replace with correct group
+              correctedId = `${groupName}:${name}`.toLowerCase();
+              logger.debug('Fixed BlockType ID group mismatch', {
+                originalId,
+                correctedId,
+                loadedGroup: groupName,
+              });
+            } else {
+              // Correct group, just normalize
+              correctedId = originalId.toLowerCase();
+            }
+          } else {
+            // No group in ID, add the loaded group
+            correctedId = `${groupName}:${originalId}`.toLowerCase();
+            logger.debug('Added group prefix to BlockType ID', {
+              originalId,
+              correctedId,
+              loadedGroup: groupName,
+            });
+          }
+
+          // Store BlockType with corrected ID
+          blockType.id = correctedId;
+          this.blockTypes.set(correctedId, blockType);
           validCount++;
         } else {
           logger.warn('Invalid block type received in group', { blockType, groupName });
@@ -181,6 +212,19 @@ export class BlockTypeService {
     // If group not loaded, load it
     if (!this.loadedGroups.has(groupName)) {
       await this.loadGroup(groupName);
+    }
+  }
+
+  /**
+   * Ensure a BlockType group is loaded (public version)
+   * @param groupName The group name to ensure is loaded
+   */
+  async ensureGroupLoaded(groupName: string): Promise<void> {
+    const normalizedGroup = groupName.toLowerCase();
+
+    // If group not loaded, load it
+    if (!this.loadedGroups.has(normalizedGroup)) {
+      await this.loadGroup(normalizedGroup);
     }
   }
 
@@ -228,6 +272,23 @@ export class BlockTypeService {
   }
 
   /**
+   * Normalize BlockType ID and ensure it has a group prefix
+   * @param id Block type ID (string or legacy number)
+   * @returns Normalized ID with group prefix (e.g., "w:310")
+   */
+  private normalizeIdWithGroup(id: string | number): string {
+    const normalized = normalizeBlockTypeId(id);
+
+    // Check if ID already has a group prefix
+    if (normalized.includes(':')) {
+      return normalized;
+    }
+
+    // No prefix, add default group 'w'
+    return `w:${normalized}`;
+  }
+
+  /**
    * Get a block type by ID (synchronous - returns cached value)
    *
    * Use this when you need immediate access to a BlockType.
@@ -237,7 +298,7 @@ export class BlockTypeService {
    * @returns BlockType or undefined if not loaded
    */
   getBlockType(id: string | number): BlockType | undefined {
-    const normalizedId = normalizeBlockTypeId(id);
+    const normalizedId = this.normalizeIdWithGroup(id);
     return this.blockTypes.get(normalizedId);
   }
 
@@ -251,8 +312,8 @@ export class BlockTypeService {
    * @returns BlockType or undefined if not found on server
    */
   async getBlockTypeAsync(id: string | number): Promise<BlockType | undefined> {
-    const normalizedId = normalizeBlockTypeId(id);
-    
+    const normalizedId = this.normalizeIdWithGroup(id);
+
     // Check if already in cache
     const cached = this.blockTypes.get(normalizedId);
     if (cached) {
@@ -300,6 +361,22 @@ export class BlockTypeService {
    */
   getBlockTypeCount(): number {
     return this.blockTypes.size;
+  }
+
+  /**
+   * Get all loaded groups
+   * @returns Array of loaded group names
+   */
+  getLoadedGroups(): string[] {
+    return Array.from(this.loadedGroups);
+  }
+
+  /**
+   * Get all known BlockType IDs
+   * @returns Array of all BlockType IDs in cache
+   */
+  getAllBlockTypeIds(): string[] {
+    return Array.from(this.blockTypes.keys());
   }
 
   /**

@@ -240,10 +240,10 @@ export class SunService {
    * Load sun texture from WorldInfo or use default
    */
   private async loadSunTexture(): Promise<void> {
-    const texturePath = this.appContext.worldInfo?.settings.sunTexture || 'textures/sun/sun1.png';
 
     if (this.networkService) {
       try {
+        const texturePath = this.appContext.worldInfo?.settings.sunTexture || 'textures/sun/sun1.png';
         // Load texture from asset server
         const textureUrl = this.networkService.getAssetUrl(texturePath);
         this.sunTexture = new Texture(

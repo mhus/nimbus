@@ -25,13 +25,16 @@ export class BlockTypeRegistry {
 
   /**
    * Get file path for BlockType ID
-   * Schema: (id / 100)/id.json
    * XXX: handle as string not as int!
    */
   private getBlockTypeFilePath(id: string | number): string {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const subDir = Math.floor(numericId / 100);
-    return path.join(this.blocktypesDir, subDir.toString(), `${numericId}.json`);
+    if (typeof id === 'number') {
+      const subDir = 'w'; // default group for numeric IDs
+      return path.join(this.blocktypesDir, subDir.toString(), `${id}.json`);
+    }
+    const group = getBlockTypeGroup(id);
+    const blockTypeName = id.toString().includes(':') ? id.toString().split(':')[1] : id.toString();
+    return path.join(this.blocktypesDir, group, `${blockTypeName}.json`);
   }
 
   /**

@@ -22,6 +22,7 @@ import {
   itemToBlock,
   type AudioDefinition, ItemBlockRef,
   normalizeBlockTypeId,
+  getBlockTypeGroup,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -364,6 +365,26 @@ export class ChunkService {
     const statusData = this.processStatusData(chunkData);
     const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
 
+    // Pre-load all BlockType groups needed for this chunk
+    if (blockTypeService && chunkData.b) {
+      const groupsToLoad = new Set<string>();
+      for (const block of chunkData.b) {
+        const group = getBlockTypeGroup(block.blockTypeId);
+        groupsToLoad.add(group);
+      }
+
+      // Load all groups in parallel
+      await Promise.all(
+        Array.from(groupsToLoad).map(group => blockTypeService.ensureGroupLoaded(group))
+      );
+
+      logger.debug('Pre-loaded BlockType groups for chunk', {
+        cx: chunkData.cx,
+        cz: chunkData.cz,
+        groups: Array.from(groupsToLoad),
+      });
+    }
+
     // World bounds
     const worldMaxY = this.appContext.worldInfo?.stop?.y ?? 1000;
     const worldMinY = this.appContext.worldInfo?.start?.y ?? -100;
@@ -492,6 +513,9 @@ export class ChunkService {
         logger.warn('BlockType not found for block', {
           blockTypeId: block.blockTypeId,
           position: block.position,
+          loadedGroups: blockTypeService.getLoadedGroups(),
+          knownBlockTypeIds: blockTypeService.getAllBlockTypeIds(),
+          knownBlockTypeCount: blockTypeService.getBlockTypeCount(),
         });
         continue;
       }
@@ -927,6 +951,9 @@ export class ChunkService {
           logger.warn('BlockType not found for block update', {
             blockTypeId: block.blockTypeId,
             position: block.position,
+            loadedGroups: blockTypeService.getLoadedGroups(),
+            knownBlockTypeIds: blockTypeService.getAllBlockTypeIds(),
+            knownBlockTypeCount: blockTypeService.getBlockTypeCount(),
           });
           continue;
         }

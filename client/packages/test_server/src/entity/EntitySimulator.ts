@@ -56,7 +56,8 @@ export class EntitySimulator {
     this.registerBehavior('PreyAnimalBehavior', new PreyAnimalBehavior());
 
     // Load spawn definitions
-    this.loadSpawnDefinitions();
+    // XXX disable this if no entities should be loaded at startup
+   this.loadSpawnDefinitions();
   }
 
   /**

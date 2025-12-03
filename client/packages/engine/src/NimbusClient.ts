@@ -8,7 +8,7 @@
  * Unreachable code is eliminated by the bundler based on __EDITOR__ and __VIEWER__ flags
  */
 
-import { SHARED_VERSION, getLogger, ExceptionHandler } from '@nimbus/shared';
+import {SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel} from '@nimbus/shared';
 import { loadClientConfig } from './config/ClientConfig';
 import { DEFAULT_PLAYER_INFO } from './config/DefaultPlayerInfo';
 import { ClientService } from './services/ClientService';
@@ -57,6 +57,7 @@ const buildMode = __EDITOR__ ? 'Editor' : 'Viewer';
  */
 async function initializeApp(): Promise<AppContext> {
   try {
+//    LoggerFactory.setDefaultLevel(LogLevel.DEBUG);
     logger.debug(`Nimbus Client v${CLIENT_VERSION} (${buildMode} Build)`);
     logger.debug(`Shared Library v${SHARED_VERSION}`);
     logger.debug(`Build Mode: ${__BUILD_MODE__}`);

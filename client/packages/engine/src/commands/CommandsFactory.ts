@@ -2,6 +2,7 @@ import {AppContext} from "../AppContext";
 import {CommandService} from "../services/CommandService";
 import {HelpCommand} from "./HelpCommand";
 import {InfoCommand} from "./InfoCommand";
+import {WorldInfoCommand} from "./WorldInfoCommand";
 import {ClearCommand} from "./ClearCommand";
 import {ReloadConfigCommand} from "./ReloadConfigCommand";
 import {ReloadWorldConfigCommand} from "./ReloadWorldConfigCommand";
@@ -156,6 +157,7 @@ export class CommandsFactory {
         // Register command handlers
         commandService.registerHandler(new HelpCommand(commandService));
         commandService.registerHandler(new InfoCommand(appContext));
+        commandService.registerHandler(new WorldInfoCommand(appContext));
         commandService.registerHandler(new ClearCommand());
         commandService.registerHandler(new ReloadConfigCommand(appContext));
         commandService.registerHandler(new ReloadWorldConfigCommand(appContext));
