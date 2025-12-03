@@ -2275,8 +2275,8 @@
         "type" : "FaceVisibility",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : "Integer",
+        "comment" : "// javaType: Integer"
       }, {
         "name" : "status",
         "type" : "number",
@@ -2666,8 +2666,8 @@
         "type" : "Shape",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : "Integer",
+        "comment" : "// javaType: Integer"
       }, {
         "name" : "effect",
         "type" : "BlockEffect",
@@ -2743,8 +2743,8 @@
         "type" : "FaceVisibility",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "Integer",
+        "comment" : "// javaType: Integer"
       } ],
       "methods" : [ ]
     }, {

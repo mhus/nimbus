@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Handles block interaction messages from clients.
- * Message type: "b.i" (Block Interaction, Client → Server)
+ * Message type: "b.int" (Block Interaction, Client → Server)
  *
  * Client sends block interactions (break, place, modify).
  * Server validates, updates world state, and broadcasts to other clients.
@@ -37,7 +37,7 @@ public class BlockInteractionHandler implements MessageHandler {
 
     @Override
     public String getMessageType() {
-        return "b.i";
+        return "b.int";
     }
 
     @Override

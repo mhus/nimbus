@@ -1,6 +1,8 @@
 package de.mhus.nimbus.tools.demoimport.importers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.tools.demoimport.ImportStats;
 import de.mhus.nimbus.world.shared.world.WChunkService;
@@ -66,8 +68,14 @@ public class ChunkImporter {
     }
 
     private void importChunk(File chunkFile, ImportStats stats) throws Exception {
-        // Parse JSON to ChunkData
-        ChunkData chunkData = objectMapper.readValue(chunkFile, ChunkData.class);
+        // Read as JsonNode first for transformation
+        JsonNode chunkNode = objectMapper.readTree(chunkFile);
+
+        // Transform faceVisibility from {"value": 124} to 124
+        transformFaceVisibility(chunkNode);
+
+        // Now deserialize to ChunkData
+        ChunkData chunkData = objectMapper.treeToValue(chunkNode, ChunkData.class);
 
         // Create chunkKey (cx:cz format)
         String chunkKey = chunkData.getCx() + ":" + chunkData.getCz();
@@ -85,5 +93,48 @@ public class ChunkImporter {
 
         log.debug("Imported chunk: {} ({} blocks)", chunkKey,
                 chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
+    }
+
+    /**
+     * Transform faceVisibility from old format {"value": 124} to new format 124.
+     * Only transforms if field exists and is in old format.
+     * Leaves blocks without faceVisibility unchanged (field stays absent).
+     */
+    private void transformFaceVisibility(JsonNode chunkNode) {
+        JsonNode blocksNode = chunkNode.get("blocks");
+        if (blocksNode == null || !blocksNode.isArray()) {
+            return;
+        }
+
+        int transformCount = 0;
+        for (JsonNode blockNode : blocksNode) {
+            if (!blockNode.isObject()) continue;
+
+            ObjectNode block = (ObjectNode) blockNode;
+
+            // Only transform if faceVisibility field exists
+            if (!block.has("faceVisibility")) {
+                continue; // Field not present, skip this block
+            }
+
+            JsonNode faceVisNode = block.get("faceVisibility");
+
+            // Check if it's in old format: {"value": X}
+            if (faceVisNode.isObject() && faceVisNode.has("value")) {
+                JsonNode valueNode = faceVisNode.get("value");
+                if (valueNode.isNumber()) {
+                    int value = valueNode.asInt();
+                    // Replace object with direct int value
+                    block.put("faceVisibility", value);
+                    transformCount++;
+                }
+            }
+            // If it's already a number, leave it as is
+            // If it doesn't exist, we already skipped above
+        }
+
+        if (transformCount > 0) {
+            log.trace("Transformed {} faceVisibility fields in chunk", transformCount);
+        }
     }
 }

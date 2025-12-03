@@ -460,7 +460,7 @@ export enum BlockEffect {
  */
 export interface VisibilityModifier {
   /** Shape type */
-  shape?: Shape;  // javaType: int
+  shape?: Shape;  // javaType: Integer
 
   /** Effect type (NONE, FLIPBOX, WIND)
    * Applies to all textures by default
@@ -508,7 +508,7 @@ export interface VisibilityModifier {
    * Determines which faces are visible or if it's auto-calculated
    * Priority: VisibilityModifier.faceVisibility > Block.faceVisibility > default (all visible)
    */
-  faceVisibility?: FaceVisibility;
+  faceVisibility?: FaceVisibility; // javaType: Integer
 }
 
 /**

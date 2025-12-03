@@ -12,19 +12,23 @@ import org.springframework.web.socket.TextMessage;
 
 /**
  * Handles entity position update messages from clients.
- * Message type: "e.pu" (Entity Position Update, Client → Server)
+ * Message type: "e.p.u" (Entity Position Update, Client → Server)
  *
- * Client sends player/entity position updates.
+ * Client sends player/entity position updates (can be multiple entities).
  * Server validates and broadcasts to other clients in the same chunk/area.
  *
- * Expected data:
- * {
- *   "entityId": "player123",
- *   "position": {"x": 10.5, "y": 64.0, "z": 20.3},
- *   "rotation": {"yaw": 90, "pitch": 0},
- *   "pose": 1,  // WALK
- *   "velocity": {"x": 0.1, "y": 0, "z": 0.2}
- * }
+ * Expected data (array of updates):
+ * [
+ *   {
+ *     "pl": "player",  // local entity id (not unique id)
+ *     "p": {"x": 10.5, "y": 64.0, "z": 20.3},  // position (optional)
+ *     "r": {"y": 90.0, "p": 0.0},  // rotation: yaw, pitch (optional)
+ *     "v": {"x": 0.1, "y": 0, "z": 0.2},  // velocity (optional)
+ *     "po": 1,  // pose id (optional)
+ *     "ts": 1697045600000,  // timestamp
+ *     "ta": {"x": 10.5, "y": 64.0, "z": 20.3, "ts": 1697045800000}  // target position (optional)
+ *   }
+ * ]
  */
 @Component
 @RequiredArgsConstructor
@@ -36,7 +40,7 @@ public class EntityPositionUpdateHandler implements MessageHandler {
 
     @Override
     public String getMessageType() {
-        return "e.pu";
+        return "e.p.u";
     }
 
     @Override
@@ -49,14 +53,29 @@ public class EntityPositionUpdateHandler implements MessageHandler {
 
         JsonNode data = message.getD();
 
-        // Extract position data
-        String entityId = data.has("entityId") ? data.get("entityId").asText() : null;
-        JsonNode position = data.has("position") ? data.get("position") : null;
-        JsonNode rotation = data.has("rotation") ? data.get("rotation") : null;
-        Integer pose = data.has("pose") ? data.get("pose").asInt() : null;
+        // Data is an array of entity updates
+        if (!data.isArray()) {
+            log.warn("Entity position update data is not an array");
+            return;
+        }
 
-        if (entityId == null || position == null) {
-            log.warn("Invalid entity position update: missing entityId or position");
+        // Process each entity update
+        for (JsonNode entityUpdate : data) {
+            processEntityUpdate(session, entityUpdate);
+        }
+    }
+
+    private void processEntityUpdate(PlayerSession session, JsonNode update) {
+        // Extract position data (using compressed field names)
+        String playerId = update.has("pl") ? update.get("pl").asText() : null;
+        JsonNode position = update.has("p") ? update.get("p") : null;
+        JsonNode rotation = update.has("r") ? update.get("r") : null;
+        JsonNode velocity = update.has("v") ? update.get("v") : null;
+        Integer pose = update.has("po") ? update.get("po").asInt() : null;
+        Long timestamp = update.has("ts") ? update.get("ts").asLong() : null;
+
+        if (playerId == null) {
+            log.warn("Entity position update without player id (pl)");
             return;
         }
 
@@ -65,23 +84,31 @@ public class EntityPositionUpdateHandler implements MessageHandler {
         // TODO: Calculate which chunk the entity is in
 
         // For now, just broadcast to other sessions in the world
-        broadcastPositionUpdate(session, data);
+        broadcastPositionUpdate(session, update);
 
-        log.trace("Entity position update: entity={}, pos=({}, {}, {})",
-                entityId,
-                position.has("x") ? position.get("x").asDouble() : 0,
-                position.has("y") ? position.get("y").asDouble() : 0,
-                position.has("z") ? position.get("z").asDouble() : 0);
+        if (log.isTraceEnabled() && position != null) {
+            log.trace("Entity position update: pl={}, pos=({}, {}, {}), session={}",
+                    playerId,
+                    position.has("x") ? position.get("x").asDouble() : 0,
+                    position.has("y") ? position.get("y").asDouble() : 0,
+                    position.has("z") ? position.get("z").asDouble() : 0,
+                    session.getSessionId());
+        }
     }
 
     /**
      * Broadcast position update to other sessions in the same world.
+     * Wraps single update in array for consistent message format.
      */
-    private void broadcastPositionUpdate(PlayerSession sender, JsonNode data) {
+    private void broadcastPositionUpdate(PlayerSession sender, JsonNode singleUpdate) {
         try {
+            // Wrap single update in array (message format requires array)
+            com.fasterxml.jackson.databind.node.ArrayNode updateArray = objectMapper.createArrayNode();
+            updateArray.add(singleUpdate);
+
             NetworkMessage broadcast = NetworkMessage.builder()
-                    .t("e.pu")
-                    .d(data)
+                    .t("e.p.u")
+                    .d(updateArray)
                     .build();
 
             String json = objectMapper.writeValueAsString(broadcast);

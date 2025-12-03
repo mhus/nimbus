@@ -1419,21 +1419,40 @@ In diesem fall soll das event zum redis gesendet werden. Der redis broadcastet d
 [?] (a.s) - Client → Server Animation Broadcasting
 Wie schon bei (u.m) muss das Event über redis verteilt werden an die anderen world-player pods und sessions.
 
-[ ] (e.t) - Effect Trigger Client → Server
+[?] (e.t) - Effect Trigger Client → Server
 Wie schon bei (u.m) muss das Event über redis verteilt werden an die anderen world-player pods und sessions.
 
-[ ] (e.u) - Effect Updates Client → Server
+[?] (e.u) - Effect Updates Client → Server
 Wie schon bei (u.m) muss das Event über redis verteilt werden an die anderen world-player pods und sessions.
 
-[ ] (e.int.r) - Entity Interaktionen
+[?] (e.int.r) - Entity Interaktionen
 Eine entity interaction muss immer im server verarbeitet werden. Aktuell soll der handler eine log message schreiben.
 
-[ ] (int.r) - Generelle Interaktionsanfragen
+[?] (int.r) - Generelle Interaktionsanfragen
 Eine entity interaction muss immer im server verarbeitet werden. Aktuell soll der handler eine log message schreiben.
 
-[ ] (cmd) - Client Commands Processing
+[?] (cmd) - Client Commands Processing
 Soll an den CommandService gegeben werden und die antwort dann an den Client gesendet werden.
 - Der CommandService hat keine Ahnung von Messages, der Request muss abstrahiert werden.
 - Commands werden als Bean-Service breitgestellt und im CommandService ausgefuehrt.
 - Erstelle die Klasse HelpCommand
 
+```text
+
+  📋 Alle registrierten Message Handler:
+
+  | Message Type | Handler                     | Beschreibung              |
+  |--------------|-----------------------------|---------------------------|
+  | "login"      | LoginHandler                | Authentifizierung         |
+  | "p"          | PingHandler                 | Keep-Alive                |
+  | "c.r"        | ChunkRegistrationHandler    | Chunk Registrierung       |
+  | "c.q"        | ChunkQueryHandler           | Chunk Anfrage             |
+  | "u.m"        | UserMovementUpdateHandler   | User Movement (Redis)     |
+  | "e.p.u"      | EntityPositionUpdateHandler | Entity Position           |
+  | "e.int.r"    | EntityInteractionHandler    | Entity Interaktion        |
+  | "int.r"      | InteractionRequestHandler   | Block Interaktion Request |
+  | "b.int"      | BlockInteractionHandler     | Block Interaktion         |
+  | "e.t"        | EffectTriggerHandler        | Effect Trigger (Redis)    |
+  | "e.u"        | EffectUpdateHandler         | Effect Update (Redis)     |
+  | "cmd"        | ClientCommandHandler        | Client Commands           |
+```

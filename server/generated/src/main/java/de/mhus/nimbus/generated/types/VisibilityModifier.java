@@ -12,7 +12,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class VisibilityModifier {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int shape;
+    private Integer shape;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private BlockEffect effect;
     @com.fasterxml.jackson.annotation.JsonProperty("effectParameters")
@@ -41,5 +41,5 @@ public class VisibilityModifier {
     private java.util.Map<Integer, Object> textures;
     @com.fasterxml.jackson.annotation.JsonProperty("faceVisibility")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private FaceVisibility faceVisibility;
+    private Integer faceVisibility;
 }
