@@ -2137,17 +2137,337 @@ Die Aufgabe ist es die REST Endpunkte des TypeScript test_server packages zu mig
 - Dem client package components soll es ermöglicht werden über die Endpunkte mit dem world-control server zu kommunizieren.
 - Aktuell wird keine Authentifizierung benötigt, diese kann später hinzugefügt werden.
 
-[ ] Erstelle alle Asset REST Endpunkte in world-control
+[?] Erstelle alle Asset REST Endpunkte in world-control
 - /api/worlds/{worldId}/assets
-[ ] Erstelle alle backdrops REST Endpunkte in world-control (nicht in rest dokumentation)
+[?] Erstelle alle backdrops REST Endpunkte in world-control (nicht in rest dokumentation)
 - /api/worlds/{worldId}/backdrops
-[ ] Erstelle alle blocktypes REST Endpunkte in world-control
+[?] Erstelle alle blocktypes REST Endpunkte in world-control
 - /api/worlds/{worldId}/blocktypes
-[ ] Erstelle alle itemtypes REST Endpunkte in world-control
+[?] Erstelle alle itemtypes REST Endpunkte in world-control
 - /api/worlds/{worldId}/itemtypes
-[ ] Erstelle alle entitymodels REST Endpunkte in world-control
+[?] Erstelle alle entitymodels REST Endpunkte in world-control
 - /api/worlds/{worldId}/entitymodel
-[ ] Erstelle alle entities REST Endpunkte in world-control
+[?] Erstelle alle entities REST Endpunkte in world-control
 - /api/worlds/{worldId}/entity
-[ ] Erstelle alle items REST Endpunkte in world-control
+[?] Erstelle alle items REST Endpunkte in world-control
 - /api/worlds/{worldId}/items
+
+```text
+ Here is Claude's plan:
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Migration Plan: REST Endpoints von TypeScript test_server zu Java world-control
+
+ Überblick
+
+ Migration von 7 REST Endpoint-Gruppen vom TypeScript test_server zum Java Spring Boot world-control Server. Alle CRUD-Operationen (GET, POST, PUT, DELETE) werden migriert, damit das client package (components) mit dem
+ world-control Server kommunizieren kann.
+
+ Vorhandene Infrastruktur
+
+ Bereits in world-shared vorhanden:
+
+ - ✅ Alle Entity Typen (WBackdrop, WBlockType, WItemType, WEntityModel, WEntity, WItemPosition)
+ - ✅ Alle Repositories (MongoRepository Interfaces)
+ - ✅ Alle Services mit CRUD-Operationen
+ - ✅ EngineMapper für DTO Serialisierung/Deserialisierung
+ - ✅ MongoDB Collections mit Compound Indexes
+
+ Bereits in world-control vorhanden:
+
+ - ✅ UniverseJwtFilter (Authentifizierung - wird später aktiviert)
+ - ✅ EAssetController als Muster-Implementation
+ - ✅ Spring Boot Konfiguration (Port 9043)
+
+ Zu migrierende REST Endpoints
+
+ | Endpoint-Gruppe | Base Path                         | Operationen            | Status |
+ |-----------------|-----------------------------------|------------------------|--------|
+ | Assets          | /api/worlds/{worldId}/assets      | Bereits implementiert  | ✅      |
+ | Backdrops       | /api/worlds/{worldId}/backdrop    | GET, POST, PUT, DELETE | ❌      |
+ | BlockTypes      | /api/worlds/{worldId}/blocktypes  | GET, POST, PUT, DELETE | ❌      |
+ | ItemTypes       | /api/worlds/{worldId}/itemtypes   | GET, POST, PUT, DELETE | ❌      |
+ | EntityModels    | /api/worlds/{worldId}/entitymodel | GET, POST, PUT, DELETE | ❌      |
+ | Entities        | /api/worlds/{worldId}/entity      | GET, POST, PUT, DELETE | ❌      |
+ | Items           | /api/worlds/{worldId}/items       | GET, POST, PUT, DELETE | ❌      |
+
+ Hinweis: Assets sind bereits in EAssetController implementiert und müssen nicht migriert werden.
+
+ Implementierungsplan
+
+ Phase 1: Base Controller Foundation
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/BaseEditorController.java
+
+ Erstelle eine abstrakte Basis-Klasse mit shared Logic:
+ - Error Response Helper: bad(), notFound(), conflict(), unauthorized()
+ - Validation Helper: validateWorldId(), validatePagination(), blank()
+ - DTO Conversion Helper: toDto() Pattern
+
+ Pattern aus EAssetController übernehmen:
+ protected ResponseEntity<Map<String,String>> bad(String msg) {
+     return ResponseEntity.badRequest().body(Map.of("error", msg));
+ }
+
+ Phase 2: Controller Implementation (einer nach dem anderen)
+
+ Jeder Controller folgt diesem Muster:
+ 1. Erweitert BaseEditorController
+ 2. Injiziert entsprechenden W*Service
+ 3. Implementiert CRUD Endpoints
+ 4. Nutzt Record DTOs für Requests/Responses
+ 5. Validiert Parameter im Controller
+ 6. Delegiert Business Logik an Service
+ 7. Wandelt Exceptions in HTTP Status Codes um
+
+ 2.1 EBackdropController
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/EBackdropController.java
+
+ Base Path: /api/worlds/{worldId}/backdrop
+
+ Endpoints:
+ - GET /{backdropId} - Einzelnen Backdrop abrufen
+ - GET / - Liste mit Pagination (?query=...&offset=0&limit=50)
+ - POST / - Neuen Backdrop erstellen (201 CREATED)
+ - PUT /{backdropId} - Backdrop aktualisieren (200 OK)
+ - DELETE /{backdropId} - Backdrop löschen (204 NO CONTENT)
+
+ DTOs:
+ public record BackdropDto(String backdropId, Backdrop publicData, String worldId, boolean enabled, Instant createdAt, Instant updatedAt) {}
+ public record CreateBackdropRequest(String backdropId, Backdrop publicData) {}
+ public record UpdateBackdropRequest(Backdrop publicData, Boolean enabled) {}
+
+ Service: WBackdropService (bereits vorhanden in world-shared)
+
+ Besonderheiten: Im TypeScript war dies PUBLIC (keine Auth), aktuell auch keine Auth erforderlich.
+
+ 2.2 EBlockTypeController
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/EBlockTypeController.java
+
+ Base Path: /api/worlds/{worldId}/blocktypes
+
+ Endpoints:
+ - GET / - Liste mit Pagination und Query-Filter
+ - GET /{blockId} - Einzelnen BlockType abrufen
+ - GET /../blocktypeschunk/{groupName} - BlockTypes nach Gruppe (spezieller Endpoint)
+ - POST / - Neuen BlockType erstellen
+ - PUT /{blockId} - BlockType aktualisieren
+ - DELETE /{blockId} - BlockType löschen
+
+ DTOs:
+ public record BlockTypeDto(String blockId, String blockTypeGroup, BlockType publicData, String worldId, boolean enabled, Instant createdAt, Instant updatedAt) {}
+ public record CreateBlockTypeRequest(String blockId, BlockType publicData, String blockTypeGroup) {}
+ public record UpdateBlockTypeRequest(BlockType publicData, String blockTypeGroup, Boolean enabled) {}
+
+ Service: WBlockTypeService
+
+ Besonderheiten:
+ - blockTypeGroup aus blockId extrahieren (z.B. "core:stone" → group="core")
+ - Default group "w" wenn kein Präfix
+ - MongoDB @Id wird automatisch generiert (ObjectId)
+ - blockId kann vom Client mitgegeben oder auto-generiert werden (wie test_server)
+
+ 2.3 EItemTypeController
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/EItemTypeController.java
+
+ Base Path: /api/worlds/{worldId}/itemtypes
+
+ Endpoints: Standard CRUD (siehe BlockType Pattern)
+
+ DTOs:
+ public record ItemTypeDto(String itemType, ItemType publicData, String worldId, boolean enabled, Instant createdAt, Instant updatedAt) {}
+ public record CreateItemTypeRequest(String itemType, ItemType publicData) {}
+ public record UpdateItemTypeRequest(ItemType publicData, Boolean enabled) {}
+
+ Service: WItemTypeService
+
+ Besonderheiten: Im TypeScript war dies PUBLIC, aktuell keine Auth.
+
+ 2.4 EEntityModelController
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/EEntityModelController.java
+
+ Base Path: /api/worlds/{worldId}/entitymodel
+
+ Endpoints: Standard CRUD
+
+ DTOs:
+ public record EntityModelDto(String modelId, EntityModel publicData, String worldId, boolean enabled, Instant createdAt, Instant updatedAt) {}
+ public record CreateEntityModelRequest(String modelId, EntityModel publicData) {}
+ public record UpdateEntityModelRequest(EntityModel publicData, Boolean enabled) {}
+
+ Service: WEntityModelService
+
+ 2.5 EEntityController
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/EEntityController.java
+
+ Base Path: /api/worlds/{worldId}/entity
+
+ Endpoints: Standard CRUD
+
+ DTOs:
+ public record EntityDto(String entityId, Entity publicData, String worldId, String chunk, String modelId, boolean enabled, Instant createdAt, Instant updatedAt) {}
+ public record CreateEntityRequest(String entityId, Entity publicData, String modelId) {}
+ public record UpdateEntityRequest(Entity publicData, String modelId, Boolean enabled) {}
+
+ Service: WEntityService
+
+ Besonderheiten:
+ - chunk wird aus Entity Position berechnet
+ - Optional: modelId Referenz validieren
+
+ 2.6 EItemController
+
+ Datei: /server/world-control/src/main/java/de/mhus/nimbus/world/editor/api/EItemController.java
+
+ Base Path: /api/worlds/{worldId}/items
+
+ Endpoints: Standard CRUD
+
+ DTOs:
+ public record ItemPositionDto(String itemId, ItemBlockRef publicData, String worldId, String chunk, boolean enabled, Instant createdAt, Instant updatedAt) {}
+ public record CreateItemRequest(ItemBlockRef itemBlockRef) {}
+ public record UpdateItemRequest(ItemBlockRef itemBlockRef) {}
+
+ Service: WItemRegistryService
+
+ Besonderheiten:
+ - universeId ist nicht relevant (universe/region Server spielen keine Rolle) - worldId als universeId verwenden oder Service anpassen
+ - chunk wird aus ItemBlockRef.position berechnet
+ - Chunk-basiertes Querying: ?cx=0&cz=0 optional
+ - MongoDB @Id wird automatisch generiert
+
+ Phase 3: Response Format Standardisierung
+
+ TypeScript kompatibles Format (User Entscheidung):
+
+ Jeder Endpoint verwendet einen spezifischen Schlüssel:
+
+ // Backdrop List
+ { "backdrops": [...], "count": 100 }
+
+ // BlockType List
+ { "blocktypes": [...], "count": 100 }
+
+ // ItemType List
+ { "itemtypes": [...], "count": 100 }
+
+ // EntityModel List
+ { "entitymodels": [...], "count": 100 }
+
+ // Entity List
+ { "entities": [...], "count": 100 }
+
+ // Item List
+ { "items": [...], "count": 100 }
+
+ Pagination (offset/limit) wird über Query Parameter gesteuert, muss nicht in Response.
+
+ Phase 4: Validation & Error Handling
+
+ Controller-Level Validierung:
+ - worldId nicht blank
+ - ID Parameter nicht blank
+ - Pagination: offset >= 0, limit zwischen 1 und 1000
+ - Request Body nicht null
+
+ Service-Level Validierung:
+ - Business Rules (bereits in Services implementiert)
+ - Referenz-Validierung (optional)
+
+ Error Responses:
+ - 400 BAD_REQUEST: Validation Fehler
+ - 404 NOT_FOUND: Entity nicht gefunden
+ - 409 CONFLICT: Entity existiert bereits (POST)
+ - 500 INTERNAL_SERVER_ERROR: Unerwartete Fehler
+
+ Format: Map.of("error", "Fehlermeldung")
+
+ Phase 5: Testing
+
+ Unit Tests (mvn test)
+
+ Location: /server/world-control/src/test/java/de/mhus/nimbus/world/editor/api/
+
+ Für jeden Controller:
+ - Mock Service mit Mockito
+ - Test Happy Path (200, 201, 204)
+ - Test Error Cases (400, 404, 409)
+ - Test Validation Logic
+ - Test Pagination
+
+ Integration Tests (mvn verify)
+
+ Location: /server/world-control/src/integration-test/java/de/mhus/nimbus/world/editor/api/
+
+ Für jeden Controller:
+ - End-to-End HTTP Tests
+ - MongoDB Persistence Tests
+ - CRUD Operation Sequences
+ - Search und Pagination Tests
+
+ Phase 6: Documentation
+
+ - OpenAPI/Swagger Annotations auf allen Controllern
+ - @Tag, @Operation, @ApiResponse Annotations
+ - Controller Javadoc mit Beispielen
+
+ Implementierungs-Reihenfolge
+
+ 1. ✅ BaseEditorController - Foundation mit Helper Methods
+ 2. EBackdropController - Einfachster Fall, wenig Logik
+ 3. EBlockTypeController - Mit Group-Filter und Chunk-Endpoint
+ 4. EItemTypeController - Ähnlich zu Backdrop
+ 5. EEntityModelController - Ähnlich zu ItemType
+ 6. EEntityController - Mit Chunk-Berechnung und Referenz
+ 7. EItemController - Komplexester Fall mit universeId
+
+ Jeweils: Implementation → Unit Tests → Integration Tests → Nächster Controller
+
+ Kritische Dateien als Referenz
+
+ 1. EAssetController.java - Muster für Controller-Struktur, Error Handling, DTOs
+ 2. WBlockTypeService.java - Service Layer Pattern, Transactions
+ 3. WBlockType.java - Entity Model mit publicData Pattern
+ 4. EngineMapper.java - DTO Serialisierung/Deserialisierung
+ 5. UniverseJwtFilter.java - Security Infrastructure (für später)
+
+ Getroffene Entscheidungen (User Feedback)
+
+ 1. ✅ universeId für Items: Es gibt keine universeId in diesem Context. universe und region Server spielen für diese Planung keine Rolle.
+   - Lösung: WItemRegistryService Calls verwenden worldId als universeId Parameter, oder Service-Methode anpassen um ohne universeId zu funktionieren.
+ 2. ✅ Response Format: TypeScript Format verwenden - jeder Endpoint hat eigenen Schlüssel
+   - Backdrop: { backdrops: [...], count }
+   - BlockType: { blocktypes: [...], count }
+   - ItemType: { itemtypes: [...], count }
+   - EntityModel: { entitymodels: [...], count }
+   - Entity: { entities: [...], count }
+   - Item: { items: [...], count }
+ 3. ✅ Auto-ID Generation: Wie im test_server - IDs werden auch in bestehenden MongoDB Repositories/Entities automatisch erstellt
+   - MongoDB @Id wird automatisch generiert (String ObjectId)
+   - Business IDs (blockId, entityId, etc.) vom Client oder auto-generiert falls leer
+ 4. Authentication: Aktuell keine - kann später aktiviert werden
+
+ Nächste Schritte nach Plan-Approval
+
+ 1. BaseEditorController erstellen
+ 2. EBackdropController implementieren (simplest case)
+ 3. Unit Tests für Backdrop
+ 4. Integration Tests für Backdrop
+ 5. Mit User testen
+ 6. Feedback einarbeiten
+ 7. Restliche Controller nach gleichem Muster
+
+ Erfolgs-Kriterien
+
+ - ✅ Alle 6 Controller implementiert (Assets bereits vorhanden)
+ - ✅ Alle CRUD Operationen funktional
+ - ✅ Unit Tests mit > 80% Coverage
+ - ✅ Integration Tests für alle Endpoints
+ - ✅ Client package (components) kann mit world-control kommunizieren
+ - ✅ TypeScript test_server API kompatibel
+ - ✅ Clean Code Prinzipien eingehalten
+```
