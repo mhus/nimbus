@@ -2672,4 +2672,28 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
   Das Edit Mode Control System mit Layer-Unterstützung ist vollständig implementiert und bereit für Integration mit Engine und Controls! 🎉
 ```
 
+[x] Block laden mit layern:
+- Um den Block muss ein separates BlockInfo Datenobjekt
+  - layer: String (layerId)
+  - group: Integer (groupId)
+  - groupName String (optional, aus Layer Entity)
+  - block: Block aus WChunk
+  - position: Vector3i (absolute position im welt koordinatensystem)
+  - readOnly: boolean (ob der block nur gelesen werden kann) - wenn der Block nicht aus dem Layer sondern aus WChunkService kommt kann er nicht geschrieben werden.
+- Pruefe ob die session im modusl EDIT ist und ob ein layer selektiert ist.
+  - Wenn ja, dann musst du 
+    - im redis pruefen ob der block schon editiert wurde.
+    - sonst aus dem Layer laden.
+  - Wenn nein, dann aus dem WChunkService laden. - read only: true
+  - Der BlockInfo + Block wird an den client geschickt.
+- Der Block kann direkt als json zurueck gebeben werden, muss nicht erst in ein DTO umgewandelt werden.
+  
+[?] Block speichern / löschen mit layern:
+- Pruefe ob die session im modusl EDIT ist und ob ein layer selektiert ist.
+  - Wenn nein, dann fehler zurueckgeben.
+- Der Block muss in den redis gespeichert werden. Logik zum overlay sollte in world-player schon exisitieren. Das hier
+  ist die seite, die diese daten speichert. - Benutze einen Service, denn es wird noch weitere optionen zum erstellen geben.
+  - Sende im Service an den player eine Nachricht, dass der Block geandert wurde.
+- Beim löchen wird ein AIR Block gespeichert (BlockType 0).
+(Das eigentliche speichern wird beim integrieren in den Layer erledigt, nicht hier)
 

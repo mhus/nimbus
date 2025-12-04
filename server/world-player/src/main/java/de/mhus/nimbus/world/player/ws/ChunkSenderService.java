@@ -62,7 +62,7 @@ public class ChunkSenderService {
 
             for (ChunkCoord coord : chunks) {
                 String chunkKey = coord.cx() + ":" + coord.cz();
-                chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey, true)
+                chunkService.loadChunkData(session.getWorldId(), chunkKey, true)
                         .ifPresentOrElse(
                                 chunkData -> {
                                     // Apply overlays if session is in edit mode

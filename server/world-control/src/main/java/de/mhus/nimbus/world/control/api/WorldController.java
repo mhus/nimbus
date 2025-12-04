@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 public class WorldController extends BaseEditorController {
 
     private final WWorldService worldService;
+    private final de.mhus.nimbus.world.control.service.BlockInfoService blockInfoService;
 
     // DTOs
     public record WorldListDto(
@@ -104,6 +105,47 @@ public class WorldController extends BaseEditorController {
 
         log.debug("Returning world: worldId={}", worldId);
         return ResponseEntity.ok(toDetailDto(opt.get()));
+    }
+
+    /**
+     * Get block info with layer metadata.
+     * GET /api/worlds/{worldId}/session/{sessionId}/block/{x}/{y}/{z}
+     */
+    @GetMapping("/{worldId}/session/{sessionId}/block/{x}/{y}/{z}")
+    @Operation(summary = "Get block info with layer metadata")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Block info loaded"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Block/Chunk not found")
+    })
+    public ResponseEntity<?> getBlock(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Session identifier") @PathVariable String sessionId,
+            @Parameter(description = "Block X coordinate") @PathVariable int x,
+            @Parameter(description = "Block Y coordinate") @PathVariable int y,
+            @Parameter(description = "Block Z coordinate") @PathVariable int z) {
+
+        log.debug("GET block: worldId={} session={} pos=({},{},{})", worldId, sessionId, x, y, z);
+
+        ResponseEntity<?> validation = validateId(worldId, "worldId");
+        if (validation != null) return validation;
+
+        validation = validateId(sessionId, "sessionId");
+        if (validation != null) return validation;
+
+        try {
+            // Load block info with layer metadata
+            java.util.Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
+
+            log.debug("Block info loaded: pos=({},{},{}) layer={} readOnly={}",
+                    x, y, z, blockInfo.get("layer"), blockInfo.get("readOnly"));
+
+            return ResponseEntity.ok(blockInfo);
+
+        } catch (Exception e) {
+            log.error("Failed to load block info: worldId={} pos=({},{},{})", worldId, x, y, z, e);
+            return ResponseEntity.status(500).body(java.util.Map.of("error", "Failed to load block: " + e.getMessage()));
+        }
     }
 
     // Helper methods

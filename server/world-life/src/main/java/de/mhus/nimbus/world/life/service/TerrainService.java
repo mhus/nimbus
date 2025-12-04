@@ -38,7 +38,7 @@ public class TerrainService {
             String chunkKey = chunkX + ":" + chunkZ;
 
             // Load chunk from database (regionId = worldId for main world, create=false)
-            Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, worldId, chunkKey, false);
+            Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);
 
             if (chunkDataOpt.isEmpty()) {
                 log.trace("Chunk not found for ground height lookup: world={}, chunk={}", worldId, chunkKey);

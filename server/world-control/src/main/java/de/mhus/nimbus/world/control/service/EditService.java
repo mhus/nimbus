@@ -116,10 +116,13 @@ public class EditService {
 
         switch (action) {
             case OPEN_CONFIG_DIALOG:
+                // Open config dialog at client
+                openConfigDialogAtClient(worldId, sessionId, origin);
+                break;
             case OPEN_EDITOR:
-                // Just update selected block position (for config/editor opening)
+                // Open block editor dialog at client
                 setSelectedBlock(worldId, sessionId, x, y, z);
-                openConfigDialogAtClient(worldId, sessionId, origin, x, y, z);
+                openBlockEditorDialogAtClient(worldId, sessionId, origin, x, y, z);
                 break;
 
             case MARK_BLOCK:
@@ -150,7 +153,22 @@ public class EditService {
         }
     }
 
-    private void openConfigDialogAtClient(String worldId, String sessionId, String origin, int x, int y, int z) {
+    private void openConfigDialogAtClient(String worldId, String sessionId, String origin) {
+        CommandContext ctx = CommandContext.builder()
+                .worldId(worldId)
+                .sessionId(sessionId)
+                .originServer("world-control")
+                .build();
+        worldClient.sendPlayerCommand(
+                worldId,
+                sessionId,
+                origin,
+                "client",
+                List.of("openComponent", "edit_config" ),
+                ctx);
+    }
+
+    private void openBlockEditorDialogAtClient(String worldId, String sessionId, String origin, int x, int y, int z) {
         CommandContext ctx = CommandContext.builder()
                 .worldId(worldId)
                 .sessionId(sessionId)

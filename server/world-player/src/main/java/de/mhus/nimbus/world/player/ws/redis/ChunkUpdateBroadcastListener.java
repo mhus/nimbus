@@ -82,7 +82,7 @@ public class ChunkUpdateBroadcastListener {
 
             // Load updated chunk from database
             Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(
-                    "main", worldId, chunkKey, false);
+                    worldId, chunkKey, false);
 
             if (chunkDataOpt.isEmpty() && !deleted) {
                 log.warn("Updated chunk not found in database: world={} chunk={}", worldId, chunkKey);

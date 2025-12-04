@@ -136,14 +136,14 @@ public class WChunkService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<ChunkData> loadChunkData(String regionId, String worldId, String chunkKey, boolean create) {
-        Optional<WChunk> chunkOpt = repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey);
+    public Optional<ChunkData> loadChunkData(String worldId, String chunkKey, boolean create) {
+        Optional<WChunk> chunkOpt = repository.findByWorldIdAndChunk(worldId, chunkKey);
 
         if (chunkOpt.isPresent()) {
             // Chunk exists in database - load it
             WChunk entity = chunkOpt.get();
             if (entity.getStorageId() == null) {
-                log.warn("Chunk ohne StorageId gefunden chunkKey={} region={} world={}", chunkKey, regionId, worldId);
+                log.warn("Chunk ohne StorageId gefunden chunkKey={} world={}", chunkKey, worldId);
                 return Optional.empty();
             }
 
@@ -158,13 +158,13 @@ public class WChunkService {
                 return Optional.ofNullable(chunkData);
 
             } catch (Exception e) {
-                log.warn("ChunkData Deserialisierung fehlgeschlagen chunkKey={} region={} world={}", chunkKey, regionId, worldId, e);
+                log.warn("ChunkData Deserialisierung fehlgeschlagen chunkKey={} world={}", chunkKey, worldId, e);
                 return Optional.empty();
             }
         } else if (create) {
             // Chunk not found - generate default chunk based on world settings
             log.debug("Chunk not found in DB, generating default: chunkKey={} world={}", chunkKey, worldId);
-            return Optional.ofNullable(generateDefaultChunk(regionId, worldId, chunkKey));
+            return Optional.ofNullable(generateDefaultChunk(worldId, chunkKey));
         } else {
             // Chunk not found and create=false - return empty
             return Optional.empty();
@@ -175,7 +175,7 @@ public class WChunkService {
      * Generate default chunk based on world configuration.
      * Creates ground blocks up to groundLevel and water blocks up to waterLevel.
      */
-    private ChunkData generateDefaultChunk(String regionId, String worldId, String chunkKey) {
+    private ChunkData generateDefaultChunk(String worldId, String chunkKey) {
         try {
             // Parse chunk coordinates from key (format: "cx:cz")
             String[] parts = chunkKey.split(":");

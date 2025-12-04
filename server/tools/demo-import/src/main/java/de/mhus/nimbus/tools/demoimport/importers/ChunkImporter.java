@@ -122,7 +122,7 @@ public class ChunkImporter {
         // Create chunkKey (cx:cz format)
         String chunkKey = chunkData.getCx() + ":" + chunkData.getCz();
 
-        boolean chunkExists = chunkService.loadChunkData(worldId, worldId, chunkKey, false).isPresent();
+        boolean chunkExists = chunkService.loadChunkData(worldId, chunkKey, false).isPresent();
         boolean layerExists = layerService.loadTerrainChunk(groundLayer.getLayerDataId(), chunkKey).isPresent();
 
         // Check if both already exist

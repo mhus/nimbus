@@ -28,8 +28,13 @@
             <h2 class="card-title">
               Block at ({{ blockCoordinates.x }}, {{ blockCoordinates.y }}, {{ blockCoordinates.z }})
             </h2>
-            <div class="badge" :class="blockExists ? 'badge-primary' : 'badge-success'">
-              {{ blockExists ? 'Existing Block' : 'New Block' }}
+            <div class="flex gap-2">
+              <div v-if="blockReadOnly" class="badge badge-warning" title="Block is read-only (no layer selected)">
+                Read-Only
+              </div>
+              <div class="badge" :class="blockExists ? 'badge-primary' : 'badge-success'">
+                {{ blockExists ? 'Existing Block' : 'New Block' }}
+              </div>
             </div>
           </div>
 
@@ -384,14 +389,16 @@
               <button
                 class="btn btn-primary"
                 @click="handleApply"
-                :disabled="!isValid || saving || !hasChanges"
+                :disabled="!isValid || saving || !hasChanges || blockReadOnly"
+                :title="blockReadOnly ? 'Block is read-only (no layer selected)' : ''"
               >
                 {{ saving ? 'Saving...' : 'Apply' }}
               </button>
               <button
                 class="btn btn-success"
                 @click="handleSave"
-                :disabled="!isValid || saving || !hasChanges"
+                :disabled="!isValid || saving || !hasChanges || blockReadOnly"
+                :title="blockReadOnly ? 'Block is read-only (no layer selected)' : ''"
               >
                 {{ saving ? 'Saving...' : 'Save & Close' }}
               </button>
@@ -512,6 +519,7 @@ const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const blockExists = ref(false);
+const blockReadOnly = ref(false);
 const originalBlock = ref<Block | null>(null);
 const blockData = ref<Block>({
   position: { x: 0, y: 0, z: 0 },
@@ -807,8 +815,17 @@ async function loadBlock() {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${worldId}/blocks/${x}/${y}/${z}`;
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+
+    // Get sessionId from URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('sessionId');
+
+    if (!sessionId) {
+      throw new Error('Session ID required for block loading');
+    }
+
+    const url = `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/block/${x}/${y}/${z}`;
 
     // Fetch with timeout
     const controller = new AbortController();
@@ -833,9 +850,13 @@ async function loadBlock() {
       originalBlock.value = null;
       loadedBlockType.value = null;
     } else if (response.ok) {
-      // Block exists - load data
-      const block = await response.json();
-      blockExists.value = true;
+      // Parse BlockInfo response (new format)
+      const blockInfo = await response.json();
+      blockExists.value = blockInfo.block && blockInfo.block.blockTypeId !== 'air';
+      blockReadOnly.value = blockInfo.readOnly || false;
+
+      // Extract block from BlockInfo
+      const block = blockInfo.block || {};
 
       // Ensure metadata is always an object
       if (!block.metadata) {
@@ -943,17 +964,24 @@ async function saveBlock(closeAfter: boolean = false) {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
 
-    const method = blockExists.value ? 'PUT' : 'POST';
+    // Get sessionId from URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('sessionId');
 
-    // Prepare block data for API (remove position as it's in URL)
-    const { position, ...blockDataForApi } = blockData.value;
+    if (!sessionId) {
+      throw new Error('Session ID required for block editing');
+    }
 
-    const response = await fetch(`${apiUrl}/api/worlds/${worldId}/blocks/${x}/${y}/${z}`, {
-      method,
+    // Use new editor endpoint for session-based editing
+    const response = await fetch(`${apiUrl}/api/editor/${worldId}/session/${sessionId}/block`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(blockDataForApi),
+      body: JSON.stringify({
+        blockId: blockData.value.blockTypeId,
+        meta: blockData.value.metadata ? JSON.stringify(blockData.value.metadata) : null,
+      }),
     });
 
     if (!response.ok) {
@@ -961,10 +989,11 @@ async function saveBlock(closeAfter: boolean = false) {
       throw new Error(errorData.error || 'Failed to save block');
     }
 
-    const savedBlock = await response.json();
+    const result = await response.json();
     blockExists.value = true;
-    blockData.value = savedBlock;
-    originalBlock.value = JSON.parse(JSON.stringify(savedBlock));
+
+    // Reload block to get updated info
+    await loadBlock();
 
     // Send notification
     if (isEmbedded()) {
@@ -1004,10 +1033,24 @@ async function deleteBlock() {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
 
-    const response = await fetch(`${apiUrl}/api/worlds/${worldId}/blocks/${x}/${y}/${z}`, {
-      method: 'DELETE',
+    // Get sessionId from URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('sessionId');
+
+    if (!sessionId) {
+      throw new Error('Session ID required for block deletion');
+    }
+
+    // Delete = set to air block via editor endpoint
+    const response = await fetch(`${apiUrl}/api/editor/${worldId}/session/${sessionId}/block`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        blockId: 'air',
+        meta: null,
+      }),
     });
 
     if (!response.ok && response.status !== 404) {
@@ -1015,13 +1058,20 @@ async function deleteBlock() {
       throw new Error(errorData.error || 'Failed to delete block');
     }
 
+    // Update local state to air
+    blockExists.value = false;
+    blockData.value = {
+      position: blockCoordinates.value,
+      blockTypeId: 'air',
+      status: 0,
+      metadata: {},
+    };
+    originalBlock.value = null;
+
     // Send notification
     if (isEmbedded()) {
       sendNotification('0', 'Block Editor', 'Block deleted successfully');
       closeModal('deleted');
-    } else {
-      // Reload page to show "no block" state
-      window.location.reload();
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to delete block';

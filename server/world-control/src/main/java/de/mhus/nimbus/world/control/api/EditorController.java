@@ -31,6 +31,7 @@ public class EditorController extends BaseEditorController {
     private final EditService editService;
     private final WLayerService layerService;
     private final de.mhus.nimbus.world.control.service.BlockUpdateService blockUpdateService;
+    private final de.mhus.nimbus.world.control.service.BlockOverlayService blockOverlayService;
     private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
 
     // ===== EDIT STATE =====
@@ -274,6 +275,18 @@ public class EditorController extends BaseEditorController {
         validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
+        // Get edit state
+        EditState state = editService.getEditState(worldId, sessionId);
+
+        // Validate edit mode and layer selection
+        if (!state.isEditMode()) {
+            return bad("Edit mode not enabled for this session");
+        }
+
+        if (state.getSelectedLayer() == null || state.getSelectedLayer().isBlank()) {
+            return bad("No layer selected - cannot save block without layer selection");
+        }
+
         // Get selected block position
         Optional<EditService.BlockPosition> positionOpt = editService.getSelectedBlock(worldId, sessionId);
         if (positionOpt.isEmpty()) {
@@ -282,30 +295,9 @@ public class EditorController extends BaseEditorController {
 
         EditService.BlockPosition position = positionOpt.get();
 
-        // Get edit state to determine layer
-        EditState state = editService.getEditState(worldId, sessionId);
-
         try {
-            // TODO: Store block in layer if layer is selected
-            // Problem: world-control doesn't have access to generated module (Block class)
-            // Solution options:
-            // 1. Store block data as JSON in Redis overlay: world:{worldId}:overlay:{sessionId}:{cx}:{cz}
-            // 2. Move layer storage logic to a separate service in world-shared or world-player
-            // 3. Use CommitLayerCommand later to persist all changes at once
-
-            if (state.getSelectedLayer() != null && !state.getSelectedLayer().isBlank()) {
-                // Calculate chunk coordinates for dirty marking
-                String chunkKey = calculateChunkKey(position.x(), position.z());
-
-                // Mark chunk as dirty for regeneration (after commit)
-                dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_edit_pending");
-
-                log.info("Block edit pending for layer: layer={} chunkKey={} pos=({},{},{})",
-                        state.getSelectedLayer(), chunkKey, position.x(), position.y(), position.z());
-            }
-
-            // Send block update command to world-player (immediate client feedback)
-            boolean sent = blockUpdateService.sendBlockUpdate(
+            // Save block to Redis overlay
+            boolean saved = blockOverlayService.saveBlockOverlay(
                     worldId,
                     sessionId,
                     position.x(),
@@ -315,9 +307,16 @@ public class EditorController extends BaseEditorController {
                     request.meta
             );
 
-            if (!sent) {
-                log.warn("Failed to send block update to client (session={})", sessionId);
+            if (!saved) {
+                return error("Failed to save block overlay");
             }
+
+            // Mark chunk as dirty for later commit
+            String chunkKey = calculateChunkKey(position.x(), position.z());
+            dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_overlay_edit");
+
+            log.info("Block saved to overlay: session={} layer={} pos=({},{},{}) blockId={}",
+                    sessionId, state.getSelectedLayer(), position.x(), position.y(), position.z(), request.blockId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("x", position.x());
@@ -326,6 +325,7 @@ public class EditorController extends BaseEditorController {
             response.put("blockId", request.blockId);
             response.put("meta", request.meta);
             response.put("layer", state.getSelectedLayer());
+            response.put("saved", true);
 
             return ResponseEntity.ok(response);
 
