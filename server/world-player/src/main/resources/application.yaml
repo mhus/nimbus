@@ -10,6 +10,7 @@ world:
   player:
     readiness:
       max-active-sessions: 100
+    chunk-publish-interval-ms: 60000  # 1 minute - Periodic chunk list publish interval
 
 server:
   port: 9042

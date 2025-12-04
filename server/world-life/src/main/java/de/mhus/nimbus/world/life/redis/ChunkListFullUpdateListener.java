@@ -16,20 +16,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Listens for chunk registration updates from world-player pods.
- * Channel: world:{worldId}:c.r
+ * Listens for periodic full chunk list updates from world-player pods.
+ * Channel: world:{worldId}:c.full
  *
  * Message format:
  * {
- *   "action": "add" | "remove",
- *   "chunks": [{"cx": 6, "cz": -13}, ...],
- *   "sessionId": "..."
+ *   "podId": "world-player-xyz",
+ *   "timestamp": 1234567890,
+ *   "chunks": [{"cx": 6, "cz": -13}, ...]
  * }
+ *
+ * This replaces the old request/response mechanism with a push-based approach.
+ * world-player pods automatically publish their registered chunks every minute.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ChunkRegistrationListener {
+public class ChunkListFullUpdateListener {
 
     private final WorldRedisMessagingService redisMessaging;
     private final ChunkAliveService chunkAliveService;
@@ -38,27 +41,28 @@ public class ChunkRegistrationListener {
     private final ObjectMapper objectMapper;
 
     @PostConstruct
-    public void subscribeToChunkRegistrations() {
+    public void subscribe() {
         String worldId = properties.getWorldId();
-        redisMessaging.subscribe(worldId, "c.r", this::handleChunkRegistration);
-        log.info("Subscribed to chunk registrations for world: {}", worldId);
+        redisMessaging.subscribe(worldId, "c.full", this::handleFullUpdate);
+        log.info("Subscribed to chunk list full updates for world: {}", worldId);
     }
 
     /**
-     * Handle chunk registration update from Redis.
+     * Handle full chunk list update from a world-player pod.
      *
      * @param topic Redis topic
      * @param message JSON message
      */
-    private void handleChunkRegistration(String topic, String message) {
+    private void handleFullUpdate(String topic, String message) {
         try {
             JsonNode data = objectMapper.readTree(message);
 
-            String action = data.has("action") ? data.get("action").asText() : null;
+            String podId = data.has("podId") ? data.get("podId").asText() : "unknown";
+            long timestamp = data.has("timestamp") ? data.get("timestamp").asLong() : 0;
             JsonNode chunksNode = data.get("chunks");
 
-            if (action == null || chunksNode == null || !chunksNode.isArray()) {
-                log.warn("Invalid chunk registration message: {}", message);
+            if (chunksNode == null || !chunksNode.isArray()) {
+                log.warn("Invalid full chunk update from pod {}: missing chunks array", podId);
                 return;
             }
 
@@ -70,25 +74,17 @@ public class ChunkRegistrationListener {
                 chunks.add(new ChunkCoordinate(cx, cz));
             }
 
-            // Update chunk alive service based on action
-            switch (action) {
-                case "add" -> {
-                    chunkAliveService.addChunks(chunks);
-                    // Update TTL timestamps for added chunks
-                    chunks.forEach(ttlTracker::touch);
-                    log.trace("Added {} chunks from registration update", chunks.size());
-                }
-                case "remove" -> {
-                    chunkAliveService.removeChunks(chunks);
-                    // Remove from TTL tracking
-                    ttlTracker.removeChunks(chunks);
-                    log.trace("Removed {} chunks from registration update", chunks.size());
-                }
-                default -> log.warn("Unknown chunk registration action: {}", action);
-            }
+            // Add chunks to alive service (additive operation)
+            chunkAliveService.addChunks(chunks);
+
+            // Update TTL timestamps for all chunks
+            chunks.forEach(ttlTracker::touch);
+
+            log.debug("Received full chunk update: podId={}, chunks={}, timestamp={}",
+                    podId, chunks.size(), timestamp);
 
         } catch (Exception e) {
-            log.error("Failed to handle chunk registration update: {}", message, e);
+            log.error("Failed to handle full chunk update: {}", message, e);
         }
     }
 }

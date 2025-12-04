@@ -33,9 +33,27 @@ public class WorldLifeProperties {
      * Chunk refresh interval in milliseconds.
      * Requests full chunk list from world-player pods.
      * Default: 300000ms (5 minutes)
+     * @deprecated Replaced by TTL-based mechanism. world-player now pushes chunks automatically.
      */
+    @Deprecated
     @Positive
     private long chunkRefreshIntervalMs = 300000;
+
+    /**
+     * Chunk TTL (Time-To-Live) in milliseconds.
+     * Chunks without update for this duration are removed.
+     * Default: 300000ms (5 minutes)
+     */
+    @Positive
+    private long chunkTtlMs = 300000;
+
+    /**
+     * Chunk TTL cleanup task interval in milliseconds.
+     * How often to check for and remove stale chunks.
+     * Default: 60000ms (1 minute)
+     */
+    @Positive
+    private long chunkTtlCleanupIntervalMs = 60000;
 
     /**
      * Entity ownership heartbeat interval in milliseconds.

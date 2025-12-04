@@ -10,7 +10,9 @@ world:
   life:
     world-id: main
     simulation-interval-ms: 1000          # 1 second
-    chunk-refresh-interval-ms: 300000     # 5 minutes
+    # chunk-refresh-interval-ms: 300000   # DEPRECATED: Replaced by TTL-based mechanism
+    chunk-ttl-ms: 300000                  # 5 minutes - Chunk TTL
+    chunk-ttl-cleanup-interval-ms: 60000  # 1 minute - TTL cleanup interval
     ownership-heartbeat-interval-ms: 5000 # 5 seconds
     ownership-stale-threshold-ms: 10000   # 10 seconds
     orphan-detection-interval-ms: 30000   # 30 seconds

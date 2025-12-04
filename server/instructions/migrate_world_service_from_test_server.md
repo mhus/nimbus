@@ -2482,9 +2482,36 @@ Deshalb die trennung.
 - im world-player wird an dich Chunks die ItemBlockRef (ItemPositionen.publicData) geschickt.
 - der import muss auch angepasst werden.
 
-[ ] world-life schickt eine message via redis an die world-player, daraufhin der world-player die registrierten chunks
+[?] world-life schickt eine message via redis an die world-player, daraufhin der world-player die registrierten chunks
 zurueckmeldet. Dieser mechanismus soll geandert werden.
 - world-life schickt eine message via redis - wird nicht mehr geschcikt, die gesamte message ist obsolate und muss weg.
 - Der world-player server soll periodisch (1 minuten) alle registrierten chunks automatisch via redis an world-life schicken.
 - Der world life service hat an chunks einen TTL von 5 minuten. Wenn er in den 5 minuten kein update bekommt, dann
   loescht er die chunks.
+
+[ ] Eine direkte kommunikation zwischen den world-* server wird benoetigt. Dazu soll der CommandService
+in world-shared wandern. damit koennen die world-* server alle eigene commands implementieren
+- Ein command hat einen namen, parameter und metadaten, z.b. worldId, sessionId ... (das muss erweietrn werden)
+- HelpCommand soll auch in world-shared wandern.
+- Jeder world server soll einen REST endpoint /world/world/command/{commandName} bekommen, der POST methoden unterstuetzt.
+  - Damit wird im CommandService ein Command ausgefuehrt, die Antwort ist der Response body.
+- Ein WordlClient (Service) in world-shared kann diesen endpoint ansprechen.
+- In der application.yaml sind die urls aller world-* server hinterlegt.
+  - world-player werden auch durch ihre direkt IP angesprochen wenn diese bekannt ist.
+  - WorldClient hat Funktionen um den Server anszsprechen sendLifeCommand(worldId, command, params), sendPlayerCommand(ip, session, command, params)
+- Im world-player Messagehandler fuer commands wird geprueft ob das command einen prefix hat, z.b. "life.", 
+  dann wird der command an den world-life server geschickt.
+- Beim Aufruf eines Commands im WordlClient soll immer ein Future zurueckgegeben werden, damit asynchrone commands unterstuetzt werden koennen aber
+  das ergebnis abgewartet/abgefragt werden kann.
+
+[ ] WebSocket Session Edit modus
+- Eine WebSocket Session kann in den Edit modus versetzt werden.
+- Im Edit modus wird geprueft ob es fuer auszuliefernde chunks ein overlay im redis gibt, diese werden dann ueberschrieben.
+- Erstelle dazu einen EditModeService der diese Funktionen implementiert.
+- Overlay sind einzeln Blocke die geandert wurden. BlockType 0 (AIR) bedeutet loeschen.
+- Ueber ein SessionEditCommand in world-player kann der Edit modus an/aus geschaltet und bagefragt werden.
+- Wird 
+  - eine session die im Edit-Mode ist getrennt, oder 
+  - der EditMode via command deaktiviert,
+  dann wird ein Command 'EditModeClosedCommand' im world-control server aufgerufen,
+  der alle overlays dieser session loescht.
