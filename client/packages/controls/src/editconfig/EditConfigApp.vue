@@ -469,6 +469,25 @@ async function fetchLayers() {
   }
 }
 
+// Helper function to check if two values are deeply equal
+function isEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!keysB.includes(key)) return false;
+    if (!isEqual(a[key], b[key])) return false;
+  }
+
+  return true;
+}
+
 // Fetch edit state from API (NEW unified endpoint)
 async function fetchEditState() {
   try {
@@ -482,8 +501,8 @@ async function fetchEditState() {
 
     const data = await response.json();
 
-    // Update edit state
-    editState.value = {
+    // Create new state object
+    const newState = {
       editMode: data.editMode || false,
       editAction: data.editAction || 'OPEN_CONFIG_DIALOG',
       selectedLayer: data.selectedLayer || null,
@@ -493,12 +512,20 @@ async function fetchEditState() {
       selectedGroup: data.selectedGroup || 0,
     };
 
-    // Update legacy refs for backward compatibility
-    currentEditAction.value = editState.value.editAction;
-    savedEditAction.value = editState.value.editAction;
+    // Only update if state actually changed
+    if (!isEqual(editState.value, newState)) {
+      editState.value = newState;
 
-    // Update selected block
-    selectedBlock.value = data.selectedBlock || null;
+      // Update legacy refs for backward compatibility
+      currentEditAction.value = editState.value.editAction;
+      savedEditAction.value = editState.value.editAction;
+    }
+
+    // Update selected block only if changed
+    const newSelectedBlock = data.selectedBlock || null;
+    if (!isEqual(selectedBlock.value, newSelectedBlock)) {
+      selectedBlock.value = newSelectedBlock;
+    }
 
     error.value = null;
   } catch (err) {
