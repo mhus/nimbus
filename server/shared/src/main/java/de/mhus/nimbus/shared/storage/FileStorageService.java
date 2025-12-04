@@ -34,7 +34,7 @@ public class FileStorageService extends StorageService {
                     new Date(),
                     path
             );
-        } catch (Exception e) {`````````````
+        } catch (Exception e) {
             log.error("Error storing file to " + file.getAbsolutePath(), e);
         }
         return null;

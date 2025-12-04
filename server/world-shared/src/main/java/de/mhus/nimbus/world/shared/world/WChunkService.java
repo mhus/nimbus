@@ -32,16 +32,10 @@ public class WChunkService {
     private final WWorldService worldService;
     private final WItemRegistryService itemRegistryService;
 
-    @Value("${nimbus.chunk.inline-max-size:1048576}")
-    @Setter
-    private long inlineMaxSize = 1048576L; // 1 MB Default
-
     @Value("${nimbus.chunk.size:16}")
     private int chunkSize = 16;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    public long getInlineMaxSize() { return inlineMaxSize; }
 
     @Transactional(readOnly = true)
     public Optional<WChunk> find(String regionId, String worldId, String chunkKey) {

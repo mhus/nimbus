@@ -41,18 +41,11 @@ public class WChunk {
     @Indexed
     private String chunk;
 
-    /** Inline gespeicherter JSON Inhalt des ChunkData (String Serialisierung). */
-    private String content;
-
-    /** Externe Speicherung falls groß. */
     @Indexed
     private String storageId;
 
     private Instant createdAt;
     private Instant updatedAt;
-
-    public boolean isInline() { return content != null && storageId == null; }
-    public boolean isExternal() { return storageId != null; }
 
     public void touchCreate() {
         Instant now = Instant.now();
