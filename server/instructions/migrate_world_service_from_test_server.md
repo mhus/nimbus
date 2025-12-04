@@ -2504,7 +2504,7 @@ in world-shared wandern. damit koennen die world-* server alle eigene commands i
 - Beim Aufruf eines Commands im WordlClient soll immer ein Future zurueckgegeben werden, damit asynchrone commands unterstuetzt werden koennen aber
   das ergebnis abgewartet/abgefragt werden kann.
 
-[ ] WebSocket Session Edit modus
+[?] WebSocket Session Edit modus
 - Eine WebSocket Session kann in den Edit modus versetzt werden.
 - Im Edit modus wird geprueft ob es fuer auszuliefernde chunks ein overlay im redis gibt, diese werden dann ueberschrieben.
 - Erstelle dazu einen EditModeService der diese Funktionen implementiert.
@@ -2516,7 +2516,7 @@ in world-shared wandern. damit koennen die world-* server alle eigene commands i
   dann wird ein Command 'EditModeClosedCommand' im world-control server aufgerufen,
   der alle overlays dieser session loescht.
 
-[ ] Block Layer Management
+[?] Block Layer Management
 Blöcke werden nicht einfach in Chunks angelegt, sondern in Layern. Es gibt zwei arten von layern:
 - Es gibt eine gemeinsamme Layer Entity, die auf die LayerData verweisst.
   - worldId
@@ -2555,6 +2555,13 @@ Erstelle in world-control einen ChunkUpdateService der
   - WChunk speichern.
   - Event schicken via redis, das der chunk geandert wurde.
   - In world-player den event abfangen und an die clients schicken.
+
+- DirtyChunk und DirtyChunkService (nicht ChunkUpdateService) muss in world-shared, damit alle world-* server einen DirtyChunk erstellen koennen.
+
+[?] Erweiterung von Layer um Gruppen
+- Blocks sollen gruppiert werden koennen, deshalb in Layer Entity eine neue Eigenschaft 'groups' List<String> hinzufuegen.
+- Dafuer wird an den Bloecken in ModelLayer eine neue Eigenschaft 'groups' Map<String, Integer> 
+- an LayerBlock 'int group' hinzugefuegt. default ist 0.
 
 [ ] Edit Mode Control
 - Im world-control server wird ein EditService erstellt. 

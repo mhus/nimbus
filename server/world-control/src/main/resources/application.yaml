@@ -12,6 +12,10 @@ world:
     life-base-url: http://localhost:9044
     control-base-url: http://localhost:9043
     command-timeout-ms: 5000
+  control:
+    chunk-update-interval-ms: 5000  # 5 seconds between chunk update runs
+    chunk-update-batch-size: 10     # Process 10 chunks per run
+    chunk-update-world-id: main     # Target world for chunk updates
 
 server:
   port: 9043
