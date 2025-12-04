@@ -2489,7 +2489,7 @@ zurueckmeldet. Dieser mechanismus soll geandert werden.
 - Der world life service hat an chunks einen TTL von 5 minuten. Wenn er in den 5 minuten kein update bekommt, dann
   loescht er die chunks.
 
-[ ] Eine direkte kommunikation zwischen den world-* server wird benoetigt. Dazu soll der CommandService
+[?] Eine direkte kommunikation zwischen den world-* server wird benoetigt. Dazu soll der CommandService
 in world-shared wandern. damit koennen die world-* server alle eigene commands implementieren
 - Ein command hat einen namen, parameter und metadaten, z.b. worldId, sessionId ... (das muss erweietrn werden)
 - HelpCommand soll auch in world-shared wandern.

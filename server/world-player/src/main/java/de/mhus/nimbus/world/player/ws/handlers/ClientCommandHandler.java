@@ -4,17 +4,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import de.mhus.nimbus.world.player.commands.Command;
-import de.mhus.nimbus.world.player.commands.CommandService;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.shared.client.WorldClientService;
+import de.mhus.nimbus.world.shared.commands.Command;
+import de.mhus.nimbus.world.shared.commands.CommandContext;
+import de.mhus.nimbus.world.shared.commands.CommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Handles client command messages.
@@ -56,7 +60,14 @@ import java.util.List;
 public class ClientCommandHandler implements MessageHandler {
 
     private final CommandService commandService;
+    private final WorldClientService worldClientService;
     private final ObjectMapper objectMapper;
+
+    // Static prefix mapping for command routing
+    private static final Map<String, String> PREFIX_ROUTING = Map.of(
+            "life.", "world-life",
+            "control.", "world-control"
+    );
 
     @Override
     public String getMessageType() {
@@ -77,14 +88,7 @@ public class ClientCommandHandler implements MessageHandler {
         // Extract command data
         String commandName = data.has("cmd") ? data.get("cmd").asText() : null;
         boolean oneway = data.has("oneway") && data.get("oneway").asBoolean();
-        List<String> args = new ArrayList<>();
-
-        if (data.has("args") && data.get("args").isArray()) {
-            ArrayNode argsArray = (ArrayNode) data.get("args");
-            for (JsonNode arg : argsArray) {
-                args.add(arg.asText());
-            }
-        }
+        List<String> args = extractArgs(data);
 
         if (commandName == null || commandName.isBlank()) {
             log.warn("Command without name");
@@ -94,10 +98,66 @@ public class ClientCommandHandler implements MessageHandler {
             return;
         }
 
-        // TODO: Check permissions (player allowed to execute this command?)
+        // Check for remote routing prefix
+        String targetServer = detectTargetServer(commandName);
+
+        if (targetServer != null) {
+            // Remote command execution
+            handleRemoteCommand(session, requestId, commandName, args, targetServer, oneway);
+        } else {
+            // Local command execution
+            handleLocalCommand(session, requestId, commandName, args, oneway);
+        }
+    }
+
+    /**
+     * Detect if command should be routed to remote server.
+     * Returns target server name or null for local execution.
+     */
+    private String detectTargetServer(String commandName) {
+        for (Map.Entry<String, String> entry : PREFIX_ROUTING.entrySet()) {
+            if (commandName.startsWith(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Strip prefix from command name.
+     * Example: "life.status" -> "status"
+     */
+    private String stripPrefix(String commandName) {
+        for (String prefix : PREFIX_ROUTING.keySet()) {
+            if (commandName.startsWith(prefix)) {
+                return commandName.substring(prefix.length());
+            }
+        }
+        return commandName;
+    }
+
+    /**
+     * Handle local command execution.
+     */
+    private void handleLocalCommand(
+            PlayerSession session,
+            String requestId,
+            String commandName,
+            List<String> args,
+            boolean oneway) {
+
+        // Build context from session
+        CommandContext context = CommandContext.builder()
+                .worldId(session.getWorldId())
+                .sessionId(session.getSessionId())
+                .userId(session.getUserId())
+                .displayName(session.getDisplayName())
+                .requestTime(Instant.now())
+                .originServer("world-player")
+                .build();
 
         // Execute command
-        Command.CommandResult result = commandService.execute(session, commandName, args);
+        Command.CommandResult result = commandService.execute(context, commandName, args);
 
         // Send streaming messages if any
         if (result.getStreamMessages() != null && !result.getStreamMessages().isEmpty()) {
@@ -111,8 +171,101 @@ public class ClientCommandHandler implements MessageHandler {
             sendResponse(session, requestId, result.getReturnCode(), result.getMessage());
         }
 
-        log.debug("Command executed: cmd={}, rc={}, user={}, session={}",
-                commandName, result.getReturnCode(), session.getDisplayName(), session.getSessionId());
+        log.debug("Local command executed: cmd={}, rc={}, user={}",
+                commandName, result.getReturnCode(), session.getDisplayName());
+    }
+
+    /**
+     * Handle remote command execution.
+     */
+    private void handleRemoteCommand(
+            PlayerSession session,
+            String requestId,
+            String commandName,
+            List<String> args,
+            String targetServer,
+            boolean oneway) {
+
+        // Strip prefix from command name
+        String actualCommandName = stripPrefix(commandName);
+
+        // Build context
+        CommandContext context = CommandContext.builder()
+                .worldId(session.getWorldId())
+                .sessionId(session.getSessionId())
+                .userId(session.getUserId())
+                .displayName(session.getDisplayName())
+                .requestTime(Instant.now())
+                .originServer("world-player")
+                .build();
+
+        log.debug("Routing command to {}: cmd={}, actualCmd={}, user={}",
+                targetServer, commandName, actualCommandName, session.getDisplayName());
+
+        // Route to appropriate server
+        java.util.concurrent.CompletableFuture<WorldClientService.CommandResponse> future;
+
+        switch (targetServer) {
+            case "world-life":
+                future = worldClientService.sendLifeCommand(
+                        session.getWorldId(), actualCommandName, args, context);
+                break;
+
+            case "world-control":
+                future = worldClientService.sendControlCommand(
+                        session.getWorldId(), actualCommandName, args, context);
+                break;
+
+            default:
+                log.error("Unknown target server: {}", targetServer);
+                if (!oneway && requestId != null) {
+                    sendErrorResponse(session, requestId, -4, "Unknown target server");
+                }
+                return;
+        }
+
+        // Handle async response
+        if (!oneway && requestId != null) {
+            future.thenAccept(response -> {
+                // Send streaming messages if any
+                if (response.streamMessages() != null) {
+                    for (String streamMessage : response.streamMessages()) {
+                        sendStreamingMessage(session, requestId, streamMessage);
+                    }
+                }
+
+                // Send final response
+                sendResponse(session, requestId, response.rc(), response.message());
+
+                log.debug("Remote command completed: cmd={}, rc={}, target={}",
+                        commandName, response.rc(), targetServer);
+
+            }).exceptionally(throwable -> {
+                log.error("Remote command failed: cmd={}, target={}",
+                        commandName, targetServer, throwable);
+                sendErrorResponse(session, requestId, -4,
+                        "Remote command failed: " + throwable.getMessage());
+                return null;
+            });
+        } else if (oneway) {
+            // Fire and forget
+            future.exceptionally(throwable -> {
+                log.error("Remote command failed (oneway): cmd={}, target={}",
+                        commandName, targetServer, throwable);
+                return null;
+            });
+        }
+    }
+
+    private List<String> extractArgs(JsonNode data) {
+        List<String> args = new ArrayList<>();
+        if (data.has("args") && data.get("args").isArray()) {
+            ArrayNode argsArray = (ArrayNode) data.get("args");
+            for (JsonNode arg : argsArray) {
+                args.add(arg.asText());
+            }
+        }
+        return args;
     }
 
     /**

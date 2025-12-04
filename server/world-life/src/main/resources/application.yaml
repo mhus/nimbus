@@ -17,6 +17,11 @@ world:
     ownership-stale-threshold-ms: 10000   # 10 seconds
     orphan-detection-interval-ms: 30000   # 30 seconds
     pathway-interval-ms: 5000             # 5 seconds
+  client:
+    player-base-url: http://localhost:9042
+    life-base-url: http://localhost:9044
+    control-base-url: http://localhost:9043
+    command-timeout-ms: 5000
 
 server:
   port: 9044

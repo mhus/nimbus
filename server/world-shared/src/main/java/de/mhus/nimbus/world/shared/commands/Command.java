@@ -1,33 +1,43 @@
-package de.mhus.nimbus.world.player.commands;
-
-import de.mhus.nimbus.world.player.ws.PlayerSession;
+package de.mhus.nimbus.world.shared.commands;
 
 import java.util.List;
 
 /**
- * Interface for client commands.
+ * Interface for commands.
  * Commands are executed by the CommandService and provide responses.
+ * Can be executed locally (with session) or remotely (session-less).
  */
 public interface Command {
 
     /**
-     * Get command name (e.g., "help", "say", "world").
+     * Get command name (e.g., "help", "say", "status").
      */
     String getName();
 
     /**
      * Execute command.
      *
-     * @param session Current player session
+     * @param context Command execution context (contains worldId, sessionId, userId, etc.)
      * @param args    Command arguments
      * @return CommandResult with return code and messages
      */
-    CommandResult execute(PlayerSession session, List<String> args);
+    CommandResult execute(CommandContext context, List<String> args);
 
     /**
      * Get command help text.
      */
     String getHelp();
+
+    /**
+     * Indicates if this command requires an active session.
+     * Commands that need direct WebSocket access should return true.
+     * Remote calls to session-required commands will return error -2.
+     *
+     * @return true if command requires session, false by default
+     */
+    default boolean requiresSession() {
+        return false;
+    }
 
     /**
      * Command execution result.

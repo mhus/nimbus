@@ -6,6 +6,13 @@ spring:
       uri: mongodb://root:example@localhost:27017/world?authSource=admin
       database: world
 
+world:
+  client:
+    player-base-url: http://localhost:9042
+    life-base-url: http://localhost:9044
+    control-base-url: http://localhost:9043
+    command-timeout-ms: 5000
+
 server:
   port: 9043
   error:

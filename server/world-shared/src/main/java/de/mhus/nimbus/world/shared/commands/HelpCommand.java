@@ -1,6 +1,5 @@
-package de.mhus.nimbus.world.player.commands;
+package de.mhus.nimbus.world.shared.commands;
 
-import de.mhus.nimbus.world.player.ws.PlayerSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,7 +26,7 @@ public class HelpCommand implements Command {
     }
 
     @Override
-    public CommandResult execute(PlayerSession session, List<String> args) {
+    public CommandResult execute(CommandContext context, List<String> args) {
         // No arguments - list all commands
         if (args == null || args.isEmpty()) {
             List<String> commandNames = commandService.getCommandNames();

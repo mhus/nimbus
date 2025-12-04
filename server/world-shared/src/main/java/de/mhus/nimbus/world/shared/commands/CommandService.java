@@ -1,6 +1,5 @@
-package de.mhus.nimbus.world.player.commands;
+package de.mhus.nimbus.world.shared.commands;
 
-import de.mhus.nimbus.world.player.ws.PlayerSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -12,9 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service for executing client commands.
+ * Service for executing commands.
  * Manages command registry and delegates execution to command beans.
  * Commands are loaded lazily to avoid circular dependency with HelpCommand.
+ * Supports both local (session-based) and remote (session-less) command execution.
  */
 @Service
 @RequiredArgsConstructor
@@ -48,12 +48,12 @@ public class CommandService {
     /**
      * Execute command by name.
      *
-     * @param session Current player session
+     * @param context Command execution context
      * @param commandName Command name
      * @param args Command arguments
      * @return CommandResult with return code and messages
      */
-    public Command.CommandResult execute(PlayerSession session, String commandName, List<String> args) {
+    public Command.CommandResult execute(CommandContext context, String commandName, List<String> args) {
         Command command = getCommands().get(commandName);
 
         if (command == null) {
@@ -61,11 +61,17 @@ public class CommandService {
             return Command.CommandResult.error(-1, "Command not found: " + commandName);
         }
 
-        try {
-            log.debug("Executing command: {} with args: {} for user: {}",
-                    commandName, args, session.getDisplayName());
+        // Validate session requirement
+        if (command.requiresSession() && !context.hasSession()) {
+            log.warn("Command requires session but none provided: {}", commandName);
+            return Command.CommandResult.error(-2, "Command requires active session");
+        }
 
-            return command.execute(session, args);
+        try {
+            log.debug("Executing command: {} with args: {} from: {} world: {}",
+                    commandName, args, context.getOriginServer(), context.getWorldId());
+
+            return command.execute(context, args);
 
         } catch (Exception e) {
             log.error("Command execution failed: {}", commandName, e);

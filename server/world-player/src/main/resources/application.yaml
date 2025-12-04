@@ -11,6 +11,11 @@ world:
     readiness:
       max-active-sessions: 100
     chunk-publish-interval-ms: 60000  # 1 minute - Periodic chunk list publish interval
+  client:
+    player-base-url: http://localhost:9042
+    life-base-url: http://localhost:9044
+    control-base-url: http://localhost:9043
+    command-timeout-ms: 5000
 
 server:
   port: 9042
