@@ -70,4 +70,10 @@ public class EditState {
      * Set by EditBlockTriggerCommand when block is selected.
      */
     private String playerIp;
+
+    /**
+     * World-player port (for triggering block updates via REST).
+     * Set by EditBlockTriggerCommand when block is selected.
+     */
+    private Integer playerPort;
 }

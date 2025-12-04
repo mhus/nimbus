@@ -37,13 +37,19 @@ public class BlockUpdateService {
      * @return true if command was sent successfully
      */
     public boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, String blockId, String meta) {
-        // Get edit state to retrieve player IP
+        // Get edit state to retrieve player IP and port
         EditState state = editService.getEditState(worldId, sessionId);
         String playerIp = state.getPlayerIp();
+        Integer playerPort = state.getPlayerPort();
 
         if (playerIp == null || playerIp.isBlank()) {
             log.warn("Cannot send block update: no player IP stored for session={}", sessionId);
             return false;
+        }
+
+        if (playerPort == null) {
+            playerPort = 9042; // Default world-player port
+            log.debug("Using default player port: {}", playerPort);
         }
 
         try {
@@ -61,7 +67,7 @@ public class BlockUpdateService {
             ));
 
             // Build URL to world-player
-            String url = buildWorldPlayerUrl(playerIp);
+            String url = buildWorldPlayerUrl(playerIp, playerPort);
 
             // Send POST request
             HttpHeaders headers = new HttpHeaders();
@@ -70,8 +76,8 @@ public class BlockUpdateService {
 
             restTemplate.postForObject(url, entity, Map.class);
 
-            log.debug("Sent block update to world-player: session={} pos=({},{},{}) playerIp={}",
-                    sessionId, x, y, z, playerIp);
+            log.debug("Sent block update to world-player: session={} pos=({},{},{}) playerIp={} playerPort={}",
+                    sessionId, x, y, z, playerIp, playerPort);
 
             return true;
 
@@ -83,8 +89,7 @@ public class BlockUpdateService {
 
     // ==================== PRIVATE HELPERS ====================
 
-    private String buildWorldPlayerUrl(String playerIp) {
-        // Assume standard world-player REST port
-        return "http://" + playerIp + ":9042/world/world/command";
+    private String buildWorldPlayerUrl(String playerIp, int playerPort) {
+        return "http://" + playerIp + ":" + playerPort + "/world/world/command";
     }
 }

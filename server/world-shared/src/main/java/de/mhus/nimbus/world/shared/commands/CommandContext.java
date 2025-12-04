@@ -60,6 +60,11 @@ public class CommandContext {
     private String originIp;
 
     /**
+     * Origin port (optional - for player-initiated commands).
+     */
+    private Integer originPort;
+
+    /**
      * Extensible metadata map.
      */
     @Builder.Default

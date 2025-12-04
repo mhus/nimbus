@@ -80,6 +80,7 @@ public class WorldClientService {
      *
      * @param worldId World identifier
      * @param sessionId Session identifier (optional)
+     * @param origin Origin server IP + : + port
      * @param commandName Command name
      * @param args Command arguments
      * @param context Optional context
@@ -88,6 +89,7 @@ public class WorldClientService {
     public CompletableFuture<CommandResponse> sendPlayerCommand(
             String worldId,
             String sessionId,
+            String origin,
             String commandName,
             List<String> args,
             CommandContext context) {

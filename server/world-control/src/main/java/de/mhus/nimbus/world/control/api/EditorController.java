@@ -74,6 +74,19 @@ public class EditorController extends BaseEditorController {
             response.put("selectedBlock", null);
         }
 
+        // Add marked block coordinates (for copy/move operations)
+        Optional<EditService.BlockPosition> markedBlock = editService.getMarkedBlock(worldId, sessionId);
+        if (markedBlock.isPresent()) {
+            Map<String, Integer> markedPos = Map.of(
+                    "x", markedBlock.get().x(),
+                    "y", markedBlock.get().y(),
+                    "z", markedBlock.get().z()
+            );
+            response.put("markedBlock", markedPos);
+        } else {
+            response.put("markedBlock", null);
+        }
+
         return ResponseEntity.ok(response);
     }
 

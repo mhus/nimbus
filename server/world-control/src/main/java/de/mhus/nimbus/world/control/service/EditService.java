@@ -1,5 +1,8 @@
 package de.mhus.nimbus.world.control.service;
 
+import de.mhus.nimbus.world.shared.client.WorldClientService;
+import de.mhus.nimbus.world.shared.commands.CommandContext;
+import de.mhus.nimbus.world.shared.commands.CommandService;
 import de.mhus.nimbus.world.shared.layer.EditAction;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
@@ -11,8 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -27,6 +29,7 @@ public class EditService {
 
     private final WorldRedisService redisService;
     private final WLayerService layerService;
+    private final WorldClientService worldClient;
 
     private static final Duration EDIT_STATE_TTL = Duration.ofHours(24);
     private static final String EDIT_STATE_PREFIX = "edit:";
@@ -51,6 +54,7 @@ public class EditService {
         String selectedBlockY = redisService.getValue(worldId, key + "selectedBlockY").orElse(null);
         String selectedBlockZ = redisService.getValue(worldId, key + "selectedBlockZ").orElse(null);
         String playerIp = redisService.getValue(worldId, key + "playerIp").orElse(null);
+        String playerPortStr = redisService.getValue(worldId, key + "playerPort").orElse(null);
 
         // Build state from Redis values
         EditState.EditStateBuilder builder = EditState.builder()
@@ -63,6 +67,7 @@ public class EditService {
                 .mountZ(parseInt(mountZStr))
                 .selectedGroup(parseInt(selectedGroupStr) != null ? parseInt(selectedGroupStr) : 0)
                 .playerIp(playerIp)
+                .playerPort(parseInt(playerPortStr))
                 .lastUpdated(Instant.now());
 
         return builder.build();
@@ -93,15 +98,122 @@ public class EditService {
     }
 
     /**
+     * Execute edit action at block position.
+     * Reads current EditAction from state and performs corresponding operation.
+     */
+    @Transactional
+    public void doAction(String worldId, String sessionId, int x, int y, int z, String origin) {
+        // Get current edit state
+        EditState state = getEditState(worldId, sessionId);
+        EditAction action = state.getEditAction();
+
+        if (action == null) {
+            action = EditAction.OPEN_CONFIG_DIALOG; // Default
+        }
+
+        log.debug("Executing edit action: session={} action={} pos=({},{},{})",
+                sessionId, action, x, y, z);
+
+        switch (action) {
+            case OPEN_CONFIG_DIALOG:
+            case OPEN_EDITOR:
+                // Just update selected block position (for config/editor opening)
+                setSelectedBlock(worldId, sessionId, x, y, z);
+                openConfigDialogAtClient(worldId, sessionId, origin, x, y, z);
+                break;
+
+            case MARK_BLOCK:
+                // Store marked block for copy/move operations
+                setMarkedBlock(worldId, sessionId, x, y, z);
+                log.info("Block marked: session={} pos=({},{},{})", sessionId, x, y, z);
+                break;
+
+            case COPY_BLOCK:
+                // Copy marked block to current position
+                copyMarkedBlock(worldId, sessionId, x, y, z);
+                break;
+
+            case DELETE_BLOCK:
+                // Delete block at position
+                deleteBlock(worldId, sessionId, x, y, z);
+                break;
+
+            case MOVE_BLOCK:
+                // Move marked block to current position
+                moveMarkedBlock(worldId, sessionId, x, y, z);
+                break;
+
+            default:
+                log.warn("Unknown edit action: {}", action);
+                setSelectedBlock(worldId, sessionId, x, y, z);
+                break;
+        }
+    }
+
+    private void openConfigDialogAtClient(String worldId, String sessionId, String origin, int x, int y, int z) {
+        CommandContext ctx = CommandContext.builder()
+                .worldId(worldId)
+                .sessionId(sessionId)
+                .originServer("world-control")
+                .build();
+        worldClient.sendPlayerCommand(
+                worldId,
+                sessionId,
+                origin,
+                "client",
+                List.of("openComponent", "block_editor", String.valueOf(x),String.valueOf(y),String.valueOf(z) ),
+                ctx);
+    }
+
+    /**
      * Update selected block coordinates.
      */
     @Transactional
-    public void setSelectedBlock(String worldId, String sessionId, int x, int y, int z) {
+    private void setSelectedBlock(String worldId, String sessionId, int x, int y, int z) {
         String key = editStateKey(sessionId);
         redisService.putValue(worldId, key + "selectedBlockX", String.valueOf(x), EDIT_STATE_TTL);
         redisService.putValue(worldId, key + "selectedBlockY", String.valueOf(y), EDIT_STATE_TTL);
         redisService.putValue(worldId, key + "selectedBlockZ", String.valueOf(z), EDIT_STATE_TTL);
         log.debug("Selected block updated: session={} pos=({},{},{})", sessionId, x, y, z);
+
+    }
+
+    /**
+     * Store marked block coordinates for copy/move operations.
+     */
+    @Transactional
+    private void setMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+        String key = editStateKey(sessionId);
+        redisService.putValue(worldId, key + "markedBlockX", String.valueOf(x), EDIT_STATE_TTL);
+        redisService.putValue(worldId, key + "markedBlockY", String.valueOf(y), EDIT_STATE_TTL);
+        redisService.putValue(worldId, key + "markedBlockZ", String.valueOf(z), EDIT_STATE_TTL);
+        log.debug("Marked block stored: session={} pos=({},{},{})", sessionId, x, y, z);
+    }
+
+    /**
+     * Get marked block coordinates (if set).
+     */
+    @Transactional(readOnly = true)
+    public Optional<BlockPosition> getMarkedBlock(String worldId, String sessionId) {
+        String key = editStateKey(sessionId);
+        String xStr = redisService.getValue(worldId, key + "markedBlockX").orElse(null);
+        String yStr = redisService.getValue(worldId, key + "markedBlockY").orElse(null);
+        String zStr = redisService.getValue(worldId, key + "markedBlockZ").orElse(null);
+
+        if (xStr == null || yStr == null || zStr == null) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(new BlockPosition(
+                    Integer.parseInt(xStr),
+                    Integer.parseInt(yStr),
+                    Integer.parseInt(zStr)
+            ));
+        } catch (NumberFormatException e) {
+            log.warn("Invalid marked block position in Redis: session={}", sessionId);
+            return Optional.empty();
+        }
     }
 
     /**
@@ -148,9 +260,76 @@ public class EditService {
         redisService.deleteValue(worldId, key + "selectedBlockX");
         redisService.deleteValue(worldId, key + "selectedBlockY");
         redisService.deleteValue(worldId, key + "selectedBlockZ");
+        redisService.deleteValue(worldId, key + "markedBlockX");
+        redisService.deleteValue(worldId, key + "markedBlockY");
+        redisService.deleteValue(worldId, key + "markedBlockZ");
         redisService.deleteValue(worldId, key + "playerIp");
+        redisService.deleteValue(worldId, key + "playerPort");
 
         log.debug("Edit state deleted: session={}", sessionId);
+    }
+
+    /**
+     * Copy marked block to target position.
+     */
+    @Transactional
+    private void copyMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+        Optional<BlockPosition> markedOpt = getMarkedBlock(worldId, sessionId);
+        if (markedOpt.isEmpty()) {
+            log.warn("No marked block for copy: session={}", sessionId);
+            return;
+        }
+
+        BlockPosition marked = markedOpt.get();
+
+        // TODO: Read block data from marked position (requires world-player coordination)
+        // For now: Just log the operation
+        log.info("Copy block: session={} from=({},{},{}) to=({},{},{})",
+                sessionId, marked.x(), marked.y(), marked.z(), x, y, z);
+
+        // Update selected block to target position
+        setSelectedBlock(worldId, sessionId, x, y, z);
+    }
+
+    /**
+     * Move marked block to target position.
+     */
+    @Transactional
+    private void moveMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+        Optional<BlockPosition> markedOpt = getMarkedBlock(worldId, sessionId);
+        if (markedOpt.isEmpty()) {
+            log.warn("No marked block for move: session={}", sessionId);
+            return;
+        }
+
+        BlockPosition marked = markedOpt.get();
+
+        // TODO: Read block from marked position, write to target, delete at marked
+        // For now: Just log the operation
+        log.info("Move block: session={} from=({},{},{}) to=({},{},{})",
+                sessionId, marked.x(), marked.y(), marked.z(), x, y, z);
+
+        // Clear marked block after move
+        String key = editStateKey(sessionId);
+        redisService.deleteValue(worldId, key + "markedBlockX");
+        redisService.deleteValue(worldId, key + "markedBlockY");
+        redisService.deleteValue(worldId, key + "markedBlockZ");
+
+        // Update selected block to target position
+        setSelectedBlock(worldId, sessionId, x, y, z);
+    }
+
+    /**
+     * Delete block at position.
+     */
+    @Transactional
+    private void deleteBlock(String worldId, String sessionId, int x, int y, int z) {
+        // TODO: Write air block to position (requires block data access)
+        // For now: Just log the operation
+        log.info("Delete block: session={} pos=({},{},{})", sessionId, x, y, z);
+
+        // Update selected block position
+        setSelectedBlock(worldId, sessionId, x, y, z);
     }
 
     /**
@@ -203,7 +382,14 @@ public class EditService {
             redisService.deleteValue(worldId, key + "playerIp");
         }
 
-        log.trace("Edit state saved: session={} layer={} playerIp={}", sessionId, state.getSelectedLayer(), state.getPlayerIp());
+        if (state.getPlayerPort() != null) {
+            redisService.putValue(worldId, key + "playerPort", String.valueOf(state.getPlayerPort()), EDIT_STATE_TTL);
+        } else {
+            redisService.deleteValue(worldId, key + "playerPort");
+        }
+
+        log.trace("Edit state saved: session={} layer={} playerIp={} playerPort={}",
+                sessionId, state.getSelectedLayer(), state.getPlayerIp(), state.getPlayerPort());
     }
 
     private boolean parseBoolean(String value, boolean defaultValue) {

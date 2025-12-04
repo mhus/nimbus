@@ -2,7 +2,6 @@ package de.mhus.nimbus.world.control.commands;
 
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.shared.commands.Command;
-import de.mhus.nimbus.world.shared.commands.Command.CommandResult;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,24 +42,27 @@ public class EditBlockTriggerCommand implements Command {
             int y = Integer.parseInt(args.get(1));
             int z = Integer.parseInt(args.get(2));
 
-            // Update selected block in Redis
-            editService.setSelectedBlock(
-                    context.getWorldId(),
-                    sessionId,
-                    x, y, z
-            );
-
-            // Store player IP for block update callbacks
+            // Store player IP and port for block update callbacks
             String playerIp = context.getOriginIp();
+            Integer playerPort = context.getOriginPort();
             if (playerIp != null && !playerIp.isBlank()) {
                 editService.updateEditState(context.getWorldId(), sessionId, state -> {
                     state.setPlayerIp(playerIp);
+                    state.setPlayerPort(playerPort);
                 });
-                log.debug("Stored player IP for session: {} -> {}", sessionId, playerIp);
+                log.debug("Stored player IP and port for session: {} -> {}:{}", sessionId, playerIp, playerPort);
             }
 
-            log.debug("Block selected via EditBlockTrigger: session={} pos=({},{},{}) playerIp={}",
-                    sessionId, x, y, z, playerIp);
+            log.debug("Block select via EditBlockTrigger: session={} pos=({},{},{}) playerIp={} playerPort={}",
+                    sessionId, x, y, z, playerIp, playerPort);
+
+            // Update selected block in Redis
+            editService.doAction(
+                    context.getWorldId(),
+                    sessionId,
+                    x, y, z,
+                    playerIp + ":" + playerPort
+            );
 
             return CommandResult.success("Block selected at (" + x + "," + y + "," + z + ")");
 
