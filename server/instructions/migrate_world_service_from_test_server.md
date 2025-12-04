@@ -2472,7 +2472,7 @@ Die Aufgabe ist es die REST Endpunkte des TypeScript test_server packages zu mig
  - ✅ Clean Code Prinzipien eingehalten
 ```
 
-[ ] das ist falsch. es gibt items und es gibt item_positions.  so ist es auch im test_server implementiert. auch im 
+[x] das ist falsch. es gibt items und es gibt item_positions.  so ist es auch im test_server implementiert. auch im 
 world-player ist das dann falsch. Items muessen keine position haben, die koennen spaeter auch in anderen welten wieder auftauchen.
 Deshalb die trennung.
 - Es wird ein separater ItemService und ItemRegistryService sind separat.
