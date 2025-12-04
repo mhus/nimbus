@@ -987,7 +987,7 @@ export class ModalService {
         'Edit Configuration',
         editorUrl,
         ModalSizePreset.LEFT_TOP, // Top-left quadrant (50% x 50%)
-        ModalFlags.CLOSEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.RESIZEABLE
+        ModalFlags.CLOSEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.RESIZEABLE | ModalFlags.BREAK_OUT
       );
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openEditConfiguration');

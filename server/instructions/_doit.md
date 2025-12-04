@@ -113,3 +113,4 @@ Die koennen im modul shared abgelegt sein.
   - worldUid: region:worldId$zone:branch
   - worldInstanceId: region:worldId$zone:branch@instance
 
+- Die DirtyChunks updaten und delete storage items (MongoStorageService) muessen synchronisiert werden, damit nicht zwei pods das gleichzeitig machen.

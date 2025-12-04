@@ -50,6 +50,7 @@ public class EditService {
         String selectedBlockX = redisService.getValue(worldId, key + "selectedBlockX").orElse(null);
         String selectedBlockY = redisService.getValue(worldId, key + "selectedBlockY").orElse(null);
         String selectedBlockZ = redisService.getValue(worldId, key + "selectedBlockZ").orElse(null);
+        String playerIp = redisService.getValue(worldId, key + "playerIp").orElse(null);
 
         // Build state from Redis values
         EditState.EditStateBuilder builder = EditState.builder()
@@ -61,6 +62,7 @@ public class EditService {
                 .mountY(parseInt(mountYStr))
                 .mountZ(parseInt(mountZStr))
                 .selectedGroup(parseInt(selectedGroupStr) != null ? parseInt(selectedGroupStr) : 0)
+                .playerIp(playerIp)
                 .lastUpdated(Instant.now());
 
         return builder.build();
@@ -146,6 +148,7 @@ public class EditService {
         redisService.deleteValue(worldId, key + "selectedBlockX");
         redisService.deleteValue(worldId, key + "selectedBlockY");
         redisService.deleteValue(worldId, key + "selectedBlockZ");
+        redisService.deleteValue(worldId, key + "playerIp");
 
         log.debug("Edit state deleted: session={}", sessionId);
     }
@@ -194,7 +197,13 @@ public class EditService {
 
         redisService.putValue(worldId, key + "selectedGroup", String.valueOf(state.getSelectedGroup()), EDIT_STATE_TTL);
 
-        log.trace("Edit state saved: session={} layer={}", sessionId, state.getSelectedLayer());
+        if (state.getPlayerIp() != null) {
+            redisService.putValue(worldId, key + "playerIp", state.getPlayerIp(), EDIT_STATE_TTL);
+        } else {
+            redisService.deleteValue(worldId, key + "playerIp");
+        }
+
+        log.trace("Edit state saved: session={} layer={} playerIp={}", sessionId, state.getSelectedLayer(), state.getPlayerIp());
     }
 
     private boolean parseBoolean(String value, boolean defaultValue) {

@@ -64,4 +64,10 @@ public class EditState {
      * World ID (for validation).
      */
     private String worldId;
+
+    /**
+     * World-player IP address (for triggering block updates via REST).
+     * Set by EditBlockTriggerCommand when block is selected.
+     */
+    private String playerIp;
 }

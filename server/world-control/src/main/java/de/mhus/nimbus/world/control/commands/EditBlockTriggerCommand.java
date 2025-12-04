@@ -50,8 +50,17 @@ public class EditBlockTriggerCommand implements Command {
                     x, y, z
             );
 
-            log.debug("Block selected via EditBlockTrigger: session={} pos=({},{},{})",
-                    sessionId, x, y, z);
+            // Store player IP for block update callbacks
+            String playerIp = context.getOriginIp();
+            if (playerIp != null && !playerIp.isBlank()) {
+                editService.updateEditState(context.getWorldId(), sessionId, state -> {
+                    state.setPlayerIp(playerIp);
+                });
+                log.debug("Stored player IP for session: {} -> {}", sessionId, playerIp);
+            }
+
+            log.debug("Block selected via EditBlockTrigger: session={} pos=({},{},{}) playerIp={}",
+                    sessionId, x, y, z, playerIp);
 
             return CommandResult.success("Block selected at (" + x + "," + y + "," + z + ")");
 

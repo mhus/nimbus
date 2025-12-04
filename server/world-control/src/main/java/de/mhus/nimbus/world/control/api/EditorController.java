@@ -30,6 +30,8 @@ public class EditorController extends BaseEditorController {
 
     private final EditService editService;
     private final WLayerService layerService;
+    private final de.mhus.nimbus.world.control.service.BlockUpdateService blockUpdateService;
+    private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
 
     // ===== EDIT STATE =====
 
@@ -164,6 +166,175 @@ public class EditorController extends BaseEditorController {
         return ResponseEntity.ok(Map.of("layers", dtos));
     }
 
+    /**
+     * POST /api/editor/{worldId}/layers
+     * Create a new layer.
+     */
+    @PostMapping("/{worldId}/layers")
+    public ResponseEntity<?> createLayer(
+            @PathVariable String worldId,
+            @RequestBody CreateLayerRequest request) {
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(request.name, "name");
+        if (validation != null) return validation;
+
+        // Check if layer already exists
+        Optional<WLayer> existing = layerService.findLayer(worldId, request.name);
+        if (existing.isPresent()) {
+            return conflict("Layer with name '" + request.name + "' already exists");
+        }
+
+        // Create new layer
+        de.mhus.nimbus.world.shared.layer.LayerType layerType = request.layerType != null
+            ? request.layerType
+            : de.mhus.nimbus.world.shared.layer.LayerType.TERRAIN;
+        int order = request.order != null ? request.order : 10;
+        boolean allChunks = request.allChunks != null ? request.allChunks : false;
+
+        WLayer saved = layerService.createLayer(worldId, request.name, layerType, order, allChunks, List.of());
+
+        // Set mount points if MODEL layer
+        if (layerType == de.mhus.nimbus.world.shared.layer.LayerType.MODEL &&
+            (request.mountX != null || request.mountY != null || request.mountZ != null)) {
+
+            layerService.updateLayer(worldId, request.name, layer -> {
+                if (request.mountX != null) layer.setMountX(request.mountX);
+                if (request.mountY != null) layer.setMountY(request.mountY);
+                if (request.mountZ != null) layer.setMountZ(request.mountZ);
+            });
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("name", saved.getName());
+        response.put("layerType", saved.getLayerType().name());
+        response.put("enabled", saved.isEnabled());
+        response.put("order", saved.getOrder());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * DELETE /api/editor/{worldId}/layers/{layerName}
+     * Delete a layer and all its data.
+     */
+    @DeleteMapping("/{worldId}/layers/{layerName}")
+    public ResponseEntity<?> deleteLayer(
+            @PathVariable String worldId,
+            @PathVariable String layerName) {
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(layerName, "layerName");
+        if (validation != null) return validation;
+
+        // Check if layer exists
+        Optional<WLayer> layer = layerService.findLayer(worldId, layerName);
+        if (layer.isEmpty()) {
+            return notFound("Layer not found: " + layerName);
+        }
+
+        // Delete layer and associated data
+        layerService.deleteLayer(worldId, layerName);
+
+        return ResponseEntity.ok(Map.of("message", "Layer deleted successfully"));
+    }
+
+    // ===== BLOCK EDITOR =====
+
+    /**
+     * PUT /api/editor/{worldId}/session/{sessionId}/block
+     * Update a block at the selected position and trigger "b.u" to client.
+     */
+    @PutMapping("/{worldId}/session/{sessionId}/block")
+    public ResponseEntity<?> updateBlock(
+            @PathVariable String worldId,
+            @PathVariable String sessionId,
+            @RequestBody UpdateBlockRequest request) {
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(sessionId, "sessionId");
+        if (validation != null) return validation;
+
+        // Get selected block position
+        Optional<EditService.BlockPosition> positionOpt = editService.getSelectedBlock(worldId, sessionId);
+        if (positionOpt.isEmpty()) {
+            return bad("No block selected");
+        }
+
+        EditService.BlockPosition position = positionOpt.get();
+
+        // Get edit state to determine layer
+        EditState state = editService.getEditState(worldId, sessionId);
+
+        try {
+            // TODO: Store block in layer if layer is selected
+            // Problem: world-control doesn't have access to generated module (Block class)
+            // Solution options:
+            // 1. Store block data as JSON in Redis overlay: world:{worldId}:overlay:{sessionId}:{cx}:{cz}
+            // 2. Move layer storage logic to a separate service in world-shared or world-player
+            // 3. Use CommitLayerCommand later to persist all changes at once
+
+            if (state.getSelectedLayer() != null && !state.getSelectedLayer().isBlank()) {
+                // Calculate chunk coordinates for dirty marking
+                String chunkKey = calculateChunkKey(position.x(), position.z());
+
+                // Mark chunk as dirty for regeneration (after commit)
+                dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_edit_pending");
+
+                log.info("Block edit pending for layer: layer={} chunkKey={} pos=({},{},{})",
+                        state.getSelectedLayer(), chunkKey, position.x(), position.y(), position.z());
+            }
+
+            // Send block update command to world-player (immediate client feedback)
+            boolean sent = blockUpdateService.sendBlockUpdate(
+                    worldId,
+                    sessionId,
+                    position.x(),
+                    position.y(),
+                    position.z(),
+                    request.blockId,
+                    request.meta
+            );
+
+            if (!sent) {
+                log.warn("Failed to send block update to client (session={})", sessionId);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("x", position.x());
+            response.put("y", position.y());
+            response.put("z", position.z());
+            response.put("blockId", request.blockId);
+            response.put("meta", request.meta);
+            response.put("layer", state.getSelectedLayer());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to update block: session={} pos=({},{},{})", sessionId, position.x(), position.y(), position.z(), e);
+            return error("Failed to update block: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Calculate chunk key from world coordinates.
+     */
+    private String calculateChunkKey(int x, int z) {
+        int cx = x >> 4;
+        int cz = z >> 4;
+        return cx + ":" + cz;
+    }
+
+    private ResponseEntity<?> error(String message) {
+        return ResponseEntity.status(500).body(Map.of("error", message));
+    }
+
     // ===== DTOs =====
 
     /**
@@ -179,5 +350,29 @@ public class EditorController extends BaseEditorController {
         private Integer mountY;
         private Integer mountZ;
         private Integer selectedGroup;
+    }
+
+    /**
+     * Request DTO for creating a new layer.
+     */
+    @Data
+    public static class CreateLayerRequest {
+        private String name;
+        private de.mhus.nimbus.world.shared.layer.LayerType layerType;
+        private Integer order;
+        private Integer mountX;
+        private Integer mountY;
+        private Integer mountZ;
+        private Boolean enabled;
+        private Boolean allChunks;
+    }
+
+    /**
+     * Request DTO for block updates.
+     */
+    @Data
+    public static class UpdateBlockRequest {
+        private String blockId;
+        private String meta;
     }
 }

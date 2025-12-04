@@ -120,7 +120,8 @@ export class EditorActivateHandler extends InputHandler {
     logger.debug('Sending setSelectedEditBlock command to server', { position: pos });
 
     commandService
-      .sendCommandToServer('setSelectedEditBlock', [pos.x, pos.y, pos.z])
+//      .sendCommandToServer('setSelectedEditBlock', [pos.x, pos.y, pos.z])
+      .sendCommandToServer('control.EditBlockTrigger', [pos.x, pos.y, pos.z])
       .then((result) => {
         logger.debug('setSelectedEditBlock command result', { result });
         if (result.rc !== 0) {
