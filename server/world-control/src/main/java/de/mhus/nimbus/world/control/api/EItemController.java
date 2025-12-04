@@ -1,8 +1,8 @@
 package de.mhus.nimbus.world.control.api;
 
-import de.mhus.nimbus.generated.types.ItemBlockRef;
-import de.mhus.nimbus.world.shared.world.WItemPosition;
-import de.mhus.nimbus.world.shared.world.WItemRegistryService;
+import de.mhus.nimbus.generated.types.Item;
+import de.mhus.nimbus.world.shared.world.WItem;
+import de.mhus.nimbus.world.shared.world.WItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,47 +21,101 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for Item CRUD operations.
- * Base path: /api/worlds/{worldId}/items
+ * Items are inventory/template objects without position (reusable across worlds).
+ * For placed items with position, see EItemPositionController.
  * <p>
- * Items are positioned objects in the world stored per chunk for efficient spatial queries.
- * Note: universeId is not used in this context (universe/region servers are not relevant here).
+ * Endpoints:
+ * - GET /api/worlds/{worldId}/items - Search items
+ * - GET /api/worlds/{worldId}/item/{itemId} - Get single item
+ * - POST /api/worlds/{worldId}/items - Create item
+ * - PUT /api/worlds/{worldId}/item/{itemId} - Update item
+ * - DELETE /api/worlds/{worldId}/item/{itemId} - Delete item
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/items")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Items", description = "Item position management")
+@Tag(name = "Items", description = "Item management (inventory/template items)")
 public class EItemController extends BaseEditorController {
 
-    private final WItemRegistryService itemRegistryService;
+    private final WItemService itemService;
 
     // DTOs
-    public record ItemPositionDto(
+    public record ItemSearchResult(
             String itemId,
-            ItemBlockRef publicData,
-            String worldId,
-            String chunk,
-            boolean enabled,
-            Instant createdAt,
-            Instant updatedAt
+            String name,
+            String texture
     ) {
     }
 
-    public record CreateItemRequest(ItemBlockRef itemBlockRef) {
+    public record CreateItemRequest(
+            String id,
+            String itemType,
+            String name,
+            String description,
+            de.mhus.nimbus.generated.types.ItemModifier modifier,
+            java.util.Map<String, Object> parameters
+    ) {
     }
 
-    public record UpdateItemRequest(ItemBlockRef itemBlockRef) {
+    public record UpdateItemRequest(
+            String itemType,
+            String name,
+            String description,
+            de.mhus.nimbus.generated.types.ItemModifier modifier,
+            java.util.Map<String, Object> parameters
+    ) {
     }
 
     /**
-     * Get single Item by ID.
-     * GET /api/worlds/{worldId}/items/{itemId}
+     * Search items (max 100 results).
+     * GET /api/worlds/{worldId}/items?query={searchTerm}
      */
-    @GetMapping("/{itemId}")
-    @Operation(summary = "Get Item by ID")
+    @GetMapping("/api/worlds/{worldId}/items")
+    @Operation(summary = "Search items")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters")
+    })
+    public ResponseEntity<?> search(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Search query") @RequestParam(required = false, defaultValue = "") String query) {
+
+        log.debug("SEARCH items: worldId={}, query={}", worldId, query);
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        List<WItem> all = itemService.findEnabledByWorldId(worldId);
+        String lowerQuery = query.toLowerCase();
+        final int maxResults = 100;
+
+        List<ItemSearchResult> results = all.stream()
+                .filter(item -> {
+                    if (query.isBlank()) return true;
+                    Item publicData = item.getPublicData();
+                    if (publicData == null) return false;
+
+                    // Match query against itemId, name, or description
+                    return (publicData.getId() != null && publicData.getId().toLowerCase().contains(lowerQuery)) ||
+                            (publicData.getName() != null && publicData.getName().toLowerCase().contains(lowerQuery)) ||
+                            (publicData.getDescription() != null && publicData.getDescription().toLowerCase().contains(lowerQuery));
+                })
+                .limit(maxResults)
+                .map(this::toSearchResult)
+                .collect(Collectors.toList());
+
+        log.debug("Returning {} items", results.size());
+        return ResponseEntity.ok(Map.of("items", results));
+    }
+
+    /**
+     * Get full item data.
+     * GET /api/worlds/{worldId}/item/{itemId}
+     */
+    @GetMapping("/api/worlds/{worldId}/item/{itemId}")
+    @Operation(summary = "Get item by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Item found"),
-            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
             @ApiResponse(responseCode = "404", description = "Item not found")
     })
     public ResponseEntity<?> get(
@@ -77,8 +130,7 @@ public class EItemController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> opt = itemRegistryService.findItem(worldId, worldId, itemId);
+        Optional<WItem> opt = itemService.findByItemId(worldId, itemId);
         if (opt.isEmpty()) {
             log.warn("Item not found: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -90,80 +142,12 @@ public class EItemController extends BaseEditorController {
     }
 
     /**
-     * List/search Items for a world with optional chunk filter and pagination.
-     * GET /api/worlds/{worldId}/items?query=...&cx=0&cz=0&offset=0&limit=50
-     */
-    @GetMapping
-    @Operation(summary = "List/search Items")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Success"),
-            @ApiResponse(responseCode = "400", description = "Invalid parameters")
-    })
-    public ResponseEntity<?> list(
-            @Parameter(description = "World identifier") @PathVariable String worldId,
-            @Parameter(description = "Search query") @RequestParam(required = false) String query,
-            @Parameter(description = "Chunk X coordinate") @RequestParam(required = false) Integer cx,
-            @Parameter(description = "Chunk Z coordinate") @RequestParam(required = false) Integer cz,
-            @Parameter(description = "Pagination offset") @RequestParam(defaultValue = "0") int offset,
-            @Parameter(description = "Pagination limit") @RequestParam(defaultValue = "50") int limit) {
-
-        log.debug("LIST items: worldId={}, query={}, cx={}, cz={}, offset={}, limit={}",
-                worldId, query, cx, cz, offset, limit);
-
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validatePagination(offset, limit);
-        if (validation != null) return validation;
-
-        // Use worldId as universeId (per user decision)
-        List<WItemPosition> all;
-
-        // If chunk coordinates provided, filter by chunk
-        if (cx != null && cz != null) {
-            List<ItemBlockRef> chunkItems = itemRegistryService.getItemsInChunk(worldId, worldId, cx, cz);
-            // Convert ItemBlockRef back to WItemPosition for filtering (simplified approach)
-            all = itemRegistryService.getAllItems(worldId, worldId).stream()
-                    .filter(item -> {
-                        String chunkKey = WItemRegistryService.toChunkKey(cx, cz);
-                        return chunkKey.equals(item.getChunk());
-                    })
-                    .collect(Collectors.toList());
-        } else {
-            all = itemRegistryService.getAllItems(worldId, worldId);
-        }
-
-        // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
-            all = filterByQuery(all, query);
-        }
-
-        int totalCount = all.size();
-
-        // Apply pagination
-        List<ItemBlockRef> publicDataList = all.stream()
-                .skip(offset)
-                .limit(limit)
-                .map(WItemPosition::getPublicData)
-                .collect(Collectors.toList());
-
-        log.debug("Returning {} items (total: {})", publicDataList.size(), totalCount);
-
-        // TypeScript compatible format (match test_server response)
-        return ResponseEntity.ok(Map.of(
-                "items", publicDataList,
-                "count", totalCount,
-                "limit", limit,
-                "offset", offset
-        ));
-    }
-
-    /**
-     * Create new Item.
+     * Create a new item.
      * POST /api/worlds/{worldId}/items
+     * Body: Item object
      */
-    @PostMapping
-    @Operation(summary = "Create new Item")
+    @PostMapping("/api/worlds/{worldId}/items")
+    @Operation(summary = "Create new item")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Item created"),
             @ApiResponse(responseCode = "400", description = "Invalid request"),
@@ -173,36 +157,47 @@ public class EItemController extends BaseEditorController {
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @RequestBody CreateItemRequest request) {
 
-        log.debug("CREATE item: worldId={}, itemId={}", worldId,
-                request.itemBlockRef() != null ? request.itemBlockRef().getId() : "null");
+        log.debug("CREATE item: worldId={}, itemId={}", worldId, request.id());
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
 
-        if (request.itemBlockRef() == null) {
-            return bad("itemBlockRef required");
+        if (blank(request.name())) {
+            return bad("name is required");
         }
 
-        ItemBlockRef itemBlockRef = request.itemBlockRef();
-
-        if (blank(itemBlockRef.getId())) {
-            return bad("itemBlockRef.id required");
+        if (blank(request.itemType())) {
+            return bad("itemType is required");
         }
 
-        if (itemBlockRef.getPosition() == null) {
-            return bad("itemBlockRef.position required");
+        // Generate ID if not provided
+        String itemId = request.id();
+        if (blank(itemId)) {
+            itemId = "item_" + System.currentTimeMillis() + "_" +
+                    Long.toHexString(Double.doubleToLongBits(Math.random())).substring(0, 7);
         }
 
-        // Check if Item already exists
-        // Use worldId as universeId (per user decision)
-        if (itemRegistryService.findItem(worldId, worldId, itemBlockRef.getId()).isPresent()) {
+        // Check if already exists
+        if (itemService.findByItemId(worldId, itemId).isPresent()) {
             return conflict("item already exists");
         }
 
         try {
-            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, worldId, itemBlockRef);
-            log.info("Created item: itemId={}, chunk={}", itemBlockRef.getId(), saved.getChunk());
-            return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
+            // Build Item DTO
+            Item item = Item.builder()
+                    .id(itemId)
+                    .itemType(request.itemType())
+                    .name(request.name())
+                    .description(request.description())
+                    .modifier(request.modifier())
+                    .parameters(request.parameters())
+                    .build();
+
+            WItem saved = itemService.save(worldId, itemId, item, null);
+            log.info("Created item: itemId={}", itemId);
+
+            // Return publicData (match test_server format)
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved.getPublicData());
         } catch (IllegalArgumentException e) {
             log.warn("Validation error creating item: {}", e.getMessage());
             return bad(e.getMessage());
@@ -214,11 +209,12 @@ public class EItemController extends BaseEditorController {
     }
 
     /**
-     * Update existing Item.
-     * PUT /api/worlds/{worldId}/items/{itemId}
+     * Update an existing item.
+     * PUT /api/worlds/{worldId}/item/{itemId}
+     * Body: Partial Item object
      */
-    @PutMapping("/{itemId}")
-    @Operation(summary = "Update Item")
+    @PutMapping("/api/worlds/{worldId}/item/{itemId}")
+    @Operation(summary = "Update item")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Item updated"),
             @ApiResponse(responseCode = "400", description = "Invalid request"),
@@ -237,37 +233,32 @@ public class EItemController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        if (request.itemBlockRef() == null) {
-            return bad("itemBlockRef required for update");
-        }
-
-        // Ensure itemId in path matches itemBlockRef.id
-        ItemBlockRef itemBlockRef = request.itemBlockRef();
-        if (!itemId.equals(itemBlockRef.getId())) {
-            // Force ID to match path parameter
-            itemBlockRef = ItemBlockRef.builder()
-                    .id(itemId)
-                    .texture(itemBlockRef.getTexture())
-                    .position(itemBlockRef.getPosition())
-                    .scaleX(itemBlockRef.getScaleX())
-                    .scaleY(itemBlockRef.getScaleY())
-                    .offset(itemBlockRef.getOffset())
-                    .amount(itemBlockRef.getAmount())
-                    .build();
-        }
-
-        // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> existing = itemRegistryService.findItem(worldId, worldId, itemId);
+        Optional<WItem> existing = itemService.findByItemId(worldId, itemId);
         if (existing.isEmpty()) {
             log.warn("Item not found for update: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
         }
 
         try {
-            // Save will update if exists
-            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, worldId, itemBlockRef);
-            log.info("Updated item: itemId={}, chunk={}", itemId, saved.getChunk());
-            return ResponseEntity.ok(toDto(saved));
+            // Merge updates with existing item
+            Item existingData = existing.get().getPublicData();
+            Item updatedItem = Item.builder()
+                    .id(itemId) // Ensure ID stays the same
+                    .itemType(request.itemType() != null ? request.itemType() : existingData.getItemType())
+                    .name(request.name() != null ? request.name() : existingData.getName())
+                    .description(request.description() != null ? request.description() : existingData.getDescription())
+                    .modifier(request.modifier() != null ? request.modifier() : existingData.getModifier())
+                    .parameters(request.parameters() != null ? request.parameters() : existingData.getParameters())
+                    .build();
+
+            Optional<WItem> updated = itemService.update(existing.get().getId(), updatedItem);
+            if (updated.isEmpty()) {
+                return notFound("item disappeared during update");
+            }
+
+            log.info("Updated item: itemId={}", itemId);
+            // Return publicData (match test_server format)
+            return ResponseEntity.ok(updated.get().getPublicData());
         } catch (IllegalArgumentException e) {
             log.warn("Validation error updating item: {}", e.getMessage());
             return bad(e.getMessage());
@@ -279,11 +270,11 @@ public class EItemController extends BaseEditorController {
     }
 
     /**
-     * Delete Item.
-     * DELETE /api/worlds/{worldId}/items/{itemId}
+     * Delete an item.
+     * DELETE /api/worlds/{worldId}/item/{itemId}
      */
-    @DeleteMapping("/{itemId}")
-    @Operation(summary = "Delete Item")
+    @DeleteMapping("/api/worlds/{worldId}/item/{itemId}")
+    @Operation(summary = "Delete item")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Item deleted"),
             @ApiResponse(responseCode = "400", description = "Invalid parameters"),
@@ -301,41 +292,32 @@ public class EItemController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        // Use worldId as universeId (per user decision)
-        boolean deleted = itemRegistryService.deleteItemPosition(worldId, worldId, itemId);
-        if (!deleted) {
+        Optional<WItem> existing = itemService.findByItemId(worldId, itemId);
+        if (existing.isEmpty()) {
             log.warn("Item not found for deletion: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
         }
 
+        itemService.delete(existing.get().getId());
         log.info("Deleted item: itemId={}", itemId);
         return ResponseEntity.noContent().build();
     }
 
     // Helper methods
 
-    private ItemPositionDto toDto(WItemPosition item) {
-        return new ItemPositionDto(
-                item.getItemId(),
-                item.getPublicData(),
-                item.getWorldId(),
-                item.getChunk(),
-                item.isEnabled(),
-                item.getCreatedAt(),
-                item.getUpdatedAt()
-        );
-    }
+    private ItemSearchResult toSearchResult(WItem item) {
+        Item publicData = item.getPublicData();
+        if (publicData == null) {
+            return new ItemSearchResult(item.getItemId(), item.getItemId(), null);
+        }
 
-    private List<WItemPosition> filterByQuery(List<WItemPosition> items, String query) {
-        String lowerQuery = query.toLowerCase();
-        return items.stream()
-                .filter(item -> {
-                    String itemId = item.getItemId();
-                    ItemBlockRef publicData = item.getPublicData();
-                    return (itemId != null && itemId.toLowerCase().contains(lowerQuery)) ||
-                            (publicData != null && publicData.getTexture() != null &&
-                                    publicData.getTexture().toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
+        // Extract texture from modifier
+        String texture = publicData.getModifier() != null ? publicData.getModifier().getTexture() : null;
+
+        return new ItemSearchResult(
+                publicData.getId(),
+                publicData.getName() != null ? publicData.getName() : publicData.getId(),
+                texture
+        );
     }
 }

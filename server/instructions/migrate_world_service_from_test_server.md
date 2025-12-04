@@ -2471,3 +2471,13 @@ Die Aufgabe ist es die REST Endpunkte des TypeScript test_server packages zu mig
  - ✅ TypeScript test_server API kompatibel
  - ✅ Clean Code Prinzipien eingehalten
 ```
+
+[ ] das ist falsch. es gibt items und es gibt item_positions.  so ist es auch im test_server implementiert. auch im 
+world-player ist das dann falsch. Items muessen keine position haben, die koennen spaeter auch in anderen welten wieder auftauchen.
+Deshalb die trennung.
+- Es wird ein separater ItemService und ItemRegistryService sind separat.
+- ItemService: Handelt Items, ItemRepsository
+- ItemRegistryService: Handhabt ItemPositionen, ItemPositionRepository
+- in /api/worlds/{worldId}/items werden Items gehandhabt
+- im world-player wird an dich Chunks die ItemBlockRef (ItemPositionen.publicData) geschickt.
+- der import muss auch angepasst werden.
