@@ -66,8 +66,10 @@ function createNewItemType() {
 }
 
 function openItemType(itemTypeId: string) {
+  console.info('[ItemTypeApp] openItemType called with:', itemTypeId);
   selectedItemTypeId.value = itemTypeId;
   isNewItemType.value = false;
+  console.info('[ItemTypeApp] selectedItemTypeId set to:', selectedItemTypeId.value);
 }
 
 function saveItemType() {

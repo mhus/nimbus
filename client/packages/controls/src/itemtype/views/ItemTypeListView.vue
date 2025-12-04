@@ -32,17 +32,17 @@
 
       <div
         v-for="itemType in itemTypes"
-        :key="itemType.id"
+        :key="itemType.type"
         class="card bg-base-200 hover:bg-base-300 cursor-pointer transition-colors"
-        @click="selectItemType(itemType.id)"
+        @click="selectItemType(itemType.type)"
       >
         <div class="card-body p-4">
-          <h3 class="card-title text-lg">{{ itemType.name || itemType.id }}</h3>
+          <h3 class="card-title text-lg">{{ itemType.name || itemType.type }}</h3>
           <p v-if="itemType.description" class="text-sm text-base-content/70">
             {{ itemType.description }}
           </p>
           <div class="flex gap-2 text-xs text-base-content/50 mt-2">
-            <span class="badge badge-sm">ID: {{ itemType.id }}</span>
+            <span class="badge badge-sm">ID: {{ itemType.type }}</span>
             <span v-if="itemType.modifier?.texture" class="badge badge-sm badge-primary">
               Has Texture
             </span>
@@ -100,7 +100,9 @@ function handleSearch() {
 }
 
 function selectItemType(itemTypeId: string) {
+  console.info('[ItemTypeListView] selectItemType called with:', itemTypeId);
   emit('select', itemTypeId);
+  console.info('[ItemTypeListView] emit completed');
 }
 
 onMounted(() => {
