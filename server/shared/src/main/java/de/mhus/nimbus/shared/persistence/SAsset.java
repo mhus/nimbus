@@ -46,9 +46,6 @@ public class SAsset {
     @Indexed
     private String storageId;
 
-    /** Inline Content (wenn size <= inlineMaxSize). */
-    private byte[] content;
-
     /**
      * Public metadata from *.info files.
      * Contains description, dimensions, color, mimeType, etc.
@@ -71,7 +68,5 @@ public class SAsset {
     @Indexed
     private String worldId; // kann null sein
 
-    public boolean isInline() { return content != null && storageId == null; }
-    public boolean isStoredExternal() { return storageId != null; }
 }
 

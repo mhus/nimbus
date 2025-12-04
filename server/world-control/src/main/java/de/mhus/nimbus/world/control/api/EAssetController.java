@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
@@ -38,29 +39,22 @@ public class EAssetController {
 
     // DTOs
     public record AssetDto(String id, String path, String name, long size, boolean enabled,
-                           String regionId, String worldId, boolean inline, String storageId,
+                           String regionId, String worldId, String storageId,
                            String createdBy, Instant createdAt) {}
-    public record AssetWithContentDto(AssetDto meta, String base64Content) {}
-    public record AssetContentRequest(String base64Content, String createdBy) {}
 
     @GetMapping("/{regionId}/{worldId}/{*path}")
     @Operation(summary = "Asset Metadaten abrufen")
     @ApiResponses({@ApiResponse(responseCode = "200"), @ApiResponse(responseCode = "404")})
     public ResponseEntity<?> get(@PathVariable String regionId,
                                  @PathVariable String worldId,
-                                 @PathVariable String path,
-                                 @RequestParam(defaultValue = "false") boolean withContent) {
+                                 @PathVariable String path
+                                 ) {
         path = normalizePath(path);
         if (blank(regionId) || blank(worldId) || blank(path)) return bad("blank parameter");
         Optional<SAsset> opt = assetService.findByPath(regionId, worldId, path);
         if (opt.isEmpty()) return notFound("asset not found");
         SAsset a = opt.get();
         AssetDto dto = toDto(a);
-        if (withContent) {
-            byte[] data = assetService.loadContent(a);
-            String b64 = data == null ? null : Base64.getEncoder().encodeToString(data);
-            return ResponseEntity.ok(new AssetWithContentDto(dto, b64));
-        }
         return ResponseEntity.ok(dto);
     }
 
@@ -72,9 +66,9 @@ public class EAssetController {
         path = normalizePath(path);
         Optional<SAsset> opt = assetService.findByPath(regionId, worldId, path);
         if (opt.isEmpty()) return notFound("asset not found");
-        byte[] data = assetService.loadContent(opt.get());
-        if (data == null) return ResponseEntity.ok().header(HttpHeaders.CONTENT_LENGTH, "0").body(new byte[0]);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(data);
+        var stream = assetService.loadContent(opt.get());
+        if (stream == null) return ResponseEntity.ok().header(HttpHeaders.CONTENT_LENGTH, "0").body(new byte[0]);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(stream);
     }
 
     @PostMapping("/{regionId}/{worldId}/{*path}")
@@ -84,13 +78,12 @@ public class EAssetController {
                                     @PathVariable String worldId,
                                     @PathVariable String path,
                                     @RequestHeader(value = "Content-Type", required = false) String contentType,
-                                    @RequestBody(required = false) byte[] rawBody,
-                                    @RequestBody(required = false) AssetContentRequest jsonBody) {
+                                    InputStream stream
+                                    ) {
         path = normalizePath(path);
         try {
             if (exists(regionId, worldId, path)) return conflict("asset exists");
-            byte[] data = resolveBody(contentType, rawBody, jsonBody);
-            SAsset saved = assetService.saveAsset(regionId, worldId, path, data, jsonBody != null && !blank(jsonBody.createdBy()) ? jsonBody.createdBy() : "editor");
+            SAsset saved = assetService.saveAsset(regionId, worldId, path, stream,"editor");
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
             return bad(e.getMessage());
@@ -105,18 +98,18 @@ public class EAssetController {
                                  @PathVariable String worldId,
                                  @PathVariable String path,
                                  @RequestHeader(value = "Content-Type", required = false) String contentType,
-                                 @RequestBody(required = false) byte[] rawBody,
-                                 @RequestBody(required = false) AssetContentRequest jsonBody) {
+                                 InputStream stream
+                                 ) {
         path = normalizePath(path);
-        byte[] data = resolveBody(contentType, rawBody, jsonBody);
         Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
         if (existing.isEmpty()) {
-            SAsset saved = assetService.saveAsset(regionId, worldId, path, data, jsonBody != null && !blank(jsonBody.createdBy()) ? jsonBody.createdBy() : "editor");
+            SAsset saved = assetService.saveAsset(regionId, worldId, path, stream, "editor");
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         }
         SAsset current = existing.get();
-        Optional<SAsset> updated = assetService.updateContent(current.getId(), data);
-        return updated.<ResponseEntity<?>>map(a -> ResponseEntity.ok(toDto(a))).orElseGet(() -> notFound("asset disappeared"));
+        SAsset updated = assetService.updateContent(current.getId(), stream);
+        if (updated == null) return notFound("asset disappeared");
+        return ResponseEntity.ok(toDto(updated));
     }
 
     @PatchMapping("/{regionId}/{worldId}/{*path}")
@@ -155,17 +148,9 @@ public class EAssetController {
     }
     private AssetDto toDto(SAsset a) {
         return new AssetDto(a.getId(), a.getPath(), a.getName(), a.getSize(), a.isEnabled(),
-                a.getRegionId(), a.getWorldId(), a.isInline(), a.getStorageId(), a.getCreatedBy(), a.getCreatedAt());
+                a.getRegionId(), a.getWorldId(), a.getStorageId(), a.getCreatedBy(), a.getCreatedAt());
     }
-    private byte[] resolveBody(String contentType, byte[] rawBytes, AssetContentRequest json) {
-        if (contentType != null && contentType.startsWith(MediaType.APPLICATION_OCTET_STREAM_VALUE)) {
-            return rawBytes == null ? new byte[0] : rawBytes;
-        }
-        if (json != null && json.base64Content() != null) {
-            return Base64.getDecoder().decode(json.base64Content());
-        }
-        return rawBytes == null ? new byte[0] : rawBytes;
-    }
+
     private String normalizePath(String path) {
         if (path == null) return null;
         return path.replaceAll("/{2,}", "/")

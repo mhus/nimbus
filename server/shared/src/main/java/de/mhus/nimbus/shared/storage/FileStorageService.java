@@ -5,29 +5,39 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Date;
 
 @Service
 @Slf4j
-public class FileStorageService implements StorageService {
+public class FileStorageService extends StorageService {
 
     @Value("${nimbus.storage.path:data}")
     private String basePath;
 
     @Override
-    public String store(String path, byte[] data) {
+    public StorageInfo store(String path, InputStream stream) {
         path = normalizePath(path);
-        storeToFile(path, data);
-        return path;
+        return storeToFile(path, stream);
     }
 
-    private void storeToFile(String path, byte[] data) {
+    private StorageInfo storeToFile(String path, InputStream stream) {
         var file = new File(basePath, path);
         file.getParentFile().mkdirs();
         try {
-            java.nio.file.Files.write(file.toPath(), data);
-        } catch (Exception e) {
+            var size = java.nio.file.Files.copy(stream, file.toPath());
+            return new StorageInfo(
+                    path,
+                    size,
+                    new Date(),
+                    path
+            );
+        } catch (Exception e) {`````````````
             log.error("Error storing file to " + file.getAbsolutePath(), e);
         }
+        return null;
     }
 
     private String normalizePath(String path) {
@@ -39,12 +49,12 @@ public class FileStorageService implements StorageService {
     }
 
     @Override
-    public byte[] load(String storageId) {
+    public OutputStream load(String storageId) {
         storageId = normalizePath(storageId);
         var file = new File(basePath, storageId);
         if (!file.exists()) return null;
         try {
-            return java.nio.file.Files.readAllBytes(file.toPath());
+            return new FileOutputStream(file);
         } catch (Exception e) {
             log.error("Error loading file from " + file.getAbsolutePath(), e);
         }
@@ -60,12 +70,30 @@ public class FileStorageService implements StorageService {
     }
 
     @Override
-    public String update(String storageId, byte[] data) {
+    public StorageInfo update(String storageId, InputStream stream) {
         storageId = normalizePath(storageId);
         var file = new File(basePath, storageId);
         if (!file.exists()) return null;
-        storeToFile(storageId, data);
-        return storageId;
+        storeToFile(storageId, stream);
+        return new StorageInfo(
+                storageId,
+                file.length(),
+                new Date(file.lastModified()),
+                storageId
+        );
+    }
+
+    @Override
+    public StorageInfo info(String storageId) {
+        storageId = normalizePath(storageId);
+        var file = new File(basePath, storageId);
+        if (!file.exists()) return null;
+        return new StorageInfo(
+                storageId,
+                file.length(),
+                new Date(file.lastModified()),
+                storageId
+        );
     }
 
 }

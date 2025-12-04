@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.persistence.AssetMetadata;
 import de.mhus.nimbus.shared.persistence.SAsset;
 import de.mhus.nimbus.shared.persistence.SAssetRepository;
 import de.mhus.nimbus.shared.storage.StorageService;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -26,20 +29,14 @@ public class SAssetService {
     private final SAssetRepository repository;
     private final StorageService storageService; // optional injected
 
-    @Value("${nimbus.asset.inline-max-size:3145728}")
-    @Setter
-    private long inlineMaxSize = 3145728L; // Default falls kein Spring Context
-
-    public long getInlineMaxSize() { return inlineMaxSize; }
-
     /**
      * Speichert ein Asset. Entscheidet ob inline oder extern.
      */
     @Transactional
-    public SAsset saveAsset(String regionId, String worldId, String path, byte[] data, String createdBy) {
+    public SAsset saveAsset(String regionId, String worldId, String path, InputStream stream, String createdBy) {
         if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId required");
         if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
-        if (data == null) data = new byte[0];
+        if (stream == null) return null;
 
         SAsset asset = new SAsset();
         asset.setRegionId(regionId);
@@ -49,16 +46,12 @@ public class SAssetService {
         asset.setCreatedAt(Instant.now());
         asset.setCreatedBy(createdBy);
         asset.setEnabled(true);
-        asset.setSize(data.length);
 
-        if (data.length <= inlineMaxSize) {
-            asset.setContent(data);
-            log.debug("Storing asset inline path={} size={} region={} world={}", path, data.length, regionId, worldId);
-        } else {
-            String storageId = storageService.store("assets/" + worldId + "/" + path, data);
-            asset.setStorageId(storageId);
-            log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, data.length, storageId, regionId, worldId);
-        }
+        StorageService.StorageInfo storageInfo = storageService.store("assets/" + worldId + "/" + path, stream);
+        asset.setSize(storageInfo.size());
+        asset.setStorageId(storageInfo.id());
+        log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), regionId, worldId);
+
         return repository.save(asset);
     }
 
@@ -67,11 +60,11 @@ public class SAssetService {
      * Für Import aus test_server mit .info Dateien.
      */
     @Transactional
-    public SAsset saveAsset(String regionId, String worldId, String path, byte[] data,
+    public SAsset saveAsset(String regionId, String worldId, String path, InputStream stream,
                            String createdBy, AssetMetadata publicData) {
         if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId required");
         if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
-        if (data == null) data = new byte[0];
+        if (stream == null) return null;
 
         SAsset asset = SAsset.builder()
                 .regionId(regionId)
@@ -80,19 +73,15 @@ public class SAssetService {
                 .name(extractName(path))
                 .createdBy(createdBy)
                 .enabled(true)
-                .size(data.length)
                 .publicData(publicData)
                 .build();
         asset.setCreatedAt(Instant.now());
 
-        if (data.length <= inlineMaxSize) {
-            asset.setContent(data);
-            log.debug("Storing asset inline path={} size={} region={} world={}", path, data.length, regionId, worldId);
-        } else {
-            String storageId = storageService.store("assets/" + worldId + "/" + path, data);
-            asset.setStorageId(storageId);
-            log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, data.length, storageId, regionId, worldId);
-        }
+        var storageInfo = storageService.store("assets/" + worldId + "/" + path, stream);
+        asset.setStorageId(storageInfo.id());
+        asset.setSize(storageInfo.size());
+        log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
+
         return repository.save(asset);
     }
 
@@ -108,14 +97,10 @@ public class SAssetService {
     }
 
     /** Lädt den Inhalt des Assets (inline oder extern). */
-    public byte[] loadContent(SAsset asset) {
+    public OutputStream loadContent(SAsset asset) {
         if (asset == null) return null;
         if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());
-        if (asset.isInline()) return asset.getContent();
-        if (asset.isStoredExternal()) {
-            return storageService.load(asset.getStorageId());
-        }
-        return null;
+        return storageService.load(asset.getStorageId());
     }
 
     @Transactional
@@ -131,12 +116,10 @@ public class SAssetService {
     @Transactional
     public void delete(String id) {
         repository.findById(id).ifPresent(a -> {
-            if (a.isStoredExternal()) {
-                try {
-                    storageService.delete(a.getStorageId());
-                } catch (Exception e) {
-                    log.warn("Failed to delete external storage {}", a.getStorageId(), e);
-                }
+            try {
+                storageService.delete(a.getStorageId());
+            } catch (Exception e) {
+                log.warn("Failed to delete external storage {}", a.getStorageId(), e);
             }
             repository.delete(a);
             log.debug("Deleted asset id={} path={}", id, a.getPath());
@@ -144,26 +127,22 @@ public class SAssetService {
     }
 
     @Transactional
-    public Optional<SAsset> updateContent(String id, byte[] newData) {
-        final byte[] data = newData == null ? new byte[0] : newData; // final für Lambda
+    public SAsset updateContent(String id, InputStream stream) {
+        if (stream == null) return null;
         return repository.findById(id).map(asset -> {
             if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());
-            asset.setSize(data.length);
-            if (data.length <= inlineMaxSize) {
-                asset.setStorageId(null);
-                asset.setContent(data);
-                log.debug("Updated inline content id={} size={}", id, data.length);
+            if (StringUtils.isNotEmpty(asset.getStorageId())) {
+                var storageId = storageService.update(asset.getStorageId(), stream);
+                asset.setSize(storageId.size());
+                asset.setStorageId(storageId.id());
+                log.debug("Updated external content id={}", storageId.id());
             } else {
-                if (asset.isStoredExternal()) {
-                    String storageId = storageService.update(asset.getStorageId(), data);
-                } else {
-                    var worldId = asset.getWorldId();
-                    var path = asset.getPath();
-                    String storageId = storageService.store("assets/" + worldId + "/" + path, data);
-                    asset.setStorageId(storageId);
-                }
-                asset.setContent(null);
-                log.debug("Updated external content id={} size={}", id, data.length);
+                var worldId = asset.getWorldId();
+                var path = asset.getPath();
+                var storageId = storageService.store("assets/" + worldId + "/" + path, stream);
+                asset.setSize(storageId.size());
+                asset.setStorageId(storageId.id());
+                log.debug("Updated/Created external content id={}", storageId.id());
             }
             return repository.save(asset);
         });

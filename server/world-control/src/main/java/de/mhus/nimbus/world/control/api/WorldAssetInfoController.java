@@ -13,7 +13,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -28,11 +36,11 @@ import java.util.stream.Collectors;
  * For full CRUD operations, use EAssetController at /editor/user/asset
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/assets")
+@RequestMapping("/api/worlds/{worldId}/assetinfo")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "WorldAssets", description = "Asset listing for world editor")
-public class WorldAssetController extends BaseEditorController {
+@Tag(name = "WorldAssetInfo", description = "Asset Info for world editor")
+public class WorldAssetInfoController extends BaseEditorController {
 
     private final SAssetService assetService;
 
