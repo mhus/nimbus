@@ -49,6 +49,69 @@
             </div>
           </div>
 
+          <!-- Layer Selection - NEW -->
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body p-2">
+              <h2 class="card-title text-sm mb-2">Layer Selection</h2>
+
+              <div class="form-control w-full">
+                <label class="label py-1">
+                  <span class="label-text-alt text-xs">Edit Layer</span>
+                </label>
+                <select
+                  v-model="editState.selectedLayer"
+                  class="select select-bordered select-sm w-full text-xs"
+                  :disabled="saving"
+                >
+                  <option :value="null">All Layers (Legacy)</option>
+                  <option v-for="layer in availableLayers" :key="layer.name" :value="layer.name">
+                    {{ layer.name }} ({{ layer.layerType }}) - Order: {{ layer.order }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Mount Point for MODEL layers -->
+              <div v-if="selectedLayerInfo?.layerType === 'MODEL'" class="mt-2">
+                <label class="label py-1">
+                  <span class="label-text-alt text-xs">Mount Point</span>
+                </label>
+                <div class="grid grid-cols-3 gap-1">
+                  <input
+                    v-model.number="editState.mountX"
+                    type="number"
+                    placeholder="X"
+                    class="input input-bordered input-sm text-xs"
+                  />
+                  <input
+                    v-model.number="editState.mountY"
+                    type="number"
+                    placeholder="Y"
+                    class="input input-bordered input-sm text-xs"
+                  />
+                  <input
+                    v-model.number="editState.mountZ"
+                    type="number"
+                    placeholder="Z"
+                    class="input input-bordered input-sm text-xs"
+                  />
+                </div>
+              </div>
+
+              <!-- Group Selection -->
+              <div class="form-control w-full mt-2">
+                <label class="label py-1">
+                  <span class="label-text-alt text-xs">Group (0 = all)</span>
+                </label>
+                <input
+                  v-model.number="editState.selectedGroup"
+                  type="number"
+                  min="0"
+                  class="input input-bordered input-sm w-full text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
           <!-- Selected Block Display - Compact -->
           <div class="card bg-base-100 shadow-sm">
             <div class="card-body p-2">
@@ -149,9 +212,32 @@ const { isEmbedded } = useModal();
 const params = new URLSearchParams(window.location.search);
 const worldId = ref(params.get('worldId') || import.meta.env.VITE_WORLD_ID || 'main');
 const sessionId = ref(params.get('sessionId') || '');
-const apiUrl = ref(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043'); // world-control
 
-// State
+// Edit State (unified)
+const editState = ref({
+  editMode: false,
+  editAction: 'OPEN_CONFIG_DIALOG' as EditAction,
+  selectedLayer: null as string | null,
+  mountX: 0,
+  mountY: 0,
+  mountZ: 0,
+  selectedGroup: 0,
+});
+
+// Available layers
+const availableLayers = ref<Array<{
+  name: string;
+  layerType: string;
+  enabled: boolean;
+  order: number;
+  mountX: number;
+  mountY: number;
+  mountZ: number;
+  groups: string[];
+}>>([]);
+
+// Legacy state refs
 const currentEditAction = ref<EditAction>('OPEN_CONFIG_DIALOG');
 const savedEditAction = ref<EditAction>('OPEN_CONFIG_DIALOG');
 const selectedBlock = ref<{ x: number; y: number; z: number } | null>(null);
@@ -190,88 +276,109 @@ function getActionDescription(action: EditAction): string {
   }
 }
 
-// Fetch current edit action from API
-async function fetchEditAction() {
+// Fetch available layers from API
+async function fetchLayers() {
   try {
-    const response = await fetch(
-      `${apiUrl.value}/api/worlds/${worldId.value}/session/${sessionId.value}/editAction`
-    );
+    const response = await fetch(`${apiUrl.value}/api/editor/${worldId.value}/layers`);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch edit action: ${response.statusText}`);
+      throw new Error(`Failed to fetch layers: ${response.statusText}`);
     }
 
     const data = await response.json();
-    currentEditAction.value = data.editAction as EditAction;
-    savedEditAction.value = data.editAction as EditAction;
-    error.value = null;
+    availableLayers.value = data.layers || [];
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to fetch edit action:', err);
+    console.error('Failed to fetch layers:', err);
+    // Don't set error here, not critical for edit mode
   }
 }
 
-// Save edit action to API
-async function saveEditAction() {
+// Fetch edit state from API (NEW unified endpoint)
+async function fetchEditState() {
+  try {
+    const response = await fetch(
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/edit`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch edit state: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Update edit state
+    editState.value = {
+      editMode: data.editMode || false,
+      editAction: data.editAction || 'OPEN_CONFIG_DIALOG',
+      selectedLayer: data.selectedLayer || null,
+      mountX: data.mountX || 0,
+      mountY: data.mountY || 0,
+      mountZ: data.mountZ || 0,
+      selectedGroup: data.selectedGroup || 0,
+    };
+
+    // Update legacy refs for backward compatibility
+    currentEditAction.value = editState.value.editAction;
+    savedEditAction.value = editState.value.editAction;
+
+    // Update selected block
+    selectedBlock.value = data.selectedBlock || null;
+
+    error.value = null;
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Failed to fetch edit state:', err);
+  }
+}
+
+// Save edit state to API (NEW unified endpoint)
+async function saveEditState() {
   saving.value = true;
   error.value = null;
 
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/worlds/${worldId.value}/session/${sessionId.value}/editAction`,
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/edit`,
       {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ editAction: currentEditAction.value }),
+        body: JSON.stringify(editState.value),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to save edit action: ${response.statusText}`);
+      throw new Error(`Failed to save edit state: ${response.statusText}`);
     }
 
     const data = await response.json();
+    // Update saved state
     savedEditAction.value = data.editAction as EditAction;
     error.value = null;
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to save edit action:', err);
+    console.error('Failed to save edit state:', err);
   } finally {
     saving.value = false;
   }
 }
 
-// Fetch selected block from API
-async function fetchSelectedBlock() {
-  try {
-    const response = await fetch(
-      `${apiUrl.value}/api/worlds/${worldId.value}/session/${sessionId.value}/selectedEditBlock`
-    );
+// Computed: Get selected layer info
+const selectedLayerInfo = computed(() => {
+  if (!editState.value.selectedLayer) return null;
+  return availableLayers.value.find(l => l.name === editState.value.selectedLayer);
+});
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch selected block: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    selectedBlock.value = data.selectedEditBlock;
-    markedBlock.value = data.markedEditBlock;
-  } catch (err) {
-    console.error('Failed to fetch selected block:', err);
-    // Don't set error here, as this is a polling operation
-  }
-}
-
-// Start polling for selected block updates
+// Start polling for edit state updates
 function startPolling() {
   // Initial fetch
-  fetchSelectedBlock();
+  fetchEditState();
 
-  // Poll every 1 second
+  // Poll every 2 seconds
   pollInterval = window.setInterval(() => {
-    fetchSelectedBlock();
-  }, 1000);
+    fetchEditState();
+  }, 2000);
 }
 
 // Stop polling
@@ -339,16 +446,18 @@ async function executeAction() {
   }
 }
 
-// Watch for edit action changes and auto-save
-watch(currentEditAction, async (newAction, oldAction) => {
-  // Skip if this is the initial load (both are same)
-  if (oldAction === undefined) return;
+// Watch for edit state changes and auto-save (with debounce)
+let saveTimeout: number | null = null;
+watch(editState, () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = window.setTimeout(async () => {
+    await saveEditState();
+  }, 500);
+}, { deep: true });
 
-  // Skip if already saved
-  if (newAction === savedEditAction.value) return;
-
-  // Auto-save
-  await saveEditAction();
+// Watch currentEditAction for backward compatibility
+watch(currentEditAction, (newAction) => {
+  editState.value.editAction = newAction;
 });
 
 // Lifecycle hooks
@@ -358,7 +467,8 @@ onMounted(async () => {
     return;
   }
 
-  await fetchEditAction();
+  await fetchLayers();
+  await fetchEditState();
   startPolling();
 });
 
