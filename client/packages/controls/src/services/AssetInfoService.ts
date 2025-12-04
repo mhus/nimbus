@@ -22,7 +22,7 @@ export class AssetInfoService {
   async getAssetInfo(worldId: string, assetPath: string): Promise<AssetInfo> {
     try {
       return await apiService.get<AssetInfo>(
-        `/api/worlds/${worldId}/assets/${assetPath}.info`
+        `/api/worlds/${worldId}/assetinfo/${assetPath}`
       );
     } catch (error) {
       // If .info file doesn't exist, return empty object
@@ -39,16 +39,18 @@ export class AssetInfoService {
     }
 
     await apiService.put<void>(
-      `/api/worlds/${worldId}/assets/${assetPath}.info`,
+      `/api/worlds/${worldId}/assetinfo/${assetPath}`,
       info
     );
   }
 
   /**
    * Delete asset info file
+   * Note: The assetinfo endpoint does not support DELETE (metadata only).
+   * To delete asset info, delete the asset itself via AssetService.
    */
   async deleteAssetInfo(worldId: string, assetPath: string): Promise<void> {
-    return apiService.delete<void>(`/api/worlds/${worldId}/assets/${assetPath}.info`);
+    throw new Error('Delete asset info not supported. Delete the asset via AssetService instead.');
   }
 
   /**

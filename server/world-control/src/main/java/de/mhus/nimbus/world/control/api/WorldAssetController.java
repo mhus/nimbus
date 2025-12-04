@@ -125,10 +125,11 @@ public class WorldAssetController extends BaseEditorController {
     }
 
     /**
-     * Get/serve asset file content or metadata.
+     * Get/serve asset file content.
      * GET /api/worlds/{worldId}/assets/{*path}
      * Example: GET /api/worlds/main/assets/textures/block/stone.png
-     * Example: GET /api/worlds/main/assets/textures/block/stone.png.info
+     *
+     * For metadata (.info), use WorldAssetInfoController
      */
     @GetMapping("/{*path}")
     @Operation(summary = "Get asset file content")
@@ -145,13 +146,7 @@ public class WorldAssetController extends BaseEditorController {
             path = path.substring(1);
         }
 
-        // Check if this is an .info request
-        boolean isInfoRequest = path != null && path.endsWith(".info");
-        if (isInfoRequest) {
-            path = path.substring(0, path.length() - 5); // Remove .info suffix
-        }
-
-        log.debug("GET asset {}: worldId={}, path={}", isInfoRequest ? "info" : "file", worldId, path);
+        log.debug("GET asset file: worldId={}, path={}", worldId, path);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
@@ -163,26 +158,13 @@ public class WorldAssetController extends BaseEditorController {
         // Find asset (regionId=worldId, worldId=worldId)
         Optional<SAsset> opt = assetService.findByPath(worldId, worldId, path);
         if (opt.isEmpty()) {
-            if (isInfoRequest) {
-                // Return empty description if not found (like test_server)
-                log.debug("Asset not found for info request: {}", path);
-                return ResponseEntity.ok(Map.of("description", ""));
-            }
             log.warn("Asset not found: worldId={}, path={}", worldId, path);
             return notFound("asset not found");
         }
 
         SAsset asset = opt.get();
 
-        // If .info request, return metadata
-        if (isInfoRequest) {
-            if (asset.getPublicData() == null) {
-                return ResponseEntity.ok(Map.of("description", ""));
-            }
-            return ResponseEntity.ok(asset.getPublicData());
-        }
-
-        // Otherwise serve binary content
+        // Serve binary content
         if (!asset.isEnabled()) {
             log.warn("Asset disabled: path={}", path);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "asset disabled"));
@@ -254,12 +236,13 @@ public class WorldAssetController extends BaseEditorController {
     }
 
     /**
-     * Update asset metadata (.info) or asset content.
-     * PUT /api/worlds/{worldId}/assets/textures/block/stone.png.info - Update metadata only
+     * Update asset content.
      * PUT /api/worlds/{worldId}/assets/textures/block/stone.png - Update/create binary content
+     *
+     * For metadata updates (.info), use WorldAssetInfoController
      */
     @PutMapping("/{*path}")
-    @Operation(summary = "Update asset or metadata")
+    @Operation(summary = "Update asset content")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Asset updated"),
             @ApiResponse(responseCode = "201", description = "Asset created"),
@@ -268,20 +251,14 @@ public class WorldAssetController extends BaseEditorController {
     public ResponseEntity<?> updateAsset(
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @Parameter(description = "Asset path") @PathVariable String path,
-            @RequestBody(required = true) InputStream stream) {
+            @RequestBody(required = true) byte[] content) {
 
         // Remove leading slash if present
         if (path != null && path.startsWith("/")) {
             path = path.substring(1);
         }
 
-        // Check if this is an .info update request
-        boolean isInfoUpdate = path != null && path.endsWith(".info");
-        if (isInfoUpdate) {
-            path = path.substring(0, path.length() - 5); // Remove .info suffix
-        }
-
-        log.debug("UPDATE asset {}: worldId={}, path={}", isInfoUpdate ? "metadata" : "content", worldId, path);
+        log.debug("UPDATE asset content: worldId={}, path={}, size={}", worldId, path, content != null ? content.length : 0);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
@@ -293,41 +270,21 @@ public class WorldAssetController extends BaseEditorController {
         try {
             Optional<SAsset> existing = assetService.findByPath(worldId, worldId, path);
 
-            if (isInfoUpdate) {
-                // Update metadata only
-                if (existing.isEmpty()) {
-                    return notFound("asset not found");
-                }
-
-                // Parse metadata from request body (JSON)
-                String jsonContent = content != null ? new String(content) : "{}";
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                de.mhus.nimbus.shared.persistence.AssetMetadata metadata = mapper.readValue(jsonContent, de.mhus.nimbus.shared.persistence.AssetMetadata.class);
-
-                Optional<SAsset> updated = assetService.updateMetadata(existing.get().getId(), metadata);
+            // Update/create binary content
+            if (existing.isPresent()) {
+                // Update existing
+                Optional<SAsset> updated = assetService.updateContent(existing.get().getId(), content);
                 if (updated.isPresent()) {
-                    log.info("Updated asset metadata: path={}", path);
-                    return ResponseEntity.ok(updated.get().getPublicData());
+                    log.info("Updated asset: path={}, size={}", path, updated.get().getSize());
+                    return ResponseEntity.ok(toListDto(updated.get()));
                 } else {
                     return notFound("asset disappeared during update");
                 }
             } else {
-                // Update/create binary content
-                if (existing.isPresent()) {
-                    // Update existing
-                    Optional<SAsset> updated = assetService.updateContent(existing.get().getId(), content);
-                    if (updated.isPresent()) {
-                        log.info("Updated asset: path={}, size={}", path, updated.get().getSize());
-                        return ResponseEntity.ok(toListDto(updated.get()));
-                    } else {
-                        return notFound("asset disappeared during update");
-                    }
-                } else {
-                    // Create new
-                    SAsset saved = assetService.saveAsset(worldId, worldId, path, content, "editor");
-                    log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
-                    return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
-                }
+                // Create new
+                SAsset saved = assetService.saveAsset(worldId, worldId, path, content, "editor");
+                log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
+                return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
             }
         } catch (IllegalArgumentException e) {
             log.warn("Validation error updating asset: {}", e.getMessage());
