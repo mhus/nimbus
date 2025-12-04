@@ -12,7 +12,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Model layer entity - entity-oriented storage.
@@ -49,6 +51,14 @@ public class WLayerModel {
      */
     @Builder.Default
     private List<LayerBlock> content = new ArrayList<>();
+
+    /**
+     * Group mapping: group name -> group ID.
+     * Allows named access to groups defined in the layer.
+     * Example: {"walls": 1, "roof": 2, "floor": 3}
+     */
+    @Builder.Default
+    private Map<String, Integer> groups = new HashMap<>();
 
     private Instant createdAt;
     private Instant updatedAt;

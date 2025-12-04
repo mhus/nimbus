@@ -39,4 +39,12 @@ public class LayerBlock {
      */
     @Builder.Default
     private boolean override = true;
+
+    /**
+     * Group identifier for this block.
+     * Default is 0 (no group).
+     * Can be used to organize and manage blocks in groups.
+     */
+    @Builder.Default
+    private int group = 0;
 }

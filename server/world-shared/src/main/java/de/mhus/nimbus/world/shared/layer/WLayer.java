@@ -86,6 +86,13 @@ public class WLayer {
     @Builder.Default
     private boolean enabled = true;
 
+    /**
+     * List of group names defined in this layer.
+     * Blocks can be assigned to groups for organized management.
+     */
+    @Builder.Default
+    private List<String> groups = new ArrayList<>();
+
     private Instant createdAt;
     private Instant updatedAt;
 
