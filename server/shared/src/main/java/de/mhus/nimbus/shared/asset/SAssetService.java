@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -97,6 +98,10 @@ public class SAssetService {
 
     public Optional<SAsset> findById(String id) { return repository.findById(id); }
 
+    public List<SAsset> findByWorldId(String worldId) {
+        return repository.findByWorldId(worldId);
+    }
+
     public Optional<SAsset> findByPath(String regionId, String worldId, String path) {
         if (worldId == null) return repository.findByRegionIdAndPath(regionId, path);
         return repository.findByRegionIdAndWorldIdAndPath(regionId, worldId, path);
@@ -160,6 +165,16 @@ public class SAssetService {
                 asset.setContent(null);
                 log.debug("Updated external content id={} size={}", id, data.length);
             }
+            return repository.save(asset);
+        });
+    }
+
+    @Transactional
+    public Optional<SAsset> updateMetadata(String id, AssetMetadata metadata) {
+        return repository.findById(id).map(asset -> {
+            if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());
+            asset.setPublicData(metadata);
+            log.debug("Updated metadata id={}", id);
             return repository.save(asset);
         });
     }

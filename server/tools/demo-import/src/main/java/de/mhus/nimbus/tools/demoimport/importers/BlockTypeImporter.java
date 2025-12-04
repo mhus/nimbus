@@ -40,6 +40,9 @@ public class BlockTypeImporter {
     @Value("${import.source-path:../../client/packages/test_server/files}")
     private String sourcePath;
 
+    @Value("${import.default-world-id:main}")
+    private String defaultWorldId;
+
     public ImportStats importAll() throws Exception {
         log.info("Starting BlockType import from: {}/blocktypes/", sourcePath);
 
@@ -140,7 +143,7 @@ public class BlockTypeImporter {
                         .blockTypeGroup(prefix)  // Store group separately (e.g., "w", "core")
                         .publicData(blockType)
                         .regionId(null)
-                        .worldId(null)
+                        .worldId(defaultWorldId)  // Set worldId from config (e.g., "main")
                         .enabled(true)
                         .build();
                 entity.touchCreate();

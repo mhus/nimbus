@@ -15,7 +15,7 @@ import:
   source-path: ../client/packages/test_server/files
   # Data path: world instances (World info, Entity instances)
 #  data-path: ../client/packages/test_server/data
-  data-path:  ../../nimbus-client/client/packages/test_server/data
+  data-path:  ../client/packages/test_server/data
   # Import Configuration
   batch-size: 100
   asset-batch-size: 50

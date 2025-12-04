@@ -33,6 +33,9 @@ public class EntityModelImporter {
     @Value("${import.source-path:../../client/packages/test_server/files}")
     private String sourcePath;
 
+    @Value("${import.default-world-id:main}")
+    private String defaultWorldId;
+
     public ImportStats importAll() throws Exception {
         log.info("Starting EntityModel import from: {}/entitymodels/", sourcePath);
 
@@ -77,7 +80,7 @@ public class EntityModelImporter {
                         .modelId(entityModel.getId())
                         .publicData(entityModel)
                         .regionId(null)
-                        .worldId(null)
+                        .worldId(defaultWorldId)  // Set worldId from config (e.g., "main")
                         .enabled(true)
                         .build();
                 entity.touchCreate();

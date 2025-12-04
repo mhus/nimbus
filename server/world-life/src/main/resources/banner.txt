@@ -1,0 +1,8 @@
+ __         __     ______   ______
+/\ \       /\ \   /\  ___\ /\  ___\
+\ \ \____  \ \ \  \ \  __\ \ \  __\
+ \ \_____\  \ \_\  \ \_\    \ \_____\
+  \/_____/   \/_/   \/_/     \/_____/
+
+:: Nimbus Server :: module: world-editor :: ${spring.application.name:world-editor} :: ${spring.boot.version}
+

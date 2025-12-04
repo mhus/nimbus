@@ -15,7 +15,8 @@
       "Bash(mvn clean verify:*)",
       "Bash(mvn verify:*)",
       "Bash(mvn test:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

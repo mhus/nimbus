@@ -33,6 +33,9 @@ public class ItemTypeImporter {
     @Value("${import.source-path:../../client/packages/test_server/files}")
     private String sourcePath;
 
+    @Value("${import.default-world-id:main}")
+    private String defaultWorldId;
+
     public ImportStats importAll() throws Exception {
         log.info("Starting ItemType import from: {}/itemtypes/", sourcePath);
 
@@ -77,7 +80,7 @@ public class ItemTypeImporter {
                         .itemType(itemType.getType())
                         .publicData(itemType)
                         .regionId(null)
-                        .worldId(null)
+                        .worldId(defaultWorldId)  // Set worldId from config (e.g., "main")
                         .enabled(true)
                         .build();
                 entity.touchCreate();
