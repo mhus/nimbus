@@ -17,7 +17,8 @@
       "Bash(mvn test:*)",
       "Bash(grep:*)",
       "Bash(ls:*)",
-      "Bash(mvn:*)"
+      "Bash(mvn:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []

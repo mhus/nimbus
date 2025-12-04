@@ -2569,6 +2569,26 @@ Erstelle in world-control einen ChunkUpdateService der
 - Erstelle fuer jeden Chunk zusaetzlich eine LayerTerrain Entity mit entsprechenden LayerChunkData
 - Erstelle fuer jeden importierten TerrainLayer einen DirtyChunk eintrag, damit der chunk nochmal ein update bekommt, mache das konfigurierbar in application.yaml
 
-[ ] Edit Mode Control
+[?] Edit Mode Control
 - Im world-control server wird ein EditService erstellt. 
+- Er hällt im redis welche session im EditMode ist und welche einstellungen aktiv sind.
+  - Einstellung sind der aktuelle edit modus, welcher Layer bearbeitet wird, im falle von ModelLayer der mount point
+    und welche gruppe aktuell bearbeitet wird. (default gruppe 0)
+    und welche aktion aktiv ist (siehe ../client/packages/shared, EditAction) - (die entitaet in generated muss nicht uebernommen werden! Sie ist deprecated!)
+- Ueber einen REST Endpunkt kann der EditMode fuer eine session an/aus geschaltet werden und auch die anderen einstellungen gesetzt werden.
+- Es gibt ein command im world-control mit dem ein Block getriggert wird EditBlockTriggerCommand
+  - Siehe hierzu im test_server (../client/packages/test_server/, SetSelectedEditBlockCommand), es wird 'setSelectedEditBlock x,y,z' gesendet.
+    (Der command name wird im client noch angepasst)
+  - Wenn das command getriggert wird, wird der EditService informiert
 
+Das Ziel ist es in zusammenarbeit von engine, controls, world-control und world-player den Edit modus zu implementieren.
+- engine: Triggert den EditBlockTriggerCommand, wenn ein block/air selektiert wurde
+- controls: Mit edit-config.html den Edit modus an/aus schalten und einstellungen aendern
+- world-control: Hält den EditMode status und die einstellungen, empfängt den Edit
+- world-player: Liefert im Edit modus die overlay blocks an die clients aus.
+
+Passe edit-config.html in ../client/packages/controls so an, das es mit den neuen REST Endpunkten im world-control kommuniziert.
+- Es werden weitere REST endpunkte benoetigt im eine liste der Layers zu liefern ....
+- Es soll auch Apply und Clear buttons geben. 
+- Es wird ein Layer ausgewahelt und bestaetigt. Dann kan er nicht geandert werden bis Apply oder Clear gedrueckt wird.
+- Im EditModeClosedCommand command muessen nun alle blocks aus einer session in den selektierrten Layer gespeichert werden.

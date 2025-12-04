@@ -92,6 +92,7 @@ export class EditorActivateHandler extends InputHandler {
     // Check service availability
     if (!selectService) {
       logger.warn('SelectService not available');
+      // TODO send b.int to server
       return;
     }
 
