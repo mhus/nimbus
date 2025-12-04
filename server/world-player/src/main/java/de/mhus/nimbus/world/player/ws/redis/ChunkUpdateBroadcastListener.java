@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.player.ws.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.world.player.ws.BroadcastService;
@@ -31,6 +31,8 @@ import java.util.Optional;
  *   "chunkKey": "0:0",
  *   "deleted": true
  * }
+ *
+ * Client message type: "c.u" (Chunk Update)
  */
 @Service
 @RequiredArgsConstructor
@@ -87,24 +89,25 @@ public class ChunkUpdateBroadcastListener {
                 return;
             }
 
-            // Build client message
-            ObjectNode clientData = objectMapper.createObjectNode();
-            clientData.put("cx", cx);
-            clientData.put("cz", cz);
+            // Build client message - ARRAY format like ChunkRegistrationHandler
+            ArrayNode chunksArray = objectMapper.createArrayNode();
 
             if (deleted || chunkDataOpt.isEmpty()) {
-                clientData.put("deleted", true);
+                // Send deleted marker (empty array or special format?)
+                // For now, skip sending deleted chunks
+                log.debug("Chunk deleted, skipping broadcast: world={} chunk={}", worldId, chunkKey);
+                return;
             } else {
                 // Include full chunk data
                 ChunkData chunkData = chunkDataOpt.get();
                 ChunkDataTransferObject transferObject = chunkService.toTransferObject(
                         worldId, "main", chunkData);
-                clientData.set("chunk", objectMapper.valueToTree(transferObject));
+                chunksArray.add(objectMapper.valueToTree(transferObject));
             }
 
             // Broadcast to all sessions registered for this chunk
             int sent = broadcastService.broadcastToChunk(
-                    worldId, cx, cz, "c.update", clientData, null);
+                    worldId, cx, cz, "c.u", chunksArray, null);
 
             log.info("Broadcast chunk update to {} sessions: world={} chunk={}",
                     sent, worldId, chunkKey);
