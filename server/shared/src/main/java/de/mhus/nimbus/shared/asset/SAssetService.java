@@ -6,9 +6,7 @@ import de.mhus.nimbus.shared.persistence.SAssetRepository;
 import de.mhus.nimbus.shared.storage.StorageService;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +48,7 @@ public class SAssetService {
         StorageService.StorageInfo storageInfo = storageService.store("assets/" + worldId + "/" + path, stream);
         asset.setSize(storageInfo.size());
         asset.setStorageId(storageInfo.id());
-        log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), regionId, worldId);
+        log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
 
         return repository.save(asset);
     }
@@ -97,7 +95,7 @@ public class SAssetService {
     }
 
     /** Lädt den Inhalt des Assets (inline oder extern). */
-    public OutputStream loadContent(SAsset asset) {
+    public InputStream loadContent(SAsset asset) {
         if (asset == null) return null;
         if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());
         return storageService.load(asset.getStorageId());
@@ -145,7 +143,7 @@ public class SAssetService {
                 log.debug("Updated/Created external content id={}", storageId.id());
             }
             return repository.save(asset);
-        });
+        }).orElse(null);
     }
 
     @Transactional

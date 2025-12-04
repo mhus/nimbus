@@ -6,6 +6,9 @@ import de.mhus.nimbus.shared.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,14 +16,24 @@ import static org.junit.jupiter.api.Assertions.*;
 class SAssetServiceTest {
 
     @Test
-    void testInlineSave() {
+    void testStreamSave() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
+
+        // Mock StorageService.store() um StorageInfo zurückzugeben
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-123", 100, new Date(), "assets/null/folder/test.txt");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+
         SAssetService service = new SAssetService(repo, storage);
         byte[] data = new byte[100];
+        InputStream stream = new ByteArrayInputStream(data);
+
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
-        SAsset asset = service.saveAsset("r1", null, "folder/test.txt", data, "tester");
-        assertTrue(asset.isInline());
+
+        SAsset asset = service.saveAsset("r1", null, "folder/test.txt", stream, "tester");
+
+        // Alle Assets sind jetzt extern gespeichert
+        assertEquals("STOR-123", asset.getStorageId());
         assertEquals("test.txt", asset.getName());
         assertEquals(100, asset.getSize());
     }
@@ -29,51 +42,108 @@ class SAssetServiceTest {
     void testExternalSave() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STOR-1");
+
+        // Mock StorageService.store() um StorageInfo zurückzugeben
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-BIG", 200, new Date(), "assets/w1/folder/big.bin");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+
         SAssetService service = new SAssetService(repo, storage);
-        // Setze inline Grenze sehr klein damit external greift
         byte[] big = new byte[200];
+        InputStream stream = new ByteArrayInputStream(big);
+
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
-        assertTrue(service.getInlineMaxSize() >= 3_000_000); // standard
-        service.setInlineMaxSize(100);
-        // Simuliere Konfigurationsänderung
-        // Erzwinge extern indem wir die Grenze manuell per Reflection reduzieren (optional) -> überspringen, nutzen vorhandenen Wert und großes Array
-        SAsset asset = service.saveAsset("r1", "w1", "folder/big.bin", big, "tester");
-        assertTrue(asset.isStoredExternal());
-        assertEquals("STOR-1", asset.getStorageId());
-        assertNull(asset.getContent());
+
+        SAsset asset = service.saveAsset("r1", "w1", "folder/big.bin", stream, "tester");
+
+        // Alle Assets sind jetzt extern gespeichert
+        assertEquals("STOR-BIG", asset.getStorageId());
+        assertEquals(200, asset.getSize());
+        assertNotNull(asset.getStorageId()); // Hat externe Storage-ID
     }
 
     @Test
-    void testUpdateToExternal() {
+    void testUpdateContent() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn("STOR-NEW");
+
+        // Mock für initial save
+        StorageService.StorageInfo initialInfo = new StorageService.StorageInfo("STOR-INIT", 100, new Date(), "assets/null/file.bin");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(initialInfo);
+
+        // Mock für update
+        StorageService.StorageInfo updateInfo = new StorageService.StorageInfo("STOR-UPDATED", 5000000, new Date(), "assets/null/file.bin");
+        Mockito.when(storage.update(Mockito.any(), Mockito.any())).thenReturn(updateInfo);
+
         SAssetService service = new SAssetService(repo, storage);
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
-        SAsset inline = service.saveAsset("r1", null, "file.bin", new byte[100], "tester");
-        assertTrue(inline.isInline());
-        // Update mit großem Inhalt
-        Optional<SAsset> updated = service.updateContent(inline.getId(), new byte[5000000]);
-        // Da Repo.findById nicht gemockt ist, updated leer -> wir mocken findById jetzt
-        Mockito.when(repo.findById(inline.getId())).thenReturn(Optional.of(inline));
-        updated = service.updateContent(inline.getId(), new byte[5000000]);
-        assertTrue(updated.isPresent());
-        assertTrue(updated.get().isStoredExternal());
-        assertEquals("STOR-NEW", updated.get().getStorageId());
+
+        // Initial Asset erstellen
+        InputStream initialStream = new ByteArrayInputStream(new byte[100]);
+        SAsset asset = service.saveAsset("r1", null, "file.bin", initialStream, "tester");
+        assertEquals("STOR-INIT", asset.getStorageId());
+
+        // Update mit größerem Content
+        Mockito.when(repo.findById(asset.getId())).thenReturn(Optional.of(asset));
+        InputStream updateStream = new ByteArrayInputStream(new byte[5000000]);
+        SAsset updated = service.updateContent(asset.getId(), updateStream);
+
+        assertNotNull(updated);
+        assertEquals("STOR-UPDATED", updated.getStorageId());
+        assertEquals(5000000, updated.getSize());
     }
 
     @Test
     void testDisable() {
         SAssetRepository repo = Mockito.mock(SAssetRepository.class);
         StorageService storage = Mockito.mock(StorageService.class);
+
+        // Mock StorageService.store() um StorageInfo zurückzugeben
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-DISABLE", 10, new Date(), "assets/null/folder/test.txt");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+
         SAssetService service = new SAssetService(repo, storage);
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
-        SAsset asset = service.saveAsset("r1", null, "folder/test.txt", new byte[10], "tester");
+
+        InputStream stream = new ByteArrayInputStream(new byte[10]);
+        SAsset asset = service.saveAsset("r1", null, "folder/test.txt", stream, "tester");
+
         Mockito.when(repo.findById(asset.getId())).thenReturn(Optional.of(asset));
         service.disable(asset.getId());
+
         assertFalse(asset.isEnabled());
         // loadContent sollte jetzt Exception werfen
         assertThrows(IllegalStateException.class, () -> service.loadContent(asset));
+    }
+
+    @Test
+    void testLoadContentStream() {
+        SAssetRepository repo = Mockito.mock(SAssetRepository.class);
+        StorageService storage = Mockito.mock(StorageService.class);
+
+        // Mock für StorageService.store()
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-LOAD", 50, new Date(), "assets/w1/test.json");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+
+        // Mock für StorageService.load() - gibt InputStream zurück
+        byte[] testData = "test content".getBytes();
+        InputStream mockInputStream = new ByteArrayInputStream(testData);
+        Mockito.when(storage.load("STOR-LOAD")).thenReturn(mockInputStream);
+
+        SAssetService service = new SAssetService(repo, storage);
+        Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Asset erstellen
+        InputStream saveStream = new ByteArrayInputStream(testData);
+        SAsset asset = service.saveAsset("r1", "w1", "test.json", saveStream, "tester");
+        assertEquals("STOR-LOAD", asset.getStorageId());
+
+        // Asset laden und Stream-API testen
+        try (InputStream loadedStream = service.loadContent(asset)) {
+            assertNotNull(loadedStream);
+            // Der Mock-InputStream sollte verfügbar sein
+            assertTrue(loadedStream.available() >= 0);
+        } catch (Exception e) {
+            fail("Stream sollte lesbar sein: " + e.getMessage());
+        }
     }
 }

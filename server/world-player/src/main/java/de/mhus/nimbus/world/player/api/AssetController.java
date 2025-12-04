@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -150,26 +151,6 @@ public class AssetController {
     }
 
     /**
-     * Serve binary asset file.
-     * GET /api/worlds/{worldId}/assets/textures/items/sword.png
-     */
-    @GetMapping(value = "/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @Operation(summary = "Get asset binary", description = "Returns asset binary content")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Asset binary"),
-            @ApiResponse(responseCode = "404", description = "Asset not found")
-    })
-    public ResponseEntity<byte[]> getAsset(
-            @PathVariable String worldId,
-            @RequestAttribute(required = false) String remainingPath) {
-
-        // Extract path from request URI
-        // Spring doesn't capture ** in @PathVariable, so we need to extract it manually
-        // This will be handled by the second method below
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-    }
-
-    /**
      * Serve binary asset file (alternative with explicit path).
      * This works better with Spring's path matching.
      */
@@ -179,7 +160,7 @@ public class AssetController {
             @ApiResponse(responseCode = "200", description = "Asset binary"),
             @ApiResponse(responseCode = "404", description = "Asset not found")
     })
-    public ResponseEntity<byte[]> getAssetByPath(
+    public ResponseEntity<?> getAssetByPath(
             @PathVariable String worldId,
             @PathVariable String assetPath) {
 
@@ -209,9 +190,9 @@ public class AssetController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // Load binary content
-        byte[] content = assetService.loadContent(asset);
-        if (content == null || content.length == 0) {
+        // Load content as stream - no memory loading!
+        InputStream contentStream = assetService.loadContent(asset);
+        if (contentStream == null) {
             log.warn("Asset has no content: {}", finalAssetPath);
             return ResponseEntity.notFound().build();
         }
@@ -219,21 +200,38 @@ public class AssetController {
         // Determine content type from metadata or path
         String contentType = determineContentType(asset);
 
-        // Build response with headers
+        // Build response with headers for streaming
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(contentType));
-        headers.setContentLength(content.length);
+
+        // Set content length if available from asset metadata
+        if (asset.getSize() > 0) {
+            headers.setContentLength(asset.getSize());
+        }
+
         headers.setCacheControl("public, max-age=86400"); // 24 hours cache
 
         // Set filename for download (use asset name from DB)
         String filename = asset.getName() != null ? asset.getName() : "asset";
         headers.setContentDispositionFormData("inline", filename);
 
-        log.trace("Serving asset: path={}, size={}, type={}, filename={}", finalAssetPath, content.length, contentType, filename);
+        log.trace("Streaming asset: path={}, size={}, type={}, filename={}",
+                 finalAssetPath, asset.getSize(), contentType, filename);
+
+        // Return StreamingResponseBody for direct streaming without memory loading
+        org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody responseBody = outputStream -> {
+            try (InputStream stream = contentStream) {
+                stream.transferTo(outputStream);
+                outputStream.flush();
+            } catch (Exception e) {
+                log.error("Error streaming asset: {}", finalAssetPath, e);
+                throw new java.io.IOException("Failed to stream asset", e);
+            }
+        };
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(content);
+                .body(responseBody);
     }
 
     /**

@@ -7,7 +7,6 @@ import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.storage.StorageService;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +28,7 @@ import java.util.Optional;
 public class WChunkService {
 
     private final WChunkRepository repository;
-    private final StorageService storageService; // optional injection
+    private final StorageService storageService;
     private final WWorldService worldService;
     private final WItemRegistryService itemRegistryService;
 
@@ -48,32 +48,42 @@ public class WChunkService {
             throw new IllegalArgumentException("regionId, worldId und chunkKey erforderlich");
         }
         if (data == null) throw new IllegalArgumentException("ChunkData erforderlich");
+
         // Felder 'status' und 'i' vor Serialisierung null setzen
         data.setStatus(null);
         data.setI(null);
+
         String json;
-        try { json = objectMapper.writeValueAsString(data); } catch (Exception e) {
+        try {
+            json = objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
             throw new IllegalStateException("Serialisierung ChunkData fehlgeschlagen", e);
         }
-        byte[] bytes = json.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
         WChunk entity = repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey)
                 .orElseGet(() -> {
                     WChunk neu = WChunk.builder().regionId(regionId).worldId(worldId).chunk(chunkKey).build();
                     neu.touchCreate();
                     return neu;
                 });
-        if (bytes.length <= inlineMaxSize) {
-            if (entity.getStorageId() != null)
-                safeDeleteExternal(storageService, entity.getStorageId());
-            entity.setStorageId(null);
-            entity.setContent(json);
-            log.debug("Chunk inline gespeichert chunkKey={} size={} region={} world={}", chunkKey, bytes.length, regionId, worldId);
-        } else {
-            String storageId = storageService.update("chunk/" + worldId + "/" + chunkKey, bytes);
-            entity.setStorageId(storageId);
-            entity.setContent(null);
-            log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}", chunkKey, bytes.length, storageId, regionId, worldId);
+
+        // Alle Chunks werden jetzt extern über StorageService gespeichert
+        try (InputStream stream = new ByteArrayInputStream(json.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+            StorageService.StorageInfo storageInfo;
+            if (entity.getStorageId() != null) {
+                // Update existing chunk
+                storageInfo = storageService.update(entity.getStorageId(), stream);
+            } else {
+                // Create new chunk
+                storageInfo = storageService.store("chunk/" + worldId + "/" + chunkKey, stream);
+            }
+            entity.setStorageId(storageInfo.id());
+            log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}",
+                    chunkKey, storageInfo.size(), storageInfo.id(), regionId, worldId);
+        } catch (Exception e) {
+            throw new IllegalStateException("Speichern ChunkData fehlgeschlagen", e);
         }
+
         entity.touchUpdate();
         return repository.save(entity);
     }
@@ -81,17 +91,48 @@ public class WChunkService {
     @Transactional(readOnly = true)
     public InputStream getStream(String regionId, String worldId, String chunkKey) {
         WChunk chunk = repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey).orElse(null);
-        if (chunk == null) return null;
-        if (chunk.isInline()) {
-            String c = chunk.getContent();
-            byte[] d = c == null ? new byte[0] : c.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-            return new ByteArrayInputStream(d);
+        if (chunk == null || chunk.getStorageId() == null) {
+            return new ByteArrayInputStream(new byte[0]);
         }
-        if (chunk.isExternal()) {
-            byte[] d = storageService.load(chunk.getStorageId());
-            return d == null ? new ByteArrayInputStream(new byte[0]) : new ByteArrayInputStream(d);
+
+        // Alle Chunks sind jetzt extern gespeichert - Stream direkt vom StorageService zurückgeben
+        InputStream stream = storageService.load(chunk.getStorageId());
+        return stream != null ? stream : new ByteArrayInputStream(new byte[0]);
+    }
+
+    /**
+     * Streams chunk content directly to HTTP response without loading into memory.
+     * Verhindert Memory-Probleme bei großen Chunks.
+     */
+    @Transactional(readOnly = true)
+    public boolean streamToResponse(String regionId, String worldId, String chunkKey, jakarta.servlet.http.HttpServletResponse response) {
+        WChunk chunk = repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey).orElse(null);
+        if (chunk == null || chunk.getStorageId() == null) {
+            return false;
         }
-        return new ByteArrayInputStream(new byte[0]);
+
+        try (InputStream inputStream = storageService.load(chunk.getStorageId())) {
+            if (inputStream == null) {
+                return false;
+            }
+
+            // Set content type and headers
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            // Stream direkt zum Client ohne Memory-Belastung
+            try (OutputStream outputStream = response.getOutputStream()) {
+                inputStream.transferTo(outputStream);
+                outputStream.flush();
+            }
+
+            log.debug("Chunk erfolgreich gestreamt chunkKey={} region={} world={}", chunkKey, regionId, worldId);
+            return true;
+
+        } catch (Exception e) {
+            log.warn("Fehler beim Streamen des Chunks chunkKey={} region={} world={}", chunkKey, regionId, worldId, e);
+            return false;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -101,18 +142,21 @@ public class WChunkService {
         if (chunkOpt.isPresent()) {
             // Chunk exists in database - load it
             WChunk entity = chunkOpt.get();
-            byte[] raw;
-            if (entity.isInline()) {
-                String c = entity.getContent();
-                raw = c == null ? new byte[0] : c.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-            } else if (entity.isExternal()) {
-                raw = storageService.load(entity.getStorageId());
-            } else {
-                raw = new byte[0];
+            if (entity.getStorageId() == null) {
+                log.warn("Chunk ohne StorageId gefunden chunkKey={} region={} world={}", chunkKey, regionId, worldId);
+                return Optional.empty();
             }
-            if (raw.length == 0) return Optional.empty();
-            try {
-                return Optional.ofNullable(objectMapper.readValue(raw, ChunkData.class));
+
+            // Alle Chunks sind jetzt extern gespeichert - Stream-basierte Deserialisierung
+            try (InputStream stream = storageService.load(entity.getStorageId())) {
+                if (stream == null) {
+                    return Optional.empty();
+                }
+
+                // Direkte Deserialisierung vom Stream ohne Memory-Verschwendung
+                ChunkData chunkData = objectMapper.readValue(stream, ChunkData.class);
+                return Optional.ofNullable(chunkData);
+
             } catch (Exception e) {
                 log.warn("ChunkData Deserialisierung fehlgeschlagen chunkKey={} region={} world={}", chunkKey, regionId, worldId, e);
                 return Optional.empty();
@@ -218,7 +262,7 @@ public class WChunkService {
     @Transactional
     public boolean delete(String regionId, String worldId, String chunkKey) {
         return repository.findByRegionIdAndWorldIdAndChunk(regionId, worldId, chunkKey).map(c -> {
-            if (c.isExternal()) {
+            if (c.getStorageId() != null) {
                 safeDeleteExternal(storageService, c.getStorageId());
             }
             repository.delete(c);

@@ -49,12 +49,12 @@ public class FileStorageService extends StorageService {
     }
 
     @Override
-    public OutputStream load(String storageId) {
+    public InputStream load(String storageId) {
         storageId = normalizePath(storageId);
         var file = new File(basePath, storageId);
         if (!file.exists()) return null;
         try {
-            return new FileOutputStream(file);
+            return new java.io.FileInputStream(file);
         } catch (Exception e) {
             log.error("Error loading file from " + file.getAbsolutePath(), e);
         }

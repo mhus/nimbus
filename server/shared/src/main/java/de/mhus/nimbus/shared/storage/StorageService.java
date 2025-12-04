@@ -11,7 +11,7 @@ public abstract class StorageService {
     /** Speichert Daten und liefert eine Storage-Id. */
     public abstract StorageInfo store(String path, InputStream stream);
     /** Lädt Daten anhand der Storage-Id. */
-    public abstract OutputStream load(String storageId);
+    public abstract InputStream load(String storageId);
     /** Entfernt abgelegten Inhalt. */
     public abstract void delete(String storageId);
     public abstract StorageInfo update(String storageId, InputStream stream);
