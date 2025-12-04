@@ -2481,3 +2481,10 @@ Deshalb die trennung.
 - in /api/worlds/{worldId}/items werden Items gehandhabt
 - im world-player wird an dich Chunks die ItemBlockRef (ItemPositionen.publicData) geschickt.
 - der import muss auch angepasst werden.
+
+[ ] world-life schickt eine message via redis an die world-player, daraufhin der world-player die registrierten chunks
+zurueckmeldet. Dieser mechanismus soll geandert werden.
+- world-life schickt eine message via redis - wird nicht mehr geschcikt, die gesamte message ist obsolate und muss weg.
+- Der world-player server soll periodisch (1 minuten) alle registrierten chunks automatisch via redis an world-life schicken.
+- Der world life service hat an chunks einen TTL von 5 minuten. Wenn er in den 5 minuten kein update bekommt, dann
+  loescht er die chunks.

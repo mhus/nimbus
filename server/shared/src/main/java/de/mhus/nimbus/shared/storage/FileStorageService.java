@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 
-@Service
+// @Service  // Deactivated - MongoStorageService is now active
 @Slf4j
 public class FileStorageService extends StorageService {
 
