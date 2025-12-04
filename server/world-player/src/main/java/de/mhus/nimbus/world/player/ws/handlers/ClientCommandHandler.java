@@ -63,6 +63,9 @@ public class ClientCommandHandler implements MessageHandler {
     private final WorldClientService worldClientService;
     private final ObjectMapper objectMapper;
 
+    // Server IP for originIp in CommandContext (cached)
+    private String serverIp = null;
+
     // Static prefix mapping for command routing
     private static final Map<String, String> PREFIX_ROUTING = Map.of(
             "life.", "world-life",
@@ -154,6 +157,7 @@ public class ClientCommandHandler implements MessageHandler {
                 .displayName(session.getDisplayName())
                 .requestTime(Instant.now())
                 .originServer("world-player")
+                .originIp(getServerIp())
                 .build();
 
         // Execute command
@@ -197,6 +201,7 @@ public class ClientCommandHandler implements MessageHandler {
                 .displayName(session.getDisplayName())
                 .requestTime(Instant.now())
                 .originServer("world-player")
+                .originIp(getServerIp())
                 .build();
 
         log.debug("Routing command to {}: cmd={}, actualCmd={}, user={}",
@@ -324,5 +329,21 @@ public class ClientCommandHandler implements MessageHandler {
      */
     private void sendErrorResponse(PlayerSession session, String requestId, int errorCode, String errorMessage) {
         sendResponse(session, requestId, errorCode, errorMessage);
+    }
+
+    /**
+     * Get server IP address for originIp in CommandContext.
+     * Uses environment variable NIMBUS_SERVER_IP or defaults to localhost.
+     */
+    private String getServerIp() {
+        if (serverIp == null) {
+            serverIp = System.getenv("NIMBUS_SERVER_IP");
+            if (serverIp == null || serverIp.isBlank()) {
+                serverIp = "localhost";
+                log.warn("NIMBUS_SERVER_IP not set, using 'localhost'. Set environment variable for production.");
+            }
+            log.info("Using server IP for CommandContext: {}", serverIp);
+        }
+        return serverIp;
     }
 }
