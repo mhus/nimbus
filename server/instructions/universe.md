@@ -177,10 +177,14 @@ Was alles gespeichert werden muss:
 
 - Ids: \[a-zA-Z0-9_-\]{1,64}
 - Pfade: /[a-zA-Z0-9_-\]{1,64}(/[a-zA-Z0-9_-]{1,64})*
-- WorldCoordiante Kurz: W:regionId/worldId\[$subWorld\]\[:branch\]
-- WorldCoordiante Lang: U:galaxyId/regionId/starId/celestialBodyId/worldId\[$subWorld\]\[:branch\]
+- WorldCoordiante Kurz: W:regionId/worldId\[/worldZone\]\[:branch\]\[@instance\]
+- WorldCoordiante Lang: U:galaxyId/regionId/starId/celestialBodyId/worldId\[/worldZone\]\[:branch\]\[@instance\]
 - starId: galaxy coordinate: komma getrennte werte einer funktion, die den stern im galaxie gitter beschreibt
 - planetId: planetNr von innen\[,mond Nr von Innen\]
+
+- worldId: main
+- worldUid: region:worldId/zone:branch - wird im world-player und world-control als weltId in Rest pfaden verwendet
+- worldInstanceId: region:worldId/zone:branch@instance
 
 ## Tokens und Access
 
