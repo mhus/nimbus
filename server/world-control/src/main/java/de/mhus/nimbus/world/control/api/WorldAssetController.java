@@ -145,21 +145,20 @@ public class WorldAssetController extends BaseEditorController {
         if (path != null && path.startsWith("/")) {
             path = path.substring(1);
         }
-        final String finalPath = path; // Make final for lambda
 
-        log.debug("GET asset file: worldId={}, path={}", worldId, finalPath);
+        log.debug("GET asset file: worldId={}, path={}", worldId, path);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
 
-        if (blank(finalPath)) {
+        if (blank(path)) {
             return bad("asset path required");
         }
 
         // Find asset (regionId=worldId, worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(worldId, worldId, finalPath);
+        Optional<SAsset> opt = assetService.findByPath(worldId, worldId, path);
         if (opt.isEmpty()) {
-            log.warn("Asset not found: worldId={}, path={}", worldId, finalPath);
+            log.warn("Asset not found: worldId={}, path={}", worldId, path);
             return notFound("asset not found");
         }
 
@@ -167,47 +166,30 @@ public class WorldAssetController extends BaseEditorController {
 
         // Serve binary content
         if (!asset.isEnabled()) {
-            log.warn("Asset disabled: path={}", finalPath);
+            log.warn("Asset disabled: path={}", path);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "asset disabled"));
         }
 
         // Load content as stream - no memory loading!
         InputStream contentStream = assetService.loadContent(asset);
         if (contentStream == null) {
-            log.warn("Asset has no content: {}", finalPath);
+            log.warn("Asset has no content: {}", path);
             return ResponseEntity.notFound().build();
         }
 
         // Determine content type
-        String mimeType = determineMimeType(finalPath);
+        String mimeType = determineMimeType(path);
 
-        // Build response with headers for streaming
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(mimeType));
+        log.debug("Streaming asset: path={}, size={}, mimeType={}", path, asset.getSize(), mimeType);
 
-        // Set content length if available from asset metadata
-        if (asset.getSize() > 0) {
-            headers.setContentLength(asset.getSize());
-        }
-
-        headers.setCacheControl("public, max-age=86400");
-
-        log.debug("Streaming asset: path={}, size={}, mimeType={}", finalPath, asset.getSize(), mimeType);
-
-        // Return StreamingResponseBody for direct streaming without memory loading
-        org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody responseBody = outputStream -> {
-            try (InputStream stream = contentStream) {
-                stream.transferTo(outputStream);
-                outputStream.flush();
-            } catch (Exception e) {
-                log.error("Error streaming asset: {}", finalPath, e);
-                throw new java.io.IOException("Failed to stream asset", e);
-            }
-        };
+        // Return InputStreamResource for streaming
+        org.springframework.core.io.InputStreamResource resource = new org.springframework.core.io.InputStreamResource(contentStream);
 
         return ResponseEntity.ok()
-                .headers(headers)
-                .body(responseBody);
+                .contentType(MediaType.parseMediaType(mimeType))
+                .contentLength(asset.getSize())
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .body(resource);
     }
 
     /**

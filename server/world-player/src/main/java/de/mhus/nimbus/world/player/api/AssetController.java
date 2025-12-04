@@ -218,20 +218,12 @@ public class AssetController {
         log.trace("Streaming asset: path={}, size={}, type={}, filename={}",
                  finalAssetPath, asset.getSize(), contentType, filename);
 
-        // Return StreamingResponseBody for direct streaming without memory loading
-        org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody responseBody = outputStream -> {
-            try (InputStream stream = contentStream) {
-                stream.transferTo(outputStream);
-                outputStream.flush();
-            } catch (Exception e) {
-                log.error("Error streaming asset: {}", finalAssetPath, e);
-                throw new java.io.IOException("Failed to stream asset", e);
-            }
-        };
+        // Return InputStreamResource for direct streaming without memory loading
+        org.springframework.core.io.InputStreamResource resource = new org.springframework.core.io.InputStreamResource(contentStream);
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(responseBody);
+                .body(resource);
     }
 
     /**
