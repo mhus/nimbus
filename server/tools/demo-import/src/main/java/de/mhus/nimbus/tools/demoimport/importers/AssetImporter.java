@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -114,7 +115,7 @@ public class AssetImporter {
             }
 
             // Save asset with metadata
-            service.saveAsset("main", "main", assetPath, content, "demo-import", metadata);
+            service.saveAsset("main", "main", assetPath, new ByteArrayInputStream(content), "demo-import", metadata);
             stats.incrementSuccess();
 
             if (stats.getSuccessCount() % batchSize == 0) {

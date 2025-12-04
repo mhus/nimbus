@@ -145,20 +145,21 @@ public class WorldAssetController extends BaseEditorController {
         if (path != null && path.startsWith("/")) {
             path = path.substring(1);
         }
+        final String finalPath = path; // Make final for lambda
 
-        log.debug("GET asset file: worldId={}, path={}", worldId, path);
+        log.debug("GET asset file: worldId={}, path={}", worldId, finalPath);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
 
-        if (blank(path)) {
+        if (blank(finalPath)) {
             return bad("asset path required");
         }
 
         // Find asset (regionId=worldId, worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(worldId, worldId, path);
+        Optional<SAsset> opt = assetService.findByPath(worldId, worldId, finalPath);
         if (opt.isEmpty()) {
-            log.warn("Asset not found: worldId={}, path={}", worldId, path);
+            log.warn("Asset not found: worldId={}, path={}", worldId, finalPath);
             return notFound("asset not found");
         }
 
@@ -166,24 +167,47 @@ public class WorldAssetController extends BaseEditorController {
 
         // Serve binary content
         if (!asset.isEnabled()) {
-            log.warn("Asset disabled: path={}", path);
+            log.warn("Asset disabled: path={}", finalPath);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "asset disabled"));
         }
 
-        byte[] content = assetService.loadContent(asset);
-        if (content == null) {
-            content = new byte[0];
+        // Load content as stream - no memory loading!
+        InputStream contentStream = assetService.loadContent(asset);
+        if (contentStream == null) {
+            log.warn("Asset has no content: {}", finalPath);
+            return ResponseEntity.notFound().build();
         }
 
         // Determine content type
-        String mimeType = determineMimeType(path);
+        String mimeType = determineMimeType(finalPath);
 
-        log.debug("Serving asset: path={}, size={}, mimeType={}", path, content.length, mimeType);
+        // Build response with headers for streaming
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(mimeType));
+
+        // Set content length if available from asset metadata
+        if (asset.getSize() > 0) {
+            headers.setContentLength(asset.getSize());
+        }
+
+        headers.setCacheControl("public, max-age=86400");
+
+        log.debug("Streaming asset: path={}, size={}, mimeType={}", finalPath, asset.getSize(), mimeType);
+
+        // Return StreamingResponseBody for direct streaming without memory loading
+        org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody responseBody = outputStream -> {
+            try (InputStream stream = contentStream) {
+                stream.transferTo(outputStream);
+                outputStream.flush();
+            } catch (Exception e) {
+                log.error("Error streaming asset: {}", finalPath, e);
+                throw new java.io.IOException("Failed to stream asset", e);
+            }
+        };
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(mimeType))
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
-                .body(content);
+                .headers(headers)
+                .body(responseBody);
     }
 
     /**
@@ -200,14 +224,14 @@ public class WorldAssetController extends BaseEditorController {
     public ResponseEntity<?> createAsset(
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @Parameter(description = "Asset path") @PathVariable String path,
-            @RequestBody byte[] content) {
+            InputStream contentStream) {
 
         // Remove leading slash if present
         if (path != null && path.startsWith("/")) {
             path = path.substring(1);
         }
 
-        log.debug("CREATE asset: worldId={}, path={}, size={}", worldId, path, content != null ? content.length : 0);
+        log.debug("CREATE asset: worldId={}, path={}", worldId, path);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
@@ -222,7 +246,7 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         try {
-            SAsset saved = assetService.saveAsset(worldId, worldId, path, content, "editor");
+            SAsset saved = assetService.saveAsset(worldId, worldId, path, contentStream, "editor");
             log.info("Created asset: path={}, size={}", path, saved.getSize());
             return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
         } catch (IllegalArgumentException e) {
@@ -251,14 +275,14 @@ public class WorldAssetController extends BaseEditorController {
     public ResponseEntity<?> updateAsset(
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @Parameter(description = "Asset path") @PathVariable String path,
-            @RequestBody(required = true) byte[] content) {
+            InputStream contentStream) {
 
         // Remove leading slash if present
         if (path != null && path.startsWith("/")) {
             path = path.substring(1);
         }
 
-        log.debug("UPDATE asset content: worldId={}, path={}, size={}", worldId, path, content != null ? content.length : 0);
+        log.debug("UPDATE asset content: worldId={}, path={}", worldId, path);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
@@ -273,16 +297,16 @@ public class WorldAssetController extends BaseEditorController {
             // Update/create binary content
             if (existing.isPresent()) {
                 // Update existing
-                Optional<SAsset> updated = assetService.updateContent(existing.get().getId(), content);
-                if (updated.isPresent()) {
-                    log.info("Updated asset: path={}, size={}", path, updated.get().getSize());
-                    return ResponseEntity.ok(toListDto(updated.get()));
+                SAsset updated = assetService.updateContent(existing.get().getId(), contentStream);
+                if (updated != null) {
+                    log.info("Updated asset: path={}, size={}", path, updated.getSize());
+                    return ResponseEntity.ok(toListDto(updated));
                 } else {
                     return notFound("asset disappeared during update");
                 }
             } else {
                 // Create new
-                SAsset saved = assetService.saveAsset(worldId, worldId, path, content, "editor");
+                SAsset saved = assetService.saveAsset(worldId, worldId, path, contentStream, "editor");
                 log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
                 return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
             }
@@ -389,7 +413,7 @@ public class WorldAssetController extends BaseEditorController {
             case ".ogg" -> "audio/ogg";
             case ".mp3" -> "audio/mpeg";
             case ".wav" -> "audio/wav";
-            default -> "application/octet-stream";
+            default -> "application/octet_stream";
         };
     }
 }

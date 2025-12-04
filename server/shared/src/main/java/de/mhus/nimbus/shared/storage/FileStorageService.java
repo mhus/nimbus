@@ -5,9 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 
 @Service
@@ -27,7 +26,7 @@ public class FileStorageService extends StorageService {
         var file = new File(basePath, path);
         file.getParentFile().mkdirs();
         try {
-            var size = java.nio.file.Files.copy(stream, file.toPath());
+            var size = java.nio.file.Files.copy(stream, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
             return new StorageInfo(
                     path,
                     size,
