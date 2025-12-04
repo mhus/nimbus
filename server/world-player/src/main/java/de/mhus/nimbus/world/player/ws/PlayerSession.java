@@ -39,6 +39,11 @@ public class PlayerSession {
      */
     private int pingInterval = 30;
 
+    /**
+     * Edit mode flag - when true, session sees overlay blocks from Redis.
+     */
+    private boolean editMode = false;
+
     public PlayerSession(WebSocketSession webSocketSession) {
         this.webSocketSession = webSocketSession;
         this.connectedAt = Instant.now();

@@ -2515,3 +2515,47 @@ in world-shared wandern. damit koennen die world-* server alle eigene commands i
   - der EditMode via command deaktiviert,
   dann wird ein Command 'EditModeClosedCommand' im world-control server aufgerufen,
   der alle overlays dieser session loescht.
+
+[ ] Block Layer Management
+Blöcke werden nicht einfach in Chunks angelegt, sondern in Layern. Es gibt zwei arten von layern:
+- Es gibt eine gemeinsamme Layer Entity, die auf die LayerData verweisst.
+  - worldId
+  - name
+  - layerType (TerrainLayer, ModelLayer)
+  - layerDataId (Verweis auf LayerTerrain oder LayerModel)
+  - mount X,Y,Z (nur fuer ModelLayer)
+  - allChunks (boolean, ob der Layer in allen Chunks dieser Welt vorhanden ist)
+  - affectedChunks (Liste der Chunks, wenn allChunks false ist)
+  - order (Reihenfolge der Layer)
+  - enabled
+  - createdAt
+  - updatedAt
+- Alle Layer haben eine order, in der sie ueberlagert werden.
+- TerrainLayer: Diese Layer sind chunk orientiert, genauso wie die Chunks.
+  - worldId
+  - layerDataId
+  - chunkKey (X:Z)
+  - storageId (Verweis auf LayerTerrainData im storage) 
+  - speicherung wie in WChunk
+- ModelLayer: Diese Layer sind entity orientiert, d.h. sie koennen ueber mehrere chunks gehen und haben einen Ursprungspunkt von dem Relative Positionen ausgehen.
+  - worldId
+  - layerDataId
+  - content (Liste von Blocks)
+
+Erstelle einen LayerService in world-shared der folgende Funktionen bereitstellt:
+- Management von Layer, TerrainLayer und ModelLayer (CRUD)
+
+Erstelle in world-control einen ChunkUpdateService der
+- Eine Entity DirtyChunk verwaltet.
+- Er prueft regelmaesig auf neue eintraege und erzeugt neue WChunk daten aus de layern.
+- Ein WChunk wird immer als ganzes ueberschrieben.
+  - Dazu werden alle Layer die auf den Chunk wirken zusammengefasst.
+  - Alle Layer entities fuer die worldId + chunkKey oder allChunks werden abgefragt. Sortiert nach order.
+  - Die Layer werden in der Reihenfolge ueberlagert.
+  - WChunk speichern.
+  - Event schicken via redis, das der chunk geandert wurde.
+  - In world-player den event abfangen und an die clients schicken.
+
+[ ] Edit Mode Control
+- Im world-control server wird ein EditService erstellt. 
+

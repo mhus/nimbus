@@ -35,6 +35,7 @@ public class ChunkRegistrationHandler implements MessageHandler {
     private final WChunkService chunkService;
     private final ObjectMapper objectMapper;
     private final de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService redisMessaging;
+    private final de.mhus.nimbus.world.player.service.EditModeService editModeService;
 
     @Override
     public String getMessageType() {
@@ -101,12 +102,18 @@ public class ChunkRegistrationHandler implements MessageHandler {
                 chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey, true)
                         .ifPresentOrElse(
                                 chunkData -> {
+                                    // Apply overlays if session is in edit mode
+                                    if (session.isEditMode()) {
+                                        editModeService.applyOverlays(session, chunkData);
+                                    }
+
                                     // Convert to transfer object for network transmission (includes items)
                                     ChunkDataTransferObject dto = chunkService.toTransferObject(
                                             session.getWorldId(), session.getWorldId(), chunkData);
                                     responseChunks.add(objectMapper.valueToTree(dto));
-                                    log.trace("Loaded chunk: cx={}, cz={}, worldId={}",
-                                            coord.cx, coord.cz, session.getWorldId());
+                                    log.trace("Loaded chunk: cx={}, cz={}, worldId={}, editMode={}, blocks={}",
+                                            coord.cx, coord.cz, session.getWorldId(),
+                                            session.isEditMode(), chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
                                 },
                                 () -> {
                                     log.debug("Chunk not found: cx={}, cz={}, worldId={}",

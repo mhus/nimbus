@@ -26,6 +26,7 @@ public class ChunkQueryHandler implements MessageHandler {
 
     private final ObjectMapper objectMapper;
     private final WChunkService chunkService;
+    private final de.mhus.nimbus.world.player.service.EditModeService editModeService;
 
     @Override
     public String getMessageType() {
@@ -54,12 +55,18 @@ public class ChunkQueryHandler implements MessageHandler {
             chunkService.loadChunkData(session.getWorldId(), session.getWorldId(), chunkKey, true)
                     .ifPresentOrElse(
                             chunkData -> {
+                                // Apply overlays if session is in edit mode
+                                if (session.isEditMode()) {
+                                    editModeService.applyOverlays(session, chunkData);
+                                }
+
                                 // Convert to transfer object for network transmission (includes items)
                                 ChunkDataTransferObject dto = chunkService.toTransferObject(
                                         session.getWorldId(), session.getWorldId(), chunkData);
                                 responseChunks.add(objectMapper.valueToTree(dto));
-                                log.trace("Loaded chunk: cx={}, cz={}, worldId={}",
-                                        cx, cz, session.getWorldId());
+                                log.trace("Loaded chunk: cx={}, cz={}, worldId={}, editMode={}, blocks={}",
+                                        cx, cz, session.getWorldId(),
+                                        session.isEditMode(), chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
                             },
                             () -> {
                                 log.debug("Chunk not found: cx={}, cz={}, worldId={}",
