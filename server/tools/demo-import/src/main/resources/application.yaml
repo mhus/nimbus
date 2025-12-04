@@ -20,6 +20,8 @@ import:
   batch-size: 100
   asset-batch-size: 50
   default-world-id: main
+  # Mark imported chunks as dirty for regeneration from layers
+  mark-chunks-dirty: true
 
 logging:
   level:

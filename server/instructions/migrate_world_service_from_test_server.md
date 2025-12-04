@@ -2563,10 +2563,11 @@ Erstelle in world-control einen ChunkUpdateService der
 - Dafuer wird an den Bloecken in ModelLayer eine neue Eigenschaft 'groups' Map<String, Integer> 
 - an LayerBlock 'int group' hinzugefuegt. default ist 0.
 
-[ ] world import von Chunks erweitern
+[?] world import von Chunks erweitern
 - Beim import muss zusaetzlich zu den Chunks auch die Layer Entities, LayerData (Terrain) importiert werden.
 - Erstelle wenn nicht existiert einen Layer 'ground' order 10, type TerrainLayer, allChunks=true
 - Erstelle fuer jeden Chunk zusaetzlich eine LayerTerrain Entity mit entsprechenden LayerChunkData
+- Erstelle fuer jeden importierten TerrainLayer einen DirtyChunk eintrag, damit der chunk nochmal ein update bekommt, mache das konfigurierbar in application.yaml
 
 [ ] Edit Mode Control
 - Im world-control server wird ein EditService erstellt. 

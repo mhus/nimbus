@@ -3,8 +3,10 @@ package de.mhus.nimbus.tools.demoimport.importers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.tools.demoimport.ImportStats;
+import de.mhus.nimbus.world.shared.layer.*;
 import de.mhus.nimbus.world.shared.world.WChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,9 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -28,6 +33,8 @@ import java.util.stream.Stream;
 public class ChunkImporter {
 
     private final WChunkService chunkService;
+    private final WLayerService layerService;
+    private final WDirtyChunkService dirtyChunkService;
     private final ObjectMapper objectMapper;
 
     @Value("${import.data-path:../../client/packages/test_server/data}")
@@ -35,6 +42,12 @@ public class ChunkImporter {
 
     @Value("${import.world-id:main}")
     private String worldId;
+
+    @Value("${import.mark-chunks-dirty:true}")
+    private boolean markChunksDirty;
+
+    private static final String GROUND_LAYER_NAME = "ground";
+    private static final int GROUND_LAYER_ORDER = 10;
 
     public ImportStats importAll() throws Exception {
         log.info("Starting Chunk import from: {}/worlds/{}/chunks/", dataPath, worldId);
@@ -47,13 +60,16 @@ public class ChunkImporter {
             return stats;
         }
 
+        // Ensure 'ground' layer exists
+        WLayer groundLayer = ensureGroundLayer();
+
         // Read all chunk_*.json files
         try (Stream<Path> files = Files.list(chunksDir)) {
             files.filter(path -> path.getFileName().toString().matches("chunk_-?\\d+_-?\\d+\\.json"))
                     .sorted()
                     .forEach(chunkPath -> {
                         try {
-                            importChunk(chunkPath.toFile(), stats);
+                            importChunk(chunkPath.toFile(), groundLayer, stats);
                         } catch (Exception e) {
                             log.error("Failed to import chunk: {}", chunkPath.getFileName(), e);
                             stats.incrementFailure();
@@ -67,7 +83,33 @@ public class ChunkImporter {
         return stats;
     }
 
-    private void importChunk(File chunkFile, ImportStats stats) throws Exception {
+    /**
+     * Ensure 'ground' layer exists.
+     * Creates if not exists: Layer 'ground', order 10, type TerrainLayer, allChunks=true.
+     */
+    private WLayer ensureGroundLayer() {
+        Optional<WLayer> existingLayer = layerService.findLayer(worldId, GROUND_LAYER_NAME);
+
+        if (existingLayer.isPresent()) {
+            log.info("Ground layer already exists for world: {}", worldId);
+            return existingLayer.get();
+        }
+
+        // Create ground layer
+        WLayer groundLayer = layerService.createLayer(
+                worldId,
+                GROUND_LAYER_NAME,
+                LayerType.TERRAIN,
+                GROUND_LAYER_ORDER,
+                true,  // allChunks
+                List.of()  // no specific chunks
+        );
+
+        log.info("Created ground layer for world: {} (order: {})", worldId, GROUND_LAYER_ORDER);
+        return groundLayer;
+    }
+
+    private void importChunk(File chunkFile, WLayer groundLayer, ImportStats stats) throws Exception {
         // Read as JsonNode first for transformation
         JsonNode chunkNode = objectMapper.readTree(chunkFile);
 
@@ -80,19 +122,80 @@ public class ChunkImporter {
         // Create chunkKey (cx:cz format)
         String chunkKey = chunkData.getCx() + ":" + chunkData.getCz();
 
-        // Check if chunk already exists (create=false to prevent default chunk generation)
-        if (chunkService.loadChunkData(worldId, worldId, chunkKey, false).isPresent()) {
-            log.trace("Chunk already exists: {} - skipping", chunkKey);
+        boolean chunkExists = chunkService.loadChunkData(worldId, worldId, chunkKey, false).isPresent();
+        boolean layerExists = layerService.loadTerrainChunk(groundLayer.getLayerDataId(), chunkKey).isPresent();
+
+        // Check if both already exist
+        if (chunkExists && layerExists) {
+            log.trace("Chunk and layer already exist: {} - skipping", chunkKey);
             stats.incrementSkipped();
             return;
         }
 
-        // Save chunk via service (regionId = worldId for main world)
-        chunkService.saveChunk(worldId, worldId, chunkKey, chunkData);
-        stats.incrementSuccess();
+        // Save chunk if it doesn't exist
+        if (!chunkExists) {
+            chunkService.saveChunk(worldId, worldId, chunkKey, chunkData);
+            log.debug("Imported chunk: {} ({} blocks)", chunkKey,
+                    chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
+        } else {
+            log.debug("Chunk already exists: {} - updating layer only", chunkKey);
+        }
 
-        log.debug("Imported chunk: {} ({} blocks)", chunkKey,
-                chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
+        // Create/Update LayerTerrain entity if it doesn't exist
+        if (!layerExists) {
+            createLayerTerrainChunk(groundLayer, chunkKey, chunkData);
+            log.debug("Created layer terrain for existing chunk: {}", chunkKey);
+
+            // Mark chunk as dirty for regeneration if configured
+            if (markChunksDirty) {
+                dirtyChunkService.markChunkDirty(worldId, chunkKey, "terrain_layer_imported");
+                log.trace("Marked chunk dirty for regeneration: {}", chunkKey);
+            }
+        }
+
+        stats.incrementSuccess();
+    }
+
+    /**
+     * Create LayerTerrain entity for the ground layer with LayerChunkData.
+     * Converts ChunkData blocks to LayerBlocks.
+     */
+    private void createLayerTerrainChunk(WLayer groundLayer, String chunkKey, ChunkData chunkData) {
+        try {
+            // Convert ChunkData to LayerChunkData
+            LayerChunkData layerChunkData = new LayerChunkData();
+            layerChunkData.setCx(chunkData.getCx());
+            layerChunkData.setCz(chunkData.getCz());
+
+            // Convert blocks to LayerBlocks
+            if (chunkData.getBlocks() != null) {
+                List<LayerBlock> layerBlocks = new ArrayList<>();
+                for (Block block : chunkData.getBlocks()) {
+                    LayerBlock layerBlock = LayerBlock.builder()
+                            .block(block)
+                            .override(true)  // default override
+                            .group(0)        // default group
+                            .build();
+                    layerBlocks.add(layerBlock);
+                }
+                layerChunkData.setBlocks(layerBlocks);
+            }
+
+            // Copy height data
+            if (chunkData.getHeightData() != null) {
+                layerChunkData.setHeightData(chunkData.getHeightData());
+            }
+
+            // Save to layer terrain
+            layerService.saveTerrainChunk(worldId, groundLayer.getLayerDataId(), chunkKey, layerChunkData);
+
+            log.trace("Created LayerTerrain for chunk: {} ({} blocks)",
+                    chunkKey, layerChunkData.getBlocks().size());
+
+        } catch (Exception e) {
+            log.error("Failed to create LayerTerrain for chunk: {}", chunkKey, e);
+            // Don't fail the import, just log the error
+        }
     }
 
     /**
