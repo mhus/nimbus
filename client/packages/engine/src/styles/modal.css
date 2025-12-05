@@ -58,6 +58,70 @@
   white-space: nowrap;
 }
 
+/* Buttons container */
+.nimbus-modal-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Minimize button */
+.nimbus-modal-minimize {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nimbus-modal-minimize:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.nimbus-modal-minimize:active {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Break-out button */
+.nimbus-modal-breakout {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nimbus-modal-breakout:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.nimbus-modal-breakout:active {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
 /* Close button */
 .nimbus-modal-close {
   background: none;
@@ -75,7 +139,6 @@
   border-radius: 4px;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  margin-left: 16px;
 }
 
 .nimbus-modal-close:hover {
@@ -94,6 +157,16 @@
   border: none;
   flex-grow: 1;
   background-color: #ffffff;
+}
+
+/* Minimized state - only header visible */
+.nimbus-modal-minimized {
+  height: auto !important;
+  min-height: unset !important;
+}
+
+.nimbus-modal-minimized .nimbus-modal-iframe {
+  display: none;
 }
 
 /* Animations */
@@ -140,6 +213,18 @@
 
   .nimbus-modal-title {
     font-size: 16px;
+  }
+
+  .nimbus-modal-minimize {
+    font-size: 20px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .nimbus-modal-breakout {
+    font-size: 20px;
+    width: 28px;
+    height: 28px;
   }
 
   .nimbus-modal-close {
@@ -295,6 +380,24 @@
 
   .nimbus-modal-title {
     color: #e0e0e0;
+  }
+
+  .nimbus-modal-minimize {
+    color: #999;
+  }
+
+  .nimbus-modal-minimize:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .nimbus-modal-breakout {
+    color: #999;
+  }
+
+  .nimbus-modal-breakout:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
   }
 
   .nimbus-modal-close {

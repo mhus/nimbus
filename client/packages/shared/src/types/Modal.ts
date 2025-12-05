@@ -66,6 +66,9 @@ export enum ModalFlags {
 
   /** Modal can be resized by dragging edges/corners */
   RESIZEABLE = 1 << 5, // 32
+
+  /** Modal can be minimized (only header visible) */
+  MINIMIZABLE = 1 << 6, // 64
 }
 
 /**

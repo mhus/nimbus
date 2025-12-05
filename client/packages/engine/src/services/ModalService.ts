@@ -373,6 +373,16 @@ export class ModalService {
       const buttonsContainer = document.createElement('div');
       buttonsContainer.className = 'nimbus-modal-buttons';
 
+      // Minimize button (if enabled)
+      const isMinimizable = (flags & ModalFlags.MINIMIZABLE) !== 0;
+      if (isMinimizable) {
+        const minimizeButton = document.createElement('button');
+        minimizeButton.className = 'nimbus-modal-minimize';
+        minimizeButton.innerHTML = '&#x2013;'; // – (en dash)
+        minimizeButton.setAttribute('aria-label', 'Minimize modal');
+        buttonsContainer.appendChild(minimizeButton);
+      }
+
       // Break-out button (if enabled)
       if (hasBreakOut) {
         const breakOutButton = document.createElement('button');
@@ -450,6 +460,15 @@ export class ModalService {
     const noBackgroundLock = (flags & ModalFlags.NO_BACKGROUND_LOCK) !== 0;
     const isMoveable = (flags & ModalFlags.MOVEABLE) !== 0;
     const isResizeable = (flags & ModalFlags.RESIZEABLE) !== 0;
+    const isMinimizable = (flags & ModalFlags.MINIMIZABLE) !== 0;
+
+    // Minimize button click
+    const minimizeButton = backdrop.querySelector('.nimbus-modal-minimize');
+    if (minimizeButton && isMinimizable) {
+      minimizeButton.addEventListener('click', () => {
+        this.toggleMinimize(modalRef);
+      });
+    }
 
     // Close button click
     const closeButton = backdrop.querySelector('.nimbus-modal-close');
@@ -801,6 +820,46 @@ export class ModalService {
   }
 
   /**
+   * Toggle minimize state of modal
+   */
+  private toggleMinimize(modalRef: ModalReference): void {
+    try {
+      const backdrop = modalRef.element;
+      const modalContainer = backdrop.querySelector('.nimbus-modal-container') as HTMLElement;
+      const iframe = modalContainer?.querySelector('.nimbus-modal-iframe') as HTMLElement;
+      const minimizeButton = backdrop.querySelector('.nimbus-modal-minimize');
+
+      if (!modalContainer || !minimizeButton) {
+        return;
+      }
+
+      const isMinimized = modalContainer.classList.contains('nimbus-modal-minimized');
+
+      if (isMinimized) {
+        // Restore
+        modalContainer.classList.remove('nimbus-modal-minimized');
+        if (iframe) {
+          iframe.style.display = '';
+        }
+        minimizeButton.innerHTML = '&#x2013;'; // – (en dash)
+        minimizeButton.setAttribute('aria-label', 'Minimize modal');
+        logger.debug('Modal restored', { id: modalRef.id });
+      } else {
+        // Minimize
+        modalContainer.classList.add('nimbus-modal-minimized');
+        if (iframe) {
+          iframe.style.display = 'none';
+        }
+        minimizeButton.innerHTML = '&#x25A1;'; // □ (square)
+        minimizeButton.setAttribute('aria-label', 'Restore modal');
+        logger.debug('Modal minimized', { id: modalRef.id });
+      }
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModalService.toggleMinimize', { modalRef });
+    }
+  }
+
+  /**
    * Break out modal to new window
    */
   private breakOutModal(modalRef: ModalReference, url: string): void {
@@ -945,7 +1004,7 @@ export class ModalService {
         `Block Editor`,
         editorUrl,
         ModalSizePreset.RIGHT,
-        ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK
+        ModalFlags.CLOSEABLE | ModalFlags.BREAK_OUT | ModalFlags.RESIZEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.MINIMIZABLE
       );
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openBlockEditor', { x, y, z });
@@ -987,7 +1046,7 @@ export class ModalService {
         'Edit Configuration',
         editorUrl,
         ModalSizePreset.LEFT_TOP, // Top-left quadrant (50% x 50%)
-        ModalFlags.CLOSEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.RESIZEABLE | ModalFlags.BREAK_OUT
+        ModalFlags.CLOSEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.RESIZEABLE | ModalFlags.BREAK_OUT | ModalFlags.MINIMIZABLE
       );
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openEditConfiguration');

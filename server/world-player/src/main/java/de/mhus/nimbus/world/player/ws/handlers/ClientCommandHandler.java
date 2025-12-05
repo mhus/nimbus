@@ -207,11 +207,13 @@ public class ClientCommandHandler implements MessageHandler {
         java.util.concurrent.CompletableFuture<WorldClientService.CommandResponse> future;
 
         switch (targetServer) {
+            case "world-life":
             case "life":
                 future = worldClientService.sendLifeCommand(
                         session.getWorldId(), actualCommandName, args, context);
                 break;
 
+            case "world-control":
             case "control":
                 future = worldClientService.sendControlCommand(
                         session.getWorldId(), actualCommandName, args, context);

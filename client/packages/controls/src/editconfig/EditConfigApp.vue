@@ -20,14 +20,25 @@
         <span>{{ error }}</span>
       </div>
 
-      <!-- Two-column layout: Form left (70%), Navigator right (30%) -->
-      <div class="grid gap-1" style="grid-template-columns: 70% 30%;">
-        <!-- Left Column: Form and Info -->
+      <!-- Two column layout -->
+      <div class="grid gap-1" style="grid-template-columns: 50% 50%;">
+        <!-- Left Column: Edit Action, Navigator, Selected Block -->
         <div class="space-y-1">
           <!-- Edit Action Configuration - Compact -->
           <div class="card bg-base-100 shadow-sm">
             <div class="card-body p-2">
-              <h2 class="card-title text-sm mb-2">Edit Action</h2>
+              <div class="flex justify-between items-center mb-2">
+                <h2 class="card-title text-sm">Edit Action</h2>
+                <button
+                  @click="fetchEditState"
+                  class="btn btn-ghost btn-xs btn-circle"
+                  title="Refresh"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
 
               <div class="form-control w-full">
                 <select
@@ -49,6 +60,75 @@
             </div>
           </div>
 
+          <!-- Navigator - Collapsible -->
+          <div class="collapse collapse-arrow bg-base-100 shadow-sm">
+            <input type="checkbox" />
+            <div class="collapse-title text-sm font-semibold p-2">
+              Navigator
+            </div>
+            <div class="collapse-content">
+              <NavigateSelectedBlockComponent
+                :selected-block="selectedBlock"
+                :step="1"
+                :size="224"
+                :show-execute-button="true"
+                @navigate="handleNavigate"
+                @execute="executeAction"
+              />
+            </div>
+          </div>
+
+          <!-- Selected Block Display - Compact -->
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body p-2">
+              <h2 class="card-title text-sm mb-2">Selected Block</h2>
+
+              <div v-if="selectedBlock" class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-primary/10 rounded p-2">
+                  <div class="text-xs text-base-content/70">X</div>
+                  <div class="text-lg font-bold text-primary">{{ selectedBlock.x }}</div>
+                </div>
+                <div class="bg-secondary/10 rounded p-2">
+                  <div class="text-xs text-base-content/70">Y</div>
+                  <div class="text-lg font-bold text-secondary">{{ selectedBlock.y }}</div>
+                </div>
+                <div class="bg-accent/10 rounded p-2">
+                  <div class="text-xs text-base-content/70">Z</div>
+                  <div class="text-lg font-bold text-accent">{{ selectedBlock.z }}</div>
+                </div>
+              </div>
+
+              <div v-else class="alert alert-info alert-sm text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>No block selected</span>
+              </div>
+
+              <!-- Marked Block Display - Compact -->
+              <div v-if="markedBlock" class="mt-2">
+                <h3 class="text-xs font-semibold mb-1 text-base-content/70">Marked (copy/move)</h3>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                  <div class="bg-warning/10 rounded p-1">
+                    <div class="text-xs text-base-content/70">X</div>
+                    <div class="text-sm font-bold">{{ markedBlock.x }}</div>
+                  </div>
+                  <div class="bg-warning/10 rounded p-1">
+                    <div class="text-xs text-base-content/70">Y</div>
+                    <div class="text-sm font-bold">{{ markedBlock.y }}</div>
+                  </div>
+                  <div class="bg-warning/10 rounded p-1">
+                    <div class="text-xs text-base-content/70">Z</div>
+                    <div class="text-sm font-bold">{{ markedBlock.z }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Layer Selection, Edit Mode Control -->
+        <div class="space-y-1">
           <!-- Layer Selection - NEW -->
           <div class="card bg-base-100 shadow-sm">
             <div class="card-body p-2">
@@ -187,70 +267,6 @@
                 </svg>
                 <span>Layer locked while active</span>
               </div>
-            </div>
-          </div>
-
-          <!-- Selected Block Display - Compact -->
-          <div class="card bg-base-100 shadow-sm">
-            <div class="card-body p-2">
-              <h2 class="card-title text-sm mb-2">Selected Block</h2>
-
-              <div v-if="selectedBlock" class="grid grid-cols-3 gap-2 text-center">
-                <div class="bg-primary/10 rounded p-2">
-                  <div class="text-xs text-base-content/70">X</div>
-                  <div class="text-lg font-bold text-primary">{{ selectedBlock.x }}</div>
-                </div>
-                <div class="bg-secondary/10 rounded p-2">
-                  <div class="text-xs text-base-content/70">Y</div>
-                  <div class="text-lg font-bold text-secondary">{{ selectedBlock.y }}</div>
-                </div>
-                <div class="bg-accent/10 rounded p-2">
-                  <div class="text-xs text-base-content/70">Z</div>
-                  <div class="text-lg font-bold text-accent">{{ selectedBlock.z }}</div>
-                </div>
-              </div>
-
-              <div v-else class="alert alert-info alert-sm text-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>No block selected</span>
-              </div>
-
-              <!-- Marked Block Display - Compact -->
-              <div v-if="markedBlock" class="mt-2">
-                <h3 class="text-xs font-semibold mb-1 text-base-content/70">Marked (copy/move)</h3>
-                <div class="grid grid-cols-3 gap-2 text-center">
-                  <div class="bg-warning/10 rounded p-1">
-                    <div class="text-xs text-base-content/70">X</div>
-                    <div class="text-sm font-bold">{{ markedBlock.x }}</div>
-                  </div>
-                  <div class="bg-warning/10 rounded p-1">
-                    <div class="text-xs text-base-content/70">Y</div>
-                    <div class="text-sm font-bold">{{ markedBlock.y }}</div>
-                  </div>
-                  <div class="bg-warning/10 rounded p-1">
-                    <div class="text-xs text-base-content/70">Z</div>
-                    <div class="text-sm font-bold">{{ markedBlock.z }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Navigate Component -->
-        <div class="flex items-start justify-center">
-          <div class="card bg-base-100 shadow-sm w-full">
-            <div class="card-body p-2">
-              <NavigateSelectedBlockComponent
-                :selected-block="selectedBlock"
-                :step="1"
-                :size="224"
-                :show-execute-button="true"
-                @navigate="handleNavigate"
-                @execute="executeAction"
-              />
             </div>
           </div>
         </div>
@@ -425,7 +441,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useModal } from '@/composables/useModal';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 
@@ -506,8 +522,7 @@ const newLayer = ref({
   allChunks: false,
 });
 
-// Polling interval
-let pollInterval: number | null = null;
+// No automatic polling - use manual refresh button
 
 // Format action name for display
 function formatActionName(action: EditAction): string {
@@ -773,24 +788,7 @@ async function deleteLayer() {
   }
 }
 
-// Start polling for edit state updates
-function startPolling() {
-  // Initial fetch
-  fetchEditState();
-
-  // Poll every 2 seconds
-  pollInterval = window.setInterval(() => {
-    fetchEditState();
-  }, 2000);
-}
-
-// Stop polling
-function stopPolling() {
-  if (pollInterval !== null) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
-}
+// Manual refresh - no automatic polling
 
 // Handle navigation from NavigateSelectedBlockComponent (selection only, no action)
 async function handleNavigate(position: { x: number; y: number; z: number }) {
@@ -872,11 +870,7 @@ onMounted(async () => {
 
   await fetchLayers();
   await fetchEditState();
-  startPolling();
-});
-
-onUnmounted(() => {
-  stopPolling();
+  // No automatic polling - user clicks refresh button manually
 });
 
 // ===== EDIT MODE CONTROL FUNCTIONS =====
