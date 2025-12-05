@@ -1,5 +1,10 @@
 package de.mhus.nimbus.world.player.ws;
 
+import de.mhus.nimbus.shared.utils.LocationService;
+import de.mhus.nimbus.world.shared.session.WSession;
+import de.mhus.nimbus.world.shared.session.WSessionService;
+import de.mhus.nimbus.world.shared.session.WSessionStatus;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,19 +17,24 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Manages all active player WebSocket sessions.
  * Provides session lookup and cleanup.
+ * Synchronizes sessions with Redis via WSessionService.
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class SessionManager {
+
+    private final WSessionService wSessionService;
+    private final LocationService locationService;
 
     @Value("${nimbus.world.development.enabled:false}")
     private boolean applicationDevelopmentEnabled;
 
     @Value("${nimbus.world.development.worldId:main}")
-    private boolean applicationDevelopmentWorldId;
+    private String applicationDevelopmentWorldId;
 
-    @Value("${nimbus.world.development.worldId:region}")
-    private boolean applicationDevelopmentRegionId;
+    @Value("${nimbus.world.development.regionId:region}")
+    private String applicationDevelopmentRegionId;
 
     private final Map<String, PlayerSession> sessionsByWebSocketId = new ConcurrentHashMap<>();
     private final Map<String, PlayerSession> sessionsBySessionId = new ConcurrentHashMap<>();
@@ -55,22 +65,72 @@ public class SessionManager {
 
     /**
      * Update session ID after authentication.
+     * Creates or updates WSession in Redis based on authentication type.
      */
-    public void setSessionId(PlayerSession session, String sessionId) {
+    public void setSessionId(PlayerSession session, String sessionId, boolean isUsernamePasswordLogin,
+                              String worldId, String regionId, String userId, String characterId) {
         session.setSessionId(sessionId);
         sessionsBySessionId.put(sessionId, session);
+
+        String playerUrl = locationService.getInternalServerUrl();
+
+        if (isUsernamePasswordLogin && applicationDevelopmentEnabled) {
+            // Username/password login: Create new WSession in Redis
+            WSession wSession = wSessionService.create(
+                worldId != null ? worldId : applicationDevelopmentWorldId,
+                regionId != null ? regionId : applicationDevelopmentRegionId,
+                userId,
+                characterId,
+                null // use default TTL from WorldProperties
+            );
+            session.setSessionId(wSession.getId()); // Update to WSession ID
+            sessionsBySessionId.remove(sessionId); // Remove temporary ID
+            sessionsBySessionId.put(wSession.getId(), session); // Add with WSession ID
+
+            // Update WSession to RUNNING and store player URL
+            wSessionService.updateStatus(wSession.getId(), WSessionStatus.RUNNING);
+            wSessionService.updatePlayerUrl(wSession.getId(), playerUrl);
+
+            log.info("Created WSession for username/password login: sessionId={}, worldId={}, regionId={}, userId={}, playerUrl={}",
+                wSession.getId(), worldId, regionId, userId, playerUrl);
+        } else {
+            // Token login: Lookup existing WSession in Redis
+            Optional<WSession> wSession = wSessionService.get(sessionId);
+            if (wSession.isPresent()) {
+                if (wSession.get().getStatus() == WSessionStatus.WAITING) {
+                    // Update WSession to RUNNING and store player URL
+                    wSessionService.updateStatus(sessionId, WSessionStatus.RUNNING);
+                    wSessionService.updatePlayerUrl(sessionId, playerUrl);
+
+                    log.info("Updated WSession to RUNNING for token login: sessionId={}, worldId={}, userId={}, playerUrl={}",
+                        sessionId, wSession.get().getWorldId(), wSession.get().getUserId(), playerUrl);
+                } else {
+                    log.warn("WSession found but not in WAITING state: sessionId={}, status={}",
+                        sessionId, wSession.get().getStatus());
+                }
+            } else {
+                log.warn("WSession not found for token login: sessionId={}", sessionId);
+            }
+        }
+
         log.debug("Registered sessionId {} for WebSocket {}", sessionId, session.getWebSocketSession().getId());
     }
 
     /**
      * Remove session on disconnect.
+     * Updates WSession in Redis to DEPRECATED.
      */
     public void removeSession(String webSocketId) {
         PlayerSession session = sessionsByWebSocketId.remove(webSocketId);
         if (session != null) {
             session.setStatus(PlayerSession.SessionStatus.CLOSED);
-            if (session.getSessionId() != null) {
-                sessionsBySessionId.remove(session.getSessionId());
+            String sessionId = session.getSessionId();
+            if (sessionId != null) {
+                sessionsBySessionId.remove(sessionId);
+
+                // Update WSession to DEPRECATED in Redis
+                wSessionService.updateStatus(sessionId, WSessionStatus.DEPRECATED);
+                log.info("Updated WSession to DEPRECATED on disconnect: sessionId={}", sessionId);
             }
             log.debug("Removed session for WebSocket: {}", webSocketId);
         }
@@ -78,10 +138,19 @@ public class SessionManager {
 
     /**
      * Mark session as deprecated (connection lost, but keep session data).
+     * Updates WSession in Redis to DEPRECATED.
      */
     public void deprecateSession(String webSocketId) {
         getByWebSocketId(webSocketId).ifPresent(session -> {
             session.setStatus(PlayerSession.SessionStatus.DEPRECATED);
+
+            // Update WSession to DEPRECATED in Redis
+            String sessionId = session.getSessionId();
+            if (sessionId != null) {
+                wSessionService.updateStatus(sessionId, WSessionStatus.DEPRECATED);
+                log.info("Updated WSession to DEPRECATED: sessionId={}", sessionId);
+            }
+
             log.debug("Deprecated session for WebSocket: {}", webSocketId);
         });
     }

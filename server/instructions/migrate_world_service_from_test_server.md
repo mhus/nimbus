@@ -2697,7 +2697,7 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
 - Beim löchen wird ein AIR Block gespeichert (BlockType 0).
 (Das eigentliche speichern wird beim integrieren in den Layer erledigt, nicht hier)
 
-[ ] Sessions in world-player mit redis synchronisieren
+[?] Sessions in world-player mit redis synchronisieren
 - Siehe world-shared WSessionService (session im redis - world global)
 - Siehe world-player SessionManager (WebSocket session - world-player lokal)
 - Wenn in SessionManager eine Session erzeugt wird, muss
@@ -2711,3 +2711,30 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
 
 [ ] Erstelle in WSessionService eine Methode mit der mittels einer sessionId die Daten aus redis, incl. internal 
 player url, geladen werden koennen.
+
+[ ] In ../client/packages/controls/edit-config.html soll der 'Edit Mode' im Redis controlliert werden
+- Der Modus wird im world-player genutzt, damit Block overlays angezeigt werden koennen.
+- Der Modus wird mit SessionEditCommand ('edit') im world-player aktiviert/deaktiviert.
+- edit-config.html sollte ueber REST Endpunkt den Modus im world-player setzen koennen.
+  - Via WSessionService die URL des Players holen
+  - Commad zum setzen des Modus an den player schicken ('edit').
+- Ob der Modus aktiv ist, sollte in edit-config.html angezeigt werden. 
+  - entweder im redis erkennbar oder per Command im player abfragen ('edit') - besser redis
+  - ggf. im world-player erweitern, das der Status erkennbar ist. - WSessionService nutzen.
+- Im edit-config.html Sehe ich gerade keine Buttons um
+  - Modus Aktivieren - dann kann der Layer nicht mehr geaendert werden
+  - Modus verwerfen - loescht alle overlays
+  - Modus speichern - speichert alle overlays in den Layer, triggern von DirtyChunks.
+    - Beides, DirtyChunks erstellen und direkt erzeugen asynchron Triggern (nicht auf Scheduler warten)
+Nochmal der Flow:
+  - Im world-player muss der Edit Mode an der Session gesetzt sein, damit die Session überhaupt overlays anzeigt
+  - Im Redis sind die Overlay Daten zur Session, diese sind während des Editierens nur fuer diese Session sichtbar
+  - Es muss beim Editieren ein Layer festgelegt sein (an der Session, im Redis) damit die Edit Tools arbeiten können
+  - Alles Edition ueber redis
+  - Es kann noch eine Gruppe festgelegt werden, diese ist immer Editierbar und wird an neue Blöcke angehängt
+  - Wenn der Edit Mode deaktiviert wird, werden alle overlays dieser Session gelöscht
+    - Entweder vorher in den Layer geschrieben und dem DirtyChunkService übergeben (Save)
+    - Oder einfach gelöscht (Discard)
+  - Kontrolleirt wird das ganze über das edit-config.html Control.
+  - Editiert wird über den block-editor.html und über den EditService im world-control.
+- editieren funktioniert ueber world-control, der world-player ist nur fuer die ansicht/auslieferung der overlays an den player zustaendig.

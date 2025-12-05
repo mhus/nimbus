@@ -75,7 +75,8 @@ public class LoginHandler implements MessageHandler {
             return;
         }
 
-        // Generate or reuse session ID
+        // Determine if this is username/password or token login
+        boolean isUsernamePasswordLogin = username != null && password != null;
         String sessionId = existingSessionId != null ? existingSessionId : UUID.randomUUID().toString();
 
         // Update session
@@ -86,14 +87,19 @@ public class LoginHandler implements MessageHandler {
         session.setWorldId(targetWorldId);
         session.setStatus(PlayerSession.SessionStatus.AUTHENTICATED);
 
-        // Register session ID
-        sessionManager.setSessionId(session, sessionId);
+        // Register session ID and sync with Redis
+        // characterId is not set yet - will be set later when character is selected
+        sessionManager.setSessionId(session, sessionId, isUsernamePasswordLogin,
+            targetWorldId, world.getRegionId(), userId, null);
+
+        // Use the actual session ID (may have changed for username/password login)
+        String actualSessionId = session.getSessionId();
 
         // Send success response with world data
-        sendLoginResponse(session, message.getI(), true, null, sessionId, world);
+        sendLoginResponse(session, message.getI(), true, null, actualSessionId, world);
 
         log.info("Login successful: user={}, sessionId={}, worldId={}",
-                displayName, sessionId, session.getWorldId());
+                displayName, actualSessionId, session.getWorldId());
     }
 
     private void sendLoginResponse(PlayerSession session, String requestId, boolean success,

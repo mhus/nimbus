@@ -26,6 +26,7 @@ public class WSessionService {
     private static final String FIELD_REGION = "region";
     private static final String FIELD_USER = "user";
     private static final String FIELD_CHARACTER = "character";
+    private static final String FIELD_PLAYER_URL = "playerUrl";
     private static final String FIELD_CREATED = "created";
     private static final String FIELD_UPDATED = "updated";
     private static final String FIELD_EXPIRE = "expire";
@@ -67,6 +68,7 @@ public class WSessionService {
                     .regionId((String) map.get(FIELD_REGION))
                     .userId((String) map.get(FIELD_USER))
                     .characterId((String) map.get(FIELD_CHARACTER))
+                    .playerUrl((String) map.get(FIELD_PLAYER_URL))
                     .createdAt(Instant.parse((String) map.get(FIELD_CREATED)))
                     .updatedAt(Instant.parse((String) map.get(FIELD_UPDATED)))
                     .expireAt(Instant.parse((String) map.get(FIELD_EXPIRE)))
@@ -94,6 +96,22 @@ public class WSessionService {
         });
     }
 
+    public Optional<WSession> updatePlayerUrl(String id, String playerUrl) {
+        return get(id).map(existing -> {
+            existing.setPlayerUrl(playerUrl);
+            existing.touchUpdate();
+            Duration ttl = switch (existing.getStatus()) {
+                case WAITING -> Duration.ofMinutes(props.getWaitingMinutes());
+                case RUNNING -> Duration.ofHours(props.getRunningHours());
+                case DEPRECATED -> Duration.ofMinutes(props.getDeprecatedMinutes());
+            };
+            existing.setExpireAt(Instant.now().plus(ttl));
+            write(existing, ttl);
+            log.debug("WSession playerUrl aktualisiert id={} playerUrl={}", id, playerUrl);
+            return existing;
+        });
+    }
+
     public boolean delete(String id) {
         return Boolean.TRUE.equals(redis.delete(key(id)));
     }
@@ -106,6 +124,9 @@ public class WSessionService {
         ops.put(k, FIELD_REGION, session.getRegionId());
         ops.put(k, FIELD_USER, session.getUserId());
         ops.put(k, FIELD_CHARACTER, session.getCharacterId());
+        if (session.getPlayerUrl() != null) {
+            ops.put(k, FIELD_PLAYER_URL, session.getPlayerUrl());
+        }
         ops.put(k, FIELD_CREATED, session.getCreatedAt().toString());
         ops.put(k, FIELD_UPDATED, session.getUpdatedAt().toString());
         ops.put(k, FIELD_EXPIRE, session.getExpireAt().toString());

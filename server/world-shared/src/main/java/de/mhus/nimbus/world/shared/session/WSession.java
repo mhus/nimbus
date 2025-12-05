@@ -18,6 +18,7 @@ public class WSession {
     private String regionId;
     private String userId;
     private String characterId;
+    private String playerUrl; // Internal URL of the world-player service
     private Instant createdAt;
     private Instant updatedAt;
     private Instant expireAt;
