@@ -7,6 +7,7 @@ import de.mhus.nimbus.world.shared.layer.WDirtyChunk;
 import de.mhus.nimbus.world.shared.layer.WDirtyChunkService;
 import de.mhus.nimbus.world.shared.layer.WLayerOverlayService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
+import de.mhus.nimbus.world.shared.redis.WorldRedisLockService;
 import de.mhus.nimbus.world.shared.world.WChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,7 @@ public class ChunkUpdateService {
     private final WLayerOverlayService overlayService;
     private final WChunkService chunkService;
     private final WorldRedisMessagingService redisMessaging;
+    private final WorldRedisLockService lockService;
     private final ObjectMapper objectMapper;
 
     @Value("${world.control.chunk-update-batch-size:10}")
@@ -78,6 +81,7 @@ public class ChunkUpdateService {
 
     /**
      * Process batch of dirty chunks (oldest first).
+     * Acquires a distributed lock to prevent concurrent processing.
      *
      * @param worldId   World identifier
      * @param maxChunks Maximum chunks to process
@@ -85,33 +89,89 @@ public class ChunkUpdateService {
      */
     @Transactional
     public int processDirtyChunks(String worldId, int maxChunks) {
-        // Get oldest dirty chunks via service
-        List<WDirtyChunk> dirtyChunks = dirtyChunkService.getDirtyChunks(worldId, maxChunks);
-
-        if (dirtyChunks.isEmpty()) {
-            log.trace("No dirty chunks to process for world: {}", worldId);
+        // Try to acquire lock
+        String lockToken = lockService.acquireLock(worldId);
+        if (lockToken == null) {
+            log.trace("Chunk update already in progress for world: {}", worldId);
             return 0;
         }
 
-        log.debug("Processing {} dirty chunks for world: {}", dirtyChunks.size(), worldId);
+        try {
+            // Get oldest dirty chunks via service
+            List<WDirtyChunk> dirtyChunks = dirtyChunkService.getDirtyChunks(worldId, maxChunks);
 
-        int successCount = 0;
-        for (WDirtyChunk dirtyChunk : dirtyChunks) {
-            if (regenerateChunk(worldId, dirtyChunk.getChunkKey())) {
-                // Remove from dirty queue
-                dirtyChunkService.clearDirtyChunk(worldId, dirtyChunk.getChunkKey());
-                successCount++;
+            if (dirtyChunks.isEmpty()) {
+                log.trace("No dirty chunks to process for world: {}", worldId);
+                return 0;
+            }
+
+            log.debug("Processing {} dirty chunks for world: {}", dirtyChunks.size(), worldId);
+
+            int successCount = 0;
+            for (WDirtyChunk dirtyChunk : dirtyChunks) {
+                // Refresh lock every chunk to prevent timeout
+                lockService.refreshLock(worldId, lockToken, Duration.ofMinutes(1));
+
+                if (regenerateChunk(worldId, dirtyChunk.getChunkKey())) {
+                    // Remove from dirty queue
+                    dirtyChunkService.clearDirtyChunk(worldId, dirtyChunk.getChunkKey());
+                    successCount++;
+                } else {
+                    // Retry later: mark as dirty again (updates timestamp)
+                    dirtyChunkService.markChunkDirty(worldId, dirtyChunk.getChunkKey(),
+                            "regeneration_failed_retry");
+                }
+            }
+
+            log.info("Processed dirty chunks: world={} success={}/{}",
+                    worldId, successCount, dirtyChunks.size());
+
+            return successCount;
+
+        } finally {
+            // Always release lock
+            lockService.releaseLock(worldId, lockToken);
+        }
+    }
+
+    /**
+     * Update a chunk asynchronously if no lock is held, otherwise mark as dirty.
+     * This method should be called after saveTerrainChunk or saveModel.
+     *
+     * @param worldId  World identifier
+     * @param chunkKey Chunk key
+     * @param reason   Reason for update
+     */
+    public void updateChunkAsync(String worldId, String chunkKey, String reason) {
+        // Check if lock is held
+        if (lockService.isLocked(worldId)) {
+            // Lock is held - mark chunk as dirty for later processing
+            dirtyChunkService.markChunkDirty(worldId, chunkKey, reason);
+            log.debug("Chunk update lock held, marked as dirty: world={} chunk={} reason={}",
+                    worldId, chunkKey, reason);
+        } else {
+            // No lock - try to update immediately
+            String lockToken = lockService.acquireLock(worldId, Duration.ofSeconds(30));
+            if (lockToken != null) {
+                try {
+                    // Update chunk immediately
+                    if (regenerateChunk(worldId, chunkKey)) {
+                        log.debug("Chunk updated immediately: world={} chunk={}", worldId, chunkKey);
+                    } else {
+                        // Failed - mark as dirty
+                        dirtyChunkService.markChunkDirty(worldId, chunkKey, reason + "_failed");
+                        log.warn("Immediate chunk update failed, marked as dirty: world={} chunk={}",
+                                worldId, chunkKey);
+                    }
+                } finally {
+                    lockService.releaseLock(worldId, lockToken);
+                }
             } else {
-                // Retry later: mark as dirty again (updates timestamp)
-                dirtyChunkService.markChunkDirty(worldId, dirtyChunk.getChunkKey(),
-                        "regeneration_failed_retry");
+                // Could not acquire lock - mark as dirty
+                dirtyChunkService.markChunkDirty(worldId, chunkKey, reason);
+                log.debug("Could not acquire lock, marked as dirty: world={} chunk={}", worldId, chunkKey);
             }
         }
-
-        log.info("Processed dirty chunks: world={} success={}/{}",
-                worldId, successCount, dirtyChunks.size());
-
-        return successCount;
     }
 
     /**

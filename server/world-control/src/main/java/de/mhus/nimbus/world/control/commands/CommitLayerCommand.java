@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.commands;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.world.control.service.ChunkUpdateService;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.control.service.EditState;
 import de.mhus.nimbus.world.shared.commands.Command;
@@ -28,7 +29,7 @@ public class CommitLayerCommand implements Command {
     private final EditService editService;
     private final WLayerService layerService;
     private final WorldRedisService redisService;
-    private final WDirtyChunkService dirtyChunkService;
+    private final ChunkUpdateService chunkUpdateService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -126,8 +127,8 @@ public class CommitLayerCommand implements Command {
                     // Save chunk
                     layerService.saveTerrainChunk(worldId, layerDataId, chunkKey, chunkData);
 
-                    // Mark chunk dirty
-                    dirtyChunkService.markChunkDirty(worldId, chunkKey, "layer_commit");
+                    // Update chunk async (will check lock and either update immediately or mark dirty)
+                    chunkUpdateService.updateChunkAsync(worldId, chunkKey, "layer_commit");
 
                     committedChunks++;
 

@@ -1,8 +1,8 @@
 package de.mhus.nimbus.world.control.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
-import de.mhus.nimbus.world.shared.commands.CommandService;
 import de.mhus.nimbus.world.shared.layer.EditAction;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -34,6 +35,8 @@ public class EditService {
     private final WLayerService layerService;
     private final WorldClientService worldClient;
     private final WSessionService wSessionService;
+    private final BlockInfoService blockInfoService;
+    private final ObjectMapper objectMapper;
 
     private static final Duration EDIT_STATE_TTL = Duration.ofHours(24);
     private static final String EDIT_STATE_PREFIX = "edit:";
@@ -131,17 +134,22 @@ public class EditService {
         switch (action) {
             case OPEN_CONFIG_DIALOG:
                 // Open config dialog at client
-                openConfigDialogAtClient(worldId, sessionId, playerUrl);
+                clientOpenConfigDialogAtClient(worldId, sessionId, playerUrl);
                 break;
             case OPEN_EDITOR:
                 // Open block editor dialog at client
                 setSelectedBlock(worldId, sessionId, x, y, z);
-                openBlockEditorDialogAtClient(worldId, sessionId, playerUrl, x, y, z);
+                clientOpenBlockEditorDialogAtClient(worldId, sessionId, playerUrl, x, y, z);
                 break;
 
             case MARK_BLOCK:
+                // get block definition at position
+                java.util.Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
                 // Store marked block for copy/move operations
                 setMarkedBlock(worldId, sessionId, x, y, z);
+                // store also blockInfo data in redis to use in copy
+                storeMarkedBlockInfo(worldId, sessionId, blockInfo);
+                clientSetSelectedEditBlock(worldId, sessionId, playerUrl, x, y, z);
                 log.info("Block marked: session={} pos=({},{},{})", sessionId, x, y, z);
                 break;
 
@@ -167,7 +175,22 @@ public class EditService {
         }
     }
 
-    private void openConfigDialogAtClient(String worldId, String sessionId, String origin) {
+    private void clientSetSelectedEditBlock(String worldId, String sessionId, String origin, int x, int y, int z) {
+        CommandContext ctx = CommandContext.builder()
+                .worldId(worldId)
+                .sessionId(sessionId)
+                .originServer("world-control")
+                .build();
+        worldClient.sendPlayerCommand(
+                worldId,
+                sessionId,
+                origin,
+                "client",
+                List.of("setSelectedEditBlock", String.valueOf(x),String.valueOf(y),String.valueOf(z) ),
+                ctx);
+    }
+
+    private void clientOpenConfigDialogAtClient(String worldId, String sessionId, String origin) {
         CommandContext ctx = CommandContext.builder()
                 .worldId(worldId)
                 .sessionId(sessionId)
@@ -182,7 +205,7 @@ public class EditService {
                 ctx);
     }
 
-    private void openBlockEditorDialogAtClient(String worldId, String sessionId, String origin, int x, int y, int z) {
+    private void clientOpenBlockEditorDialogAtClient(String worldId, String sessionId, String origin, int x, int y, int z) {
         CommandContext ctx = CommandContext.builder()
                 .worldId(worldId)
                 .sessionId(sessionId)
@@ -220,6 +243,46 @@ public class EditService {
         redisService.putValue(worldId, key + "markedBlockY", String.valueOf(y), EDIT_STATE_TTL);
         redisService.putValue(worldId, key + "markedBlockZ", String.valueOf(z), EDIT_STATE_TTL);
         log.debug("Marked block stored: session={} pos=({},{},{})", sessionId, x, y, z);
+    }
+
+    /**
+     * Store marked block info (complete block data with metadata) in Redis.
+     * Used for copy/move operations.
+     */
+    private void storeMarkedBlockInfo(String worldId, String sessionId, Map<String, Object> blockInfo) {
+        try {
+            String key = editStateKey(sessionId);
+            String blockInfoJson = objectMapper.writeValueAsString(blockInfo);
+            redisService.putValue(worldId, key + "markedBlockInfo", blockInfoJson, EDIT_STATE_TTL);
+            log.debug("Marked block info stored: session={} size={} bytes", sessionId, blockInfoJson.length());
+        } catch (Exception e) {
+            log.error("Failed to store marked block info: session={}", sessionId, e);
+        }
+    }
+
+    /**
+     * Get marked block info (complete block data with metadata) from Redis.
+     * Returns empty if not found or parse error.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Map<String, Object>> getMarkedBlockInfo(String worldId, String sessionId) {
+        try {
+            String key = editStateKey(sessionId);
+            Optional<String> blockInfoJsonOpt = redisService.getValue(worldId, key + "markedBlockInfo");
+
+            if (blockInfoJsonOpt.isEmpty()) {
+                return Optional.empty();
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> blockInfo = objectMapper.readValue(blockInfoJsonOpt.get(), Map.class);
+            log.debug("Marked block info loaded: session={}", sessionId);
+            return Optional.of(blockInfo);
+
+        } catch (Exception e) {
+            log.warn("Failed to load marked block info: session={}", sessionId, e);
+            return Optional.empty();
+        }
     }
 
     /**

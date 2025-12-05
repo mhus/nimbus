@@ -2818,3 +2818,9 @@ Nochmal der Flow:
   Alle Änderungen kompilieren erfolgreich!
 ```
 
+[?] Es werden zwei dinge benoetigt:
+- Wenn der DirtyChunkService ein update startet, muss ein Lock via redis gesetzt werden, damit nicht mehrere updates parallel laufen koennen.
+  - Das lock muss zeitlich begrenzt sein (z.b. 1 minuten) und aktualisiert werden koennen.
+- Wenn layerService.saveTerrainChunk oder layerService.saveModel aufgerufen wird muss danach nicht dirtyChunkService.markChunkDirty
+  sondern auch updateChunkAsync() aufgerufen werden.
+  - Auch hier muss das lock beachtet werden. Wenn das lock gesetzt ist, dann wird kein update gestartet sondern dirtyChunkService.markChunkDirty
