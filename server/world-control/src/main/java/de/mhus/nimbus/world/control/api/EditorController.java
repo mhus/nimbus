@@ -43,7 +43,7 @@ public class EditorController extends BaseEditorController {
     private final EditService editService;
     private final WLayerService layerService;
     private final de.mhus.nimbus.world.control.service.BlockUpdateService blockUpdateService;
-    private final de.mhus.nimbus.world.control.service.BlockOverlayService blockOverlayService;
+    private final de.mhus.nimbus.world.shared.overlay.BlockOverlayService blockOverlayService;
     private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
     private final WorldRedisService redisService;
     private final WSessionService wSessionService;
@@ -326,28 +326,33 @@ public class EditorController extends BaseEditorController {
             }
 
             // Save complete block to Redis overlay
-            boolean saved = blockOverlayService.saveBlockOverlay(
-                    worldId,
-                    sessionId,
-                    block,
-                    request
-            );
+            String blockJson = blockOverlayService.saveBlockOverlay(worldId, sessionId, block);
 
-            if (!saved) {
+            if (blockJson == null) {
                 return bad("Failed to save block overlay");
+            }
+
+            // Send block update to client
+            int x = (int) block.getPosition().getX();
+            int y = (int) block.getPosition().getY();
+            int z = (int) block.getPosition().getZ();
+
+            boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, null);
+            if (!sent) {
+                log.warn("Failed to send block update to client: session={}", sessionId);
             }
 
             // Mark chunk as dirty for later commit
             WWorld world = worldService.getByWorldId(worldId).orElse(null);
             if (world != null) {
-                String chunkKey = world.getChunkKey((int)block.getPosition().getX(), (int)block.getPosition().getZ());
+                String chunkKey = world.getChunkKey(x, z);
                 dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_overlay_edit");
             } else {
                 log.warn("Could not mark chunk dirty - world not found: {}", worldId);
             }
 
-            log.info("Block saved to overlay: session={} layer={} pos=({}) blockTypeId={}",
-                    sessionId, state.getSelectedLayer(), block.getPosition(), block.getBlockTypeId());
+            log.info("Block saved and update sent: session={} layer={} pos=({},{},{}) blockTypeId={}",
+                    sessionId, state.getSelectedLayer(), x, y, z, block.getBlockTypeId());
 
             Map<String, Object> response = new HashMap<>();
             response.put("blockTypeId", block.getBlockTypeId());

@@ -131,37 +131,36 @@ public class BlockInfoService {
             return null;
         }
 
-        String chunkKey = world.getChunkKey(x, z);
-        String key = "world:" + worldId + ":overlay:" + sessionId + ":" + chunkKey;
+        int cx = world.getChunkX(x);
+        int cz = world.getChunkZ(z);
 
-        Optional<String> overlayJson = redisService.getValue(worldId, key);
-        if (overlayJson.isEmpty()) {
+        // Get overlay blocks from Redis Hash (not String value!)
+        Map<Object, Object> overlays = redisService.getOverlayBlocks(worldId, sessionId, cx, cz);
+        if (overlays == null || overlays.isEmpty()) {
+            return null;
+        }
+
+        // Find block at specific position
+        String positionKey = x + ":" + y + ":" + z;
+        Object blockJsonObj = overlays.get(positionKey);
+
+        if (blockJsonObj == null) {
             return null;
         }
 
         try {
-            // Parse overlay chunk data
-            ChunkData chunkData = objectMapper.readValue(overlayJson.get(), ChunkData.class);
+            // Parse block JSON
+            String blockJson = blockJsonObj.toString();
+            Block block = objectMapper.readValue(blockJson, Block.class);
 
-            // Find block at position (Vector3 uses doubles, need int comparison)
-            if (chunkData.getBlocks() != null) {
-                for (Block block : chunkData.getBlocks()) {
-                    Vector3 pos = block.getPosition();
-                    if (pos != null &&
-                        (int)pos.getX() == x &&
-                        (int)pos.getY() == y &&
-                        (int)pos.getZ() == z) {
-                        log.debug("Found block in Redis overlay: pos=({},{},{}) blockTypeId={}",
-                                x, y, z, block.getBlockTypeId());
-                        return block;
-                    }
-                }
-            }
+            log.debug("Found block in Redis overlay: pos=({},{},{}) blockTypeId={}",
+                    x, y, z, block.getBlockTypeId());
+            return block;
+
         } catch (Exception e) {
-            log.warn("Failed to parse Redis overlay: key={}", key, e);
+            log.warn("Failed to parse overlay block at pos ({},{},{}): {}", x, y, z, e.getMessage());
+            return null;
         }
-
-        return null;
     }
 
     /**
