@@ -7,6 +7,8 @@ import de.mhus.nimbus.world.shared.layer.EditAction;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
+import de.mhus.nimbus.world.shared.session.WSession;
+import de.mhus.nimbus.world.shared.session.WSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -31,6 +33,7 @@ public class EditService {
     private final WorldRedisService redisService;
     private final WLayerService layerService;
     private final WorldClientService worldClient;
+    private final WSessionService wSessionService;
 
     private static final Duration EDIT_STATE_TTL = Duration.ofHours(24);
     private static final String EDIT_STATE_PREFIX = "edit:";
@@ -101,10 +104,24 @@ public class EditService {
      * Reads current EditAction from state and performs corresponding operation.
      */
     @Transactional
-    public void doAction(String worldId, String sessionId, int x, int y, int z, String origin) {
+    public void doAction(String worldId, String sessionId, int x, int y, int z) {
         // Get current edit state
         EditState state = getEditState(worldId, sessionId);
         EditAction action = state.getEditAction();
+
+        // Get playerUrl from WSession (not from EditState)
+        Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
+        if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
+            log.warn("No player URL available for session {}, cannot perform edit action", sessionId);
+            return;
+        }
+
+        String playerUrl = wSession.get().getPlayerUrl();
+
+        if (playerUrl == null) {
+            log.warn("No player URL available for session {}, cannot perform edit action", sessionId);
+            return;
+        }
 
         if (action == null) {
             action = EditAction.OPEN_CONFIG_DIALOG; // Default
@@ -116,12 +133,12 @@ public class EditService {
         switch (action) {
             case OPEN_CONFIG_DIALOG:
                 // Open config dialog at client
-                openConfigDialogAtClient(worldId, sessionId, origin);
+                openConfigDialogAtClient(worldId, sessionId, playerUrl);
                 break;
             case OPEN_EDITOR:
                 // Open block editor dialog at client
                 setSelectedBlock(worldId, sessionId, x, y, z);
-                openBlockEditorDialogAtClient(worldId, sessionId, origin, x, y, z);
+                openBlockEditorDialogAtClient(worldId, sessionId, playerUrl, x, y, z);
                 break;
 
             case MARK_BLOCK:

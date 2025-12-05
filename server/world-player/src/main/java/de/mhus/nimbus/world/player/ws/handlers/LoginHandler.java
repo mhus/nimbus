@@ -90,7 +90,7 @@ public class LoginHandler implements MessageHandler {
         // Register session ID and sync with Redis
         // characterId is not set yet - will be set later when character is selected
         sessionManager.setSessionId(session, sessionId, isUsernamePasswordLogin,
-            targetWorldId, world.getRegionId(), userId, null);
+            targetWorldId, world.getRegionId(), userId, username); // TODO username?
 
         // Use the actual session ID (may have changed for username/password login)
         String actualSessionId = session.getSessionId();

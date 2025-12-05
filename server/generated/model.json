@@ -2518,7 +2518,7 @@
       } ]
     }, {
       "name" : "ModalFlags",
-      "values" : [ "NONE", "CLOSEABLE", "NO_BORDERS", "BREAK_OUT", "NO_BACKGROUND_LOCK", "MOVEABLE", "RESIZEABLE" ],
+      "values" : [ "NONE", "CLOSEABLE", "NO_BORDERS", "BREAK_OUT", "NO_BACKGROUND_LOCK", "MOVEABLE", "RESIZEABLE", "MINIMIZABLE" ],
       "enumValues" : [ {
         "name" : "NONE",
         "value" : "0"
@@ -2540,6 +2540,9 @@
       }, {
         "name" : "RESIZEABLE",
         "value" : "1 << 5"
+      }, {
+        "name" : "MINIMIZABLE",
+        "value" : "1 << 6"
       } ]
     }, {
       "name" : "IFrameMessageType",

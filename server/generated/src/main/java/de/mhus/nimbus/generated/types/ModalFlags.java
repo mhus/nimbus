@@ -11,7 +11,8 @@ public enum ModalFlags implements de.mhus.nimbus.types.TsEnum {
     BREAK_OUT("1 << 2"),
     NO_BACKGROUND_LOCK("1 << 3"),
     MOVEABLE("1 << 4"),
-    RESIZEABLE("1 << 5");
+    RESIZEABLE("1 << 5"),
+    MINIMIZABLE("1 << 6");
 
     @lombok.Getter
     private final String tsIndex;

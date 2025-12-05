@@ -27,13 +27,13 @@ public class SessionManager {
     private final WSessionService wSessionService;
     private final LocationService locationService;
 
-    @Value("${nimbus.world.development.enabled:false}")
+    @Value("${world.development.enabled:false}")
     private boolean applicationDevelopmentEnabled;
 
-    @Value("${nimbus.world.development.worldId:main}")
+    @Value("${world.development.worldId:main}")
     private String applicationDevelopmentWorldId;
 
-    @Value("${nimbus.world.development.regionId:region}")
+    @Value("${world.development.regionId:region}")
     private String applicationDevelopmentRegionId;
 
     private final Map<String, PlayerSession> sessionsByWebSocketId = new ConcurrentHashMap<>();
@@ -93,20 +93,26 @@ public class SessionManager {
 
             log.info("Created WSession for username/password login: sessionId={}, worldId={}, regionId={}, userId={}, playerUrl={}",
                 wSession.getId(), worldId, regionId, userId, playerUrl);
+        } else if (isUsernamePasswordLogin) {
+            // deny login if not in development mode
+            log.error("Username/password login is only allowed in development mode.");
+            throw new RuntimeException("Username/password login not allowed");
         } else {
             // Token login: Lookup existing WSession in Redis
             Optional<WSession> wSession = wSessionService.get(sessionId);
             if (wSession.isPresent()) {
+                // Always update playerUrl (even if already RUNNING - for reconnects or pod changes)
+                wSessionService.updatePlayerUrl(sessionId, playerUrl);
+
                 if (wSession.get().getStatus() == WSessionStatus.WAITING) {
-                    // Update WSession to RUNNING and store player URL
+                    // Update WSession to RUNNING
                     wSessionService.updateStatus(sessionId, WSessionStatus.RUNNING);
-                    wSessionService.updatePlayerUrl(sessionId, playerUrl);
 
                     log.info("Updated WSession to RUNNING for token login: sessionId={}, worldId={}, userId={}, playerUrl={}",
                         sessionId, wSession.get().getWorldId(), wSession.get().getUserId(), playerUrl);
                 } else {
-                    log.warn("WSession found but not in WAITING state: sessionId={}, status={}",
-                        sessionId, wSession.get().getStatus());
+                    log.debug("WSession already in {} state, updated playerUrl: sessionId={}, playerUrl={}",
+                        wSession.get().getStatus(), sessionId, playerUrl);
                 }
             } else {
                 log.warn("WSession not found for token login: sessionId={}", sessionId);

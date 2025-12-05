@@ -53,15 +53,11 @@ public class EditBlockTriggerCommand implements Command {
                 log.debug("Stored player IP and port for session: {} -> {}", sessionId, playerUrl);
             }
 
-            log.debug("Block select via EditBlockTrigger: session={} pos=({},{},{}) playerUrl={}",
-                    sessionId, x, y, z, playerUrl);
-
             // Update selected block in Redis
             editService.doAction(
                     context.getWorldId(),
                     sessionId,
-                    x, y, z,
-                    playerUrl
+                    x, y, z
             );
 
             return CommandResult.success("Block selected at (" + x + "," + y + "," + z + ")");

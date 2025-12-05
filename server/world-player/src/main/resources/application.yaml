@@ -16,6 +16,8 @@ world:
     life-base-url: http://localhost:9044
     control-base-url: http://localhost:9043
     command-timeout-ms: 5000
+  development:
+    enabled: true
 
 server:
   port: 9042
