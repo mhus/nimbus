@@ -10,18 +10,19 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Command to cleanup edit mode overlays when a session closes.
+ * Command to handle edit mode closure with auto-save functionality.
  * Called by world-player when:
  * 1. Session disconnects
  * 2. Edit mode is disabled
  *
- * Deletes all Redis keys matching: world:{worldId}:overlay:{sessionId}:*
+ * AUTO-SAVES overlays to layer before cleanup (instead of discarding).
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class EditModeClosedCommand implements Command {
 
+    private final CommitLayerCommand commitCommand;
     private final WorldRedisService redisService;
 
     @Override
@@ -40,25 +41,41 @@ public class EditModeClosedCommand implements Command {
         }
 
         try {
-            // Delete all overlays for this session
-            long deleted = redisService.deleteAllOverlays(worldId, sessionId);
+            // AUTO-SAVE: Commit overlays to layer before closing
+            log.info("Auto-saving overlays before session close: worldId={}, sessionId={}",
+                    worldId, sessionId);
 
-            log.info("Cleaned up edit mode overlays: worldId={}, sessionId={}, keysDeleted={}",
-                    worldId, sessionId, deleted);
+            // Delegate to CommitLayerCommand (synchronous execution)
+            CommandResult commitResult = commitCommand.execute(context, List.of());
 
-            return CommandResult.success("Cleaned up " + deleted + " overlay keys");
+            if (commitResult.getReturnCode() == 0) {
+                log.info("Auto-save successful: {}", commitResult.getMessage());
+                return CommandResult.success("Auto-saved: " + commitResult.getMessage());
+            } else {
+                log.warn("Auto-save completed with warnings: {}", commitResult.getMessage());
+                return CommandResult.success("Auto-saved with warnings: " + commitResult.getMessage());
+            }
 
         } catch (Exception e) {
-            log.error("Failed to cleanup overlays: worldId={}, sessionId={}",
-                    worldId, sessionId, e);
-            return CommandResult.error(-4, "Cleanup failed: " + e.getMessage());
+            log.error("Auto-save failed for worldId={}, sessionId={}: {}",
+                    worldId, sessionId, e.getMessage(), e);
+
+            // Fallback: Discard on error to prevent orphaned overlays in Redis
+            try {
+                long deleted = redisService.deleteAllOverlays(worldId, sessionId);
+                log.warn("Auto-save failed, discarded {} overlay keys as fallback", deleted);
+                return CommandResult.error(-4, "Auto-save failed, overlays discarded (" + deleted + " keys)");
+            } catch (Exception discardError) {
+                log.error("Fallback discard also failed: {}", discardError.getMessage());
+                return CommandResult.error(-5, "Auto-save and discard both failed");
+            }
         }
     }
 
     @Override
     public String getHelp() {
-        return "Cleanup edit mode overlays for a session\n" +
+        return "Auto-save edit mode overlays to layer on session close\n" +
                 "Internal command - called automatically by world-player\n" +
-                "Deletes all Redis overlay keys for the specified session";
+                "Commits all overlay blocks to the selected layer, then cleans up Redis";
     }
 }

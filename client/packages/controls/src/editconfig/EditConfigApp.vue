@@ -85,7 +85,7 @@
                 <select
                   v-model="editState.selectedLayer"
                   class="select select-bordered select-sm w-full text-xs"
-                  :disabled="saving"
+                  :disabled="saving || editState.editMode"
                 >
                   <option :value="null">All Layers (Legacy)</option>
                   <option v-for="layer in availableLayers" :key="layer.name" :value="layer.name">
@@ -132,6 +132,60 @@
                   min="0"
                   class="input input-bordered input-sm w-full text-xs"
                 />
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode Control - NEW -->
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body p-2">
+              <h2 class="card-title text-sm mb-2">Edit Mode Control</h2>
+
+              <!-- Status Display -->
+              <div class="alert text-xs" :class="editState.editMode ? 'alert-success' : 'alert-info'">
+                <div class="flex flex-col gap-1 w-full">
+                  <span>
+                    <strong>{{ editState.editMode ? '✓ ACTIVE' : '○ INACTIVE' }}</strong>
+                  </span>
+                  <span v-if="editState.editMode && editState.selectedLayer" class="text-xs opacity-80">
+                    Layer: {{ editState.selectedLayer }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Activate Button (when inactive) -->
+              <button
+                v-if="!editState.editMode"
+                @click="activateEditMode"
+                :disabled="!editState.selectedLayer || activating"
+                class="btn btn-primary btn-sm btn-block mt-2">
+                <span v-if="activating" class="loading loading-spinner loading-xs"></span>
+                <span v-else>Activate Edit Mode</span>
+              </button>
+
+              <!-- Action Buttons (when active) -->
+              <div v-else class="flex gap-2 flex-col mt-2">
+                <button @click="saveOverlays"
+                        :disabled="saving"
+                        class="btn btn-success btn-sm">
+                  <span v-if="saving" class="loading loading-spinner loading-xs"></span>
+                  <span v-else>💾 Save to Layer</span>
+                </button>
+
+                <button @click="openDiscardModal"
+                        :disabled="discarding"
+                        class="btn btn-error btn-sm">
+                  <span v-if="discarding" class="loading loading-spinner loading-xs"></span>
+                  <span v-else>🗑️ Discard All</span>
+                </button>
+              </div>
+
+              <!-- Layer Lock Info -->
+              <div v-if="editState.editMode" class="alert alert-warning text-xs mt-2 py-1 px-2">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>Layer locked while active</span>
               </div>
             </div>
           </div>
@@ -341,6 +395,32 @@
         <button>close</button>
       </form>
     </dialog>
+
+    <!-- Discard Confirmation Modal - NEW -->
+    <dialog ref="discardModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">⚠️ Discard All Changes?</h3>
+        <div class="alert alert-warning my-4">
+          <svg class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <div>
+            <p class="font-semibold">This will delete ALL overlay blocks!</p>
+            <p class="text-sm">This action cannot be undone.</p>
+          </div>
+        </div>
+        <div class="modal-action">
+          <button @click="closeDiscardModal" class="btn btn-ghost">Cancel</button>
+          <button @click="confirmDiscard" class="btn btn-error" :disabled="discarding">
+            <span v-if="discarding" class="loading loading-spinner loading-xs"></span>
+            <span v-else>Discard All Changes</span>
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -404,10 +484,15 @@ const saving = ref(false);
 // Modal state
 const createLayerModal = ref<HTMLDialogElement | null>(null);
 const deleteLayerModal = ref<HTMLDialogElement | null>(null);
+const discardModal = ref<HTMLDialogElement | null>(null);
 const creating = ref(false);
 const deleting = ref(false);
 const createError = ref<string | null>(null);
 const deleteError = ref<string | null>(null);
+
+// Edit mode control state
+const activating = ref(false);
+const discarding = ref(false);
 
 // New layer form
 const newLayer = ref({
@@ -793,4 +878,87 @@ onMounted(async () => {
 onUnmounted(() => {
   stopPolling();
 });
+
+// ===== EDIT MODE CONTROL FUNCTIONS =====
+
+async function activateEditMode() {
+  if (!editState.value.selectedLayer) {
+    error.value = 'Please select a layer first';
+    return;
+  }
+
+  activating.value = true;
+  error.value = null;
+
+  try {
+    const response = await fetch(
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/activate`,
+      { method: 'POST' }
+    );
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Activation failed');
+    }
+
+    await fetchEditState(); // Refresh
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+  } finally {
+    activating.value = false;
+  }
+}
+
+function openDiscardModal() {
+  discardModal.value?.showModal();
+}
+
+function closeDiscardModal() {
+  discardModal.value?.close();
+}
+
+async function confirmDiscard() {
+  discarding.value = true;
+
+  try {
+    const response = await fetch(
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/discard`,
+      { method: 'POST' }
+    );
+
+    if (!response.ok) throw new Error('Discard failed');
+
+    closeDiscardModal();
+    await fetchEditState(); // Refresh
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+  } finally {
+    discarding.value = false;
+  }
+}
+
+async function saveOverlays() {
+  saving.value = true;
+  error.value = null;
+
+  try {
+    const response = await fetch(
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/save`,
+      { method: 'POST', headers: { 'Accept': 'application/json' } }
+    );
+
+    if (!response.ok) throw new Error('Save failed');
+
+    const data = await response.json();
+    console.log('Save started:', data.message);
+    // Optional: Show success notification
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+  } finally {
+    saving.value = false;
+  }
+}
 </script>

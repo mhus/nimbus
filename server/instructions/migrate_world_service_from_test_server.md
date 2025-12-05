@@ -2712,7 +2712,7 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
 [x] Erstelle in WSessionService eine Methode mit der mittels einer sessionId die Daten aus redis, incl. internal 
 player url, geladen werden koennen.
 
-[ ] In ../client/packages/controls/edit-config.html soll der 'Edit Mode' im Redis controlliert werden
+[?] In ../client/packages/controls/edit-config.html soll der 'Edit Mode' im Redis controlliert werden
 - Der Modus wird im world-player genutzt, damit Block overlays angezeigt werden koennen.
 - Der Modus wird mit SessionEditCommand ('edit') im world-player aktiviert/deaktiviert.
 - edit-config.html sollte ueber REST Endpunkt den Modus im world-player setzen koennen.
@@ -2738,3 +2738,83 @@ Nochmal der Flow:
   - Kontrolleirt wird das ganze über das edit-config.html Control.
   - Editiert wird über den block-editor.html und über den EditService im world-control.
 - editieren funktioniert ueber world-control, der world-player ist nur fuer die ansicht/auslieferung der overlays an den player zustaendig.
+
+```text
+  Implementierung abgeschlossen!
+
+  Backend-Änderungen (erfolgreich kompiliert):
+
+  1. WorldRedisService (world-shared/src/main/java/de/mhus/nimbus/world/shared/redis/WorldRedisService.java:94)
+
+  - ✅ Neue Methode getOverlayKeys(worldId, sessionId) zum Scannen aller Overlay-Keys
+
+  2. CommitLayerCommand (world-control/src/main/java/de/mhus/nimbus/world/control/commands/CommitLayerCommand.java)
+
+  - ✅ Vollständig implementiert mit Overlay → Layer Merge-Logik
+  - Scannt alle Overlays für eine Session
+  - Gruppiert nach Chunks
+  - Merged Overlays in LayerChunkData (AIR = Delete, Block = Add/Replace)
+  - Speichert via WLayerService
+  - Markiert Chunks als Dirty via WDirtyChunkService
+  - Löscht Overlays aus Redis nach erfolgreichem Commit
+
+  3. EditModeClosedCommand (world-control/src/main/java/de/mhus/nimbus/world/control/commands/EditModeClosedCommand.java)
+
+  - ✅ Von "Discard" auf "Auto-Save" umgestellt
+  - Ruft CommitLayerCommand auf bei Session Close
+  - Fallback zu Discard bei Fehler
+
+  4. EditorController (world-control/src/main/java/de/mhus/nimbus/world/control/api/EditorController.java)
+
+  - ✅ POST /api/editor/{worldId}/session/{sessionId}/activate - Aktiviert Edit Mode
+  - ✅ POST /api/editor/{worldId}/session/{sessionId}/discard - Löscht Overlays und deaktiviert Mode
+  - ✅ POST /api/editor/{worldId}/session/{sessionId}/save - Speichert Overlays (fire-and-forget)
+
+  Frontend-Änderungen:
+
+  5. EditConfigApp.vue (client/packages/controls/src/editconfig/EditConfigApp.vue)
+
+  - ✅ Edit Mode Control Section mit Status-Anzeige
+  - ✅ "Activate Edit Mode" Button (disabled wenn kein Layer ausgewählt)
+  - ✅ "Save to Layer" Button (nur sichtbar wenn Edit Mode aktiv)
+  - ✅ "Discard All" Button (nur sichtbar wenn Edit Mode aktiv)
+  - ✅ Discard Confirmation Modal mit Warnung
+  - ✅ Layer Lock Warnung wenn Edit Mode aktiv
+  - ✅ Layer-Dropdown disabled wenn Edit Mode aktiv
+  - ✅ Funktionen: activateEditMode(), saveOverlays(), confirmDiscard()
+
+  Funktionsweise:
+
+  Activate Flow:
+  1. User wählt Layer aus
+  2. Klickt "Activate Edit Mode"
+  3. → POST zu world-control
+  4. → Edit Mode in Redis auf true
+  5. → "edit true" Command an world-player
+  6. → Edit Mode aktiv, Overlays werden angezeigt
+
+  Save Flow:
+  1. User klickt "Save to Layer"
+  2. → POST zu world-control (fire-and-forget)
+  3. → Async: CommitLayerCommand scannt Overlays, merged in Layer, markiert Chunks dirty
+  4. → Response 202 Accepted sofort
+  5. → Edit Mode bleibt aktiv
+
+  Discard Flow:
+  1. User klickt "Discard All"
+  2. → Confirmation Dialog
+  3. → Bei Bestätigung: POST zu world-control
+  4. → Overlays aus Redis gelöscht
+  5. → Edit Mode deaktiviert
+  6. → "edit false" Command an world-player
+
+  Auto-Save Flow:
+  1. Session schließt
+  2. → EditModeService.disableEditMode() in world-player
+  3. → "EditModeClosed" Command an world-control
+  4. → CommitLayerCommand speichert Overlays synchron
+  5. → Bei Fehler: Fallback zu Discard
+
+  Alle Änderungen kompilieren erfolgreich!
+```
+

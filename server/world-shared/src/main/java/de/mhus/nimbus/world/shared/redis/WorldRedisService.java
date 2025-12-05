@@ -84,6 +84,20 @@ public class WorldRedisService {
     }
 
     /**
+     * Get all overlay keys for a session.
+     * Pattern: world:{worldId}:overlay:{sessionId}:*
+     *
+     * @param worldId World identifier
+     * @param sessionId Session identifier
+     * @return Set of overlay keys (empty if none found)
+     */
+    public Set<String> getOverlayKeys(String worldId, String sessionId) {
+        String pattern = ns(worldId, "overlay:" + sessionId + ":*");
+        Set<String> keys = redis.keys(pattern);
+        return keys != null ? keys : Set.of();
+    }
+
+    /**
      * Delete all overlays for a session (wildcard delete).
      * Pattern: world:{worldId}:overlay:{sessionId}:*
      *
