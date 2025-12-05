@@ -2697,3 +2697,6 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
 - Beim löchen wird ein AIR Block gespeichert (BlockType 0).
 (Das eigentliche speichern wird beim integrieren in den Layer erledigt, nicht hier)
 
+[ ] Es wird ein mechanismus benoetigt um eine session zu finden. Der world-control server hat eine
+session und benoetigt die zugehoerige IP.
+- Sessions sollten be

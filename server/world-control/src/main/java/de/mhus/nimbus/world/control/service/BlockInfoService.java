@@ -175,7 +175,7 @@ public class BlockInfoService {
     private Block loadBlockFromChunk(String worldId, int x, int y, int z) {
         String chunkKey = calculateChunkKey(x, z);
 
-        Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(null, worldId, chunkKey, false);
+        Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);
         if (chunkDataOpt.isEmpty()) {
             log.debug("Chunk not found: {}", chunkKey);
             return null;

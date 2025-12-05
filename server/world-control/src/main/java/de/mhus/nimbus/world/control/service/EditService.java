@@ -9,6 +9,7 @@ import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +54,7 @@ public class EditService {
         String selectedBlockX = redisService.getValue(worldId, key + "selectedBlockX").orElse(null);
         String selectedBlockY = redisService.getValue(worldId, key + "selectedBlockY").orElse(null);
         String selectedBlockZ = redisService.getValue(worldId, key + "selectedBlockZ").orElse(null);
-        String playerIp = redisService.getValue(worldId, key + "playerIp").orElse(null);
-        String playerPortStr = redisService.getValue(worldId, key + "playerPort").orElse(null);
+        String playerUrl = redisService.getValue(worldId, key + "playerUrl").orElse(null);
 
         // Build state from Redis values
         EditState.EditStateBuilder builder = EditState.builder()
@@ -66,8 +66,7 @@ public class EditService {
                 .mountY(parseInt(mountYStr))
                 .mountZ(parseInt(mountZStr))
                 .selectedGroup(parseInt(selectedGroupStr) != null ? parseInt(selectedGroupStr) : 0)
-                .playerIp(playerIp)
-                .playerPort(parseInt(playerPortStr))
+                .playerUrl(playerUrl)
                 .lastUpdated(Instant.now());
 
         return builder.build();
@@ -394,20 +393,14 @@ public class EditService {
 
         redisService.putValue(worldId, key + "selectedGroup", String.valueOf(state.getSelectedGroup()), EDIT_STATE_TTL);
 
-        if (state.getPlayerIp() != null) {
-            redisService.putValue(worldId, key + "playerIp", state.getPlayerIp(), EDIT_STATE_TTL);
+        if (Strings.isNotEmpty(state.getPlayerUrl())) {
+            redisService.putValue(worldId, key + "playerUrl", state.getPlayerUrl(), EDIT_STATE_TTL);
         } else {
-            redisService.deleteValue(worldId, key + "playerIp");
+            redisService.deleteValue(worldId, key + "playerUrl");
         }
 
-        if (state.getPlayerPort() != null) {
-            redisService.putValue(worldId, key + "playerPort", String.valueOf(state.getPlayerPort()), EDIT_STATE_TTL);
-        } else {
-            redisService.deleteValue(worldId, key + "playerPort");
-        }
-
-        log.trace("Edit state saved: session={} layer={} playerIp={} playerPort={}",
-                sessionId, state.getSelectedLayer(), state.getPlayerIp(), state.getPlayerPort());
+        log.trace("Edit state saved: session={} layer={} playerUrl={}",
+                sessionId, state.getSelectedLayer(), state.getPlayerUrl());
     }
 
     private boolean parseBoolean(String value, boolean defaultValue) {

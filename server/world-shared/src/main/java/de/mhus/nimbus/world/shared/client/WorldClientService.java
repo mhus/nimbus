@@ -1,7 +1,10 @@
 package de.mhus.nimbus.world.shared.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.shared.utils.LocationService;
+import de.mhus.nimbus.shared.utils.LocationService.SERVER;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -32,6 +36,7 @@ public class WorldClientService {
     private final RestTemplate restTemplate;
     private final WorldClientProperties properties;
     private final ObjectMapper objectMapper;
+    private final LocationService locationService;
 
     /**
      * Command request DTO.
@@ -72,7 +77,16 @@ public class WorldClientService {
             CommandContext context) {
 
         String baseUrl = properties.getLifeBaseUrl();
-        return sendCommand(baseUrl, worldId, commandName, args, context, "world-life");
+        prepareContext(context, worldId);
+        return sendCommand(baseUrl, commandName, args, context, SERVER.LIFE);
+    }
+
+    private void prepareContext(CommandContext context, String worldId) {
+        context.setOriginInternal(locationService.getInternalServerUrl());
+        context.setOriginExternal(locationService.getExternalServerUrl());
+        context.setRequestTime(Instant.now());
+        context.setOriginServer(locationService.getMeServer().name());
+        context.setWorldId(worldId);
     }
 
     /**
@@ -105,8 +119,9 @@ public class WorldClientService {
         } else if (sessionId != null) {
             context.setSessionId(sessionId);
         }
+        prepareContext(context, worldId);
 
-        return sendCommand(baseUrl, worldId, commandName, args, context, "world-player");
+        return sendCommand(baseUrl, commandName, args, context, SERVER.PLAYER);
     }
 
     /**
@@ -124,21 +139,22 @@ public class WorldClientService {
             List<String> args,
             CommandContext context) {
 
+        prepareContext(context, worldId);
         String baseUrl = properties.getControlBaseUrl();
-        return sendCommand(baseUrl, worldId, commandName, args, context, "world-control");
+        return sendCommand(baseUrl, commandName, args, context, SERVER.CONTROL);
     }
 
     /**
      * Generic command sender.
      */
     private CompletableFuture<CommandResponse> sendCommand(
-            String baseUrl,
-            String worldId,
-            String commandName,
-            List<String> args,
-            CommandContext context,
-            String targetServer) {
+            @NotNull String baseUrl,
+            @NotNull String commandName,
+            @NotNull List<String> args,
+            @NotNull CommandContext context,
+            @NotNull SERVER targetServer) {
 
+        var worldId = context.getWorldId();
         return CompletableFuture.supplyAsync(() -> {
             try {
                 // Build request

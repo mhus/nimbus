@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import de.mhus.nimbus.shared.utils.LocationService;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.ws.PlayerSession;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
@@ -12,7 +13,6 @@ import de.mhus.nimbus.world.shared.commands.CommandContext;
 import de.mhus.nimbus.world.shared.commands.CommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
@@ -67,9 +67,6 @@ public class ClientCommandHandler implements MessageHandler {
     // Server IP and port for origin in CommandContext (cached)
     private String serverIp = null;
     private Integer serverPort = null;
-
-    @Value("${server.port:4092}")
-    private int applicationServerPort;
 
     // Static prefix mapping for command routing
     private static final Map<String, String> PREFIX_ROUTING = Map.of(
@@ -160,10 +157,6 @@ public class ClientCommandHandler implements MessageHandler {
                 .sessionId(session.getSessionId())
                 .userId(session.getUserId())
                 .displayName(session.getDisplayName())
-                .requestTime(Instant.now())
-                .originServer("world-player")
-                .originIp(getServerIp())
-                .originPort(getServerPort())
                 .build();
 
         // Execute command
@@ -205,10 +198,6 @@ public class ClientCommandHandler implements MessageHandler {
                 .sessionId(session.getSessionId())
                 .userId(session.getUserId())
                 .displayName(session.getDisplayName())
-                .requestTime(Instant.now())
-                .originServer("world-player")
-                .originIp(getServerIp())
-                .originPort(getServerPort())
                 .build();
 
         log.debug("Routing command to {}: cmd={}, actualCmd={}, user={}",
@@ -218,12 +207,12 @@ public class ClientCommandHandler implements MessageHandler {
         java.util.concurrent.CompletableFuture<WorldClientService.CommandResponse> future;
 
         switch (targetServer) {
-            case "world-life":
+            case "life":
                 future = worldClientService.sendLifeCommand(
                         session.getWorldId(), actualCommandName, args, context);
                 break;
 
-            case "world-control":
+            case "control":
                 future = worldClientService.sendControlCommand(
                         session.getWorldId(), actualCommandName, args, context);
                 break;
@@ -338,103 +327,4 @@ public class ClientCommandHandler implements MessageHandler {
         sendResponse(session, requestId, errorCode, errorMessage);
     }
 
-    /**
-     * Get server IP address for originIp in CommandContext.
-     * Uses environment variable NIMBUS_SERVER_IP or tries to detect real IP address.
-     */
-    private String getServerIp() {
-        if (serverIp == null) {
-            serverIp = System.getenv("NIMBUS_SERVER_IP");
-            if (serverIp == null || serverIp.isBlank()) {
-                serverIp = detectRealIpAddress();
-            }
-            log.info("Using server IP for CommandContext: {}", serverIp);
-        }
-        return serverIp;
-    }
-
-    /**
-     * Get server port for originPort in CommandContext.
-     * Uses environment variable NIMBUS_SERVER_PORT or defaults to 9042 (world-player default).
-     */
-    private Integer getServerPort() {
-        if (serverPort == null) {
-            String portStr = System.getenv("NIMBUS_SERVER_PORT");
-            if (portStr != null && !portStr.isBlank()) {
-                try {
-                    serverPort = Integer.parseInt(portStr);
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid NIMBUS_SERVER_PORT: {}, using default 9042", portStr);
-                    serverPort = applicationServerPort;
-                }
-            } else {
-                serverPort = applicationServerPort; // Default world-player REST port
-            }
-            log.info("Using server port for CommandContext: {}", serverPort);
-        }
-        return serverPort;
-    }
-
-    /**
-     * Detect the real IP address of the server.
-     * Tries multiple approaches to find the actual IP, especially in containerized environments.
-     */
-    private String detectRealIpAddress() {
-        try {
-            // Try Kubernetes pod IP first (common environment variable)
-            String podIp = System.getenv("POD_IP");
-            if (podIp != null && !podIp.isBlank() && !podIp.equals("127.0.0.1")) {
-                log.info("Using Kubernetes POD_IP: {}", podIp);
-                return podIp;
-            }
-
-            // Try Kubernetes hostname (often the pod name with IP)
-            String hostname = System.getenv("HOSTNAME");
-            if (hostname != null && !hostname.isBlank()) {
-                try {
-                    java.net.InetAddress hostAddr = java.net.InetAddress.getByName(hostname);
-                    String hostIp = hostAddr.getHostAddress();
-                    if (!hostIp.equals("127.0.0.1") && !hostIp.startsWith("127.")) {
-                        log.info("Using hostname IP: {} ({})", hostIp, hostname);
-                        return hostIp;
-                    }
-                } catch (Exception e) {
-                    log.debug("Could not resolve hostname {}: {}", hostname, e.getMessage());
-                }
-            }
-
-            // Try to find non-loopback network interface
-            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
-            while (interfaces.hasMoreElements()) {
-                java.net.NetworkInterface networkInterface = interfaces.nextElement();
-
-                // Skip loopback and inactive interfaces
-                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-                    continue;
-                }
-
-                java.util.Enumeration<java.net.InetAddress> addresses = networkInterface.getInetAddresses();
-                while (addresses.hasMoreElements()) {
-                    java.net.InetAddress address = addresses.nextElement();
-
-                    // Skip loopback, link-local, and IPv6 addresses
-                    if (address.isLoopbackAddress() || address.isLinkLocalAddress() ||
-                        address instanceof java.net.Inet6Address) {
-                        continue;
-                    }
-
-                    String ip = address.getHostAddress();
-                    log.info("Detected network interface IP: {} ({})", ip, networkInterface.getName());
-                    return ip;
-                }
-            }
-
-            log.warn("Could not detect real IP address, falling back to localhost");
-            return "localhost";
-
-        } catch (Exception e) {
-            log.error("Error detecting IP address, using localhost", e);
-            return "localhost";
-        }
-    }
 }

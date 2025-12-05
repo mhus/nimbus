@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static org.apache.logging.log4j.util.Strings.isNotEmpty;
+
 /**
  * EditBlockTrigger command - triggered by engine when block selected.
  * Updates selected block coordinates in Redis edit state.
@@ -43,25 +45,23 @@ public class EditBlockTriggerCommand implements Command {
             int z = Integer.parseInt(args.get(2));
 
             // Store player IP and port for block update callbacks
-            String playerIp = context.getOriginIp();
-            Integer playerPort = context.getOriginPort();
-            if (playerIp != null && !playerIp.isBlank()) {
+            String playerUrl = context.getOriginInternal();
+            if (isNotEmpty(playerUrl)) {
                 editService.updateEditState(context.getWorldId(), sessionId, state -> {
-                    state.setPlayerIp(playerIp);
-                    state.setPlayerPort(playerPort);
+                    state.setPlayerUrl(playerUrl);
                 });
-                log.debug("Stored player IP and port for session: {} -> {}:{}", sessionId, playerIp, playerPort);
+                log.debug("Stored player IP and port for session: {} -> {}", sessionId, playerUrl);
             }
 
-            log.debug("Block select via EditBlockTrigger: session={} pos=({},{},{}) playerIp={} playerPort={}",
-                    sessionId, x, y, z, playerIp, playerPort);
+            log.debug("Block select via EditBlockTrigger: session={} pos=({},{},{}) playerUrl={}",
+                    sessionId, x, y, z, playerUrl);
 
             // Update selected block in Redis
             editService.doAction(
                     context.getWorldId(),
                     sessionId,
                     x, y, z,
-                    playerIp + ":" + playerPort
+                    playerUrl
             );
 
             return CommandResult.success("Block selected at (" + x + "," + y + "," + z + ")");

@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -39,17 +40,11 @@ public class BlockUpdateService {
     public boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, String blockId, String meta) {
         // Get edit state to retrieve player IP and port
         EditState state = editService.getEditState(worldId, sessionId);
-        String playerIp = state.getPlayerIp();
-        Integer playerPort = state.getPlayerPort();
+        String playerUrl = state.getPlayerUrl();
 
-        if (playerIp == null || playerIp.isBlank()) {
+        if (Strings.isEmpty(playerUrl)) {
             log.warn("Cannot send block update: no player IP stored for session={}", sessionId);
             return false;
-        }
-
-        if (playerPort == null) {
-            playerPort = 9042; // Default world-player port
-            log.debug("Using default player port: {}", playerPort);
         }
 
         try {
@@ -66,23 +61,20 @@ public class BlockUpdateService {
                     meta != null ? meta : ""
             ));
 
-            // Build URL to world-player
-            String url = buildWorldPlayerUrl(playerIp, playerPort);
-
             // Send POST request
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
-            restTemplate.postForObject(url, entity, Map.class);
+            restTemplate.postForObject(playerUrl, entity, Map.class);
 
-            log.debug("Sent block update to world-player: session={} pos=({},{},{}) playerIp={} playerPort={}",
-                    sessionId, x, y, z, playerIp, playerPort);
+            log.debug("Sent block update to world-player: session={} pos=({},{},{}) playerUrl={}",
+                    sessionId, x, y, z, playerUrl);
 
             return true;
 
         } catch (Exception e) {
-            log.error("Failed to send block update to world-player: session={} playerIp={}", sessionId, playerIp, e);
+            log.error("Failed to send block update to world-player: session={} playerUrl={}", sessionId, playerUrl, e);
             return false;
         }
     }

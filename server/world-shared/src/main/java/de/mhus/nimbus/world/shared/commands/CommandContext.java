@@ -55,14 +55,14 @@ public class CommandContext {
     private String originServer;
 
     /**
-     * Origin IP address (optional - for player-initiated commands).
+     * Origin intenal url address (optional - for server-initiated commands).
      */
-    private String originIp;
+    private String originInternal;
 
     /**
-     * Origin port (optional - for player-initiated commands).
+     * Origin external url address (optional - for server-initiated commands).
      */
-    private Integer originPort;
+    private String originExternal;
 
     /**
      * Extensible metadata map.
