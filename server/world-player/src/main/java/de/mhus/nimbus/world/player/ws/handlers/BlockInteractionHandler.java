@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -34,6 +36,7 @@ public class BlockInteractionHandler implements MessageHandler {
 
     private final ObjectMapper objectMapper;
     private final BlockUpdateSender blockUpdateSender;
+    private final WWorldService worldService;
 
     @Override
     public String getMessageType() {
@@ -68,9 +71,15 @@ public class BlockInteractionHandler implements MessageHandler {
         // TODO: Validate block position is within world bounds
         // TODO: Update block in database (via WChunkService)
 
-        // Calculate chunk coordinates
-        int cx = x >> 4;  // Divide by 16 (chunkSize)
-        int cz = z >> 4;
+        // Get world and calculate chunk coordinates using configured chunkSize
+        WWorld world = worldService.getByWorldId(session.getWorldId()).orElse(null);
+        if (world == null || world.getPublicData() == null) {
+            log.warn("World not found: {}", session.getWorldId());
+            return;
+        }
+
+        int cx = world.getChunkX(x);
+        int cz = world.getChunkZ(z);
 
         // Create block update for broadcast
         List<JsonNode> blockUpdates = new ArrayList<>();

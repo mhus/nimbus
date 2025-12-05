@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
+import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.world.control.commands.CommitLayerCommand;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.control.service.EditState;
@@ -11,10 +13,13 @@ import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
+import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +49,8 @@ public class EditorController extends BaseEditorController {
     private final WSessionService wSessionService;
     private final WorldClientService worldClientService;
     private final CommitLayerCommand commitLayerCommand;
+    private final EngineMapper engineMapper;
+    private final WWorldService worldService;
 
     // ===== EDIT STATE =====
 
@@ -278,7 +285,7 @@ public class EditorController extends BaseEditorController {
     public ResponseEntity<?> updateBlock(
             @PathVariable String worldId,
             @PathVariable String sessionId,
-            @RequestBody UpdateBlockRequest request) {
+            @RequestBody String request) {
 
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
@@ -298,61 +305,61 @@ public class EditorController extends BaseEditorController {
             return bad("No layer selected - cannot save block without layer selection");
         }
 
-        // Get selected block position
-        Optional<EditService.BlockPosition> positionOpt = editService.getSelectedBlock(worldId, sessionId);
-        if (positionOpt.isEmpty()) {
-            return bad("No block selected");
-        }
-
-        EditService.BlockPosition position = positionOpt.get();
-
         try {
-            // Save block to Redis overlay
+            // Validate blockJson
+            if (Strings.isEmpty(request)) {
+                return bad("blockJson is required");
+            }
+
+            // Deserialize block using EngineMapper
+            Block block;
+            try {
+                block = engineMapper.readValue(request, Block.class);
+            } catch (Exception e) {
+                log.error("Failed to parse blockJson: {}", request, e);
+                return bad("Invalid blockJson: " + e.getMessage());
+            }
+
+            // Validate block has position
+            if (block.getPosition() == null) {
+                return bad("Block must have position");
+            }
+
+            // Save complete block to Redis overlay
             boolean saved = blockOverlayService.saveBlockOverlay(
                     worldId,
                     sessionId,
-                    position.x(),
-                    position.y(),
-                    position.z(),
-                    request.blockId,
-                    request.meta
+                    block,
+                    request
             );
 
             if (!saved) {
-                return error("Failed to save block overlay");
+                return bad("Failed to save block overlay");
             }
 
             // Mark chunk as dirty for later commit
-            String chunkKey = calculateChunkKey(position.x(), position.z());
-            dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_overlay_edit");
+            WWorld world = worldService.getByWorldId(worldId).orElse(null);
+            if (world != null) {
+                String chunkKey = world.getChunkKey((int)block.getPosition().getX(), (int)block.getPosition().getZ());
+                dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_overlay_edit");
+            } else {
+                log.warn("Could not mark chunk dirty - world not found: {}", worldId);
+            }
 
-            log.info("Block saved to overlay: session={} layer={} pos=({},{},{}) blockId={}",
-                    sessionId, state.getSelectedLayer(), position.x(), position.y(), position.z(), request.blockId);
+            log.info("Block saved to overlay: session={} layer={} pos=({}) blockTypeId={}",
+                    sessionId, state.getSelectedLayer(), block.getPosition(), block.getBlockTypeId());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("x", position.x());
-            response.put("y", position.y());
-            response.put("z", position.z());
-            response.put("blockId", request.blockId);
-            response.put("meta", request.meta);
+            response.put("blockTypeId", block.getBlockTypeId());
             response.put("layer", state.getSelectedLayer());
             response.put("saved", true);
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.error("Failed to update block: session={} pos=({},{},{})", sessionId, position.x(), position.y(), position.z(), e);
-            return error("Failed to update block: " + e.getMessage());
+            log.error("Failed to update block: session={}", sessionId, e);
+            return bad("Failed to update block: " + e.getMessage());
         }
-    }
-
-    /**
-     * Calculate chunk key from world coordinates.
-     */
-    private String calculateChunkKey(int x, int z) {
-        int cx = x >> 4;
-        int cz = z >> 4;
-        return cx + ":" + cz;
     }
 
     private ResponseEntity<?> error(String message) {
@@ -393,11 +400,12 @@ public class EditorController extends BaseEditorController {
 
     /**
      * Request DTO for block updates.
+     * Accepts complete block definition as JSON string from block-editor.
      */
     @Data
     public static class UpdateBlockRequest {
-        private String blockId;
-        private String meta;
+        private String blockJson;  // Complete block definition as JSON string
+        private String meta;  // Optional additional metadata
     }
 
     // ===== EDIT MODE CONTROL =====

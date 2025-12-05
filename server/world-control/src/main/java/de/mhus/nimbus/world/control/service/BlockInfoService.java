@@ -8,6 +8,8 @@ import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import de.mhus.nimbus.world.shared.world.WChunkService;
+import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class BlockInfoService {
     private final WChunkService chunkService;
     private final WorldRedisService redisService;
     private final ObjectMapper objectMapper;
+    private final WWorldService worldService;
 
     /**
      * Load block info with layer metadata.
@@ -121,7 +124,14 @@ public class BlockInfoService {
      * Load block from Redis overlay (edited but not committed).
      */
     private Block loadBlockFromRedisOverlay(String worldId, String sessionId, int x, int y, int z) {
-        String chunkKey = calculateChunkKey(x, z);
+        // Get world for chunk calculation
+        WWorld world = worldService.getByWorldId(worldId).orElse(null);
+        if (world == null) {
+            log.warn("World not found for overlay lookup: {}", worldId);
+            return null;
+        }
+
+        String chunkKey = world.getChunkKey(x, z);
         String key = "world:" + worldId + ":overlay:" + sessionId + ":" + chunkKey;
 
         Optional<String> overlayJson = redisService.getValue(worldId, key);
@@ -172,10 +182,10 @@ public class BlockInfoService {
             // 2. Load block based on layer type
             switch (layer.getLayerType()) {
                 case TERRAIN:
-                    return loadBlockFromTerrainLayer(layerDataId, x, y, z);
+                    return loadBlockFromTerrainLayer(worldId, layerDataId, x, y, z);
 
                 case MODEL:
-                    return loadBlockFromModelLayer(layerDataId, layer, x, y, z);
+                    return loadBlockFromModelLayer(worldId, layerDataId, layer, x, y, z);
 
                 default:
                     log.warn("Unknown layer type: {}", layer.getLayerType());
@@ -191,9 +201,15 @@ public class BlockInfoService {
     /**
      * Load block from TERRAIN layer.
      */
-    private Block loadBlockFromTerrainLayer(String layerDataId, int x, int y, int z) {
-        // Calculate chunk key
-        String chunkKey = calculateChunkKey(x, z);
+    private Block loadBlockFromTerrainLayer(String worldId, String layerDataId, int x, int y, int z) {
+        // Get world and calculate chunk key
+        WWorld world = worldService.getByWorldId(worldId).orElse(null);
+        if (world == null) {
+            log.warn("World not found: {}", worldId);
+            return null;
+        }
+
+        String chunkKey = world.getChunkKey(x, z);
 
         // Load LayerChunkData
         Optional<de.mhus.nimbus.world.shared.layer.LayerChunkData> chunkDataOpt =
@@ -224,7 +240,7 @@ public class BlockInfoService {
     /**
      * Load block from MODEL layer.
      */
-    private Block loadBlockFromModelLayer(String layerDataId, WLayer layer, int x, int y, int z) {
+    private Block loadBlockFromModelLayer(String worldId, String layerDataId, WLayer layer, int x, int y, int z) {
         // Load model content
         Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
                 layerService.loadModel(layerDataId);
@@ -274,7 +290,14 @@ public class BlockInfoService {
      * Load block from merged WChunk (final rendered result).
      */
     private Block loadBlockFromChunk(String worldId, int x, int y, int z) {
-        String chunkKey = calculateChunkKey(x, z);
+        // Get world and calculate chunk key
+        WWorld world = worldService.getByWorldId(worldId).orElse(null);
+        if (world == null) {
+            log.warn("World not found: {}", worldId);
+            return null;
+        }
+
+        String chunkKey = world.getChunkKey(x, z);
 
         Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);
         if (chunkDataOpt.isEmpty()) {
@@ -320,14 +343,5 @@ public class BlockInfoService {
                 .build();
 
         return block;
-    }
-
-    /**
-     * Calculate chunk key from world coordinates.
-     */
-    private String calculateChunkKey(int x, int z) {
-        int cx = x >> 4;
-        int cz = z >> 4;
-        return cx + ":" + cz;
     }
 }

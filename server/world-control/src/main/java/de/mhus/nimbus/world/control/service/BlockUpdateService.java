@@ -74,13 +74,7 @@ public class BlockUpdateService {
                     sessionId,
                     playerUrl,
                     "BlockUpdate",
-                    List.of(
-                            String.valueOf(x),
-                            String.valueOf(y),
-                            String.valueOf(z),
-                            blockJson,
-                            meta != null ? meta : ""
-                    ),
+                    List.of(blockJson),
                     ctx
             );
 

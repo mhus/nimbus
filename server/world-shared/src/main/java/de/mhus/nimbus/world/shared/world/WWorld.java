@@ -92,4 +92,46 @@ public class WWorld {
     public void touchForUpdate() {
         updatedAt = Instant.now();
     }
+
+    /**
+     * Calculate chunk X coordinate from world X coordinate.
+     * Uses configured chunkSize from WorldInfo.
+     *
+     * @param worldX World X coordinate
+     * @return Chunk X coordinate
+     */
+    public int getChunkX(int worldX) {
+        if (publicData == null) {
+            throw new IllegalStateException("World has no publicData");
+        }
+        int chunkSize = publicData.getChunkSize();
+        return Math.floorDiv(worldX, chunkSize);
+    }
+
+    /**
+     * Calculate chunk Z coordinate from world Z coordinate.
+     * Uses configured chunkSize from WorldInfo.
+     *
+     * @param worldZ World Z coordinate
+     * @return Chunk Z coordinate
+     */
+    public int getChunkZ(int worldZ) {
+        if (publicData == null) {
+            throw new IllegalStateException("World has no publicData");
+        }
+        int chunkSize = publicData.getChunkSize();
+        return Math.floorDiv(worldZ, chunkSize);
+    }
+
+    /**
+     * Calculate chunk key from world coordinates.
+     * Format: "{cx}:{cz}"
+     *
+     * @param worldX World X coordinate
+     * @param worldZ World Z coordinate
+     * @return Chunk key string
+     */
+    public String getChunkKey(int worldX, int worldZ) {
+        return getChunkX(worldX) + ":" + getChunkZ(worldZ);
+    }
 }

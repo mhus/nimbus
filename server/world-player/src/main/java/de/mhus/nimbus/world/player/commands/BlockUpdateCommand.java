@@ -45,11 +45,7 @@ public class BlockUpdateCommand implements Command {
         }
 
         try {
-            int x = Integer.parseInt(args.get(0));
-            int y = Integer.parseInt(args.get(1));
-            int z = Integer.parseInt(args.get(2));
-            String blockData = args.get(3);
-            String meta = args.get(4);
+            String blockData = args.get(0);
 
             // Find session
             Optional<PlayerSession> sessionOpt = sessionManager.getBySessionId(sessionId);
@@ -84,8 +80,8 @@ public class BlockUpdateCommand implements Command {
             // Send via WebSocket
             session.getWebSocketSession().sendMessage(textMessage);
 
-            log.debug("Sent block update to client: session={} pos=({},{},{}) block={}",
-                    sessionId, x, y, z, blockData);
+            log.debug("Sent block update to client: session={} blocks={}",
+                    sessionId, blockData);
 
             return CommandResult.success("Block update sent to client");
 
