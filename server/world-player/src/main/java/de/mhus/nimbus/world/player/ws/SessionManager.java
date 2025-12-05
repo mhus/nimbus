@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.ws;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -15,6 +16,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Slf4j
 public class SessionManager {
+
+    @Value("${nimbus.world.development.enabled:false}")
+    private boolean applicationDevelopmentEnabled;
+
+    @Value("${nimbus.world.development.worldId:main}")
+    private boolean applicationDevelopmentWorldId;
+
+    @Value("${nimbus.world.development.worldId:region}")
+    private boolean applicationDevelopmentRegionId;
 
     private final Map<String, PlayerSession> sessionsByWebSocketId = new ConcurrentHashMap<>();
     private final Map<String, PlayerSession> sessionsBySessionId = new ConcurrentHashMap<>();

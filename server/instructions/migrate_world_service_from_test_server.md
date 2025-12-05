@@ -2697,6 +2697,17 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
 - Beim löchen wird ein AIR Block gespeichert (BlockType 0).
 (Das eigentliche speichern wird beim integrieren in den Layer erledigt, nicht hier)
 
-[ ] Es wird ein mechanismus benoetigt um eine session zu finden. Der world-control server hat eine
-session und benoetigt die zugehoerige IP.
-- Sessions sollten be
+[ ] Sessions in world-player mit redis synchronisieren
+- Siehe world-shared WSessionService (session im redis - world global)
+- Siehe world-player SessionManager (WebSocket session - world-player lokal)
+- Wenn in SessionManager eine Session erzeugt wird, muss
+  - bei username/password login eine WSession angelegt werden
+    - username/password login wird nur zum entwickeln unterstuetzt (pruefen applicationDevelopmentEnabled in SessionManager).
+    - Nutze zum rstellen der WSession konfigurierte Werte (applicationDevelopmentWorldId, applicationDevelopmentRegionId) - erstelle ggf mehr wenn benoetigt.
+  - bei token login eine WSession gesucht werden - Status auf WAITING prüfen
+  - Die WSession auf RUNNING stellen, ausserdem in der WSession die internal URL des players speichern (LocationService in shared).
+- Wenn in SessionManager eine Session entfernt wird, muss
+  - die WSession auf DEPRECATED gesetzt werden.
+
+[ ] Erstelle in WSessionService eine Methode mit der mittels einer sessionId die Daten aus redis, incl. internal 
+player url, geladen werden koennen.
