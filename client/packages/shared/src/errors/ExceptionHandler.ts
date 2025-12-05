@@ -45,6 +45,7 @@ export class ExceptionHandler {
    */
   static handle(error: unknown, context: string, data?: any): void {
     const errorObj = this.normalizeError(error);
+    console.error(error);
 
     // Log the error
     logger.error(`Exception in ${context}: ${errorObj.message}`, data, errorObj);

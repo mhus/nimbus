@@ -57,7 +57,6 @@ public class EditService {
         String selectedBlockX = redisService.getValue(worldId, key + "selectedBlockX").orElse(null);
         String selectedBlockY = redisService.getValue(worldId, key + "selectedBlockY").orElse(null);
         String selectedBlockZ = redisService.getValue(worldId, key + "selectedBlockZ").orElse(null);
-        String playerUrl = redisService.getValue(worldId, key + "playerUrl").orElse(null);
 
         // Build state from Redis values
         EditState.EditStateBuilder builder = EditState.builder()
@@ -69,7 +68,6 @@ public class EditService {
                 .mountY(parseInt(mountYStr))
                 .mountZ(parseInt(mountZStr))
                 .selectedGroup(parseInt(selectedGroupStr) != null ? parseInt(selectedGroupStr) : 0)
-                .playerUrl(playerUrl)
                 .lastUpdated(Instant.now());
 
         return builder.build();
@@ -410,14 +408,8 @@ public class EditService {
 
         redisService.putValue(worldId, key + "selectedGroup", String.valueOf(state.getSelectedGroup()), EDIT_STATE_TTL);
 
-        if (Strings.isNotEmpty(state.getPlayerUrl())) {
-            redisService.putValue(worldId, key + "playerUrl", state.getPlayerUrl(), EDIT_STATE_TTL);
-        } else {
-            redisService.deleteValue(worldId, key + "playerUrl");
-        }
-
-        log.trace("Edit state saved: session={} layer={} playerUrl={}",
-                sessionId, state.getSelectedLayer(), state.getPlayerUrl());
+        log.trace("Edit state saved: session={} layer={}",
+                sessionId, state.getSelectedLayer());
     }
 
     private boolean parseBoolean(String value, boolean defaultValue) {

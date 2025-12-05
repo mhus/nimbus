@@ -70,7 +70,7 @@ public class BlockOverlayService {
                     sessionId, x, y, z, blockTypeId);
 
             // Send block update to client
-            boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockTypeId, metadata);
+            boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, metadata);
 
             if (!sent) {
                 log.warn("Failed to send block update to client: session={}", sessionId);

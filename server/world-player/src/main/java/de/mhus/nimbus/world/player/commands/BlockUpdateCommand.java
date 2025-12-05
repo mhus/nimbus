@@ -8,6 +8,7 @@ import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
@@ -33,9 +34,9 @@ public class BlockUpdateCommand implements Command {
 
     @Override
     public CommandResult execute(CommandContext context, List<String> args) {
-        // Args: [x, y, z, blockId, meta]
+        // Args: [x, y, z, blockDataObjectAsString, meta]
         if (args.size() != 5) {
-            return CommandResult.error(-3, "Usage: BlockUpdate <x> <y> <z> <blockId> <meta>");
+            return CommandResult.error(-3, "Usage: BlockUpdate <x> <y> <z> <blockDataObjectAsString> <meta>");
         }
 
         String sessionId = context.getSessionId();
@@ -47,7 +48,7 @@ public class BlockUpdateCommand implements Command {
             int x = Integer.parseInt(args.get(0));
             int y = Integer.parseInt(args.get(1));
             int z = Integer.parseInt(args.get(2));
-            String blockId = args.get(3);
+            String blockData = args.get(3);
             String meta = args.get(4);
 
             // Find session
@@ -56,12 +57,25 @@ public class BlockUpdateCommand implements Command {
                 return CommandResult.error(-4, "Session not found: " + sessionId);
             }
 
+            if (Strings.isEmpty(blockData)) {
+                return CommandResult.error(-5, "Block data corrupted");
+            }
+            blockData = blockData.trim();
+
+            if (blockData.startsWith("{") && blockData.endsWith("}")) {
+                blockData = "[" + blockData + "]";
+            }
+            if (!blockData.startsWith("[") || !blockData.endsWith("]")) {
+                return CommandResult.error(-5, "Block data corrupted");
+            }
+            var blockJson = objectMapper.readTree(blockData);
+
             PlayerSession session = sessionOpt.get();
 
             // Build "b.u" message
             NetworkMessage message = NetworkMessage.builder()
                     .t("b.u")
-                    .d(objectMapper.valueToTree(List.of(x, y, z, blockId, meta.isEmpty() ? null : meta)))
+                    .d(blockJson)
                     .build();
 
             String json = objectMapper.writeValueAsString(message);
@@ -70,8 +84,8 @@ public class BlockUpdateCommand implements Command {
             // Send via WebSocket
             session.getWebSocketSession().sendMessage(textMessage);
 
-            log.debug("Sent block update to client: session={} pos=({},{},{}) blockId={}",
-                    sessionId, x, y, z, blockId);
+            log.debug("Sent block update to client: session={} pos=({},{},{}) block={}",
+                    sessionId, x, y, z, blockData);
 
             return CommandResult.success("Block update sent to client");
 

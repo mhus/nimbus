@@ -7,6 +7,7 @@ import de.mhus.nimbus.world.shared.commands.CommandContext;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -94,7 +95,7 @@ public class WorldClientService {
      *
      * @param worldId World identifier
      * @param sessionId Session identifier (optional)
-     * @param origin Origin server IP + : + port
+     * @param playerUrl Player Base URL http://serverIP:port
      * @param commandName Command name
      * @param args Command arguments
      * @param context Optional context
@@ -103,12 +104,12 @@ public class WorldClientService {
     public CompletableFuture<CommandResponse> sendPlayerCommand(
             String worldId,
             String sessionId,
-            String origin,
+            String playerUrl,
             String commandName,
             List<String> args,
             CommandContext context) {
 
-        String baseUrl = properties.getPlayerBaseUrl();
+        String baseUrl = Strings.isEmpty(playerUrl) ? properties.getPlayerBaseUrl() : playerUrl;
 
         // Update context with session if provided
         if (context == null) {

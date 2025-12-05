@@ -356,7 +356,7 @@ export class ChunkService {
     // Normalize blockTypeId for all blocks (convert legacy numbers to strings)
     if (chunkData.b) {
       for (const block of chunkData.b) {
-        block.blockTypeId = normalizeBlockTypeId(block.blockTypeId);
+          block.blockTypeId = normalizeBlockTypeId(block.blockTypeId);
       }
     }
 
@@ -877,6 +877,8 @@ export class ChunkService {
    */
   async onBlockUpdate(blocks: Block[]): Promise<void> {
     try {
+      console.log("Blocks Update:")
+      console.log(blocks);
       logger.debug('🔵 ChunkService.onBlockUpdate called', {
         blockCount: blocks.length,
       });

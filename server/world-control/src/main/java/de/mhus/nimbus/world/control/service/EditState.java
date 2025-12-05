@@ -65,10 +65,4 @@ public class EditState {
      */
     private String worldId;
 
-    /**
-     * World-player URL
-     * Set by EditBlockTriggerCommand when block is selected.
-     */
-    private String playerUrl;
-
 }

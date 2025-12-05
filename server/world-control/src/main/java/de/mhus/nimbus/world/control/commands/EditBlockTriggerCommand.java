@@ -44,15 +44,6 @@ public class EditBlockTriggerCommand implements Command {
             int y = Integer.parseInt(args.get(1));
             int z = Integer.parseInt(args.get(2));
 
-            // Store player IP and port for block update callbacks
-            String playerUrl = context.getOriginInternal();
-            if (isNotEmpty(playerUrl)) {
-                editService.updateEditState(context.getWorldId(), sessionId, state -> {
-                    state.setPlayerUrl(playerUrl);
-                });
-                log.debug("Stored player IP and port for session: {} -> {}", sessionId, playerUrl);
-            }
-
             // Update selected block in Redis
             editService.doAction(
                     context.getWorldId(),
