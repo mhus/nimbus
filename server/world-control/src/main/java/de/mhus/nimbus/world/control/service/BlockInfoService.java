@@ -158,14 +158,115 @@ public class BlockInfoService {
      * Load block from selected layer.
      */
     private Block loadBlockFromLayer(String worldId, String layerName, int x, int y, int z) {
-        // TODO: Implement layer-specific block loading
-        // This requires:
-        // 1. Load WLayer entity
-        // 2. For TERRAIN: Load LayerChunkData, find block
-        // 3. For MODEL: Calculate relative position, find in model content
-        // 4. Convert LayerBlock to Block
+        try {
+            // 1. Load WLayer entity
+            Optional<WLayer> layerOpt = layerService.findLayer(worldId, layerName);
+            if (layerOpt.isEmpty()) {
+                log.debug("Layer not found: {}", layerName);
+                return null;
+            }
 
-        // For now: Return null (falls back to WChunk)
+            WLayer layer = layerOpt.get();
+            String layerDataId = layer.getLayerDataId();
+
+            // 2. Load block based on layer type
+            switch (layer.getLayerType()) {
+                case TERRAIN:
+                    return loadBlockFromTerrainLayer(layerDataId, x, y, z);
+
+                case MODEL:
+                    return loadBlockFromModelLayer(layerDataId, layer, x, y, z);
+
+                default:
+                    log.warn("Unknown layer type: {}", layer.getLayerType());
+                    return null;
+            }
+
+        } catch (Exception e) {
+            log.warn("Failed to load block from layer {}: {}", layerName, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Load block from TERRAIN layer.
+     */
+    private Block loadBlockFromTerrainLayer(String layerDataId, int x, int y, int z) {
+        // Calculate chunk key
+        String chunkKey = calculateChunkKey(x, z);
+
+        // Load LayerChunkData
+        Optional<de.mhus.nimbus.world.shared.layer.LayerChunkData> chunkDataOpt =
+                layerService.loadTerrainChunk(layerDataId, chunkKey);
+
+        if (chunkDataOpt.isEmpty()) {
+            return null;
+        }
+
+        de.mhus.nimbus.world.shared.layer.LayerChunkData chunkData = chunkDataOpt.get();
+
+        // Find block at position
+        if (chunkData.getBlocks() != null) {
+            for (de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock : chunkData.getBlocks()) {
+                Block block = layerBlock.getBlock();
+                if (block != null && block.getPosition() != null) {
+                    Vector3 pos = block.getPosition();
+                    if ((int) pos.getX() == x && (int) pos.getY() == y && (int) pos.getZ() == z) {
+                        return block;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Load block from MODEL layer.
+     */
+    private Block loadBlockFromModelLayer(String layerDataId, WLayer layer, int x, int y, int z) {
+        // Load model content
+        Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
+                layerService.loadModel(layerDataId);
+
+        if (modelOpt.isEmpty()) {
+            return null;
+        }
+
+        de.mhus.nimbus.world.shared.layer.WLayerModel model = modelOpt.get();
+
+        // Calculate relative position from mount point
+        int mountX = layer.getMountX() != null ? layer.getMountX() : 0;
+        int mountY = layer.getMountY() != null ? layer.getMountY() : 0;
+        int mountZ = layer.getMountZ() != null ? layer.getMountZ() : 0;
+
+        int relativeX = x - mountX;
+        int relativeY = y - mountY;
+        int relativeZ = z - mountZ;
+
+        // Find block in model content
+        if (model.getContent() != null) {
+            for (de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock : model.getContent()) {
+                Block block = layerBlock.getBlock();
+                if (block != null && block.getPosition() != null) {
+                    Vector3 pos = block.getPosition();
+                    if ((int) pos.getX() == relativeX && (int) pos.getY() == relativeY && (int) pos.getZ() == relativeZ) {
+                        // Create new block with absolute position
+                        Block absoluteBlock = Block.builder()
+                                .position(Vector3.builder().x((double) x).y((double) y).z((double) z).build())
+                                .blockTypeId(block.getBlockTypeId())
+                                .offsets(block.getOffsets())
+                                .cornerHeights(block.getCornerHeights())
+                                .status(block.getStatus())
+                                .modifiers(block.getModifiers())
+                                .metadata(block.getMetadata())
+                                .build();
+                        return absoluteBlock;
+                    }
+                }
+            }
+        }
+
         return null;
     }
 
