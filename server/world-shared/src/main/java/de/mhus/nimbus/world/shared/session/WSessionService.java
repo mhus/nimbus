@@ -80,6 +80,18 @@ public class WSessionService {
         }
     }
 
+    /**
+     * Lädt eine WSession aus Redis mit allen Daten inklusive internal player URL.
+     * Diese Methode ist identisch zu get(), aber mit aussagekräftigerem Namen für
+     * den Use-Case, wenn explizit die Player-URL benötigt wird.
+     *
+     * @param sessionId Die Session-ID
+     * @return Optional mit WSession inkl. playerUrl, oder empty wenn nicht gefunden
+     */
+    public Optional<WSession> getWithPlayerUrl(String sessionId) {
+        return get(sessionId);
+    }
+
     public Optional<WSession> updateStatus(String id, WSessionStatus newStatus) {
         return get(id).map(existing -> {
             existing.setStatus(newStatus);

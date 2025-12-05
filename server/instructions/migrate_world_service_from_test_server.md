@@ -2709,7 +2709,7 @@ Passe edit-config.html in ../client/packages/controls so an, das es mit den neue
 - Wenn in SessionManager eine Session entfernt wird, muss
   - die WSession auf DEPRECATED gesetzt werden.
 
-[ ] Erstelle in WSessionService eine Methode mit der mittels einer sessionId die Daten aus redis, incl. internal 
+[x] Erstelle in WSessionService eine Methode mit der mittels einer sessionId die Daten aus redis, incl. internal 
 player url, geladen werden koennen.
 
 [ ] In ../client/packages/controls/edit-config.html soll der 'Edit Mode' im Redis controlliert werden
