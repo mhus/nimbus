@@ -35,8 +35,8 @@ public class BlockUpdateCommand implements Command {
     @Override
     public CommandResult execute(CommandContext context, List<String> args) {
         // Args: [x, y, z, blockDataObjectAsString, meta]
-        if (args.size() != 5) {
-            return CommandResult.error(-3, "Usage: BlockUpdate <x> <y> <z> <blockDataObjectAsString> <meta>");
+        if (args.size() < 1) {
+            return CommandResult.error(-3, "Usage: BlockUpdate <blockDataObjectAsString>");
         }
 
         String sessionId = context.getSessionId();
