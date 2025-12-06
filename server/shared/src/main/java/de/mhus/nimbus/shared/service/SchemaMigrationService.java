@@ -265,6 +265,40 @@ public class SchemaMigrationService {
     }
 
     /**
+     * Returns the latest (highest) schema version available for an entity type.
+     * Returns "0" if no migrators exist for the entity type.
+     *
+     * @param entityType the entity type
+     * @return the latest schema version
+     */
+    public String getLatestVersion(String entityType) {
+        List<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptyList());
+
+        if (entityMigrators.isEmpty()) {
+            return "0";
+        }
+
+        // Find the highest toVersion from all migrators
+        return entityMigrators.stream()
+                .map(SchemaMigrator::getToVersion)
+                .max(String::compareTo)
+                .orElse("0");
+    }
+
+    /**
+     * Migrates an entity to the latest available version.
+     *
+     * @param entityJson the entity as JSON string
+     * @param entityType the entity type name
+     * @return the migrated entity as JSON string
+     * @throws MigrationException if migration fails
+     */
+    public String migrateToLatest(String entityJson, String entityType) throws MigrationException {
+        String latestVersion = getLatestVersion(entityType);
+        return migrate(entityJson, entityType, latestVersion);
+    }
+
+    /**
      * Exception thrown when schema migration fails.
      */
     public static class MigrationException extends Exception {

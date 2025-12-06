@@ -18,5 +18,7 @@
         <module>local-cleanup</module>
         <module>world-test</module>
         <module>demo-import</module>
+        <module>world-export</module>
+        <module>world-import</module>
     </modules>
 </project>

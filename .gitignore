@@ -10,6 +10,7 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 /server/data
+/server/exports
 
 # IDE
 .idea/

@@ -101,7 +101,7 @@ vorerst ein Log ausgibt.
   - Kann remote ohne Session aufgerufen werden
 ```
 
-[ ] Export und Import mit Schema Migration
+[?] Export und Import mit Schema Migration
 - Erstelle in shared einen ExportService und ImportService.
 - Der ExportService exportiert alle Entities einer Collection in eine Datei.
 - Der ImportService importiert alle Entities aus einer Datei in die Collection.
@@ -111,4 +111,22 @@ vorerst ein Log ausgibt.
   - in application.yaml kann angegeben werden welche Collections exportiert/importiert werden sollen.
   - in application.yaml kann der Pfad der Export/Import Datei angegeben werden.
 
+```text
+  Export:
+  cd tools/world-export
+  mvn spring-boot:run
+  # oder mit Custom-Pfad:
+  mvn spring-boot:run -Dspring-boot.run.arguments="--export.output-path=/data/exports"
 
+  Import:
+  cd tools/world-import
+  mvn spring-boot:run
+  # oder mit Custom-Pfad:
+  mvn spring-boot:run -Dspring-boot.run.arguments="--import.input-path=/data/exports"
+```
+
+[?] optional soll auch die worldId in application.yaml angegeben werden, die exportiert werden soll. Alle welten ist '*'
+[?] Beim importieren muss geprueft werden ob die entity schon existiert. ein parameter in application.yaml steuert ob die entity skippt oder overwritten wird.
+[ ] Erstelle SchemaMigrator für
+- s_assets, storage_data, worlds, w_bacldrops, w_chunk, w_layer, w_blocktypes, w_items, w_entities, w_entry_models, w_item_positions, w_itemtypes, w_layer_terrain, w_layer_models
+- von verion 0 auf version 1.0.0 - ohne änderungen vorzunehmen. - damit geht alles initial auf version 1.0.0

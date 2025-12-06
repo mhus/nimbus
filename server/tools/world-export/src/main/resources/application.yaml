@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: world-export
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      database: world
+
+# Export configuration
+export:
+  # Base path for export files
+  output-path: ${EXPORT_OUTPUT_PATH:./exports/demo-world}
+
+  # World ID to export (use '*' for all worlds, or specify a worldId like 'main')
+  world-id: ${EXPORT_WORLD_ID:*}
+
+  # Collections to export
+  collections: s_assets,storage_data,worlds,w_backdrops,w_chunks,w_layers,w_blocktypes,w_items,w_entities,w_entity_models,w_item_positions,w_itemtypes,w_layer_terrain,w_layer_models
+
+logging:
+  level:
+    de.mhus.nimbus: INFO
+    org.springframework.data.mongodb: WARN
+
+server:
+  port: 9152

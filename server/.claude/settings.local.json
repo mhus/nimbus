@@ -18,7 +18,8 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(mvn:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(paste:*)"
     ],
     "deny": [],
     "ask": []

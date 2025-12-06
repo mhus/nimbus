@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: world-import
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      database: world
+
+# Import configuration
+import:
+  # Base path for import files
+  input-path: ${IMPORT_INPUT_PATH:./exports/demo-world}
+
+  # World ID to import (use '*' for all worlds, or specify a worldId like 'main')
+  world-id: ${IMPORT_WORLD_ID:*}
+
+  # Import mode for existing entities: 'skip' or 'overwrite'
+  # skip: Skip entities that already exist in the database
+  # overwrite: Overwrite existing entities with imported data
+  mode: ${IMPORT_MODE:overwrite}
+
+  # Collections to import (order matters for referential integrity)
+  collections: s_assets,storage_data,worlds,w_backdrops,w_chunks,w_layers,w_blocktypes,w_items,w_entities,w_entity_models,w_item_positions,w_itemtypes,w_layer_terrain,w_layer_models
+
+logging:
+  level:
+    de.mhus.nimbus: INFO
+    org.springframework.data.mongodb: WARN
+
+server:
+  port: 9151
