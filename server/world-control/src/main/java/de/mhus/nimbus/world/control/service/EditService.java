@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.control.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import de.mhus.nimbus.world.shared.layer.EditAction;
@@ -9,6 +11,8 @@ import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
+import de.mhus.nimbus.world.shared.world.WWorldService;
+import de.mhus.nimbus.world.shared.world.WWorld;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -36,10 +40,12 @@ public class EditService {
     private final WorldClientService worldClient;
     private final WSessionService wSessionService;
     private final BlockInfoService blockInfoService;
+    private final WWorldService worldService;
     private final ObjectMapper objectMapper;
 
     private static final Duration EDIT_STATE_TTL = Duration.ofHours(24);
     private static final String EDIT_STATE_PREFIX = "edit:";
+    private static final Duration OVERLAY_TTL = Duration.ofHours(24);
 
     /**
      * Get edit state for session.
@@ -165,7 +171,7 @@ public class EditService {
 
             case MOVE_BLOCK:
                 // Move marked block to current position
-                moveMarkedBlock(worldId, sessionId, x, y, z);
+                moveMarkedBlock(worldId, sessionId, playerUrl, x, y, z);
                 break;
 
             default:
@@ -366,9 +372,11 @@ public class EditService {
 
     /**
      * Copy marked block to target position.
+     * Uses stored blockInfo from Redis to recreate the block at the new position.
      */
     @Transactional
     private void copyMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+        // Get marked block position
         Optional<BlockPosition> markedOpt = getMarkedBlock(worldId, sessionId);
         if (markedOpt.isEmpty()) {
             log.warn("No marked block for copy: session={}", sessionId);
@@ -377,10 +385,64 @@ public class EditService {
 
         BlockPosition marked = markedOpt.get();
 
-        // TODO: Read block data from marked position (requires world-player coordination)
-        // For now: Just log the operation
-        log.info("Copy block: session={} from=({},{},{}) to=({},{},{})",
-                sessionId, marked.x(), marked.y(), marked.z(), x, y, z);
+        // Get marked block info from Redis
+        Optional<Map<String, Object>> blockInfoOpt = getMarkedBlockInfo(worldId, sessionId);
+        if (blockInfoOpt.isEmpty()) {
+            log.warn("No marked block info for copy: session={} - marked block may have expired", sessionId);
+            return;
+        }
+
+        Map<String, Object> blockInfo = blockInfoOpt.get();
+
+        // Extract block from blockInfo
+        Object blockObj = blockInfo.get("block");
+        if (blockObj == null) {
+            log.warn("No block data in marked block info: session={}", sessionId);
+            return;
+        }
+
+        try {
+            // Convert block object to Block
+            Block originalBlock = objectMapper.convertValue(blockObj, Block.class);
+
+            // Create new block with target position
+            Block copiedBlock = Block.builder()
+                    .position(Vector3.builder()
+                            .x((double) x)
+                            .y((double) y)
+                            .z((double) z)
+                            .build())
+                    .blockTypeId(originalBlock.getBlockTypeId())
+                    .offsets(originalBlock.getOffsets())
+                    .cornerHeights(originalBlock.getCornerHeights())
+                    .status(originalBlock.getStatus())
+                    .modifiers(originalBlock.getModifiers())
+                    .metadata(originalBlock.getMetadata())
+                    .build();
+
+            // Get world and calculate chunk coordinates
+            WWorld world = worldService.getByWorldId(worldId).orElse(null);
+            if (world == null) {
+                log.error("World not found for copy: worldId={}", worldId);
+                return;
+            }
+
+            int cx = world.getChunkX(x);
+            int cz = world.getChunkZ(z);
+            String positionKey = x + ":" + y + ":" + z;
+
+            // Write block to Redis overlay
+            String blockJson = objectMapper.writeValueAsString(copiedBlock);
+            redisService.putOverlayBlock(worldId, sessionId, cx, cz, positionKey, blockJson, OVERLAY_TTL);
+
+            log.info("Block copied: session={} from=({},{},{}) to=({},{},{}) type={}",
+                    sessionId, marked.x(), marked.y(), marked.z(), x, y, z, copiedBlock.getBlockTypeId());
+
+        } catch (Exception e) {
+            log.error("Failed to copy block: session={} from=({},{},{}) to=({},{},{})",
+                    sessionId, marked.x(), marked.y(), marked.z(), x, y, z, e);
+            return;
+        }
 
         // Update selected block to target position
         setSelectedBlock(worldId, sessionId, x, y, z);
@@ -388,9 +450,11 @@ public class EditService {
 
     /**
      * Move marked block to target position.
+     * Implements as: Copy block to target + Delete at source + Update marked block to new position.
      */
     @Transactional
-    private void moveMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+    private void moveMarkedBlock(String worldId, String sessionId, String playerUrl, int x, int y, int z) {
+        // Get marked block position
         Optional<BlockPosition> markedOpt = getMarkedBlock(worldId, sessionId);
         if (markedOpt.isEmpty()) {
             log.warn("No marked block for move: session={}", sessionId);
@@ -399,19 +463,91 @@ public class EditService {
 
         BlockPosition marked = markedOpt.get();
 
-        // TODO: Read block from marked position, write to target, delete at marked
-        // For now: Just log the operation
-        log.info("Move block: session={} from=({},{},{}) to=({},{},{})",
-                sessionId, marked.x(), marked.y(), marked.z(), x, y, z);
+        // Get marked block info from Redis
+        Optional<Map<String, Object>> blockInfoOpt = getMarkedBlockInfo(worldId, sessionId);
+        if (blockInfoOpt.isEmpty()) {
+            log.warn("No marked block info for move: session={} - marked block may have expired", sessionId);
+            return;
+        }
 
-        // Clear marked block after move
-        String key = editStateKey(sessionId);
-        redisService.deleteValue(worldId, key + "markedBlockX");
-        redisService.deleteValue(worldId, key + "markedBlockY");
-        redisService.deleteValue(worldId, key + "markedBlockZ");
+        Map<String, Object> blockInfo = blockInfoOpt.get();
 
-        // Update selected block to target position
-        setSelectedBlock(worldId, sessionId, x, y, z);
+        // Extract block from blockInfo
+        Object blockObj = blockInfo.get("block");
+        if (blockObj == null) {
+            log.warn("No block data in marked block info: session={}", sessionId);
+            return;
+        }
+
+        try {
+            // Convert block object to Block
+            Block originalBlock = objectMapper.convertValue(blockObj, Block.class);
+
+            // Get world for chunk calculations
+            WWorld world = worldService.getByWorldId(worldId).orElse(null);
+            if (world == null) {
+                log.error("World not found for move: worldId={}", worldId);
+                return;
+            }
+
+            // Step 1: Copy block to target position
+            Block copiedBlock = Block.builder()
+                    .position(Vector3.builder()
+                            .x((double) x)
+                            .y((double) y)
+                            .z((double) z)
+                            .build())
+                    .blockTypeId(originalBlock.getBlockTypeId())
+                    .offsets(originalBlock.getOffsets())
+                    .cornerHeights(originalBlock.getCornerHeights())
+                    .status(originalBlock.getStatus())
+                    .modifiers(originalBlock.getModifiers())
+                    .metadata(originalBlock.getMetadata())
+                    .build();
+
+            int targetCx = world.getChunkX(x);
+            int targetCz = world.getChunkZ(z);
+            String targetPositionKey = x + ":" + y + ":" + z;
+
+            // Write copied block to Redis overlay at target
+            String copiedBlockJson = objectMapper.writeValueAsString(copiedBlock);
+            redisService.putOverlayBlock(worldId, sessionId, targetCx, targetCz, targetPositionKey, copiedBlockJson, OVERLAY_TTL);
+
+            // Step 2: Delete block at source position (write air block)
+            Block airBlock = Block.builder()
+                    .position(Vector3.builder()
+                            .x((double) marked.x())
+                            .y((double) marked.y())
+                            .z((double) marked.z())
+                            .build())
+                    .blockTypeId("air")
+                    .build();
+
+            int sourceCx = world.getChunkX(marked.x());
+            int sourceCz = world.getChunkZ(marked.z());
+            String sourcePositionKey = marked.x() + ":" + marked.y() + ":" + marked.z();
+
+            // Write air block to Redis overlay at source
+            String airBlockJson = objectMapper.writeValueAsString(airBlock);
+            redisService.putOverlayBlock(worldId, sessionId, sourceCx, sourceCz, sourcePositionKey, airBlockJson, OVERLAY_TTL);
+
+            log.info("Block moved: session={} from=({},{},{}) to=({},{},{}) type={}",
+                    sessionId, marked.x(), marked.y(), marked.z(), x, y, z, copiedBlock.getBlockTypeId());
+
+            // Step 3: Update marked block and selected block to new position
+            setMarkedBlock(worldId, sessionId, x, y, z);
+
+            // Reload block info at new position and store it
+            Map<String, Object> newBlockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
+            storeMarkedBlockInfo(worldId, sessionId, newBlockInfo);
+
+            // Notify client
+            clientSetSelectedEditBlock(worldId, sessionId, playerUrl, x, y, z);
+
+        } catch (Exception e) {
+            log.error("Failed to move block: session={} from=({},{},{}) to=({},{},{})",
+                    sessionId, marked.x(), marked.y(), marked.z(), x, y, z, e);
+        }
     }
 
     /**
