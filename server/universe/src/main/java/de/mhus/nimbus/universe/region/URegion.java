@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe.region;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @Document(collection = "uRegions")
+@SchemaVersion("1.0.0")
 public class URegion {
 
     @Id

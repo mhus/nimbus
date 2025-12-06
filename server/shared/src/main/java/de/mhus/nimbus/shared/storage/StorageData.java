@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.storage;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import java.util.Date;
  * Each chunk is stored as a separate document.
  */
 @Document(collection = "storage_data")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "uuid_index_idx", def = "{ 'uuid': 1, 'index': 1 }", unique = true)
 })

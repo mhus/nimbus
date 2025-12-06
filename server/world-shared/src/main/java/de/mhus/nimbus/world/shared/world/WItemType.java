@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.ItemType;
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import java.time.Instant;
  * ItemTypes are templates that define how items look and behave.
  */
 @Document(collection = "w_itemtypes")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "itemType_idx", def = "{ 'itemType': 1 }", unique = true)
 })

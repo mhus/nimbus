@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,7 @@ import java.util.TreeMap;
  * References specific layer data (LayerTerrain or LayerModel).
  */
 @Document(collection = "w_layers")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "world_name_idx", def = "{ 'worldId': 1, 'name': 1 }", unique = true),
         @CompoundIndex(name = "world_order_idx", def = "{ 'worldId': 1, 'order': 1 }"),

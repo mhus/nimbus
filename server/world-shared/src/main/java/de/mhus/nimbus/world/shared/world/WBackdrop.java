@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Backdrop;
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import java.time.Instant;
  * Backdrops are visual elements rendered at chunk boundaries (fog, sky, etc.).
  */
 @Document(collection = "w_backdrops")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "backdropId_idx", def = "{ 'backdropId': 1 }", unique = true)
 })

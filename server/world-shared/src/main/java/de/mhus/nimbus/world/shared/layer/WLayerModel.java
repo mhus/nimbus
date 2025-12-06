@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,7 @@ import java.util.Map;
  * Blocks have relative positions from mount point.
  */
 @Document(collection = "w_layer_model")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "layerData_idx", def = "{ 'layerDataId': 1 }", unique = true),
         @CompoundIndex(name = "world_layerData_idx", def = "{ 'worldId': 1, 'layerDataId': 1 }")

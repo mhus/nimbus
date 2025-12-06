@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.storage;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import java.util.Date;
  * This allows ongoing read operations to complete safely before data is removed.
  */
 @Document(collection = "storage_delete")
+@SchemaVersion("1.0.0")
 @Data
 @Builder
 @NoArgsConstructor

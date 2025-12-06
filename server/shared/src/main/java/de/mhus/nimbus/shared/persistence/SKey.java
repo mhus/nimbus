@@ -19,6 +19,7 @@ import java.util.Base64;
  * Persisted key definition to be stored in MongoDB.
  */
 @Document(collection = "s_keys")
+@SchemaVersion("1.0.0")
 @Data
 public class SKey {
 

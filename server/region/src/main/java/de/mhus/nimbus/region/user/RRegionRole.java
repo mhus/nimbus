@@ -1,5 +1,6 @@
 package de.mhus.nimbus.region.user;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import de.mhus.nimbus.shared.user.RegionRoles;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Document(collection = "region_roles")
 @CompoundIndex(def = "{userId:1, regionId:1}", unique = true)
+@SchemaVersion("1.0.0")
 @Data
 public class RRegionRole {
 

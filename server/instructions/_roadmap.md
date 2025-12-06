@@ -19,11 +19,12 @@
 - Hex Map
   - Hex Map Editor
   - Radius in WorldInfo
+  - Entry Points per Hex (?)
 - World
 - Entry Points
 - Import / Exporter / Version management von Daten
   - Änderungsmanagement mongodb liquibase
-- Mechanismus der Interaktion mit Interaktiven elementen, ggf. Space-Key wenn selekted
+- Mechanismus der Interaktion mit interaktiven Elementen, ggf. Space-Key wenn selected
 - Balken+Name ueber Entities
 - Zeichen, zb. Menge + Namen ueber Items
 

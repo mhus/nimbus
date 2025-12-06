@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe.favorit;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import java.time.Instant;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -7,6 +8,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "favorits")
+@SchemaVersion("1.0.0")
 public class UFavorit {
 
     @Id

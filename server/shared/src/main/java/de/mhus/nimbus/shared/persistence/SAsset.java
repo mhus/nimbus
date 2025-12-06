@@ -19,6 +19,7 @@ import java.time.Instant;
  * Metadaten aus *.info Dateien werden in publicData gespeichert.
  */
 @Document(collection = "s_assets")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "region_world_path_idx", def = "{ 'regionId': 1, 'worldId': 1, 'path': 1 }", unique = true)
 })

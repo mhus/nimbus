@@ -27,3 +27,37 @@
 - Wichtig ist, dass die daten nicht in den speicher passen, deshalb muessen die streams die chunks nacheinander laden und speichern.
 
 > [x] Storage with worldId
+
+---
+
+[?] Ist es moeglich in Spring Boot JPA und mongoDB ein Feld in die Entities einzufuegen, das nicht in der
+Entity Klasse ist. Ich denke an ein _schema Feld das beim schreiben immer die version des aktuellen Schemas hat.
+
+[?] Wenn eine Entity geladen wird, die nicht dem aktuellen Schema entspricht, dann wird eine Funktion aufgerufen, die
+vorerst ein Log ausgibt.
+
+```text
+ Beim Speichern (onBeforeConvert):
+     1. Entity wird gespeichert via repository.save(entity)
+     2. Event Listener wird automatisch aufgerufen
+     3. @SchemaVersion Annotation wird aus Entity-Klasse gelesen (gecached)
+     4. _schema Feld wird in MongoDB Document eingefügt
+     5. Dokument wird in MongoDB gespeichert mit _schema Feld
+
+     Beim Laden (onAfterConvert):
+     1. Entity wird geladen via repository.findById(id) oder ähnlich
+     2. MongoDB Document wird in Entity konvertiert
+     3. Event Listener wird automatisch aufgerufen
+     4. _schema aus Document wird mit erwarteter Version aus Annotation verglichen
+     5. Bei Unterschied: Warning wird geloggt
+     6. Entity wird normal zurückgegeben (keine Exception)
+```
+
+[ ] Ich brauche in shared ein SchemaMigrationService, der einzelne Entities migrieren kann.
+- Es wird auch ein SchemaMigrator Interface benoetigt, das eine Entity von einer Version in die naechste migriert.
+- Der SchemaMigrationService sucht die passenden SchemaMigrator Services und mirgerit die Entitaet von der aktuelle Version bis zur letzen Version.
+- Wenn kein _shema Feld vorhanden ist, dann wird von Version 0 ausgegangen.
+- Dabei wird immer die entity als String uebergeben und kommt als String in der neuen Version zurück.
+- Es soll auch die möglichkeit geben, die Entity als String aus mongo zu laden und zu speichern, ohne sie in ein Objekt zu deserialisieren.
+- Die SchemaMigratoren muessen als Spring Beans registriert werden und werden in einer Liste im SchemaMigrationService Lazy gehalten.
+- Erstelle in world-control ein Command mit dem man einzelne oder alle Entities einer Collection migrieren kann.

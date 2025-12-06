@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.ItemBlockRef;
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import java.time.Instant;
  * Each item position is associated with a specific chunk for efficient spatial queries.
  */
 @Document(collection = "w_item_positions")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "world_universe_itemId_idx", def = "{ 'worldId': 1, 'universeId': 1, 'itemId': 1 }", unique = true)
 })

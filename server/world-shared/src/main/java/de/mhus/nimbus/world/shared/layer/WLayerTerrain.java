@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import java.time.Instant;
  * Actual chunk data stored externally via StorageService.
  */
 @Document(collection = "w_layer_terrain")
+@SchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "layerData_chunk_idx", def = "{ 'layerDataId': 1, 'chunkKey': 1 }", unique = true),
         @CompoundIndex(name = "world_layerData_idx", def = "{ 'worldId': 1, 'layerDataId': 1 }")

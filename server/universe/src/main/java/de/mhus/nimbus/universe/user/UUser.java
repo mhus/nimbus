@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.mhus.nimbus.shared.persistence.SchemaVersion;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -16,6 +17,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import de.mhus.nimbus.shared.user.UniverseRoles; // geändert
 
 @Document(collection = "users")
+@SchemaVersion("1.0.0")
 @Data
 public class UUser {
 
