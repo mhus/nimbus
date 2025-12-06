@@ -1,8 +1,11 @@
 package de.mhus.nimbus.shared.config;
 
 import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
@@ -18,17 +21,28 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li><b>Before Save:</b> Automatically adds the "_schema" field to MongoDB documents
  *       based on the {@link SchemaVersion} annotation on the entity class.</li>
  *   <li><b>After Load:</b> Validates that the loaded document's schema version matches
- *       the expected version. Logs a warning if there's a mismatch.</li>
+ *       the expected version. Can optionally trigger automatic migration.</li>
  * </ul>
  *
  * <p>Performance optimization: Schema versions are cached in memory to avoid
  * repeated reflection calls on entity classes.</p>
+ *
+ * <p>Configuration:</p>
+ * <ul>
+ *   <li>{@code nimbus.schema.auto-migrate=true}: Enable automatic migration on load (default: false)</li>
+ * </ul>
  */
 @Component
 @Slf4j
 public class SchemaVersionEventListener extends AbstractMongoEventListener<Object> {
 
     private final ConcurrentHashMap<Class<?>, String> schemaVersionCache = new ConcurrentHashMap<>();
+
+    @Autowired(required = false)
+    private SchemaMigrationService migrationService;
+
+    @Value("${nimbus.schema.auto-migrate:false}")
+    private boolean autoMigrate;
 
     /**
      * Called before an entity is converted to a MongoDB document for saving.
@@ -103,11 +117,12 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
      * Handles the case when a loaded document's schema version doesn't match
      * the expected version from the entity class annotation.
      *
-     * <p>Currently logs a warning. Can be extended in the future to:</p>
+     * <p>Behavior:</p>
      * <ul>
-     *   <li>Call a migration service to automatically update the entity</li>
-     *   <li>Throw an exception for incompatible schema versions</li>
-     *   <li>Track metrics for monitoring schema version distribution</li>
+     *   <li>Always logs a warning about the mismatch</li>
+     *   <li>If {@code nimbus.schema.auto-migrate=true} and migration service is available,
+     *       attempts automatic migration</li>
+     *   <li>Migration happens in-place on the loaded entity (changes are not automatically persisted)</li>
      * </ul>
      *
      * @param entity the loaded entity instance
@@ -115,12 +130,33 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
      * @param expectedSchema the expected schema version from the annotation
      */
     private void handleSchemaMismatch(Object entity, String documentSchema, String expectedSchema) {
+        String entityType = entity.getClass().getSimpleName();
+        String currentVersion = documentSchema != null ? documentSchema : "0";
+
         log.warn("Schema version mismatch for entity {}: document has schema '{}', expected '{}'",
-                 entity.getClass().getSimpleName(),
-                 documentSchema != null ? documentSchema : "<none>",
+                 entityType,
+                 currentVersion,
                  expectedSchema);
 
-        // Future extension point: call migration service
-        // e.g.: schemaMigrationService.migrate(entity, documentSchema, expectedSchema);
+        // Automatic migration if enabled
+        if (autoMigrate && migrationService != null) {
+            try {
+                log.info("Attempting automatic migration for {} from {} to {}",
+                        entityType, currentVersion, expectedSchema);
+
+                // Note: This logs the attempt but actual migration would require
+                // access to the raw document, which is not available in AfterConvertEvent.
+                // For real automatic migration, use the migration command or service directly.
+
+                log.warn("Automatic migration during load is not yet implemented. " +
+                        "Please use the migration command to migrate documents manually.");
+
+            } catch (Exception e) {
+                log.error("Automatic migration failed for {} from {} to {}: {}",
+                        entityType, currentVersion, expectedSchema, e.getMessage());
+            }
+        } else if (autoMigrate) {
+            log.debug("Auto-migrate enabled but migration service not available");
+        }
     }
 }

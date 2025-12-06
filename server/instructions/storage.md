@@ -53,7 +53,7 @@ vorerst ein Log ausgibt.
      6. Entity wird normal zurückgegeben (keine Exception)
 ```
 
-[ ] Ich brauche in shared ein SchemaMigrationService, der einzelne Entities migrieren kann.
+[?] Ich brauche in shared ein SchemaMigrationService, der einzelne Entities migrieren kann.
 - Es wird auch ein SchemaMigrator Interface benoetigt, das eine Entity von einer Version in die naechste migriert.
 - Der SchemaMigrationService sucht die passenden SchemaMigrator Services und mirgerit die Entitaet von der aktuelle Version bis zur letzen Version.
 - Wenn kein _shema Feld vorhanden ist, dann wird von Version 0 ausgegangen.
@@ -61,3 +61,42 @@ vorerst ein Log ausgibt.
 - Es soll auch die möglichkeit geben, die Entity als String aus mongo zu laden und zu speichern, ohne sie in ein Objekt zu deserialisieren.
 - Die SchemaMigratoren muessen als Spring Beans registriert werden und werden in einer Liste im SchemaMigrationService Lazy gehalten.
 - Erstelle in world-control ein Command mit dem man einzelne oder alle Entities einer Collection migrieren kann.
+
+```text
+ 1. RestController in shared (shared/src/main/java/de/mhus/nimbus/shared/api/SchemaMigrationController.java)
+
+  REST API für Schema-Migrationen, verfügbar über /api/schema:
+
+  Endpoints:
+  - POST /api/schema/migrate - Migriert Dokumente
+    - Request Body: { collectionName, documentId, entityType, targetVersion }
+    - documentId kann sein: ID, "*" (alle), oder "no-schema" (ohne Schema)
+  - GET /api/schema/stats/{collectionName} - Statistiken über Schema-Versionen
+  - GET /api/schema/entity-types - Liste aller Entity-Typen mit Migratoren
+
+  Verwendung:
+  curl -X POST http://localhost:8080/api/schema/migrate \
+    -H "Content-Type: application/json" \
+    -d '{
+      "collectionName": "users",
+      "documentId": "*",
+      "entityType": "UUser",
+      "targetVersion": "1.0.0"
+    }'
+
+  2. Command in world-control (world-control/src/main/java/de/mhus/nimbus/world/control/commands/MigrateSchemaCommand.java)
+
+  Richtiges Command für das Command-System, implementiert Command Interface:
+
+  Verwendung:
+  # Via CommandService
+  MigrateSchema users 507f1f77bcf86cd799439011 UUser 1.0.0
+  MigrateSchema users * UUser 1.0.0
+  MigrateSchema users no-schema UUser 1.0.0
+
+  Features:
+  - Implementiert getName(), getHelp(), execute(), requiresSession()
+  - Detaillierte Hilfe mit getHelp()
+  - Return Codes für verschiedene Fehlerszenarien
+  - Kann remote ohne Session aufgerufen werden
+```
