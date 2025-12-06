@@ -36,7 +36,7 @@ public class MongoStorageService extends StorageService {
 
     @Override
     @Transactional
-    public StorageInfo store(String path, InputStream stream) {
+    public StorageInfo store(String worldId, String path, InputStream stream) {
         if (stream == null) {
             log.error("Cannot store null stream for path: {}", path);
             return null;
@@ -46,7 +46,7 @@ public class MongoStorageService extends StorageService {
         Date createdAt = new Date();
 
         try (ChunkedOutputStream outputStream = new ChunkedOutputStream(
-                storageDataRepository, uuid, path, chunkSize, createdAt)) {
+                storageDataRepository, uuid, worldId, path, chunkSize, createdAt)) {
 
             // Copy from input stream to chunked output stream
             // ChunkedOutputStream automatically splits into chunks and saves to MongoDB
@@ -56,7 +56,7 @@ public class MongoStorageService extends StorageService {
 
             log.debug("Stored file: uuid={} path={} size={}", uuid, path, totalSize);
 
-            return new StorageInfo(uuid, totalSize, createdAt, path);
+            return new StorageInfo(uuid, totalSize, createdAt, worldId, path);
 
         } catch (IOException e) {
             log.error("Error storing file: path={}", path, e);
@@ -118,10 +118,15 @@ public class MongoStorageService extends StorageService {
 
         // Get old metadata for path reference
         StorageData oldFinalChunk = storageDataRepository.findByUuidAndIsFinalTrue(storageId);
-        String path = (oldFinalChunk != null) ? oldFinalChunk.getPath() : "unknown";
+        if (oldFinalChunk == null) {
+            log.warn("No existing storage found for update: storageId={}", storageId);
+            throw new IllegalArgumentException("Storage ID not found: " + storageId);
+        }
+        String path = oldFinalChunk.getPath();
+        String worldId = oldFinalChunk.getWorldId();
 
         // Store new version with new UUID
-        StorageInfo newInfo = store(path, stream);
+        StorageInfo newInfo = store(worldId, path, stream);
 
         // Schedule old version for deletion
         if (newInfo != null) {
@@ -150,6 +155,7 @@ public class MongoStorageService extends StorageService {
                 storageId,
                 finalChunk.getSize(),
                 finalChunk.getCreatedAt(),
+                finalChunk.getWorldId(),
                 finalChunk.getPath()
         );
     }

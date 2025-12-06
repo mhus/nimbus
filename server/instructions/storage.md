@@ -25,3 +25,5 @@
 - FileStorageService wird deaktiviert
 - Es werden Stream implementierungen benoetigt, die die chunks automatisch laden und speichern.
 - Wichtig ist, dass die daten nicht in den speicher passen, deshalb muessen die streams die chunks nacheinander laden und speichern.
+
+> [x] Storage with worldId

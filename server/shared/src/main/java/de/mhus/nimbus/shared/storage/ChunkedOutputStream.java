@@ -24,6 +24,7 @@ public class ChunkedOutputStream extends OutputStream {
     private final String path;
     private final int chunkSize;
     private final Date createdAt;
+    private final String worldId;
 
     private byte[] buffer;
     private int bufferPosition = 0;
@@ -41,10 +42,11 @@ public class ChunkedOutputStream extends OutputStream {
      * @param chunkSize  Maximum chunk size in bytes (typically 512KB)
      * @param createdAt  Creation timestamp for all chunks
      */
-    public ChunkedOutputStream(StorageDataRepository repository, String uuid, String path,
+    public ChunkedOutputStream(StorageDataRepository repository, String uuid, String worldId, String path,
                                int chunkSize, Date createdAt) {
         this.repository = repository;
         this.uuid = uuid;
+        this.worldId = worldId;
         this.path = path;
         this.chunkSize = chunkSize;
         this.createdAt = createdAt;

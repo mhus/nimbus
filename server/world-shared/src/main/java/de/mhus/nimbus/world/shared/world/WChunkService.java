@@ -75,7 +75,7 @@ public class WChunkService {
                 storageInfo = storageService.update(entity.getStorageId(), stream);
             } else {
                 // Create new chunk
-                storageInfo = storageService.store("chunk/" + worldId + "/" + chunkKey, stream);
+                storageInfo = storageService.store(worldId, "chunk/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}",

@@ -224,7 +224,7 @@ public class WLayerService {
             if (entity.getStorageId() != null) {
                 storageInfo = storageService.update(entity.getStorageId(), stream);
             } else {
-                storageInfo = storageService.store("layer/terrain/" + layerDataId + "/" + chunkKey, stream);
+                storageInfo = storageService.store(worldId, "layer/terrain/" + layerDataId + "/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Terrain chunk stored: layerDataId={} chunkKey={} storageId={} size={}",

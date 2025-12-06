@@ -21,8 +21,8 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-123", 100, new Date(), "assets/null/folder/test.txt");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-123", 100, new Date(), "w1", "assets/folder/test.txt");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         SAssetService service = new SAssetService(repo, storage);
         byte[] data = new byte[100];
@@ -44,8 +44,8 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-BIG", 200, new Date(), "assets/w1/folder/big.bin");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-BIG", 200, new Date(), "w1", "assets/folder/big.bin");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         SAssetService service = new SAssetService(repo, storage);
         byte[] big = new byte[200];
@@ -67,11 +67,11 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock für initial save
-        StorageService.StorageInfo initialInfo = new StorageService.StorageInfo("STOR-INIT", 100, new Date(), "assets/null/file.bin");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(initialInfo);
+        StorageService.StorageInfo initialInfo = new StorageService.StorageInfo("STOR-INIT", 100, new Date(), "w1", "assets/file.bin");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(initialInfo);
 
         // Mock für update
-        StorageService.StorageInfo updateInfo = new StorageService.StorageInfo("STOR-UPDATED", 5000000, new Date(), "assets/null/file.bin");
+        StorageService.StorageInfo updateInfo = new StorageService.StorageInfo("STOR-UPDATED", 5000000, new Date(), "w1", "assets/file.bin");
         Mockito.when(storage.update(Mockito.any(), Mockito.any())).thenReturn(updateInfo);
 
         SAssetService service = new SAssetService(repo, storage);
@@ -98,8 +98,8 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-DISABLE", 10, new Date(), "assets/null/folder/test.txt");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-DISABLE", 10, new Date(), "w1", "assets/folder/test.txt");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         SAssetService service = new SAssetService(repo, storage);
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
@@ -121,8 +121,8 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock für StorageService.store()
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-LOAD", 50, new Date(), "assets/w1/test.json");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-LOAD", 50, new Date(), "w1", "assets/test.json");
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         // Mock für StorageService.load() - gibt InputStream zurück
         byte[] testData = "test content".getBytes();

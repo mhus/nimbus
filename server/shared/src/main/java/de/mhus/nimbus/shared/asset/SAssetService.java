@@ -45,7 +45,7 @@ public class SAssetService {
         asset.setCreatedBy(createdBy);
         asset.setEnabled(true);
 
-        StorageService.StorageInfo storageInfo = storageService.store("assets/" + worldId + "/" + path, stream);
+        StorageService.StorageInfo storageInfo = storageService.store(worldId, "assets/" + path, stream);
         asset.setSize(storageInfo.size());
         asset.setStorageId(storageInfo.id());
         log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
@@ -75,7 +75,7 @@ public class SAssetService {
                 .build();
         asset.setCreatedAt(Instant.now());
 
-        var storageInfo = storageService.store("assets/" + worldId + "/" + path, stream);
+        var storageInfo = storageService.store(worldId, "assets/" + path, stream);
         asset.setStorageId(storageInfo.id());
         asset.setSize(storageInfo.size());
         log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
@@ -137,7 +137,7 @@ public class SAssetService {
             } else {
                 var worldId = asset.getWorldId();
                 var path = asset.getPath();
-                var storageId = storageService.store("assets/" + worldId + "/" + path, stream);
+                var storageId = storageService.store(worldId, "assets/" + path, stream);
                 asset.setSize(storageId.size());
                 asset.setStorageId(storageId.id());
                 log.debug("Updated/Created external content id={}", storageId.id());

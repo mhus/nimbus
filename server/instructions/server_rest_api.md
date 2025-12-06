@@ -31,9 +31,9 @@ Region Server bekommt den einstiegspunkt '/region'
 
 Folgende Akteure und ihre Basispfade:
 
-- '/Region/world' - Zugriff durch den World Server, wird durch den WorldServerSecurityFilter geschuetzt
-- '/Region/universe' - Zugriff durch den Universe Server, wird durch den UniverseServerSecurityFilter geschuetzt
-- '/Region/user' - Zugriff durch den User Server, wird durch den UserServerSecurityFilter geschuetzt
+- '/region/world' - Zugriff durch den World Server, wird durch den WorldServerSecurityFilter geschuetzt
+- '/region/universe' - Zugriff durch den Universe Server, wird durch den UniverseServerSecurityFilter geschuetzt
+- '/region/user' - Zugriff durch den User Server, wird durch den UserServerSecurityFilter geschuetzt
 
 Deprecated: Alle Internen Entitäten und Server beginnen mit dem prefix R.
 

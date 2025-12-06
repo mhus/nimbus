@@ -47,6 +47,11 @@ public class StorageData {
     private String path;
 
     /**
+     * World identifier for multi-world support.
+     */
+    private String worldId;
+
+    /**
      * Chunk index (0-based, sequential).
      * Together with uuid forms a unique constraint.
      */

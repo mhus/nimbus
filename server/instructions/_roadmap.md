@@ -1,0 +1,39 @@
+
+- Modulares Resourcen-System mit prefixen und shared Resources
+  - assets migrieren mit group als ersten teil des pfades: texture/sun.png -> w/texture/sun.png
+  - ggf. fallback auf 'w'
+  - prefixes: w (world), r* (region), s* (shared)
+  - In BlockTypen auch groupId verwenden (schon implementiert)
+- Itemverwaltung mit Region sharen
+- Editoren
+  - layer-editor
+  - layer-model-editor
+  - blocktype editor fixen mit 3-status-checkbox
+- layers
+  - Model reference layer: referenziert shared modelle - mount, rotation - nicht editierbar
+  - Layer Description, Owner, Editors, Version
+  - groups fixen Map<int,name>
+  - Bei chunk Erstellung die height daten erstellen
+- Resources
+  - Source, Licence, Author, Version
+- Hex Map
+  - Hex Map Editor
+  - Radius in WorldInfo
+- World
+- Entry Points
+- Import / Exporter / Version management von Daten
+  - Änderungsmanagement mongodb liquibase
+- Mechanismus der Interaktion mit Interaktiven elementen, ggf. Space-Key wenn selekted
+- Balken+Name ueber Entities
+- Zeichen, zb. Menge + Namen ueber Items
+
+Bug:
+- Storage worldId mitgeben
+- jump als number
+- Block wall physics
+- engine
+  - Sonne wir zu früh geladen
+  - Lens effekt kaputt
+  - Fly mode
+- BlockVector3.ts mit ints oder xyz direkt im block
+- rotation direkt im block

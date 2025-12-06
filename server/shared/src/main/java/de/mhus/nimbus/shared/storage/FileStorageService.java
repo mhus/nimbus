@@ -17,20 +17,23 @@ public class FileStorageService extends StorageService {
     private String basePath;
 
     @Override
-    public StorageInfo store(String path, InputStream stream) {
+    public StorageInfo store(String worldId, String path, InputStream stream) {
         path = normalizePath(path);
-        return storeToFile(path, stream);
+        worldId = normalizePath(worldId);
+        return storeToFile(worldId, path, stream);
     }
 
-    private StorageInfo storeToFile(String path, InputStream stream) {
-        var file = new File(basePath, path);
+    private StorageInfo storeToFile(String worldId, String path, InputStream stream) {
+        var pathId = worldId + "/" + path;
+        var file = new File(basePath, pathId);
         file.getParentFile().mkdirs();
         try {
             var size = java.nio.file.Files.copy(stream, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
             return new StorageInfo(
-                    path,
+                    pathId,
                     size,
                     new Date(),
+                    worldId,
                     path
             );
         } catch (Exception e) {
@@ -71,26 +74,38 @@ public class FileStorageService extends StorageService {
     @Override
     public StorageInfo update(String storageId, InputStream stream) {
         storageId = normalizePath(storageId);
+        var worldId = extractWorldId(storageId);
         var file = new File(basePath, storageId);
         if (!file.exists()) return null;
-        storeToFile(storageId, stream);
+        storeToFile(worldId, extractPath(storageId), stream);
         return new StorageInfo(
                 storageId,
                 file.length(),
                 new Date(file.lastModified()),
+                worldId,
                 storageId
         );
+    }
+
+    private String extractPath(String storageId) {
+        return storageId.split("/", 2)[1];
+    }
+
+    private String extractWorldId(String storageId) {
+        return storageId.split("/", 2)[0];
     }
 
     @Override
     public StorageInfo info(String storageId) {
         storageId = normalizePath(storageId);
+        var worldId = extractWorldId(storageId);
         var file = new File(basePath, storageId);
         if (!file.exists()) return null;
         return new StorageInfo(
                 storageId,
                 file.length(),
                 new Date(file.lastModified()),
+                worldId,
                 storageId
         );
     }

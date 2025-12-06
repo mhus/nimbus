@@ -12,7 +12,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Layer entity - main registry for all layers.
@@ -91,7 +94,7 @@ public class WLayer {
      * Blocks can be assigned to groups for organized management.
      */
     @Builder.Default
-    private List<String> groups = new ArrayList<>();
+    private Map<Integer,String> groups = new HashMap<>();
 
     private Instant createdAt;
     private Instant updatedAt;

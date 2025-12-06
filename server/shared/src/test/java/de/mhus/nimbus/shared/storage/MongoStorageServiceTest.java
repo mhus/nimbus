@@ -16,7 +16,6 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -47,7 +46,7 @@ class MongoStorageServiceTest {
         byte[] testData = "Hello World".getBytes();
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store(testPath, stream);
+        StorageService.StorageInfo result = service.store("w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isNotBlank(); // UUID generated
@@ -78,7 +77,7 @@ class MongoStorageServiceTest {
         }
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store(testPath, stream);
+        StorageService.StorageInfo result = service.store("w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(testData.length);
@@ -91,7 +90,7 @@ class MongoStorageServiceTest {
     void testStoreNullStream() {
         String testPath = "test/file.txt";
 
-        StorageService.StorageInfo result = service.store(testPath, null);
+        StorageService.StorageInfo result = service.store("w1", testPath, null);
 
         assertThat(result).isNull();
         verify(storageDataRepository, never()).save(any(StorageData.class));
@@ -296,7 +295,7 @@ class MongoStorageServiceTest {
         when(storageDataRepository.save(any(StorageData.class)))
                 .thenThrow(new RuntimeException("MongoDB connection failed"));
 
-        assertThatThrownBy(() -> service.store(testPath, stream))
+        assertThatThrownBy(() -> service.store("w1", testPath, stream))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to store file");
     }
@@ -308,15 +307,14 @@ class MongoStorageServiceTest {
 
         when(storageDataRepository.findByUuidAndIsFinalTrue(oldStorageId)).thenReturn(null);
 
-        StorageService.StorageInfo result = service.update(oldStorageId, stream);
+        assertThatThrownBy(() -> service.update(oldStorageId, stream))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("not found");
 
-        assertThat(result).isNotNull();
-        assertThat(result.path()).isEqualTo("unknown"); // Path is "unknown" when old chunk not found
+        // Verify no new version was stored due to exception
+        verify(storageDataRepository, never()).save(any(StorageData.class));
 
-        // New version should still be stored
-        verify(storageDataRepository, atLeastOnce()).save(any(StorageData.class));
-
-        // Old version deletion should still be scheduled (even though it doesn't exist)
-        verify(storageDeleteRepository).save(any(StorageDelete.class));
+        // Verify no deletion was scheduled due to exception
+        verify(storageDeleteRepository, never()).save(any(StorageDelete.class));
     }
 }

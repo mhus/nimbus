@@ -27,6 +27,7 @@ class ChunkedOutputStreamTest {
 
     private static final String TEST_UUID = "test-uuid";
     private static final String TEST_PATH = "test/path";
+    private static final String TEST_WORLD = "test-world";
     private static final int CHUNK_SIZE = 1024; // 1KB for testing
     private Date testDate;
 
@@ -38,7 +39,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteSingleChunk() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         byte[] data = "Hello World".getBytes();
         stream.write(data);
@@ -60,7 +61,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteMultipleChunks() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         // Write 2.5 chunks worth of data
         byte[] chunk1 = new byte[CHUNK_SIZE];
@@ -108,7 +109,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteSingleBytes() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         // Write bytes one at a time
         String text = "Test";
@@ -129,7 +130,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteExactlyOneChunk() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         byte[] data = new byte[CHUNK_SIZE];
         for (int i = 0; i < CHUNK_SIZE; i++) {
@@ -160,7 +161,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteEmptyStream() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         stream.close();
 
@@ -177,7 +178,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteWithOffset() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         byte[] data = "0123456789".getBytes();
         stream.write(data, 2, 5); // Write "23456"
@@ -194,7 +195,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteAfterClose() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         stream.close();
 
@@ -206,7 +207,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteNullArray() {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         assertThatThrownBy(() -> stream.write(null, 0, 10))
                 .isInstanceOf(NullPointerException.class)
@@ -216,7 +217,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testWriteInvalidOffsetLength() {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         byte[] data = new byte[10];
 
@@ -236,7 +237,7 @@ class ChunkedOutputStreamTest {
                 .thenThrow(new RuntimeException("MongoDB error"));
 
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         byte[] data = "test".getBytes();
 
@@ -250,7 +251,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testGetTotalBytesWritten() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         assertThat(stream.getTotalBytesWritten()).isEqualTo(0);
 
@@ -266,7 +267,7 @@ class ChunkedOutputStreamTest {
     @Test
     void testDoubleClose() throws IOException {
         ChunkedOutputStream stream = new ChunkedOutputStream(
-                repository, TEST_UUID, TEST_PATH, CHUNK_SIZE, testDate);
+                repository, TEST_UUID, TEST_WORLD, TEST_PATH, CHUNK_SIZE, testDate);
 
         stream.write("test".getBytes());
         stream.close();
