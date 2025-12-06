@@ -974,14 +974,32 @@ async function saveBlock(closeAfter: boolean = false) {
       throw new Error('Session ID required for block editing');
     }
 
-    // Use new editor endpoint for session-based editing
+    // Build complete block object (from Block.ts type)
+    const block = {
+      position: {
+        x: x,
+        y: y,
+        z: z,
+      },
+      blockTypeId: blockData.value.blockTypeId?.toString() || '0',
+      offsets: blockData.value.offsets && blockData.value.offsets.length > 0
+        ? blockData.value.offsets
+        : undefined,
+      cornerHeights: blockData.value.cornerHeights && blockData.value.cornerHeights.length > 0
+        ? blockData.value.cornerHeights
+        : undefined,
+      status: blockData.value.status || 0,
+      modifiers: blockData.value.modifiers || undefined,
+      metadata: blockData.value.metadata && Object.keys(blockData.value.metadata).length > 0
+        ? blockData.value.metadata
+        : undefined,
+    };
+
+    // Send complete block as JSON string
     const response = await fetch(`${apiUrl}/api/editor/${worldId}/session/${sessionId}/block`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        blockId: blockData.value.blockTypeId,
-        meta: blockData.value.metadata ? JSON.stringify(blockData.value.metadata) : null,
-      }),
+      body: JSON.stringify(block),
     });
 
     if (!response.ok) {

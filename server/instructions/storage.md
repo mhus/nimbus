@@ -100,3 +100,15 @@ vorerst ein Log ausgibt.
   - Return Codes für verschiedene Fehlerszenarien
   - Kann remote ohne Session aufgerufen werden
 ```
+
+[ ] Export und Import mit Schema Migration
+- Erstelle in shared einen ExportService und ImportService.
+- Der ExportService exportiert alle Entities einer Collection in eine Datei.
+- Der ImportService importiert alle Entities aus einer Datei in die Collection.
+- Beim Import wird die Entity mit dem SchemaMigrationService migriert bevor sie gespeichert wird.
+- Erstelle in tools ein Modul 'world-export' und 'world-import', hier werden alle World relevanten Collections exportiert und importiert.
+  - s_assets, storage_data, worlds, w_bacldrops, w_chunk, w_layer, w_blocktypes, w_items, w_entities, w_entry_models, w_item_positions, w_itemtypes, w_layer_terrain, w_layer_models
+  - in application.yaml kann angegeben werden welche Collections exportiert/importiert werden sollen.
+  - in application.yaml kann der Pfad der Export/Import Datei angegeben werden.
+
+

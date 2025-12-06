@@ -34,6 +34,9 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
   async handle(message: BaseMessage<Block[]>): Promise<void> {
     const blocks = message.d;
 
+    console.error('Received block update message:');
+    console.error(message);
+
     logger.debug('🔵 BLOCK UPDATE MESSAGE RECEIVED (b.u)', {
       messageType: message.t,
       blockCount: blocks?.length || 0,
