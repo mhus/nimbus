@@ -7,9 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Master Importer - Orchestrates import of all configured collections with schema migration.
@@ -59,59 +64,138 @@ public class MasterImporter {
         long startTime = System.currentTimeMillis();
         ImportStats stats = new ImportStats();
 
-        Path inputDir = Path.of(inputPath);
+        Path inputPathObj = Path.of(inputPath);
 
-        if (!Files.exists(inputDir)) {
-            throw new IllegalArgumentException("Input directory does not exist: " + inputDir);
-        }
+        // Check if input is a ZIP file
+        boolean isZipFile = inputPath.toLowerCase().endsWith(".zip");
+        Path workDir = null;
 
-        if (collectionsToImport.isEmpty()) {
-            log.warn("No collections configured for import in application.yaml");
-            return stats;
-        }
-
-        stats.setTotalCollections(collectionsToImport.size());
-
-        for (String collectionName : collectionsToImport) {
-            try {
-                Path inputFile = inputDir.resolve(collectionName + ".jsonl");
-
-                if (!Files.exists(inputFile)) {
-                    log.warn("Input file not found, skipping collection: {}", inputFile);
-                    continue;
+        try {
+            if (isZipFile) {
+                if (!Files.exists(inputPathObj)) {
+                    throw new IllegalArgumentException("ZIP file does not exist: " + inputPathObj);
                 }
+                log.info("Detected ZIP file, extracting to temporary directory...");
+                workDir = extractZipFile(inputPathObj);
+                log.info("Extracted ZIP to: {}", workDir);
+            } else {
+                if (!Files.exists(inputPathObj)) {
+                    throw new IllegalArgumentException("Input directory does not exist: " + inputPathObj);
+                }
+                workDir = inputPathObj;
+            }
 
-                log.info(">>> Importing collection: {}", collectionName);
-                log.info("    Entity type and version will be detected from _class field");
+            if (collectionsToImport.isEmpty()) {
+                log.warn("No collections configured for import in application.yaml");
+                return stats;
+            }
 
-                ImportService.ImportResult result = importService.importCollection(
-                        collectionName,
-                        inputFile,
-                        worldId,
-                        importMode
-                );
+            stats.setTotalCollections(collectionsToImport.size());
 
-                if (result.isSuccess() || !result.hasErrors()) {
-                    stats.incrementSuccess(result.getSuccessCount(), result.getMigrationCount());
-                    log.info("    {} entities imported, {} migrated, {} skipped (existing)",
-                            result.getSuccessCount(), result.getMigrationCount(), result.getSkippedExistingCount());
-                } else {
+            for (String collectionName : collectionsToImport) {
+                try {
+                    Path inputFile = workDir.resolve(collectionName + ".jsonl");
+
+                    if (!Files.exists(inputFile)) {
+                        log.warn("Input file not found, skipping collection: {}", inputFile);
+                        continue;
+                    }
+
+                    log.info(">>> Importing collection: {}", collectionName);
+                    log.info("    Entity type and version will be detected from _class field");
+
+                    ImportService.ImportResult result = importService.importCollection(
+                            collectionName,
+                            inputFile,
+                            worldId,
+                            importMode
+                    );
+
+                    if (result.isSuccess() || !result.hasErrors()) {
+                        stats.incrementSuccess(result.getSuccessCount(), result.getMigrationCount());
+                        log.info("    {} entities imported, {} migrated, {} skipped (existing)",
+                                result.getSuccessCount(), result.getMigrationCount(), result.getSkippedExistingCount());
+                    } else {
+                        stats.incrementFailure(collectionName);
+                        log.error("    Import failed with {} errors", result.getErrorCount());
+                    }
+
+                    log.info("");
+
+                } catch (Exception e) {
+                    log.error("Failed to import collection: {}", collectionName, e);
                     stats.incrementFailure(collectionName);
-                    log.error("    Import failed with {} errors", result.getErrorCount());
+                    log.info("");
                 }
+            }
 
-                log.info("");
+            long duration = System.currentTimeMillis() - startTime;
+            stats.setDurationMs(duration);
 
-            } catch (Exception e) {
-                log.error("Failed to import collection: {}", collectionName, e);
-                stats.incrementFailure(collectionName);
-                log.info("");
+            return stats;
+
+        } finally {
+            // Clean up temporary directory if ZIP was extracted
+            if (isZipFile && workDir != null) {
+                try {
+                    deleteDirectory(workDir);
+                    log.info("Cleaned up temporary directory: {}", workDir);
+                } catch (IOException e) {
+                    log.warn("Failed to clean up temporary directory: {}", workDir, e);
+                }
             }
         }
+    }
 
-        long duration = System.currentTimeMillis() - startTime;
-        stats.setDurationMs(duration);
+    /**
+     * Extracts a ZIP file to a temporary directory.
+     *
+     * @param zipFile the ZIP file path
+     * @return the temporary directory path
+     * @throws IOException if extraction fails
+     */
+    private Path extractZipFile(Path zipFile) throws IOException {
+        Path tempDir = Files.createTempDirectory("nimbus-import-");
 
-        return stats;
+        try (ZipFile zip = new ZipFile(zipFile.toFile())) {
+            zip.stream().forEach(entry -> {
+                try {
+                    Path targetPath = tempDir.resolve(entry.getName());
+
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(targetPath);
+                    } else {
+                        Files.createDirectories(targetPath.getParent());
+                        try (InputStream in = zip.getInputStream(entry)) {
+                            Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to extract: " + entry.getName(), e);
+                }
+            });
+        }
+
+        return tempDir;
+    }
+
+    /**
+     * Recursively deletes a directory.
+     *
+     * @param directory the directory to delete
+     * @throws IOException if deletion fails
+     */
+    private void deleteDirectory(Path directory) throws IOException {
+        if (Files.exists(directory)) {
+            Files.walk(directory)
+                    .sorted((a, b) -> b.compareTo(a))
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            log.warn("Failed to delete: {}", path, e);
+                        }
+                    });
+        }
     }
 }

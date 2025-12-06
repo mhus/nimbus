@@ -6,10 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Master Exporter - Orchestrates export of all configured collections.
@@ -51,8 +54,6 @@ public class MasterExporter {
         long startTime = System.currentTimeMillis();
         ExportStats stats = new ExportStats();
 
-        Path outputDir = Path.of(outputPath);
-
         // Use configured collections or warn if none configured
         if (collectionsToExport.isEmpty()) {
             log.warn("No collections configured for export in application.yaml");
@@ -61,38 +62,119 @@ public class MasterExporter {
 
         stats.setTotalCollections(collectionsToExport.size());
 
-        for (String collectionName : collectionsToExport) {
-            try {
-                log.info(">>> Exporting collection: {}", collectionName);
+        // Check if output should be a ZIP file
+        boolean isZipFile = outputPath.toLowerCase().endsWith(".zip");
+        Path workDir = null;
 
-                Path outputFile = outputDir.resolve(collectionName + ".jsonl");
+        try {
+            if (isZipFile) {
+                log.info("Detected ZIP output, exporting to temporary directory...");
+                workDir = Files.createTempDirectory("nimbus-export-");
+                log.info("Temporary directory: {}", workDir);
+            } else {
+                workDir = Path.of(outputPath);
+            }
 
-                ExportService.ExportResult result = exportService.exportCollection(
-                        collectionName,
-                        outputFile,
-                        worldId
-                );
+            // Export all collections
+            for (String collectionName : collectionsToExport) {
+                try {
+                    log.info(">>> Exporting collection: {}", collectionName);
 
-                if (result.isSuccess() || !result.hasErrors()) {
-                    stats.incrementSuccess(result.getSuccessCount());
-                    log.info("    {} entities exported to {}", result.getSuccessCount(), outputFile);
-                } else {
+                    Path outputFile = workDir.resolve(collectionName + ".jsonl");
+
+                    ExportService.ExportResult result = exportService.exportCollection(
+                            collectionName,
+                            outputFile,
+                            worldId
+                    );
+
+                    if (result.isSuccess() || !result.hasErrors()) {
+                        stats.incrementSuccess(result.getSuccessCount());
+                        log.info("    {} entities exported to {}", result.getSuccessCount(), outputFile);
+                    } else {
+                        stats.incrementFailure(collectionName);
+                        log.error("    Export failed with {} errors", result.getErrorCount());
+                    }
+
+                    log.info("");
+
+                } catch (Exception e) {
+                    log.error("Failed to export collection: {}", collectionName, e);
                     stats.incrementFailure(collectionName);
-                    log.error("    Export failed with {} errors", result.getErrorCount());
+                    log.info("");
                 }
+            }
 
-                log.info("");
+            // Create ZIP file if needed
+            if (isZipFile) {
+                log.info("Creating ZIP archive: {}", outputPath);
+                createZipFile(workDir, Path.of(outputPath));
+                log.info("ZIP archive created successfully");
+            }
 
-            } catch (Exception e) {
-                log.error("Failed to export collection: {}", collectionName, e);
-                stats.incrementFailure(collectionName);
-                log.info("");
+            long duration = System.currentTimeMillis() - startTime;
+            stats.setDurationMs(duration);
+
+            return stats;
+
+        } finally {
+            // Clean up temporary directory if ZIP was created
+            if (isZipFile && workDir != null) {
+                try {
+                    deleteDirectory(workDir);
+                    log.info("Cleaned up temporary directory: {}", workDir);
+                } catch (IOException e) {
+                    log.warn("Failed to clean up temporary directory: {}", workDir, e);
+                }
             }
         }
+    }
 
-        long duration = System.currentTimeMillis() - startTime;
-        stats.setDurationMs(duration);
+    /**
+     * Creates a ZIP file from all files in a directory.
+     *
+     * @param sourceDir the source directory
+     * @param zipFile   the target ZIP file path
+     * @throws IOException if ZIP creation fails
+     */
+    private void createZipFile(Path sourceDir, Path zipFile) throws IOException {
+        // Ensure parent directory exists
+        Files.createDirectories(zipFile.getParent());
 
-        return stats;
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
+            Files.walk(sourceDir)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        try {
+                            String entryName = sourceDir.relativize(path).toString();
+                            ZipEntry zipEntry = new ZipEntry(entryName);
+                            zos.putNextEntry(zipEntry);
+                            Files.copy(path, zos);
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to add file to ZIP: " + path, e);
+                        }
+                    });
+        }
+    }
+
+    /**
+     * Recursively deletes a directory.
+     *
+     * @param directory the directory to delete
+     * @throws IOException if deletion fails
+     */
+    private void deleteDirectory(Path directory) throws IOException {
+        if (Files.exists(directory)) {
+            Files.walk(directory)
+                    .sorted((a, b) -> b.compareTo(a))
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            log.warn("Failed to delete: {}", path, e);
+                        }
+                    });
+        }
     }
 }

@@ -127,6 +127,8 @@ vorerst ein Log ausgibt.
 
 [?] optional soll auch die worldId in application.yaml angegeben werden, die exportiert werden soll. Alle welten ist '*'
 [?] Beim importieren muss geprueft werden ob die entity schon existiert. ein parameter in application.yaml steuert ob die entity skippt oder overwritten wird.
-[ ] Erstelle SchemaMigrator für
+[x] Erstelle SchemaMigrator für
 - s_assets, storage_data, worlds, w_bacldrops, w_chunk, w_layer, w_blocktypes, w_items, w_entities, w_entry_models, w_item_positions, w_itemtypes, w_layer_terrain, w_layer_models
 - von verion 0 auf version 1.0.0 - ohne änderungen vorzunehmen. - damit geht alles initial auf version 1.0.0
+- Kann der Import alternativ aus einer zip datei geladen werden. Wenn der import pfad mit .zip ended.
+- Kann der Export alternativ in eine zip datei gespeichert werden. Wenn der export pfad mit .zip ended.
