@@ -161,7 +161,7 @@ export class CubeRenderer extends BlockRenderer {
     ];
 
     // Apply edge offsets if available
-    const offsets = block.block.offsets;
+    const offsets = modifier.visibility.offsets;
     if (offsets) {
       for (let i = 0; i < 8; i++) {
         const offsetX = offsets[i * 3];
@@ -175,9 +175,9 @@ export class CubeRenderer extends BlockRenderer {
     }
 
     // Apply scaling if specified (after offsets, before rotation)
-    const scalingX = modifier.visibility?.scalingX ?? 1.0;
-    const scalingY = modifier.visibility?.scalingY ?? 1.0;
-    const scalingZ = modifier.visibility?.scalingZ ?? 1.0;
+    const scalingX = modifier.visibility.scalingX ?? 1.0;
+    const scalingY = modifier.visibility.scalingY ?? 1.0;
+    const scalingZ = modifier.visibility.scalingZ ?? 1.0;
 
     if (scalingX !== 1.0 || scalingY !== 1.0 || scalingZ !== 1.0) {
       for (let i = 0; i < 8; i++) {
@@ -199,8 +199,8 @@ export class CubeRenderer extends BlockRenderer {
     }
 
     // Apply rotation if specified (after scaling)
-    const rotationX = modifier.visibility?.rotationX ?? 0;
-    const rotationY = modifier.visibility?.rotationY ?? 0;
+    const rotationX = modifier.visibility.rotation?.x ?? 0;
+    const rotationY = modifier.visibility.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       // Convert degrees to radians

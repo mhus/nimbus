@@ -79,8 +79,8 @@ export class FogRenderer extends BlockRenderer {
       const scalingZ = modifier.visibility?.scalingZ ?? 1.0;
 
       // Get rotation
-      const rotationX = modifier.visibility?.rotationX ?? 0;
-      const rotationY = modifier.visibility?.rotationY ?? 0;
+      const rotationX = modifier.visibility?.rotation?.x ?? 0;
+      const rotationY = modifier.visibility?.rotation?.y ?? 0;
 
       // Calculate box dimensions
       const width = scalingX;

@@ -9,6 +9,7 @@
 
 import type { Shape } from './Shape';
 import type { Vector3 } from './Vector3';
+import {RotationXY} from "./RotationXY";
 
 /**
  * Texture mapping keys
@@ -490,11 +491,9 @@ export interface VisibilityModifier {
   /** Scaling factor Z */
   scalingZ?: number;
 
-  /** Rotation X (degrees) */
-  rotationX?: number;
 
-  /** Rotation Y (degrees) */
-  rotationY?: number;
+  /** Rotation XY (degrees) */
+  rotation?: RotationXY;
 
   /** Path to model file (for shape=MODEL) */
   path?: string;

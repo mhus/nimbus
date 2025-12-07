@@ -101,8 +101,8 @@ export class SelectedBlockInfoCommand extends CommandHandler {
         }
 
         // Rotation
-        if (mod.visibility.rotationX !== undefined || mod.visibility.rotationY !== undefined) {
-          lines.push(`    Rotation   : (${mod.visibility.rotationX ?? 0}, ${mod.visibility.rotationY ?? 0})`);
+        if (mod.visibility.rotation?.x !== undefined || mod.visibility.rotation?.y !== undefined) {
+          lines.push(`    Rotation   : (${mod.visibility.rotation?.x ?? 0}, ${mod.visibility.rotation?.y ?? 0})`);
         }
       }
 

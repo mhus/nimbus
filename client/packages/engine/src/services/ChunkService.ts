@@ -962,6 +962,19 @@ export class ChunkService {
 
         // Merge block modifiers
         const currentModifier = mergeBlockModifier(this.appContext, block, blockType, clientChunk.data.statusData.get(posKey));
+        if (currentModifier.visibility == undefined) {
+          // fallback default visibility
+          currentModifier.visibility = {
+            shape: 0
+          };
+        }
+        // overwrite from block in currentModifier if set
+        if (block.offsets) {
+            currentModifier.visibility.offsets = block.offsets;
+        }
+        if (block.rotation) {
+            currentModifier.visibility.rotation = block.rotation;
+        }
 
         // Create/update ClientBlock
         const clientBlock: ClientBlock = {

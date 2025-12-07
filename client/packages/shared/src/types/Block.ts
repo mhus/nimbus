@@ -11,6 +11,7 @@
 import type { Vector3 } from './Vector3';
 import type { BlockMetadata } from './BlockMetadata';
 import type { BlockModifier, VisibilityModifier } from './BlockModifier';
+import {RotationXY} from "./RotationXY";
 
 /**
  * Offsets for block geometry modification
@@ -336,6 +337,8 @@ export interface Block {
    * @see Offsets for detailed documentation
    */
   offsets?: number[];  // javaType: java.util.List<java.lang.Float>
+
+  rotation?: RotationXY; // javaType: Integer
 
   /**
    * Corner heights for sloped/ramped blocks (optional)

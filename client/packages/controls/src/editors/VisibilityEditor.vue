@@ -80,7 +80,7 @@
           <span class="label-text text-xs">Rotation X</span>
         </label>
         <input
-          v-model.number="localValue.rotationX"
+          v-model.number="localValue.rotation?.x"
           type="number"
           class="input input-bordered input-sm"
           placeholder="0"
@@ -91,7 +91,7 @@
           <span class="label-text text-xs">Rotation Y</span>
         </label>
         <input
-          v-model.number="localValue.rotationY"
+          v-model.number="localValue.rotation?.y"
           type="number"
           class="input input-bordered input-sm"
           placeholder="0"
@@ -226,7 +226,7 @@
 
           <!-- Bitfield value display -->
           <div class="text-xs text-base-content/50">
-            Bitfield value: {{ localValue.faceVisibility?.value || 0 }}
+            Bitfield value: {{ localValue.faceVisibility || 0 }}
           </div>
         </div>
       </div>
@@ -1207,33 +1207,33 @@ const hasFaceVisibility = computed(() => {
 
 const isFixedMode = computed(() => {
   if (!localValue.value.faceVisibility) return false;
-  return (localValue.value.faceVisibility.value & 64) !== 0; // FIXED flag (bit 6)
+  return (localValue.value.faceVisibility & 64) !== 0; // FIXED flag (bit 6)
 });
 
 const toggleFaceVisibility = (enabled: boolean) => {
   if (!enabled) {
     localValue.value.faceVisibility = undefined;
   } else if (!localValue.value.faceVisibility) {
-    localValue.value.faceVisibility = { value: 63 }; // 0b00111111 = all 6 faces visible
+    localValue.value.faceVisibility = 63; // 0b00111111 = all 6 faces visible
   }
 };
 
 const isFaceVisible = (faceFlag: number): boolean => {
   if (!localValue.value.faceVisibility) return false;
-  return (localValue.value.faceVisibility.value & faceFlag) !== 0;
+  return (localValue.value.faceVisibility & faceFlag) !== 0;
 };
 
 const toggleFace = (faceFlag: number) => {
   if (!localValue.value.faceVisibility) {
-    localValue.value.faceVisibility = { value: 0 };
+    localValue.value.faceVisibility = 0;
   }
-  localValue.value.faceVisibility.value ^= faceFlag; // XOR to toggle bit
+  localValue.value.faceVisibility ^= faceFlag; // XOR to toggle bit
 };
 
 const toggleFixedMode = () => {
   if (!localValue.value.faceVisibility) {
-    localValue.value.faceVisibility = { value: 0 };
+    localValue.value.faceVisibility = 0;
   }
-  localValue.value.faceVisibility.value ^= 64; // Toggle FIXED flag (bit 6)
+  localValue.value.faceVisibility ^= 64; // Toggle FIXED flag (bit 6)
 };
 </script>

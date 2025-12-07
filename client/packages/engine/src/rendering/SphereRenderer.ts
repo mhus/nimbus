@@ -167,8 +167,8 @@ export class SphereRenderer extends BlockRenderer {
     }
 
     // Apply rotation if specified (around origin, before translation)
-    const rotationX = modifier.visibility?.rotationX ?? 0;
-    const rotationY = modifier.visibility?.rotationY ?? 0;
+    const rotationX = modifier.visibility.rotation?.x ?? 0;
+    const rotationY = modifier.visibility.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       // Convert degrees to radians

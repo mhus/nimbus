@@ -113,13 +113,13 @@ describe('CubeRenderer', () => {
   ): ClientBlock {
     const block: Block = {
       position: { x, y, z },
-      blockTypeId: 1,
+      blockTypeId: '1',
       faceVisibility,
       status: 0
     };
 
     const blockType: BlockType = {
-      id: 1,
+      id: '1',
       initialStatus: 0,
       modifiers: {
         0: {
@@ -423,8 +423,10 @@ describe('CubeRenderer', () => {
       // Add 45-degree rotation around Y axis
       block.currentModifier.visibility = {
         ...block.currentModifier.visibility,
-        rotationX: 0,
-        rotationY: 45
+        rotation: {
+          x: 0,
+          y: 45
+        }
       };
 
       await cubeRenderer.render(renderContext, block);
