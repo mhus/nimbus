@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class WLayerService {
 
     public static final String STORAGE_SCHEMA = "WLayerTerrainStorage";
-    public static final String STORAGE_SCHEMA_VERSION = "1.0.0";
+    public static final String STORAGE_SCHEMA_VERSION = "1.0.1";
 
     private final WLayerRepository layerRepository;
     private final WLayerTerrainRepository terrainRepository;

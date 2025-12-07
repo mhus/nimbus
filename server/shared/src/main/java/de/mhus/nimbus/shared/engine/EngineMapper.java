@@ -24,7 +24,7 @@ import java.io.IOException;
 @Slf4j
 public class EngineMapper {
 
-    protected static ObjectMapper objectMapper;
+    protected ObjectMapper objectMapper;
 
     public EngineMapper() {
 
@@ -123,31 +123,31 @@ public class EngineMapper {
 
     }
 
-    public static ObjectNode createObjectNode() {
+    public ObjectNode createObjectNode() {
         return objectMapper.createObjectNode();
     }
 
-    public static JsonNode readTree(String content) throws JsonProcessingException, JsonMappingException {
+    public JsonNode readTree(String content) throws JsonProcessingException, JsonMappingException {
         return objectMapper.readTree(content);
     }
 
-    public static String writeValueAsString(Object value) throws JsonProcessingException {
+    public String writeValueAsString(Object value) throws JsonProcessingException {
         return objectMapper.writeValueAsString(value);
     }
 
-    public static <T> T treeToValue(TreeNode n, Class<T> valueType) throws IllegalArgumentException, JsonProcessingException {
+    public <T> T treeToValue(TreeNode n, Class<T> valueType) throws IllegalArgumentException, JsonProcessingException {
         return objectMapper.treeToValue(n, valueType);
     }
 
-    public static <T> T readValue(String content, Class<T> valueType) throws JsonProcessingException, JsonMappingException {
+    public <T> T readValue(String content, Class<T> valueType) throws JsonProcessingException, JsonMappingException {
         return objectMapper.readValue(content, valueType);
     }
 
-    public static ArrayNode createArrayNode() {
+    public ArrayNode createArrayNode() {
         return objectMapper.createArrayNode();
     }
 
-    public static <T extends JsonNode> T valueToTree(Object fromValue) throws IllegalArgumentException {
+    public <T extends JsonNode> T valueToTree(Object fromValue) throws IllegalArgumentException {
         return objectMapper.valueToTree(fromValue);
     }
 

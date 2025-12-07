@@ -284,7 +284,7 @@ public class SchemaMigrationService {
         List<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptyList());
 
         if (entityMigrators.isEmpty()) {
-            return "0";
+            return null;
         }
 
         // Find the highest toVersion from all migrators
@@ -305,6 +305,7 @@ public class SchemaMigrationService {
     public String migrateToLatest(String entityJson, String entityType) throws MigrationException {
         String currentVersion = extractSchemaVersion(entityJson);
         String latestVersion = getLatestVersion(entityType);
+        if (latestVersion == null) return entityJson; // No migrators for this entity
         return migrate(entityJson, entityType, latestVersion);
     }
 
@@ -324,6 +325,7 @@ public class SchemaMigrationService {
         }
 
         String latestVersion = getLatestVersion(entityType);
+        if (latestVersion == null) return entityJson; // No migrators for this entity
 
         log.debug("Migrating {} from version {} to latest {}",
                 entityType, currentVersion, latestVersion);
@@ -374,7 +376,7 @@ public class SchemaMigrationService {
         String latestVersion = getLatestVersion(schema);
 
         // Check if migration is needed
-        if (currentVersion.equals(latestVersion)) {
+        if (latestVersion == null || currentVersion.equals(latestVersion)) {
             log.info("Storage {} already at latest version {} for schema {}",
                     storageId, latestVersion, schema);
             return new MigrationResult(storageId, schema, currentVersion, latestVersion, false, "Already at latest version");
