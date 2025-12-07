@@ -6,9 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -338,8 +339,8 @@ public class SchemaMigrationService {
     }
 
     /**
-     * Migrates a storage object to the latest available version.
-     * Loads the storage data, migrates it, and replaces it using the same storageId.
+     * Migrates a storage object to the latest available version using stream-based approach.
+     * Uses temporary files to cache data during migration to avoid race conditions with replace().
      *
      * @param storageId the storage ID to migrate
      * @return MigrationResult with details about the migration
@@ -367,7 +368,7 @@ public class SchemaMigrationService {
 
         if (schema == null || schema.isBlank()) {
             log.info("Storage {} has no schema, skipping migration", storageId);
-            return new MigrationResult(storageId, null, currentVersion, currentVersion, false);
+            return new MigrationResult(storageId, null, currentVersion, currentVersion, false, "No schema");
         }
 
         String latestVersion = getLatestVersion(schema);
@@ -376,37 +377,95 @@ public class SchemaMigrationService {
         if (currentVersion.equals(latestVersion)) {
             log.info("Storage {} already at latest version {} for schema {}",
                     storageId, latestVersion, schema);
-            return new MigrationResult(storageId, schema, currentVersion, latestVersion, false);
+            return new MigrationResult(storageId, schema, currentVersion, latestVersion, false, "Already at latest version");
         }
 
+        // Find migration path
+        List<SchemaMigrator> migrationPath = findMigrationPath(schema, currentVersion, latestVersion);
+        if (migrationPath.isEmpty()) {
+            log.warn("No migration path found for schema {} from {} to {}", schema, currentVersion, latestVersion);
+            return new MigrationResult(storageId, schema, currentVersion, latestVersion, false, "No migration path");
+        }
+
+        Path tempFile = null;
+        Path currentFile = null;
+
         try {
-            // Load storage data as string
-            InputStream inputStream = storageService.load(storageId);
-            if (inputStream == null) {
-                throw new MigrationException("Failed to load storage data for: " + storageId);
+            // Load storage to temporary file
+            tempFile = Files.createTempFile("nimbus-storage-migration-", ".tmp");
+
+            try (InputStream input = storageService.load(storageId);
+                 OutputStream output = Files.newOutputStream(tempFile)) {
+                if (input == null) {
+                    throw new MigrationException("Failed to load storage data");
+                }
+                input.transferTo(output);
             }
 
-            String dataString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            inputStream.close();
+            // Apply migrations sequentially using streams
+            currentFile = tempFile;
+            for (SchemaMigrator migrator : migrationPath) {
+                Path nextFile = Files.createTempFile("nimbus-storage-migration-", ".tmp");
 
-            // Migrate data
-            String migratedData = migrateToLatest(dataString, schema, currentVersion);
+                log.debug("Applying migration {} -> {} for storage {}",
+                        migrator.getFromVersion(), migrator.getToVersion(), storageId);
+
+                try (InputStream input = Files.newInputStream(currentFile);
+                     InputStream migrated = migrator.migrateStream(input);
+                     OutputStream output = Files.newOutputStream(nextFile)) {
+                    migrated.transferTo(output);
+                }
+
+                // Delete old temp file
+                if (!currentFile.equals(tempFile)) {
+                    Files.deleteIfExists(currentFile);
+                }
+                currentFile = nextFile;
+            }
 
             // Replace storage with migrated data
-            InputStream migratedStream = new ByteArrayInputStream(migratedData.getBytes(StandardCharsets.UTF_8));
-            StorageService.StorageInfo newInfo = storageService.replace(schema, latestVersion, storageId, migratedStream);
+            try (InputStream finalInput = Files.newInputStream(currentFile)) {
+                StorageService.StorageInfo newInfo = storageService.replace(schema, latestVersion, storageId, finalInput);
 
-            if (newInfo == null) {
-                throw new MigrationException("Failed to replace storage data for: " + storageId);
+                if (newInfo == null) {
+                    throw new MigrationException("Failed to replace storage data");
+                }
+            }
+
+            // Clean up temp files
+            Files.deleteIfExists(currentFile);
+            if (!currentFile.equals(tempFile)) {
+                Files.deleteIfExists(tempFile);
             }
 
             log.info("Successfully migrated storage {} from version {} to {}",
                     storageId, currentVersion, latestVersion);
 
-            return new MigrationResult(storageId, schema, currentVersion, latestVersion, true);
+            return new MigrationResult(storageId, schema, currentVersion, latestVersion, true, "Migrated successfully");
 
+        } catch (MigrationException e) {
+            // Clean up on error
+            cleanupTempFiles(tempFile, currentFile);
+            throw e;
         } catch (Exception e) {
+            // Clean up on error
+            cleanupTempFiles(tempFile, currentFile);
             throw new MigrationException("Storage migration failed for " + storageId + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Cleans up temporary files used during migration.
+     */
+    private void cleanupTempFiles(Path... files) {
+        for (Path file : files) {
+            if (file != null) {
+                try {
+                    Files.deleteIfExists(file);
+                } catch (Exception e) {
+                    log.warn("Failed to delete temp file: {}", file, e);
+                }
+            }
         }
     }
 
@@ -418,7 +477,8 @@ public class SchemaMigrationService {
             String schema,
             String fromVersion,
             String toVersion,
-            boolean migrated
+            boolean migrated,
+            String message
     ) {}
 
     /**

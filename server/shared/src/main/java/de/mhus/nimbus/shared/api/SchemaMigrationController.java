@@ -82,7 +82,7 @@ public class SchemaMigrationController {
                     result.fromVersion(),
                     result.toVersion(),
                     result.migrated(),
-                    result.migrated() ? "Storage migrated successfully" : "Already at latest version"
+                    result.message()
             );
 
             return ResponseEntity.ok(response);

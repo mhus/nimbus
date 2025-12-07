@@ -257,8 +257,7 @@ public class MasterImporter {
                             storageId, result.schema(), result.fromVersion(), result.toVersion());
                 } else {
                     skippedCount++;
-                    log.trace("Skipped storage: {} (already at version {})",
-                            storageId, result.toVersion());
+                    log.trace("Skipped storage {}: {}", storageId, result.message());
                 }
 
             } catch (SchemaMigrationService.MigrationException e) {

@@ -74,4 +74,21 @@ public interface SchemaMigrator {
      * @throws Exception if migration fails
      */
     String migrate(String entityJson) throws Exception;
+
+    /**
+     * Stream-based migration for storage objects.
+     * Default implementation converts stream to string, migrates using {@link #migrate(String)},
+     * and converts back to stream. This works for text-based data (JSON).
+     *
+     * <p>Override this method for true binary migration if needed (e.g., Protobuf upgrades).</p>
+     *
+     * @param input the input stream with data to migrate
+     * @return the migrated data as input stream
+     * @throws Exception if migration fails
+     */
+    default java.io.InputStream migrateStream(java.io.InputStream input) throws Exception {
+        String json = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        String migrated = migrate(json);
+        return new java.io.ByteArrayInputStream(migrated.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
 }
