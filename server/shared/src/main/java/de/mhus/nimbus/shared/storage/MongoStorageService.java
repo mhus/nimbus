@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.storage;
 
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,13 +36,13 @@ public class MongoStorageService extends StorageService {
     private int chunkSize; // 512KB default
 
     @Override
-    public StorageInfo store(String schema, String schemaVersion, String worldId, String path, InputStream stream) {
+    public StorageInfo store(String schema, SchemaVersion schemaVersion, String worldId, String path, InputStream stream) {
         String uuid = UUID.randomUUID().toString();
         return store(uuid, schema, schemaVersion, worldId, path, stream);
     }
 
     @Transactional
-    protected StorageInfo store(String storageId, String schema, String schemaVersion, String worldId, String path, InputStream stream) {
+    protected StorageInfo store(String storageId, String schema, SchemaVersion schemaVersion, String worldId, String path, InputStream stream) {
         if (stream == null) {
             log.error("Cannot store null stream for path: {}", path);
             return null;
@@ -50,7 +51,7 @@ public class MongoStorageService extends StorageService {
         Date createdAt = new Date();
 
         try (ChunkedOutputStream outputStream = new ChunkedOutputStream(
-                storageDataRepository, storageId, schema, schemaVersion, worldId, path, chunkSize, createdAt)) {
+                storageDataRepository, storageId, schema, schemaVersion.toString(), worldId, path, chunkSize, createdAt)) {
 
             // Copy from input stream to chunked output stream
             // ChunkedOutputStream automatically splits into chunks and saves to MongoDB
@@ -109,7 +110,7 @@ public class MongoStorageService extends StorageService {
 
     @Override
     @Transactional
-    public StorageInfo update(String schema, String schemaVersion, String storageId, InputStream stream) {
+    public StorageInfo update(String schema, SchemaVersion schemaVersion, String storageId, InputStream stream) {
         if (storageId == null || storageId.isBlank()) {
             log.error("Cannot update with null/empty storageId");
             return null;
@@ -129,7 +130,7 @@ public class MongoStorageService extends StorageService {
         String path = oldFinalChunk.getPath();
         String worldId = oldFinalChunk.getWorldId();
         if (schema == null) schema = oldFinalChunk.getSchema();
-        if (schemaVersion == null) schemaVersion = oldFinalChunk.getSchemaVersion();
+        if (schemaVersion == null) schemaVersion = SchemaVersion.of(oldFinalChunk.getSchemaVersion());
 
         // Store new version with new UUID
         StorageInfo newInfo = store(schema, schemaVersion, worldId, path, stream);
@@ -145,7 +146,7 @@ public class MongoStorageService extends StorageService {
 
     @Override
     @Transactional
-    public StorageInfo replace(String schema, String schemaVersion, String storageId, InputStream stream) {
+    public StorageInfo replace(String schema, SchemaVersion schemaVersion, String storageId, InputStream stream) {
         if (storageId == null || storageId.isBlank()) {
             log.error("Cannot update with null/empty storageId");
             return null;
@@ -166,7 +167,7 @@ public class MongoStorageService extends StorageService {
         String worldId = oldChunk.getWorldId();
         storageId = oldChunk.getUuid(); // Keep same UUID but be sure to use existing one
         if (schema == null) schema = oldChunk.getSchema();
-        if (schemaVersion == null) schemaVersion = oldChunk.getSchemaVersion();
+        if (schemaVersion == null) schemaVersion = SchemaVersion.of(oldChunk.getSchemaVersion());
 
         // delete the old data immediately
         delete(storageId);
@@ -197,7 +198,7 @@ public class MongoStorageService extends StorageService {
                 finalChunk.getWorldId(),
                 finalChunk.getPath(),
                 finalChunk.getSchema(),
-                finalChunk.getSchemaVersion()
+                SchemaVersion.of(finalChunk.getSchemaVersion())
         );
     }
 }

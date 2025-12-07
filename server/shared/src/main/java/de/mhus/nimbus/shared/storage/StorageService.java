@@ -55,7 +55,7 @@ public abstract class StorageService {
 
     public abstract StorageInfo info(String storageId);
 
-    public record StorageInfo(String id, long size, Date createdAt, String worldId, String path, String schema, String schemaVersion) { }
+    public record StorageInfo(String id, long size, Date createdAt, String worldId, String path, String schema, SchemaVersion schemaVersion) { }
 
 }
 

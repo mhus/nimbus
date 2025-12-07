@@ -83,8 +83,7 @@ public class SchemaMigrationService {
      * @return the migrated entity as JSON string
      * @throws MigrationException if migration fails or no migration path exists
      */
-    public String migrate(String entityJson, String entityType, SchemaVersion targetVersion) throws MigrationException {
-        var currentVersion = extractSchemaVersion(entityJson);
+    public String migrate(String entityJson, String entityType, SchemaVersion targetVersion, SchemaVersion currentVersion) throws MigrationException {
 
         log.debug("Migrating {} from version {} to {}",
                 entityType, currentVersion, targetVersion);
@@ -96,7 +95,7 @@ public class SchemaMigrationService {
         }
 
         // Find migration path
-        List<SchemaMigrator> migrationPath = findMigrationPath(entityType, currentVersion, targetVersion);
+        Set<SchemaMigrator> migrationPath = findMigrationPath(entityType, currentVersion, targetVersion);
 
         if (migrationPath.isEmpty() && !currentVersion.equals(targetVersion)) {
             throw new MigrationException(String.format(
@@ -265,8 +264,8 @@ public class SchemaMigrationService {
      * @param entityType the entity type
      * @return list of migrators, or empty list if none exist
      */
-    public List<SchemaMigrator> getMigratorsForEntity(String entityType) {
-        return migratorsByEntity.getOrDefault(entityType, Collections.emptyList());
+    public Set<SchemaMigrator> getMigratorsForEntity(String entityType) {
+        return migratorsByEntity.getOrDefault(entityType, Collections.emptySet());
     }
 
     /**
@@ -277,17 +276,17 @@ public class SchemaMigrationService {
      * @return the latest schema version
      */
     public SchemaVersion getLatestVersion(String entityType) {
-        List<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptyList());
+        Set<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptySet());
 
         if (entityMigrators.isEmpty()) {
             return null;
         }
 
         // Find the highest toVersion from all migrators
-        return SchemaVersion.of(entityMigrators.stream()
+        return entityMigrators.stream()
                 .map(SchemaMigrator::getToVersion)
                 .max(SchemaVersion::compareTo)
-                .orElse(SchemaVersion.NULL));
+                .orElse(SchemaVersion.NULL);
     }
 
     /**
@@ -299,10 +298,10 @@ public class SchemaMigrationService {
      * @throws MigrationException if migration fails
      */
     public String migrateToLatest(String entityJson, String entityType) throws MigrationException {
-        String currentVersion = extractSchemaVersion(entityJson);
+        var currentVersion = extractSchemaVersion(entityJson);
         var latestVersion = getLatestVersion(entityType);
         if (latestVersion == null) return entityJson; // No migrators for this entity
-        return migrate(entityJson, entityType, latestVersion);
+        return migrate(entityJson, entityType, latestVersion, currentVersion);
     }
 
     /**
@@ -333,7 +332,7 @@ public class SchemaMigrationService {
         }
 
         // Find and apply migration path
-        return migrate(entityJson, entityType, latestVersion);
+        return migrate(entityJson, entityType, latestVersion, currentVersion);
     }
 
     /**
@@ -362,7 +361,7 @@ public class SchemaMigrationService {
         }
 
         String schema = info.schema();
-        SchemaVersion currentVersion = SchemaVersion.of(info.schemaVersion() != null ? info.schemaVersion() : "0");
+        SchemaVersion currentVersion = info.schemaVersion() != null ? info.schemaVersion() : SchemaVersion.NULL;
 
         if (schema == null || schema.isBlank()) {
             log.info("Storage {} has no schema, skipping migration", storageId);
@@ -379,7 +378,7 @@ public class SchemaMigrationService {
         }
 
         // Find migration path
-        List<SchemaMigrator> migrationPath = findMigrationPath(schema, currentVersion, latestVersion);
+        Set<SchemaMigrator> migrationPath = findMigrationPath(schema, currentVersion, latestVersion);
         if (migrationPath.isEmpty()) {
             log.warn("No migration path found for schema {} from {} to {}", schema, currentVersion, latestVersion);
             return new MigrationResult(storageId, schema, currentVersion, latestVersion, false, "No migration path");

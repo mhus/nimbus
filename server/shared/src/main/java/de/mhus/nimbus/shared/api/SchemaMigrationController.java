@@ -2,6 +2,7 @@ package de.mhus.nimbus.shared.api;
 
 import de.mhus.nimbus.shared.service.MongoRawDocumentService;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ public class SchemaMigrationController {
             String collectionName,
             String documentId,      // ID, "*" for all, or "no-schema" for documents without _schema
             String entityType,
-            String targetVersion
+            SchemaVersion targetVersion
     ) {}
 
     /**
@@ -56,8 +57,8 @@ public class SchemaMigrationController {
     public record StorageMigrationResponse(
             String storageId,
             String schema,
-            String fromVersion,
-            String toVersion,
+            SchemaVersion fromVersion,
+            SchemaVersion toVersion,
             boolean migrated,
             String message
     ) {}
@@ -126,7 +127,7 @@ public class SchemaMigrationController {
                         false, "Entity type is required", 0, 0, 0, 0));
             }
 
-            if (request.targetVersion == null || request.targetVersion.isBlank()) {
+            if (request.targetVersion == null || request.targetVersion.isNull()) {
                 return ResponseEntity.badRequest().body(new MigrationResponse(
                         false, "Target version is required", 0, 0, 0, 0));
             }
@@ -163,8 +164,8 @@ public class SchemaMigrationController {
             int noSchemaCount = 0;
 
             for (String doc : documents) {
-                String version = extractSchemaVersion(doc);
-                if (version == null || version.equals("0")) {
+                var version = extractSchemaVersion(doc);
+                if (version == null || version.isNull()) {
                     noSchemaCount++;
                 } else {
                     versionCounts.merge(version, 1, Integer::sum);
@@ -213,7 +214,8 @@ public class SchemaMigrationController {
         }
 
         try {
-            String migratedJson = migrationService.migrate(documentJson, request.entityType, request.targetVersion);
+            var currentVersion = extractSchemaVersion(documentJson);
+            String migratedJson = migrationService.migrate(documentJson, request.entityType, request.targetVersion, currentVersion);
             boolean updated = rawDocumentService.replaceDocument(request.collectionName, request.documentId, migratedJson);
 
             if (updated) {
@@ -253,7 +255,8 @@ public class SchemaMigrationController {
                     continue;
                 }
 
-                String migratedJson = migrationService.migrate(documentJson, request.entityType, request.targetVersion);
+                var currentVersion = extractSchemaVersion(documentJson);
+                String migratedJson = migrationService.migrate(documentJson, request.entityType, request.targetVersion, currentVersion);
                 boolean updated = rawDocumentService.replaceDocument(request.collectionName, documentId, migratedJson);
 
                 if (updated) {
@@ -300,7 +303,8 @@ public class SchemaMigrationController {
         for (String documentJson : documents) {
             try {
                 String documentId = rawDocumentService.extractDocumentId(documentJson);
-                String migratedJson = migrationService.migrate(documentJson, request.entityType, request.targetVersion);
+                var currentVersion = extractSchemaVersion(documentJson);
+                String migratedJson = migrationService.migrate(documentJson, request.entityType, request.targetVersion, currentVersion);
                 boolean updated = rawDocumentService.replaceDocument(request.collectionName, documentId, migratedJson);
 
                 if (updated) {
@@ -334,26 +338,26 @@ public class SchemaMigrationController {
     }
 
     private boolean needsMigration(String documentJson, String targetVersion) {
-        String currentVersion = extractSchemaVersion(documentJson);
+        var currentVersion = extractSchemaVersion(documentJson);
         return !targetVersion.equals(currentVersion);
     }
 
-    private String extractSchemaVersion(String documentJson) {
+    private SchemaVersion extractSchemaVersion(String documentJson) {
         int schemaIndex = documentJson.indexOf("\"_schema\"");
         if (schemaIndex == -1) {
-            return "0";
+            return SchemaVersion.NULL;
         }
 
         int valueStart = documentJson.indexOf("\"", schemaIndex + 10);
         if (valueStart == -1) {
-            return "0";
+            return SchemaVersion.NULL;
         }
 
         int valueEnd = documentJson.indexOf("\"", valueStart + 1);
         if (valueEnd == -1) {
-            return "0";
+            return SchemaVersion.NULL;
         }
 
-        return documentJson.substring(valueStart + 1, valueEnd);
+        return SchemaVersion.of(documentJson.substring(valueStart + 1, valueEnd));
     }
 }
