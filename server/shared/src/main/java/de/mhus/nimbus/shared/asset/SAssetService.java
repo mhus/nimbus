@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +22,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class SAssetService {
+
+    public static final String STORAGE_SCHEMA = "asset";
+    public static final String STORAGE_SCHEMA_VERSION = "1.0.0";
 
     private final SAssetRepository repository;
     private final StorageService storageService; // optional injected
@@ -45,7 +47,7 @@ public class SAssetService {
         asset.setCreatedBy(createdBy);
         asset.setEnabled(true);
 
-        StorageService.StorageInfo storageInfo = storageService.store(worldId, "assets/" + path, stream);
+        StorageService.StorageInfo storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, stream);
         asset.setSize(storageInfo.size());
         asset.setStorageId(storageInfo.id());
         log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
@@ -75,7 +77,7 @@ public class SAssetService {
                 .build();
         asset.setCreatedAt(Instant.now());
 
-        var storageInfo = storageService.store(worldId, "assets/" + path, stream);
+        var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, stream);
         asset.setStorageId(storageInfo.id());
         asset.setSize(storageInfo.size());
         log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
@@ -137,7 +139,7 @@ public class SAssetService {
             } else {
                 var worldId = asset.getWorldId();
                 var path = asset.getPath();
-                var storageId = storageService.store(worldId, "assets/" + path, stream);
+                var storageId = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, stream);
                 asset.setSize(storageId.size());
                 asset.setStorageId(storageId.id());
                 log.debug("Updated/Created external content id={}", storageId.id());

@@ -65,6 +65,18 @@ public class StorageData {
     private byte[] data;
 
     /**
+     * Schema of the stored data. Default is none.
+     * e.g. "block"
+     */
+    private String schema;
+
+    /**
+     * Version of the schema. Defsult is '0'
+     * e.g. "1.0.0"
+     */
+    private String schemaVersion;
+
+    /**
      * Indicates the last chunk in the sequence.
      * Used to mark end of file and store total size.
      */

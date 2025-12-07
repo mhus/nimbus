@@ -132,3 +132,20 @@ vorerst ein Log ausgibt.
 - von verion 0 auf version 1.0.0 - ohne änderungen vorzunehmen. - damit geht alles initial auf version 1.0.0
 - Kann der Import alternativ aus einer zip datei geladen werden. Wenn der import pfad mit .zip ended.
 - Kann der Export alternativ in eine zip datei gespeichert werden. Wenn der export pfad mit .zip ended.
+
+[ ] Es wird in SchemaMigrationService ein zweiter Mechanismus benoetigt, mit dem
+Objekte aus StorageService migriert werden koennen.
+- Es gibt am StorageData die Parameter String schema, String schemaVersion
+- Beim speichern wird das schema und die schemaVersion gesetzt.
+- Bei StorageInfo wird das schema und die schemaVersion zurueckgegeben.
+- Als migration wird der bestehende mechanismus benutzt mit den SchemaMigratoren.
+  - Aktuell: migrateToLatest(String entityJson, String entityType) 
+  - Hier wird die Schmea Version niht in _schema, sondern separat mitgegeben.
+  - migrateToLatest(String entityJson, String entityType, String currentVersion)
+- Da StorageService erreichbar ist kann die Migration direkt implementiert werden.
+  - migrateStorage(String storageId) soll auf die Latest Version migrieren.
+  - Nutze StorageService.replace() um die Daten zu ersetzen, so wird die StorageId nicht veraendert.
+  - Lade die Daten als String, migriere sie und speichere sie wieder.
+- Erstelle einen REST Knoten im bestehenden SchemaMigrationController um auch Storage Objekte zu migrieren.
+- In world-import muss der importer nach dem import von 'storage_data' die Storage Objekte die importiert wurden
+  migrieren.

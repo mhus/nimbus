@@ -25,6 +25,8 @@ public class ChunkedOutputStream extends OutputStream {
     private final int chunkSize;
     private final Date createdAt;
     private final String worldId;
+    private final String schema;
+    private final String schemaVersion;
 
     private byte[] buffer;
     private int bufferPosition = 0;
@@ -42,11 +44,13 @@ public class ChunkedOutputStream extends OutputStream {
      * @param chunkSize  Maximum chunk size in bytes (typically 512KB)
      * @param createdAt  Creation timestamp for all chunks
      */
-    public ChunkedOutputStream(StorageDataRepository repository, String uuid, String worldId, String path,
+    public ChunkedOutputStream(StorageDataRepository repository, String uuid, String schema, String schemaVersion, String worldId, String path,
                                int chunkSize, Date createdAt) {
         this.repository = repository;
         this.uuid = uuid;
         this.worldId = worldId;
+        this.schema = schema;
+        this.schemaVersion = schemaVersion;
         this.path = path;
         this.chunkSize = chunkSize;
         this.createdAt = createdAt;
@@ -121,6 +125,9 @@ public class ChunkedOutputStream extends OutputStream {
                         .isFinal(true)
                         .size(totalBytesWritten)
                         .createdAt(createdAt)
+                        .worldId(worldId)
+                        .schema(schema)
+                        .schemaVersion(schemaVersion)
                         .build();
                 repository.save(finalChunk);
                 log.trace("Updated last chunk as final: uuid={} index={}", uuid, lastChunk.getIndex());
@@ -168,6 +175,9 @@ public class ChunkedOutputStream extends OutputStream {
                 .isFinal(isFinal)
                 .size(isFinal ? totalBytesWritten : 0)
                 .createdAt(createdAt)
+                .worldId(worldId)
+                .schema(schema)
+                .schemaVersion(schemaVersion)
                 .build();
 
         try {

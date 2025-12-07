@@ -46,7 +46,7 @@ class MongoStorageServiceTest {
         byte[] testData = "Hello World".getBytes();
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store("w1", testPath, stream);
+        StorageService.StorageInfo result = service.store("test", "1.0", "w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isNotBlank(); // UUID generated
@@ -77,7 +77,7 @@ class MongoStorageServiceTest {
         }
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store("w1", testPath, stream);
+        StorageService.StorageInfo result = service.store("test", "1.0", "w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(testData.length);
@@ -90,7 +90,7 @@ class MongoStorageServiceTest {
     void testStoreNullStream() {
         String testPath = "test/file.txt";
 
-        StorageService.StorageInfo result = service.store("w1", testPath, null);
+        StorageService.StorageInfo result = service.store("test", "1.0", "w1", testPath, null);
 
         assertThat(result).isNull();
         verify(storageDataRepository, never()).save(any(StorageData.class));
@@ -295,7 +295,7 @@ class MongoStorageServiceTest {
         when(storageDataRepository.save(any(StorageData.class)))
                 .thenThrow(new RuntimeException("MongoDB connection failed"));
 
-        assertThatThrownBy(() -> service.store("w1", testPath, stream))
+        assertThatThrownBy(() -> service.store("test", "1.0", "w1", testPath, stream))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to store file");
     }

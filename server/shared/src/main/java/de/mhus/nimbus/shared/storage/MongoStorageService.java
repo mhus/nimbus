@@ -35,18 +35,22 @@ public class MongoStorageService extends StorageService {
     private int chunkSize; // 512KB default
 
     @Override
+    public StorageInfo store(String schema, String schemaVersion, String worldId, String path, InputStream stream) {
+        String uuid = UUID.randomUUID().toString();
+        return store(uuid, schema, schemaVersion, worldId, path, stream);
+    }
+
     @Transactional
-    public StorageInfo store(String worldId, String path, InputStream stream) {
+    protected StorageInfo store(String storageId, String schema, String schemaVersion, String worldId, String path, InputStream stream) {
         if (stream == null) {
             log.error("Cannot store null stream for path: {}", path);
             return null;
         }
 
-        String uuid = UUID.randomUUID().toString();
         Date createdAt = new Date();
 
         try (ChunkedOutputStream outputStream = new ChunkedOutputStream(
-                storageDataRepository, uuid, worldId, path, chunkSize, createdAt)) {
+                storageDataRepository, storageId, schema, schemaVersion, worldId, path, chunkSize, createdAt)) {
 
             // Copy from input stream to chunked output stream
             // ChunkedOutputStream automatically splits into chunks and saves to MongoDB
@@ -54,9 +58,9 @@ public class MongoStorageService extends StorageService {
 
             long totalSize = outputStream.getTotalBytesWritten();
 
-            log.debug("Stored file: uuid={} path={} size={}", uuid, path, totalSize);
+            log.debug("Stored file: uuid={} path={} size={}", storageId, path, totalSize);
 
-            return new StorageInfo(uuid, totalSize, createdAt, worldId, path);
+            return new StorageInfo(storageId, totalSize, createdAt, worldId, path, schema, schemaVersion);
 
         } catch (IOException e) {
             log.error("Error storing file: path={}", path, e);
@@ -105,7 +109,7 @@ public class MongoStorageService extends StorageService {
 
     @Override
     @Transactional
-    public StorageInfo update(String storageId, InputStream stream) {
+    public StorageInfo update(String schema, String schemaVersion, String storageId, InputStream stream) {
         if (storageId == null || storageId.isBlank()) {
             log.error("Cannot update with null/empty storageId");
             return null;
@@ -124,15 +128,50 @@ public class MongoStorageService extends StorageService {
         }
         String path = oldFinalChunk.getPath();
         String worldId = oldFinalChunk.getWorldId();
+        if (schema == null) schema = oldFinalChunk.getSchema();
+        if (schemaVersion == null) schemaVersion = oldFinalChunk.getSchemaVersion();
 
         // Store new version with new UUID
-        StorageInfo newInfo = store(worldId, path, stream);
+        StorageInfo newInfo = store(schema, schemaVersion, worldId, path, stream);
 
         // Schedule old version for deletion
         if (newInfo != null) {
             delete(storageId);
             log.debug("Updated storage: oldId={} newId={}", storageId, newInfo.id());
         }
+
+        return newInfo;
+    }
+
+    @Override
+    @Transactional
+    public StorageInfo replace(String schema, String schemaVersion, String storageId, InputStream stream) {
+        if (storageId == null || storageId.isBlank()) {
+            log.error("Cannot update with null/empty storageId");
+            return null;
+        }
+
+        if (stream == null) {
+            log.error("Cannot update with null stream for storageId: {}", storageId);
+            return null;
+        }
+
+        // Get old metadata for path reference
+        StorageData oldChunk = storageDataRepository.findByUuidAndIsFinalTrue(storageId);
+        if (oldChunk == null) {
+            log.warn("No existing storage found for update: storageId={}", storageId);
+            throw new IllegalArgumentException("Storage ID not found: " + storageId);
+        }
+        String path = oldChunk.getPath();
+        String worldId = oldChunk.getWorldId();
+        storageId = oldChunk.getUuid(); // Keep same UUID but be sure to use existing one
+        if (schema == null) schema = oldChunk.getSchema();
+        if (schemaVersion == null) schemaVersion = oldChunk.getSchemaVersion();
+
+        // delete the old data immediately
+        delete(storageId);
+        // Store new version with same UUID
+        StorageInfo newInfo = store(storageId, schema, schemaVersion, worldId, path, stream);
 
         return newInfo;
     }
@@ -156,7 +195,9 @@ public class MongoStorageService extends StorageService {
                 finalChunk.getSize(),
                 finalChunk.getCreatedAt(),
                 finalChunk.getWorldId(),
-                finalChunk.getPath()
+                finalChunk.getPath(),
+                finalChunk.getSchema(),
+                finalChunk.getSchemaVersion()
         );
     }
 }
