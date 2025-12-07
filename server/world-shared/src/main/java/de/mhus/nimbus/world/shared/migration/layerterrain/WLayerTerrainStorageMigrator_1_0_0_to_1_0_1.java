@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.migration.layerterrain;
 
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +18,13 @@ public class WLayerTerrainStorageMigrator_1_0_0_to_1_0_1 implements SchemaMigrat
     }
 
     @Override
-    public String getFromVersion() {
-        return "1.0.0";
+    public SchemaVersion getFromVersion() {
+        return SchemaVersion.of("1.0.0");
     }
 
     @Override
-    public String getToVersion() {
-        return "1.0.1";
+    public SchemaVersion getToVersion() {
+        return SchemaVersion.of("1.0.1");
     }
 
     @Override

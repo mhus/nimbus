@@ -6,6 +6,7 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.storage.StorageService;
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,10 +76,10 @@ public class WChunkService {
             StorageService.StorageInfo storageInfo;
             if (entity.getStorageId() != null) {
                 // Update existing chunk
-                storageInfo = storageService.update(entity.getStorageId(), stream);
+                storageInfo = storageService.update(STORAGE_SCHEMA, SchemaVersion.of(STORAGE_SCHEMA_VERSION), entity.getStorageId(), stream);
             } else {
                 // Create new chunk
-                storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "chunk/" + chunkKey, stream);
+                storageInfo = storageService.store(STORAGE_SCHEMA, SchemaVersion.of(STORAGE_SCHEMA_VERSION), worldId, "chunk/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}",

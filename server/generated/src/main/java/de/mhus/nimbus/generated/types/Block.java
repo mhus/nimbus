@@ -16,6 +16,8 @@ public class Block {
     private String blockTypeId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<java.lang.Float> offsets;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Integer rotation;
     @com.fasterxml.jackson.annotation.JsonProperty("cornerHeights")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<Object> cornerHeights;

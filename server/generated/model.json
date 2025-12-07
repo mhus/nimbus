@@ -2207,7 +2207,7 @@
     "typeAliases" : [ ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/Block.ts",
-    "imports" : [ "./Vector3", "./BlockMetadata", "./BlockModifier" ],
+    "imports" : [ "./Vector3", "./BlockMetadata", "./BlockModifier", "./RotationXY" ],
     "interfaces" : [ {
       "name" : "FaceVisibility",
       "extendsList" : [ ],
@@ -2256,6 +2256,13 @@
         "visibility" : null,
         "javaTypeHint" : "java.util.List<java.lang.Float>",
         "comment" : "// javaType: java.util.List<java.lang.Float>"
+      }, {
+        "name" : "rotation",
+        "type" : "RotationXY",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : "// javaType: Integer"
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
@@ -2568,7 +2575,7 @@
     } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/BlockModifier.ts",
-    "imports" : [ "./Shape", "./Vector3" ],
+    "imports" : [ "./Shape", "./Vector3", "./RotationXY" ],
     "interfaces" : [ {
       "name" : "serves",
       "extendsList" : [ ],
@@ -2700,15 +2707,8 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "rotationX",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "rotationY",
-        "type" : "number",
+        "name" : "rotation",
+        "type" : "RotationXY",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -3176,6 +3176,32 @@
       "name" : "AudioModifier",
       "target" : null
     } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/RotationXY.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "RotationXY",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/ShortcutDefinition.ts",
     "imports" : [ ],

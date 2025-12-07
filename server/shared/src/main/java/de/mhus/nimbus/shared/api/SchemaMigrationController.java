@@ -168,7 +168,7 @@ public class SchemaMigrationController {
                 if (version == null || version.isNull()) {
                     noSchemaCount++;
                 } else {
-                    versionCounts.merge(version, 1, Integer::sum);
+                    versionCounts.merge(version.toString(), 1, Integer::sum);
                 }
             }
 
@@ -337,7 +337,7 @@ public class SchemaMigrationController {
         );
     }
 
-    private boolean needsMigration(String documentJson, String targetVersion) {
+    private boolean needsMigration(String documentJson, SchemaVersion targetVersion) {
         var currentVersion = extractSchemaVersion(documentJson);
         return !targetVersion.equals(currentVersion);
     }

@@ -29,12 +29,8 @@ public class VisibilityModifier {
     @com.fasterxml.jackson.annotation.JsonProperty("scalingZ")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double scalingZ;
-    @com.fasterxml.jackson.annotation.JsonProperty("rotationX")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double rotationX;
-    @com.fasterxml.jackson.annotation.JsonProperty("rotationY")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double rotationY;
+    private RotationXY rotation;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String path;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.storage;
 
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +47,7 @@ class MongoStorageServiceTest {
         byte[] testData = "Hello World".getBytes();
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store("test", "1.0", "w1", testPath, stream);
+        StorageService.StorageInfo result = service.store("test", SchemaVersion.of("1.0"), "w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isNotBlank(); // UUID generated
@@ -77,7 +78,7 @@ class MongoStorageServiceTest {
         }
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store("test", "1.0", "w1", testPath, stream);
+        StorageService.StorageInfo result = service.store("test", SchemaVersion.of("1.0"), "w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(testData.length);
@@ -90,7 +91,7 @@ class MongoStorageServiceTest {
     void testStoreNullStream() {
         String testPath = "test/file.txt";
 
-        StorageService.StorageInfo result = service.store("test", "1.0", "w1", testPath, null);
+        StorageService.StorageInfo result = service.store("test", SchemaVersion.of("1.0"), "w1", testPath, null);
 
         assertThat(result).isNull();
         verify(storageDataRepository, never()).save(any(StorageData.class));
@@ -109,6 +110,8 @@ class MongoStorageServiceTest {
                 .isFinal(true)
                 .size(data.length)
                 .createdAt(new Date())
+                .schema("test")
+                .schemaVersion("1.0")
                 .build();
 
         when(storageDataRepository.findByUuidAndIndex(storageId, 0)).thenReturn(chunk);
@@ -190,15 +193,18 @@ class MongoStorageServiceTest {
         StorageData oldChunk = StorageData.builder()
                 .uuid(oldStorageId)
                 .path(testPath)
+                .worldId("w1")
                 .index(0)
                 .isFinal(true)
                 .size(100)
                 .createdAt(new Date())
+                .schema("test")
+                .schemaVersion("1.0")
                 .build();
 
         when(storageDataRepository.findByUuidAndIsFinalTrue(oldStorageId)).thenReturn(oldChunk);
 
-        StorageService.StorageInfo result = service.update(oldStorageId, stream);
+        StorageService.StorageInfo result = service.update(null, null, oldStorageId, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isNotEqualTo(oldStorageId); // New UUID generated
@@ -216,7 +222,7 @@ class MongoStorageServiceTest {
     void testUpdateNullStorageId() {
         InputStream stream = new ByteArrayInputStream("test".getBytes());
 
-        StorageService.StorageInfo result = service.update(null, stream);
+        StorageService.StorageInfo result = service.update(null, null, null, stream);
 
         assertThat(result).isNull();
         verify(storageDataRepository, never()).save(any(StorageData.class));
@@ -226,7 +232,7 @@ class MongoStorageServiceTest {
     void testUpdateNullStream() {
         String storageId = "test-uuid";
 
-        StorageService.StorageInfo result = service.update(storageId, null);
+        StorageService.StorageInfo result = service.update(null, null, storageId, null);
 
         assertThat(result).isNull();
         verify(storageDataRepository, never()).save(any(StorageData.class));
@@ -242,10 +248,13 @@ class MongoStorageServiceTest {
         StorageData finalChunk = StorageData.builder()
                 .uuid(storageId)
                 .path(testPath)
+                .worldId("w1")
                 .index(5)
                 .isFinal(true)
                 .size(testSize)
                 .createdAt(testDate)
+                .schema("test")
+                .schemaVersion("1.0")
                 .build();
 
         when(storageDataRepository.findByUuidAndIsFinalTrue(storageId)).thenReturn(finalChunk);
@@ -295,7 +304,7 @@ class MongoStorageServiceTest {
         when(storageDataRepository.save(any(StorageData.class)))
                 .thenThrow(new RuntimeException("MongoDB connection failed"));
 
-        assertThatThrownBy(() -> service.store("test", "1.0", "w1", testPath, stream))
+        assertThatThrownBy(() -> service.store("test", SchemaVersion.of("1.0"), "w1", testPath, stream))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to store file");
     }
@@ -307,7 +316,7 @@ class MongoStorageServiceTest {
 
         when(storageDataRepository.findByUuidAndIsFinalTrue(oldStorageId)).thenReturn(null);
 
-        assertThatThrownBy(() -> service.update(oldStorageId, stream))
+        assertThatThrownBy(() -> service.update(null, null, oldStorageId, stream))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("not found");
 

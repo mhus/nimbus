@@ -133,7 +133,7 @@ public class SAssetService {
         return repository.findById(id).map(asset -> {
             if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());
             if (StringUtils.isNotEmpty(asset.getStorageId())) {
-                var storageId = storageService.update(asset.getStorageId(), stream);
+                var storageId = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, asset.getStorageId(), stream);
                 asset.setSize(storageId.size());
                 asset.setStorageId(storageId.id());
                 log.debug("Updated external content id={}", storageId.id());

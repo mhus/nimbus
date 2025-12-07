@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.migration;
 
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,13 +17,13 @@ public class WItemPositionMigrator_0_to_1_0_0 implements SchemaMigrator {
     }
 
     @Override
-    public String getFromVersion() {
-        return "0";
+    public SchemaVersion getFromVersion() {
+        return SchemaVersion.of("0");
     }
 
     @Override
-    public String getToVersion() {
-        return "1.0.0";
+    public SchemaVersion getToVersion() {
+        return SchemaVersion.of("1.0.0");
     }
 
     @Override

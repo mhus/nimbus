@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,7 +48,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When
-        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"));
+        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"), SchemaVersion.of("0"));
 
         // Then
         assertThat(result).contains("\"migrated\":\"v1\"");
@@ -60,7 +61,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When
-        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("3.0.0"));
+        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("3.0.0"), SchemaVersion.of("0"));
 
         // Then
         assertThat(result).contains("\"migrated\":\"v1\"");
@@ -75,7 +76,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\",\"_schema\":\"2.0.0\"}";
 
         // When
-        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("2.0.0"));
+        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("2.0.0"), SchemaVersion.of("2.0.0"));
 
         // Then
         assertThat(result).isEqualTo(entityJson);
@@ -88,7 +89,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\",\"_schema\":\"1.0.0\"}";
 
         // When
-        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("2.0.0"));
+        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("2.0.0"), SchemaVersion.of("1.0.0"));
 
         // Then
         assertThat(result).contains("\"migrated2\":\"v2\"");
@@ -102,7 +103,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When/Then
-        assertThatThrownBy(() -> migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("99.0.0")))
+        assertThatThrownBy(() -> migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("99.0.0"), SchemaVersion.of("0")))
                 .isInstanceOf(SchemaMigrationService.MigrationException.class)
                 .hasMessageContaining("No migration path found");
     }
@@ -113,7 +114,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When/Then
-        assertThatThrownBy(() -> migrationService.migrate(entityJson, "UnknownEntity", SchemaVersion.of("1.0.0")))
+        assertThatThrownBy(() -> migrationService.migrate(entityJson, "UnknownEntity", SchemaVersion.of("1.0.0"), SchemaVersion.of("0")))
                 .isInstanceOf(SchemaMigrationService.MigrationException.class)
                 .hasMessageContaining("No migration path found");
     }
@@ -124,7 +125,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When
-        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"));
+        String result = migrationService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"), SchemaVersion.of("0"));
 
         // Then
         assertThat(result).contains("\"migrated\":\"v1\"");
@@ -158,17 +159,17 @@ class SchemaMigrationServiceTest {
     @Test
     void shouldGetMigratorsForEntity() {
         // When
-        List<SchemaMigrator> migrators = migrationService.getMigratorsForEntity("TestEntity");
+        Set<SchemaMigrator> migrators = migrationService.getMigratorsForEntity("TestEntity");
 
         // Then
         assertThat(migrators).hasSize(3);
-        assertThat(migrators).containsExactly(migrator_0_to_1, migrator_1_to_2, migrator_2_to_3);
+        assertThat(migrators).containsExactlyInAnyOrder(migrator_0_to_1, migrator_1_to_2, migrator_2_to_3);
     }
 
     @Test
     void shouldReturnEmptyListForUnknownEntity() {
         // When
-        List<SchemaMigrator> migrators = migrationService.getMigratorsForEntity("UnknownEntity");
+        Set<SchemaMigrator> migrators = migrationService.getMigratorsForEntity("UnknownEntity");
 
         // Then
         assertThat(migrators).isEmpty();
@@ -181,7 +182,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When/Then
-        assertThatThrownBy(() -> emptyService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0")))
+        assertThatThrownBy(() -> emptyService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"), SchemaVersion.of("0")))
                 .isInstanceOf(SchemaMigrationService.MigrationException.class);
     }
 
@@ -199,7 +200,7 @@ class SchemaMigrationServiceTest {
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
         // When/Then
-        assertThatThrownBy(() -> service.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0")))
+        assertThatThrownBy(() -> service.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"), SchemaVersion.of("0")))
                 .isInstanceOf(SchemaMigrationService.MigrationException.class)
                 .hasMessageContaining("Migration failed");
     }
@@ -207,7 +208,7 @@ class SchemaMigrationServiceTest {
     /**
      * Test implementation of SchemaMigrator.
      */
-    static class TestMigrator implements SchemaMigrator {
+    static class TestMigrator implements SchemaMigrator, Comparable<TestMigrator> {
         private final String entityType;
         private final SchemaVersion fromVersion;
         private final SchemaVersion toVersion;
@@ -256,6 +257,33 @@ class SchemaMigrationServiceTest {
             };
 
             return trimmed + "\"" + fieldName + "\":\"" + markerValue + "\"}";
+        }
+
+        @Override
+        public int compareTo(TestMigrator other) {
+            // Compare by entityType first, then by fromVersion, then by toVersion
+            int entityComparison = this.entityType.compareTo(other.entityType);
+            if (entityComparison != 0) return entityComparison;
+
+            int fromComparison = this.fromVersion.compareTo(other.fromVersion);
+            if (fromComparison != 0) return fromComparison;
+
+            return this.toVersion.compareTo(other.toVersion);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof TestMigrator)) return false;
+            TestMigrator other = (TestMigrator) obj;
+            return entityType.equals(other.entityType) &&
+                   fromVersion.equals(other.fromVersion) &&
+                   toVersion.equals(other.toVersion);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(entityType, fromVersion, toVersion);
         }
     }
 }

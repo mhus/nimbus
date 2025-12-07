@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.commands;
 
 import de.mhus.nimbus.shared.service.MongoRawDocumentService;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
+import de.mhus.nimbus.shared.service.SchemaVersion;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;
@@ -106,7 +107,7 @@ public class MigrateSchemaCommand implements Command {
         String collectionName = args.get(0);
         String idOrPattern = args.get(1);
         String entityType = args.get(2);
-        String targetVersion = args.get(3);
+        SchemaVersion targetVersion = SchemaVersion.of(args.get(3));
 
         log.info("Starting schema migration for collection '{}', pattern '{}', entity '{}', target version '{}'",
                 collectionName, idOrPattern, entityType, targetVersion);
@@ -129,7 +130,7 @@ public class MigrateSchemaCommand implements Command {
      * Migrates a single document by ID.
      */
     private CommandResult migrateSingleDocument(String collectionName, String id,
-                                                String entityType, String targetVersion) {
+                                                String entityType, SchemaVersion targetVersion) {
         log.info("Migrating single document: {} in {}", id, collectionName);
 
         // Load document as JSON
@@ -139,8 +140,11 @@ public class MigrateSchemaCommand implements Command {
         }
 
         try {
+            // Extract current version from document
+            SchemaVersion currentVersion = extractSchemaVersion(documentJson);
+
             // Migrate document
-            String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion);
+            String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion, currentVersion);
 
             // Save migrated document back to MongoDB
             boolean updated = rawDocumentService.replaceDocument(collectionName, id, migratedJson);
@@ -162,7 +166,7 @@ public class MigrateSchemaCommand implements Command {
      * Migrates all documents in a collection.
      */
     private CommandResult migrateAllDocuments(String collectionName,
-                                              String entityType, String targetVersion) {
+                                              String entityType, SchemaVersion targetVersion) {
         log.info("Migrating all documents in collection: {}", collectionName);
 
         // Load all documents
@@ -187,8 +191,11 @@ public class MigrateSchemaCommand implements Command {
                     continue;
                 }
 
+                // Extract current version from document
+                SchemaVersion currentVersion = extractSchemaVersion(documentJson);
+
                 // Migrate document
-                String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion);
+                String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion, currentVersion);
 
                 // Save migrated document
                 boolean updated = rawDocumentService.replaceDocument(collectionName, documentId, migratedJson);
@@ -224,7 +231,7 @@ public class MigrateSchemaCommand implements Command {
      * Migrates documents without _schema field.
      */
     private CommandResult migrateDocumentsWithoutSchema(String collectionName,
-                                                        String entityType, String targetVersion) {
+                                                        String entityType, SchemaVersion targetVersion) {
         log.info("Migrating documents without _schema field in collection: {}", collectionName);
 
         // Load documents without _schema field
@@ -242,7 +249,8 @@ public class MigrateSchemaCommand implements Command {
                 String documentId = rawDocumentService.extractDocumentId(documentJson);
 
                 // Migrate document (starting from version "0")
-                String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion);
+                SchemaVersion currentVersion = SchemaVersion.of("0"); // Documents without schema start at version 0
+                String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion, currentVersion);
 
                 // Save migrated document
                 boolean updated = rawDocumentService.replaceDocument(collectionName, documentId, migratedJson);
@@ -277,24 +285,37 @@ public class MigrateSchemaCommand implements Command {
     /**
      * Checks if a document needs migration based on its current schema version.
      */
-    private boolean needsMigration(String documentJson, String targetVersion) {
-        // Extract current version from document
+    private boolean needsMigration(String documentJson, SchemaVersion targetVersion) {
+        SchemaVersion currentVersion = extractSchemaVersion(documentJson);
+        return !currentVersion.equals(targetVersion);
+    }
+
+    /**
+     * Extracts the schema version from a JSON document.
+     */
+    private SchemaVersion extractSchemaVersion(String documentJson) {
+        // Look for _schema field
         int schemaIndex = documentJson.indexOf("\"_schema\"");
         if (schemaIndex == -1) {
-            return true; // No schema field, needs migration
+            return SchemaVersion.of("0"); // Default to version 0 if no schema field
         }
 
         int valueStart = documentJson.indexOf("\"", schemaIndex + 10);
         if (valueStart == -1) {
-            return true;
+            return SchemaVersion.of("0");
         }
 
         int valueEnd = documentJson.indexOf("\"", valueStart + 1);
         if (valueEnd == -1) {
-            return true;
+            return SchemaVersion.of("0");
         }
 
-        String currentVersion = documentJson.substring(valueStart + 1, valueEnd);
-        return !currentVersion.equals(targetVersion);
+        String versionString = documentJson.substring(valueStart + 1, valueEnd);
+        try {
+            return SchemaVersion.of(versionString);
+        } catch (Exception e) {
+            log.warn("Invalid schema version '{}' in document, defaulting to 0", versionString);
+            return SchemaVersion.of("0");
+        }
     }
 }
