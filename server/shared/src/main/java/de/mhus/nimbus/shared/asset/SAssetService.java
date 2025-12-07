@@ -23,7 +23,7 @@ import java.util.Optional;
 @Slf4j
 public class SAssetService {
 
-    public static final String STORAGE_SCHEMA = "asset";
+    public static final String STORAGE_SCHEMA = "SAssetStorage";
     public static final String STORAGE_SCHEMA_VERSION = "1.0.0";
 
     private final SAssetRepository repository;

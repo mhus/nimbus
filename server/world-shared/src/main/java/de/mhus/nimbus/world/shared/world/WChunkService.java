@@ -27,6 +27,9 @@ import java.util.Optional;
 @Slf4j
 public class WChunkService {
 
+    public static final String STORAGE_SCHEMA = "WChunkStorage";
+    public static final String STORAGE_SCHEMA_VERSION = "1.0.0";
+
     private final WChunkRepository repository;
     private final StorageService storageService;
     private final WWorldService worldService;
@@ -75,7 +78,7 @@ public class WChunkService {
                 storageInfo = storageService.update(entity.getStorageId(), stream);
             } else {
                 // Create new chunk
-                storageInfo = storageService.store(worldId, "chunk/" + chunkKey, stream);
+                storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "chunk/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} region={} world={}",

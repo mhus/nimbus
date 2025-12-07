@@ -1,9 +1,14 @@
 package de.mhus.nimbus.shared.service;
 
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
+import de.mhus.nimbus.shared.storage.StorageService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +37,9 @@ public class SchemaMigrationService {
 
     private final List<SchemaMigrator> migrators;
     private final Map<String, List<SchemaMigrator>> migratorsByEntity = new HashMap<>();
+
+    @Autowired(required = false)
+    private StorageService storageService;
 
     /**
      * Constructor with lazy injection of all available migrators.
@@ -294,9 +302,124 @@ public class SchemaMigrationService {
      * @throws MigrationException if migration fails
      */
     public String migrateToLatest(String entityJson, String entityType) throws MigrationException {
+        String currentVersion = extractSchemaVersion(entityJson);
         String latestVersion = getLatestVersion(entityType);
         return migrate(entityJson, entityType, latestVersion);
     }
+
+    /**
+     * Migrates an entity to the latest available version with explicit current version.
+     * Use this when the schema version is stored separately (e.g., in StorageData.schemaVersion).
+     *
+     * @param entityJson     the entity as JSON string
+     * @param entityType     the entity type name
+     * @param currentVersion the current schema version (e.g., from StorageData.schemaVersion)
+     * @return the migrated entity as JSON string
+     * @throws MigrationException if migration fails
+     */
+    public String migrateToLatest(String entityJson, String entityType, String currentVersion) throws MigrationException {
+        if (currentVersion == null || currentVersion.isBlank()) {
+            currentVersion = "0";
+        }
+
+        String latestVersion = getLatestVersion(entityType);
+
+        log.debug("Migrating {} from version {} to latest {}",
+                entityType, currentVersion, latestVersion);
+
+        // Check if migration is needed
+        if (currentVersion.equals(latestVersion)) {
+            log.trace("Entity {} already at latest version {}", entityType, latestVersion);
+            return entityJson;
+        }
+
+        // Find and apply migration path
+        return migrate(entityJson, entityType, latestVersion);
+    }
+
+    /**
+     * Migrates a storage object to the latest available version.
+     * Loads the storage data, migrates it, and replaces it using the same storageId.
+     *
+     * @param storageId the storage ID to migrate
+     * @return MigrationResult with details about the migration
+     * @throws MigrationException if migration fails or storage service is not available
+     */
+    public MigrationResult migrateStorage(String storageId) throws MigrationException {
+        if (storageService == null) {
+            throw new MigrationException("StorageService not available for migration");
+        }
+
+        if (storageId == null || storageId.isBlank()) {
+            throw new MigrationException("Storage ID cannot be null or empty");
+        }
+
+        log.info("Starting storage migration for storageId: {}", storageId);
+
+        // Get storage info
+        StorageService.StorageInfo info = storageService.info(storageId);
+        if (info == null) {
+            throw new MigrationException("Storage not found: " + storageId);
+        }
+
+        String schema = info.schema();
+        String currentVersion = info.schemaVersion() != null ? info.schemaVersion() : "0";
+
+        if (schema == null || schema.isBlank()) {
+            log.info("Storage {} has no schema, skipping migration", storageId);
+            return new MigrationResult(storageId, null, currentVersion, currentVersion, false);
+        }
+
+        String latestVersion = getLatestVersion(schema);
+
+        // Check if migration is needed
+        if (currentVersion.equals(latestVersion)) {
+            log.info("Storage {} already at latest version {} for schema {}",
+                    storageId, latestVersion, schema);
+            return new MigrationResult(storageId, schema, currentVersion, latestVersion, false);
+        }
+
+        try {
+            // Load storage data as string
+            InputStream inputStream = storageService.load(storageId);
+            if (inputStream == null) {
+                throw new MigrationException("Failed to load storage data for: " + storageId);
+            }
+
+            String dataString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            inputStream.close();
+
+            // Migrate data
+            String migratedData = migrateToLatest(dataString, schema, currentVersion);
+
+            // Replace storage with migrated data
+            InputStream migratedStream = new ByteArrayInputStream(migratedData.getBytes(StandardCharsets.UTF_8));
+            StorageService.StorageInfo newInfo = storageService.replace(schema, latestVersion, storageId, migratedStream);
+
+            if (newInfo == null) {
+                throw new MigrationException("Failed to replace storage data for: " + storageId);
+            }
+
+            log.info("Successfully migrated storage {} from version {} to {}",
+                    storageId, currentVersion, latestVersion);
+
+            return new MigrationResult(storageId, schema, currentVersion, latestVersion, true);
+
+        } catch (Exception e) {
+            throw new MigrationException("Storage migration failed for " + storageId + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Result of a storage migration operation.
+     */
+    public record MigrationResult(
+            String storageId,
+            String schema,
+            String fromVersion,
+            String toVersion,
+            boolean migrated
+    ) {}
 
     /**
      * Exception thrown when schema migration fails.

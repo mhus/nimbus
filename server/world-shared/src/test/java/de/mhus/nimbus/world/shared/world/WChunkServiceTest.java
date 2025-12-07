@@ -20,7 +20,7 @@ public class WChunkServiceTest {
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
         StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STORAGE-ID", 100, new java.util.Date(), "w1", "chunk/c1", "chunk", "1.0");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         WChunkService service = new WChunkService(repo, storage, worldService, itemRegistryService);
         ChunkData cd = new ChunkData();
@@ -47,7 +47,7 @@ public class WChunkServiceTest {
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
         StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STORAGE-ID-2", 200, new java.util.Date(), "w1", "chunk/c2", "chunk", "1.0");
-        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
+        Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         WChunkService service = new WChunkService(repo, storage, worldService, itemRegistry);
         ChunkData cd = new ChunkData();

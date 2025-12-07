@@ -51,6 +51,59 @@ public class SchemaMigrationController {
     ) {}
 
     /**
+     * Storage migration response DTO.
+     */
+    public record StorageMigrationResponse(
+            String storageId,
+            String schema,
+            String fromVersion,
+            String toVersion,
+            boolean migrated,
+            String message
+    ) {}
+
+    /**
+     * Migrates a storage object to the latest available version.
+     * POST /shared/schema/migrate/storage/{storageId}
+     *
+     * @param storageId the storage ID to migrate
+     * @return migration result with details
+     */
+    @PostMapping("/migrate/storage/{storageId}")
+    public ResponseEntity<StorageMigrationResponse> migrateStorage(@PathVariable String storageId) {
+        try {
+            log.info("Storage migration request for storageId: {}", storageId);
+
+            SchemaMigrationService.MigrationResult result = migrationService.migrateStorage(storageId);
+
+            StorageMigrationResponse response = new StorageMigrationResponse(
+                    result.storageId(),
+                    result.schema(),
+                    result.fromVersion(),
+                    result.toVersion(),
+                    result.migrated(),
+                    result.migrated() ? "Storage migrated successfully" : "Already at latest version"
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (SchemaMigrationService.MigrationException e) {
+            log.error("Storage migration failed for storageId: {}", storageId, e);
+
+            StorageMigrationResponse response = new StorageMigrationResponse(
+                    storageId,
+                    null,
+                    null,
+                    null,
+                    false,
+                    "Migration failed: " + e.getMessage()
+            );
+
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
      * Migrate a single document or all documents in a collection.
      *
      * @param request the migration request

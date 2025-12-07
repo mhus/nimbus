@@ -133,7 +133,7 @@ vorerst ein Log ausgibt.
 - Kann der Import alternativ aus einer zip datei geladen werden. Wenn der import pfad mit .zip ended.
 - Kann der Export alternativ in eine zip datei gespeichert werden. Wenn der export pfad mit .zip ended.
 
-[ ] Es wird in SchemaMigrationService ein zweiter Mechanismus benoetigt, mit dem
+[?] Es wird in SchemaMigrationService ein zweiter Mechanismus benoetigt, mit dem
 Objekte aus StorageService migriert werden koennen.
 - Es gibt am StorageData die Parameter String schema, String schemaVersion
 - Beim speichern wird das schema und die schemaVersion gesetzt.

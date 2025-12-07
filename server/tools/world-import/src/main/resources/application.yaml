@@ -9,7 +9,7 @@ spring:
 # Import configuration
 import:
   # Base path for import files
-  input-path: ${IMPORT_INPUT_PATH:./exports/demo-world}
+  input-path: ${IMPORT_INPUT_PATH:./exports/data/demo-world}
 
   # World ID to import (use '*' for all worlds, or specify a worldId like 'main')
   world-id: ${IMPORT_WORLD_ID:*}

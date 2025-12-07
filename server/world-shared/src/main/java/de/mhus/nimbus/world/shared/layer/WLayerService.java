@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WLayerService {
 
+    public static final String STORAGE_SCHEMA = "WLayerTerrainStorage";
+    public static final String STORAGE_SCHEMA_VERSION = "1.0.0";
+
     private final WLayerRepository layerRepository;
     private final WLayerTerrainRepository terrainRepository;
     private final WLayerModelRepository modelRepository;
@@ -224,7 +227,7 @@ public class WLayerService {
             if (entity.getStorageId() != null) {
                 storageInfo = storageService.update(entity.getStorageId(), stream);
             } else {
-                storageInfo = storageService.store(worldId, "layer/terrain/" + layerDataId + "/" + chunkKey, stream);
+                storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "layer/terrain/" + layerDataId + "/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Terrain chunk stored: layerDataId={} chunkKey={} storageId={} size={}",

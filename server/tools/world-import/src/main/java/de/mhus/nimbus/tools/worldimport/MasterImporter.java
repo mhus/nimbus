@@ -2,6 +2,9 @@ package de.mhus.nimbus.tools.worldimport;
 
 import de.mhus.nimbus.shared.service.ImportMode;
 import de.mhus.nimbus.shared.service.ImportService;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
+import de.mhus.nimbus.shared.storage.StorageData;
+import de.mhus.nimbus.shared.storage.StorageDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +33,8 @@ import java.util.zip.ZipFile;
 public class MasterImporter {
 
     private final ImportService importService;
+    private final SchemaMigrationService schemaMigrationService;
+    private final StorageDataRepository storageDataRepository;
 
     @Value("${import.input-path:./export}")
     private String inputPath;
@@ -115,6 +120,11 @@ public class MasterImporter {
                         stats.incrementSuccess(result.getSuccessCount(), result.getMigrationCount());
                         log.info("    {} entities imported, {} migrated, {} skipped (existing)",
                                 result.getSuccessCount(), result.getMigrationCount(), result.getSkippedExistingCount());
+
+                        // After importing storage_data, migrate all storage objects
+                        if ("storage_data".equals(collectionName)) {
+                            migrateImportedStorage(result.getSuccessCount());
+                        }
                     } else {
                         stats.incrementFailure(collectionName);
                         log.error("    Import failed with {} errors", result.getErrorCount());
@@ -197,5 +207,73 @@ public class MasterImporter {
                         }
                     });
         }
+    }
+
+    /**
+     * Migrates all imported storage objects to the latest schema version.
+     * Called after storage_data collection import.
+     *
+     * @param importedCount number of imported storage_data records
+     */
+    private void migrateImportedStorage(int importedCount) {
+        if (importedCount == 0) {
+            log.info("No storage objects imported, skipping storage migration");
+            return;
+        }
+
+        log.info("");
+        log.info("=".repeat(70));
+        log.info("POST-IMPORT: Migrating storage objects to latest schema version");
+        log.info("=".repeat(70));
+
+        // Get all unique storage IDs from imported storage_data
+        List<StorageData> storageDataList = storageDataRepository.findAll();
+
+        if (storageDataList.isEmpty()) {
+            log.info("No storage data found for migration");
+            return;
+        }
+
+        // Get unique storage IDs (UUIDs)
+        List<String> storageIds = storageDataList.stream()
+                .filter(StorageData::isFinal)
+                .map(StorageData::getUuid)
+                .distinct()
+                .toList();
+
+        log.info("Found {} unique storage objects to migrate", storageIds.size());
+
+        int successCount = 0;
+        int failureCount = 0;
+        int skippedCount = 0;
+
+        for (String storageId : storageIds) {
+            try {
+                SchemaMigrationService.MigrationResult result = schemaMigrationService.migrateStorage(storageId);
+
+                if (result.migrated()) {
+                    successCount++;
+                    log.debug("Migrated storage: {} ({} {} -> {})",
+                            storageId, result.schema(), result.fromVersion(), result.toVersion());
+                } else {
+                    skippedCount++;
+                    log.trace("Skipped storage: {} (already at version {})",
+                            storageId, result.toVersion());
+                }
+
+            } catch (SchemaMigrationService.MigrationException e) {
+                failureCount++;
+                log.error("Failed to migrate storage {}: {}", storageId, e.getMessage());
+            }
+        }
+
+        log.info("");
+        log.info("Storage migration completed:");
+        log.info("  Total storage objects: {}", storageIds.size());
+        log.info("  Migrated:              {}", successCount);
+        log.info("  Skipped (up-to-date):  {}", skippedCount);
+        log.info("  Failed:                {}", failureCount);
+        log.info("=".repeat(70));
+        log.info("");
     }
 }
