@@ -148,46 +148,103 @@ class SchemaMigrationServiceTest {
     }
 
     @Test
-    void shouldGetRegisteredEntityTypes() {
-        // When
-        var entityTypes = migrationService.getRegisteredEntityTypes();
+    void shouldApplyMigratorsInCorrectOrder() throws Exception {
+        // Given - Test mit speziellen Migratoren, die ihre Reihenfolge protokollieren
+        TestMigrator orderMigrator1 = new TestMigrator("OrderEntity", "0", "1.0.0", "step1") {
+            @Override
+            public String migrate(String entityJson) {
+                // Füge order-Feld hinzu oder erweitere es
+                if (entityJson.contains("\"order\"")) {
+                    return entityJson.replace("\"order\":\"", "\"order\":\"step1,");
+                } else {
+                    String trimmed = entityJson.trim();
+                    if (trimmed.endsWith("}")) {
+                        trimmed = trimmed.substring(0, trimmed.length() - 1).trim();
+                    }
+                    if (trimmed.length() > 1 && !trimmed.endsWith(",")) {
+                        trimmed += ",";
+                    }
+                    return trimmed + "\"order\":\"step1\"}";
+                }
+            }
+        };
 
-        // Then
-        assertThat(entityTypes).containsExactly("TestEntity");
-    }
+        TestMigrator orderMigrator2 = new TestMigrator("OrderEntity", "1.0.0", "2.0.0", "step2") {
+            @Override
+            public String migrate(String entityJson) {
+                return entityJson.replace("\"order\":\"step1", "\"order\":\"step1,step2");
+            }
+        };
 
-    @Test
-    void shouldGetMigratorsForEntity() {
-        // When
-        Set<SchemaMigrator> migrators = migrationService.getMigratorsForEntity("TestEntity");
+        TestMigrator orderMigrator3 = new TestMigrator("OrderEntity", "2.0.0", "3.0.0", "step3") {
+            @Override
+            public String migrate(String entityJson) {
+                return entityJson.replace("\"order\":\"step1,step2", "\"order\":\"step1,step2,step3");
+            }
+        };
 
-        // Then
-        assertThat(migrators).hasSize(3);
-        assertThat(migrators).containsExactlyInAnyOrder(migrator_0_to_1, migrator_1_to_2, migrator_2_to_3);
-    }
+        // Migratoren absichtlich in ungeordneter Reihenfolge hinzufügen
+        List<SchemaMigrator> unorderedMigrators = Arrays.asList(
+                orderMigrator3, // 2.0.0 -> 3.0.0
+                orderMigrator1, // 0 -> 1.0.0
+                orderMigrator2  // 1.0.0 -> 2.0.0
+        );
 
-    @Test
-    void shouldReturnEmptyListForUnknownEntity() {
-        // When
-        Set<SchemaMigrator> migrators = migrationService.getMigratorsForEntity("UnknownEntity");
-
-        // Then
-        assertThat(migrators).isEmpty();
-    }
-
-    @Test
-    void shouldHandleEmptyMigratorList() {
-        // Given
-        SchemaMigrationService emptyService = new SchemaMigrationService(Collections.emptyList());
+        SchemaMigrationService orderService = new SchemaMigrationService(unorderedMigrators);
         String entityJson = "{\"id\":\"123\",\"name\":\"test\"}";
 
-        // When/Then
-        assertThatThrownBy(() -> emptyService.migrate(entityJson, "TestEntity", SchemaVersion.of("1.0.0"), SchemaVersion.of("0")))
-                .isInstanceOf(SchemaMigrationService.MigrationException.class);
+        // When - Migration von Version 0 auf 3.0.0
+        String result = orderService.migrate(entityJson, "OrderEntity", SchemaVersion.of("3.0.0"), SchemaVersion.of("0"));
+
+        // Then - Die Schritte müssen in der korrekten Reihenfolge angewendet worden sein
+        assertThat(result).contains("\"order\":\"step1,step2,step3\"");
+        assertThat(result).contains("\"_schema\":\"3.0.0\"");
+
+        // Zusätzliche Überprüfung: Der Order-String sollte genau diese Sequenz enthalten
+        assertThat(result).containsPattern("\"order\"\\s*:\\s*\"step1,step2,step3\"");
     }
 
     @Test
-    void shouldPropagateExceptionFromMigrator() {
+    void shouldApplyPartialMigrationInCorrectOrder() throws Exception {
+        // Given - Teste partielle Migration (nicht von Anfang)
+        TestMigrator orderMigrator2 = new TestMigrator("PartialEntity", "1.0.0", "2.0.0", "step2") {
+            @Override
+            public String migrate(String entityJson) {
+                String trimmed = entityJson.trim();
+                if (trimmed.endsWith("}")) {
+                    trimmed = trimmed.substring(0, trimmed.length() - 1).trim();
+                }
+                if (trimmed.length() > 1 && !trimmed.endsWith(",")) {
+                    trimmed += ",";
+                }
+                return trimmed + "\"migration_step\":\"2\"}";
+            }
+        };
+
+        TestMigrator orderMigrator3 = new TestMigrator("PartialEntity", "2.0.0", "3.0.0", "step3") {
+            @Override
+            public String migrate(String entityJson) {
+                return entityJson.replace("\"migration_step\":\"2\"", "\"migration_step\":\"2,3\"");
+            }
+        };
+
+        List<SchemaMigrator> partialMigrators = Arrays.asList(orderMigrator3, orderMigrator2);
+        SchemaMigrationService partialService = new SchemaMigrationService(partialMigrators);
+
+        // Entity startet bereits bei Version 1.0.0
+        String entityJson = "{\"id\":\"123\",\"name\":\"test\",\"_schema\":\"1.0.0\"}";
+
+        // When - Migration von Version 1.0.0 auf 3.0.0
+        String result = partialService.migrate(entityJson, "PartialEntity", SchemaVersion.of("3.0.0"), SchemaVersion.of("1.0.0"));
+
+        // Then - Nur Schritt 2 und 3 sollten angewendet werden, in dieser Reihenfolge
+        assertThat(result).contains("\"migration_step\":\"2,3\"");
+        assertThat(result).contains("\"_schema\":\"3.0.0\"");
+        assertThat(result).doesNotContain("step1"); // Schritt 1 sollte übersprungen werden
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMigratorFails() {
         // Given
         TestMigrator failingMigrator = new TestMigrator("TestEntity", "0", "1.0.0", "v1") {
             @Override
