@@ -1,5 +1,7 @@
 package de.mhus.nimbus.shared.persistence;
 
+import de.mhus.nimbus.shared.service.SchemaVersion;
+
 /**
  * Interface for schema migration implementations.
  * Each migrator handles the migration of an entity from one specific version to the next.
@@ -46,14 +48,14 @@ public interface SchemaMigrator {
      *
      * @return the source schema version (e.g., "1.0.0" or "0")
      */
-    String getFromVersion();
+    SchemaVersion getFromVersion();
 
     /**
      * Returns the target version this migrator migrates to.
      *
      * @return the target schema version (e.g., "1.1.0")
      */
-    String getToVersion();
+    SchemaVersion getToVersion();
 
     /**
      * Performs the migration from {@link #getFromVersion()} to {@link #getToVersion()}.

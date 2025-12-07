@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.shared.world;
 
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -20,7 +20,7 @@ import java.time.Instant;
  * wird er extern über storageId referenziert und content bleibt null.
  */
 @Document(collection = "w_chunks")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "region_world_chunk_idx", def = "{ 'regionId': 1, 'worldId': 1, 'chunk': 1 }", unique = true)
 })

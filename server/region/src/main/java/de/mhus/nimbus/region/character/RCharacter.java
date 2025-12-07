@@ -1,7 +1,7 @@
 package de.mhus.nimbus.region.character;
 
 import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Document(collection = "characters")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 @CompoundIndex(def = "{userId:1, regionId:1, name:1}", unique = true)
 @Data
 public class RCharacter {

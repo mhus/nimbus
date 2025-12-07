@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.shared.layer;
 
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ import java.time.Instant;
  * Tracks chunks that need to be regenerated from layers.
  */
 @Document(collection = "w_dirty_chunks")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "world_chunk_idx", def = "{ 'worldId': 1, 'chunkKey': 1 }", unique = true),
         @CompoundIndex(name = "world_timestamp_idx", def = "{ 'worldId': 1, 'timestamp': 1 }")

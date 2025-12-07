@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.EntityModel;
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +20,7 @@ import java.time.Instant;
  * EntityModels are templates that define 3D models, animations, and physics for entities.
  */
 @Document(collection = "w_entity_models")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "modelId_idx", def = "{ 'modelId': 1 }", unique = true)
 })

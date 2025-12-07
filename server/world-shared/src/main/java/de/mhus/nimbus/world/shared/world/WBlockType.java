@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.BlockType;
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +20,7 @@ import java.time.Instant;
  * BlockTypes are templates that define how blocks look and behave.
  */
 @Document(collection = "w_blocktypes")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
         @CompoundIndex(name = "blockId_idx", def = "{ 'blockId': 1 }", unique = true)
 })

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.shared.config;
 
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +40,7 @@ class SchemaVersionEventListenerTest {
      * Test entity with @SchemaVersion annotation.
      */
     @org.springframework.data.mongodb.core.mapping.Document(collection = "test_entities")
-    @SchemaVersion("1.0.0")
+    @ActualSchemaVersion("1.0.0")
     static class TestEntityWithSchema {
         private String id;
         private String name;
@@ -59,7 +59,7 @@ class SchemaVersionEventListenerTest {
      * Test entity with different schema version.
      */
     @org.springframework.data.mongodb.core.mapping.Document(collection = "test_entities")
-    @SchemaVersion("2.0.0")
+    @ActualSchemaVersion("2.0.0")
     static class TestEntityWithDifferentSchema {
         private String id;
         private String name;

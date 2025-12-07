@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface SchemaVersion {
+public @interface ActualSchemaVersion {
     /**
      * The schema version for this entity.
      * Format: semantic versioning recommended (e.g., "1.0.0", "2.1.3")

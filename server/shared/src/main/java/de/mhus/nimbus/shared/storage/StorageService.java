@@ -1,5 +1,7 @@
 package de.mhus.nimbus.shared.storage;
 
+import de.mhus.nimbus.shared.service.SchemaVersion;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
@@ -14,7 +16,7 @@ public abstract class StorageService {
 //    }
 
     /** Speichert Daten und liefert eine Storage-Id. */
-    public abstract StorageInfo store(String schema, String schemaVersion, String worldId, String path, InputStream stream);
+    public abstract StorageInfo store(String schema, SchemaVersion schemaVersion, String worldId, String path, InputStream stream);
 
     /** Lädt Daten anhand der Storage-Id. */
     public abstract InputStream load(String storageId);
@@ -37,7 +39,7 @@ public abstract class StorageService {
      * @param stream New data stream
      * @return New StorageInfo data
      */
-    public abstract StorageInfo update(String schema, String schemaVersion, String storageId, InputStream stream);
+    public abstract StorageInfo update(String schema, SchemaVersion schemaVersion, String storageId, InputStream stream);
 
     /**
      * Replace existing stored data with the same storageId.
@@ -49,7 +51,7 @@ public abstract class StorageService {
      * @param stream New data stream
      * @return New StorageInfo data
      */
-    public abstract StorageInfo replace(String schema, String schemaVersion, String storageId, InputStream stream);
+    public abstract StorageInfo replace(String schema, SchemaVersion schemaVersion, String storageId, InputStream stream);
 
     public abstract StorageInfo info(String storageId);
 

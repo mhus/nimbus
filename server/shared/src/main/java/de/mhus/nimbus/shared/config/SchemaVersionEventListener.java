@@ -1,6 +1,6 @@
 package de.mhus.nimbus.shared.config;
 
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>This listener performs two main functions:</p>
  * <ul>
  *   <li><b>Before Save:</b> Automatically adds the "_schema" field to MongoDB documents
- *       based on the {@link SchemaVersion} annotation on the entity class.</li>
+ *       based on the {@link ActualSchemaVersion} annotation on the entity class.</li>
  *   <li><b>After Load:</b> Validates that the loaded document's schema version matches
  *       the expected version. Can optionally trigger automatic migration.</li>
  * </ul>
@@ -46,7 +46,7 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
 
     /**
      * Called before an entity is converted to a MongoDB document for saving.
-     * Adds the "_schema" field with the version from the {@link SchemaVersion} annotation.
+     * Adds the "_schema" field with the version from the {@link ActualSchemaVersion} annotation.
      *
      * @param event the before convert event containing the entity and document
      */
@@ -100,7 +100,7 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
     }
 
     /**
-     * Gets the schema version for an entity class from its {@link SchemaVersion} annotation.
+     * Gets the schema version for an entity class from its {@link ActualSchemaVersion} annotation.
      * Results are cached for performance.
      *
      * @param entityClass the entity class to get the schema version for
@@ -108,7 +108,7 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
      */
     private String getSchemaVersion(Class<?> entityClass) {
         return schemaVersionCache.computeIfAbsent(entityClass, clazz -> {
-            SchemaVersion annotation = clazz.getAnnotation(SchemaVersion.class);
+            ActualSchemaVersion annotation = clazz.getAnnotation(ActualSchemaVersion.class);
             return annotation != null ? annotation.value() : null;
         });
     }

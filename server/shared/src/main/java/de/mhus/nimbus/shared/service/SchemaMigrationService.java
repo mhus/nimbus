@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class SchemaMigrationService {
 
     private final List<SchemaMigrator> migrators;
-    private final Map<String, List<SchemaMigrator>> migratorsByEntity = new HashMap<>();
+    private final Map<String, Set<SchemaMigrator>> migratorsByEntity = new HashMap<>();
 
     @Autowired(required = false)
     private StorageService storageService;
@@ -60,18 +60,13 @@ public class SchemaMigrationService {
         for (SchemaMigrator migrator : migrators) {
             String entityType = migrator.getEntityType();
             migratorsByEntity
-                    .computeIfAbsent(entityType, k -> new ArrayList<>())
+                    .computeIfAbsent(entityType, k -> new TreeSet<>())
                     .add(migrator);
 
             log.debug("Registered migrator for {}: {} -> {}",
                     entityType,
                     migrator.getFromVersion(),
                     migrator.getToVersion());
-        }
-
-        // Sort migrators by version order for each entity type
-        for (List<SchemaMigrator> entityMigrators : migratorsByEntity.values()) {
-            entityMigrators.sort(Comparator.comparing(SchemaMigrator::getFromVersion));
         }
 
         log.info("Initialized schema migration service with {} migrators for {} entity types",
@@ -88,8 +83,8 @@ public class SchemaMigrationService {
      * @return the migrated entity as JSON string
      * @throws MigrationException if migration fails or no migration path exists
      */
-    public String migrate(String entityJson, String entityType, String targetVersion) throws MigrationException {
-        String currentVersion = extractSchemaVersion(entityJson);
+    public String migrate(String entityJson, String entityType, SchemaVersion targetVersion) throws MigrationException {
+        var currentVersion = extractSchemaVersion(entityJson);
 
         log.debug("Migrating {} from version {} to {}",
                 entityType, currentVersion, targetVersion);
@@ -145,11 +140,12 @@ public class SchemaMigrationService {
      * @param toVersion the target version
      * @return ordered list of migrators to apply
      */
-    private List<SchemaMigrator> findMigrationPath(String entityType, String fromVersion, String toVersion) {
-        List<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptyList());
+    private Set<SchemaMigrator> findMigrationPath(String entityType, SchemaVersion fromVersion, SchemaVersion toVersion) {
+        Set<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptySet());
 
-        List<SchemaMigrator> path = new ArrayList<>();
-        String currentVersion = fromVersion;
+
+        Set<SchemaMigrator> path = new TreeSet<>();
+        SchemaVersion currentVersion = fromVersion;
 
         // Build migration chain
         for (SchemaMigrator migrator : entityMigrators) {
@@ -158,7 +154,7 @@ public class SchemaMigrationService {
                 currentVersion = migrator.getToVersion();
 
                 // Stop if we reached target version
-                if (currentVersion.equals(toVersion)) {
+                if (currentVersion.compareTo(toVersion) >= 0) {
                     break;
                 }
             }
@@ -168,7 +164,7 @@ public class SchemaMigrationService {
         if (!currentVersion.equals(toVersion) && !path.isEmpty()) {
             log.warn("Migration path for {} incomplete: reached {} instead of {}",
                     entityType, currentVersion, toVersion);
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
 
         return path;
@@ -181,25 +177,25 @@ public class SchemaMigrationService {
      * @param entityJson the entity as JSON string
      * @return the schema version, or "0" if not present
      */
-    private String extractSchemaVersion(String entityJson) {
+    private SchemaVersion extractSchemaVersion(String entityJson) {
         // Simple JSON parsing to extract _schema field
         // Format: "\"_schema\":\"1.0.0\""
         int schemaIndex = entityJson.indexOf("\"_schema\"");
         if (schemaIndex == -1) {
-            return "0";
+            return SchemaVersion.NULL;
         }
 
         int valueStart = entityJson.indexOf("\"", schemaIndex + 10);
         if (valueStart == -1) {
-            return "0";
+            return SchemaVersion.NULL;
         }
 
         int valueEnd = entityJson.indexOf("\"", valueStart + 1);
         if (valueEnd == -1) {
-            return "0";
+            return SchemaVersion.NULL;
         }
 
-        return entityJson.substring(valueStart + 1, valueEnd);
+        return SchemaVersion.of(entityJson.substring(valueStart + 1, valueEnd));
     }
 
     /**
@@ -209,7 +205,7 @@ public class SchemaMigrationService {
      * @param newVersion the new schema version
      * @return the entity JSON with updated _schema field
      */
-    private String updateSchemaVersion(String entityJson, String newVersion) {
+    private String updateSchemaVersion(String entityJson, SchemaVersion newVersion) {
         // Remove trailing } to add/update _schema field
         String trimmed = entityJson.trim();
         if (trimmed.endsWith("}")) {
@@ -246,11 +242,11 @@ public class SchemaMigrationService {
      * @param toVersion the target version
      * @return true if a migration path exists
      */
-    public boolean hasMigrationPath(String entityType, String fromVersion, String toVersion) {
+    public boolean hasMigrationPath(String entityType, SchemaVersion fromVersion, SchemaVersion toVersion) {
         if (fromVersion.equals(toVersion)) {
             return true;
         }
-        List<SchemaMigrator> path = findMigrationPath(entityType, fromVersion, toVersion);
+        Set<SchemaMigrator> path = findMigrationPath(entityType, fromVersion, toVersion);
         return !path.isEmpty();
     }
 
@@ -280,7 +276,7 @@ public class SchemaMigrationService {
      * @param entityType the entity type
      * @return the latest schema version
      */
-    public String getLatestVersion(String entityType) {
+    public SchemaVersion getLatestVersion(String entityType) {
         List<SchemaMigrator> entityMigrators = migratorsByEntity.getOrDefault(entityType, Collections.emptyList());
 
         if (entityMigrators.isEmpty()) {
@@ -288,10 +284,10 @@ public class SchemaMigrationService {
         }
 
         // Find the highest toVersion from all migrators
-        return entityMigrators.stream()
+        return SchemaVersion.of(entityMigrators.stream()
                 .map(SchemaMigrator::getToVersion)
-                .max(String::compareTo)
-                .orElse("0");
+                .max(SchemaVersion::compareTo)
+                .orElse(SchemaVersion.NULL));
     }
 
     /**
@@ -304,7 +300,7 @@ public class SchemaMigrationService {
      */
     public String migrateToLatest(String entityJson, String entityType) throws MigrationException {
         String currentVersion = extractSchemaVersion(entityJson);
-        String latestVersion = getLatestVersion(entityType);
+        var latestVersion = getLatestVersion(entityType);
         if (latestVersion == null) return entityJson; // No migrators for this entity
         return migrate(entityJson, entityType, latestVersion);
     }
@@ -319,12 +315,12 @@ public class SchemaMigrationService {
      * @return the migrated entity as JSON string
      * @throws MigrationException if migration fails
      */
-    public String migrateToLatest(String entityJson, String entityType, String currentVersion) throws MigrationException {
-        if (currentVersion == null || currentVersion.isBlank()) {
-            currentVersion = "0";
+    public String migrateToLatest(String entityJson, String entityType, SchemaVersion currentVersion) throws MigrationException {
+        if (currentVersion == null) {
+            currentVersion = SchemaVersion.NULL;
         }
 
-        String latestVersion = getLatestVersion(entityType);
+        var latestVersion = getLatestVersion(entityType);
         if (latestVersion == null) return entityJson; // No migrators for this entity
 
         log.debug("Migrating {} from version {} to latest {}",
@@ -366,19 +362,19 @@ public class SchemaMigrationService {
         }
 
         String schema = info.schema();
-        String currentVersion = info.schemaVersion() != null ? info.schemaVersion() : "0";
+        SchemaVersion currentVersion = SchemaVersion.of(info.schemaVersion() != null ? info.schemaVersion() : "0");
 
         if (schema == null || schema.isBlank()) {
             log.info("Storage {} has no schema, skipping migration", storageId);
             return new MigrationResult(storageId, null, currentVersion, currentVersion, false, "No schema");
         }
 
-        String latestVersion = getLatestVersion(schema);
+        var latestVersion = getLatestVersion(schema);
 
         // Check if migration is needed
-        if (latestVersion == null || currentVersion.equals(latestVersion)) {
-            log.info("Storage {} already at latest version {} for schema {}",
-                    storageId, latestVersion, schema);
+        if (latestVersion == null || currentVersion.compareTo(latestVersion) >= 0) {
+            log.info("Storage {}:{} already at latest version {}",
+                    schema, storageId, latestVersion);
             return new MigrationResult(storageId, schema, currentVersion, latestVersion, false, "Already at latest version");
         }
 
@@ -477,8 +473,8 @@ public class SchemaMigrationService {
     public record MigrationResult(
             String storageId,
             String schema,
-            String fromVersion,
-            String toVersion,
+            SchemaVersion fromVersion,
+            SchemaVersion toVersion,
             boolean migrated,
             String message
     ) {}

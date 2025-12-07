@@ -1,6 +1,6 @@
 package de.mhus.nimbus.universe.world;
 
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +17,7 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @Document(collection = "uWorlds")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 public class UWorld {
 
     @Id

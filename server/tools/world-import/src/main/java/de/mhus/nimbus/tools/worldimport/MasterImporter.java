@@ -227,7 +227,7 @@ public class MasterImporter {
         log.info("=".repeat(70));
 
         // Get all unique storage IDs from imported storage_data
-        List<StorageData> storageDataList = storageDataRepository.findAll();
+        List<StorageData> storageDataList = storageDataRepository.findAll(); // TODO use Stream or chunks, could be a huge amount of data
 
         if (storageDataList.isEmpty()) {
             log.info("No storage data found for migration");

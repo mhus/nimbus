@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region.world;
 
-import de.mhus.nimbus.shared.persistence.SchemaVersion;
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Document(collection = "worlds")
-@SchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.0")
 public class RWorld {
 
     @Id
