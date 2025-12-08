@@ -341,6 +341,13 @@ export interface Block {
   rotation?: RotationXY;
 
   /**
+   * Face visibility flags (1 byte)
+   * Determines which faces are visible or if it's auto-calculated
+   * Can be stored as number (preferred) or FaceVisibility object (legacy)
+   */
+  faceVisibility?: number; // javaType: Integer
+
+  /**
    * Corner heights for sloped/ramped blocks (optional)
    *
    * Defines Y-offset adjustments for the four top corners of the block.
@@ -364,13 +371,6 @@ export interface Block {
    * cornerHeights: [-0.5, -0.5, 0.0, 0.0]
    */
   cornerHeights?: [number, number, number, number];
-
-  /**
-   * Face visibility flags (1 byte)
-   * Determines which faces are visible or if it's auto-calculated
-   * Can be stored as number (preferred) or FaceVisibility object (legacy)
-   */
-  faceVisibility?: number // javaType: Integer
 
   /**
    * Current status (0-255)

@@ -51,7 +51,7 @@
 
                 <!-- Currently Selected Block Type -->
                 <div
-                  v-if="blockData.blockTypeId > 0 && !showBlockTypeSearch"
+                  v-if="blockData.blockTypeId != '' && !showBlockTypeSearch"
                   class="p-3 bg-base-200 rounded-lg flex items-center justify-between mb-2"
                 >
                   <div>
@@ -76,7 +76,7 @@
                 </div>
 
                 <!-- Search Field (shown when changing or no block type selected) -->
-                <div v-if="showBlockTypeSearch || blockData.blockTypeId === 0">
+                <div v-if="showBlockTypeSearch || blockData.blockTypeId === ''">
                   <SearchInput
                     v-model="blockTypeSearch"
                     placeholder="Search block types by ID or description..."
@@ -306,6 +306,47 @@
             </div>
           </CollapsibleSection>
 
+          <!-- Rotation Section -->
+          <CollapsibleSection
+            title="Rotation"
+            :model-value="hasRotation"
+            @update:model-value="toggleRotation"
+          >
+            <div class="space-y-2 pt-2">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="form-control">
+                  <label class="label py-0">
+                    <span class="label-text text-xs">Rotation X</span>
+                  </label>
+                  <input
+                    v-model.number="rotationX"
+                    type="number"
+                    step="1"
+                    class="input input-bordered input-sm"
+                    placeholder="0"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-0">
+                    <span class="label-text text-xs">Rotation Y</span>
+                  </label>
+                  <input
+                    v-model.number="rotationY"
+                    type="number"
+                    step="1"
+                    class="input input-bordered input-sm"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <label class="label">
+                <span class="label-text-alt">
+                  Rotation around X/Y axes in degrees. Leave disabled to use default rotation.
+                </span>
+              </label>
+            </div>
+          </CollapsibleSection>
+
           <!-- Metadata Section -->
           <div class="divider">Metadata</div>
 
@@ -323,17 +364,6 @@
               />
             </div>
 
-            <!-- Interactive -->
-            <div class="form-control">
-              <label class="label cursor-pointer justify-start gap-2">
-                <input
-                  v-model="blockData.metadata.interactive"
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                />
-                <span class="label-text">Interactive</span>
-              </label>
-            </div>
           </div>
 
           <!-- Modifiers Section -->
@@ -523,7 +553,7 @@ const blockReadOnly = ref(false);
 const originalBlock = ref<Block | null>(null);
 const blockData = ref<Block>({
   position: { x: 0, y: 0, z: 0 },
-  blockTypeId: 0,
+  blockTypeId: '0',
   status: 0,
   metadata: {},
 });
@@ -552,7 +582,9 @@ const selectedBlockType = computed(() => {
 });
 
 const isValid = computed(() => {
-  return blockData.value.blockTypeId > 0;
+  // blockTypeId is a string; treat any non-empty, non-'0' value as valid
+  const id = blockData.value.blockTypeId;
+  return id !== '' && id !== '0';
 });
 
 const hasChanges = computed(() => {
@@ -662,7 +694,7 @@ const currentShape = computed(() => {
 });
 
 // Generate BlockTypeEditor URL with blockTypeId parameter
-function getBlockTypeEditorUrl(blockTypeId: number): string {
+function getBlockTypeEditorUrl(blockTypeId: string): string {
   const params = new URLSearchParams(window.location.search);
 
   // Use relative path to material-editor.html
@@ -781,7 +813,7 @@ function selectBlockType(blockType: BlockType) {
 }
 
 function clearBlockType() {
-  blockData.value.blockTypeId = 0;
+  blockData.value.blockTypeId = '';
   loadedBlockType.value = null;
   blockTypeSearch.value = '';
   blockTypeSearchResults.value = [];
@@ -844,7 +876,7 @@ async function loadBlock() {
       blockExists.value = false;
       blockData.value = {
         position: blockCoordinates.value,
-        blockTypeId: 0,
+        blockTypeId: '',
         status: 0,
         metadata: {},
       };
@@ -864,10 +896,8 @@ async function loadBlock() {
         block.metadata = {};
       }
 
-      // Normalize faceVisibility from old object format { value } to number
-      if (block.faceVisibility && typeof block.faceVisibility === 'object' && 'value' in block.faceVisibility) {
-        block.faceVisibility = (block.faceVisibility as any).value;
-      }
+      // Old faceVisibility object format { value } is no longer used,
+      // so we assume faceVisibility is already a numeric bitfield if present.
 
       blockData.value = block;
       originalBlock.value = JSON.parse(JSON.stringify(block));
@@ -994,11 +1024,11 @@ async function saveBlock(closeAfter: boolean = false) {
       cornerHeights: blockData.value.cornerHeights && blockData.value.cornerHeights.length > 0
         ? blockData.value.cornerHeights
         : undefined,
+      rotation: blockData.value.rotation || undefined,
       status: blockData.value.status || 0,
       modifiers: blockData.value.modifiers || undefined,
-      faceVisibility: typeof blockData.value.faceVisibility === 'number'
-        ? blockData.value.faceVisibility
-        : undefined,
+      // faceVisibility is now always stored as a numeric bitfield on the block
+      faceVisibility: blockData.value.faceVisibility,
       metadata: blockData.value.metadata && Object.keys(blockData.value.metadata).length > 0
         ? blockData.value.metadata
         : undefined,
@@ -1016,7 +1046,7 @@ async function saveBlock(closeAfter: boolean = false) {
       throw new Error(errorData.error || 'Failed to save block');
     }
 
-    const result = await response.json();
+//    const result = await response.json();
     blockExists.value = true;
 
     // Reload block to get updated info
@@ -1164,4 +1194,37 @@ const handleJsonApply = (jsonData: any) => {
   // Merge JSON data into blockData, preserving reactive properties
   Object.assign(blockData.value, jsonData);
 };
+
+// Rotation state
+const hasRotation = computed(() => {
+  return blockData.value.rotation !== undefined;
+});
+
+const toggleRotation = (enabled: boolean) => {
+  if (!enabled) {
+    blockData.value.rotation = undefined;
+  } else if (!blockData.value.rotation) {
+    blockData.value.rotation = { x: 0, y: 0 };
+  }
+};
+
+const rotationX = computed({
+  get: () => blockData.value.rotation?.x ?? 0,
+  set: (value: number) => {
+    if (!blockData.value.rotation) {
+      blockData.value.rotation = { x: 0, y: 0 };
+    }
+    blockData.value.rotation.x = value;
+  },
+});
+
+const rotationY = computed({
+  get: () => blockData.value.rotation?.y ?? 0,
+  set: (value: number) => {
+    if (!blockData.value.rotation) {
+      blockData.value.rotation = { x: 0, y: 0 };
+    }
+    blockData.value.rotation.y = value;
+  },
+});
 </script>

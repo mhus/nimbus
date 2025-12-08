@@ -2264,6 +2264,13 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
+        "name" : "faceVisibility",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : "// javaType: Integer"
+      }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",
         "optional" : true,

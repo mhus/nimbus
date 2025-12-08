@@ -1,6 +1,7 @@
 spring:
   application:
     name: WorldLife
+    host: localhost
   data:
     mongodb:
       uri: mongodb://root:example@localhost:27017/world?authSource=admin

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.apache.logging.log4j.util.Strings.isEmpty;
 
 /*
@@ -29,8 +30,11 @@ public class LocationService {
     @Value("${server.port:4092}")
     private int applicationServerPort;
 
+    @Value("${spring.application.host:}")
+    private String applicationServerHost;
+
     @Value("${spring.application.name:}")
-    private String applicationSericeName;
+    private String applicationServiceName;
 
     private String serverIp;
     private Integer serverPort;
@@ -44,6 +48,9 @@ public class LocationService {
     public String getServerIp() {
         if (serverIp == null) {
             serverIp = System.getenv("NIMBUS_SERVER_IP");
+            if (isBlank(serverIp) && !isBlank(applicationServerHost)) {
+                serverIp = applicationServerHost;
+            }
             if (serverIp == null || serverIp.isBlank()) {
                 serverIp = detectRealIpAddress();
             }
@@ -155,7 +162,7 @@ public class LocationService {
         if (meServer == null) {
             meServer = toServer(System.getenv("NIMBUS_SERVICE_NAME"));
             if (meServer == SERVER.UNKNOWN) {
-                meServer = toServer(applicationSericeName);
+                meServer = toServer(applicationServiceName);
             }
         }
         return meServer;
