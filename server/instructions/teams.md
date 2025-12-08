@@ -20,7 +20,7 @@
 - Andere status änderungen werden per redis an alle world-player server geschickt.
 - Siehe instructions/general/network-model-2.0.md
 
-[ ] Teams Managen
+[ ] Teams Management
 - Neue Gruppe anlegen
 - Mitglied einladen
 - Einladung annehmen/ablehnen

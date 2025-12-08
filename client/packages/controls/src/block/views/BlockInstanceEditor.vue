@@ -301,7 +301,7 @@
 
               <!-- Current value display -->
               <div class="text-xs text-base-content/50">
-                Bitfield value: {{ blockData.faceVisibility?.value || 0 }}
+                Bitfield value: {{ typeof blockData.faceVisibility === 'number' ? blockData.faceVisibility : 0 }}
               </div>
             </div>
           </CollapsibleSection>
@@ -445,7 +445,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import type { Block, BlockModifier, BlockType } from '@nimbus/shared';
-import { useModal, ModalSizePreset } from '@/composables/useModal';
+import { useModal } from '@/composables/useModal';
 import { useBlockTypes } from '@/composables/useBlockTypes';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import ErrorAlert from '@/components/ErrorAlert.vue';
@@ -634,14 +634,15 @@ const hasFaceVisibility = computed(() => {
 const toggleFaceVisibility = (enabled: boolean) => {
   if (!enabled) {
     blockData.value.faceVisibility = undefined;
-  } else if (!blockData.value.faceVisibility) {
-    blockData.value.faceVisibility = { value: 63 }; // All faces visible
+  } else if (blockData.value.faceVisibility === undefined || blockData.value.faceVisibility === null) {
+    // All faces visible (6 bits set), FIXED flag off by default
+    blockData.value.faceVisibility = 63;
   }
 };
 
 const isFixedMode = computed(() => {
-  if (!blockData.value.faceVisibility) return false;
-  return (blockData.value.faceVisibility.value & 64) !== 0; // FIXED flag
+  if (typeof blockData.value.faceVisibility !== 'number') return false;
+  return (blockData.value.faceVisibility & 64) !== 0; // FIXED flag
 });
 
 const currentShape = computed(() => {
@@ -863,6 +864,11 @@ async function loadBlock() {
         block.metadata = {};
       }
 
+      // Normalize faceVisibility from old object format { value } to number
+      if (block.faceVisibility && typeof block.faceVisibility === 'object' && 'value' in block.faceVisibility) {
+        block.faceVisibility = (block.faceVisibility as any).value;
+      }
+
       blockData.value = block;
       originalBlock.value = JSON.parse(JSON.stringify(block));
 
@@ -935,24 +941,24 @@ function handleModifierSave(modifier: BlockModifier) {
 
 // Check if specific face is visible
 function isFaceVisible(faceFlag: number): boolean {
-  if (!blockData.value.faceVisibility) return false;
-  return (blockData.value.faceVisibility.value & faceFlag) !== 0;
+  if (typeof blockData.value.faceVisibility !== 'number') return false;
+  return (blockData.value.faceVisibility & faceFlag) !== 0;
 }
 
 // Toggle specific face
 function toggleFace(faceFlag: number) {
-  if (!blockData.value.faceVisibility) {
-    blockData.value.faceVisibility = { value: 0 };
+  if (typeof blockData.value.faceVisibility !== 'number') {
+    blockData.value.faceVisibility = 0;
   }
-  blockData.value.faceVisibility.value ^= faceFlag; // XOR to toggle
+  blockData.value.faceVisibility ^= faceFlag; // XOR to toggle
 }
 
 // Toggle fixed mode
 function toggleFixedMode() {
-  if (!blockData.value.faceVisibility) {
-    blockData.value.faceVisibility = { value: 0 };
+  if (typeof blockData.value.faceVisibility !== 'number') {
+    blockData.value.faceVisibility = 0;
   }
-  blockData.value.faceVisibility.value ^= 64; // Toggle FIXED flag (bit 6)
+  blockData.value.faceVisibility ^= 64; // Toggle FIXED flag (bit 6)
 }
 
 // Save/Delete operations
@@ -990,6 +996,9 @@ async function saveBlock(closeAfter: boolean = false) {
         : undefined,
       status: blockData.value.status || 0,
       modifiers: blockData.value.modifiers || undefined,
+      faceVisibility: typeof blockData.value.faceVisibility === 'number'
+        ? blockData.value.faceVisibility
+        : undefined,
       metadata: blockData.value.metadata && Object.keys(blockData.value.metadata).length > 0
         ? blockData.value.metadata
         : undefined,
