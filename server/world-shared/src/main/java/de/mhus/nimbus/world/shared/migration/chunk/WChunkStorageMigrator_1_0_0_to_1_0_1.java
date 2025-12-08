@@ -35,7 +35,6 @@ public class WChunkStorageMigrator_1_0_0_to_1_0_1 implements SchemaMigrator {
                 "rotationX"
                 ,"rotationY"
                 ,"textures"
-//                ,"autoJump"
         )) return entityJson;
 
         var json = mapper.readTree(entityJson);

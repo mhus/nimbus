@@ -37,7 +37,6 @@ public class WLayerTerrainStorageMigrator_1_0_0_to_1_0_1 implements SchemaMigrat
                 "rotationX"
                 ,"rotationY"
                 ,"textures"
-//                ,"autoJump"
         )) return entityJson;
 
         var json = mapper.readTree(entityJson);
