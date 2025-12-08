@@ -96,7 +96,7 @@ export class SphereRenderer extends BlockRenderer {
     // Offset format for SPHERE:
     // [0-2]: Radius Offset (XYZ) - modifies the radius
     // [3-5]: Displacement (XYZ) - shifts the sphere position
-    const offsets = modifier.visibility.offsets;
+    const offsets = block.block.offsets;
     let radiusOffsetX = 0;
     let radiusOffsetY = 0;
     let radiusOffsetZ = 0;
@@ -167,8 +167,8 @@ export class SphereRenderer extends BlockRenderer {
     }
 
     // Apply rotation if specified (around origin, before translation)
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       // Convert degrees to radians

@@ -71,8 +71,8 @@ export class FlipboxRenderer extends BlockRenderer {
     const scalingX = modifier.visibility.scalingX ?? 1.0;
     const scalingY = modifier.visibility.scalingY ?? 1.0;
     const scalingZ = modifier.visibility.scalingZ ?? 1.0;
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.rotation?.x ?? 0;
+    const rotationY = block.rotation?.y ?? 0;
 
     // Block position
     const pos = block.position;
@@ -85,7 +85,7 @@ export class FlipboxRenderer extends BlockRenderer {
       scalingZ,
       rotationX,
       rotationY,
-      modifier.visibility.offsets
+      block.offsets
     );
 
     // Create separate mesh for this block

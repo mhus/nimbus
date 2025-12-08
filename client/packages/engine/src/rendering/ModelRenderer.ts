@@ -86,7 +86,7 @@ export class ModelRenderer extends BlockRenderer {
     const scalingZ = modifier.visibility?.scalingZ ?? 1.0;
 
     // Get position offset from offsets (first 3 values: XYZ)
-    const offsets = modifier.visibility.offsets;
+    const offsets = block.block.offsets;
     let offsetX = 0;
     let offsetY = 0;
     let offsetZ = 0;
@@ -168,8 +168,8 @@ export class ModelRenderer extends BlockRenderer {
       );
 
       // Apply rotation
-      const rotationX = modifier.visibility.rotation?.x ?? 0;
-      const rotationY = modifier.visibility.rotation?.y ?? 0;
+      const rotationX = block.block.rotation?.x ?? 0;
+      const rotationY = block.block.rotation?.y ?? 0;
 
       if (rotationX !== 0) {
         modelMesh.rotation.x = (rotationX * Math.PI) / 180;

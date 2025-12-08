@@ -84,10 +84,10 @@ export class FlameRenderer extends BlockRenderer {
     let offsetY = 0;
     let offsetZ = 0;
 
-    if (modifier.visibility.offsets && modifier.visibility.offsets.length >= 3) {
-      offsetX = modifier.visibility.offsets[0] || 0;
-      offsetY = modifier.visibility.offsets[1] || 0;
-      offsetZ = modifier.visibility.offsets[2] || 0;
+    if (block.offsets && block.offsets.length >= 3) {
+      offsetX = block.offsets[0] || 0;
+      offsetY = block.offsets[1] || 0;
+      offsetZ = block.offsets[2] || 0;
     }
 
     // Get flame properties from wind modifier (used for flame animation)

@@ -109,7 +109,7 @@ export class CrossRenderer extends BlockRenderer {
     ];
 
     // Apply edge offsets if available (supports all 8 corners like cube)
-    const offsets = modifier.visibility.offsets;
+    const offsets = block.block.offsets;
     if (offsets) {
       for (let i = 0; i < 8 && i * 3 + 2 < offsets.length; i++) {
         const offsetX = offsets[i * 3];
@@ -147,8 +147,8 @@ export class CrossRenderer extends BlockRenderer {
     }
 
     // Apply rotation if specified (after scaling)
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       // Convert degrees to radians

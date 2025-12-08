@@ -79,18 +79,18 @@ export class ItemRenderer extends BlockRenderer {
     // Get transformations with item-specific defaults
     const scalingX = modifier.visibility.scalingX ?? DEFAULT_ITEM_SCALING;
     const scalingY = modifier.visibility.scalingY ?? DEFAULT_ITEM_SCALING;
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.rotation?.x ?? 0;
+    const rotationY = block.rotation?.y ?? 0;
 
     // Get pivot offset (offset[0] shifts the pivot point)
     let pivotOffsetX = 0;
     let pivotOffsetY = 0;
     let pivotOffsetZ = 0;
 
-    if (modifier.visibility.offsets && modifier.visibility.offsets.length >= 3) {
-      pivotOffsetX = modifier.visibility.offsets[0] || 0;
-      pivotOffsetY = modifier.visibility.offsets[1] || 0;
-      pivotOffsetZ = modifier.visibility.offsets[2] || 0;
+    if (block.offsets && block.offsets.length >= 3) {
+      pivotOffsetX = block.offsets[0] || 0;
+      pivotOffsetY = block.offsets[1] || 0;
+      pivotOffsetZ = block.offsets[2] || 0;
     }
 
     // Block position

@@ -165,9 +165,12 @@ export class WallRenderer extends BlockRenderer {
     // (Similar to CubeRenderer - apply to all 32 corners)
 
     const offsets = block.block.offsets;
-    if (offsets && offsets.length >= 24) {
+    if (offsets && offsets.length >= 3) {
       // Apply offsets to outer corners (0-7)
       for (let i = 0; i < 8; i++) {
+        if (!offsets[i * 3] && !offsets[i * 3 + 1] && !offsets[i * 3 + 2]) {
+            continue; // No offset for this corner
+        }
         corners[i][0] += offsets[i * 3] ?? 0;
         corners[i][1] += offsets[i * 3 + 1] ?? 0;
         corners[i][2] += offsets[i * 3 + 2] ?? 0;
@@ -196,8 +199,8 @@ export class WallRenderer extends BlockRenderer {
       }
     }
 
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       const radX = rotationX * Math.PI / 180;

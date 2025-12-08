@@ -80,9 +80,12 @@ export class GlassRenderer extends BlockRenderer {
     ];
 
     // Apply edge offsets if available
-    const offsets = modifier.visibility.offsets;
+    const offsets = block.block.offsets;
     if (offsets) {
       for (let i = 0; i < 8 && i * 3 + 2 < offsets.length; i++) {
+        if (!offsets[i * 3] && !offsets[i * 3 + 1] && !offsets[i * 3 + 2]) {
+          continue; // No offset for this corner
+        }
         const offsetX = offsets[i * 3];
         const offsetY = offsets[i * 3 + 1];
         const offsetZ = offsets[i * 3 + 2];
@@ -115,8 +118,8 @@ export class GlassRenderer extends BlockRenderer {
     }
 
     // Apply rotation
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       const radX = rotationX * Math.PI / 180;

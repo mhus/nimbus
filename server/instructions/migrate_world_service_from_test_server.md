@@ -2824,3 +2824,33 @@ Nochmal der Flow:
 - Wenn layerService.saveTerrainChunk oder layerService.saveModel aufgerufen wird muss danach nicht dirtyChunkService.markChunkDirty
   sondern auch updateChunkAsync() aufgerufen werden.
   - Auch hier muss das lock beachtet werden. Wenn das lock gesetzt ist, dann wird kein update gestartet sondern dirtyChunkService.markChunkDirty
+
+## Push messages (Multi Player Synchronisation)
+
+[ ] Der Client sendet zum Server Messages, die zu anderen clients verteilt werden muessen.
+- Workflow:
+  - Der Server sendet die Messages zu redis, 
+  - redi sendet die messages zu allen world-player servern
+  - jeder world-player server sendet die message an alle sessions die in dem chunk registriert sind.
+  - session sendet die message an den client.
+- Die Funktionalität ohne redis wurde bereits in test_server implementiert.
+- Siehe instructions/general/network-model-2.0.md
+  - "e.p.u" "## Entity Position Update (Client -> Server)"
+    - packages/test_server/src/NimbusServer.ts Methode: handleEntityPositionUpdate()
+      - In dieser implementierung speichert der test_server einfach die position und sie wird an anderer stelle verteilt.
+      - Messages sollen maximal alle 100ms versendet werden (konfigurierbar in application.yaml). Sie keonnen gesammelt versendet werden, ggf. durch einen Service,
+      - packages/test_server/src/NimbusServer.ts Methode: generatePlayerPathways()
+      - wenn sie sich nicht geaendert haben, dann sollen sie nicht versendet werden.
+      - Auch an den Client soll nur maximal alle 100ms gesendet werden (konfigurierbar in application.yaml).
+      - Die entity ist der player name. Davor ist ein "@" Zeichen.
+    - Es wird "e.p" "Entity Chunk Pathway (Server -> Client)" weiter gesendet in dem die bewegung des players definiert wird.
+      - Es koennen mehrere Pathways in einer message gesendet werden. src/main/java/de/mhus/nimbus/generated/types/EntityPathway.java
+      - Die muessen von den world-player/sessions wieder gefiltert werden, auf die chunks die sie registriert haben.
+  - "e.t" "## Effeckt Trigger (Client -> Server)"
+      - Es wird das Package als "e.t" "## Effeckt Trigger (Server -> Client)" an jeden client gesendet
+  - "e.u" "## Effect Update (Client -> Server)"
+    - Es wird das Package als "e.u" "## Effect Update (Server -> Client)" an jeden client gesendet
+
+[ ] Player Entity Names mit '@' vor dem Namen ausliefern
+- Im REST Controller für Entitys soll auch der Player Entity Name mit '@' vor dem Namen ausgeliefert werden.
+- Wird bereits in test_server so gemacht.

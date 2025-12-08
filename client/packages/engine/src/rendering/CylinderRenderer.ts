@@ -98,7 +98,7 @@ export class CylinderRenderer extends BlockRenderer {
     const centerZ = worldZ + size / 2;
 
     // Get offsets from visibility
-    const offsets = modifier.visibility.offsets;
+    const offsets = block.block.offsets;
     let radiusTopX = baseRadius;
     let radiusTopZ = baseRadius;
     let radiusBottomX = baseRadius;
@@ -196,8 +196,8 @@ export class CylinderRenderer extends BlockRenderer {
     }
 
     // Apply rotation if specified
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       // Convert degrees to radians

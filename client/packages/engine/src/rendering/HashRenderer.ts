@@ -141,7 +141,7 @@ export class HashRenderer extends BlockRenderer {
 
     // Apply offsets with face-specific axis constraints
     // Offset array: [x0,y0,z0, x1,y1,z1, ..., x23,y23,z23] (72 values)
-    const offsets = modifier.visibility.offsets;
+    const offsets = block.block.offsets;
     if (offsets) {
       // Top face (0-3): Only X and Z offsets (Y fixed at top)
       for (let i = 0; i < 4 && i * 3 + 2 < offsets.length; i++) {
@@ -211,8 +211,8 @@ export class HashRenderer extends BlockRenderer {
     }
 
     // Apply rotation (after scaling)
-    const rotationX = modifier.visibility.rotation?.x ?? 0;
-    const rotationY = modifier.visibility.rotation?.y ?? 0;
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
 
     if (rotationX !== 0 || rotationY !== 0) {
       const radX = rotationX * Math.PI / 180;

@@ -39,7 +39,7 @@ export class TeamDataCommand extends CommandHandler {
     // Send to client
     context.session.ws.send(
       JSON.stringify({
-        t: 't.d',
+        t: 't.d ',
         d: teamData,
       })
     );
