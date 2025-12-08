@@ -338,7 +338,7 @@ export interface Block {
    */
   offsets?: number[];  // javaType: java.util.List<java.lang.Float>
 
-  rotation?: RotationXY; // javaType: Integer
+  rotation?: RotationXY;
 
   /**
    * Corner heights for sloped/ramped blocks (optional)

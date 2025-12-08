@@ -189,11 +189,30 @@ export function mergeBlockModifier(
     // Not in cache - compute and cache
     const result = performModifierMerge(blockType, status, null);
     modifierCache.set(cacheKey, result);
+
+    // overwrite from block in currentModifier if set
+    if (block.offsets && result.visibility) {
+      result.visibility.offsets = block.offsets;
+    }
+    if (block.rotation && result.visibility) {
+      result.visibility.rotation = block.rotation;
+    }
+
     return result;
   }
 
   // Block has custom modifiers - must merge each time (cannot cache)
-  return performModifierMerge(blockType, status, block.modifiers ?? null);
+  const result = performModifierMerge(blockType, status, block.modifiers ?? null);
+
+  // overwrite from block in currentModifier if set
+  if (block.offsets && result.visibility) {
+    result.visibility.offsets = block.offsets;
+  }
+  if (block.rotation && result.visibility) {
+    result.visibility.rotation = block.rotation;
+  }
+
+  return result;
 }
 
 /**

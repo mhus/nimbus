@@ -14,7 +14,7 @@ import {
   BaseMessage,
   MessageType,
   type Block,
-  getLogger,
+  getLogger, ExceptionHandler,
 } from '@nimbus/shared';
 import { MessageHandler } from '../MessageHandler';
 import type { ChunkService } from '../../services/ChunkService';
@@ -32,34 +32,35 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
   }
 
   async handle(message: BaseMessage<Block[]>): Promise<void> {
-    const blocks = message.d;
+      const blocks = message.d;
 
-    console.error('Received block update message:');
-    console.error(message);
+      console.error('Received block update message:');
+      console.error(message);
 
-    logger.debug('🔵 BLOCK UPDATE MESSAGE RECEIVED (b.u)', {
-      messageType: message.t,
-      blockCount: blocks?.length || 0,
-      rawMessage: message,
-    });
+      logger.debug('🔵 BLOCK UPDATE MESSAGE RECEIVED (b.u)', {
+        messageType: message.t,
+        blockCount: blocks?.length || 0,
+        rawMessage: message,
+      });
 
-    if (!blocks || blocks.length === 0) {
-      logger.warn('Received empty block update');
-      return;
-    }
+      if (!blocks || blocks.length === 0) {
+        logger.warn('Received empty block update');
+        return;
+      }
 
-    logger.debug('Processing block updates', {
-      count: blocks.length,
-      blocks: blocks.map(b => ({
-        position: b.position,
-        blockTypeId: b.blockTypeId,
-        isDelete: b.blockTypeId === '0',
-      })),
-    });
+      logger.debug('Processing block updates', {
+        count: blocks.length,
+        blocks: blocks.map(b => ({
+          position: b.position,
+          blockTypeId: b.blockTypeId,
+          isDelete: b.blockTypeId === '0',
+        })),
+      });
 
-    // Forward to ChunkService (await to ensure BlockTypes are loaded)
-    await this.chunkService.onBlockUpdate(blocks);
+      // Forward to ChunkService (await to ensure BlockTypes are loaded)
+      await this.chunkService.onBlockUpdate(blocks);
 
-    logger.debug('Block updates forwarded to ChunkService');
+      logger.debug('Block updates forwarded to ChunkService');
+
   }
 }

@@ -2261,8 +2261,8 @@
         "type" : "RotationXY",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "Integer",
-        "comment" : "// javaType: Integer"
+        "javaTypeHint" : null,
+        "comment" : null
       }, {
         "name" : "cornerHeights",
         "type" : "[number, number, number, number]",

@@ -10,6 +10,7 @@ import {
   MessageType,
   ChunkDataTransferObject,
   getLogger,
+  ExceptionHandler,
 } from '@nimbus/shared';
 import { MessageHandler } from '../MessageHandler';
 import type { ChunkService } from '../../services/ChunkService';
@@ -27,24 +28,28 @@ export class ChunkMessageHandler extends MessageHandler<ChunkDataTransferObject[
   }
 
   handle(message: BaseMessage<ChunkDataTransferObject[]>): void {
-    const chunks = message.d;
+    try {
+      const chunks = message.d;
 
-    if (!chunks || chunks.length === 0) {
-      logger.debug('Received empty chunk update');
-      return;
+      if (!chunks || chunks.length === 0) {
+        logger.debug('Received empty chunk update');
+        return;
+      }
+
+      logger.debug('Received chunk update', {
+        count: chunks.length,
+        chunks: chunks.map(c => ({
+          cx: c.cx,
+          cz: c.cz,
+          blocks: c.b?.length || 0,
+          items: c.i?.length || 0,
+        })),
+      });
+
+      // Forward to ChunkService
+      this.chunkService.onChunkUpdate(chunks);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ChunkMessageHandler.handle');
     }
-
-    logger.debug('Received chunk update', {
-      count: chunks.length,
-      chunks: chunks.map(c => ({
-        cx: c.cx,
-        cz: c.cz,
-        blocks: c.b?.length || 0,
-        items: c.i?.length || 0,
-      })),
-    });
-
-    // Forward to ChunkService
-    this.chunkService.onChunkUpdate(chunks);
   }
 }

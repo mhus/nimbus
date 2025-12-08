@@ -3,7 +3,9 @@ package de.mhus.nimbus.world.shared.migration.layerterrain;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
 import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.world.shared.migration.chunk.WChunkStorageMigrator_1_0_0_to_1_0_1;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,40 +31,34 @@ public class WLayerTerrainStorageMigrator_1_0_0_to_1_0_1 implements SchemaMigrat
 
     @Override
     public String migrate(String entityJson) throws Exception {
+
+        if (!Strings.CS.containsAny(
+                entityJson,
+                "rotationX"
+                ,"rotationY"
+                ,"textures"
+//                ,"autoJump"
+        )) return entityJson;
+
         var json = mapper.readTree(entityJson);
 
         var blocks = json.get("blocks"); // array of blocks
         if (blocks != null && blocks.isArray()) {
             for (var blockNode : blocks) {
-                var blockBlock = blockNode.get("block"); // obeject block
-                var statusMap = blockNode.get("status"); // object status
-                // every value is modifier
-                if (statusMap != null && statusMap.isObject()) {
-                    var fields = statusMap.fields();
-                    while (fields.hasNext()) {
-                        var entry = fields.next();
-                        var modifierName = entry.getKey();
-                        var modifierValue = entry.getValue();
-                        var visibility = modifierValue.get("visibility");
-                        if (visibility != null && visibility.isObject()) {
-                            var rotationX = visibility.get("rotationX").asDouble(0);
-                            var rotationY = visibility.get("rotationY").asDouble(0);
-                            if (rotationX != 0 || rotationY != 0) {
-                                // Apply rotation to block
-                                var rotationNode = mapper.createObjectNode();
-                                rotationNode.put("x", rotationX);
-                                rotationNode.put("y", rotationY);
-                                ((com.fasterxml.jackson.databind.node.ObjectNode) blockBlock).set("rotation", rotationNode);
-                            }
-                            ((com.fasterxml.jackson.databind.node.ObjectNode) visibility).remove("rotationX");
-                            ((com.fasterxml.jackson.databind.node.ObjectNode) visibility).remove("rotationY");
-                        }
-                    }
-                    // Remove status map
-                    ((com.fasterxml.jackson.databind.node.ObjectNode) blockNode).remove("status");
-                }
+                processLayerTerrainBlock(blockNode, mapper);
             }
         }
         return mapper.writeValueAsString(json);
+    }
+
+    /**
+     * Verarbeitet einen LayerTerrain-Block-Knoten mit dem zusätzlichen 'block'-Knoten
+     */
+    private static void processLayerTerrainBlock(com.fasterxml.jackson.databind.JsonNode blockNode, EngineMapper mapper) {
+        var blockBlockNode = blockNode.get("block");
+        if (blockBlockNode == null) return;
+
+        // Verwende die statischen Methoden aus WChunkStorageMigrator für die eigentliche Verarbeitung
+        WChunkStorageMigrator_1_0_0_to_1_0_1.processBlockModifiers(blockBlockNode, mapper);
     }
 }

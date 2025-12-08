@@ -320,16 +320,7 @@ export class NetworkService {
     try {
       const message: BaseMessage = JSON.parse(event.data);
 
-      // Log ALL incoming messages (especially b.u for debugging)
-      if (message.t === 'b.u') {
-        logger.debug('🔵 INCOMING WebSocket Message: b.u', {
-          type: message.t,
-          dataLength: message.d?.length,
-          rawData: event.data,
-        });
-      } else {
-        logger.debug('Received message', { type: message.t, responseId: message.r });
-      }
+      logger.debug('Received message', { type: message.t, responseId: message.r });
 
       // Handle response to pending request
       if (message.r) {
@@ -345,9 +336,6 @@ export class NetworkService {
       // Route to handlers
       const handlers = this.handlers.get(message.t);
       if (handlers && handlers.length > 0) {
-        if (message.t === 'b.u') {
-          logger.debug(`🔵 Found ${handlers.length} handler(s) for b.u, routing...`);
-        }
         handlers.forEach(handler => {
           try {
             // Support both sync and async handlers

@@ -9,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -265,7 +264,7 @@ class SchemaMigrationServiceTest {
     /**
      * Test implementation of SchemaMigrator.
      */
-    static class TestMigrator implements SchemaMigrator, Comparable<TestMigrator> {
+    static class TestMigrator implements SchemaMigrator {
         private final String entityType;
         private final SchemaVersion fromVersion;
         private final SchemaVersion toVersion;
@@ -317,22 +316,21 @@ class SchemaMigrationServiceTest {
         }
 
         @Override
-        public int compareTo(TestMigrator other) {
+        public int compareTo(SchemaMigrator other) {
             // Compare by entityType first, then by fromVersion, then by toVersion
-            int entityComparison = this.entityType.compareTo(other.entityType);
+            int entityComparison = this.entityType.compareTo(other.getEntityType());
             if (entityComparison != 0) return entityComparison;
 
-            int fromComparison = this.fromVersion.compareTo(other.fromVersion);
+            int fromComparison = this.fromVersion.compareTo(other.getFromVersion());
             if (fromComparison != 0) return fromComparison;
 
-            return this.toVersion.compareTo(other.toVersion);
+            return this.toVersion.compareTo(other.getToVersion());
         }
 
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (!(obj instanceof TestMigrator)) return false;
-            TestMigrator other = (TestMigrator) obj;
+            if (!(obj instanceof TestMigrator other)) return false;
             return entityType.equals(other.entityType) &&
                    fromVersion.equals(other.fromVersion) &&
                    toVersion.equals(other.toVersion);

@@ -877,9 +877,7 @@ export class ChunkService {
    */
   async onBlockUpdate(blocks: Block[]): Promise<void> {
     try {
-      console.log("Blocks Update:")
-      console.log(blocks);
-      logger.debug('🔵 ChunkService.onBlockUpdate called', {
+      logger.debug('ChunkService.onBlockUpdate called', {
         blockCount: blocks.length,
       });
 
@@ -968,13 +966,6 @@ export class ChunkService {
             shape: 0
           };
         }
-        // overwrite from block in currentModifier if set
-        if (block.offsets) {
-            currentModifier.visibility.offsets = block.offsets;
-        }
-        if (block.rotation) {
-            currentModifier.visibility.rotation = block.rotation;
-        }
 
         // Create/update ClientBlock
         const clientBlock: ClientBlock = {
@@ -1032,188 +1023,6 @@ export class ChunkService {
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.onBlockUpdate', {
-        count: blocks.length,
-      });
-    }
-  }
-
-  /**
-   * Handle item block updates from server (called by ItemBlockUpdateHandler)
-   *
-   * Updates individual item blocks in loaded chunks.
-   * - Items with blockTypeId: 0 → remove item (only if an item exists at that position)
-   * - Items with blockTypeId: 1 → add/update item (can overwrite existing items)
-   * - Items can only exist at AIR positions or replace existing items
-   *
-   * @param blocks - Array of item block updates from server
-   */
-  async onItemBlockUpdate(blocks: Block[]): Promise<void> {
-    try {
-      logger.debug('🔵 ChunkService.onItemBlockUpdate called', {
-        itemCount: blocks.length,
-      });
-
-      // Normalize blockTypeId for all blocks (convert legacy numbers to strings)
-      for (const block of blocks) {
-        block.blockTypeId = normalizeBlockTypeId(block.blockTypeId);
-      }
-
-      const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
-      const blockTypeService = this.appContext.services.blockType;
-
-      if (!blockTypeService) {
-        logger.warn('BlockTypeService not available - cannot process item updates');
-        return;
-      }
-
-      // Preload all BlockTypes needed for these updates
-      const blockTypeIds = new Set(
-        blocks
-          .filter(block => block.blockTypeId !== '0') // Skip deletions
-          .map(block => block.blockTypeId)
-      );
-
-      if (blockTypeIds.size > 0) {
-        logger.debug('Preloading BlockTypes for item updates', {
-          uniqueBlockTypes: blockTypeIds.size,
-        });
-        await blockTypeService.preloadBlockTypes(Array.from(blockTypeIds));
-      }
-
-      // Track affected chunks for re-rendering
-      const affectedChunks = new Set<string>();
-
-      for (const block of blocks) {
-        // Calculate chunk coordinates from block position
-        const chunkCoord = worldToChunk(block.position.x, block.position.z, chunkSize);
-        const chunkKey = getChunkKey(chunkCoord.cx, chunkCoord.cz);
-
-        // Get chunk
-        const clientChunk = this.chunks.get(chunkKey);
-        if (!clientChunk) {
-          // Chunk not loaded on client - ignore update
-          logger.debug('Item update for unloaded chunk, ignoring', {
-            position: block.position,
-            cx: chunkCoord.cx,
-            cz: chunkCoord.cz,
-          });
-          continue;
-        }
-
-        // Get position key
-        const posKey = getBlockPositionKey(
-          block.position.x,
-          block.position.y,
-          block.position.z
-        );
-
-        // Get existing block at this position
-        const existingBlock = clientChunk.data.data.get(posKey);
-
-        // Handle deletion (blockTypeId: '0')
-        if (block.blockTypeId === '0') {
-          // Only delete if an item exists at this position (blockTypeId: '1')
-          if (existingBlock && existingBlock.block.blockTypeId === '1') {
-            const wasDeleted = clientChunk.data.data.delete(posKey);
-            if (wasDeleted) {
-              logger.debug('Item deleted', {
-                position: block.position,
-                itemId: block.metadata?.id,
-              });
-              affectedChunks.add(chunkKey);
-            }
-          } else {
-            logger.debug('Item deletion ignored - no item at position or different block type', {
-              position: block.position,
-              existingBlockTypeId: existingBlock?.block.blockTypeId,
-            });
-          }
-          continue;
-        }
-
-        // Handle add/update (blockTypeId: '1')
-        if (block.blockTypeId === '1') {
-          // Check if position is AIR or already has an item
-          const isAir = !existingBlock;
-          const isItem = existingBlock && existingBlock.block.blockTypeId === '1';
-
-          if (!isAir && !isItem) {
-            logger.debug('Item add/update ignored - position occupied by non-item block', {
-              position: block.position,
-              existingBlockTypeId: existingBlock.block.blockTypeId,
-              itemId: block.metadata?.id,
-            });
-            continue;
-          }
-
-          // Get BlockType
-          const blockType = blockTypeService.getBlockType(block.blockTypeId);
-          if (!blockType) {
-            logger.warn('BlockType not found for item update', {
-              blockTypeId: block.blockTypeId,
-              position: block.position,
-            });
-            continue;
-          }
-
-          // Merge block modifiers
-          const currentModifier = mergeBlockModifier(this.appContext, block, blockType, clientChunk.data.statusData.get(posKey));
-
-          // Create/update ClientBlock
-          const clientBlock: ClientBlock = {
-            block,
-            chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
-            blockType,
-            currentModifier,
-            clientBlockType: blockType as any,
-            isVisible: true,
-            isDirty: true,
-            lastUpdate: Date.now(),
-          };
-
-          // Update in chunk
-          clientChunk.data.data.set(posKey, clientBlock);
-
-          // Load audio files for this block (non-blocking - loads in background)
-          this.loadBlockAudio(clientBlock).catch(error => {
-            logger.warn('Failed to load item update audio (non-blocking)', {
-              position: clientBlock.block.position,
-              error: (error as Error).message,
-            });
-          });
-          affectedChunks.add(chunkKey);
-
-          logger.debug('Item added/updated', {
-            position: block.position,
-            itemId: block.metadata?.id,
-            displayName: block.metadata?.displayName,
-            wasUpdate: isItem,
-          });
-        } else {
-          logger.warn('Item block update with unexpected blockTypeId', {
-            blockTypeId: block.blockTypeId,
-            position: block.position,
-          });
-        }
-      }
-
-      // Emit events for affected chunks (triggers re-rendering)
-      for (const chunkKey of affectedChunks) {
-        const chunk = this.chunks.get(chunkKey);
-        if (chunk) {
-          // Mark for re-rendering
-          chunk.isRendered = false;
-          this.emit('chunk:updated', chunk);
-          logger.debug('🔵 Emitting chunk:updated event for items', { chunkKey });
-        }
-      }
-
-      logger.debug('🔵 Item updates applied', {
-        totalItems: blocks.length,
-        affectedChunks: affectedChunks.size,
-      });
-    } catch (error) {
-      ExceptionHandler.handle(error, 'ChunkService.onItemBlockUpdate', {
         count: blocks.length,
       });
     }

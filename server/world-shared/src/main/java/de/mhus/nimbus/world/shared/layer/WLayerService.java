@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class WLayerService {
 
     public static final String STORAGE_SCHEMA = "WLayerTerrainStorage";
-    public static final String STORAGE_SCHEMA_VERSION = "1.0.1";
+    public static final SchemaVersion STORAGE_SCHEMA_VERSION = SchemaVersion.of("1.0.1");
 
     private final WLayerRepository layerRepository;
     private final WLayerTerrainRepository terrainRepository;
@@ -226,9 +226,9 @@ public class WLayerService {
         try (InputStream stream = new ByteArrayInputStream(json.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
             StorageService.StorageInfo storageInfo;
             if (entity.getStorageId() != null) {
-                storageInfo = storageService.update(STORAGE_SCHEMA, SchemaVersion.of(STORAGE_SCHEMA_VERSION), entity.getStorageId(), stream);
+                storageInfo = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, entity.getStorageId(), stream);
             } else {
-                storageInfo = storageService.store(STORAGE_SCHEMA, SchemaVersion.of(STORAGE_SCHEMA_VERSION), worldId, "layer/terrain/" + layerDataId + "/" + chunkKey, stream);
+                storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "layer/terrain/" + layerDataId + "/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Terrain chunk stored: layerDataId={} chunkKey={} storageId={} size={}",

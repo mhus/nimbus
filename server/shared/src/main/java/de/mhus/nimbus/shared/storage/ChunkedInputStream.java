@@ -1,9 +1,11 @@
 package de.mhus.nimbus.shared.storage;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * Custom InputStream that lazy-loads chunks from MongoDB on-demand.
@@ -134,8 +136,21 @@ public class ChunkedInputStream extends InputStream {
      */
     private void loadNextChunk() {
         try {
-            StorageData chunk = repository.findByUuidAndIndex(uuid, currentChunkIndex);
-
+            StorageData chunk = null;
+            try {
+                chunk = repository.findByUuidAndIndex(uuid, currentChunkIndex);
+            } catch (IncorrectResultSizeDataAccessException e) {
+                log.error("Multiple final chunks found for storageId: uuid={}, index={}", uuid, currentChunkIndex, e);
+                // get all
+                List<StorageData> chunks = repository.findAllByUuidAndIndex(uuid, currentChunkIndex);
+                chunks.sort((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()));
+                // get youngest and delete the rest
+                chunk = chunks.removeLast();
+                chunks.forEach(c -> {
+                    log.info("Deleting duplicate final chunk id={} createdAt={}", c.getId(), c.getCreatedAt());
+                    repository.delete(c);
+                });
+            }
             if (chunk == null) {
                 if (currentChunkIndex == 0) {
                     throw new IllegalStateException("No chunks found for uuid: " + uuid);

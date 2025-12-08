@@ -3,6 +3,8 @@ package de.mhus.nimbus.shared.storage;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Repository for StorageData chunks.
  * Provides query methods for chunk-based storage operations.
@@ -45,4 +47,10 @@ public interface StorageDataRepository extends MongoRepository<StorageData, Stri
      * @return Number of chunks
      */
     long countByUuid(String uuid);
+
+    List<StorageData> findAllByUuidAndIsFinalTrue(String storageId);
+
+    List<StorageData> findAllByUuidAndIndex(String uuid, int currentChunkIndex);
+
+    List<StorageData> findAllByUuid(String storageId);
 }

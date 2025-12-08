@@ -32,7 +32,7 @@ import de.mhus.nimbus.shared.service.SchemaVersion;
  * }
  * </pre>
  */
-public interface SchemaMigrator {
+public interface SchemaMigrator extends Comparable<SchemaMigrator> {
 
     /**
      * Returns the entity type this migrator handles.
@@ -93,4 +93,11 @@ public interface SchemaMigrator {
         String migrated = migrate(json);
         return new java.io.ByteArrayInputStream(migrated.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
+
+    default int compareTo(SchemaMigrator other) {
+        int entityComp = this.getEntityType().compareTo(other.getEntityType());
+        if (entityComp != 0) return entityComp;
+        return this.getFromVersion().compareTo(other.getFromVersion());
+    }
+
 }

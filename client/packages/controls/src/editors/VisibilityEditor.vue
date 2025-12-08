@@ -80,7 +80,7 @@
           <span class="label-text text-xs">Rotation X</span>
         </label>
         <input
-          v-model.number="localValue.rotation?.x"
+          v-model.number="localValue.rotation.x"
           type="number"
           class="input input-bordered input-sm"
           placeholder="0"
@@ -91,7 +91,7 @@
           <span class="label-text text-xs">Rotation Y</span>
         </label>
         <input
-          v-model.number="localValue.rotation?.y"
+          v-model.number="localValue.rotation.y"
           type="number"
           class="input input-bordered input-sm"
           placeholder="0"
@@ -1236,4 +1236,14 @@ const toggleFixedMode = () => {
   }
   localValue.value.faceVisibility ^= 64; // Toggle FIXED flag (bit 6)
 };
+
+// ensure rotation object always exists so template v-model bindings are safe
+if (!localValue.value.rotation) {
+  localValue.value.rotation = { x: 0, y: 0, z: 0 } as any;
+} else {
+  // fill missing components with defaults
+  localValue.value.rotation.x ??= 0 as any;
+  localValue.value.rotation.y ??= 0 as any;
+  (localValue.value.rotation as any).z ??= 0;
+}
 </script>

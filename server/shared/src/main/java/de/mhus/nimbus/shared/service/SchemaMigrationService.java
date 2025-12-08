@@ -441,10 +441,12 @@ public class SchemaMigrationService {
             return new MigrationResult(storageId, schema, currentVersion, latestVersion, true, "Migrated successfully");
 
         } catch (MigrationException e) {
+            log.error("Storage migration failed for {}: {}", storageId, e.getMessage(), e);
             // Clean up on error
             cleanupTempFiles(tempFile, currentFile);
             throw e;
         } catch (Exception e) {
+            log.error("Storage migration failed for {}: {}", storageId, e.getMessage(), e);
             // Clean up on error
             cleanupTempFiles(tempFile, currentFile);
             throw new MigrationException("Storage migration failed for " + storageId + ": " + e.getMessage(), e);

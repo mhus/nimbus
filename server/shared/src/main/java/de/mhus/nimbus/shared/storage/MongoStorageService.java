@@ -4,12 +4,14 @@ import de.mhus.nimbus.shared.service.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -170,7 +172,11 @@ public class MongoStorageService extends StorageService {
         if (schemaVersion == null) schemaVersion = SchemaVersion.of(oldChunk.getSchemaVersion());
 
         // delete the old data immediately
-        delete(storageId);
+        List<StorageData> deleteMe = storageDataRepository.findAllByUuid(storageId);
+        deleteMe.forEach(chunk -> {
+            storageDataRepository.delete(chunk);
+        });
+
         // Store new version with same UUID
         StorageInfo newInfo = store(storageId, schema, schemaVersion, worldId, path, stream);
 
@@ -183,22 +189,44 @@ public class MongoStorageService extends StorageService {
             log.error("Cannot get info with null/empty storageId");
             return null;
         }
+        try {
+            StorageData finalChunk = storageDataRepository.findByUuidAndIsFinalTrue(storageId);
 
-        StorageData finalChunk = storageDataRepository.findByUuidAndIsFinalTrue(storageId);
+            if (finalChunk == null) {
+                log.warn("No final chunk found for storageId: {}", storageId);
+                return null;
+            }
 
-        if (finalChunk == null) {
-            log.warn("No final chunk found for storageId: {}", storageId);
-            return null;
+            return new StorageInfo(
+                    storageId,
+                    finalChunk.getSize(),
+                    finalChunk.getCreatedAt(),
+                    finalChunk.getWorldId(),
+                    finalChunk.getPath(),
+                    finalChunk.getSchema(),
+                    SchemaVersion.of(finalChunk.getSchemaVersion())
+            );
+        } catch (IncorrectResultSizeDataAccessException e) {
+            log.error("Multiple final chunks found for storageId: {}", storageId, e);
+            // get all
+            List<StorageData> finalChunks = storageDataRepository.findAllByUuidAndIsFinalTrue(storageId);
+            // sort by created
+            finalChunks.sort((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()));
+            // get youngest and delete the rest
+            var finalChunk = finalChunks.removeLast();
+            finalChunks.forEach(chunk -> {
+                log.info("Deleting duplicate final chunk id={} createdAt={}", chunk.getId(), chunk.getCreatedAt());
+                storageDataRepository.delete(chunk);
+            });
+            return new StorageInfo(
+                    storageId,
+                    finalChunk.getSize(),
+                    finalChunk.getCreatedAt(),
+                    finalChunk.getWorldId(),
+                    finalChunk.getPath(),
+                    finalChunk.getSchema(),
+                    SchemaVersion.of(finalChunk.getSchemaVersion())
+            );
         }
-
-        return new StorageInfo(
-                storageId,
-                finalChunk.getSize(),
-                finalChunk.getCreatedAt(),
-                finalChunk.getWorldId(),
-                finalChunk.getPath(),
-                finalChunk.getSchema(),
-                SchemaVersion.of(finalChunk.getSchemaVersion())
-        );
     }
 }

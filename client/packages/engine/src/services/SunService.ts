@@ -42,7 +42,7 @@ export class SunService {
   private lensFlareEnabled: boolean = true;
   private lensFlareIntensity: number = 1.0;
   private lensFlareColor: Color3 = new Color3(1, 0.9, 0.7); // Warm flare color
-  private lensFlareTexture: string = 'textures/sun/flare.png';
+  private lensFlareTexture: string = 'w/textures/sun/flare.png';
 
   // Sun position parameters
   private currentAngleY: number = 90; // Default: East
@@ -157,7 +157,6 @@ export class SunService {
     logger.debug('SunService initialized', {
       angleY: this.currentAngleY,
       elevation: this.currentElevation,
-      hasCustomTexture: this.appContext.worldInfo?.settings.sunTexture !== undefined,
       lensFlareEnabled: this.lensFlareEnabled,
     });
   }
@@ -243,7 +242,7 @@ export class SunService {
 
     if (this.networkService) {
       try {
-        const texturePath = this.appContext.worldInfo?.settings.sunTexture || 'textures/sun/sun1.png';
+        const texturePath = this.appContext.worldInfo?.settings?.sunTexture || 'w/textures/sun/sun1.png';
         // Load texture from asset server
         const textureUrl = this.networkService.getAssetUrl(texturePath);
         this.sunTexture = new Texture(

@@ -162,7 +162,7 @@ export class CubeRenderer extends BlockRenderer {
 
     // Apply edge offsets if available
     const offsets = modifier.visibility.offsets;
-    if (offsets) {
+    if (offsets && offsets.length >= 24) {
       for (let i = 0; i < 8; i++) {
         const offsetX = offsets[i * 3];
         const offsetY = offsets[i * 3 + 1];
