@@ -1,5 +1,5 @@
 /**
- * Default PlayerInfo configuration
+   * Default PlayerInfo configuration
  *
  * These are the baseline values for player properties.
  * They can be overridden by:

@@ -2827,6 +2827,17 @@ Nochmal der Flow:
 
 ## Push messages (Multi Player Synchronisation)
 
+[ ] Enhance PlayerService
+- Es gibt bereits einen player service in world-player.
+- Er soll erweitert werden um die Player Infos in der Session im redis zu speichern.
+
+[ ] Player Entity Names mit '@' vor dem Namen ausliefern
+- Im REST Controller für Entitys soll auch der Player Entity Name mit '@' vor dem Namen ausgeliefert werden.
+- Wird bereits in test_server so gemacht.
+- Player wird wie eine Entity ausgeleifert.
+- Siehe auch ../client/test_server packages/test_server/src
+
+
 [ ] Der Client sendet zum Server Messages, die zu anderen clients verteilt werden muessen.
 - Workflow:
   - Der Server sendet die Messages zu redis, 
@@ -2850,7 +2861,3 @@ Nochmal der Flow:
       - Es wird das Package als "e.t" "## Effeckt Trigger (Server -> Client)" an jeden client gesendet
   - "e.u" "## Effect Update (Client -> Server)"
     - Es wird das Package als "e.u" "## Effect Update (Server -> Client)" an jeden client gesendet
-
-[ ] Player Entity Names mit '@' vor dem Namen ausliefern
-- Im REST Controller für Entitys soll auch der Player Entity Name mit '@' vor dem Namen ausgeliefert werden.
-- Wird bereits in test_server so gemacht.

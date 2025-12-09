@@ -7,6 +7,7 @@ import de.mhus.nimbus.shared.types.PlayerId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Profile({"test","default"})
 public class LocalPlayerProvider implements PlayerProvider {
 
     @Value("${world.player.data.directory:./data/players}")

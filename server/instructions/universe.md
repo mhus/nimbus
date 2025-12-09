@@ -151,13 +151,6 @@ CharacterInfo:
   - dimensions
   - public key
 
-Neue Pfade
-
-Assets:
-- @G:/assets/{assetId} - geht nach Governor
-- @S:/assets/{assetId} - geht nach Shop
-- assets/{assetId} - geht nach World
-
 
 
 Was alles gespeichert werden muss:
@@ -201,9 +194,8 @@ Was alles gespeichert werden muss:
   abgefragt und alle 5 minuten aktualisiert
 
 - SessionId kann jedes mal im redis direkt abgefragt werden
-- SessionId: <regionId>:<worldId>:<expireTimestamp>:<uuid><uuid>
+- SessionId: uuid
 - expire ist 24 Stunden
-- uuid ohne '-'
 
 Ist die Session weg, muss am Unvierse Server ein neues Access Token erstellt werden
 und ein neues Visum geholt werden. Danach Session ersellen.
@@ -214,7 +206,7 @@ Beim erstellen eines Visums gibt es meherer Wege:
 
 Vorher: 
 - User login
-- Asuwahl Region
+- Auswahl Region
 - Auswahl Character
 
 Visum erstellen:
@@ -227,11 +219,27 @@ Im Visum (wird alles an der Session gemerkt):
 - WorldId
 - EntryPoint
 - ggf Ruckkehr-Punkt
-- Signieryt von Region Server
+- Signiert von Region Server
 
 Oder World Server stellt Visum direkt aus (z.b. bei World Wechsel / teleport)
 - Mit dem Visum wird eine neue Session erstellt und im Redis gespeichert
 - Bei Rückkehr zur main-Welt muss auch wieder ein Visum erstellt werden
+
+## Servers
+
+- universe server
+  - handled die User und Regionen, User in seiner Universe Domain
+  - Login
+- region server
+  - user als Region Domain View - wird angelegt wenn der user accepted ist by region.
+  - handled die Charaktere und deren Daten (inventar, ausstattung, skills, fortschritt)
+  - handled Items
+- world servers
+  - engine spricht nur mit world servers
+  - world-player: Bedient voll den engine client (3d engine)
+  - world-control: Bedient den control client (editing, controls)
+  - world-life: Simuliert life (npc, tiere, pflanzen, wetter, tagezyklus)
+  - world-generate: Generiert die welten (prozedural, vorgefertigt)
 
 ## Zusammenfassung
 

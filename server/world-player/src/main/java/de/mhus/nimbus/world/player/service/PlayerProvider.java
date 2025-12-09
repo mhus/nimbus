@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface PlayerProvider {
 
     Optional<PlayerData> getPlayer(PlayerId playerId, ClientType clientType);
+
 }

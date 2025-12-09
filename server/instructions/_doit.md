@@ -112,10 +112,12 @@ Die koennen im modul shared abgelegt sein.
   - worldId: main
   - worldUid: region:worldId$zone:branch
   - worldInstanceId: region:worldId$zone:branch@instance
-> worldId ist jetzt die volle uid
+> worldId ist jetzt die volle uid, keine separate worldId mehr
 
 [x] Die DirtyChunks updaten und delete storage items (MongoStorageService) muessen synchronisiert werden, damit nicht zwei pods das gleichzeitig machen.
 
 ---
 
 [ ] PlayerInfo bereinigen, 'dimensions' wird nicht mehr benoetgt.
+[ ] DEFAULT_PLAYER_INFO deprecated, nicht mehr noetig. (DefaultPlayerInfo.ts)
+

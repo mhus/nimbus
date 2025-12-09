@@ -1,6 +1,7 @@
 {
   "user": {
-
+    "userId": "ecb",
+    "displayName": "Eric Cross Brooks"
   },
   "character": {
     "publicData": {
@@ -164,6 +165,7 @@
     }
   },
   "settings": {
-
+    "name": "ecb_blade_web_settings"
   }
 }
+
