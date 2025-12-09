@@ -38,19 +38,20 @@ public class EffectUpdateBroadcastListener {
 
     @PostConstruct
     public void subscribeToWorlds() {
-        // Subscribe to "main" world for now
-        subscribeToWorld("main");
+        // Subscribe to ALL worlds using pattern: world:*:e.u
+        redisMessaging.subscribeToAllWorlds("e.u", this::handleEffectUpdate);
+        log.info("Subscribed to effect update events for all worlds (pattern: world:*:e.u)");
     }
 
-    public void subscribeToWorld(String worldId) {
-        redisMessaging.subscribe(worldId, "e.u", (topic, message) -> {
-            handleEffectUpdate(worldId, message);
-        });
-        log.info("Subscribed to effect update events for world: {}", worldId);
-    }
-
-    private void handleEffectUpdate(String worldId, String message) {
+    private void handleEffectUpdate(String topic, String message) {
         try {
+            // Extract worldId from topic: "world:main:e.u" -> "main"
+            String worldId = extractWorldIdFromTopic(topic);
+            if (worldId == null) {
+                log.warn("Could not extract worldId from topic: {}", topic);
+                return;
+            }
+
             JsonNode data = objectMapper.readTree(message);
 
             // Extract metadata
@@ -74,10 +75,11 @@ public class EffectUpdateBroadcastListener {
                 int totalSent = 0;
 
                 for (JsonNode chunkNode : chunks) {
-                    if (!chunkNode.has("x") || !chunkNode.has("z")) continue;
-
-                    int cx = chunkNode.get("x").asInt();
-                    int cz = chunkNode.get("z").asInt();
+                    // Support both "cx"/"cz" and "x"/"z" formats
+                    int cx = chunkNode.has("cx") ? chunkNode.get("cx").asInt() :
+                             chunkNode.has("x") ? chunkNode.get("x").asInt() : 0;
+                    int cz = chunkNode.has("cz") ? chunkNode.get("cz").asInt() :
+                             chunkNode.has("z") ? chunkNode.get("z").asInt() : 0;
 
                     // Broadcast to this chunk
                     int sent = broadcastService.broadcastToWorld(
@@ -98,8 +100,26 @@ public class EffectUpdateBroadcastListener {
         }
     }
 
-    public void unsubscribeFromWorld(String worldId) {
-        redisMessaging.unsubscribe(worldId, "e.u");
-        log.info("Unsubscribed from effect update events for world: {}", worldId);
+    /**
+     * Extract worldId from Redis topic.
+     * Topic format: "world:{worldId}:e.u"
+     *
+     * @param topic Redis topic
+     * @return worldId or null if invalid format
+     */
+    private String extractWorldIdFromTopic(String topic) {
+        if (topic == null || !topic.startsWith("world:")) {
+            return null;
+        }
+        // Remove "world:" prefix
+        String withoutPrefix = topic.substring(6);
+
+        // Find last occurrence of ":e.u" and extract everything before it
+        int lastIndex = withoutPrefix.lastIndexOf(":e.u");
+        if (lastIndex > 0) {
+            return withoutPrefix.substring(0, lastIndex);
+        }
+
+        return null;
     }
 }
