@@ -1,5 +1,8 @@
 package de.mhus.nimbus.world.player.session;
 
+import de.mhus.nimbus.generated.network.ClientType;
+import de.mhus.nimbus.shared.types.PlayerData;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.Data;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -17,16 +20,21 @@ public class PlayerSession {
     private final WebSocketSession webSocketSession;
 
     private String sessionId;
-    private String userId;
+    private PlayerData player;
     private String displayName;
-    private String worldId;
+    private WorldId worldId;
+    private ClientType clientType;
 
-    private boolean authenticated = false;
     private SessionStatus status = SessionStatus.CONNECTED;
 
     private Instant connectedAt;
     private Instant lastPingAt;
     private Instant authenticatedAt;
+
+
+    public boolean isAuthenticated() {
+        return status == SessionStatus.AUTHENTICATED;
+    }
 
     /**
      * Registered chunks (cx, cz coordinates as "cx:cz" format).

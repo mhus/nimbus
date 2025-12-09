@@ -106,7 +106,7 @@ public class UserMovementUpdateHandler implements MessageHandler {
             // Build enriched message with session info and chunk coordinates
             ObjectNode enriched = objectMapper.createObjectNode();
             enriched.put("sessionId", session.getSessionId());
-            enriched.put("userId", session.getUserId());
+            enriched.put("userId", session.getPlayer().user().getUserId());
             enriched.put("displayName", session.getDisplayName());
 
             // Copy original data
@@ -122,7 +122,7 @@ public class UserMovementUpdateHandler implements MessageHandler {
             if (cz != null) enriched.put("cz", cz);
 
             String json = objectMapper.writeValueAsString(enriched);
-            redisMessaging.publish(session.getWorldId(), "u.m", json);
+            redisMessaging.publish(session.getWorldId().getId(), "u.m", json);
 
             log.trace("Published movement update to Redis: worldId={}, sessionId={}",
                     session.getWorldId(), session.getSessionId());

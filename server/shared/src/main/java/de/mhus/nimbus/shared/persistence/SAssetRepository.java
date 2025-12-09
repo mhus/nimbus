@@ -9,14 +9,11 @@ import java.util.Optional;
 @Repository
 public interface SAssetRepository extends MongoRepository<SAsset, String> {
 
-    List<SAsset> findByRegionId(String regionId);
     List<SAsset> findByWorldId(String worldId);
-    List<SAsset> findByRegionIdAndWorldId(String regionId, String worldId);
 
-    Optional<SAsset> findByRegionIdAndPath(String regionId, String path);
-    Optional<SAsset> findByRegionIdAndWorldIdAndPath(String regionId, String worldId, String path);
+    Optional<SAsset> findByWorldIdAndPath(String worldId, String path);
 
-    void deleteByRegionIdAndWorldIdAndPath(String regionId, String worldId, String path);
-    void deleteByRegionIdAndPath(String regionId, String path);
+    void deleteByWorldIdAndPath(String worldId, String path);
+
 }
 

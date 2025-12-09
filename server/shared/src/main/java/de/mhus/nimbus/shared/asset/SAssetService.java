@@ -34,13 +34,11 @@ public class SAssetService {
      * Speichert ein Asset. Entscheidet ob inline oder extern.
      */
     @Transactional
-    public SAsset saveAsset(String regionId, String worldId, String path, InputStream stream, String createdBy) {
-        if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId required");
+    public SAsset saveAsset(String worldId, String path, InputStream stream, String createdBy) {
         if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
         if (stream == null) return null;
 
         SAsset asset = new SAsset();
-        asset.setRegionId(regionId);
         asset.setWorldId(worldId);
         asset.setPath(path);
         asset.setName(extractName(path));
@@ -51,7 +49,7 @@ public class SAssetService {
         StorageService.StorageInfo storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, stream);
         asset.setSize(storageInfo.size());
         asset.setStorageId(storageInfo.id());
-        log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
+        log.debug("Storing asset externally path={} size={} storageId={} world={}", path, storageInfo.size(), storageInfo.id(), worldId);
 
         return repository.save(asset);
     }
@@ -61,14 +59,12 @@ public class SAssetService {
      * Für Import aus test_server mit .info Dateien.
      */
     @Transactional
-    public SAsset saveAsset(String regionId, String worldId, String path, InputStream stream,
+    public SAsset saveAsset(String worldId, String path, InputStream stream,
                            String createdBy, AssetMetadata publicData) {
-        if (regionId == null || regionId.isBlank()) throw new IllegalArgumentException("regionId required");
         if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
         if (stream == null) return null;
 
         SAsset asset = SAsset.builder()
-                .regionId(regionId)
                 .worldId(worldId)
                 .path(path)
                 .name(extractName(path))
@@ -81,7 +77,7 @@ public class SAssetService {
         var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, stream);
         asset.setStorageId(storageInfo.id());
         asset.setSize(storageInfo.size());
-        log.debug("Storing asset externally path={} size={} storageId={} region={} world={}", path, storageInfo.size(), storageInfo.id(), regionId, worldId);
+        log.debug("Storing asset externally path={} size={} storageId={} world={}", path, storageInfo.size(), storageInfo.id(), worldId);
 
         return repository.save(asset);
     }
@@ -92,9 +88,8 @@ public class SAssetService {
         return repository.findByWorldId(worldId);
     }
 
-    public Optional<SAsset> findByPath(String regionId, String worldId, String path) {
-        if (worldId == null) return repository.findByRegionIdAndPath(regionId, path);
-        return repository.findByRegionIdAndWorldIdAndPath(regionId, worldId, path);
+    public Optional<SAsset> findByPath(String worldId, String path) {
+        return repository.findByWorldIdAndPath(worldId, path);
     }
 
     /** Lädt den Inhalt des Assets (inline oder extern). */

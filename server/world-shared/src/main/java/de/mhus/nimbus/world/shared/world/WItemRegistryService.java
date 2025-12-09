@@ -106,16 +106,15 @@ public class WItemRegistryService {
      * Returns only enabled items.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param cx Chunk X coordinate
      * @param cz Chunk Z coordinate
      * @return List of ItemBlockRef objects for the chunk
      */
     @Transactional(readOnly = true)
-    public List<ItemBlockRef> getItemsInChunk(String worldId, String universeId, int cx, int cz) {
+    public List<ItemBlockRef> getItemsInChunk(String worldId, int cx, int cz) {
         String chunk = toChunkKey(cx, cz);
-        List<WItemPosition> positions = repository.findByWorldIdAndUniverseIdAndChunkAndEnabled(
-                worldId, universeId, chunk, true);
+        List<WItemPosition> positions = repository.findByWorldIdAndChunkAndEnabled(
+                worldId, chunk, true);
 
         return positions.stream()
                 .map(WItemPosition::getPublicData)
@@ -128,12 +127,11 @@ public class WItemRegistryService {
      * Returns only enabled items.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @return List of all item positions
      */
     @Transactional(readOnly = true)
-    public List<WItemPosition> getAllItems(String worldId, String universeId) {
-        return repository.findByWorldIdAndUniverseId(worldId, universeId);
+    public List<WItemPosition> getAllItems(String worldId) {
+        return repository.findByWorldId(worldId);
     }
 
     /**
@@ -182,14 +180,13 @@ public class WItemRegistryService {
      * Permanently delete an item position.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param itemId Item identifier
      */
     @Transactional
-    public void hardDeleteItemPosition(String worldId, String universeId, String itemId) {
-        repository.deleteByWorldIdAndUniverseIdAndItemId(worldId, universeId, itemId);
-        log.info("Hard deleted item: world={}, universe={}, itemId={}",
-                worldId, universeId, itemId);
+    public void hardDeleteItemPosition(String worldId, String itemId) {
+        repository.deleteByWorldIdAndItemId(worldId, itemId);
+        log.info("Hard deleted item: world={}, itemId={}",
+                worldId, itemId);
     }
 
     /**
@@ -224,7 +221,7 @@ public class WItemRegistryService {
     @Transactional(readOnly = true)
     public long countItemsInChunk(String worldId, String universeId, int cx, int cz) {
         String chunk = toChunkKey(cx, cz);
-        return repository.findByWorldIdAndUniverseIdAndChunkAndEnabled(
-                worldId, universeId, chunk, true).size();
+        return repository.findByWorldIdAndChunkAndEnabled(
+                worldId, chunk, true).size();
     }
 }

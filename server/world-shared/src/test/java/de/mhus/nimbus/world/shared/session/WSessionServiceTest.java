@@ -36,7 +36,7 @@ class WSessionServiceTest {
         ));
         Mockito.when(template.delete(anyString())).thenReturn(true);
         WSessionService svc = new WSessionService(template, props);
-        WSession session = svc.create("w1","r1","u1","c1", null);
+        WSession session = svc.create("w1","u1:c1", null);
         assertNotNull(session.getId());
         assertEquals(60, session.getId().length());
         assertTrue(Duration.between(Instant.now(), session.getExpireAt()).toMinutes() <= 5);

@@ -62,8 +62,8 @@ public class WorldAssetInfoController extends BaseEditorController {
             return bad("asset path required");
         }
 
-        // Find asset (regionId=worldId, worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(worldId, worldId, path);
+        // Find asset (worldId=worldId)
+        Optional<SAsset> opt = assetService.findByPath(worldId, path);
         if (opt.isEmpty()) {
             // Return empty description if not found (like test_server)
             log.debug("Asset not found for info request: {}", path);
@@ -113,7 +113,7 @@ public class WorldAssetInfoController extends BaseEditorController {
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(worldId, worldId, path);
+            Optional<SAsset> existing = assetService.findByPath(worldId, path);
             if (existing.isEmpty()) {
                 return notFound("asset not found");
             }

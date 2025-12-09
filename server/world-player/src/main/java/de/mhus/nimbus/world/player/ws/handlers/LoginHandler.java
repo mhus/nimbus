@@ -3,14 +3,21 @@ package de.mhus.nimbus.world.player.ws.handlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import de.mhus.nimbus.generated.network.ClientType;
 import de.mhus.nimbus.generated.types.WorldInfo;
+import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
+import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
@@ -34,6 +41,11 @@ public class LoginHandler implements MessageHandler {
     private final ObjectMapper objectMapper;
     private final SessionManager sessionManager;
     private final WWorldService worldService;
+    private final PlayerService playerService;
+    private final WSessionService wSessionService;
+
+    @Value("${world.development.enabled:false}")
+    private boolean applicationDevelopmentEnabled;
 
     @Override
     public String getMessageType() {
@@ -47,50 +59,58 @@ public class LoginHandler implements MessageHandler {
         // Extract login data
         String username = data.has("username") ? data.get("username").asText() : null;
         String password = data.has("password") ? data.get("password").asText() : null;
-        String token = data.has("token") ? data.get("token").asText() : null;
-        String worldId = data.has("worldId") ? data.get("worldId").asText() : null;
-        String clientType = data.has("clientType") ? data.get("clientType").asText() : "web";
+        String worldIdStr = data.has("worldId") ? data.get("worldId").asText() : null;
+        String clientTypeStr = data.has("clientType") ? data.get("clientType").asText() : "web";
         String existingSessionId = data.has("sessionId") ? data.get("sessionId").asText() : null;
 
-        log.info("Login attempt: username={}, token={}, worldId={}, existingSessionId={}",
-                username, token != null ? "***" : null, worldId, existingSessionId);
+        log.info("Login attempt: username={}, worldId={}, existingSessionId={}",
+                username, worldIdStr, existingSessionId);
 
         // Check if world exists
-        String targetWorldId = worldId != null ? worldId : session.getWorldId();
-        WWorld world = worldService.getByWorldId(targetWorldId).orElse(null);
-        if (world == null || world.getPublicData() == null) {
-            log.warn("World not found in database: {}, login failed", targetWorldId);
-            sendLoginResponse(session, message.getI(), false, "World not found: " + targetWorldId, null, null);
+        var worldId = WorldId.of(worldIdStr);
+        if (worldIdStr != null && worldId.isEmpty()) {
+            log.warn("Invalid world ID format: {}, login failed", worldIdStr);
+            sendLoginResponse(session, message.getI(), false, "Invalid world id", null, null);
             return;
         }
 
-        // TODO: Implement real authentication
-        // For now, accept all logins
-        boolean authenticated = true;
-        String userId = username != null ? "user_" + username : "user_" + UUID.randomUUID().toString().substring(0, 8);
-        String displayName = username != null ? username : "Guest";
+        var clientType = ClientType.valueOf(clientTypeStr.trim().toUpperCase());
 
-        if (!authenticated) {
+        WWorld world = worldService.getByWorldId(worldId.get()).orElse(null);
+        if (world == null || world.getPublicData() == null) {
+            log.warn("World not found in database: {}, login failed", worldId);
+            sendLoginResponse(session, message.getI(), false, "World not found: " + worldId, null, null);
+            return;
+        }
+
+        var playerId = PlayerId.of(username);
+        if (playerId.isEmpty()) {
+            log.warn("Invalid player ID format: {}, login failed", username);
+            sendLoginResponse(session, message.getI(), false, "Invalid player", null, null);
+            return;
+        }
+        var player = playerService.getPlayer(playerId.get(), clientType);
+
+        if (applicationDevelopmentEnabled && username != null && password != null) {
+            if (Strings.CS.equals(
+                    password,
+                    player.get().user().getDevelopmentPassword())
+            ) {
+                var newSessionId = wSessionService.create(
+                        worldId.get().toString(),
+                        player.get().character().getPublicData().getPlayerId(),
+                        null
+                ).getId();
+                sessionManager.authenticateSession(session, newSessionId, worldId.get(), player.get(), clientType);
+            }
+        } else {
+            sessionManager.authenticateSession(session, existingSessionId, worldId.get(), player.get(), clientType);
+        }
+
+        if (!session.isAuthenticated()) {
             sendLoginResponse(session, message.getI(), false, "Invalid credentials", null, null);
             return;
         }
-
-        // Determine if this is username/password or token login
-        boolean isUsernamePasswordLogin = username != null && password != null;
-        String sessionId = existingSessionId != null ? existingSessionId : UUID.randomUUID().toString();
-
-        // Update session
-        session.setAuthenticated(true);
-        session.setAuthenticatedAt(Instant.now());
-        session.setUserId(userId);
-        session.setDisplayName(displayName);
-        session.setWorldId(targetWorldId);
-        session.setStatus(PlayerSession.SessionStatus.AUTHENTICATED);
-
-        // Register session ID and sync with Redis
-        // characterId is not set yet - will be set later when character is selected
-        sessionManager.setSessionId(session, sessionId, isUsernamePasswordLogin,
-            targetWorldId, world.getRegionId(), userId, username); // TODO username?
 
         // Use the actual session ID (may have changed for username/password login)
         String actualSessionId = session.getSessionId();
@@ -99,7 +119,7 @@ public class LoginHandler implements MessageHandler {
         sendLoginResponse(session, message.getI(), true, null, actualSessionId, world);
 
         log.info("Login successful: user={}, sessionId={}, worldId={}",
-                displayName, actualSessionId, session.getWorldId());
+                playerId.get(), actualSessionId, worldId.get());
     }
 
     private void sendLoginResponse(PlayerSession session, String requestId, boolean success,
@@ -108,7 +128,7 @@ public class LoginHandler implements MessageHandler {
         data.put("success", success);
 
         if (success) {
-            data.put("userId", session.getUserId());
+            data.put("userId", session.getPlayer().user().getUserId());
             data.put("displayName", session.getDisplayName());
             data.put("sessionId", sessionId);
 

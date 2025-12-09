@@ -88,7 +88,7 @@ export function loadClientConfig(): ClientConfig {
   const config: ClientConfig = {
     username: username!,
     password: password!,
-    websocketUrl: websocketUrl!,
+    websocketUrl: websocketUrl + "/world/" + worldId,
     apiUrl: apiUrl!,
     worldId,
     logToConsole,

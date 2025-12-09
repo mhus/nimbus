@@ -30,16 +30,17 @@ public class RegionSessionController {
     })
     public ResponseEntity<Map<String,Object>> createWaitingSession(@PathVariable String regionId,
                                                                    @RequestParam String worldId,
-                                                                   @RequestParam String userId,
+                                                                   @RequestParam String playerId,
                                                                    @RequestParam(required = false) String characterId) {
+        // TODO validate regionId against worldId
+
         // characterId optional
-        WSession session = sessionService.create(worldId, regionId, userId, characterId, null);
+        WSession session = sessionService.create(worldId, playerId, null);
         return ResponseEntity.ok(Map.of(
                 "id", session.getId(),
                 "status", session.getStatus().name(),
                 "expireAt", session.getExpireAt().toString(),
-                "worldId", session.getWorldId(),
-                "regionId", session.getRegionId()
+                "worldId", session.getWorldId()
         ));
     }
 }

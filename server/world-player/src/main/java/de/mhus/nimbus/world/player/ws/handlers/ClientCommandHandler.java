@@ -151,9 +151,9 @@ public class ClientCommandHandler implements MessageHandler {
 
         // Build context from session
         CommandContext context = CommandContext.builder()
-                .worldId(session.getWorldId())
+                .worldId(session.getWorldId().getId())
                 .sessionId(session.getSessionId())
-                .userId(session.getUserId())
+                .userId(session.getPlayer().user().getUserId())
                 .displayName(session.getDisplayName())
                 .build();
 
@@ -192,9 +192,9 @@ public class ClientCommandHandler implements MessageHandler {
 
         // Build context
         CommandContext context = CommandContext.builder()
-                .worldId(session.getWorldId())
+                .worldId(session.getWorldId().getId())
                 .sessionId(session.getSessionId())
-                .userId(session.getUserId())
+                .userId(session.getPlayer().user().getUserId())
                 .displayName(session.getDisplayName())
                 .build();
 
@@ -208,13 +208,13 @@ public class ClientCommandHandler implements MessageHandler {
             case "world-life":
             case "life":
                 future = worldClientService.sendLifeCommand(
-                        session.getWorldId(), actualCommandName, args, context);
+                        session.getWorldId().getId(), actualCommandName, args, context);
                 break;
 
             case "world-control":
             case "control":
                 future = worldClientService.sendControlCommand(
-                        session.getWorldId(), actualCommandName, args, context);
+                        session.getWorldId().getId(), actualCommandName, args, context);
                 break;
 
             default:

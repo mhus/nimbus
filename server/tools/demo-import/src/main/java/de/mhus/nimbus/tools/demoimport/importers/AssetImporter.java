@@ -83,7 +83,7 @@ public class AssetImporter {
     private void importAsset(File assetFile, String assetPath, ImportStats stats) {
         try {
             // Check if already exists
-            if (service.findByPath("main", "main", assetPath).isPresent()) {
+            if (service.findByPath( "main", assetPath).isPresent()) {
                 log.trace("Asset already exists: {} - skipping", assetPath);
                 stats.incrementSkipped();
                 return;
@@ -115,7 +115,7 @@ public class AssetImporter {
             }
 
             // Save asset with metadata
-            service.saveAsset("main", "main", assetPath, new ByteArrayInputStream(content), "demo-import", metadata);
+            service.saveAsset("main", assetPath, new ByteArrayInputStream(content), "demo-import", metadata);
             stats.incrementSuccess();
 
             if (stats.getSuccessCount() % batchSize == 0) {

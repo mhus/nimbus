@@ -15,9 +15,7 @@ public class WSession {
     private String id; // 60 zufällige alphanumerische Zeichen
     private WSessionStatus status;
     private String worldId;
-    private String regionId;
-    private String userId;
-    private String characterId;
+    private String playerId;
     private String playerUrl; // Internal URL of the world-player service
     private Instant createdAt;
     private Instant updatedAt;

@@ -23,9 +23,7 @@ public class WSessionService {
     private static final String KEY_PREFIX = "wsession:"; // Namespace
     private static final String FIELD_STATUS = "status";
     private static final String FIELD_WORLD = "world";
-    private static final String FIELD_REGION = "region";
     private static final String FIELD_USER = "user";
-    private static final String FIELD_CHARACTER = "character";
     private static final String FIELD_PLAYER_URL = "playerUrl";
     private static final String FIELD_CREATED = "created";
     private static final String FIELD_UPDATED = "updated";
@@ -35,7 +33,7 @@ public class WSessionService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int ID_LENGTH = 60;
 
-    public WSession create(String worldId, String regionId, String userId, String characterId, Duration ttl) {
+    public WSession create(String worldId, String playerId, Duration ttl) {
         String id = randomId();
         Instant now = Instant.now();
         Duration effectiveTtl = ttl != null ? ttl : Duration.ofMinutes(props.getWaitingMinutes());
@@ -44,15 +42,13 @@ public class WSessionService {
                 .id(id)
                 .status(WSessionStatus.WAITING)
                 .worldId(worldId)
-                .regionId(regionId)
-                .userId(userId)
-                .characterId(characterId)
+                .playerId(playerId)
                 .createdAt(now)
                 .updatedAt(now)
                 .expireAt(expire)
                 .build();
         write(session, effectiveTtl);
-        log.debug("WSession erstellt id={} world={} user={} status=WAITING ttl={}min", id, worldId, userId, effectiveTtl.toMinutes());
+        log.debug("WSession erstellt id={} world={} user={} status=WAITING ttl={}min", id, worldId, playerId, effectiveTtl.toMinutes());
         return session;
     }
 
@@ -65,9 +61,7 @@ public class WSessionService {
                     .id(id)
                     .status(WSessionStatus.valueOf((String) map.get(FIELD_STATUS)))
                     .worldId((String) map.get(FIELD_WORLD))
-                    .regionId((String) map.get(FIELD_REGION))
-                    .userId((String) map.get(FIELD_USER))
-                    .characterId((String) map.get(FIELD_CHARACTER))
+                    .playerId((String) map.get(FIELD_USER))
                     .playerUrl((String) map.get(FIELD_PLAYER_URL))
                     .createdAt(Instant.parse((String) map.get(FIELD_CREATED)))
                     .updatedAt(Instant.parse((String) map.get(FIELD_UPDATED)))
@@ -133,9 +127,7 @@ public class WSessionService {
         var k = key(session.getId());
         ops.put(k, FIELD_STATUS, session.getStatus().name());
         ops.put(k, FIELD_WORLD, session.getWorldId());
-        ops.put(k, FIELD_REGION, session.getRegionId());
-        ops.put(k, FIELD_USER, session.getUserId());
-        ops.put(k, FIELD_CHARACTER, session.getCharacterId());
+        ops.put(k, FIELD_USER, session.getPlayerId());
         if (session.getPlayerUrl() != null) {
             ops.put(k, FIELD_PLAYER_URL, session.getPlayerUrl());
         }

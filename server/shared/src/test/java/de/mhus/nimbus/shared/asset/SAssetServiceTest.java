@@ -31,7 +31,7 @@ class SAssetServiceTest {
 
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
 
-        SAsset asset = service.saveAsset("r1", null, "folder/test.txt", stream, "tester");
+        SAsset asset = service.saveAsset(null, "folder/test.txt", stream, "tester");
 
         // Alle Assets sind jetzt extern gespeichert
         assertEquals("STOR-123", asset.getStorageId());
@@ -54,7 +54,7 @@ class SAssetServiceTest {
 
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
 
-        SAsset asset = service.saveAsset("r1", "w1", "folder/big.bin", stream, "tester");
+        SAsset asset = service.saveAsset("w1", "folder/big.bin", stream, "tester");
 
         // Alle Assets sind jetzt extern gespeichert
         assertEquals("STOR-BIG", asset.getStorageId());
@@ -80,7 +80,7 @@ class SAssetServiceTest {
 
         // Initial Asset erstellen
         InputStream initialStream = new ByteArrayInputStream(new byte[100]);
-        SAsset asset = service.saveAsset("r1", null, "file.bin", initialStream, "tester");
+        SAsset asset = service.saveAsset( null, "file.bin", initialStream, "tester");
         assertEquals("STOR-INIT", asset.getStorageId());
 
         // Update mit größerem Content
@@ -106,7 +106,7 @@ class SAssetServiceTest {
         Mockito.when(repo.save(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
 
         InputStream stream = new ByteArrayInputStream(new byte[10]);
-        SAsset asset = service.saveAsset("r1", null, "folder/test.txt", stream, "tester");
+        SAsset asset = service.saveAsset( null, "folder/test.txt", stream, "tester");
 
         Mockito.when(repo.findById(asset.getId())).thenReturn(Optional.of(asset));
         service.disable(asset.getId());
@@ -135,7 +135,7 @@ class SAssetServiceTest {
 
         // Asset erstellen
         InputStream saveStream = new ByteArrayInputStream(testData);
-        SAsset asset = service.saveAsset("r1", "w1", "test.json", saveStream, "tester");
+        SAsset asset = service.saveAsset( "w1", "test.json", saveStream, "tester");
         assertEquals("STOR-LOAD", asset.getStorageId());
 
         // Asset laden und Stream-API testen

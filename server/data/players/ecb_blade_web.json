@@ -1,7 +1,8 @@
 {
   "user": {
     "userId": "ecb",
-    "displayName": "Eric Cross Brooks"
+    "displayName": "Eric Cross Brooks",
+    "developmentPassword": "blade123"
   },
   "character": {
     "publicData": {

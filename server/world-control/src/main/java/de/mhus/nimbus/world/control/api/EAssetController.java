@@ -39,7 +39,7 @@ public class EAssetController {
 
     // DTOs
     public record AssetDto(String id, String path, String name, long size, boolean enabled,
-                           String regionId, String worldId, String storageId,
+                           String worldId, String storageId,
                            String createdBy, Instant createdAt) {}
 
     @GetMapping("/{regionId}/{worldId}/{*path}")
@@ -51,7 +51,7 @@ public class EAssetController {
                                  ) {
         path = normalizePath(path);
         if (blank(regionId) || blank(worldId) || blank(path)) return bad("blank parameter");
-        Optional<SAsset> opt = assetService.findByPath(regionId, worldId, path);
+        Optional<SAsset> opt = assetService.findByPath(worldId, path);
         if (opt.isEmpty()) return notFound("asset not found");
         SAsset a = opt.get();
         AssetDto dto = toDto(a);
@@ -64,7 +64,7 @@ public class EAssetController {
                                      @PathVariable String worldId,
                                      @PathVariable String path) {
         path = normalizePath(path);
-        Optional<SAsset> opt = assetService.findByPath(regionId, worldId, path);
+        Optional<SAsset> opt = assetService.findByPath(worldId, path);
         if (opt.isEmpty()) return notFound("asset not found");
         var stream = assetService.loadContent(opt.get());
         if (stream == null) return ResponseEntity.ok().header(HttpHeaders.CONTENT_LENGTH, "0").body(new byte[0]);
@@ -82,8 +82,8 @@ public class EAssetController {
                                     ) {
         path = normalizePath(path);
         try {
-            if (exists(regionId, worldId, path)) return conflict("asset exists");
-            SAsset saved = assetService.saveAsset(regionId, worldId, path, stream,"editor");
+            if (exists(worldId, path)) return conflict("asset exists");
+            SAsset saved = assetService.saveAsset(worldId, path, stream,"editor");
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
             return bad(e.getMessage());
@@ -101,9 +101,9 @@ public class EAssetController {
                                  InputStream stream
                                  ) {
         path = normalizePath(path);
-        Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
+        Optional<SAsset> existing = assetService.findByPath(worldId, path);
         if (existing.isEmpty()) {
-            SAsset saved = assetService.saveAsset(regionId, worldId, path, stream, "editor");
+            SAsset saved = assetService.saveAsset(worldId, path, stream, "editor");
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         }
         SAsset current = existing.get();
@@ -119,7 +119,7 @@ public class EAssetController {
                                           @PathVariable String path,
                                           @RequestParam Boolean enabled) {
         path = normalizePath(path);
-        Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
+        Optional<SAsset> existing = assetService.findByPath(worldId, path);
         if (existing.isEmpty()) return notFound("asset not found");
         SAsset asset = existing.get();
         boolean current = asset.isEnabled();
@@ -136,19 +136,19 @@ public class EAssetController {
                                     @PathVariable String worldId,
                                     @PathVariable String path) {
         path = normalizePath(path);
-        Optional<SAsset> existing = assetService.findByPath(regionId, worldId, path);
+        Optional<SAsset> existing = assetService.findByPath(worldId, path);
         if (existing.isEmpty()) return notFound("asset not found");
         assetService.delete(existing.get().getId());
         return ResponseEntity.noContent().build();
     }
 
     // Hilfsmethoden
-    private boolean exists(String regionId, String worldId, String path) {
-        return assetService.findByPath(regionId, worldId, path).isPresent();
+    private boolean exists(String worldId, String path) {
+        return assetService.findByPath(worldId, path).isPresent();
     }
     private AssetDto toDto(SAsset a) {
         return new AssetDto(a.getId(), a.getPath(), a.getName(), a.getSize(), a.isEnabled(),
-                a.getRegionId(), a.getWorldId(), a.getStorageId(), a.getCreatedBy(), a.getCreatedAt());
+                a.getWorldId(), a.getStorageId(), a.getCreatedBy(), a.getCreatedAt());
     }
 
     private String normalizePath(String path) {

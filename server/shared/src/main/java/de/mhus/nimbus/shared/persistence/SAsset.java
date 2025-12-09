@@ -21,7 +21,7 @@ import java.time.Instant;
 @Document(collection = "s_assets")
 @ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
-        @CompoundIndex(name = "region_world_path_idx", def = "{ 'regionId': 1, 'worldId': 1, 'path': 1 }", unique = true)
+        @CompoundIndex(name = "region_world_path_idx", def = "{ 'worldId': 1, 'path': 1 }", unique = true)
 })
 @Data
 @Builder
@@ -60,10 +60,6 @@ public class SAsset {
 
     @Builder.Default
     private boolean enabled = true;
-
-    /** Pflicht: Region Identifier. */
-    @Indexed
-    private String regionId;
 
     /** Optional: Welt Identifier. */
     @Indexed

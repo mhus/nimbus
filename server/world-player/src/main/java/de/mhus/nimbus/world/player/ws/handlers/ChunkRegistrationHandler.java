@@ -77,7 +77,7 @@ public class ChunkRegistrationHandler implements MessageHandler {
 
         // Publish chunk registration to Redis for world-life
         if (!newChunks.isEmpty()) {
-            publishChunkRegistrationUpdate(session.getWorldId(), "add", newChunks);
+            publishChunkRegistrationUpdate(session.getWorldId().getId(), "add", newChunks);
         }
 
         // Asynchronously send new chunks to client

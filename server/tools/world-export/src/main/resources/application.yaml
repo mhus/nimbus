@@ -9,7 +9,7 @@ spring:
 # Export configuration
 export:
   # Base path for export files
-  output-path: ${EXPORT_OUTPUT_PATH:./exports/data/demo-world}
+  output-path: ${EXPORT_OUTPUT_PATH:./exports/data/earth616-westview}
 
   # World ID to export (use '*' for all worlds, or specify a worldId like 'main')
   world-id: ${EXPORT_WORLD_ID:*}

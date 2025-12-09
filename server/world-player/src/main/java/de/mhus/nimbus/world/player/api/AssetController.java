@@ -129,10 +129,7 @@ public class AssetController {
 
         // Find asset
         // Try with worldId as regionId first (for main worlds), then fallback to null regionId
-        SAsset asset = assetService.findByPath(worldId, worldId, finalAssetPath)
-                .or(() -> assetService.findByPath(null, worldId, finalAssetPath))
-                .or(() -> assetService.findByPath(worldId, null, finalAssetPath))
-                .or(() -> assetService.findByPath(null, null, finalAssetPath))
+        SAsset asset = assetService.findByPath(worldId, finalAssetPath)
                 .orElse(null);
 
         if (asset == null) {
@@ -174,10 +171,7 @@ public class AssetController {
 
         // Find asset in database
         // Try with worldId as regionId first (for main worlds), then fallback to null regionId
-        SAsset asset = assetService.findByPath(worldId, worldId, finalAssetPath)
-                .or(() -> assetService.findByPath(null, worldId, finalAssetPath))
-                .or(() -> assetService.findByPath(worldId, null, finalAssetPath))
-                .or(() -> assetService.findByPath(null, null, finalAssetPath))
+        SAsset asset = assetService.findByPath(worldId, finalAssetPath)
                 .orElse(null);
 
         if (asset == null) {

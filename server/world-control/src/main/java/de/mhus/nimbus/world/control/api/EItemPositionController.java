@@ -122,16 +122,16 @@ public class EItemPositionController extends BaseEditorController {
 
         // If chunk coordinates provided, filter by chunk
         if (cx != null && cz != null) {
-            List<ItemBlockRef> chunkItems = itemRegistryService.getItemsInChunk(worldId, worldId, cx, cz);
+            List<ItemBlockRef> chunkItems = itemRegistryService.getItemsInChunk(worldId, cx, cz);
             // Convert ItemBlockRef back to WItemPosition for filtering (simplified approach)
-            all = itemRegistryService.getAllItems(worldId, worldId).stream()
+            all = itemRegistryService.getAllItems(worldId).stream()
                     .filter(item -> {
                         String chunkKey = WItemRegistryService.toChunkKey(cx, cz);
                         return chunkKey.equals(item.getChunk());
                     })
                     .collect(Collectors.toList());
         } else {
-            all = itemRegistryService.getAllItems(worldId, worldId);
+            all = itemRegistryService.getAllItems(worldId);
         }
 
         // Apply search filter if provided

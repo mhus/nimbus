@@ -101,7 +101,7 @@ public class ChunkUpdateBroadcastListener {
                 // Include full chunk data
                 ChunkData chunkData = chunkDataOpt.get();
                 ChunkDataTransferObject transferObject = chunkService.toTransferObject(
-                        worldId, "main", chunkData);
+                        worldId, chunkData);
                 chunksArray.add(objectMapper.valueToTree(transferObject));
             }
 

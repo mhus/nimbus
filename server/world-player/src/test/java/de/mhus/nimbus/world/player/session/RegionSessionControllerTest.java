@@ -34,16 +34,15 @@ class RegionSessionControllerTest {
                 .id("X".repeat(60))
                 .status(WSessionStatus.WAITING)
                 .worldId("w1")
-                .regionId("r1")
-                .userId("u1")
+                .playerId("u1:c1")
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .expireAt(Instant.now().plus(Duration.ofMinutes(5)))
                 .build();
-        Mockito.when(sessionService.create("w1","r1","u1", null, null)).thenReturn(mock);
+        Mockito.when(sessionService.create("w1","u1:c1", null)).thenReturn(mock);
         mvc.perform(post("/world/region/r1/session")
                 .param("worldId","w1")
-                .param("userId","u1"))
+                .param("playerId","u1:c1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(mock.getId()))
                 .andExpect(jsonPath("$.regionId").value("r1"))

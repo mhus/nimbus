@@ -6,4 +6,5 @@ import lombok.Data;
 public class PlayerUser {
     private String userId;
     private String displayName;
+    private String developmentPassword;
 }

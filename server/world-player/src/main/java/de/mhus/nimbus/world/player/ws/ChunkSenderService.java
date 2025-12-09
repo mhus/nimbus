@@ -63,7 +63,7 @@ public class ChunkSenderService {
 
             for (ChunkCoord coord : chunks) {
                 String chunkKey = coord.cx() + ":" + coord.cz();
-                chunkService.loadChunkData(session.getWorldId(), chunkKey, true)
+                chunkService.loadChunkData(session.getWorldId().getId(), chunkKey, true)
                         .ifPresentOrElse(
                                 chunkData -> {
                                     // Apply overlays if session is in edit mode
@@ -73,7 +73,7 @@ public class ChunkSenderService {
 
                                     // Convert to transfer object for network transmission (includes items)
                                     ChunkDataTransferObject dto = chunkService.toTransferObject(
-                                            session.getWorldId(), session.getWorldId(), chunkData);
+                                            session.getWorldId().getId(), chunkData);
                                     responseChunks.add(objectMapper.valueToTree(dto));
                                     log.trace("Loaded chunk: cx={}, cz={}, worldId={}, editMode={}, blocks={}",
                                             coord.cx(), coord.cz(), session.getWorldId(),

@@ -75,7 +75,6 @@ public class WorldAssetController extends BaseEditorController {
 
         // Get all assets for this world (regionId=worldId, worldId=worldId)
         List<SAsset> all = assetService.findByWorldId(worldId).stream()
-                .filter(a -> worldId.equals(a.getRegionId()) || a.getRegionId() == null)
                 .collect(Collectors.toList());
 
         // Apply search filter if provided
@@ -156,7 +155,7 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         // Find asset (regionId=worldId, worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(worldId, worldId, path);
+        Optional<SAsset> opt = assetService.findByPath(worldId, path);
         if (opt.isEmpty()) {
             log.warn("Asset not found: worldId={}, path={}", worldId, path);
             return notFound("asset not found");
@@ -223,12 +222,12 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         // Check if asset already exists
-        if (assetService.findByPath(worldId, worldId, path).isPresent()) {
+        if (assetService.findByPath(worldId, path).isPresent()) {
             return conflict("asset already exists");
         }
 
         try {
-            SAsset saved = assetService.saveAsset(worldId, worldId, path, contentStream, "editor");
+            SAsset saved = assetService.saveAsset(worldId, path, contentStream, "editor");
             log.info("Created asset: path={}, size={}", path, saved.getSize());
             return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
         } catch (IllegalArgumentException e) {
@@ -274,7 +273,7 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(worldId, worldId, path);
+            Optional<SAsset> existing = assetService.findByPath(worldId, path);
 
             // Update/create binary content
             if (existing.isPresent()) {
@@ -288,7 +287,7 @@ public class WorldAssetController extends BaseEditorController {
                 }
             } else {
                 // Create new
-                SAsset saved = assetService.saveAsset(worldId, worldId, path, contentStream, "editor");
+                SAsset saved = assetService.saveAsset(worldId, path, contentStream, "editor");
                 log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
                 return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
             }
@@ -331,7 +330,7 @@ public class WorldAssetController extends BaseEditorController {
             return bad("asset path required");
         }
 
-        Optional<SAsset> existing = assetService.findByPath(worldId, worldId, path);
+        Optional<SAsset> existing = assetService.findByPath(worldId, path);
         if (existing.isEmpty()) {
             log.warn("Asset not found for deletion: path={}", path);
             return notFound("asset not found");

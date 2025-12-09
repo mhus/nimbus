@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.player.ws;
 
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.readiness.WebSocketSessionTracker;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
 
         // Create player session
         PlayerSession playerSession = sessionManager.createSession(webSocketSession);
-        playerSession.setWorldId(worldId);
+        playerSession.setWorldId(WorldId.of(worldId).get());
 
         // Send connection confirmation (legacy format for compatibility)
         webSocketSession.sendMessage(new TextMessage(

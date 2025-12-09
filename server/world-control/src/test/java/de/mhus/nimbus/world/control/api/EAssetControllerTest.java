@@ -16,10 +16,10 @@ class EAssetControllerTest {
     @Test
     void testGetNotFound() {
         SAssetService service = Mockito.mock(SAssetService.class);
-        Mockito.when(service.findByPath("reg1", "world1", "path/file.txt")).thenReturn(Optional.empty());
+        Mockito.when(service.findByPath("reg1:world1", "path/file.txt")).thenReturn(Optional.empty());
         EAssetController ctrl = new EAssetController(service);
-        ResponseEntity<?> resp = ctrl.get("reg1", "world1", "path/file.txt");
-        assertEquals(404, resp.getStatusCodeValue());
+        ResponseEntity<?> resp = ctrl.get("reg1", "reg1:world1", "path/file.txt");
+        assertEquals(404, resp.getStatusCode());
     }
 
     @Test
@@ -27,17 +27,16 @@ class EAssetControllerTest {
         SAssetService service = Mockito.mock(SAssetService.class);
         SAsset asset = new SAsset();
         asset.setId("X1");
-        asset.setRegionId("reg1");
         asset.setWorldId("world1");
         asset.setPath("path/file.txt");
         asset.setName("file.txt");
         asset.setCreatedAt(Instant.now());
         asset.setCreatedBy("editor");
         asset.setEnabled(true);
-        Mockito.when(service.findByPath("reg1", "world1", "path/file.txt")).thenReturn(Optional.of(asset));
+        Mockito.when(service.findByPath("reg1:world1", "path/file.txt")).thenReturn(Optional.of(asset));
         EAssetController ctrl = new EAssetController(service);
-        ResponseEntity<?> resp = ctrl.get("reg1", "world1", "path/file.txt");
-        assertEquals(200, resp.getStatusCodeValue());
+        ResponseEntity<?> resp = ctrl.get("reg1", "reg1:world1", "path/file.txt");
+        assertEquals(200, resp.getStatusCode());
     }
 }
 

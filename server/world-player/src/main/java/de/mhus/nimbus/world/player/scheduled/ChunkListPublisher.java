@@ -61,7 +61,7 @@ public class ChunkListPublisher {
 
                 // Get world ID from first authenticated session
                 if (worldId == null && session.getWorldId() != null) {
-                    worldId = session.getWorldId();
+                    worldId = session.getWorldId().getId();
                 }
 
                 // Collect all registered chunks from this session

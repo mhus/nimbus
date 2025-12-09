@@ -47,6 +47,8 @@ public class PlayerId {
     }
 
     public static Optional<PlayerId> of(String id) {
+        if (id == null) return Optional.empty();
+        if (!id.startsWith("@")) id = "@" + id;
         if (!validate(id)) return Optional.empty();
         return Optional.of(new PlayerId(id));
     }

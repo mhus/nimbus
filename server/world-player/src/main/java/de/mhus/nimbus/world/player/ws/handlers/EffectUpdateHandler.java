@@ -79,7 +79,7 @@ public class EffectUpdateHandler implements MessageHandler {
             // Build enriched message with session info
             ObjectNode enriched = objectMapper.createObjectNode();
             enriched.put("sessionId", session.getSessionId());
-            enriched.put("userId", session.getUserId());
+            enriched.put("userId", session.getPlayer().user().getUserId());
             enriched.put("displayName", session.getDisplayName());
 
             // Copy original data
@@ -88,7 +88,7 @@ public class EffectUpdateHandler implements MessageHandler {
             if (originalData.has("variables")) enriched.set("variables", originalData.get("variables"));
 
             String json = objectMapper.writeValueAsString(enriched);
-            redisMessaging.publish(session.getWorldId(), "e.u", json);
+            redisMessaging.publish(session.getWorldId().getId(), "e.u", json);
 
             log.trace("Published effect update to Redis: worldId={}, sessionId={}",
                     session.getWorldId(), session.getSessionId());

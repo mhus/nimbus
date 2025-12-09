@@ -101,12 +101,12 @@ public class EntityInteractionHandler implements MessageHandler {
             }
 
             // Add session/player context
-            message.put("userId", session.getUserId());
+            message.put("userId", session.getPlayer().user().getUserId());
             message.put("sessionId", session.getSessionId());
             message.put("displayName", session.getDisplayName());
 
             String json = objectMapper.writeValueAsString(message);
-            redisMessaging.publish(session.getWorldId(), "e.int", json);
+            redisMessaging.publish(session.getWorldId().getId(), "e.int", json);
 
             log.trace("Published entity interaction to Redis: entityId={}, action={}", entityId, action);
 

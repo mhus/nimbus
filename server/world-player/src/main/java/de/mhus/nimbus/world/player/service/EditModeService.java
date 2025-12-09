@@ -76,7 +76,7 @@ public class EditModeService {
         try {
             // Get overlays from Redis
             Map<Object, Object> overlays = redisService.getOverlayBlocks(
-                    session.getWorldId(),
+                    session.getWorldId().getId(),
                     session.getSessionId(),
                     chunkData.getCx(),
                     chunkData.getCz()
@@ -169,7 +169,7 @@ public class EditModeService {
         }
 
         CommandContext context = CommandContext.builder()
-                .worldId(session.getWorldId())
+                .worldId(session.getWorldId().getId())
                 .sessionId(session.getSessionId())
                 .originServer("world-player")
                 .requestTime(Instant.now())
@@ -177,7 +177,7 @@ public class EditModeService {
 
         // Send cleanup command to world-control (async, fire-and-forget)
         worldClientService.sendControlCommand(
-                session.getWorldId(),
+                session.getWorldId().getId(),
                 "EditModeClosed",
                 List.of(),
                 context

@@ -85,7 +85,7 @@ public class BlockInteractionHandler implements MessageHandler {
         blockUpdates.add(createBlockUpdate(x, y, z, blockTypeId, action));
 
         // Broadcast to all clients in the chunk
-        blockUpdateSender.broadcastToChunk(session.getWorldId(), cx, cz, blockUpdates);
+        blockUpdateSender.broadcastToChunk(session.getWorldId().getId(), cx, cz, blockUpdates);
 
         log.debug("Block interaction: action={}, pos=({}, {}, {}), blockType={}, user={}",
                 action, x, y, z, blockTypeId, session.getDisplayName());

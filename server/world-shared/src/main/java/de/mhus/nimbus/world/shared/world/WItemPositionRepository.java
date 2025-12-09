@@ -38,39 +38,35 @@ public interface WItemPositionRepository extends MongoRepository<WItemPosition, 
      * Find all items in a world.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @return List of all item positions in the world
      */
-    List<WItemPosition> findByWorldIdAndUniverseId(String worldId, String universeId);
+    List<WItemPosition> findByWorldId(String worldId);
 
     /**
      * Check if an item exists.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param itemId Item identifier
      * @return True if item exists
      */
-    boolean existsByWorldIdAndUniverseIdAndItemId(String worldId, String universeId, String itemId);
+    boolean existsByWorldIdAndItemId(String worldId, String itemId);
 
     /**
      * Delete a specific item.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param itemId Item identifier
      */
-    void deleteByWorldIdAndUniverseIdAndItemId(String worldId, String universeId, String itemId);
+    void deleteByWorldIdAndItemId(String worldId, String itemId);
 
     /**
      * Find enabled items in a chunk.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param chunk Chunk key
      * @param enabled Enabled flag
      * @return List of item positions matching criteria
      */
-    List<WItemPosition> findByWorldIdAndUniverseIdAndChunkAndEnabled(
-            String worldId, String universeId, String chunk, boolean enabled);
+    List<WItemPosition> findByWorldIdAndChunkAndEnabled(
+            String worldId, String chunk, boolean enabled);
 }
