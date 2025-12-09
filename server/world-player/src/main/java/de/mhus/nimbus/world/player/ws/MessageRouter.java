@@ -38,7 +38,7 @@ public class MessageRouter {
     public void route(PlayerSession session, TextMessage message) {
         try {
             String payload = message.getPayload();
-            log.debug("Received message from {}: {}", session.getWebSocketSession().getId(),
+            log.trace("Received message from {}: {}", session.getWebSocketSession().getId(),
                      payload.length() > 200 ? payload.substring(0, 200) + "..." : payload);
 
             // Parse network message

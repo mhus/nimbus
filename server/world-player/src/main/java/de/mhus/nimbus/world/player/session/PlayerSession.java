@@ -1,6 +1,9 @@
 package de.mhus.nimbus.world.player.session;
 
 import de.mhus.nimbus.generated.network.ClientType;
+import de.mhus.nimbus.generated.types.ENTITY_POSES;
+import de.mhus.nimbus.generated.types.Rotation;
+import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.WorldId;
 import lombok.Data;
@@ -51,6 +54,18 @@ public class PlayerSession {
      * Edit mode flag - when true, session sees overlay blocks from Redis.
      */
     private boolean editMode = false;
+
+    /**
+     * Entity position tracking for pathway generation.
+     */
+    private Vector3 lastPosition;
+    private Rotation lastRotation;
+    private Vector3 lastVelocity;
+    private ENTITY_POSES lastPose;
+    private Instant lastPositionUpdateAt;
+    private boolean positionChanged;
+    private Integer currentChunkX;
+    private Integer currentChunkZ;
 
     public PlayerSession(WebSocketSession webSocketSession) {
         this.webSocketSession = webSocketSession;
@@ -109,6 +124,82 @@ public class PlayerSession {
 
     private String chunkKey(int cx, int cz) {
         return cx + ":" + cz;
+    }
+
+    /**
+     * Update entity position tracking.
+     * Detects position changes and updates chunk coordinates.
+     *
+     * @param position new position (can be null)
+     * @param rotation new rotation (can be null)
+     * @param velocity new velocity (can be null)
+     * @param pose new pose (can be null)
+     */
+    public void updatePosition(Vector3 position, Rotation rotation, Vector3 velocity, ENTITY_POSES pose) {
+        // Detect position change
+        boolean changed = this.lastPosition == null ||
+                         (position != null && !positionsEqual(this.lastPosition, position));
+
+        this.positionChanged = changed;
+        this.lastPosition = position;
+        this.lastRotation = rotation;
+        this.lastVelocity = velocity;
+        this.lastPose = pose;
+        this.lastPositionUpdateAt = Instant.now();
+
+        // Update chunk coordinates
+        if (position != null) {
+            this.currentChunkX = (int) Math.floor(position.getX() / 16);
+            this.currentChunkZ = (int) Math.floor(position.getZ() / 16);
+        }
+    }
+
+    /**
+     * Check if position update is stale (older than timeout).
+     *
+     * @param timeoutMs timeout in milliseconds
+     * @return true if update is stale or no update exists
+     */
+    public boolean isUpdateStale(long timeoutMs) {
+        if (lastPositionUpdateAt == null) return true;
+        return Instant.now().toEpochMilli() - lastPositionUpdateAt.toEpochMilli() > timeoutMs;
+    }
+
+    /**
+     * Get entity ID in PlayerId format: "@userId:characterId"
+     *
+     * @return entity ID or null if player not set
+     */
+    public String getEntityId() {
+        if (player == null || player.character() == null || player.character().getPublicData() == null) {
+            return null;
+        }
+        // PlayerId is stored in character.publicData.playerId
+        String playerId = player.character().getPublicData().getPlayerId();
+        if (playerId == null) {
+            return null;
+        }
+
+        // Ensure @ prefix is present
+        if (!playerId.startsWith("@")) {
+            return "@" + playerId;
+        }
+        return playerId;
+    }
+
+    /**
+     * Compare two positions with tolerance.
+     *
+     * @param a first position
+     * @param b second position
+     * @return true if positions are equal within tolerance
+     */
+    private boolean positionsEqual(Vector3 a, Vector3 b) {
+        if (a == null || b == null) return false;
+        double threshold = 0.001; // 1mm tolerance
+        return Math.abs(a.getX() - b.getX()) < threshold &&
+               Math.abs(a.getY() - b.getY()) < threshold &&
+               Math.abs(a.getZ() - b.getZ()) < threshold;
     }
 
     public enum SessionStatus {

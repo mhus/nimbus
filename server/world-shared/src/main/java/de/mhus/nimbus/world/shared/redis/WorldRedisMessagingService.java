@@ -49,6 +49,43 @@ public class WorldRedisMessagingService {
         }
     }
 
+    /**
+     * Subscribe to all worlds for a specific channel using pattern matching.
+     * Pattern: "world:*:channel"
+     *
+     * @param channel The channel name (e.g., "e.p", "u.m")
+     * @param handler Handler that receives (topic, message)
+     */
+    public void subscribeToAllWorlds(String channel, BiConsumer<String,String> handler) {
+        String pattern = "world:*:" + channel;
+        if (listeners.containsKey(pattern)) return; // already subscribed
+
+        MessageListener listener = (msg, patternBytes) -> {
+            try {
+                String topic = new String(msg.getChannel());
+                String body = new String(msg.getBody());
+                handler.accept(topic, body);
+            } catch (Exception e) {
+                log.warn("Failed to process redis message on pattern {}: {}", pattern, e.getMessage(), e);
+            }
+        };
+
+        container.addMessageListener(listener, new org.springframework.data.redis.listener.PatternTopic(pattern));
+        listeners.put(pattern, listener);
+        log.info("Subscribed to Redis pattern: {}", pattern);
+    }
+
+    /**
+     * Unsubscribe from pattern subscription for all worlds.
+     */
+    public void unsubscribeFromAllWorlds(String channel) {
+        String pattern = "world:*:" + channel;
+        MessageListener listener = listeners.remove(pattern);
+        if (listener != null) {
+            container.removeMessageListener(listener, new org.springframework.data.redis.listener.PatternTopic(pattern));
+        }
+    }
+
     private String topic(String worldId, String channel) {
         // Use ':' as delimiter to match Redis topic convention and tests
         return "world:" + worldId + ":" + channel;

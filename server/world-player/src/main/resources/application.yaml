@@ -12,6 +12,9 @@ world:
     readiness:
       max-active-sessions: 100
     chunk-publish-interval-ms: 60000  # 1 minute - Periodic chunk list publish interval
+    pathway-broadcast-interval-ms: 100  # Broadcast pathways every 100ms
+    entity-update-timeout-ms: 200  # Skip inactive entities after 200ms
+    pathway-prediction-time-ms: 100  # Predict position 100ms ahead
   client:
     player-base-url: http://localhost:9042
     life-base-url: http://localhost:9044

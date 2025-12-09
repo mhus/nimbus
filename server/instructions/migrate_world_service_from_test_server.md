@@ -2837,7 +2837,7 @@ Nochmal der Flow:
 - Player wird wie eine Entity ausgeleifert.
 - Siehe auch ../client/test_server packages/test_server/src
 
-[ ] Der Client sendet zum Server Messages, die zu anderen clients verteilt werden muessen.
+[?] Der Client sendet zum Server Messages, die zu anderen clients verteilt werden muessen.
 - Workflow:
   - Der Server sendet die Messages zu redis, 
   - redi sendet die messages zu allen world-player servern
