@@ -1,6 +1,6 @@
 package de.mhus.nimbus.shared.storage;
 
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -132,7 +132,7 @@ public class MongoStorageService extends StorageService {
         String path = oldFinalChunk.getPath();
         String worldId = oldFinalChunk.getWorldId();
         if (schema == null) schema = oldFinalChunk.getSchema();
-        if (schemaVersion == null) schemaVersion = SchemaVersion.of(oldFinalChunk.getSchemaVersion());
+        if (schemaVersion == null) schemaVersion = SchemaVersion.create(oldFinalChunk.getSchemaVersion());
 
         // Store new version with new UUID
         StorageInfo newInfo = store(schema, schemaVersion, worldId, path, stream);
@@ -169,7 +169,7 @@ public class MongoStorageService extends StorageService {
         String worldId = oldChunk.getWorldId();
         storageId = oldChunk.getUuid(); // Keep same UUID but be sure to use existing one
         if (schema == null) schema = oldChunk.getSchema();
-        if (schemaVersion == null) schemaVersion = SchemaVersion.of(oldChunk.getSchemaVersion());
+        if (schemaVersion == null) schemaVersion = SchemaVersion.create(oldChunk.getSchemaVersion());
 
         // delete the old data immediately
         List<StorageData> deleteMe = storageDataRepository.findAllByUuid(storageId);
@@ -204,7 +204,7 @@ public class MongoStorageService extends StorageService {
                     finalChunk.getWorldId(),
                     finalChunk.getPath(),
                     finalChunk.getSchema(),
-                    SchemaVersion.of(finalChunk.getSchemaVersion())
+                    SchemaVersion.create(finalChunk.getSchemaVersion())
             );
         } catch (IncorrectResultSizeDataAccessException e) {
             log.error("Multiple final chunks found for storageId: {}", storageId, e);
@@ -225,7 +225,7 @@ public class MongoStorageService extends StorageService {
                     finalChunk.getWorldId(),
                     finalChunk.getPath(),
                     finalChunk.getSchema(),
-                    SchemaVersion.of(finalChunk.getSchemaVersion())
+                    SchemaVersion.create(finalChunk.getSchemaVersion())
             );
         }
     }

@@ -2,6 +2,7 @@ package de.mhus.nimbus.shared.world;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import de.mhus.nimbus.shared.types.WorldKind;
 import org.junit.jupiter.api.Test;
 
 class WorldKindTest {

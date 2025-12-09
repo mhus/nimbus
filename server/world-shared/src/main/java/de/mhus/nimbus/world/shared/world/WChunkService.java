@@ -6,7 +6,7 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.storage.StorageService;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +29,7 @@ import java.util.Optional;
 public class WChunkService {
 
     public static final String STORAGE_SCHEMA = "WChunkStorage";
-    public static final SchemaVersion STORAGE_SCHEMA_VERSION = SchemaVersion.of("1.0.1");
+    public static final SchemaVersion STORAGE_SCHEMA_VERSION = SchemaVersion.create("1.0.1");
 
     private final WChunkRepository repository;
     private final StorageService storageService;

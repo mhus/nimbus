@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.WorldInfo;
-import de.mhus.nimbus.shared.world.WorldKind;
+import de.mhus.nimbus.shared.types.WorldKind;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.Operation;

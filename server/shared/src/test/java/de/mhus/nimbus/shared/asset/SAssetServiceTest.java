@@ -3,7 +3,7 @@ package de.mhus.nimbus.shared.asset;
 import de.mhus.nimbus.shared.persistence.SAsset;
 import de.mhus.nimbus.shared.persistence.SAssetRepository;
 import de.mhus.nimbus.shared.storage.StorageService;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -22,7 +22,7 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-123", 100L, new Date(), "w1", "assets/folder/test.txt", "asset", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-123", 100L, new Date(), "w1", "assets/folder/test.txt", "asset", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         SAssetService service = new SAssetService(repo, storage);
@@ -45,7 +45,7 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-BIG", 200L, new Date(), "w1", "assets/folder/big.bin", "asset", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-BIG", 200L, new Date(), "w1", "assets/folder/big.bin", "asset", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         SAssetService service = new SAssetService(repo, storage);
@@ -68,11 +68,11 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock für initial save
-        StorageService.StorageInfo initialInfo = new StorageService.StorageInfo("STOR-INIT", 100L, new Date(), "w1", "assets/file.bin", "asset", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo initialInfo = new StorageService.StorageInfo("STOR-INIT", 100L, new Date(), "w1", "assets/file.bin", "asset", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(initialInfo);
 
         // Mock für update
-        StorageService.StorageInfo updateInfo = new StorageService.StorageInfo("STOR-UPDATED", 5000000L, new Date(), "w1", "assets/file.bin", "asset", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo updateInfo = new StorageService.StorageInfo("STOR-UPDATED", 5000000L, new Date(), "w1", "assets/file.bin", "asset", SchemaVersion.create("1.0"));
         Mockito.when(storage.update(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(updateInfo);
 
         SAssetService service = new SAssetService(repo, storage);
@@ -99,7 +99,7 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-DISABLE", 10L, new Date(), "w1", "assets/folder/test.txt", "asset", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-DISABLE", 10L, new Date(), "w1", "assets/folder/test.txt", "asset", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         SAssetService service = new SAssetService(repo, storage);
@@ -122,7 +122,7 @@ class SAssetServiceTest {
         StorageService storage = Mockito.mock(StorageService.class);
 
         // Mock für StorageService.store()
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-LOAD", 50L, new Date(), "w1", "assets/test.json", "asset", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STOR-LOAD", 50L, new Date(), "w1", "assets/test.json", "asset", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         // Mock für StorageService.load() - gibt InputStream zurück

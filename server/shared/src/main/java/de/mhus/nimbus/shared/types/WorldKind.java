@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.world;
+package de.mhus.nimbus.shared.types;
 
 import java.util.Objects;
 import java.util.regex.Pattern;

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.shared.persistence;
 
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 
 /**
  * Interface for schema migration implementations.

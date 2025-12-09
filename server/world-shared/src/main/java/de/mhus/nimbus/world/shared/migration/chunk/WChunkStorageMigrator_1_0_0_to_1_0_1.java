@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.shared.migration.chunk;
 
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
@@ -20,12 +20,12 @@ public class WChunkStorageMigrator_1_0_0_to_1_0_1 implements SchemaMigrator {
 
     @Override
     public SchemaVersion getFromVersion() {
-        return SchemaVersion.of("1.0.0");
+        return SchemaVersion.create("1.0.0");
     }
 
     @Override
     public SchemaVersion getToVersion() {
-        return SchemaVersion.of("1.0.1");
+        return SchemaVersion.create("1.0.1");
     }
 
     @Override

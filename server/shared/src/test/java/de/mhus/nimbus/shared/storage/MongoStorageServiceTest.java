@@ -1,6 +1,6 @@
 package de.mhus.nimbus.shared.storage;
 
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +47,7 @@ class MongoStorageServiceTest {
         byte[] testData = "Hello World".getBytes();
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store("test", SchemaVersion.of("1.0"), "w1", testPath, stream);
+        StorageService.StorageInfo result = service.store("test", SchemaVersion.create("1.0"), "w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isNotBlank(); // UUID generated
@@ -78,7 +78,7 @@ class MongoStorageServiceTest {
         }
         InputStream stream = new ByteArrayInputStream(testData);
 
-        StorageService.StorageInfo result = service.store("test", SchemaVersion.of("1.0"), "w1", testPath, stream);
+        StorageService.StorageInfo result = service.store("test", SchemaVersion.create("1.0"), "w1", testPath, stream);
 
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(testData.length);
@@ -91,7 +91,7 @@ class MongoStorageServiceTest {
     void testStoreNullStream() {
         String testPath = "test/file.txt";
 
-        StorageService.StorageInfo result = service.store("test", SchemaVersion.of("1.0"), "w1", testPath, null);
+        StorageService.StorageInfo result = service.store("test", SchemaVersion.create("1.0"), "w1", testPath, null);
 
         assertThat(result).isNull();
         verify(storageDataRepository, never()).save(any(StorageData.class));
@@ -304,7 +304,7 @@ class MongoStorageServiceTest {
         when(storageDataRepository.save(any(StorageData.class)))
                 .thenThrow(new RuntimeException("MongoDB connection failed"));
 
-        assertThatThrownBy(() -> service.store("test", SchemaVersion.of("1.0"), "w1", testPath, stream))
+        assertThatThrownBy(() -> service.store("test", SchemaVersion.create("1.0"), "w1", testPath, stream))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to store file");
     }

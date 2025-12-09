@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region.world;
 
-import de.mhus.nimbus.shared.world.WorldKind;
+import de.mhus.nimbus.shared.types.WorldKind;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

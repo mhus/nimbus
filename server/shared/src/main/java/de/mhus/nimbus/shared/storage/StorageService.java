@@ -1,9 +1,8 @@
 package de.mhus.nimbus.shared.storage;
 
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Date;
 
 /**

@@ -2,6 +2,7 @@ package de.mhus.nimbus.shared.service;
 
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
 import de.mhus.nimbus.shared.storage.StorageService;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service for managing and executing schema migrations on MongoDB entities.
@@ -194,7 +194,7 @@ public class SchemaMigrationService {
             return SchemaVersion.NULL;
         }
 
-        return SchemaVersion.of(entityJson.substring(valueStart + 1, valueEnd));
+        return SchemaVersion.create(entityJson.substring(valueStart + 1, valueEnd));
     }
 
     /**

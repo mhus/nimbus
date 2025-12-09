@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.control.commands;
 
 import de.mhus.nimbus.shared.service.MongoRawDocumentService;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;
@@ -107,7 +107,7 @@ public class MigrateSchemaCommand implements Command {
         String collectionName = args.get(0);
         String idOrPattern = args.get(1);
         String entityType = args.get(2);
-        SchemaVersion targetVersion = SchemaVersion.of(args.get(3));
+        SchemaVersion targetVersion = SchemaVersion.create(args.get(3));
 
         log.info("Starting schema migration for collection '{}', pattern '{}', entity '{}', target version '{}'",
                 collectionName, idOrPattern, entityType, targetVersion);
@@ -249,7 +249,7 @@ public class MigrateSchemaCommand implements Command {
                 String documentId = rawDocumentService.extractDocumentId(documentJson);
 
                 // Migrate document (starting from version "0")
-                SchemaVersion currentVersion = SchemaVersion.of("0"); // Documents without schema start at version 0
+                SchemaVersion currentVersion = SchemaVersion.create("0"); // Documents without schema start at version 0
                 String migratedJson = migrationService.migrate(documentJson, entityType, targetVersion, currentVersion);
 
                 // Save migrated document
@@ -297,25 +297,25 @@ public class MigrateSchemaCommand implements Command {
         // Look for _schema field
         int schemaIndex = documentJson.indexOf("\"_schema\"");
         if (schemaIndex == -1) {
-            return SchemaVersion.of("0"); // Default to version 0 if no schema field
+            return SchemaVersion.create("0"); // Default to version 0 if no schema field
         }
 
         int valueStart = documentJson.indexOf("\"", schemaIndex + 10);
         if (valueStart == -1) {
-            return SchemaVersion.of("0");
+            return SchemaVersion.create("0");
         }
 
         int valueEnd = documentJson.indexOf("\"", valueStart + 1);
         if (valueEnd == -1) {
-            return SchemaVersion.of("0");
+            return SchemaVersion.create("0");
         }
 
         String versionString = documentJson.substring(valueStart + 1, valueEnd);
         try {
-            return SchemaVersion.of(versionString);
+            return SchemaVersion.create(versionString);
         } catch (Exception e) {
             log.warn("Invalid schema version '{}' in document, defaulting to 0", versionString);
-            return SchemaVersion.of("0");
+            return SchemaVersion.create("0");
         }
     }
 }

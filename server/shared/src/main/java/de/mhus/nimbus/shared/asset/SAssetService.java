@@ -3,7 +3,7 @@ package de.mhus.nimbus.shared.asset;
 import de.mhus.nimbus.shared.persistence.AssetMetadata;
 import de.mhus.nimbus.shared.persistence.SAsset;
 import de.mhus.nimbus.shared.persistence.SAssetRepository;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.shared.storage.StorageService;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class SAssetService {
 
     public static final String STORAGE_SCHEMA = "SAssetStorage";
-    public static final SchemaVersion STORAGE_SCHEMA_VERSION = SchemaVersion.of("1.0.0");
+    public static final SchemaVersion STORAGE_SCHEMA_VERSION = SchemaVersion.create("1.0.0");
 
     private final SAssetRepository repository;
     private final StorageService storageService; // optional injected

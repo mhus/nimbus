@@ -2,7 +2,7 @@ package de.mhus.nimbus.shared.api;
 
 import de.mhus.nimbus.shared.service.MongoRawDocumentService;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -358,6 +358,6 @@ public class SchemaMigrationController {
             return SchemaVersion.NULL;
         }
 
-        return SchemaVersion.of(documentJson.substring(valueStart + 1, valueEnd));
+        return SchemaVersion.create(documentJson.substring(valueStart + 1, valueEnd));
     }
 }

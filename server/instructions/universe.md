@@ -182,9 +182,9 @@ Was alles gespeichert werden muss:
 - starId: galaxy coordinate: komma getrennte werte einer funktion, die den stern im galaxie gitter beschreibt
 - planetId: planetNr von innen\[,mond Nr von Innen\]
 
-- worldId: main
-- worldUid: region:worldId/zone:branch - wird im world-player und world-control als weltId in Rest pfaden verwendet
-- worldInstanceId: region:worldId/zone:branch@instance
+- regionId: main \[0-9a-zA-Z_-]{1,64}
+- worldName: main \[0-9a-zA-Z_-]{1,64}
+- worldId: regionId:worldName\[:zone\]\[@branch\][#instance\]
 
 ## Tokens und Access
 

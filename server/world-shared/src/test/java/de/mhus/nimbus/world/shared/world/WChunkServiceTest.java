@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.shared.storage.StorageService;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -20,7 +20,7 @@ public class WChunkServiceTest {
         WItemRegistryService itemRegistryService = Mockito.mock(WItemRegistryService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STORAGE-ID", 100L, new java.util.Date(), "w1", "chunk/c1", "chunk", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STORAGE-ID", 100L, new java.util.Date(), "w1", "chunk/c1", "chunk", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         WChunkService service = new WChunkService(repo, storage, worldService, itemRegistryService);
@@ -47,7 +47,7 @@ public class WChunkServiceTest {
         WItemRegistryService itemRegistry = Mockito.mock(WItemRegistryService.class);
 
         // Mock StorageService.store() um StorageInfo zurückzugeben
-        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STORAGE-ID-2", 200L, new java.util.Date(), "w1", "chunk/c2", "chunk", SchemaVersion.of("1.0"));
+        StorageService.StorageInfo storageInfo = new StorageService.StorageInfo("STORAGE-ID-2", 200L, new java.util.Date(), "w1", "chunk/c2", "chunk", SchemaVersion.create("1.0"));
         Mockito.when(storage.store(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(storageInfo);
 
         WChunkService service = new WChunkService(repo, storage, worldService, itemRegistry);

@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.shared.migration;
 
 import de.mhus.nimbus.shared.persistence.SchemaMigrator;
-import de.mhus.nimbus.shared.service.SchemaVersion;
+import de.mhus.nimbus.shared.types.SchemaVersion;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,12 +18,12 @@ public class StorageDataMigrator_0_to_1_0_0 implements SchemaMigrator {
 
     @Override
     public SchemaVersion getFromVersion() {
-        return SchemaVersion.of("0");
+        return SchemaVersion.create("0");
     }
 
     @Override
     public SchemaVersion getToVersion() {
-        return SchemaVersion.of("1.0.0");
+        return SchemaVersion.create("1.0.0");
     }
 
     @Override

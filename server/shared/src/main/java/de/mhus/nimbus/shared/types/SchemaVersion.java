@@ -1,12 +1,19 @@
-package de.mhus.nimbus.shared.service;
+package de.mhus.nimbus.shared.types;
 
 import lombok.Getter;
 import org.apache.logging.log4j.util.Strings;
 
+import java.util.Optional;
+
+/**
+ * SchemaVersion represents a version in the format "major[.minor[.patch]]".
+ * The default value is "0.0.0". Even for the parts that are not specified.
+ * Negative is not allowed.
+ */
 @Getter
 public class SchemaVersion implements Comparable<SchemaVersion> {
 
-    public static final SchemaVersion NULL = SchemaVersion.of("0");
+    public static final SchemaVersion NULL = SchemaVersion.create("0");
 
     private int major = 0;
     private int minor = 0;
@@ -38,8 +45,26 @@ public class SchemaVersion implements Comparable<SchemaVersion> {
                 this.patch == otherVersion.patch;
     }
 
-    public static SchemaVersion of(String version) {
+    public static SchemaVersion create(String version) {
         return new SchemaVersion(version);
+    }
+
+    public static Optional<SchemaVersion> of(String version) {
+        if (!validate(version)) return Optional.empty();
+        return Optional.of(new SchemaVersion(version));
+    }
+
+    public static boolean validate(String version) {
+        if (Strings.isBlank(version)) return false;
+//        String[] parts = version.trim().split("\\.", 3);
+//        for (String part : parts) {
+//            try {
+//                if (Integer.parseInt(part) < 0) return false;
+//            } catch (NumberFormatException e) {
+//                return false;
+//            }
+//        }
+        return version.matches("\\d+(\\.\\d+)?(\\.\\d+)?");
     }
 
     @Override
