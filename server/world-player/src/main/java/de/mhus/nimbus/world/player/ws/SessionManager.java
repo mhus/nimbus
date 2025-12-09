@@ -195,9 +195,12 @@ public class SessionManager {
         session.setWorldId(worldId);
         session.setClientType(clientType);
         session.setStatus(PlayerSession.SessionStatus.AUTHENTICATED);
+        session.setSessionId(worldSession.getId());
 
         // register session
         wSessionService.updateStatus(worldSessionId, WSessionStatus.RUNNING);
+        wSessionService.updatePlayerUrl(worldSessionId, locationService.getInternalServerUrl());
+
         sessionsBySessionId.put(worldSessionId, session);
 
     }
