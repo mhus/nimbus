@@ -24,5 +24,5 @@ public class ScrawlScript {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.Map<String, ScrawlSequence> sequences;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private ScrawlStep root;
+    private java.util.Map<Object, Object> root;
 }

@@ -20,7 +20,6 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/world/itemtypes")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "ItemTypes", description = "ItemType templates for items and inventory")
@@ -28,45 +27,60 @@ public class ItemTypeController {
 
     private final WItemTypeService service;
 
-    @GetMapping("/{itemType}")
+    /**
+     * Get ItemType by type.
+     * GET /api/worlds/{worldId}/itemtypes/{itemType}
+     */
+    @GetMapping("/api/worlds/{worldId}/itemtypes/{itemType}")
     @Operation(summary = "Get ItemType by type", description = "Returns ItemType template for a specific item type")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "ItemType found"),
             @ApiResponse(responseCode = "404", description = "ItemType not found")
     })
-    public ResponseEntity<?> getItemType(@PathVariable String itemType) {
+    public ResponseEntity<?> getItemType(
+            @PathVariable String worldId,
+            @PathVariable String itemType) {
+
+        log.debug("GET itemType: worldId={}, itemType={}", worldId, itemType);
+
+        if (worldId == null || worldId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "worldId is required"));
+        }
+
+        if (itemType == null || itemType.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "itemType is required"));
+        }
+
         return service.findByItemType(itemType)
                 .map(WItemType::getPublicData)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    log.warn("ItemType not found: worldId={}, itemType={}", worldId, itemType);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
-    @GetMapping
-    @Operation(summary = "Get all ItemTypes", description = "Returns all enabled ItemType templates, optionally filtered")
+    /**
+     * Get all ItemTypes for a world.
+     * GET /api/worlds/{worldId}/itemtypes
+     */
+    @GetMapping("/api/worlds/{worldId}/itemtypes")
+    @Operation(summary = "Get all ItemTypes", description = "Returns all enabled ItemType templates for a world")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of ItemTypes")
     })
-    public ResponseEntity<?> getAllItemTypes(
-            @RequestParam(required = false) String regionId,
-            @RequestParam(required = false) String worldId) {
+    public ResponseEntity<?> getAllItemTypes(@PathVariable String worldId) {
 
-        List<ItemType> itemTypes;
+        log.debug("GET all itemTypes: worldId={}", worldId);
 
-        if (regionId != null && !regionId.isBlank()) {
-            itemTypes = service.findByRegionId(regionId).stream()
-                    .filter(WItemType::isEnabled)
-                    .map(WItemType::getPublicData)
-                    .toList();
-        } else if (worldId != null && !worldId.isBlank()) {
-            itemTypes = service.findByWorldId(worldId).stream()
-                    .filter(WItemType::isEnabled)
-                    .map(WItemType::getPublicData)
-                    .toList();
-        } else {
-            itemTypes = service.findAllEnabled().stream()
-                    .map(WItemType::getPublicData)
-                    .toList();
+        if (worldId == null || worldId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "worldId is required"));
         }
+
+        List<ItemType> itemTypes = service.findByWorldId(worldId).stream()
+                .filter(WItemType::isEnabled)
+                .map(WItemType::getPublicData)
+                .toList();
 
         return ResponseEntity.ok(Map.of(
                 "itemTypes", itemTypes,

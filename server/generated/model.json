@@ -950,8 +950,8 @@
         "type" : "ScrawlStep",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "java.util.Map<Object,Object>",
+        "comment" : "// javaType: java.util.Map<Object,Object>"
       } ],
       "methods" : [ ]
     }, {

@@ -55,7 +55,7 @@ export interface ScrawlScript {
   sequences?: Record<string, ScrawlSequence>;
 
   /** Root step (for simple scripts) or reference to main sequence */
-  root?: ScrawlStep;
+  root?: ScrawlStep; // javaType: java.util.Map<Object,Object>
 }
 
 /**
