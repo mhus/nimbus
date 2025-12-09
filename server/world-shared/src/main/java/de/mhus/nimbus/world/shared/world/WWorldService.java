@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.WorldInfo;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,11 @@ import java.util.Optional;
 public class WWorldService {
 
     private final WWorldRepository repository;
+
+    @Transactional(readOnly = true)
+    public Optional<WWorld> getByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
+    }
 
     @Transactional(readOnly = true)
     public Optional<WWorld> getByWorldId(String worldId) {

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.control.api;
 
-import de.mhus.nimbus.shared.types.WorldKind;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -44,10 +45,10 @@ public class UserWorldEditorController {
         @ApiResponse(responseCode = "403", description = "Kein Zugriff"),
         @ApiResponse(responseCode = "404", description = "Nicht gefunden")
     })
-    public ResponseEntity<?> get(@RequestParam String worldId, HttpServletRequest req) {
+    public ResponseEntity<?> get(@RequestParam String worldIdStr, HttpServletRequest req) {
         String userId = currentUserId(req);
         if (userId == null) return unauthorized();
-        Optional<WWorld> opt = worldService.getByWorldId(worldId);
+        Optional<WWorld> opt = worldService.getByWorldId(worldIdStr);
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","world not found"));
         WWorld w = opt.get();
         // Zugriff: Owner darf immer; publicFlag erlaubt Zugriff; andere nicht
@@ -70,16 +71,16 @@ public class UserWorldEditorController {
         String userId = currentUserId(http);
         if (userId == null) return unauthorized();
         if (req.worldId() == null || req.worldId().isBlank()) return bad("worldId blank");
-        WorldKind kind;
-        try { kind = WorldKind.of(req.worldId()); } catch (IllegalArgumentException e) { return bad(e.getMessage()); }
-        if (kind.isMain()) return bad("world must not be main (needs zone or branch)");
+        WorldId worldId;
+        try { worldId = WorldId.of(req.worldId()).get(); } catch (NoSuchElementException e) { return bad(e.getMessage()); }
+        if (worldId.isMain()) return bad("world must not be main (needs zone or branch)");
         // Haupt-Welt laden
-        Optional<WWorld> mainOpt = worldService.getByWorldId(kind.worldId());
-        if (mainOpt.isEmpty()) return bad("main world not found: " + kind.worldId());
+        Optional<WWorld> mainOpt = worldService.getByWorldId(worldId);
+        if (mainOpt.isEmpty()) return bad("main world not found: " + worldId);
         WWorld main = mainOpt.get();
         if (!main.getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not an owner of main world"));
         try {
-            WWorld created = worldService.createWorld(req.worldId(), main.getPublicData(), main.getWorldId(), kind.isBranch() ? kind.branch() : null, req.enabled());
+            WWorld created = worldService.createWorld(req.worldId(), main.getPublicData(), main.getWorldId(), worldId.isBranch() ? worldId.getBranch() : null, req.enabled());
             // publicFlag separat updaten falls gesetzt
             if (req.publicFlag() != null || req.enabled() != null) {
                 worldService.updateWorld(created.getWorldId(), w -> {
@@ -103,27 +104,27 @@ public class UserWorldEditorController {
         @ApiResponse(responseCode = "403", description = "Kein Zugriff"),
         @ApiResponse(responseCode = "404", description = "Nicht gefunden")
     })
-    public ResponseEntity<?> update(@RequestParam String worldId, @RequestBody UpdateChildWorldRequest req, HttpServletRequest http) {
+    public ResponseEntity<?> update(@RequestParam String worldIdStr, @RequestBody UpdateChildWorldRequest req, HttpServletRequest http) {
         String userId = currentUserId(http);
         if (userId == null) return unauthorized();
-        WorldKind kind;
-        try { kind = WorldKind.of(worldId); } catch (IllegalArgumentException e) { return bad(e.getMessage()); }
-        if (kind.isMain()) return bad("cannot update main world here");
-        Optional<WWorld> opt = worldService.getByWorldId(worldId);
+        WorldId worldId;
+        try { worldId = WorldId.of(worldIdStr).get(); } catch (NoSuchElementException e) { return bad(e.getMessage()); }
+        if (worldId.isMain()) return bad("cannot update main world here");
+        Optional<WWorld> opt = worldService.getByWorldId(worldIdStr);
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","world not found"));
         WWorld existing = opt.get();
         // parent prüfen (sollte worldId des main sein)
-        if (existing.getParent() == null || !existing.getParent().equals(kind.worldId())) return bad("world has invalid parent");
-        Optional<WWorld> mainOpt = worldService.getByWorldId(kind.worldId());
-        if (mainOpt.isEmpty()) return bad("main world not found: " + kind.worldId());
+        if (existing.getParent() == null || !existing.getParent().equals(worldId.getId())) return bad("world has invalid parent");
+        Optional<WWorld> mainOpt = worldService.getByWorldId(worldId.getId());
+        if (mainOpt.isEmpty()) return bad("main world not found: " + worldId);
         if (!mainOpt.get().getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not owner of main world"));
-        worldService.updateWorld(worldId, w -> {
+        worldService.updateWorld(worldIdStr, w -> {
             if (req.enabled() != null) w.setEnabled(req.enabled());
             if (req.publicFlag() != null) w.setPublicFlag(req.publicFlag());
             if (req.editor() != null) w.setEditor(req.editor());
             if (req.player() != null) w.setPlayer(req.player());
         });
-        WWorld updated = worldService.getByWorldId(worldId).orElse(existing);
+        WWorld updated = worldService.getByWorldId(worldIdStr).orElse(existing);
         return ResponseEntity.ok(worldToMap(updated));
     }
 
@@ -137,18 +138,18 @@ public class UserWorldEditorController {
         @ApiResponse(responseCode = "404", description = "Nicht gefunden"),
         @ApiResponse(responseCode = "500", description = "Löschfehler")
     })
-    public ResponseEntity<?> delete(@RequestParam String worldId, HttpServletRequest http) {
+    public ResponseEntity<?> delete(@RequestParam String worldIdStr, HttpServletRequest http) {
         String userId = currentUserId(http);
         if (userId == null) return unauthorized();
-        WorldKind kind;
-        try { kind = WorldKind.of(worldId); } catch (IllegalArgumentException e) { return bad(e.getMessage()); }
-        if (kind.isMain()) return bad("cannot delete main world here");
-        Optional<WWorld> opt = worldService.getByWorldId(worldId);
+        WorldId worldId;
+        try { worldId = WorldId.of(worldIdStr).get(); } catch (NoSuchElementException e) { return bad(e.getMessage()); }
+        if (worldId.isMain()) return bad("cannot delete main world here");
+        Optional<WWorld> opt = worldService.getByWorldId(worldIdStr);
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","world not found"));
-        Optional<WWorld> mainOpt = worldService.getByWorldId(kind.worldId());
-        if (mainOpt.isEmpty()) return bad("main world not found: " + kind.worldId());
+        Optional<WWorld> mainOpt = worldService.getByWorldId(worldId.getId());
+        if (mainOpt.isEmpty()) return bad("main world not found: " + worldId);
         if (!mainOpt.get().getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not owner of main world"));
-        boolean deleted = worldService.deleteWorld(worldId);
+        boolean deleted = worldService.deleteWorld(worldIdStr);
         if (deleted) return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error","delete failed"));
     }

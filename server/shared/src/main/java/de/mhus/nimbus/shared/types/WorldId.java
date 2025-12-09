@@ -29,6 +29,34 @@ public class WorldId {
         return regionId;
     }
 
+    public String getBranch() {
+        if (regionId == null) {
+            parseId();
+        }
+        return branch;
+    }
+
+    public String getWorldName() {
+        if (regionId == null) {
+            parseId();
+        }
+        return worldName;
+    }
+
+    public String getZone() {
+        if (regionId == null) {
+            parseId();
+        }
+        return zone;
+    }
+
+    public String getInstance() {
+        if (regionId == null) {
+            parseId();
+        }
+        return instance;
+    }
+
     private void parseId() {
         var string = id;
         if (string.indexOf('#') > 0) {
@@ -67,5 +95,13 @@ public class WorldId {
         if (id.length() < 3) return false;
          // Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
         return id.matches("^[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}(:[a-zA-Z0-9_\\-]{1,64})?(@[a-zA-Z0-9_\\-]{1,64})?(#[a-zA-Z0-9_\\-]{1,64})?$");
+    }
+
+    public boolean isMain() {
+        return zone == null && branch == null && instance == null;
+    }
+
+    public boolean isBranch() {
+        return branch != null;
     }
 }

@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.WorldInfo;
-import de.mhus.nimbus.shared.types.WorldKind;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -53,9 +54,9 @@ public class RegionWorldController {
     })
     public ResponseEntity<?> createWorld(@RequestBody CreateWorldRequest req) {
         if (req.getWorldId() == null || req.getWorldId().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
-        WorldKind kind;
-        try { kind = WorldKind.of(req.getWorldId()); } catch (IllegalArgumentException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
-        if (!kind.isMain()) {
+        WorldId worldId;
+        try { worldId = WorldId.of(req.getWorldId()).get(); } catch (NoSuchElementException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
+        if (!worldId.isMain()) {
             return ResponseEntity.badRequest().body(Map.of("error","only main worlds can be created (no zone, no branch)", "worldId", req.getWorldId()));
         }
         try {

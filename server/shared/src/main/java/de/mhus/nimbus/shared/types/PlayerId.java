@@ -12,9 +12,31 @@ import java.util.Optional;
 public class PlayerId {
     @Getter
     private String id;
+    private String userId;
+    private String characterId;
 
     public PlayerId(String id) {
         this.id = id;
+    }
+
+    public String getUserId() {
+        if (userId == null) {
+            parseId();
+        }
+        return userId;
+    }
+
+    public String getCharacterId() {
+        if (userId == null) {
+            parseId();
+        }
+        return characterId;
+    }
+
+    private void parseId() {
+        var parts = id.split(":", 3); // one more for garbage
+        userId = parts[0];
+        characterId = parts[1];
     }
 
     public static Optional<PlayerId> of(String id) {

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.region.world;
 
-import de.mhus.nimbus.shared.types.WorldKind;
+import de.mhus.nimbus.shared.types.WorldId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -46,13 +47,13 @@ public class RUserWorldController {
         @ApiResponse(responseCode = "404", description = "Nicht gefunden (Konfiguration oder Remote)"),
         @ApiResponse(responseCode = "500", description = "Unerwarteter Fehler")
     })
-    public ResponseEntity<?> getMainWorld(@RequestParam String worldId) {
-        if (worldId == null || worldId.isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
-        WorldKind kind;
-        try { kind = WorldKind.of(worldId); } catch (IllegalArgumentException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
-        if (!kind.isMain()) return ResponseEntity.badRequest().body(Map.of("error","not a main world"));
+    public ResponseEntity<?> getMainWorld(@RequestParam String worldIdStr) {
+        if (worldIdStr == null || worldIdStr.isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
+        WorldId worldId;
+        try { worldId = WorldId.of(worldIdStr).get(); } catch (NoSuchElementException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
+        if (!worldId.isMain()) return ResponseEntity.badRequest().body(Map.of("error","not a main world"));
         // lokale RWorld suchen für apiUrl
-        Optional<RWorld> opt = rWorldService.getByWorldId(worldId);
+        Optional<RWorld> opt = rWorldService.getByWorldId(worldIdStr);
         if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","world config not found"));
         Optional<RWorldClientService.WorldInfoDto> remote = worldClient.fetchWorld(opt.get());
         return remote.<ResponseEntity<?>>map(r -> ResponseEntity.ok(new WorldInfoResponse(r.worldId(), r.enabled(), r.parent(), r.branch())))
@@ -69,9 +70,9 @@ public class RUserWorldController {
     public ResponseEntity<?> createMainWorld(@RequestBody CreateMainWorldRequest req) {
         if (req.worldId() == null || req.worldId().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","worldId blank"));
         if (req.name() == null || req.name().isBlank()) return ResponseEntity.badRequest().body(Map.of("error","name blank"));
-        WorldKind kind;
-        try { kind = WorldKind.of(req.worldId()); } catch (IllegalArgumentException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
-        if (!kind.isMain()) return ResponseEntity.badRequest().body(Map.of("error","only main worlds allowed"));
+        WorldId worldId;
+        try { worldId = WorldId.of(req.worldId()).get(); } catch (NoSuchElementException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
+        if (!worldId.isMain()) return ResponseEntity.badRequest().body(Map.of("error","only main worlds allowed"));
         // Region-Welt Config anlegen falls nicht vorhanden
         Optional<RWorld> existing = rWorldService.getByWorldId(req.worldId());
         RWorld config = existing.orElseGet(() -> rWorldService.create(req.worldId(), req.name()));
