@@ -56,6 +56,9 @@ export interface TeamStatusUpdate {
     /** Player ID */
     id: string;
 
+    /** Same World? */
+    w?: boolean;
+
     /** Health Percent (optional) */
     h?: number; // javaType: int
 

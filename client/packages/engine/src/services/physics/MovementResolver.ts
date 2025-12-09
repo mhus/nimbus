@@ -147,12 +147,12 @@ export class MovementResolver {
    * @param startJump Jump button pressed this frame
    * @param deltaTime Frame time
    */
-  handleJump(entity: PhysicsEntity, startJump: boolean, deltaTime: number): void {
+  handleJump(entity: PhysicsEntity, startJump: boolean, deltaTime: number, jumpValue : number): void {
     // Underwater: Jump always works (swimming upward)
     // Jump force scaled by underwater gravity ratio, but multiplied for better control
     if (entity.inWater && startJump) {
       const gravityRatio = Math.abs(this.config.underwaterGravity / this.config.gravity);
-      entity.velocity.y = this.getJumpSpeed(entity) * gravityRatio * 4.0; // 4x boost for better underwater swimming
+      entity.velocity.y = (jumpValue > 0 ? jumpValue : this.getJumpSpeed(entity)) * gravityRatio * 4.0; // 4x boost for better underwater swimming
       return;
     }
 
@@ -170,7 +170,7 @@ export class MovementResolver {
 
     // Jump if grounded or within coyote time
     if (startJump && timeSinceGrounded <= this.config.coyoteTime) {
-      entity.velocity.y = this.getJumpSpeed(entity);
+      entity.velocity.y = jumpValue > 0 ? jumpValue : this.getJumpSpeed(entity);
       entity.grounded = false;
       this.coyoteTimeTracking.set(coyoteKey, this.config.coyoteTime + 1); // Prevent double jump
 

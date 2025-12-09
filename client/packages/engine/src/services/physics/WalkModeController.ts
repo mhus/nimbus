@@ -162,8 +162,9 @@ export class WalkModeController {
       }
 
       // Auto-jump
-      if (context.footBlocks.hasAutoJump || context.groundBlocks.hasAutoJump) {
-        entity.canAutoJump = true;
+      entity.autoJump = 0;
+      if (context.footBlocks.autoJump > 0 || context.groundBlocks.autoJump > 0) {
+        entity.autoJump = Math.max(context.footBlocks.autoJump, context.groundBlocks.autoJump);
         if (!startJump) {
           // Trigger auto-jump
           startJump = true;
@@ -194,7 +195,7 @@ export class WalkModeController {
     this.movementResolver.updateVelocity(entity, entity.wishMove, context, resistance, deltaTime);
 
     // Handle jump
-    this.movementResolver.handleJump(entity, startJump, deltaTime);
+    this.movementResolver.handleJump(entity, startJump, deltaTime, entity.autoJump);
 
     // Calculate movement distance
     const movement = entity.velocity.scale(deltaTime);

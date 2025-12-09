@@ -19,7 +19,7 @@ const entity: PhysicsEntity = {
   grounded: false,
   onSlope: false,
   inWater: false,
-  canAutoJump: false,
+  autoJump: 0,
   lastBlockPos: new Vector3(10, 64, 20),
 };
 
@@ -572,7 +572,7 @@ const horse: PhysicsEntity = {
   grounded: false,
   onSlope: false,
   inWater: false,
-  canAutoJump: false,
+  autoJump: 0,
   lastBlockPos: new Vector3(50, 64, 50),
 };
 

@@ -398,10 +398,25 @@ export class CollisionDetector {
     const context = this.contextAnalyzer.getContext(entity, dimensions);
 
     return (
-      context.footBlocks.hasAutoJump ||
-      context.groundBlocks.hasAutoJump ||
+      context.footBlocks.autoJump > 0 ||
+      context.groundBlocks.autoJump > 0 ||
       context.currentBlocks.hasSolid
     );
+
+  }
+
+  /**
+   * return auto-jump value
+   */
+  getAutoJump(entity: PhysicsEntity, dimensions: EntityDimensions): number {
+    const context = this.contextAnalyzer.getContext(entity, dimensions);
+
+    if (!context.currentBlocks.hasSolid) {
+      return 0;
+    }
+
+    return Math.max(context.footBlocks.autoJump,
+        context.groundBlocks.autoJump);
   }
 
   /**

@@ -248,8 +248,8 @@ export class PhysicsService {
     if (entity.inWater === undefined) {
       entity.inWater = false;
     }
-    if (entity.canAutoJump === undefined) {
-      entity.canAutoJump = false;
+    if (entity.autoJump === undefined) {
+      entity.autoJump = 0;
     }
     if (entity.jumpRequested === undefined) {
       entity.jumpRequested = false;

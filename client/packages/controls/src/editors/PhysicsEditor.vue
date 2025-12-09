@@ -45,9 +45,12 @@
       <div class="form-control">
         <label class="label cursor-pointer justify-start gap-2">
           <input
-            v-model="localValue.autoJump"
-            type="checkbox"
-            class="checkbox checkbox-sm"
+            v-model.number="autoJumpValue"
+            type="number"
+            step="0.1"
+            min="0"
+            class="input input-bordered input-sm"
+            placeholder="0"
           />
           <span class="label-text text-xs">Auto Jump</span>
         </label>
@@ -433,6 +436,18 @@ const cornerHeightSW = computed({
       localValue.value.cornerHeights = [0, 0, 0, 0];
     }
     localValue.value.cornerHeights[3] = value;
+  }
+});
+
+// Computed property for autoJump as number
+const autoJumpValue = computed({
+  get: () => localValue.value.autoJump ?? 0,
+  set: (value: number) => {
+    if (value > 0) {
+      localValue.value.autoJump = value;
+    } else {
+      localValue.value.autoJump = undefined;
+    }
   }
 });
 

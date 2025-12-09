@@ -77,7 +77,7 @@ interface PhysicsEntity {
   grounded: boolean;          // Auf Boden
   onSlope: boolean;           // Auf Schräge
   inWater: boolean;           // Unter Wasser
-  canAutoJump: boolean;       // Auto-Jump verfügbar
+  autoJump: number;       // Auto-Jump verfügbar mit value
 
   // Optimierung
   lastBlockPos: Vector3;      // Für Cache-Invalidierung
@@ -135,7 +135,7 @@ interface PlayerBlockContext {
     hasSolid: boolean;
     hasAutoRotationY: boolean;
     hasAutoMove: boolean;
-    hasAutoJump: boolean;
+    autoJump: number;
     autoOrientationY: number | undefined;
     autoMove: { x, y, z };
   };
@@ -156,7 +156,7 @@ interface PlayerBlockContext {
     resistance: number;
     hasAutoMove: boolean;
     hasAutoRotationY: boolean;
-    hasAutoJump: boolean;
+    autoJump: number;
     autoMove: { x, y, z };
     autoOrientationY: number | undefined;
   };
@@ -238,8 +238,8 @@ if (grounded || footBlocks.hasSolid) {
   }
 
   // Auto-Jump
-  if (footBlocks.hasAutoJump) {
-    entity.canAutoJump = true;
+  if (footBlocks.autoJump > 0) {
+    entity.autoJump = footBlocks.autoJump;
     startJump = true;
   }
 }
@@ -556,8 +556,8 @@ physics: {
 }
 
 // Wenn Spieler auf/in autoJump-Block
-if (footBlocks.hasAutoJump || groundBlocks.hasAutoJump) {
-  entity.canAutoJump = true;
+if (footBlocks.autoJump > 0 || groundBlocks.autoJump > 0) {
+  entity.autoJump = true;
   startJump = true; // Automatischer Sprung
 }
 ```
@@ -1167,7 +1167,7 @@ const entity: PhysicsEntity = {
   grounded: false,
   onSlope: false,
   inWater: false,
-  canAutoJump: false,
+  autoJump: 0,
   lastBlockPos: new Vector3(0, 64, 0),
 };
 

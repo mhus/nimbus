@@ -55,7 +55,7 @@ export interface PhysicsEntity {
   inWater: boolean;
 
   /** Can auto-jump be triggered? */
-  canAutoJump: boolean;
+  autoJump: number;
 
   /** Jump requested this frame (set by jump() method) */
   jumpRequested: boolean;

@@ -573,7 +573,7 @@ export interface PhysicsModifier {
   passableFrom?: Direction;
 
   /** Auto-jump when walking into the block - like fence gate, default: false */
-  autoJump?: boolean;
+  autoJump?: number;
 
   /**
    * Corner heights for sloped/ramped blocks - defines Y-offset adjustments for the four top corners.

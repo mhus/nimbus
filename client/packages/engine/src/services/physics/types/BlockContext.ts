@@ -50,7 +50,7 @@ export interface PlayerBlockContext {
     hasSolid: boolean;
     hasAutoRotationY: boolean;
     hasAutoMove: boolean;
-    hasAutoJump: boolean;
+    autoJump: number;
     autoOrientationY: number | undefined;
     autoMove: { x: number; y: number; z: number };
   };
@@ -73,7 +73,7 @@ export interface PlayerBlockContext {
     resistance: number; // Ground friction/resistance
     hasAutoMove: boolean;
     hasAutoRotationY: boolean;
-    hasAutoJump: boolean;
+    autoJump: number;
     autoMove: { x: number; y: number; z: number };
     autoOrientationY: number | undefined;
   };

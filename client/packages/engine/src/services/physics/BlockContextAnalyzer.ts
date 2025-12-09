@@ -376,7 +376,7 @@ export class BlockContextAnalyzer {
     let hasSolid = false;
     let hasAutoRotationY = false;
     let hasAutoMove = false;
-    let hasAutoJump = false;
+    let autoJump = 0;
     let autoOrientationY: number | undefined = undefined;
     const autoMove = { x: 0, y: 0, z: 0 };
 
@@ -397,7 +397,7 @@ export class BlockContextAnalyzer {
           autoMove.y = Math.max(autoMove.y, Math.abs(physics.autoMove.y)) * Math.sign(physics.autoMove.y);
           autoMove.z = Math.max(autoMove.z, Math.abs(physics.autoMove.z)) * Math.sign(physics.autoMove.z);
         }
-        if (physics?.autoJump) hasAutoJump = true;
+        if (physics?.autoJump && physics?.autoJump > 0) autoJump = physics?.autoJump;
       }
     }
 
@@ -406,7 +406,7 @@ export class BlockContextAnalyzer {
       hasSolid,
       hasAutoRotationY,
       hasAutoMove,
-      hasAutoJump,
+      autoJump,
       autoOrientationY,
       autoMove,
     };
@@ -464,7 +464,7 @@ export class BlockContextAnalyzer {
     let resistance = 0;
     let hasAutoMove = false;
     let hasAutoRotationY = false;
-    let hasAutoJump = false;
+    let autoJump = 0;
     let autoOrientationY: number | undefined = undefined;
     const autoMove = { x: 0, y: 0, z: 0 };
 
@@ -492,7 +492,7 @@ export class BlockContextAnalyzer {
           hasAutoRotationY = true;
           autoOrientationY = physics.autoOrientationY;
         }
-        if (physics?.autoJump) hasAutoJump = true;
+        if (physics?.autoJump && physics?.autoJump > 0) autoJump = physics?.autoJump;
       }
     }
 
@@ -504,7 +504,7 @@ export class BlockContextAnalyzer {
       resistance,
       hasAutoMove,
       hasAutoRotationY,
-      hasAutoJump,
+      autoJump,
       autoMove,
       autoOrientationY,
     };
