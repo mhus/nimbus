@@ -12,6 +12,7 @@
   - Services sind Business Logik
   - Für Outbound REST wird ein 'Client' Service erstellt, nur er darf als Client mit der remote REST API interagieren
 - Folge Clean Code Prinzipien
+- **KEINE HACKS!** Saubere Architektur mit DTOs, Services und klaren Verantwortlichkeiten. Keine JSON-Manipulation oder deepCopy-Tricks. Nutze typisierte Klassen und Builder Patterns
 - Im World Umfeld wird noch redis (nur world-* module) für Messaging, Locking und auch Caching verwendet (session related ist oft direkt an der Session im Speicher, nicht in redis)
 - In World Player ist Performance wichtig
 - Im Modul 'generated' liegen generierte Klassen, die nicht geändert werden können, sie sind der Contract zum Frontend und müssen mit EngineMapper (Service) de/serialisiert werden

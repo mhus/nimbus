@@ -2,13 +2,20 @@ package de.mhus.nimbus.world.player.ws.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.world.player.ws.BroadcastService;
 import de.mhus.nimbus.world.player.ws.SessionManager;
+import de.mhus.nimbus.world.player.ws.dto.PathwayContainer;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Listens for entity pathway updates from all world-player and world-life pods.
@@ -20,10 +27,14 @@ import org.springframework.stereotype.Service;
  *
  * Message format:
  * {
- *   "pathways": [{EntityPathway}, ...],
- *   "affectedChunks": [{"cx": 6, "cz": -13}, ...],
- *   "entityToSession": {"@user:char": "sessionId", ...}
+ *   "containers": [PathwayContainer, ...],
+ *   "affectedChunks": [{"cx": 6, "cz": -13}, ...]
  * }
+ *
+ * PathwayContainer contains:
+ * - pathway: EntityPathway
+ * - sessionId: String (originating session)
+ * - worldId: String
  */
 @Service
 @RequiredArgsConstructor
@@ -59,12 +70,11 @@ public class PathwayBroadcastListener {
 
             JsonNode data = objectMapper.readTree(message);
 
-            JsonNode pathways = data.get("pathways");
+            JsonNode containersNode = data.get("containers");
             JsonNode affectedChunks = data.get("affectedChunks");
-            JsonNode entityToSession = data.get("entityToSession");
 
-            if (pathways == null || !pathways.isArray()) {
-                log.warn("Invalid pathway update: missing pathways array");
+            if (containersNode == null || !containersNode.isArray()) {
+                log.warn("Invalid pathway update: missing containers array");
                 return;
             }
 
@@ -73,69 +83,87 @@ public class PathwayBroadcastListener {
                 return;
             }
 
-            // Filter pathways to exclude those from local sessions on this pod
-            // This prevents echoing back pathways to the sessions that generated them
-            com.fasterxml.jackson.databind.node.ArrayNode filteredPathways = objectMapper.createArrayNode();
-            if (entityToSession != null && entityToSession.isObject()) {
-                // Build set of entityIds to exclude (those that belong to local sessions)
-                java.util.Set<String> localEntityIds = new java.util.HashSet<>();
-                java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = entityToSession.fields();
-                while (fields.hasNext()) {
-                    java.util.Map.Entry<String, JsonNode> entry = fields.next();
-                    String entityId = entry.getKey();
-                    String sessionId = entry.getValue().asText();
-                    // Check if this session exists on this pod
-                    if (sessionManager.getAllSessions().containsKey(sessionId)) {
-                        localEntityIds.add(entityId);
-                    }
-                }
-
-                // Filter out local pathways
-                for (JsonNode pathway : pathways) {
-                    String entityId = pathway.has("entityId") ? pathway.get("entityId").asText() : null;
-                    if (entityId == null || !localEntityIds.contains(entityId)) {
-                        filteredPathways.add(pathway);
-                    }
-                }
-            } else {
-                // No entityToSession mapping, include all pathways (e.g., from world-life)
-                for (JsonNode pathway : pathways) {
-                    filteredPathways.add(pathway);
-                }
+            // Parse containers
+            List<PathwayContainer> containers = new ArrayList<>();
+            for (JsonNode containerNode : containersNode) {
+                PathwayContainer container = objectMapper.treeToValue(containerNode, PathwayContainer.class);
+                containers.add(container);
             }
 
-            // Skip if no pathways to broadcast after filtering
-            if (filteredPathways.isEmpty()) {
-                log.trace("No pathways to broadcast after filtering local sessions");
-                return;
-            }
-
-            // Broadcast pathways to sessions for each affected chunk
-            // BroadcastService will filter sessions by chunk registration
+            // Broadcast pathways per chunk
             for (JsonNode chunkNode : affectedChunks) {
                 int cx = chunkNode.has("cx") ? chunkNode.get("cx").asInt() : 0;
                 int cz = chunkNode.has("cz") ? chunkNode.get("cz").asInt() : 0;
 
-                // Broadcast to all sessions that have this chunk registered
-                int sentCount = broadcastService.broadcastToWorld(
-                        worldId,         // worldId from topic
-                        "e.p",           // messageType
-                        filteredPathways, // data (filtered pathways array)
-                        null,            // originatingSessionId (filtering done above)
-                        cx,              // chunk X
-                        cz               // chunk Z
-                );
+                // Collect all pathways for this chunk (grouped by originating session)
+                // We need to send them grouped because BroadcastService only accepts one originatingSessionId
+                Map<String, List<EntityPathway>> pathwaysByOriginSession = new HashMap<>();
 
-                log.trace("Broadcasted {} pathways to {} sessions for chunk ({}, {})",
-                        filteredPathways.size(), sentCount, cx, cz);
+                for (PathwayContainer container : containers) {
+                    EntityPathway pathway = container.getPathway();
+
+                    // Check if pathway affects this chunk
+                    if (!pathwayAffectsChunk(pathway, cx, cz)) {
+                        continue;
+                    }
+
+                    // Group by originating sessionId
+                    String originSessionId = container.getSessionId() != null ? container.getSessionId() : "none";
+                    pathwaysByOriginSession
+                        .computeIfAbsent(originSessionId, k -> new ArrayList<>())
+                        .add(pathway);
+                }
+
+                // Broadcast each group separately (different origin sessions)
+                for (Map.Entry<String, List<EntityPathway>> entry : pathwaysByOriginSession.entrySet()) {
+                    String originSessionId = entry.getKey().equals("none") ? null : entry.getKey();
+                    List<EntityPathway> pathways = entry.getValue();
+
+                    // Convert pathways array to JsonNode
+                    JsonNode pathwaysArray = objectMapper.valueToTree(pathways);
+
+                    // Broadcast to all sessions in this chunk (excluding originating session)
+                    int sentCount = broadcastService.broadcastToWorld(
+                            worldId,          // worldId from topic
+                            "e.p",            // messageType
+                            pathwaysArray,    // data (pathways ARRAY)
+                            originSessionId,  // originatingSessionId - will be filtered out!
+                            cx,               // chunk X
+                            cz                // chunk Z
+                    );
+
+                    log.trace("Broadcasted {} pathways to {} sessions for chunk ({}, {}) [origin={}]",
+                            pathways.size(), sentCount, cx, cz, originSessionId);
+                }
             }
 
-            log.debug("Handled pathway update: {} pathways, {} filtered, {} chunks",
-                    pathways.size(), filteredPathways.size(), affectedChunks.size());
+            log.debug("Handled pathway update: {} containers, {} chunks",
+                    containers.size(), affectedChunks.size());
 
         } catch (Exception e) {
             log.error("Failed to handle pathway update from topic {}: {}", topic, message, e);
         }
+    }
+
+    /**
+     * Check if pathway affects a specific chunk.
+     * Pathway affects chunk if any waypoint is in that chunk.
+     */
+    private boolean pathwayAffectsChunk(EntityPathway pathway, int cx, int cz) {
+        if (pathway.getWaypoints() == null) return false;
+
+        for (de.mhus.nimbus.generated.types.Waypoint waypoint : pathway.getWaypoints()) {
+            if (waypoint.getTarget() != null) {
+                double x = waypoint.getTarget().getX();
+                double z = waypoint.getTarget().getZ();
+                int waypointCx = (int) Math.floor(x / 16);
+                int waypointCz = (int) Math.floor(z / 16);
+                if (waypointCx == cx && waypointCz == cz) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

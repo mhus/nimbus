@@ -10,6 +10,7 @@ import de.mhus.nimbus.generated.types.ENTITY_POSES;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.world.player.config.PathwayBroadcastProperties;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.player.ws.dto.PathwayContainer;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -48,9 +49,8 @@ public class PathwayBroadcastService {
     @Scheduled(fixedRateString = "${world.player.pathway-broadcast-interval-ms:100}")
     public void broadcastPathways() {
         try {
-            // Group pathways and session mappings by worldId
-            Map<String, List<EntityPathway>> pathwaysByWorld = new HashMap<>();
-            Map<String, Map<String, String>> entityToSessionByWorld = new HashMap<>();
+            // Group pathway containers by worldId
+            Map<String, List<PathwayContainer>> containersByWorld = new HashMap<>();
 
             // Iterate all active sessions
             for (PlayerSession session : sessionManager.getAllSessions().values()) {
@@ -70,28 +70,29 @@ public class PathwayBroadcastService {
                 EntityPathway pathway = generatePathway(session);
                 if (pathway != null) {
                     String worldId = session.getWorldId().getId();
-                    pathwaysByWorld
-                        .computeIfAbsent(worldId, k -> new ArrayList<>())
-                        .add(pathway);
 
-                    // Store entityId → sessionId mapping for filtering
-                    entityToSessionByWorld
-                        .computeIfAbsent(worldId, k -> new HashMap<>())
-                        .put(pathway.getEntityId(), session.getSessionId());
+                    // Create container with session metadata
+                    PathwayContainer container = PathwayContainer.builder()
+                        .pathway(pathway)
+                        .sessionId(session.getSessionId())
+                        .worldId(worldId)
+                        .build();
+
+                    containersByWorld
+                        .computeIfAbsent(worldId, k -> new ArrayList<>())
+                        .add(container);
                 }
             }
 
             // Publish pathways to Redis (grouped by world)
-            for (Map.Entry<String, List<EntityPathway>> entry : pathwaysByWorld.entrySet()) {
-                String worldId = entry.getKey();
-                Map<String, String> entityToSession = entityToSessionByWorld.get(worldId);
-                publishPathways(worldId, entry.getValue(), entityToSession);
+            for (Map.Entry<String, List<PathwayContainer>> entry : containersByWorld.entrySet()) {
+                publishPathways(entry.getKey(), entry.getValue());
             }
 
-            if (!pathwaysByWorld.isEmpty()) {
+            if (!containersByWorld.isEmpty()) {
                 log.trace("Broadcasted {} pathways across {} worlds",
-                    pathwaysByWorld.values().stream().mapToInt(List::size).sum(),
-                    pathwaysByWorld.size());
+                    containersByWorld.values().stream().mapToInt(List::size).sum(),
+                    containersByWorld.size());
             }
 
         } catch (Exception e) {
@@ -177,17 +178,17 @@ public class PathwayBroadcastService {
      *
      * Message format:
      * {
-     *   "pathways": [EntityPathway, ...],
-     *   "affectedChunks": [{"cx": 6, "cz": -13}, ...],
-     *   "entityToSession": {"@user1:char1": "session123", ...}  // EntityId → SessionId mapping
+     *   "containers": [PathwayContainer, ...],
+     *   "affectedChunks": [{"cx": 6, "cz": -13}, ...]
      * }
      */
-    private void publishPathways(String worldId, List<EntityPathway> pathways, Map<String, String> entityToSession) {
+    private void publishPathways(String worldId, List<PathwayContainer> containers) {
         try {
             // Determine affected chunks from pathways
             Set<ChunkCoordinate> affectedChunks = new HashSet<>();
 
-            for (EntityPathway pathway : pathways) {
+            for (PathwayContainer container : containers) {
+                EntityPathway pathway = container.getPathway();
                 for (Waypoint wp : pathway.getWaypoints()) {
                     Vector3 pos = wp.getTarget();
                     int cx = (int) Math.floor(pos.getX() / 16);
@@ -198,7 +199,7 @@ public class PathwayBroadcastService {
 
             // Build Redis message
             ObjectNode message = engineMapper.createObjectNode();
-            message.set("pathways", engineMapper.valueToTree(pathways));
+            message.set("containers", engineMapper.valueToTree(containers));
 
             ArrayNode chunksArray = engineMapper.createArrayNode();
             for (ChunkCoordinate chunk : affectedChunks) {
@@ -209,23 +210,11 @@ public class PathwayBroadcastService {
             }
             message.set("affectedChunks", chunksArray);
 
-            // Add entityId → sessionId mapping for origin filtering
-            if (entityToSession != null && !entityToSession.isEmpty()) {
-                ObjectNode mappingNode = engineMapper.createObjectNode();
-                for (Map.Entry<String, String> entry : entityToSession.entrySet()) {
-                    mappingNode.put(entry.getKey(), entry.getValue());
-                }
-                message.set("entityToSession", mappingNode);
-            }
-
             String json = engineMapper.writeValueAsString(message);
             redisMessaging.publish(worldId, "e.p", json);
 
-            log.debug("Publishing {} pathways to Redis for world {} ({} chunks)",
-                pathways.size(), worldId, affectedChunks.size()); // XXX
-
-            log.trace("Published {} pathways to Redis for world {} ({} chunks)",
-                pathways.size(), worldId, affectedChunks.size());
+            log.debug("Published {} pathway containers to Redis for world {} ({} chunks)",
+                containers.size(), worldId, affectedChunks.size());
 
         } catch (Exception e) {
             log.error("Failed to publish pathways to Redis", e);
