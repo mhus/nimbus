@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
-import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;

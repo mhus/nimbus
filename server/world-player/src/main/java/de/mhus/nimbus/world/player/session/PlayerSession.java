@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.player.ws;
+package de.mhus.nimbus.world.player.session;
 
 import lombok.Data;
 import org.springframework.web.socket.WebSocketSession;

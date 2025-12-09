@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.ws;
 
 import de.mhus.nimbus.shared.utils.LocationService;
+import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;

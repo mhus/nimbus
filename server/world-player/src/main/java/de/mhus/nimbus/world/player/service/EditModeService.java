@@ -3,7 +3,7 @@ package de.mhus.nimbus.world.player.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
-import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;

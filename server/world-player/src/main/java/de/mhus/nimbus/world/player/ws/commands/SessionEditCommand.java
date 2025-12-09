@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.player.ws.commands;
 
 import de.mhus.nimbus.world.player.service.EditModeService;
-import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;

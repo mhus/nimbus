@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
-import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.shared.world.WChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

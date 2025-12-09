@@ -3,7 +3,7 @@ package de.mhus.nimbus.world.player.ws.handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
-import de.mhus.nimbus.world.player.ws.PlayerSession;
+import de.mhus.nimbus.world.player.session.PlayerSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

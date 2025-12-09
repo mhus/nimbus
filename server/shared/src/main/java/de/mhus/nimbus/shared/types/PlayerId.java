@@ -6,7 +6,7 @@ import org.apache.logging.log4j.util.Strings;
 import java.util.Optional;
 
 /**
- * PlayerId represents a unique identifier for a player in the format "userId:charachterId".
+ * PlayerId represents a unique identifier for a player in the format "@userId:charachterId".
  * Each part is a string 'a-zA-Z0-9_-' from 3 to 64 characters.
  */
 public class PlayerId {
@@ -33,8 +33,15 @@ public class PlayerId {
         return characterId;
     }
 
+    /**
+     * Returns the raw id without the leading "@".
+     */
+    public String getRawId() {
+        return id.substring(1);
+    }
+
     private void parseId() {
-        var parts = id.split(":", 3); // one more for garbage
+        var parts = id.substring(1).split(":", 3); // remove @ and one more for garbage
         userId = parts[0];
         characterId = parts[1];
     }
@@ -47,6 +54,11 @@ public class PlayerId {
     public static boolean validate(String id) {
         if (Strings.isBlank(id)) return false;
         if (id.length() < 3) return false;
-        return id.matches("[a-zA-Z0-9_\\-]{3,64}:[a-zA-Z0-9_\\-]{3,64}");
+        return id.matches("@[a-zA-Z0-9_\\-]{3,64}:[a-zA-Z0-9_\\-]{3,64}");
     }
+
+    public String toString() {
+        return id;
+    }
+
 }
