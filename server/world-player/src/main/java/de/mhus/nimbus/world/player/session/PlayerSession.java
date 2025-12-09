@@ -128,7 +128,7 @@ public class PlayerSession {
 
     /**
      * Update entity position tracking.
-     * Detects position changes and updates chunk coordinates.
+     * Detects ANY changes (position, rotation, velocity, pose) and updates chunk coordinates.
      *
      * @param position new position (can be null)
      * @param rotation new rotation (can be null)
@@ -136,9 +136,12 @@ public class PlayerSession {
      * @param pose new pose (can be null)
      */
     public void updatePosition(Vector3 position, Rotation rotation, Vector3 velocity, ENTITY_POSES pose) {
-        // Detect position change
+        // Detect ANY change (position, rotation, velocity, pose)
         boolean changed = this.lastPosition == null ||
-                         (position != null && !positionsEqual(this.lastPosition, position));
+                         (position != null && !positionsEqual(this.lastPosition, position)) ||
+                         (rotation != null && !rotationsEqual(this.lastRotation, rotation)) ||
+                         (velocity != null && !velocitiesEqual(this.lastVelocity, velocity)) ||
+                         (pose != null && !pose.equals(this.lastPose));
 
         this.positionChanged = changed;
         this.lastPosition = position;
@@ -197,6 +200,35 @@ public class PlayerSession {
     private boolean positionsEqual(Vector3 a, Vector3 b) {
         if (a == null || b == null) return false;
         double threshold = 0.001; // 1mm tolerance
+        return Math.abs(a.getX() - b.getX()) < threshold &&
+               Math.abs(a.getY() - b.getY()) < threshold &&
+               Math.abs(a.getZ() - b.getZ()) < threshold;
+    }
+
+    /**
+     * Compare two rotations with tolerance.
+     *
+     * @param a first rotation
+     * @param b second rotation
+     * @return true if rotations are equal within tolerance
+     */
+    private boolean rotationsEqual(Rotation a, Rotation b) {
+        if (a == null || b == null) return false;
+        double threshold = 0.01; // ~0.6 degree tolerance
+        return Math.abs(a.getY() - b.getY()) < threshold &&
+               Math.abs(a.getP() - b.getP()) < threshold;
+    }
+
+    /**
+     * Compare two velocities with tolerance.
+     *
+     * @param a first velocity
+     * @param b second velocity
+     * @return true if velocities are equal within tolerance
+     */
+    private boolean velocitiesEqual(Vector3 a, Vector3 b) {
+        if (a == null || b == null) return false;
+        double threshold = 0.001; // 1mm/s tolerance
         return Math.abs(a.getX() - b.getX()) < threshold &&
                Math.abs(a.getY() - b.getY()) < threshold &&
                Math.abs(a.getZ() - b.getZ()) < threshold;

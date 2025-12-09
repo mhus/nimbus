@@ -3,13 +3,16 @@ package de.mhus.nimbus.world.player.ws.handlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.world.player.ws.ChunkSenderService;
 import de.mhus.nimbus.world.player.ws.ChunkSenderService.ChunkCoord;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
+import de.mhus.nimbus.world.player.ws.PathwayBroadcastService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.List;
 public class ChunkRegistrationHandler implements MessageHandler {
 
     private final ChunkSenderService chunkSenderService;
+    private final PathwayBroadcastService pathwayBroadcastService;
     private final ObjectMapper objectMapper;
     private final de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService redisMessaging;
 
@@ -83,6 +87,50 @@ public class ChunkRegistrationHandler implements MessageHandler {
         // Asynchronously send new chunks to client
         if (!newChunks.isEmpty()) {
             chunkSenderService.sendChunksAsync(session, newChunks);
+        }
+
+        // Send cached pathways for newly registered chunks
+        if (!newChunks.isEmpty() && session.getWorldId() != null) {
+            sendCachedPathwaysForChunks(session, newChunks);
+        }
+    }
+
+    /**
+     * Send cached pathways for newly registered chunks.
+     * This ensures new sessions immediately see existing entities.
+     *
+     * @param session Player session
+     * @param chunks Newly registered chunks
+     */
+    private void sendCachedPathwaysForChunks(PlayerSession session, List<ChunkCoord> chunks) {
+        try {
+            String worldId = session.getWorldId().getId();
+            List<EntityPathway> allPathways = new ArrayList<>();
+
+            // Collect cached pathways for all new chunks
+            for (ChunkCoord chunk : chunks) {
+                List<EntityPathway> pathways = pathwayBroadcastService.getCachedPathwaysForChunk(
+                        worldId, chunk.cx(), chunk.cz());
+                allPathways.addAll(pathways);
+            }
+
+            // Send pathways to client if any found
+            if (!allPathways.isEmpty()) {
+                JsonNode pathwaysArray = objectMapper.valueToTree(allPathways);
+                NetworkMessage pathwayMessage = NetworkMessage.builder()
+                        .t("e.p")
+                        .d(pathwaysArray)
+                        .build();
+
+                String json = objectMapper.writeValueAsString(pathwayMessage);
+                session.getWebSocketSession().sendMessage(new TextMessage(json));
+
+                log.debug("Sent {} cached pathways to session {} for {} new chunks",
+                        allPathways.size(), session.getSessionId(), chunks.size());
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to send cached pathways for chunks", e);
         }
     }
 

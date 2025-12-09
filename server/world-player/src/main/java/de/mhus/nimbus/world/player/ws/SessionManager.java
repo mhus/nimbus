@@ -5,15 +5,20 @@ import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.utils.LocationService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.player.session.SessionClosedConsumer;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +35,10 @@ public class SessionManager {
 
     private final WSessionService wSessionService;
     private final LocationService locationService;
+
+    @Autowired
+    @Lazy
+    private List<SessionClosedConsumer> sessionClosedConsumers;
 
     private final Map<String, PlayerSession> sessionsByWebSocketId = new ConcurrentHashMap<>();
     private final Map<String, PlayerSession> sessionsBySessionId = new ConcurrentHashMap<>();
@@ -121,6 +130,7 @@ public class SessionManager {
     /**
      * Remove session on disconnect.
      * Updates WSession in Redis to DEPRECATED.
+     * Notifies SessionClosedConsumers for cleanup.
      */
     public void removeSession(String webSocketId) {
         PlayerSession session = sessionsByWebSocketId.remove(webSocketId);
@@ -134,7 +144,24 @@ public class SessionManager {
                 wSessionService.updateStatus(sessionId, WSessionStatus.CLOSED);
                 log.info("Updated WSession to DEPRECATED on disconnect: sessionId={}", sessionId);
             }
+
+            // Notify SessionClosedConsumers for cleanup
+            notifySessionClosed(session);
+
             log.debug("Removed session for WebSocket: {}", webSocketId);
+        }
+    }
+
+    /**
+     * Notify all SessionClosedConsumers.
+     */
+    private void notifySessionClosed(PlayerSession session) {
+        for (SessionClosedConsumer consumer : sessionClosedConsumers) {
+            try {
+                consumer.onSessionClosed(session);
+            } catch (Exception e) {
+                log.error("SessionClosedConsumer failed: {}", consumer.getClass().getSimpleName(), e);
+            }
         }
     }
 
