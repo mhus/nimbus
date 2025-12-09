@@ -188,7 +188,7 @@ export interface Entity {
   model: string; // EntityModel ID
 
   /** Custom modifiers for this instance (overrides/extends model defaults) */
-  modelModifier: Record<string, any>;
+  modelModifier: Record<string, string>;
 
   /** Entity modifiers (audio, etc.) */
   modifier?: EntityModifier;

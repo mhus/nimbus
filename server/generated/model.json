@@ -1333,7 +1333,7 @@
         "comment" : "// EntityModel ID"
       }, {
         "name" : "modelModifier",
-        "type" : "Record<string, any>",
+        "type" : "Record<string, string>",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -4675,6 +4675,13 @@
       }, {
         "name" : "thirdPersonModelId",
         "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "thirdPersonModelModifiers",
+        "type" : "Map<string, string>",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,

@@ -193,6 +193,10 @@ export interface PlayerInfo {
 
   /** Entity model ID for third-person view (optional, e.g., "farmer1") */
   thirdPersonModelId?: string;
+
+  /** Modifiers for third-person model appearance (e.g., colors, accessories) */
+  thirdPersonModelModifiers?: Map<string, string>;
+
 }
 
 /**

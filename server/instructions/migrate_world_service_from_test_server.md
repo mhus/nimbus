@@ -2827,16 +2827,15 @@ Nochmal der Flow:
 
 ## Push messages (Multi Player Synchronisation)
 
-[ ] Enhance PlayerService
+[m] Enhance PlayerService
 - Es gibt bereits einen player service in world-player.
 - Er soll erweitert werden um die Player Infos in der Session im redis zu speichern.
 
-[ ] Player Entity Names mit '@' vor dem Namen ausliefern
+[m] Player Entity Names mit '@' vor dem Namen ausliefern
 - Im REST Controller für Entitys soll auch der Player Entity Name mit '@' vor dem Namen ausgeliefert werden.
 - Wird bereits in test_server so gemacht.
 - Player wird wie eine Entity ausgeleifert.
 - Siehe auch ../client/test_server packages/test_server/src
-
 
 [ ] Der Client sendet zum Server Messages, die zu anderen clients verteilt werden muessen.
 - Workflow:
@@ -2853,7 +2852,8 @@ Nochmal der Flow:
       - packages/test_server/src/NimbusServer.ts Methode: generatePlayerPathways()
       - wenn sie sich nicht geaendert haben, dann sollen sie nicht versendet werden.
       - Auch an den Client soll nur maximal alle 100ms gesendet werden (konfigurierbar in application.yaml).
-      - Die entity ist der player name. Davor ist ein "@" Zeichen.
+      - Die entity ist der player name. Davor ist ein "@" Zeichen. Playernamen haben schon ein @ vor dem identifier (Klasser PlayerId).
+      - versende auch die sessionId, so kann die session eigene messages filtern und ignorieren.
     - Es wird "e.p" "Entity Chunk Pathway (Server -> Client)" weiter gesendet in dem die bewegung des players definiert wird.
       - Es koennen mehrere Pathways in einer message gesendet werden. src/main/java/de/mhus/nimbus/generated/types/EntityPathway.java
       - Die muessen von den world-player/sessions wieder gefiltert werden, auf die chunks die sie registriert haben.

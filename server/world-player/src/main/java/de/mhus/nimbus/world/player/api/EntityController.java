@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Entity;
+import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +30,7 @@ import java.util.Map;
 public class EntityController {
 
     private final WEntityService service;
+    private final PlayerService playerService;
 
     @GetMapping("/{worldId}/{entityId}")
     @Operation(summary = "Get Entity by world and entity ID", description = "Returns Entity instance for a specific entity in a world")
@@ -37,56 +41,25 @@ public class EntityController {
     public ResponseEntity<?> getEntity(
             @PathVariable String worldId,
             @PathVariable String entityId) {
+
+        if (Strings.isBlank(entityId)) {
+            return ResponseEntity.badRequest().body("entityId is required");
+        }
+        if (entityId.startsWith("@")) {
+            var playerId = PlayerId.of(entityId);
+            if (playerId.isEmpty()) {
+                return ResponseEntity.badRequest().body("Invalid player ID");
+            }
+            var playerEntity = playerService.getPlayerAsEntity(playerId.get(), worldId);
+            return playerEntity
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
         return service.findByWorldIdAndEntityId(worldId, entityId)
                 .map(WEntity::getPublicData)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
-    @GetMapping
-    @Operation(summary = "Get all Entities", description = "Returns all enabled Entity instances, filtered by world or chunk")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of Entities"),
-            @ApiResponse(responseCode = "400", description = "worldId required")
-    })
-    public ResponseEntity<?> getAllEntities(
-            @RequestParam(required = false) String worldId,
-            @RequestParam(required = false) String chunk,
-            @RequestParam(required = false) String modelId) {
-
-        // worldId is typically required for meaningful queries
-        if (worldId == null || worldId.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "worldId required"));
-        }
-
-        List<Entity> entities;
-
-        if (chunk != null && !chunk.isBlank()) {
-            // Filter by world and chunk (most common for streaming)
-            entities = service.findByWorldIdAndChunk(worldId, chunk).stream()
-                    .filter(WEntity::isEnabled)
-                    .map(WEntity::getPublicData)
-                    .toList();
-        } else if (modelId != null && !modelId.isBlank()) {
-            // Filter by modelId (all entities of a specific type)
-            entities = service.findByModelId(modelId).stream()
-                    .filter(WEntity::isEnabled)
-                    .filter(e -> worldId.equals(e.getWorldId()))
-                    .map(WEntity::getPublicData)
-                    .toList();
-        } else {
-            // All entities in world
-            entities = service.findByWorldId(worldId).stream()
-                    .filter(WEntity::isEnabled)
-                    .map(WEntity::getPublicData)
-                    .toList();
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "entities", entities,
-                "count", entities.size(),
-                "worldId", worldId
-        ));
-    }
 }

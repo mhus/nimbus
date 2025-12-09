@@ -19,7 +19,7 @@ class EAssetControllerTest {
         Mockito.when(service.findByPath("reg1:world1", "path/file.txt")).thenReturn(Optional.empty());
         EAssetController ctrl = new EAssetController(service);
         ResponseEntity<?> resp = ctrl.get("reg1", "reg1:world1", "path/file.txt");
-        assertEquals(404, resp.getStatusCode());
+        assertEquals(404, resp.getStatusCode().value());
     }
 
     @Test
@@ -36,7 +36,7 @@ class EAssetControllerTest {
         Mockito.when(service.findByPath("reg1:world1", "path/file.txt")).thenReturn(Optional.of(asset));
         EAssetController ctrl = new EAssetController(service);
         ResponseEntity<?> resp = ctrl.get("reg1", "reg1:world1", "path/file.txt");
-        assertEquals(200, resp.getStatusCode());
+        assertEquals(200, resp.getStatusCode().value());
     }
 }
 

@@ -62,4 +62,7 @@ public class PlayerInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("thirdPersonModelId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String thirdPersonModelId;
+    @com.fasterxml.jackson.annotation.JsonProperty("thirdPersonModelModifiers")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.util.Map<String, String> thirdPersonModelModifiers;
 }
