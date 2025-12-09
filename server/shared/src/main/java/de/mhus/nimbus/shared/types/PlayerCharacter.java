@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.player.service;
+package de.mhus.nimbus.shared.types;
 
 import de.mhus.nimbus.generated.configs.PlayerBackpack;
 import de.mhus.nimbus.generated.types.PlayerInfo;
