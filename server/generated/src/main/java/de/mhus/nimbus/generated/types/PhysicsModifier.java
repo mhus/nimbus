@@ -36,7 +36,7 @@ public class PhysicsModifier {
     private Direction passableFrom;
     @com.fasterxml.jackson.annotation.JsonProperty("autoJump")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Boolean autoJump;
+    private java.lang.Double autoJump;
     @com.fasterxml.jackson.annotation.JsonProperty("cornerHeights")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<Object> cornerHeights;

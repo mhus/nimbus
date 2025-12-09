@@ -12,6 +12,7 @@ import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -104,8 +105,8 @@ public class BlockInfoService {
         // Fallback: Load from WChunk (merged result)
         if (block == null) {
             block = loadBlockFromChunk(worldId, x, y, z);
-            readOnly = true;
-            log.debug("Loaded block from WChunk: pos=({},{},{}) readOnly=true", x, y, z);
+            readOnly = Strings.isBlank(layerName); // will copy it into layer
+            log.debug("Loaded block from WChunk: pos=({},{},{}) readOnly={} layerName={}", x, y, z, readOnly, layerName);
         }
 
         // Default to air if still not found

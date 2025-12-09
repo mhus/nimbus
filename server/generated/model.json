@@ -2863,7 +2863,7 @@
         "comment" : null
       }, {
         "name" : "autoJump",
-        "type" : "boolean",
+        "type" : "number",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
