@@ -136,7 +136,7 @@ public class SessionManager {
                 sessionsBySessionId.remove(sessionId);
 
                 // Update WSession to DEPRECATED in Redis
-                wSessionService.updateStatus(sessionId, WSessionStatus.DEPRECATED);
+                wSessionService.updateStatus(sessionId, WSessionStatus.CLOSED);
                 log.info("Updated WSession to DEPRECATED on disconnect: sessionId={}", sessionId);
             }
             log.debug("Removed session for WebSocket: {}", webSocketId);
@@ -154,7 +154,7 @@ public class SessionManager {
             // Update WSession to DEPRECATED in Redis
             String sessionId = session.getSessionId();
             if (sessionId != null) {
-                wSessionService.updateStatus(sessionId, WSessionStatus.DEPRECATED);
+                wSessionService.updateStatus(sessionId, WSessionStatus.CLOSED);
                 log.info("Updated WSession to DEPRECATED: sessionId={}", sessionId);
             }
 

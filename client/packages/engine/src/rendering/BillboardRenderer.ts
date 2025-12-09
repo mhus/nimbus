@@ -75,10 +75,10 @@ export class BillboardRenderer extends BlockRenderer {
     let pivotOffsetY = 0;
     let pivotOffsetZ = 0;
 
-    if (block.block.offsets && block.block.offsets.length >= 3) {
-      pivotOffsetX = block.block.offsets[0] || 0;
-      pivotOffsetY = block.block.offsets[1] || 0;
-      pivotOffsetZ = block.block.offsets[2] || 0;
+    if (block.offsets && block.offsets.length >= 3) {
+      pivotOffsetX = block.offsets[0] || 0;
+      pivotOffsetY = block.offsets[1] || 0;
+      pivotOffsetZ = block.offsets[2] || 0;
     }
 
     // Block position

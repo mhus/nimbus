@@ -86,31 +86,36 @@ vom region server zugreifen kann.
 
 ---
 
-Solltend die DTOs zum kommunizieren via REST zwischen den servern nicht ie gleichen sein?
+[x] Solltend die DTOs zum kommunizieren via REST zwischen den servern nicht ie gleichen sein?
 Die koennen im modul shared abgelegt sein.
 
 ----
 
 
-- Umstellen MongoStorageService
-  - Storage immer aus diesem ladne, nicht mehr in content
+[x] Umstellen MongoStorageService
+  - Storage immer aus diesem laden, nicht mehr in content
 
-- chunk refresh event nicht mehr vom life aus senden, sondern mit sheduler, life hat dann einen timeout auf den chunks
+[x] chunk refresh event nicht mehr vom life aus senden, sondern mit sheduler, life hat dann einen timeout auf den chunks
 
-- Direkte Kommunikation zwischen world servern via REST, player sendet siene direkte IP mit
-- Commands weiter geben von player an weitere server (life und control). command schema?
+[x] Direkte Kommunikation zwischen world servern via REST, player sendet siene direkte IP mit
+[x] Commands weiter geben von player an weitere server (life und control). command schema?
   - life.xyz, control.xyz 
   
-- Edit Mode im player
+[x] Edit Mode im player
   - An der session
   - Updated blocks von redis laden
   - Blocks werden von control direct in redis geschrieben
   - Bei ende der session migrieren
   - Bei ende Edit mode migrieren
 
-- Umbennenen worldId in worldUid
+[-] Umbennenen worldId in worldUid
   - worldId: main
   - worldUid: region:worldId$zone:branch
   - worldInstanceId: region:worldId$zone:branch@instance
+> worldId ist jetzt die volle uid
 
-- Die DirtyChunks updaten und delete storage items (MongoStorageService) muessen synchronisiert werden, damit nicht zwei pods das gleichzeitig machen.
+[x] Die DirtyChunks updaten und delete storage items (MongoStorageService) muessen synchronisiert werden, damit nicht zwei pods das gleichzeitig machen.
+
+---
+
+[ ] PlayerInfo bereinigen, 'dimensions' wird nicht mehr benoetgt.

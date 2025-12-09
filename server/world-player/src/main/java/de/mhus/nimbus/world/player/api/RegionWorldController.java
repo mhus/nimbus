@@ -60,7 +60,7 @@ public class RegionWorldController {
             return ResponseEntity.badRequest().body(Map.of("error","only main worlds can be created (no zone, no branch)", "worldId", req.getWorldId()));
         }
         try {
-            WWorld created = worldService.createWorld(req.getWorldId(), req.getInfo());
+            WWorld created = worldService.createWorld(worldId, req.getInfo());
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));

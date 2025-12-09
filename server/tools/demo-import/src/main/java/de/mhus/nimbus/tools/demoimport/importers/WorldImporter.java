@@ -2,6 +2,7 @@ package de.mhus.nimbus.tools.demoimport.importers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.WorldInfo;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.tools.demoimport.ImportStats;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
@@ -73,7 +74,8 @@ public class WorldImporter {
                     .build();
             world.touchForCreate();
 
-            worldService.createWorld(worldInfo.getWorldId(), worldInfo);
+            var worldId = WorldId.of(worldInfo.getWorldId()).get();
+            worldService.createWorld(worldId, worldInfo);
             stats.incrementSuccess();
 
             log.info("Created world: {} ({})", worldInfo.getWorldId(), worldInfo.getName());

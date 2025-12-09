@@ -33,12 +33,12 @@ public class WWorldService {
     }
 
     @Transactional
-    public WWorld createWorld(String worldId, WorldInfo info) {
-        if (repository.existsByWorldId(worldId)) {
+    public WWorld createWorld(WorldId worldId, WorldInfo info) {
+        if (repository.existsByWorldId(worldId.getId())) {
             throw new IllegalStateException("WorldId bereits vorhanden: " + worldId);
         }
         WWorld entity = WWorld.builder()
-                .worldId(worldId)
+                .worldId(worldId.getId())
                 .publicData(info)
                 .build();
         entity.touchForCreate();
@@ -48,12 +48,12 @@ public class WWorldService {
     }
 
     @Transactional
-    public WWorld createWorld(String worldId, WorldInfo info, String parent, String branch, Boolean enabled) {
-        if (repository.existsByWorldId(worldId)) {
+    public WWorld createWorld(WorldId worldId, WorldInfo info, String parent, String branch, Boolean enabled) {
+        if (repository.existsByWorldId(worldId.getId())) {
             throw new IllegalStateException("WorldId bereits vorhanden: " + worldId);
         }
         WWorld entity = WWorld.builder()
-                .worldId(worldId)
+                .worldId(worldId.getId())
                 .publicData(info)
                 .parent(parent)
                 .branch(branch)
@@ -66,8 +66,8 @@ public class WWorldService {
     }
 
     @Transactional
-    public Optional<WWorld> updateWorld(String worldId, java.util.function.Consumer<WWorld> updater) {
-        return repository.findByWorldId(worldId).map(existing -> {
+    public Optional<WWorld> updateWorld(WorldId worldId, java.util.function.Consumer<WWorld> updater) {
+        return repository.findByWorldId(worldId.getId()).map(existing -> {
             updater.accept(existing);
             existing.touchForUpdate();
             repository.save(existing);
@@ -77,8 +77,8 @@ public class WWorldService {
     }
 
     @Transactional
-    public boolean deleteWorld(String worldId) {
-        return repository.findByWorldId(worldId).map(e -> {
+    public boolean deleteWorld(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId()).map(e -> {
             repository.delete(e);
             log.debug("WWorld geloescht: {}", worldId);
             return true;

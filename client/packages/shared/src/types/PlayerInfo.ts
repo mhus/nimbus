@@ -77,7 +77,7 @@ export interface PlayerInfo {
    * Contains all properties that vary by movement state
    * (speeds, dimensions, eyeHeight, selectionRadius, etc.)
    */
-  stateValues: Record<MovementStateKey, MovementStateValues>;
+  stateValues: Record<MovementStateKey, MovementStateValues>; // javaType: Map<String,MovementStateValues>
 
   // ============================================
   // Base Movement Speeds (blocks per second)

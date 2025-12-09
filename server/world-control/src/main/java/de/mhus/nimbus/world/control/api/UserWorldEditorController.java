@@ -80,10 +80,11 @@ public class UserWorldEditorController {
         WWorld main = mainOpt.get();
         if (!main.getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not an owner of main world"));
         try {
-            WWorld created = worldService.createWorld(req.worldId(), main.getPublicData(), main.getWorldId(), worldId.isBranch() ? worldId.getBranch() : null, req.enabled());
+            worldId = WorldId.of(req.worldId()).get(); // nochmal parsen um sicherzugehen
+            WWorld created = worldService.createWorld(worldId, main.getPublicData(), main.getWorldId(), worldId.isBranch() ? worldId.getBranch() : null, req.enabled());
             // publicFlag separat updaten falls gesetzt
             if (req.publicFlag() != null || req.enabled() != null) {
-                worldService.updateWorld(created.getWorldId(), w -> {
+                worldService.updateWorld(worldId, w -> {
                     if (req.publicFlag() != null) w.setPublicFlag(req.publicFlag());
                     if (req.enabled() != null) w.setEnabled(req.enabled());
                 });
@@ -118,7 +119,7 @@ public class UserWorldEditorController {
         Optional<WWorld> mainOpt = worldService.getByWorldId(worldId.getId());
         if (mainOpt.isEmpty()) return bad("main world not found: " + worldId);
         if (!mainOpt.get().getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not owner of main world"));
-        worldService.updateWorld(worldIdStr, w -> {
+        worldService.updateWorld(worldId, w -> {
             if (req.enabled() != null) w.setEnabled(req.enabled());
             if (req.publicFlag() != null) w.setPublicFlag(req.publicFlag());
             if (req.editor() != null) w.setEditor(req.editor());
@@ -149,7 +150,7 @@ public class UserWorldEditorController {
         Optional<WWorld> mainOpt = worldService.getByWorldId(worldId.getId());
         if (mainOpt.isEmpty()) return bad("main world not found: " + worldId);
         if (!mainOpt.get().getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not owner of main world"));
-        boolean deleted = worldService.deleteWorld(worldIdStr);
+        boolean deleted = worldService.deleteWorld(worldId);
         if (deleted) return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error","delete failed"));
     }

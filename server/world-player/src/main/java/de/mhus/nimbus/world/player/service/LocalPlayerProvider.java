@@ -27,7 +27,7 @@ public class LocalPlayerProvider implements PlayerProvider {
     @Override
     public Optional<PlayerData> getPlayer(PlayerId playerId, ClientType clientType) {
 
-        String pathStr = playerDataDirectory + "/" + normalizePath(playerId.getRawId() + "_" + clientType.tsString());
+        String pathStr = playerDataDirectory + "/" + normalizePath(playerId.getRawId() + "_" + clientType.tsString()) + ".json";
         var path = Paths.get(pathStr);
         try {
             if (!Files.exists(path)) {

@@ -16,7 +16,7 @@ public class PlayerInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("displayName")
     private String displayName;
     @com.fasterxml.jackson.annotation.JsonProperty("stateValues")
-    private java.util.Map<MovementStateKey, MovementStateValues> stateValues;
+    private java.util.Map<String, MovementStateValues> stateValues;
     @com.fasterxml.jackson.annotation.JsonProperty("baseWalkSpeed")
     private double baseWalkSpeed;
     @com.fasterxml.jackson.annotation.JsonProperty("baseRunSpeed")

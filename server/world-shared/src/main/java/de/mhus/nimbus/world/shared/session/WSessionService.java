@@ -99,7 +99,7 @@ public class WSessionService {
             Duration newTtl = switch (newStatus) {
                 case WAITING -> Duration.ofMinutes(props.getWaitingMinutes());
                 case RUNNING -> Duration.ofHours(props.getRunningHours());
-                case DEPRECATED -> Duration.ofMinutes(props.getDeprecatedMinutes());
+                case CLOSED -> Duration.ofMinutes(props.getDeprecatedMinutes());
             };
             existing.setExpireAt(Instant.now().plus(newTtl));
             write(existing, newTtl);
@@ -115,7 +115,7 @@ public class WSessionService {
             Duration ttl = switch (existing.getStatus()) {
                 case WAITING -> Duration.ofMinutes(props.getWaitingMinutes());
                 case RUNNING -> Duration.ofHours(props.getRunningHours());
-                case DEPRECATED -> Duration.ofMinutes(props.getDeprecatedMinutes());
+                case CLOSED -> Duration.ofMinutes(props.getDeprecatedMinutes());
             };
             existing.setExpireAt(Instant.now().plus(ttl));
             write(existing, ttl);

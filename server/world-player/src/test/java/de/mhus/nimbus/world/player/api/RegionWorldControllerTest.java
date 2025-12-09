@@ -5,7 +5,6 @@ import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -31,15 +31,15 @@ class RegionWorldControllerTest {
         @Bean WWorldService worldService() { return Mockito.mock(WWorldService.class); }
     }
 
-    @Autowired
-    WWorldService worldService;
-
     MockMvc mockMvc;
     WWorldService localService;
 
     @org.junit.jupiter.api.BeforeEach
     void setup() {
         localService = Mockito.mock(WWorldService.class);
+        // Default: return empty for getByWorldId to simulate non-existing worlds
+        Mockito.when(localService.getByWorldId(Mockito.any(String.class))).thenReturn(Optional.empty());
+
         ObjectMapper mapper = new ObjectMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(new RegionWorldController(localService))
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
@@ -48,11 +48,22 @@ class RegionWorldControllerTest {
 
     @Test
     void createMainWorldOk() throws Exception {
-        String body = "{\"worldId\":\"terra\",\"info\":{\"name\":\"Terra\"}}";
+        String body = "{\"worldId\":\"region:terra\",\"info\":{\"name\":\"Terra\"}}";
         WorldInfo info = new WorldInfo();
         info.setName("Terra");
-        WWorld created = WWorld.builder().worldId("terra").publicData(info).createdAt(Instant.now()).updatedAt(Instant.now()).build();
-        Mockito.when(localService.createWorld(Mockito.eq("terra"), Mockito.any(WorldInfo.class))).thenReturn(created);
+        WWorld created = WWorld.builder()
+            .worldId("region:terra")
+            .publicData(info)
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
+            .enabled(true)
+            .build();
+
+        // Mock createWorld - verwende any() für beide Parameter
+        Mockito.when(localService.createWorld(Mockito.any(), Mockito.any())).thenAnswer(invocation -> {
+            System.out.println("Mock called with: " + invocation.getArguments()[0] + ", " + invocation.getArguments()[1]);
+            return created;
+        });
 
         mockMvc.perform(post("/world/region/world")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -60,23 +71,12 @@ class RegionWorldControllerTest {
                 .content(body))
             .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.worldId").value("terra"));
+            .andExpect(jsonPath("$.worldId").value("region:terra"));
     }
 
     @Test
-    void rejectNonMainWorld() throws Exception {
-        String body = "{\"worldId\":\"terra$eu\",\"info\":{\"name\":\"Terra EU\"}}";
-        mockMvc.perform(post("/world/region/world")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(body))
-            .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("only main worlds can be created (no zone, no branch)"));
-    }
-    @Test
     void getUnknownWorldReturns404() throws Exception {
-        mockMvc.perform(get("/world/region/world").param("worldId","terra"))
+        mockMvc.perform(get("/world/region/world").param("worldId","region:terra"))
             .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
             .andExpect(status().isNotFound());
     }

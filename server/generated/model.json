@@ -4523,8 +4523,8 @@
         "type" : "Record<MovementStateKey, MovementStateValues>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "Map<String,MovementStateValues>",
+        "comment" : "// javaType: Map<String,MovementStateValues>"
       }, {
         "name" : "baseWalkSpeed",
         "type" : "number",

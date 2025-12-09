@@ -46,7 +46,7 @@ class WSessionServiceTest {
         Optional<WSession> updated = svc.updateStatus(session.getId(), WSessionStatus.RUNNING);
         assertTrue(updated.isPresent());
         assertEquals(WSessionStatus.RUNNING, updated.get().getStatus());
-        Optional<WSession> deprecated = svc.updateStatus(session.getId(), WSessionStatus.DEPRECATED);
+        Optional<WSession> deprecated = svc.updateStatus(session.getId(), WSessionStatus.CLOSED);
         assertTrue(deprecated.isPresent());
         assertTrue(svc.delete(session.getId()));
     }

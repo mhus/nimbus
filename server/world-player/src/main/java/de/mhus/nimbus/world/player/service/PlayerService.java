@@ -5,6 +5,7 @@ import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.world.player.session.SessionPingConsumer;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.Optional;
 public class PlayerService implements SessionPingConsumer {
 
     private final PlayerProvider playerProvider;
+    private final WorldRedisService worldRedisService;
 
     public Optional<PlayerData> getPlayer(PlayerId playerId, ClientType clientType) {
         return playerProvider.getPlayer(playerId, clientType);
