@@ -13,6 +13,18 @@ import type { AppContext } from '../AppContext';
 const logger = getLogger('ScrawlExecutor');
 
 /**
+ * Defines how the executor is controlled
+ */
+export enum ExecutorControlType {
+  /** Private script - runs only locally, no network sync */
+  LOCAL_ONLY = 'local_only',
+  /** Main/Common script - locally controlled, sends updates to others */
+  LOCAL_CONTROLLED = 'local_controlled',
+  /** Slave/Common script - remotely controlled via network messages */
+  REMOTE_CONTROLLED = 'remote_controlled',
+}
+
+/**
  * Executor for scrawl scripts.
  * Handles the execution logic for all step types.
  */
@@ -24,6 +36,9 @@ export class ScrawlExecutor {
   private runningEffects = new Map<string, any>();
   private executorId: string = `exec_${Date.now()}_${Math.random()}`; // Default, will be set by setExecutorId()
   private taskCompletionPromises = new Map<string, Promise<void>>();
+
+  /** Defines how this executor is controlled (local vs remote) */
+  private controlType: ExecutorControlType;
   private shortcutEndListener: ((data: any) => void) | null = null;
   private playerDirectionListener: ((data: any) => void) | null = null;
   private playerDirectionBroadcastActive: boolean = false;
@@ -42,8 +57,33 @@ export class ScrawlExecutor {
   ) {
     this.eventEmitter = new EventTarget();
 
+    // Determine control type based on context
+    const isLocal = (initialContext as any)?.isLocal ?? true;
+    const sendToServer = this.sendToServer; // Will be set later via setMultiplayerData
+
+    if (!isLocal) {
+      // Script came from network - remotely controlled
+      this.controlType = ExecutorControlType.REMOTE_CONTROLLED;
+    } else if (sendToServer) {
+      // Local script that syncs to network - locally controlled
+      this.controlType = ExecutorControlType.LOCAL_CONTROLLED;
+    } else {
+      // Local only script - no network
+      this.controlType = ExecutorControlType.LOCAL_ONLY;
+    }
+
+    logger.debug('Executor created', {
+      executorId: this.executorId,
+      controlType: this.controlType,
+      isLocal,
+      sendToServer,
+    });
+
     // Listen for shortcut ended events to stop Until/While loops
-    this.setupShortcutEndListener();
+    // Only for LOCAL_ONLY and LOCAL_CONTROLLED (not REMOTE_CONTROLLED)
+    if (this.controlType !== ExecutorControlType.REMOTE_CONTROLLED) {
+      this.setupShortcutEndListener();
+    }
   }
 
   /**
@@ -63,9 +103,10 @@ export class ScrawlExecutor {
         logger.debug('Shortcut ended for this executor, emitting stop_event', {
           executorId: this.executorId,
           scriptId: this.script.id,
+          controlType: this.controlType,
         });
 
-        // Emit 'stop_event' to terminate Until/While loops
+        // Emit stop_event to terminate Until/While loops
         this.emit('stop_event');
       }
     };
@@ -786,8 +827,20 @@ export class ScrawlExecutor {
     if (paramName === '__stop__' && value === true) {
       logger.debug('Stop event received via parameter update, emitting stop_event', {
         executorId: this.executorId,
+        controlType: this.controlType,
       });
-      this.emit('stop_event');
+
+      // Only handle __stop__ for REMOTE_CONTROLLED executors
+      if (this.controlType === ExecutorControlType.REMOTE_CONTROLLED) {
+        // Emit stop_event to terminate Until/While loops
+        this.emit('stop_event');
+      } else {
+        logger.warn('Received __stop__ for non-remote executor', {
+          executorId: this.executorId,
+          controlType: this.controlType,
+        });
+      }
+
       return; // Don't update vars or notify effects
     }
 
