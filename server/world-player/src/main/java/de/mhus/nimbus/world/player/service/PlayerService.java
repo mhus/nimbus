@@ -50,8 +50,8 @@ public class PlayerService implements SessionPingConsumer {
                 .physics(false)
                 .notifyOnAttentionRange(player.character().getPublicData().getStealthRange())
                 .notifyOnCollision(true)
-                .healthMax(500)
-                .health(400)
+//                .healthMax(500)
+//                .health(400)
                 .build();
         return Optional.of(result);
     }

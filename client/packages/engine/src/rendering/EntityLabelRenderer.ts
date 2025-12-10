@@ -68,7 +68,7 @@ export class EntityLabelRenderer {
     }
 
     const entity = clientEntity.entity;
-    const hasHealth = entity.health !== undefined && entity.healthMax !== undefined;
+    const hasHealth = entity.health !== undefined && entity.healthMax !== undefined && entity.health < entity.healthMax;
 
     // Create plane mesh for the label
     const labelPlane = MeshBuilder.CreatePlane(
@@ -226,14 +226,25 @@ export class EntityLabelRenderer {
    * @param clientEntity Entity to update label for
    */
   updateLabel(clientEntity: ClientEntity): void {
+    const entity = clientEntity.entity;
+    const shouldShowHealthBar = entity.health !== undefined && entity.healthMax !== undefined && entity.health < entity.healthMax;
+
     const label = this.entityLabels.get(clientEntity.id);
+
     if (!label) {
       // Label doesn't exist yet, create it
       this.createLabel(clientEntity);
       return;
     }
 
-    const entity = clientEntity.entity;
+    // Check if health bar status changed (need to recreate label with different layout)
+    const currentHasHealthBar = label.healthBarContainer !== undefined;
+    if (currentHasHealthBar !== shouldShowHealthBar) {
+      // Health bar status changed - recreate label
+      this.removeLabel(clientEntity.id);
+      this.createLabel(clientEntity);
+      return;
+    }
 
     // Update position
     const labelPos = this.calculateLabelPosition(clientEntity);
