@@ -29,6 +29,9 @@ export * from './Backdrop';
 // World types
 export * from './World';
 
+// Layer types
+export * from './WLayer';
+
 // Animation and effects
 export * from './AnimationData';
 export * from './AreaData';

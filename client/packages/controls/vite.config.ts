@@ -14,6 +14,7 @@ export default defineConfig({
       '@components': resolve(__dirname, './src/components'),
       '@editors': resolve(__dirname, './src/editors'),
       '@material': resolve(__dirname, './src/material'),
+      '@layer': resolve(__dirname, './src/layer'),
       '@block': resolve(__dirname, './src/block'),
       '@editconfig': resolve(__dirname, './src/editconfig'),
       '@nimbus/shared': resolve(__dirname, '../shared/src'),
@@ -25,6 +26,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'material-editor': resolve(__dirname, 'material-editor.html'),
+        'layer-editor': resolve(__dirname, 'layer-editor.html'),
         'block-editor': resolve(__dirname, 'block-editor.html'),
         'edit-config': resolve(__dirname, 'edit-config.html'),
         'item-editor': resolve(__dirname, 'item-editor.html'),

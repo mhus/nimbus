@@ -151,10 +151,26 @@ public class WLayerService {
     }
 
     /**
+     * Find a layer by ID.
+     */
+    @Transactional(readOnly = true)
+    public Optional<WLayer> findById(String id) {
+        return layerRepository.findById(id);
+    }
+
+    /**
      * Find a layer by world and name.
      */
     @Transactional(readOnly = true)
     public Optional<WLayer> findLayer(String worldId, String layerName) {
+        return layerRepository.findByWorldIdAndName(worldId, layerName);
+    }
+
+    /**
+     * Find a layer by world and name (alias for REST API).
+     */
+    @Transactional(readOnly = true)
+    public Optional<WLayer> findByWorldIdAndName(String worldId, String layerName) {
         return layerRepository.findByWorldIdAndName(worldId, layerName);
     }
 
@@ -164,6 +180,46 @@ public class WLayerService {
     @Transactional(readOnly = true)
     public List<WLayer> findLayersByWorld(String worldId) {
         return layerRepository.findByWorldIdOrderByOrderAsc(worldId);
+    }
+
+    /**
+     * Find all layers for a world (alias for REST API).
+     */
+    @Transactional(readOnly = true)
+    public List<WLayer> findByWorldId(String worldId) {
+        return layerRepository.findByWorldIdOrderByOrderAsc(worldId);
+    }
+
+    /**
+     * Save a layer.
+     */
+    @Transactional
+    public WLayer save(WLayer layer) {
+        return layerRepository.save(layer);
+    }
+
+    /**
+     * Delete a layer by ID.
+     */
+    @Transactional
+    public void delete(String id) {
+        Optional<WLayer> layerOpt = layerRepository.findById(id);
+        if (layerOpt.isPresent()) {
+            WLayer layer = layerOpt.get();
+            // Mark affected chunks as dirty before deletion
+            markAffectedChunksDirty(layer, "layer_deleted");
+
+            // Delete associated data
+            if (layer.getLayerType() == LayerType.TERRAIN) {
+                deleteTerrainData(layer.getLayerDataId());
+            } else if (layer.getLayerType() == LayerType.MODEL) {
+                modelRepository.deleteByLayerDataId(layer.getLayerDataId());
+            }
+
+            // Delete layer
+            layerRepository.deleteById(id);
+            log.info("Deleted layer: id={} name={} type={}", id, layer.getName(), layer.getLayerType());
+        }
     }
 
     /**
