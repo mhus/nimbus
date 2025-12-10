@@ -51,8 +51,9 @@ export class ScrawlListCommand extends CommandHandler {
 
     logger.debug('=== Running Executors ===');
     const runningIds = scrawlService.getRunningExecutorIds();
+    logger.info(`Total running executors: ${runningIds.length}`);
     if (runningIds.length === 0) {
-      logger.debug('No scripts currently running');
+      logger.info('No scripts currently running');
     } else {
       runningIds.forEach((id: string) => {
         const executor = scrawlService.getExecutor(id);
@@ -62,7 +63,9 @@ export class ScrawlListCommand extends CommandHandler {
             : executor.isPaused()
             ? 'paused'
             : 'running';
-          logger.debug(`  - ${id} (${executor.getScriptId()}) - ${status}`);
+          logger.info(`  - ${id} (${executor.getScriptId()}) - ${status}`);
+        } else {
+          logger.warn(`  - ${id} - EXECUTOR NOT FOUND (already cleaned up?)`);
         }
       });
     }

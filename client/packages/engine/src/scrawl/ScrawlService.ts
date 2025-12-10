@@ -38,6 +38,9 @@ export class ScrawlService {
   // Track sent effect IDs to prevent executing our own effects when they come back from server
   private sentEffectIds: Set<string> = new Set();
 
+  // Track received effect IDs to prevent duplicate execution
+  private receivedEffectIds: Set<string> = new Set();
+
   // Map effectId → executorId for parameter updates
   private effectIdToExecutorId = new Map<string, string>();
 
@@ -329,16 +332,17 @@ export class ScrawlService {
       executor.setExecutorId(executorId); // Set executor ID for shortcut tracking
       this.runningExecutors.set(executorId, executor);
 
-      logger.debug(`Starting script execution: ${script.id}`, { executorId });
+      logger.info(`▶️  SCRIPT STARTED: ${script.id}`, { executorId });
 
       // Execute script (fire-and-forget)
       executor
         .start()
         .then(() => {
-          logger.debug(`Script execution completed: ${script.id}`, { executorId });
+          logger.info(`✅ SCRIPT COMPLETED: ${script.id}`, { executorId });
           this.cleanupExecutor(executorId);
         })
         .catch((error) => {
+          logger.info(`❌ SCRIPT FAILED: ${script.id}`, { executorId, error: (error as Error).message });
           ExceptionHandler.handle(error, 'ScrawlService.executeScript.executor', {
             scriptId: script.id,
             executorId,
@@ -706,12 +710,11 @@ export class ScrawlService {
 
       // Send to server if NetworkService is available
       if (networkService) {
-        logger.debug('🟢 CLIENT: Sending effect trigger to server', {
+        logger.info('📤 SENDING s.t to server', {
           effectId,
           entityId,
           chunkCount: chunks.length,
           scriptId: action.scriptId,
-          messageType: MessageType.EFFECT_TRIGGER,
         });
 
         networkService.send({
@@ -719,7 +722,7 @@ export class ScrawlService {
           d: effectTriggerData,
         });
 
-        logger.debug('🟢 CLIENT: Effect trigger sent to server', {
+        logger.info('📤 s.t SENT to server', {
           effectId,
         });
       } else {
@@ -753,6 +756,26 @@ export class ScrawlService {
   }
 
   /**
+   * Mark an effect as received to prevent duplicate execution
+   *
+   * Used by EffectTriggerHandler to track received effects and prevent
+   * duplicate execution if the same effect is received multiple times.
+   *
+   * @param effectId Effect ID to mark as received
+   * @returns True if this is the first time receiving this effect, false if duplicate
+   */
+  markEffectAsReceived(effectId: string): boolean {
+    if (this.receivedEffectIds.has(effectId)) {
+      return false; // Duplicate
+    }
+
+    this.receivedEffectIds.add(effectId);
+    // Cleanup after 10 seconds (same as sentEffectIds)
+    setTimeout(() => this.receivedEffectIds.delete(effectId), 10000);
+    return true; // First time
+  }
+
+  /**
    * Get effectId for a specific executor
    *
    * Used by ShortcutService to send position updates to server.
@@ -778,6 +801,7 @@ export class ScrawlService {
     logger.debug('Disposing ScrawlService...');
     this.cancelAllExecutors();
     this.sentEffectIds.clear();
+    this.receivedEffectIds.clear();
     this.effectIdToExecutorId.clear();
     this.executorIdToEffectId.clear();
     logger.debug('ScrawlService disposed');

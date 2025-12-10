@@ -31,6 +31,7 @@ export enum ExecutorControlType {
 export class ScrawlExecutor {
   private cancelled = false;
   private paused = false;
+  private shouldBreak = false; // Set when script should break (from shortcut end or __stop__)
   private vars = new Map<string, any>();
   private eventEmitter: EventTarget;
   private runningEffects = new Map<string, any>();
@@ -80,10 +81,8 @@ export class ScrawlExecutor {
     });
 
     // Listen for shortcut ended events to stop Until/While loops
-    // Only for LOCAL_ONLY and LOCAL_CONTROLLED (not REMOTE_CONTROLLED)
-    if (this.controlType !== ExecutorControlType.REMOTE_CONTROLLED) {
-      this.setupShortcutEndListener();
-    }
+    // For all control types - remote will receive via __stop__ parameter
+    this.setupShortcutEndListener();
   }
 
   /**
@@ -100,13 +99,15 @@ export class ScrawlExecutor {
     this.shortcutEndListener = (data: any) => {
       // Check if this is our executor
       if (data.executorId === this.executorId) {
-        logger.debug('Shortcut ended for this executor, emitting stop_event', {
+        logger.info('🛑 SHORTCUT ENDED - Setting shouldBreak flag', {
           executorId: this.executorId,
           scriptId: this.script.id,
           controlType: this.controlType,
         });
 
-        // Emit stop_event to terminate Until/While loops
+        // Set flag to break Until/While loops
+        this.shouldBreak = true;
+        // Also emit event for compatibility
         this.emit('stop_event');
       }
     };
@@ -825,15 +826,30 @@ export class ScrawlExecutor {
 
     // Handle special stop parameter (from remote shortcut end)
     if (paramName === '__stop__' && value === true) {
-      logger.debug('Stop event received via parameter update, emitting stop_event', {
+      logger.info('🛑 __STOP__ RECEIVED via parameter update', {
         executorId: this.executorId,
         controlType: this.controlType,
       });
 
       // Only handle __stop__ for REMOTE_CONTROLLED executors
       if (this.controlType === ExecutorControlType.REMOTE_CONTROLLED) {
-        // Emit stop_event to terminate Until/While loops
-        this.emit('stop_event');
+        // Set flag to break Until/While loops (same as local shortcut end)
+        this.shouldBreak = true;
+
+        // Also emit shortcut:ended event for compatibility
+        const playerService = this.appContext.services.player;
+        if (playerService) {
+          playerService.emitShortcutEnded({
+            executorId: this.executorId,
+            shortcutNr: 0,
+            shortcutKey: '',
+            duration: 0,
+          });
+        }
+
+        logger.info('🛑 Set shouldBreak=true and emitted shortcut:ended', {
+          executorId: this.executorId,
+        });
       } else {
         logger.warn('Received __stop__ for non-remote executor', {
           executorId: this.executorId,
@@ -989,7 +1005,7 @@ export class ScrawlExecutor {
         effectHandler = await this.executeAndTrackEffect(ctx, step.step);
 
         // Wait for task completion or timeout
-        while (!this.cancelled && !taskCompleted) {
+        while (!this.cancelled && !this.shouldBreak && !taskCompleted) {
           const elapsed = performance.now() / 1000 - startTime;
           if (elapsed >= timeout) {
             logger.warn(`While loop timed out after ${timeout}s`, {
@@ -1009,7 +1025,7 @@ export class ScrawlExecutor {
         }
       } else {
         // One-Shot: Execute repeatedly until task ends
-        while (!this.cancelled && !taskCompleted) {
+        while (!this.cancelled && !this.shouldBreak && !taskCompleted) {
           const elapsed = performance.now() / 1000 - startTime;
           if (elapsed >= timeout) {
             logger.warn(`While loop timed out after ${timeout}s`, {
@@ -1034,6 +1050,14 @@ export class ScrawlExecutor {
         this.cleanupPlayerDirectionListener();
         logger.debug('Player direction broadcast DISABLED after While loop');
       }
+
+      // Reset shouldBreak for next loops in script
+      if (this.shouldBreak) {
+        logger.info('🔄 While loop ended due to shouldBreak, resetting flag', {
+          executorId: this.executorId,
+        });
+      }
+      this.shouldBreak = false;
     }
   }
 
@@ -1093,7 +1117,7 @@ export class ScrawlExecutor {
         effectHandler = await this.executeAndTrackEffect(ctx, step.step);
 
         // Wait for event or timeout
-        while (!this.cancelled && !eventReceived) {
+        while (!this.cancelled && !this.shouldBreak && !eventReceived) {
           const elapsed = performance.now() / 1000 - startTime;
           if (elapsed >= timeout) {
             logger.warn(`Until loop timed out after ${timeout}s`, {
@@ -1113,7 +1137,7 @@ export class ScrawlExecutor {
         }
       } else {
         // One-Shot: Execute repeatedly until event
-        while (!this.cancelled && !eventReceived) {
+        while (!this.cancelled && !this.shouldBreak && !eventReceived) {
           const elapsed = performance.now() / 1000 - startTime;
           if (elapsed >= timeout) {
             logger.warn(`Until loop timed out after ${timeout}s`, {
@@ -1138,6 +1162,14 @@ export class ScrawlExecutor {
         this.cleanupPlayerDirectionListener();
         logger.debug('Player direction broadcast DISABLED after Until loop');
       }
+
+      // Reset shouldBreak for next loops in script
+      if (this.shouldBreak) {
+        logger.info('🔄 Until loop ended due to shouldBreak, resetting flag', {
+          executorId: this.executorId,
+        });
+      }
+      this.shouldBreak = false;
     }
   }
 
