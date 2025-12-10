@@ -46,13 +46,24 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
     }
 
     try {
+      const updated = this.scrawlService.updateExecutorParameter(
+        data.effectId,
+        data.paramName,
+        data.value,
+        data.targeting
+      );
 
-      this.scrawlService.updateExecutorParameter(data.effectId, data.paramName, data.value, data.targeting);
-
-      logger.debug('Remote parameter update applied', {
-        effectId: data.effectId,
-        paramName: data.paramName
-      });
+      if (updated) {
+        logger.info('Remote parameter update applied successfully', {
+          effectId: data.effectId,
+          paramName: data.paramName,
+        });
+      } else {
+        logger.warn('Remote parameter update failed: executor not found', {
+          effectId: data.effectId,
+          paramName: data.paramName,
+        });
+      }
     } catch (error) {
       logger.warn('Failed to apply remote parameter update', {
         effectId: data.effectId,

@@ -41,6 +41,9 @@ export class ScrawlService {
   // Map effectId → executorId for parameter updates
   private effectIdToExecutorId = new Map<string, string>();
 
+  // Reverse mapping executorId → effectId for cleanup
+  private executorIdToEffectId = new Map<string, string>();
+
   constructor(private readonly appContext: AppContext) {
     // Initialize effect registry and factory
     this.effectRegistry = new ScrawlEffectRegistry();
@@ -333,14 +336,14 @@ export class ScrawlService {
         .start()
         .then(() => {
           logger.debug(`Script execution completed: ${script.id}`, { executorId });
-          this.runningExecutors.delete(executorId);
+          this.cleanupExecutor(executorId);
         })
         .catch((error) => {
           ExceptionHandler.handle(error, 'ScrawlService.executeScript.executor', {
             scriptId: script.id,
             executorId,
           });
-          this.runningExecutors.delete(executorId);
+          this.cleanupExecutor(executorId);
         });
 
       return executorId;
@@ -367,7 +370,7 @@ export class ScrawlService {
     const executor = this.runningExecutors.get(executorId);
     if (executor) {
       executor.cancel();
-      this.runningExecutors.delete(executorId);
+      this.cleanupExecutor(executorId);
       logger.debug(`Executor cancelled: ${executorId}`);
       return true;
     }
@@ -414,6 +417,24 @@ export class ScrawlService {
     const ids = this.getRunningExecutorIds();
     ids.forEach((id) => this.cancelExecutor(id));
     logger.debug(`Cancelled ${ids.length} executors`);
+  }
+
+  /**
+   * Clean up executor and associated mappings
+   *
+   * @param executorId Executor ID to clean up
+   */
+  private cleanupExecutor(executorId: string): void {
+    // Clean up effectId mapping if exists
+    const effectId = this.executorIdToEffectId.get(executorId);
+    if (effectId) {
+      this.effectIdToExecutorId.delete(effectId);
+      this.executorIdToEffectId.delete(executorId);
+      logger.debug('Effect mapping cleaned up', { effectId, executorId });
+    }
+
+    // Remove from running executors
+    this.runningExecutors.delete(executorId);
   }
 
   /**
@@ -505,6 +526,38 @@ export class ScrawlService {
   }
 
   /**
+   * Register effectId mapping for remote effects
+   *
+   * Called by EffectTriggerHandler after remote script execution starts.
+   * Creates the effectIdToExecutorId mapping so that parameter updates (s.u) work.
+   *
+   * @param effectId Server-provided effect ID
+   * @param executorId Local executor ID
+   */
+  registerRemoteEffectMapping(effectId: string, executorId: string): void {
+    const executor = this.runningExecutors.get(executorId);
+    if (!executor) {
+      logger.warn('Cannot register remote effect mapping: executor not found', {
+        effectId,
+        executorId,
+      });
+      return;
+    }
+
+    // Set multiplayer data on executor (no chunks, no server send for remote)
+    executor.setMultiplayerData(effectId, [], false);
+
+    // Create bidirectional mapping
+    this.effectIdToExecutorId.set(effectId, executorId);
+    this.executorIdToEffectId.set(executorId, effectId);
+
+    logger.debug('Remote effect mapping registered', {
+      effectId,
+      executorId,
+    });
+  }
+
+  /**
    * Updates a parameter in a running executor.
    * Can be called from any source (e.g., InputService, NetworkService, etc.)
    *
@@ -512,13 +565,14 @@ export class ScrawlService {
    * @param paramName Name of the parameter (e.g. 'targetPos', 'mousePos', 'volume')
    * @param value New value (any type)
    * @param targeting Optional targeting context from network synchronization
+   * @returns True if executor was found and updated, false otherwise
    */
   updateExecutorParameter(
     executorIdOrEffectId: string,
     paramName: string,
     value: any,
     targeting?: import('@nimbus/shared').SerializableTargetingContext
-  ): void {
+  ): boolean {
     // Try direct executor ID first
     let executor = this.runningExecutors.get(executorIdOrEffectId);
 
@@ -537,10 +591,12 @@ export class ScrawlService {
         paramName,
         hasTargeting: !!targeting,
       });
+      return true;
     } else {
       logger.debug(`Executor not found for parameter update: ${executorIdOrEffectId}`, {
         paramName,
       });
+      return false;
     }
   }
 
@@ -722,6 +778,8 @@ export class ScrawlService {
     logger.debug('Disposing ScrawlService...');
     this.cancelAllExecutors();
     this.sentEffectIds.clear();
+    this.effectIdToExecutorId.clear();
+    this.executorIdToEffectId.clear();
     logger.debug('ScrawlService disposed');
   }
 }

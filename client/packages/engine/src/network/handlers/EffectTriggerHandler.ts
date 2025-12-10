@@ -80,12 +80,15 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
         }
       );
 
+      // Register remote effect mapping for parameter updates (s.u)
+      this.scrawlService.registerRemoteEffectMapping(data.effectId, executorId);
+
       logger.debug('Remote executor should have isLocal: false', {
         executorId,
         contextIsLocal: false,
       });
 
-      logger.debug('Remote effect executed', {
+      logger.debug('Remote effect executed and registered', {
         executorId,
         effectId: data.effectId,
         entityId: data.entityId,
