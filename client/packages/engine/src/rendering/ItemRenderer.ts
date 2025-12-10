@@ -12,11 +12,13 @@
  * - transparencyMode: ALPHA_TEST (sharp cutout edges, cannot be overridden)
  */
 
-import { Vector3, Mesh, VertexData, Texture } from '@babylonjs/core';
+import { Vector3, Mesh, VertexData, Texture, MeshBuilder, StandardMaterial, Color3 } from '@babylonjs/core';
+import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
 import { getLogger, TextureHelper, TransparencyMode } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
+import { RENDERING_GROUPS } from '../config/renderingGroups';
 
 const logger = getLogger('ItemRenderer');
 
@@ -272,6 +274,93 @@ export class ItemRenderer extends BlockRenderer {
       displayName: block.metadata?.displayName,
       position: centerPosition,
       aspectRatio,
+    });
+
+    // Create billboard text for item name and amount
+    this.createItemLabel(mesh, clientBlock, renderContext);
+  }
+
+  /**
+   * Create billboard text label for item
+   *
+   * Displays item name and amount (if present) above the item mesh.
+   * Uses a fixed-size screen-space GUI that doesn't scale with distance.
+   *
+   * @param mesh Item mesh to attach label to
+   * @param clientBlock ClientBlock containing itemBlockRef with name/amount
+   * @param renderContext Render context with resourcesToDispose
+   */
+  private createItemLabel(
+    mesh: Mesh,
+    clientBlock: ClientBlock,
+    renderContext: RenderContext
+  ): void {
+    const itemBlockRef = clientBlock.itemBlockRef;
+
+    // Check if item has name or amount to display
+    if (!itemBlockRef || (!itemBlockRef.name && !itemBlockRef.amount)) {
+      return;
+    }
+
+    // Build label text
+    let labelText = '';
+    if (itemBlockRef.name) {
+      labelText = itemBlockRef.name;
+    }
+    if (itemBlockRef.amount && itemBlockRef.amount > 1) {
+      labelText += labelText ? ` (${itemBlockRef.amount})` : `${itemBlockRef.amount}`;
+    }
+
+    if (!labelText) {
+      return;
+    }
+
+    // Create a small plane mesh for the label with compact size
+    const scene = renderContext.renderService.materialService.scene;
+    const labelPlane = MeshBuilder.CreatePlane(
+      `${mesh.name}_label`,
+      { width: 0.5, height: 0.15 },
+      scene
+    );
+
+    // Position label above the item in world space (not as child!)
+    const itemPos = mesh.position;
+    labelPlane.position = new Vector3(itemPos.x, itemPos.y + 0.5, itemPos.z);
+    labelPlane.billboardMode = Mesh.BILLBOARDMODE_Y; // Same as item billboard
+    labelPlane.isPickable = false;
+
+    // Ensure label renders on top of world geometry
+    labelPlane.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY;
+    labelPlane.alwaysSelectAsActiveMesh = true;
+
+    // Create a transparent material to prevent depth issues
+    const labelMaterial = new StandardMaterial(`${mesh.name}_label_mat`, scene);
+    labelMaterial.disableDepthWrite = true; // Don't write to depth buffer
+    labelMaterial.disableColorWrite = true; // Don't write color (GUI texture will)
+    labelPlane.material = labelMaterial;
+
+    // Create GUI texture for the label with high resolution for crisp text
+    const guiTexture = AdvancedDynamicTexture.CreateForMesh(labelPlane, 256, 64);
+
+    // Create text block
+    const textBlock = new TextBlock();
+    textBlock.text = labelText;
+    textBlock.color = 'white';
+    textBlock.fontSize = 24;
+    textBlock.fontWeight = 'bold';
+    textBlock.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+    textBlock.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
+    textBlock.outlineWidth = 3;
+    textBlock.outlineColor = 'black';
+
+    guiTexture.addControl(textBlock);
+
+    // Register label plane for disposal
+    renderContext.resourcesToDispose.addMesh(labelPlane);
+
+    logger.debug('Item label created', {
+      meshName: mesh.name,
+      labelText,
     });
   }
 }

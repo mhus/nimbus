@@ -216,6 +216,12 @@ export interface Entity {
 
   /** Distance threshold for proximity notifications in blocks (0 = disabled) */
   notifyOnAttentionRange?: number;
+
+  /** Current health of the entity */
+  health?: number; // javaType: float
+  /** Maximum health of the entity */
+  healthMax?: number; // javaType: float
+
 }
 
 /**
@@ -394,5 +400,27 @@ export function interpolateEntityPosition(
       p: prevWaypoint.rotation.p + (nextWaypoint.rotation.p - prevWaypoint.rotation.p) * clampedT,
     },
     pose: clampedT < 0.5 ? prevWaypoint.pose : nextWaypoint.pose,
+  };
+}
+
+/**
+ * Entity Status Update
+ *
+ * Used for network message "e.s.u" to update entity status
+ * (health, healthMax, and potentially other status fields)
+ */
+export interface EntityStatusUpdate {
+  /** Entity ID to update */
+  entityId: string;
+
+  /** Status fields to update */
+  status: {
+    /** Current health value */
+    health?: number;
+
+    /** Maximum health value */
+    healthMax?: number;
+
+    // Future expansion: mana, stamina, effects, etc.
   };
 }

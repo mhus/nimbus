@@ -28,6 +28,11 @@
 - Balken+Name ueber Entities
 - Zeichen, zb. Menge + Namen ueber Items
 
+- lookup strategien
+  - erweitere worldId um @ at start: @<collection type>:<collection id>
+  - z.b. @region:earth616 -> shared collection of assets for earth616 ofer all worlds in this region, z.b. item texturen
+  - z.b. @shared:nebulus -> shared collection 'nebulus' of assets for all worlds (in this server, server needs to sync them before)
+
 Bug:
 - Storage worldId mitgeben
 - jump als number

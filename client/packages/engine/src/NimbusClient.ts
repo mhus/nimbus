@@ -38,6 +38,7 @@ import { EffectTriggerHandler } from './network/handlers/EffectTriggerHandler';
 import { EffectParameterUpdateHandler } from './network/handlers/EffectParameterUpdateHandler';
 import { PingMessageHandler } from './network/handlers/PingMessageHandler';
 import { EntityPathwayMessageHandler } from './network/handlers/EntityPathwayMessageHandler';
+import { EntityStatusUpdateMessageHandler } from './network/handlers/EntityStatusUpdateMessageHandler';
 import { CommandMessageHandler } from './network/handlers/CommandMessageHandler';
 import { CommandResultHandler } from './network/handlers/CommandResultHandler';
 import { ServerCommandHandler } from './network/handlers/ServerCommandHandler';
@@ -306,6 +307,11 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     const entityPathwayHandler = new EntityPathwayMessageHandler(entityService);
     networkService.registerHandler(entityPathwayHandler);
     logger.debug('🔵 EntityPathwayMessageHandler registered for message type: e.p');
+
+    // Register EntityStatusUpdateMessageHandler
+    const entityStatusUpdateHandler = new EntityStatusUpdateMessageHandler(entityService);
+    networkService.registerHandler(entityStatusUpdateHandler);
+    logger.debug('🔵 EntityStatusUpdateMessageHandler registered for message type: e.s.u');
 
     // Register EffectTriggerHandler (ScrawlService was initialized earlier)
     if (appContext.services.scrawl) {

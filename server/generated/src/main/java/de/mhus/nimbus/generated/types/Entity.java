@@ -37,4 +37,9 @@ public class Entity {
     @com.fasterxml.jackson.annotation.JsonProperty("notifyOnAttentionRange")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double notifyOnAttentionRange;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private float health;
+    @com.fasterxml.jackson.annotation.JsonProperty("healthMax")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private float healthMax;
 }

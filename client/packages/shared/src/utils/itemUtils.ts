@@ -33,6 +33,9 @@ export function itemToBlock(item: ItemBlockRef): Block {
                 scalingX: item.scaleX ?? 0.5,
                 scalingY: item.scaleY ?? 0.5,
             },
+            physics: {
+                interactive: true,
+            }
         }
     },
     metadata: {

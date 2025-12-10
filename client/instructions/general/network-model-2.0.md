@@ -402,6 +402,26 @@ Der Client sendet seine aktuelle Entity-Positions und Rotation an den Server.
 }
 ```
 
+## Entity Status Update (Server -> Client)
+
+Update des Entity-Status (z.B. Gesundheit etc.) vom Server an den Client.
+
+```json
+{"t": "e.s.u", "d": 
+  [
+    {
+      "entityId": "entity123",
+      "status": {
+        "healthMax": 100,
+        "health": 80,
+        ...
+      }
+    },
+    ...
+  ]
+}
+```
+
 ## Entity Interaction (Client -> Server)
 
 Der Client sendet eine Interaktions information mit einer Entity an den Server (z.B. wenn der Spieler mit einer Entity interagiert).

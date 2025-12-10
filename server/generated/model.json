@@ -1401,6 +1401,20 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "health",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "float",
+        "comment" : "// javaType: float"
+      }, {
+        "name" : "healthMax",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "float",
+        "comment" : "// javaType: float"
       } ],
       "methods" : [ ]
     }, {
@@ -2188,6 +2202,13 @@
       }, {
         "name" : "offset",
         "type" : "[number, number, number]",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -5681,7 +5702,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "MessageType",
-      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "ANIMATION_START", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT", "TEAM_DATA", "TEAM_STATUS" ],
+      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT", "TEAM_DATA", "TEAM_STATUS" ],
       "enumValues" : [ {
         "name" : "LOGIN",
         "value" : "login"
@@ -5731,14 +5752,11 @@
         "name" : "ENTITY_INTERACTION",
         "value" : "e.int.r"
       }, {
-        "name" : "ANIMATION_START",
-        "value" : "a.s"
-      }, {
         "name" : "EFFECT_TRIGGER",
-        "value" : "e.t"
+        "value" : "s.t"
       }, {
         "name" : "EFFECT_PARAMETER_UPDATE",
-        "value" : "ef.p.u"
+        "value" : "s.u"
       }, {
         "name" : "USER_MOVEMENT",
         "value" : "u.m"

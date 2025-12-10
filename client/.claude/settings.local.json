@@ -75,7 +75,8 @@
       "Bash(xargs:*)",
       "Bash(npm run dev:*)",
       "Bash(pnpm update:*)",
-      "Bash(pnpm --filter @nimbus/engine build:shared:*)"
+      "Bash(pnpm --filter @nimbus/engine build:shared:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

@@ -65,6 +65,12 @@ public class WLayer {
     private Integer mountZ;
 
     /**
+     * If true, this layer defines ground level (affects terrain generation).
+     * This will affect the ground calculation. Makes only sense for terrain layers but not reduced to them.
+     */
+    private boolean ground;
+
+    /**
      * If true, this layer affects all chunks in the world.
      * If false, only chunks in affectedChunks list are affected.
      */

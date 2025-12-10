@@ -47,6 +47,7 @@ import {WebGLCheckCommand} from "./WebGLCheckCommand";
 import {ListEntitiesCommand} from "./ListEntitiesCommand";
 import {EntityInfoCommand} from "./EntityInfoCommand";
 import {SpawnEntityCommand} from "./SpawnEntityCommand";
+import {SetEntityStatusCommand} from "./SetEntityStatusCommand";
 import {ToggleEntityPathwaysCommand} from "./ToggleEntityPathwaysCommand";
 import {WindDirectionCommand, WindGustStrengthCommand, WindStrengthCommand, WindSwayFactorCommand} from "./wind";
 import {
@@ -204,6 +205,7 @@ export class CommandsFactory {
         commandService.registerHandler(new ListEntitiesCommand(appContext));
         commandService.registerHandler(new EntityInfoCommand(appContext));
         commandService.registerHandler(new SpawnEntityCommand(appContext));
+        commandService.registerHandler(new SetEntityStatusCommand(appContext));
         commandService.registerHandler(new ToggleEntityPathwaysCommand(appContext));
 
         // Register wind commands

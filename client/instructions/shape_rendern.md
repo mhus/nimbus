@@ -278,6 +278,14 @@ Welche Einsaetze gemacht werden muessen hängt von der kombinantion der fehlende
   }
 ```
 
+
+[x] ueber items soll immer ein keiner text stehen, der name und die anzahl (fallss angegeben) als billboard text ueber dem item. (ItemRenderer)
+[ ] Jetzt das gleche fuer Entities die haben in EntityData.ts schon einen namen, der angezeigt werden soll: ueber entities soll immer ein kleiner text stehen, der name der entity und deren health (falls angegeben, als balken) als
+billboard text ueber der entity. Wie kann hier der abglich der health geschehen? Es soll auch der health wert angezeigt und im laufenden darstellung auch aktualisiert werden. Wie macht man das denn?
+
+
+---
+
 ## Illumination
 
 Im BlockModifier gibt es eine Sektion Illumination.
