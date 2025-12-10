@@ -99,7 +99,7 @@ export class ScrawlExecutor {
     this.shortcutEndListener = (data: any) => {
       // Check if this is our executor
       if (data.executorId === this.executorId) {
-        logger.info('🛑 SHORTCUT ENDED - Setting shouldBreak flag', {
+        logger.debug('Shortcut ended for this executor, setting shouldBreak flag', {
           executorId: this.executorId,
           scriptId: this.script.id,
           controlType: this.controlType,
@@ -826,7 +826,7 @@ export class ScrawlExecutor {
 
     // Handle special stop parameter (from remote shortcut end)
     if (paramName === '__stop__' && value === true) {
-      logger.info('🛑 __STOP__ RECEIVED via parameter update', {
+      logger.debug('Stop event received via parameter update', {
         executorId: this.executorId,
         controlType: this.controlType,
       });
@@ -847,7 +847,7 @@ export class ScrawlExecutor {
           });
         }
 
-        logger.info('🛑 Set shouldBreak=true and emitted shortcut:ended', {
+        logger.debug('Set shouldBreak=true and emitted shortcut:ended', {
           executorId: this.executorId,
         });
       } else {
@@ -1053,7 +1053,7 @@ export class ScrawlExecutor {
 
       // Reset shouldBreak for next loops in script
       if (this.shouldBreak) {
-        logger.info('🔄 While loop ended due to shouldBreak, resetting flag', {
+        logger.debug('While loop ended due to shouldBreak, resetting flag', {
           executorId: this.executorId,
         });
       }
@@ -1165,7 +1165,7 @@ export class ScrawlExecutor {
 
       // Reset shouldBreak for next loops in script
       if (this.shouldBreak) {
-        logger.info('🔄 Until loop ended due to shouldBreak, resetting flag', {
+        logger.debug('Until loop ended due to shouldBreak, resetting flag', {
           executorId: this.executorId,
         });
       }

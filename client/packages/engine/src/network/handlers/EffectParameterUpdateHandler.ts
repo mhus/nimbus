@@ -34,7 +34,7 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
       return;
     }
 
-    logger.info('Effect parameter update received from server', {
+    logger.debug('Effect parameter update received from server', {
       effectId: data.effectId,
       paramName: data.paramName,
       value: data.value
@@ -54,7 +54,7 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
       );
 
       if (updated) {
-        logger.info('Remote parameter update applied successfully', {
+        logger.debug('Remote parameter update applied successfully', {
           effectId: data.effectId,
           paramName: data.paramName,
         });

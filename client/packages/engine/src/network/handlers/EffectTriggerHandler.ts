@@ -36,7 +36,7 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
       return;
     }
 
-    logger.info('📥 EFFECT TRIGGER received from server', {
+    logger.debug('Effect trigger received from server', {
       effectId: data.effectId,
       entityId: data.entityId,
       chunkCount: data.chunks?.length || 0,
@@ -50,7 +50,7 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
 
     // Check if this effect was sent by us (would have been already executed locally)
     if (this.scrawlService.wasEffectSentByUs(data.effectId)) {
-      logger.info('⏭️  SKIPPING - Effect was sent by us (already executed locally)', {
+      logger.debug('Effect was sent by us, skipping (already executed locally)', {
         effectId: data.effectId,
       });
       return;
@@ -58,7 +58,7 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
 
     // Check if this effect was already received (prevent duplicate execution)
     if (!this.scrawlService.markEffectAsReceived(data.effectId)) {
-      logger.info('⏭️  SKIPPING - Effect already received (duplicate message)', {
+      logger.debug('Effect already received, skipping (duplicate message)', {
         effectId: data.effectId,
       });
       return;
@@ -91,7 +91,7 @@ export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
       // Register remote effect mapping for parameter updates (s.u)
       this.scrawlService.registerRemoteEffectMapping(data.effectId, executorId);
 
-      logger.info('✅ Remote effect executed and registered', {
+      logger.debug('Remote effect executed and registered', {
         executorId,
         effectId: data.effectId,
         entityId: data.entityId,
