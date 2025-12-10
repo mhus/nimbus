@@ -14,6 +14,7 @@ import type { AppContext } from '../AppContext';
 import type { EntityService } from './EntityService';
 import type { ModelService } from './ModelService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import { EntityLabelRenderer } from '../rendering/EntityLabelRenderer';
 
 const logger = getLogger('EntityRenderService');
 
@@ -59,6 +60,9 @@ export class EntityRenderService {
   // Rendered entities: entityId -> RenderedEntity
   private renderedEntities: Map<string, RenderedEntity> = new Map();
 
+  // Entity label renderer
+  private entityLabelRenderer: EntityLabelRenderer;
+
   // Debug: Show pathway lines
   private _showPathways: boolean = false;
 
@@ -71,6 +75,9 @@ export class EntityRenderService {
     this.entityService = entityService;
     this.modelService = modelService;
 
+    // Initialize label renderer
+    this.entityLabelRenderer = new EntityLabelRenderer(scene);
+
     logger.debug('EntityRenderService initialized');
 
     // Register event listeners
@@ -82,26 +89,44 @@ export class EntityRenderService {
    */
   private registerEventListeners(): void {
     // Listen for pathway updates (entity appears or moves)
-    this.entityService.on('pathway', (pathway: EntityPathway) => {
-      this.onEntityPathway(pathway);
+    this.entityService.on('pathway', async (pathway: EntityPathway) => {
+      await this.onEntityPathway(pathway);
+
+      // Create label when entity appears
+      const clientEntity = await this.entityService.getEntity(pathway.entityId);
+      if (clientEntity) {
+        this.entityLabelRenderer.createLabel(clientEntity);
+      }
     });
 
     // Listen for transform updates (position/rotation/pose changes)
-    this.entityService.on('transform', (data: any) => {
+    this.entityService.on('transform', async (data: any) => {
       this.updateEntityTransform(data.entityId, data.position, data.rotation);
       if (data.pose !== undefined) {
         this.updateEntityPose(data.entityId, data.pose, data.velocity);
+      }
+
+      // Update label
+      const clientEntity = await this.entityService.getEntity(data.entityId);
+      if (clientEntity) {
+        this.entityLabelRenderer.updateLabel(clientEntity);
       }
     });
 
     // Listen for entity visibility changes
     this.entityService.on('visibility', (data: { entityId: string; visible: boolean }) => {
       this.onEntityVisibility(data.entityId, data.visible);
+
+      // Update label visibility
+      this.entityLabelRenderer.setLabelVisibility(data.entityId, data.visible);
     });
 
     // Listen for entity removal
     this.entityService.on('removed', (entityId: string) => {
       this.onEntityRemoved(entityId);
+
+      // Remove label
+      this.entityLabelRenderer.removeLabel(entityId);
     });
 
     logger.debug('Event listeners registered');
@@ -596,6 +621,9 @@ export class EntityRenderService {
    * Dispose service (cleanup all entities)
    */
   dispose(): void {
+    // Dispose label renderer
+    this.entityLabelRenderer.dispose();
+
     // Remove all entities
     for (const entityId of Array.from(this.renderedEntities.keys())) {
       this.removeEntity(entityId);
