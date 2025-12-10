@@ -421,6 +421,9 @@ export interface EntityStatusUpdate {
     /** Maximum health value */
     healthMax?: number;
 
+    /** Death flag - 1 means entity has died and should be removed */
+    death?: number;
+
     // Future expansion: mana, stamina, effects, etc.
   };
 }

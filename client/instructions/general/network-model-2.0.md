@@ -422,6 +422,9 @@ Update des Entity-Status (z.B. Gesundheit etc.) vom Server an den Client.
 }
 ```
 
+- Es gibt das flag death: 1 im status object, wenn die entity gestorben ist.
+- die Staus keys sind frei definierbar, je nach entity type und welt Mechanik.
+
 ## Entity Interaction (Client -> Server)
 
 Der Client sendet eine Interaktions information mit einer Entity an den Server (z.B. wenn der Spieler mit einer Entity interagiert).

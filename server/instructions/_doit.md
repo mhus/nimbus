@@ -121,3 +121,4 @@ Die koennen im modul shared abgelegt sein.
 [x] PlayerInfo bereinigen, 'dimensions' wird nicht mehr benoetgt.
 [x] DEFAULT_PLAYER_INFO deprecated, nicht mehr noetig. (DefaultPlayerInfo.ts)
 
+[]
