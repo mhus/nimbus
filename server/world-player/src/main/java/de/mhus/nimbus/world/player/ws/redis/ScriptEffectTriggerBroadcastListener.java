@@ -73,25 +73,12 @@ public class ScriptEffectTriggerBroadcastListener {
             if (data.has("chunks")) clientData.set("chunks", data.get("chunks"));
             if (data.has("effect")) clientData.set("effect", data.get("effect"));
 
-            // Broadcast to all affected chunks
+            // Broadcast to all affected chunks (with deduplication across chunks)
             if (chunks != null && chunks.size() > 0) {
-                Set<String> broadcastedSessions = new HashSet<>();
-                int totalSent = 0;
+                int totalSent = broadcastService.broadcastToWorldMultiChunk(
+                        worldId, "s.t", clientData, originatingSessionId, chunks);
 
-                for (JsonNode chunkNode : chunks) {
-                    // Support both "cx"/"cz" and "x"/"z" formats
-                    int cx = chunkNode.has("cx") ? chunkNode.get("cx").asInt() :
-                             chunkNode.has("x") ? chunkNode.get("x").asInt() : 0;
-                    int cz = chunkNode.has("cz") ? chunkNode.get("cz").asInt() :
-                             chunkNode.has("z") ? chunkNode.get("z").asInt() : 0;
-
-                    // Broadcast to this chunk (BroadcastService handles deduplication per chunk)
-                    int sent = broadcastService.broadcastToWorld(
-                            worldId, "s.t", clientData, originatingSessionId, cx, cz);
-                    totalSent += sent;
-                }
-
-                log.trace("Distributed effect trigger to {} sessions across {} chunks",
+                log.trace("Distributed effect trigger to {} unique sessions across {} chunks",
                         totalSent, chunks.size());
             } else {
                 // No chunks specified, broadcast to entire world
