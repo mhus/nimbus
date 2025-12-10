@@ -315,7 +315,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
 
       const effectParameterUpdateHandler = new EffectParameterUpdateHandler(appContext.services.scrawl);
       networkService.registerHandler(effectParameterUpdateHandler);
-      logger.debug('🔵 EffectParameterUpdateHandler registered for message type: ef.p.u');
+      logger.debug('🔵 EffectParameterUpdateHandler registered for message type: s.u');
     } else {
       logger.warn('ScrawlService not available - effect handlers not registered');
     }

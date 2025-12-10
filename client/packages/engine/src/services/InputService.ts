@@ -212,7 +212,7 @@ export class InputService {
       // Update player position (always)
       scrawlService.updateExecutorParameter(
         shortcut.executorId,
-        'playerPos',
+        'sourcePos',
         playerPos
       );
 

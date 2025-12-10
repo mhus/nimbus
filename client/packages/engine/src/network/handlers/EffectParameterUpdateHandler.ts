@@ -17,7 +17,7 @@ import type { ScrawlService } from '../../scrawl/ScrawlService';
 const logger = getLogger('EffectParameterUpdateHandler');
 
 /**
- * Handles EFFECT_PARAMETER_UPDATE messages from server (ef.p.u)
+ * Handles EFFECT_PARAMETER_UPDATE messages from server (s.u)
  */
 export class EffectParameterUpdateHandler extends MessageHandler<EffectParameterUpdateData> {
   readonly messageType = MessageType.EFFECT_PARAMETER_UPDATE;
@@ -34,11 +34,10 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
       return;
     }
 
-    logger.debug('Effect parameter update received from server', {
+    logger.info('Effect parameter update received from server', {
       effectId: data.effectId,
       paramName: data.paramName,
-      value: data.value,
-      hasTargeting: !!data.targeting,
+      value: data.value
     });
 
     if (!data.effectId || !data.paramName) {
@@ -47,14 +46,12 @@ export class EffectParameterUpdateHandler extends MessageHandler<EffectParameter
     }
 
     try {
-      // Update the executor parameter with optional targeting context
-      // The effectId from server corresponds to the executor ID
+
       this.scrawlService.updateExecutorParameter(data.effectId, data.paramName, data.value, data.targeting);
 
       logger.debug('Remote parameter update applied', {
         effectId: data.effectId,
-        paramName: data.paramName,
-        hasTargeting: !!data.targeting,
+        paramName: data.paramName
       });
     } catch (error) {
       logger.warn('Failed to apply remote parameter update', {

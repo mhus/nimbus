@@ -289,7 +289,7 @@ The `ctx` parameter contains the latest execution context with updated variables
 ```typescript
 onParameterChanged(paramName: string, value: any, ctx: ScrawlExecContext): void {
   // Access updated context variables
-  const playerPos = ctx.vars?.['playerPos'];
+  const playerPos = ctx.vars?.['sourcePos'];
   const targetPos = ctx.vars?.['targetPos'];
 
   // Access context subjects

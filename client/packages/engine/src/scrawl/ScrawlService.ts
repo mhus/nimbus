@@ -655,7 +655,7 @@ export class ScrawlService {
           entityId,
           chunkCount: chunks.length,
           scriptId: action.scriptId,
-          messageType: 'e.t',
+          messageType: MessageType.EFFECT_TRIGGER,
         });
 
         networkService.send({

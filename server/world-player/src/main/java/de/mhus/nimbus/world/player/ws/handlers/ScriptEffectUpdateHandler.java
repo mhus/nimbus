@@ -11,34 +11,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Handles effect update messages from clients.
- * Message type: "e.u" (Effect Update, Client → Server)
+ * Handles effect parameter update messages from clients.
+ * Message type: "s.u" (Script Effect Update, Client → Server)
  *
- * Client sends effect updates when effect variables change.
+ * Client sends parameter updates when effect variables change during execution.
  * Server publishes to Redis for multi-pod broadcasting.
  *
  * Expected data:
  * {
  *   "effectId": "effect_123",
- *   "chunks": [{"x":1,"z":4}, {"x":2,"z":4}],  // optional, affected chunks
- *   "variables": {
- *     "intensity": 0.8,
- *     "duration": 5000,
- *     ...
- *   }
+ *   "paramName": "targetPos",
+ *   "value": {"x": -1.5, "y": 66.5, "z": 1.5},
+ *   "chunks": [{"cx":0,"cz":0}, {"cx":-1,"cz":0}],
+ *   "targeting": {...}  // optional, currently not used
  * }
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EffectUpdateHandler implements MessageHandler {
+public class ScriptEffectUpdateHandler implements MessageHandler {
 
     private final ObjectMapper objectMapper;
     private final WorldRedisMessagingService redisMessaging;
 
     @Override
     public String getMessageType() {
-        return "e.u";
+        return "s.u";
     }
 
     @Override
@@ -53,11 +51,12 @@ public class EffectUpdateHandler implements MessageHandler {
 
         // Extract effect data
         String effectId = data.has("effectId") ? data.get("effectId").asText() : null;
-        JsonNode chunks = data.has("chunks") ? data.get("chunks") : null;
-        JsonNode variables = data.has("variables") ? data.get("variables") : null;
+        JsonNode chunks = data.get("chunks");
+        JsonNode paramName = data.get("paramName");
+        JsonNode value = data.get("value");
 
-        if (effectId == null || variables == null) {
-            log.warn("Effect update without effectId or variables");
+        if (effectId == null || paramName == null || value == null || chunks == null) {
+            log.warn("Effect update without values");
             return;
         }
 
@@ -67,8 +66,8 @@ public class EffectUpdateHandler implements MessageHandler {
         // Publish to Redis for multi-pod broadcasting
         publishToRedis(session, data);
 
-        log.debug("Effect update: effectId={}, session={}, variables={}",
-                effectId, session.getSessionId(), variables);
+        log.debug("Effect update: effectId={}, session={}, data={}",
+                effectId, session.getSessionId(), data);
     }
 
     /**
@@ -79,16 +78,19 @@ public class EffectUpdateHandler implements MessageHandler {
             // Build enriched message with session info
             ObjectNode enriched = objectMapper.createObjectNode();
             enriched.put("sessionId", session.getSessionId());
+            enriched.put("worldId", session.getWorldId().getId());
             enriched.put("userId", session.getPlayer().user().getUserId());
             enriched.put("displayName", session.getDisplayName());
 
             // Copy original data
             if (originalData.has("effectId")) enriched.put("effectId", originalData.get("effectId").asText());
+            if (originalData.has("paramName")) enriched.put("paramName", originalData.get("paramName").asText());
+            if (originalData.has("value")) enriched.set("value", originalData.get("value"));
             if (originalData.has("chunks")) enriched.set("chunks", originalData.get("chunks"));
-            if (originalData.has("variables")) enriched.set("variables", originalData.get("variables"));
+            if (originalData.has("targeting")) enriched.set("targeting", originalData.get("targeting"));
 
             String json = objectMapper.writeValueAsString(enriched);
-            redisMessaging.publish(session.getWorldId().getId(), "e.u", json);
+            redisMessaging.publish(session.getWorldId().getId(), "s.u", json);
 
             log.trace("Published effect update to Redis: worldId={}, sessionId={}",
                     session.getWorldId(), session.getSessionId());

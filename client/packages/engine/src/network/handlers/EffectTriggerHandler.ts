@@ -19,7 +19,7 @@ import type { ScrawlService } from '../../scrawl/ScrawlService';
 const logger = getLogger('EffectTriggerHandler');
 
 /**
- * Handles EFFECT_TRIGGER messages from server (e.t)
+ * Handles EFFECT_TRIGGER messages from server (s.t)
  */
 export class EffectTriggerHandler extends MessageHandler<EffectTriggerData> {
   readonly messageType = MessageType.EFFECT_TRIGGER;

@@ -283,16 +283,24 @@ export class ShortcutService {
       return;
     }
 
+    // get executor
+    const executor = scrawlService.getExecutor(shortcut.executorId);
+    if (!executor) {
+      return;
+    }
     // Get effectId for this executor
-    const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+    // const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+    const effectId = executor.getEffectId();
     if (!effectId) {
       return; // No server sync needed
     }
+    const chunks = executor.getAffectedChunks();
 
     try {
       // Send stop event as parameter update
       networkService.sendEffectParameterUpdate(
         effectId,
+        chunks,
         '__stop__', // Special parameter to signal stop
         true
       );
@@ -376,7 +384,7 @@ export class ShortcutService {
    * Send position updates for all active shortcuts to server
    *
    * Uses TargetingService to resolve current targets and send full targeting context
-   * to remote clients via ef.p.u messages.
+   * to remote clients via s.u messages.
    *
    * Only sends if:
    * - TargetingService can resolve a target
@@ -402,11 +410,18 @@ export class ShortcutService {
 
     for (const shortcut of this.activeShortcuts.values()) {
       // Get effectId for this executor
-      const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+      const executor = scrawlService.getExecutor(shortcut.executorId);
+      if (!executor) {
+        skippedCount++;
+        continue;
+      }
+//      const effectId = scrawlService.getEffectIdForExecutor(shortcut.executorId);
+        const effectId = executor.getEffectId();
       if (!effectId) {
         skippedCount++;
         continue;
       }
+      const chunks = executor.getAffectedChunks();
 
       // Resolve current target using TargetingService with item's targeting mode
       const currentTarget = targetingService.resolveTarget(shortcut.targetingMode);
@@ -429,6 +444,7 @@ export class ShortcutService {
 
         networkService.sendEffectParameterUpdate(
           effectId,
+          chunks,
           'targetPos',
           targetPosition,
           targetingContext

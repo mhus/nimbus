@@ -468,82 +468,6 @@ Wird im SelectMode.INTERACTIVE gesendet, wenn der Spieler auf eine interaktive E
 }
 ```
 
-## Animation Execution (Server -> Client oder Client -> Server)
-
-**Server → Client:** Server sendet Animation mit festen Positionen
-**Client → Server:** Client sendet gefüllte Animation Template für Broadcast an alle Spieler
-
-Der Server sendet eine Anweisung zum Starten einer Animation an den Client.
-
-```json
-{"t": "a.s", "d":
-  [
-    {
-      "x": 10,      // World coordinate (reference position)
-      "y": 64,
-      "z": 10,
-      "animation": AnimationData
-    },
-    ...
-  ]
-}
-```
-
-**Animation Flow (Client-definiert):**
-1. Client hat Template mit Placeholders (z.B. "arrow_shot")
-2. Player schießt Pfeil → Client füllt Positionen (shooter, target, impact)
-3. Client spielt Animation lokal (sofortiges Feedback)
-4. Client sendet gefüllte Animation an Server
-5. Server validiert und broadcastet an alle anderen Spieler
-6. Andere Clients empfangen und spielen Animation
-
-**Animation Flow (Server-definiert):**
-1. Server erstellt Animation mit festen Positionen (z.B. Tür öffnet)
-2. Server sendet an alle betroffenen Clients
-3. Clients spielen Animation
-
-### AnimationData Structure
-
-Siehe object-model-2.0.md für vollständige AnimationData Struktur mit:
-- Timeline-basierte Effekte (parallel/sequential)
-- Multi-Position Support (Placeholder oder Fixed)
-- Effect Types (projectile, explosion, skyChange, etc.)
-- Position References (fixed vs placeholder)
-
-**Beispiel:** Pfeilschuss mit Explosion und Sky-Effekt
-```json
-{
-  "name": "arrow_shot",
-  "duration": 2000,
-  "effects": [
-    {
-      "type": "projectile",
-      "positions": [
-        {"type": "fixed", "position": {"x": 0, "y": 65, "z": 0}},
-        {"type": "fixed", "position": {"x": 10, "y": 65, "z": 10}}
-      ],
-      "params": {"speed": 50, "trajectory": "arc"},
-      "startTime": 0,
-      "duration": 1000,
-      "blocking": true
-    },
-    {
-      "type": "skyChange",
-      "params": {"color": "#333", "lightIntensity": 0.3},
-      "startTime": 0,
-      "duration": 500
-    },
-    {
-      "type": "explosion",
-      "positions": [{"type": "fixed", "position": {"x": 10, "y": 65, "z": 10}}],
-      "params": {"radius": 5},
-      "startTime": 1000,
-      "duration": 300
-    }
-  ]
-}
-```
-
 ## User Movement Update (Client -> Server)
 
 Der Client sendet seine aktuelle Position und Rotation an den Server.
@@ -805,13 +729,13 @@ Die Session wird nicht mehr vorgehalten.
 * q: query
 * r: register
 
-## Effeckt Trigger (Client -> Server)
+## Script Effeckt Trigger (Client -> Server)
 
 Der Client sendet eine Nachricht an den Server, wenn ein Spieler einen Effeckt-Trigger auslöst 
 (z.B. durch Betreten eines Bereichs).
 
 ```json
-{"i":"12347", "t": "e.t", "d":
+{"i":"12347", "t": "s.t", "d":
   {
     "entityId": "@player_1234", 
     "effectId": "effect_1231j2829281928",
@@ -829,13 +753,13 @@ EffectTriggerData:
 - chunks: ChunkPosition[] (optional) - liste von chunks die betroffen sind (wird aus source und targets ermittelt)
 - effect: ScriptActionDefinition // including source und target, targets
 
-## Effeckt Trigger (Server -> Client)
+## Script Effeckt Trigger (Server -> Client)
 
 Der Server sendet Nachrichten an den Client weiter, wenn ein Spieler einen Effeckt-Trigger auslöst
 (z.B. durch Betreten eines Bereichs).
 
 ```json
-{"i":"12347", "t": "e.t", "d":
+{"i":"12347", "t": "s.t", "d":
   {
     "entityId": "@player_1234",
     "effectId": "effect_1231j2829281928",
@@ -847,13 +771,13 @@ Der Server sendet Nachrichten an den Client weiter, wenn ein Spieler einen Effec
 }
 ```
 
-## Effect Update (Client -> Server)
+## Script Effect Update (Client -> Server)
 
 Der Client sendet eine Nachricht an den Server, um den Status eines laufenden Effekts zu aktualisieren
 (variable hat sich geandert).
 
 ```json
-{"i":"12348", "t": "e.u", "d":
+{"i":"12348", "t": "s.u", "d":
   {
     "effectId": "effect_1231j2829281928",
     "chunks": [{1,4},{2,4}],
@@ -866,13 +790,13 @@ Der Client sendet eine Nachricht an den Server, um den Status eines laufenden Ef
 }
 ```
 
-## Effect Update (Server -> Client)
+## Script Effect Update (Server -> Client)
 
 Der Server sendet eine Nachricht an alle Clients, um den Status eines laufenden Effekts zu aktualisieren
 (variable hat sich geandert).
 
 ```json
-{"i":"12348", "t": "e.u", "d":
+{"i":"12348", "t": "s.u", "d":
   {
     "effectId": "effect_1231j2829281928",
     "chunks": [{1,4},{2,4}],

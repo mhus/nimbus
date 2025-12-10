@@ -33,12 +33,9 @@ export enum MessageType {
   ENTITY_POSITION_UPDATE = 'e.p.u',
   ENTITY_INTERACTION = 'e.int.r',
 
-  // Animation
-  ANIMATION_START = 'a.s',
-
-  // Effects
-  EFFECT_TRIGGER = 'e.t',
-  EFFECT_PARAMETER_UPDATE = 'ef.p.u',
+  // Scrawl Script Effects
+  EFFECT_TRIGGER = 's.t',
+  EFFECT_PARAMETER_UPDATE = 's.u',
 
   // User/Player
   USER_MOVEMENT = 'u.m',

@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Redis listener for effect update events.
- * Receives effect update events from Redis and distributes to relevant sessions.
+ * Redis listener for effect parameter update events.
+ * Receives effect parameter update events from Redis and distributes to relevant sessions.
  *
  * Distribution: Broadcasts to all chunks listed in the "chunks" array.
  *
@@ -23,14 +23,15 @@ import org.springframework.stereotype.Service;
  *   "userId": "user123",
  *   "displayName": "Player",
  *   "effectId": "effect_123",
- *   "chunks": [{"x":1,"z":4}, {"x":2,"z":4}],
- *   "variables": { "intensity": 0.8, ... }
+ *   "paramName": "targetPos",
+ *   "value": {"x": -1.5, "y": 66.5, "z": 1.5},
+ *   "chunks": [{"cx":0,"cz":0}, {"cx":-1,"cz":0}]
  * }
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EffectUpdateBroadcastListener {
+public class ScriptEffectUpdateBroadcastListener {
 
     private final WorldRedisMessagingService redisMessaging;
     private final BroadcastService broadcastService;
@@ -38,21 +39,21 @@ public class EffectUpdateBroadcastListener {
 
     @PostConstruct
     public void subscribeToWorlds() {
-        // Subscribe to ALL worlds using pattern: world:*:e.u
-        redisMessaging.subscribeToAllWorlds("e.u", this::handleEffectUpdate);
+        // Subscribe to ALL worlds using pattern: world:*:s.u
+        redisMessaging.subscribeToAllWorlds("s.u", this::handleEffectUpdate);
         log.info("Subscribed to effect update events for all worlds (pattern: world:*:e.u)");
     }
 
     private void handleEffectUpdate(String topic, String message) {
         try {
+            JsonNode data = objectMapper.readTree(message);
+
             // Extract worldId from topic: "world:main:e.u" -> "main"
-            String worldId = extractWorldIdFromTopic(topic);
+            String worldId = data.has("worldId") ? data.get("worldId").asText(null) : null;
             if (worldId == null) {
                 log.warn("Could not extract worldId from topic: {}", topic);
                 return;
             }
-
-            JsonNode data = objectMapper.readTree(message);
 
             // Extract metadata
             String originatingSessionId = data.has("sessionId") ? data.get("sessionId").asText() : null;
@@ -67,8 +68,10 @@ public class EffectUpdateBroadcastListener {
             // Build client message (without internal metadata)
             ObjectNode clientData = objectMapper.createObjectNode();
             if (data.has("effectId")) clientData.put("effectId", data.get("effectId").asText());
-            if (data.has("chunks")) clientData.set("chunks", data.get("chunks"));
-            if (data.has("variables")) clientData.set("variables", data.get("variables"));
+            if (data.has("paramName")) clientData.put("paramName", data.get("paramName").asText());
+            if (data.has("value")) clientData.set("value", data.get("value"));
+            if (data.has("targeting")) clientData.set("targeting", data.get("targeting"));
+//            if (data.has("chunks")) clientData.set("chunks", data.get("chunks"));
 
             // Broadcast to all affected chunks
             if (chunks != null && chunks.size() > 0) {
@@ -83,7 +86,7 @@ public class EffectUpdateBroadcastListener {
 
                     // Broadcast to this chunk
                     int sent = broadcastService.broadcastToWorld(
-                            worldId, "e.u", clientData, originatingSessionId, cx, cz);
+                            worldId, "s.u", clientData, originatingSessionId, cx, cz);
                     totalSent += sent;
                 }
 
@@ -91,7 +94,7 @@ public class EffectUpdateBroadcastListener {
                         totalSent, chunks.size());
             } else {
                 // No chunks specified, broadcast to entire world
-                int sent = broadcastService.broadcastToWorld(worldId, "e.u", clientData, originatingSessionId, null, null);
+                int sent = broadcastService.broadcastToWorld(worldId, "s.u", clientData, originatingSessionId, null, null);
                 log.trace("Distributed effect update to {} sessions (world-wide)", sent);
             }
 
@@ -100,26 +103,4 @@ public class EffectUpdateBroadcastListener {
         }
     }
 
-    /**
-     * Extract worldId from Redis topic.
-     * Topic format: "world:{worldId}:e.u"
-     *
-     * @param topic Redis topic
-     * @return worldId or null if invalid format
-     */
-    private String extractWorldIdFromTopic(String topic) {
-        if (topic == null || !topic.startsWith("world:")) {
-            return null;
-        }
-        // Remove "world:" prefix
-        String withoutPrefix = topic.substring(6);
-
-        // Find last occurrence of ":e.u" and extract everything before it
-        int lastIndex = withoutPrefix.lastIndexOf(":e.u");
-        if (lastIndex > 0) {
-            return withoutPrefix.substring(0, lastIndex);
-        }
-
-        return null;
-    }
 }

@@ -34,7 +34,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EffectTriggerBroadcastListener {
+public class ScriptEffectTriggerBroadcastListener {
 
     private final WorldRedisMessagingService redisMessaging;
     private final BroadcastService broadcastService;
@@ -43,20 +43,18 @@ public class EffectTriggerBroadcastListener {
     @PostConstruct
     public void subscribeToWorlds() {
         // Subscribe to ALL worlds using pattern: world:*:e.t
-        redisMessaging.subscribeToAllWorlds("e.t", this::handleEffectTrigger);
-        log.info("Subscribed to effect trigger events for all worlds (pattern: world:*:e.t)");
+        redisMessaging.subscribeToAllWorlds("s.t", this::handleEffectTrigger);
+        log.info("Subscribed to effect trigger events for all worlds (pattern: world:*:s.t)");
     }
 
     private void handleEffectTrigger(String topic, String message) {
         try {
-            // Extract worldId from topic: "world:main:e.t" -> "main"
-            String worldId = extractWorldIdFromTopic(topic);
+            JsonNode data = objectMapper.readTree(message);
+            String worldId = data.has("worldId") ? data.get("worldId").asText(null) : null;
             if (worldId == null) {
                 log.warn("Could not extract worldId from topic: {}", topic);
                 return;
             }
-
-            JsonNode data = objectMapper.readTree(message);
 
             // Extract metadata
             String originatingSessionId = data.has("sessionId") ? data.get("sessionId").asText() : null;
@@ -89,7 +87,7 @@ public class EffectTriggerBroadcastListener {
 
                     // Broadcast to this chunk (BroadcastService handles deduplication per chunk)
                     int sent = broadcastService.broadcastToWorld(
-                            worldId, "e.t", clientData, originatingSessionId, cx, cz);
+                            worldId, "s.t", clientData, originatingSessionId, cx, cz);
                     totalSent += sent;
                 }
 
@@ -97,7 +95,7 @@ public class EffectTriggerBroadcastListener {
                         totalSent, chunks.size());
             } else {
                 // No chunks specified, broadcast to entire world
-                int sent = broadcastService.broadcastToWorld(worldId, "e.t", clientData, originatingSessionId, null, null);
+                int sent = broadcastService.broadcastToWorld(worldId, "s.t", clientData, originatingSessionId, null, null);
                 log.trace("Distributed effect trigger to {} sessions (world-wide)", sent);
             }
 
@@ -106,26 +104,4 @@ public class EffectTriggerBroadcastListener {
         }
     }
 
-    /**
-     * Extract worldId from Redis topic.
-     * Topic format: "world:{worldId}:e.t"
-     *
-     * @param topic Redis topic
-     * @return worldId or null if invalid format
-     */
-    private String extractWorldIdFromTopic(String topic) {
-        if (topic == null || !topic.startsWith("world:")) {
-            return null;
-        }
-        // Remove "world:" prefix
-        String withoutPrefix = topic.substring(6);
-
-        // Find last occurrence of ":e.t" and extract everything before it
-        int lastIndex = withoutPrefix.lastIndexOf(":e.t");
-        if (lastIndex > 0) {
-            return withoutPrefix.substring(0, lastIndex);
-        }
-
-        return null;
-    }
 }

@@ -350,7 +350,7 @@ export class TargetingService {
    *
    * @param mode Targeting mode used
    * @param target Resolved target
-   * @returns Serializable targeting context for ef.p.u messages
+   * @returns Serializable targeting context for s.u messages
    */
   toSerializableContext(
     mode: TargetingMode,

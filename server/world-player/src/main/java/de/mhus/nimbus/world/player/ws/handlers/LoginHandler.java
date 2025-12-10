@@ -84,7 +84,7 @@ public class LoginHandler implements MessageHandler {
         }
 
         var playerId = PlayerId.of(username);
-        if (playerId.isEmpty()) {
+        if (playerId.isEmpty()) { // TODO if sessionId is given, get player from existing session !
             log.warn("Invalid player ID format: {}, login failed", username);
             sendLoginResponse(session, message.getI(), false, "Invalid player", null, null);
             return;

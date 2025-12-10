@@ -12,7 +12,7 @@ import {
   ClientType,
   LoginRequestData,
   getLogger,
-  ExceptionHandler,
+  ExceptionHandler, ChunkCoordinate,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { MessageHandler } from '../network/MessageHandler';
@@ -802,6 +802,7 @@ export class NetworkService {
    */
   sendEffectParameterUpdate(
     effectId: string,
+    affectedChunks: Array<ChunkCoordinate>,
     paramName: string,
     value: any,
     targeting?: import('@nimbus/shared').SerializableTargetingContext
@@ -821,6 +822,8 @@ export class NetworkService {
         paramName,
         value: serializedValue,
       };
+
+      updateData.chunks = affectedChunks;
 
       // Add targeting context if provided
       if (targeting) {

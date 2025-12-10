@@ -1,4 +1,4 @@
-import { getLogger, ExceptionHandler, MessageType } from '@nimbus/shared';
+import {getLogger, ExceptionHandler, MessageType, ChunkCoordinate} from '@nimbus/shared';
 import type {
   ScrawlScript,
   ScrawlStep,
@@ -30,7 +30,7 @@ export class ScrawlExecutor {
 
   // For multiplayer synchronization
   private effectId?: string; // Unique effect ID for this execution
-  private affectedChunks?: Array<{ cx: number; cz: number }>; // Chunks affected by this effect
+  private affectedChunks?: Array<ChunkCoordinate>; // Chunks affected by this effect
   private sendToServer: boolean = true; // Whether to send updates to server
 
   constructor(
@@ -783,7 +783,7 @@ export class ScrawlExecutor {
     ctx.vars = ctx.vars || {};
 
     // Handle special stop parameter (from remote shortcut end)
-    if (paramName === '__stop__') {
+    if (paramName === '__stop__' && value === true) {
       logger.debug('Stop event received via parameter update, emitting stop_event', {
         executorId: this.executorId,
       });
@@ -793,61 +793,62 @@ export class ScrawlExecutor {
 
     // Map InputService parameter names to script variable names
     if (paramName === 'targetPos') {
-      if (targeting) {
-        // Use targeting context to reconstruct full target
-        switch (targeting.targetType) {
-          case 'entity':
-            ctx.vars.target = {
-              id: targeting.entityId,
-              currentPosition: value,
-              position: value,
-            };
-            logger.debug('Target updated from targeting context (entity)', {
-              entityId: targeting.entityId,
-              position: value,
-              executorId: this.executorId,
-            });
-            break;
-          case 'block':
-            ctx.vars.target = {
-              block: {
-                position: targeting.blockPosition,
-              },
-              position: value,
-              currentPosition: value,
-            };
-            logger.debug('Target updated from targeting context (block)', {
-              blockPosition: targeting.blockPosition,
-              position: value,
-              executorId: this.executorId,
-            });
-            break;
-          case 'ground':
-            ctx.vars.target = {
-              position: value,
-              currentPosition: value,
-            };
-            logger.debug('Target updated from targeting context (ground)', {
-              position: value,
-              executorId: this.executorId,
-            });
-            break;
-          case 'none':
-            ctx.vars.target = undefined;
-            logger.debug('Target cleared (none)', { executorId: this.executorId });
-            break;
-        }
-      } else {
-        // Legacy: InputService sends 'targetPos' as Vector3 without targeting context
+      // targeting is legacy for setting target position, should be freely provided. targeting is for the backend to reconstruct full target if needed
+      // if (targeting) {
+      //   // Use targeting context to reconstruct full target
+      //   switch (targeting.targetType) {
+      //     case 'entity':
+      //       ctx.vars.target = {
+      //         id: targeting.entityId,
+      //         currentPosition: value,
+      //         position: value,
+      //       };
+      //       logger.debug('Target updated from targeting context (entity)', {
+      //         entityId: targeting.entityId,
+      //         position: value,
+      //         executorId: this.executorId,
+      //       });
+      //       break;
+      //     case 'block':
+      //       ctx.vars.target = {
+      //         block: {
+      //           position: targeting.blockPosition,
+      //         },
+      //         position: value,
+      //         currentPosition: value,
+      //       };
+      //       logger.debug('Target updated from targeting context (block)', {
+      //         blockPosition: targeting.blockPosition,
+      //         position: value,
+      //         executorId: this.executorId,
+      //       });
+      //       break;
+      //     case 'ground':
+      //       ctx.vars.target = {
+      //         position: value,
+      //         currentPosition: value,
+      //       };
+      //       logger.debug('Target updated from targeting context (ground)', {
+      //         position: value,
+      //         executorId: this.executorId,
+      //       });
+      //       break;
+      //     case 'none':
+      //       ctx.vars.target = undefined;
+      //       logger.debug('Target cleared (none)', { executorId: this.executorId });
+      //       break;
+      //   }
+      // } else {
+        // InputService sends 'targetPos' as Vector3 without targeting context
         // Convert to 'target' with both currentPosition (for entities) and position (for compatibility)
         ctx.vars.target = {
           currentPosition: value,
           position: value,
         };
         logger.debug('Target position updated (legacy)', { position: value, executorId: this.executorId });
-      }
-    } else if (paramName === 'playerPos') {
-      // InputService sends 'playerPos' as Vector3
+//      }
+    } else if (paramName === 'sourcePos') {
+      // InputService sends 'sourcePos' (maybe player pos) as Vector3
       // Convert to 'source' with both currentPosition and position
       ctx.vars.source = {
         currentPosition: value,
@@ -1198,4 +1199,12 @@ export class ScrawlExecutor {
   getEffectId(): string | undefined {
     return this.effectId;
   }
+
+  getAffectedChunks(): Array<{ cx: number; cz: number }> {
+    if (!this.affectedChunks) {
+      return [];
+    }
+    return this.affectedChunks;
+  }
+
 }

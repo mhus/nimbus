@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Handles effect trigger messages from clients.
- * Message type: "e.t" (Effect Trigger, Client → Server)
+ * Message type: "s.t" (Script Effect Trigger, Client → Server)
  *
  * Client sends effect trigger when player triggers an effect (e.g., entering an area).
  * Server publishes to Redis for multi-pod broadcasting.
@@ -30,14 +30,14 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EffectTriggerHandler implements MessageHandler {
+public class ScriptEffectTriggerHandler implements MessageHandler {
 
     private final ObjectMapper objectMapper;
     private final WorldRedisMessagingService redisMessaging;
 
     @Override
     public String getMessageType() {
-        return "e.t";
+        return "s.t";
     }
 
     @Override
@@ -79,6 +79,7 @@ public class EffectTriggerHandler implements MessageHandler {
             // Build enriched message with session info
             ObjectNode enriched = objectMapper.createObjectNode();
             enriched.put("sessionId", session.getSessionId());
+            enriched.put("worldId", session.getWorldId().getId());
             enriched.put("userId", session.getPlayer().user().getUserId());
             enriched.put("displayName", session.getDisplayName());
 
@@ -89,7 +90,7 @@ public class EffectTriggerHandler implements MessageHandler {
             if (originalData.has("effect")) enriched.set("effect", originalData.get("effect"));
 
             String json = objectMapper.writeValueAsString(enriched);
-            redisMessaging.publish(session.getWorldId().getId(), "e.t", json);
+            redisMessaging.publish(session.getWorldId().getId(), "s.t", json);
 
             log.trace("Published effect trigger to Redis: worldId={}, sessionId={}",
                     session.getWorldId(), session.getSessionId());
