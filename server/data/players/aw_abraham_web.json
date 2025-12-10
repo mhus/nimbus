@@ -29,7 +29,7 @@
       "effectiveTurnSpeed": 0.003,
       "baseUnderwaterTurnSpeed": 0.002,
       "effectiveUnderwaterTurnSpeed": 0.002,
-      "thirdPersonModelId": "wizard1",
+      "thirdPersonModelId": "farmer1",
       "stateValues": {
         "default": {
           "dimensions": { "height": 2.0, "width": 0.6, "footprint": 0.3 },

@@ -61,12 +61,20 @@ export function loadClientConfig(): ClientConfig {
   // Get environment based on build tool
   const env = getEnvironment();
 
+  // Check for username in URL query parameter (overrides env)
+  const urlParams = new URLSearchParams(window.location.search);
+  const usernameFromUrl = urlParams.get('username');
+
   // Load required variables
-  const username = env.CLIENT_USERNAME;
+  const username = usernameFromUrl || env.CLIENT_USERNAME;
   const password = env.CLIENT_PASSWORD;
   const websocketUrl = env.SERVER_WEBSOCKET_URL;
   const apiUrl = env.SERVER_API_URL;
   const worldId = env.WORLD_ID || 'main'; // Default to 'main' if not specified
+
+  if (usernameFromUrl) {
+    logger.info('Username overridden by URL query parameter', { username: usernameFromUrl });
+  }
 
   // Validate required fields
   const missing: string[] = [];

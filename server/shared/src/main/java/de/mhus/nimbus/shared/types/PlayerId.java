@@ -56,7 +56,7 @@ public class PlayerId {
     public static boolean validate(String id) {
         if (Strings.isBlank(id)) return false;
         if (id.length() < 3) return false;
-        return id.matches("@[a-zA-Z0-9_\\-]{3,64}:[a-zA-Z0-9_\\-]{3,64}");
+        return id.matches("@[a-zA-Z0-9_\\-]{2,64}:[a-zA-Z0-9_\\-]{2,64}");
     }
 
     public String toString() {
