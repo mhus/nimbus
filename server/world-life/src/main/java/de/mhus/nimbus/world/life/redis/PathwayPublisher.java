@@ -1,11 +1,9 @@
 package de.mhus.nimbus.world.life.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.generated.types.EntityPathway;
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
+import de.mhus.nimbus.world.shared.redis.PathwayBroadcastMessage;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Publishes entity pathways to world-player pods via Redis.
@@ -34,57 +33,59 @@ import java.util.Set;
 public class PathwayPublisher {
 
     private final WorldRedisMessagingService redisMessaging;
-    private final WorldLifeProperties properties;
     private final ObjectMapper objectMapper;
 
     /**
      * Publish entity pathways to Redis for distribution to clients.
      *
+     * @param worldId World ID
      * @param pathways List of entity pathways
      * @param affectedChunks Chunks that contain these pathways
      */
-    public void publishPathways(List<EntityPathway> pathways, Set<ChunkCoordinate> affectedChunks) {
+    public void publishPathways(String worldId, List<EntityPathway> pathways, Set<ChunkCoordinate> affectedChunks) {
         if (pathways == null || pathways.isEmpty()) {
             return;
         }
 
         try {
-            ObjectNode message = objectMapper.createObjectNode();
+            // Convert to PathwayBroadcastMessage format
+            List<PathwayBroadcastMessage.PathwayContainer> containers = pathways.stream()
+                    .map(pathway -> PathwayBroadcastMessage.PathwayContainer.builder()
+                            .pathway(pathway)
+                            .sessionId(null) // NPC pathways have no originating session
+                            .worldId(worldId)
+                            .build())
+                    .collect(Collectors.toList());
 
-            // Add pathways array
-            ArrayNode pathwaysArray = message.putArray("pathways");
-            for (EntityPathway pathway : pathways) {
-                pathwaysArray.addPOJO(pathway);
-            }
+            List<PathwayBroadcastMessage.ChunkCoordinate> chunks = affectedChunks.stream()
+                    .map(chunk -> new PathwayBroadcastMessage.ChunkCoordinate(chunk.getCx(), chunk.getCz()))
+                    .collect(Collectors.toList());
 
-            // Add affected chunks array
-            ArrayNode chunksArray = message.putArray("affectedChunks");
-            for (ChunkCoordinate chunk : affectedChunks) {
-                ObjectNode chunkObj = chunksArray.addObject();
-                chunkObj.put("cx", chunk.getCx());
-                chunkObj.put("cz", chunk.getCz());
-            }
+            PathwayBroadcastMessage message = PathwayBroadcastMessage.builder()
+                    .containers(containers)
+                    .affectedChunks(chunks)
+                    .build();
 
-            // Publish to Redis
-            String worldId = properties.getWorldId();
+            // Serialize and publish
             String json = objectMapper.writeValueAsString(message);
             redisMessaging.publish(worldId, "e.p", json);
 
-            log.debug("Published {} pathways to Redis, affecting {} chunks",
-                    pathways.size(), affectedChunks.size());
+            log.debug("World {}: Published {} pathways to Redis, affecting {} chunks",
+                    worldId, pathways.size(), affectedChunks.size());
 
         } catch (Exception e) {
-            log.error("Failed to publish pathways to Redis: {} pathways", pathways.size(), e);
+            log.error("World {}: Failed to publish pathways to Redis: {} pathways", worldId, pathways.size(), e);
         }
     }
 
     /**
      * Publish a single pathway.
      *
+     * @param worldId World ID
      * @param pathway Entity pathway
      * @param affectedChunks Chunks affected by this pathway
      */
-    public void publishPathway(EntityPathway pathway, Set<ChunkCoordinate> affectedChunks) {
-        publishPathways(List.of(pathway), affectedChunks);
+    public void publishPathway(String worldId, EntityPathway pathway, Set<ChunkCoordinate> affectedChunks) {
+        publishPathways(worldId, List.of(pathway), affectedChunks);
     }
 }

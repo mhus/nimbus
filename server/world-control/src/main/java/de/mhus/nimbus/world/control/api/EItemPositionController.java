@@ -79,7 +79,7 @@ public class EItemPositionController extends BaseEditorController {
         if (validation != null) return validation;
 
         // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> opt = itemRegistryService.findItem(worldId, worldId, itemId);
+        Optional<WItemPosition> opt = itemRegistryService.findItem(worldId, itemId);
         if (opt.isEmpty()) {
             log.warn("Item not found: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -196,12 +196,12 @@ public class EItemPositionController extends BaseEditorController {
 
         // Check if Item already exists
         // Use worldId as universeId (per user decision)
-        if (itemRegistryService.findItem(worldId, worldId, itemBlockRef.getId()).isPresent()) {
+        if (itemRegistryService.findItem(worldId, itemBlockRef.getId()).isPresent()) {
             return conflict("item already exists");
         }
 
         try {
-            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, worldId, itemBlockRef);
+            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, itemBlockRef);
             log.info("Created item: itemId={}, chunk={}", itemBlockRef.getId(), saved.getChunk());
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
@@ -258,7 +258,7 @@ public class EItemPositionController extends BaseEditorController {
         }
 
         // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> existing = itemRegistryService.findItem(worldId, worldId, itemId);
+        Optional<WItemPosition> existing = itemRegistryService.findItem(worldId, itemId);
         if (existing.isEmpty()) {
             log.warn("Item not found for update: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -266,7 +266,7 @@ public class EItemPositionController extends BaseEditorController {
 
         try {
             // Save will update if exists
-            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, worldId, itemBlockRef);
+            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, itemBlockRef);
             log.info("Updated item: itemId={}, chunk={}", itemId, saved.getChunk());
             return ResponseEntity.ok(toDto(saved));
         } catch (IllegalArgumentException e) {
@@ -303,7 +303,7 @@ public class EItemPositionController extends BaseEditorController {
         if (validation != null) return validation;
 
         // Use worldId as universeId (per user decision)
-        boolean deleted = itemRegistryService.deleteItemPosition(worldId, worldId, itemId);
+        boolean deleted = itemRegistryService.deleteItemPosition(worldId, itemId);
         if (!deleted) {
             log.warn("Item not found for deletion: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");

@@ -146,9 +146,9 @@ public class ItemImporter {
             }
 
             // Check if item position already exists
-            if (itemRegistryService.findItem(worldId, worldId, itemBlockRef.getId()).isEmpty()) {
+            if (itemRegistryService.findItem(worldId, itemBlockRef.getId()).isEmpty()) {
                 // Save item position via service (universeId = worldId for main world)
-                itemRegistryService.saveItemPosition(worldId, worldId, itemBlockRef);
+                itemRegistryService.saveItemPosition(worldId, itemBlockRef);
                 log.debug("Imported item position: {} at ({}, {}, {})",
                         itemBlockRef.getId(),
                         itemBlockRef.getPosition().getX(),

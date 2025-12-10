@@ -2,17 +2,23 @@ package de.mhus.nimbus.world.life.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
 import de.mhus.nimbus.world.life.service.EntityInteractionService;
+import de.mhus.nimbus.world.life.service.WorldDiscoveryService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Listens for entity interaction events from world-player pods.
  * Channel: world:{worldId}:e.int
+ *
+ * Dynamically subscribes to all enabled worlds discovered from MongoDB.
  *
  * When a player interacts with an entity (click, talk, attack, etc.),
  * world-player forwards the interaction to world-life via Redis.
@@ -41,23 +47,49 @@ public class EntityInteractionListener {
 
     private final WorldRedisMessagingService redisMessaging;
     private final EntityInteractionService interactionService;
-    private final WorldLifeProperties properties;
+    private final WorldDiscoveryService worldDiscoveryService;
     private final ObjectMapper objectMapper;
 
+    private final Set<String> subscribedWorlds = new HashSet<>();
+
     @PostConstruct
-    public void subscribeToEntityInteractions() {
-        String worldId = properties.getWorldId();
-        redisMessaging.subscribe(worldId, "e.int", this::handleEntityInteraction);
-        log.info("Subscribed to entity interactions for world: {}", worldId);
+    public void initialize() {
+        updateSubscriptions();
+    }
+
+    /**
+     * Periodically check for new worlds and update subscriptions.
+     * Runs every minute.
+     */
+    @Scheduled(fixedDelay = 60000)
+    public void updateSubscriptions() {
+        Set<String> knownWorlds = worldDiscoveryService.getKnownWorldIds();
+
+        // Subscribe to new worlds
+        for (String worldId : knownWorlds) {
+            if (!subscribedWorlds.contains(worldId)) {
+                redisMessaging.subscribe(worldId, "e.int", (topic, message) -> handleEntityInteraction(worldId, message));
+                subscribedWorlds.add(worldId);
+                log.info("Subscribed to entity interactions for world: {}", worldId);
+            }
+        }
+
+        // Unsubscribe from removed worlds
+        Set<String> toRemove = new HashSet<>(subscribedWorlds);
+        toRemove.removeAll(knownWorlds);
+        for (String worldId : toRemove) {
+            subscribedWorlds.remove(worldId);
+            log.info("Unsubscribed from entity interactions for world: {}", worldId);
+        }
     }
 
     /**
      * Handle entity interaction from Redis.
      *
-     * @param topic Redis topic
+     * @param worldId World ID
      * @param message JSON message
      */
-    private void handleEntityInteraction(String topic, String message) {
+    private void handleEntityInteraction(String worldId, String message) {
         try {
             JsonNode data = objectMapper.readTree(message);
 
@@ -72,12 +104,13 @@ public class EntityInteractionListener {
             String displayName = data.has("displayName") ? data.get("displayName").asText() : null;
 
             if (entityId == null || action == null) {
-                log.warn("Invalid entity interaction message: missing entityId or action");
+                log.warn("Invalid entity interaction message for world {}: missing entityId or action", worldId);
                 return;
             }
 
             // Process interaction via service
             interactionService.handleInteraction(
+                    worldId,
                     entityId,
                     action,
                     timestamp,
@@ -87,11 +120,11 @@ public class EntityInteractionListener {
                     displayName
             );
 
-            log.debug("Handled entity interaction: entityId={}, action={}, user={}",
-                    entityId, action, displayName);
+            log.debug("World {}: Handled entity interaction: entityId={}, action={}, user={}",
+                    worldId, entityId, action, displayName);
 
         } catch (Exception e) {
-            log.error("Failed to handle entity interaction: {}", message, e);
+            log.error("Failed to handle entity interaction for world {}: {}", worldId, message, e);
         }
     }
 }

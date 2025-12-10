@@ -22,7 +22,7 @@ import java.time.Instant;
 @Document(collection = "w_item_positions")
 @ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
-        @CompoundIndex(name = "world_universe_itemId_idx", def = "{ 'worldId': 1, 'universeId': 1, 'itemId': 1 }", unique = true)
+        @CompoundIndex(name = "world_itemId_idx", def = "{ 'worldId': 1, 'itemId': 1 }", unique = true)
 })
 @Data
 @Builder
@@ -40,13 +40,7 @@ public class WItemPosition {
     private String worldId;
 
     /**
-     * Universe identifier (region context).
-     */
-    @Indexed
-    private String universeId;
-
-    /**
-     * Item identifier (unique within world/universe).
+     * Item identifier (unique within world).
      */
     private String itemId;
 

@@ -16,7 +16,7 @@ import {
   Mesh,
   TransformNode,
 } from '@babylonjs/core';
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, getStateValues } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { PlayerService } from './PlayerService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
@@ -71,10 +71,13 @@ export class CameraService {
     this.scene = scene;
     this.appContext = appContext;
 
-    // Initialize turn speeds from PlayerInfo
+    // Initialize turn speeds from PlayerInfo default state values
     if (appContext.playerInfo) {
-      this.effectiveTurnSpeed = appContext.playerInfo.effectiveTurnSpeed;
-      this.effectiveUnderwaterTurnSpeed = appContext.playerInfo.effectiveUnderwaterTurnSpeed;
+      const defaultValues = getStateValues(appContext.playerInfo, 'default');
+      this.effectiveTurnSpeed = defaultValues.effectiveTurnSpeed;
+      // Underwater uses swim state turn speed
+      const swimValues = getStateValues(appContext.playerInfo, 'swim');
+      this.effectiveUnderwaterTurnSpeed = swimValues.effectiveTurnSpeed;
     }
 
     this.initializeCamera();
@@ -96,8 +99,11 @@ export class CameraService {
 
     // Subscribe to PlayerInfo updates
     playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
-      this.effectiveTurnSpeed = info.effectiveTurnSpeed;
-      this.effectiveUnderwaterTurnSpeed = info.effectiveUnderwaterTurnSpeed;
+      const defaultValues = getStateValues(info, 'default');
+      this.effectiveTurnSpeed = defaultValues.effectiveTurnSpeed;
+      // Underwater uses swim state turn speed
+      const swimValues = getStateValues(info, 'swim');
+      this.effectiveUnderwaterTurnSpeed = swimValues.effectiveTurnSpeed;
       logger.debug('CameraService: turnSpeed updated', {
         turnSpeed: this.effectiveTurnSpeed,
         underwaterTurnSpeed: this.effectiveUnderwaterTurnSpeed,

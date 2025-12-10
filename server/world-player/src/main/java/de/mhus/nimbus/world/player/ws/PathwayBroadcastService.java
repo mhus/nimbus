@@ -12,7 +12,7 @@ import de.mhus.nimbus.world.player.config.PathwayBroadcastProperties;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.session.SessionClosedConsumer;
 import de.mhus.nimbus.world.player.session.SessionPingConsumer;
-import de.mhus.nimbus.world.player.ws.dto.PathwayContainer;
+import de.mhus.nimbus.world.shared.redis.PathwayBroadcastMessage;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -61,7 +61,7 @@ public class PathwayBroadcastService implements SessionPingConsumer, SessionClos
     public void broadcastPathways() {
         try {
             // Group pathway containers by worldId
-            Map<String, List<PathwayContainer>> containersByWorld = new HashMap<>();
+            Map<String, List<PathwayBroadcastMessage.PathwayContainer>> containersByWorld = new HashMap<>();
 
             // Iterate all active sessions
             for (PlayerSession session : sessionManager.getAllSessions().values()) {
@@ -83,7 +83,7 @@ public class PathwayBroadcastService implements SessionPingConsumer, SessionClos
                     String worldId = session.getWorldId().getId();
 
                     // Create container with session metadata
-                    PathwayContainer container = PathwayContainer.builder()
+                    PathwayBroadcastMessage.PathwayContainer container = PathwayBroadcastMessage.PathwayContainer.builder()
                         .pathway(pathway)
                         .sessionId(session.getSessionId())
                         .worldId(worldId)
@@ -99,7 +99,7 @@ public class PathwayBroadcastService implements SessionPingConsumer, SessionClos
             }
 
             // Publish pathways to Redis (grouped by world)
-            for (Map.Entry<String, List<PathwayContainer>> entry : containersByWorld.entrySet()) {
+            for (Map.Entry<String, List<PathwayBroadcastMessage.PathwayContainer>> entry : containersByWorld.entrySet()) {
                 publishPathways(entry.getKey(), entry.getValue());
             }
 
@@ -196,12 +196,12 @@ public class PathwayBroadcastService implements SessionPingConsumer, SessionClos
      *   "affectedChunks": [{"cx": 6, "cz": -13}, ...]
      * }
      */
-    private void publishPathways(String worldId, List<PathwayContainer> containers) {
+    private void publishPathways(String worldId, List<PathwayBroadcastMessage.PathwayContainer> containers) {
         try {
             // Determine affected chunks from pathways
             Set<ChunkCoordinate> affectedChunks = new HashSet<>();
 
-            for (PathwayContainer container : containers) {
+            for (PathwayBroadcastMessage.PathwayContainer container : containers) {
                 EntityPathway pathway = container.getPathway();
                 for (Waypoint wp : pathway.getWaypoints()) {
                     Vector3 pos = wp.getTarget();

@@ -34,7 +34,7 @@ export interface ShortcutDefinition {
    * - 'use': Use item action
    * - 'none': No action (default)
    */
-  type: ShortcutActionType;
+  type: ShortcutActionType; // javaType: String
 
   /**
    * Item ID to use (for block, attack, or use actions)

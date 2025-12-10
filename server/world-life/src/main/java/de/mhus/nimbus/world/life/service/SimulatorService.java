@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Main entity simulation service.
  *
+ * Supports multi-world simulation across all enabled worlds in MongoDB.
+ *
  * Responsibilities:
- * - Load entities from database
- * - Run simulation loop (every 1 second)
- * - Manage entity simulation states
+ * - Load entities from database for all worlds
+ * - Run simulation loop (every 1 second) for all worlds
+ * - Manage entity simulation states per world
  * - Coordinate entity ownership across pods
  * - Generate pathways via behavior strategies
  * - Publish pathways to world-player pods
@@ -45,55 +48,105 @@ public class SimulatorService {
 
     private final WEntityRepository entityRepository;
     private final BehaviorRegistry behaviorRegistry;
-    private final ChunkAliveService chunkAliveService;
+    private final MultiWorldChunkService multiWorldChunkService;
     private final PathwayPublisher pathwayPublisher;
     private final EntityOwnershipService ownershipService;
+    private final WorldDiscoveryService worldDiscoveryService;
     private final WorldLifeProperties properties;
 
     /**
-     * Simulation states for all entities in the world.
-     * Maps entityId → SimulationState
+     * Simulation states for all entities, grouped by world.
+     * Maps worldId → (entityId → SimulationState)
      */
-    private final Map<String, SimulationState> simulationStates = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, SimulationState>> worldSimulationStates = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void initialize() {
-        log.info("Initializing SimulatorService for world: {}", properties.getWorldId());
+        log.info("Initializing SimulatorService for multi-world support");
+        loadAllWorldEntities();
+    }
 
-        // Load all entities from database
-        List<WEntity> entities = entityRepository.findByWorldId(properties.getWorldId());
-        log.info("Loaded {} entities from database", entities.size());
+    /**
+     * Load entities for all enabled worlds.
+     * Called on startup and when worlds change.
+     */
+    @Scheduled(fixedDelay = 300000, initialDelay = 5000)
+    public void loadAllWorldEntities() {
+        Set<String> knownWorlds = worldDiscoveryService.getKnownWorldIds();
 
-        // Initialize simulation state for each entity
-        int initializedCount = 0;
-        int missingPositionCount = 0;
-        for (WEntity entity : entities) {
-            if (!entity.isEnabled()) {
-                continue;
-            }
-
-            // Check if entity has position set
-            if (entity.getPosition() == null) {
-                log.warn("Entity {} has no position set, skipping simulation", entity.getEntityId());
-                missingPositionCount++;
-                continue;
-            }
-
-            SimulationState state = new SimulationState(entity);
-            simulationStates.put(entity.getEntityId(), state);
-            initializedCount++;
+        if (knownWorlds.isEmpty()) {
+            log.debug("No worlds discovered yet, skipping entity load");
+            return;
         }
 
-        // Register for chunk change notifications (optional - not critical for now)
-        chunkAliveService.addChangeListener(this::onChunksChanged);
+        int totalInitialized = 0;
+        int totalSkipped = 0;
 
-        log.info("SimulatorService initialized: {} entities ready for simulation ({} skipped - no position)",
-                initializedCount, missingPositionCount);
+        for (String worldId : knownWorlds) {
+            // Skip if already loaded
+            if (worldSimulationStates.containsKey(worldId)) {
+                continue;
+            }
+
+            log.info("Loading entities for world: {}", worldId);
+
+            // Load all entities from database for this world
+            List<WEntity> entities = entityRepository.findByWorldId(worldId);
+            log.info("World {}: Loaded {} entities from database", worldId, entities.size());
+
+            // Create simulation state map for this world
+            Map<String, SimulationState> worldStates = new ConcurrentHashMap<>();
+
+            // Initialize simulation state for each entity
+            int initializedCount = 0;
+            int missingPositionCount = 0;
+
+            for (WEntity entity : entities) {
+                if (!entity.isEnabled()) {
+                    continue;
+                }
+
+                // Check if entity has position set
+                if (entity.getPosition() == null) {
+                    log.warn("World {}: Entity {} has no position set, skipping simulation",
+                            worldId, entity.getEntityId());
+                    missingPositionCount++;
+                    continue;
+                }
+
+                SimulationState state = new SimulationState(entity);
+                worldStates.put(entity.getEntityId(), state);
+                initializedCount++;
+            }
+
+            worldSimulationStates.put(worldId, worldStates);
+
+            log.info("World {}: Initialized {} entities for simulation ({} skipped - no position)",
+                    worldId, initializedCount, missingPositionCount);
+
+            totalInitialized += initializedCount;
+            totalSkipped += missingPositionCount;
+        }
+
+        // Remove worlds that are no longer known
+        Set<String> toRemove = new HashSet<>(worldSimulationStates.keySet());
+        toRemove.removeAll(knownWorlds);
+        for (String worldId : toRemove) {
+            worldSimulationStates.remove(worldId);
+            log.info("Removed simulation states for disabled world: {}", worldId);
+        }
+
+        if (totalInitialized > 0 || totalSkipped > 0) {
+            log.info("SimulatorService: {} total entities across {} worlds ({} skipped)",
+                    totalInitialized, knownWorlds.size(), totalSkipped);
+        }
     }
 
     /**
      * Main simulation loop.
      * Runs every second (configurable via world.life.simulation-interval-ms).
+     *
+     * Simulates all entities across all enabled worlds.
      *
      * For each entity in active chunks:
      * 1. Check chunk is active
@@ -104,10 +157,32 @@ public class SimulatorService {
     @Scheduled(fixedDelayString = "#{${world.life.simulation-interval-ms:1000}}")
     public void simulationLoop() {
         long currentTime = System.currentTimeMillis();
-        Set<ChunkCoordinate> activeChunks = chunkAliveService.getActiveChunks();
+
+        // Process each world separately
+        for (Map.Entry<String, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+            String worldId = worldEntry.getKey();
+            Map<String, SimulationState> simulationStates = worldEntry.getValue();
+
+            try {
+                simulateWorld(worldId, simulationStates, currentTime);
+            } catch (Exception e) {
+                log.error("Error simulating world {}: {}", worldId, e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Simulate entities for a single world.
+     *
+     * @param worldId World ID
+     * @param simulationStates Entity simulation states for this world
+     * @param currentTime Current timestamp
+     */
+    private void simulateWorld(String worldId, Map<String, SimulationState> simulationStates, long currentTime) {
+        Set<ChunkCoordinate> activeChunks = multiWorldChunkService.getActiveChunks(worldId);
 
         if (activeChunks.isEmpty()) {
-            log.trace("No active chunks, skipping simulation");
+            log.trace("World {}: No active chunks, skipping simulation", worldId);
             return;
         }
 
@@ -121,41 +196,42 @@ public class SimulatorService {
             try {
                 // 1. Check if entity is in an active chunk
                 String entityChunk = entity.getChunk();
-                if (entityChunk == null || !chunkAliveService.isChunkActive(entityChunk)) {
+                if (entityChunk == null || !multiWorldChunkService.isChunkActive(worldId, entityChunk)) {
                     // Entity chunk is not active, release ownership if we own it
-                    if (ownershipService.isOwnedByThisPod(entityId)) {
-                        ownershipService.releaseEntity(entityId);
-                        log.trace("Released entity {} (chunk {} no longer active)", entityId, entityChunk);
+                    if (ownershipService.isOwnedByThisPod(worldId, entityId)) {
+                        ownershipService.releaseEntity(worldId, entityId);
+                        log.trace("World {}: Released entity {} (chunk {} no longer active)",
+                                worldId, entityId, entityChunk);
                     }
                     continue;
                 }
 
                 // 2. Try to claim ownership if not already owned
-                if (!ownershipService.isOwnedByThisPod(entityId)) {
-                    boolean claimed = ownershipService.claimEntity(entityId, entityChunk);
+                if (!ownershipService.isOwnedByThisPod(worldId, entityId)) {
+                    boolean claimed = ownershipService.claimEntity(worldId, entityId, entityChunk);
                     if (!claimed) {
                         // Another pod owns this entity, skip simulation
                         continue;
                     }
-                    log.debug("Claimed entity {} in chunk {}", entityId, entityChunk);
+                    log.debug("World {}: Claimed entity {} in chunk {}", worldId, entityId, entityChunk);
                 }
 
                 // 3. Simulate entity
-                Optional<EntityPathway> pathway = simulateEntity(entity, state, currentTime);
+                Optional<EntityPathway> pathway = simulateEntity(entity, state, currentTime, worldId);
                 pathway.ifPresent(newPathways::add);
 
             } catch (Exception e) {
-                log.error("Error simulating entity: {}", entityId, e);
+                log.error("World {}: Error simulating entity {}: {}", worldId, entityId, e.getMessage(), e);
             }
         }
 
         // 4. Publish pathways to Redis
         if (!newPathways.isEmpty()) {
             Set<ChunkCoordinate> affectedChunks = calculateAffectedChunks(newPathways);
-            pathwayPublisher.publishPathways(newPathways, affectedChunks);
+            pathwayPublisher.publishPathways(worldId, newPathways, affectedChunks);
 
-            log.debug("Simulation loop: generated {} pathways, affecting {} chunks",
-                    newPathways.size(), affectedChunks.size());
+            log.debug("World {}: Generated {} pathways, affecting {} chunks",
+                    worldId, newPathways.size(), affectedChunks.size());
         }
     }
 
@@ -165,20 +241,21 @@ public class SimulatorService {
      * @param entity Entity to simulate
      * @param state Simulation state
      * @param currentTime Current time
+     * @param worldId World ID
      * @return Optional pathway if generated
      */
-    private Optional<EntityPathway> simulateEntity(WEntity entity, SimulationState state, long currentTime) {
+    private Optional<EntityPathway> simulateEntity(WEntity entity, SimulationState state, long currentTime, String worldId) {
         // Get behavior for entity
         String behaviorType = getBehaviorType(entity);
         EntityBehavior behavior = behaviorRegistry.getBehavior(behaviorType);
 
         if (behavior == null) {
-            log.warn("Behavior not found: {}, entity: {}", behaviorType, entity.getEntityId());
+            log.warn("World {}: Behavior not found: {}, entity: {}", worldId, behaviorType, entity.getEntityId());
             return Optional.empty();
         }
 
         // Generate pathway
-        EntityPathway pathway = behavior.update(entity, state, currentTime, properties.getWorldId());
+        EntityPathway pathway = behavior.update(entity, state, currentTime, worldId);
 
         if (pathway != null) {
             // Update in-memory position to last waypoint target
@@ -188,7 +265,7 @@ public class SimulatorService {
                 entity.setPosition(lastWaypoint.getTarget());
 
                 // Update chunk if entity moved to different chunk
-                updateEntityChunk(entity);
+                updateEntityChunk(entity, worldId);
             }
 
             // Update simulation state
@@ -249,56 +326,67 @@ public class SimulatorService {
     }
 
     /**
-     * Handle chunk changes notification from ChunkAliveService.
-     *
-     * @param activeChunks Updated set of active chunks
-     */
-    private void onChunksChanged(Set<ChunkCoordinate> activeChunks) {
-        log.debug("Active chunks changed: {} chunks now active", activeChunks.size());
-        // Entities in newly active chunks will be claimed in next simulation loop
-        // Entities in deactivated chunks will have ownership released automatically
-    }
-
-    /**
      * Try to claim an orphaned entity if it's in an active chunk.
      * Called by OrphanDetectionTask.
      *
      * @param entityId Entity identifier
      */
     public void tryClaimOrphanedEntity(String entityId) {
-        SimulationState state = simulationStates.get(entityId);
-        if (state == null) {
-            log.debug("Entity not found in simulation states: {}", entityId);
+        // Search for entity across all worlds
+        for (Map.Entry<String, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+            String worldId = worldEntry.getKey();
+            Map<String, SimulationState> simulationStates = worldEntry.getValue();
+
+            SimulationState state = simulationStates.get(entityId);
+            if (state == null) {
+                continue; // Not in this world
+            }
+
+            WEntity entity = state.getEntity();
+            String entityChunk = entity.getChunk();
+
+            if (entityChunk == null) {
+                log.debug("Entity {} has no chunk information", entityId);
+                return;
+            }
+
+            if (!multiWorldChunkService.isChunkActive(worldId, entityChunk)) {
+                log.trace("Entity {} chunk not active in world {}, not claiming: chunk {}",
+                        entityId, worldId, entityChunk);
+                return;
+            }
+
+            // Try to claim entity
+            boolean claimed = ownershipService.claimEntity(worldId, entityId, entityChunk);
+            if (claimed) {
+                log.info("Claimed orphaned entity {} in world {} chunk {}", entityId, worldId, entityChunk);
+            }
             return;
         }
 
-        WEntity entity = state.getEntity();
-        String entityChunk = entity.getChunk();
-
-        if (entityChunk == null) {
-            log.debug("Entity has no chunk information: {}", entityId);
-            return;
-        }
-
-        if (!chunkAliveService.isChunkActive(entityChunk)) {
-            log.trace("Entity chunk not active, not claiming: {} in chunk {}", entityId, entityChunk);
-            return;
-        }
-
-        // Try to claim entity
-        boolean claimed = ownershipService.claimEntity(entityId, entityChunk);
-        if (claimed) {
-            log.info("Claimed orphaned entity: {} in chunk {}", entityId, entityChunk);
-        }
+        log.debug("Entity not found in any world simulation states: {}", entityId);
     }
 
     /**
-     * Get number of entities being simulated.
+     * Get number of entities being simulated across all worlds.
      *
      * @return Total entity count
      */
     public int getEntityCount() {
-        return simulationStates.size();
+        return worldSimulationStates.values().stream()
+                .mapToInt(Map::size)
+                .sum();
+    }
+
+    /**
+     * Get number of entities being simulated per world.
+     *
+     * @return Map of worldId → entity count
+     */
+    public Map<String, Integer> getEntityCountPerWorld() {
+        Map<String, Integer> counts = new HashMap<>();
+        worldSimulationStates.forEach((worldId, states) -> counts.put(worldId, states.size()));
+        return counts;
     }
 
     /**
@@ -315,8 +403,9 @@ public class SimulatorService {
      * Recalculates chunk coordinates and updates if changed.
      *
      * @param entity Entity to update
+     * @param worldId World ID
      */
-    private void updateEntityChunk(WEntity entity) {
+    private void updateEntityChunk(WEntity entity, String worldId) {
         if (entity.getPosition() == null) {
             return;
         }
@@ -329,12 +418,12 @@ public class SimulatorService {
             String oldChunk = entity.getChunk();
             entity.setChunk(newChunk);
 
-            log.debug("Entity {} moved to new chunk: {} -> {}", entity.getEntityId(), oldChunk, newChunk);
+            log.debug("World {}: Entity {} moved to new chunk: {} -> {}", worldId, entity.getEntityId(), oldChunk, newChunk);
 
             // Update ownership with new chunk
-            if (ownershipService.isOwnedByThisPod(entity.getEntityId())) {
-                ownershipService.releaseEntity(entity.getEntityId());
-                ownershipService.claimEntity(entity.getEntityId(), newChunk);
+            if (ownershipService.isOwnedByThisPod(worldId, entity.getEntityId())) {
+                ownershipService.releaseEntity(worldId, entity.getEntityId());
+                ownershipService.claimEntity(worldId, entity.getEntityId(), newChunk);
             }
         }
     }
@@ -342,23 +431,29 @@ public class SimulatorService {
     /**
      * Snapshot entity positions to database periodically.
      * Runs every 60 seconds to persist in-memory position changes.
+     * Snapshots entities from all worlds.
      */
     @Scheduled(fixedDelay = 60000)
     public void snapshotEntityPositions() {
         List<WEntity> toUpdate = new ArrayList<>();
 
-        for (SimulationState state : simulationStates.values()) {
-            WEntity entity = state.getEntity();
+        for (Map.Entry<String, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+            String worldId = worldEntry.getKey();
+            Map<String, SimulationState> simulationStates = worldEntry.getValue();
 
-            // Only snapshot entities owned by this pod
-            if (ownershipService.isOwnedByThisPod(entity.getEntityId())) {
-                toUpdate.add(entity);
+            for (SimulationState state : simulationStates.values()) {
+                WEntity entity = state.getEntity();
+
+                // Only snapshot entities owned by this pod
+                if (ownershipService.isOwnedByThisPod(worldId, entity.getEntityId())) {
+                    toUpdate.add(entity);
+                }
             }
         }
 
         if (!toUpdate.isEmpty()) {
             entityRepository.saveAll(toUpdate);
-            log.info("Snapshotted {} entity positions to database", toUpdate.size());
+            log.info("Snapshotted {} entity positions to database across all worlds", toUpdate.size());
         }
     }
 }

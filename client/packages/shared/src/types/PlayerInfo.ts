@@ -12,10 +12,13 @@
  * Movement speeds are in blocks per second.
  */
 
+import {ShortcutDefinition} from "./ShortcutDefinition";
+
 /**
  * Movement state key - maps to both MovementMode and PlayerMovementState
+ * 'default' is used as fallback when no specific movement state is known
  */
-export type MovementStateKey = 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport' | 'riding';
+export type MovementStateKey = 'default' | 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport' | 'riding';
 
 /**
  * Movement state configuration
@@ -31,7 +34,6 @@ export interface MovementStateValues {
     width: number;     // Entity width in blocks (collision box diameter)
     footprint: number; // Footprint radius in blocks (for corner sampling)
   };
-
   // Movement speeds (blocks/second)
   baseMoveSpeed: number;      // Base horizontal movement speed
   effectiveMoveSpeed: number; // Base + modifiers
@@ -66,7 +68,7 @@ export interface PlayerInfo {
    * Maps shortcut keys to action definitions
    * Keys: 'key0'-'key9', 'click0'-'click2', 'slot0'-'slotN'
    */
-  shortcuts?: Record<string, import('./ShortcutDefinition').ShortcutDefinition>;
+  shortcuts?: Record<string, ShortcutDefinition>; // javaType: Map<String,ShortcutDefinition>
 
   // ============================================
   // State-Based Values (NEW UNIFIED STRUCTURE)
@@ -134,23 +136,6 @@ export interface PlayerInfo {
   /** Player eye height in blocks (for camera position and raycast origin) */
   eyeHeight: number;
 
-  /**
-   * Entity dimensions per movement mode
-   * - height: Entity height in blocks (collision box)
-   * - width: Entity width in blocks (collision box diameter)
-   * - footprint: Footprint radius in blocks (for corner sampling)
-   */
-  dimensions: {
-    walk: { height: number; width: number; footprint: number };
-    sprint: { height: number; width: number; footprint: number };
-    crouch: { height: number; width: number; footprint: number };
-    swim: { height: number; width: number; footprint: number };
-    climb: { height: number; width: number; footprint: number };
-    free_fly: { height: number; width: number; footprint: number };
-    fly: { height: number; width: number; footprint: number };
-    teleport: { height: number; width: number; footprint: number };
-  };
-
   // ============================================
   // Stealth & Detection
   // ============================================
@@ -204,6 +189,21 @@ export interface PlayerInfo {
  * Used as fallback when playerInfo.stateValues is not populated
  */
 export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues> = {
+  // Default fallback values (same as walk)
+  default: {
+    dimensions: { height: 2.0, width: 0.6, footprint: 0.3 },
+    baseMoveSpeed: 5.0,
+    effectiveMoveSpeed: 5.0,
+    baseJumpSpeed: 8.0,
+    effectiveJumpSpeed: 8.0,
+    eyeHeight: 1.6,
+    baseTurnSpeed: 0.003,    // radians per pixel
+    effectiveTurnSpeed: 0.003,
+    selectionRadius: 5.0,
+    stealthRange: 8.0,
+    distanceNotifyReduction: 0.0,
+  },
+
   walk: {
     dimensions: { height: 2.0, width: 0.6, footprint: 0.3 },
     baseMoveSpeed: 5.0,
@@ -335,13 +335,13 @@ export const DEFAULT_STATE_VALUES: Record<MovementStateKey, MovementStateValues>
  * Get state values for a movement state with fallback
  * @param playerInfo Player information
  * @param stateKey Movement state key
- * @returns State values (falls back to walk if not found)
+ * @returns State values (falls back to default if not found)
  */
 export function getStateValues(
   playerInfo: PlayerInfo,
   stateKey: MovementStateKey
 ): MovementStateValues {
-  return playerInfo.stateValues?.[stateKey] || playerInfo.stateValues?.walk || DEFAULT_STATE_VALUES.walk;
+  return playerInfo.stateValues?.[stateKey] || playerInfo.stateValues?.default || DEFAULT_STATE_VALUES.default;
 }
 
 /**
@@ -362,7 +362,7 @@ export function movementStateToKey(state: string): MovementStateKey {
     case 'RIDING': return 'riding';
     case 'JUMP': return 'walk';  // Jump uses walk values
     case 'FALL': return 'walk';  // Fall uses walk values
-    default: return 'walk';
+    default: return 'default';
   }
 }
 
@@ -382,6 +382,6 @@ export function movementModeToKey(mode: string): MovementStateKey {
     case 'free_fly': return 'free_fly';
     case 'fly': return 'fly';
     case 'teleport': return 'teleport';
-    default: return 'walk';
+    default: return 'default';
   }
 }

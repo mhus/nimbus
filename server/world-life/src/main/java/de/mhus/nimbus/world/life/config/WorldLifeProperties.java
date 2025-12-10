@@ -15,12 +15,6 @@ import jakarta.validation.constraints.Positive;
 @Validated
 public class WorldLifeProperties {
 
-    /**
-     * World ID to simulate.
-     * Each world-life pod simulates one world.
-     */
-    @NotBlank
-    private String worldId = "main";
 
     /**
      * Simulation loop interval in milliseconds.

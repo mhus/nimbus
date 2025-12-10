@@ -21,6 +21,7 @@ public enum MessageType implements de.mhus.nimbus.types.TsEnum {
     ENTITY_CHUNK_PATHWAY("e.p"),
     ENTITY_POSITION_UPDATE("e.p.u"),
     ENTITY_INTERACTION("e.int.r"),
+    ENTITY_STATUS_UPDATE("e.s.u"),
     EFFECT_TRIGGER("s.t"),
     EFFECT_PARAMETER_UPDATE("s.u"),
     USER_MOVEMENT("u.m"),

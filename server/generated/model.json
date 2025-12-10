@@ -1518,6 +1518,18 @@
         "comment" : null
       } ],
       "methods" : [ ]
+    }, {
+      "name" : "EntityStatusUpdate",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "entityId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
     } ],
     "enums" : [ {
       "name" : "ENTITY_POSES",
@@ -3241,8 +3253,8 @@
         "type" : "ShortcutActionType",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "String",
+        "comment" : "// javaType: String"
       }, {
         "name" : "itemId",
         "type" : "string",
@@ -4446,7 +4458,7 @@
     } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/PlayerInfo.ts",
-    "imports" : [ ],
+    "imports" : [ "./ShortcutDefinition" ],
     "interfaces" : [ {
       "name" : "MovementStateValues",
       "extendsList" : [ ],
@@ -4539,6 +4551,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "shortcuts",
+        "type" : "Record<string, ShortcutDefinition>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Map<String,ShortcutDefinition>",
+        "comment" : "// javaType: Map<String,ShortcutDefinition>"
       }, {
         "name" : "stateValues",
         "type" : "Record<MovementStateKey, MovementStateValues>",
@@ -4716,6 +4735,140 @@
       "name" : "MovementStateKey",
       "target" : null
     } ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/WLayer.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "WLayer",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "worldId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "layerType",
+        "type" : "LayerType",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "layerDataId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "mountX",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "mountY",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "mountZ",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "ground",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "allChunks",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "affectedChunks",
+        "type" : "string[]",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "order",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "enabled",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "groups",
+        "type" : "Record<number, string>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "createdAt",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "updatedAt",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ {
+      "name" : "LayerType",
+      "values" : [ "TERRAIN", "MODEL" ],
+      "enumValues" : [ {
+        "name" : "TERRAIN",
+        "value" : "TERRAIN"
+      }, {
+        "name" : "MODEL",
+        "value" : "MODEL"
+      } ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/constants/NimbusConstants.ts",
     "imports" : [ ],
@@ -5702,7 +5855,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "MessageType",
-      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT", "TEAM_DATA", "TEAM_STATUS" ],
+      "values" : [ "LOGIN", "LOGIN_RESPONSE", "LOGOUT", "PING", "WORLD_STATUS_UPDATE", "CHUNK_REGISTER", "CHUNK_QUERY", "CHUNK_UPDATE", "BLOCK_UPDATE", "BLOCK_STATUS_UPDATE", "ITEM_BLOCK_UPDATE", "BLOCK_INTERACTION", "ENTITY_UPDATE", "ENTITY_CHUNK_PATHWAY", "ENTITY_POSITION_UPDATE", "ENTITY_INTERACTION", "ENTITY_STATUS_UPDATE", "EFFECT_TRIGGER", "EFFECT_PARAMETER_UPDATE", "USER_MOVEMENT", "PLAYER_TELEPORT", "INTERACTION_REQUEST", "INTERACTION_RESPONSE", "CMD", "CMD_MESSAGE", "CMD_RESULT", "SCMD", "SCMD_RESULT", "TEAM_DATA", "TEAM_STATUS" ],
       "enumValues" : [ {
         "name" : "LOGIN",
         "value" : "login"
@@ -5751,6 +5904,9 @@
       }, {
         "name" : "ENTITY_INTERACTION",
         "value" : "e.int.r"
+      }, {
+        "name" : "ENTITY_STATUS_UPDATE",
+        "value" : "e.s.u"
       }, {
         "name" : "EFFECT_TRIGGER",
         "value" : "s.t"

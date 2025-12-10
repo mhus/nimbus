@@ -10,7 +10,6 @@
 
 import {SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel} from '@nimbus/shared';
 import { loadClientConfig } from './config/ClientConfig';
-import { DEFAULT_PLAYER_INFO } from './config/DefaultPlayerInfo';
 import { ClientService } from './services/ClientService';
 import { createAppContext } from './AppContext';
 import type { AppContext } from './AppContext';
@@ -78,14 +77,7 @@ async function initializeApp(): Promise<AppContext> {
     logger.debug('Creating AppContext...');
     const appContext = createAppContext(config, clientService);
 
-    // Initialize PlayerInfo with defaults
-    // This can later be overridden by server configuration
-    appContext.playerInfo = { ...DEFAULT_PLAYER_INFO };
-    logger.debug('PlayerInfo initialized', {
-      displayName: appContext.playerInfo.displayName,
-      baseWalkSpeed: appContext.playerInfo.baseWalkSpeed,
-      effectiveWalkSpeed: appContext.playerInfo.effectiveWalkSpeed,
-    });
+    // PlayerInfo will be initialized by server configuration via ConfigService
 
     // Initialize ModalService (no dependencies, UI-only)
     logger.debug('Initializing ModalService...');

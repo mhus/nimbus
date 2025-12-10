@@ -50,17 +50,13 @@ public class WItemRegistryService {
      * Automatically calculates chunk key from item position.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param itemBlockRef ItemBlockRef containing position and display data
      * @return Saved item position entity
      */
     @Transactional
-    public WItemPosition saveItemPosition(String worldId, String universeId, ItemBlockRef itemBlockRef) {
+    public WItemPosition saveItemPosition(String worldId, ItemBlockRef itemBlockRef) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
-        }
-        if (universeId == null || universeId.isBlank()) {
-            throw new IllegalArgumentException("universeId required");
         }
         if (itemBlockRef == null) {
             throw new IllegalArgumentException("itemBlockRef required");
@@ -76,18 +72,17 @@ public class WItemRegistryService {
         Vector3 position = itemBlockRef.getPosition();
         String chunk = calculateChunkKey(position.getX(), position.getZ());
 
-        WItemPosition itemPosition = repository.findByWorldIdAndUniverseIdAndItemId(worldId, universeId, itemId)
+        WItemPosition itemPosition = repository.findByWorldIdAndItemId(worldId, itemId)
                 .orElseGet(() -> {
                     WItemPosition neu = WItemPosition.builder()
                             .worldId(worldId)
-                            .universeId(universeId)
                             .itemId(itemId)
                             .chunk(chunk)
                             .enabled(true)
                             .build();
                     neu.touchCreate();
-                    log.debug("Creating new item position: world={}, universe={}, itemId={}, chunk={}",
-                            worldId, universeId, itemId, chunk);
+                    log.debug("Creating new item position: world={}, itemId={}, chunk={}",
+                            worldId, itemId, chunk);
                     return neu;
                 });
 
@@ -96,8 +91,8 @@ public class WItemRegistryService {
         itemPosition.touchUpdate();
 
         WItemPosition saved = repository.save(itemPosition);
-        log.debug("Saved item position: world={}, universe={}, itemId={}, chunk={}",
-                worldId, universeId, itemId, chunk);
+        log.debug("Saved item position: world={}, itemId={}, chunk={}",
+                worldId, itemId, chunk);
         return saved;
     }
 
@@ -138,13 +133,12 @@ public class WItemRegistryService {
      * Find a specific item by ID.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param itemId Item identifier
      * @return Optional containing the item position if found
      */
     @Transactional(readOnly = true)
-    public Optional<WItemPosition> findItem(String worldId, String universeId, String itemId) {
-        return repository.findByWorldIdAndUniverseIdAndItemId(worldId, universeId, itemId);
+    public Optional<WItemPosition> findItem(String worldId, String itemId) {
+        return repository.findByWorldIdAndItemId(worldId, itemId);
     }
 
     /**
@@ -152,17 +146,16 @@ public class WItemRegistryService {
      * Performs soft delete by setting enabled=false.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param itemId Item identifier
      * @return True if item was found and disabled
      */
     @Transactional
-    public boolean deleteItemPosition(String worldId, String universeId, String itemId) {
-        Optional<WItemPosition> itemOpt = repository.findByWorldIdAndUniverseIdAndItemId(worldId, universeId, itemId);
+    public boolean deleteItemPosition(String worldId, String itemId) {
+        Optional<WItemPosition> itemOpt = repository.findByWorldIdAndItemId(worldId, itemId);
 
         if (itemOpt.isEmpty()) {
-            log.debug("Item not found for deletion: world={}, universe={}, itemId={}",
-                    worldId, universeId, itemId);
+            log.debug("Item not found for deletion: world={}, itemId={}",
+                    worldId, itemId);
             return false;
         }
 
@@ -171,8 +164,8 @@ public class WItemRegistryService {
         item.touchUpdate();
         repository.save(item);
 
-        log.info("Soft deleted item: world={}, universe={}, itemId={}",
-                worldId, universeId, itemId);
+        log.info("Soft deleted item: world={}, itemId={}",
+                worldId, itemId);
         return true;
     }
 
@@ -213,13 +206,12 @@ public class WItemRegistryService {
      * Count items in a chunk.
      *
      * @param worldId World identifier
-     * @param universeId Universe identifier
      * @param cx Chunk X coordinate
      * @param cz Chunk Z coordinate
      * @return Number of items in the chunk
      */
     @Transactional(readOnly = true)
-    public long countItemsInChunk(String worldId, String universeId, int cx, int cz) {
+    public long countItemsInChunk(String worldId, int cx, int cz) {
         String chunk = toChunkKey(cx, cz);
         return repository.findByWorldIdAndChunkAndEnabled(
                 worldId, chunk, true).size();

@@ -11,6 +11,7 @@ import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
 import {
   getLogger,
   ExceptionHandler,
+  getStateValues,
   type ClientEntity,
   type BlockType,
 } from '@nimbus/shared';
@@ -114,19 +115,21 @@ export class SelectService {
     this.entityService = entityService;
     this.scene = scene;
 
-    // Initialize player properties from PlayerInfo
+    // Initialize player properties from PlayerInfo default state values
     // Note: selectionRadius is now state-dependent (via getSelectionRadius())
     // eyeHeight is also state-dependent but we keep a fallback cache
     if (appContext.playerInfo) {
-      this.playerEyeHeight = appContext.playerInfo.eyeHeight;
-      this.playerSelectionRadius = appContext.playerInfo.selectionRadius; // Fallback only
+      const defaultValues = getStateValues(appContext.playerInfo, 'default');
+      this.playerEyeHeight = defaultValues.eyeHeight;
+      this.playerSelectionRadius = defaultValues.selectionRadius; // Fallback only
     }
 
     // Subscribe to PlayerInfo updates
     playerService.on('playerInfo:updated', (info: import('@nimbus/shared').PlayerInfo) => {
       // Update cached eye height (state-dependent value is fetched dynamically)
-      this.playerEyeHeight = info.eyeHeight;
-      this.playerSelectionRadius = info.selectionRadius; // Fallback only
+      const defaultValues = getStateValues(info, 'default');
+      this.playerEyeHeight = defaultValues.eyeHeight;
+      this.playerSelectionRadius = defaultValues.selectionRadius; // Fallback only
       logger.debug('SelectService: PlayerInfo updated');
     });
 

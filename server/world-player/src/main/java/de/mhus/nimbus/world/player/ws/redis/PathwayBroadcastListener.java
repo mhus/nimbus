@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.world.player.ws.BroadcastService;
 import de.mhus.nimbus.world.player.ws.SessionManager;
-import de.mhus.nimbus.world.player.ws.dto.PathwayContainer;
+import de.mhus.nimbus.world.shared.redis.PathwayBroadcastMessage;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -84,9 +84,9 @@ public class PathwayBroadcastListener {
             }
 
             // Parse containers
-            List<PathwayContainer> containers = new ArrayList<>();
+            List<PathwayBroadcastMessage.PathwayContainer> containers = new ArrayList<>();
             for (JsonNode containerNode : containersNode) {
-                PathwayContainer container = objectMapper.treeToValue(containerNode, PathwayContainer.class);
+                PathwayBroadcastMessage.PathwayContainer container = objectMapper.treeToValue(containerNode, PathwayBroadcastMessage.PathwayContainer.class);
                 containers.add(container);
             }
 
@@ -99,7 +99,7 @@ public class PathwayBroadcastListener {
                 // We need to send them grouped because BroadcastService only accepts one originatingSessionId
                 Map<String, List<EntityPathway>> pathwaysByOriginSession = new HashMap<>();
 
-                for (PathwayContainer container : containers) {
+                for (PathwayBroadcastMessage.PathwayContainer container : containers) {
                     EntityPathway pathway = container.getPathway();
 
                     // Check if pathway affects this chunk

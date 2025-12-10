@@ -14,27 +14,6 @@ import java.util.Optional;
 public interface WItemPositionRepository extends MongoRepository<WItemPosition, String> {
 
     /**
-     * Find all items in a specific chunk.
-     * This is the primary query for loading items when delivering chunk data to clients.
-     *
-     * @param worldId World identifier
-     * @param universeId Universe identifier
-     * @param chunk Chunk key in format "cx:cz" (e.g., "0:0", "-1:2")
-     * @return List of item positions in the chunk
-     */
-    List<WItemPosition> findByWorldIdAndUniverseIdAndChunk(String worldId, String universeId, String chunk);
-
-    /**
-     * Find a specific item by ID.
-     *
-     * @param worldId World identifier
-     * @param universeId Universe identifier
-     * @param itemId Item identifier
-     * @return Optional containing the item position if found
-     */
-    Optional<WItemPosition> findByWorldIdAndUniverseIdAndItemId(String worldId, String universeId, String itemId);
-
-    /**
      * Find all items in a world.
      *
      * @param worldId World identifier
@@ -69,4 +48,6 @@ public interface WItemPositionRepository extends MongoRepository<WItemPosition, 
      */
     List<WItemPosition> findByWorldIdAndChunkAndEnabled(
             String worldId, String chunk, boolean enabled);
+
+    Optional<WItemPosition> findByWorldIdAndItemId(String worldId, String itemId);
 }

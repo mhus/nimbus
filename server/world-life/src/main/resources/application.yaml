@@ -9,7 +9,6 @@ spring:
 
 world:
   life:
-    world-id: main
     simulation-interval-ms: 1000          # 1 second
     # chunk-refresh-interval-ms: 300000   # DEPRECATED: Replaced by TTL-based mechanism
     chunk-ttl-ms: 300000                  # 5 minutes - Chunk TTL

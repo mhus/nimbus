@@ -19,6 +19,11 @@ public class EntityOwnership {
     private String entityId;
 
     /**
+     * World ID where entity exists.
+     */
+    private String worldId;
+
+    /**
      * Pod ID that owns this entity.
      * Typically the Kubernetes hostname or configured pod identifier.
      */

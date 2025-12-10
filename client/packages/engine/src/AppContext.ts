@@ -207,7 +207,7 @@ export function createAppContext(
     config,
     serverInfo: null,
     worldInfo: null,
-    playerInfo: null, // Will be initialized later with DEFAULT_PLAYER_INFO
+    playerInfo: null, // Will be initialized by server configuration via ConfigService
     sessionId: null,
   };
 }

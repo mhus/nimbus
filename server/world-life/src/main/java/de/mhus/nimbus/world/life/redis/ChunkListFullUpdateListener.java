@@ -2,22 +2,26 @@ package de.mhus.nimbus.world.life.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
-import de.mhus.nimbus.world.life.service.ChunkAliveService;
-import de.mhus.nimbus.world.life.service.ChunkTTLTracker;
+import de.mhus.nimbus.world.life.service.MultiWorldChunkService;
+import de.mhus.nimbus.world.life.service.WorldDiscoveryService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Listens for periodic full chunk list updates from world-player pods.
  * Channel: world:{worldId}:c.full
+ *
+ * Dynamically subscribes to all enabled worlds discovered from MongoDB.
  *
  * Message format:
  * {
@@ -35,25 +39,50 @@ import java.util.List;
 public class ChunkListFullUpdateListener {
 
     private final WorldRedisMessagingService redisMessaging;
-    private final ChunkAliveService chunkAliveService;
-    private final ChunkTTLTracker ttlTracker;
-    private final WorldLifeProperties properties;
+    private final MultiWorldChunkService multiWorldChunkService;
+    private final WorldDiscoveryService worldDiscoveryService;
     private final ObjectMapper objectMapper;
 
+    private final Set<String> subscribedWorlds = new HashSet<>();
+
     @PostConstruct
-    public void subscribe() {
-        String worldId = properties.getWorldId();
-        redisMessaging.subscribe(worldId, "c.full", this::handleFullUpdate);
-        log.info("Subscribed to chunk list full updates for world: {}", worldId);
+    public void initialize() {
+        updateSubscriptions();
+    }
+
+    /**
+     * Periodically check for new worlds and update subscriptions.
+     * Runs every minute.
+     */
+    @Scheduled(fixedDelay = 60000)
+    public void updateSubscriptions() {
+        Set<String> knownWorlds = worldDiscoveryService.getKnownWorldIds();
+
+        // Subscribe to new worlds
+        for (String worldId : knownWorlds) {
+            if (!subscribedWorlds.contains(worldId)) {
+                redisMessaging.subscribe(worldId, "c.full", (topic, message) -> handleFullUpdate(worldId, message));
+                subscribedWorlds.add(worldId);
+                log.info("Subscribed to chunk list full updates for world: {}", worldId);
+            }
+        }
+
+        // Unsubscribe from removed worlds
+        Set<String> toRemove = new HashSet<>(subscribedWorlds);
+        toRemove.removeAll(knownWorlds);
+        for (String worldId : toRemove) {
+            subscribedWorlds.remove(worldId);
+            log.info("Unsubscribed from chunk list full updates for world: {}", worldId);
+        }
     }
 
     /**
      * Handle full chunk list update from a world-player pod.
      *
-     * @param topic Redis topic
+     * @param worldId World ID
      * @param message JSON message
      */
-    private void handleFullUpdate(String topic, String message) {
+    private void handleFullUpdate(String worldId, String message) {
         try {
             JsonNode data = objectMapper.readTree(message);
 
@@ -62,7 +91,7 @@ public class ChunkListFullUpdateListener {
             JsonNode chunksNode = data.get("chunks");
 
             if (chunksNode == null || !chunksNode.isArray()) {
-                log.warn("Invalid full chunk update from pod {}: missing chunks array", podId);
+                log.warn("Invalid full chunk update from pod {} for world {}: missing chunks array", podId, worldId);
                 return;
             }
 
@@ -74,17 +103,14 @@ public class ChunkListFullUpdateListener {
                 chunks.add(new ChunkCoordinate(cx, cz));
             }
 
-            // Add chunks to alive service (additive operation)
-            chunkAliveService.addChunks(chunks);
+            // Add chunks to world's chunk service (additive operation)
+            multiWorldChunkService.addChunks(worldId, chunks);
 
-            // Update TTL timestamps for all chunks
-            chunks.forEach(ttlTracker::touch);
-
-            log.debug("Received full chunk update: podId={}, chunks={}, timestamp={}",
-                    podId, chunks.size(), timestamp);
+            log.debug("World {}: Received full chunk update: podId={}, chunks={}, timestamp={}",
+                    worldId, podId, chunks.size(), timestamp);
 
         } catch (Exception e) {
-            log.error("Failed to handle full chunk update: {}", message, e);
+            log.error("Failed to handle full chunk update for world {}: {}", worldId, message, e);
         }
     }
 }

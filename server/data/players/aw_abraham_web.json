@@ -21,16 +21,6 @@
       "effectiveRidingSpeed": 8.0,
       "effectiveJumpSpeed": 8.0,
       "eyeHeight": 1.6,
-      "dimensions": {
-        "walk": { "height": 2.0, "width": 0.6, "footprint": 0.3 },
-        "sprint": { "height": 2.0, "width": 0.6, "footprint": 0.3 },
-        "crouch": { "height": 1.0, "width": 0.6, "footprint": 0.3 },
-        "swim": { "height": 1.8, "width": 0.6, "footprint": 0.3 },
-        "climb": { "height": 1.8, "width": 0.6, "footprint": 0.3 },
-        "free_fly": { "height": 1.8, "width": 0.6, "footprint": 0.3 },
-        "fly": { "height": 1.8, "width": 0.6, "footprint": 0.3 },
-        "teleport": { "height": 1.8, "width": 0.6, "footprint": 0.3 }
-      },
       "stealthRange": 8.0,
       "distanceNotifyReductionWalk": 0,
       "distanceNotifyReductionCrouch": 0,
@@ -41,6 +31,19 @@
       "effectiveUnderwaterTurnSpeed": 0.002,
       "thirdPersonModelId": "wizard1",
       "stateValues": {
+        "default": {
+          "dimensions": { "height": 2.0, "width": 0.6, "footprint": 0.3 },
+          "baseMoveSpeed": 5.0,
+          "effectiveMoveSpeed": 5.0,
+          "baseJumpSpeed": 8.0,
+          "effectiveJumpSpeed": 8.0,
+          "eyeHeight": 1.6,
+          "baseTurnSpeed": 0.003,
+          "effectiveTurnSpeed": 0.003,
+          "selectionRadius": 5.0,
+          "stealthRange": 8.0,
+          "distanceNotifyReduction": 0
+        },
         "walk": {
           "dimensions": { "height": 2.0, "width": 0.6, "footprint": 0.3 },
           "baseMoveSpeed": 5.0,

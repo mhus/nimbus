@@ -140,20 +140,6 @@ export class PlayerService {
       throw new Error('PlayerInfo must be initialized in AppContext before creating PlayerService');
     }
 
-    // Initialize dimensions if not present
-    if (!appContext.playerInfo.dimensions) {
-      appContext.playerInfo.dimensions = {
-        walk: { height: 2.0, width: 0.6, footprint: 0.3 },
-        sprint: { height: 2.0, width: 0.6, footprint: 0.3 },
-        crouch: { height: 1.0, width: 0.6, footprint: 0.3 },
-        swim: { height: 1.8, width: 0.6, footprint: 0.3 },
-        climb: { height: 1.8, width: 0.6, footprint: 0.3 },
-        free_fly: { height: 1.8, width: 0.6, footprint: 0.3 },
-        fly: { height: 1.8, width: 0.6, footprint: 0.3 },
-        teleport: { height: 1.8, width: 0.6, footprint: 0.3 },
-      };
-    }
-
     // Get initial state values for WALK state
     const initialStateValues = getStateValues(appContext.playerInfo, 'walk');
 

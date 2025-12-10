@@ -41,6 +41,7 @@ public class EntityInteractionService {
     /**
      * Handle entity interaction from a player.
      *
+     * @param worldId World ID
      * @param entityId Entity being interacted with
      * @param action Interaction action type
      * @param timestamp Client timestamp
@@ -50,6 +51,7 @@ public class EntityInteractionService {
      * @param displayName Display name of player
      */
     public void handleInteraction(
+            String worldId,
             String entityId,
             String action,
             Long timestamp,
@@ -59,13 +61,13 @@ public class EntityInteractionService {
             String displayName) {
 
         // Check if this pod owns the entity
-        if (!ownershipService.isOwnedByThisPod(entityId)) {
-            log.trace("Entity interaction for entity not owned by this pod: entityId={}", entityId);
+        if (!ownershipService.isOwnedByThisPod(worldId, entityId)) {
+            log.trace("World {}: Entity interaction for entity not owned by this pod: entityId={}", worldId, entityId);
             return;
         }
 
-        log.info("Processing entity interaction: entityId={}, action={}, user={}",
-                entityId, action, displayName);
+        log.info("World {}: Processing entity interaction: entityId={}, action={}, user={}",
+                worldId, entityId, action, displayName);
 
         // TODO: Pass interaction to behavior
         // For now, behaviors don't have interaction handlers
