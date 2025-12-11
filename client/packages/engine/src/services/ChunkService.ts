@@ -664,6 +664,21 @@ export class ChunkService {
             continue;
           }
 
+        // Calculate correct chunk for this item based on its position
+        // Don't rely on server's chunk assignment (may be from old buggy data)
+        const itemChunkCoord = worldToChunk(item.position.x, item.position.z, chunkSize);
+
+        // Skip if item belongs to different chunk than current one
+        if (itemChunkCoord.cx !== chunkData.cx || itemChunkCoord.cz !== chunkData.cz) {
+          logger.debug('Item belongs to different chunk, skipping', {
+            position: item.position,
+            itemId: item.id,
+            itemChunk: itemChunkCoord,
+            currentChunk: { cx: chunkData.cx, cz: chunkData.cz },
+          });
+          continue;
+        }
+
         // STEP 1: Check if position is AIR
         const posKey = getBlockPositionKey(
           item.position.x,
@@ -710,9 +725,10 @@ export class ChunkService {
         const block = itemToBlock(item);
 
         // STEP 5: Create ClientBlock with Item reference
+        // Use correct chunk coords calculated from item position (not server's chunk)
         const clientBlock: ClientBlock = {
           block,
-          chunk: { cx: chunkData.cx, cz: chunkData.cz },
+          chunk: itemChunkCoord, // Use calculated chunk coords, not chunkData coords
           blockType,
           currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
           clientBlockType: blockType as any,

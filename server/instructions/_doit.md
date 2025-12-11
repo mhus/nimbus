@@ -121,7 +121,7 @@ Die koennen im modul shared abgelegt sein.
 [x] PlayerInfo bereinigen, 'dimensions' wird nicht mehr benoetgt.
 [x] DEFAULT_PLAYER_INFO deprecated, nicht mehr noetig. (DefaultPlayerInfo.ts)
 
-[ ] Icons werden als AIR eingebaut, nith als blockTypeId: 1 
+[x] Icons werden als AIR eingebaut, nith als blockTypeId: 1 
 [ ] Flight mode bricht manchmal ab mit gravitation
 Editieren:
 [ ] Selected block richtig anzeigen, selekted ist jetzt Marked
