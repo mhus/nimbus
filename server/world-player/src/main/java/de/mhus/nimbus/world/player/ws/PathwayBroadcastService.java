@@ -227,7 +227,7 @@ public class PathwayBroadcastService implements SessionPingConsumer, SessionClos
             String json = engineMapper.writeValueAsString(message);
             redisMessaging.publish(worldId, "e.p", json);
 
-            log.debug("Published {} pathway containers to Redis for world {} ({} chunks)",
+            log.trace("Published {} pathway containers to Redis for world {} ({} chunks)",
                 containers.size(), worldId, affectedChunks.size());
 
         } catch (Exception e) {

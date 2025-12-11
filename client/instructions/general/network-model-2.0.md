@@ -504,33 +504,6 @@ Der Client sendet seine aktuelle Position und Rotation an den Server.
 }
 ```
 
-## Interaction Request (Client -> Server)
-
-Der Client sendet eine Interaktionsanfrage an den Server (z.B. wenn der Spieler mit einem Block interagiert).
-
-```json
-{"i":"12346", "t": "int.r", "d":
-  {
-    "x": 10,
-    "y": 64,
-    "z": 10,
-    "g": "123" // groupId des Blocks, optional
-  }
-}
-```
-
-Fail Response:
-
-```json
-{"r":"12346", "t": "int.rs", "d":
-  {
-    "success": false,
-    "errorCode": 403,
-    "errorMessage": "You do not have permission to interact with this block."
-  }
-}
-```
-
 ## Player Teleport (Server -> Client)
 
 Der Server sendet eine Teleport-Anweisung an den Client.

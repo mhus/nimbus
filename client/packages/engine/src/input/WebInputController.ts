@@ -10,6 +10,7 @@ import type { InputController } from '../services/InputService';
 import type { PlayerService } from '../services/PlayerService';
 import type { AppContext } from '../AppContext';
 import type { InputHandler } from './InputHandler';
+import { SelectMode } from '../services/SelectService';
 
 const logger = getLogger('WebInputController');
 
@@ -251,6 +252,55 @@ export class WebInputController implements InputController {
     if (event.key === ' ') {
       const mode = this.playerService.getMovementMode();
       logger.info('Space key pressed, movement mode:', { mode });
+
+      // Check if SelectionService is in INTERACTIVE mode and has a target
+      const selectService = this.appContext.services.select;
+      if (selectService) {
+        const selectMode = selectService.getAutoSelectMode();
+        const selectedBlock = selectService.getCurrentSelectedBlock();
+        const selectedEntity = selectService.getCurrentSelectedEntity();
+
+        // If in INTERACTIVE mode and has a target, send interaction instead of jump
+        if (selectMode === SelectMode.INTERACTIVE && (selectedBlock || selectedEntity)) {
+          logger.info('Space key triggers interaction in INTERACTIVE mode', {
+            hasBlock: !!selectedBlock,
+            hasEntity: !!selectedEntity
+          });
+
+          const networkService = this.appContext.services.network;
+          if (networkService) {
+            if (selectedEntity) {
+              // Send entity interaction (e.int.r)
+              networkService.sendEntityInteraction(
+                selectedEntity.id,
+                'interact',
+                undefined, // no clickType for 'interact' action
+                {}
+              );
+              logger.info('Sent entity interaction for space key', { entityId: selectedEntity.id });
+            } else if (selectedBlock) {
+              // Send block interaction (b.int)
+              const pos = selectedBlock.block.position;
+              networkService.sendBlockInteraction(
+                pos.x,
+                pos.y,
+                pos.z,
+                'interact',
+                {}, // no additional params for 'interact' action
+                selectedBlock.block.metadata?.id,
+                selectedBlock.block.metadata?.groupId
+              );
+              logger.info('Sent block interaction for space key', { position: pos });
+            }
+          } else {
+            logger.warn('NetworkService not available for space interaction');
+          }
+
+          event.preventDefault();
+          return;
+        }
+      }
+
       // Only WALK and SPRINT modes: Jump
       if (mode === 'walk' || mode === 'sprint') {
         if (this.jumpHandler && !this.jumpHandler.isActive()) {

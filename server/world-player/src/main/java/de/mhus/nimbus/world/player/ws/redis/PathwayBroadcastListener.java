@@ -137,7 +137,7 @@ public class PathwayBroadcastListener {
                 }
             }
 
-            log.debug("Handled pathway update: {} containers, {} chunks",
+            log.trace("Handled pathway update: {} containers, {} chunks",
                     containers.size(), affectedChunks.size());
 
         } catch (Exception e) {

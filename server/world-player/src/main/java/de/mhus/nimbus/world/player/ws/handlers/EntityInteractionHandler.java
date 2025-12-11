@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.ws.handlers;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import de.mhus.nimbus.world.player.service.GameplayService;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class EntityInteractionHandler implements MessageHandler {
 
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService redisMessaging;
+    private final GameplayService gameplay;
 
     @Override
     public String getMessageType() {
@@ -58,6 +60,14 @@ public class EntityInteractionHandler implements MessageHandler {
         if (entityId == null || action == null) {
             log.warn("Entity interaction without entityId or action");
             return;
+        }
+
+        log.trace("Entity interaction received: entityId={}, action={}, user={}",
+                entityId, action, session.getDisplayName());
+
+        if (entityId.startsWith("@")) {
+            // this is a player d not send to life server, send to gameplay service
+            gameplay.onPlayerEntityInteraction(session, entityId, action, timestamp, params);
         }
 
         // Publish interaction to Redis for world-life processing
