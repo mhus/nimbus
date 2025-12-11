@@ -81,4 +81,29 @@ public class BlockUtil {
         return "w";
     }
 
+    /**
+     * Normalize blockId to always include group prefix.
+     * Format: "{group}/{key}"
+     * If no group prefix exists, prepends "w/" as default.
+     *
+     * Examples:
+     * - "310" → "w/310"
+     * - "w/310" → "w/310"
+     * - "core/stone" → "core/stone"
+     *
+     * @param blockId Block identifier (may be with or without group prefix)
+     * @return Normalized block identifier with group prefix
+     */
+    public static String normalizeBlockId(String blockId) {
+        if (blockId == null || blockId.isEmpty()) {
+            return blockId;
+        }
+        // If already has group prefix, return as-is
+        if (blockId.contains("/")) {
+            return blockId;
+        }
+        // Add default "w/" prefix
+        return "w/" + blockId;
+    }
+
 }

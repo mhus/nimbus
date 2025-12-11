@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static de.mhus.nimbus.world.shared.world.BlockUtil.extractGroupFromBlockId;
+import static de.mhus.nimbus.world.shared.world.BlockUtil.normalizeBlockId;
 
 /**
  * REST Controller for BlockType CRUD operations.
@@ -71,6 +72,20 @@ public class EBlockTypeController extends BaseEditorController {
     public ResponseEntity<?> get(
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @Parameter(description = "Block identifier") @PathVariable String blockId) {
+
+        // Strip leading slash from wildcard pattern {*blockId}
+        if (blockId != null && blockId.startsWith("/")) {
+            blockId = blockId.substring(1);
+        }
+
+        // Extract ID from format "w/310" -> "310" or "310" -> "310"
+        // In DB: blockId stores only the number, blockTypeGroup stores "w"
+        if (blockId != null && blockId.contains("/")) {
+            String[] parts = blockId.split("/", 2);
+            if (parts.length == 2) {
+                blockId = parts[1];  // Use the ID part after the slash
+            }
+        }
 
         log.debug("GET blocktype: worldId={}, blockId={}", worldId, blockId);
 
@@ -264,6 +279,19 @@ public class EBlockTypeController extends BaseEditorController {
             @Parameter(description = "Block identifier") @PathVariable String blockId,
             @RequestBody UpdateBlockTypeRequest request) {
 
+        // Strip leading slash from wildcard pattern {*blockId}
+        if (blockId != null && blockId.startsWith("/")) {
+            blockId = blockId.substring(1);
+        }
+
+        // Extract ID from format "w/310" -> "310" or "310" -> "310"
+        if (blockId != null && blockId.contains("/")) {
+            String[] parts = blockId.split("/", 2);
+            if (parts.length == 2) {
+                blockId = parts[1];
+            }
+        }
+
         log.debug("UPDATE blocktype: worldId={}, blockId={}", worldId, blockId);
 
         ResponseEntity<?> validation = validateWorldId(worldId);
@@ -312,6 +340,19 @@ public class EBlockTypeController extends BaseEditorController {
     public ResponseEntity<?> delete(
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @Parameter(description = "Block identifier") @PathVariable String blockId) {
+
+        // Strip leading slash from wildcard pattern {*blockId}
+        if (blockId != null && blockId.startsWith("/")) {
+            blockId = blockId.substring(1);
+        }
+
+        // Extract ID from format "w/310" -> "310" or "310" -> "310"
+        if (blockId != null && blockId.contains("/")) {
+            String[] parts = blockId.split("/", 2);
+            if (parts.length == 2) {
+                blockId = parts[1];
+            }
+        }
 
         log.debug("DELETE blocktype: worldId={}, blockId={}", worldId, blockId);
 

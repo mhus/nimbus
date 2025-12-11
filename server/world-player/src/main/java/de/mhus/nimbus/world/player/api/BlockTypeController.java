@@ -71,10 +71,30 @@ public class BlockTypeController {
     public ResponseEntity<?> getBlockType(
             @PathVariable String worldId,
             @PathVariable String blockId) {
-        return service.findByBlockId(blockId)
+
+        // Strip leading slash from wildcard pattern {*blockId}
+        if (blockId != null && blockId.startsWith("/")) {
+            blockId = blockId.substring(1);
+        }
+
+        // Extract ID from format "w/310" -> "310" or "310" -> "310"
+        if (blockId != null && blockId.contains("/")) {
+            String[] parts = blockId.split("/", 2);
+            if (parts.length == 2) {
+                blockId = parts[1];
+            }
+        }
+
+        final String finalBlockId = blockId;
+        log.debug("GET blocktype: blockId={}, worldId={}", finalBlockId, worldId);
+
+        return service.findByBlockId(finalBlockId)
                 .map(WBlockType::getPublicData)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    log.warn("BlockType not found: blockId={}", finalBlockId);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
 }
