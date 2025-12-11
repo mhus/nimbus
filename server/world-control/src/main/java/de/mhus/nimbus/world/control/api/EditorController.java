@@ -1,13 +1,13 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.world.control.commands.CommitLayerCommand;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.control.service.EditState;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
-import de.mhus.nimbus.world.shared.layer.EditAction;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
@@ -93,13 +93,13 @@ public class EditorController extends BaseEditorController {
             response.put("selectedBlock", null);
         }
 
-        // Add marked block coordinates (for copy/move operations)
-        Optional<EditService.BlockPosition> markedBlock = editService.getMarkedBlock(worldId, sessionId);
-        if (markedBlock.isPresent()) {
+        // Add marked block coordinates (for copy/move operations) - extracted from block data
+        Optional<Block> markedBlock = editService.getMarkedBlockData(worldId, sessionId);
+        if (markedBlock.isPresent() && markedBlock.get().getPosition() != null) {
             Map<String, Integer> markedPos = Map.of(
-                    "x", markedBlock.get().x(),
-                    "y", markedBlock.get().y(),
-                    "z", markedBlock.get().z()
+                    "x", (int) markedBlock.get().getPosition().getX(),
+                    "y", (int) markedBlock.get().getPosition().getY(),
+                    "z", (int) markedBlock.get().getPosition().getZ()
             );
             response.put("markedBlock", markedPos);
         } else {
@@ -655,12 +655,13 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/pasteBlock
-     * Sets a block as the current paste block (for palette selection).
-     * Stores complete block data in Redis for later paste operations.
+     * POST /api/editor/{worldId}/session/{sessionId}/markedBlock
+     * Sets a block as the current marked block (for palette selection and paste).
+     * Stores complete block data in Redis overlay.
+     * Position in block.position is optional/ignored - only block content matters.
      */
-    @PostMapping("/{worldId}/session/{sessionId}/pasteBlock")
-    public ResponseEntity<?> setPasteBlock(
+    @PostMapping("/{worldId}/session/{sessionId}/markedBlock")
+    public ResponseEntity<?> setMarkedBlock(
             @PathVariable String worldId,
             @PathVariable String sessionId,
             @RequestBody String blockJson) {
@@ -684,19 +685,19 @@ public class EditorController extends BaseEditorController {
             }
 
             // Store via EditService
-            editService.setPasteBlock(worldId, sessionId, blockJson);
+            editService.setMarkedBlockData(worldId, sessionId, blockJson);
 
-            log.info("Paste block set: worldId={}, sessionId={}, blockTypeId={}",
+            log.info("Marked block set from palette: worldId={}, sessionId={}, blockTypeId={}",
                     worldId, sessionId, block.getBlockTypeId());
 
             return ResponseEntity.ok(Map.of(
-                    "message", "Paste block set successfully",
+                    "message", "Marked block set successfully",
                     "blockTypeId", block.getBlockTypeId()
             ));
 
         } catch (Exception e) {
-            log.error("Failed to set paste block: worldId={}, sessionId={}", worldId, sessionId, e);
-            return bad("Failed to set paste block: " + e.getMessage());
+            log.error("Failed to set marked block: worldId={}, sessionId={}", worldId, sessionId, e);
+            return bad("Failed to set marked block: " + e.getMessage());
         }
     }
 }

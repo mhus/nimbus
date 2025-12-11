@@ -415,19 +415,10 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useModal } from '@/composables/useModal';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
-import type { PaletteBlockDefinition, Block, BlockType } from '@nimbus/shared';
+import { EditAction, type PaletteBlockDefinition, type Block, type BlockType } from '@nimbus/shared';
 
-// Edit actions enum
-const editActions = [
-  'OPEN_CONFIG_DIALOG',
-  'OPEN_EDITOR',
-  'MARK_BLOCK',
-  'COPY_BLOCK',
-  'DELETE_BLOCK',
-  'MOVE_BLOCK',
-] as const;
-
-type EditAction = typeof editActions[number];
+// Get all edit actions from enum
+const editActions = Object.values(EditAction);
 
 // Modal composable for embedded detection
 const { isEmbedded } = useModal();
@@ -441,7 +432,7 @@ const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:904
 // Edit State (unified)
 const editState = ref({
   editMode: false,
-  editAction: 'OPEN_CONFIG_DIALOG' as EditAction,
+  editAction: EditAction.OPEN_CONFIG_DIALOG,
   selectedLayer: null as string | null,
   mountX: 0,
   mountY: 0,
@@ -462,8 +453,8 @@ const availableLayers = ref<Array<{
 }>>([]);
 
 // Legacy state refs
-const currentEditAction = ref<EditAction>('OPEN_CONFIG_DIALOG');
-const savedEditAction = ref<EditAction>('OPEN_CONFIG_DIALOG');
+const currentEditAction = ref<EditAction>(EditAction.OPEN_CONFIG_DIALOG);
+const savedEditAction = ref<EditAction>(EditAction.OPEN_CONFIG_DIALOG);
 const selectedBlock = ref<{ x: number; y: number; z: number } | null>(null);
 const markedBlock = ref<{ x: number; y: number; z: number } | null>(null);
 const error = ref<string | null>(null);
@@ -499,18 +490,16 @@ function formatActionName(action: EditAction): string {
 // Get action description
 function getActionDescription(action: EditAction): string {
   switch (action) {
-    case 'OPEN_CONFIG_DIALOG':
+    case EditAction.OPEN_CONFIG_DIALOG:
       return 'Opens config dialog on block select';
-    case 'OPEN_EDITOR':
+    case EditAction.OPEN_EDITOR:
       return 'Opens block editor on select';
-    case 'MARK_BLOCK':
-      return 'Marks block for copy/move';
-    case 'COPY_BLOCK':
-      return 'Copies marked block to position';
-    case 'DELETE_BLOCK':
+    case EditAction.MARK_BLOCK:
+      return 'Marks block for paste';
+    case EditAction.PASTE_BLOCK:
+      return 'Pastes marked block to position';
+    case EditAction.DELETE_BLOCK:
       return 'Deletes block at position';
-    case 'MOVE_BLOCK':
-      return 'Moves marked block to position';
     default:
       return '';
   }
@@ -568,7 +557,7 @@ async function fetchEditState() {
     // Create new state object
     const newState = {
       editMode: data.editMode || false,
-      editAction: data.editAction || 'OPEN_CONFIG_DIALOG',
+      editAction: (data.editAction as EditAction) || EditAction.OPEN_CONFIG_DIALOG,
       selectedLayer: data.selectedLayer || null,
       mountX: data.mountX || 0,
       mountY: data.mountY || 0,
@@ -935,15 +924,17 @@ async function addMarkedBlockToPalette() {
   }
 }
 
-// Select a palette block (sets as current paste block in Redis)
+// Select a palette block (sets as current marked block in Redis)
 async function selectPaletteBlock(index: number) {
   selectedPaletteIndex.value = index;
   const paletteBlock = palette.value[index];
 
+  console.log('[Palette] Selecting block:', paletteBlock.name);
+
   try {
-    // Send block to Redis as current paste block
+    // Send block to Redis as marked block (will trigger polling update)
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/pasteBlock`,
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/markedBlock`,
       {
         method: 'POST',
         headers: {
@@ -954,13 +945,19 @@ async function selectPaletteBlock(index: number) {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to set paste block');
+      const errorText = await response.text();
+      console.error('[Palette] Failed to set marked block:', errorText);
+      throw new Error('Failed to set marked block');
     }
 
-    console.log(`Selected palette block: ${paletteBlock.name}`);
+    const result = await response.json();
+    console.log('[Palette] Marked block set successfully:', result);
+
+    // Marked block content will be updated by polling within 2 seconds
+
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to select block';
-    console.error('Failed to select palette block:', err);
+    console.error('[Palette] Failed to select palette block:', err);
   }
 }
 

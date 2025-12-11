@@ -8,9 +8,8 @@ public enum EditAction implements de.mhus.nimbus.types.TsEnum {
     OPEN_CONFIG_DIALOG("OPEN_CONFIG_DIALOG"),
     OPEN_EDITOR("OPEN_EDITOR"),
     MARK_BLOCK("MARK_BLOCK"),
-    COPY_BLOCK("COPY_BLOCK"),
-    DELETE_BLOCK("DELETE_BLOCK"),
-    MOVE_BLOCK("MOVE_BLOCK");
+    PASTE_BLOCK("PASTE_BLOCK"),
+    DELETE_BLOCK("DELETE_BLOCK");
 
     @lombok.Getter
     private final String tsIndex;

@@ -20,7 +20,8 @@
       "Bash(mvn:*)",
       "Bash(xargs basename:*)",
       "Bash(paste:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(javap:*)"
     ],
     "deny": [],
     "ask": []

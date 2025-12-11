@@ -354,18 +354,23 @@ public class McpController extends BaseEditorController {
         }
 
         String worldId = sessionOpt.get().getWorldId();
-        Optional<EditService.BlockPosition> markedBlock = editService.getMarkedBlock(worldId, sessionId);
+        Optional<Block> markedBlock = editService.getMarkedBlockData(worldId, sessionId);
 
         if (markedBlock.isEmpty()) {
             return ResponseEntity.ok(Map.of("marked", false));
         }
 
-        EditService.BlockPosition pos = markedBlock.get();
+        // Extract position from block data
+        Block block = markedBlock.get();
+        if (block.getPosition() == null) {
+            return ResponseEntity.ok(Map.of("marked", false));
+        }
+
         return ResponseEntity.ok(Map.of(
                 "marked", true,
-                "x", pos.x(),
-                "y", pos.y(),
-                "z", pos.z()
+                "x", (int) block.getPosition().getX(),
+                "y", (int) block.getPosition().getY(),
+                "z", (int) block.getPosition().getZ()
         ));
     }
 

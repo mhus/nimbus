@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.control.service;
 
-import de.mhus.nimbus.world.shared.layer.EditAction;
+import de.mhus.nimbus.generated.types.EditAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

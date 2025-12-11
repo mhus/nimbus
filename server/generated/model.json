@@ -3374,6 +3374,72 @@
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/EditSettings.ts",
+    "imports" : [ "./Block" ],
+    "interfaces" : [ {
+      "name" : "PaletteBlockDefinition",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "block",
+        "type" : "Block",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "icon",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WWorldEditSettings",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "worldId",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "userId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "palette",
+        "type" : "PaletteBlockDefinition[]",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "lastModified",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/TeamData.ts",
     "imports" : [ "./Vector3" ],
     "interfaces" : [ {
@@ -3967,7 +4033,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "EditAction",
-      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "COPY_BLOCK", "DELETE_BLOCK", "MOVE_BLOCK" ],
+      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "PASTE_BLOCK", "DELETE_BLOCK" ],
       "enumValues" : [ {
         "name" : "OPEN_CONFIG_DIALOG",
         "value" : "OPEN_CONFIG_DIALOG"
@@ -3978,14 +4044,11 @@
         "name" : "MARK_BLOCK",
         "value" : "MARK_BLOCK"
       }, {
-        "name" : "COPY_BLOCK",
-        "value" : "COPY_BLOCK"
+        "name" : "PASTE_BLOCK",
+        "value" : "PASTE_BLOCK"
       }, {
         "name" : "DELETE_BLOCK",
         "value" : "DELETE_BLOCK"
-      }, {
-        "name" : "MOVE_BLOCK",
-        "value" : "MOVE_BLOCK"
       } ]
     } ],
     "classes" : [ ],

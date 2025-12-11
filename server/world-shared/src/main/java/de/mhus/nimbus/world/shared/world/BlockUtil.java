@@ -106,4 +106,28 @@ public class BlockUtil {
         return "w/" + blockId;
     }
 
+    /**
+     * Clone a block with all its properties.
+     * Creates a deep copy of the block, excluding the position.
+     * Position must be set separately after cloning.
+     *
+     * @param originalBlock Block to clone
+     * @return Cloned block without position
+     */
+    public static Block cloneBlock(Block originalBlock) {
+        if (originalBlock == null) {
+            return null;
+        }
+       // TDOO also cloen modifiers ?
+        return Block.builder()
+                .blockTypeId(originalBlock.getBlockTypeId())
+                .offsets(originalBlock.getOffsets())
+                .rotation(originalBlock.getRotation())
+                .faceVisibility(originalBlock.getFaceVisibility())
+                .cornerHeights(originalBlock.getCornerHeights())
+                .status(originalBlock.getStatus())
+                .modifiers(originalBlock.getModifiers())
+                .metadata(originalBlock.getMetadata())
+                .build();
+    }
 }
