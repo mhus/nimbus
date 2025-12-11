@@ -12,7 +12,7 @@ public class BlockUtil {
 
     /**
      * Check if block type represents AIR (empty space).
-     * AIR types: "0", "w:0", null, empty string
+     * AIR types: "0", "w/0", null, empty string
      *
      * @param blockTypeId Block type identifier
      * @return true if block type is AIR
@@ -21,7 +21,7 @@ public class BlockUtil {
         if (blockTypeId == null || blockTypeId.isEmpty()) {
             return true;
         }
-        return "0".equals(blockTypeId) || "w:0".equals(blockTypeId);
+        return "0".equals(blockTypeId) || "w/0".equals(blockTypeId) || "air".equals(blockTypeId) || "w/air".equals(blockTypeId);
     }
 
     /**
@@ -62,4 +62,23 @@ public class BlockUtil {
     public static String positionKey(Block block) {
         return block != null ? positionKey(block.getPosition()) : "0:0:0";
     }
+
+    /**
+     * Extract group from blockId.
+     * Format: "{group}/{key}" (e.g., "core:stone" → "core", "w/123" → "w")
+     * If no group prefix, defaults to "w".
+     */
+    public static String extractGroupFromBlockId(String blockId) {
+        if (blockId == null || !blockId.contains("/")) {
+            return "w";  // default group
+        }
+        String[] parts = blockId.split("/", 2);
+        String group = parts[0].toLowerCase();
+        // Validate group format
+        if (group.matches("^[a-z0-9_-]+$")) {
+            return group;
+        }
+        return "w";
+    }
+
 }

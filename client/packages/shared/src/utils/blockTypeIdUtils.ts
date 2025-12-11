@@ -24,7 +24,7 @@ const VALID_GROUP_PATTERN = /^[a-z0-9_-]+$/;
  */
 export function normalizeBlockTypeId(id: number | string): string {
   if (typeof id === 'number') {
-    return "w:" + String(id).toLowerCase();
+    return "w/" + String(id).toLowerCase();
   }
   return id.toLowerCase();
 }
@@ -48,7 +48,7 @@ export function normalizeBlockTypeIds(ids: (number | string)[]): string[] {
  */
 export function isAirBlockTypeId(id: number | string): boolean {
   const normalized = normalizeBlockTypeId(id);
-  return normalized === '0' || normalized === 'w:0';
+  return normalized === '0' || normalized === 'w/0' || normalized === 'w:air' || normalized === 'air' || normalized === '';
 }
 
 /**
@@ -60,8 +60,8 @@ export function isAirBlockTypeId(id: number | string): boolean {
 export function parseBlockTypeId(id: string | number): { group: string; name: string } | null {
   const normalized = normalizeBlockTypeId(id);
 
-  // Check if ID contains ':'
-  const colonIndex = normalized.indexOf(':');
+  // Check if ID contains '/'
+  const colonIndex = normalized.indexOf('/');
 
   if (colonIndex === -1) {
     // No group specified, use default 'w'
@@ -126,5 +126,5 @@ export function isValidBlockTypeGroup(group: string): boolean {
 export function buildBlockTypeId(group: string, name: string): string {
   const normalizedGroup = group.toLowerCase();
   const normalizedName = name.toLowerCase();
-  return `${normalizedGroup}:${normalizedName}`;
+  return `${normalizedGroup}/${normalizedName}`;
 }

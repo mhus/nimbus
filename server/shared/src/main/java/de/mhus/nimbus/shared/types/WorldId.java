@@ -7,6 +7,7 @@ import java.util.Optional;
 /*
  * WorldId represents a unique identifier for a world in the format
  * "regionId:worldName[:zone][@branch][#instance]".
+ * or
  * Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
  */
 public class WorldId {

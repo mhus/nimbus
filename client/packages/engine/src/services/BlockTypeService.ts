@@ -150,12 +150,12 @@ export class BlockTypeService {
           const originalId = String(blockType.id);
           let correctedId: string;
 
-          if (originalId.includes(':')) {
+          if (originalId.includes('/')) {
             // ID has group, check if it matches the loaded group
-            const [existingGroup, name] = originalId.split(':', 2);
+            const [existingGroup, name] = originalId.split('/', 2);
             if (existingGroup.toLowerCase() !== groupName.toLowerCase()) {
               // Wrong group in ID, replace with correct group
-              correctedId = `${groupName}:${name}`.toLowerCase();
+              correctedId = `${groupName}/${name}`.toLowerCase();
               logger.debug('Fixed BlockType ID group mismatch', {
                 originalId,
                 correctedId,
@@ -167,7 +167,7 @@ export class BlockTypeService {
             }
           } else {
             // No group in ID, add the loaded group
-            correctedId = `${groupName}:${originalId}`.toLowerCase();
+            correctedId = `${groupName}/${originalId}`.toLowerCase();
             logger.debug('Added group prefix to BlockType ID', {
               originalId,
               correctedId,
@@ -274,18 +274,18 @@ export class BlockTypeService {
   /**
    * Normalize BlockType ID and ensure it has a group prefix
    * @param id Block type ID (string or legacy number)
-   * @returns Normalized ID with group prefix (e.g., "w:310")
+   * @returns Normalized ID with group prefix (e.g., "w/310")
    */
   private normalizeIdWithGroup(id: string | number): string {
     const normalized = normalizeBlockTypeId(id);
 
     // Check if ID already has a group prefix
-    if (normalized.includes(':')) {
+    if (normalized.includes('/')) {
       return normalized;
     }
 
     // No prefix, add default group 'w'
-    return `w:${normalized}`;
+    return `w/${normalized}`;
   }
 
   /**

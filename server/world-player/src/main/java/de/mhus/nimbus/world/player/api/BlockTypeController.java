@@ -62,7 +62,7 @@ public class BlockTypeController {
      * GET /api/worlds/{worldId}/blocktypes/{blockId}
      * Returns a single BlockType by ID.
      */
-    @GetMapping("/blocktypes/{blockId}")
+    @GetMapping("/blocktypes/{*blockId}")
     @Operation(summary = "Get BlockType by ID", description = "Returns BlockType template for a specific block ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "BlockType found"),
@@ -77,40 +77,4 @@ public class BlockTypeController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * GET /api/worlds/{worldId}/blocktypes
-     * Returns all BlockTypes, optionally filtered.
-     */
-    @GetMapping("/blocktypes")
-    @Operation(summary = "Get all BlockTypes", description = "Returns all enabled BlockType templates, optionally filtered")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of BlockTypes")
-    })
-    public ResponseEntity<?> getAllBlockTypes(
-            @PathVariable String worldId,
-            @RequestParam(required = false) String regionId) {
-
-        List<BlockType> blockTypes;
-
-        if (regionId != null && !regionId.isBlank()) {
-            blockTypes = service.findByRegionId(regionId).stream()
-                    .filter(WBlockType::isEnabled)
-                    .map(WBlockType::getPublicData)
-                    .toList();
-        } else if (worldId != null && !worldId.isBlank()) {
-            blockTypes = service.findByWorldId(worldId).stream()
-                    .filter(WBlockType::isEnabled)
-                    .map(WBlockType::getPublicData)
-                    .toList();
-        } else {
-            blockTypes = service.findAllEnabled().stream()
-                    .map(WBlockType::getPublicData)
-                    .toList();
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "blockTypes", blockTypes,
-                "count", blockTypes.size()
-        ));
-    }
 }

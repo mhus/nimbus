@@ -69,7 +69,7 @@ public class WorldImporter {
                     .enabled(true)
                     .groundLevel(0)           // Default ground level
                     .waterLevel(null)         // No water by default
-                    .groundBlockType("w:310") // Grass block
+                    .groundBlockType("w/310") // Grass block
                     .waterBlockType("core:water")
                     .build();
             world.touchForCreate();

@@ -179,6 +179,32 @@ Was alles gespeichert werden muss:
 - worldName: main \[0-9a-zA-Z_-]{1,64}
 - worldId: regionId:worldName\[:zone\]\[@branch\][#instance\]
 
+## Blocks
+
+Block Types:
+
+- blockGroup/blockId
+- blockGroup: \[a-zA-Z0-9_-\]{1,64}
+- blockId: \[a-zA-Z0-9_-\]{1,64}
+- default blockGroup: 'w'
+
+Block Gruppen:
+- 'w' - World spezifische Blöcke
+- 'r' - Region spezifische Blöcke
+- '*' - shared Blöcke 
+
+Spezielle Typen:
+- air: 0, w/0, air, w/air
+- item: 1, w/1, item, w/item
+- invisible:: 2, w/2, invisible, w/invisible
+- invisible blocking: 3, w/3, invisible_blocking, w/invisible_blocking
+
+Weiter standart Typen:
+- r/ocean
+- r/grass
+- r/stone
+
+
 ## Tokens und Access
 
 - Login mit credentials am Universe Server: Access Token (15 Minuten gültig) - nur im Memory

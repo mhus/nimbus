@@ -311,8 +311,8 @@ public class MainBlockDataTest extends AbstractSystemTest {
                         if (typeNode.isTextual()) {
                             String type = typeNode.asText();
                             System.out.println("✅ t (type): \"" + type + "\" (String)");
-                            if (!"w:310".equals(type)) {
-                                System.out.println("❌ WRONG VALUE: Expected 'w:310', got '" + type + "'");
+                            if (!"w/310".equals(type)) {
+                                System.out.println("❌ WRONG VALUE: Expected 'w/310', got '" + type + "'");
                                 blockHasErrors = true;
                             }
                         } else {
@@ -413,7 +413,7 @@ public class MainBlockDataTest extends AbstractSystemTest {
             JsonNode blockType310 = null;
             for (JsonNode bt : blockTypes) {
                 String id = bt.get("id").asText();
-                if ("w:310".equals(id) || "310".equals(id)) {
+                if ("w/310".equals(id) || "310".equals(id)) {
                     blockType310 = bt;
                     break;
                 }
@@ -439,7 +439,7 @@ public class MainBlockDataTest extends AbstractSystemTest {
             if (blockType310.has("id")) {
                 String id = blockType310.get("id").asText();
                 System.out.println("✅ id: \"" + id + "\"");
-                if (!"w:310".equals(id)) {
+                if (!"w/310".equals(id)) {
                     System.out.println("❌ WRONG VALUE: Expected 'w:310', got '" + id + "'");
                     hasErrors = true;
                 }

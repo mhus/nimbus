@@ -72,18 +72,18 @@ public class WWorld {
     private Integer waterLevel;
 
     /**
-     * Block type ID for ground blocks (e.g., "w:310" for grass).
+     * Block type ID for ground blocks (e.g., "r/grass" for grass).
      * Used when generating default chunks.
      */
     @Builder.Default
-    private String groundBlockType = "w:310";
+    private String groundBlockType = "r/grass";
 
     /**
      * Block type ID for water blocks (e.g., "core:water").
      * Used when generating ocean in default chunks.
      */
     @Builder.Default
-    private String waterBlockType = "core:water";
+    private String waterBlockType = "r/ocean";
 
     public void touchForCreate() {
         Instant now = Instant.now();

@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static de.mhus.nimbus.world.shared.world.BlockUtil.extractGroupFromBlockId;
+
 /**
  * REST Controller for BlockType CRUD operations.
  * Base path: /api/worlds/{worldId}/blocktypes
@@ -59,7 +61,7 @@ public class EBlockTypeController extends BaseEditorController {
      * Get single BlockType by ID.
      * GET /api/worlds/{worldId}/blocktypes/{blockId}
      */
-    @GetMapping("/{blockId}")
+    @GetMapping("/{*blockId}")
     @Operation(summary = "Get BlockType by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "BlockType found"),
@@ -146,7 +148,7 @@ public class EBlockTypeController extends BaseEditorController {
      * GET /api/worlds/{worldId}/blocktypeschunk/{groupName}
      * <p>
      * This is a special endpoint to load BlockTypes grouped by their group prefix
-     * (e.g., "core" for "core:stone", "w" for "w:123").
+     * (e.g., "core" for "core:stone", "w" for "w/123").
      */
     @GetMapping("../blocktypeschunk/{groupName}")
     @Operation(summary = "Get BlockTypes by group")
@@ -250,7 +252,7 @@ public class EBlockTypeController extends BaseEditorController {
      * Update existing BlockType.
      * PUT /api/worlds/{worldId}/blocktypes/{blockId}
      */
-    @PutMapping("/{blockId}")
+    @PutMapping("/{*blockId}")
     @Operation(summary = "Update BlockType")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "BlockType updated"),
@@ -300,7 +302,7 @@ public class EBlockTypeController extends BaseEditorController {
      * Delete BlockType.
      * DELETE /api/worlds/{worldId}/blocktypes/{blockId}
      */
-    @DeleteMapping("/{blockId}")
+    @DeleteMapping("/{*blockId}")
     @Operation(summary = "Delete BlockType")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "BlockType deleted"),
@@ -357,21 +359,4 @@ public class EBlockTypeController extends BaseEditorController {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Extract group from blockId.
-     * Format: "{group}:{key}" (e.g., "core:stone" → "core", "w:123" → "w")
-     * If no group prefix, defaults to "w".
-     */
-    private String extractGroupFromBlockId(String blockId) {
-        if (blockId == null || !blockId.contains(":")) {
-            return "w";  // default group
-        }
-        String[] parts = blockId.split(":", 2);
-        String group = parts[0].toLowerCase();
-        // Validate group format
-        if (group.matches("^[a-z0-9_-]+$")) {
-            return group;
-        }
-        return "w";
-    }
 }
