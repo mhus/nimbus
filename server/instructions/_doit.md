@@ -128,4 +128,3 @@ Editieren:
 [ ] Palette von Bloecken verwalten und fuer Paste nutzen
 [ ] Einen Block bearbeiten und dann als neuer BlockType speichern
 
-[ ] Lookup Konzept erstellen

@@ -170,14 +170,14 @@ Was alles gespeichert werden muss:
 
 - Ids: \[a-zA-Z0-9_-\]{1,64}
 - Pfade: /[a-zA-Z0-9_-\]{1,64}(/[a-zA-Z0-9_-]{1,64})*
-- WorldCoordiante Kurz: W:regionId/worldId\[/worldZone\]\[:branch\]\[@instance\]
-- WorldCoordiante Lang: U:galaxyId/regionId/starId/celestialBodyId/worldId\[/worldZone\]\[:branch\]\[@instance\]
+- ~~WorldCoordiante Kurz: W:regionId/worldId\[/worldZone\]\[:branch\]\[@instance\]~~
+- ~~WorldCoordiante Lang: U:galaxyId/regionId/starId/celestialBodyId/worldId\[/worldZone\]\[:branch\]\[@instance\]~~
 - starId: galaxy coordinate: komma getrennte werte einer funktion, die den stern im galaxie gitter beschreibt
 - planetId: planetNr von innen\[,mond Nr von Innen\]
 
 - regionId: main \[0-9a-zA-Z_-]{1,64}
 - worldName: main \[0-9a-zA-Z_-]{1,64}
-- worldId: regionId:worldName\[:zone\]\[@branch\][#instance\]
+- worldId: regionId:worldName\[:zone\]\[@branch\][!instance\]
 
 ## Blocks
 

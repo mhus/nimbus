@@ -6,8 +6,9 @@ import java.util.Optional;
 
 /*
  * WorldId represents a unique identifier for a world in the format
- * "regionId:worldName[:zone][@branch][#instance]".
+ * "regionId:worldName[:zone][@branch][!instance]".
  * or
+ * @collection:collectinId
  * Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
  */
 public class WorldId {
@@ -24,57 +25,62 @@ public class WorldId {
     }
 
     public String getRegionId() {
-        if (regionId == null) {
-            parseId();
-        }
+        parseId();
         return regionId;
     }
 
     public String getBranch() {
-        if (regionId == null) {
-            parseId();
-        }
+        parseId();
         return branch;
     }
 
     public String getWorldName() {
-        if (regionId == null) {
-            parseId();
-        }
+        parseId();
         return worldName;
     }
 
     public String getZone() {
-        if (regionId == null) {
-            parseId();
-        }
+        parseId();
         return zone;
     }
 
     public String getInstance() {
-        if (regionId == null) {
-            parseId();
-        }
+        parseId();
         return instance;
     }
 
-    private void parseId() {
+    public boolean isCollection() {
+        return id.startsWith("@");
+    }
+
+    private void parseId() { // no need for sync, worst case double parse
+        if (regionId != null) return;
         var string = id;
-        if (string.indexOf('#') > 0) {
-            var parts = id.split("#", 3); // one mor for garbage
+        if (string.startsWith("@")) {
+            // Collection ID
+            var parts = string.split(":", 3); // one more for garbage
+            regionId = parts[0];
+            worldName = parts[1];
+            branch = null;
+            zone = null;
+            instance = null;
+            return;
+        }
+        if (string.indexOf('!') > 0) {
+            var parts = id.split("!", 3); // one more for garbage
             if (parts.length > 1) {
                 instance = parts[1];
             }
             string = parts[0];
         }
         if (string.indexOf('@') > 0) {
-            var parts = string.split("@", 3); // one mor for garbage
+            var parts = string.split("@", 3); // one more for garbage
             if (parts.length > 1) {
                 branch = parts[1];
             }
             string = parts[0];
         }
-        var parts = string.split(":", 4); // one mor for garbage
+        var parts = string.split(":", 4); // one more for garbage
         regionId = parts[0];
         worldName = parts[1];
         if (parts.length > 2) {
@@ -94,15 +100,32 @@ public class WorldId {
     public static boolean validate(String id) {
         if (id == null || id.isBlank()) return false;
         if (id.length() < 3) return false;
+        if (id.startsWith("@")) {
+            // Collection ID
+            return id.matches("^@[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}$");
+        }
          // Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
-        return id.matches("^[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}(:[a-zA-Z0-9_\\-]{1,64})?(@[a-zA-Z0-9_\\-]{1,64})?(#[a-zA-Z0-9_\\-]{1,64})?$");
+        return id.matches("^[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}(:[a-zA-Z0-9_\\-]{1,64})?(@[a-zA-Z0-9_\\-]{1,64})?(![a-zA-Z0-9_\\-]{1,64})?$");
     }
 
     public boolean isMain() {
+        parseId();
         return zone == null && branch == null && instance == null;
     }
 
     public boolean isBranch() {
+        parseId();
         return branch != null;
     }
+
+    public boolean isInstance() {
+        parseId();
+        return instance != null;
+    }
+
+    public boolean isZone() {
+        parseId();
+        return zone != null;
+    }
+
 }
