@@ -20,4 +20,10 @@ export enum EditAction {
 
   /** Deletes the block at the selected position */
   DELETE_BLOCK = 'DELETE_BLOCK',
+
+  /** Smooths blocks (applies smoothing to geometry) */
+  SMOOTH_BLOCKS = 'SMOOTH_BLOCKS',
+
+  /** Roughens blocks (applies rough geometry) */
+  ROUGH_BLOCKS = 'ROUGH_BLOCKS',
 }

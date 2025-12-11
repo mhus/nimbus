@@ -60,24 +60,6 @@
             </div>
           </div>
 
-          <!-- Navigator - Collapsible -->
-          <div class="collapse collapse-arrow bg-base-100 shadow-sm">
-            <input type="checkbox" />
-            <div class="collapse-title text-sm font-semibold p-2">
-              Navigator
-            </div>
-            <div class="collapse-content">
-              <NavigateSelectedBlockComponent
-                :selected-block="selectedBlock"
-                :step="1"
-                :size="224"
-                :show-execute-button="true"
-                @navigate="handleNavigate"
-                @execute="executeAction"
-              />
-            </div>
-          </div>
-
           <!-- Selected Block Display - Compact -->
           <div class="card bg-base-100 shadow-sm">
             <div class="card-body p-2">
@@ -98,16 +80,8 @@
                 </div>
               </div>
 
-              <div v-else class="alert alert-info alert-sm text-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>No block selected</span>
-              </div>
-
               <!-- Marked Block Display - Content -->
-              <div v-if="markedBlockContent" class="mt-2">
-                <h3 class="text-xs font-semibold mb-1 text-base-content/70">Marked Block</h3>
+              <div v-if="markedBlockContent">
                 <div class="bg-warning/10 rounded p-2">
                   <div class="flex items-center gap-2">
                     <!-- Block Icon/Texture -->
@@ -135,6 +109,126 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Block Palette - Collapsible -->
+          <div class="collapse collapse-arrow bg-base-100 shadow-sm">
+            <input type="checkbox" v-model="blocksPanelOpen" />
+            <div class="collapse-title text-sm font-semibold p-2">
+              Blocks ({{ palette.length }})
+            </div>
+            <div class="collapse-content">
+              <div class="space-y-2">
+                <!-- Add Marked Block Button -->
+                <button
+                  @click="addMarkedBlockToPalette"
+                  :disabled="!markedBlockContent || addingToPalette"
+                  class="btn btn-success btn-xs w-full"
+                  title="Add currently marked block to palette"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {{ addingToPalette ? 'Adding...' : 'Add Marked Block' }}
+                </button>
+
+                <!-- Palette Blocks List -->
+                <div v-if="palette.length === 0" class="text-xs text-center text-base-content/50 py-4">
+                  No blocks in palette. Mark a block and add it.
+                </div>
+
+                <div v-else class="space-y-1 max-h-64 overflow-y-auto">
+                  <div
+                    v-for="(paletteBlock, index) in palette"
+                    :key="index"
+                    class="relative group cursor-pointer"
+                    @click="selectPaletteBlock(index)"
+                  >
+                    <div
+                      class="bg-base-200 hover:bg-base-300 rounded p-2 transition-colors"
+                      :class="{ 'ring-2 ring-primary': selectedPaletteIndex === index }"
+                    >
+                      <div class="flex items-center gap-2">
+                        <!-- Block Icon/Texture -->
+                        <div class="w-8 h-8 bg-base-300 rounded flex items-center justify-center flex-shrink-0">
+                          <img
+                            v-if="paletteBlock.icon"
+                            :src="getTextureUrl(paletteBlock.icon)"
+                            :alt="paletteBlock.name"
+                            class="w-full h-full object-contain"
+                            @error="handleImageError($event, index)"
+                          />
+                          <svg v-else class="w-4 h-4 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                          </svg>
+                        </div>
+
+                        <!-- Block Info -->
+                        <div class="flex-1 min-w-0">
+                          <!-- Editable Name -->
+                          <input
+                            v-if="editingNameIndex === index"
+                            v-model="editingName"
+                            @click.stop
+                            @blur="saveBlockName(index)"
+                            @keyup.enter="saveBlockName(index)"
+                            @keyup.esc="cancelEditName"
+                            class="input input-xs input-bordered w-full text-xs font-bold"
+                            autofocus
+                          />
+                          <div
+                            v-else
+                            class="text-xs font-bold truncate cursor-text"
+                            :title="paletteBlock.name"
+                            @dblclick.stop="startEditName(index)"
+                          >
+                            {{ paletteBlock.name }}
+                          </div>
+
+                          <!-- BlockType ID -->
+                          <div class="text-xs text-base-content/50 font-mono truncate">
+                            {{ paletteBlock.block.blockTypeId }}
+                          </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            @click.stop="startEditName(index)"
+                            class="btn btn-xs btn-circle btn-ghost"
+                            title="Edit name"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button
+                            @click.stop="removePaletteBlock(index)"
+                            class="btn btn-xs btn-circle btn-error"
+                            title="Remove from palette"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Save Palette Button -->
+                <button
+                  v-if="palette.length > 0"
+                  @click="savePalette"
+                  :disabled="savingPalette"
+                  class="btn btn-primary btn-xs w-full mt-2"
+                >
+                  <span v-if="savingPalette" class="loading loading-spinner loading-xs"></span>
+                  <span v-else>💾 Save Palette</span>
+                </button>
               </div>
             </div>
           </div>
@@ -309,19 +403,20 @@
                   No blocks in palette. Mark a block and add it.
                 </div>
 
-                <div v-else class="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto">
+                <div v-else class="space-y-1 max-h-64 overflow-y-auto">
                   <div
                     v-for="(paletteBlock, index) in palette"
-                    :key="paletteBlock.id"
+                    :key="index"
                     class="relative group cursor-pointer"
-                    :class="{ 'ring-2 ring-primary': selectedPaletteIndex === index }"
                     @click="selectPaletteBlock(index)"
                   >
-                    <!-- Block Card -->
-                    <div class="card bg-base-200 hover:bg-base-300 transition-colors">
-                      <div class="card-body p-2">
+                    <div
+                      class="bg-base-200 hover:bg-base-300 rounded p-2 transition-colors"
+                      :class="{ 'ring-2 ring-primary': selectedPaletteIndex === index }"
+                    >
+                      <div class="flex items-center gap-2">
                         <!-- Block Icon/Texture -->
-                        <div class="w-full aspect-square bg-base-300 rounded flex items-center justify-center mb-1">
+                        <div class="w-8 h-8 bg-base-300 rounded flex items-center justify-center flex-shrink-0">
                           <img
                             v-if="paletteBlock.icon"
                             :src="getTextureUrl(paletteBlock.icon)"
@@ -329,31 +424,60 @@
                             class="w-full h-full object-contain"
                             @error="handleImageError($event, index)"
                           />
-                          <svg v-else class="w-6 h-6 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
+                          <svg v-else class="w-4 h-4 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                           </svg>
                         </div>
 
-                        <!-- Block Name -->
-                        <div class="text-xs font-semibold truncate" :title="paletteBlock.name">
-                          {{ paletteBlock.name }}
+                        <!-- Block Info -->
+                        <div class="flex-1 min-w-0">
+                          <!-- Editable Name -->
+                          <input
+                            v-if="editingNameIndex === index"
+                            v-model="editingName"
+                            @click.stop
+                            @blur="saveBlockName(index)"
+                            @keyup.enter="saveBlockName(index)"
+                            @keyup.esc="cancelEditName"
+                            class="input input-xs input-bordered w-full text-xs font-bold"
+                            autofocus
+                          />
+                          <div
+                            v-else
+                            class="text-xs font-bold truncate cursor-text"
+                            :title="paletteBlock.name"
+                            @dblclick.stop="startEditName(index)"
+                          >
+                            {{ paletteBlock.name }}
+                          </div>
+
+                          <!-- BlockType ID -->
+                          <div class="text-xs text-base-content/50 font-mono truncate">
+                            {{ paletteBlock.block.blockTypeId }}
+                          </div>
                         </div>
 
-                        <!-- BlockType ID -->
-                        <div class="text-xs text-base-content/50 truncate">
-                          {{ paletteBlock.block.blockTypeId }}
+                        <!-- Action Buttons -->
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            @click.stop="startEditName(index)"
+                            class="btn btn-xs btn-circle btn-ghost"
+                            title="Edit name"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button
+                            @click.stop="removePaletteBlock(index)"
+                            class="btn btn-xs btn-circle btn-error"
+                            title="Remove from palette"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
-
-                        <!-- Delete Button (visible on hover) -->
-                        <button
-                          @click.stop="removePaletteBlock(index)"
-                          class="absolute top-1 right-1 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Remove from palette"
-                        >
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -414,7 +538,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useModal } from '@/composables/useModal';
-import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 import { EditAction, type PaletteBlockDefinition, type Block, type BlockType } from '@nimbus/shared';
 
 // Get all edit actions from enum
@@ -473,6 +596,8 @@ const selectedPaletteIndex = ref<number | null>(null);
 const blocksPanelOpen = ref(false);
 const addingToPalette = ref(false);
 const savingPalette = ref(false);
+const editingNameIndex = ref<number | null>(null);
+const editingName = ref('');
 
 // Marked Block Content state
 const markedBlockContent = ref<{ name: string; blockTypeId: string; block: Block } | null>(null);
@@ -500,6 +625,10 @@ function getActionDescription(action: EditAction): string {
       return 'Pastes marked block to position';
     case EditAction.DELETE_BLOCK:
       return 'Deletes block at position';
+    case EditAction.SMOOTH_BLOCKS:
+      return 'Applies smoothing to block geometry';
+    case EditAction.ROUGH_BLOCKS:
+      return 'Applies rough geometry to blocks';
     default:
       return '';
   }
@@ -653,63 +782,6 @@ async function refreshAll() {
 }
 
 // Manual refresh - no automatic polling
-
-// Handle navigation from NavigateSelectedBlockComponent (selection only, no action)
-async function handleNavigate(position: { x: number; y: number; z: number }) {
-  try {
-    const response = await fetch(
-      `${apiUrl.value}/api/worlds/${worldId.value}/session/${sessionId.value}/selectedEditBlock/navigate`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(position),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to navigate to block: ${response.statusText}`);
-    }
-
-    // Update local state immediately for responsive UI
-    selectedBlock.value = position;
-    error.value = null;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to navigate to block:', err);
-  }
-}
-
-// Execute action on selected block (PUT triggers editAction)
-async function executeAction() {
-  if (!selectedBlock.value) {
-    error.value = 'No block selected';
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${apiUrl.value}/api/worlds/${worldId.value}/session/${sessionId.value}/selectedEditBlock`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedBlock.value),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to execute action: ${response.statusText}`);
-    }
-
-    error.value = null;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to execute action:', err);
-  }
-}
 
 // Watch for edit state changes and auto-save (with debounce)
 let saveTimeout: number | null = null;
@@ -959,6 +1031,34 @@ async function selectPaletteBlock(index: number) {
     error.value = err instanceof Error ? err.message : 'Failed to select block';
     console.error('[Palette] Failed to select palette block:', err);
   }
+}
+
+// Start editing block name
+function startEditName(index: number) {
+  editingNameIndex.value = index;
+  editingName.value = palette.value[index].name;
+}
+
+// Cancel editing block name
+function cancelEditName() {
+  editingNameIndex.value = null;
+  editingName.value = '';
+}
+
+// Save edited block name
+function saveBlockName(index: number) {
+  if (editingNameIndex.value === null) return;
+
+  const newName = editingName.value.trim();
+  if (newName) {
+    palette.value[index].name = newName;
+    console.log('[Palette] Name updated:', newName);
+    // Auto-save after name change
+    savePalette();
+  }
+
+  editingNameIndex.value = null;
+  editingName.value = '';
 }
 
 // Remove block from palette

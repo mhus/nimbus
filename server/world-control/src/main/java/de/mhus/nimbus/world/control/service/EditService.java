@@ -171,16 +171,45 @@ public class EditService {
                 deleteBlock(worldId, sessionId, x, y, z);
                 break;
 
-//            case MOVE_BLOCK:
-//                // Move marked block to current position
-//                moveMarkedBlock(worldId, sessionId, playerUrl, x, y, z);
-//                break;
-
+            case SMOOTH_BLOCKS:
+                smoothBlocks(worldId, sessionId, x, y, z);
+                break;
+            case ROUGH_BLOCKS:
+                roughBlocks(worldId, sessionId, x, y, z);
+                break;
             default:
                 log.warn("Unknown edit action: {}", action);
                 setSelectedBlock(worldId, sessionId, x, y, z);
                 break;
         }
+    }
+
+    private void roughBlocks(String worldId, String sessionId, int x, int y, int z) {
+        EditState editState = getEditState(worldId, sessionId);
+
+        RoughBlockOperation.builder()
+                .editService(this)
+                .editState(editState)
+                .sessionId(sessionId)
+                .centerX(x)
+                .centerY(y)
+                .centerZ(z)
+                .build()
+                .execute();
+    }
+
+    private void smoothBlocks(String worldId, String sessionId, int x, int y, int z) {
+        EditState editState = getEditState(worldId, sessionId);
+
+        SmoothBlockOperation.builder()
+                .editService(this)
+                .editState(editState)
+                .sessionId(sessionId)
+                .centerX(x)
+                .centerY(y)
+                .centerZ(z)
+                .build()
+                .execute();
     }
 
     private void clientSetSelectedEditBlock(String worldId, String sessionId, String origin, int x, int y, int z) {
@@ -632,6 +661,88 @@ public class EditService {
                     worldId, sessionId, e);
             throw new RuntimeException("Failed to set marked block data", e);
         }
+    }
+
+    /**
+     * Get block at position, reading from overlay, layer, and chunk (in that order).
+     * Uses blockInfoService which handles the priority correctly:
+     * 1. Overlay (if sessionId provided)
+     * 2. Selected layer (if editState has selectedLayer)
+     * 3. Chunk data
+     *
+     * @param editState Edit state containing layer selection
+     * @param sessionId Session ID for overlay lookup
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param z Z coordinate
+     * @return Block at position, or null if not found
+     */
+    public Block getBlock(EditState editState, String sessionId, int x, int y, int z) {
+        String worldId = editState.getWorldId();
+
+        // Use blockInfoService which handles the priority correctly
+        // It reads from: overlay -> layer -> chunk
+        Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
+
+        if (blockInfo == null) {
+            return null;
+        }
+
+        Object blockObj = blockInfo.get("block");
+        if (blockObj == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.convertValue(blockObj, Block.class);
+        } catch (Exception e) {
+            log.warn("Failed to convert block at ({},{},{}): {}", x, y, z, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Update block at position.
+     * Writes to overlay and sends update to client.
+     * Always writes through the selected layer in edit state.
+     *
+     * @param editState Edit state containing session and layer info
+     * @param sessionId Session ID for overlay and client updates
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param z Z coordinate
+     * @param block Block to write
+     * @return true if successful
+     */
+    public boolean updateBlock(EditState editState, String sessionId, int x, int y, int z, Block block) {
+        String worldId = editState.getWorldId();
+
+        // Set position in block if not already set
+        if (block.getPosition() == null) {
+            block.setPosition(Vector3.builder()
+                    .x((double) x)
+                    .y((double) y)
+                    .z((double) z)
+                    .build());
+        }
+
+        // Save to overlay using BlockOverlayService
+        String blockJson = blockOverlayService.saveBlockOverlay(worldId, sessionId, block);
+
+        if (blockJson == null) {
+            log.error("Failed to save block to overlay: worldId={}, pos=({},{},{})",
+                    worldId, x, y, z);
+            return false;
+        }
+
+        // Send update to client
+        boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, null);
+        if (!sent) {
+            log.warn("Failed to send block update to client: session={}, pos=({},{},{})",
+                    sessionId, x, y, z);
+        }
+
+        return true;
     }
 
     /**

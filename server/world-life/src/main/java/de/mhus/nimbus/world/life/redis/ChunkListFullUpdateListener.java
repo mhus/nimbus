@@ -106,7 +106,7 @@ public class ChunkListFullUpdateListener {
             // Add chunks to world's chunk service (additive operation)
             multiWorldChunkService.addChunks(worldId, chunks);
 
-            log.debug("World {}: Received full chunk update: podId={}, chunks={}, timestamp={}",
+            log.trace("World {}: Received full chunk update: podId={}, chunks={}, timestamp={}",
                     worldId, podId, chunks.size(), timestamp);
 
         } catch (Exception e) {

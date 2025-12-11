@@ -4033,7 +4033,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "EditAction",
-      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "PASTE_BLOCK", "DELETE_BLOCK" ],
+      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "PASTE_BLOCK", "DELETE_BLOCK", "SMOOTH_BLOCKS", "ROUGH_BLOCKS" ],
       "enumValues" : [ {
         "name" : "OPEN_CONFIG_DIALOG",
         "value" : "OPEN_CONFIG_DIALOG"
@@ -4049,6 +4049,12 @@
       }, {
         "name" : "DELETE_BLOCK",
         "value" : "DELETE_BLOCK"
+      }, {
+        "name" : "SMOOTH_BLOCKS",
+        "value" : "SMOOTH_BLOCKS"
+      }, {
+        "name" : "ROUGH_BLOCKS",
+        "value" : "ROUGH_BLOCKS"
       } ]
     } ],
     "classes" : [ ],

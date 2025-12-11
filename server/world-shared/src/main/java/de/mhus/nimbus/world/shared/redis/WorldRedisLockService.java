@@ -47,7 +47,7 @@ public class WorldRedisLockService {
         Boolean acquired = redis.opsForValue().setIfAbsent(lockKey, token, ttl);
 
         if (Boolean.TRUE.equals(acquired)) {
-            log.debug("Acquired chunk update lock: world={} token={} ttl={}ms",
+            log.trace("Acquired chunk update lock: world={} token={} ttl={}ms",
                     worldId, token, ttl.toMillis());
             return token;
         }
@@ -91,7 +91,7 @@ public class WorldRedisLockService {
 
         if (token.equals(currentToken)) {
             redis.delete(lockKey);
-            log.debug("Released chunk update lock: world={}", worldId);
+            log.trace("Released chunk update lock: world={}", worldId);
             return true;
         }
 
