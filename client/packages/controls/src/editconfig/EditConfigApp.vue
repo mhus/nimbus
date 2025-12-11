@@ -934,7 +934,7 @@ async function selectPaletteBlock(index: number) {
   try {
     // Send block to Redis as marked block (will trigger polling update)
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/markedBlock`,
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/blockRegister`,
       {
         method: 'POST',
         headers: {
@@ -1026,7 +1026,7 @@ async function pollMarkedBlockContent() {
 
   try {
     // Always try to fetch - server will return 404 if no block marked
-    const url = `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/markedBlock`;
+    const url = `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
     console.log('[Polling] Fetching:', url);
 
     const response = await fetch(url);

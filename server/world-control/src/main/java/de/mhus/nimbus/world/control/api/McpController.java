@@ -354,7 +354,7 @@ public class McpController extends BaseEditorController {
         }
 
         String worldId = sessionOpt.get().getWorldId();
-        Optional<Block> markedBlock = editService.getMarkedBlockData(worldId, sessionId);
+        Optional<Block> markedBlock = editService.getRegisterBlockData(worldId, sessionId);
 
         if (markedBlock.isEmpty()) {
             return ResponseEntity.ok(Map.of("marked", false));

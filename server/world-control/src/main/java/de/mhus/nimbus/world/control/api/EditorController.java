@@ -56,7 +56,7 @@ public class EditorController extends BaseEditorController {
 
     /**
      * GET /api/editor/{worldId}/session/{sessionId}/edit
-     * Returns full edit state including selected block.
+     * Returns full edit state
      */
     @GetMapping("/{worldId}/session/{sessionId}/edit")
     public ResponseEntity<?> getEditState(
@@ -91,19 +91,6 @@ public class EditorController extends BaseEditorController {
             response.put("selectedBlock", blockPos);
         } else {
             response.put("selectedBlock", null);
-        }
-
-        // Add marked block coordinates (for copy/move operations) - extracted from block data
-        Optional<Block> markedBlock = editService.getMarkedBlockData(worldId, sessionId);
-        if (markedBlock.isPresent() && markedBlock.get().getPosition() != null) {
-            Map<String, Integer> markedPos = Map.of(
-                    "x", (int) markedBlock.get().getPosition().getX(),
-                    "y", (int) markedBlock.get().getPosition().getY(),
-                    "z", (int) markedBlock.get().getPosition().getZ()
-            );
-            response.put("markedBlock", markedPos);
-        } else {
-            response.put("markedBlock", null);
         }
 
         return ResponseEntity.ok(response);
@@ -606,14 +593,14 @@ public class EditorController extends BaseEditorController {
     // ===== BLOCK PALETTE SUPPORT =====
 
     /**
-     * GET /api/editor/{worldId}/session/{sessionId}/markedBlock
+     * GET /api/editor/{worldId}/session/{sessionId}/blockRegister
      * Returns the complete block data for the currently marked block.
      * Reads from Redis overlay where the marked block is stored.
      * Used when adding a marked block to the palette.
      * Returns 200 with null/empty response if no marked block exists.
      */
-    @GetMapping("/{worldId}/session/{sessionId}/markedBlock")
-    public ResponseEntity<?> getMarkedBlockData(
+    @GetMapping("/{worldId}/session/{sessionId}/blockRegister")
+    public ResponseEntity<?> getBlockRegisterData(
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
@@ -624,7 +611,7 @@ public class EditorController extends BaseEditorController {
         if (validation != null) return validation;
 
         // Get marked block from EditService
-        Optional<Block> blockOpt = editService.getMarkedBlockData(worldId, sessionId);
+        Optional<Block> blockOpt = editService.getRegisterBlockData(worldId, sessionId);
         if (blockOpt.isEmpty()) {
             log.debug("No marked block found: worldId={}, sessionId={}", worldId, sessionId);
             // Return 200 with null to indicate no marked block
@@ -655,13 +642,13 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/markedBlock
+     * POST /api/editor/{worldId}/session/{sessionId}/blockRegister
      * Sets a block as the current marked block (for palette selection and paste).
      * Stores complete block data in Redis overlay.
      * Position in block.position is optional/ignored - only block content matters.
      */
-    @PostMapping("/{worldId}/session/{sessionId}/markedBlock")
-    public ResponseEntity<?> setMarkedBlock(
+    @PostMapping("/{worldId}/session/{sessionId}/blockRegister")
+    public ResponseEntity<?> setBlockRegisterData(
             @PathVariable String worldId,
             @PathVariable String sessionId,
             @RequestBody String blockJson) {
@@ -685,14 +672,48 @@ public class EditorController extends BaseEditorController {
             }
 
             // Store via EditService
-            editService.setMarkedBlockData(worldId, sessionId, blockJson);
+            editService.setBlockRegisterData(worldId, sessionId, blockJson);
 
-            log.info("Marked block set from palette: worldId={}, sessionId={}, blockTypeId={}",
+            log.info("register block set from palette: worldId={}, sessionId={}, blockTypeId={}",
                     worldId, sessionId, block.getBlockTypeId());
 
             return ResponseEntity.ok(Map.of(
                     "message", "Marked block set successfully",
                     "blockTypeId", block.getBlockTypeId()
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to set register block: worldId={}, sessionId={}", worldId, sessionId, e);
+            return bad("Failed to set marked block: " + e.getMessage());
+        }
+    }
+
+    /**
+     * POST /api/editor/{worldId}/session/{sessionId}/blockRegister
+     * Sets a block as the current marked block (for palette selection and paste).
+     * Stores complete block data in Redis overlay.
+     * Position in block.position is optional/ignored - only block content matters.
+     */
+    @DeleteMapping("/{worldId}/session/{sessionId}/blockRegister")
+    public ResponseEntity<?> clearBlockRegisterData(
+            @PathVariable String worldId,
+            @PathVariable String sessionId) {
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(sessionId, "sessionId");
+        if (validation != null) return validation;
+
+        try {
+            // Store via EditService
+            editService.setBlockRegisterData(worldId, sessionId, null);
+
+            log.info("Register block cleared: worldId={}, sessionId={}",
+                    worldId, sessionId);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Register block cleared successfully"
             ));
 
         } catch (Exception e) {

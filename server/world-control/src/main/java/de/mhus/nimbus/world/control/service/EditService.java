@@ -13,7 +13,6 @@ import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WWorldService;
-import de.mhus.nimbus.world.shared.world.WWorld;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -154,12 +153,11 @@ public class EditService {
 
             case MARK_BLOCK:
                 // get block definition at position
-                java.util.Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
-                // Store marked block for copy/move operations
-                setMarkedBlock(worldId, sessionId, x, y, z);
+                Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
+                // Store marked block and show in client
+                doMarkBlock(worldId, sessionId, x, y, z);
                 // store also blockInfo data in redis to use in copy
-                storeMarkedBlockInfo(worldId, sessionId, blockInfo);
-                clientSetSelectedEditBlock(worldId, sessionId, playerUrl, x, y, z);
+                storeBlockDataRegistry(worldId, sessionId, blockInfo);
                 log.info("Block marked: session={} pos=({},{},{})", sessionId, x, y, z);
                 break;
 
@@ -259,14 +257,20 @@ public class EditService {
      * Store marked block info (complete block data with metadata) in Redis.
      * Used for copy/move operations.
      */
-    private void storeMarkedBlockInfo(String worldId, String sessionId, Map<String, Object> blockInfo) {
+    private void storeBlockDataRegistry(String worldId, String sessionId, Map<String, Object> blockInfo) {
         try {
             String key = editStateKey(sessionId);
+            if (blockInfo == null) {
+                // Clear stored info
+                redisService.deleteValue(worldId, key + "registerBlockInfo");
+                log.debug("Register block info cleared: session={}", sessionId);
+                return;
+            }
             String blockInfoJson = objectMapper.writeValueAsString(blockInfo);
-            redisService.putValue(worldId, key + "markedBlockInfo", blockInfoJson, EDIT_STATE_TTL);
-            log.debug("Marked block info stored: session={} size={} bytes", sessionId, blockInfoJson.length());
+            redisService.putValue(worldId, key + "registerBlockInfo", blockInfoJson, EDIT_STATE_TTL);
+            log.debug("Register block info stored: session={} size={} bytes", sessionId, blockInfoJson.length());
         } catch (Exception e) {
-            log.error("Failed to store marked block info: session={}", sessionId, e);
+            log.error("Failed to store register block info: session={}", sessionId, e);
         }
     }
 
@@ -275,10 +279,10 @@ public class EditService {
      * Returns empty if not found or parse error.
      */
     @Transactional(readOnly = true)
-    public Optional<Map<String, Object>> getMarkedBlockInfo(String worldId, String sessionId) {
+    public Optional<Map<String, Object>> getBlockDataRegister(String worldId, String sessionId) {
         try {
             String key = editStateKey(sessionId);
-            Optional<String> blockInfoJsonOpt = redisService.getValue(worldId, key + "markedBlockInfo");
+            Optional<String> blockInfoJsonOpt = redisService.getValue(worldId, key + "registerBlockInfo");
 
             if (blockInfoJsonOpt.isEmpty()) {
                 return Optional.empty();
@@ -286,11 +290,11 @@ public class EditService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> blockInfo = objectMapper.readValue(blockInfoJsonOpt.get(), Map.class);
-            log.debug("Marked block info loaded: session={}", sessionId);
+            log.debug("Register block info loaded: session={}", sessionId);
             return Optional.of(blockInfo);
 
         } catch (Exception e) {
-            log.warn("Failed to load marked block info: session={}", sessionId, e);
+            log.warn("Failed to load register block info: session={}", sessionId, e);
             return Optional.empty();
         }
     }
@@ -356,7 +360,7 @@ public class EditService {
     @Transactional
     private void pasteMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
         // Get marked block data from Redis
-        Optional<Block> originalBlockOpt = getMarkedBlockData(worldId, sessionId);
+        Optional<Block> originalBlockOpt = getRegisterBlockData(worldId, sessionId);
         if (originalBlockOpt.isEmpty()) {
             log.warn("No marked block data for paste: session={}", sessionId);
             return;
@@ -492,14 +496,7 @@ public class EditService {
 
         String playerUrl = wSession.get().getPlayerUrl();
 
-        // Get block info at position
-        Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
-
-        // Store marked block for copy/move operations
         setMarkedBlock(worldId, sessionId, x, y, z);
-
-        // Store blockInfo data in redis for copy operations
-        storeMarkedBlockInfo(worldId, sessionId, blockInfo);
 
         // Send command to client to mark the block visually
         clientSetSelectedEditBlock(worldId, sessionId, playerUrl, x, y, z);
@@ -527,7 +524,6 @@ public class EditService {
         redisService.deleteValue(worldId, key + "markedBlockX");
         redisService.deleteValue(worldId, key + "markedBlockY");
         redisService.deleteValue(worldId, key + "markedBlockZ");
-        redisService.deleteValue(worldId, key + "markedBlockInfo");
 
         // Send empty command to client to clear the visual marker
         CommandContext ctx = CommandContext.builder()
@@ -552,11 +548,11 @@ public class EditService {
      * Uses the stored markedBlockInfo, not the overlay.
      */
     @Transactional(readOnly = true)
-    public Optional<Block> getMarkedBlockData(String worldId, String sessionId) {
+    public Optional<Block> getRegisterBlockData(String worldId, String sessionId) {
         // Get marked block info from Redis (stored when block was marked)
-        Optional<Map<String, Object>> blockInfoOpt = getMarkedBlockInfo(worldId, sessionId);
+        Optional<Map<String, Object>> blockInfoOpt = getBlockDataRegister(worldId, sessionId);
         if (blockInfoOpt.isEmpty()) {
-            log.debug("No marked block info found: sessionId={}", sessionId);
+            log.debug("No registered block data found: sessionId={}", sessionId);
             return Optional.empty();
         }
 
@@ -609,8 +605,15 @@ public class EditService {
      * @param sessionId Session identifier
      * @param blockJson Block data as JSON string
      */
-    public void setMarkedBlockData(String worldId, String sessionId, String blockJson) {
+    public void setBlockRegisterData(String worldId, String sessionId, String blockJson) {
         try {
+
+            if (blockJson == null ) {
+                storeBlockDataRegistry(worldId, sessionId, null);
+                log.info("Cleared block register data: worldId={}, sessionId={}",
+                        worldId, sessionId);
+                return;
+            }
             // Parse block JSON
             Block block = objectMapper.readValue(blockJson, Block.class);
 
@@ -619,13 +622,13 @@ public class EditService {
             blockInfo.put("block", block);
 
             // Use existing store method
-            storeMarkedBlockInfo(worldId, sessionId, blockInfo);
+            storeBlockDataRegistry(worldId, sessionId, blockInfo);
 
-            log.info("Marked block set from palette: worldId={}, sessionId={}, blockTypeId={}",
+            log.info("Register block set from palette: worldId={}, sessionId={}, blockTypeId={}",
                     worldId, sessionId, block.getBlockTypeId());
 
         } catch (Exception e) {
-            log.error("Failed to set marked block data: worldId={}, sessionId={}",
+            log.error("Failed to set register block data: worldId={}, sessionId={}",
                     worldId, sessionId, e);
             throw new RuntimeException("Failed to set marked block data", e);
         }
