@@ -76,7 +76,8 @@
       "Bash(npm run dev:*)",
       "Bash(pnpm update:*)",
       "Bash(pnpm --filter @nimbus/engine build:shared:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pnpm --filter @nimbus/controls exec tsc:*)"
     ],
     "deny": [],
     "ask": []

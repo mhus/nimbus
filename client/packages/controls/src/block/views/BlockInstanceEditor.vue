@@ -837,6 +837,27 @@ async function loadBlockTypeDetails(blockTypeId: number) {
   }
 }
 
+// Set marker in world-control (async, non-blocking)
+async function setMarker(x: number, y: number, z: number, sessionId: string) {
+  try {
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const url = `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/marker/${x}/${y}/${z}`;
+
+    // Fire and forget - don't wait for response
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }).catch(err => {
+      // Log error but don't block UI
+      console.warn('Failed to set marker:', err);
+    });
+  } catch (err) {
+    console.warn('Failed to set marker:', err);
+  }
+}
+
 // Load block data
 async function loadBlock() {
   if (!blockCoordinates.value) {
@@ -857,6 +878,9 @@ async function loadBlock() {
     if (!sessionId) {
       throw new Error('Session ID required for block loading');
     }
+
+    // Set marker asynchronously (fire and forget)
+    setMarker(x, y, z, sessionId);
 
     const url = `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/block/${x}/${y}/${z}`;
 

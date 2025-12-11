@@ -693,3 +693,13 @@ GET /api/worlds/{worldId}/config/settings?client={clientType}
 
 Gibt nur die aktuellen Settings werte zurueck.
 
+## Mark block in world-control
+
+Setzte Markierung
+
+POST /api/worlds/{worldId}/session/{sessionId}/marker/{x}/{y}/{z}
+
+Entfernt Markierung
+
+DELETE /api/worlds/{worldId}/session/{sessionId}/marker/{x}/{y}/{z}
+

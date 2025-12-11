@@ -635,6 +635,75 @@ public class EditService {
     }
 
     /**
+     * Mark a block at the specified position.
+     * Sends command to client to highlight/mark the block.
+     */
+    @Transactional
+    public void doMarkBlock(String worldId, String sessionId, int x, int y, int z) {
+        // Get playerUrl from WSession
+        Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
+        if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
+            log.warn("No player URL available for session {}, cannot mark block", sessionId);
+            return;
+        }
+
+        String playerUrl = wSession.get().getPlayerUrl();
+
+        // Get block info at position
+        Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
+
+        // Store marked block for copy/move operations
+        setMarkedBlock(worldId, sessionId, x, y, z);
+
+        // Store blockInfo data in redis for copy operations
+        storeMarkedBlockInfo(worldId, sessionId, blockInfo);
+
+        // Send command to client to mark the block visually
+        clientSetSelectedEditBlock(worldId, sessionId, playerUrl, x, y, z);
+
+        log.info("Block marked: worldId={}, session={}, pos=({},{},{})", worldId, sessionId, x, y, z);
+    }
+
+    /**
+     * Clear the marked block.
+     * Removes marked block from Redis and sends empty setSelectedEditBlock to client.
+     */
+    @Transactional
+    public void clearMarkedBlock(String worldId, String sessionId) {
+        // Get playerUrl from WSession
+        Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
+        if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
+            log.warn("No player URL available for session {}, cannot clear mark", sessionId);
+            return;
+        }
+
+        String playerUrl = wSession.get().getPlayerUrl();
+
+        // Remove marked block from Redis
+        String key = editStateKey(sessionId);
+        redisService.deleteValue(worldId, key + "markedBlockX");
+        redisService.deleteValue(worldId, key + "markedBlockY");
+        redisService.deleteValue(worldId, key + "markedBlockZ");
+        redisService.deleteValue(worldId, key + "markedBlockInfo");
+
+        // Send empty command to client to clear the visual marker
+        CommandContext ctx = CommandContext.builder()
+                .worldId(worldId)
+                .sessionId(sessionId)
+                .originServer("world-control")
+                .build();
+        worldClient.sendPlayerCommand(
+                worldId,
+                sessionId,
+                playerUrl,
+                "client",
+                List.of("setSelectedEditBlock"),
+                ctx);
+
+        log.info("Marked block cleared: worldId={}, session={}", worldId, sessionId);
+    }
+
+    /**
      * Block position record.
      */
     public record BlockPosition(int x, int y, int z) {}
