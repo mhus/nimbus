@@ -30,9 +30,9 @@
               <div class="flex justify-between items-center mb-2">
                 <h2 class="card-title text-sm">Edit Action</h2>
                 <button
-                  @click="fetchEditState"
+                  @click="refreshAll"
                   class="btn btn-ghost btn-xs btn-circle"
-                  title="Refresh"
+                  title="Refresh all (layers, state, palette)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -113,11 +113,11 @@
                     <!-- Block Icon/Texture -->
                     <div class="w-8 h-8 bg-base-300 rounded flex items-center justify-center flex-shrink-0">
                       <img
-                        v-if="markedBlockTexture"
-                        :src="getTextureUrl(markedBlockTexture)"
+                        v-if="markedBlockIcon"
+                        :src="getTextureUrl(markedBlockIcon)"
                         :alt="markedBlockContent.name"
                         class="w-full h-full object-contain"
-                        @error="markedBlockTexture = null"
+                        @error="markedBlockIcon = null"
                       />
                       <svg v-else class="w-4 h-4 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
@@ -160,9 +160,9 @@
                     Edit Layers
                   </a>
                   <button
-                    @click="fetchLayers"
+                    @click="refreshAll"
                     class="btn btn-ghost btn-xs btn-circle"
-                    title="Refresh layers"
+                    title="Refresh all (layers, state, palette)"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -323,8 +323,8 @@
                         <!-- Block Icon/Texture -->
                         <div class="w-full aspect-square bg-base-300 rounded flex items-center justify-center mb-1">
                           <img
-                            v-if="paletteBlock.texturePath"
-                            :src="getTextureUrl(paletteBlock.texturePath)"
+                            v-if="paletteBlock.icon"
+                            :src="getTextureUrl(paletteBlock.icon)"
                             :alt="paletteBlock.name"
                             class="w-full h-full object-contain"
                             @error="handleImageError($event, index)"
@@ -485,7 +485,7 @@ const savingPalette = ref(false);
 
 // Marked Block Content state
 const markedBlockContent = ref<{ name: string; blockTypeId: string; block: Block } | null>(null);
-const markedBlockTexture = ref<string | null>(null);
+const markedBlockIcon = ref<string | null>(null);
 let markedBlockPollingInterval: number | null = null;
 
 // Format action name for display
@@ -650,6 +650,17 @@ function getLayerEditorUrl(): string {
   if (params.get('sessionId')) newParams.set('sessionId', params.get('sessionId')!);
 
   return `${baseUrl}?${newParams.toString()}`;
+}
+
+// Refresh all data (layers, edit state, palette)
+async function refreshAll() {
+  console.log('[Refresh] Reloading all data...');
+  await Promise.all([
+    fetchLayers(),
+    fetchEditState(),
+    loadEditSettings()
+  ]);
+  console.log('[Refresh] All data reloaded');
 }
 
 // Manual refresh - no automatic polling
@@ -862,9 +873,9 @@ async function loadEditSettings() {
 }
 
 // Get texture URL for block icon
-function getTextureUrl(texturePath: string): string {
+function getTextureUrl(icon: string): string {
   const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  return `${apiBaseUrl}/api/worlds/${worldId.value}/assets/${texturePath}`;
+  return `${apiBaseUrl}/api/worlds/${worldId.value}/assets/${icon}`;
 }
 
 // Handle image load error (fallback to placeholder)
@@ -893,20 +904,19 @@ async function addMarkedBlockToPalette() {
     // Use already loaded marked block content
     const blockData = markedBlockContent.value.block;
     const blockTypeName = markedBlockContent.value.name;
-    const texturePath = markedBlockTexture.value || undefined;
+    const icon = markedBlockIcon.value || undefined;
 
     console.log('[Palette] Creating palette entry:', {
       name: blockTypeName,
       blockTypeId: blockData.blockTypeId,
-      hasTexture: !!texturePath
+      hasIcon: !!icon
     });
 
     // Create palette entry
     const paletteBlock: PaletteBlockDefinition = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: blockTypeName,
       block: blockData,
-      texturePath,
+      name: blockTypeName,
+      icon,
     };
 
     // Add to palette
@@ -1031,7 +1041,7 @@ async function pollMarkedBlockContent() {
       if (markedBlockContent.value !== null) {
         console.log('[Polling] Clearing marked block content (status not ok)');
         markedBlockContent.value = null;
-        markedBlockTexture.value = null;
+        markedBlockIcon.value = null;
       }
       return;
     }
@@ -1046,7 +1056,7 @@ async function pollMarkedBlockContent() {
       if (markedBlockContent.value !== null) {
         console.log('[Polling] Clearing marked block content (error in response)');
         markedBlockContent.value = null;
-        markedBlockTexture.value = null;
+        markedBlockIcon.value = null;
       }
       return;
     }
@@ -1061,7 +1071,7 @@ async function pollMarkedBlockContent() {
 
     // Fetch BlockType to get description and texture
     let blockTypeName = `Block ${blockData.blockTypeId}`;
-    let texturePath: string | null = null;
+    let icon: string | null = null;
 
     try {
       const blockTypeResponse = await fetch(
@@ -1077,7 +1087,7 @@ async function pollMarkedBlockContent() {
         if (firstModifier?.visibility?.textures) {
           const textures = firstModifier.visibility.textures;
           // Get first available texture (top, front, or any face)
-          texturePath = textures.top || textures.front || textures.side || Object.values(textures)[0] || null;
+          icon = textures.top || textures.front || textures.side || Object.values(textures)[0] || null;
         }
       }
     } catch (err) {
@@ -1095,7 +1105,7 @@ async function pollMarkedBlockContent() {
       blockTypeId: blockData.blockTypeId,
       block: blockData,
     };
-    markedBlockTexture.value = texturePath;
+    markedBlockIcon.value = icon;
 
     console.log('Marked block content updated:', blockTypeName);
 

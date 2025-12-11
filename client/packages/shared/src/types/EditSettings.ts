@@ -12,18 +12,10 @@ import type { Block } from './Block';
  *
  * A block that can be selected from the palette for quick placement.
  * Contains complete block data and display information.
+ *
+ * Note: Server DTO does not include 'id' field - it's generated client-side
  */
 export interface PaletteBlockDefinition {
-  /**
-   * Unique identifier for this palette entry
-   */
-  id: string;
-
-  /**
-   * Display name for the block (from BlockType description or custom)
-   */
-  name: string;
-
   /**
    * Complete block definition
    * Can be placed/pasted in the world
@@ -31,10 +23,15 @@ export interface PaletteBlockDefinition {
   block: Block;
 
   /**
-   * Optional texture path for icon display
-   * If not provided, will be derived from block's BlockType
+   * Display name for the block (from BlockType description or custom)
    */
-  texturePath?: string;
+  name: string;
+
+  /**
+   * Icon URL or texture reference for the palette entry
+   * Maps to 'icon' field in server DTO
+   */
+  icon?: string;
 }
 
 /**
