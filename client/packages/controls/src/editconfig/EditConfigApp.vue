@@ -135,25 +135,25 @@
               <div class="flex justify-between items-center mb-2">
                 <h2 class="card-title text-sm">Layer Selection</h2>
                 <div class="flex gap-1">
-                  <button
-                    @click="openCreateLayerModal"
-                    class="btn btn-success btn-xs"
-                    :disabled="saving"
+                  <a
+                    :href="getLayerEditorUrl()"
+                    target="_blank"
+                    class="btn btn-primary btn-xs"
+                    title="Open Layer Editor"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    New
-                  </button>
+                    Edit Layers
+                  </a>
                   <button
-                    @click="openDeleteLayerModal"
-                    class="btn btn-error btn-xs"
-                    :disabled="saving || !editState.selectedLayer"
+                    @click="fetchLayers"
+                    class="btn btn-ghost btn-xs btn-circle"
+                    title="Refresh layers"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Delete
                   </button>
                 </div>
               </div>
@@ -280,139 +280,7 @@
       </div>
     </footer>
 
-    <!-- Create Layer Modal -->
-    <dialog ref="createLayerModal" class="modal">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">Create New Layer</h3>
-
-        <div class="form-control w-full mb-3">
-          <label class="label">
-            <span class="label-text">Layer Name</span>
-          </label>
-          <input
-            v-model="newLayer.name"
-            type="text"
-            placeholder="e.g. buildings, roads, decorations"
-            class="input input-bordered w-full"
-          />
-        </div>
-
-        <div class="form-control w-full mb-3">
-          <label class="label">
-            <span class="label-text">Layer Type</span>
-          </label>
-          <select v-model="newLayer.layerType" class="select select-bordered w-full">
-            <option value="TERRAIN">TERRAIN (chunk-based)</option>
-            <option value="MODEL">MODEL (entity-based)</option>
-          </select>
-        </div>
-
-        <div class="form-control w-full mb-3">
-          <label class="label">
-            <span class="label-text">Order (lower = drawn first)</span>
-          </label>
-          <input
-            v-model.number="newLayer.order"
-            type="number"
-            placeholder="10"
-            class="input input-bordered w-full"
-          />
-        </div>
-
-        <div v-if="newLayer.layerType === 'MODEL'" class="mb-3">
-          <label class="label">
-            <span class="label-text">Mount Point</span>
-          </label>
-          <div class="grid grid-cols-3 gap-2">
-            <input
-              v-model.number="newLayer.mountX"
-              type="number"
-              placeholder="X"
-              class="input input-bordered"
-            />
-            <input
-              v-model.number="newLayer.mountY"
-              type="number"
-              placeholder="Y"
-              class="input input-bordered"
-            />
-            <input
-              v-model.number="newLayer.mountZ"
-              type="number"
-              placeholder="Z"
-              class="input input-bordered"
-            />
-          </div>
-        </div>
-
-        <div class="form-control mb-3">
-          <label class="cursor-pointer label">
-            <span class="label-text">Enabled</span>
-            <input v-model="newLayer.enabled" type="checkbox" class="checkbox checkbox-primary" />
-          </label>
-        </div>
-
-        <div class="form-control mb-3">
-          <label class="cursor-pointer label">
-            <span class="label-text">All Chunks (TERRAIN only)</span>
-            <input
-              v-model="newLayer.allChunks"
-              type="checkbox"
-              class="checkbox checkbox-primary"
-              :disabled="newLayer.layerType !== 'TERRAIN'"
-            />
-          </label>
-        </div>
-
-        <div v-if="createError" class="alert alert-error mb-3">
-          <span>{{ createError }}</span>
-        </div>
-
-        <div class="modal-action">
-          <button @click="closeCreateLayerModal" class="btn" :disabled="creating">Cancel</button>
-          <button @click="createLayer" class="btn btn-primary" :disabled="creating || !newLayer.name">
-            <span v-if="creating" class="loading loading-spinner loading-sm"></span>
-            Create
-          </button>
-        </div>
-      </div>
-      <form method="dialog" class="modal-backdrop">
-        <button>close</button>
-      </form>
-    </dialog>
-
-    <!-- Delete Layer Modal -->
-    <dialog ref="deleteLayerModal" class="modal">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">Delete Layer</h3>
-
-        <div class="alert alert-warning mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>Are you sure you want to delete layer <strong>{{ editState.selectedLayer }}</strong>?</span>
-        </div>
-
-        <p class="text-sm mb-4">This action cannot be undone. All layer data will be permanently deleted.</p>
-
-        <div v-if="deleteError" class="alert alert-error mb-3">
-          <span>{{ deleteError }}</span>
-        </div>
-
-        <div class="modal-action">
-          <button @click="closeDeleteLayerModal" class="btn" :disabled="deleting">Cancel</button>
-          <button @click="deleteLayer" class="btn btn-error" :disabled="deleting">
-            <span v-if="deleting" class="loading loading-spinner loading-sm"></span>
-            Delete Layer
-          </button>
-        </div>
-      </div>
-      <form method="dialog" class="modal-backdrop">
-        <button>close</button>
-      </form>
-    </dialog>
-
-    <!-- Discard Confirmation Modal - NEW -->
+    <!-- Discard Confirmation Modal -->
     <dialog ref="discardModal" class="modal">
       <div class="modal-box">
         <h3 class="font-bold text-lg">⚠️ Discard All Changes?</h3>
@@ -498,29 +366,11 @@ const error = ref<string | null>(null);
 const saving = ref(false);
 
 // Modal state
-const createLayerModal = ref<HTMLDialogElement | null>(null);
-const deleteLayerModal = ref<HTMLDialogElement | null>(null);
 const discardModal = ref<HTMLDialogElement | null>(null);
-const creating = ref(false);
-const deleting = ref(false);
-const createError = ref<string | null>(null);
-const deleteError = ref<string | null>(null);
 
 // Edit mode control state
 const activating = ref(false);
 const discarding = ref(false);
-
-// New layer form
-const newLayer = ref({
-  name: '',
-  layerType: 'TERRAIN',
-  order: 10,
-  mountX: 0,
-  mountY: 0,
-  mountZ: 0,
-  enabled: true,
-  allChunks: false,
-});
 
 // No automatic polling - use manual refresh button
 
@@ -673,119 +523,19 @@ const selectedLayerInfo = computed(() => {
   return availableLayers.value.find(l => l.name === editState.value.selectedLayer);
 });
 
-// Modal functions
-function openCreateLayerModal() {
-  // Reset form
-  newLayer.value = {
-    name: '',
-    layerType: 'TERRAIN',
-    order: 10,
-    mountX: 0,
-    mountY: 0,
-    mountZ: 0,
-    enabled: true,
-    allChunks: false,
-  };
-  createError.value = null;
-  createLayerModal.value?.showModal();
-}
+// Generate Layer Editor URL with preserved parameters
+function getLayerEditorUrl(): string {
+  const params = new URLSearchParams(window.location.search);
 
-function closeCreateLayerModal() {
-  createLayerModal.value?.close();
-}
+  // Use relative path to layer-editor.html
+  const baseUrl = 'layer-editor.html';
 
-async function createLayer() {
-  creating.value = true;
-  createError.value = null;
+  // Preserve worldId and sessionId parameters
+  const newParams = new URLSearchParams();
+  if (params.get('worldId')) newParams.set('worldId', params.get('worldId')!);
+  if (params.get('sessionId')) newParams.set('sessionId', params.get('sessionId')!);
 
-  try {
-    const payload: any = {
-      name: newLayer.value.name,
-      layerType: newLayer.value.layerType,
-      order: newLayer.value.order,
-      enabled: newLayer.value.enabled,
-    };
-
-    if (newLayer.value.layerType === 'MODEL') {
-      payload.mountX = newLayer.value.mountX;
-      payload.mountY = newLayer.value.mountY;
-      payload.mountZ = newLayer.value.mountZ;
-    }
-
-    if (newLayer.value.layerType === 'TERRAIN') {
-      payload.allChunks = newLayer.value.allChunks;
-    }
-
-    const response = await fetch(`${apiUrl.value}/api/editor/${worldId.value}/layers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.message || `Failed to create layer: ${response.statusText}`);
-    }
-
-    // Refresh layers
-    await fetchLayers();
-
-    // Select new layer
-    editState.value.selectedLayer = newLayer.value.name;
-
-    closeCreateLayerModal();
-  } catch (err) {
-    createError.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to create layer:', err);
-  } finally {
-    creating.value = false;
-  }
-}
-
-function openDeleteLayerModal() {
-  if (!editState.value.selectedLayer) return;
-  deleteError.value = null;
-  deleteLayerModal.value?.showModal();
-}
-
-function closeDeleteLayerModal() {
-  deleteLayerModal.value?.close();
-}
-
-async function deleteLayer() {
-  if (!editState.value.selectedLayer) return;
-
-  deleting.value = true;
-  deleteError.value = null;
-
-  try {
-    const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/layers/${encodeURIComponent(editState.value.selectedLayer)}`,
-      {
-        method: 'DELETE',
-      }
-    );
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.message || `Failed to delete layer: ${response.statusText}`);
-    }
-
-    // Clear selection
-    editState.value.selectedLayer = null;
-
-    // Refresh layers
-    await fetchLayers();
-
-    closeDeleteLayerModal();
-  } catch (err) {
-    deleteError.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to delete layer:', err);
-  } finally {
-    deleting.value = false;
-  }
+  return `${baseUrl}?${newParams.toString()}`;
 }
 
 // Manual refresh - no automatic polling
