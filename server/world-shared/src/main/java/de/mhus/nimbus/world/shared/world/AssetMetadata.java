@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.persistence;
+package de.mhus.nimbus.world.shared.world;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

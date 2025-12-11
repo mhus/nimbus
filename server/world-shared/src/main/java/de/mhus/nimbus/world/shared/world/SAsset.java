@@ -1,5 +1,7 @@
-package de.mhus.nimbus.shared.persistence;
+package de.mhus.nimbus.world.shared.world;
 
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +29,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SAsset {
+public class SAsset implements Identifiable {
 
     @Id
     private String id;

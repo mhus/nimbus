@@ -151,7 +151,7 @@ public class EntityOwnershipService {
             EntityOwnership ownership = ownershipRegistry.get(entityKey);
             if (ownership != null) {
                 ownership.setLastHeartbeat(timestamp);
-                publishOwnershipAnnouncement(WorldId.value(ownership.getWorldId()), "claim", ownership.getEntityId(), ownership.getCurrentChunk());
+                publishOwnershipAnnouncement(WorldId.unchecked(ownership.getWorldId()), "claim", ownership.getEntityId(), ownership.getCurrentChunk());
             }
         }
 
@@ -281,7 +281,7 @@ public class EntityOwnershipService {
      */
     private WorldId extractWorldIdFromTopic(String topic) {
         String[] parts = topic.split(":");
-        return WorldId.value(parts.length >= 2 ? parts[1] : "unknown"); // TODO throw if invalid?
+        return WorldId.unchecked(parts.length >= 2 ? parts[1] : "unknown"); // TODO throw if invalid?
     }
 
     /**

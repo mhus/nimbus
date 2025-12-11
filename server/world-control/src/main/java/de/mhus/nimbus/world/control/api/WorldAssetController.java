@@ -1,7 +1,8 @@
 package de.mhus.nimbus.world.control.api;
 
-import de.mhus.nimbus.shared.asset.SAssetService;
-import de.mhus.nimbus.shared.persistence.SAsset;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.SAssetService;
+import de.mhus.nimbus.world.shared.world.SAsset;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -74,7 +75,9 @@ public class WorldAssetController extends BaseEditorController {
         if (validation != null) return validation;
 
         // Get all assets for this world (regionId=worldId, worldId=worldId)
-        List<SAsset> all = assetService.findByWorldId(worldId).stream()
+        WorldId wid = toWorldId(worldId);
+        if (wid == null) return ResponseEntity.badRequest().body(Map.of("error", "invalid worldId"));
+        List<SAsset> all = assetService.findByWorldId(wid).stream()
                 .collect(Collectors.toList());
 
         // Apply search filter if provided
@@ -155,7 +158,7 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         // Find asset (regionId=worldId, worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(worldId, path);
+        Optional<SAsset> opt = assetService.findByPath(toWorldId(worldId), path);
         if (opt.isEmpty()) {
             log.warn("Asset not found: worldId={}, path={}", worldId, path);
             return notFound("asset not found");
@@ -222,12 +225,12 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         // Check if asset already exists
-        if (assetService.findByPath(worldId, path).isPresent()) {
+        if (assetService.findByPath(toWorldId(worldId), path).isPresent()) {
             return conflict("asset already exists");
         }
 
         try {
-            SAsset saved = assetService.saveAsset(worldId, path, contentStream, "editor");
+            SAsset saved = assetService.saveAsset(toWorldId(worldId), path, contentStream, "editor");
             log.info("Created asset: path={}, size={}", path, saved.getSize());
             return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
         } catch (IllegalArgumentException e) {
@@ -273,12 +276,12 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(worldId, path);
+            Optional<SAsset> existing = assetService.findByPath(toWorldId(worldId), path);
 
             // Update/create binary content
             if (existing.isPresent()) {
                 // Update existing
-                SAsset updated = assetService.updateContent(existing.get().getId(), contentStream);
+                SAsset updated = assetService.updateContent(existing.get(), contentStream);
                 if (updated != null) {
                     log.info("Updated asset: path={}, size={}", path, updated.getSize());
                     return ResponseEntity.ok(toListDto(updated));
@@ -287,7 +290,7 @@ public class WorldAssetController extends BaseEditorController {
                 }
             } else {
                 // Create new
-                SAsset saved = assetService.saveAsset(worldId, path, contentStream, "editor");
+                SAsset saved = assetService.saveAsset(toWorldId(worldId), path, contentStream, "editor");
                 log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
                 return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
             }
@@ -330,13 +333,13 @@ public class WorldAssetController extends BaseEditorController {
             return bad("asset path required");
         }
 
-        Optional<SAsset> existing = assetService.findByPath(worldId, path);
+        Optional<SAsset> existing = assetService.findByPath(toWorldId(worldId), path);
         if (existing.isEmpty()) {
             log.warn("Asset not found for deletion: path={}", path);
             return notFound("asset not found");
         }
 
-        assetService.delete(existing.get().getId());
+        assetService.delete(existing.get());
         log.info("Deleted asset: path={}", path);
         return ResponseEntity.noContent().build();
     }
@@ -378,6 +381,10 @@ public class WorldAssetController extends BaseEditorController {
         }
         int firstSlash = path.indexOf('/');
         return path.substring(0, firstSlash);
+    }
+
+    private WorldId toWorldId(String worldIdStr) {
+        return WorldId.of(worldIdStr).orElse(null);
     }
 
     private String determineMimeType(String path) {

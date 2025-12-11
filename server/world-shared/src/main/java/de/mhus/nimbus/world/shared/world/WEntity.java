@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WEntity {
+public class WEntity implements Identifiable {
 
     @Id
     private String id;

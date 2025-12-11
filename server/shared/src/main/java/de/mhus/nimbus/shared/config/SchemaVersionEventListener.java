@@ -2,6 +2,7 @@ package de.mhus.nimbus.shared.config;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,6 +133,9 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
     private void handleSchemaMismatch(Object entity, String documentSchema, String expectedSchema) {
         String entityType = entity.getClass().getSimpleName();
         String currentVersion = documentSchema != null ? documentSchema : "0";
+        if (entity instanceof Identifiable identifiable) {
+            entityType += " (ID: " + identifiable.getId() + ")";
+        }
 
         log.warn("Schema version mismatch for entity {}: document has schema '{}', expected '{}'",
                  entityType,

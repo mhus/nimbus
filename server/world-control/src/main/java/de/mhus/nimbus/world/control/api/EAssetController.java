@@ -1,7 +1,8 @@
 package de.mhus.nimbus.world.control.api;
 
-import de.mhus.nimbus.shared.asset.SAssetService;
-import de.mhus.nimbus.shared.persistence.SAsset;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.SAssetService;
+import de.mhus.nimbus.world.shared.world.SAsset;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
@@ -51,7 +51,9 @@ public class EAssetController {
                                  ) {
         path = normalizePath(path);
         if (blank(regionId) || blank(worldId) || blank(path)) return bad("blank parameter");
-        Optional<SAsset> opt = assetService.findByPath(worldId, path);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return bad("invalid worldId");
+        Optional<SAsset> opt = assetService.findByPath(wid, path);
         if (opt.isEmpty()) return notFound("asset not found");
         SAsset a = opt.get();
         AssetDto dto = toDto(a);
@@ -64,7 +66,9 @@ public class EAssetController {
                                      @PathVariable String worldId,
                                      @PathVariable String path) {
         path = normalizePath(path);
-        Optional<SAsset> opt = assetService.findByPath(worldId, path);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return bad("invalid worldId");
+        Optional<SAsset> opt = assetService.findByPath(wid, path);
         if (opt.isEmpty()) return notFound("asset not found");
         var stream = assetService.loadContent(opt.get());
         if (stream == null) return ResponseEntity.ok().header(HttpHeaders.CONTENT_LENGTH, "0").body(new byte[0]);
@@ -83,7 +87,9 @@ public class EAssetController {
         path = normalizePath(path);
         try {
             if (exists(worldId, path)) return conflict("asset exists");
-            SAsset saved = assetService.saveAsset(worldId, path, stream,"editor");
+            WorldId wid = WorldId.of(worldId).orElse(null);
+            if (wid == null) return bad("invalid worldId");
+            SAsset saved = assetService.saveAsset(wid, path, stream,"editor");
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
             return bad(e.getMessage());
@@ -101,13 +107,15 @@ public class EAssetController {
                                  InputStream stream
                                  ) {
         path = normalizePath(path);
-        Optional<SAsset> existing = assetService.findByPath(worldId, path);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return bad("invalid worldId");
+        Optional<SAsset> existing = assetService.findByPath(wid, path);
         if (existing.isEmpty()) {
-            SAsset saved = assetService.saveAsset(worldId, path, stream, "editor");
+            SAsset saved = assetService.saveAsset(wid, path, stream, "editor");
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         }
         SAsset current = existing.get();
-        SAsset updated = assetService.updateContent(current.getId(), stream);
+        SAsset updated = assetService.updateContent(current, stream);
         if (updated == null) return notFound("asset disappeared");
         return ResponseEntity.ok(toDto(updated));
     }
@@ -119,12 +127,14 @@ public class EAssetController {
                                           @PathVariable String path,
                                           @RequestParam Boolean enabled) {
         path = normalizePath(path);
-        Optional<SAsset> existing = assetService.findByPath(worldId, path);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return bad("invalid worldId");
+        Optional<SAsset> existing = assetService.findByPath(wid, path);
         if (existing.isEmpty()) return notFound("asset not found");
         SAsset asset = existing.get();
         boolean current = asset.isEnabled();
         if (enabled != null && enabled != current) {
-            if (!enabled) assetService.disable(asset.getId());
+            if (!enabled) assetService.disable(asset);
             else asset.setEnabled(true);
         }
         return ResponseEntity.ok(toDto(asset));
@@ -136,15 +146,19 @@ public class EAssetController {
                                     @PathVariable String worldId,
                                     @PathVariable String path) {
         path = normalizePath(path);
-        Optional<SAsset> existing = assetService.findByPath(worldId, path);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return bad("invalid worldId");
+        Optional<SAsset> existing = assetService.findByPath(wid, path);
         if (existing.isEmpty()) return notFound("asset not found");
-        assetService.delete(existing.get().getId());
+        assetService.delete(existing.get());
         return ResponseEntity.noContent().build();
     }
 
     // Hilfsmethoden
     private boolean exists(String worldId, String path) {
-        return assetService.findByPath(worldId, path).isPresent();
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return false;
+        return assetService.findByPath(wid, path).isPresent();
     }
     private AssetDto toDto(SAsset a) {
         return new AssetDto(a.getId(), a.getPath(), a.getName(), a.getSize(), a.isEnabled(),

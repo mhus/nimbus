@@ -1,7 +1,8 @@
 package de.mhus.nimbus.world.control.api;
 
-import de.mhus.nimbus.shared.asset.SAssetService;
-import de.mhus.nimbus.shared.persistence.SAsset;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.SAssetService;
+import de.mhus.nimbus.world.shared.world.SAsset;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ class EAssetControllerTest {
     @Test
     void testGetNotFound() {
         SAssetService service = Mockito.mock(SAssetService.class);
-        Mockito.when(service.findByPath("reg1:world1", "path/file.txt")).thenReturn(Optional.empty());
+        Mockito.when(service.findByPath(WorldId.unchecked("reg1:world1"), "path/file.txt")).thenReturn(Optional.empty());
         EAssetController ctrl = new EAssetController(service);
         ResponseEntity<?> resp = ctrl.get("reg1", "reg1:world1", "path/file.txt");
         assertEquals(404, resp.getStatusCode().value());
@@ -33,7 +34,7 @@ class EAssetControllerTest {
         asset.setCreatedAt(Instant.now());
         asset.setCreatedBy("editor");
         asset.setEnabled(true);
-        Mockito.when(service.findByPath("reg1:world1", "path/file.txt")).thenReturn(Optional.of(asset));
+        Mockito.when(service.findByPath(WorldId.unchecked("reg1:world1"), "path/file.txt")).thenReturn(Optional.of(asset));
         EAssetController ctrl = new EAssetController(service);
         ResponseEntity<?> resp = ctrl.get("reg1", "reg1:world1", "path/file.txt");
         assertEquals(200, resp.getStatusCode().value());

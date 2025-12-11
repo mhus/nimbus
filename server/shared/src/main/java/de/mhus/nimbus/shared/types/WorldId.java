@@ -24,7 +24,7 @@ public class WorldId implements Comparable<WorldId> {
         this.id = id;
     }
 
-    public static WorldId value(String worldId) {
+    public static WorldId unchecked(String worldId) {
         if (worldId == null) throw new NullPointerException("worldId is null");
         return new WorldId(worldId);
     }

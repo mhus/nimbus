@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -28,7 +29,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WChunk {
+public class WChunk implements Identifiable {
 
     @Id
     private String id;

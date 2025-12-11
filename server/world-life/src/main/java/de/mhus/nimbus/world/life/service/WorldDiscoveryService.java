@@ -45,9 +45,7 @@ public class WorldDiscoveryService {
 
         Set<WorldId> enabledWorldIds = worlds.stream()
                 .filter(WWorld::isEnabled)
-                .map(w -> WorldId.of(w.getWorldId()))
-                .filter(worldId -> worldId.isPresent())
-                .map(worldId -> worldId.get())
+                .map(w -> WorldId.unchecked(w.getWorldId()))
                 .collect(Collectors.toSet());
 
         Set<WorldId> added = enabledWorldIds.stream()

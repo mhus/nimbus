@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.persistence;
+package de.mhus.nimbus.world.shared.world;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

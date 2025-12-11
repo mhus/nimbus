@@ -1,9 +1,10 @@
 package de.mhus.nimbus.world.player.api;
 
-import de.mhus.nimbus.shared.asset.SAssetService;
-import de.mhus.nimbus.shared.persistence.AssetMetadata;
-import de.mhus.nimbus.shared.persistence.SAsset;
-import de.mhus.nimbus.shared.persistence.SAssetRepository;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.SAssetService;
+import de.mhus.nimbus.world.shared.world.AssetMetadata;
+import de.mhus.nimbus.world.shared.world.SAsset;
+import de.mhus.nimbus.world.shared.world.SAssetRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -129,7 +130,7 @@ public class AssetController {
 
         // Find asset
         // Try with worldId as regionId first (for main worlds), then fallback to null regionId
-        SAsset asset = assetService.findByPath(worldId, finalAssetPath)
+        SAsset asset = assetService.findByPath(WorldId.of(worldId).orElse(null), finalAssetPath)
                 .orElse(null);
 
         if (asset == null) {
@@ -171,7 +172,7 @@ public class AssetController {
 
         // Find asset in database
         // Try with worldId as regionId first (for main worlds), then fallback to null regionId
-        SAsset asset = assetService.findByPath(worldId, finalAssetPath)
+        SAsset asset = assetService.findByPath(WorldId.of(worldId).orElse(null), finalAssetPath)
                 .orElse(null);
 
         if (asset == null) {

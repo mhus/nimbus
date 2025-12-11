@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @Document(collection = "worlds")
 @ActualSchemaVersion("1.0.0")
-public class WWorld {
+public class WWorld implements Identifiable {
 
     @Id
     private String id; // MongoDB ObjectId als String oder UUID

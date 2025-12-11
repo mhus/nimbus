@@ -1,9 +1,10 @@
 package de.mhus.nimbus.world.control.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.shared.asset.SAssetService;
-import de.mhus.nimbus.shared.persistence.AssetMetadata;
-import de.mhus.nimbus.shared.persistence.SAsset;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.SAssetService;
+import de.mhus.nimbus.world.shared.world.AssetMetadata;
+import de.mhus.nimbus.world.shared.world.SAsset;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -63,7 +64,7 @@ public class WorldAssetInfoController extends BaseEditorController {
         }
 
         // Find asset (worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(worldId, path);
+        Optional<SAsset> opt = assetService.findByPath(WorldId.of(worldId).orElse(null), path);
         if (opt.isEmpty()) {
             // Return empty description if not found (like test_server)
             log.debug("Asset not found for info request: {}", path);
@@ -113,7 +114,7 @@ public class WorldAssetInfoController extends BaseEditorController {
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(worldId, path);
+            Optional<SAsset> existing = assetService.findByPath(WorldId.of(worldId).orElse(null), path);
             if (existing.isEmpty()) {
                 return notFound("asset not found");
             }
@@ -121,7 +122,7 @@ public class WorldAssetInfoController extends BaseEditorController {
             // Parse metadata from request body (JSON)
             AssetMetadata metadata = objectMapper.readValue(jsonContent, AssetMetadata.class);
 
-            Optional<SAsset> updated = assetService.updateMetadata(existing.get().getId(), metadata);
+            Optional<SAsset> updated = assetService.updateMetadata(existing.get(), metadata);
             if (updated.isPresent()) {
                 log.info("Updated asset metadata: path={}", path);
                 return ResponseEntity.ok(updated.get().getPublicData());
