@@ -122,7 +122,8 @@ Die koennen im modul shared abgelegt sein.
 [x] DEFAULT_PLAYER_INFO deprecated, nicht mehr noetig. (DefaultPlayerInfo.ts)
 
 [x] Icons werden als AIR eingebaut, nith als blockTypeId: 1 
-[ ] Flight mode bricht manchmal ab mit gravitation
+[x] Flight mode bricht manchmal ab mit gravitation
+[ ] Space interaction wenn Selected auf INTERACTION und seletierter bock/entity gefunden
 Editieren:
 [ ] Selected block richtig anzeigen, selekted ist jetzt Marked
 [ ] Palette von Bloecken verwalten und fuer Paste nutzen

@@ -117,8 +117,8 @@ export class MovementResolver {
 
     // === VERTICAL VELOCITY (Y) ===
 
-    // Gravity (disabled for FLY mode, but all other physics are active)
-    if (!grounded && entity.movementMode !== 'climb' && entity.movementMode !== 'fly') {
+    // Gravity (disabled for FLY and FREE_FLY modes, but all other physics are active)
+    if (!grounded && entity.movementMode !== 'climb' && entity.movementMode !== 'fly' && entity.movementMode !== 'free_fly') {
       const gravityForce = inWater ? this.config.underwaterGravity : this.config.gravity;
       entity.velocity.y += gravityForce * deltaTime;
     }
@@ -135,7 +135,7 @@ export class MovementResolver {
     }
 
     // Fly mode: use wishMove.y directly (full 3D control)
-    if (entity.movementMode === 'fly') {
+    if (entity.movementMode === 'fly' || entity.movementMode === 'free_fly') {
       entity.velocity.y = wishMove.y * this.getMoveSpeed(entity);
     }
   }

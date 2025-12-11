@@ -529,6 +529,16 @@ export class PhysicsService {
       return;
     }
 
+    // Skip modifier updates when in FLY or FREE_FLY mode
+    // These modes should not be overridden by physics-based states (JUMP, FALL, SWIM)
+    if (entity.movementMode === 'fly' || entity.movementMode === 'free_fly') {
+      // Disable all physics-based modifiers in fly modes
+      this.jumpModifier.setEnabled(false);
+      this.fallModifier.setEnabled(false);
+      this.swimModifier.setEnabled(false);
+      return;
+    }
+
     // SWIM state (priority 30) - enabled when in water
     this.swimModifier.setEnabled(entity.inWater);
 
