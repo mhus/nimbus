@@ -48,7 +48,7 @@ public class WEntityModel implements Identifiable {
     private EntityModel publicData;
 
     /**
-     * Optional world identifier for scoped entity models.
+     * Must have world identifier
      */
     @Indexed
     private String worldId;
