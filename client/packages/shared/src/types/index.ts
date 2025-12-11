@@ -56,3 +56,4 @@ export * from './Modal';
 
 // Edit action types
 export * from './EditAction';
+export * from './EditSettings';

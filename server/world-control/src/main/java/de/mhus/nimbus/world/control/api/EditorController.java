@@ -602,4 +602,101 @@ public class EditorController extends BaseEditorController {
             return bad("Failed to start save operation: " + e.getMessage());
         }
     }
+
+    // ===== BLOCK PALETTE SUPPORT =====
+
+    /**
+     * GET /api/editor/{worldId}/session/{sessionId}/markedBlock
+     * Returns the complete block data for the currently marked block.
+     * Reads from Redis overlay where the marked block is stored.
+     * Used when adding a marked block to the palette.
+     * Returns 200 with null/empty response if no marked block exists.
+     */
+    @GetMapping("/{worldId}/session/{sessionId}/markedBlock")
+    public ResponseEntity<?> getMarkedBlockData(
+            @PathVariable String worldId,
+            @PathVariable String sessionId) {
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(sessionId, "sessionId");
+        if (validation != null) return validation;
+
+        // Get marked block from EditService
+        Optional<Block> blockOpt = editService.getMarkedBlockData(worldId, sessionId);
+        if (blockOpt.isEmpty()) {
+            log.debug("No marked block found: worldId={}, sessionId={}", worldId, sessionId);
+            // Return 200 with null to indicate no marked block
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body("null");
+        }
+
+        try {
+            Block block = blockOpt.get();
+
+            // Serialize to JSON
+            String blockJson = engineMapper.writeValueAsString(block);
+
+            log.info("Retrieved marked block data: worldId={}, sessionId={}, blockTypeId={}",
+                    worldId, sessionId, block.getBlockTypeId());
+
+            // Return as JSON
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(blockJson);
+
+        } catch (Exception e) {
+            log.error("Failed to serialize marked block: worldId={}, sessionId={}",
+                    worldId, sessionId, e);
+            return bad("Failed to serialize marked block: " + e.getMessage());
+        }
+    }
+
+    /**
+     * POST /api/editor/{worldId}/session/{sessionId}/pasteBlock
+     * Sets a block as the current paste block (for palette selection).
+     * Stores complete block data in Redis for later paste operations.
+     */
+    @PostMapping("/{worldId}/session/{sessionId}/pasteBlock")
+    public ResponseEntity<?> setPasteBlock(
+            @PathVariable String worldId,
+            @PathVariable String sessionId,
+            @RequestBody String blockJson) {
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(sessionId, "sessionId");
+        if (validation != null) return validation;
+
+        if (Strings.isEmpty(blockJson)) {
+            return bad("Block data is required");
+        }
+
+        try {
+            // Validate by parsing the JSON
+            Block block = engineMapper.readValue(blockJson, Block.class);
+
+            if (block == null || Strings.isBlank(block.getBlockTypeId())) {
+                return bad("Invalid block data: blockTypeId is required");
+            }
+
+            // Store via EditService
+            editService.setPasteBlock(worldId, sessionId, blockJson);
+
+            log.info("Paste block set: worldId={}, sessionId={}, blockTypeId={}",
+                    worldId, sessionId, block.getBlockTypeId());
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Paste block set successfully",
+                    "blockTypeId", block.getBlockTypeId()
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to set paste block: worldId={}, sessionId={}", worldId, sessionId, e);
+            return bad("Failed to set paste block: " + e.getMessage());
+        }
+    }
 }

@@ -703,3 +703,8 @@ Entfernt Markierung
 
 DELETE /api/worlds/{worldId}/session/{sessionId}/marker/{x}/{y}/{z}
 
+## Edit Settings
+
+GET /api/editor/settings/worlds/{worldId}/editsettings?sessionId=...: Settings für Welt und User laden
+
+POST /api/editor/settings/worlds/{worldId}/editsettings/palette?sessionId=...: Palette setzen (body: Liste von PaletteBlockDefinition)

@@ -704,6 +704,61 @@ public class EditService {
     }
 
     /**
+     * Get marked block as Block object from Redis.
+     * Returns the complete Block that was stored when the block was marked.
+     * Uses the stored markedBlockInfo, not the overlay.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Block> getMarkedBlockData(String worldId, String sessionId) {
+        // Get marked block info from Redis (stored when block was marked)
+        Optional<Map<String, Object>> blockInfoOpt = getMarkedBlockInfo(worldId, sessionId);
+        if (blockInfoOpt.isEmpty()) {
+            log.debug("No marked block info found: sessionId={}", sessionId);
+            return Optional.empty();
+        }
+
+        Map<String, Object> blockInfo = blockInfoOpt.get();
+
+        // Extract block from blockInfo
+        Object blockObj = blockInfo.get("block");
+        if (blockObj == null) {
+            log.warn("No block data in marked block info: sessionId={}", sessionId);
+            return Optional.empty();
+        }
+
+        try {
+            // Convert block object to Block
+            Block block = objectMapper.convertValue(blockObj, Block.class);
+            log.debug("Retrieved marked block: blockTypeId={}", block.getBlockTypeId());
+            return Optional.of(block);
+        } catch (Exception e) {
+            log.warn("Failed to convert marked block data: sessionId={}, error={}", sessionId, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Set paste block in Redis.
+     * Stores a complete block definition for later paste operations.
+     */
+    @Transactional
+    public void setPasteBlock(String worldId, String sessionId, String blockJson) {
+        String key = editStateKey(sessionId);
+        redisService.putValue(worldId, key + "pasteBlock", blockJson, EDIT_STATE_TTL);
+        log.debug("Paste block set: session={}", sessionId);
+    }
+
+    /**
+     * Get paste block from Redis.
+     * Returns the stored block JSON for paste operations.
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> getPasteBlock(String worldId, String sessionId) {
+        String key = editStateKey(sessionId);
+        return redisService.getValue(worldId, key + "pasteBlock");
+    }
+
+    /**
      * Block position record.
      */
     public record BlockPosition(int x, int y, int z) {}

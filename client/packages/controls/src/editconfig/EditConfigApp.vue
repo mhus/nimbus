@@ -105,21 +105,34 @@
                 <span>No block selected</span>
               </div>
 
-              <!-- Marked Block Display - Compact -->
-              <div v-if="markedBlock" class="mt-2">
-                <h3 class="text-xs font-semibold mb-1 text-base-content/70">Marked (copy/move)</h3>
-                <div class="grid grid-cols-3 gap-2 text-center">
-                  <div class="bg-warning/10 rounded p-1">
-                    <div class="text-xs text-base-content/70">X</div>
-                    <div class="text-sm font-bold">{{ markedBlock.x }}</div>
-                  </div>
-                  <div class="bg-warning/10 rounded p-1">
-                    <div class="text-xs text-base-content/70">Y</div>
-                    <div class="text-sm font-bold">{{ markedBlock.y }}</div>
-                  </div>
-                  <div class="bg-warning/10 rounded p-1">
-                    <div class="text-xs text-base-content/70">Z</div>
-                    <div class="text-sm font-bold">{{ markedBlock.z }}</div>
+              <!-- Marked Block Display - Content -->
+              <div v-if="markedBlockContent" class="mt-2">
+                <h3 class="text-xs font-semibold mb-1 text-base-content/70">Marked Block</h3>
+                <div class="bg-warning/10 rounded p-2">
+                  <div class="flex items-center gap-2">
+                    <!-- Block Icon/Texture -->
+                    <div class="w-8 h-8 bg-base-300 rounded flex items-center justify-center flex-shrink-0">
+                      <img
+                        v-if="markedBlockTexture"
+                        :src="getTextureUrl(markedBlockTexture)"
+                        :alt="markedBlockContent.name"
+                        class="w-full h-full object-contain"
+                        @error="markedBlockTexture = null"
+                      />
+                      <svg v-else class="w-4 h-4 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                      </svg>
+                    </div>
+
+                    <!-- Block Info -->
+                    <div class="flex-1 min-w-0">
+                      <div class="text-xs font-bold truncate" :title="markedBlockContent.name">
+                        {{ markedBlockContent.name }}
+                      </div>
+                      <div class="text-xs text-base-content/50 font-mono truncate">
+                        {{ markedBlockContent.blockTypeId }}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -269,6 +282,96 @@
               </div>
             </div>
           </div>
+
+          <!-- Block Palette - Collapsible -->
+          <div class="collapse collapse-arrow bg-base-100 shadow-sm">
+            <input type="checkbox" v-model="blocksPanelOpen" />
+            <div class="collapse-title text-sm font-semibold p-2">
+              Blocks ({{ palette.length }})
+            </div>
+            <div class="collapse-content">
+              <div class="space-y-2">
+                <!-- Add Marked Block Button -->
+                <button
+                  @click="addMarkedBlockToPalette"
+                  :disabled="!markedBlockContent || addingToPalette"
+                  class="btn btn-success btn-xs w-full"
+                  title="Add currently marked block to palette"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {{ addingToPalette ? 'Adding...' : 'Add Marked Block' }}
+                </button>
+
+                <!-- Palette Blocks List -->
+                <div v-if="palette.length === 0" class="text-xs text-center text-base-content/50 py-4">
+                  No blocks in palette. Mark a block and add it.
+                </div>
+
+                <div v-else class="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto">
+                  <div
+                    v-for="(paletteBlock, index) in palette"
+                    :key="paletteBlock.id"
+                    class="relative group cursor-pointer"
+                    :class="{ 'ring-2 ring-primary': selectedPaletteIndex === index }"
+                    @click="selectPaletteBlock(index)"
+                  >
+                    <!-- Block Card -->
+                    <div class="card bg-base-200 hover:bg-base-300 transition-colors">
+                      <div class="card-body p-2">
+                        <!-- Block Icon/Texture -->
+                        <div class="w-full aspect-square bg-base-300 rounded flex items-center justify-center mb-1">
+                          <img
+                            v-if="paletteBlock.texturePath"
+                            :src="getTextureUrl(paletteBlock.texturePath)"
+                            :alt="paletteBlock.name"
+                            class="w-full h-full object-contain"
+                            @error="handleImageError($event, index)"
+                          />
+                          <svg v-else class="w-6 h-6 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                          </svg>
+                        </div>
+
+                        <!-- Block Name -->
+                        <div class="text-xs font-semibold truncate" :title="paletteBlock.name">
+                          {{ paletteBlock.name }}
+                        </div>
+
+                        <!-- BlockType ID -->
+                        <div class="text-xs text-base-content/50 truncate">
+                          {{ paletteBlock.block.blockTypeId }}
+                        </div>
+
+                        <!-- Delete Button (visible on hover) -->
+                        <button
+                          @click.stop="removePaletteBlock(index)"
+                          class="absolute top-1 right-1 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove from palette"
+                        >
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Save Palette Button -->
+                <button
+                  v-if="palette.length > 0"
+                  @click="savePalette"
+                  :disabled="savingPalette"
+                  class="btn btn-primary btn-xs w-full mt-2"
+                >
+                  <span v-if="savingPalette" class="loading loading-spinner loading-xs"></span>
+                  <span v-else>💾 Save Palette</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -309,9 +412,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useModal } from '@/composables/useModal';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
+import type { PaletteBlockDefinition, Block, BlockType } from '@nimbus/shared';
 
 // Edit actions enum
 const editActions = [
@@ -372,7 +476,17 @@ const discardModal = ref<HTMLDialogElement | null>(null);
 const activating = ref(false);
 const discarding = ref(false);
 
-// No automatic polling - use manual refresh button
+// Block Palette state
+const palette = ref<PaletteBlockDefinition[]>([]);
+const selectedPaletteIndex = ref<number | null>(null);
+const blocksPanelOpen = ref(false);
+const addingToPalette = ref(false);
+const savingPalette = ref(false);
+
+// Marked Block Content state
+const markedBlockContent = ref<{ name: string; blockTypeId: string; block: Block } | null>(null);
+const markedBlockTexture = ref<string | null>(null);
+let markedBlockPollingInterval: number | null = null;
 
 // Format action name for display
 function formatActionName(action: EditAction): string {
@@ -620,7 +734,15 @@ onMounted(async () => {
 
   await fetchLayers();
   await fetchEditState();
-  // No automatic polling - user clicks refresh button manually
+  await loadEditSettings();
+
+  // Start marked block content polling
+  startMarkedBlockPolling();
+});
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  stopMarkedBlockPolling();
 });
 
 // ===== EDIT MODE CONTROL FUNCTIONS =====
@@ -703,6 +825,309 @@ async function saveOverlays() {
     error.value = err instanceof Error ? err.message : 'Unknown error';
   } finally {
     saving.value = false;
+  }
+}
+
+// ===== BLOCK PALETTE FUNCTIONS =====
+
+// Load edit settings (palette) from API
+async function loadEditSettings() {
+  try {
+    const response = await fetch(
+      `${apiUrl.value}/api/editor/settings/worlds/${worldId.value}/editsettings?sessionId=${sessionId.value}`
+    );
+
+    if (!response.ok) {
+      console.log('[Palette] Failed to load settings (status not ok), will create on first save');
+      palette.value = [];
+      return;
+    }
+
+    const data = await response.json();
+
+    // Check if response contains an error
+    if (data.error) {
+      console.log('[Palette] No existing settings found, will create on first save');
+      palette.value = [];
+      return;
+    }
+
+    palette.value = data.palette || [];
+    console.log('[Palette] Loaded', palette.value.length, 'blocks from palette');
+  } catch (err) {
+    console.log('[Palette] Error loading settings:', err, '- will create on first save');
+    // Don't show error to user, palette is optional and will be created on first save
+    palette.value = [];
+  }
+}
+
+// Get texture URL for block icon
+function getTextureUrl(texturePath: string): string {
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  return `${apiBaseUrl}/api/worlds/${worldId.value}/assets/${texturePath}`;
+}
+
+// Handle image load error (fallback to placeholder)
+function handleImageError(event: Event, index: number) {
+  const target = event.target as HTMLImageElement;
+  target.style.display = 'none';
+}
+
+// Add marked block to palette
+async function addMarkedBlockToPalette() {
+  console.log('[Palette] Add marked block clicked', {
+    hasMarkedBlockContent: !!markedBlockContent.value,
+    markedBlockContent: markedBlockContent.value
+  });
+
+  if (!markedBlockContent.value) {
+    error.value = 'No block is currently marked';
+    console.error('[Palette] Cannot add - no marked block content');
+    return;
+  }
+
+  addingToPalette.value = true;
+  error.value = null;
+
+  try {
+    // Use already loaded marked block content
+    const blockData = markedBlockContent.value.block;
+    const blockTypeName = markedBlockContent.value.name;
+    const texturePath = markedBlockTexture.value || undefined;
+
+    console.log('[Palette] Creating palette entry:', {
+      name: blockTypeName,
+      blockTypeId: blockData.blockTypeId,
+      hasTexture: !!texturePath
+    });
+
+    // Create palette entry
+    const paletteBlock: PaletteBlockDefinition = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: blockTypeName,
+      block: blockData,
+      texturePath,
+    };
+
+    // Add to palette
+    palette.value.push(paletteBlock);
+    console.log('[Palette] Added to palette, new size:', palette.value.length);
+
+    // Auto-save palette
+    await savePalette();
+    console.log('[Palette] Block successfully added and saved');
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to add block to palette';
+    console.error('[Palette] Failed to add marked block to palette:', err);
+  } finally {
+    addingToPalette.value = false;
+  }
+}
+
+// Select a palette block (sets as current paste block in Redis)
+async function selectPaletteBlock(index: number) {
+  selectedPaletteIndex.value = index;
+  const paletteBlock = palette.value[index];
+
+  try {
+    // Send block to Redis as current paste block
+    const response = await fetch(
+      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/pasteBlock`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paletteBlock.block),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to set paste block');
+    }
+
+    console.log(`Selected palette block: ${paletteBlock.name}`);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to select block';
+    console.error('Failed to select palette block:', err);
+  }
+}
+
+// Remove block from palette
+function removePaletteBlock(index: number) {
+  palette.value.splice(index, 1);
+
+  // Clear selection if removed block was selected
+  if (selectedPaletteIndex.value === index) {
+    selectedPaletteIndex.value = null;
+  } else if (selectedPaletteIndex.value !== null && selectedPaletteIndex.value > index) {
+    // Adjust selection index if block before selected was removed
+    selectedPaletteIndex.value--;
+  }
+
+  // Auto-save after removal
+  savePalette();
+}
+
+// Save palette to server
+async function savePalette() {
+  console.log('[Palette] Saving palette with', palette.value.length, 'blocks');
+  savingPalette.value = true;
+  error.value = null;
+
+  try {
+    const url = `${apiUrl.value}/api/editor/settings/worlds/${worldId.value}/editsettings/palette?sessionId=${sessionId.value}`;
+    console.log('[Palette] POST to:', url);
+    console.log('[Palette] Payload:', palette.value);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(palette.value),
+    });
+
+    console.log('[Palette] Save response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('[Palette] Save failed with response:', errorData);
+      throw new Error(`Failed to save palette: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('[Palette] Save successful, response:', result);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to save palette';
+    console.error('[Palette] Save error:', err);
+  } finally {
+    savingPalette.value = false;
+  }
+}
+
+// ===== MARKED BLOCK POLLING =====
+
+// Poll marked block content
+async function pollMarkedBlockContent() {
+  console.log('[Polling] Checking marked block...', {
+    markedBlockPosition: markedBlock.value,
+    worldId: worldId.value,
+    sessionId: sessionId.value
+  });
+
+  try {
+    // Always try to fetch - server will return 404 if no block marked
+    const url = `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/markedBlock`;
+    console.log('[Polling] Fetching:', url);
+
+    const response = await fetch(url);
+
+    console.log('[Polling] Response status:', response.status);
+
+    if (!response.ok) {
+      // No marked block or error - clear content
+      if (markedBlockContent.value !== null) {
+        console.log('[Polling] Clearing marked block content (status not ok)');
+        markedBlockContent.value = null;
+        markedBlockTexture.value = null;
+      }
+      return;
+    }
+
+    const responseData = await response.json();
+    console.log('[Polling] Received response data:', responseData);
+
+    // Check if response contains an error
+    if (responseData.error) {
+      console.log('[Polling] Server returned error:', responseData.error);
+      // Clear content when error is present
+      if (markedBlockContent.value !== null) {
+        console.log('[Polling] Clearing marked block content (error in response)');
+        markedBlockContent.value = null;
+        markedBlockTexture.value = null;
+      }
+      return;
+    }
+
+    const blockData: Block = responseData;
+
+    // Check if content changed (compare blockTypeId)
+    if (markedBlockContent.value?.blockTypeId === blockData.blockTypeId) {
+      console.log('[Polling] Content unchanged, skipping update');
+      return;
+    }
+
+    // Fetch BlockType to get description and texture
+    let blockTypeName = `Block ${blockData.blockTypeId}`;
+    let texturePath: string | null = null;
+
+    try {
+      const blockTypeResponse = await fetch(
+        `${apiUrl.value}/api/worlds/${worldId.value}/blocktypes/${blockData.blockTypeId}`
+      );
+
+      if (blockTypeResponse.ok) {
+        const blockType: BlockType = await blockTypeResponse.json();
+        blockTypeName = blockType.description || blockTypeName;
+
+        // Try to get texture from first modifier's visibility
+        const firstModifier = blockType.modifiers?.[0];
+        if (firstModifier?.visibility?.textures) {
+          const textures = firstModifier.visibility.textures;
+          // Get first available texture (top, front, or any face)
+          texturePath = textures.top || textures.front || textures.side || Object.values(textures)[0] || null;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch BlockType details for marked block:', err);
+    }
+
+    // Truncate name if too long
+    if (blockTypeName.length > 40) {
+      blockTypeName = blockTypeName.substring(0, 37) + '...';
+    }
+
+    // Update content
+    markedBlockContent.value = {
+      name: blockTypeName,
+      blockTypeId: blockData.blockTypeId,
+      block: blockData,
+    };
+    markedBlockTexture.value = texturePath;
+
+    console.log('Marked block content updated:', blockTypeName);
+
+  } catch (err) {
+    // Silent fail - polling will retry
+    console.debug('Failed to poll marked block content:', err);
+  }
+}
+
+// Start marked block polling
+function startMarkedBlockPolling() {
+  if (markedBlockPollingInterval !== null) {
+    console.log('[Polling] Already running, skipping start');
+    return;
+  }
+
+  console.log('[Polling] Starting marked block polling (interval: 2s)');
+
+  // Initial poll
+  pollMarkedBlockContent();
+
+  // Poll every 2 seconds
+  markedBlockPollingInterval = window.setInterval(() => {
+    pollMarkedBlockContent();
+  }, 2000);
+}
+
+// Stop marked block polling
+function stopMarkedBlockPolling() {
+  if (markedBlockPollingInterval !== null) {
+    clearInterval(markedBlockPollingInterval);
+    markedBlockPollingInterval = null;
   }
 }
 </script>

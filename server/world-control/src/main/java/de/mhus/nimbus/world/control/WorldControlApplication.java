@@ -14,8 +14,8 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableMongoAuditing
-@ReflectiveScan(basePackages = {"de.mhus.nimbus.world.editor","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
-@EnableMongoRepositories(basePackages = {"de.mhus.nimbus.world.editor","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
+@ReflectiveScan(basePackages = {"de.mhus.nimbus.world.control","de.mhus.nimbus.world.editor","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
+@EnableMongoRepositories(basePackages = {"de.mhus.nimbus.world.control","de.mhus.nimbus.world.editor","de.mhus.nimbus.world.shared","de.mhus.nimbus.shared"})
 @OpenAPIDefinition(info = @Info(title = "World Editor API", version = "v1", description = "API for world editor", contact = @Contact(name="Nimbus"), license = @License(name="Apache-2.0")))
 @SpringBootApplication
 @ConfigurationPropertiesScan
