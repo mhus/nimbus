@@ -20,7 +20,7 @@
         <module>generated</module>
         <module>shared</module>
         <module>universe</module>
-        <module>region</module>
+        <module>world-region</module>
         <module>world-shared</module>
         <module>world-player</module>
         <module>world-control</module>

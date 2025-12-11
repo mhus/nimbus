@@ -3,8 +3,8 @@ spring:
     name: Region
   data:
     mongodb:
-      uri: mongodb://root:example@localhost:27017/region?authSource=admin
-      database: region
+      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      database: world
 
 region:
   server:

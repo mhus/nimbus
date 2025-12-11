@@ -256,7 +256,7 @@ Oder World Server stellt Visum direkt aus (z.b. bei World Wechsel / teleport)
 - universe server
   - handled die User und Regionen, User in seiner Universe Domain
   - Login
-- region server
+- region server - region ist jetzt world-region und damit teil des world service verbunds und hat zugriff auf world daten.
   - user als Region Domain View - wird angelegt wenn der user accepted ist by region.
   - handled die Charaktere und deren Daten (inventar, ausstattung, skills, fortschritt)
   - handled Items
