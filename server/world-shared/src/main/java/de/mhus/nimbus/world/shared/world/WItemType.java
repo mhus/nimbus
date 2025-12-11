@@ -47,12 +47,6 @@ public class WItemType {
     private ItemType publicData;
 
     /**
-     * Optional region identifier for scoped item types.
-     */
-    @Indexed
-    private String regionId;
-
-    /**
      * Optional world identifier for scoped item types.
      */
     @Indexed

@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.life.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.mhus.nimbus.generated.types.EntityPathway;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.behavior.BehaviorRegistry;
 import de.mhus.nimbus.world.life.behavior.EntityBehavior;
 import de.mhus.nimbus.world.life.config.WorldLifeProperties;
@@ -51,7 +52,7 @@ public class EntityInteractionService {
      * @param displayName Display name of player
      */
     public void handleInteraction(
-            String worldId,
+            WorldId worldId,
             String entityId,
             String action,
             Long timestamp,

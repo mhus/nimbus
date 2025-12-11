@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Backdrop;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,27 +22,22 @@ public class WBackdropService {
     private final WBackdropRepository repository;
 
     @Transactional(readOnly = true)
-    public Optional<WBackdrop> findByBackdropId(String backdropId) {
-        return repository.findByBackdropId(backdropId);
+    public Optional<WBackdrop> findByBackdropId(WorldId worldId, String backdropId) {
+        return repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId);
     }
 
     @Transactional(readOnly = true)
-    public List<WBackdrop> findByRegionId(String regionId) {
-        return repository.findByRegionId(regionId);
+    public List<WBackdrop> findByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<WBackdrop> findByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<WBackdrop> findAllEnabled() {
-        return repository.findByEnabled(true);
+    public List<WBackdrop> findAllEnabled(WorldId worldId) {
+        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
     }
 
     @Transactional
-    public WBackdrop save(String backdropId, Backdrop publicData, String regionId, String worldId) {
+    public WBackdrop save(WorldId worldId, String backdropId, Backdrop publicData) {
         if (blank(backdropId)) {
             throw new IllegalArgumentException("backdropId required");
         }
@@ -49,11 +45,10 @@ public class WBackdropService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WBackdrop entity = repository.findByBackdropId(backdropId).orElseGet(() -> {
+        WBackdrop entity = repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId).orElseGet(() -> {
             WBackdrop neu = WBackdrop.builder()
                     .backdropId(backdropId)
-                    .regionId(regionId)
-                    .worldId(worldId)
+                    .worldId(worldId.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -62,8 +57,6 @@ public class WBackdropService {
         });
 
         entity.setPublicData(publicData);
-        entity.setRegionId(regionId);
-        entity.setWorldId(worldId);
         entity.touchUpdate();
 
         WBackdrop saved = repository.save(entity);
@@ -72,7 +65,7 @@ public class WBackdropService {
     }
 
     @Transactional
-    public List<WBackdrop> saveAll(List<WBackdrop> entities) {
+    public List<WBackdrop> saveAll(WorldId worldId, List<WBackdrop> entities) {
         entities.forEach(e -> {
             if (e.getCreatedAt() == null) {
                 e.touchCreate();
@@ -85,8 +78,8 @@ public class WBackdropService {
     }
 
     @Transactional
-    public Optional<WBackdrop> update(String backdropId, Consumer<WBackdrop> updater) {
-        return repository.findByBackdropId(backdropId).map(entity -> {
+    public Optional<WBackdrop> update(WorldId worldId, String backdropId, Consumer<WBackdrop> updater) {
+        return repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WBackdrop saved = repository.save(entity);
@@ -96,8 +89,8 @@ public class WBackdropService {
     }
 
     @Transactional
-    public boolean delete(String backdropId) {
-        return repository.findByBackdropId(backdropId).map(entity -> {
+    public boolean delete(WorldId worldId, String backdropId) {
+        return repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WBackdrop: {}", backdropId);
             return true;
@@ -105,13 +98,13 @@ public class WBackdropService {
     }
 
     @Transactional
-    public boolean disable(String backdropId) {
-        return update(backdropId, entity -> entity.setEnabled(false)).isPresent();
+    public boolean disable(WorldId worldId, String backdropId) {
+        return update(worldId, backdropId, entity -> entity.setEnabled(false)).isPresent();
     }
 
     @Transactional
-    public boolean enable(String backdropId) {
-        return update(backdropId, entity -> entity.setEnabled(true)).isPresent();
+    public boolean enable(WorldId worldId, String backdropId) {
+        return update(worldId, backdropId, entity -> entity.setEnabled(true)).isPresent();
     }
 
     private boolean blank(String s) {

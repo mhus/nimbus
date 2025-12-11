@@ -2,6 +2,8 @@ package de.mhus.nimbus.world.life.service;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +32,12 @@ public class TerrainService {
      * @param startY Starting Y coordinate for downward search
      * @return Y coordinate of ground surface (top of highest solid block), or 64 if not found
      */
-    public int getGroundHeight(String worldId, int x, int z, int startY) {
+    public int getGroundHeight(WorldId worldId, int x, int z, int startY) {
         try {
             // Calculate chunk coordinates
             int chunkX = Math.floorDiv(x, 16);
             int chunkZ = Math.floorDiv(z, 16);
-            String chunkKey = chunkX + ":" + chunkZ;
+            String chunkKey = BlockUtil.toCunkKey(chunkX, chunkZ);
 
             // Load chunk from database (regionId = worldId for main world, create=false)
             Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);

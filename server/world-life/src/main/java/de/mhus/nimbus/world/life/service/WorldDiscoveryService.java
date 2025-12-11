@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.life.service;
 
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldRepository;
 import jakarta.annotation.PostConstruct;
@@ -27,7 +28,7 @@ public class WorldDiscoveryService {
     /**
      * Set of currently known world IDs.
      */
-    private final Set<String> knownWorldIds = ConcurrentHashMap.newKeySet();
+    private final Set<WorldId> knownWorldIds = ConcurrentHashMap.newKeySet();
 
     @PostConstruct
     public void initialize() {
@@ -42,16 +43,18 @@ public class WorldDiscoveryService {
     public void discoverWorlds() {
         List<WWorld> worlds = worldRepository.findAll();
 
-        Set<String> enabledWorldIds = worlds.stream()
+        Set<WorldId> enabledWorldIds = worlds.stream()
                 .filter(WWorld::isEnabled)
-                .map(WWorld::getWorldId)
+                .map(w -> WorldId.of(w.getWorldId()))
+                .filter(worldId -> worldId.isPresent())
+                .map(worldId -> worldId.get())
                 .collect(Collectors.toSet());
 
-        Set<String> added = enabledWorldIds.stream()
+        Set<WorldId> added = enabledWorldIds.stream()
                 .filter(worldId -> !knownWorldIds.contains(worldId))
                 .collect(Collectors.toSet());
 
-        Set<String> removed = knownWorldIds.stream()
+        Set<WorldId> removed = knownWorldIds.stream()
                 .filter(worldId -> !enabledWorldIds.contains(worldId))
                 .collect(Collectors.toSet());
 
@@ -78,7 +81,7 @@ public class WorldDiscoveryService {
      *
      * @return Set of world IDs
      */
-    public Set<String> getKnownWorldIds() {
+    public Set<WorldId> getKnownWorldIds() {
         return Set.copyOf(knownWorldIds);
     }
 

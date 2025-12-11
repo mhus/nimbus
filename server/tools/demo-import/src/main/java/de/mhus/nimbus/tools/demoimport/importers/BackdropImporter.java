@@ -2,6 +2,7 @@ package de.mhus.nimbus.tools.demoimport.importers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Backdrop;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.tools.demoimport.ImportStats;
 import de.mhus.nimbus.world.shared.world.WBackdrop;
 import de.mhus.nimbus.world.shared.world.WBackdropService;
@@ -68,8 +69,12 @@ public class BackdropImporter {
                     backdropId = file.getName().replace(".json", "");
                 }
 
+                WorldId wId = WorldId.of(defaultWorldId).orElseThrow(
+                        () -> new IllegalArgumentException("Invalid worldId: " + defaultWorldId)
+                );
+
                 // Check if already exists
-                if (service.findByBackdropId(backdropId).isPresent()) {
+                if (service.findByBackdropId(wId, backdropId).isPresent()) {
                     log.trace("Backdrop already exists: {} - skipping", backdropId);
                     stats.incrementSkipped();
                     continue;
@@ -79,7 +84,6 @@ public class BackdropImporter {
                 WBackdrop entity = WBackdrop.builder()
                         .backdropId(backdropId)
                         .publicData(backdrop)
-                        .regionId(null)
                         .worldId(defaultWorldId)  // Set worldId from config (e.g., "main")
                         .enabled(true)
                         .build();
@@ -99,7 +103,10 @@ public class BackdropImporter {
         // Batch save
         if (!entities.isEmpty()) {
             log.info("Saving {} Backdrops to database...", entities.size());
-            service.saveAll(entities);
+            WorldId wId = WorldId.of(defaultWorldId).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid worldId: " + defaultWorldId)
+            );
+            service.saveAll(wId, entities);
         }
 
         log.info("Backdrop import completed: {} imported, {} skipped, {} failed",

@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.Entity;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,7 +78,12 @@ public class EEntityController extends BaseEditorController {
         validation = validateId(entityId, "entityId");
         if (validation != null) return validation;
 
-        Optional<WEntity> opt = entityService.findByWorldIdAndEntityId(worldId, entityId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WEntity> opt = entityService.findByWorldIdAndEntityId(widOpt.get(), entityId);
         if (opt.isEmpty()) {
             log.warn("Entity not found: worldId={}, entityId={}", worldId, entityId);
             return notFound("entity not found");
@@ -112,8 +118,13 @@ public class EEntityController extends BaseEditorController {
         validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
         // Get all Entities for this world
-        List<WEntity> all = entityService.findByWorldId(worldId);
+        List<WEntity> all = entityService.findByWorldId(widOpt.get());
 
         // Apply search filter if provided
         if (query != null && !query.isBlank()) {
@@ -168,8 +179,14 @@ public class EEntityController extends BaseEditorController {
             return bad("publicData required");
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Check if Entity already exists
-        if (entityService.findByWorldIdAndEntityId(worldId, request.entityId()).isPresent()) {
+        if (entityService.findByWorldIdAndEntityId(wid, request.entityId()).isPresent()) {
             return conflict("entity already exists");
         }
 
@@ -178,7 +195,7 @@ public class EEntityController extends BaseEditorController {
             String chunk = calculateChunk(request.publicData());
 
             WEntity saved = entityService.save(
-                    worldId,
+                    wid,
                     request.entityId(),
                     request.publicData(),
                     chunk,
@@ -225,7 +242,12 @@ public class EEntityController extends BaseEditorController {
             return bad("at least one field required for update");
         }
 
-        Optional<WEntity> updated = entityService.update(worldId, entityId, entity -> {
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WEntity> updated = entityService.update(widOpt.get(), entityId, entity -> {
             if (request.publicData() != null) {
                 entity.setPublicData(request.publicData());
                 // Recalculate chunk if position changed
@@ -272,7 +294,12 @@ public class EEntityController extends BaseEditorController {
         validation = validateId(entityId, "entityId");
         if (validation != null) return validation;
 
-        boolean deleted = entityService.delete(worldId, entityId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        boolean deleted = entityService.delete(widOpt.get(), entityId);
         if (!deleted) {
             log.warn("Entity not found for deletion: worldId={}, entityId={}", worldId, entityId);
             return notFound("entity not found");

@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.life.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.service.EntityInteractionService;
 import de.mhus.nimbus.world.life.service.WorldDiscoveryService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
@@ -50,7 +51,7 @@ public class EntityInteractionListener {
     private final WorldDiscoveryService worldDiscoveryService;
     private final ObjectMapper objectMapper;
 
-    private final Set<String> subscribedWorlds = new HashSet<>();
+    private final Set<WorldId> subscribedWorlds = new HashSet<>();
 
     @PostConstruct
     public void initialize() {
@@ -63,21 +64,21 @@ public class EntityInteractionListener {
      */
     @Scheduled(fixedDelay = 60000)
     public void updateSubscriptions() {
-        Set<String> knownWorlds = worldDiscoveryService.getKnownWorldIds();
+        Set<WorldId> knownWorlds = worldDiscoveryService.getKnownWorldIds();
 
         // Subscribe to new worlds
-        for (String worldId : knownWorlds) {
+        for (WorldId worldId : knownWorlds) {
             if (!subscribedWorlds.contains(worldId)) {
-                redisMessaging.subscribe(worldId, "e.int", (topic, message) -> handleEntityInteraction(worldId, message));
+                redisMessaging.subscribe(worldId.getId(), "e.int", (topic, message) -> handleEntityInteraction(worldId, message));
                 subscribedWorlds.add(worldId);
                 log.info("Subscribed to entity interactions for world: {}", worldId);
             }
         }
 
         // Unsubscribe from removed worlds
-        Set<String> toRemove = new HashSet<>(subscribedWorlds);
+        Set<WorldId> toRemove = new HashSet<>(subscribedWorlds);
         toRemove.removeAll(knownWorlds);
-        for (String worldId : toRemove) {
+        for (WorldId worldId : toRemove) {
             subscribedWorlds.remove(worldId);
             log.info("Unsubscribed from entity interactions for world: {}", worldId);
         }
@@ -89,7 +90,7 @@ public class EntityInteractionListener {
      * @param worldId World ID
      * @param message JSON message
      */
-    private void handleEntityInteraction(String worldId, String message) {
+    private void handleEntityInteraction(WorldId worldId, String message) {
         try {
             JsonNode data = objectMapper.readTree(message);
 

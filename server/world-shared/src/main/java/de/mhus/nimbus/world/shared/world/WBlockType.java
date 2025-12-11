@@ -54,12 +54,6 @@ public class WBlockType {
     private BlockType publicData;
 
     /**
-     * Optional region identifier for scoped block types.
-     */
-    @Indexed
-    private String regionId;
-
-    /**
      * Optional world identifier for scoped block types.
      */
     @Indexed

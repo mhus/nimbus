@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.ItemType;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WItemType;
 import de.mhus.nimbus.world.shared.world.WItemTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,13 +52,15 @@ public class ItemTypeController {
             return ResponseEntity.badRequest().body(Map.of("error", "itemType is required"));
         }
 
-        return service.findByItemType(itemType)
-                .map(WItemType::getPublicData)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    log.warn("ItemType not found: worldId={}, itemType={}", worldId, itemType);
-                    return ResponseEntity.notFound().build();
-                });
+        return WorldId.of(worldId)
+                .map(wid -> service.findByItemType(wid, itemType)
+                        .map(WItemType::getPublicData)
+                        .map(ResponseEntity::ok)
+                        .orElseGet(() -> {
+                            log.warn("ItemType not found: worldId={}, itemType={}", worldId, itemType);
+                            return ResponseEntity.notFound().build();
+                        }))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     /**
@@ -77,14 +80,18 @@ public class ItemTypeController {
             return ResponseEntity.badRequest().body(Map.of("error", "worldId is required"));
         }
 
-        List<ItemType> itemTypes = service.findByWorldId(worldId).stream()
-                .filter(WItemType::isEnabled)
-                .map(WItemType::getPublicData)
-                .toList();
+        return WorldId.of(worldId)
+                .<ResponseEntity<?>>map(wid -> {
+                    List<ItemType> itemTypes = service.findByWorldId(wid).stream()
+                            .filter(WItemType::isEnabled)
+                            .map(WItemType::getPublicData)
+                            .toList();
 
-        return ResponseEntity.ok(Map.of(
-                "itemTypes", itemTypes,
-                "count", itemTypes.size()
-        ));
+                    return ResponseEntity.ok(Map.of(
+                            "itemTypes", itemTypes,
+                            "count", itemTypes.size()
+                    ));
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 }

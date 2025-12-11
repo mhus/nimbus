@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.BlockType;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,32 +22,27 @@ public class WBlockTypeService {
     private final WBlockTypeRepository repository;
 
     @Transactional(readOnly = true)
-    public Optional<WBlockType> findByBlockId(String blockId) {
-        return repository.findByBlockId(blockId);
+    public Optional<WBlockType> findByBlockId(WorldId worldId, String blockId) {
+        return repository.findByWorldIdAndBlockId(worldId.getId(), blockId);
     }
 
     @Transactional(readOnly = true)
-    public List<WBlockType> findByBlockTypeGroup(String blockTypeGroup) {
-        return repository.findByBlockTypeGroup(blockTypeGroup);
+    public List<WBlockType> findByBlockTypeGroup(WorldId worldId, String blockTypeGroup) {
+        return repository.findByWorldIdAndBlockTypeGroup(worldId.getId(), blockTypeGroup);
     }
 
     @Transactional(readOnly = true)
-    public List<WBlockType> findByRegionId(String regionId) {
-        return repository.findByRegionId(regionId);
+    public List<WBlockType> findByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<WBlockType> findByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<WBlockType> findAllEnabled() {
-        return repository.findByEnabled(true);
+    public List<WBlockType> findAllEnabled(WorldId worldId) {
+        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
     }
 
     @Transactional
-    public WBlockType save(String blockId, BlockType publicData, String regionId, String worldId) {
+    public WBlockType save(WorldId worldId, String blockId, BlockType publicData) {
         if (blank(blockId)) {
             throw new IllegalArgumentException("blockId required");
         }
@@ -54,11 +50,10 @@ public class WBlockTypeService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WBlockType entity = repository.findByBlockId(blockId).orElseGet(() -> {
+        WBlockType entity = repository.findByWorldIdAndBlockId(worldId.getId(), blockId).orElseGet(() -> {
             WBlockType neu = WBlockType.builder()
                     .blockId(blockId)
-                    .regionId(regionId)
-                    .worldId(worldId)
+                    .worldId(worldId.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -67,8 +62,6 @@ public class WBlockTypeService {
         });
 
         entity.setPublicData(publicData);
-        entity.setRegionId(regionId);
-        entity.setWorldId(worldId);
         entity.touchUpdate();
 
         WBlockType saved = repository.save(entity);
@@ -77,7 +70,7 @@ public class WBlockTypeService {
     }
 
     @Transactional
-    public List<WBlockType> saveAll(List<WBlockType> entities) {
+    public List<WBlockType> saveAll(WorldId worldId, List<WBlockType> entities) {
         entities.forEach(e -> {
             if (e.getCreatedAt() == null) {
                 e.touchCreate();
@@ -90,8 +83,8 @@ public class WBlockTypeService {
     }
 
     @Transactional
-    public Optional<WBlockType> update(String blockId, Consumer<WBlockType> updater) {
-        return repository.findByBlockId(blockId).map(entity -> {
+    public Optional<WBlockType> update(WorldId worldId, String blockId, Consumer<WBlockType> updater) {
+        return repository.findByWorldIdAndBlockId(worldId.getId(), blockId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WBlockType saved = repository.save(entity);
@@ -101,8 +94,8 @@ public class WBlockTypeService {
     }
 
     @Transactional
-    public boolean delete(String blockId) {
-        return repository.findByBlockId(blockId).map(entity -> {
+    public boolean delete(WorldId worldId, String blockId) {
+        return repository.findByWorldIdAndBlockId(worldId.getId(), blockId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WBlockType: {}", blockId);
             return true;
@@ -110,13 +103,13 @@ public class WBlockTypeService {
     }
 
     @Transactional
-    public boolean disable(String blockId) {
-        return update(blockId, entity -> entity.setEnabled(false)).isPresent();
+    public boolean disable(WorldId worldId, String blockId) {
+        return update(worldId, blockId, entity -> entity.setEnabled(false)).isPresent();
     }
 
     @Transactional
-    public boolean enable(String blockId) {
-        return update(blockId, entity -> entity.setEnabled(true)).isPresent();
+    public boolean enable(WorldId worldId, String blockId) {
+        return update(worldId, blockId, entity -> entity.setEnabled(true)).isPresent();
     }
 
     private boolean blank(String s) {

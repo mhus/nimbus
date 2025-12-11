@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.life.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.config.WorldLifeProperties;
 import de.mhus.nimbus.world.life.model.EntityOwnership;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
@@ -76,7 +77,7 @@ public class EntityOwnershipService {
      * @param entityId Entity ID
      * @return Composite key
      */
-    private String makeEntityKey(String worldId, String entityId) {
+    private String makeEntityKey(WorldId worldId, String entityId) {
         return worldId + ":" + entityId;
     }
 
@@ -90,7 +91,7 @@ public class EntityOwnershipService {
      * @param chunk Current chunk where entity is located
      * @return True if claim was successful, false if entity is owned by another pod
      */
-    public boolean claimEntity(String worldId, String entityId, String chunk) {
+    public boolean claimEntity(WorldId worldId, String entityId, String chunk) {
         long timestamp = System.currentTimeMillis();
         String entityKey = makeEntityKey(worldId, entityId);
 
@@ -105,7 +106,7 @@ public class EntityOwnershipService {
         }
 
         // Claim entity
-        EntityOwnership ownership = new EntityOwnership(entityId, worldId, podId, timestamp, timestamp, chunk);
+        EntityOwnership ownership = new EntityOwnership(entityId, worldId.getId(), podId, timestamp, timestamp, chunk);
         ownershipRegistry.put(entityKey, ownership);
         ownedEntities.add(entityKey);
 
@@ -123,7 +124,7 @@ public class EntityOwnershipService {
      * @param worldId World ID
      * @param entityId Entity identifier
      */
-    public void releaseEntity(String worldId, String entityId) {
+    public void releaseEntity(WorldId worldId, String entityId) {
         String entityKey = makeEntityKey(worldId, entityId);
         EntityOwnership ownership = ownershipRegistry.remove(entityKey);
         ownedEntities.remove(entityKey);
@@ -150,7 +151,7 @@ public class EntityOwnershipService {
             EntityOwnership ownership = ownershipRegistry.get(entityKey);
             if (ownership != null) {
                 ownership.setLastHeartbeat(timestamp);
-                publishOwnershipAnnouncement(ownership.getWorldId(), "claim", ownership.getEntityId(), ownership.getCurrentChunk());
+                publishOwnershipAnnouncement(WorldId.value(ownership.getWorldId()), "claim", ownership.getEntityId(), ownership.getCurrentChunk());
             }
         }
 
@@ -164,7 +165,7 @@ public class EntityOwnershipService {
      * @param entityId Entity identifier
      * @return True if owned by this pod
      */
-    public boolean isOwnedByThisPod(String worldId, String entityId) {
+    public boolean isOwnedByThisPod(WorldId worldId, String entityId) {
         String entityKey = makeEntityKey(worldId, entityId);
         return ownedEntities.contains(entityKey);
     }
@@ -176,7 +177,7 @@ public class EntityOwnershipService {
      * @param entityId Entity identifier
      * @return True if entity is orphaned
      */
-    public boolean isOrphaned(String worldId, String entityId) {
+    public boolean isOrphaned(WorldId worldId, String entityId) {
         String entityKey = makeEntityKey(worldId, entityId);
         EntityOwnership ownership = ownershipRegistry.get(entityKey);
 
@@ -235,7 +236,7 @@ public class EntityOwnershipService {
     private void handleOwnershipAnnouncement(String topic, String message) {
         try {
             // Extract worldId from topic (format: "world:{worldId}:e.o")
-            String worldId = extractWorldIdFromTopic(topic);
+            WorldId worldId = extractWorldIdFromTopic(topic);
 
             JsonNode data = objectMapper.readTree(message);
 
@@ -252,7 +253,7 @@ public class EntityOwnershipService {
 
             if ("claim".equals(action)) {
                 String entityKey = makeEntityKey(worldId, entityId);
-                EntityOwnership ownership = new EntityOwnership(entityId, worldId, podIdFromMessage, timestamp, timestamp, chunk);
+                EntityOwnership ownership = new EntityOwnership(entityId, worldId.getId(), podIdFromMessage, timestamp, timestamp, chunk);
                 ownershipRegistry.put(entityKey, ownership);
 
                 log.trace("World {}: Entity {} claimed by pod {} in chunk {}", worldId, entityId, podIdFromMessage, chunk);
@@ -278,9 +279,9 @@ public class EntityOwnershipService {
      * @param topic Redis topic
      * @return World ID
      */
-    private String extractWorldIdFromTopic(String topic) {
+    private WorldId extractWorldIdFromTopic(String topic) {
         String[] parts = topic.split(":");
-        return parts.length >= 2 ? parts[1] : "unknown";
+        return WorldId.value(parts.length >= 2 ? parts[1] : "unknown"); // TODO throw if invalid?
     }
 
     /**
@@ -291,7 +292,7 @@ public class EntityOwnershipService {
      * @param entityId Entity identifier
      * @param chunk Current chunk
      */
-    private void publishOwnershipAnnouncement(String worldId, String action, String entityId, String chunk) {
+    private void publishOwnershipAnnouncement(WorldId worldId, String action, String entityId, String chunk) {
         try {
             ObjectNode message = objectMapper.createObjectNode();
             message.put("action", action);
@@ -301,7 +302,7 @@ public class EntityOwnershipService {
             message.put("chunk", chunk);
 
             String json = objectMapper.writeValueAsString(message);
-            redisMessaging.publish(worldId, "e.o", json);
+            redisMessaging.publish(worldId.getId(), "e.o", json);
 
             log.trace("World {}: Published ownership announcement: action={}, entityId={}, chunk={}",
                     worldId, action, entityId, chunk);

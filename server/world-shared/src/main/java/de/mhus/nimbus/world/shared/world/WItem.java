@@ -40,12 +40,6 @@ public class WItem {
     private String worldId;
 
     /**
-     * Region identifier (optional, null for world-level items).
-     */
-    @Indexed
-    private String regionId;
-
-    /**
      * Item identifier (unique within world).
      */
     private String itemId;

@@ -47,12 +47,6 @@ public class WEntityModel {
     private EntityModel publicData;
 
     /**
-     * Optional region identifier for scoped entity models.
-     */
-    @Indexed
-    private String regionId;
-
-    /**
      * Optional world identifier for scoped entity models.
      */
     @Indexed

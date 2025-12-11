@@ -52,7 +52,7 @@ public class ChunkQueryHandler implements MessageHandler {
 
             // Load chunk data from database (create=true to generate default if not found)
             String chunkKey = cx + ":" + cz;
-            chunkService.loadChunkData(session.getWorldId().getId(), chunkKey, true)
+            chunkService.loadChunkData(session.getWorldId(), chunkKey, true)
                     .ifPresentOrElse(
                             chunkData -> {
                                 // Apply overlays if session is in edit mode
@@ -62,7 +62,7 @@ public class ChunkQueryHandler implements MessageHandler {
 
                                 // Convert to transfer object for network transmission (includes items)
                                 ChunkDataTransferObject dto = chunkService.toTransferObject(
-                                        session.getWorldId().getId(), chunkData);
+                                        session.getWorldId(), chunkData);
                                 responseChunks.add(objectMapper.valueToTree(dto));
                                 log.trace("Loaded chunk: cx={}, cz={}, worldId={}, editMode={}, blocks={}",
                                         cx, cz, session.getWorldId(),

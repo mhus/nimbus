@@ -4,6 +4,7 @@ import de.mhus.nimbus.generated.types.ENTITY_POSES;
 import de.mhus.nimbus.generated.types.Rotation;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Waypoint;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.service.TerrainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ public class BlockBasedMovement {
      * @param z Starting Z coordinate
      * @return Ground Y coordinate
      */
-    public int findStartPosition(String worldId, double x, double z) {
+    public int findStartPosition(WorldId worldId, double x, double z) {
         int floorX = (int) Math.floor(x);
         int floorZ = (int) Math.floor(z);
 
@@ -85,7 +86,7 @@ public class BlockBasedMovement {
      * @return List of waypoints
      */
     public List<Waypoint> generatePathway(
-            String worldId,
+            WorldId worldId,
             Vector3 startPosition,
             Vector3 direction,
             int waypointCount,

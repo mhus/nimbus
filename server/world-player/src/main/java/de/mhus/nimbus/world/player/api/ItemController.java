@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Item;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WItem;
 import de.mhus.nimbus.world.shared.world.WItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +58,12 @@ public class ItemController {
             return ResponseEntity.badRequest().body(Map.of("error", "worldId is required"));
         }
 
-        List<WItem> all = itemService.findEnabledByWorldId(worldId);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid worldId"));
+        }
+
+        List<WItem> all = itemService.findEnabledByWorldId(wid);
         String lowerQuery = query.toLowerCase();
         final int maxResults = 100;
 
@@ -104,7 +110,12 @@ public class ItemController {
             return ResponseEntity.badRequest().body(Map.of("error", "itemId is required"));
         }
 
-        return itemService.findByItemId(worldId, itemId)
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid worldId"));
+        }
+
+        return itemService.findByItemId(wid, itemId)
                 .map(WItem::getPublicData)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> {

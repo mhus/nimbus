@@ -79,7 +79,6 @@ public class EntityModelImporter {
                 WEntityModel entity = WEntityModel.builder()
                         .modelId(entityModel.getId())
                         .publicData(entityModel)
-                        .regionId(null)
                         .worldId(defaultWorldId)  // Set worldId from config (e.g., "main")
                         .enabled(true)
                         .build();

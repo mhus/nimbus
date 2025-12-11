@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Entity;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,33 +22,33 @@ public class WEntityService {
     private final WEntityRepository repository;
 
     @Transactional(readOnly = true)
-    public Optional<WEntity> findByWorldIdAndEntityId(String worldId, String entityId) {
-        return repository.findByWorldIdAndEntityId(worldId, entityId);
+    public Optional<WEntity> findByWorldIdAndEntityId(WorldId worldId, String entityId) {
+        return repository.findByWorldIdAndEntityId(worldId.getId(), entityId);
     }
 
     @Transactional(readOnly = true)
-    public List<WEntity> findByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
+    public List<WEntity> findByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<WEntity> findByWorldIdAndChunk(String worldId, String chunk) {
-        return repository.findByWorldIdAndChunk(worldId, chunk);
+    public List<WEntity> findByWorldIdAndChunk(WorldId worldId, String chunk) {
+        return repository.findByWorldIdAndChunk(worldId.getId(), chunk);
     }
 
     @Transactional(readOnly = true)
-    public List<WEntity> findByModelId(String modelId) {
-        return repository.findByModelId(modelId);
+    public List<WEntity> findByModelId(WorldId worldId, String modelId) {
+        return repository.findByWorldIdAndModelId(worldId.getId(), modelId);
     }
 
     @Transactional(readOnly = true)
-    public List<WEntity> findAllEnabled() {
-        return repository.findByEnabled(true);
+    public List<WEntity> findAllEnabled(WorldId worldId) {
+        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
     }
 
     @Transactional
-    public WEntity save(String worldId, String entityId, Entity publicData, String chunk, String modelId) {
-        if (blank(worldId)) {
+    public WEntity save(WorldId worldId, String entityId, Entity publicData, String chunk, String modelId) {
+        if (worldId == null) {
             throw new IllegalArgumentException("worldId required");
         }
         if (blank(entityId)) {
@@ -57,9 +58,9 @@ public class WEntityService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WEntity entity = repository.findByWorldIdAndEntityId(worldId, entityId).orElseGet(() -> {
+        WEntity entity = repository.findByWorldIdAndEntityId(worldId.getId(), entityId).orElseGet(() -> {
             WEntity neu = WEntity.builder()
-                    .worldId(worldId)
+                    .worldId(worldId.getId())
                     .entityId(entityId)
                     .chunk(chunk)
                     .modelId(modelId)
@@ -94,8 +95,8 @@ public class WEntityService {
     }
 
     @Transactional
-    public Optional<WEntity> update(String worldId, String entityId, Consumer<WEntity> updater) {
-        return repository.findByWorldIdAndEntityId(worldId, entityId).map(entity -> {
+    public Optional<WEntity> update(WorldId worldId, String entityId, Consumer<WEntity> updater) {
+        return repository.findByWorldIdAndEntityId(worldId.getId(), entityId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WEntity saved = repository.save(entity);
@@ -105,8 +106,8 @@ public class WEntityService {
     }
 
     @Transactional
-    public boolean delete(String worldId, String entityId) {
-        return repository.findByWorldIdAndEntityId(worldId, entityId).map(entity -> {
+    public boolean delete(WorldId worldId, String entityId) {
+        return repository.findByWorldIdAndEntityId(worldId.getId(), entityId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WEntity: world={}, entityId={}", worldId, entityId);
             return true;
@@ -114,13 +115,13 @@ public class WEntityService {
     }
 
     @Transactional
-    public boolean disable(String worldId, String entityId) {
-        return update(worldId, entityId, entity -> entity.setEnabled(false)).isPresent();
+    public boolean enable(WorldId worldId, String entityId) {
+        return update(worldId, entityId, entity -> entity.setEnabled(true)).isPresent();
     }
 
     @Transactional
-    public boolean enable(String worldId, String entityId) {
-        return update(worldId, entityId, entity -> entity.setEnabled(true)).isPresent();
+    public boolean disable(WorldId worldId, String entityId) {
+        return update(worldId, entityId, entity -> entity.setEnabled(false)).isPresent();
     }
 
     private boolean blank(String s) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
@@ -303,7 +304,13 @@ public class BlockInfoService {
 
         String chunkKey = world.getChunkKey(x, z);
 
-        Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) {
+            log.warn("Invalid worldId: {}", worldId);
+            return null;
+        }
+
+        Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(wid, chunkKey, false);
         if (chunkDataOpt.isEmpty()) {
             log.debug("Chunk not found: {}", chunkKey);
             return null;

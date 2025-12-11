@@ -12,15 +12,13 @@ import java.util.Optional;
 @Repository
 public interface WItemTypeRepository extends MongoRepository<WItemType, String> {
 
-    Optional<WItemType> findByItemType(String itemType);
-
-    List<WItemType> findByRegionId(String regionId);
+    Optional<WItemType> findByWorldIdAndItemType(String worldId, String itemType);
 
     List<WItemType> findByWorldId(String worldId);
 
-    List<WItemType> findByEnabled(boolean enabled);
+    List<WItemType> findByWorldIdAndEnabled(String worldId, boolean enabled);
 
-    boolean existsByItemType(String itemType);
+    boolean existsByWorldIdAndItemType(String worldId, String itemType);
 
-    void deleteByItemType(String itemType);
+    void deleteByWorldIdAndItemType(String worldId, String itemType);
 }

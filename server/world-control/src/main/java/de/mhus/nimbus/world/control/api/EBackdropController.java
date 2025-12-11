@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.Backdrop;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WBackdrop;
 import de.mhus.nimbus.world.shared.world.WBackdropService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +41,6 @@ public class EBackdropController extends BaseEditorController {
             String backdropId,
             Backdrop publicData,
             String worldId,
-            String regionId,
             boolean enabled,
             Instant createdAt,
             Instant updatedAt
@@ -76,7 +76,8 @@ public class EBackdropController extends BaseEditorController {
         validation = validateId(backdropId, "backdropId");
         if (validation != null) return validation;
 
-        Optional<WBackdrop> opt = backdropService.findByBackdropId(backdropId);
+        Optional<WBackdrop> opt = WorldId.of(worldId)
+                .flatMap(wid -> backdropService.findByBackdropId(wid, backdropId));
         if (opt.isEmpty()) {
             log.warn("Backdrop not found: backdropId={}", backdropId);
             return notFound("backdrop not found");
@@ -112,7 +113,11 @@ public class EBackdropController extends BaseEditorController {
         if (validation != null) return validation;
 
         // Get all backdrops for this world
-        List<WBackdrop> all = backdropService.findByWorldId(worldId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        List<WBackdrop> all = backdropService.findByWorldId(widOpt.get());
 
         // Apply search filter if provided
         if (query != null && !query.isBlank()) {
@@ -167,13 +172,19 @@ public class EBackdropController extends BaseEditorController {
             return bad("publicData required");
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Check if backdrop already exists
-        if (backdropService.findByBackdropId(request.backdropId()).isPresent()) {
+        if (backdropService.findByBackdropId(wid, request.backdropId()).isPresent()) {
             return conflict("backdrop already exists");
         }
 
         try {
-            WBackdrop saved = backdropService.save(request.backdropId(), request.publicData(), null, worldId);
+            WBackdrop saved = backdropService.save(wid, request.backdropId(), request.publicData());
             log.info("Created backdrop: backdropId={}", request.backdropId());
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
@@ -214,14 +225,18 @@ public class EBackdropController extends BaseEditorController {
             return bad("at least one field required for update");
         }
 
-        Optional<WBackdrop> updated = backdropService.update(backdropId, backdrop -> {
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WBackdrop> updated = backdropService.update(widOpt.get(), backdropId, backdrop -> {
             if (request.publicData() != null) {
                 backdrop.setPublicData(request.publicData());
             }
             if (request.enabled() != null) {
                 backdrop.setEnabled(request.enabled());
             }
-            backdrop.setWorldId(worldId);
         });
 
         if (updated.isEmpty()) {
@@ -256,7 +271,12 @@ public class EBackdropController extends BaseEditorController {
         validation = validateId(backdropId, "backdropId");
         if (validation != null) return validation;
 
-        boolean deleted = backdropService.delete(backdropId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        boolean deleted = backdropService.delete(widOpt.get(), backdropId);
         if (!deleted) {
             log.warn("Backdrop not found for deletion: backdropId={}", backdropId);
             return notFound("backdrop not found");
@@ -273,7 +293,6 @@ public class EBackdropController extends BaseEditorController {
                 entity.getBackdropId(),
                 entity.getPublicData(),
                 entity.getWorldId(),
-                entity.getRegionId(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

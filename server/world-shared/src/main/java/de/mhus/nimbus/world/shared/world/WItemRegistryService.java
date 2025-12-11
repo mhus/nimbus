@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.ItemBlockRef;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,30 +21,7 @@ import java.util.Optional;
 public class WItemRegistryService {
 
     private final WItemPositionRepository repository;
-
-    /**
-     * Calculate chunk key from world position.
-     *
-     * @param worldX World X coordinate
-     * @param worldZ World Z coordinate
-     * @return Chunk key in format "cx:cz" (e.g., "0:0", "-1:2")
-     */
-    public static String calculateChunkKey(double worldX, double worldZ) {
-        int cx = (int) Math.floor(worldX / 16.0);
-        int cz = (int) Math.floor(worldZ / 16.0);
-        return cx + ":" + cz;
-    }
-
-    /**
-     * Calculate chunk key from chunk coordinates.
-     *
-     * @param cx Chunk X coordinate
-     * @param cz Chunk Z coordinate
-     * @return Chunk key in format "cx:cz"
-     */
-    public static String toChunkKey(int cx, int cz) {
-        return cx + ":" + cz;
-    }
+    private final WWorldService worldService;
 
     /**
      * Save or update an item position.
@@ -54,8 +32,8 @@ public class WItemRegistryService {
      * @return Saved item position entity
      */
     @Transactional
-    public WItemPosition saveItemPosition(String worldId, ItemBlockRef itemBlockRef) {
-        if (worldId == null || worldId.isBlank()) {
+    public WItemPosition saveItemPosition(WorldId worldId, ItemBlockRef itemBlockRef) {
+        if (worldId == null) {
             throw new IllegalArgumentException("worldId required");
         }
         if (itemBlockRef == null) {
@@ -70,12 +48,13 @@ public class WItemRegistryService {
 
         String itemId = itemBlockRef.getId();
         Vector3 position = itemBlockRef.getPosition();
-        String chunk = calculateChunkKey(position.getX(), position.getZ());
+        WWorld world = worldService.getByWorldId(worldId.getId()).get();
+        String chunk = world.getChunkKey((int)position.getX(), (int)position.getZ());
 
-        WItemPosition itemPosition = repository.findByWorldIdAndItemId(worldId, itemId)
+        WItemPosition itemPosition = repository.findByWorldIdAndItemId(worldId.getId(), itemId)
                 .orElseGet(() -> {
                     WItemPosition neu = WItemPosition.builder()
-                            .worldId(worldId)
+                            .worldId(worldId.getId())
                             .itemId(itemId)
                             .chunk(chunk)
                             .enabled(true)
@@ -106,10 +85,11 @@ public class WItemRegistryService {
      * @return List of ItemBlockRef objects for the chunk
      */
     @Transactional(readOnly = true)
-    public List<ItemBlockRef> getItemsInChunk(String worldId, int cx, int cz) {
-        String chunk = toChunkKey(cx, cz);
+    public List<ItemBlockRef> getItemsInChunk(WorldId worldId, int cx, int cz) {
+        WWorld world = worldService.getByWorldId(worldId.getId()).get();
+        String chunk = BlockUtil.toCunkKey(cx, cz);
         List<WItemPosition> positions = repository.findByWorldIdAndChunkAndEnabled(
-                worldId, chunk, true);
+                worldId.getId(), chunk, true);
 
         return positions.stream()
                 .map(WItemPosition::getPublicData)
@@ -125,8 +105,8 @@ public class WItemRegistryService {
      * @return List of all item positions
      */
     @Transactional(readOnly = true)
-    public List<WItemPosition> getAllItems(String worldId) {
-        return repository.findByWorldId(worldId);
+    public List<WItemPosition> getAllItems(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     /**
@@ -137,8 +117,8 @@ public class WItemRegistryService {
      * @return Optional containing the item position if found
      */
     @Transactional(readOnly = true)
-    public Optional<WItemPosition> findItem(String worldId, String itemId) {
-        return repository.findByWorldIdAndItemId(worldId, itemId);
+    public Optional<WItemPosition> findItem(WorldId worldId, String itemId) {
+        return repository.findByWorldIdAndItemId(worldId.getId(), itemId);
     }
 
     /**
@@ -150,8 +130,8 @@ public class WItemRegistryService {
      * @return True if item was found and disabled
      */
     @Transactional
-    public boolean deleteItemPosition(String worldId, String itemId) {
-        Optional<WItemPosition> itemOpt = repository.findByWorldIdAndItemId(worldId, itemId);
+    public boolean deleteItemPosition(WorldId worldId, String itemId) {
+        Optional<WItemPosition> itemOpt = repository.findByWorldIdAndItemId(worldId.getId(), itemId);
 
         if (itemOpt.isEmpty()) {
             log.debug("Item not found for deletion: world={}, itemId={}",
@@ -176,8 +156,8 @@ public class WItemRegistryService {
      * @param itemId Item identifier
      */
     @Transactional
-    public void hardDeleteItemPosition(String worldId, String itemId) {
-        repository.deleteByWorldIdAndItemId(worldId, itemId);
+    public void hardDeleteItemPosition(WorldId worldId, String itemId) {
+        repository.deleteByWorldIdAndItemId(worldId.getId(), itemId);
         log.info("Hard deleted item: world={}, itemId={}",
                 worldId, itemId);
     }
@@ -189,7 +169,7 @@ public class WItemRegistryService {
      * @return List of saved item positions
      */
     @Transactional
-    public List<WItemPosition> saveAll(List<WItemPosition> items) {
+    public List<WItemPosition> saveAll(WorldId worldId, List<WItemPosition> items) {
         items.forEach(item -> {
             if (item.getCreatedAt() == null) {
                 item.touchCreate();
@@ -211,9 +191,9 @@ public class WItemRegistryService {
      * @return Number of items in the chunk
      */
     @Transactional(readOnly = true)
-    public long countItemsInChunk(String worldId, int cx, int cz) {
-        String chunk = toChunkKey(cx, cz);
+    public long countItemsInChunk(WorldId worldId, int cx, int cz) {
+        String chunk = BlockUtil.toCunkKey(cx, cz);
         return repository.findByWorldIdAndChunkAndEnabled(
-                worldId, chunk, true).size();
+                worldId.getId(), chunk, true).size();
     }
 }

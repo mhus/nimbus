@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.ItemType;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WItemType;
 import de.mhus.nimbus.world.shared.world.WItemTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +41,6 @@ public class EItemTypeController extends BaseEditorController {
             String itemType,
             ItemType publicData,
             String worldId,
-            String regionId,
             boolean enabled,
             Instant createdAt,
             Instant updatedAt
@@ -76,7 +76,12 @@ public class EItemTypeController extends BaseEditorController {
         validation = validateId(itemType, "itemType");
         if (validation != null) return validation;
 
-        Optional<WItemType> opt = itemTypeService.findByItemType(itemType);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WItemType> opt = itemTypeService.findByItemType(widOpt.get(), itemType);
         if (opt.isEmpty()) {
             log.warn("ItemType not found: itemType={}", itemType);
             return notFound("itemtype not found");
@@ -111,8 +116,13 @@ public class EItemTypeController extends BaseEditorController {
         validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
         // Get all ItemTypes for this world
-        List<WItemType> all = itemTypeService.findByWorldId(worldId);
+        List<WItemType> all = itemTypeService.findByWorldId(widOpt.get());
 
         // Apply search filter if provided
         if (query != null && !query.isBlank()) {
@@ -167,13 +177,19 @@ public class EItemTypeController extends BaseEditorController {
             return bad("publicData required");
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Check if ItemType already exists
-        if (itemTypeService.findByItemType(request.itemType()).isPresent()) {
+        if (itemTypeService.findByItemType(wid, request.itemType()).isPresent()) {
             return conflict("itemtype already exists");
         }
 
         try {
-            WItemType saved = itemTypeService.save(request.itemType(), request.publicData(), null, worldId);
+            WItemType saved = itemTypeService.save(wid, request.itemType(), request.publicData());
             log.info("Created itemtype: itemType={}", request.itemType());
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
@@ -214,7 +230,12 @@ public class EItemTypeController extends BaseEditorController {
             return bad("at least one field required for update");
         }
 
-        Optional<WItemType> updated = itemTypeService.update(itemType, item -> {
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WItemType> updated = itemTypeService.update(widOpt.get(), itemType, item -> {
             if (request.publicData() != null) {
                 item.setPublicData(request.publicData());
             }
@@ -256,7 +277,12 @@ public class EItemTypeController extends BaseEditorController {
         validation = validateId(itemType, "itemType");
         if (validation != null) return validation;
 
-        boolean deleted = itemTypeService.delete(itemType);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        boolean deleted = itemTypeService.delete(widOpt.get(), itemType);
         if (!deleted) {
             log.warn("ItemType not found for deletion: itemType={}", itemType);
             return notFound("itemtype not found");
@@ -273,7 +299,6 @@ public class EItemTypeController extends BaseEditorController {
                 entity.getItemType(),
                 entity.getPublicData(),
                 entity.getWorldId(),
-                entity.getRegionId(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

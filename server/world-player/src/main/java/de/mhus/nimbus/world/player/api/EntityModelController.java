@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.EntityModel;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WEntityModel;
 import de.mhus.nimbus.world.shared.world.WEntityModelService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,47 +33,40 @@ public class EntityModelController {
     @Operation(summary = "Get EntityModel by ID", description = "Returns EntityModel template for a specific model ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "EntityModel found"),
+            @ApiResponse(responseCode = "400", description = "Invalid worldId"),
             @ApiResponse(responseCode = "404", description = "EntityModel not found")
     })
     public ResponseEntity<?> getEntityModel(
             @PathVariable String worldId,
             @PathVariable String modelId) {
-        return service.findByModelId(modelId)
-                .map(WEntityModel::getPublicData)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return WorldId.of(worldId)
+                .map(wid -> service.findByModelId(wid, modelId)
+                        .map(WEntityModel::getPublicData)
+                        .map(ResponseEntity::ok)
+                        .orElseGet(() -> ResponseEntity.notFound().build()))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     @GetMapping
-    @Operation(summary = "Get all EntityModels", description = "Returns all enabled EntityModel templates, optionally filtered")
+    @Operation(summary = "Get all EntityModels", description = "Returns all enabled EntityModel templates")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of EntityModels")
+            @ApiResponse(responseCode = "200", description = "List of EntityModels"),
+            @ApiResponse(responseCode = "400", description = "Invalid worldId")
     })
     public ResponseEntity<?> getAllEntityModels(
-            @RequestParam(required = false) String regionId,
-            @RequestParam(required = false) String worldId) {
+            @PathVariable String worldId) {
 
-        List<EntityModel> entityModels;
+        return WorldId.of(worldId)
+                .<ResponseEntity<?>>map(wid -> {
+                    List<EntityModel> entityModels = service.findAllEnabled(wid).stream()
+                            .map(WEntityModel::getPublicData)
+                            .toList();
 
-        if (regionId != null && !regionId.isBlank()) {
-            entityModels = service.findByRegionId(regionId).stream()
-                    .filter(WEntityModel::isEnabled)
-                    .map(WEntityModel::getPublicData)
-                    .toList();
-        } else if (worldId != null && !worldId.isBlank()) {
-            entityModels = service.findByWorldId(worldId).stream()
-                    .filter(WEntityModel::isEnabled)
-                    .map(WEntityModel::getPublicData)
-                    .toList();
-        } else {
-            entityModels = service.findAllEnabled().stream()
-                    .map(WEntityModel::getPublicData)
-                    .toList();
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "entityModels", entityModels,
-                "count", entityModels.size()
-        ));
+                    return ResponseEntity.ok(Map.of(
+                            "entityModels", entityModels,
+                            "count", entityModels.size()
+                    ));
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 }

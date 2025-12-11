@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.EntityModel;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,39 +22,33 @@ public class WEntityModelService {
     private final WEntityModelRepository repository;
 
     @Transactional(readOnly = true)
-    public Optional<WEntityModel> findByModelId(String modelId) {
-        return repository.findByModelId(modelId);
+    public Optional<WEntityModel> findByModelId(WorldId worldId, String modelId) {
+        return repository.findByWorldIdAndModelId(worldId.getId(), modelId);
     }
 
     @Transactional(readOnly = true)
-    public List<WEntityModel> findByRegionId(String regionId) {
-        return repository.findByRegionId(regionId);
+    public List<WEntityModel> findByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<WEntityModel> findByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<WEntityModel> findAllEnabled() {
-        return repository.findByEnabled(true);
+    public List<WEntityModel> findAllEnabled(WorldId worldId) {
+        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
     }
 
     @Transactional
-    public WEntityModel save(String modelId, EntityModel publicData, String regionId, String worldId) {
-        if (blank(modelId)) {
+    public WEntityModel save(WorldId worldId, String modelId, EntityModel publicData) {
+        if (modelId == null) {
             throw new IllegalArgumentException("modelId required");
         }
         if (publicData == null) {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WEntityModel entity = repository.findByModelId(modelId).orElseGet(() -> {
+        WEntityModel entity = repository.findByWorldIdAndModelId(worldId.getId(), modelId).orElseGet(() -> {
             WEntityModel neu = WEntityModel.builder()
                     .modelId(modelId)
-                    .regionId(regionId)
-                    .worldId(worldId)
+                    .worldId(worldId.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -62,8 +57,6 @@ public class WEntityModelService {
         });
 
         entity.setPublicData(publicData);
-        entity.setRegionId(regionId);
-        entity.setWorldId(worldId);
         entity.touchUpdate();
 
         WEntityModel saved = repository.save(entity);
@@ -72,7 +65,7 @@ public class WEntityModelService {
     }
 
     @Transactional
-    public List<WEntityModel> saveAll(List<WEntityModel> entities) {
+    public List<WEntityModel> saveAll(WorldId worldId, List<WEntityModel> entities) {
         entities.forEach(e -> {
             if (e.getCreatedAt() == null) {
                 e.touchCreate();
@@ -85,8 +78,8 @@ public class WEntityModelService {
     }
 
     @Transactional
-    public Optional<WEntityModel> update(String modelId, Consumer<WEntityModel> updater) {
-        return repository.findByModelId(modelId).map(entity -> {
+    public Optional<WEntityModel> update(WorldId worldId, String modelId, Consumer<WEntityModel> updater) {
+        return repository.findByWorldIdAndModelId(worldId.getId(), modelId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WEntityModel saved = repository.save(entity);
@@ -96,8 +89,8 @@ public class WEntityModelService {
     }
 
     @Transactional
-    public boolean delete(String modelId) {
-        return repository.findByModelId(modelId).map(entity -> {
+    public boolean delete(WorldId worldId, String modelId) {
+        return repository.findByWorldIdAndModelId(worldId.getId(), modelId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WEntityModel: {}", modelId);
             return true;
@@ -105,16 +98,13 @@ public class WEntityModelService {
     }
 
     @Transactional
-    public boolean disable(String modelId) {
-        return update(modelId, entity -> entity.setEnabled(false)).isPresent();
+    public boolean disable(WorldId worldId, String modelId) {
+        return update(worldId, modelId, entity -> entity.setEnabled(false)).isPresent();
     }
 
     @Transactional
-    public boolean enable(String modelId) {
-        return update(modelId, entity -> entity.setEnabled(true)).isPresent();
+    public boolean enable(WorldId worldId, String modelId) {
+        return update(worldId, modelId, entity -> entity.setEnabled(true)).isPresent();
     }
 
-    private boolean blank(String s) {
-        return s == null || s.isBlank();
-    }
 }

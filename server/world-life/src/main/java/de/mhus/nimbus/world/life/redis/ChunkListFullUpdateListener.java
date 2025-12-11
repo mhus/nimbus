@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.life.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
 import de.mhus.nimbus.world.life.service.MultiWorldChunkService;
 import de.mhus.nimbus.world.life.service.WorldDiscoveryService;
@@ -43,7 +44,7 @@ public class ChunkListFullUpdateListener {
     private final WorldDiscoveryService worldDiscoveryService;
     private final ObjectMapper objectMapper;
 
-    private final Set<String> subscribedWorlds = new HashSet<>();
+    private final Set<WorldId> subscribedWorlds = new HashSet<>();
 
     @PostConstruct
     public void initialize() {
@@ -56,21 +57,21 @@ public class ChunkListFullUpdateListener {
      */
     @Scheduled(fixedDelay = 60000)
     public void updateSubscriptions() {
-        Set<String> knownWorlds = worldDiscoveryService.getKnownWorldIds();
+        Set<WorldId> knownWorlds = worldDiscoveryService.getKnownWorldIds();
 
         // Subscribe to new worlds
-        for (String worldId : knownWorlds) {
+        for (WorldId worldId : knownWorlds) {
             if (!subscribedWorlds.contains(worldId)) {
-                redisMessaging.subscribe(worldId, "c.full", (topic, message) -> handleFullUpdate(worldId, message));
+                redisMessaging.subscribe(worldId.getId(), "c.full", (topic, message) -> handleFullUpdate(worldId, message));
                 subscribedWorlds.add(worldId);
                 log.info("Subscribed to chunk list full updates for world: {}", worldId);
             }
         }
 
         // Unsubscribe from removed worlds
-        Set<String> toRemove = new HashSet<>(subscribedWorlds);
+        Set<WorldId> toRemove = new HashSet<>(subscribedWorlds);
         toRemove.removeAll(knownWorlds);
-        for (String worldId : toRemove) {
+        for (WorldId worldId : toRemove) {
             subscribedWorlds.remove(worldId);
             log.info("Unsubscribed from chunk list full updates for world: {}", worldId);
         }
@@ -82,7 +83,7 @@ public class ChunkListFullUpdateListener {
      * @param worldId World ID
      * @param message JSON message
      */
-    private void handleFullUpdate(String worldId, String message) {
+    private void handleFullUpdate(WorldId worldId, String message) {
         try {
             JsonNode data = objectMapper.readTree(message);
 

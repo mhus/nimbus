@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.ItemBlockRef;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WItemPosition;
 import de.mhus.nimbus.world.shared.world.WItemRegistryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,8 +80,13 @@ public class EItemPositionController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
         // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> opt = itemRegistryService.findItem(worldId, itemId);
+        Optional<WItemPosition> opt = itemRegistryService.findItem(widOpt.get(), itemId);
         if (opt.isEmpty()) {
             log.warn("Item not found: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -117,21 +124,27 @@ public class EItemPositionController extends BaseEditorController {
         validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Use worldId as universeId (per user decision)
         List<WItemPosition> all;
 
         // If chunk coordinates provided, filter by chunk
         if (cx != null && cz != null) {
-            List<ItemBlockRef> chunkItems = itemRegistryService.getItemsInChunk(worldId, cx, cz);
+            List<ItemBlockRef> chunkItems = itemRegistryService.getItemsInChunk(wid, cx, cz);
             // Convert ItemBlockRef back to WItemPosition for filtering (simplified approach)
-            all = itemRegistryService.getAllItems(worldId).stream()
+            all = itemRegistryService.getAllItems(wid).stream()
                     .filter(item -> {
-                        String chunkKey = WItemRegistryService.toChunkKey(cx, cz);
+                        String chunkKey = BlockUtil.toCunkKey(cx, cz);
                         return chunkKey.equals(item.getChunk());
                     })
                     .collect(Collectors.toList());
         } else {
-            all = itemRegistryService.getAllItems(worldId);
+            all = itemRegistryService.getAllItems(wid);
         }
 
         // Apply search filter if provided
@@ -194,14 +207,20 @@ public class EItemPositionController extends BaseEditorController {
             return bad("itemBlockRef.position required");
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Check if Item already exists
         // Use worldId as universeId (per user decision)
-        if (itemRegistryService.findItem(worldId, itemBlockRef.getId()).isPresent()) {
+        if (itemRegistryService.findItem(wid, itemBlockRef.getId()).isPresent()) {
             return conflict("item already exists");
         }
 
         try {
-            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, itemBlockRef);
+            WItemPosition saved = itemRegistryService.saveItemPosition(wid, itemBlockRef);
             log.info("Created item: itemId={}, chunk={}", itemBlockRef.getId(), saved.getChunk());
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
@@ -257,8 +276,14 @@ public class EItemPositionController extends BaseEditorController {
                     .build();
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> existing = itemRegistryService.findItem(worldId, itemId);
+        Optional<WItemPosition> existing = itemRegistryService.findItem(wid, itemId);
         if (existing.isEmpty()) {
             log.warn("Item not found for update: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -266,7 +291,7 @@ public class EItemPositionController extends BaseEditorController {
 
         try {
             // Save will update if exists
-            WItemPosition saved = itemRegistryService.saveItemPosition(worldId, itemBlockRef);
+            WItemPosition saved = itemRegistryService.saveItemPosition(wid, itemBlockRef);
             log.info("Updated item: itemId={}, chunk={}", itemId, saved.getChunk());
             return ResponseEntity.ok(toDto(saved));
         } catch (IllegalArgumentException e) {
@@ -302,8 +327,13 @@ public class EItemPositionController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
         // Use worldId as universeId (per user decision)
-        boolean deleted = itemRegistryService.deleteItemPosition(worldId, itemId);
+        boolean deleted = itemRegistryService.deleteItemPosition(widOpt.get(), itemId);
         if (!deleted) {
             log.warn("Item not found for deletion: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");

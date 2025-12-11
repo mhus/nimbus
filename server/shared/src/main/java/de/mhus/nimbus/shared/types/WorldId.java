@@ -11,7 +11,7 @@ import java.util.Optional;
  * @collection:collectinId
  * Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
  */
-public class WorldId {
+public class WorldId implements Comparable<WorldId> {
     @Getter
     private String id;
     private String regionId;
@@ -20,8 +20,13 @@ public class WorldId {
     private String zone;
     private String instance;
 
-    public WorldId(String id) {
+    private WorldId(String id) {
         this.id = id;
+    }
+
+    public static WorldId value(String worldId) {
+        if (worldId == null) throw new NullPointerException("worldId is null");
+        return new WorldId(worldId);
     }
 
     public String getRegionId() {
@@ -126,6 +131,18 @@ public class WorldId {
     public boolean isZone() {
         parseId();
         return zone != null;
+    }
+
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WorldId worldId = (WorldId) o;
+        return id.equals(worldId.id);
+    }
+
+    @Override
+    public int compareTo(WorldId o) {
+        return this.id.compareTo(o.id);
     }
 
 }

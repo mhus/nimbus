@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.ItemType;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,27 +22,22 @@ public class WItemTypeService {
     private final WItemTypeRepository repository;
 
     @Transactional(readOnly = true)
-    public Optional<WItemType> findByItemType(String itemType) {
-        return repository.findByItemType(itemType);
+    public Optional<WItemType> findByItemType(WorldId worldId, String itemType) {
+        return repository.findByWorldIdAndItemType(worldId.getId(), itemType);
     }
 
     @Transactional(readOnly = true)
-    public List<WItemType> findByRegionId(String regionId) {
-        return repository.findByRegionId(regionId);
+    public List<WItemType> findByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     @Transactional(readOnly = true)
-    public List<WItemType> findByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<WItemType> findAllEnabled() {
-        return repository.findByEnabled(true);
+    public List<WItemType> findAllEnabled(WorldId worldId) {
+        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
     }
 
     @Transactional
-    public WItemType save(String itemType, ItemType publicData, String regionId, String worldId) {
+    public WItemType save(WorldId worldId, String itemType, ItemType publicData) {
         if (blank(itemType)) {
             throw new IllegalArgumentException("itemType required");
         }
@@ -49,11 +45,10 @@ public class WItemTypeService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WItemType entity = repository.findByItemType(itemType).orElseGet(() -> {
+        WItemType entity = repository.findByWorldIdAndItemType(worldId.getId(), itemType).orElseGet(() -> {
             WItemType neu = WItemType.builder()
                     .itemType(itemType)
-                    .regionId(regionId)
-                    .worldId(worldId)
+                    .worldId(worldId.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -62,8 +57,6 @@ public class WItemTypeService {
         });
 
         entity.setPublicData(publicData);
-        entity.setRegionId(regionId);
-        entity.setWorldId(worldId);
         entity.touchUpdate();
 
         WItemType saved = repository.save(entity);
@@ -72,7 +65,7 @@ public class WItemTypeService {
     }
 
     @Transactional
-    public List<WItemType> saveAll(List<WItemType> entities) {
+    public List<WItemType> saveAll(WorldId worldId, List<WItemType> entities) {
         entities.forEach(e -> {
             if (e.getCreatedAt() == null) {
                 e.touchCreate();
@@ -85,8 +78,8 @@ public class WItemTypeService {
     }
 
     @Transactional
-    public Optional<WItemType> update(String itemType, Consumer<WItemType> updater) {
-        return repository.findByItemType(itemType).map(entity -> {
+    public Optional<WItemType> update(WorldId worldId, String itemType, Consumer<WItemType> updater) {
+        return repository.findByWorldIdAndItemType(worldId.getId(), itemType).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WItemType saved = repository.save(entity);
@@ -96,8 +89,8 @@ public class WItemTypeService {
     }
 
     @Transactional
-    public boolean delete(String itemType) {
-        return repository.findByItemType(itemType).map(entity -> {
+    public boolean delete(WorldId worldId, String itemType) {
+        return repository.findByWorldIdAndItemType(worldId.getId(), itemType).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WItemType: {}", itemType);
             return true;
@@ -105,13 +98,13 @@ public class WItemTypeService {
     }
 
     @Transactional
-    public boolean disable(String itemType) {
-        return update(itemType, entity -> entity.setEnabled(false)).isPresent();
+    public boolean disable(WorldId worldId, String itemType) {
+        return update(worldId, itemType, entity -> entity.setEnabled(false)).isPresent();
     }
 
     @Transactional
-    public boolean enable(String itemType) {
-        return update(itemType, entity -> entity.setEnabled(true)).isPresent();
+    public boolean enable(WorldId worldId, String itemType) {
+        return update(worldId, itemType, entity -> entity.setEnabled(true)).isPresent();
     }
 
     private boolean blank(String s) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.generated.types.BlockType;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.tools.demoimport.ImportStats;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
@@ -73,9 +74,13 @@ public class BlockTypeImporter {
         if (!entities.isEmpty()) {
             log.info("Saving {} BlockTypes to database...", entities.size());
 
+            WorldId wid = WorldId.of(defaultWorldId).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid worldId: " + defaultWorldId)
+            );
+
             // Try batch save first
             try {
-                service.saveAll(entities);
+                service.saveAll(wid, entities);
             } catch (Exception e) {
                 log.error("Batch save failed, trying individual saves to identify problem entities...", e);
 
@@ -83,10 +88,9 @@ public class BlockTypeImporter {
                 for (WBlockType entity : entities) {
                     try {
                         service.save(
+                            wid,
                             entity.getBlockId(),
-                            entity.getPublicData(),
-                            entity.getRegionId(),
-                            entity.getWorldId()
+                            entity.getPublicData()
                         );
                     } catch (Exception individualError) {
                         log.error("Failed to save BlockType: blockId={}, file might be: {}.json",
@@ -125,7 +129,10 @@ public class BlockTypeImporter {
 
                 // Check if already exists (handle duplicates gracefully)
                 try {
-                    if (service.findByBlockId(blockType.getId()).isPresent()) {
+                    WorldId wid = WorldId.of(defaultWorldId).orElseThrow(
+                            () -> new IllegalArgumentException("Invalid worldId: " + defaultWorldId)
+                    );
+                    if (service.findByBlockId(wid, blockType.getId()).isPresent()) {
                         log.trace("BlockType already exists: {} - skipping", blockType.getId());
                         stats.incrementSkipped();
                         continue;

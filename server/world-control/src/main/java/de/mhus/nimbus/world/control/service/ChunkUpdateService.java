@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.control.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.generated.types.ChunkData;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.layer.WDirtyChunk;
 import de.mhus.nimbus.world.shared.layer.WDirtyChunkService;
 import de.mhus.nimbus.world.shared.layer.WLayerOverlayService;
@@ -53,17 +54,21 @@ public class ChunkUpdateService {
             // Generate merged chunk from layers
             Optional<ChunkData> chunkDataOpt = overlayService.generateChunk(worldId, chunkKey);
 
+            WorldId wid = WorldId.of(worldId).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid worldId: " + worldId)
+            );
+
             if (chunkDataOpt.isEmpty()) {
                 log.info("No layers affecting chunk, deleting WChunk: world={} chunk={}", worldId, chunkKey);
                 // Delete existing WChunk if no layers define it
-                chunkService.delete("main", worldId, chunkKey); // regionId="main" hardcoded for now
+                chunkService.delete(wid, chunkKey);
                 publishChunkUpdate(worldId, chunkKey, null);
                 return true;
             }
 
             // Save to WChunk
             ChunkData chunkData = chunkDataOpt.get();
-            chunkService.saveChunk("main", worldId, chunkKey, chunkData);
+            chunkService.saveChunk(wid, chunkKey, chunkData);
 
             // Publish update event to Redis
             publishChunkUpdate(worldId, chunkKey, chunkData);

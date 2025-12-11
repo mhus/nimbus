@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.BlockType;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,6 @@ public class EBlockTypeController extends BaseEditorController {
             String blockTypeGroup,
             BlockType publicData,
             String worldId,
-            String regionId,
             boolean enabled,
             Instant createdAt,
             Instant updatedAt
@@ -95,7 +95,12 @@ public class EBlockTypeController extends BaseEditorController {
         validation = validateId(blockId, "blockId");
         if (validation != null) return validation;
 
-        Optional<WBlockType> opt = blockTypeService.findByBlockId(blockId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WBlockType> opt = blockTypeService.findByBlockId(widOpt.get(), blockId);
         if (opt.isEmpty()) {
             log.warn("BlockType not found: blockId={}", blockId);
             return notFound("blocktype not found");
@@ -130,8 +135,13 @@ public class EBlockTypeController extends BaseEditorController {
         validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
         // Get all BlockTypes for this world
-        List<WBlockType> all = blockTypeService.findByWorldId(worldId);
+        List<WBlockType> all = blockTypeService.findByWorldId(widOpt.get());
 
         // Apply search filter if provided
         if (query != null && !query.isBlank()) {
@@ -189,7 +199,12 @@ public class EBlockTypeController extends BaseEditorController {
             return bad("groupName must be lowercase alphanumeric with dash or underscore");
         }
 
-        List<WBlockType> blockTypes = blockTypeService.findByBlockTypeGroup(groupName);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        List<WBlockType> blockTypes = blockTypeService.findByBlockTypeGroup(widOpt.get(), groupName);
 
         // Map to DTOs (publicData only for TypeScript compatibility)
         List<BlockType> publicDataList = blockTypes.stream()
@@ -230,8 +245,14 @@ public class EBlockTypeController extends BaseEditorController {
             return bad("publicData required");
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Check if BlockType already exists
-        if (blockTypeService.findByBlockId(request.blockId()).isPresent()) {
+        if (blockTypeService.findByBlockId(wid, request.blockId()).isPresent()) {
             return conflict("blocktype already exists");
         }
 
@@ -241,15 +262,15 @@ public class EBlockTypeController extends BaseEditorController {
                     ? extractGroupFromBlockId(request.blockId())
                     : request.blockTypeGroup();
 
-            WBlockType saved = blockTypeService.save(request.blockId(), request.publicData(), null, worldId);
+            WBlockType saved = blockTypeService.save(wid, request.blockId(), request.publicData());
 
             // Set the blockTypeGroup
-            blockTypeService.update(request.blockId(), blockType -> {
+            blockTypeService.update(wid, request.blockId(), blockType -> {
                 blockType.setBlockTypeGroup(blockTypeGroup);
             });
 
             // Reload to get updated entity
-            saved = blockTypeService.findByBlockId(request.blockId()).orElse(saved);
+            saved = blockTypeService.findByBlockId(wid, request.blockId()).orElse(saved);
 
             log.info("Created blocktype: blockId={}, group={}", request.blockId(), blockTypeGroup);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("blockId", saved.getBlockId()));
@@ -304,7 +325,12 @@ public class EBlockTypeController extends BaseEditorController {
             return bad("at least one field required for update");
         }
 
-        Optional<WBlockType> updated = blockTypeService.update(blockId, blockType -> {
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WBlockType> updated = blockTypeService.update(widOpt.get(), blockId, blockType -> {
             if (request.publicData() != null) {
                 blockType.setPublicData(request.publicData());
             }
@@ -362,7 +388,12 @@ public class EBlockTypeController extends BaseEditorController {
         validation = validateId(blockId, "blockId");
         if (validation != null) return validation;
 
-        boolean deleted = blockTypeService.delete(blockId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        boolean deleted = blockTypeService.delete(widOpt.get(), blockId);
         if (!deleted) {
             log.warn("BlockType not found for deletion: blockId={}", blockId);
             return notFound("blocktype not found");
@@ -380,7 +411,6 @@ public class EBlockTypeController extends BaseEditorController {
                 entity.getBlockTypeGroup(),
                 entity.getPublicData(),
                 entity.getWorldId(),
-                entity.getRegionId(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

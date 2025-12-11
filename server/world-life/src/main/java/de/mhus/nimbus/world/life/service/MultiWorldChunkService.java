@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.life.service;
 
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,8 +36,8 @@ public class MultiWorldChunkService {
      * @param worldId World ID
      * @return ChunkAliveService instance
      */
-    public ChunkAliveService getChunkAliveService(String worldId) {
-        return chunkAliveServices.computeIfAbsent(worldId, wid -> {
+    public ChunkAliveService getChunkAliveService(WorldId worldId) {
+        return chunkAliveServices.computeIfAbsent(worldId.getId(), wid -> {
             log.info("Creating ChunkAliveService for world: {}", wid);
             return new ChunkAliveService();
         });
@@ -48,8 +49,8 @@ public class MultiWorldChunkService {
      * @param worldId World ID
      * @return ChunkTTLTracker instance
      */
-    public ChunkTTLTracker getTTLTracker(String worldId) {
-        return ttlTrackers.computeIfAbsent(worldId, wid -> {
+    public ChunkTTLTracker getTTLTracker(WorldId worldId) {
+        return ttlTrackers.computeIfAbsent(worldId.getId(), wid -> {
             log.info("Creating ChunkTTLTracker for world: {}", wid);
             return new ChunkTTLTracker();
         });
@@ -61,7 +62,7 @@ public class MultiWorldChunkService {
      * @param worldId World ID
      * @param chunks Chunks to add
      */
-    public void addChunks(String worldId, List<ChunkCoordinate> chunks) {
+    public void addChunks(WorldId worldId, List<ChunkCoordinate> chunks) {
         ChunkAliveService aliveService = getChunkAliveService(worldId);
         ChunkTTLTracker ttlTracker = getTTLTracker(worldId);
 
@@ -75,7 +76,7 @@ public class MultiWorldChunkService {
      * @param worldId World ID
      * @param chunks Chunks to remove
      */
-    public void removeChunks(String worldId, List<ChunkCoordinate> chunks) {
+    public void removeChunks(WorldId worldId, List<ChunkCoordinate> chunks) {
         ChunkAliveService aliveService = getChunkAliveService(worldId);
         ChunkTTLTracker ttlTracker = getTTLTracker(worldId);
 
@@ -89,7 +90,7 @@ public class MultiWorldChunkService {
      * @param worldId World ID
      * @param chunks New chunk set
      */
-    public void replaceChunks(String worldId, Set<ChunkCoordinate> chunks) {
+    public void replaceChunks(WorldId worldId, Set<ChunkCoordinate> chunks) {
         ChunkAliveService aliveService = getChunkAliveService(worldId);
         ChunkTTLTracker ttlTracker = getTTLTracker(worldId);
 
@@ -103,7 +104,7 @@ public class MultiWorldChunkService {
      * @param worldId World ID
      * @return Set of active chunks
      */
-    public Set<ChunkCoordinate> getActiveChunks(String worldId) {
+    public Set<ChunkCoordinate> getActiveChunks(WorldId worldId) {
         return getChunkAliveService(worldId).getActiveChunks();
     }
 
@@ -114,7 +115,7 @@ public class MultiWorldChunkService {
      * @param chunkKey Chunk key (format "cx:cz")
      * @return True if chunk is active
      */
-    public boolean isChunkActive(String worldId, String chunkKey) {
+    public boolean isChunkActive(WorldId worldId, String chunkKey) {
         return getChunkAliveService(worldId).isChunkActive(chunkKey);
     }
 
@@ -132,7 +133,7 @@ public class MultiWorldChunkService {
      *
      * @param worldId World ID
      */
-    public void removeWorld(String worldId) {
+    public void removeWorld(WorldId worldId) {
         ChunkAliveService removed = chunkAliveServices.remove(worldId);
         ttlTrackers.remove(worldId);
 

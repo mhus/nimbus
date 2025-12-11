@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Item;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,59 +24,49 @@ public class WItemService {
      * Find all items for a specific world.
      */
     @Transactional(readOnly = true)
-    public List<WItem> findByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
+    public List<WItem> findByWorldId(WorldId worldId) {
+        return repository.findByWorldId(worldId.getId());
     }
 
     /**
      * Find all enabled items for a specific world.
      */
     @Transactional(readOnly = true)
-    public List<WItem> findEnabledByWorldId(String worldId) {
-        return repository.findByWorldIdAndEnabled(worldId, true);
-    }
-
-    /**
-     * Find item by ID.
-     */
-    @Transactional(readOnly = true)
-    public Optional<WItem> findById(String id) {
-        return repository.findById(id);
+    public List<WItem> findEnabledByWorldId(WorldId worldId) {
+        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
     }
 
     /**
      * Find item by worldId and itemId.
      */
     @Transactional(readOnly = true)
-    public Optional<WItem> findByItemId(String worldId, String itemId) {
-        return repository.findByWorldIdAndItemId(worldId, itemId);
+    public Optional<WItem> findByItemId(WorldId worldId, String itemId) {
+        return repository.findByWorldIdAndItemId(worldId.getId(), itemId);
     }
 
     /**
      * Save a new item or update existing.
      */
     @Transactional
-    public WItem save(String worldId, String itemId, Item publicData, String regionId) {
-        if (worldId == null || worldId.isBlank()) {
+    public WItem save(WorldId worldId, String itemId, Item publicData) {
+        if (worldId == null) {
             throw new IllegalArgumentException("worldId is required");
         }
         if (itemId == null || itemId.isBlank()) {
             throw new IllegalArgumentException("itemId is required");
         }
 
-        Optional<WItem> existing = repository.findByWorldIdAndItemId(worldId, itemId);
+        Optional<WItem> existing = repository.findByWorldIdAndItemId(worldId.getId(), itemId);
         if (existing.isPresent()) {
             WItem item = existing.get();
             item.setPublicData(publicData);
-            item.setRegionId(regionId);
             item.touchUpdate();
             log.debug("Updated item: worldId={}, itemId={}", worldId, itemId);
             return repository.save(item);
         }
 
         WItem item = WItem.builder()
-                .worldId(worldId)
-                .regionId(regionId)
+                .worldId(worldId.getId())
                 .itemId(itemId)
                 .publicData(publicData)
                 .enabled(true)
@@ -90,11 +81,11 @@ public class WItemService {
      * Update item publicData.
      */
     @Transactional
-    public Optional<WItem> update(String id, Item publicData) {
-        return repository.findById(id).map(item -> {
+    public Optional<WItem> update(WorldId worldId, String itemId, Item publicData) {
+        return repository.findByWorldIdAndItemId(worldId.getId(), itemId).map(item -> {
             item.setPublicData(publicData);
             item.touchUpdate();
-            log.debug("Updated item publicData: id={}", id);
+            log.debug("Updated item publicData: worldId={}, itemId={}", worldId, itemId);
             return repository.save(item);
         });
     }
@@ -103,32 +94,34 @@ public class WItemService {
      * Disable (soft delete) an item.
      */
     @Transactional
-    public void disable(String id) {
-        repository.findById(id).ifPresent(item -> {
-            if (!item.isEnabled()) return;
+    public boolean disable(WorldId worldId, String itemId) {
+        return repository.findByWorldIdAndItemId(worldId.getId(), itemId).map(item -> {
+            if (!item.isEnabled()) return false;
             item.setEnabled(false);
             item.touchUpdate();
             repository.save(item);
-            log.debug("Disabled item: id={}", id);
-        });
+            log.debug("Disabled item: worldId={}, itemId={}", worldId, itemId);
+            return true;
+        }).orElse(false);
     }
 
     /**
      * Hard delete an item.
      */
     @Transactional
-    public void delete(String id) {
-        repository.findById(id).ifPresent(item -> {
+    public boolean delete(WorldId worldId, String itemId) {
+        return repository.findByWorldIdAndItemId(worldId.getId(), itemId).map(item -> {
             repository.delete(item);
-            log.debug("Deleted item: id={}, itemId={}", id, item.getItemId());
-        });
+            log.debug("Deleted item: worldId={}, itemId={}", worldId, itemId);
+            return true;
+        }).orElse(false);
     }
 
     /**
      * Save all items (batch operation for import).
      */
     @Transactional
-    public List<WItem> saveAll(List<WItem> items) {
+    public List<WItem> saveAll(WorldId worldId, List<WItem> items) {
         return repository.saveAll(items);
     }
 }

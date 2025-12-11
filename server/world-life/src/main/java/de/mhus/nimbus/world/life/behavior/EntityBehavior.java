@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.life.behavior;
 
 import de.mhus.nimbus.generated.types.EntityPathway;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.model.SimulationState;
 import de.mhus.nimbus.world.shared.world.WEntity;
 
@@ -37,7 +38,7 @@ public interface EntityBehavior {
      * @param worldId World identifier
      * @return New EntityPathway if generated, or null if no update needed
      */
-    EntityPathway update(WEntity entity, SimulationState state, long currentTime, String worldId);
+    EntityPathway update(WEntity entity, SimulationState state, long currentTime, WorldId worldId);
 
     /**
      * Check if entity needs a new pathway.

@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.Item;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WItem;
 import de.mhus.nimbus.world.shared.world.WItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -85,7 +86,12 @@ public class EItemController extends BaseEditorController {
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
 
-        List<WItem> all = itemService.findEnabledByWorldId(worldId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        List<WItem> all = itemService.findEnabledByWorldId(widOpt.get());
         String lowerQuery = query.toLowerCase();
         final int maxResults = 100;
 
@@ -130,7 +136,12 @@ public class EItemController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        Optional<WItem> opt = itemService.findByItemId(worldId, itemId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        Optional<WItem> opt = itemService.findByItemId(widOpt.get(), itemId);
         if (opt.isEmpty()) {
             log.warn("Item not found: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -177,8 +188,14 @@ public class EItemController extends BaseEditorController {
                     Long.toHexString(Double.doubleToLongBits(Math.random())).substring(0, 7);
         }
 
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
         // Check if already exists
-        if (itemService.findByItemId(worldId, itemId).isPresent()) {
+        if (itemService.findByItemId(wid, itemId).isPresent()) {
             return conflict("item already exists");
         }
 
@@ -193,7 +210,7 @@ public class EItemController extends BaseEditorController {
                     .parameters(request.parameters())
                     .build();
 
-            WItem saved = itemService.save(worldId, itemId, item, null);
+            WItem saved = itemService.save(wid, itemId, item);
             log.info("Created item: itemId={}", itemId);
 
             // Return publicData (match test_server format)
@@ -233,7 +250,13 @@ public class EItemController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        Optional<WItem> existing = itemService.findByItemId(worldId, itemId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
+        Optional<WItem> existing = itemService.findByItemId(wid, itemId);
         if (existing.isEmpty()) {
             log.warn("Item not found for update: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -251,7 +274,7 @@ public class EItemController extends BaseEditorController {
                     .parameters(request.parameters() != null ? request.parameters() : existingData.getParameters())
                     .build();
 
-            Optional<WItem> updated = itemService.update(existing.get().getId(), updatedItem);
+            Optional<WItem> updated = itemService.update(wid, itemId, updatedItem);
             if (updated.isEmpty()) {
                 return notFound("item disappeared during update");
             }
@@ -292,13 +315,16 @@ public class EItemController extends BaseEditorController {
         validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        Optional<WItem> existing = itemService.findByItemId(worldId, itemId);
-        if (existing.isEmpty()) {
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        boolean deleted = itemService.delete(widOpt.get(), itemId);
+        if (!deleted) {
             log.warn("Item not found for deletion: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
         }
-
-        itemService.delete(existing.get().getId());
         log.info("Deleted item: itemId={}", itemId);
         return ResponseEntity.noContent().build();
     }

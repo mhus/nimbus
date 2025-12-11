@@ -5,6 +5,7 @@ import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Waypoint;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.config.WorldLifeProperties;
 import de.mhus.nimbus.world.life.model.SimulationState;
 import de.mhus.nimbus.world.life.movement.BlockBasedMovement;
@@ -49,7 +50,7 @@ public class PreyAnimalBehavior implements EntityBehavior {
     }
 
     @Override
-    public EntityPathway update(WEntity entity, SimulationState state, long currentTime, String worldId) {
+    public EntityPathway update(WEntity entity, SimulationState state, long currentTime, WorldId worldId) {
         // Check if we need a new pathway (with interval check)
         if (!needsNewPathwayWithInterval(state, currentTime)) {
             return null;
@@ -75,7 +76,7 @@ public class PreyAnimalBehavior implements EntityBehavior {
     /**
      * Generate a new pathway for the entity.
      */
-    private EntityPathway generatePathway(WEntity entity, SimulationState state, long currentTime, String worldId) {
+    private EntityPathway generatePathway(WEntity entity, SimulationState state, long currentTime, WorldId worldId) {
         // Get entity's current position (server-side simulation data)
         Vector3 currentPosition = entity.getPosition();
         if (currentPosition == null) {

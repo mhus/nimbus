@@ -47,12 +47,6 @@ public class WBackdrop {
     private Backdrop publicData;
 
     /**
-     * Optional region identifier for scoped backdrops.
-     */
-    @Indexed
-    private String regionId;
-
-    /**
      * Optional world identifier for scoped backdrops.
      */
     @Indexed

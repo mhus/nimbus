@@ -130,4 +130,8 @@ public class BlockUtil {
                 .metadata(originalBlock.getMetadata())
                 .build();
     }
+
+    public static String toCunkKey(Integer cx, Integer cz) {
+        return cx + ":" + cz;
+    }
 }

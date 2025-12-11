@@ -15,14 +15,14 @@ import java.time.Instant;
 
 /**
  * MongoDB Speicherung eines Welt-Chunks.
- * Uniqueness: (regionId, worldId, chunk).
+ * Uniqueness: (worldId, chunk).
  * Inline wird ein JSON String des ChunkData gespeichert (content). Ist der JSON zu groß,
  * wird er extern über storageId referenziert und content bleibt null.
  */
 @Document(collection = "w_chunks")
 @ActualSchemaVersion("1.0.0")
 @CompoundIndexes({
-        @CompoundIndex(name = "region_world_chunk_idx", def = "{ 'regionId': 1, 'worldId': 1, 'chunk': 1 }", unique = true)
+        @CompoundIndex(name = "world_chunk_idx", def = "{ 'worldId': 1, 'chunk': 1 }", unique = true)
 })
 @Data
 @Builder
@@ -32,9 +32,6 @@ public class WChunk {
 
     @Id
     private String id;
-
-    @Indexed
-    private String regionId;
 
     @Indexed
     private String worldId;

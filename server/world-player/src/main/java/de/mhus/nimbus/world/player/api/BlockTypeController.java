@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.BlockType;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,14 +49,18 @@ public class BlockTypeController {
                     .body(Map.of("error", "Invalid group name. Only lowercase letters, numbers, hyphens and underscores allowed."));
         }
 
-        List<BlockType> blockTypes = service.findByBlockTypeGroup(groupName).stream()
-                .filter(WBlockType::isEnabled)
-                .map(WBlockType::getPublicData)
-                .toList();
+        return WorldId.of(worldId)
+                .<ResponseEntity<?>>map(wid -> {
+                    List<BlockType> blockTypes = service.findByBlockTypeGroup(wid, groupName).stream()
+                            .filter(WBlockType::isEnabled)
+                            .map(WBlockType::getPublicData)
+                            .toList();
 
-        log.debug("Returning {} BlockTypes for group: {}", blockTypes.size(), groupName);
+                    log.debug("Returning {} BlockTypes for group: {}", blockTypes.size(), groupName);
 
-        return ResponseEntity.ok(blockTypes);
+                    return ResponseEntity.ok(blockTypes);
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().body(Map.of("error", "Invalid worldId")));
     }
 
     /**
@@ -88,13 +93,15 @@ public class BlockTypeController {
         final String finalBlockId = blockId;
         log.debug("GET blocktype: blockId={}, worldId={}", finalBlockId, worldId);
 
-        return service.findByBlockId(finalBlockId)
-                .map(WBlockType::getPublicData)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    log.warn("BlockType not found: blockId={}", finalBlockId);
-                    return ResponseEntity.notFound().build();
-                });
+        return WorldId.of(worldId)
+                .map(wid -> service.findByBlockId(wid, finalBlockId)
+                        .map(WBlockType::getPublicData)
+                        .map(ResponseEntity::ok)
+                        .orElseGet(() -> {
+                            log.warn("BlockType not found: blockId={}", finalBlockId);
+                            return ResponseEntity.notFound().build();
+                        }))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
 }

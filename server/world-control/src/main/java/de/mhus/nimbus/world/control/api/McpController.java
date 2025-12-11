@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.shared.engine.EngineMapper;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.shared.layer.*;
 import de.mhus.nimbus.world.shared.session.WSession;
@@ -797,7 +798,12 @@ public class McpController extends BaseEditorController {
         ResponseEntity<?> validation = validateWorldId(worldId);
         if (validation != null) return validation;
 
-        List<WBlockType> blockTypes = blockTypeService.findByWorldId(worldId);
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+
+        List<WBlockType> blockTypes = blockTypeService.findByWorldId(widOpt.get());
         List<Map<String, Object>> blockTypeDtos = blockTypes.stream()
                 .limit(limit)
                 .map(this::toBlockTypeDto)

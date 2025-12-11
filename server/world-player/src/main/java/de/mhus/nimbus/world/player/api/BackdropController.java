@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Backdrop;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.WBackdrop;
 import de.mhus.nimbus.world.shared.world.WBackdropService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,47 +33,40 @@ public class BackdropController {
     @Operation(summary = "Get Backdrop by ID", description = "Returns Backdrop configuration for a specific backdrop ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Backdrop found"),
+            @ApiResponse(responseCode = "400", description = "Invalid worldId"),
             @ApiResponse(responseCode = "404", description = "Backdrop not found")
     })
     public ResponseEntity<?> getBackdrop(
             @PathVariable String worldId,
             @PathVariable String backdropId) {
-        return service.findByBackdropId(backdropId)
-                .map(WBackdrop::getPublicData)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return WorldId.of(worldId)
+                .map(wid -> service.findByBackdropId(wid, backdropId)
+                        .map(WBackdrop::getPublicData)
+                        .map(ResponseEntity::ok)
+                        .orElseGet(() -> ResponseEntity.notFound().build()))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     @GetMapping("/backdrops")
-    @Operation(summary = "Get all Backdrops", description = "Returns all enabled Backdrop configurations, optionally filtered")
+    @Operation(summary = "Get all Backdrops", description = "Returns all enabled Backdrop configurations")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of Backdrops")
+            @ApiResponse(responseCode = "200", description = "List of Backdrops"),
+            @ApiResponse(responseCode = "400", description = "Invalid worldId")
     })
     public ResponseEntity<?> getAllBackdrops(
-            @PathVariable String worldId,
-            @RequestParam(required = false) String regionId) {
+            @PathVariable String worldId) {
 
-        List<Backdrop> backdrops;
+        return WorldId.of(worldId)
+                .map(wid -> {
+                    List<Backdrop> backdrops = service.findAllEnabled(wid).stream()
+                            .map(WBackdrop::getPublicData)
+                            .toList();
 
-        if (regionId != null && !regionId.isBlank()) {
-            backdrops = service.findByRegionId(regionId).stream()
-                    .filter(WBackdrop::isEnabled)
-                    .map(WBackdrop::getPublicData)
-                    .toList();
-        } else if (worldId != null && !worldId.isBlank()) {
-            backdrops = service.findByWorldId(worldId).stream()
-                    .filter(WBackdrop::isEnabled)
-                    .map(WBackdrop::getPublicData)
-                    .toList();
-        } else {
-            backdrops = service.findAllEnabled().stream()
-                    .map(WBackdrop::getPublicData)
-                    .toList();
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "backdrops", backdrops,
-                "count", backdrops.size()
-        ));
+                    return ResponseEntity.ok(Map.of(
+                            "backdrops", backdrops,
+                            "count", backdrops.size()
+                    ));
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 }

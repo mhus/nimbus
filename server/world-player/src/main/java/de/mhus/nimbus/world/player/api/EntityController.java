@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
@@ -56,10 +57,12 @@ public class EntityController {
                     .orElseGet(() -> ResponseEntity.notFound().build());
         }
 
-        return service.findByWorldIdAndEntityId(worldId, entityId)
-                .map(WEntity::getPublicData)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return WorldId.of(worldId)
+                .map(wid -> service.findByWorldIdAndEntityId(wid, entityId)
+                        .map(WEntity::getPublicData)
+                        .map(ResponseEntity::ok)
+                        .orElseGet(() -> ResponseEntity.notFound().build()))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
 }

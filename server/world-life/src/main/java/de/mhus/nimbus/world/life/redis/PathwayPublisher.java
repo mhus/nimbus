@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.life.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.EntityPathway;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
 import de.mhus.nimbus.world.shared.redis.PathwayBroadcastMessage;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
@@ -42,7 +43,7 @@ public class PathwayPublisher {
      * @param pathways List of entity pathways
      * @param affectedChunks Chunks that contain these pathways
      */
-    public void publishPathways(String worldId, List<EntityPathway> pathways, Set<ChunkCoordinate> affectedChunks) {
+    public void publishPathways(WorldId worldId, List<EntityPathway> pathways, Set<ChunkCoordinate> affectedChunks) {
         if (pathways == null || pathways.isEmpty()) {
             return;
         }
@@ -53,7 +54,7 @@ public class PathwayPublisher {
                     .map(pathway -> PathwayBroadcastMessage.PathwayContainer.builder()
                             .pathway(pathway)
                             .sessionId(null) // NPC pathways have no originating session
-                            .worldId(worldId)
+                            .worldId(worldId.getId())
                             .build())
                     .collect(Collectors.toList());
 
@@ -68,7 +69,7 @@ public class PathwayPublisher {
 
             // Serialize and publish
             String json = objectMapper.writeValueAsString(message);
-            redisMessaging.publish(worldId, "e.p", json);
+            redisMessaging.publish(worldId.getId(), "e.p", json);
 
             log.debug("World {}: Published {} pathways to Redis, affecting {} chunks",
                     worldId, pathways.size(), affectedChunks.size());
@@ -85,7 +86,7 @@ public class PathwayPublisher {
      * @param pathway Entity pathway
      * @param affectedChunks Chunks affected by this pathway
      */
-    public void publishPathway(String worldId, EntityPathway pathway, Set<ChunkCoordinate> affectedChunks) {
+    public void publishPathway(WorldId worldId, EntityPathway pathway, Set<ChunkCoordinate> affectedChunks) {
         publishPathways(worldId, List.of(pathway), affectedChunks);
     }
 }

@@ -12,15 +12,13 @@ import java.util.Optional;
 @Repository
 public interface WBackdropRepository extends MongoRepository<WBackdrop, String> {
 
-    Optional<WBackdrop> findByBackdropId(String backdropId);
-
-    List<WBackdrop> findByRegionId(String regionId);
+    Optional<WBackdrop> findByWorldIdAndBackdropId(String worldId, String backdropId);
 
     List<WBackdrop> findByWorldId(String worldId);
 
-    List<WBackdrop> findByEnabled(boolean enabled);
+    List<WBackdrop> findByWorldIdAndEnabled(String worldId, boolean enabled);
 
-    boolean existsByBackdropId(String backdropId);
+    boolean existsByWorldIdAndBackdropId(String worldId, String backdropId);
 
-    void deleteByBackdropId(String backdropId);
+    void deleteByWorldIdAndBackdropId(String worldId, String backdropId);
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.generated.types.ChunkData;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.ws.BroadcastService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import de.mhus.nimbus.world.shared.world.WChunkService;
@@ -81,8 +82,13 @@ public class ChunkUpdateBroadcastListener {
                     worldId, chunkKey, deleted);
 
             // Load updated chunk from database
-            Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(
-                    worldId, chunkKey, false);
+            WorldId wid = WorldId.of(worldId).orElse(null);
+            if (wid == null) {
+                log.warn("Invalid worldId: {}", worldId);
+                return;
+            }
+
+            Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(wid, chunkKey, false);
 
             if (chunkDataOpt.isEmpty() && !deleted) {
                 log.warn("Updated chunk not found in database: world={} chunk={}", worldId, chunkKey);
@@ -100,8 +106,7 @@ public class ChunkUpdateBroadcastListener {
             } else {
                 // Include full chunk data
                 ChunkData chunkData = chunkDataOpt.get();
-                ChunkDataTransferObject transferObject = chunkService.toTransferObject(
-                        worldId, chunkData);
+                ChunkDataTransferObject transferObject = chunkService.toTransferObject(wid, chunkData);
                 chunksArray.add(objectMapper.valueToTree(transferObject));
             }
 

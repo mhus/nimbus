@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.life.service;
 import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Waypoint;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.behavior.BehaviorRegistry;
 import de.mhus.nimbus.world.life.behavior.EntityBehavior;
 import de.mhus.nimbus.world.life.config.WorldLifeProperties;
@@ -11,6 +12,7 @@ import de.mhus.nimbus.world.life.model.SimulationState;
 import de.mhus.nimbus.world.life.redis.PathwayPublisher;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityRepository;
+import de.mhus.nimbus.world.shared.world.WEntityService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class SimulatorService {
 
-    private final WEntityRepository entityRepository;
+    private final WEntityService entityService;
     private final BehaviorRegistry behaviorRegistry;
     private final MultiWorldChunkService multiWorldChunkService;
     private final PathwayPublisher pathwayPublisher;
@@ -58,7 +60,7 @@ public class SimulatorService {
      * Simulation states for all entities, grouped by world.
      * Maps worldId → (entityId → SimulationState)
      */
-    private final Map<String, Map<String, SimulationState>> worldSimulationStates = new ConcurrentHashMap<>();
+    private final Map<WorldId, Map<String, SimulationState>> worldSimulationStates = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void initialize() {
@@ -72,7 +74,7 @@ public class SimulatorService {
      */
     @Scheduled(fixedDelay = 300000, initialDelay = 5000)
     public void loadAllWorldEntities() {
-        Set<String> knownWorlds = worldDiscoveryService.getKnownWorldIds();
+        Set<WorldId> knownWorlds = worldDiscoveryService.getKnownWorldIds();
 
         if (knownWorlds.isEmpty()) {
             log.debug("No worlds discovered yet, skipping entity load");
@@ -82,7 +84,7 @@ public class SimulatorService {
         int totalInitialized = 0;
         int totalSkipped = 0;
 
-        for (String worldId : knownWorlds) {
+        for (WorldId worldId : knownWorlds) {
             // Skip if already loaded
             if (worldSimulationStates.containsKey(worldId)) {
                 continue;
@@ -91,7 +93,7 @@ public class SimulatorService {
             log.info("Loading entities for world: {}", worldId);
 
             // Load all entities from database for this world
-            List<WEntity> entities = entityRepository.findByWorldId(worldId);
+            List<WEntity> entities = entityService.findByWorldId(worldId);
             log.info("World {}: Loaded {} entities from database", worldId, entities.size());
 
             // Create simulation state map for this world
@@ -129,9 +131,9 @@ public class SimulatorService {
         }
 
         // Remove worlds that are no longer known
-        Set<String> toRemove = new HashSet<>(worldSimulationStates.keySet());
+        Set<WorldId> toRemove = new HashSet<>(worldSimulationStates.keySet());
         toRemove.removeAll(knownWorlds);
-        for (String worldId : toRemove) {
+        for (WorldId worldId : toRemove) {
             worldSimulationStates.remove(worldId);
             log.info("Removed simulation states for disabled world: {}", worldId);
         }
@@ -159,8 +161,8 @@ public class SimulatorService {
         long currentTime = System.currentTimeMillis();
 
         // Process each world separately
-        for (Map.Entry<String, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
-            String worldId = worldEntry.getKey();
+        for (Map.Entry<WorldId, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+            WorldId worldId = worldEntry.getKey();
             Map<String, SimulationState> simulationStates = worldEntry.getValue();
 
             try {
@@ -178,7 +180,7 @@ public class SimulatorService {
      * @param simulationStates Entity simulation states for this world
      * @param currentTime Current timestamp
      */
-    private void simulateWorld(String worldId, Map<String, SimulationState> simulationStates, long currentTime) {
+    private void simulateWorld(WorldId worldId, Map<String, SimulationState> simulationStates, long currentTime) {
         Set<ChunkCoordinate> activeChunks = multiWorldChunkService.getActiveChunks(worldId);
 
         if (activeChunks.isEmpty()) {
@@ -244,7 +246,7 @@ public class SimulatorService {
      * @param worldId World ID
      * @return Optional pathway if generated
      */
-    private Optional<EntityPathway> simulateEntity(WEntity entity, SimulationState state, long currentTime, String worldId) {
+    private Optional<EntityPathway> simulateEntity(WEntity entity, SimulationState state, long currentTime, WorldId worldId) {
         // Get behavior for entity
         String behaviorType = getBehaviorType(entity);
         EntityBehavior behavior = behaviorRegistry.getBehavior(behaviorType);
@@ -333,8 +335,8 @@ public class SimulatorService {
      */
     public void tryClaimOrphanedEntity(String entityId) {
         // Search for entity across all worlds
-        for (Map.Entry<String, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
-            String worldId = worldEntry.getKey();
+        for (Map.Entry<WorldId, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+            WorldId worldId = worldEntry.getKey();
             Map<String, SimulationState> simulationStates = worldEntry.getValue();
 
             SimulationState state = simulationStates.get(entityId);
@@ -383,8 +385,8 @@ public class SimulatorService {
      *
      * @return Map of worldId → entity count
      */
-    public Map<String, Integer> getEntityCountPerWorld() {
-        Map<String, Integer> counts = new HashMap<>();
+    public Map<WorldId, Integer> getEntityCountPerWorld() {
+        Map<WorldId, Integer> counts = new HashMap<>();
         worldSimulationStates.forEach((worldId, states) -> counts.put(worldId, states.size()));
         return counts;
     }
@@ -405,7 +407,7 @@ public class SimulatorService {
      * @param entity Entity to update
      * @param worldId World ID
      */
-    private void updateEntityChunk(WEntity entity, String worldId) {
+    private void updateEntityChunk(WEntity entity, WorldId worldId) {
         if (entity.getPosition() == null) {
             return;
         }
@@ -437,8 +439,8 @@ public class SimulatorService {
     public void snapshotEntityPositions() {
         List<WEntity> toUpdate = new ArrayList<>();
 
-        for (Map.Entry<String, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
-            String worldId = worldEntry.getKey();
+        for (Map.Entry<WorldId, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+            WorldId worldId = worldEntry.getKey();
             Map<String, SimulationState> simulationStates = worldEntry.getValue();
 
             for (SimulationState state : simulationStates.values()) {
@@ -452,7 +454,7 @@ public class SimulatorService {
         }
 
         if (!toUpdate.isEmpty()) {
-            entityRepository.saveAll(toUpdate);
+            entityService.saveAll(toUpdate);
             log.info("Snapshotted {} entity positions to database across all worlds", toUpdate.size());
         }
     }
