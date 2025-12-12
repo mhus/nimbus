@@ -31,6 +31,10 @@ public class WWorld implements Identifiable {
     @Indexed
     private String regionId; // Zugehörige Region ID
 
+    private String name;
+
+    private String description;
+
     /**
      * Public data containing the generated WorldInfo DTO.
      * This is what gets serialized and sent to clients.

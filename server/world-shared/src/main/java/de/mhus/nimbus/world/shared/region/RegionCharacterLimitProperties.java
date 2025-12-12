@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region.character;
+package de.mhus.nimbus.world.shared.region;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

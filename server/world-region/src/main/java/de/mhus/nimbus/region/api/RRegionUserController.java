@@ -1,7 +1,7 @@
-package de.mhus.nimbus.region.user;
+package de.mhus.nimbus.region.api;
 
-import de.mhus.nimbus.region.region.RRegion;
-import de.mhus.nimbus.region.region.RRegionService;
+import de.mhus.nimbus.world.shared.region.RRegion;
+import de.mhus.nimbus.world.shared.region.RRegionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

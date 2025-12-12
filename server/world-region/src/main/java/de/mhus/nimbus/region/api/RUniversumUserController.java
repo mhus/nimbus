@@ -1,5 +1,7 @@
-package de.mhus.nimbus.region.user;
+package de.mhus.nimbus.region.api;
 
+import de.mhus.nimbus.world.shared.region.RUser;
+import de.mhus.nimbus.world.shared.region.RUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +33,7 @@ public class RUniversumUserController {
     public record QUserResponse(String id, String username, String email, String roles) {}
 
     private QUserResponse toResponse(RUser u) {
-        return new QUserResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRolesRaw());
+        return new QUserResponse(u.getId(), u.getUsername(), u.getEmail(), service.getRolesRaw(u.getId()));
     }
 
     @Operation(summary = "List users")
@@ -59,8 +61,8 @@ public class RUniversumUserController {
             RUser u = service.createUser(req.username(), req.email());
             // roles from request (optional)
             if (req.roles() != null && !req.roles().isBlank()) {
-                u.setRolesRaw(req.roles());
-                u = service.update(u.getId(), u.getUsername(), u.getEmail(), u.getRolesRaw());
+                service.setRolesRaw(u.getId(), req.roles());
+                u = service.update(u.getId(), u.getUsername(), u.getEmail(), service.getRolesRaw(u.getId()));
             }
             return ResponseEntity.created(URI.create(BASE_PATH + "/" + u.getId())).body(toResponse(u));
         } catch (IllegalArgumentException e) {
@@ -87,7 +89,6 @@ public class RUniversumUserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         if (service.getById(id).isEmpty()) return ResponseEntity.notFound().build();
-        service.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

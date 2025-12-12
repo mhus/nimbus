@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region.region;
+package de.mhus.nimbus.world.shared.region;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.Data;

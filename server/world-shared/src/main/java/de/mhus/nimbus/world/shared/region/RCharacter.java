@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region.character;
+package de.mhus.nimbus.world.shared.region;
 
 import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;

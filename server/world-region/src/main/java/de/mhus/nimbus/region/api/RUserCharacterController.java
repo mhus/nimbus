@@ -1,7 +1,9 @@
-package de.mhus.nimbus.region.character;
+package de.mhus.nimbus.region.api;
 
 import de.mhus.nimbus.generated.dto.RegionCharacterResponse;
 import de.mhus.nimbus.generated.types.RegionItemInfo;
+import de.mhus.nimbus.world.shared.region.RCharacter;
+import de.mhus.nimbus.world.shared.region.RCharacterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region.region;
+package de.mhus.nimbus.world.shared.region;
 
 import java.util.Arrays;
 import java.util.Base64;
@@ -7,14 +7,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import de.mhus.nimbus.region.RegionProperties;
-import de.mhus.nimbus.region.world.RUniverseClientService;
 import de.mhus.nimbus.shared.security.FormattedKey;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 

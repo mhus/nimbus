@@ -1,16 +1,12 @@
-package de.mhus.nimbus.region.world;
+package de.mhus.nimbus.world.shared.region;
 
-import de.mhus.nimbus.region.RegionProperties;
 import de.mhus.nimbus.shared.dto.universe.URegionRequest;
 import de.mhus.nimbus.shared.dto.universe.URegionResponse;
 import de.mhus.nimbus.shared.security.FormattedKey;
 import de.mhus.nimbus.shared.security.JwtService;
-import de.mhus.nimbus.shared.security.KeyIntent;
-import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.shared.utils.RestTemplateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

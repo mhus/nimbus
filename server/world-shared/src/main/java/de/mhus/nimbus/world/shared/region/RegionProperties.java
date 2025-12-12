@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region;
+package de.mhus.nimbus.world.shared.region;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
